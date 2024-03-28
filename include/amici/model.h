@@ -1482,6 +1482,40 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual std::vector<double> get_trigger_timepoints() const;
 
     /**
+     * @brief Get steady-state mask as std::vector.
+     *
+     * See `set_steadystate_mask` for details.
+     *
+     * @return Steady-state mask
+     */
+    std::vector<double> get_steadystate_mask() const {
+        return steadystate_mask_.getVector();
+    };
+
+    /**
+     * @brief Get steady-state mask as AmiVector.
+     *
+     * See `set_steadystate_mask` for details.
+     * @return Steady-state mask
+     */
+    AmiVector const& get_steadystate_mask_av() const {
+        return steadystate_mask_;
+    };
+
+    /**
+     * @brief Set steady-state mask.
+     *
+     * The mask is used to exclude certain state variables from the steady-state
+     * convergence check. Positive values indicate that the corresponding state
+     * variable should be included in the convergence check, while non-positive
+     * values indicate that the corresponding state variable should be excluded.
+     * An empty mask is interpreted as including all state variables.
+     *
+     * @param mask Mask of length `nx_solver`.
+     */
+    void set_steadystate_mask(std::vector<double> const& mask);
+
+    /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
      * directional or full second order derivative will be computed
@@ -2087,6 +2121,15 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** Simulation parameters, initial state, etc. */
     SimulationParameters simulation_parameters_;
+
+    /**
+     * Mask for state variables that should be checked for steady state
+     * during pre-/post-equilibration. Positive values indicate that the
+     * corresponding state variable should be checked for steady state.
+     * Negative values indicate that the corresponding state variable should
+     * be ignored.
+     */
+    AmiVector steadystate_mask_;
 };
 
 bool operator==(Model const& a, Model const& b);

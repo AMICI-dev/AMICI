@@ -8,6 +8,10 @@ import pytest
 from amici.debugging import get_model_for_preeq
 from numpy.testing import assert_allclose, assert_equal
 from test_pysb import get_data
+from amici.testing import (
+    TemporaryDirectoryWinSafe as TemporaryDirectory,
+    skip_on_valgrind,
+)
 
 
 @pytest.fixture
@@ -658,3 +662,62 @@ def test_get_model_for_preeq(preeq_fixture):
         rdata1.sx,
         rdata2.sx,
     )
+
+
+@skip_on_valgrind
+def test_partial_eq():
+    """Check that partial equilibration is possible."""
+    from amici.antimony_import import antimony2amici
+
+    ant_str = """
+    model test_partial_eq
+        explodes = 1
+        explodes' = explodes
+        A = 1
+        B = 0
+        R: A -> B; k*A - k*B
+        k = 1
+    end
+    """
+    module_name = "test_partial_eq"
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        antimony2amici(
+            ant_str,
+            model_name=module_name,
+            output_dir=outdir,
+        )
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
+        amici_model = model_module.getModel()
+        amici_model.setTimepoints([np.inf])
+        amici_solver = amici_model.getSolver()
+        amici_solver.setRelativeToleranceSteadyState(1e-12)
+
+        # equilibration of `explodes` will fail
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_ERROR
+        assert rdata.messages[0].identifier == "EQUILIBRATION_FAILURE"
+
+        # excluding `explodes` should enable equilibration
+        amici_model.set_steadystate_mask(
+            [
+                0 if state_id == "explodes" else 1
+                for state_id in amici_model.getStateIdsSolver()
+            ]
+        )
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert_allclose(
+            rdata.by_id("A"),
+            0.5,
+            atol=amici_solver.getAbsoluteToleranceSteadyState(),
+            rtol=amici_solver.getRelativeToleranceSteadyState(),
+        )
+        assert_allclose(
+            rdata.by_id("B"),
+            0.5,
+            atol=amici_solver.getAbsoluteToleranceSteadyState(),
+            rtol=amici_solver.getRelativeToleranceSteadyState(),
+        )
+        assert rdata.t_last < 100

@@ -509,8 +509,8 @@ bool SteadystateProblem::getSensitivityFlag(
 }
 
 realtype SteadystateProblem::getWrmsNorm(
-    AmiVector const& x, AmiVector const& xdot, realtype atol, realtype rtol,
-    AmiVector& ewt
+    AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
+    realtype atol, realtype rtol, AmiVector& ewt
 ) const {
     /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
        we need to pass ewt[QB], as xdot and xQBdot have different sizes */
@@ -522,7 +522,14 @@ realtype SteadystateProblem::getWrmsNorm(
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     /* ewt = 1/ewt (ewt = 1/(rtol*x+atol)) */
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    /* wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector */
+
+    // wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector
+    if (mask.getLength()) {
+        return N_VWrmsNormMask(
+            const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector(),
+            const_cast<N_Vector>(mask.getNVector())
+        );
+    }
     return N_VWrmsNorm(
         const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector()
     );
@@ -543,7 +550,10 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
                 "Newton type convergence check is not implemented for adjoint "
                 "steady state computations. Stopping."
             );
-        wrms = getWrmsNorm(xQB_, xQBdot_, atol_quad_, rtol_quad_, ewtQB_);
+        wrms = getWrmsNorm(
+            xQB_, xQBdot_, model.get_steadystate_mask_av(), atol_quad_,
+            rtol_quad_, ewtQB_
+        );
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
            Get RHS and compute weighted error norm */
@@ -552,7 +562,8 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
         else
             updateRightHandSide(model);
         wrms = getWrmsNorm(
-            state_.x, newton_step_conv_ ? delta_ : xdot_, atol_, rtol_, ewt_
+            state_.x, newton_step_conv_ ? delta_ : xdot_,
+            model.get_steadystate_mask_av(), atol_, rtol_, ewt_
         );
     }
     return wrms;
@@ -573,8 +584,10 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
         );
         if (newton_step_conv_)
             newton_solver_->solveLinearSystem(xdot_);
-        wrms
-            = getWrmsNorm(state_.sx[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
+        wrms = getWrmsNorm(
+            state_.sx[ip], xdot_, model.get_steadystate_mask_av(), atol_sensi_,
+            rtol_sensi_, ewt_
+        );
         /* ideally this function would report the maximum of all wrms over
          all ip, but for practical purposes we can just report the wrms for
          the first ip where we know that the convergence threshold is not

@@ -39,7 +39,7 @@ def test_copy_constructors(pysb_example_presimulation_module):
             val = get_val(obj, attr)
 
             try:
-                modval = get_mod_val(val, attr)
+                modval = get_mod_val(val, attr, obj)
             except ValueError:
                 # happens for everything that is not bool or scalar
                 continue
@@ -78,6 +78,10 @@ model_instance_settings0 = {
     ("getInitialStateSensitivities", "setUnscaledInitialStateSensitivities"): [
         tuple([1.0] + [0.0] * 35),
         tuple([0.1] * 36),
+    ],
+    "_steadystate_mask": [
+        (),
+        tuple([0] * 3),
     ],
     "MinimumSigmaResiduals": [
         50.0,
@@ -361,19 +365,21 @@ def get_val(obj, attr):
         return getattr(obj, attr)
 
 
-def get_mod_val(val, attr):
+def get_mod_val(val, attr, obj):
     if attr == "getReturnDataReportingMode":
         return amici.RDataReporting.likelihood
     elif attr == "getParameterList":
-        return tuple(get_mod_val(val[0], "") for _ in val)
+        return tuple(get_mod_val(val[0], "", obj) for _ in val)
     elif attr == "getStateIsNonNegative":
         raise ValueError("Cannot modify value")
+    elif attr == "get_steadystate_mask":
+        return [0 for _ in range(obj.nx_solver)]
     elif isinstance(val, bool):
         return not val
     elif isinstance(val, numbers.Number):
         return val + 1
     elif isinstance(val, tuple):
-        return tuple(get_mod_val(v, attr) for v in val)
+        return tuple(get_mod_val(v, attr, obj) for v in val)
 
     raise ValueError("Cannot modify value")
 

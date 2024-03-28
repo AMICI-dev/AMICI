@@ -430,8 +430,8 @@ inline span<realtype> make_span(N_Vector nv) {
 }
 
 /**
- * @brief Create span from N_Vector
- * @param nv
+ * @brief Create span from AmiVector
+ * @param av
  *
  */
 inline span<realtype const> make_span(amici::AmiVector const& av) {
