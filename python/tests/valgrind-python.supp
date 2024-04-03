@@ -215,6 +215,21 @@
 
 {
    other
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:resize_compact
+   fun:_PyUnicodeWriter_Finish
+   fun:PyUnicode_FromFormatV
+   fun:PyUnicode_FromFormat
+   fun:PyFortranObject_NewAsAttr
+   fun:PyInit__zpropack
+   fun:_PyImport_LoadDynamicModuleWithSpec
+   ...
+}
+
+{
+   other
    Memcheck:Value8
    ...
    fun:PyBytes_Repr
