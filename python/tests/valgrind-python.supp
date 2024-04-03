@@ -223,8 +223,6 @@
    fun:PyUnicode_FromFormatV
    fun:PyUnicode_FromFormat
    fun:PyFortranObject_NewAsAttr
-   fun:PyInit__zpropack
-   fun:_PyImport_LoadDynamicModuleWithSpec
    ...
 }
 
