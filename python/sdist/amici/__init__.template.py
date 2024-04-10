@@ -24,7 +24,7 @@ from .TPL_MODELNAME import *  # noqa: F403, F401
 from .TPL_MODELNAME import getModel as get_model  # noqa: F401
 
 try:
-    from .TPL_MODELNAME.jax import JAXModel_TPL_MODELNAME
+    from .jax import JAXModel_TPL_MODELNAME
 
     def get_jax_model() -> JAXModel:
         return JAXModel_TPL_MODELNAME()

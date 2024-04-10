@@ -11,9 +11,7 @@ from collections.abc import Iterable
 
 import amici
 
-from jax.config import config
-
-config.update("jax_enable_x64", True)
+jax.config.update("jax_enable_x64", True)
 
 
 class JAXModel:
@@ -77,6 +75,9 @@ class JAXSolver:
         self.solver: diffrax.AbstractSolver = diffrax.Kvaerno5()
         self.atol: float = 1e-8
         self.rtol: float = 1e-8
+        self.pcoeff: float = 0.4
+        self.icoeff: float = 0.3
+        self.dcoeff: float = 0.0
         self.maxsteps: int = int(1e6)
         self.sensi_mode: amici.SensitivityMethod = (
             amici.SensitivityMethod.adjoint
@@ -95,7 +96,11 @@ class JAXSolver:
             dt0=None,
             y0=self.model.x_solver(x0),
             stepsize_controller=diffrax.PIDController(
-                rtol=self.rtol, atol=self.atol
+                rtol=self.rtol,
+                atol=self.atol,
+                pcoeff=self.pcoeff,
+                icoeff=self.icoeff,
+                dcoeff=self.dcoeff,
             ),
             max_steps=self.maxsteps,
             saveat=diffrax.SaveAt(ts=ts),
@@ -166,8 +171,11 @@ def run_simulations(
     def run(edata):
         return run_simulation(model, solver, edata)
 
-    with ThreadPoolExecutor(max_workers=num_threads) as pool:
-        results = pool.map(run, edatas)
+    if num_threads > 1:
+        with ThreadPoolExecutor(max_workers=num_threads) as pool:
+            results = pool.map(run, edatas)
+    else:
+        results = map(run, edatas)
     return list(results)
 
 
@@ -201,7 +209,7 @@ def run_simulation(model: JAXModel, solver: JAXSolver, edata: amici.ExpData):
 
     for field in rdata_kwargs.keys():
         if field == "llh":
-            rdata_kwargs[field] = np.float(rdata_kwargs[field])
+            rdata_kwargs[field] = np.float64(rdata_kwargs[field])
         elif field not in ["sllh", "s2llh"]:
             rdata_kwargs[field] = np.asarray(rdata_kwargs[field]).T
             if rdata_kwargs[field].ndim == 1:
