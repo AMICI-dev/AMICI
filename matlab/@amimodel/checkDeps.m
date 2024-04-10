@@ -8,10 +8,10 @@ function cflag = checkDeps(this,HTable,deps)
     %  deps: cell array with containing a list of dependencies @type cell
     %
     % Return values:
-    %  cflag: boolean indicating whether any of the dependencies have 
+    %  cflag: boolean indicating whether any of the dependencies have
     %  changed with respect to the hashes stored in HTable @type
     %  bool
-    
+
     if(~isempty(HTable))
         cflags = zeros(length(deps),1);
         for id = 1:length(deps)

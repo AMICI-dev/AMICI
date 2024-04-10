@@ -1,1 +1,0 @@
-../../amici/setuptools.py

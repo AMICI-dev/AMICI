@@ -14,7 +14,7 @@ namespace amici {
  * @param rdata ReturnDataObject
  * @return rdatamatlab ReturnDataObject stored as matlab compatible data
  */
-mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const *rdata);
+mxArray* getReturnDataMatlabFromAmiciCall(ReturnData const* rdata);
 
 /**
  * @brief allocates and initializes solution mxArray with the corresponding
@@ -22,7 +22,7 @@ mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const *rdata);
  * @param rdata ReturnDataObject
  * @return Solution mxArray
  */
-mxArray *initMatlabReturnFields(ReturnData const *rdata);
+mxArray* initMatlabReturnFields(ReturnData const* rdata);
 
 /**
  * @brief allocates and initializes diagnosis mxArray with the corresponding
@@ -30,7 +30,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata);
  * @param rdata ReturnDataObject
  * @return Diagnosis mxArray
  */
-mxArray *initMatlabDiagnosisFields(ReturnData const *rdata);
+mxArray* initMatlabDiagnosisFields(ReturnData const* rdata);
 
 /**
  * @brief initialize vector and attach to the field
@@ -40,8 +40,9 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata);
  * @param fieldData Data which will be stored in the field
  */
 template <typename T>
-void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
-                       T fieldData);
+void writeMatlabField0(
+    mxArray* matlabStruct, char const* fieldName, T fieldData
+);
 
 /**
  * @brief initialize vector and attach to the field
@@ -52,8 +53,10 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
  * @param dim0 Number of elements in the vector
  */
 template <typename T>
-void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
-                       gsl::span<const T> const &fieldData, const int dim0);
+void writeMatlabField1(
+    mxArray* matlabStruct, char const* fieldName,
+    gsl::span<T const> const& fieldData, mwSize const dim0
+);
 
 /**
  * @brief initialize matrix, attach to the field and write data
@@ -65,9 +68,11 @@ void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
  * @param perm reordering of dimensions (i.e., transposition)
  */
 template <typename T>
-void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
-                       std::vector<T> const &fieldData, int dim0, int dim1,
-                       std::vector<int> perm);
+void writeMatlabField2(
+    mxArray* matlabStruct, char const* fieldName,
+    std::vector<T> const& fieldData, mwSize dim0, mwSize dim1,
+    std::vector<int> perm
+);
 
 /**
  * @brief initialize 3D tensor, attach to the field and write data
@@ -80,9 +85,11 @@ void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
  * @param perm reordering of dimensions
  */
 template <typename T>
-void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
-                       std::vector<T> const &fieldData, int dim0, int dim1,
-                       int dim2, std::vector<int> perm);
+void writeMatlabField3(
+    mxArray* matlabStruct, char const* fieldName,
+    std::vector<T> const& fieldData, mwSize dim0, mwSize dim1, mwSize dim2,
+    std::vector<int> perm
+);
 
 /**
  * @brief initialize 4D tensor, attach to the field and write data
@@ -96,9 +103,11 @@ void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
  * @param perm reordering of dimensions
  */
 template <typename T>
-void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
-                       std::vector<T> const &fieldData, int dim0, int dim1,
-                       int dim2, int dim3, std::vector<int> perm);
+void writeMatlabField4(
+    mxArray* matlabStruct, char const* fieldName,
+    std::vector<T> const& fieldData, mwSize dim0, mwSize dim1, mwSize dim2,
+    mwSize dim3, std::vector<int> perm
+);
 
 /**
  * @brief initializes the field fieldName in matlabStruct with dimension dim
@@ -108,15 +117,16 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
  *
  * @return pointer to field data
  */
-double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName,
-                           std::vector<mwSize> dim);
+double* initAndAttachArray(
+    mxArray* matlabStruct, char const* fieldName, std::vector<mwSize> dim
+);
 
 /**
  * @brief checks whether fieldNames was properly allocated
  * @param fieldNames array of field names
  * @param fieldCount expected number of fields in fieldNames
  */
-void checkFieldNames(const char **fieldNames, const int fieldCount);
+void checkFieldNames(char const** fieldNames, int const fieldCount);
 
 /**
  * @brief template function that reorders elements in a std::vector
@@ -127,8 +137,8 @@ void checkFieldNames(const char **fieldNames, const int fieldCount);
  * @return Reordered vector
  */
 template <typename T>
-std::vector<T> reorder(std::vector<T> const& input,
-                       std::vector<int> const& order);
+std::vector<T>
+reorder(std::vector<T> const& input, std::vector<int> const& order);
 
 } // namespace amici
 

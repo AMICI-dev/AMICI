@@ -6,15 +6,18 @@ namespace std {
   struct unique_ptr {
      typedef Type* pointer;
 
+     %apply SWIGTYPE *DISOWN { pointer Ptr };
      explicit unique_ptr( pointer Ptr );
+     %clear pointer Ptr;
      unique_ptr (unique_ptr&& Right);
+
      template<class Type2, Class Del2> unique_ptr( unique_ptr<Type2, Del2>&& Right );
      unique_ptr( const unique_ptr& Right) = delete;
 
 
      pointer operator-> () const;
      pointer release ();
-     void reset (pointer __p=pointer());
+     void reset (pointer __p=std::unique_ptr<Type>::pointer());
      void swap (unique_ptr &__u);
      pointer get () const;
      operator bool () const;

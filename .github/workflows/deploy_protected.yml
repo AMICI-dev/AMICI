@@ -4,35 +4,58 @@ on:
     branches:
       - master
       - develop
+      - release**
   pull_request:
-    branches:
-      - master
+    paths:
+      - container/Dockerfile
+      # ensure all relevant files are still included in sdist
+      - python/sdist/MANIFEST.in
   workflow_dispatch:
 
 jobs:
-  dockerhub:
-    # https://github.com/marketplace/actions/publish-docker
-    name: Deploy Dockerhub
+  check-secret:
+    runs-on: ubuntu-latest
+    outputs:
+      secrets-defined: ${{ steps.secret-check.outputs.defined }}
+    steps:
+      - name: Check for Secret availability
+        id: secret-check
+        shell: bash
+        run: |
+          if [ "${{ secrets.DOCKER_USERNAME }}" != '' ]; then
+            echo "defined=true" >> $GITHUB_OUTPUT;
+          else
+            echo "defined=false" >> $GITHUB_OUTPUT;
+          fi
 
+  dockerhub:
+    name: Deploy Dockerhub
+    needs: [check-secret]
+    if: needs.check-secret.outputs.secrets-defined == 'true'
     runs-on: ubuntu-22.04
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: actions/checkout@master
-    - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
+    - uses: actions/checkout@v4
+    - run: git archive -o container/amici.tar.gz --format=tar.gz HEAD
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@v4
       with:
         name: dweindl/amici
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        workdir: docker/
+        workdir: container/
         dockerfile: Dockerfile
         tag_names: true
+        platforms: linux/amd64,linux/arm64

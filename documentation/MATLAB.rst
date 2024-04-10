@@ -3,6 +3,7 @@ Matlab interface
 
 .. toctree::
    :maxdepth: 2
+   :caption: MATLAB
 
    Installation <matlab_installation>
    Usage <matlab_interface>

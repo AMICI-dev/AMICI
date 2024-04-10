@@ -1,0 +1,37 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-merge-conflict
+  - id: check-yaml
+    args: [--allow-multiple-documents]
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.1.11
+  hooks:
+    # Run the linter.
+    - id: ruff
+      args:
+        - --fix
+        - --config
+        - python/sdist/pyproject.toml
+
+    # Run the formatter.
+    - id: ruff-format
+      args:
+        - --config
+        - python/sdist/pyproject.toml
+
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.0
+    hooks:
+    -   id: pyupgrade
+        args: ["--py39-plus"]
+        additional_dependencies: [pyupgrade==3.15.0]
+
+exclude: '^(ThirdParty|models)/'

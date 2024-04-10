@@ -1,10 +1,10 @@
 #include "amici/misc.h"
 #include "amici/symbolic_functions.h"
 
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <sstream>
-#include <cstdarg>
 
 #if defined(_WIN32)
 #define PLATFORM_WINDOWS // Windows
@@ -13,19 +13,18 @@
 #elif defined(__CYGWIN__) && !defined(_WIN32)
 #define PLATFORM_WINDOWS // Windows (Cygwin POSIX under Microsoft Window)
 #else
+#include <cxxabi.h> // for __cxa_demangle
+#include <dlfcn.h>  // for dladdr
 #include <execinfo.h>
-#include <dlfcn.h>    // for dladdr
-#include <cxxabi.h>   // for __cxa_demangle
 #endif
 
 namespace amici {
 
-void writeSlice(const AmiVector &s, gsl::span<realtype> b) {
+void writeSlice(AmiVector const& s, gsl::span<realtype> b) {
     writeSlice(s.getVector(), b);
 };
 
-double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
-{
+double getUnscaledParameter(double scaledParameter, ParameterScaling scaling) {
     switch (scaling) {
     case ParameterScaling::log10:
         return pow(10, scaledParameter);
@@ -38,22 +37,20 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void unscaleParameters(gsl::span<const realtype> bufferScaled,
-                       gsl::span<const ParameterScaling> pscale,
-                       gsl::span<realtype> bufferUnscaled)
-{
+void unscaleParameters(
+    gsl::span<realtype const> bufferScaled,
+    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferUnscaled
+) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
 
-    for (gsl::span<realtype>::index_type ip = 0;
-         ip < bufferScaled.size(); ++ip) {
+    for (gsl::span<realtype>::index_type ip = 0; ip < bufferScaled.size();
+         ++ip) {
         bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
     }
 }
 
-
-double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
-{
+double getScaledParameter(double unscaledParameter, ParameterScaling scaling) {
     switch (scaling) {
     case ParameterScaling::log10:
         return log10(unscaledParameter);
@@ -66,68 +63,69 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-
-void scaleParameters(gsl::span<const realtype> bufferUnscaled,
-                     gsl::span<const ParameterScaling> pscale,
-                     gsl::span<realtype> bufferScaled)
-{
+void scaleParameters(
+    gsl::span<realtype const> bufferUnscaled,
+    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferScaled
+) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
 
-    for (gsl::span<realtype>::index_type ip = 0;
-         ip < bufferUnscaled.size(); ++ip) {
+    for (gsl::span<realtype>::index_type ip = 0; ip < bufferUnscaled.size();
+         ++ip) {
         bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
     }
-
 }
 
-std::string backtraceString(const int maxFrames)
-{
+std::string backtraceString(int const maxFrames, int const first_frame) {
     std::ostringstream trace_buf;
 
 #ifdef PLATFORM_WINDOWS
     trace_buf << "stacktrace not available on windows platforms\n";
 #else
-    void *callstack[maxFrames];
+    int const last_frame = first_frame + maxFrames;
+    void* callstack[last_frame];
     char buf[1024];
-    int nFrames = backtrace(callstack, maxFrames);
-    char **symbols = backtrace_symbols(callstack, nFrames);
+    int nFrames = backtrace(callstack, last_frame);
+    char** symbols = backtrace_symbols(callstack, nFrames);
 
-    // start at 2 to omit AmiException and storeBacktrace
-    for (int i = 2; i < nFrames; i++) {
+    for (int i = first_frame; i < nFrames; i++) {
         // call
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
-            char *demangled = nullptr;
+            char* demangled = nullptr;
             int status = -1;
             if (info.dli_sname[0] == '_')
-                demangled = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr,
-                                                &status);
-            snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n", i - 2,
-                     int(2 + sizeof(void *) * 2), callstack[i],
-                     status == 0 ? demangled
-                                 : info.dli_sname == nullptr ? symbols[i]
-                                                               : info.dli_sname,
-                     static_cast<ssize_t>((char *)callstack[i] -
-                                          (char *)info.dli_saddr));
+                demangled = abi::__cxa_demangle(
+                    info.dli_sname, nullptr, nullptr, &status
+                );
+            snprintf(
+                buf, sizeof(buf), "%-3d %*p %s + %zd\n", i - 2,
+                int(2 + sizeof(void*) * 2), callstack[i],
+                status == 0                 ? demangled
+                : info.dli_sname == nullptr ? symbols[i]
+                                            : info.dli_sname,
+                static_cast<ssize_t>(
+                    (char*)callstack[i] - (char*)info.dli_saddr
+                )
+            );
             free(demangled);
         } else {
-            snprintf(buf, sizeof(buf), "%-3d %*p %s\n", i - 2,
-                     int(2 + sizeof(void *) * 2), callstack[i],
-                     symbols[i]);
+            snprintf(
+                buf, sizeof(buf), "%-3d %*p %s\n", i - 2,
+                int(2 + sizeof(void*) * 2), callstack[i], symbols[i]
+            );
         }
         trace_buf << buf;
     }
     free(symbols);
 
-    if (nFrames == maxFrames)
-        trace_buf << "[truncated]\n";
+    if (nFrames == last_frame)
+        trace_buf << "[possibly truncated]\n";
 #endif
     return trace_buf.str();
 }
 
-std::string regexErrorToString(std::regex_constants::error_type err_type)
-{
+std::string regexErrorToString(std::regex_constants::error_type err_type) {
     switch (err_type) {
     case std::regex_constants::error_collate:
         return "error_collate";
@@ -160,7 +158,7 @@ std::string regexErrorToString(std::regex_constants::error_type err_type)
     }
 }
 
-std::string printfToString(const char *fmt, va_list ap) {
+std::string printfToString(char const* fmt, va_list ap) {
     // Get size of string
     va_list ap_count;
     va_copy(ap_count, ap);
@@ -177,8 +175,7 @@ std::string printfToString(const char *fmt, va_list ap) {
     return str;
 }
 
-std::pair<size_t, size_t> unravel_index(size_t flat_idx, size_t num_cols)
-{
+std::pair<size_t, size_t> unravel_index(size_t flat_idx, size_t num_cols) {
     return {flat_idx / num_cols, flat_idx % num_cols};
 }
 

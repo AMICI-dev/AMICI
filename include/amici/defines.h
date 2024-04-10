@@ -5,49 +5,48 @@
 #define _USE_MATH_DEFINES
 #endif
 
-#include <functional>
 #include <cmath>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
 #if defined(_USE_MATH_DEFINES)
 #if !defined(M_E)
-#define M_E        2.71828182845904523536
+#define M_E 2.71828182845904523536
 #endif
 #if !defined(M_LOG2E)
-#define M_LOG2E    1.44269504088896340736
+#define M_LOG2E 1.44269504088896340736
 #endif
 #if !defined(M_LOG10E)
-#define M_LOG10E   0.434294481903251827651
+#define M_LOG10E 0.434294481903251827651
 #endif
 #if !defined(M_LN2)
-#define M_LN2      0.693147180559945309417
+#define M_LN2 0.693147180559945309417
 #endif
 #if !defined(M_LN10)
-#define M_LN10     2.30258509299404568402
+#define M_LN10 2.30258509299404568402
 #endif
 #if !defined(M_PI)
-#define M_PI       3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 #if !defined(M_PI_2)
-#define M_PI_2     1.57079632679489661923
+#define M_PI_2 1.57079632679489661923
 #endif
 #if !defined(M_PI_4)
-#define M_PI_4     0.785398163397448309616
+#define M_PI_4 0.785398163397448309616
 #endif
 #if !defined(M_1_PI)
-#define M_1_PI     0.318309886183790671538
+#define M_1_PI 0.318309886183790671538
 #endif
 #if !defined(M_2_PI)
-#define M_2_PI     0.636619772367581343076
+#define M_2_PI 0.636619772367581343076
 #endif
 #if !defined(M_2_SQRTPI)
 #define M_2_SQRTPI 1.12837916709551257390
 #endif
 #if !defined(M_SQRT2)
-#define M_SQRT2    1.41421356237309504880
+#define M_SQRT2 1.41421356237309504880
 #endif
 #if !defined(M_SQRT1_2)
-#define M_SQRT1_2  0.707106781186547524401
+#define M_SQRT1_2 0.707106781186547524401
 #endif
 #endif
 
@@ -55,19 +54,24 @@ namespace amici {
 
 constexpr double pi = M_PI;
 
-
 // clang-format off
 
 constexpr int AMICI_ONEOUTPUT=                 5;
 
-/* Return codes */
+// Return codes
+//
+// NOTE: When adding / removing / renaming return codes,
+//       please update simulation_status_to_str_map in amici.h
 constexpr int AMICI_RECOVERABLE_ERROR=         1;
 constexpr int AMICI_UNRECOVERABLE_ERROR=     -10;
 constexpr int AMICI_TOO_MUCH_WORK=            -1;
 constexpr int AMICI_TOO_MUCH_ACC=             -2;
 constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
+constexpr int AMICI_LSETUP_FAIL=              -6;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
+constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
+constexpr int AMICI_CONSTR_FAIL=             -15;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
@@ -75,6 +79,7 @@ constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
 constexpr int AMICI_SINGULAR_JACOBIAN=      -809;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
+constexpr int AMICI_NOT_RUN=               -1001;
 constexpr int AMICI_SUCCESS=                   0;
 constexpr int AMICI_DATA_RETURN=               1;
 constexpr int AMICI_ROOT_RETURN=               2;
@@ -124,15 +129,21 @@ enum class SecondOrderMode {
 
 /** orders of sensitivity analysis */
 enum class SensitivityOrder {
+    /** Don't compute sensitivities. */
     none,
+    /** First-order sensitivities. */
     first,
+    /** Second-order sensitivities. */
     second
 };
 
 /** methods for sensitivity computation */
 enum class SensitivityMethod {
+    /** Don't compute sensitivities. */
     none,
+    /** Forward sensitivity analysis. */
     forward,
+    /** Adjoint sensitivity analysis. */
     adjoint
 };
 
@@ -174,6 +185,13 @@ enum class NonlinearSolverIteration {
     functional = 1, /** deprecated */
     fixedpoint = 1,
     newton = 2
+};
+
+/** Steady-state computation mode in steadyStateProblem */
+enum class SteadyStateComputationMode {
+    newtonOnly,
+    integrationOnly,
+    integrateIfNewtonFails
 };
 
 /** Sensitivity computation mode in steadyStateProblem */
@@ -218,6 +236,33 @@ enum class RDataReporting {
     full,
     residuals,
     likelihood,
+};
+
+/** boundary conditions for splines */
+enum class SplineBoundaryCondition {
+    given                 = -1,
+    zeroDerivative        =  0,
+    natural               =  1,
+    naturalZeroDerivative =  2,
+    periodic              =  3,
+};
+
+/** extrapolation methods for splines */
+enum class SplineExtrapolation {
+    noExtrapolation = -1,
+    constant        =  0,
+    linear          =  1,
+    polynomial      =  2,
+    periodic        =  3,
+};
+
+/** Constraints on state variables */
+enum class Constraint {
+    none = 0,
+    non_negative = 1,
+    non_positive = -1,
+    positive = 2,
+    negative = -2,
 };
 
 // clang-format on

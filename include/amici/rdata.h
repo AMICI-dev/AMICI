@@ -2,9 +2,10 @@
 #define AMICI_RDATA_H
 
 #include "amici/defines.h"
-#include "amici/vector.h"
-#include "amici/model.h"
+#include "amici/logging.h"
 #include "amici/misc.h"
+#include "amici/model.h"
+#include "amici/vector.h"
 
 #include <vector>
 
@@ -20,7 +21,7 @@ class SteadystateProblem;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &r, unsigned int version);
+void serialize(Archive& ar, amici::ReturnData& r, unsigned int version);
 }
 } // namespace boost
 
@@ -31,7 +32,7 @@ namespace amici {
  *
  * NOTE: multi-dimensional arrays are stored in row-major order (C-style)
  */
-class ReturnData: public ModelDimensions {
+class ReturnData : public ModelDimensions {
   public:
     /**
      * @brief Default constructor
@@ -53,17 +54,18 @@ class ReturnData: public ModelDimensions {
      * @param rdrm see amici::Solver::rdata_reporting
      * @param quadratic_llh whether model defines a quadratic nllh and
      * computing res, sres and FIM makes sense
-     * @param sigma_res indicates whether additional residuals are to be added for each sigma
+     * @param sigma_res indicates whether additional residuals are to be added
+     * for each sigma
      * @param sigma_offset offset to ensure real-valuedness of sigma residuals
      */
-    ReturnData(std::vector<realtype> ts,
-               ModelDimensions const& model_dimensions,
-               int nplist, int nmaxevent, int nt,
-               int newton_maxsteps,
-               std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
-               SensitivityOrder sensi, SensitivityMethod sensi_meth,
-               RDataReporting rdrm, bool quadratic_llh, bool sigma_res,
-               realtype sigma_offset);
+    ReturnData(
+        std::vector<realtype> ts, ModelDimensions const& model_dimensions,
+        int nplist, int nmaxevent, int nt, int newton_maxsteps,
+        std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
+        SensitivityOrder sensi, SensitivityMethod sensi_meth,
+        RDataReporting rdrm, bool quadratic_llh, bool sigma_res,
+        realtype sigma_offset
+    );
 
     /**
      * @brief constructor that uses information from model and solver to
@@ -71,7 +73,7 @@ class ReturnData: public ModelDimensions {
      * @param solver solver instance
      * @param model model instance
      */
-    ReturnData(Solver const &solver, const Model &model);
+    ReturnData(Solver const& solver, Model const& model);
 
     ~ReturnData() = default;
 
@@ -81,17 +83,17 @@ class ReturnData: public ModelDimensions {
      * @param preeq simulated preequilibration problem, pass `nullptr` to ignore
      * @param fwd simulated forward problem, pass `nullptr` to ignore
      * @param bwd simulated backward problem, pass `nullptr` to ignore
-     * @param posteq simulated postequilibration problem, pass `nullptr` to ignore
+     * @param posteq simulated postequilibration problem, pass `nullptr` to
+     * ignore
      * @param model matching model instance
      * @param solver matching solver instance
      * @param edata matching experimental data
      */
-    void processSimulationObjects(SteadystateProblem const *preeq,
-                                  ForwardProblem const *fwd,
-                                  BackwardProblem const *bwd,
-                                  SteadystateProblem const *posteq,
-                                  Model &model, Solver const &solver,
-                                  ExpData const *edata);
+    void processSimulationObjects(
+        SteadystateProblem const* preeq, ForwardProblem const* fwd,
+        BackwardProblem const* bwd, SteadystateProblem const* posteq,
+        Model& model, Solver const& solver, ExpData const* edata
+    );
     /**
      * @brief Arbitrary (not necessarily unique) identifier.
      */
@@ -102,17 +104,19 @@ class ReturnData: public ModelDimensions {
      */
     std::vector<realtype> ts;
 
-    /** time derivative (shape `nx`) */
+    /** time derivative (shape `nx`) evaluated at `t_last`. */
     std::vector<realtype> xdot;
 
     /**
-     * Jacobian of differential equation right hand side (shape `nx` x `nx`, row-major)
+     * Jacobian of differential equation right hand side (shape `nx` x `nx`,
+     * row-major) evaluated at `t_last`.
      */
     std::vector<realtype> J;
 
     /**
      * w data from the model (recurring terms in xdot, for imported SBML models
-     * from python, this contains the flux vector) (shape `nt` x `nw`, row major)
+     * from python, this contains the flux vector) (shape `nt` x `nw`, row
+     * major)
      */
     std::vector<realtype> w;
 
@@ -120,7 +124,8 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> z;
 
     /**
-     * event output sigma standard deviation (shape `nmaxevent` x `nz`, row-major)
+     * event output sigma standard deviation (shape `nmaxevent` x `nz`,
+     * row-major)
      */
     std::vector<realtype> sigmaz;
 
@@ -212,40 +217,99 @@ class ReturnData: public ModelDimensions {
     std::vector<int> numnonlinsolvconvfails;
 
     /**
-     * number of linear solver convergence failures backward problem (shape `nt`)
+     * number of linear solver convergence failures backward problem (shape
+     * `nt`)
      */
     std::vector<int> numnonlinsolvconvfailsB;
 
     /** employed order forward problem (shape `nt`) */
     std::vector<int> order;
 
-    /** computation time of forward solve [ms] */
+    /**
+     * @brief computation time of forward solve [ms]
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double cpu_time = 0.0;
 
-    /** computation time of backward solve [ms] */
+    /**
+     * @brief computation time of backward solve [ms]
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double cpu_timeB = 0.0;
 
-    /** total CPU time from entering runAmiciSimulation until exiting [ms] */
+    /**
+     * @brief total CPU time from entering runAmiciSimulation until exiting [ms]
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double cpu_time_total = 0.0;
 
     /** flags indicating success of steady state solver (preequilibration) */
     std::vector<SteadyStateStatus> preeq_status;
 
-    /** computation time of the steady state solver [ms] (preequilibration) */
+    /**
+     * @brief computation time of the steady state solver [ms]
+     * (preequilibration)
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double preeq_cpu_time = 0.0;
 
-    /** computation time of the steady state solver of the backward problem [ms]
-     *  (preequilibration) */
+    /**
+     * @brief computation time of the steady state solver of the backward
+     * problem [ms] (preequilibration)
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double preeq_cpu_timeB = 0.0;
 
     /** flags indicating success of steady state solver  (postequilibration) */
     std::vector<SteadyStateStatus> posteq_status;
 
-    /** computation time of the steady state solver [ms]  (postequilibration) */
+    /**
+     * @brief computation time of the steady state solver [ms]
+     * (postequilibration)
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double posteq_cpu_time = 0.0;
 
-    /** computation time of the steady state solver of the backward problem [ms]
-     *  (postequilibration) */
+    /**
+     * @brief computation time of the steady state solver of the backward
+     * problem [ms] (postequilibration)
+     *
+     * .. warning::
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
+     *
+     */
     double posteq_cpu_timeB = 0.0;
 
     /**
@@ -297,14 +361,14 @@ class ReturnData: public ModelDimensions {
     /** initial state (shape `nx`) */
     std::vector<realtype> x0;
 
-    /** preequilibration steady state found by Newton solver (shape `nx`) */
+    /** preequilibration steady state (shape `nx`) */
     std::vector<realtype> x_ss;
 
     /** initial sensitivities (shape `nplist` x `nx`, row-major) */
     std::vector<realtype> sx0;
 
     /**
-     * preequilibration sensitivities found by Newton solver
+     * preequilibration sensitivities
      * (shape `nplist` x `nx`, row-major)
      */
     std::vector<realtype> sx_ss;
@@ -324,8 +388,19 @@ class ReturnData: public ModelDimensions {
      */
     std::vector<realtype> s2llh;
 
-    /** status code */
-    int status = 0;
+    /**
+     * @brief Simulation status code.
+     *
+     * One of:
+     *
+     * * AMICI_SUCCESS, indicating successful simulation
+     * * AMICI_MAX_TIME_EXCEEDED, indicating that the simulation did not finish
+     *   within the allowed time (see Solver.{set,get}MaxTime)
+     * * AMICI_ERROR, indicating that some error occurred during simulation
+     *   (a more detailed error message will have been printed).
+     * * AMICI_NOT_RUN, if no simulation was started
+     */
+    int status = AMICI_NOT_RUN;
 
     /** number of states (alias `nx_rdata`, kept for backward compatibility) */
     int nx{0};
@@ -370,24 +445,33 @@ class ReturnData: public ModelDimensions {
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
-                                                unsigned int version);
+    friend void boost::serialization::serialize(
+        Archive& ar, ReturnData& r, unsigned int version
+    );
 
-    /** boolean indicating whether residuals for standard deviations have been added */
+    /** boolean indicating whether residuals for standard deviations have been
+     * added */
     bool sigma_res;
 
-  protected:
+    /** log messages */
+    std::vector<LogItem> messages;
 
+    /** The final internal time of the solver. */
+    realtype t_last{std::numeric_limits<realtype>::quiet_NaN()};
+
+  protected:
     /** offset for sigma_residuals */
     realtype sigma_offset;
 
     /** timepoint for model evaluation*/
     realtype t_;
 
-    /** partial state vector, excluding states eliminated from conservation laws */
+    /** partial state vector, excluding states eliminated from conservation laws
+     */
     AmiVector x_solver_;
 
-    /** partial time derivative of state vector, excluding states eliminated from conservation laws */
+    /** partial time derivative of state vector, excluding states eliminated
+     * from conservation laws */
     AmiVector dx_solver_;
 
     /** partial sensitivity state vector array, excluding states eliminated from
@@ -407,8 +491,8 @@ class ReturnData: public ModelDimensions {
 
     /**
      * @brief initializes storage for likelihood reporting mode
-     * @param quadratic_llh whether model defines a quadratic nllh and computing res, sres and FIM
-     * makes sense.
+     * @param quadratic_llh whether model defines a quadratic nllh and computing
+     * res, sres and FIM makes sense.
      */
     void initializeLikelihoodReporting(bool quadratic_llh);
 
@@ -424,7 +508,6 @@ class ReturnData: public ModelDimensions {
      */
     void initializeFullReporting(bool enable_fim);
 
-
     /**
      * @brief initialize values for chi2 and llh and derivatives
      * @param enable_chi2 whether chi2 values are to be computed
@@ -436,8 +519,7 @@ class ReturnData: public ModelDimensions {
      * @param preeq SteadystateProblem for preequilibration
      * @param model Model instance to compute return values
      */
-    void processPreEquilibration(SteadystateProblem const &preeq,
-                                 Model &model);
+    void processPreEquilibration(SteadystateProblem const& preeq, Model& model);
 
     /**
      * @brief extracts data from a preequilibration SteadystateProblem
@@ -445,9 +527,9 @@ class ReturnData: public ModelDimensions {
      * @param model Model instance to compute return values
      * @param edata ExpData instance containing observable data
      */
-    void processPostEquilibration(SteadystateProblem const &posteq,
-                                  Model &model,
-                                  ExpData const *edata);
+    void processPostEquilibration(
+        SteadystateProblem const& posteq, Model& model, ExpData const* edata
+    );
 
     /**
      * @brief extracts results from forward problem
@@ -455,10 +537,9 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used for forward simulation
      * @param edata ExpData instance containing observable data
      */
-    void processForwardProblem(ForwardProblem const &fwd,
-                               Model &model,
-                               ExpData const *edata);
-
+    void processForwardProblem(
+        ForwardProblem const& fwd, Model& model, ExpData const* edata
+    );
 
     /**
      * @brief extracts results from backward problem
@@ -467,25 +548,26 @@ class ReturnData: public ModelDimensions {
      * @param preeq SteadystateProblem for preequilibration
      * @param model model that was used for forward/backward simulation
      */
-    void processBackwardProblem(ForwardProblem const &fwd,
-                                BackwardProblem const &bwd,
-                                SteadystateProblem const *preeq,
-                                Model &model);
+    void processBackwardProblem(
+        ForwardProblem const& fwd, BackwardProblem const& bwd,
+        SteadystateProblem const* preeq, Model& model
+    );
 
     /**
      * @brief extracts results from solver
      * @param solver solver that was used for forward/backward simulation
      */
-    void processSolver(Solver const &solver);
+    void processSolver(Solver const& solver);
 
     /**
-     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @brief Evaluates and stores the Jacobian and right hand side at final
+     * timepoint
      * @param problem forward problem or steadystate problem
      * @param model model that was used for forward/backward simulation
      */
     template <class T>
-    void storeJacobianAndDerivativeInReturnData(T const &problem, Model &model)
-    {
+    void
+    storeJacobianAndDerivativeInReturnData(T const& problem, Model& model) {
         readSimulationState(problem.getFinalSimulationState(), model);
 
         AmiVector xdot(nx_solver);
@@ -497,20 +579,21 @@ class ReturnData: public ModelDimensions {
 
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver);
-            model.fJ(t_, 0.0, x_solver_, dx_solver_, xdot, J.get());
+            model.fJ(t_, 0.0, x_solver_, dx_solver_, xdot, J);
             // CVODES uses colmajor, so we need to transform to rowmajor
             for (int ix = 0; ix < model.nx_solver; ix++)
                 for (int jx = 0; jx < model.nx_solver; jx++)
-                    this->J.at(ix * model.nx_solver + jx) =
-                        J.data()[ix + model.nx_solver * jx];
+                    this->J.at(ix * model.nx_solver + jx)
+                        = J.data()[ix + model.nx_solver * jx];
         }
     }
     /**
-     * @brief sets member variables and model state according to provided simulation state
+     * @brief sets member variables and model state according to provided
+     * simulation state
      * @param state simulation state provided by Problem
      * @param model model that was used for forward/backward simulation
      */
-    void readSimulationState(SimulationState const &state, Model &model);
+    void readSimulationState(SimulationState const& state, Model& model);
 
     /**
      * @brief Residual function
@@ -518,14 +601,14 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used for forward/backward simulation
      * @param edata ExpData instance containing observable data
      */
-    void fres(int it, Model &model, const ExpData &edata);
+    void fres(int it, Model& model, ExpData const& edata);
 
     /**
      * @brief Chi-squared function
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
-    void fchi2(int it, const ExpData &edata);
+    void fchi2(int it, ExpData const& edata);
 
     /**
      * @brief Residual sensitivity function
@@ -533,7 +616,7 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used for forward/backward simulation
      * @param edata ExpData instance containing observable data
      */
-    void fsres(int it, Model &model, const ExpData &edata);
+    void fsres(int it, Model& model, ExpData const& edata);
 
     /**
      * @brief Fisher information matrix function
@@ -541,7 +624,7 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used for forward/backward simulation
      * @param edata ExpData instance containing observable data
      */
-    void fFIM(int it, Model &model, const ExpData &edata);
+    void fFIM(int it, Model& model, ExpData const& edata);
 
     /**
      * @brief Set likelihood, state variables, outputs and respective
@@ -567,16 +650,17 @@ class ReturnData: public ModelDimensions {
      * the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
-    void applyChainRuleFactorToSimulationResults(const Model &model);
-
+    void applyChainRuleFactorToSimulationResults(Model const& model);
 
     /**
      * @brief Checks whether forward sensitivity analysis is performed
      * @return boolean indicator
      */
     bool computingFSA() const {
-        return (sensi_meth == SensitivityMethod::forward &&
-                sensi >= SensitivityOrder::first);
+        return (
+            sensi_meth == SensitivityMethod::forward
+            && sensi >= SensitivityOrder::first
+        );
     }
 
     /**
@@ -586,7 +670,7 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataOutput(int it, Model &model, ExpData const *edata);
+    void getDataOutput(int it, Model& model, ExpData const* edata);
 
     /**
      * @brief Extracts data information for forward sensitivity analysis,
@@ -595,7 +679,7 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataSensisFSA(int it, Model &model, ExpData const *edata);
+    void getDataSensisFSA(int it, Model& model, ExpData const* edata);
 
     /**
      * @brief Extracts output information for events, expects that x_solver_
@@ -606,8 +690,10 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventOutput(realtype t, const std::vector<int> rootidx,
-                        Model &model, ExpData const *edata);
+    void getEventOutput(
+        realtype t, std::vector<int> const rootidx, Model& model,
+        ExpData const* edata
+    );
 
     /**
      * @brief Extracts event information for forward sensitivity analysis,
@@ -617,8 +703,8 @@ class ReturnData: public ModelDimensions {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventSensisFSA(int ie, realtype t, Model &model,
-                           ExpData const *edata);
+    void
+    getEventSensisFSA(int ie, realtype t, Model& model, ExpData const* edata);
 
     /**
      * @brief Updates contribution to likelihood from quadratures (xQB),
@@ -629,20 +715,23 @@ class ReturnData: public ModelDimensions {
      * of preequilibration
      * @param xQB vector with quadratures from adjoint computation
      */
-    void handleSx0Backward(const Model &model, SteadystateProblem const &preeq,
-                           std::vector<realtype> &llhS0, AmiVector &xQB) const;
+    void handleSx0Backward(
+        Model const& model, SteadystateProblem const& preeq,
+        std::vector<realtype>& llhS0, AmiVector& xQB
+    ) const;
 
     /**
      * @brief Updates contribution to likelihood for initial state sensitivities
-     * (llhS0), if no preequilibration was run or if forward sensitivities were used
+     * (llhS0), if no preequilibration was run or if forward sensitivities were
+     * used
      * @param model model that was used for forward/backward simulation
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * @param xB vector with final adjoint state
      * (excluding conservation laws)
      */
-    void handleSx0Forward(const Model &model,
-                          std::vector<realtype> &llhS0,
-                          AmiVector &xB) const;
+    void handleSx0Forward(
+        Model const& model, std::vector<realtype>& llhS0, AmiVector& xB
+    ) const;
 };
 
 /**
@@ -656,9 +745,9 @@ class ModelContext : public ContextManager {
      *
      * @param model
      */
-    explicit ModelContext(Model *model);
+    explicit ModelContext(Model* model);
 
-    ModelContext &operator=(const ModelContext &other) = delete;
+    ModelContext& operator=(ModelContext const& other) = delete;
 
     ~ModelContext();
 
@@ -670,10 +759,9 @@ class ModelContext : public ContextManager {
     void restore();
 
   private:
-    Model *model_ {nullptr};
+    Model* model_{nullptr};
     ModelState original_state_;
 };
-
 
 } // namespace amici
 

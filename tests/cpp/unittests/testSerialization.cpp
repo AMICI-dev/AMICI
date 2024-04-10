@@ -5,7 +5,7 @@
 #include "testfunctions.h"
 
 #include <cmath>
-
+#include <fstream>
 #include <gtest/gtest.h>
 
 void
@@ -142,6 +142,8 @@ TEST(ModelSerializationTest, ToFile)
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             9,         // nw
             2,         // ndwdx
@@ -206,6 +208,8 @@ TEST(ReturnDataSerializationTest, ToString)
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             9,         // nw
             10,        // ndwdx

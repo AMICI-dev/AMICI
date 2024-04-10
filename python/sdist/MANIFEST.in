@@ -1,15 +1,18 @@
-recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt
-recursive-include amici/ThirdParty/sundials *.c *.h LICENSE
+recursive-include amici/ThirdParty/SuiteSparse *
+recursive-include amici/ThirdParty/sundials *
 recursive-include amici/ThirdParty/gsl *.hpp
-recursive-include amici/include *.h
-recursive-include amici/swig *.i *.h
+recursive-include amici/cmake *
+recursive-include amici/include/amici *.h
+recursive-include amici/src *
+recursive-include amici/swig *
 include amici/*
-include amici/src/*template*
-include amici/src/hdf5.cpp
-include amici/swig/CMakeLists_model.cmake
-include setup_clibs.py
 include version.txt
 include LICENSE.md
 exclude amici/*.so
 exclude amici/*.dll
-
+prune **/build
+prune amici/share
+prune amici/lib
+prune amici/ThirdParty/SuiteSparse/lib
+prune amici/ThirdParty/SuiteSparse/include
+prune __pycache__

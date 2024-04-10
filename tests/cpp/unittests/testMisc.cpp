@@ -65,6 +65,8 @@ class ModelTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             nmaxevent, // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             0,         // nw
             0,         // ndwdx
@@ -259,6 +261,13 @@ TEST(SolverIdasTest, DefaultConstructableAndNotLeaky)
     IDASolver solver;
 }
 
+TEST(SolverIdasTest, CopyCtor)
+{
+    IDASolver solver1;
+    IDASolver solver2(solver1);
+}
+
+
 
 class SolverTest : public ::testing::Test {
   protected:
@@ -302,6 +311,8 @@ class SolverTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             0,         // nw
             0,         // ndwdx
@@ -670,7 +681,7 @@ TEST(UnravelIndex, UnravelIndexSunMatDense)
     A.set_data(2, 1, 5);
 
     for(int i = 0; i < 6; ++i) {
-        auto idx = unravel_index(i, A.get());
+        auto idx = unravel_index(i, A);
         EXPECT_EQ(A.get_data(idx.first, idx.second), i);
     }
 }
@@ -685,7 +696,7 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     // [2, 0]
     // data [1, 2, 3]
     // colptrs [0, 2, 3]
-    // rowidxs [2, 3, 1]
+    // rowidxs [2, 3, 0]
     D.set_data(0, 0, 0);
     D.set_data(1, 0, 0);
     D.set_data(2, 0, 1);
@@ -695,7 +706,7 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     D.set_data(2, 1, 0);
     D.set_data(3, 1, 0);
 
-    auto S = SUNSparseFromDenseMatrix(D.get(), 1e-15, CSC_MAT);
+    auto S = SUNSparseFromDenseMatrix(D, 1e-15, CSC_MAT);
 
     EXPECT_EQ(unravel_index(0, S), std::make_pair((sunindextype) 2, (sunindextype) 0));
     EXPECT_EQ(unravel_index(1, S), std::make_pair((sunindextype) 3, (sunindextype) 0));
@@ -704,5 +715,43 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     SUNMatDestroy(S);
 }
 
+
+TEST(UnravelIndex, UnravelIndexSunMatSparseMissingIndices)
+{
+    // Sparse matrix without any indices set
+    SUNMatrixWrapper mat = SUNMatrixWrapper(2, 3, 2, CSC_MAT);
+    EXPECT_EQ(unravel_index(0, mat), std::make_pair((sunindextype) -1, (sunindextype) -1));
+    EXPECT_EQ(unravel_index(1, mat), std::make_pair((sunindextype) -1, (sunindextype) -1));
+}
+
+
+TEST(ReturnCodeToStr, ReturnCodeToStr)
+{
+    EXPECT_EQ("AMICI_SUCCESS", simulation_status_to_str(AMICI_SUCCESS));
+    EXPECT_EQ("AMICI_UNRECOVERABLE_ERROR",
+              simulation_status_to_str(AMICI_UNRECOVERABLE_ERROR));
+}
+
+TEST(SpanEqual, SpanEqual)
+{
+    std::vector<realtype> a {1, 2, 3};
+    std::vector<realtype> b {1, 2, NAN};
+
+    EXPECT_TRUE(is_equal(a, a));
+    EXPECT_TRUE(is_equal(b, b));
+    EXPECT_FALSE(is_equal(a, b));
+}
+
+TEST(CpuTimer, CpuTimer)
+{
+    amici::CpuTimer timer;
+    auto elapsed = timer.elapsed_seconds();
+    EXPECT_LE(0.0, elapsed);
+    EXPECT_GT(1.0, elapsed);
+
+    elapsed = timer.elapsed_milliseconds();
+    EXPECT_LT(0.0, elapsed);
+    EXPECT_GT(1000.0, elapsed);
+}
 
 } // namespace

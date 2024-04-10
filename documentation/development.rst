@@ -12,8 +12,8 @@ AMICI roughly follows the
 All new contributions are merged into ``develop``. These changes are
 regularly merged into ``master`` as new releases. For release versioning
 we are trying to follow `semantic versioning <https://semver.org/>`__.
-New releases are created on Github and are automatically deployed to
-`Zenodo <https://zenodo.org/record/3362453#.XVwJ9vyxVMA>`__ for
+New releases are created on GitHub and are automatically deployed to
+`Zenodo <https://doi.org/10.5281/zenodo.597928>`__ for
 archiving and to obtain a digital object identifier (DOI) to make them
 citable. Furthermore, our `CI pipeline <documentation/CI.md>`__ will
 automatically create and deploy a new release on
@@ -51,17 +51,11 @@ process described below:
 
 -  Submit a pull request to the ``develop`` branch
 
--  Make sure your code is documented appropriately
-
-   -  Run ``scripts/run-doxygen.sh`` to check completeness of your
-      documentation
-
--  Make sure your code is compatible with C++14, ``gcc`` and ``clang``
-   (our CI pipeline will do this for you)
+-  Ensure all tests pass
 
 -  When adding new functionality, please also provide test cases (see
-   ``tests/cpp/`` and
-   `documentation/CI.md <documentation/CI.md>`__)
+   ``tests/cpp/``, ``python/tests/``,
+   and `documentation/CI.md <documentation/CI.md>`__)
 
 -  Write meaningful commit messages
 
@@ -84,8 +78,8 @@ process described below:
 -  Wait for feedback. If you do not receive feedback to your pull
    request within a week, please give us a friendly reminder.
 
-Style guide
-~~~~~~~~~~~
+Style/compatibility guide
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 General
 ^^^^^^^
@@ -99,17 +93,24 @@ General
 Python
 ^^^^^^
 
--  We want to be compatible with Python 3.8
+-  In terms of Python compatibility, we follow numpy's
+   `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__.
 
 -  For the Python code we want to follow
    `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__. Although this
    is not the case for all existing code, any new contributions should
-   do so.
+   do so. We use `black <https://black.readthedocs.io/en/stable/index.html>`__
+   for code formatting.
+
+   To run black as pre-commit hook, install the
+   `pre-commit <https://pre-commit.com/>`_ package
+   (e.g. ``pip install pre-commit``), and enable AMICI-hooks by running
+   ``pre-commit install`` from within the AMICI directory.
 
 -  We use Python `type
    hints <https://docs.python.org/3/library/typing.html>`__ for all
    functions (but not for class attributes, since they are not supported
-   by the current Python doxygen filter). In Python code type hints
+   by the current Python doxygen filter). In Python code, type hints
    should be used instead of doxygen ``@type``.
 
    For function docstrings, follow this format:
@@ -134,15 +135,14 @@ Python
 C++
 ^^^
 
--  We use C++14
+-  We use C++17
 
--  We want to maintain compatibility with g++, clang and the Intel C++
+-  We want to maintain compatibility with g++, clang, and the Intel C++
    compiler
 
--  For code formatting, we use the settings from ``.clang-format`` in
-   the root directory
-
--  *Details to be defined*
+-  For code formatting, we use ``clang-format`` and ``cmake-format``. They can
+   be invoked by ``make clang-format cmake-format`` from the CMake build
+   directory.
 
 Matlab
 ^^^^^^

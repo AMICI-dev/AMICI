@@ -49,7 +49,8 @@ find_package(KLU REQUIRED)
 
 message(STATUS "KLU_LIBRARIES:   ${KLU_LIBRARIES}")
 message(STATUS "KLU_INCLUDE_DIR: ${KLU_INCLUDE_DIR}")
-
+list(JOIN KLU_LIBRARIES "\" \"" KLU_LIBRARIES_TMP)
+set(KLU_LIBRARIES_TMP \"${KLU_LIBRARIES_TMP}\")
 # -----------------------------------------------------------------------------
 # Section 4: Test the TPL
 # -----------------------------------------------------------------------------
@@ -58,11 +59,11 @@ if(KLU_FOUND AND (NOT KLU_WORKS))
   # Do any checks which don't require compilation first.
 
   # Create the KLU_TEST directory
-  set(KLU_TEST_DIR ${PROJECT_BINARY_DIR}/KLU_TEST)
+  set(KLU_TEST_DIR "${PROJECT_BINARY_DIR}/KLU_TEST")
   file(MAKE_DIRECTORY ${KLU_TEST_DIR})
 
   # Create a CMakeLists.txt file
-  file(WRITE ${KLU_TEST_DIR}/CMakeLists.txt
+  file(WRITE "${KLU_TEST_DIR}/CMakeLists.txt"
   "CMAKE_MINIMUM_REQUIRED(VERSION 3.1.3)\n"
   "PROJECT(ltest C)\n"
   "SET(CMAKE_VERBOSE_MAKEFILE ON)\n"
@@ -72,12 +73,12 @@ if(KLU_FOUND AND (NOT KLU_WORKS))
   "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"
   "SET(CMAKE_C_FLAGS_RELWITHDEBUGINFO \"${CMAKE_C_FLAGS_RELWITHDEBUGINFO}\")\n"
   "SET(CMAKE_C_FLAGS_MINSIZE \"${CMAKE_C_FLAGS_MINSIZE}\")\n"
-  "INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})\n"
+  "INCLUDE_DIRECTORIES(\"${KLU_INCLUDE_DIR}\")\n"
   "ADD_EXECUTABLE(ltest ltest.c)\n"
-  "TARGET_LINK_LIBRARIES(ltest ${KLU_LIBRARIES})\n")
+  "TARGET_LINK_LIBRARIES(ltest ${KLU_LIBRARIES_TMP})\n")
 
   # Create a C source file which calls a KLU function
-  file(WRITE ${KLU_TEST_DIR}/ltest.c
+  file(WRITE "${KLU_TEST_DIR}/ltest.c"
   "\#include \"klu.h\"\n"
   "int main(){\n"
   "klu_common Common;\n"
@@ -87,10 +88,10 @@ if(KLU_FOUND AND (NOT KLU_WORKS))
 
   # To ensure we do not use stuff from the previous attempts,
   # we must remove the CMakeFiles directory.
-  file(REMOVE_RECURSE ${KLU_TEST_DIR}/CMakeFiles)
+  file(REMOVE_RECURSE "${KLU_TEST_DIR}/CMakeFiles")
 
   # Attempt to build and link the "ltest" executable
-  try_compile(COMPILE_OK ${KLU_TEST_DIR} ${KLU_TEST_DIR} ltest
+  try_compile(COMPILE_OK "${KLU_TEST_DIR}" "${KLU_TEST_DIR}" ltest
     OUTPUT_VARIABLE COMPILE_OUTPUT)
 
   # Process test result

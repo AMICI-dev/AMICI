@@ -1,7 +1,7 @@
 %define DOCSTRING
 """
 Core C++ bindings
------------------
+
 This module encompasses the complete public C++ API of AMICI, which was
 exposed via swig. All functions listed here are directly accessible in the
 main amici package, i.e., :py:class:`amici.amici.ExpData` is available as
@@ -16,6 +16,7 @@ nonstandard type conversions.
 
 // typemaps for docstrings
 %typemap(doctype) std::unique_ptr< amici::ExpData >::pointer "ExpData";
+%typemap(doctype) std::unique_ptr< amici::Model > "ModelPtr";
 %typemap(doctype) std::unique_ptr< amici::Solver > "SolverPtr";
 %typemap(doctype) std::vector< amici::realtype,std::allocator< amici::realtype > > "DoubleVector";
 %typemap(doctype) std::vector< double,std::allocator< double > > "DoubleVector";
@@ -43,8 +44,8 @@ nonstandard type conversions.
 %typemap(doctype) amici::SteadyStateSensitivityMode "SteadyStateSensitivityMode";
 %typemap(doctype) amici::realtype "float";
 %typemap(doctype) DoubleVector "numpy.ndarray";
-%typemap(doctype) IntVector "List[int]";
-%typemap(doctype) std::pair< size_t,size_t > "Tuple[int, int]";
+%typemap(doctype) IntVector "list[int]";
+%typemap(doctype) std::pair< size_t,size_t > "tuple[int, int]";
 %typemap(doctype) std::string "str";
 %typemap(doctype) std::string const & "str";
 %typemap(doctype) std::unique_ptr< amici::ExpData >   "ExpData";
@@ -63,6 +64,9 @@ nonstandard type conversions.
     }
 }
 
+// Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
+%rename("__eq__") operator ==;
+
 %{
 #define SWIG_FILE_WITH_INIT
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -79,13 +83,48 @@ import_array();
 // Expose vectors
 %include <stl.i>
 %template(DoubleVector) std::vector<double>;
+%extend std::vector<double> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.float64)) + ' >'
+
+%}
+};
 %template(IntVector) std::vector<int>;
+%extend std::vector<int> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.int64)) + ' >'
+
+%}
+};
 %template(BoolVector) std::vector<bool>;
+%extend std::vector<bool> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.bool_)) + ' >'
+
+%}
+};
 %template(StringVector) std::vector<std::string>;
+%extend std::vector<string> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 %feature("docstring") std::map<std::string, double>
 "Swig-Generated class templating :class:`Dict`
 [:class:`str`, :class:`float`] to facilitate interfacing with C++ bindings.";
 %template(StringDoubleMap) std::map<std::string, double>;
+%extend std::map<std::string, double> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(dict(self)) + ' >'
+
+%}
+};
 
 // Let numpy access std::vector
 %{
@@ -116,11 +155,15 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_sim;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_presim;
 
+// DO NOT IGNORE amici::SimulationParameters, amici::ModelDimensions, amici::CpuTimer
 %ignore amici::ModelContext;
 %ignore amici::ContextManager;
 %ignore amici::ModelState;
 %ignore amici::ModelStateDerived;
 %ignore amici::unravel_index;
+%ignore amici::backtraceString;
+%ignore amici::Logger;
+%ignore amici::SimulationState;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
@@ -138,6 +181,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %include model.i
 %include model_ode.i
 %include model_dae.i
+%include logging.i
 %include rdata.i
 
 #ifndef AMICI_SWIG_WITHOUT_HDF5
@@ -154,9 +198,6 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %}
 
 // Add necessary symbols to generated header
-// Ignore due to https://github.com/swig/swig/issues/1643
-%ignore amici::AmiciApplication::warningF;
-%ignore amici::AmiciApplication::errorF;
 %{
 #include "amici/amici.h"
 using namespace amici;
@@ -165,12 +206,42 @@ using namespace amici;
 // Prevent using ValueWrapper, but don't expose unique_ptr vector
 %ignore std::vector<std::unique_ptr<amici::ReturnData>>;
 %template(ReturnDataPtrVector) std::vector<std::unique_ptr<amici::ReturnData>>;
+%extend std::vector<std::unique_ptr<amici::ReturnData>> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 // Process symbols in header
 %include "amici/amici.h"
 
 // Expose vectors
 %template(ExpDataPtrVector) std::vector<amici::ExpData*>;
+%extend std::vector<amici::ExpData*> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
+%template(LogItemVector) std::vector<amici::LogItem>;
+%extend std::vector<amici::LogItem> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
+
+%extend amici::LogItem {
+%pythoncode %{
+def __repr__(self):
+    return (f"{self.__class__.__name__}(severity={self.severity}, "
+        f"identifier={self.identifier!r}, message={self.message!r})")
+%}
+};
 
 
 // Convert integer values to enum class
@@ -206,6 +277,13 @@ namespace amici {
     void Model::setParameterScale(std::vector<int> const& intVec);
 }
 %template(ParameterScalingVector) std::vector<amici::ParameterScaling>;
+%extend std::vector<amici::ParameterScaling> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 
 // Add function to check if amici was compiled with OpenMP
@@ -243,29 +321,51 @@ InternalSensitivityMethod = enum('InternalSensitivityMethod')
 InterpolationType = enum('InterpolationType')
 LinearMultistepMethod = enum('LinearMultistepMethod')
 NonlinearSolverIteration = enum('NonlinearSolverIteration')
+SteadyStateComputationMode = enum('SteadyStateComputationMode')
 SteadyStateSensitivityMode = enum('SteadyStateSensitivityMode')
 SteadyStateStatus = enum('SteadyStateStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
+Constraint = enum('Constraint')
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
+%extend std::vector<amici::SteadyStateStatus> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 // Handle AMICI_DLL_DIRS environment variable
 %pythonbegin %{
 import sys
 import os
 
-if sys.platform == 'win32':
-    for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
+if sys.platform == 'win32' and (dll_dirs := os.environ.get('AMICI_DLL_DIRS')):
+    for dll_dir in dll_dirs.split(os.pathsep):
         os.add_dll_directory(dll_dir)
 
 %}
 
 // import additional types for typehints
+// also import np for use in __repr__ functions
 %pythonbegin %{
-from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
+from typing import TYPE_CHECKING, Iterable, Sequence
+import numpy as np
 if TYPE_CHECKING:
     import numpy
+%}
+
+%pythoncode %{
+
+
+__all__ = [
+    x
+    for x in dir(sys.modules[__name__])
+    if not x.startswith('_')
+    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence"}
+]
 %}

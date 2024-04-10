@@ -20,10 +20,12 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     % if no list provided, try to determine relevant files from model
     % folder
     if(isempty(funs))
-        ls = dir(fullfile(modelSourceFolder, [modelname '_*.cpp']));
+        ls = dir(fullfile(modelSourceFolder, '*.cpp'));
         ls = {ls.name};
+        % wrapfunctions is handled separately
+        ls = ls(cellfun(@(x) ~strcmp(x, "wrapfunctions.cpp"), ls));
         % extract funs from filename (strip of modelname_ and .cpp
-        funs = cellfun(@(x) x((length(modelname)+2):(length(x)-4)), ls, 'UniformOutput', false);
+        funs = cellfun(@(x) x(1:(length(x)-4)), ls, 'UniformOutput', false);
     end
 
     objectFileSuffix = '.o';
@@ -32,9 +34,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     % compile flags
-    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++14'''];
+    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++17'''];
     if(debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++14 -Wno-unused-function -Wno-unused-variable'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++17 -Wno-unused-function -Wno-unused-variable'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
@@ -74,7 +76,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     %% Model-specific files
     for j=1:length(funs)
-        baseFileName = [modelname '_' strrep(funs{j}, 'sigma_', 'sigma')];
+        baseFileName = strrep(funs{j}, 'sigma_', 'sigma');
         cfun(1).(funs{j}) = sourceNeedsRecompilation(modelSourceFolder, modelObjectFolder, baseFileName, objectFileSuffix);
     end
 
@@ -124,22 +126,26 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     if(numel(funsForRecompile))
         fprintf('ffuns | ');
 
-        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[modelname '_' x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
+        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
         sources = strjoin(sources,' ');
 
-        eval(['mex ' DEBUG COPT ...
+        cmd = ['mex ' DEBUG COPT ...
             ' -c -outdir "' modelObjectFolder '" ' ...
-            sources ' ' ...
-            includesstr ]);
-        cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);
+            sources ' ' includesstr];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
+        cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, x),funsForRecompile,'UniformOutput',false);
     end
 
     % append model object files
     for j=1:length(funs)
-        filename = fullfile(modelObjectFolder, [modelname '_' strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
+        filename = fullfile(modelObjectFolder, [strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
         if(exist(filename,'file'))
-            objectsstr = strcat(objectsstr,...
-                ' "',filename,'"');
+            objectsstr = strcat(objectsstr, ' "',filename,'"');
         end
     end
 
@@ -156,10 +162,17 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     % compile the wrapfunctions object
     fprintf('wrapfunctions | ');
-    eval(['mex ' DEBUG COPT ...
+    cmd = ['mex ' DEBUG COPT ...
         ' -c -outdir "' modelObjectFolder '" "' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') '" ' model_cpp ...
-        includesstr]);
+        includesstr];
+    try
+        eval(cmd);
+    catch ME
+        disp(cmd);
+        rethrow(ME);
+    end
+
     objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '" ' model_cpp_obj];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
@@ -186,21 +199,28 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     mexFilename = fullfile(modelSourceFolder,['ami_' modelname]);
-    eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
-        ' -output "' mexFilename '" ' objectsstr])
+    cmd = ['mex ' DEBUG ' ' COPT ' ' CLIBS ...
+        ' -output "' mexFilename '" ' objectsstr];
+    try
+        eval(cmd);
+    catch ME
+        disp(cmd);
+        rethrow(ME);
+    end
+
 end
 
 function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT)
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
-        'edata','rdata', 'exception', ...
+        'edata','rdata', 'exception', 'logging', ...
         'interface_matlab', 'misc', 'simulation_parameters', ...
         'solver', 'solver_cvodes', 'solver_idas', 'model_state', ...
         'model', 'model_ode', 'model_dae', 'returndata_matlab', ...
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver', ...
         'abstract_model', 'sundials_matrix_wrapper', 'sundials_linsol_wrapper', ...
-        'vector'
+        'vector', 'splinefunctions'
     };
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy
@@ -217,8 +237,15 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
             baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
             sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
         end
-        eval(['mex ' DEBUG COPT ' -c -outdir "' objectFolder '" ' ...
-            includesstr ' ' sourceStr]);
+        cmd = ['mex ' DEBUG COPT ' -c -outdir "' objectFolder '" ' ...
+            includesstr ' ' sourceStr];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
+
         cellfun(@(x) updateFileHashSource(amiciSourcePath, objectFolder, x), sourcesForRecompile);
         updateHeaderFileHashes(amiciIncludePath, objectFolder);
     end
@@ -355,5 +382,3 @@ function versionstring = getCompilerVersionString()
     str = regexprep(str,'[\s\.\-]','_');
     versionstring = genvarname(str); % fix everything else we have missed
 end
-
-

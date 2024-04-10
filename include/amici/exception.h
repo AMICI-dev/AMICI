@@ -3,9 +3,9 @@
 
 #include "amici/defines.h" // necessary for realtype
 
-#include <exception>
 #include <array>
 #include <cstdarg>
+#include <exception>
 
 namespace amici {
 
@@ -15,13 +15,12 @@ namespace amici {
  * Has a printf style interface to allow easy generation of error messages
  */
 class AmiException : public std::exception {
-public:
+  public:
     /**
-     * @brief Constructor with printf style interface
-     * @param fmt error message with printf format
-     * @param ... printf formatting variables
+     * @brief Default ctor.
+     * @param first_frame Index of first frame to include
      */
-    AmiException();
+    AmiException(int const first_frame = 3);
 
     /**
      * @brief Constructor with printf style interface
@@ -34,19 +33,20 @@ public:
      * @brief Override of default error message function
      * @return msg error message
      */
-    const char* what() const noexcept override;
+    char const* what() const noexcept override;
 
     /**
      * @brief Returns the stored backtrace
      * @return trace backtrace
      */
-    const char *getBacktrace() const;
+    char const* getBacktrace() const;
 
     /**
      * @brief Stores the current backtrace
      * @param nMaxFrames number of frames to go back in stacktrace
+     * @param first_frame Index of first frame to include
      */
-    void storeBacktrace(int nMaxFrames);
+    void storeBacktrace(int nMaxFrames, int const first_frame);
 
   protected:
     /**
@@ -54,41 +54,44 @@ public:
      * @param fmt error message with printf format
      * @param argptr pointer to variadic argument list
      */
-    void storeMessage(const char *fmt, va_list argptr);
+    void storeMessage(char const* fmt, va_list argptr);
 
-private:
+  private:
     std::array<char, 500> msg_;
     std::array<char, 500> trace_;
 };
 
-
 /**
- * @brief cvode exception handler class
+ * @brief CVODE exception handler class
  */
-class CvodeException : public AmiException  {
-public:
+class CvodeException : public AmiException {
+  public:
     /**
      * @brief Constructor
-     * @param error_code error code returned by cvode function
-     * @param function cvode function name
+     * @param error_code error code returned by CVODE function
+     * @param function CVODE function name
+     * @param extra Extra text to append to error message
      */
-    CvodeException(int error_code, const char *function);
+    CvodeException(
+        int error_code, char const* function, char const* extra = nullptr
+    );
 };
-
 
 /**
- * @brief ida exception handler class
+ * @brief IDA exception handler class
  */
-class IDAException : public AmiException  {
-public:
+class IDAException : public AmiException {
+  public:
     /**
      * @brief Constructor
-     * @param error_code error code returned by ida function
-     * @param function ida function name
+     * @param error_code error code returned by IDA function
+     * @param function IDA function name
+     * @param extra Extra text to append to error message
      */
-    IDAException(int error_code, const char *function);
+    IDAException(
+        int error_code, char const* function, char const* extra = nullptr
+    );
 };
-
 
 /**
  * @brief Integration failure exception for the forward problem
@@ -97,7 +100,7 @@ public:
  * for this exception we can assume that we can recover from the exception
  * and return a solution struct to the user
  */
-class IntegrationFailure : public AmiException  {
+class IntegrationFailure : public AmiException {
   public:
     /**
      * @brief Constructor
@@ -113,7 +116,6 @@ class IntegrationFailure : public AmiException  {
     realtype time;
 };
 
-
 /**
  * @brief Integration failure exception for the backward problem
  *
@@ -121,7 +123,7 @@ class IntegrationFailure : public AmiException  {
  * for this exception we can assume that we can recover from the exception
  * and return a solution struct to the user
  */
-class IntegrationFailureB : public AmiException  {
+class IntegrationFailureB : public AmiException {
   public:
     /**
      * @brief Constructor
@@ -136,7 +138,6 @@ class IntegrationFailureB : public AmiException  {
     /** time of integration failure */
     realtype time;
 };
-
 
 /**
  * @brief Setup failure exception
@@ -153,9 +154,7 @@ class SetupFailure : public AmiException {
      * @param ... printf formatting variables
      */
     explicit SetupFailure(char const* fmt, ...);
-
 };
-
 
 /**
  * @brief Newton failure exception
@@ -165,13 +164,13 @@ class SetupFailure : public AmiException {
  * recover from the exception and return a solution struct to the user
  */
 class NewtonFailure : public AmiException {
-public:
+  public:
     /**
      * @brief Constructor, simply calls AmiException constructor
      * @param function name of the function in which the error occurred
      * @param code error code
      */
-    NewtonFailure(int code, const char *function);
+    NewtonFailure(int code, char const* function);
 
     /** error code returned by solver */
     int error_code;

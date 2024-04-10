@@ -9,5 +9,14 @@ requires = [
     # cf. discussion at https://github.com/numpy/numpy/issues/5888
     # (https://github.com/scipy/oldest-supported-numpy/)
     "oldest-supported-numpy",
+    "cmake-build-extension==0.5.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 79
+
+[tool.ruff]
+line-length = 79
+ignore = ["E402", "F403", "F405", "E741"]
+extend-include = ["*.ipynb"]

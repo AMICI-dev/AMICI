@@ -90,7 +90,7 @@
  ** documentation and/or software.                                   **
  **********************************************************************
  */
- 
+
 /*
 % $JRev: R5.00z V:025 Sum:/kHGslMmCpAS Date:17-Dec-2009 12:46:26 $
 % $File: CalcMD5\CalcMD5.c $
@@ -209,33 +209,33 @@ void MD5Update(MD5_CTX *context, UCHAR *input, UINT inputLen)
 
   /*  Compute number of bytes mod 64: */
   index = (UINT)((context->count[0] >> 3) & 0x3F);
-  
+
   /*  Update number of bits: */
   if ((context->count[0] += ((UINT32)inputLen << 3)) < ((UINT32)inputLen << 3)) {
     context->count[1]++;
   }
   context->count[1] += ((UINT32)inputLen >> 29);
-  
+
   partLen = 64 - index;
-  
+
   /*  Transform as many times as possible: */
   if (inputLen >= partLen) {
     int i;
     memcpy((POINTER)&context->buffer[index], (POINTER)input, partLen);
     MD5Transform(context->state, context->buffer);
-    
+
     inputLenM63 = inputLen - 63;
     for (i = partLen; i < inputLenM63; i += 64) {
       MD5Transform(context->state, &input[i]);
     }
-    
+
     /*  Buffer remaining input: index = 0 */
     memcpy((POINTER)&context->buffer[0], (POINTER)&input[i], inputLen - i);
   } else {
     /*  Buffer remaining input: i = 0 */
     memcpy((POINTER)&context->buffer[index], (POINTER)input, inputLen);
   }
-  
+
   return;
 }
 
@@ -254,13 +254,13 @@ void MD5Final(UCHAR digest[16], MD5_CTX *context)
   index  = (UINT)((context->count[0] >> 3) & 0x3f);
   padLen = (index < 56) ? (56 - index) : (120 - index);
   MD5Update(context, PADDING, padLen);
-  
+
   /*  Append length before padding: */
   MD5Update(context, bits, 8);
-  
+
   /*  Store state in digest: */
   MD5Encode(digest, context->state, 4);
-  
+
   /*  Zero sensitive information: */
   memset((POINTER)context, 0, sizeof(MD5_CTX));
 }
@@ -312,7 +312,7 @@ void MD5Transform(UINT32 state[4], UCHAR block[64])
           (((UINT32)block[58]) << 16) | (((UINT32)block[59]) << 24);
   x[15] = ( (UINT32)block[60])        | (((UINT32)block[61]) << 8) |
           (((UINT32)block[62]) << 16) | (((UINT32)block[63]) << 24);
-  
+
   /*  Round 1 */
   FF(a, b, c, d, x[ 0], S11, 0xd76aa478);  /*  1 */
   FF(d, a, b, c, x[ 1], S12, 0xe8c7b756);  /*  2 */
@@ -398,7 +398,7 @@ void MD5Transform(UINT32 state[4], UCHAR block[64])
 void MD5Encode(UCHAR *output, UINT32 *input, UINT len)
 {
   UINT j;
-  
+
   for (j = 0; j < len; j++) {
     *output++ = (UCHAR)( *input          & 0xff);
     *output++ = (UCHAR)((*input   >>  8) & 0xff);
@@ -417,17 +417,17 @@ void MD5Char(mxChar *array, mwSize inputLen, UCHAR digest[16])
   MD5_CTX context;
   UINT Chunk;
   UCHAR *bufferP, *bufferEnd = buffer + BUFFER_LEN, *arrayP;
-  
+
   /*  Limit length to 32 bit address, because I cannot test this function */
   /*  with 64 bit arrays currently (under construction): */
   if (inputLen >> 31 != 0) {  /*  Detect sign-bit if mwSize is int */
      mexErrMsgTxt("*** CalcMD5[mex]: Input > 2^31 byte not handled yet.");
   }
-  
+
   arrayP = (UCHAR *) array;  /*  UCHAR *, not mxChar *!*/
-  
+
   MD5Init(&context);
-  
+
   /*  Copy chunks of input data - only the first byte of each mxChar: */
   Chunk = inputLen / BUFFER_LEN;
   while (Chunk--) {
@@ -436,10 +436,10 @@ void MD5Char(mxChar *array, mwSize inputLen, UCHAR digest[16])
         *bufferP++ = *arrayP;
         arrayP    += 2;
      }
-     
+
      MD5Update(&context, buffer, BUFFER_LEN);
   }
-  
+
   /*  Last chunk: */
   Chunk = inputLen % BUFFER_LEN;
   if (Chunk != 0) {
@@ -449,12 +449,12 @@ void MD5Char(mxChar *array, mwSize inputLen, UCHAR digest[16])
         *bufferP++ = *arrayP;
         arrayP    += 2;
      }
-     
+
      MD5Update(&context, buffer, Chunk);
   }
-  
+
   MD5Final(digest, &context);
-  
+
   return;
 }
 
@@ -462,13 +462,13 @@ void MD5Char(mxChar *array, mwSize inputLen, UCHAR digest[16])
 void MD5Array(UCHAR *array, mwSize inputLen, UCHAR digest[16])
 {
   MD5_CTX context;
-  
+
   /*  Limit length to 32 bit address, because I cannot test this function */
   /*  with 64 bit arrays currently (under construction): */
   if (inputLen >> 31 != 0) {  /*  Detect sign-bit if mwSize is signed int */
      mexErrMsgTxt("*** CalcMD5[mex]: Input > 2^31 byte not handled yet.");
   }
-  
+
   MD5Init(&context);
   MD5Update(&context, array, (UINT) inputLen);
   MD5Final(digest, &context);
@@ -481,13 +481,13 @@ void MD5File(char *filename, UCHAR digest[16])
   MD5_CTX context;
   int len;
   UINT32 allLen = 0;
-  
+
   /*  Open the file in binary mode: */
   if ((FID = fopen(filename, "rb")) == NULL) {
      mexPrintf("*** Error for file: [%s]\n", filename);
      mexErrMsgTxt("*** CalcMD5[mex]: Cannot open file.");
   }
-  
+
   MD5Init(&context);
   while ((len = fread(buffer, 1, BUFFER_LEN, FID)) != 0) {
      /*  Limit length to 32 bit address, because I cannot test this function */
@@ -497,7 +497,7 @@ void MD5File(char *filename, UCHAR digest[16])
         fclose(FID);
         mexErrMsgTxt("*** CalcMD5[mex]: Cannot handle files > 2.1GB yet.");
      }
-     
+
      MD5Update(&context, buffer, (UINT) len);
   }
   MD5Final(digest, &context);
@@ -509,7 +509,7 @@ void MD5File(char *filename, UCHAR digest[16])
 void ToHex(const UCHAR digest[16], char *output, int LowerCase)
 {
   char *outputEnd;
-  
+
   if (LowerCase) {
     for (outputEnd = output + 32; output < outputEnd; output += 2) {
       sprintf(output, "%02x", *(digest++));
@@ -519,7 +519,7 @@ void ToHex(const UCHAR digest[16], char *output, int LowerCase)
       sprintf(output, "%02X", *(digest++));
     }
   }
-  
+
   return;
 }
 
@@ -535,7 +535,7 @@ void ToBase64(const UCHAR In[16], char *Out)
    int i;
    char *p;
    const UCHAR *s;
-   
+
    p = Out;
    s = In;
    for (i = 0; i < 5; i++) {
@@ -545,11 +545,11 @@ void ToBase64(const UCHAR In[16], char *Out)
       *p++ = B64[s[2] & 0x3F];
       s   += 3;
    }
-   
+
    *p++ = B64[(*s >> 2) & 0x3F];
    *p++ = B64[((*s & 0x3) << 4)];
    *p   = '\0';
-   
+
    return;
 }
 
@@ -560,12 +560,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /*  - Define default values of optional arguments. */
   /*  - Forward input data to different calculators according to the input type. */
   /*  - Convert digest to output format. */
-  
+
   char   *FileName, InType, hexOut[33], b64Out[23];
   UCHAR  digest[16], *digestP, OutType = 'h';
   int    isFile = false, isUnicode = false;
   double *outP, *outEnd;
-  
+
   /*  Check number of inputs and outputs: */
   if (nrhs == 0 || nrhs > 3) {
     mexErrMsgTxt("*** CalcMD5[mex]: 1 to 3 inputs required.");
@@ -573,27 +573,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nlhs > 1) {
     mexErrMsgTxt("*** CalcMD5[mex]: Too many output arguments.");
   }
- 
+
   /*  If 2nd input starts with 'f', treat string in 1st argument as file name: */
   if (nrhs >= 2 && mxGetNumberOfElements(prhs[1]) > 0) {
     if (mxIsChar(prhs[1]) == 0) {
       mexErrMsgTxt("*** CalcMD5[mex]: 2nd input must be a string.");
     }
-    
+
     InType    = (char) tolower(*(POINTER) mxGetData(prhs[1]));
     isFile    = (InType == 'f');
     isUnicode = (InType == 'u');
   }  /*  Default otherwise! */
-  
+
   /*  Output type - default: hex: */
   if (nrhs == 3 && !mxIsEmpty(prhs[2])) {
     if (mxIsChar(prhs[2]) == 0) {
       mexErrMsgTxt("*** CalcMD5[mex]: 3rd input must be a string.");
     }
-    
+
     OutType = *(POINTER) mxGetData(prhs[2]);  /*  Just 1st character */
   }
-     
+
   /*  Calculate check sum: */
   if (isFile) {
      if ((FileName = mxArrayToString(prhs[0])) == NULL) {
@@ -601,21 +601,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      }
      MD5File(FileName, digest);
      mxFree(FileName);
-     
+
   } else if (mxIsNumeric(prhs[0]) || isUnicode) {
      MD5Array((POINTER) mxGetData(prhs[0]),
               mxGetNumberOfElements(prhs[0]) * mxGetElementSize(prhs[0]),
               digest);
-              
+
   } else if (mxIsChar(prhs[0])) {
      MD5Char((mxChar *) mxGetData(prhs[0]),
              mxGetNumberOfElements(prhs[0]),
              digest);
-     
+
   } else {
      mexErrMsgTxt("*** CalcMD5[mex]: Input type not accepted.");
   }
-  
+
   /*  Create output: */
   switch (OutType) {
     case 'H':
@@ -623,7 +623,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       ToHex(digest, hexOut, OutType == 'h');
       plhs[0] = mxCreateString(hexOut);
       break;
-      
+
     case 'D':
     case 'd':  /*  DOUBLE with integer values: */
       plhs[0] = mxCreateDoubleMatrix(1, 16, mxREAL);
@@ -633,7 +633,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         *outP = (double) *digestP++;
       }
       break;
-    
+
     case 'B':
     case 'b':  /*  Base64: */
       /* strtobase64(b64Out, 26, digest, 16);  // included in LCC3.8 */
@@ -641,10 +641,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       ToBase64(digest, b64Out);               /*  Locally implemented */
       plhs[0] = mxCreateString(b64Out);
       break;
-      
+
     default:
       mexErrMsgTxt("*** CalcMD5[mex]: Unknown output type.");
   }
-  
+
   return;
 }

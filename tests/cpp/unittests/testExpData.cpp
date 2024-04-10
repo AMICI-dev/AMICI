@@ -4,8 +4,6 @@
 #include <amici/model_ode.h>
 #include <amici/symbolic_functions.h>
 
-#include <cmath>
-#include <cstring>
 #include <exception>
 #include <vector>
 
@@ -49,6 +47,8 @@ class ExpDataTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             nmaxevent, // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             0,         // nw
             0,         // ndwdx
@@ -180,6 +180,17 @@ TEST_F(ExpDataTest, CopyConstructable)
                     TEST_ATOL,
                     TEST_RTOL,
                     "ts");
+}
+
+
+TEST_F(ExpDataTest, Equality)
+{
+    auto edata = ExpData(testModel);
+    auto edata2(edata);
+    ASSERT_TRUE(edata == edata2);
+
+    edata2.id = "different";
+    ASSERT_FALSE(edata == edata2);
 }
 
 TEST_F(ExpDataTest, DimensionChecks)

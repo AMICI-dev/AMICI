@@ -1,5 +1,5 @@
 name: Installation
-on: [push, pull_request, workflow_dispatch]
+on: [push, pull_request, merge_group, workflow_dispatch]
 
 jobs:
   archive:
@@ -9,86 +9,107 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
-    # install amici dependencies
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
     - name: apt
       run: |
         sudo apt-get update \
           && sudo apt-get install -y \
-            cmake \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
+            cmake
 
     - name: Build suitesparse
-      run: |
-        scripts/buildSuiteSparse.sh
+      run: scripts/buildSuiteSparse.sh
 
     - name: Build sundials
-      run: |
-        scripts/buildSundials.sh
+      run: scripts/buildSundials.sh
 
     - name: Build AMICI
-      run: |
-        scripts/buildAmici.sh
+      run: scripts/buildAmici.sh
 
     - name: Install python archive
-      run: |
-        scripts/installAmiciArchive.sh
+      run: scripts/installAmiciArchive.sh
 
-  sdist:
-    name: sdist Install
+  sdist_ubuntu:
+    name: sdist Install Ubuntu
 
     runs-on: ubuntu-22.04
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
+    - name: Create AMICI sdist
+      run: scripts/buildSdist.sh
+
+    - name: Install python sdist
+      run: pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+
+    - name: Test import
+      run: python -m amici
+
+
+  sdist_macos:
+    name: sdist Install macos
+
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     # install amici dependencies
-    - name: apt
+    - name: homebrew
       run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
+        brew install hdf5 swig gcc cppcheck libomp boost \
+          && brew ls -v boost \
+          && brew ls -v libomp \
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
 
     - name: Create AMICI sdist
-      run: |
-        scripts/buildSdist.sh
+      run: scripts/buildSdist.sh
 
     - name: Install python sdist
-      run: |
-        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+      run: pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
 
     - name: Test import
-      run: |
-        python -m amici
+      run: python -m amici

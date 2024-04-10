@@ -16,9 +16,9 @@ class IDASolver;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::IDASolver &s, unsigned int version);
+void serialize(Archive& ar, amici::IDASolver& s, unsigned int version);
 }
-} // namespace boost::serialization
+} // namespace boost
 
 namespace amici {
 
@@ -35,38 +35,38 @@ class IDASolver : public Solver {
      * @brief Clone this instance
      * @return The clone
      */
-    Solver *clone() const override;
+    Solver* clone() const override;
 
     void reInitPostProcessF(realtype tnext) const override;
 
     void reInitPostProcessB(realtype tnext) const override;
 
-    void reInit(realtype t0, const AmiVector &yy0,
-                const AmiVector &yp0) const override;
+    void reInit(realtype t0, AmiVector const& yy0, AmiVector const& yp0)
+        const override;
 
-    void sensReInit(const AmiVectorArray &yyS0,
-                    const AmiVectorArray &ypS0) const override;
+    void sensReInit(AmiVectorArray const& yyS0, AmiVectorArray const& ypS0)
+        const override;
 
     void sensToggleOff() const override;
 
-    void reInitB(int which, realtype tB0,
-                 const AmiVector &yyB0, const AmiVector &ypB0) const override;
+    void reInitB(
+        int which, realtype tB0, AmiVector const& yyB0, AmiVector const& ypB0
+    ) const override;
 
-    void quadReInitB(int which, const AmiVector &yQB0) const override;
+    void quadReInitB(int which, AmiVector const& yQB0) const override;
 
-    void quadSStolerancesB(int which, realtype reltolQB,
-                           realtype abstolQB) const override;
+    void quadSStolerancesB(int which, realtype reltolQB, realtype abstolQB)
+        const override;
 
     void quadSStolerances(realtype reltolQ, realtype abstolQ) const override;
 
     int solve(realtype tout, int itask) const override;
 
-    int solveF(realtype tout, int itask,
-               int *ncheckPtr) const override;
+    int solveF(realtype tout, int itask, int* ncheckPtr) const override;
 
     void solveB(realtype tBout, int itaskB) const override;
 
-    void getRootInfo(int *rootsfound) const override;
+    void getRootInfo(int* rootsfound) const override;
 
     void getDky(realtype t, int k) const override;
 
@@ -82,7 +82,7 @@ class IDASolver : public Solver {
 
     void getQuadDkyB(realtype t, int k, int which) const override;
 
-    void getQuad(realtype &t) const override;
+    void getQuad(realtype& t) const override;
 
     void getQuadDky(realtype t, int k) const override;
 
@@ -94,7 +94,7 @@ class IDASolver : public Solver {
 
     void turnOffRootFinding() const override;
 
-    const Model *getModel() const override;
+    Model const* getModel() const override;
 
     void setLinearSolver() const override;
 
@@ -115,16 +115,17 @@ class IDASolver : public Solver {
      * @param ypout new state derivative vector
      * @param tout anticipated next integration timepoint.
      */
-    void reInitPostProcess(void *ida_mem, realtype *t, AmiVector *yout,
-                           AmiVector *ypout, realtype tout) const;
+    void reInitPostProcess(
+        void* ida_mem, realtype* t, AmiVector* yout, AmiVector* ypout,
+        realtype tout
+    ) const;
 
     void allocateSolver() const override;
 
-    void setSStolerances(realtype rtol,
-                         realtype atol) const override;
+    void setSStolerances(realtype rtol, realtype atol) const override;
 
-    void setSensSStolerances(realtype rtol,
-                             const realtype *atol) const override;
+    void
+    setSensSStolerances(realtype rtol, realtype const* atol) const override;
 
     void setSensErrCon(bool error_corr) const override;
 
@@ -144,66 +145,70 @@ class IDASolver : public Solver {
 
     void setStabLimDetB(int which, int stldet) const override;
 
-    void setId(const Model *model) const override;
+    void setId(Model const* model) const override;
 
     void setSuppressAlg(bool flag) const override;
 
     /**
-     * @brief resetState reset the IDAS solver to restart integration after a rhs discontinuity.
+     * @brief resetState reset the IDAS solver to restart integration after a
+     * rhs discontinuity.
      * @param ida_mem pointer to IDAS solver memory object
      * @param yy0 new state vector
      * @param yp0 new state derivative vector
      */
-    void resetState(void *ida_mem, const_N_Vector yy0,
-                    const_N_Vector yp0) const;
+    void
+    resetState(void* ida_mem, const_N_Vector yy0, const_N_Vector yp0) const;
 
-    void setSensParams(const realtype *p, const realtype *pbar,
-                       const int *plist) const override;
+    void setSensParams(
+        realtype const* p, realtype const* pbar, int const* plist
+    ) const override;
 
     void adjInit() const override;
 
-    void quadInit(const AmiVector &xQ0) const override;
+    void quadInit(AmiVector const& xQ0) const override;
 
-    void allocateSolverB(int *which) const override;
+    void allocateSolverB(int* which) const override;
 
-    void setMaxNumStepsB(int which,
-                         long int mxstepsB) const override;
+    void setMaxNumStepsB(int which, long int mxstepsB) const override;
 
-    void setSStolerancesB(int which, realtype relTolB,
-                          realtype absTolB) const override;
+    void setSStolerancesB(int which, realtype relTolB, realtype absTolB)
+        const override;
 
     void diag() const override;
 
     void diagB(int which) const override;
 
-    void getNumSteps(const void *ami_mem, long int *numsteps) const override;
-
-    void getNumRhsEvals(const void *ami_mem,
-                        long int *numrhsevals) const override;
-
-    void getNumErrTestFails(const void *ami_mem,
-                            long int *numerrtestfails) const override;
+    void getNumSteps(void const* ami_mem, long int* numsteps) const override;
 
     void
-    getNumNonlinSolvConvFails(const void *ami_mem,
-                              long int *numnonlinsolvconvfails) const override;
+    getNumRhsEvals(void const* ami_mem, long int* numrhsevals) const override;
 
-    void getLastOrder(const void *ami_mem, int *order) const override;
+    void getNumErrTestFails(void const* ami_mem, long int* numerrtestfails)
+        const override;
 
-    void *getAdjBmem(void *ami_mem, int which) const override;
+    void getNumNonlinSolvConvFails(
+        void const* ami_mem, long int* numnonlinsolvconvfails
+    ) const override;
 
-    void init(realtype t0, const AmiVector &x0,
-              const AmiVector &dx0) const override;
+    void getLastOrder(void const* ami_mem, int* order) const override;
 
-    void initSteadystate(const realtype t0, const AmiVector &x0,
-                         const AmiVector &dx0) const override;
+    void* getAdjBmem(void* ami_mem, int which) const override;
 
-    void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0) const override;
+    void
+    init(realtype t0, AmiVector const& x0, AmiVector const& dx0) const override;
 
-    void binit(int which, realtype tf,
-               const AmiVector &xB0, const AmiVector &dxB0) const override;
+    void initSteadystate(
+        realtype const t0, AmiVector const& x0, AmiVector const& dx0
+    ) const override;
 
-    void qbinit(int which, const AmiVector &xQB0) const override;
+    void sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& sdx0)
+        const override;
+
+    void binit(
+        int which, realtype tf, AmiVector const& xB0, AmiVector const& dxB0
+    ) const override;
+
+    void qbinit(int which, AmiVector const& xQB0) const override;
 
     void rootInit(int ne) const override;
 
@@ -224,6 +229,14 @@ class IDASolver : public Solver {
     void setJacTimesVecFnB(int which) const override;
 
     void setSparseJacFn_ss() const override;
+
+    void apply_max_nonlin_iters() const override;
+
+    void apply_max_conv_fails() const override;
+
+    void apply_constraints() const override;
+
+    void apply_max_step_size() const override;
 };
 
 } // namespace amici

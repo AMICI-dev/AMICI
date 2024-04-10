@@ -10,32 +10,36 @@ Some mathematical background for AMICI is provided in the following
 publications:
 
 * Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017).
-  Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.
+  **Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.**
   PLOS Computational Biology, 13(1), e1005331.
   doi:`10.1371/journal.pcbi.1005331 <https://doi.org/10.1371/journal.pcbi.1005331>`_.
 
 * Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017).
-  Parameter estimation for dynamical systems with discrete events and logical
-  operations. Bioinformatics, 33(7), 1049-1056.
+  **Parameter estimation for dynamical systems with discrete events and logical
+  operations.** Bioinformatics, 33(7), 1049-1056.
   doi:`10.1093/bioinformatics/btw764 <https://doi.org/10.1093/bioinformatics/btw764>`_.
 
 * Terje Lines, Glenn, Łukasz Paszkowski, Leonard Schmiester, Daniel Weindl,
-  Paul Stapor, and Jan Hasenauer. 2019. "Efficient Computation of Steady States
-  in Large-Scale Ode Models of Biochemical Reaction Networks.
+  Paul Stapor, and Jan Hasenauer. 2019. **Efficient Computation of Steady States
+  in Large-Scale ODE Models of Biochemical Reaction Networks.**
   *IFAC-PapersOnLine* 52 (26): 32–37.
   DOI: `10.1016/j.ifacol.2019.12.232 <https://doi.org/10.1016/j.ifacol.2019.12.232>`_.
 
 * Stapor, Paul, Fabian Fröhlich, and Jan Hasenauer. 2018.
-  "Optimization and Profile Calculation of ODE Models Using Second Order
-  Adjoint Sensitivity Analysis." *Bioinformatics* 34 (13): i151–i159.
+  **Optimization and Profile Calculation of ODE Models Using Second Order
+  Adjoint Sensitivity Analysis.** *Bioinformatics* 34 (13): i151–i159.
   DOI: `10.1093/bioinformatics/bty230 <https://doi.org/10.1093/bioinformatics/bty230>`_.
 
 * Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski,
   Dilan Pathirana, Fabian Fröhlich, Glenn Terje Lines, Daniel Weindl,
   and Jan Hasenauer. 2022.
-  "Efficient Computation of Adjoint Sensitivities at Steady-State in ODE Models
-  of Biochemical Reaction Networks." *bioRxiv* 2022.08.08.503176.
+  **Efficient Computation of Adjoint Sensitivities at Steady-State in ODE Models
+  of Biochemical Reaction Networks.** *bioRxiv* 2022.08.08.503176.
   DOI: `10.1101/2022.08.08.503176 <https://doi.org/10.1101/2022.08.08.503176>`_.
+
+* L. Contento, P. Stapor, D. Weindl, and J. Hasenauer, "A more expressive spline
+  representation for SBML models improves code generation performance in AMICI,"
+  bioRxiv, 2023, DOI: `10.1101/2023.06.29.547120 <https://doi.org/10.1101/2023.06.29.547120>`_.
 
 .. note::
 

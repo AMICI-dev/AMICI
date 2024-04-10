@@ -1,43 +1,51 @@
 name: Windows Tests
 on:
   push:
-  pull_request:
+  merge_group:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
+  pull_request:
+    branches:
+      - develop
+      - master
 
 jobs:
   build:
     name: Tests Windows
 
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       openBLAS_version: "0.3.19"
-      AMICI_DLL_DIRS: "C:\\BLAS\\bin"
+      AMICI_DLL_DIRS: "C:\\BLAS\\OpenBLAS\\bin"
+      LIB: "C:/BLAS/OpenBLAS/lib"
+      CFLAGS: "-nologo"
+      CXXFLAGS: "-nologo"
+      LDFLAGS: "-nologo"
 
     strategy:
       matrix:
-        python-version: [ "3.8" ]
+        python-version: [ "3.9" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - shell: bash
       run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - shell: bash
-      run: echo "C:\\BLAS\\bin" >> $GITHUB_PATH
+      run: echo "C:\\BLAS\\OpenBLAS\\bin" >> $GITHUB_PATH
     - shell: bash
-      run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/lib openblas.lib" >> $GITHUB_ENV
+      run: echo "BLAS_LIBS=-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib" >> $GITHUB_ENV
     - shell: bash
-      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS-${openBLAS_version}/OpenBLAS-${openBLAS_version}" >> $GITHUB_ENV
+      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS/include/openblas/" >> $GITHUB_ENV
 
     # Developer Command Prompt for Microsoft Visual C++
     - uses: ilammy/msvc-dev-cmd@v1
@@ -53,6 +61,11 @@ jobs:
       shell: powershell
       run: scripts/installOpenBLAS
 
+    - uses: actions/upload-artifact@v4
+      with:
+        name: OpenBLAS
+        path: C:\BLAS\OpenBLAS
+
     - name: Create sdist
       working-directory: python/sdist
       run: pip install build && python -m build --sdist
@@ -65,4 +78,14 @@ jobs:
     - run: python -m amici
 
     - name: Run Python tests
-      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
+      shell: bash
+      run: |
+        python -m pytest \
+          --ignore-glob=*petab* \
+          --ignore-glob=*special* \
+          --ignore-glob=*test_splines.py \
+          python/tests
+
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
+      run: python -m pytest python/tests/test_splines.py

@@ -2,7 +2,7 @@
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
-## About 
+## About
 
 AMICI provides a multi-language (Python, C++, Matlab) interface for the
 [SUNDIALS](https://computing.llnl.gov/projects/sundials/) solvers
@@ -25,7 +25,7 @@ forward sensitivity analysis, steady state sensitivity analysis and
 adjoint sensitivity analysis for likelihood-based output functions.
 
 The interface was designed to provide routines for efficient gradient
-computation in parameter estimation of biochemical reaction models but
+computation in parameter estimation of biochemical reaction models, but
 it is also applicable to a wider range of differential equation
 constrained optimization problems.
 
@@ -62,7 +62,6 @@ constrained optimization problems.
 * Pre-equilibration and pre-simulation conditions
 * Support for
   [discrete events and logical operations](https://academic.oup.com/bioinformatics/article/33/7/1049/2769435)
-  (Matlab-only)
 
 ## Interfaces & workflow
 
@@ -83,9 +82,12 @@ To install AMICI, first read the installation instructions for
 [Python](https://amici.readthedocs.io/en/latest/python_installation.html),
 [C++](https://amici.readthedocs.io/en/develop/cpp_installation.html) or
 [Matlab](https://amici.readthedocs.io/en/develop/matlab_installation.html).
+There are also instructions for using AMICI inside
+[containers](https://github.com/AMICI-dev/AMICI/tree/master/container).
 
 To get you started with Python-AMICI, the best way might be checking out this
-[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/documentation/GettingStarted.ipynb).
+[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/documentation/GettingStarted.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=documentation%2FGettingStarted.ipynb).
 
 To get started with Matlab-AMICI, various examples are available
 in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/examples).
@@ -124,7 +126,7 @@ with AMICI:
 
 There is a list of [publications using AMICI](https://amici.readthedocs.io/en/latest/references.html).
 If you used AMICI in your work, we are happy to include
-your project, please let us know via a Github issue.
+your project, please let us know via a GitHub issue.
 
 When using AMICI in your project, please cite
 * Fröhlich, F., Weindl, D., Schälte, Y., Pathirana, D., Paszkowski, Ł., Lines, G.T., Stapor, P. and Hasenauer, J., 2021.
@@ -143,8 +145,8 @@ When using AMICI in your project, please cite
   eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btab227/36866220/btab227.pdf},
 }
 ```
-  
-When presenting work that employs AMICI, feel free to use one of the icons in 
+
+When presenting work that employs AMICI, feel free to use one of the icons in
 [documentation/gfx/](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx),
 which are available under a
 [CC0](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx/LICENSE.md)

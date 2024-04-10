@@ -12,7 +12,6 @@
 #include <cfloat>
 #include <cmath>
 #include <cstdarg>
-#include <cstdlib>
 #if _MSC_VER && !__INTEL_COMPILER
 #include <malloc.h>
 #define alloca _alloca
@@ -71,7 +70,7 @@ double sign(double x) {
     return 0.0;
 }
 
-double max(double a, double b, double  /*c*/) {
+double max(double a, double b, double /*c*/) {
     int anan = isNaN(a), bnan = isNaN(b);
     if (anan || bnan) {
         if (anan && !bnan)
@@ -83,11 +82,9 @@ double max(double a, double b, double  /*c*/) {
     return (std::max(a, b));
 }
 
-double min(double a, double b, double c) {
-    return (-max(-a,-b,c));
-}
+double min(double a, double b, double c) { return (-max(-a, -b, c)); }
 
-double Dmax(int id, double a, double b, double  /*c*/) {
+double Dmax(int id, double a, double b, double /*c*/) {
     if (id == 1.0) {
         if (a > b)
             return 1.0;
@@ -100,15 +97,14 @@ double Dmax(int id, double a, double b, double  /*c*/) {
 }
 
 double Dmin(int id, double a, double b, double c) {
-    return Dmax(id,-a,-b,c);
+    return Dmax(id, -a, -b, c);
 }
 
 double pos_pow(double base, double exponent) {
-    // we do NOT want to propagate NaN values here, if base is nan, so should the output be
-    return pow(std::max(base, 0.0),exponent);
+    // we do NOT want to propagate NaN values here, if base is nan, so should
+    // the output be
+    return pow(std::max(base, 0.0), exponent);
 }
-
-
 
 // Legacy spline implementation in C (MATLAB only)
 double spline(double t, int num, ...) {
@@ -119,12 +115,12 @@ double spline(double t, int num, ...) {
     double ss;
     double dudt;
 
-    auto *ts = (double *)alloca(num * sizeof(double));
-    auto *us = (double *)alloca(num * sizeof(double));
+    auto* ts = (double*)alloca(num * sizeof(double));
+    auto* us = (double*)alloca(num * sizeof(double));
 
-    auto *b = (double *)alloca(num * sizeof(double));
-    auto *c = (double *)alloca(num * sizeof(double));
-    auto *d = (double *)alloca(num * sizeof(double));
+    auto* b = (double*)alloca(num * sizeof(double));
+    auto* c = (double*)alloca(num * sizeof(double));
+    auto* d = (double*)alloca(num * sizeof(double));
 
     /* Variable list type macro */
     /* initialize valist for num number of arguments */
@@ -155,13 +151,13 @@ double spline_pos(double t, int num, ...) {
     double ss;
     double dudt;
 
-    auto *ts = (double *)alloca(num * sizeof(double));
-    auto *us = (double *)alloca(num * sizeof(double));
-    auto *uslog = (double *)alloca(num * sizeof(double));
+    auto* ts = (double*)alloca(num * sizeof(double));
+    auto* us = (double*)alloca(num * sizeof(double));
+    auto* uslog = (double*)alloca(num * sizeof(double));
 
-    auto *b = (double *)alloca(num * sizeof(double));
-    auto *c = (double *)alloca(num * sizeof(double));
-    auto *d = (double *)alloca(num * sizeof(double));
+    auto* b = (double*)alloca(num * sizeof(double));
+    auto* c = (double*)alloca(num * sizeof(double));
+    auto* d = (double*)alloca(num * sizeof(double));
 
     /* initialize valist for num number of arguments */
     va_start(valist, num);
@@ -192,13 +188,13 @@ double Dspline(int id, double t, int num, ...) {
     double ss;
     double dudt;
 
-    double *ts = (double *)alloca(num * sizeof(double));
-    double *us = (double *)alloca(num * sizeof(double));
-    double *ps = (double *)alloca(num * sizeof(double));
+    double* ts = (double*)alloca(num * sizeof(double));
+    double* us = (double*)alloca(num * sizeof(double));
+    double* ps = (double*)alloca(num * sizeof(double));
 
-    double *b = (double *)alloca(num * sizeof(double));
-    double *c = (double *)alloca(num * sizeof(double));
-    double *d = (double *)alloca(num * sizeof(double));
+    double* b = (double*)alloca(num * sizeof(double));
+    double* c = (double*)alloca(num * sizeof(double));
+    double* d = (double*)alloca(num * sizeof(double));
 
     int did = id / 2 - 2;
 
@@ -228,14 +224,14 @@ double Dspline_pos(int id, double t, int num, ...) {
 
     va_list valist;
 
-    auto *ts = (double *)alloca(num * sizeof(double));
-    auto *us = (double *)alloca(num * sizeof(double));
-    auto *sus = (double *)alloca(num * sizeof(double));
-    auto *uslog = (double *)alloca(num * sizeof(double));
+    auto* ts = (double*)alloca(num * sizeof(double));
+    auto* us = (double*)alloca(num * sizeof(double));
+    auto* sus = (double*)alloca(num * sizeof(double));
+    auto* uslog = (double*)alloca(num * sizeof(double));
 
-    auto *b = (double *)alloca(num * sizeof(double));
-    auto *c = (double *)alloca(num * sizeof(double));
-    auto *d = (double *)alloca(num * sizeof(double));
+    auto* b = (double*)alloca(num * sizeof(double));
+    auto* c = (double*)alloca(num * sizeof(double));
+    auto* d = (double*)alloca(num * sizeof(double));
 
     double uout;
     double ss;
@@ -272,21 +268,23 @@ double Dspline_pos(int id, double t, int num, ...) {
     return uout;
 }
 
-double DDspline(int  /*id1*/, int  /*id2*/, double  /*t*/, int  /*num*/, ...) { return 0.0; }
+double DDspline(int /*id1*/, int /*id2*/, double /*t*/, int /*num*/, ...) {
+    return 0.0;
+}
 
 double DDspline_pos(int id1, int id2, double t, int num, ...) {
 
     va_list valist;
 
-    auto *ts = (double *)alloca(num * sizeof(double));
-    auto *us = (double *)alloca(num * sizeof(double));
-    auto *sus1 = (double *)alloca(num * sizeof(double));
-    auto *sus2 = (double *)alloca(num * sizeof(double));
-    auto *uslog = (double *)alloca(num * sizeof(double));
+    auto* ts = (double*)alloca(num * sizeof(double));
+    auto* us = (double*)alloca(num * sizeof(double));
+    auto* sus1 = (double*)alloca(num * sizeof(double));
+    auto* sus2 = (double*)alloca(num * sizeof(double));
+    auto* uslog = (double*)alloca(num * sizeof(double));
 
-    auto *b = (double *)alloca(num * sizeof(double));
-    auto *c = (double *)alloca(num * sizeof(double));
-    auto *d = (double *)alloca(num * sizeof(double));
+    auto* b = (double*)alloca(num * sizeof(double));
+    auto* c = (double*)alloca(num * sizeof(double));
+    auto* d = (double*)alloca(num * sizeof(double));
 
     double uout;
     double ss;

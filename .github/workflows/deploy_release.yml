@@ -12,35 +12,42 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/amici
+
+    permissions:
+      id-token: write
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 20
 
-    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig" >> $GITHUB_ENV
+    - name: Set up SWIG
+      uses: ./.github/actions/setup-swig
 
-    - name: Build swig4
-      run: |
-        sudo scripts/downloadAndBuildSwig.sh
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+
+    - name: Remove direct dependencies from setup.cfg
+      # Remove any "git+https"-based dependencies that are not supported
+      #  by PyPI and are only required for testing.
+      run: sed -i '/git+https/d' python/sdist/setup.cfg
 
     - name: sdist
-      run: |
-        scripts/buildSdist.sh
+      run: scripts/buildSdist.sh
 
     - name: Publish a Python distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.pypi_password }}
-        packages_dir: python/sdist/dist
+        packages-dir: python/sdist/dist
 
   bioSimulatorsUpdateCliAndDockerImage:
     name: Release to BioSimulators

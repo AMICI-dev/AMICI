@@ -12,7 +12,7 @@ The legacy GitHub Pages URL https://amici-dev.github.io/AMICI/ is set up as a
 redirect to RTD.
 
 The main configuration file is `documentation/conf.py` and the documentation
-is generated using `scripts/run-sphinx.sh`. The documentation is written to
+is generated using `tox -e doc`. The documentation is written to
 `documentation/_build/`.
 
 The documentation comprises:
@@ -50,12 +50,6 @@ Matlab documentation is processed by
 [mtoc++](https://www.morepas.org/software/mtocpp/docs/tools.html).
 This is configured in `matlab/mtoc/config`.
 
-#### Python documentation
-
-Python documentation is processed by doxygen and doxypypy using the script and
-filters in `scripts/`.
-
-
 ## Writing documentation
 
 ### Out-of-source documentation
@@ -78,12 +72,12 @@ Graphics for documentation are kept in `documentation/gfx/`.
   for offline use.
 
 * Please stick to the limit of 80 characters per line for readability of raw
-  Markdown files where possible. 
+  Markdown files where possible.
 
   However, note that some Markdown interpreters can handle line breaks within
   links and headings, whereas others cannot. Here, compatibility is preferred
-  over linebreaks. 
-  
+  over linebreaks.
+
 * Avoid trailing whitespace
 
 ## Maintaining the list of publications
