@@ -246,6 +246,7 @@ class DEExporter:
             sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
         ):
             self._prepare_model_folder()
+            self._generate_jax_code()
             self._generate_c_code()
             self._generate_m_code()
 
