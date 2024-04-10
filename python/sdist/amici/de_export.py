@@ -302,7 +302,7 @@ class DEExporter:
         tpl_data = {
             **{
                 f"{eq_name.upper()}_EQ": "\n".join(
-                    self.model._code_printer_jax._get_sym_lines(
+                    self._code_printer_jax._get_sym_lines(
                         (str(strip_pysb(s)) for s in self.model.sym(eq_name)),
                         self.model.eq(eq_name),
                         indent,
