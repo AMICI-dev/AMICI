@@ -148,6 +148,7 @@ def main():
         "Bachmann_MSB2011",
         "Beer_MolBioSystems2014",
         "Brannmark_JBC2010",
+        "Fujita_SciSignal2010",
         "Isensee_JCB2018",
         "Weber_BMC2015",
         "Zheng_PNAS2012",
@@ -155,6 +156,7 @@ def main():
         # Bachmann: integration failure even with 1e6 steps
         # Beer: Heaviside
         # Brannmark_JBC2010: preeq
+        # Fujita: Heaviside
         # Isensee_JCB2018: preeq
         # Weber_BMC2015: preeq
         # Zheng_PNAS2012: preeq
