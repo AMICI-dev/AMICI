@@ -150,6 +150,7 @@ def main():
         "Brannmark_JBC2010",
         "Fujita_SciSignal2010",
         "Isensee_JCB2018",
+        "Smith_BMCSystBiol2013",
         "Weber_BMC2015",
         "Zheng_PNAS2012",
     ):
@@ -158,6 +159,7 @@ def main():
         # Brannmark_JBC2010: preeq
         # Fujita: Heaviside
         # Isensee_JCB2018: preeq
+        # Smith_BMCSystBiol2013: Heaviside
         # Weber_BMC2015: preeq
         # Zheng_PNAS2012: preeq
 
