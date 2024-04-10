@@ -20,3 +20,5 @@ line-length = 79
 line-length = 79
 ignore = ["E402", "F403", "F405", "E741"]
 extend-include = ["*.ipynb"]
+exclude = ['jax.template.py']
+extend-select = ["UP"]
