@@ -50,7 +50,7 @@ jobs:
       run: |
         pip3 install --user petab[vis] && \
         AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
     # retrieve test models
     - name: Download and test benchmark collection

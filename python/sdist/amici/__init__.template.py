@@ -31,7 +31,7 @@ try:
 except (ModuleNotFoundError, ImportError):
 
     def get_jax_model() -> JAXModel:
-        raise NotImplementedError()
+        raise NotImplementedError(str(err))
 
 
 __version__ = "TPL_PACKAGE_VERSION"
