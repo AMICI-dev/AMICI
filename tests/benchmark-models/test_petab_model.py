@@ -145,7 +145,6 @@ def main():
     llh = res[LLH]
 
     if args.model_name not in (
-        "Bachmann_MSB2011",
         "Beer_MolBioSystems2014",
         "Brannmark_JBC2010",
         "Fujita_SciSignal2010",
@@ -154,7 +153,6 @@ def main():
         "Weber_BMC2015",
         "Zheng_PNAS2012",
     ):
-        # Bachmann: integration failure even with 1e6 steps
         # Beer: Heaviside
         # Brannmark_JBC2010: preeq
         # Fujita: Heaviside
@@ -164,7 +162,6 @@ def main():
         # Zheng_PNAS2012: preeq
 
         jax_model = model_module.get_jax_model()
-        jax_solver = jax_model.get_solver()
         simulation_conditions = (
             problem.get_simulation_conditions_from_measurement_df()
         )
@@ -191,9 +188,9 @@ def main():
             amici_model=amici_model,
         )
         # run once to JIT
-        amici.jax.run_simulations(jax_model, jax_solver, edatas)
+        jax_model.run_simulations(edatas)
         start_jax = timer()
-        rdatas_jax = amici.jax.run_simulations(jax_model, jax_solver, edatas)
+        rdatas_jax = jax_model.run_simulations(edatas)
         end_jax = timer()
 
         t_jax = end_jax - start_jax
