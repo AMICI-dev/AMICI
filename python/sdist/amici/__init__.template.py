@@ -28,10 +28,11 @@ try:
 
     def get_jax_model() -> JAXModel:
         return JAXModel_TPL_MODELNAME()
-except (ModuleNotFoundError, ImportError):
+except (ModuleNotFoundError, ImportError) as exc:
+    error = str(exc)
 
     def get_jax_model() -> JAXModel:
-        raise NotImplementedError(str(err))
+        raise NotImplementedError(error)
 
 
 __version__ = "TPL_PACKAGE_VERSION"
