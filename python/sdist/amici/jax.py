@@ -103,8 +103,24 @@ class JAXModel(eqx.Module):
             .get()
         )(p, pscale)
 
-    def _solve(self, ts, p, k):
+    def _preeq(self, p, k):
         x0 = self.x0(p, k)
+        tcl = self.tcl(x0, p, k)
+        sol = diffrax.diffeqsolve(
+            self.term,
+            self.solver,
+            args=(p, k, tcl),
+            t0=0.0,
+            t1=jnp.inf,
+            dt0=None,
+            y0=self.x_solver(x0),
+            stepsize_controller=self.controller,
+            max_steps=self.maxsteps,
+            discrete_terminating_event=diffrax.SteadyStateEvent(),
+        )
+        return sol.ys
+
+    def _solve(self, ts, p, k, x0):
         tcl = self.tcl(x0, p, k)
         sol = diffrax.diffeqsolve(
             self.term,
@@ -140,11 +156,16 @@ class JAXModel(eqx.Module):
         ts: np.ndarray,
         p: np.ndarray,
         k: jnp.ndarray,
+        k_preeq: jnp.ndarray,
         my: jnp.ndarray,
         pscale: np.ndarray,
     ):
         ps = self.unscale_p(p, pscale)
-        x, tcl, stats = self._solve(ts, ps, k)
+        if k_preeq.shape[0] > 0:
+            x0 = self._preeq(ps, k_preeq)
+        else:
+            x0 = self.x0(p, k)
+        x, tcl, stats = self._solve(ts, ps, k, x0)
         obs = self._obs(ts, x, ps, k, tcl)
         my_r = my.reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
@@ -158,10 +179,11 @@ class JAXModel(eqx.Module):
         ts: np.ndarray,
         p: jnp.ndarray,
         k: np.ndarray,
+        k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
     ):
-        return self._run(ts, p, k, my, pscale)
+        return self._run(ts, p, k, k_preeq, my, pscale)
 
     @eqx.filter_jit
     def srun(
@@ -198,6 +220,7 @@ class JAXModel(eqx.Module):
         ts = np.asarray(edata.getTimepoints())
         p = jnp.asarray(edata.parameters)
         k = np.asarray(edata.fixedParameters)
+        k_preeq = np.asarray(edata.fixedParametersPreequilibration)
         my = np.asarray(edata.getObservedData())
         pscale = np.asarray(edata.pscale)
 
@@ -207,20 +230,20 @@ class JAXModel(eqx.Module):
             (
                 rdata_kwargs["llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.run(ts, p, k, my, pscale)
+            ) = self.run(ts, p, k, k_preeq, my, pscale)
         elif self.sensi_order == amici.SensitivityOrder.first:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.srun(ts, p, k, my, pscale)
+            ) = self.srun(ts, p, k, k_preeq, my, pscale)
         elif self.sensi_order == amici.SensitivityOrder.second:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 rdata_kwargs["s2llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.s2run(ts, p, k, my, pscale)
+            ) = self.s2run(ts, p, k, k_preeq, my, pscale)
 
         for field in rdata_kwargs.keys():
             if field == "llh":

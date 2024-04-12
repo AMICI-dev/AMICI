@@ -151,15 +151,13 @@ def main():
         "Isensee_JCB2018",
         "Smith_BMCSystBiol2013",
         "Weber_BMC2015",
-        "Zheng_PNAS2012",
     ):
         # Beer: Heaviside
-        # Brannmark_JBC2010: preeq
+        # Brannmark: Heaviside
         # Fujita: Heaviside
-        # Isensee_JCB2018: preeq
-        # Smith_BMCSystBiol2013: Heaviside
-        # Weber_BMC2015: preeq
-        # Zheng_PNAS2012: preeq
+        # Isensee: Heaviside
+        # Smith: Heaviside
+        # Weber: Heaviside
 
         jax_model = model_module.get_jax_model()
         simulation_conditions = (
