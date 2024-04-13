@@ -29,7 +29,6 @@ class JAXModel(eqx.Module):
     dcoeff: float
     maxsteps: int
     term: diffrax.ODETerm
-    sensi_order: amici.SensitivityOrder
 
     def __init__(self):
         self.solver = diffrax.Kvaerno5()
@@ -38,7 +37,7 @@ class JAXModel(eqx.Module):
         self.pcoeff: float = 0.4
         self.icoeff: float = 0.3
         self.dcoeff: float = 0.0
-        self.maxsteps: int = 2**10
+        self.maxsteps: int = 2**14
         self.controller = diffrax.PIDController(
             rtol=self.rtol,
             atol=self.atol,
@@ -47,7 +46,6 @@ class JAXModel(eqx.Module):
             dcoeff=self.dcoeff,
         )
         self.term = diffrax.ODETerm(self.xdot)
-        self.sensi_order = amici.SensitivityOrder.none
 
     @staticmethod
     @abstractmethod
@@ -120,7 +118,7 @@ class JAXModel(eqx.Module):
         )
         return sol.ys
 
-    def _solve(self, ts, p, k, x0):
+    def _solve(self, ts, p, k, x0, checkpointed):
         tcl = self.tcl(x0, p, k)
         sol = diffrax.diffeqsolve(
             self.term,
@@ -132,6 +130,9 @@ class JAXModel(eqx.Module):
             y0=self.x_solver(x0),
             stepsize_controller=self.controller,
             max_steps=self.maxsteps,
+            adjoint=diffrax.RecursiveCheckpointAdjoint()
+            if checkpointed
+            else diffrax.DirectAdjoint(),
             saveat=diffrax.SaveAt(ts=ts),
         )
         return sol.ys, tcl, sol.stats
@@ -159,13 +160,14 @@ class JAXModel(eqx.Module):
         k_preeq: jnp.ndarray,
         my: jnp.ndarray,
         pscale: np.ndarray,
+        checkpointed=True,
     ):
         ps = self.unscale_p(p, pscale)
         if k_preeq.shape[0] > 0:
             x0 = self._preeq(ps, k_preeq)
         else:
             x0 = self.x0(p, k)
-        x, tcl, stats = self._solve(ts, ps, k, x0)
+        x, tcl, stats = self._solve(ts, ps, k, x0, checkpointed=checkpointed)
         obs = self._obs(ts, x, ps, k, tcl)
         my_r = my.reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
@@ -191,12 +193,13 @@ class JAXModel(eqx.Module):
         ts: np.ndarray,
         p: jnp.ndarray,
         k: np.ndarray,
+        k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
-        )(ts, p, k, my, pscale)
+        )(ts, p, k, k_preeq, my, pscale)
         return llh, sllh, (x, obs, stats)
 
     @eqx.filter_jit
@@ -205,18 +208,23 @@ class JAXModel(eqx.Module):
         ts: np.ndarray,
         p: jnp.ndarray,
         k: np.ndarray,
+        k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
     ):
-        (llh, (_, _, _)), sllh = (jax.value_and_grad(self._run, 1, True))(
-            ts, p, k, my, pscale
+        (llh, (x, obs, stats)), sllh = (
+            jax.value_and_grad(self._run, 1, True)
+        )(ts, p, k, k_preeq, my, pscale)
+
+        s2llh = jax.hessian(self._run, 1, True)(
+            ts, p, k, k_preeq, my, pscale, False
         )
-        s2llh, (x, obs, stats) = jax.jacfwd(
-            jax.grad(self._run, 1, True), 1, True
-        )(ts, p, k, my, pscale)
+
         return llh, sllh, s2llh, (x, obs, stats)
 
-    def run_simulation(self, edata: amici.ExpData):
+    def run_simulation(
+        self, edata: amici.ExpData, sensitivity_order: amici.SensitivityOrder
+    ):
         ts = np.asarray(edata.getTimepoints())
         p = jnp.asarray(edata.parameters)
         k = np.asarray(edata.fixedParameters)
@@ -226,18 +234,18 @@ class JAXModel(eqx.Module):
 
         rdata_kwargs = dict()
 
-        if self.sensi_order == amici.SensitivityOrder.none:
+        if sensitivity_order == amici.SensitivityOrder.none:
             (
                 rdata_kwargs["llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
             ) = self.run(ts, p, k, k_preeq, my, pscale)
-        elif self.sensi_order == amici.SensitivityOrder.first:
+        elif sensitivity_order == amici.SensitivityOrder.first:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
             ) = self.srun(ts, p, k, k_preeq, my, pscale)
-        elif self.sensi_order == amici.SensitivityOrder.second:
+        elif sensitivity_order == amici.SensitivityOrder.second:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
@@ -260,13 +268,17 @@ class JAXModel(eqx.Module):
     def run_simulations(
         self,
         edatas: Iterable[amici.ExpData],
+        sensitivity_order: amici.SensitivityOrder = amici.SensitivityOrder.none,
         num_threads: int = 1,
     ):
+        fun = eqx.Partial(
+            self.run_simulation, sensitivity_order=sensitivity_order
+        )
         if num_threads > 1:
             with ThreadPoolExecutor(max_workers=num_threads) as pool:
-                results = pool.map(self.run_simulation, edatas)
+                results = pool.map(fun, edatas)
         else:
-            results = map(self.run_simulation, edatas)
+            results = map(fun, edatas)
         return list(results)
 
 

@@ -1,5 +1,6 @@
 import pytest
 import amici
+
 pytest.importorskip("jax")
 import amici.jax
 
@@ -16,21 +17,18 @@ def test_conversion():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
 
-    model = pysb.Model('conversion')
-    a = pysb.Monomer('A', sites=['s'], site_states={'s': ['a', 'b']})
-    pysb.Initial(a(s='a'), pysb.Parameter('aa0', 1.2))
-    pysb.Rule(
-        'conv',
-        a(s='a') >> a(s='b'), pysb.Parameter('kcat', 0.05)
-    )
-    pysb.Observable('ab', a(s='b'))
+    model = pysb.Model("conversion")
+    a = pysb.Monomer("A", sites=["s"], site_states={"s": ["a", "b"]})
+    pysb.Initial(a(s="a"), pysb.Parameter("aa0", 1.2))
+    pysb.Rule("conv", a(s="a") >> a(s="b"), pysb.Parameter("kcat", 0.05))
+    pysb.Observable("ab", a(s="b"))
 
     outdir = model.name
-    pysb2amici(model, outdir, verbose=True,
-               observables=['ab'])
+    pysb2amici(model, outdir, verbose=True, observables=["ab"])
 
-    model_module = amici.import_model_module(module_name=model.name,
-                                             module_path=outdir)
+    model_module = amici.import_model_module(
+        module_name=model.name, module_path=outdir
+    )
 
     ts = tuple(np.linspace(0, 1, 10))
     p = jnp.stack((1.0, 0.1), axis=-1)
@@ -42,33 +40,44 @@ def test_dimerization():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
 
-    model = pysb.Model('dimerization')
-    a = pysb.Monomer('A', sites=['b'])
-    b = pysb.Monomer('B', sites=['a'])
+    model = pysb.Model("dimerization")
+    a = pysb.Monomer("A", sites=["b"])
+    b = pysb.Monomer("B", sites=["a"])
 
-    pysb.Rule('turnover_a',
-              a(b=None) | None,
-              pysb.Parameter('kdeg_a', 10),
-              pysb.Parameter('ksyn_a', 0.1))
-    pysb.Rule('turnover_b',
-              b(a=None) | None,
-              pysb.Parameter('kdeg_b', 0.1),
-              pysb.Parameter('ksyn_b', 10))
-    pysb.Rule('dimer',
-              a(b=None) + b(a=None) | a(b=1) % b(a=1),
-              pysb.Parameter('kon', 1.0),
-              pysb.Parameter('koff', 0.1))
+    pysb.Rule(
+        "turnover_a",
+        a(b=None) | None,
+        pysb.Parameter("kdeg_a", 10),
+        pysb.Parameter("ksyn_a", 0.1),
+    )
+    pysb.Rule(
+        "turnover_b",
+        b(a=None) | None,
+        pysb.Parameter("kdeg_b", 0.1),
+        pysb.Parameter("ksyn_b", 10),
+    )
+    pysb.Rule(
+        "dimer",
+        a(b=None) + b(a=None) | a(b=1) % b(a=1),
+        pysb.Parameter("kon", 1.0),
+        pysb.Parameter("koff", 0.1),
+    )
 
-    pysb.Observable('a_obs', a())
-    pysb.Observable('b_obs', b())
+    pysb.Observable("a_obs", a())
+    pysb.Observable("b_obs", b())
 
     outdir = model.name
-    pysb2amici(model, outdir, verbose=True,
-               observables=['a_obs', 'b_obs'],
-               constant_parameters=['ksyn_a', 'ksyn_b'])
+    pysb2amici(
+        model,
+        outdir,
+        verbose=True,
+        observables=["a_obs", "b_obs"],
+        constant_parameters=["ksyn_a", "ksyn_b"],
+    )
 
-    model_module = amici.import_model_module(module_name=model.name,
-                                             module_path=outdir)
+    model_module = amici.import_model_module(
+        module_name=model.name, module_path=outdir
+    )
 
     ts = tuple(np.linspace(0, 1, 10))
     p = jnp.stack((5, 0.5, 0.5, 0.5), axis=-1)
@@ -80,11 +89,11 @@ def _test_model(model_module, ts, p, k):
     amici_model = model_module.getModel()
 
     amici_model.setTimepoints(np.asarray(ts, dtype=np.float64))
-    sol_amici_ref = amici.runAmiciSimulation(amici_model,
-                                             amici_model.getSolver())
+    sol_amici_ref = amici.runAmiciSimulation(
+        amici_model, amici_model.getSolver()
+    )
 
     jax_model = model_module.get_jax_model()
-    jax_solver = jax_model.get_solver()
 
     amici_model.setParameters(np.asarray(p, dtype=np.float64))
     amici_model.setFixedParameters(np.asarray(k, dtype=np.float64))
@@ -99,39 +108,40 @@ def _test_model(model_module, ts, p, k):
     amici_solver = amici_model.getSolver()
     amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
     amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    rs_amici = amici.runAmiciSimulations(
-        amici_model,
-        amici_solver,
-        edatas
-    )
+    rs_amici = amici.runAmiciSimulations(amici_model, amici_solver, edatas)
 
-    check_fields_jax(rs_amici, jax_model, jax_solver, edatas,
-                     ['x', 'y', 'llh'])
+    check_fields_jax(rs_amici, jax_model, edatas, ["x", "y", "llh"])
 
-    jax_solver.sensi_order = amici.SensitivityOrder.first
-    check_fields_jax(rs_amici, jax_model, jax_solver, edatas,
-                     ['x', 'y', 'llh', 'sllh'])
-
-    jax_solver.sensi_order = amici.SensitivityOrder.second
-    check_fields_jax(rs_amici, jax_model, jax_solver, edatas,
-                     ['x', 'y', 'llh', 'sllh'])
-
-
-def check_fields_jax(rs_amici,
-                     jax_model,
-                     jax_solver,
-                     edatas,
-                     fields):
-    rs_jax = amici.jax.run_simulations(
+    check_fields_jax(
+        rs_amici,
         jax_model,
-        jax_solver,
-        edatas
+        edatas,
+        ["x", "y", "llh", "sllh"],
+        sensi_order=amici.SensitivityOrder.first,
     )
+
+    check_fields_jax(
+        rs_amici,
+        jax_model,
+        edatas,
+        ["x", "y", "llh", "sllh"],
+        sensi_order=amici.SensitivityOrder.second,
+    )
+
+
+def check_fields_jax(
+    rs_amici,
+    jax_model,
+    edatas,
+    fields,
+    sensi_order=amici.SensitivityOrder.none,
+):
+    rs_jax = jax_model.run_simulations(edatas, sensitivity_order=sensi_order)
     for field in fields:
         for r_amici, r_jax in zip(rs_amici, rs_jax):
             assert_allclose(
                 actual=r_amici[field],
                 desired=r_jax[field],
                 atol=1e-6,
-                rtol=1e-6
+                rtol=1e-6,
             )
