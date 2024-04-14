@@ -134,6 +134,7 @@ class JAXModel(eqx.Module):
             if checkpointed
             else diffrax.DirectAdjoint(),
             saveat=diffrax.SaveAt(ts=ts),
+            throw=False,
         )
         return sol.ys, tcl, sol.stats
 
@@ -166,7 +167,7 @@ class JAXModel(eqx.Module):
         if k_preeq.shape[0] > 0:
             x0 = self._preeq(ps, k_preeq)
         else:
-            x0 = self.x0(p, k)
+            x0 = self.x0(ps, k)
         x, tcl, stats = self._solve(ts, ps, k, x0, checkpointed=checkpointed)
         obs = self._obs(ts, x, ps, k, tcl)
         my_r = my.reshape((len(ts), -1))
