@@ -36,6 +36,9 @@ def test_conversion():
     _test_model(model_module, ts, p, k)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Model does not contain any initial conditions"
+)
 def test_dimerization():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
