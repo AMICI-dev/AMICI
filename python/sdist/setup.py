@@ -11,6 +11,7 @@ Non-python-package requirements:
 """
 import os
 import sys
+from shutil import which
 from pathlib import Path
 
 from cmake_build_extension import CMakeExtension
@@ -42,6 +43,7 @@ def get_extensions():
     global_cmake_configure_options = [
         "-DCMAKE_VERBOSE_MAKEFILE=ON",
         f"-DCMAKE_MODULE_PATH={prefix_path.as_posix()}",
+        f"-DCMAKE_AR={which('ar')}",
     ]
 
     # SuiteSparse Config
