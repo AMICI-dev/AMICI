@@ -109,7 +109,7 @@ def plot_observable_trajectories(
     if not ax:
         fig, ax = plt.subplots()
     if not observable_indices:
-        observable_indices = range(rdata["y"].shape[1])
+        observable_indices = range(rdata.ny)
 
     if marker is None:
         # Show marker if only one time point is available,
