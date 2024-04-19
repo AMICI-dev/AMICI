@@ -9,19 +9,33 @@ import re
 import subprocess
 import sys
 from enum import EnumType
-
-# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
-import amici
 import exhale.deploy
-import exhale_multiproject_monkeypatch
 from unittest import mock
-import pandas as pd
 import sphinx
-import sympy as sp
 from exhale import configs as exhale_configs
 from sphinx.transforms.post_transforms import ReferencesResolver
 
-exhale_multiproject_monkeypatch, pd, sp  # to avoid removal of unused import
+try:
+    import exhale_multiproject_monkeypatch  # noqa: F401
+except ModuleNotFoundError:
+    # for unclear reasons, the import of exhale_multiproject_monkeypatch
+    #  fails on some systems, because the the location of the editable install
+    #  is not automatically added to sys.path ¯\_(ツ)_/¯
+    from importlib.metadata import Distribution
+    import json
+    from urllib.parse import unquote_plus, urlparse
+
+    dist = Distribution.from_name("sphinx-contrib-exhale-multiproject")
+    url = json.loads(dist.read_text("direct_url.json"))["url"]
+    package_dir = unquote_plus(urlparse(url).path)
+    sys.path.append(package_dir)
+    import exhale_multiproject_monkeypatch  # noqa: F401
+
+# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+import amici
+import pandas as pd  # noqa: F401
+import sympy as sp  # noqa: F401
+
 
 # BEGIN Monkeypatch exhale
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen

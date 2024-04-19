@@ -1,7 +1,5 @@
 # NOTE: relative paths are expected to be relative to the repository root
-
-# sphinx<7.3.0: https://github.com/AMICI-dev/AMICI/issues/2403
-sphinx<7.3.0
+sphinx
 mock>=5.0.2
 setuptools>=67.7.2
 pysb>=1.11.0

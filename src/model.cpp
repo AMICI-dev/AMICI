@@ -1673,7 +1673,6 @@ int Model::checkFinite(
         && model_quantity != ModelQuantity::ts) {
         checkFinite(state_.fixedParameters, ModelQuantity::k, t);
         checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
-        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
         if (!always_check_finite_ && model_quantity != ModelQuantity::w) {
             // don't check twice if always_check_finite_ is true
             checkFinite(derived_state_.w_, ModelQuantity::w, t);
@@ -1791,7 +1790,6 @@ int Model::checkFinite(
     // check upstream
     checkFinite(state_.fixedParameters, ModelQuantity::k, t);
     checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
     checkFinite(derived_state_.w_, ModelQuantity::w, t);
 
     return AMICI_RECOVERABLE_ERROR;
@@ -1882,7 +1880,6 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t)
     // check upstream
     checkFinite(state_.fixedParameters, ModelQuantity::k, t);
     checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
     checkFinite(derived_state_.w_, ModelQuantity::w, t);
 
     return AMICI_RECOVERABLE_ERROR;
