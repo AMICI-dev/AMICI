@@ -517,6 +517,9 @@ def test_rdataview(sbml_example_presimulation_module):
     rdata = amici.runAmiciSimulation(model, model.getSolver())
     assert isinstance(rdata, amici.ReturnDataView)
 
+    # check that non-array attributes are looked up in the wrapped object
+    assert rdata.ptr.ny == rdata.ny
+
     # fields are accessible via dot notation and [] operator,
     #  __contains__ and __getattr__ are implemented correctly
     with pytest.raises(AttributeError):
