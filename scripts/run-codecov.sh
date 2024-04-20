@@ -4,7 +4,7 @@
 script_path=$(dirname $BASH_SOURCE)
 amici_path=$(cd "$script_path"/.. && pwd)
 
-source "${amici_path}"/build/venv/bin/activate
+source "${amici_path}"/venv/bin/activate
 pip install coverage pytest pytest-cov
 
 if [[ -z "${BNGPATH}" ]]; then

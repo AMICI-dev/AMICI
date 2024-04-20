@@ -300,6 +300,8 @@ def import_model_sbml(
             init_par = sbml_model.createParameter()
             init_par.setId(init_par_id)
             init_par.setName(init_par_id)
+            # must be a fixed parameter in any case to allow reinitialization
+            fixed_parameters.append(init_par_id)
         assignment = sbml_model.getInitialAssignment(assignee_id)
         if assignment is None:
             assignment = sbml_model.createInitialAssignment()
@@ -518,14 +520,26 @@ def _get_fixed_parameters_sbml(
         petab_problem, non_estimated_parameters_as_constants
     )
 
-    # exclude targets of rules or initial assignments
+    # exclude targets of rules or initial assignments that are not numbers
     sbml_model = petab_problem.model.sbml_model
+    parser_settings = libsbml.L3ParserSettings()
+    parser_settings.setModel(sbml_model)
+    parser_settings.setParseUnits(libsbml.L3P_NO_UNITS)
+
     for fixed_parameter in fixed_parameters.copy():
         # check global parameters
-        if sbml_model.getInitialAssignmentBySymbol(
-            fixed_parameter
-        ) or sbml_model.getRuleByVariable(fixed_parameter):
+        if sbml_model.getRuleByVariable(fixed_parameter):
             fixed_parameters.remove(fixed_parameter)
+            continue
+        if ia := sbml_model.getInitialAssignmentBySymbol(fixed_parameter):
+            sym_math = sp.sympify(
+                libsbml.formulaToL3StringWithSettings(
+                    ia.getMath(), parser_settings
+                )
+            )
+            if not sym_math.evalf().is_Number:
+                fixed_parameters.remove(fixed_parameter)
+                continue
 
     return list(sorted(fixed_parameters))
 

@@ -12,7 +12,7 @@ if [[ -z "${BNGPATH}" ]]; then
 fi
 
 cd "${amici_path}"/python/tests
-source "${amici_path}"/build/venv/bin/activate
+source "${amici_path}"/venv/bin/activate
 
 # PEtab tests are run separately
 pytest \

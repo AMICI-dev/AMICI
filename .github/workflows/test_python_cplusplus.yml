@@ -45,11 +45,11 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: Python tests (part 1)
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pytest \
           --ignore-glob=*petab* \
           --ignore-glob=*test_splines.py \
@@ -64,7 +64,7 @@ jobs:
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pytest \
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
@@ -138,7 +138,7 @@ jobs:
 
     - name: Python tests
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pytest \
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
@@ -214,7 +214,7 @@ jobs:
 
     - name: Install notebook dependencies
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pip install jax[cpu]
 
     - name: example notebooks
@@ -251,7 +251,7 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: cppcheck
       run: scripts/run-cppcheck.sh
@@ -296,7 +296,7 @@ jobs:
         scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh

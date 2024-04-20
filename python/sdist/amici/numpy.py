@@ -9,7 +9,7 @@ import copy
 import itertools
 from typing import Literal, Union
 from collections.abc import Iterator
-
+from numbers import Number
 import amici
 import numpy as np
 import sympy as sp
@@ -55,15 +55,18 @@ class SwigPtrView(collections.abc.Mapping):
         if item in self._cache:
             return self._cache[item]
 
-        if item == "id":
+        if item in self._field_names:
+            value = _field_as_numpy(
+                self._field_dimensions, item, self._swigptr
+            )
+            self._cache[item] = value
+
+            return value
+
+        if not item.startswith("_") and hasattr(self._swigptr, item):
             return getattr(self._swigptr, item)
 
-        if item not in self._field_names:
-            self.__missing__(item)
-
-        value = _field_as_numpy(self._field_dimensions, item, self._swigptr)
-        self._cache[item] = value
-        return value
+        self.__missing__(item)
 
     def __missing__(self, key: str) -> None:
         """
@@ -238,6 +241,8 @@ class ReturnDataView(SwigPtrView):
         "numnonlinsolvconvfailsB",
         "cpu_timeB",
         "cpu_time_total",
+        "messages",
+        "t_last",
     ]
 
     def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
@@ -440,7 +445,11 @@ def _field_as_numpy(
     attr = getattr(data, field)
     if field_dim := field_dimensions.get(field, None):
         return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
-    return float(attr)
+
+    if isinstance(attr, Number):
+        return float(attr)
+
+    return attr
 
 
 def _entity_type_from_id(

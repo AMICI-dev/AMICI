@@ -4,6 +4,8 @@
 %ignore amici::regexErrorToString;
 %ignore amici::writeSlice;
 %ignore ContextManager;
+%ignore amici::scaleParameters;
+%ignore amici::unscaleParameters;
 
 // Add necessary symbols to generated header
 %{
