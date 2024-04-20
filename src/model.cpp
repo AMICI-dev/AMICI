@@ -287,7 +287,9 @@ bool operator==(Model const& a, Model const& b) {
            && (a.nmaxevent_ == b.nmaxevent_)
            && (a.state_is_non_negative_ == b.state_is_non_negative_)
            && (a.sigma_res_ == b.sigma_res_) && (a.min_sigma_ == b.min_sigma_)
-           && a.state_ == b.state_;
+           && (a.state_ == b.state_)
+           && (a.steadystate_mask_.getVector()
+               == b.steadystate_mask_.getVector());
 }
 
 bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
@@ -3133,6 +3135,23 @@ std::vector<double> Model::get_trigger_timepoints() const {
     }
     std::sort(trigger_timepoints.begin(), trigger_timepoints.end());
     return trigger_timepoints;
+}
+
+void Model::set_steadystate_mask(std::vector<double> const& mask) {
+    if (mask.size() == 0) {
+        if (steadystate_mask_.getLength() != 0) {
+            steadystate_mask_ = AmiVector();
+        }
+        return;
+    }
+
+    if (gsl::narrow<int>(mask.size()) != nx_solver)
+        throw AmiException(
+            "Steadystate mask has wrong size: %d, expected %d",
+            gsl::narrow<int>(mask.size()), nx_solver
+        );
+
+    steadystate_mask_ = AmiVector(mask);
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {
