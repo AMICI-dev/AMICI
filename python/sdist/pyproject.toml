@@ -106,9 +106,6 @@ Repository = "https://github.com/AMICI-dev/AMICI.git"
 ## https://setuptools-scm.readthedocs.io/en/latest/
 #root = "../.."
 
-[tool.setuptools.packages.find]
-where = ["amici"]
-
 [tool.setuptools.package-data]
 amici = [
     "amici/include/amici/*",

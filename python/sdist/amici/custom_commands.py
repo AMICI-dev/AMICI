@@ -179,12 +179,6 @@ class AmiciBuildCMakeExtension(BuildExtension):
         # put some structure into CMake output
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
 
-        # since switching to pyproject.toml, we are already in amici/
-        # for editable installs, but not for regular installs. therefore,
-        # we need to remove the install prefix for editable installs
-        if self.editable_mode and ext.install_prefix == "amici":
-            ext.install_prefix = ""
-
         # Some hack to be able to use distutils' potentially temporary build
         # directory in CMake options:
         # Any occurrence of `${build_dir}` will be replaced by said path.
