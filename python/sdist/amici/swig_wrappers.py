@@ -4,11 +4,16 @@ import sys
 import warnings
 from contextlib import contextmanager, suppress
 from typing import Any, Optional, Union
-from collections.abc import Sequence
 
 import amici
 import amici.amici as amici_swig
-
+from amici.amici import (
+    _get_ptr,
+    AmiciExpData,
+    AmiciExpDataVector,
+    AmiciModel,
+    AmiciSolver,
+)
 from . import numpy
 from .logging import get_logger
 
@@ -18,24 +23,11 @@ logger = get_logger(__name__, log_level=logging.DEBUG)
 __all__ = [
     "runAmiciSimulation",
     "runAmiciSimulations",
-    "ExpData",
     "readSolverSettingsFromHDF5",
     "writeSolverSettingsToHDF5",
     "set_model_settings",
     "get_model_settings",
-    "AmiciModel",
-    "AmiciSolver",
-    "AmiciExpData",
-    "AmiciReturnData",
-    "AmiciExpDataVector",
 ]
-
-AmiciModel = Union["amici.Model", "amici.ModelPtr"]
-AmiciSolver = Union["amici.Solver", "amici.SolverPtr"]
-AmiciExpData = Union["amici.ExpData", "amici.ExpDataPtr"]
-AmiciReturnData = Union["amici.ReturnData", "amici.ReturnDataPtr"]
-AmiciExpDataVector = Union["amici.ExpDataPtrVector", Sequence[AmiciExpData]]
-
 
 try:
     from wurlitzer import sys_pipes
@@ -52,36 +44,6 @@ def _capture_cstdout():
     else:
         with sys_pipes():
             yield
-
-
-def _get_ptr(
-    obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData],
-) -> Union[
-    "amici_swig.Model",
-    "amici_swig.ExpData",
-    "amici_swig.Solver",
-    "amici_swig.ReturnData",
-]:
-    """
-    Convenience wrapper that returns the smart pointer pointee, if applicable
-
-    :param obj:
-        Potential smart pointer
-
-    :returns:
-        Non-smart pointer
-    """
-    if isinstance(
-        obj,
-        (
-            amici_swig.ModelPtr,
-            amici_swig.ExpDataPtr,
-            amici_swig.SolverPtr,
-            amici_swig.ReturnDataPtr,
-        ),
-    ):
-        return obj.get()
-    return obj
 
 
 def runAmiciSimulation(
@@ -126,32 +88,6 @@ def runAmiciSimulation(
     if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
         _ids_and_names_to_rdata(rdata, model)
     return numpy.ReturnDataView(rdata)
-
-
-def ExpData(*args) -> "amici_swig.ExpData":
-    """
-    Convenience wrapper for :py:class:`amici.amici.ExpData` constructors
-
-    :param args: arguments
-
-    :returns: ExpData Instance
-    """
-    if not args:
-        return amici_swig.ExpData()
-
-    if isinstance(args[0], numpy.ReturnDataView):
-        return amici_swig.ExpData(_get_ptr(args[0]["ptr"]), *args[1:])
-
-    if isinstance(args[0], (amici_swig.ExpData, amici_swig.ExpDataPtr)):
-        # the *args[:1] should be empty, but by the time you read this,
-        # the constructor signature may have changed, and you are glad this
-        # wrapper did not break.
-        return amici_swig.ExpData(_get_ptr(args[0]), *args[1:])
-
-    if isinstance(args[0], (amici_swig.Model, amici_swig.ModelPtr)):
-        return amici_swig.ExpData(_get_ptr(args[0]))
-
-    return amici_swig.ExpData(*args)
 
 
 def runAmiciSimulations(
