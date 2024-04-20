@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 84.
+List of publications using AMICI. Total number is 85.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -14,6 +14,12 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2024</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="list">
+<div id="ref-DoresicGre2024" class="csl-entry" role="listitem">
+Dorešić, Domagoj, Stephan Grein, and Jan Hasenauer. 2024.
+<span>“Efficient Parameter Estimation for ODE Models of Cellular
+Processes Using Semi-Quantitative Data.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2024.01.26.577371">https://doi.org/10.1101/2024.01.26.577371</a>.
+</div>
 <div id="ref-KissVen2024" class="csl-entry" role="listitem">
 Kiss, Anna E, Anuroop V Venkatasubramani, Dilan Pathirana, Silke Krause,
 Aline Campos Sparr, Jan Hasenauer, Axel Imhof, Marisa Müller, and Peter
