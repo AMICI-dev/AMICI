@@ -7,9 +7,9 @@
    viewBox="0 0 294.54358 107.54766"
    version="1.1"
    id="svg11110"
-   inkscape:version="1.1.1 (1:1.1+202109281946+c3084ef5ed)"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    sodipodi:docname="amici_workflow.svg"
-   inkscape:export-filename="/home/dweindl/src/AMICI-devel/documentation/gfx/amici_workflow.png"
+   inkscape:export-filename="amici_workflow.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -570,13 +570,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
-     inkscape:cx="83.085046"
-     inkscape:cy="80.180858"
+     inkscape:cx="76.771593"
+     inkscape:cy="80.433396"
      inkscape:document-units="mm"
      inkscape:current-layer="g22231"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="974"
+     inkscape:window-height="1110"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -584,7 +584,9 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:pagecheckerboard="0" />
+     inkscape:pagecheckerboard="0"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata11107">
     <rdf:RDF>
@@ -1498,7 +1500,7 @@
              id="tspan20651"
              x="-16.819941"
              y="40.732136"
-             style="stroke-width:0.264583px">&gt;= 3.9</tspan></text>
+             style="stroke-width:0.264583px">&gt;= 3.10</tspan></text>
       </g>
       <path
          style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker21180)"
