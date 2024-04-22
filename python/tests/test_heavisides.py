@@ -1,4 +1,5 @@
 """Tests for SBML events, including piecewise expressions."""
+
 import numpy as np
 import pytest
 from util import (

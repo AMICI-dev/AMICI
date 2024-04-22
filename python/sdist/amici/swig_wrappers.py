@@ -1,9 +1,10 @@
 """Convenience wrappers for the swig interface"""
+
 import logging
 import sys
 import warnings
 from contextlib import contextmanager, suppress
-from typing import Any, Optional, Union
+from typing import Any
 
 import amici
 import amici.amici as amici_swig
@@ -49,7 +50,7 @@ def _capture_cstdout():
 def runAmiciSimulation(
     model: AmiciModel,
     solver: AmiciSolver,
-    edata: Optional[AmiciExpData] = None,
+    edata: AmiciExpData | None = None,
 ) -> "numpy.ReturnDataView":
     """
     Convenience wrapper around :py:func:`amici.amici.runAmiciSimulation`
@@ -139,7 +140,7 @@ def runAmiciSimulations(
 
 
 def readSolverSettingsFromHDF5(
-    file: str, solver: AmiciSolver, location: Optional[str] = "solverSettings"
+    file: str, solver: AmiciSolver, location: str | None = "solverSettings"
 ) -> None:
     """
     Convenience wrapper for :py:func:`amici.readSolverSettingsFromHDF5`
@@ -153,8 +154,8 @@ def readSolverSettingsFromHDF5(
 
 def writeSolverSettingsToHDF5(
     solver: AmiciSolver,
-    file: Union[str, object],
-    location: Optional[str] = "solverSettings",
+    file: str | object,
+    location: str | None = "solverSettings",
 ) -> None:
     """
     Convenience wrapper for :py:func:`amici.amici.writeSolverSettingsToHDF5`

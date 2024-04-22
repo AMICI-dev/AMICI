@@ -7,6 +7,7 @@ into AMICI.
 .. deprecated:: 0.21.0
     Use :mod:`amici.petab` instead.
 """
+
 import warnings
 
 warnings.warn(

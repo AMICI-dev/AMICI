@@ -37,7 +37,7 @@ class SwigPtrView(collections.abc.Mapping):
     _field_names: list[str] = []
     _field_dimensions: dict[str, list[int]] = dict()
 
-    def __getitem__(self, item: str) -> Union[np.ndarray, float]:
+    def __getitem__(self, item: str) -> np.ndarray | float:
         """
         Access to field names, copies data from C++ object into numpy
         array, reshapes according to field dimensions and stores values in
@@ -76,7 +76,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         raise KeyError(f"Unknown field name {key}.")
 
-    def __getattr__(self, item) -> Union[np.ndarray, float]:
+    def __getattr__(self, item) -> np.ndarray | float:
         """
         Attribute accessor for field names
 
@@ -245,7 +245,7 @@ class ReturnDataView(SwigPtrView):
         "t_last",
     ]
 
-    def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
+    def __init__(self, rdata: ReturnDataPtr | ReturnData):
         """
         Constructor
 
@@ -309,7 +309,7 @@ class ReturnDataView(SwigPtrView):
 
     def __getitem__(
         self, item: str
-    ) -> Union[np.ndarray, ReturnDataPtr, ReturnData, float]:
+    ) -> np.ndarray | ReturnDataPtr | ReturnData | float:
         """
         Access fields by name.s
 
@@ -391,7 +391,7 @@ class ExpDataView(SwigPtrView):
         "fixedParametersPresimulation",
     ]
 
-    def __init__(self, edata: Union[ExpDataPtr, ExpData]):
+    def __init__(self, edata: ExpDataPtr | ExpData):
         """
         Constructor
 
@@ -429,7 +429,7 @@ class ExpDataView(SwigPtrView):
 
 def _field_as_numpy(
     field_dimensions: dict[str, list[int]], field: str, data: SwigPtrView
-) -> Union[np.ndarray, float, None]:
+) -> np.ndarray | float | None:
     """
     Convert data object field to numpy array with dimensions according to
     specified field dimensions

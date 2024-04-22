@@ -3,6 +3,7 @@
 """
 Aggregate computation times from different benchmarks and plot
 """
+
 import os
 
 import matplotlib.pyplot as plt

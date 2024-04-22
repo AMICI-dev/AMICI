@@ -1,4 +1,5 @@
 """Tests related to amici.sbml_import"""
+
 import os
 import re
 from numbers import Number
