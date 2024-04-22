@@ -37,13 +37,13 @@ dependencies = [
 ]
 license = {text = "BSD 3-Clause License"}
 authors = [
-    {name = "Fabian Froehlich", email = "fabian_froehlich@hms.harvard.edu"},
+    {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},
     {name = "Jan Hasenauer"},
     {name = "AMICI contributors"},
 ]
 maintainers = [
-    {name = "Fabian Froehlich", email = "fabian_froehlich@hms.harvard.edu"},
+    {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},
 ]
 readme = "README.md"
