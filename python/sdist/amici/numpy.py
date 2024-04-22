@@ -55,15 +55,18 @@ class SwigPtrView(collections.abc.Mapping):
         if item in self._cache:
             return self._cache[item]
 
-        if item == "id":
+        if item in self._field_names:
+            value = _field_as_numpy(
+                self._field_dimensions, item, self._swigptr
+            )
+            self._cache[item] = value
+
+            return value
+
+        if not item.startswith("_") and hasattr(self._swigptr, item):
             return getattr(self._swigptr, item)
 
-        if item not in self._field_names:
-            self.__missing__(item)
-
-        value = _field_as_numpy(self._field_dimensions, item, self._swigptr)
-        self._cache[item] = value
-        return value
+        self.__missing__(item)
 
     def __missing__(self, key: str) -> None:
         """

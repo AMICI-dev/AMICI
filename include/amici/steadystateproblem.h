@@ -246,14 +246,16 @@ class SteadystateProblem {
      * w_i = 1 / ( rtol * x_i + atol )
      * @param x current state (sx[ip] for sensitivities)
      * @param xdot current rhs (sxdot[ip] for sensitivities)
+     * @param mask mask for state variables to include in WRMS norm.
+     * Positive value: include; non-positive value: exclude; empty: include all.
      * @param atol absolute tolerance
      * @param rtol relative tolerance
      * @param ewt error weight vector
      * @return root-mean-square norm
      */
     realtype getWrmsNorm(
-        AmiVector const& x, AmiVector const& xdot, realtype atol, realtype rtol,
-        AmiVector& ewt
+        AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
+        realtype atol, realtype rtol, AmiVector& ewt
     ) const;
 
     /**

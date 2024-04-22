@@ -83,13 +83,14 @@ if(NOT TARGET BLAS::BLAS)
     INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
     INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
   add_library(BLAS::BLAS ALIAS BLAS)
-  install(TARGETS BLAS EXPORT BLAS)
-  export(EXPORT BLAS NAMESPACE BLAS::)
-  install(
-    EXPORT BLAS
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
-    NAMESPACE BLAS::)
-
+  if("${PROJECT_NAME}" STREQUAL "amici")
+      install(TARGETS BLAS EXPORT BLAS)
+      export(EXPORT BLAS NAMESPACE BLAS::)
+      install(
+        EXPORT BLAS
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
+        NAMESPACE BLAS::)
+  endif()
 
   # legacy python package environment variables:
   if(DEFINED ENV{BLAS_CFLAGS})
