@@ -1,6 +1,8 @@
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+# https://setuptools.pypa.io/en/latest/userguide/index.html
 [build-system]
 requires = [
-    "setuptools>=40.6.3",
+    "setuptools>=61",
     "wheel",
     # oldest-supported-numpy helps us to pin numpy here to the lowest supported
     # version to have ABI-compatibility with the numpy version in the runtime
@@ -12,6 +14,112 @@ requires = [
     "cmake-build-extension==0.5.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "amici"
+dynamic = ["version"]
+description = "Advanced multi-language Interface to CVODES and IDAS"
+requires-python = ">=3.9"
+dependencies = [
+    "cmake-build-extension==0.5.1",
+    "sympy>=1.9",
+    "numpy>=1.19.3; python_version=='3.9'",
+    "numpy>=1.21.4; python_version>='3.10'",
+    "numpy>=1.23.2; python_version=='3.11'",
+    "numpy; python_version>='3.12'",
+    "python-libsbml",
+    "pandas>=2.0.2",
+    "pyarrow",
+    "wurlitzer",
+    "toposort",
+    "setuptools>=48",
+    "mpmath",
+]
+license = {text = "BSD 3-Clause License"}
+authors = [
+    {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
+    {name = "Daniel Weindl", email = "sci@danielweindl.de"},
+    {name = "Jan Hasenauer"},
+    {name = "AMICI contributors"},
+]
+maintainers = [
+    {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
+    {name = "Daniel Weindl", email = "sci@danielweindl.de"},
+]
+readme = "README.md"
+keywords =["differential equations", "simulation", "ode", "cvodes",
+    "systems biology", "sensitivity analysis", "sbml", "pysb", "petab"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python",
+    "Programming Language :: C++",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+[project.optional-dependencies]
+# Don't include any URLs here - they are not supported by PyPI:
+#  HTTPError: 400 Bad Request from https://upload.pypi.org/legacy/
+#  Invalid value for requires_dist. Error: Can't have direct dependency: ...
+petab = ["petab>=0.2.9"]
+pysb = ["pysb>=1.13.1"]
+test = [
+    "benchmark_models_petab @ git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python",
+    "h5py",
+    "pytest",
+    "pytest-cov",
+    "pytest-rerunfailures",
+    "coverage",
+    "shyaml",
+    "antimony>=2.13",
+    # see https://github.com/sys-bio/antimony/issues/92
+    #  unsupported x86_64 / x86_64h
+    "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
+    "scipy",
+    "pooch"
+]
+vis =[
+    "matplotlib",
+    "seaborn",
+]
+examples =[
+    "jupyter",
+    "scipy",
+]
+
+[project.scripts]
+# amici_import_petab.py is kept for backwards compatibility
+amici_import_petab = "amici.petab.cli.import_petab:_main"
+"amici_import_petab.py" = "amici.petab.cli.import_petab:_main"
+
+[project.urls]
+Homepage = "https://github.com/AMICI-dev/AMICI"
+Documentation = "https://amici.readthedocs.io/en/latest/"
+Repository = "https://github.com/AMICI-dev/AMICI.git"
+"Bug Tracker" = "https://github.com/AMICI-dev/AMICI/issues"
+
+# TODO: consider using setuptools_scm
+#[tool.setuptools_scm]
+## https://setuptools-scm.readthedocs.io/en/latest/
+#root = "../.."
+
+[tool.setuptools.package-data]
+amici = [
+    "amici/include/amici/*",
+    "src/*template*",
+    "swig/*",
+    "libs/*",
+    "setup.py.template",
+]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["README.txt"]
+
+[tool.setuptools.dynamic]
+version = {attr = "amici.__version__"}
 
 [tool.black]
 line-length = 79
