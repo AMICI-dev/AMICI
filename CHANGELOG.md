@@ -2,6 +2,48 @@
 
 ## v0.X Series
 
+### v0.24.0 (2024-04-22)
+
+This will be the last release supporting Python 3.9.
+Future releases will require Python 3.10.
+
+**Fixes**
+
+* Fix cmake error `cannot create directory: /cmake/Amici`
+  during model import in cases where BLAS was not found via `FindBLAS`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2389
+* Added status code `AMICI_CONSTR_FAIL`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2379
+* Fixed certain initial state issues with PEtab
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2382
+* Fixed Solver `operator==` and copyctor
+  (constraints were not copied correctly)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2388
+* Avoid confusing warnings about non-finite timepoints
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2395
+* Fixed incorrect exception types / messages for `IDASolver`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2398
+* cmake: set SUNDIALS path hint for python package to help CMake find
+  the correct SUNDIALS installation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2397
+
+* **Features**
+
+* Optionally include measurements in `plot_observable_trajectories`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2381
+* Improved type annotations in swig-wrappers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2401
+* Additional attributes are accessible directly via `ReturnDataView` and
+  `ExpDataView`, e.g. `ReturnDataView.ny`, `ReturnDataView.nx`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2405
+* Allow subselection of state variables for convergence check during
+  steady-state simulations via `Model.set_steadystate_mask([1, 0, ..., 1])`
+  (positive value: check; non-positive: don't check).
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2387
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.23.1...v0.24.0
+
+
 ### v0.23.1 (2024-03-11)
 
 * Fixes installation issues related to building SuiteSparse on some systems

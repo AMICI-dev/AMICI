@@ -255,6 +255,7 @@ model_instance_settings = [
     "SteadyStateSensitivityMode",
     ("t0", "setT0"),
     "Timepoints",
+    "_steadystate_mask",
 ]
 
 

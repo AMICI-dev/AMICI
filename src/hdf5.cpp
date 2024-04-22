@@ -1244,6 +1244,12 @@ void readModelDataFromHDF5(
             model.setInitialStates(x0);
     }
 
+    if (locationExists(file, datasetPath + "/steadystate_mask")) {
+        auto mask = getDoubleDataset1D(file, datasetPath + "/steadystate_mask");
+        if (!mask.empty())
+            model.set_steadystate_mask(mask);
+    }
+
     if (locationExists(file, datasetPath + "/sx0")) {
         hsize_t length0 = 0;
         hsize_t length1 = 0;

@@ -158,14 +158,6 @@ def get_extensions():
 
 
 def main():
-    # Readme as long package description to go on PyPi
-    # (https://pypi.org/project/amici/)
-    with open(
-        os.path.join(os.path.dirname(__file__), "README.md"),
-        encoding="utf-8",
-    ) as fh:
-        long_description = fh.read()
-
     ext_modules = get_extensions()
 
     # handle parallel building
@@ -185,8 +177,6 @@ def main():
             "develop": AmiciDevelop,
             "build_py": AmiciBuildPy,
         },
-        long_description=long_description,
-        long_description_content_type="text/markdown",
         ext_modules=ext_modules,
     )
 
