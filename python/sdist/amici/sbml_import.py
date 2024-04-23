@@ -556,9 +556,13 @@ class SbmlImporter:
         dxdt = smart_multiply(
             self.stoichiometric_matrix, MutableDenseMatrix(fluxes)
         )
+        # there may be an additional 0-entry at the end of the
+        #  stoichiometric matrix / flux vector
+        assert dxdt.shape[0] - len(self.symbols[SymbolId.SPECIES]) in (0, 1)
+
         # correct time derivatives for compartment changes
         for ix, ((species_id, species), formula) in enumerate(
-            zip(self.symbols[SymbolId.SPECIES].items(), dxdt, strict=True)
+            zip(self.symbols[SymbolId.SPECIES].items(), dxdt, strict=False)
         ):
             # rate rules and amount species don't need to be updated
             if "dt" in species:

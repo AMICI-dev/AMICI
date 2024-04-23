@@ -1400,7 +1400,8 @@ class DEModel:
                                 if not s.has_conservation_law()
                             ),
                             self.sym("dx"),
-                            strict=True,
+                            # dx contains extra elements for algebraic states
+                            strict=False,
                         )
                     ]
                     + [eq.get_val() for eq in self._algebraic_equations]
