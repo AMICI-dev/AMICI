@@ -1,4 +1,5 @@
 """Symbolic differential equation model."""
+
 from __future__ import annotations
 
 import contextlib
@@ -6,7 +7,8 @@ import copy
 import itertools
 import re
 from itertools import chain
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from collections.abc import Callable
 from collections.abc import Sequence
 
 import numpy as np

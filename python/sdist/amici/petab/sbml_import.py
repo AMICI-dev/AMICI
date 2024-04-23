@@ -4,7 +4,7 @@ import os
 import tempfile
 from itertools import chain
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 from warnings import warn
 
 import amici
@@ -31,17 +31,17 @@ logger = logging.getLogger(__name__)
 @log_execution_time("Importing PEtab model", logger)
 def import_model_sbml(
     sbml_model: Union[str, Path, "libsbml.Model"] = None,
-    condition_table: Optional[Union[str, Path, pd.DataFrame]] = None,
-    observable_table: Optional[Union[str, Path, pd.DataFrame]] = None,
-    measurement_table: Optional[Union[str, Path, pd.DataFrame]] = None,
+    condition_table: str | Path | pd.DataFrame | None = None,
+    observable_table: str | Path | pd.DataFrame | None = None,
+    measurement_table: str | Path | pd.DataFrame | None = None,
     petab_problem: petab.Problem = None,
-    model_name: Optional[str] = None,
-    model_output_dir: Optional[Union[str, Path]] = None,
-    verbose: Optional[Union[bool, int]] = True,
+    model_name: str | None = None,
+    model_output_dir: str | Path | None = None,
+    verbose: bool | int | None = True,
     allow_reinit_fixpar_initcond: bool = True,
     validate: bool = True,
     non_estimated_parameters_as_constants=True,
-    output_parameter_defaults: Optional[dict[str, float]] = None,
+    output_parameter_defaults: dict[str, float] | None = None,
     discard_sbml_annotations: bool = False,
     **kwargs,
 ) -> amici.SbmlImporter:
@@ -545,7 +545,7 @@ def _get_fixed_parameters_sbml(
 
 
 def _create_model_output_dir_name(
-    sbml_model: "libsbml.Model", model_name: Optional[str] = None
+    sbml_model: "libsbml.Model", model_name: str | None = None
 ) -> Path:
     """
     Find a folder for storing the compiled amici model.

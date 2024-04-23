@@ -9,6 +9,7 @@ as this will be done by
 :py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
 :py:func:`amici.petab_import.import_model`.
 """
+
 from __future__ import annotations
 import copy
 import logging
@@ -1142,36 +1143,36 @@ class DEExporter:
                         ] = impl
                 continue
 
-            tpl_data[
-                f"{func_name.upper()}_DEF"
-            ] = get_function_extern_declaration(
-                func_name, self.model_name, self.model.is_ode()
+            tpl_data[f"{func_name.upper()}_DEF"] = (
+                get_function_extern_declaration(
+                    func_name, self.model_name, self.model.is_ode()
+                )
             )
-            tpl_data[
-                f"{func_name.upper()}_IMPL"
-            ] = get_model_override_implementation(
-                func_name, self.model_name, self.model.is_ode()
+            tpl_data[f"{func_name.upper()}_IMPL"] = (
+                get_model_override_implementation(
+                    func_name, self.model_name, self.model.is_ode()
+                )
             )
             if func_name in sparse_functions:
-                tpl_data[
-                    f"{func_name.upper()}_COLPTRS_DEF"
-                ] = get_sunindex_extern_declaration(
-                    func_name, self.model_name, "colptrs"
+                tpl_data[f"{func_name.upper()}_COLPTRS_DEF"] = (
+                    get_sunindex_extern_declaration(
+                        func_name, self.model_name, "colptrs"
+                    )
                 )
-                tpl_data[
-                    f"{func_name.upper()}_COLPTRS_IMPL"
-                ] = get_sunindex_override_implementation(
-                    func_name, self.model_name, "colptrs"
+                tpl_data[f"{func_name.upper()}_COLPTRS_IMPL"] = (
+                    get_sunindex_override_implementation(
+                        func_name, self.model_name, "colptrs"
+                    )
                 )
-                tpl_data[
-                    f"{func_name.upper()}_ROWVALS_DEF"
-                ] = get_sunindex_extern_declaration(
-                    func_name, self.model_name, "rowvals"
+                tpl_data[f"{func_name.upper()}_ROWVALS_DEF"] = (
+                    get_sunindex_extern_declaration(
+                        func_name, self.model_name, "rowvals"
+                    )
                 )
-                tpl_data[
-                    f"{func_name.upper()}_ROWVALS_IMPL"
-                ] = get_sunindex_override_implementation(
-                    func_name, self.model_name, "rowvals"
+                tpl_data[f"{func_name.upper()}_ROWVALS_IMPL"] = (
+                    get_sunindex_override_implementation(
+                        func_name, self.model_name, "rowvals"
+                    )
                 )
 
         if self.model.num_states_solver() == self.model.num_states_rdata():

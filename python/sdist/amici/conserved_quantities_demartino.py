@@ -2,7 +2,6 @@ import logging
 import math
 import random
 import sys
-from typing import Optional, Union
 from collections.abc import MutableSequence, Sequence
 
 from .logging import get_logger
@@ -21,8 +20,8 @@ def compute_moiety_conservation_laws(
     num_species: int,
     num_reactions: int,
     max_num_monte_carlo: int = 20,
-    rng_seed: Union[None, bool, int] = False,
-    species_names: Optional[Sequence[str]] = None,
+    rng_seed: None | bool | int = False,
+    species_names: Sequence[str] | None = None,
 ) -> tuple[list[list[int]], list[list[float]]]:
     """Compute moiety conservation laws.
 
@@ -116,7 +115,7 @@ def _output(
     int_matched: list[int],
     species_indices: list[list[int]],
     species_coefficients: list[list[float]],
-    species_names: Optional[Sequence[str]] = None,
+    species_names: Sequence[str] | None = None,
     verbose: bool = False,
     log_level: int = logging.DEBUG,
 ):

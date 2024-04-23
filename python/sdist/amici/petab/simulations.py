@@ -3,9 +3,10 @@
 Functionality related to running simulations or evaluating the objective
 function as defined by a PEtab problem.
 """
+
 import copy
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 from collections.abc import Sequence
 
 import amici
@@ -72,12 +73,12 @@ __all__ = [
 def simulate_petab(
     petab_problem: petab.Problem,
     amici_model: AmiciModel,
-    solver: Optional[amici.Solver] = None,
-    problem_parameters: Optional[dict[str, float]] = None,
-    simulation_conditions: Union[pd.DataFrame, dict] = None,
+    solver: amici.Solver | None = None,
+    problem_parameters: dict[str, float] | None = None,
+    simulation_conditions: pd.DataFrame | dict = None,
     edatas: list[AmiciExpData] = None,
     parameter_mapping: ParameterMapping = None,
-    scaled_parameters: Optional[bool] = False,
+    scaled_parameters: bool | None = False,
     log_level: int = logging.WARNING,
     num_threads: int = 1,
     failfast: bool = True,
@@ -263,11 +264,11 @@ def simulate_petab(
 def aggregate_sllh(
     amici_model: AmiciModel,
     rdatas: Sequence[amici.ReturnDataView],
-    parameter_mapping: Optional[ParameterMapping],
+    parameter_mapping: ParameterMapping | None,
     edatas: list[AmiciExpData],
     petab_scale: bool = True,
     petab_problem: petab.Problem = None,
-) -> Union[None, dict[str, float]]:
+) -> None | dict[str, float]:
     """
     Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.

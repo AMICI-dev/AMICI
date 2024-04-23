@@ -1,8 +1,8 @@
 """C++ code generation"""
+
 import itertools
 import os
 import re
-from typing import Optional
 from collections.abc import Sequence
 from collections.abc import Iterable
 
@@ -49,7 +49,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         else:
             self._fpoptimizer = None
 
-    def doprint(self, expr: sp.Expr, assign_to: Optional[str] = None) -> str:
+    def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         if self._fpoptimizer:
             if isinstance(expr, list):
                 expr = list(map(self._fpoptimizer, expr))
@@ -124,7 +124,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         equations: sp.Matrix,
         variable: str,
         indent_level: int,
-        indices: Optional[Sequence[int]] = None,
+        indices: Sequence[int] | None = None,
     ) -> list[str]:
         """
         Generate C++ code for where array elements are directly replaced with
@@ -234,8 +234,8 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 def get_switch_statement(
     condition: str,
     cases: dict[int, list[str]],
-    indentation_level: Optional[int] = 0,
-    indentation_step: Optional[str] = " " * 4,
+    indentation_level: int | None = 0,
+    indentation_step: str | None = " " * 4,
 ):
     """
     Generate code for a C++ switch statement.
@@ -300,8 +300,8 @@ def csc_matrix(
     matrix: sp.Matrix,
     rownames: list[sp.Symbol],
     colnames: list[sp.Symbol],
-    identifier: Optional[int] = 0,
-    pattern_only: Optional[bool] = False,
+    identifier: int | None = 0,
+    pattern_only: bool | None = False,
 ) -> tuple[list[int], list[int], sp.Matrix, list[str], sp.Matrix]:
     """
     Generates the sparse symbolic identifiers, symbolic identifiers,

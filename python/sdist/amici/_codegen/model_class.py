@@ -1,4 +1,5 @@
 """Function for generating the ``amici::Model`` subclass for an amici model."""
+
 from __future__ import annotations
 
 from .cxx_functions import functions, multiobs_functions

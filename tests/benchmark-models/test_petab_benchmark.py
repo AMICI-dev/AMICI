@@ -1,4 +1,5 @@
 """Tests for simulate_petab on PEtab benchmark problems."""
+
 import os
 from pathlib import Path
 
