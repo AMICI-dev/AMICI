@@ -717,7 +717,9 @@ class DEExporter:
             for ipar in range(self.model.num_par()):
                 expressions = []
                 for index, formula in zip(
-                    self.model._x0_fixedParameters_idx, equations[:, ipar]
+                    self.model._x0_fixedParameters_idx,
+                    equations[:, ipar],
+                    strict=True,
                 ):
                     if not formula.is_zero:
                         expressions.extend(
@@ -735,7 +737,7 @@ class DEExporter:
 
         elif function == "x0_fixedParameters":
             for index, formula in zip(
-                self.model._x0_fixedParameters_idx, equations
+                self.model._x0_fixedParameters_idx, equations, strict=True
             ):
                 lines.append(
                     f"    if(std::find(reinitialization_state_idxs.cbegin(), "

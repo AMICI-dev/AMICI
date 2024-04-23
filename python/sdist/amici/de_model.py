@@ -396,7 +396,9 @@ class DEModel:
     def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
         rate_of_func = sp.core.function.UndefinedFunction("rateOf")
-        species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
+        species_sym_to_xdot = dict(
+            zip(self.sym("x"), self.sym("xdot"), strict=True)
+        )
         species_sym_to_idx = {x: i for i, x in enumerate(self.sym("x"))}
 
         def get_rate(symbol: sp.Symbol):
@@ -427,7 +429,7 @@ class DEModel:
         if made_substitutions:
             # substitute in topological order
             subs = toposort_symbols(
-                dict(zip(self.sym("xdot"), self.eq("xdot")))
+                dict(zip(self.sym("xdot"), self.eq("xdot"), strict=True))
             )
             self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
@@ -469,6 +471,7 @@ class DEModel:
                     zip(
                         self.sym("w")[self.num_cons_law() :, :],
                         self.eq("w")[self.num_cons_law() :, :],
+                        strict=True,
                     )
                 )
             )
@@ -477,6 +480,7 @@ class DEModel:
                     zip(
                         self.sym("w")[: self.num_cons_law(), :],
                         self.eq("w")[: self.num_cons_law(), :],
+                        strict=True,
                     )
                 )
                 | w_sorted
@@ -1027,7 +1031,9 @@ class DEModel:
             #  of non-zeros entries of the sparse matrix
             self._static_indices[name] = [
                 i
-                for i, (expr, row_idx) in enumerate(zip(sparseeq, rowvals))
+                for i, (expr, row_idx) in enumerate(
+                    zip(sparseeq, rowvals, strict=True)
+                )
                 # derivative of a static expression is static
                 if row_idx in static_indices_w
                 # constant expressions
@@ -1396,6 +1402,8 @@ class DEModel:
                                 if not s.has_conservation_law()
                             ),
                             self.sym("dx"),
+                            # dx contains extra elements for algebraic states
+                            strict=False,
                         )
                     ]
                     + [eq.get_val() for eq in self._algebraic_equations]
@@ -1556,7 +1564,9 @@ class DEModel:
             # backsubstitution of optimized right-hand side terms into RHS
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
-            w_sorted = toposort_symbols(dict(zip(self.sym("w"), self.eq("w"))))
+            w_sorted = toposort_symbols(
+                dict(zip(self.sym("w"), self.eq("w"), strict=True))
+            )
             tmp_xdot = smart_subs_dict(self.eq("xdot"), w_sorted)
             self._eqs[name] = self.eq("drootdt")
             if self.num_states_solver():
@@ -1586,7 +1596,7 @@ class DEModel:
                 for event_obs in self._event_observables
             ]
             for (iz, ie), event_obs in zip(
-                enumerate(z2event), self._event_observables
+                enumerate(z2event), self._event_observables, strict=True
             ):
                 event_observables[ie - 1][iz] = event_obs.get_val()
 
@@ -1727,7 +1737,7 @@ class DEModel:
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
             xs_in_sigma = {}
-            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name]):
+            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name], strict=True):
                 yz_free_syms = eq_yz.free_symbols
                 if tmp := {x for x in syms_x if x in yz_free_syms}:
                     xs_in_sigma[sym_yz] = tmp
@@ -2229,6 +2239,7 @@ class DEModel:
                 zip(
                     [expr.get_id() for expr in self._expressions],
                     [expr.get_val() for expr in self._expressions],
+                    strict=True,
                 )
             )
         )

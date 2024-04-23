@@ -179,7 +179,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                 # we need toposort to handle the dependencies of extracted
                 #  subexpressions
                 expr_dict = dict(
-                    itertools.chain(zip(symbols, reduced_exprs), replacements)
+                    itertools.chain(
+                        zip(symbols, reduced_exprs, strict=True), replacements
+                    )
                 )
                 sorted_symbols = toposort(
                     {
@@ -192,7 +194,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                     }
                 )
                 symbol_to_idx = {
-                    sym: idx for idx, sym in zip(indices, symbols)
+                    sym: idx for idx, sym in zip(indices, symbols, strict=True)
                 }
 
                 def format_line(symbol: sp.Symbol):
@@ -217,7 +219,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         return [
             format_regular_line(sym, math, index)
-            for index, sym, math in zip(indices, symbols, equations)
+            for index, sym, math in zip(
+                indices, symbols, equations, strict=True
+            )
             if math not in [0, 0.0]
         ]
 

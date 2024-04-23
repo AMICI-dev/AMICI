@@ -44,7 +44,7 @@ def test_two_splines(**kwargs):
         tols1 = (tols1, tols1, tols1)
 
     tols = []
-    for t0, t1 in zip(tols0, tols1):
+    for t0, t1 in zip(tols0, tols1, strict=True):
         keys = set().union(t0.keys(), t1.keys())
         t = {
             key: max(

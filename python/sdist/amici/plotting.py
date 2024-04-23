@@ -65,7 +65,7 @@ def plot_state_trajectories(
     else:
         labels = np.asarray(rdata.ptr.state_ids)[list(state_indices)]
 
-    for ix, label in zip(state_indices, labels):
+    for ix, label in zip(state_indices, labels, strict=True):
         ax.plot(rdata["t"], rdata["x"][:, ix], marker=marker, label=label)
 
     ax.set_xlabel("$t$")
@@ -131,7 +131,7 @@ def plot_observable_trajectories(
     else:
         labels = np.asarray(rdata.ptr.observable_ids)[list(observable_indices)]
 
-    for iy, label in zip(observable_indices, labels):
+    for iy, label in zip(observable_indices, labels, strict=True):
         (l,) = ax.plot(
             rdata["t"], rdata["y"][:, iy], marker=marker, label=label
         )

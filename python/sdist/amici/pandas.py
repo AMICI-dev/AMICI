@@ -155,7 +155,7 @@ def getSimulationObservablesAsDataFrame(
 
     # aggregate records
     dicts = []
-    for edata, rdata in zip(edata_list, rdata_list):
+    for edata, rdata in zip(edata_list, rdata_list, strict=True):
         for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
                 "time": timepoint,
@@ -212,7 +212,7 @@ def getSimulationStatesAsDataFrame(
 
     # aggregate records
     dicts = []
-    for edata, rdata in zip(edata_list, rdata_list):
+    for edata, rdata in zip(edata_list, rdata_list, strict=True):
         for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
                 "time": timepoint,
@@ -268,7 +268,7 @@ def get_expressions_as_dataframe(
 
     # aggregate records
     dicts = []
-    for edata, rdata in zip(edata_list, rdata_list):
+    for edata, rdata in zip(edata_list, rdata_list, strict=True):
         for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
                 "time": timepoint,

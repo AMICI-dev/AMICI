@@ -385,7 +385,7 @@ def create_parameter_mapping(
 
     parameter_mapping = ParameterMapping()
     for (_, condition), prelim_mapping_for_condition in zip(
-        simulation_conditions.iterrows(), prelim_parameter_mapping
+        simulation_conditions.iterrows(), prelim_parameter_mapping, strict=True
     ):
         mapping_for_condition = create_parameter_mapping_for_condition(
             prelim_mapping_for_condition, condition, petab_problem, amici_model

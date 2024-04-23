@@ -563,7 +563,11 @@ def _add_expression(
         cost_fun_expr = sp.sympify(
             cost_fun_str,
             locals=dict(
-                zip(_get_str_symbol_identifiers(name), (y, my, sigma))
+                zip(
+                    _get_str_symbol_identifiers(name),
+                    (y, my, sigma),
+                    strict=True,
+                )
             ),
         )
         ode_model.add_component(

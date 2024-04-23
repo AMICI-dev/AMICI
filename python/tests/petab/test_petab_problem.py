@@ -81,7 +81,7 @@ def test_amici_petab_problem_pregenerate_equals_on_demand():
     app_store_false.set_parameters(parameter_update, scaled_parameters=True)
 
     for edata_store_true, edata_store_false in zip(
-        app_store_true.get_edatas(), app_store_false.get_edatas()
+        app_store_true.get_edatas(), app_store_false.get_edatas(), strict=True
     ):
         assert edata_store_true is not edata_store_false
         assert edata_store_true == edata_store_false
