@@ -558,7 +558,7 @@ class SbmlImporter:
         )
         # correct time derivatives for compartment changes
         for ix, ((species_id, species), formula) in enumerate(
-            zip(self.symbols[SymbolId.SPECIES].items(), dxdt)
+            zip(self.symbols[SymbolId.SPECIES].items(), dxdt, strict=True)
         ):
             # rate rules and amount species don't need to be updated
             if "dt" in species:
@@ -604,7 +604,7 @@ class SbmlImporter:
 
         # add fluxes as expressions, this needs to happen after base
         # expressions from symbols have been parsed
-        for flux_id, flux in zip(fluxes, self.flux_vector):
+        for flux_id, flux in zip(fluxes, self.flux_vector, strict=True):
             # replace splines inside fluxes
             flux = flux.subs(spline_subs)
             ode_model.add_component(
@@ -981,7 +981,9 @@ class SbmlImporter:
             self.symbols[SymbolId.SPECIES], "init"
         )
         for species, rateof_dummies in zip(
-            self.symbols[SymbolId.SPECIES].values(), all_rateof_dummies
+            self.symbols[SymbolId.SPECIES].values(),
+            all_rateof_dummies,
+            strict=True,
         ):
             species["init"] = _dummy_to_rateof(
                 smart_subs_dict(species["init"], sorted_species, "init"),
@@ -1945,6 +1947,7 @@ class SbmlImporter:
         for (obs_id, obs), (sigma_id, sigma) in zip(
             self.symbols[obs_symbol].items(),
             self.symbols[sigma_symbol].items(),
+            strict=True,
         ):
             symbol = symbol_with_assumptions(f"J{obs_id}")
             dist = noise_distributions.get(str(obs_id), "normal")
@@ -1955,6 +1958,7 @@ class SbmlImporter:
                     zip(
                         _get_str_symbol_identifiers(obs_id),
                         (obs_id, obs["measurement_symbol"], sigma_id),
+                        strict=True,
                     )
                 ),
             )
@@ -2173,9 +2177,9 @@ class SbmlImporter:
             len(cls_coefficients), len(ode_model._differential_states)
         )
         for i_cl, (cl, coefficients) in enumerate(
-            zip(cls_state_idxs, cls_coefficients)
+            zip(cls_state_idxs, cls_coefficients, strict=True)
         ):
-            for i, c in zip(cl, coefficients):
+            for i, c in zip(cl, coefficients, strict=True):
                 A[i_cl, i] = sp.Rational(c)
         rref, pivots = A.rref()
 
@@ -2319,7 +2323,10 @@ class SbmlImporter:
                     "coefficients": {
                         state_id: coeff * compartment
                         for state_id, coeff, compartment in zip(
-                            state_ids, coefficients, compartment_sizes
+                            state_ids,
+                            coefficients,
+                            compartment_sizes,
+                            strict=True,
                         )
                     },
                 }

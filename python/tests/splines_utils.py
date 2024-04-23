@@ -216,7 +216,7 @@ def create_petab_problem(
     zz_true = np.array(
         [
             integrate_spline(spline, params_true, tt_obs, iv)
-            for (spline, iv) in zip(splines, initial_values)
+            for (spline, iv) in zip(splines, initial_values, strict=True)
         ],
         dtype=float,
     )
@@ -480,7 +480,7 @@ def compute_ground_truth(
     x_true_sym = sp.Matrix(
         [
             integrate_spline(spline, None, times, iv)
-            for (spline, iv) in zip(splines, initial_values)
+            for (spline, iv) in zip(splines, initial_values, strict=True)
         ]
     ).transpose()
     groundtruth = {
@@ -604,7 +604,7 @@ def check_splines(
         x_true_sym = sp.Matrix(
             [
                 integrate_spline(spline, None, tt, iv)
-                for (spline, iv) in zip(splines, initial_values)
+                for (spline, iv) in zip(splines, initial_values, strict=True)
             ]
         ).transpose()
         x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
@@ -896,7 +896,7 @@ def example_spline_1(
     yy = list(sp.symbols(f"y{idx}_0:{len(yy_true)}"))
 
     if fixed_values is None:
-        params = dict(zip(yy, yy_true))
+        params = dict(zip(yy, yy_true, strict=True))
     elif fixed_values == "all":
         params = {}
         for i in range(len(yy_true)):
@@ -939,7 +939,7 @@ def example_spline_2(idx: int = 0):
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f"y{idx}_0:{len(yy_true) - 1}"))
     yy.append(yy[0])
-    params = dict(zip(yy, yy_true))
+    params = dict(zip(yy, yy_true, strict=True))
     spline = CubicHermiteSpline(
         f"y{idx}",
         nodes=xx,
@@ -960,7 +960,7 @@ def example_spline_3(idx: int = 0):
     yy_true = [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0]
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f"y{idx}_0:{len(yy_true)}"))
-    params = dict(zip(yy, yy_true))
+    params = dict(zip(yy, yy_true, strict=True))
     spline = CubicHermiteSpline(
         f"y{idx}",
         nodes=xx,

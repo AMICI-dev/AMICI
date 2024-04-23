@@ -56,6 +56,7 @@ def _add_observation_model(
         petab_problem.observable_df.index,
         petab_problem.observable_df[OBSERVABLE_FORMULA],
         petab_problem.observable_df[NOISE_FORMULA],
+        strict=True,
     ):
         obs_symbol = sp.sympify(observable_formula, locals=local_syms)
         if observable_id in pysb_model.expressions.keys():

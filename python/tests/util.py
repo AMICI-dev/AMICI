@@ -108,7 +108,7 @@ def create_sbml_model(
 
         if isinstance(event_def["target"], list):
             for event_target, event_assignment in zip(
-                event_def["target"], event_def["assignment"]
+                event_def["target"], event_def["assignment"], strict=True
             ):
                 create_event_assignment(event_target, event_assignment)
 

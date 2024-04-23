@@ -68,7 +68,9 @@ def fill_in_parameters(
             RuntimeWarning,
         )
 
-    for edata, mapping_for_condition in zip(edatas, parameter_mapping):
+    for edata, mapping_for_condition in zip(
+        edatas, parameter_mapping, strict=True
+    ):
         fill_in_parameters_for_condition(
             edata,
             problem_parameters,

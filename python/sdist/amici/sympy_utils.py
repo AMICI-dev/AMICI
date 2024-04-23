@@ -182,7 +182,11 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
             elif isinstance(obj, sp.SparseMatrix):
                 dok = obj.todok()
                 mapped = p.map(func, dok.values())
-                dok = {k: v for k, v in zip(dok.keys(), mapped) if v != 0}
+                dok = {
+                    k: v
+                    for k, v in zip(dok.keys(), mapped, strict=True)
+                    if v != 0
+                }
                 return obj._new(obj.rows, obj.cols, dok)
             else:
                 raise ValueError(f"Unsupported matrix type {type(obj)}")

@@ -140,7 +140,7 @@ def _output(
     # print all conserved quantities
     if verbose:
         for i, (coefficients, engaged_species_idxs) in enumerate(
-            zip(species_coefficients, species_indices)
+            zip(species_coefficients, species_indices, strict=True)
         ):
             if not engaged_species_idxs:
                 continue
@@ -149,7 +149,7 @@ def _output(
                 "species:"
             )
             for species_idx, coefficient in zip(
-                engaged_species_idxs, coefficients
+                engaged_species_idxs, coefficients, strict=True
             ):
                 name = (
                     species_names[species_idx]
@@ -958,12 +958,12 @@ def _reduce(
                 k2 = order[j]
                 column: list[float] = [0] * num_species
                 for species_idx, coefficient in zip(
-                    cls_species_idxs[k1], cls_coefficients[k1]
+                    cls_species_idxs[k1], cls_coefficients[k1], strict=True
                 ):
                     column[species_idx] = coefficient
                 ok1 = True
                 for species_idx, coefficient in zip(
-                    cls_species_idxs[k2], cls_coefficients[k2]
+                    cls_species_idxs[k2], cls_coefficients[k2], strict=True
                 ):
                     column[species_idx] -= coefficient
                     if column[species_idx] < -_MIN:

@@ -171,6 +171,7 @@ def simulate_petab(
             zip(
                 petab_problem.x_ids,
                 petab_problem.x_nominal_scaled,
+                strict=True,
             )
         )
         # depending on `fill_fixed_parameters` for parameter mapping, the
@@ -310,7 +311,7 @@ def aggregate_sllh(
             )
 
     for condition_parameter_mapping, edata, rdata in zip(
-        parameter_mapping, edatas, rdatas
+        parameter_mapping, edatas, rdatas, strict=True
     ):
         for sllh_parameter_index, condition_parameter_sllh in enumerate(
             rdata.sllh
@@ -432,7 +433,9 @@ def rdatas_to_measurement_df(
     observable_ids = model.getObservableIds()
     rows = []
     # iterate over conditions
-    for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
+    for (_, condition), rdata in zip(
+        simulation_conditions.iterrows(), rdatas, strict=True
+    ):
         # current simulation matrix
         y = rdata.y
         # time array used in rdata

@@ -215,8 +215,11 @@ def test_SplineNonUniformPeriodicExtrapolation():
 @skip_on_valgrind
 def check_gradient(spline, t, params, params_values, expected, rel_tol=1e-9):
     value = spline.evaluate(t)
-    subs = {pname: pvalue for (pname, pvalue) in zip(params, params_values)}
-    for p, exp in zip(params, expected):
+    subs = {
+        pname: pvalue
+        for (pname, pvalue) in zip(params, params_values, strict=True)
+    }
+    for p, exp in zip(params, expected, strict=True):
         assert math.isclose(
             float(value.diff(p).subs(subs)), exp, rel_tol=rel_tol
         )
