@@ -1,4 +1,5 @@
 """Info about C++ functions in the generated model code."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

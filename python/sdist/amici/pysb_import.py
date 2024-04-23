@@ -12,10 +12,9 @@ import sys
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Optional,
     Union,
 )
+from collections.abc import Callable
 from collections.abc import Iterable
 
 import numpy as np
@@ -53,12 +52,12 @@ logger = get_logger(__name__, logging.ERROR)
 
 def pysb2amici(
     model: pysb.Model,
-    output_dir: Optional[Union[str, Path]] = None,
+    output_dir: str | Path | None = None,
     observables: list[str] = None,
     constant_parameters: list[str] = None,
     sigmas: dict[str, str] = None,
-    noise_distributions: Optional[dict[str, Union[str, Callable]]] = None,
-    verbose: Union[int, bool] = False,
+    noise_distributions: dict[str, str | Callable] | None = None,
+    verbose: int | bool = False,
     assume_pow_positivity: bool = False,
     compiler: str = None,
     compute_conservation_laws: bool = True,
@@ -68,7 +67,7 @@ def pysb2amici(
     # See https://github.com/AMICI-dev/AMICI/pull/1672
     cache_simplify: bool = False,
     generate_sensitivity_code: bool = True,
-    model_name: Optional[str] = None,
+    model_name: str | None = None,
 ):
     r"""
     Generate AMICI C++ files for the provided model.
@@ -194,13 +193,13 @@ def ode_model_from_pysb_importer(
     constant_parameters: list[str] = None,
     observables: list[str] = None,
     sigmas: dict[str, str] = None,
-    noise_distributions: Optional[dict[str, Union[str, Callable]]] = None,
+    noise_distributions: dict[str, str | Callable] | None = None,
     compute_conservation_laws: bool = True,
     simplify: Callable = sp.powsimp,
     # Do not enable by default without testing.
     # See https://github.com/AMICI-dev/AMICI/pull/1672
     cache_simplify: bool = False,
-    verbose: Union[int, bool] = False,
+    verbose: int | bool = False,
 ) -> DEModel:
     """
     Creates an :class:`amici.DEModel` instance from a :class:`pysb.Model`
@@ -441,7 +440,7 @@ def _process_pysb_expressions(
     ode_model: DEModel,
     observables: list[str],
     sigmas: dict[str, str],
-    noise_distributions: Optional[dict[str, Union[str, Callable]]] = None,
+    noise_distributions: dict[str, str | Callable] | None = None,
 ) -> None:
     r"""
     Converts pysb expressions/observables into Observables (with
@@ -506,7 +505,7 @@ def _add_expression(
     ode_model: DEModel,
     observables: list[str],
     sigmas: dict[str, str],
-    noise_distributions: Optional[dict[str, Union[str, Callable]]] = None,
+    noise_distributions: dict[str, str | Callable] | None = None,
 ):
     """
     Adds expressions to the ODE model given and adds observables/sigmas if
@@ -621,7 +620,7 @@ def _process_pysb_observables(
     ode_model: DEModel,
     observables: list[str],
     sigmas: dict[str, str],
-    noise_distributions: Optional[dict[str, Union[str, Callable]]] = None,
+    noise_distributions: dict[str, str | Callable] | None = None,
 ) -> None:
     """
     Converts :class:`pysb.core.Observable` into
@@ -1349,7 +1348,7 @@ def has_fixed_parameter_ic(
 
 
 def extract_monomers(
-    complex_patterns: Union[pysb.ComplexPattern, list[pysb.ComplexPattern]],
+    complex_patterns: pysb.ComplexPattern | list[pysb.ComplexPattern],
 ) -> list[str]:
     """
     Constructs a list of monomer names contained in complex patterns.
@@ -1415,8 +1414,8 @@ def _get_unconserved_monomers(
 
 
 def _get_changed_stoichiometries(
-    reactants: Union[pysb.ComplexPattern, list[pysb.ComplexPattern]],
-    products: Union[pysb.ComplexPattern, list[pysb.ComplexPattern]],
+    reactants: pysb.ComplexPattern | list[pysb.ComplexPattern],
+    products: pysb.ComplexPattern | list[pysb.ComplexPattern],
 ) -> set[str]:
     """
     Constructs the set of monomer names which have different
@@ -1444,7 +1443,7 @@ def _get_changed_stoichiometries(
     return changed_stoichiometries
 
 
-def pysb_model_from_path(pysb_model_file: Union[str, Path]) -> pysb.Model:
+def pysb_model_from_path(pysb_model_file: str | Path) -> pysb.Model:
     """Load a pysb model module and return the :class:`pysb.Model` instance
 
     :param pysb_model_file: Full or relative path to the PySB model module

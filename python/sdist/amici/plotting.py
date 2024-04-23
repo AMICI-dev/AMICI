@@ -3,7 +3,7 @@ Plotting
 --------
 Plotting related functions
 """
-from typing import Optional, Union
+
 from collections.abc import Iterable, Sequence
 
 import matplotlib.pyplot as plt
@@ -19,8 +19,8 @@ from .numpy import StrOrExpr, evaluate
 
 def plot_state_trajectories(
     rdata: ReturnDataView,
-    state_indices: Optional[Sequence[int]] = None,
-    ax: Optional[Axes] = None,
+    state_indices: Sequence[int] | None = None,
+    ax: Axes | None = None,
     model: Model = None,
     prefer_names: bool = True,
     marker=None,
@@ -76,12 +76,12 @@ def plot_state_trajectories(
 
 def plot_observable_trajectories(
     rdata: ReturnDataView,
-    observable_indices: Optional[Iterable[int]] = None,
-    ax: Optional[Axes] = None,
+    observable_indices: Iterable[int] | None = None,
+    ax: Axes | None = None,
     model: Model = None,
     prefer_names: bool = True,
     marker=None,
-    edata: Union[amici.ExpData, amici.ExpDataView] = None,
+    edata: amici.ExpData | amici.ExpDataView = None,
 ) -> None:
     """
     Plot observable trajectories.
@@ -175,7 +175,7 @@ plotObservableTrajectories = plot_observable_trajectories
 
 
 def plot_expressions(
-    exprs: Union[Sequence[StrOrExpr], StrOrExpr], rdata: ReturnDataView
+    exprs: Sequence[StrOrExpr] | StrOrExpr, rdata: ReturnDataView
 ) -> None:
     """Plot the given expressions evaluated on the given simulation outputs.
 

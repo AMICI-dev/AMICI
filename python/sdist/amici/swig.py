@@ -1,4 +1,5 @@
 """Functions related to SWIG or SWIG-generated code"""
+
 from __future__ import annotations
 import ast
 import contextlib

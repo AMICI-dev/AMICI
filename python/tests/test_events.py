@@ -1,4 +1,5 @@
 """Tests for SBML events, including piecewise expressions."""
+
 from copy import deepcopy
 
 import amici

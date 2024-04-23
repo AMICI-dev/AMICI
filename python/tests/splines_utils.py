@@ -8,7 +8,7 @@ import math
 import os
 import uuid
 from tempfile import mkdtemp
-from typing import Any, Optional, Union
+from typing import Any
 from collections.abc import Sequence
 
 import amici
@@ -45,7 +45,7 @@ def evaluate_spline(
 
 def integrate_spline(
     spline: AbstractSpline,
-    params: Union[dict, None],
+    params: dict | None,
     tt: Sequence[float],
     initial_value: float = 0,
 ):
@@ -119,12 +119,12 @@ def species_to_index(name) -> int:
 def create_petab_problem(
     splines: list[AbstractSpline],
     params_true: dict,
-    initial_values: Optional[np.ndarray] = None,
+    initial_values: np.ndarray | None = None,
     use_reactions: bool = False,
     measure_upsample: int = 6,
     sigma: float = 1.0,
     t_extrapolate: float = 0.25,
-    folder: Optional[str] = None,
+    folder: str | None = None,
     model_name: str = "test_splines",
 ):
     """
@@ -283,9 +283,9 @@ def simulate_splines(
     params_true,
     initial_values=None,
     *,
-    folder: Optional[str] = None,
+    folder: str | None = None,
     keep_temporary: bool = False,
-    benchmark: Union[bool, int] = False,
+    benchmark: bool | int = False,
     rtol: float = 1e-12,
     atol: float = 1e-12,
     maxsteps: int = 500_000,
@@ -505,8 +505,8 @@ def check_splines(
     discard_annotations: bool = False,
     use_adjoint: bool = False,
     skip_sensitivity: bool = False,
-    debug: Union[bool, str] = False,
-    parameter_lists: Optional[Sequence[Sequence[int]]] = None,
+    debug: bool | str = False,
+    parameter_lists: Sequence[Sequence[int]] | None = None,
     llh_rtol: float = 1e-8,
     sllh_atol: float = 1e-8,
     x_rtol: float = 1e-11,
@@ -515,7 +515,7 @@ def check_splines(
     w_atol: float = 1e-11,
     sx_rtol: float = 1e-10,
     sx_atol: float = 1e-10,
-    groundtruth: Optional[Union[str, dict[str, Any]]] = None,
+    groundtruth: str | dict[str, Any] | None = None,
     **kwargs,
 ):
     """
@@ -771,8 +771,8 @@ def check_splines_full(
     check_piecewise: bool = True,
     check_forward: bool = True,
     check_adjoint: bool = True,
-    folder: Optional[str] = None,
-    groundtruth: Optional[Union[dict, str]] = "compute",
+    folder: str | None = None,
+    groundtruth: dict | str | None = "compute",
     return_groundtruth: bool = False,
     **kwargs,
 ):

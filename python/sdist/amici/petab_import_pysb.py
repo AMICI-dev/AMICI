@@ -4,6 +4,7 @@ PEtab import for PySB models
 .. deprecated:: 0.21.0
     Use :mod:`amici.petab.pysb_import` instead.
 """
+
 import warnings
 
 from .petab.pysb_import import *  # noqa: F401, F403

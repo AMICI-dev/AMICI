@@ -9,6 +9,7 @@ Non-python-package requirements:
 - swig>=3.0
 - Optional: hdf5 libraries and headers
 """
+
 import os
 import sys
 from pathlib import Path

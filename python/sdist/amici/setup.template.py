@@ -1,4 +1,5 @@
 """AMICI model package setup"""
+
 import os
 import sys
 from pathlib import Path
