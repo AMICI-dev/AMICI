@@ -556,9 +556,14 @@ class SbmlImporter:
         dxdt = smart_multiply(
             self.stoichiometric_matrix, MutableDenseMatrix(fluxes)
         )
-        # there may be an additional 0-entry at the end of the
-        #  stoichiometric matrix / flux vector
-        assert dxdt.shape[0] - len(self.symbols[SymbolId.SPECIES]) in (0, 1)
+        # dxdt has algebraic states at the end
+        assert dxdt.shape[0] - len(self.symbols[SymbolId.SPECIES]) == len(
+            self.symbols.get(SymbolId.ALGEBRAIC_STATE, [])
+        ), (
+            self.symbols[SymbolId.SPECIES],
+            dxdt,
+            self.symbols[SymbolId.SPECIES],
+        )
 
         # correct time derivatives for compartment changes
         for ix, ((species_id, species), formula) in enumerate(
