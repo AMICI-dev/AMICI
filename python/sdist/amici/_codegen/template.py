@@ -1,7 +1,7 @@
 """Functions to apply template substitution to files."""
+
 from pathlib import Path
 from string import Template
-from typing import Union
 
 
 class TemplateAmici(Template):
@@ -17,8 +17,8 @@ class TemplateAmici(Template):
 
 
 def apply_template(
-    source_file: Union[str, Path],
-    target_file: Union[str, Path],
+    source_file: str | Path,
+    target_file: str | Path,
     template_data: dict[str, str],
 ) -> None:
     """

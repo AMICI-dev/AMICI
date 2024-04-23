@@ -1,4 +1,5 @@
 """Tests for petab_simulate.py."""
+
 import tempfile
 from pathlib import Path
 

@@ -5,6 +5,7 @@ This module provides helper functions for reading/writing splines with AMICI
 annotations from/to SBML files and for adding such splines to the AMICI C++
 code.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
     from numbers import Real
     from typing import (
         Any,
-        Callable,
         Union,
     )
+    from collections.abc import Callable
     from collections.abc import Sequence
 
     from . import sbml_import

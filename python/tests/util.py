@@ -1,4 +1,5 @@
 """Tests for SBML events, including piecewise expressions."""
+
 import sys
 import tempfile
 from pathlib import Path

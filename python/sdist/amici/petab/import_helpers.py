@@ -2,12 +2,12 @@
 
 Functions for PEtab import that are independent of the model format.
 """
+
 import importlib
 import logging
 import os
 import re
 from pathlib import Path
-from typing import Union
 
 import amici
 import pandas as pd
@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 
 def get_observation_model(
     observable_df: pd.DataFrame,
-) -> tuple[
-    dict[str, dict[str, str]], dict[str, str], dict[str, Union[str, float]]
-]:
+) -> tuple[dict[str, dict[str, str]], dict[str, str], dict[str, str | float]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
     table in a format suitable for
@@ -128,7 +126,7 @@ def petab_scale_to_amici_scale(scale_str: str) -> int:
     raise ValueError(f"Invalid parameter scale {scale_str}")
 
 
-def _create_model_name(folder: Union[str, Path]) -> str:
+def _create_model_name(folder: str | Path) -> str:
     """
     Create a name for the model.
     Just re-use the last part of the folder.
@@ -136,9 +134,7 @@ def _create_model_name(folder: Union[str, Path]) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(
-    model_name: str, model_output_dir: Union[str, Path]
-) -> bool:
+def _can_import_model(model_name: str, model_output_dir: str | Path) -> bool:
     """
     Check whether a module of that name can already be imported.
     """

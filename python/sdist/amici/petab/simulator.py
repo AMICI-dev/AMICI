@@ -11,7 +11,7 @@ Use cases:
 
 import inspect
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 import pandas as pd
 import petab

@@ -4,6 +4,7 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
+
 import copy
 import itertools as itt
 import logging
@@ -15,10 +16,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Optional,
     Union,
 )
+from collections.abc import Callable
 from collections.abc import Iterable, Sequence
 
 import libsbml as sbml
@@ -134,7 +134,7 @@ class SbmlImporter:
 
     def __init__(
         self,
-        sbml_source: Union[str, Path, sbml.Model],
+        sbml_source: str | Path | sbml.Model,
         show_sbml_warnings: bool = False,
         from_file: bool = True,
         discard_annotations: bool = False,
@@ -177,7 +177,7 @@ class SbmlImporter:
         # Long and short names for model components
         self.symbols: dict[SymbolId, dict[sp.Symbol, dict[str, Any]]] = {}
 
-        self._local_symbols: dict[str, Union[sp.Expr, sp.Function]] = {}
+        self._local_symbols: dict[str, sp.Expr | sp.Function] = {}
         self.compartments: SymbolicFormula = {}
         self.compartment_assignment_rules: SymbolicFormula = {}
         self.species_assignment_rules: SymbolicFormula = {}
@@ -269,21 +269,21 @@ class SbmlImporter:
     def sbml2amici(
         self,
         model_name: str,
-        output_dir: Union[str, Path] = None,
+        output_dir: str | Path = None,
         observables: dict[str, dict[str, str]] = None,
         event_observables: dict[str, dict[str, str]] = None,
         constant_parameters: Iterable[str] = None,
-        sigmas: dict[str, Union[str, float]] = None,
-        event_sigmas: dict[str, Union[str, float]] = None,
-        noise_distributions: dict[str, Union[str, Callable]] = None,
-        event_noise_distributions: dict[str, Union[str, Callable]] = None,
-        verbose: Union[int, bool] = logging.ERROR,
+        sigmas: dict[str, str | float] = None,
+        event_sigmas: dict[str, str | float] = None,
+        noise_distributions: dict[str, str | Callable] = None,
+        event_noise_distributions: dict[str, str | Callable] = None,
+        verbose: int | bool = logging.ERROR,
         assume_pow_positivity: bool = False,
         compiler: str = None,
         allow_reinit_fixpar_initcond: bool = True,
         compile: bool = True,
         compute_conservation_laws: bool = True,
-        simplify: Optional[Callable] = _default_simplify,
+        simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = True,
         generate_sensitivity_code: bool = True,
@@ -451,13 +451,13 @@ class SbmlImporter:
         observables: dict[str, dict[str, str]] = None,
         event_observables: dict[str, dict[str, str]] = None,
         constant_parameters: Iterable[str] = None,
-        sigmas: dict[str, Union[str, float]] = None,
-        event_sigmas: dict[str, Union[str, float]] = None,
-        noise_distributions: dict[str, Union[str, Callable]] = None,
-        event_noise_distributions: dict[str, Union[str, Callable]] = None,
-        verbose: Union[int, bool] = logging.ERROR,
+        sigmas: dict[str, str | float] = None,
+        event_sigmas: dict[str, str | float] = None,
+        noise_distributions: dict[str, str | Callable] = None,
+        event_noise_distributions: dict[str, str | Callable] = None,
+        verbose: int | bool = logging.ERROR,
         compute_conservation_laws: bool = True,
-        simplify: Optional[Callable] = _default_simplify,
+        simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = True,
         hardcode_symbols: Sequence[str] = None,
@@ -1043,7 +1043,7 @@ class SbmlImporter:
         self,
         d_dt: sp.Expr,
         variable: sp.Symbol,
-        variable0: Union[float, sp.Expr],
+        variable0: float | sp.Expr,
         name: str,
     ) -> None:
         """
@@ -1701,8 +1701,8 @@ class SbmlImporter:
     @log_execution_time("processing SBML observables", logger)
     def _process_observables(
         self,
-        observables: Union[dict[str, dict[str, str]], None],
-        sigmas: dict[str, Union[str, float]],
+        observables: dict[str, dict[str, str]] | None,
+        sigmas: dict[str, str | float],
         noise_distributions: dict[str, str],
     ) -> None:
         """
@@ -1768,7 +1768,7 @@ class SbmlImporter:
     def _process_event_observables(
         self,
         event_observables: dict[str, dict[str, str]],
-        event_sigmas: dict[str, Union[str, float]],
+        event_sigmas: dict[str, str | float],
         event_noise_distributions: dict[str, str],
     ) -> None:
         """
@@ -1884,7 +1884,7 @@ class SbmlImporter:
 
     def _process_log_likelihood(
         self,
-        sigmas: dict[str, Union[str, float]],
+        sigmas: dict[str, str | float],
         noise_distributions: dict[str, str],
         events: bool = False,
         event_reg: bool = False,
@@ -2036,8 +2036,8 @@ class SbmlImporter:
             )
 
     def _make_initial(
-        self, sym_math: Union[sp.Expr, None, float]
-    ) -> Union[sp.Expr, None, float]:
+        self, sym_math: sp.Expr | None | float
+    ) -> sp.Expr | None | float:
         """
         Transforms an expression to its value at the initial time point by
         replacing species by their initial values.
@@ -2488,7 +2488,7 @@ class SbmlImporter:
 
     def _sympy_from_sbml_math(
         self, var_or_math: [sbml.SBase, str]
-    ) -> Union[sp.Expr, float, None]:
+    ) -> sp.Expr | float | None:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
@@ -2541,7 +2541,7 @@ class SbmlImporter:
 
     def _get_element_initial_assignment(
         self, element_id: str
-    ) -> Union[sp.Expr, None]:
+    ) -> sp.Expr | None:
         """
         Extract value of sbml variable according to its initial assignment
 
@@ -2926,7 +2926,7 @@ def _get_list_of_species_references(
     ]
 
 
-def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
+def replace_logx(math_str: str | float | None) -> str | float | None:
     """
     Replace logX(.) by log(., X) since sympy cannot parse the former
 
@@ -2961,7 +2961,7 @@ def _collect_event_assignment_parameter_targets(
 
 
 def _check_unsupported_functions_sbml(
-    sym: sp.Expr, expression_type: str, full_sym: Optional[sp.Expr] = None
+    sym: sp.Expr, expression_type: str, full_sym: sp.Expr | None = None
 ):
     try:
         _check_unsupported_functions(sym, expression_type, full_sym)
@@ -2979,8 +2979,8 @@ def _parse_special_functions_sbml(
 
 
 def _validate_observables(
-    observables: Union[dict[str, dict[str, str]], None],
-    sigmas: dict[str, Union[str, float]],
+    observables: dict[str, dict[str, str]] | None,
+    sigmas: dict[str, str | float],
     noise_distributions: dict[str, str],
     events: bool = False,
 ) -> None:

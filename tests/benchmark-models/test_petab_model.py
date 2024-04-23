@@ -3,6 +3,7 @@
 """
 Simulate a PEtab problem and compare results to reference values
 """
+
 import argparse
 import contextlib
 import importlib

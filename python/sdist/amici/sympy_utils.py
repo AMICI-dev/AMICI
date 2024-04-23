@@ -1,7 +1,9 @@
 """Functionality for working with sympy objects."""
+
 import os
 from itertools import starmap
-from typing import Union, Any, Callable
+from typing import Any
+from collections.abc import Callable
 import contextlib
 import sympy as sp
 import logging
@@ -111,9 +113,9 @@ def smart_jacobian(
 
 @log_execution_time("running smart_multiply", logger)
 def smart_multiply(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+    x: sp.MutableDenseMatrix | sp.MutableSparseMatrix,
     y: sp.MutableDenseMatrix,
-) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
+) -> sp.MutableDenseMatrix | sp.MutableSparseMatrix:
     """
     Wrapper around symbolic multiplication with some additional checks that
     reduce computation time for large matrices
@@ -136,7 +138,7 @@ def smart_multiply(
 
 
 def smart_is_zero_matrix(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+    x: sp.MutableDenseMatrix | sp.MutableSparseMatrix,
 ) -> bool:
     """A faster implementation of sympy's is_zero_matrix
 
