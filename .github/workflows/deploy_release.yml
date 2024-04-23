@@ -76,7 +76,7 @@ jobs:
             -d "{\"ref\": \"dev\", \"inputs\": {\"simulatorVersion\": \"${PACKAGE_VERSION}\", \"simulatorVersionLatest\": \"true\"}}"
 
   dockerhub:
-    name: Release to Dockerhub
+    name: Release to Docker Hub
     runs-on: ubuntu-22.04
 
     steps:
