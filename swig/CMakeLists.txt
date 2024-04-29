@@ -122,7 +122,6 @@ if(WIN32)
     POST_BUILD
     COMMAND dumpbin "/DEPENDENTS" "$<TARGET_FILE:_amici>"
     COMMENT "Dumping extension dependencies.")
-  message("Dependencies: ${dump}")
 endif()
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py $<TARGET_FILE:_amici>
