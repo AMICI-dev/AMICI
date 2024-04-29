@@ -36,6 +36,14 @@ Compartment-Resolved Dynamics of 16 Observables in RPE-1 Cells.”</span>
 <em>PLOS Computational Biology</em> 20 (1): 1–24. <a
 href="https://doi.org/10.1371/journal.pcbi.1011151">https://doi.org/10.1371/journal.pcbi.1011151</a>.
 </div>
+<div id="ref-MerktAli2024" class="csl-entry" role="listitem">
+Merkt, Simon, Solomon Ali, Esayas Kebede Gudina, Wondimagegn Adissu,
+Addisu Gize, Maximilian Muenchhoff, Alexander Graf, et al. 2024.
+<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
+Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span>
+<em>Nature Communications</em> 15 (1). <a
+href="https://doi.org/10.1038/s41467-024-47556-2">https://doi.org/10.1038/s41467-024-47556-2</a>.
+</div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
 T. Nelissen, Hans A. Heus, and Wilhelm T. S. Huck. 2024.
@@ -83,13 +91,6 @@ Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
 Rewiring Contribute to Drug Resistance.”</span> <em>Molecular Systems
 Biology</em> 19 (2): e10988. <a
 href="https://doi.org/10.15252/msb.202210988">https://doi.org/10.15252/msb.202210988</a>.
-</div>
-<div id="ref-HasenauerMer2023" class="csl-entry" role="listitem">
-Hasenauer, Jan, Simon Merkt, Solomon Ali, Esayas Gudina, Wondimagegn
-Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
-<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
-Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
-href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
 </div>
 <div id="ref-HuckBal2023" class="csl-entry" role="listitem">
 Huck, Wilhelm, Mathieu Baltussen, Thijs de Jong, Quentin Duez, and
