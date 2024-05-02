@@ -1561,16 +1561,18 @@ class DEModel:
             self._eqs[name] = smart_jacobian(self.eq("root"), time_symbol)
 
         elif name == "drootdt_total":
-            # backsubstitution of optimized right-hand side terms into RHS
-            # calling subs() is costly. Due to looping over events though, the
-            # following lines are only evaluated if a model has events
-            w_sorted = toposort_symbols(
-                dict(zip(self.sym("w"), self.eq("w"), strict=True))
-            )
-            tmp_xdot = smart_subs_dict(self.eq("xdot"), w_sorted)
             self._eqs[name] = self.eq("drootdt")
-            if self.num_states_solver():
-                self._eqs[name] += smart_multiply(self.eq("drootdx"), tmp_xdot)
+            # backsubstitution of optimized right-hand side terms into RHS
+            # calling subs() is costly. We can skip it if we don't have any
+            # state-dependent roots.
+            if self.num_states_solver() and not smart_is_zero_matrix(
+                drootdx := self.eq("drootdx")
+            ):
+                w_sorted = toposort_symbols(
+                    dict(zip(self.sym("w"), self.eq("w"), strict=True))
+                )
+                tmp_xdot = smart_subs_dict(self.eq("xdot"), w_sorted)
+                self._eqs[name] += smart_multiply(drootdx, tmp_xdot)
 
         elif name == "deltax":
             # fill boluses for Heaviside functions, as empty state updates
