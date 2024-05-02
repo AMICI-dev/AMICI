@@ -14,6 +14,7 @@ from .petab.pysb_import import *  # noqa: F401, F403
 warnings.warn(
     "Importing amici.petab_import_pysb is deprecated. Use `amici.petab.pysb_import` instead.",
     DeprecationWarning,
+    stacklevel=2,
 )
 
 __all__ = [

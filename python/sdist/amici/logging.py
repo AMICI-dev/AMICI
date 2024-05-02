@@ -175,7 +175,8 @@ def get_logger(
     elif kwargs:
         warnings.warn(
             "AMICI logger already exists, ignoring keyword "
-            "arguments to setup_logger"
+            "arguments to setup_logger",
+            stacklevel=2,
         )
 
     logger = logging.getLogger(logger_name)

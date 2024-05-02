@@ -442,7 +442,8 @@ class SbmlImporter:
             if not has_clibs:
                 warnings.warn(
                     "AMICI C++ extensions have not been built. "
-                    "Generated model code, but unable to compile."
+                    "Generated model code, but unable to compile.",
+                    stacklevel=2,
                 )
             exporter.compile_model()
 

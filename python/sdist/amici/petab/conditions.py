@@ -67,6 +67,7 @@ def fill_in_parameters(
             "The following problem parameters were not used: "
             + str(unused_parameters),
             RuntimeWarning,
+            stacklevel=2,
         )
 
     for edata, mapping_for_condition in zip(

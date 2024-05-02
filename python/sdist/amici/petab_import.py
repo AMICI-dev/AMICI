@@ -13,6 +13,7 @@ import warnings
 warnings.warn(
     "Importing amici.petab_import is deprecated. Use `amici.petab` instead.",
     DeprecationWarning,
+    stacklevel=2,
 )
 
 from .petab.import_helpers import (  # noqa # pylint: disable=unused-import
