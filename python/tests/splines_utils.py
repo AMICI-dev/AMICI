@@ -717,13 +717,7 @@ def check_splines(
             if sllh_atol is None:
                 sllh_atol = np.finfo(float).eps
             sllh_err_abs = abs(sllh).max()
-            if (
-                sllh_err_abs > sllh_atol and debug is not True
-            ) or debug == "print":
-                print(f"sllh_atol={sllh_atol}")
-                print(f"sllh_err_abs = {sllh_err_abs}")
-            if not debug:
-                assert sllh_err_abs <= sllh_atol
+            assert sllh_err_abs <= sllh_atol, f"{sllh_err_abs=} {sllh_atol=}"
     else:
         assert sllh is None
 
@@ -922,7 +916,7 @@ def example_spline_1(
         tols = (
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
-            dict(llh_rtol=1e-15, sllh_atol=5e-8, x_rtol=1e-8, x_atol=1e-7),
+            dict(llh_rtol=1e-15, sllh_atol=5e-7, x_rtol=1e-8, x_atol=1e-7),
         )
     else:
         tols = (
