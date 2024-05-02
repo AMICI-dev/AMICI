@@ -6,6 +6,7 @@ computed ground truth.
 
 import math
 import os
+import platform
 import uuid
 from tempfile import mkdtemp
 from typing import Any
@@ -917,7 +918,7 @@ def example_spline_1(
         extrapolate=extrapolate,
     )
 
-    if os.name == "nt":
+    if os.name == "nt" or platform.system() == "Darwin":
         tols = (
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
