@@ -442,7 +442,8 @@ class SbmlImporter:
             if not has_clibs:
                 warnings.warn(
                     "AMICI C++ extensions have not been built. "
-                    "Generated model code, but unable to compile."
+                    "Generated model code, but unable to compile.",
+                    stacklevel=2,
                 )
             exporter.compile_model()
 
@@ -1838,7 +1839,8 @@ class SbmlImporter:
                     f'Event observable {eo["name"]} uses `t` in '
                     "it's formula which is not the time variable. "
                     "For the time variable, please use `time` "
-                    "instead!"
+                    "instead!",
+                    stacklevel=1,
                 )
 
         # check for nesting of observables (unsupported)
@@ -2157,7 +2159,8 @@ class SbmlImporter:
                 "Conservation laws for non-constant species in "
                 "combination with parameterized stoichiometric "
                 "coefficients are not currently supported "
-                "and will be turned off."
+                "and will be turned off.",
+                stacklevel=1,
             )
             return []
 
@@ -2234,7 +2237,8 @@ class SbmlImporter:
                 "Conservation laws for non-constant species in "
                 "combination with parameterized stoichiometric "
                 "coefficients are not currently supported "
-                "and will be turned off."
+                "and will be turned off.",
+                stacklevel=1,
             )
             return []
 
@@ -3048,7 +3052,8 @@ def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
         warnings.warn(
             "Conservation laws for non-constant species in "
             "models with RateRules are currently not supported "
-            "and will be turned off."
+            "and will be turned off.",
+            stacklevel=1,
         )
         return False
 
@@ -3060,7 +3065,8 @@ def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
         warnings.warn(
             "Conservation laws for non-constant species in "
             "models with Species-AssignmentRules are currently not "
-            "supported and will be turned off."
+            "supported and will be turned off.",
+            stacklevel=1,
         )
         return False
 

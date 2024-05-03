@@ -15,6 +15,7 @@ from .petab.util import get_states_in_condition_table  # noqa: F401
 warnings.warn(
     f"Importing {__name__} is deprecated. Use `amici.petab.util` instead.",
     DeprecationWarning,
+    stacklevel=2,
 )
 
 __all__ = [

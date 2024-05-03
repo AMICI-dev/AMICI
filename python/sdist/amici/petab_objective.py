@@ -12,6 +12,7 @@ import warnings
 warnings.warn(
     f"Importing {__name__} is deprecated. Use `amici.petab.simulations` instead.",
     DeprecationWarning,
+    stacklevel=2,
 )
 
 from .petab.conditions import fill_in_parameters  # noqa: F401
