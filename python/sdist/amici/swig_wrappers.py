@@ -1,9 +1,7 @@
 """Convenience wrappers for the swig interface"""
 
 import logging
-import sys
 import warnings
-from contextlib import contextmanager, suppress
 from typing import Any
 
 import amici
@@ -29,22 +27,6 @@ __all__ = [
     "set_model_settings",
     "get_model_settings",
 ]
-
-try:
-    from wurlitzer import sys_pipes
-except ModuleNotFoundError:
-    sys_pipes = suppress
-
-
-@contextmanager
-def _capture_cstdout():
-    """Redirect C/C++ stdout to python stdout if python stdout is redirected,
-    e.g. in ipython notebook"""
-    if sys.stdout == sys.__stdout__:
-        yield
-    else:
-        with sys_pipes():
-            yield
 
 
 def runAmiciSimulation(
@@ -82,10 +64,9 @@ def runAmiciSimulation(
             stacklevel=1,
         )
 
-    with _capture_cstdout():
-        rdata = amici_swig.runAmiciSimulation(
-            _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
-        )
+    rdata = amici_swig.runAmiciSimulation(
+        _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
+    )
     _log_simulation(rdata)
     if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
         _ids_and_names_to_rdata(rdata, model)
@@ -124,15 +105,14 @@ def runAmiciSimulations(
             stacklevel=1,
         )
 
-    with _capture_cstdout():
-        edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
-        rdata_ptr_list = amici_swig.runAmiciSimulations(
-            _get_ptr(solver),
-            edata_ptr_vector,
-            _get_ptr(model),
-            failfast,
-            num_threads,
-        )
+    edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
+    rdata_ptr_list = amici_swig.runAmiciSimulations(
+        _get_ptr(solver),
+        edata_ptr_vector,
+        _get_ptr(model),
+        failfast,
+        num_threads,
+    )
     for rdata in rdata_ptr_list:
         _log_simulation(rdata)
         if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
