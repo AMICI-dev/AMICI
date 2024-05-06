@@ -1662,7 +1662,7 @@ class SbmlImporter:
                         "Could not process event assignment for "
                         f"{str(variable_sym)}. AMICI currently only allows "
                         "event assignments to species; parameters; or, "
-                        "compartments with rate rules, at the moment."
+                        "compartments, at the moment."
                     )
                 try:
                     # Try working with the formula now to detect errors
