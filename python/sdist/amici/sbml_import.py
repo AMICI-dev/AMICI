@@ -1595,6 +1595,34 @@ class SbmlImporter:
                 ].append(species)
 
         for ievent, event in enumerate(events):
+            # Since we assume valid in SBML models here, this attribute is
+            # either given (mandatory in L3), or defaults to True (L2)
+            use_trig_val = (
+                event.getUseValuesFromTriggerTime()
+                if event.isSetUseValuesFromTriggerTime()
+                else True
+            )
+            # AMICI does not support events with
+            # `useValuesFromTriggerTime=true`, unless
+            # 1) there is only a single event with a single event assignment
+            # 2) there are multiple events, but they are guaranteed to not
+            #    trigger at the same time
+            # 3) there are multiple event assignments, but they are guaranteed
+            #    to not interfere with each other
+            # in these cases, the attribute value doesn't matter, as long
+            # as we don't support delays
+            if use_trig_val and (
+                len(events) > 1 or len(event.getListOfEventAssignments()) > 1
+            ):
+                raise SBMLException(
+                    "Events with `useValuesFromTriggerTime=true` are not "
+                    "supported when there are multiple events or multiple "
+                    "event assignments.\n If those events are guaranteed "
+                    "to not trigger at the same time, or if the event "
+                    "assignments are guaranteed to be independent, you can "
+                    "set `useValuesFromTriggerTime=false` and retry."
+                )
+
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
             if event_id is None or event_id == "":
