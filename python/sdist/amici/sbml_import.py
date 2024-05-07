@@ -1625,6 +1625,10 @@ class SbmlImporter:
                     species_def["compartment"]
                 ].append(species)
 
+        # Currently, all event assignment targets must exist in
+        # self.symbols[SymbolId.SPECIES]
+        state_vector = list(self.symbols[SymbolId.SPECIES].keys())
+
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
@@ -1636,10 +1640,6 @@ class SbmlImporter:
             trigger_sbml = event.getTrigger()
             trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
             trigger = _parse_event_trigger(trigger_sym)
-
-            # Currently, all event assignment targets must exist in
-            # self.symbols[SymbolId.SPECIES]
-            state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 
             # parse the boluses / event assignments
             bolus = [get_empty_bolus_value() for _ in state_vector]
@@ -1759,6 +1759,8 @@ class SbmlImporter:
         # 1) there is only a single event
         # 2) there are multiple events, but they are guaranteed to not
         #    trigger at the same time
+        # 3) event assignments from events triggering at the same time
+        #    are independent
         # in these cases, the attribute value doesn't matter, as long
         # as we don't support delays
         # We can't check this in check_event_support without already processing
@@ -1781,6 +1783,18 @@ class SbmlImporter:
             if len(trigger_times) == len(set(trigger_times)):
                 # all trigger times are unique
                 return
+
+        # If all events assign to different species, we are fine. This is the
+        # case if the list of assigned-to variables across all events contains
+        # only unique values.
+        assigned_to_species = [
+            variable
+            for event in self.symbols[SymbolId.EVENT].values()
+            for variable, update in zip(state_vector, event["state_update"])
+            if not update.is_zero
+        ]
+        if len(assigned_to_species) == len(set(assigned_to_species)):
+            return
 
         raise SBMLException(
             "Events with `useValuesFromTriggerTime=true` are not "
