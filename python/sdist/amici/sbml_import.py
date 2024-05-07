@@ -1796,6 +1796,16 @@ class SbmlImporter:
         if len(assigned_to_species) == len(set(assigned_to_species)):
             return
 
+        # if all assignments are absolute (not referring to other non-constant
+        # model entities), we are fine.
+        if all(
+            update.is_zero or (update + variable).is_Number
+            for event in self.symbols[SymbolId.EVENT].values()
+            for variable, update in zip(state_vector, event["state_update"])
+            if not update.is_zero
+        ):
+            return
+
         raise SBMLException(
             "Events with `useValuesFromTriggerTime=true` are not "
             "supported when there are multiple events.\n"
