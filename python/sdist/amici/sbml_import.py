@@ -1689,7 +1689,7 @@ class SbmlImporter:
 
             # Update the concentration of species with concentration units
             # in compartments that were affected by the event assignments.
-            for compartment_sym, formula in compartment_event_assignments:
+            for compartment_sym, new_size in compartment_event_assignments:
                 for species_sym in concentration_species_by_compartment[
                     compartment_sym
                 ]:
@@ -1701,7 +1701,7 @@ class SbmlImporter:
                     ):
                         # New species value is old amount / new volume.
                         bolus[state_vector.index(species_sym)] = (
-                            species_sym * compartment_sym / formula
+                            species_sym * compartment_sym / new_size
                         )
 
             # Subtract the current species value from each species with an
