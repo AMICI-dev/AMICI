@@ -1595,34 +1595,6 @@ class SbmlImporter:
                 ].append(species)
 
         for ievent, event in enumerate(events):
-            # Since we assume valid in SBML models here, this attribute is
-            # either given (mandatory in L3), or defaults to True (L2)
-            use_trig_val = (
-                event.getUseValuesFromTriggerTime()
-                if event.isSetUseValuesFromTriggerTime()
-                else True
-            )
-            # AMICI does not support events with
-            # `useValuesFromTriggerTime=true`, unless
-            # 1) there is only a single event with a single event assignment
-            # 2) there are multiple events, but they are guaranteed to not
-            #    trigger at the same time
-            # 3) there are multiple event assignments, but they are guaranteed
-            #    to not interfere with each other
-            # in these cases, the attribute value doesn't matter, as long
-            # as we don't support delays
-            if use_trig_val and (
-                len(events) > 1 or len(event.getListOfEventAssignments()) > 1
-            ):
-                raise SBMLException(
-                    "Events with `useValuesFromTriggerTime=true` are not "
-                    "supported when there are multiple events or multiple "
-                    "event assignments.\n If those events are guaranteed "
-                    "to not trigger at the same time, or if the event "
-                    "assignments are guaranteed to be independent, you can "
-                    "set `useValuesFromTriggerTime=false` and retry."
-                )
-
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
             if event_id is None or event_id == "":
@@ -1731,12 +1703,59 @@ class SbmlImporter:
                     " algebraic rules."
                 )
 
+            # Store `useValuesFromTriggerTime` attribute for checking later
+            # Since we assume valid in SBML models here, this attribute is
+            # either given (mandatory in L3), or defaults to True (L2)
+            use_trig_val = (
+                event.getUseValuesFromTriggerTime()
+                if event.isSetUseValuesFromTriggerTime()
+                else True
+            )
+
             self.symbols[SymbolId.EVENT][event_sym] = {
                 "name": event_id,
                 "value": trigger,
                 "state_update": sp.MutableDenseMatrix(bolus),
                 "initial_value": initial_value,
+                "use_values_from_trigger_time": use_trig_val,
             }
+
+        # Check `useValuesFromTriggerTime` attribute
+        # AMICI does not support events with
+        # `useValuesFromTriggerTime=true`, unless
+        # 1) there is only a single event
+        # 2) there are multiple events, but they are guaranteed to not
+        #    trigger at the same time
+        # in these cases, the attribute value doesn't matter, as long
+        # as we don't support delays
+        # We can't check this in check_event_support without already processing
+        #  all trigger expressions, so we do it here
+        if len(self.symbols[SymbolId.EVENT]) <= 1 or not any(
+            event["use_values_from_trigger_time"]
+            for event in self.symbols[SymbolId.EVENT].values()
+        ):
+            return
+
+        # check if events are guaranteed to not trigger at the same time
+        trigger_times = [
+            sp.solve(event["value"], sbml_time_symbol)
+            for event_sym, event in self.symbols[SymbolId.EVENT].items()
+        ]
+        # for now, we only check for single/fixed/unique time points, but there
+        # are probably other cases we could cover
+        if all(len(ts) == 1 and ts[0].is_Number for ts in trigger_times):
+            trigger_times = [ts[0] for ts in trigger_times]
+            if len(trigger_times) == len(set(trigger_times)):
+                # all trigger times are unique
+                return
+
+        raise SBMLException(
+            "Events with `useValuesFromTriggerTime=true` are not "
+            "supported when there are multiple events.\n"
+            "If those events are guaranteed to not trigger at the same time, "
+            "you can set `useValuesFromTriggerTime=false` for those events "
+            "and retry."
+        )
 
     @log_execution_time("processing SBML observables", logger)
     def _process_observables(
