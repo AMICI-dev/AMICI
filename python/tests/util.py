@@ -96,7 +96,7 @@ def create_sbml_model(
         event = model.createEvent()
         event.setId(event_id)
         event.setName(event_id)
-        event.setUseValuesFromTriggerTime(True)
+        event.setUseValuesFromTriggerTime(False)
         trigger = event.createTrigger()
         trigger.setMath(libsbml.parseL3Formula(event_def["trigger"]))
         trigger.setPersistent(True)
