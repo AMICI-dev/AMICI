@@ -1660,21 +1660,16 @@ class SbmlImporter:
                 for species_sym in concentration_species_by_compartment[
                     compartment_sym
                 ]:
-                    # If the species was not affected by an event assignment
-                    # then the old value should be updated.
+                    # Only if the species was not affected by any other event
+                    # assignment, the old value should be updated.
                     if (
                         bolus[state_vector.index(species_sym)]
                         == get_empty_bolus_value()
                     ):
-                        species_value = species_sym
-                    # else the species was affected by an event assignment,
-                    # hence the updated value should be updated further.
-                    else:
-                        species_value = bolus[state_vector.index(species_sym)]
-                    # New species value is old amount / new volume.
-                    bolus[state_vector.index(species_sym)] = (
-                        species_value * compartment_sym / formula
-                    )
+                        # New species value is old amount / new volume.
+                        bolus[state_vector.index(species_sym)] = (
+                            species_sym * compartment_sym / formula
+                        )
 
             # Subtract the current species value from each species with an
             # update, as the bolus will be added on to the current species
