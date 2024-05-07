@@ -763,7 +763,8 @@ def test_multiple_event_assignment_with_compartment():
         at (time > 10): event_target = 1, unrelated = 2
     end
     """
-    module_name = "test_multiple_event_assignment_with_compartment"
+    # watch out for too long path names on windows ...
+    module_name = "tst_mltple_ea_w_cmprtmnt"
     with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
         antimony2amici(
             ant_model,
