@@ -1762,9 +1762,11 @@ class SbmlImporter:
         # 3) event assignments from events triggering at the same time
         #    are independent
         # in these cases, the attribute value doesn't matter, as long
-        # as we don't support delays
-        # We can't check this in check_event_support without already processing
-        #  all trigger expressions, so we do it here
+        # as we don't support delays.
+        # We can't check this in `check_event_support` without already
+        #  processing all trigger expressions, so we do it here
+
+        # are there any events with `useValuesFromTriggerTime=true`?
         if len(self.symbols[SymbolId.EVENT]) <= 1 or not any(
             event["use_values_from_trigger_time"]
             for event in self.symbols[SymbolId.EVENT].values()
@@ -1809,9 +1811,11 @@ class SbmlImporter:
         raise SBMLException(
             "Events with `useValuesFromTriggerTime=true` are not "
             "supported when there are multiple events.\n"
-            "If those events are guaranteed to not trigger at the same time, "
-            "you can set `useValuesFromTriggerTime=false` for those events "
-            "and retry."
+            "If it is guaranteed that 1) events do not trigger at the same "
+            "time, or 2) different event assignments do not affect the same "
+            "entities, or 3) event assignments do not depend on the "
+            "pre-event state, then you can set "
+            "`useValuesFromTriggerTime=false` and retry."
         )
 
     @log_execution_time("processing SBML observables", logger)
