@@ -1613,7 +1613,9 @@ class SbmlImporter:
             # parse the boluses / event assignments
             bolus = [get_empty_bolus_value() for _ in state_vector]
             event_assignments = event.getListOfEventAssignments()
-            compartment_event_assignments = set()
+            compartment_event_assignments: set[tuple[sp.Symbol, sp.Expr]] = (
+                set()
+            )
             for event_assignment in event_assignments:
                 variable_sym = symbol_with_assumptions(
                     event_assignment.getVariable()
@@ -1644,7 +1646,7 @@ class SbmlImporter:
                         "expressions as event assignments."
                     )
                 if variable_sym in concentration_species_by_compartment:
-                    compartment_event_assignments.add(variable_sym)
+                    compartment_event_assignments.add((variable_sym, formula))
 
                 for (
                     comp,
@@ -1652,15 +1654,15 @@ class SbmlImporter:
                 ) in self.compartment_assignment_rules.items():
                     if variable_sym not in assignment.free_symbols:
                         continue
-                    compartment_event_assignments.add(comp)
+                    compartment_event_assignments.add((comp, formula))
 
             # Update the concentration of species with concentration units
             # in compartments that were affected by the event assignments.
-            for compartment_sym in compartment_event_assignments:
+            for compartment_sym, formula in compartment_event_assignments:
                 for species_sym in concentration_species_by_compartment[
                     compartment_sym
                 ]:
-                    # If the species was not affected by an event assignment
+                    # If the species was not affected by an event assignment,
                     # then the old value should be updated.
                     if (
                         bolus[state_vector.index(species_sym)]
