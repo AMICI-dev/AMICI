@@ -561,9 +561,9 @@ class SbmlImporter:
         assert dxdt.shape[0] - len(self.symbols[SymbolId.SPECIES]) == len(
             self.symbols.get(SymbolId.ALGEBRAIC_STATE, [])
         ), (
-            self.symbols[SymbolId.SPECIES],
+            self.symbols.get(SymbolId.SPECIES),
             dxdt,
-            self.symbols[SymbolId.SPECIES],
+            self.symbols.get(SymbolId.ALGEBRAIC_STATE),
         )
 
         # correct time derivatives for compartment changes
@@ -954,6 +954,7 @@ class SbmlImporter:
             }
 
         self._convert_event_assignment_parameter_targets_to_species()
+        self._convert_event_assignment_compartment_targets_to_species()
         self._process_species_initial()
         self._process_rate_rules()
 
@@ -1564,6 +1565,36 @@ class SbmlImporter:
                 "dt": sp.Float(0),
             }
 
+    def _convert_event_assignment_compartment_targets_to_species(self):
+        """Find compartments that are event assignment targets and convert
+        those compartments to species."""
+        for event in self.sbml.getListOfEvents():
+            for event_assignment in event.getListOfEventAssignments():
+                if event_assignment.getMath() is None:
+                    # Ignore event assignments with no change in value.
+                    continue
+                variable = symbol_with_assumptions(
+                    event_assignment.getVariable()
+                )
+                if variable not in self.compartments:
+                    continue
+                if variable in self.symbols[SymbolId.SPECIES]:
+                    # Compartments with rate rules are already present as
+                    # species
+                    continue
+
+                self.symbols[SymbolId.SPECIES][variable] = {
+                    "name": str(variable),
+                    "init": self.compartments[variable],
+                    # 'compartment': None,  # can ignore for amounts
+                    "constant": False,
+                    "amount": True,
+                    # 'conversion_factor': 1.0,  # can be ignored
+                    "index": len(self.symbols[SymbolId.SPECIES]),
+                    "dt": sp.Float(0),
+                }
+                del self.compartments[variable]
+
     @log_execution_time("processing SBML events", logger)
     def _process_events(self) -> None:
         """Process SBML events."""
@@ -1613,7 +1644,9 @@ class SbmlImporter:
             # parse the boluses / event assignments
             bolus = [get_empty_bolus_value() for _ in state_vector]
             event_assignments = event.getListOfEventAssignments()
-            compartment_event_assignments = set()
+            compartment_event_assignments: set[tuple[sp.Symbol, sp.Expr]] = (
+                set()
+            )
             for event_assignment in event_assignments:
                 variable_sym = symbol_with_assumptions(
                     event_assignment.getVariable()
@@ -1631,7 +1664,7 @@ class SbmlImporter:
                         "Could not process event assignment for "
                         f"{str(variable_sym)}. AMICI currently only allows "
                         "event assignments to species; parameters; or, "
-                        "compartments with rate rules, at the moment."
+                        "compartments."
                     )
                 try:
                     # Try working with the formula now to detect errors
@@ -1644,7 +1677,7 @@ class SbmlImporter:
                         "expressions as event assignments."
                     )
                 if variable_sym in concentration_species_by_compartment:
-                    compartment_event_assignments.add(variable_sym)
+                    compartment_event_assignments.add((variable_sym, formula))
 
                 for (
                     comp,
@@ -1652,15 +1685,15 @@ class SbmlImporter:
                 ) in self.compartment_assignment_rules.items():
                     if variable_sym not in assignment.free_symbols:
                         continue
-                    compartment_event_assignments.add(comp)
+                    compartment_event_assignments.add((comp, formula))
 
             # Update the concentration of species with concentration units
             # in compartments that were affected by the event assignments.
-            for compartment_sym in compartment_event_assignments:
+            for compartment_sym, formula in compartment_event_assignments:
                 for species_sym in concentration_species_by_compartment[
                     compartment_sym
                 ]:
-                    # If the species was not affected by an event assignment
+                    # If the species was not affected by an event assignment,
                     # then the old value should be updated.
                     if (
                         bolus[state_vector.index(species_sym)]
