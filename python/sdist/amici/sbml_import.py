@@ -1625,6 +1625,10 @@ class SbmlImporter:
                     species_def["compartment"]
                 ].append(species)
 
+        # Currently, all event assignment targets must exist in
+        # self.symbols[SymbolId.SPECIES]
+        state_vector = list(self.symbols[SymbolId.SPECIES].keys())
+
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
@@ -1636,10 +1640,6 @@ class SbmlImporter:
             trigger_sbml = event.getTrigger()
             trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
             trigger = _parse_event_trigger(trigger_sym)
-
-            # Currently, all event assignment targets must exist in
-            # self.symbols[SymbolId.SPECIES]
-            state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 
             # parse the boluses / event assignments
             bolus = [get_empty_bolus_value() for _ in state_vector]
@@ -1736,12 +1736,87 @@ class SbmlImporter:
                     " algebraic rules."
                 )
 
+            # Store `useValuesFromTriggerTime` attribute for checking later
+            # Since we assume valid in SBML models here, this attribute is
+            # either given (mandatory in L3), or defaults to True (L2)
+            use_trig_val = (
+                event.getUseValuesFromTriggerTime()
+                if event.isSetUseValuesFromTriggerTime()
+                else True
+            )
+
             self.symbols[SymbolId.EVENT][event_sym] = {
                 "name": event_id,
                 "value": trigger,
                 "state_update": sp.MutableDenseMatrix(bolus),
                 "initial_value": initial_value,
+                "use_values_from_trigger_time": use_trig_val,
             }
+
+        # Check `useValuesFromTriggerTime` attribute
+        # AMICI does not support events with
+        # `useValuesFromTriggerTime=true`, unless
+        # 1) there is only a single event
+        # 2) there are multiple events, but they are guaranteed to not
+        #    trigger at the same time
+        # 3) event assignments from events triggering at the same time
+        #    are independent
+        # in these cases, the attribute value doesn't matter, as long
+        # as we don't support delays.
+        # We can't check this in `check_event_support` without already
+        #  processing all trigger expressions, so we do it here
+
+        # are there any events with `useValuesFromTriggerTime=true`?
+        if len(self.symbols[SymbolId.EVENT]) <= 1 or not any(
+            event["use_values_from_trigger_time"]
+            for event in self.symbols[SymbolId.EVENT].values()
+        ):
+            return
+
+        # check if events are guaranteed to not trigger at the same time
+        trigger_times = [
+            sp.solve(event["value"], sbml_time_symbol)
+            for event_sym, event in self.symbols[SymbolId.EVENT].items()
+        ]
+        # for now, we only check for single/fixed/unique time points, but there
+        # are probably other cases we could cover
+        if all(len(ts) == 1 and ts[0].is_Number for ts in trigger_times):
+            trigger_times = [ts[0] for ts in trigger_times]
+            if len(trigger_times) == len(set(trigger_times)):
+                # all trigger times are unique
+                return
+
+        # If all events assign to different species, we are fine. This is the
+        # case if the list of assigned-to variables across all events contains
+        # only unique values.
+        assigned_to_species = [
+            variable
+            for event in self.symbols[SymbolId.EVENT].values()
+            for variable, update in zip(state_vector, event["state_update"])
+            if not update.is_zero
+        ]
+        if len(assigned_to_species) == len(set(assigned_to_species)):
+            return
+
+        # if all assignments are absolute (not referring to other non-constant
+        # model entities), we are fine.
+        if all(
+            update.is_zero or (update + variable).is_Number
+            for event in self.symbols[SymbolId.EVENT].values()
+            for variable, update in zip(state_vector, event["state_update"])
+            if not update.is_zero
+        ):
+            return
+
+        raise SBMLException(
+            "Events with `useValuesFromTriggerTime=true` are not "
+            "supported when there are multiple events.\n"
+            "If it is guaranteed that 1) events do not trigger at the same "
+            "time, or 2) different event assignments do not affect the same "
+            "entities, or 3) event assignments do not depend on the "
+            "pre-event state, then you can set "
+            "`useValuesFromTriggerTime=false` and retry."
+        )
 
     @log_execution_time("processing SBML observables", logger)
     def _process_observables(
