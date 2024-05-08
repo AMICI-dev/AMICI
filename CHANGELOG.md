@@ -2,7 +2,7 @@
 
 ## v0.X Series
 
-### v0.25.0 (2024-05-TBD)
+### v0.25.0 (2024-05-08)
 
 This release requires Python >= 3.10.
 
