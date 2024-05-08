@@ -23,6 +23,6 @@ jobs:
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
     - name: Run script
-      uses: matlab-actions/run-command@v1
+      uses: matlab-actions/run-command@v2
       with:
         command: cd matlab; installAMICI; addpath tests; testModels
