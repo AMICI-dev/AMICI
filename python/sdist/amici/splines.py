@@ -5,6 +5,7 @@ This module provides helper functions for reading/writing splines with AMICI
 annotations from/to SBML files and for adding such splines to the AMICI C++
 code.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
     from numbers import Real
     from typing import (
         Any,
-        Callable,
         Union,
     )
+    from collections.abc import Callable
     from collections.abc import Sequence
 
     from . import sbml_import
@@ -593,7 +594,9 @@ class AbstractSpline(ABC):
             importer.symbols[SymbolId.FIXED_PARAMETER][fp]["value"]
             for fp in fixed_parameters
         ]
-        subs = dict(zip(fixed_parameters, fixed_parameters_values))
+        subs = dict(
+            zip(fixed_parameters, fixed_parameters_values, strict=True)
+        )
         nodes_values = [sp.simplify(x.subs(subs)) for x in self.nodes]
         for x in nodes_values:
             assert x.is_Number
@@ -1092,7 +1095,7 @@ class AbstractSpline(ABC):
                     # It makes no sense to give a single nominal value:
                     # grid values must all be different
                     raise TypeError("x_nominal must be a Sequence!")
-                for _x, _val in zip(self.nodes, x_nominal):
+                for _x, _val in zip(self.nodes, x_nominal, strict=True):
                     if _x.is_Symbol and not model.getParameter(_x.name):
                         add_parameter(
                             model, _x.name, value=_val, units=x_units
@@ -1115,7 +1118,7 @@ class AbstractSpline(ABC):
                 else:
                     y_constant = len(self.values_at_nodes) * [y_constant]
                 for _y, _val, _const in zip(
-                    self.values_at_nodes, y_nominal, y_constant
+                    self.values_at_nodes, y_nominal, y_constant, strict=True
                 ):
                     if _y.is_Symbol and not model.getParameter(_y.name):
                         add_parameter(

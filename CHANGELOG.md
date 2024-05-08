@@ -2,10 +2,42 @@
 
 ## v0.X Series
 
+### v0.25.0 (2024-05-TBD)
+
+This release requires Python >= 3.10.
+
+**Fixes**
+* Fixed a bug in event handling that could lead to incorrect simulation
+  results for models with events that assign to compartments *and* have
+  additional event assignments
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2428
+* SBML import: handle `useValuesFromTriggerTime` attribute on events.
+  This attribute was previously ignored. It is possible that now AMICI fails
+  to import models that it previously imported successfully. For cases where
+  `useValuesFromTriggerTime=True` made a difference, AMICI might have produced
+  incorrect results before.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2429
+* Faster code generation for models with events if they don't have
+  state-dependent triggers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2417
+* Most warnings now come with a more informative code location
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2421
+* `amici.ExpData` was changed so that `isinstance(edata, amici.ExpData)` works
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2396
+
+**Features**
+* Event-assignments to compartments are now supported. Previously, this only
+  worked for compartments that were rate rule targets.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2425
+* Releases are now deployed to Docker Hub
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2413
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.24.0...v0.25.0
+
 ### v0.24.0 (2024-04-22)
 
 This will be the last release supporting Python 3.9.
-Future releases will require Python 3.10.
+Future releases will require Python>=3.10.
 
 **Fixes**
 
@@ -27,7 +59,7 @@ Future releases will require Python 3.10.
   the correct SUNDIALS installation
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2397
 
-* **Features**
+**Features**
 
 * Optionally include measurements in `plot_observable_trajectories`
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2381

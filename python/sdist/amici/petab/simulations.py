@@ -3,9 +3,10 @@
 Functionality related to running simulations or evaluating the objective
 function as defined by a PEtab problem.
 """
+
 import copy
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 from collections.abc import Sequence
 
 import amici
@@ -72,12 +73,12 @@ __all__ = [
 def simulate_petab(
     petab_problem: petab.Problem,
     amici_model: AmiciModel,
-    solver: Optional[amici.Solver] = None,
-    problem_parameters: Optional[dict[str, float]] = None,
-    simulation_conditions: Union[pd.DataFrame, dict] = None,
+    solver: amici.Solver | None = None,
+    problem_parameters: dict[str, float] | None = None,
+    simulation_conditions: pd.DataFrame | dict = None,
     edatas: list[AmiciExpData] = None,
     parameter_mapping: ParameterMapping = None,
-    scaled_parameters: Optional[bool] = False,
+    scaled_parameters: bool | None = False,
     log_level: int = logging.WARNING,
     num_threads: int = 1,
     failfast: bool = True,
@@ -171,6 +172,7 @@ def simulate_petab(
             zip(
                 petab_problem.x_ids,
                 petab_problem.x_nominal_scaled,
+                strict=True,
             )
         )
         # depending on `fill_fixed_parameters` for parameter mapping, the
@@ -262,11 +264,11 @@ def simulate_petab(
 def aggregate_sllh(
     amici_model: AmiciModel,
     rdatas: Sequence[amici.ReturnDataView],
-    parameter_mapping: Optional[ParameterMapping],
+    parameter_mapping: ParameterMapping | None,
     edatas: list[AmiciExpData],
     petab_scale: bool = True,
     petab_problem: petab.Problem = None,
-) -> Union[None, dict[str, float]]:
+) -> None | dict[str, float]:
     """
     Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.
@@ -310,7 +312,7 @@ def aggregate_sllh(
             )
 
     for condition_parameter_mapping, edata, rdata in zip(
-        parameter_mapping, edatas, rdatas
+        parameter_mapping, edatas, rdatas, strict=True
     ):
         for sllh_parameter_index, condition_parameter_sllh in enumerate(
             rdata.sllh
@@ -432,7 +434,9 @@ def rdatas_to_measurement_df(
     observable_ids = model.getObservableIds()
     rows = []
     # iterate over conditions
-    for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
+    for (_, condition), rdata in zip(
+        simulation_conditions.iterrows(), rdatas, strict=True
+    ):
         # current simulation matrix
         y = rdata.y
         # time array used in rdata

@@ -9,7 +9,6 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Union
 from warnings import warn
 
 import amici
@@ -34,7 +33,7 @@ logger = get_logger(__name__, logging.WARNING)
 
 def import_petab_problem(
     petab_problem: petab.Problem,
-    model_output_dir: Union[str, Path, None] = None,
+    model_output_dir: str | Path | None = None,
     model_name: str = None,
     compile_: bool = None,
     non_estimated_parameters_as_constants=True,

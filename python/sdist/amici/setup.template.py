@@ -1,4 +1,5 @@
 """AMICI model package setup"""
+
 import os
 import sys
 from pathlib import Path
@@ -71,8 +72,7 @@ setup(
     ext_modules=[MODEL_EXT],
     packages=find_namespace_packages(),
     install_requires=["amici==TPL_AMICI_VERSION"],
-    extras_require={"wurlitzer": ["wurlitzer"]},
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     package_data={},
     zip_safe=False,
     classifiers=CLASSIFIERS,

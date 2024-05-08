@@ -62,7 +62,7 @@ def test_multiple_splines(**kwargs):
 
     tols = []
     for t0, t1, t2, t3, t4, t5 in zip(
-        tols0, tols1, tols2, tols3, tols4, tols5
+        tols0, tols1, tols2, tols3, tols4, tols5, strict=True
     ):
         keys = set().union(
             t0.keys(), t1.keys(), t2.keys(), t3.keys(), t4.keys(), t5.keys()

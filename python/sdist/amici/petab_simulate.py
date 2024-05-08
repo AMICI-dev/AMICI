@@ -11,6 +11,7 @@ import warnings
 warnings.warn(
     f"Importing {__name__} is deprecated. Use `amici.petab.simulator` instead.",
     DeprecationWarning,
+    stacklevel=2,
 )
 
 from .petab.simulator import PetabSimulator  # noqa: F401

@@ -8,6 +8,24 @@ using namespace amici;
 
 %ignore ConditionContext;
 
+%feature("pythonprepend") amici::ExpData::ExpData %{
+    """
+    Convenience wrapper for :py:class:`amici.amici.ExpData` constructors
+
+    :param args: arguments
+
+    :returns: ExpData Instance
+    """
+    if args:
+        from amici.numpy import ReturnDataView
+
+        # Get the raw pointer if necessary
+        if isinstance(args[0], (ExpData, ExpDataPtr, Model, ModelPtr)):
+            args = (_get_ptr(args[0]), *args[1:])
+        elif isinstance(args[0], ReturnDataView):
+            args = (_get_ptr(args[0]["ptr"]), *args[1:])
+%}
+
 // ExpData.__repr__
 %pythoncode %{
 def _edata_repr(self: "ExpData"):

@@ -13,7 +13,8 @@ import re
 import sys
 from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Any, Callable, Union
+from typing import Any
+from collections.abc import Callable
 
 
 def _get_amici_path():
@@ -134,13 +135,11 @@ if not _imported_from_setup():
             """Create a model instance."""
             ...
 
-    AmiciModel = Union[amici.Model, amici.ModelPtr]
-
 
 class add_path:
     """Context manager for temporarily changing PYTHONPATH"""
 
-    def __init__(self, path: Union[str, Path]):
+    def __init__(self, path: str | Path):
         self.path: str = str(path)
 
     def __enter__(self):
@@ -153,7 +152,7 @@ class add_path:
 
 
 def import_model_module(
-    module_name: str, module_path: Union[Path, str]
+    module_name: str, module_path: Path | str
 ) -> ModelModule:
     """
     Import Python module of an AMICI model

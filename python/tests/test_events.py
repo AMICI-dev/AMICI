@@ -1,4 +1,5 @@
 """Tests for SBML events, including piecewise expressions."""
+
 from copy import deepcopy
 
 import amici
@@ -14,6 +15,7 @@ from util import (
     create_amici_model,
     create_sbml_model,
 )
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture(
@@ -745,3 +747,85 @@ def test_handling_of_fixed_time_point_event_triggers():
         assert (rdata.x[(rdata.ts >= 3)] == 3).all()
 
         check_derivatives(amici_model, amici_solver, edata=None)
+
+
+def test_multiple_event_assignment_with_compartment():
+    """see https://github.com/AMICI-dev/AMICI/issues/2426"""
+    ant_model = """
+    model test_events_multiple_assignments
+        compartment event_target = 1
+        event_target' = 0
+        species species_in_event_target in event_target = 1
+        unrelated = 2
+
+        # use different order of event assignments for the two events
+        at (time > 5): unrelated = 4, event_target = 10
+        at (time > 10): event_target = 1, unrelated = 2
+    end
+    """
+    # watch out for too long path names on windows ...
+    module_name = "tst_mltple_ea_w_cmprtmnt"
+    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+        antimony2amici(
+            ant_model,
+            model_name=module_name,
+            output_dir=outdir,
+            verbose=True,
+        )
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
+        amici_model = model_module.getModel()
+        assert amici_model.ne == 2
+        assert amici_model.ne_solver == 0
+        assert amici_model.nx_rdata == 3
+        amici_model.setTimepoints(np.linspace(0, 15, 16))
+        amici_solver = amici_model.getSolver()
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        idx_event_target = amici_model.getStateIds().index("event_target")
+        idx_unrelated = amici_model.getStateIds().index("unrelated")
+        idx_species_in_event_target = amici_model.getStateIds().index(
+            "species_in_event_target"
+        )
+
+        assert_allclose(
+            rdata.x[(rdata.ts < 5) & (rdata.ts > 10), idx_event_target],
+            1,
+            rtol=0,
+            atol=1e-15,
+        )
+        assert_allclose(
+            rdata.x[(5 < rdata.ts) & (rdata.ts < 10), idx_event_target],
+            10,
+            rtol=0,
+            atol=1e-15,
+        )
+        assert_allclose(
+            rdata.x[(rdata.ts < 5) & (rdata.ts > 10), idx_unrelated],
+            2,
+            rtol=0,
+            atol=1e-15,
+        )
+        assert_allclose(
+            rdata.x[(5 < rdata.ts) & (rdata.ts < 10), idx_unrelated],
+            4,
+            rtol=0,
+            atol=1e-15,
+        )
+        assert_allclose(
+            rdata.x[
+                (rdata.ts < 5) & (rdata.ts > 10), idx_species_in_event_target
+            ],
+            1,
+            rtol=0,
+            atol=1e-15,
+        )
+        assert_allclose(
+            rdata.x[
+                (5 < rdata.ts) & (rdata.ts < 10), idx_species_in_event_target
+            ],
+            0.1,
+            rtol=0,
+            atol=1e-15,
+        )

@@ -8,7 +8,6 @@ Import a model in the PySB-adapted :mod:`petab`
 import logging
 import re
 from pathlib import Path
-from typing import Optional, Union
 
 import petab
 import pysb
@@ -56,6 +55,7 @@ def _add_observation_model(
         petab_problem.observable_df.index,
         petab_problem.observable_df[OBSERVABLE_FORMULA],
         petab_problem.observable_df[NOISE_FORMULA],
+        strict=True,
     ):
         obs_symbol = sp.sympify(observable_formula, locals=local_syms)
         if observable_id in pysb_model.expressions.keys():
@@ -165,9 +165,9 @@ def _add_initialization_variables(
 @log_execution_time("Importing PEtab model", logger)
 def import_model_pysb(
     petab_problem: petab.Problem,
-    model_output_dir: Optional[Union[str, Path]] = None,
-    verbose: Optional[Union[bool, int]] = True,
-    model_name: Optional[str] = None,
+    model_output_dir: str | Path | None = None,
+    verbose: bool | int | None = True,
+    model_name: str | None = None,
     **kwargs,
 ) -> None:
     """

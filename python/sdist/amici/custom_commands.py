@@ -17,12 +17,16 @@ from setuptools.command.sdist import sdist
 class AmiciInstall(install):
     """Custom `install` command to handle extra arguments"""
 
-    print("running AmiciInstall")
-
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
         ("no-clibs", None, "Don't build AMICI C++ extension"),
     ]
+
+    def run(self):
+        """Setuptools entry-point"""
+        print(f"running {self.__class__.__name__}")
+
+        super().run()
 
     def initialize_options(self):
         super().initialize_options()

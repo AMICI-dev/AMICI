@@ -558,15 +558,15 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace("sunindextype", "int")
     sig = sig.replace("H5::H5File", "object")
 
-    # remove const
-    sig = sig.replace(" const ", r" ")
-    sig = re.sub(r" const$", r"", sig)
+    # remove const / const&
+    sig = sig.replace(" const&? ", r" ")
+    sig = re.sub(r" const&?$", r"", sig)
 
     # remove pass by reference
     sig = re.sub(r" &(,|\))", r"\1", sig)
     sig = re.sub(r" &$", r"", sig)
 
-    # turn gsl_spans and pointers int Iterables
+    # turn gsl_spans and pointers into Iterables
     sig = re.sub(r"([\w.]+) \*", r"Iterable[\1]", sig)
     sig = re.sub(r"gsl::span< ([\w.]+) >", r"Iterable[\1]", sig)
 

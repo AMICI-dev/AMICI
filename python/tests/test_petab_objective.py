@@ -40,10 +40,7 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     amici_solver.setMaxSteps(int(1e5))
 
     problem_parameters = dict(
-        zip(
-            petab_problem.x_ids,
-            petab_problem.x_nominal,
-        )
+        zip(petab_problem.x_ids, petab_problem.x_nominal, strict=True)
     )
 
     results = {}

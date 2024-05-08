@@ -6,7 +6,6 @@ computed sensitivities using finite difference approximations
 """
 
 import copy
-from typing import Optional
 from collections.abc import Sequence
 
 import numpy as np
@@ -31,9 +30,9 @@ def check_finite_difference(
     edata: ExpData,
     ip: int,
     fields: list[str],
-    atol: Optional[float] = 1e-4,
-    rtol: Optional[float] = 1e-4,
-    epsilon: Optional[float] = 1e-3,
+    atol: float | None = 1e-4,
+    rtol: float | None = 1e-4,
+    epsilon: float | None = 1e-3,
 ) -> None:
     """
     Checks the computed sensitivity based derivatives against a finite
@@ -138,10 +137,10 @@ def check_finite_difference(
 def check_derivatives(
     model: Model,
     solver: Solver,
-    edata: Optional[ExpData] = None,
-    atol: Optional[float] = 1e-4,
-    rtol: Optional[float] = 1e-4,
-    epsilon: Optional[float] = 1e-3,
+    edata: ExpData | None = None,
+    atol: float | None = 1e-4,
+    rtol: float | None = 1e-4,
+    epsilon: float | None = 1e-3,
     check_least_squares: bool = True,
     skip_zero_pars: bool = False,
 ) -> None:
@@ -249,8 +248,8 @@ def _check_close(
     atol: float,
     rtol: float,
     field: str,
-    ip: Optional[int] = None,
-    verbose: Optional[bool] = True,
+    ip: int | None = None,
+    verbose: bool | None = True,
 ) -> None:
     """
     Compares computed values against expected values and provides rich

@@ -27,6 +27,7 @@ from .petab.parameter_mapping import (  # noqa # pylint: disable=unused-import
 warnings.warn(
     "Importing amici.parameter_mapping is deprecated. Use `amici.petab.parameter_mapping` instead.",
     DeprecationWarning,
+    stacklevel=2,
 )
 
 __all__ = [

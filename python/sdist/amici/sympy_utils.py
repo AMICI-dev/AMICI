@@ -1,7 +1,9 @@
 """Functionality for working with sympy objects."""
+
 import os
 from itertools import starmap
-from typing import Union, Any, Callable
+from typing import Any
+from collections.abc import Callable
 import contextlib
 import sympy as sp
 import logging
@@ -111,9 +113,9 @@ def smart_jacobian(
 
 @log_execution_time("running smart_multiply", logger)
 def smart_multiply(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+    x: sp.MutableDenseMatrix | sp.MutableSparseMatrix,
     y: sp.MutableDenseMatrix,
-) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
+) -> sp.MutableDenseMatrix | sp.MutableSparseMatrix:
     """
     Wrapper around symbolic multiplication with some additional checks that
     reduce computation time for large matrices
@@ -136,7 +138,7 @@ def smart_multiply(
 
 
 def smart_is_zero_matrix(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+    x: sp.MutableDenseMatrix | sp.MutableSparseMatrix,
 ) -> bool:
     """A faster implementation of sympy's is_zero_matrix
 
@@ -182,7 +184,11 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
             elif isinstance(obj, sp.SparseMatrix):
                 dok = obj.todok()
                 mapped = p.map(func, dok.values())
-                dok = {k: v for k, v in zip(dok.keys(), mapped) if v != 0}
+                dok = {
+                    k: v
+                    for k, v in zip(dok.keys(), mapped, strict=True)
+                    if v != 0
+                }
                 return obj._new(obj.rows, obj.cols, dok)
             else:
                 raise ValueError(f"Unsupported matrix type {type(obj)}")
