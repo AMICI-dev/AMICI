@@ -878,3 +878,90 @@
    fun:loadAntimonyString
    ...
 }
+
+{
+   Python
+   Memcheck:Cond
+   fun:maybe_small_long
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:medium_value
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:Py_INCREF
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:Py_DECREF
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:Py_SIZE
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:Py_TYPE
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:type_call
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:_PyEval_EvalFrameDefault
+   ...
+}
+
+
+{
+   Python
+   Memcheck:Value8
+   fun:PyType_HasFeature
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:unpack_indices
+   ...
+}
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyFloat_FromDouble
+   fun:fill_time
+   ...
+}
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:gc_alloc
+   ...
+   fun:Py_CompileStringObject
+   ...
+}
