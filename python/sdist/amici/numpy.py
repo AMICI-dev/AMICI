@@ -13,7 +13,7 @@ from numbers import Number
 import amici
 import numpy as np
 import sympy as sp
-
+from sympy.abc import _clash
 from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
 
 StrOrExpr = Union[str, sp.Expr]
@@ -497,7 +497,7 @@ def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
     from sympy.utilities.lambdify import lambdify
 
     if isinstance(expr, str):
-        expr = sp.sympify(expr)
+        expr = sp.sympify(expr, locals=_clash)
 
     arg_names = list(sorted(expr.free_symbols, key=lambda x: x.name))
     func = lambdify(arg_names, expr, "numpy")
