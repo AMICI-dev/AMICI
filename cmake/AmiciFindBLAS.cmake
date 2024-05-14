@@ -12,18 +12,32 @@ set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
 
 if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
   if(DEFINED ENV{MKLROOT})
-    # This is set by Environment Modules
-    message(STATUS "Using MKL_INCDIR and MKL_LIB from environment module")
     set(BLAS
         "MKL"
         CACHE STRING "BLAS library to use" FORCE)
-    set(BLAS_INCLUDE_DIRS
-        "$ENV{MKL_INCDIR}"
-        CACHE STRING "" FORCE)
-    set(BLAS_LIBRARIES
-        "$ENV{MKL_LIB}"
-        CACHE STRING "" FORCE)
+
+    # Was MKLROOT set by /opt/intel/oneapi/setvars.sh? then cmake will find it
+    message(STATUS "Trying to find BLAS based on MKLROOT=$ENV{MKLROOT}")
+    # give the user the option to override the BLA_VENDOR
+    if(NOT DEFINED BLA_VENDOR)
+      set(BLA_VENDOR Intel10_64lp)
+    endif()
+    find_package(BLAS)
+    if(BLAS_FOUND)
+      message(STATUS "Found BLAS via FindBLAS and MKLROOT")
+    else()
+      # This is set by Environment Modules and might not be compatible with
+      # FindBLAS
+      message(STATUS "Using MKL_INCDIR and MKL_LIB from environment module")
+      set(BLAS_INCLUDE_DIRS
+          "$ENV{MKL_INCDIR}"
+          CACHE STRING "" FORCE)
+      set(BLAS_LIBRARIES
+          "$ENV{MKL_LIB}"
+          CACHE STRING "" FORCE)
+    endif()
   else()
+    message(STATUS "BLAS is set to MKL, but MKLROOT is not set.")
     set(BLAS_INCLUDE_DIRS
         ""
         CACHE STRING "")
@@ -79,17 +93,17 @@ endif()
 # Create an imported target
 if(NOT TARGET BLAS::BLAS)
   add_library(BLAS INTERFACE)
-  set_target_properties(BLAS PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
-    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
+  set_target_properties(
+    BLAS PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
+                    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
   add_library(BLAS::BLAS ALIAS BLAS)
   if("${PROJECT_NAME}" STREQUAL "amici")
-      install(TARGETS BLAS EXPORT BLAS)
-      export(EXPORT BLAS NAMESPACE BLAS::)
-      install(
-        EXPORT BLAS
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
-        NAMESPACE BLAS::)
+    install(TARGETS BLAS EXPORT BLAS)
+    export(EXPORT BLAS NAMESPACE BLAS::)
+    install(
+      EXPORT BLAS
+      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
+      NAMESPACE BLAS::)
   endif()
 
   # legacy python package environment variables:
