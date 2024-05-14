@@ -141,6 +141,7 @@ def get_extensions():
         ],
     )
     # AMICI
+    debug_build = os.getenv("AMICI_DEBUG", "").lower() in ["1", "true"]
     amici_ext = CMakeExtension(
         name="amici",
         install_prefix="amici",
@@ -153,6 +154,7 @@ def get_extensions():
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
         ],
+        cmake_build_type="Debug" if debug_build else "Release",
     )
     # Order matters!
     return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_ext]
