@@ -141,7 +141,10 @@ def get_extensions():
         ],
     )
     # AMICI
-    debug_build = os.getenv("AMICI_DEBUG", "").lower() in ["1", "true"]
+    debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
+        "1",
+        "true",
+    ]
     amici_ext = CMakeExtension(
         name="amici",
         install_prefix="amici",

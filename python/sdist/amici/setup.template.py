@@ -24,7 +24,10 @@ def get_extension() -> CMakeExtension:
     else:
         os.environ["CMAKE_BUILD_PARALLEL_LEVEL"] = "1"
 
-    debug_build = os.getenv("AMICI_DEBUG", "").lower() in ["1", "true"]
+    debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
+        "1",
+        "true",
+    ]
 
     return CMakeExtension(
         name="model_ext",
