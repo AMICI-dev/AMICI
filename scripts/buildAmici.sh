@@ -14,7 +14,8 @@ mkdir -p "${amici_build_dir}"
 cd "${amici_build_dir}"
 
 if [ "${GITHUB_ACTIONS:-}" = true ] ||
-  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
+  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ] ||
+  [ "${ENABLE_GCOV_COVERAGE:-}" = TRUE ]; then
   # Running on CI server
   build_type="Debug"
   # exceptions instead of terminate()
