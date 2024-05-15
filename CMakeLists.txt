@@ -134,7 +134,7 @@ endif()
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 # Handle different sundials build/install dirs, depending on whether we are
-#  building the Python extension only or the full C++ interface
+# building the Python extension only or the full C++ interface
 if(AMICI_PYTHON_BUILD_EXT_ONLY)
   set(VENDORED_SUNDIALS_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR})
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})

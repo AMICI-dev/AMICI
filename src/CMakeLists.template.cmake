@@ -38,6 +38,10 @@ endif()
 find_package(Amici TPL_AMICI_VERSION REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
+set_target_properties(Upstream::amici PROPERTIES
+    MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo;Release;
+    MAP_IMPORTED_CONFIG_RELEASE Release
+    MAP_IMPORTED_CONFIG_DEBUG Debug;RelWithDebInfo;)
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
