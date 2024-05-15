@@ -36,6 +36,7 @@ models = [
         "Isensee_JCB2018",
         "Beer_MolBioSystems2014",
         "Alkan_SciSignal2018",
+        "Lang_PLOSComputBiol2024",
         # excluded due to excessive numerical failures
         "Crauste_CellSystems2017",
         "Fujita_SciSignal2010",
