@@ -126,6 +126,7 @@ ExpData::ExpData(
     }
 
     id = rdata.id;
+    initialization_id = rdata.initialization_id;
 }
 
 void ExpData::setTimepoints(std::vector<realtype> const& ts) {
