@@ -22,6 +22,7 @@ if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
     if(NOT DEFINED BLA_VENDOR)
       set(BLA_VENDOR Intel10_64lp)
     endif()
+    message(STATUS "Trying FindBLAS with BLA_VENDOR=${BLA_VENDOR}")
     find_package(BLAS)
     if(BLAS_FOUND)
       message(STATUS "Found BLAS via FindBLAS and MKLROOT")
@@ -56,6 +57,7 @@ elseif(
 
   if(APPLE AND (NOT DEFINED BLA_VENDOR OR BLA_VENDOR STREQUAL "All"))
     set(BLA_VENDOR Apple)
+    message(STATUS "Trying FindBLAS with BLA_VENDOR=${BLA_VENDOR}")
     find_package(BLAS)
     if(BLAS_FOUND)
       message(STATUS "Found Apple Accelerate BLAS")
@@ -73,6 +75,7 @@ elseif(
 
   endif()
   if(NOT BLAS_FOUND)
+    message(STATUS "Trying FindBLAS with BLA_VENDOR=${BLA_VENDOR}")
     find_package(BLAS)
     if(BLAS_FOUND)
       message(STATUS "Found BLAS via FindBLAS")
