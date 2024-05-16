@@ -27,7 +27,7 @@ def get_extension() -> CMakeExtension:
     debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
         "1",
         "true",
-    ]
+    ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
 
     return CMakeExtension(
         name="model_ext",

@@ -144,7 +144,7 @@ def get_extensions():
     debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
         "1",
         "true",
-    ]
+    ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
     amici_ext = CMakeExtension(
         name="amici",
         install_prefix="amici",
