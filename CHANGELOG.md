@@ -2,7 +2,23 @@
 
 ## v0.X Series
 
-### v0.25.0 (2024-05-TBD)
+### v0.25.1 (2024-05-16)
+
+**Fixes**
+* Avoid clashes with sympy-entities in `plot_expressions`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2440
+* PEtab: fix KeyErrors for missing parameters in `fill_in_parameters`
+  (default values are now used if only a subset of parameters is provided)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2449
+* CMake: Fix Intel MKL detection when not using environment modules
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2443
+* CMake: Fix some issues with multi-config generators
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2445
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.25.0...v0.25.1
+
+
+### v0.25.0 (2024-05-08)
 
 This release requires Python >= 3.10.
 

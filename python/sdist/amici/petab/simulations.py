@@ -166,30 +166,33 @@ def simulate_petab(
             amici_model=amici_model,
         )
 
-    if problem_parameters is None:
-        # scaled PEtab nominal values
-        problem_parameters = dict(
-            zip(
-                petab_problem.x_ids,
-                petab_problem.x_nominal_scaled,
-                strict=True,
-            )
-        )
-        # depending on `fill_fixed_parameters` for parameter mapping, the
-        #  parameter mapping may contain values instead of symbols for fixed
-        #  parameters. In this case, we need to filter them here to avoid
-        #  warnings in `fill_in_parameters`.
-        free_parameters = parameter_mapping.free_symbols
-        problem_parameters = {
-            par_id: par_value
-            for par_id, par_value in problem_parameters.items()
-            if par_id in free_parameters
-        }
-
-    elif not scaled_parameters:
+    if problem_parameters is not None and not scaled_parameters:
         problem_parameters = petab_problem.scale_parameters(problem_parameters)
-
     scaled_parameters = True
+
+    if problem_parameters is None:
+        problem_parameters = {}
+
+    # scaled PEtab nominal values
+    default_problem_parameters = dict(
+        zip(
+            petab_problem.x_ids,
+            petab_problem.get_x_nominal(scaled=scaled_parameters),
+            strict=True,
+        )
+    )
+    # depending on `fill_fixed_parameters` for parameter mapping, the
+    #  parameter mapping may contain values instead of symbols for fixed
+    #  parameters. In this case, we need to filter them here to avoid
+    #  warnings in `fill_in_parameters`.
+    free_parameters = parameter_mapping.free_symbols
+    default_problem_parameters = {
+        par_id: par_value
+        for par_id, par_value in default_problem_parameters.items()
+        if par_id in free_parameters
+    }
+
+    problem_parameters = default_problem_parameters | problem_parameters
 
     # Get edatas
     if edatas is None:

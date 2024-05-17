@@ -21,8 +21,8 @@ jobs:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     - name: Install MATLAB
-      uses: matlab-actions/setup-matlab@v1
+      uses: matlab-actions/setup-matlab@v2
     - name: Run script
-      uses: matlab-actions/run-command@v1
+      uses: matlab-actions/run-command@v2
       with:
         command: cd matlab; installAMICI; addpath tests; testModels
