@@ -386,6 +386,11 @@ void ExpData::checkEventsDimension(
         );
 }
 
+bool ExpData::isEquilibration() const {
+    return ts_.size() == 1 && std::isinf(ts_[0]);
+}
+
+
 void checkSigmaPositivity(
     std::vector<realtype> const& sigmaVector, char const* vectorName
 ) {

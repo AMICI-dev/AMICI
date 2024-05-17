@@ -445,6 +445,12 @@ class ExpData : public SimulationParameters {
         std::vector<realtype> const& input, char const* fieldname
     ) const;
 
+    /**
+     * @brief check whether this instance implements only equilibration
+     * without simulation
+     */
+    bool isEquilibration() const;
+
     /** @brief number of observables */
     int nytrue_{0};
 
