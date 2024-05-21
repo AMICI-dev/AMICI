@@ -104,7 +104,9 @@ def install_mtocpp():
 
 def install_doxygen():
     """Get a more recent doxygen"""
-    version = "1.9.7"
+    version = "1.11.0"
+    release = f"Release_{version.replace('.', '_')}"
+    filename = f"doxygen-{version}.linux.bin.tar.gz"
     doxygen_exe = os.path.join(
         amici_dir, "ThirdParty", f"doxygen-{version}", "bin", "doxygen"
     )
@@ -112,9 +114,9 @@ def install_doxygen():
     some_dir_on_path = os.environ["PATH"].split(os.pathsep)[0]
     cmd = (
         f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
-        f"&& wget 'https://www.doxygen.nl/files/"
-        f"doxygen-{version}.linux.bin.tar.gz' "
-        f"&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
+        f"&& wget 'https://github.com/doxygen/doxygen/releases/download/"
+        f"{release}/{filename}' "
+        f"&& tar -xzf '{filename}' "
         f"&& ln -sf '{doxygen_exe}' '{some_dir_on_path}'"
     )
     subprocess.run(cmd, shell=True, check=True)
