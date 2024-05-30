@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 86.
+List of publications using AMICI. Total number is 87.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -49,6 +49,11 @@ Addisu Gize, Maximilian Muenchhoff, Alexander Graf, et al. 2024.
 Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span>
 <em>Nature Communications</em> 15 (1). <a
 href="https://doi.org/10.1038/s41467-024-47556-2">https://doi.org/10.1038/s41467-024-47556-2</a>.
+</div>
+<div id="ref-Mutsuddy2024" class="csl-entry" role="listitem">
+Mutsuddy, Arnab. 2024. <span>“Single Cell Pharmacodynamic Modeling of
+Cancer Cell Lines.”</span> PhD thesis, Clemson University. <a
+href="https://tigerprints.clemson.edu/all_dissertations/3572">https://tigerprints.clemson.edu/all_dissertations/3572</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
