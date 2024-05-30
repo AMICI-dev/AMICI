@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 85.
+List of publications using AMICI. Total number is 86.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -28,6 +28,12 @@ of histone acetylation by the male-specific lethal
 complex</span>.”</span> <em>Nucleic Acids Research</em>, February,
 gkae123. <a
 href="https://doi.org/10.1093/nar/gkae123">https://doi.org/10.1093/nar/gkae123</a>.
+</div>
+<div id="ref-LakrisenkoPat2024" class="csl-entry" role="listitem">
+Lakrisenko, Polina, Dilan Pathirana, Daniel Weindl, and Jan Hasenauer.
+2024. <span>“Exploration of Methods for Computing Sensitivities in ODE
+Models at Dynamic and Steady States.”</span> <a
+href="https://arxiv.org/abs/2405.16524">https://arxiv.org/abs/2405.16524</a>.
 </div>
 <div id="ref-LangPen2024" class="csl-entry" role="listitem">
 Lang, Paul F., David R. Penas, Julio R. Banga, Daniel Weindl, and Bela
