@@ -265,11 +265,38 @@ def import_model_sbml(
     # <BeginWorkAround>
 
     initial_states = get_states_in_condition_table(petab_problem)
+    requires_preequilibration = (
+        petab.PREEQUILIBRATION_CONDITION_ID in petab_problem.measurement_df
+        and petab_problem.measurement_df[petab.PREEQUILIBRATION_CONDITION_ID]
+        .notnull()
+        .any()
+    )
+    estimated_parameters_ids = petab_problem.get_x_ids(free=True, fixed=False)
+    # any initial states overridden to be estimated via the conditions table?
+    has_estimated_initial_states = any(
+        par_id in petab_problem.condition_df[initial_states.keys()].values
+        for par_id in estimated_parameters_ids
+    )
+
+    if has_estimated_initial_states and requires_preequilibration:
+        # To support reinitialization of initial conditions after
+        # preequilibration we need fixed parameters for the initial
+        # conditions. To estimate initial conditions, we need to
+        # create non-fixed parameters for the initial conditions.
+        # TODO: check this state by state, then we can support some additional
+        #  cases
+        # TODO: for model generation without sensitivity code,
+        #  we can ignore that, right?
+        raise NotImplementedError(
+            "PEtab problems that have both, estimated initial conditions "
+            "specified in the condition table, and preequilibration with "
+            "initial conditions specified in the condition table are not "
+            "supported."
+        )
+
     fixed_parameters = []
-    if initial_states:
+    if initial_states and requires_preequilibration:
         # add preequilibration indicator variable
-        # NOTE: would only be required if we actually have preequilibration
-        #  adding it anyways. can be optimized-out later
         if sbml_model.getParameter(PREEQ_INDICATOR_ID) is not None:
             raise AssertionError(
                 "Model already has a parameter with ID "
@@ -290,7 +317,9 @@ def import_model_sbml(
     for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
-        for init_par_id in [init_par_id_preeq, init_par_id_sim]:
+        for init_par_id in (
+            [init_par_id_preeq] if requires_preequilibration else []
+        ) + [init_par_id_sim]:
             if sbml_model.getElementBySId(init_par_id) is not None:
                 raise ValueError(
                     "Cannot create parameter for initial assignment "
@@ -300,8 +329,12 @@ def import_model_sbml(
             init_par = sbml_model.createParameter()
             init_par.setId(init_par_id)
             init_par.setName(init_par_id)
-            # must be a fixed parameter in any case to allow reinitialization
-            fixed_parameters.append(init_par_id)
+            if requires_preequilibration:
+                # must be a fixed parameter to allow reinitialization
+                # TODO: also add other initial condition parameters that are
+                #  not estimated
+                fixed_parameters.append(init_par_id)
+
         assignment = sbml_model.getInitialAssignment(assignee_id)
         if assignment is None:
             assignment = sbml_model.createInitialAssignment()
@@ -315,10 +348,13 @@ def import_model_sbml(
                 "be overwritten to handle preequilibration and "
                 "initial values specified by the PEtab problem."
             )
-        formula = (
-            f"{PREEQ_INDICATOR_ID} * {init_par_id_preeq} "
-            f"+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}"
-        )
+        if requires_preequilibration:
+            formula = (
+                f"{PREEQ_INDICATOR_ID} * {init_par_id_preeq} "
+                f"+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}"
+            )
+        else:
+            formula = init_par_id_sim
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
     # <EndWorkAround>
