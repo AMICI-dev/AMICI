@@ -229,9 +229,10 @@ def get_fixed_parameters(
         # check global parameters
         if not petab_problem.model.has_entity_with_id(fixed_parameter):
             # TODO: could still exist as an output parameter?
+            # TODO: or in the parameters table
             logger.warning(
                 f"Column '{fixed_parameter}' used in condition "
-                "table but not entity with the corresponding ID "
+                "table but no entity with the corresponding ID "
                 "exists. Ignoring."
             )
             fixed_parameters.remove(fixed_parameter)
