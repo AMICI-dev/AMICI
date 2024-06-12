@@ -135,6 +135,7 @@ def import_model_sbml(
             else SbmlModel.from_file(sbml_model),
             condition_df=petab.get_condition_df(condition_table),
             observable_df=petab.get_observable_df(observable_table),
+            measurement_df=petab.get_measurement_df(measurement_table),
         )
 
     if petab_problem.observable_df is None:
