@@ -266,7 +266,8 @@ def import_model_sbml(
 
     initial_states = get_states_in_condition_table(petab_problem)
     requires_preequilibration = (
-        petab.PREEQUILIBRATION_CONDITION_ID in petab_problem.measurement_df
+        petab_problem.measurement_df is not None
+        and petab.PREEQUILIBRATION_CONDITION_ID in petab_problem.measurement_df
         and petab_problem.measurement_df[petab.PREEQUILIBRATION_CONDITION_ID]
         .notnull()
         .any()
@@ -313,7 +314,9 @@ def import_model_sbml(
             "Adding preequilibration indicator "
             f"constant {PREEQ_INDICATOR_ID}"
         )
-    logger.debug(f"Adding initial assignments for {initial_states.keys()}")
+    logger.debug(
+        f"Adding initial assignments for {list(initial_states.keys())}"
+    )
     for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
