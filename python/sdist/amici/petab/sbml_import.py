@@ -265,7 +265,9 @@ def import_model_sbml(
     #  feels dirty and should be changed (see also #924)
     # <BeginWorkAround>
 
+    # state variable IDs and initial values specified via the conditions' table
     initial_states = get_states_in_condition_table(petab_problem)
+    # is there any condition that involves preequilibration?
     requires_preequilibration = (
         petab_problem.measurement_df is not None
         and petab.PREEQUILIBRATION_CONDITION_ID in petab_problem.measurement_df
@@ -280,15 +282,23 @@ def import_model_sbml(
         for par_id in estimated_parameters_ids
     )
 
-    if has_estimated_initial_states and requires_preequilibration:
+    if (
+        has_estimated_initial_states
+        and requires_preequilibration
+        and kwargs.setdefault("generate_sensitivity_code", True)
+    ):
         # To support reinitialization of initial conditions after
         # preequilibration we need fixed parameters for the initial
-        # conditions. To estimate initial conditions, we need to
-        # create non-fixed parameters for the initial conditions.
+        # conditions. If we need sensitivities w.r.t. to initial conditions,
+        # we need to create non-fixed parameters for the initial conditions.
+        # We can't have both for the same state variable.
+        # (We could handle it via separate amici models if pre-equilibration
+        # and estimation of initial values for a given state variable are
+        # used in separate PEtab conditions.)
+        # We currently assume that we do need sensitivities w.r.t. initial
+        # conditions if sensitivities are needed at all.
         # TODO: check this state by state, then we can support some additional
         #  cases
-        # TODO: for model generation without sensitivity code,
-        #  we can ignore that, right?
         raise NotImplementedError(
             "PEtab problems that have both, estimated initial conditions "
             "specified in the condition table, and preequilibration with "
