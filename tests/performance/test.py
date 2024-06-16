@@ -77,10 +77,7 @@ def run_import(model_name, model_dir: Path):
     import_model(
         model_name=model_name,
         model_output_dir=model_dir,
-        sbml_model=pp.sbml_model,
-        condition_table=pp.condition_df,
-        observable_table=pp.observable_df,
-        measurement_table=pp.measurement_df,
+        petab_problem=pp,
         compile=False,
         verbose=True,
     )

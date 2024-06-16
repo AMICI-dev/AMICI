@@ -178,8 +178,9 @@ def check_derivatives(
         problem_parameters=problem_parameters,
     ):
         # check_derivatives does currently not support parameters in ExpData
-        model.setParameters(edata.parameters)
+        # set parameter scales before setting parameter values!
         model.setParameterScale(edata.pscale)
+        model.setParameters(edata.parameters)
         edata.parameters = []
         edata.pscale = amici.parameterScalingFromIntVector([])
         amici_check_derivatives(model, solver, edata)

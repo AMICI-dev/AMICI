@@ -965,3 +965,13 @@
    fun:Py_CompileStringObject
    ...
 }
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:gc_alloc
+   fun:_PyObject_GC_NewVar
+   ...
+}

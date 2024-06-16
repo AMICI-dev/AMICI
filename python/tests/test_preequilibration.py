@@ -32,7 +32,7 @@ def preeq_fixture(pysb_example_presimulation_module):
 
     edata_preeq = amici.ExpData(edata)
     edata_preeq.t_presim = 0
-    edata_preeq.setTimepoints([np.infty])
+    edata_preeq.setTimepoints([np.inf])
     edata_preeq.fixedParameters = edata.fixedParametersPreequilibration
     edata_preeq.fixedParametersPresimulation = ()
     edata_preeq.fixedParametersPreequilibration = ()
