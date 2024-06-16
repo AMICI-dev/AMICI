@@ -2,6 +2,23 @@
 
 ## v0.X Series
 
+### v0.25.2 (2024-06-16)
+
+**Fixes**
+
+* Fixed a bug in PEtab import which led to incorrect gradients
+  *w.r.t. estimated initial values specified via the condition table*
+  **BREAKING CHANGE**:
+  `amici.petab.sbml_import.{import_model_sbml,import_model}` no longer supports
+  passing individual PEtab tables, but only the PEtab problem object.
+  This functionality was deprecated since v0.12.0 (2022-08-26).
+* Fixes for numpy 2.0 compatibility
+  **NOTE**: As long as some amici dependencies don't support numpy 2.0 yet,
+  you may need to pin numpy to <2.0 in your requirements
+  (`pip install amici "numpy<2.0"`).
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.25.1...v0.25.2
+
 ### v0.25.1 (2024-05-16)
 
 **Fixes**

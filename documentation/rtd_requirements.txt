@@ -23,3 +23,4 @@ git+https://github.com/readthedocs/readthedocs-sphinx-ext
 ipykernel
 -e git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab
 -e python/sdist/
+numpy<2.0
