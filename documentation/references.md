@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 85.
+List of publications using AMICI. Total number is 87.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -29,12 +29,31 @@ complex</span>.”</span> <em>Nucleic Acids Research</em>, February,
 gkae123. <a
 href="https://doi.org/10.1093/nar/gkae123">https://doi.org/10.1093/nar/gkae123</a>.
 </div>
+<div id="ref-LakrisenkoPat2024" class="csl-entry" role="listitem">
+Lakrisenko, Polina, Dilan Pathirana, Daniel Weindl, and Jan Hasenauer.
+2024. <span>“Exploration of Methods for Computing Sensitivities in ODE
+Models at Dynamic and Steady States.”</span> <a
+href="https://arxiv.org/abs/2405.16524">https://arxiv.org/abs/2405.16524</a>.
+</div>
 <div id="ref-LangPen2024" class="csl-entry" role="listitem">
 Lang, Paul F., David R. Penas, Julio R. Banga, Daniel Weindl, and Bela
 Novak. 2024. <span>“Reusable Rule-Based Cell Cycle Model Explains
 Compartment-Resolved Dynamics of 16 Observables in RPE-1 Cells.”</span>
 <em>PLOS Computational Biology</em> 20 (1): 1–24. <a
 href="https://doi.org/10.1371/journal.pcbi.1011151">https://doi.org/10.1371/journal.pcbi.1011151</a>.
+</div>
+<div id="ref-MerktAli2024" class="csl-entry" role="listitem">
+Merkt, Simon, Solomon Ali, Esayas Kebede Gudina, Wondimagegn Adissu,
+Addisu Gize, Maximilian Muenchhoff, Alexander Graf, et al. 2024.
+<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
+Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span>
+<em>Nature Communications</em> 15 (1). <a
+href="https://doi.org/10.1038/s41467-024-47556-2">https://doi.org/10.1038/s41467-024-47556-2</a>.
+</div>
+<div id="ref-Mutsuddy2024" class="csl-entry" role="listitem">
+Mutsuddy, Arnab. 2024. <span>“Single Cell Pharmacodynamic Modeling of
+Cancer Cell Lines.”</span> PhD thesis, Clemson University. <a
+href="https://tigerprints.clemson.edu/all_dissertations/3572">https://tigerprints.clemson.edu/all_dissertations/3572</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
@@ -83,13 +102,6 @@ Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
 Rewiring Contribute to Drug Resistance.”</span> <em>Molecular Systems
 Biology</em> 19 (2): e10988. <a
 href="https://doi.org/10.15252/msb.202210988">https://doi.org/10.15252/msb.202210988</a>.
-</div>
-<div id="ref-HasenauerMer2023" class="csl-entry" role="listitem">
-Hasenauer, Jan, Simon Merkt, Solomon Ali, Esayas Gudina, Wondimagegn
-Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
-<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
-Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
-href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
 </div>
 <div id="ref-HuckBal2023" class="csl-entry" role="listitem">
 Huck, Wilhelm, Mathieu Baltussen, Thijs de Jong, Quentin Duez, and
