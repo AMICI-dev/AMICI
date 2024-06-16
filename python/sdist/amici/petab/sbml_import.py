@@ -5,11 +5,9 @@ import tempfile
 from itertools import chain
 from pathlib import Path
 from typing import Union
-from warnings import warn
 
 import amici
 import libsbml
-import pandas as pd
 import petab
 import sympy as sp
 from _collections import OrderedDict
@@ -31,9 +29,6 @@ logger = logging.getLogger(__name__)
 @log_execution_time("Importing PEtab model", logger)
 def import_model_sbml(
     sbml_model: Union[str, Path, "libsbml.Model"] = None,
-    condition_table: str | Path | pd.DataFrame | None = None,
-    observable_table: str | Path | pd.DataFrame | None = None,
-    measurement_table: str | Path | pd.DataFrame | None = None,
     petab_problem: petab.Problem = None,
     model_name: str | None = None,
     model_output_dir: str | Path | None = None,
@@ -51,18 +46,6 @@ def import_model_sbml(
     :param sbml_model:
         PEtab SBML model or SBML file name.
         Deprecated, pass ``petab_problem`` instead.
-
-    :param condition_table:
-        PEtab condition table. If provided, parameters from there will be
-        turned into AMICI constant parameters (i.e. parameters w.r.t. which
-        no sensitivities will be computed).
-        Deprecated, pass ``petab_problem`` instead.
-
-    :param observable_table:
-        PEtab observable table. Deprecated, pass ``petab_problem`` instead.
-
-    :param measurement_table:
-        PEtab measurement table. Deprecated, pass ``petab_problem`` instead.
 
     :param petab_problem:
         PEtab problem.
@@ -112,31 +95,6 @@ def import_model_sbml(
     set_log_level(logger, verbose)
 
     logger.info("Importing model ...")
-
-    if any([sbml_model, condition_table, observable_table, measurement_table]):
-        warn(
-            "The `sbml_model`, `condition_table`, `observable_table`, and "
-            "`measurement_table` arguments are deprecated and will be "
-            "removed in a future version. Use `petab_problem` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if petab_problem:
-            raise ValueError(
-                "Must not pass a `petab_problem` argument in "
-                "combination with any of `sbml_model`, "
-                "`condition_table`, `observable_table`, or "
-                "`measurement_table`."
-            )
-
-        petab_problem = petab.Problem(
-            model=SbmlModel(sbml_model)
-            if isinstance(sbml_model, libsbml.Model)
-            else SbmlModel.from_file(sbml_model),
-            condition_df=petab.get_condition_df(condition_table),
-            observable_df=petab.get_observable_df(observable_table),
-            measurement_df=petab.get_measurement_df(measurement_table),
-        )
 
     if petab_problem.observable_df is None:
         raise NotImplementedError(
