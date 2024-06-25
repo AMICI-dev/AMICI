@@ -102,6 +102,12 @@ def _parse_cli_args():
     )
 
     parser.add_argument(
+        dest="yaml_file_name",
+        help="PEtab YAML problem filename.",
+        nargs="?",
+    )
+
+    parser.add_argument(
         "-n",
         "--model-name",
         dest="model_name",
@@ -119,8 +125,8 @@ def _parse_cli_args():
         ]
     ):
         print(
-            "Passing individual tables to amico_import_petab is deprecated, "
-            "please pass a PEtab YAML file instead."
+            "WARNING: Passing individual tables to amico_import_petab is "
+            "deprecated, please pass a PEtab YAML file instead."
         )
     if (
         not args.yaml_file_name and not args.yaml_file_name_deprecated
@@ -141,8 +147,8 @@ def _parse_cli_args():
 
     if args.yaml_file_name_deprecated:
         print(
-            "-y/--yaml is deprecated. Pass the YAML file as positional "
-            "argument instead."
+            "WARNING: -y/--yaml is deprecated. Pass the YAML file as "
+            "positional argument instead."
         )
         args.yaml_file_name = args.yaml_file_name_deprecated
 
