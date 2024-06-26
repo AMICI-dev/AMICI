@@ -1,14 +1,6 @@
 # Changelog
 
-## Deprecation policy
-
-AMICI aims to provide a stable API for users. However, not all features can be
-maintained indefinitely. We will deprecate features in minor releases and
-where possible, issue a warning when they are used. We will keep deprecated
-features for at least six months after the release that includes the
-respective deprecation warning and then remove them earliest in the next minor
-or major release. If a deprecated feature is the source of a major bug, we may
-remove it earlier.
+See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioning_policy.html).
 
 ## v0.X Series
 
