@@ -32,14 +32,22 @@ publications:
 
 * Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski,
   Dilan Pathirana, Fabian Fröhlich, Glenn Terje Lines, Daniel Weindl,
-  and Jan Hasenauer. 2022.
+  and Jan Hasenauer. 2023.
   **Efficient Computation of Adjoint Sensitivities at Steady-State in ODE Models
-  of Biochemical Reaction Networks.** *bioRxiv* 2022.08.08.503176.
-  DOI: `10.1101/2022.08.08.503176 <https://doi.org/10.1101/2022.08.08.503176>`_.
+  of Biochemical Reaction Networks.** *PLoS Comput Biol* 19(1): e1010783.
+  DOI: `10.1371/journal.pcbi.1010783 <https://doi.org/10.1371/journal.pcbi.1010783>`_.
 
-* L. Contento, P. Stapor, D. Weindl, and J. Hasenauer, "A more expressive spline
-  representation for SBML models improves code generation performance in AMICI,"
-  bioRxiv, 2023, DOI: `10.1101/2023.06.29.547120 <https://doi.org/10.1101/2023.06.29.547120>`_.
+* L. Contento, P. Stapor, D. Weindl, and J. Hasenauer. 2023.
+  **A more expressive spline representation for SBML models improves code generation performance in AMICI**,
+  In: Pang, J., Niehren, J. (eds) Computational Methods in Systems Biology.
+  CMSB 2023. *Lecture Notes in Computer Science*, vol 14137. Springer, Cham.
+  DOI: `10.1007/978-3-031-42697-1_3 <https://doi.org/10.1007/978-3-031-42697-1_3>`_.
+  Preprint available at `bioRxiv <https://doi.org/10.1101/2023.06.29.547120>`_.
+
+* Lakrisenko, Polina, Dilan Pathirana, Daniel Weindl, and Jan Hasenauer. 2024.
+  **Exploration of methods for computing sensitivities in ODE models at dynamic and steady states.** *arXiv:2405.16524 [q-bio.QM]*.
+  DOI: `10.48550/arXiv.2405.16524 <https://doi.org/10.48550/arXiv.2405.16524>`_.
+
 
 .. note::
 
