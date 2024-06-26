@@ -31,8 +31,8 @@ If this does not work for you, please follow the full instructions below.
 Installation on Linux
 +++++++++++++++++++++
 
-Ubuntu 22.04
-------------
+Ubuntu 22.04 / 24.04
+--------------------
 
 Install the AMICI dependencies via ``apt``
 (this requires superuser privileges):
@@ -44,8 +44,8 @@ Install the AMICI dependencies via ``apt``
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
 
-    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
-    libboost-chrono-dev libboost-math-dev libboost-serialization-dev
+   # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+   libboost-chrono-dev libboost-math-dev libboost-serialization-dev
 
 Install AMICI:
 
@@ -203,9 +203,8 @@ Newer installations could be located under
 
 so that it matches your directory structure.
 This will download OpenBLAS and compile it, creating
-
-    C:\\BLAS\\OpenBLAS\\lib\\openblas.lib
-    C:\\BLAS\\OpenBLAS\\bin\\openblas.dll
+``C:\\BLAS\\OpenBLAS\\lib\\openblas.lib`` and
+``C:\\BLAS\\OpenBLAS\\bin\\openblas.dll``.
 
 You will also need to define two environment variables:
 
@@ -231,8 +230,8 @@ Now you need to make sure that all required DLLs are within the scope of the
 ``PATH`` variable. In particular, the following directories need to be included
 in ``PATH``:
 
-    C:\\BLAS\\OpenBLAS\\bin
-    C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\\DLLs\\x64
+* ``C:\BLAS\OpenBLAS\bin``
+* ``C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64``
 
 The first one is needed for ``openblas.dll`` and the second is needed for the
 Windows Universal C Runtime.
@@ -240,7 +239,7 @@ Windows Universal C Runtime.
 If any DLLs are missing in the ``PATH`` variable, Python will return the
 following error upon ``import amici``:
 
-    ImportError: DLL load failed: The specified module could not be found.
+``ImportError: DLL load failed: The specified module could not be found.``
 
 Almost all of the DLLs are standard Windows DLLs and should be included in
 either Windows or Visual Studio. But, in case it is necessary to test this,
