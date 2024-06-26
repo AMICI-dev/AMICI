@@ -1,5 +1,7 @@
 # Changelog
 
+See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioning_policy.html).
+
 ## v0.X Series
 
 ### v0.25.2 (2024-06-16)
