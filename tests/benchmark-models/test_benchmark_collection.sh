@@ -116,10 +116,15 @@ cd "$script_path" && python evaluate_benchmark.py
 model="Zheng_PNAS2012"
 problem_dir="${model_dir}/${model}"
 amici_model_dir=test_bmc/"${model}-deprecated"
-mkdir -p "$amici_model_dir"
 cmd_import="amici_import_petab -s "${problem_dir}/model_${model}.xml" \
   -m "${problem_dir}/measurementData_${model}.tsv" \
   -c "${problem_dir}/experimentalCondition_${model}.tsv" \
   -p "${problem_dir}/parameters_${model}.tsv" \
   -b "${problem_dir}/observables_${model}.tsv" \
   -o ${amici_model_dir} -n ${model} --no-compile"
+
+if [[ -z "$dry_run" ]]; then
+  $cmd_import
+else
+  echo "$cmd_import"
+fi
