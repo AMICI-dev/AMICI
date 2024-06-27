@@ -6,7 +6,7 @@ import sys
 
 import amici
 import pandas as pd
-import petab
+import petab.v1 as petab
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped

@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import libsbml
 import pandas as pd
-import petab
-from petab.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
-from petab.mapping import resolve_mapping
-from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+import petab.v1 as petab
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
+from petab.v1.mapping import resolve_mapping
+from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 if TYPE_CHECKING:
     pysb = None
