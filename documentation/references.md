@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 87.
+List of publications using AMICI. Total number is 88.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -54,6 +54,12 @@ href="https://doi.org/10.1038/s41467-024-47556-2">https://doi.org/10.1038/s41467
 Mutsuddy, Arnab. 2024. <span>“Single Cell Pharmacodynamic Modeling of
 Cancer Cell Lines.”</span> PhD thesis, Clemson University. <a
 href="https://tigerprints.clemson.edu/all_dissertations/3572">https://tigerprints.clemson.edu/all_dissertations/3572</a>.
+</div>
+<div id="ref-PhilippsKoe2024" class="csl-entry" role="listitem">
+Philipps, Maren, Antonia Körner, Jakob Vanhoefer, Dilan Pathirana, and
+Jan Hasenauer. 2024. <span>“Non-Negative Universal Differential
+Equations with Applications in Systems Biology.”</span> <a
+href="https://arxiv.org/abs/2406.14246">https://arxiv.org/abs/2406.14246</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
