@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 88.
+List of publications using AMICI. Total number is 89.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -14,6 +14,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2024</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="list">
+<div id="ref-BaltussenJon2024" class="csl-entry" role="listitem">
+Baltussen, Mathieu G., Thijs J. de Jong, Quentin Duez, William E.
+Robinson, and Wilhelm T. S. Huck. 2024. <span>“Chemical Reservoir
+Computation in a Self-Organizing Reaction Network.”</span>
+<em>Nature</em>, June. <a
+href="https://doi.org/10.1038/s41586-024-07567-x">https://doi.org/10.1038/s41586-024-07567-x</a>.
+</div>
 <div id="ref-DoresicGre2024" class="csl-entry" role="listitem">
 Dorešić, Domagoj, Stephan Grein, and Jan Hasenauer. 2024.
 <span>“Efficient Parameter Estimation for ODE Models of Cellular
