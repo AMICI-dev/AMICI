@@ -75,7 +75,9 @@ def main():
         )
         f.write(
             "If you applied AMICI in your work and your publication is "
-            "missing, please let us know via a new GitHub issue.\n\n"
+            "missing, please let us know via a new GitHub "
+            "[issue](https://github.com/AMICI-dev/AMICI/issues/new"
+            "?labels=documentation&title=Add+publication).\n\n"
         )
         f.write(
             """
