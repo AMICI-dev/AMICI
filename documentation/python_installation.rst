@@ -360,16 +360,19 @@ environment variables:
 |                            | Default: ``ON``                  |                                 |
 +----------------------------+----------------------------------+---------------------------------+
 
-Installation under Anaconda
----------------------------
+Installation under conda
+------------------------
 
-To use an Anaconda installation of Python
-`https://www.anaconda.com/distribution/ <https://www.anaconda.com/distribution/>`_,
-Python>=3.7), proceed as follows:
+There is no amici conda recipe available yet. However, you can install AMICI
+using pip in a conda environment.
 
-Since Anaconda provides own versions of some packages which might not
-work with AMICI (in particular the ``gcc`` compiler), create a minimal
-virtual environment via:
+.. note::
+
+   It is possible, but we currently don't recommend using conda for installing
+   AMICI, as it commonly leads to conflicts with system installations of
+   libraries and compilers.
+
+Create a minimal conda environment via:
 
 .. code-block:: bash
 
@@ -415,7 +418,7 @@ Now, you are ready to use AMICI in the virtual environment.
 
 .. note::
 
-   **Anaconda on Mac**
+   **conda on Mac**
 
    If the above installation does not work for you, try installing AMICI via:
 
@@ -437,6 +440,9 @@ Now, you are ready to use AMICI in the virtual environment.
 
    (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
 
+Known issues:
+
+* ``CMAKE_AR-NOTFOUND: not found``: Try ``conda install binutils``.
 
 Optional Boost support
 ----------------------
