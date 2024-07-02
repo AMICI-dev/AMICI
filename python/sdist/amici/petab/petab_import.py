@@ -12,8 +12,8 @@ from pathlib import Path
 from warnings import warn
 
 import amici
-import petab
-from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+import petab.v1 as petab
+from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 from ..logging import get_logger
 from .import_helpers import _can_import_model, _create_model_name, check_model

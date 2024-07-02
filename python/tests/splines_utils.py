@@ -15,7 +15,7 @@ from collections.abc import Sequence
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 import sympy as sp
 from amici.gradient_check import _check_results
 from amici.petab.petab_import import import_petab_problem
@@ -31,7 +31,7 @@ from amici.sbml_utils import (
 )
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-from petab.models.sbml_model import SbmlModel
+from petab.v1.models.sbml_model import SbmlModel
 
 
 def evaluate_spline(

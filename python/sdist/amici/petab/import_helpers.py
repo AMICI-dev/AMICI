@@ -11,9 +11,9 @@ from pathlib import Path
 
 import amici
 import pandas as pd
-import petab
+import petab.v1 as petab
 import sympy as sp
-from petab.C import (
+from petab.v1.C import (
     CONDITION_NAME,
     ESTIMATE,
     NOISE_DISTRIBUTION,
@@ -22,7 +22,7 @@ from petab.C import (
     OBSERVABLE_NAME,
     OBSERVABLE_TRANSFORMATION,
 )
-from petab.parameters import get_valid_parameters_for_parameter_table
+from petab.v1.parameters import get_valid_parameters_for_parameter_table
 from sympy.abc import _clash
 
 logger = logging.getLogger(__name__)

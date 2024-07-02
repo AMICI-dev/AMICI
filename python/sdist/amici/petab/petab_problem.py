@@ -4,8 +4,8 @@ import copy
 
 import amici
 import pandas as pd
-import petab
-from petab.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
+import petab.v1 as petab
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
 from .conditions import create_edatas, fill_in_parameters
 from .parameter_mapping import create_parameter_mapping

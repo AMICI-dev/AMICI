@@ -9,9 +9,9 @@ from collections.abc import Sequence
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 from amici import AmiciModel
-from petab.C import (
+from petab.v1.C import (
     MEASUREMENT,
     NOISE_PARAMETERS,
     OBSERVABLE_ID,

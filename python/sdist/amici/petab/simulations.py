@@ -12,8 +12,8 @@ from collections.abc import Sequence
 import amici
 import numpy as np
 import pandas as pd
-import petab
-from petab.C import *  # noqa: F403
+import petab.v1 as petab
+from petab.v1.C import *  # noqa: F403
 
 from .. import AmiciExpData, AmiciModel
 from ..logging import get_logger, log_execution_time

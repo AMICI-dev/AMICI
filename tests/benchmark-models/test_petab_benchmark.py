@@ -6,7 +6,7 @@ from pathlib import Path
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 import pytest
 from amici.petab.petab_import import import_petab_problem
 

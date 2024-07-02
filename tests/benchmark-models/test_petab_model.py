@@ -15,7 +15,7 @@ from pathlib import Path
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 import yaml
 from amici.logging import get_logger
 from amici.petab.simulations import (
@@ -24,7 +24,7 @@ from amici.petab.simulations import (
     rdatas_to_measurement_df,
     simulate_petab,
 )
-from petab.visualize import plot_problem
+from petab.v1.visualize import plot_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 

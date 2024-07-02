@@ -58,7 +58,7 @@ classifiers = [
 # Don't include any URLs here - they are not supported by PyPI:
 #  HTTPError: 400 Bad Request from https://upload.pypi.org/legacy/
 #  Invalid value for requires_dist. Error: Can't have direct dependency: ...
-petab = ["petab>=0.2.9"]
+petab = ["petab>=0.4.0"]
 pysb = ["pysb>=1.13.1"]
 test = [
     "benchmark_models_petab @ git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python",

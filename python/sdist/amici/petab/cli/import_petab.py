@@ -3,7 +3,7 @@ import argparse
 import petab
 
 from ..petab_import import import_model_sbml
-from petab.models.sbml_model import SbmlModel
+from petab.v1.models.sbml_model import SbmlModel
 
 
 def _parse_cli_args():
