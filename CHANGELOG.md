@@ -4,7 +4,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
-### v0.26.0 (2024-07-06)
+### v0.26.0 (2024-07-02)
 
 AMICI v0.26.0 requires sympy>=1.12.1 and petab>=0.4.0.
 
