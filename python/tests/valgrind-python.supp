@@ -975,3 +975,13 @@
    fun:_PyObject_GC_NewVar
    ...
 }
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:_PyObject_GC_Resize
+   fun:_PyTuple_Resize
+   ...
+}

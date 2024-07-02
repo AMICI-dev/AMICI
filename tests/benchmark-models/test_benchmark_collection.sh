@@ -89,7 +89,7 @@ for model in $models; do
   yaml="${model_dir}"/"${model}"/"${model}".yaml
   amici_model_dir=test_bmc/"${model}"
   mkdir -p "$amici_model_dir"
-  cmd_import="amici_import_petab -y ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
+  cmd_import="amici_import_petab ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
   cmd_run="$script_path/test_petab_model.py -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
 
   printf '=%.0s' {1..40}
@@ -111,3 +111,20 @@ for model in $models; do
 done
 
 cd "$script_path" && python evaluate_benchmark.py
+
+# Test deprecated import from individual PEtab files
+model="Zheng_PNAS2012"
+problem_dir="${model_dir}/${model}"
+amici_model_dir=test_bmc/"${model}-deprecated"
+cmd_import="amici_import_petab -s "${problem_dir}/model_${model}.xml" \
+  -m "${problem_dir}/measurementData_${model}.tsv" \
+  -c "${problem_dir}/experimentalCondition_${model}.tsv" \
+  -p "${problem_dir}/parameters_${model}.tsv" \
+  -b "${problem_dir}/observables_${model}.tsv" \
+  -o ${amici_model_dir} -n ${model} --no-compile"
+
+if [[ -z "$dry_run" ]]; then
+  $cmd_import
+else
+  echo "$cmd_import"
+fi

@@ -9,12 +9,12 @@ import logging
 import re
 from pathlib import Path
 
-import petab
+import petab.v1 as petab
 import pysb
 import pysb.bng
 import sympy as sp
-from petab.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
-from petab.models.pysb_model import PySBModel
+from petab.v1.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
+from petab.v1.models.pysb_model import PySBModel
 
 from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID

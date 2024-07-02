@@ -8,11 +8,11 @@ from typing import Union
 
 import amici
 import libsbml
-import petab
+import petab.v1 as petab
 import sympy as sp
 from _collections import OrderedDict
 from amici.logging import log_execution_time, set_log_level
-from petab.models import MODEL_TYPE_SBML
+from petab.v1.models import MODEL_TYPE_SBML
 from sympy.abc import _clash
 
 from . import PREEQ_INDICATOR_ID
@@ -90,7 +90,7 @@ def import_model_sbml(
     :return:
         The created :class:`amici.sbml_import.SbmlImporter` instance.
     """
-    from petab.models.sbml_model import SbmlModel
+    from petab.v1.models.sbml_model import SbmlModel
 
     set_log_level(logger, verbose)
 

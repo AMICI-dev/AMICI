@@ -1,8 +1,9 @@
 # References
 
-List of publications using AMICI. Total number is 87.
+List of publications using AMICI. Total number is 89.
 
-If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
+If you applied AMICI in your work and your publication is missing, please let us know via a new
+[GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
 
 
 <style>
@@ -14,6 +15,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2024</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="list">
+<div id="ref-BaltussenJon2024" class="csl-entry" role="listitem">
+Baltussen, Mathieu G., Thijs J. de Jong, Quentin Duez, William E.
+Robinson, and Wilhelm T. S. Huck. 2024. <span>“Chemical Reservoir
+Computation in a Self-Organizing Reaction Network.”</span>
+<em>Nature</em>, June. <a
+href="https://doi.org/10.1038/s41586-024-07567-x">https://doi.org/10.1038/s41586-024-07567-x</a>.
+</div>
 <div id="ref-DoresicGre2024" class="csl-entry" role="listitem">
 Dorešić, Domagoj, Stephan Grein, and Jan Hasenauer. 2024.
 <span>“Efficient Parameter Estimation for ODE Models of Cellular
@@ -54,6 +62,12 @@ href="https://doi.org/10.1038/s41467-024-47556-2">https://doi.org/10.1038/s41467
 Mutsuddy, Arnab. 2024. <span>“Single Cell Pharmacodynamic Modeling of
 Cancer Cell Lines.”</span> PhD thesis, Clemson University. <a
 href="https://tigerprints.clemson.edu/all_dissertations/3572">https://tigerprints.clemson.edu/all_dissertations/3572</a>.
+</div>
+<div id="ref-PhilippsKoe2024" class="csl-entry" role="listitem">
+Philipps, Maren, Antonia Körner, Jakob Vanhoefer, Dilan Pathirana, and
+Jan Hasenauer. 2024. <span>“Non-Negative Universal Differential
+Equations with Applications in Systems Biology.”</span> <a
+href="https://arxiv.org/abs/2406.14246">https://arxiv.org/abs/2406.14246</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.

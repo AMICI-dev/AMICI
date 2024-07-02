@@ -1,6 +1,36 @@
 # Changelog
 
+See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioning_policy.html).
+
 ## v0.X Series
+
+### v0.26.0 (2024-07-06)
+
+AMICI v0.26.0 requires sympy>=1.12.1 and petab>=0.4.0.
+
+**Policy changes**
+
+* Updated AMICI's [versioning / deprecation policy](https://amici.readthedocs.io/en/develop/versioning_policy.html)
+
+  We will start removing deprecated features that had a deprecation warning
+  for longer than six months in the next minor release.
+
+**Deprecations**
+
+* Passing individual tables to `amici_import_petab` is now deprecated.
+  Use a `petab.Problem` instance instead.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2464
+
+**Fixes**
+
+* Fixed a bug where during installation of AMICI, an incorrect sundials CMake
+  would be used resulting in installation errors.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2468
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.25.2...v0.26.0
+
 
 ### v0.25.2 (2024-06-16)
 

@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-import petab
+import petab.v1 as petab
 import petabtests
 import pytest
 from amici.petab.simulator import PetabSimulator
