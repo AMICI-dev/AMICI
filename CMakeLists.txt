@@ -8,6 +8,10 @@ cmake_policy(VERSION 3.15...3.27)
 if(POLICY CMP0144)
   cmake_policy(SET CMP0144 NEW)
 endif(POLICY CMP0144)
+# cmake >= 3.30
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif(POLICY CMP0167)
 
 project(amici)
 
