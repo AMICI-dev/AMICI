@@ -282,17 +282,28 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
 #pragma omp parallel for num_threads(num_threads)
 #endif
     for (int i = 0; i < (int)edatas.size(); ++i) {
-        auto mySolver = std::unique_ptr<Solver>(solver.clone());
-        auto myModel = std::unique_ptr<Model>(model.clone());
+        // must catch exceptions in parallel section to avoid termination
+        try {
+            auto mySolver = std::unique_ptr<Solver>(solver.clone());
+            auto myModel = std::unique_ptr<Model>(model.clone());
 
-        /* if we fail we need to write empty return datas for the python
-         interface */
-        if (skipThrough) {
-            ConditionContext conditionContext(myModel.get(), edatas[i]);
+            /* if we fail we need to write empty return datas for the python
+             interface */
+            if (skipThrough) {
+                ConditionContext conditionContext(myModel.get(), edatas[i]);
+                results[i]
+                    = std::unique_ptr<ReturnData>(new ReturnData(solver, model)
+                    );
+            } else {
+                results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+            }
+        } catch (std::exception const& ex) {
             results[i]
                 = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
-        } else {
-            results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+            results[i]->status = AMICI_ERROR;
+            results[i]->messages.push_back(
+                LogItem(LogSeverity::error, "OTHER", ex.what())
+            );
         }
 
         skipThrough |= failfast && results[i]->status < 0;
