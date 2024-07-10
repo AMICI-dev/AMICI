@@ -562,11 +562,20 @@ def test_python_exceptions(sbml_example_presimulation_module):
     ):
         amici.runAmiciSimulation(model, solver, edata)
 
+    amici.runAmiciSimulations(
+        model, solver, [edata, edata], failfast=True, num_threads=1
+    )
+
     # model throws, base catches, swig-exception handling is not involved
     model.setParameters([nan] * model.np())
     model.setTimepoints([1])
     rdata = amici.runAmiciSimulation(model, solver)
     assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR
+
+    rdatas = amici.runAmiciSimulations(
+        model, solver, [edata, edata], failfast=True, num_threads=1
+    )
+    assert rdatas[0].status == amici.AMICI_FIRST_RHSFUNC_ERR
 
     # model throws, base catches, swig-exception handling is involved
     from amici._amici import runAmiciSimulation
