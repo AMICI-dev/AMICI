@@ -423,8 +423,10 @@ void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
                 model.setParameterScale(
                     static_cast<ParameterScaling>(dbl2int(mxGetScalar(a)))
                 );
-            } else if((mxGetM(a) == 1 && gsl::narrow<int>(mxGetN(a)) == model.np())
-                       || (mxGetN(a) == 1 && gsl::narrow<int>(mxGetM(a)) == model.np())) {
+            } else if ((mxGetM(a) == 1
+                        && gsl::narrow<int>(mxGetN(a)) == model.np())
+                       || (mxGetN(a) == 1
+                           && gsl::narrow<int>(mxGetM(a)) == model.np())) {
                 auto pscaleArray = static_cast<double*>(mxGetData(a));
                 std::vector<ParameterScaling> pscale(model.np());
                 for (int ip = 0; ip < model.np(); ++ip) {
@@ -597,7 +599,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, mxArray const* prhs[]) {
                 ex.what()
             );
         }
-    } else if (solver->getSensitivityOrder() >= amici::SensitivityOrder::first && solver->getSensitivityMethod() == amici::SensitivityMethod::adjoint) {
+    } else if (solver->getSensitivityOrder() >= amici::SensitivityOrder::first
+               && solver->getSensitivityMethod()
+                      == amici::SensitivityMethod::adjoint) {
         mexErrMsgIdAndTxt("AMICI:mex:setup", "No data provided!");
     }
 

@@ -52,10 +52,10 @@ class Model_ODE : public Model {
         std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
-            model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-            pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
-            w_recursion_depth, state_independent_events
-        ) {}
+              model_dimensions, simulation_parameters, o2mode, idlist, z2event,
+              pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
+              w_recursion_depth, state_independent_events
+          ) {}
 
     void
     fJ(realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
