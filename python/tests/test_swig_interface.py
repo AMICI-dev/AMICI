@@ -572,6 +572,7 @@ def test_python_exceptions(sbml_example_presimulation_module):
     rdata = amici.runAmiciSimulation(model, solver)
     assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR
 
+    edata = amici.ExpData(1, 1, 1, [1])
     rdatas = amici.runAmiciSimulations(
         model, solver, [edata, edata], failfast=True, num_threads=1
     )
