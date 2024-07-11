@@ -8,6 +8,10 @@ cmake_policy(VERSION 3.15...3.27)
 if(POLICY CMP0144)
   cmake_policy(SET CMP0144 NEW)
 endif(POLICY CMP0144)
+# cmake >= 3.30
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif(POLICY CMP0167)
 
 project(amici)
 
@@ -32,10 +36,11 @@ message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  # require at least gcc 4.9, otherwise regex wont work properly
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-    message(FATAL_ERROR "GCC version must be at least 4.9!")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}"
+                                                STREQUAL "MINGW")
+  # require at least gcc 9.1 for proper C+17 support, e.g. std::reduce
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+    message(FATAL_ERROR "GCC version must be at least 9.1!")
   endif()
 endif()
 
@@ -143,8 +148,7 @@ else()
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 endif()
 set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
-find_package(
-  SUNDIALS REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/")
+find_package(SUNDIALS REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")

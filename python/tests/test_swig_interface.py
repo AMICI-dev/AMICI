@@ -5,7 +5,7 @@ Test getters, setters, etc.
 
 import copy
 import numbers
-
+from math import nan
 import pytest
 
 import amici
@@ -534,3 +534,55 @@ def test_rdataview(sbml_example_presimulation_module):
 
     # field names are included by dir()
     assert "x" in dir(rdata)
+
+
+def test_python_exceptions(sbml_example_presimulation_module):
+    """Test that C++ exceptions are correctly caught and re-raised in Python."""
+
+    # amici-base extension throws and its swig-wrapper catches
+    solver = amici.CVodeSolver()
+    with pytest.raises(
+        RuntimeError, match="maxsteps must be a positive number"
+    ):
+        solver.setMaxSteps(-1)
+
+    # model extension throws and its swig-wrapper catches
+    model = sbml_example_presimulation_module.get_model()
+    with pytest.raises(RuntimeError, match="Steadystate mask has wrong size"):
+        model.set_steadystate_mask([1] * model.nx_solver * 2)
+
+    # amici-base extension throws and its swig-wrapper catches
+    edata = amici.ExpData(1, 1, 1, [1])
+    # too short sx0
+    edata.sx0 = (1, 2)
+    with pytest.raises(
+        RuntimeError,
+        match=r"Number of initial conditions sensitivities \(36\) "
+        r"in model does not match ExpData \(2\).",
+    ):
+        amici.runAmiciSimulation(model, solver, edata)
+
+    amici.runAmiciSimulations(
+        model, solver, [edata, edata], failfast=True, num_threads=1
+    )
+
+    # model throws, base catches, swig-exception handling is not involved
+    model.setParameters([nan] * model.np())
+    model.setTimepoints([1])
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR
+
+    edata = amici.ExpData(1, 1, 1, [1])
+    rdatas = amici.runAmiciSimulations(
+        model, solver, [edata, edata], failfast=True, num_threads=1
+    )
+    assert rdatas[0].status == amici.AMICI_FIRST_RHSFUNC_ERR
+
+    # model throws, base catches, swig-exception handling is involved
+    from amici._amici import runAmiciSimulation
+
+    with pytest.raises(
+        RuntimeError, match="AMICI failed to integrate the forward problem"
+    ):
+        # rethrow=True
+        runAmiciSimulation(solver, None, model.get(), True)

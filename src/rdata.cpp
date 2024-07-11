@@ -15,14 +15,14 @@ namespace amici {
 
 ReturnData::ReturnData(Solver const& solver, Model const& model)
     : ReturnData(
-        model.getTimepoints(),
-        ModelDimensions(static_cast<ModelDimensions const&>(model)),
-        model.nplist(), model.nMaxEvent(), model.nt(),
-        solver.getNewtonMaxSteps(), model.getParameterScale(), model.o2mode,
-        solver.getSensitivityOrder(), solver.getSensitivityMethod(),
-        solver.getReturnDataReportingMode(), model.hasQuadraticLLH(),
-        model.getAddSigmaResiduals(), model.getMinimumSigmaResiduals()
-    ) {}
+          model.getTimepoints(),
+          ModelDimensions(static_cast<ModelDimensions const&>(model)),
+          model.nplist(), model.nMaxEvent(), model.nt(),
+          solver.getNewtonMaxSteps(), model.getParameterScale(), model.o2mode,
+          solver.getSensitivityOrder(), solver.getSensitivityMethod(),
+          solver.getReturnDataReportingMode(), model.hasQuadraticLLH(),
+          model.getAddSigmaResiduals(), model.getMinimumSigmaResiduals()
+      ) {}
 
 ReturnData::ReturnData(
     std::vector<realtype> ts, ModelDimensions const& model_dimensions,

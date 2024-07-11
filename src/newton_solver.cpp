@@ -145,7 +145,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector& rhs) {
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }
 
-void NewtonSolverDense::reinitialize(){
+void NewtonSolverDense::reinitialize() {
     /* dense solver does not need reinitialization */
 };
 

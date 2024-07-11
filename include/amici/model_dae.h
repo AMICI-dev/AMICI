@@ -53,10 +53,10 @@ class Model_DAE : public Model {
         std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
-            model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-            pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
-            w_recursion_depth, state_independent_events
-        ) {
+              model_dimensions, simulation_parameters, o2mode, idlist, z2event,
+              pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
+              w_recursion_depth, state_independent_events
+          ) {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
         auto M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())

@@ -13,7 +13,7 @@ amici_build_dir="${amici_path}/build"
 mkdir -p "${amici_build_dir}"
 cd "${amici_build_dir}"
 
-if [ "${GITHUB_ACTIONS:-}" = true ] ||
+if [[ "${GITHUB_REPOSITORY:-}" = *"/AMICI" ]] ||
   [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ] ||
   [ "${ENABLE_GCOV_COVERAGE:-}" = TRUE ]; then
   # Running on CI server

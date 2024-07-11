@@ -152,7 +152,9 @@ def get_extensions():
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-Werror=dev"
-            if "GITHUB_ACTIONS" in os.environ
+            # Turn warnings in to errors on GitHub Actions,
+            #  match original repo and forks with default name
+            if os.environ.get("GITHUB_REPOSITORY", "").endswith("/AMICI")
             else "-Wno-error=dev",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
