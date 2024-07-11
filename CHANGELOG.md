@@ -4,6 +4,27 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.26.1 (2024-07-11)
+
+**Fixes**
+
+* Fixed some C++ exception handling that previously could crash Python under
+  certain conditions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2484
+
+* Disabled turning warnings into errors when building amici on GitHub Actions
+  in downstream projects
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2481
+
+* Fixed CMP0167 warning with CMake 3.30
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2480
+
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.0...v0.26.1
+
 ### v0.26.0 (2024-07-02)
 
 AMICI v0.26.0 requires sympy>=1.12.1 and petab>=0.4.0.
