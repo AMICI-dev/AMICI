@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 89.
+List of publications using AMICI. Total number is 90.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -27,6 +27,14 @@ Dorešić, Domagoj, Stephan Grein, and Jan Hasenauer. 2024.
 <span>“Efficient Parameter Estimation for ODE Models of Cellular
 Processes Using Semi-Quantitative Data.”</span> <em>bioRxiv</em>. <a
 href="https://doi.org/10.1101/2024.01.26.577371">https://doi.org/10.1101/2024.01.26.577371</a>.
+</div>
+<div id="ref-DuezWie2024" class="csl-entry" role="listitem">
+Duez, Quentin, Jeroen van de Wiel, Bob van Sluijs, Souvik Ghosh, Mathieu
+G. Baltussen, Max T. G. M. Derks, Jana Roithová, and Wilhelm T. S. Huck.
+2024. <span>“Quantitative Online Monitoring of an Immobilized Enzymatic
+Network by Ion Mobility–Mass Spectrometry.”</span> <em>Journal of the
+American Chemical Society</em> 146 (30): 20778–87. <a
+href="https://doi.org/10.1021/jacs.4c04218">https://doi.org/10.1021/jacs.4c04218</a>.
 </div>
 <div id="ref-KissVen2024" class="csl-entry" role="listitem">
 Kiss, Anna E, Anuroop V Venkatasubramani, Dilan Pathirana, Silke Krause,
