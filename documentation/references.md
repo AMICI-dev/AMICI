@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 90.
+List of publications using AMICI. Total number is 91.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -76,6 +76,15 @@ Philipps, Maren, Antonia Körner, Jakob Vanhoefer, Dilan Pathirana, and
 Jan Hasenauer. 2024. <span>“Non-Negative Universal Differential
 Equations with Applications in Systems Biology.”</span> <a
 href="https://arxiv.org/abs/2406.14246">https://arxiv.org/abs/2406.14246</a>.
+</div>
+<div id="ref-SchmiesterBra2024" class="csl-entry" role="listitem">
+Schmiester, Leonard, Fara Brasó-Maristany, Blanca González-Farré, Tomás
+Pascual, Joaquín Gavilá, Xavier Tekpli, Jürgen Geisler, et al. 2024.
+<span>“<span class="nocase">Computational Model Predicts Patient
+Outcomes in Luminal B Breast Cancer Treated with Endocrine Therapy and
+CDK4/6 Inhibition</span>.”</span> <em>Clinical Cancer Research</em>,
+July, OF1–9. <a
+href="https://doi.org/10.1158/1078-0432.CCR-24-0244">https://doi.org/10.1158/1078-0432.CCR-24-0244</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
