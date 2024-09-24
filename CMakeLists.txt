@@ -370,7 +370,7 @@ export(
 include(CMakePackageConfigHelpers)
 include(version)
 configure_package_config_file(
-  cmake/AmiciConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+  "cmake/AmiciConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)
