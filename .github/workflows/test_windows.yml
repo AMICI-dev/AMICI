@@ -81,6 +81,7 @@ jobs:
       id: get-pooch-cache
       run: |
         echo "pooch-cache=$(python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+      shell: bash
 
     - name: Cache Pooch Directory
       uses: actions/cache@v4
