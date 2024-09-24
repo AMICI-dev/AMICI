@@ -77,6 +77,17 @@ jobs:
 
     - run: python -m amici
 
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Run Python tests
       shell: bash
       run: |
