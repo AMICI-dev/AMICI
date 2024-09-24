@@ -125,6 +125,13 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
@@ -201,6 +208,13 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
@@ -259,6 +273,17 @@ jobs:
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Python tests
       run: |
         scripts/run-python-tests.sh \
@@ -300,6 +325,18 @@ jobs:
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh
+
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Python tests
       run: |
