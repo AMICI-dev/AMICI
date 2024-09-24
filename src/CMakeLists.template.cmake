@@ -1,6 +1,6 @@
 # Build AMICI model
 cmake_minimum_required(VERSION 3.15)
-cmake_policy(VERSION 3.15...3.27)
+cmake_policy(VERSION 3.15...3.30)
 
 # cmake >=3.27
 if(POLICY CMP0144)
