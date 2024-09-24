@@ -4,6 +4,26 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.26.2 (2024-09-25)
+
+**Fixes**
+
+* Fixed a sympy float comparison issue in spline code that would cause
+  an `AssertionError`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2499
+
+* Fixed some warnings from recent CMake versions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2492
+
+* Fixed a potential issue when including AMICI in a CMake project
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2493
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.1...v0.26.2
+
+
 ### v0.26.1 (2024-07-11)
 
 **Fixes**
