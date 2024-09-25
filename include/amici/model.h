@@ -1427,19 +1427,20 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_solver State variables with conservation laws applied
      * (solver returns this)
      */
-    void fx_rdata(AmiVector& x_rdata, AmiVector const& x_solver);
+    void fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x_solver);
 
     /**
      * @brief Expand conservation law for state sensitivities.
      * @param sx_rdata Output buffer for state variables sensitivities with
-     * conservation laws expanded (stored in `amici::ReturnData`).
+     * conservation laws expanded
+     * (stored in `amici::ReturnData` shape `nplist` x `nx`, row-major).
      * @param sx_solver State variables sensitivities with conservation laws
      * applied (solver returns this)
      * @param x_solver State variables with conservation laws
      * applied (solver returns this)
      */
     void fsx_rdata(
-        AmiVectorArray& sx_rdata, AmiVectorArray const& sx_solver,
+        gsl::span<realtype> sx_rdata, AmiVectorArray const& sx_solver,
         AmiVector const& x_solver
     );
 
