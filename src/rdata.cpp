@@ -327,7 +327,7 @@ void ReturnData::getDataSensisFSA(
 ) {
     if (!sx.empty()) {
         model.fsx_rdata(
-            gsl::span<realtype>(&sx.at(it * nplist * nx), nx),
+            gsl::span<realtype>(&sx.at(it * nplist * nx), nplist * nx),
             simulation_state.sx, simulation_state.x
         );
     }
