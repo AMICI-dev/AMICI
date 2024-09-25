@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -20,10 +20,15 @@
 # Currently only available in CVODE.
 # ---------------------------------------------------------------
 
+if(ENABLE_CUDA OR ENABLE_HIP)
+  set(CUDA_OR_HIP TRUE)
+else()
+  set(CUDA_OR_HIP FALSE)
+endif()
+
 sundials_option(SUNDIALS_BUILD_PACKAGE_FUSED_KERNELS BOOL "Build specialized fused GPU kernels" OFF
-                DEPENDS_ON BUILD_CVODE
-                DEPENDS_ON_THROW_ERROR
-                SHOW_IF BUILD_CVODE)
+                DEPENDS_ON BUILD_CVODE CUDA_OR_HIP
+                DEPENDS_ON_THROW_ERROR)
 
 # ---------------------------------------------------------------
 # Options to enable/disable build for NVECTOR modules.
@@ -102,6 +107,11 @@ sundials_option(BUILD_NVECTOR_TRILINOS BOOL "Build the NVECTOR_TRILINOS module (
                 ADVANCED)
 list(APPEND SUNDIALS_BUILD_LIST "BUILD_NVECTOR_TRILINOS")
 
+sundials_option(BUILD_NVECTOR_KOKKOS BOOL "Build the NVECTOR_KOKKOS module (requires Kokkos)" ON
+                DEPENDS_ON ENABLE_KOKKOS KOKKOS_WORKS
+                ADVANCED)
+list(APPEND SUNDIALS_BUILD_LIST "BUILD_NVECTOR_KOKKOS")
+
 
 # ---------------------------------------------------------------
 # Options to enable/disable build for SUNMATRIX modules.
@@ -123,6 +133,16 @@ sundials_option(BUILD_SUNMATRIX_CUSPARSE BOOL "Build the SUNMATRIX_CUSPARSE modu
                 DEPENDS_ON ENABLE_CUDA CMAKE_CUDA_COMPILER _COMPATIBLE_INDEX_SIZE BUILD_NVECTOR_CUDA
                 ADVANCED)
 list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNMATRIX_CUSPARSE")
+
+sundials_option(BUILD_SUNMATRIX_GINKGO BOOL "Build the SUNMATRIX_GINKGO module (requires Ginkgo)" ON
+                DEPENDS_ON ENABLE_GINKGO GINKGO_WORKS
+                ADVANCED)
+list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNMATRIX_GINKGO")
+
+sundials_option(BUILD_SUNMATRIX_KOKKOSDENSE BOOL "Build the SUNMATRIX_KOKKOSDENSE module" ON
+                DEPENDS_ON ENABLE_KOKKOS KOKKOS_WORKS ENABLE_KOKKOS_KERNELS KOKKOS_KERNELS_WORKS
+                ADVANCED)
+list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNMATRIX_KOKKOSDENSE")
 
 sundials_option(BUILD_SUNMATRIX_MAGMADENSE BOOL "Build the SUNMATRIX_MAGMADENSE module (requires MAGMA)" ON
                 DEPENDS_ON ENABLE_MAGMA MAGMA_WORKS
@@ -164,10 +184,20 @@ sundials_option(BUILD_SUNLINSOL_CUSOLVERSP BOOL "Build the SUNLINSOL_CUSOLVERSP 
                 ADVANCED)
 list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNLINSOL_CUSOLVERSP")
 
+sundials_option(BUILD_SUNLINSOL_GINKGO BOOL "Build the SUNLINSOL_GINKGO module (requires Ginkgo)" ON
+                DEPENDS_ON ENABLE_GINKGO GINKGO_WORKS
+                ADVANCED)
+list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNLINSOL_GINKGO")
+
 sundials_option(BUILD_SUNLINSOL_KLU BOOL "Build the SUNLINSOL_KLU module (requires KLU)" ON
                 DEPENDS_ON ENABLE_KLU KLU_WORKS
                 ADVANCED)
 list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNLINSOL_KLU")
+
+sundials_option(BUILD_SUNLINSOL_KOKKOSDENSE BOOL "Build the SUNLINSOL_KOKKOSDENSE module" ON
+                DEPENDS_ON ENABLE_KOKKOS KOKKOS_WORKS ENABLE_KOKKOS_KERNELS KOKKOS_KERNELS_WORKS
+                ADVANCED)
+list(APPEND SUNDIALS_BUILD_LIST "BUILD_SUNLINSOL_KOKKOSDENSE")
 
 sundials_option(BUILD_SUNLINSOL_LAPACKBAND BOOL "Build the SUNLINSOL_LAPACKBAND module (requires LAPACK)" ON
                 DEPENDS_ON ENABLE_LAPACK LAPACK_WORKS

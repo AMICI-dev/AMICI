@@ -5,7 +5,7 @@
  *     code, written by Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2021, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -34,14 +34,14 @@
 #include <klu.h>
 #endif
 
-#ifdef __cplusplus  /* wrapper to enable C++ usage */
+#ifdef __cplusplus /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
 /* Default KLU solver parameters */
-#define SUNKLU_ORDERING_DEFAULT  1    /* COLAMD */
-#define SUNKLU_REINIT_FULL       1
-#define SUNKLU_REINIT_PARTIAL    2
+#define SUNKLU_ORDERING_DEFAULT 1 /* COLAMD */
+#define SUNKLU_REINIT_FULL      1
+#define SUNKLU_REINIT_PARTIAL   2
 
 /* Interfaces to match 'sunindextype' with the correct KLU types/functions */
 #if defined(SUNDIALS_INT64_T)
@@ -68,13 +68,13 @@ extern "C" {
 #define sun_klu_defaults      klu_defaults
 #define sun_klu_free_symbolic klu_free_symbolic
 #define sun_klu_free_numeric  klu_free_numeric
-#else  /* incompatible sunindextype for KLU */
-#error  Incompatible sunindextype for KLU
+#else /* incompatible sunindextype for KLU */
+#error Incompatible sunindextype for KLU
 #endif
 
 #if defined(SUNDIALS_DOUBLE_PRECISION)
 #else
-#error  Incompatible realtype for KLU
+#error Incompatible sunrealtype for KLU
 #endif
 
 /* --------------------------------------
@@ -85,39 +85,31 @@ extern "C" {
  * warning messages about sunindextype vs internal KLU index types. */
 
 typedef sunindextype (*KLUSolveFn)(sun_klu_symbolic*, sun_klu_numeric*,
-                                   sunindextype, sunindextype,
-                                   double*, sun_klu_common*);
+                                   sunindextype, sunindextype, double*,
+                                   sun_klu_common*);
 
-struct _SUNLinearSolverContent_KLU {
-  int              last_flag;
-  int              first_factorize;
-  sun_klu_symbolic *symbolic;
-  sun_klu_numeric  *numeric;
-  sun_klu_common   common;
-  KLUSolveFn       klu_solver;
+struct _SUNLinearSolverContent_KLU
+{
+  int last_flag;
+  int first_factorize;
+  sun_klu_symbolic* symbolic;
+  sun_klu_numeric* numeric;
+  sun_klu_common common;
+  KLUSolveFn klu_solver;
 };
 
-typedef struct _SUNLinearSolverContent_KLU *SUNLinearSolverContent_KLU;
-
+typedef struct _SUNLinearSolverContent_KLU* SUNLinearSolverContent_KLU;
 
 /* -------------------------------------
  * Exported Functions for SUNLINSOL_KLU
  * ------------------------------------- */
 
-SUNDIALS_EXPORT SUNLinearSolver SUNLinSol_KLU(N_Vector y, SUNMatrix A);
+SUNDIALS_EXPORT SUNLinearSolver SUNLinSol_KLU(N_Vector y, SUNMatrix A,
+                                              SUNContext sunctx);
 SUNDIALS_EXPORT int SUNLinSol_KLUReInit(SUNLinearSolver S, SUNMatrix A,
                                         sunindextype nnz, int reinit_type);
 SUNDIALS_EXPORT int SUNLinSol_KLUSetOrdering(SUNLinearSolver S,
                                              int ordering_choice);
-
-/* deprecated */
-SUNDIALS_EXPORT SUNLinearSolver SUNKLU(N_Vector y, SUNMatrix A);
-/* deprecated */
-SUNDIALS_EXPORT int SUNKLUReInit(SUNLinearSolver S, SUNMatrix A,
-                                 sunindextype nnz, int reinit_type);
-/* deprecated */
-SUNDIALS_EXPORT int SUNKLUSetOrdering(SUNLinearSolver S,
-                                      int ordering_choice);
 
 /* --------------------
  *  Accessor functions
@@ -127,23 +119,21 @@ SUNDIALS_EXPORT sun_klu_symbolic* SUNLinSol_KLUGetSymbolic(SUNLinearSolver S);
 SUNDIALS_EXPORT sun_klu_numeric* SUNLinSol_KLUGetNumeric(SUNLinearSolver S);
 SUNDIALS_EXPORT sun_klu_common* SUNLinSol_KLUGetCommon(SUNLinearSolver S);
 
-
 /* -----------------------------------------------
  *  Implementations of SUNLinearSolver operations
  * ----------------------------------------------- */
 
 SUNDIALS_EXPORT SUNLinearSolver_Type SUNLinSolGetType_KLU(SUNLinearSolver S);
 SUNDIALS_EXPORT SUNLinearSolver_ID SUNLinSolGetID_KLU(SUNLinearSolver S);
-SUNDIALS_EXPORT int SUNLinSolInitialize_KLU(SUNLinearSolver S);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolInitialize_KLU(SUNLinearSolver S);
 SUNDIALS_EXPORT int SUNLinSolSetup_KLU(SUNLinearSolver S, SUNMatrix A);
 SUNDIALS_EXPORT int SUNLinSolSolve_KLU(SUNLinearSolver S, SUNMatrix A,
-                                       N_Vector x, N_Vector b, realtype tol);
+                                       N_Vector x, N_Vector b, sunrealtype tol);
 SUNDIALS_EXPORT sunindextype SUNLinSolLastFlag_KLU(SUNLinearSolver S);
-SUNDIALS_EXPORT int SUNLinSolSpace_KLU(SUNLinearSolver S,
-                                       long int *lenrwLS,
-                                       long int *leniwLS);
-SUNDIALS_EXPORT int SUNLinSolFree_KLU(SUNLinearSolver S);
-
+SUNDIALS_EXPORT SUNErrCode SUNLinSolSpace_KLU(SUNLinearSolver S,
+                                              long int* lenrwLS,
+                                              long int* leniwLS);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolFree_KLU(SUNLinearSolver S);
 
 #ifdef __cplusplus
 }

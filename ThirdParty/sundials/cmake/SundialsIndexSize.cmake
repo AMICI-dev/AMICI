@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -42,9 +42,8 @@ if(SUNDIALS_INDEX_SIZE MATCHES "64")
   endforeach()
 
   if(NOT SUNDIALS_CINDEX_TYPE)
-    print_error("No integer type of size 8 was found.\n\
-                 Tried ${POSSIBLE_INT64}.\n\
-                 Try setting the advanced option SUNDIALS_INDEX_TYPE.")
+    message(FATAL_ERROR "No integer type of size 8 was found. Tried "
+      "${POSSIBLE_INT64}. Try setting the advanced option SUNDIALS_INDEX_TYPE.")
   endif()
 
   # set Fortran integer size too
@@ -70,13 +69,12 @@ elseif(SUNDIALS_INDEX_SIZE MATCHES "32")
   endforeach()
 
   if(NOT SUNDIALS_CINDEX_TYPE)
-    print_error("No integer type of size 4 was found.\n\
-                 Tried ${POSSIBLE_INT32}\n\
-                 Try setting the advanced option SUNDIALS_INDEX_TYPE.")
+    message(FATAL_ERROR "No integer type of size 4 was found. Tried "
+      "${POSSIBLE_INT32}. Try setting the advanced option SUNDIALS_INDEX_TYPE.")
   endif()
 
   # set Fortran integer size too
   set(SUNDIALS_FINDEX_TYPE "4")
 else()
-  print_error("Invalid index size.")
+  message(FATAL_ERROR "Invalid index size.")
 endif()

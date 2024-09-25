@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -28,8 +28,9 @@ sundials_add_library(sundials_sunmatrixslunrloc
     ${SUNDIALS_SOURCE_DIR}/include/sunmatrix/sunmatrix_slunrloc.h
   INCLUDE_SUBDIR
     sunmatrix
+  LINK_LIBRARIES
+    PUBLIC sundials_core
   OBJECT_LIBRARIES
-    sundials_generic_obj
   LINK_LIBRARIES
     PUBLIC SUNDIALS::SUPERLUDIST
     $<IF:$<BOOL:${SUPERLUDIST_OpenMP}>,OpenMP::OpenMP_C,>
