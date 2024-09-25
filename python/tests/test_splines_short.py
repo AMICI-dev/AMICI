@@ -12,6 +12,7 @@ from amici.testing import skip_on_valgrind
 from splines_utils import check_splines_full, example_spline_1
 
 
+@skip_on_valgrind
 def test_spline_piecewise(**kwargs):
     """
     Test a SBML model containing a single spline.
