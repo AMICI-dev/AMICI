@@ -15,10 +15,10 @@
 cmake_minimum_required ( VERSION 3.22 )
 
 # version of both SuiteSparse and SuiteSparse_config
-set ( SUITESPARSE_DATE "Jan 20, 2024" )
+set ( SUITESPARSE_DATE "Aug 20, 2024" )
 set ( SUITESPARSE_VERSION_MAJOR 7 )
-set ( SUITESPARSE_VERSION_MINOR 6 )
-set ( SUITESPARSE_VERSION_SUB   0 )
+set ( SUITESPARSE_VERSION_MINOR 8 )
+set ( SUITESPARSE_VERSION_SUB   2 )
 set ( SUITESPARSE_CONFIG_VERSION_MAJOR ${SUITESPARSE_VERSION_MAJOR} CACHE STRING "" FORCE )
 set ( SUITESPARSE_CONFIG_VERSION_MINOR ${SUITESPARSE_VERSION_MINOR} CACHE STRING "" FORCE )
 set ( SUITESPARSE_CONFIG_VERSION_PATCH ${SUITESPARSE_VERSION_SUB} CACHE STRING "" FORCE )
@@ -112,7 +112,14 @@ else ( )
     endif ( )
 endif ( )
 
-if ( NOT SUITESPARSE_CONFIG_USE_OPENMP AND NOT SUITESPARSE_HAVE_CLOCK_GETTIME )
+if ( SUITESPARSE_CONFIG_USE_OPENMP OR SUITESPARSE_HAVE_CLOCK_GETTIME )
+    set ( SUITESPARSE_TIMER_ENABLED ON )
+    if ( SUITESPARSE_CONFIG_USE_OPENMP )
+        set ( SUITESPARSE_CONFIG_TIMER "omp_get_wtime" )
+    else ( )
+        set ( SUITESPARSE_CONFIG_TIMER "clock_gettime" )
+    endif ( )
+else ( )
     message ( STATUS "No OpenMP and no clock_gettime available. Timing functions won't work." )
 endif ( )
 
@@ -174,7 +181,7 @@ if ( BUILD_STATIC_LIBS )
         OUTPUT_NAME suitesparseconfig
         PUBLIC_HEADER "SuiteSparse_config.h" )
 
-    if ( MSVC )
+    if ( MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC") )
         set_target_properties ( SuiteSparseConfig_static PROPERTIES
             OUTPUT_NAME suitesparseconfig_static )
     endif ( )
