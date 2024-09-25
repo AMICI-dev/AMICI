@@ -374,7 +374,7 @@ int SuiteSparse_divcomplex
     // be done via the SUITESPARSE_TIME macro, defined below:
     #define SUITESPARSE_TIMER_ENABLED
     #define SUITESPARSE_HAVE_CLOCK_GETTIME
-    #define SUITESPARSE_CONFIG_TIMER omp_get_wtime
+    #define SUITESPARSE_CONFIG_TIMER clock_gettime
     #if defined ( SUITESPARSE_TIMER_ENABLED )
         #if defined ( _OPENMP )
             // Avoid indirection through the library if the compilation unit
@@ -537,7 +537,7 @@ int SuiteSparse_version     // returns SUITESPARSE_VERSION
 #else
 
     // let CMake determine the size of the integer in the Fortran BLAS
-    #define SUITESPARSE_BLAS_INT int32_t
+    #define SUITESPARSE_BLAS_INT int64_t
 
 #endif
 
