@@ -177,19 +177,15 @@ Model::Model(
     ModelDimensions const& model_dimensions,
     SimulationParameters simulation_parameters, SecondOrderMode o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
-    bool const pythonGenerated, int const ndxdotdp_explicit,
-    int const ndxdotdx_explicit, int const w_recursion_depth,
     std::map<realtype, std::vector<int>> state_independent_events
 )
     : ModelDimensions(model_dimensions)
-    , pythonGenerated(pythonGenerated)
     , o2mode(o2mode)
     , idlist(std::move(idlist))
     , state_independent_events_(std::move(state_independent_events))
     , derived_state_(model_dimensions)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
-    , w_recursion_depth_(w_recursion_depth)
     , simulation_parameters_(std::move(simulation_parameters)) {
     Expects(
         model_dimensions.np
@@ -217,60 +213,6 @@ Model::Model(
 
     root_initial_values_.resize(ne, true);
 
-    /* If Matlab wrapped: dxdotdp is a full AmiVector,
-       if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices
-     */
-    if (pythonGenerated) {
-
-        derived_state_.dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
-        // size dynamically adapted for dwdx_ and dwdp_
-        derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
-        derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), 0, CSC_MAT);
-
-        for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
-            /* for the first element we know the exact size, while for all
-               others we guess the size*/
-            derived_state_.dwdp_hierarchical_.emplace_back(
-                SUNMatrixWrapper(nw, np(), irec * ndwdw + ndwdp, CSC_MAT)
-            );
-            derived_state_.dwdx_hierarchical_.emplace_back(
-                SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT)
-            );
-        }
-        assert(
-            gsl::narrow<int>(derived_state_.dwdp_hierarchical_.size())
-            == w_recursion_depth_ + 1
-        );
-        assert(
-            gsl::narrow<int>(derived_state_.dwdx_hierarchical_.size())
-            == w_recursion_depth_ + 1
-        );
-
-        derived_state_.dxdotdp_explicit
-            = SUNMatrixWrapper(nx_solver, np(), ndxdotdp_explicit, CSC_MAT);
-        // guess size, will be dynamically reallocated
-        derived_state_.dxdotdp_implicit
-            = SUNMatrixWrapper(nx_solver, np(), ndwdp + ndxdotdw, CSC_MAT);
-        derived_state_.dxdotdx_explicit = SUNMatrixWrapper(
-            nx_solver, nx_solver, ndxdotdx_explicit, CSC_MAT
-        );
-        // guess size, will be dynamically reallocated
-        derived_state_.dxdotdx_implicit
-            = SUNMatrixWrapper(nx_solver, nx_solver, ndwdx + ndxdotdw, CSC_MAT);
-        // dynamically allocate on first call
-        derived_state_.dxdotdp_full
-            = SUNMatrixWrapper(nx_solver, np(), 0, CSC_MAT);
-
-        for (int iytrue = 0; iytrue < nytrue; ++iytrue)
-            derived_state_.dJydy_.emplace_back(
-                SUNMatrixWrapper(nJ, ny, ndJydy.at(iytrue), CSC_MAT)
-            );
-    } else {
-        derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
-        derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), ndwdp, CSC_MAT);
-        derived_state_.dJydy_matlab_
-            = std::vector<realtype>(nJ * nytrue * ny, 0.0);
-    }
     requireSensitivitiesForAllParameters();
 }
 
@@ -2871,8 +2813,9 @@ void Model::fsspl(realtype const t) {
     realtype* sspl_data = derived_state_.sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++)
-            sspl_data[ispl + nspl * plist(ip)]
-                = splines_[ispl].get_sensitivity(t, ip, derived_state_.spl_[ispl]);
+            sspl_data[ispl + nspl * plist(ip)] = splines_[ispl].get_sensitivity(
+                t, ip, derived_state_.spl_[ispl]
+            );
     }
 }
 
@@ -2914,7 +2857,7 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
             derived_state_.sspl_.data(), include_static
         );
 
-        for (int irecursion = 1; irecursion <= w_recursion_depth_;
+        for (int irecursion = 1; irecursion <= w_recursion_depth;
              irecursion++) {
             derived_state_.dwdw_.sparse_multiply(
                 derived_state_.dwdp_hierarchical_.at(irecursion),
@@ -2966,7 +2909,7 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
             derived_state_.spl_.data(), include_static
         );
 
-        for (int irecursion = 1; irecursion <= w_recursion_depth_;
+        for (int irecursion = 1; irecursion <= w_recursion_depth;
              irecursion++) {
             derived_state_.dwdw_.sparse_multiply(
                 derived_state_.dwdx_hierarchical_.at(irecursion),
@@ -2982,7 +2925,8 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
         fdwdx(
             derived_state_.dwdx_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(), derived_state_.spl_.data()
+            derived_state_.w_.data(), state_.total_cl.data(),
+            derived_state_.spl_.data()
         );
     }
 
