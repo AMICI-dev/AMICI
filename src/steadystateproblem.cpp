@@ -28,6 +28,7 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , xQ_(model.nJ * model.nx_solver)
     , xQB_(model.nplist())
     , xQBdot_(model.nplist())
+    , steadystate_mask_(AmiVector(model.get_steadystate_mask()))
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
@@ -551,7 +552,7 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
                 "steady state computations. Stopping."
             );
         wrms = getWrmsNorm(
-            xQB_, xQBdot_, model.get_steadystate_mask_av(), atol_quad_,
+            xQB_, xQBdot_, steadystate_mask_, atol_quad_,
             rtol_quad_, ewtQB_
         );
     } else {
@@ -563,7 +564,7 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
             updateRightHandSide(model);
         wrms = getWrmsNorm(
             state_.x, newton_step_conv_ ? delta_ : xdot_,
-            model.get_steadystate_mask_av(), atol_, rtol_, ewt_
+            steadystate_mask_, atol_, rtol_, ewt_
         );
     }
     return wrms;
@@ -585,7 +586,7 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
         if (newton_step_conv_)
             newton_solver_->solveLinearSystem(xdot_);
         wrms = getWrmsNorm(
-            state_.sx[ip], xdot_, model.get_steadystate_mask_av(), atol_sensi_,
+            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_,
             rtol_sensi_, ewt_
         );
         /* ideally this function would report the maximum of all wrms over

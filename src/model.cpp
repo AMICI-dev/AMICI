@@ -222,7 +222,7 @@ Model::Model(
      */
     if (pythonGenerated) {
 
-        dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
+        derived_state_.dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
         // size dynamically adapted for dwdx_ and dwdp_
         derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
         derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), 0, CSC_MAT);
@@ -230,19 +230,19 @@ Model::Model(
         for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
             /* for the first element we know the exact size, while for all
                others we guess the size*/
-            dwdp_hierarchical_.emplace_back(
+            derived_state_.dwdp_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, np(), irec * ndwdw + ndwdp, CSC_MAT)
             );
-            dwdx_hierarchical_.emplace_back(
+            derived_state_.dwdx_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT)
             );
         }
         assert(
-            gsl::narrow<int>(dwdp_hierarchical_.size())
+            gsl::narrow<int>(derived_state_.dwdp_hierarchical_.size())
             == w_recursion_depth_ + 1
         );
         assert(
-            gsl::narrow<int>(dwdx_hierarchical_.size())
+            gsl::narrow<int>(derived_state_.dwdx_hierarchical_.size())
             == w_recursion_depth_ + 1
         );
 
@@ -288,8 +288,7 @@ bool operator==(Model const& a, Model const& b) {
            && (a.state_is_non_negative_ == b.state_is_non_negative_)
            && (a.sigma_res_ == b.sigma_res_) && (a.min_sigma_ == b.min_sigma_)
            && (a.state_ == b.state_)
-           && (a.steadystate_mask_.getVector()
-               == b.steadystate_mask_.getVector());
+           && (a.steadystate_mask_ == b.steadystate_mask_);
 }
 
 bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
@@ -381,7 +380,7 @@ void Model::initializeSplines() {
     splines_ = fcreate_splines(
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
-    state_.spl_.resize(splines_.size(), 0.0);
+    derived_state_.spl_.resize(splines_.size(), 0.0);
     for (auto& spline : splines_) {
         spline.compute_coefficients();
     }
@@ -2107,7 +2106,7 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), plist(ip), derived_state_.w_.data(),
                 state_.total_cl.data(), state_.stotal_cl.data(),
-                state_.spl_.data(), derived_state_.sspl_.data()
+                derived_state_.spl_.data(), derived_state_.sspl_.data()
             );
         } else {
             fdydp(
@@ -2864,7 +2863,7 @@ void Model::fdJrzdsigma(
 
 void Model::fspl(realtype const t) {
     for (int ispl = 0; ispl < nspl; ispl++)
-        state_.spl_[ispl] = splines_[ispl].get_value(t);
+        derived_state_.spl_[ispl] = splines_[ispl].get_value(t);
 }
 
 void Model::fsspl(realtype const t) {
@@ -2873,7 +2872,7 @@ void Model::fsspl(realtype const t) {
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++)
             sspl_data[ispl + nspl * plist(ip)]
-                = splines_[ispl].get_sensitivity(t, ip, state_.spl_[ispl]);
+                = splines_[ispl].get_sensitivity(t, ip, derived_state_.spl_[ispl]);
     }
 }
 
@@ -2884,7 +2883,7 @@ void Model::fw(realtype const t, realtype const* x, bool include_static) {
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
-       state_.spl_.data(), include_static);
+       derived_state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.w_, ModelQuantity::w, t);
@@ -2903,26 +2902,26 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
         fsspl(t);
         fdwdw(t, x, include_static);
         if (include_static) {
-            dwdp_hierarchical_.at(0).zero();
-            fdwdp_colptrs(dwdp_hierarchical_.at(0));
-            fdwdp_rowvals(dwdp_hierarchical_.at(0));
+            derived_state_.dwdp_hierarchical_.at(0).zero();
+            fdwdp_colptrs(derived_state_.dwdp_hierarchical_.at(0));
+            fdwdp_rowvals(derived_state_.dwdp_hierarchical_.at(0));
         }
         fdwdp(
-            dwdp_hierarchical_.at(0).data(), t, x,
+            derived_state_.dwdp_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), state_.spl_.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
             derived_state_.sspl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
-            dwdw_.sparse_multiply(
-                dwdp_hierarchical_.at(irecursion),
-                dwdp_hierarchical_.at(irecursion - 1)
+            derived_state_.dwdw_.sparse_multiply(
+                derived_state_.dwdp_hierarchical_.at(irecursion),
+                derived_state_.dwdp_hierarchical_.at(irecursion - 1)
             );
         }
-        derived_state_.dwdp_.sparse_sum(dwdp_hierarchical_);
+        derived_state_.dwdp_.sparse_sum(derived_state_.dwdp_hierarchical_);
 
     } else {
         if (!derived_state_.dwdp_.capacity())
@@ -2932,7 +2931,7 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
             derived_state_.dwdp_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
             derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), state_.spl_.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
             derived_state_.sspl_.data()
         );
     }
@@ -2950,31 +2949,31 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
-        if (!dwdx_hierarchical_.at(0).capacity())
+        if (!derived_state_.dwdx_hierarchical_.at(0).capacity())
             return;
 
         fdwdw(t, x, include_static);
 
         if (include_static) {
-            dwdx_hierarchical_.at(0).zero();
-            fdwdx_colptrs(dwdx_hierarchical_.at(0));
-            fdwdx_rowvals(dwdx_hierarchical_.at(0));
+            derived_state_.dwdx_hierarchical_.at(0).zero();
+            fdwdx_colptrs(derived_state_.dwdx_hierarchical_.at(0));
+            fdwdx_rowvals(derived_state_.dwdx_hierarchical_.at(0));
         }
         fdwdx(
-            dwdx_hierarchical_.at(0).data(), t, x,
+            derived_state_.dwdx_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.spl_.data(), include_static
+            derived_state_.spl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
-            dwdw_.sparse_multiply(
-                dwdx_hierarchical_.at(irecursion),
-                dwdx_hierarchical_.at(irecursion - 1)
+            derived_state_.dwdw_.sparse_multiply(
+                derived_state_.dwdx_hierarchical_.at(irecursion),
+                derived_state_.dwdx_hierarchical_.at(irecursion - 1)
             );
         }
-        derived_state_.dwdx_.sparse_sum(dwdx_hierarchical_);
+        derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
 
     } else {
         if (!derived_state_.dwdx_.capacity())
@@ -2983,7 +2982,7 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
         fdwdx(
             derived_state_.dwdx_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(), state_.spl_.data()
+            derived_state_.w_.data(), state_.total_cl.data(), derived_state_.spl_.data()
         );
     }
 
@@ -2997,19 +2996,19 @@ void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
         return;
 
     if (include_static) {
-        dwdw_.zero();
-        fdwdw_colptrs(dwdw_);
-        fdwdw_rowvals(dwdw_);
+        derived_state_.dwdw_.zero();
+        fdwdw_colptrs(derived_state_.dwdw_);
+        fdwdw_rowvals(derived_state_.dwdw_);
     }
 
     fdwdw(
-        dwdw_.data(), t, x, state_.unscaledParameters.data(),
+        derived_state_.dwdw_.data(), t, x, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
         derived_state_.w_.data(), state_.total_cl.data(), include_static
     );
 
     if (always_check_finite_) {
-        checkFinite(dwdw_, ModelQuantity::dwdw, t);
+        checkFinite(derived_state_.dwdw_, ModelQuantity::dwdw, t);
     }
 }
 
@@ -3137,11 +3136,9 @@ std::vector<double> Model::get_trigger_timepoints() const {
     return trigger_timepoints;
 }
 
-void Model::set_steadystate_mask(std::vector<double> const& mask) {
+void Model::set_steadystate_mask(const std::vector<realtype> &mask) {
     if (mask.size() == 0) {
-        if (steadystate_mask_.getLength() != 0) {
-            steadystate_mask_ = AmiVector();
-        }
+        steadystate_mask_.clear();
         return;
     }
 
@@ -3151,7 +3148,7 @@ void Model::set_steadystate_mask(std::vector<double> const& mask) {
             gsl::narrow<int>(mask.size()), nx_solver
         );
 
-    steadystate_mask_ = AmiVector(mask);
+    steadystate_mask_ = mask;
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

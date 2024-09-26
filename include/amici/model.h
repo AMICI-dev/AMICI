@@ -1489,17 +1489,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Steady-state mask
      */
-    std::vector<double> get_steadystate_mask() const {
-        return steadystate_mask_.getVector();
-    };
-
-    /**
-     * @brief Get steady-state mask as AmiVector.
-     *
-     * See `set_steadystate_mask` for details.
-     * @return Steady-state mask
-     */
-    AmiVector const& get_steadystate_mask_av() const {
+    std::vector<realtype> get_steadystate_mask() const {
         return steadystate_mask_;
     };
 
@@ -1514,7 +1504,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param mask Mask of length `nx_solver`.
      */
-    void set_steadystate_mask(std::vector<double> const& mask);
+    void set_steadystate_mask(std::vector<realtype> const& mask);
 
     /**
      * Flag indicating whether for
@@ -2108,15 +2098,6 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype min_sigma_{50.0};
 
   private:
-    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
-    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
-
-    /** Sparse dwdw temporary storage (shape `ndwdw`) */
-    mutable SUNMatrixWrapper dwdw_;
-
-    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
-    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
-
     /** Recursion */
     int w_recursion_depth_{0};
 
@@ -2130,7 +2111,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * Negative values indicate that the corresponding state variable should
      * be ignored.
      */
-    AmiVector steadystate_mask_;
+    std::vector<realtype> steadystate_mask_;
 };
 
 bool operator==(Model const& a, Model const& b);
