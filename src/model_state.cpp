@@ -70,6 +70,8 @@ ModelStateDerived::ModelStateDerived(ModelDimensions const& dim)
             dJydy_.emplace_back(
                 SUNMatrixWrapper(dim.nJ, dim.ny, dim.ndJydy.at(iytrue), CSC_MAT)
             );
+
+        dJydy_dense_ = SUNMatrixWrapper(dim.nJ, dim.ny);
     } else {
         dwdx_ = SUNMatrixWrapper(dim.nw, dim.nx_solver, dim.ndwdx, CSC_MAT);
         dwdp_ = SUNMatrixWrapper(dim.nw, dim.np, dim.ndwdp, CSC_MAT);

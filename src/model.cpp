@@ -2192,7 +2192,6 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     if (pythonGenerated) {
         fdJydsigma(it, x, edata);
         fdsigmaydy(it, &edata);
-        SUNMatrixWrapper tmp_dense(nJ, ny);
 
         setNaNtoZero(derived_state_.dJydsigma_);
         setNaNtoZero(derived_state_.dsigmaydy_);
@@ -2217,15 +2216,15 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
             // dJydy += dJydsigma * dsigmaydy
             // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
             // sparse    dense       dense
-            tmp_dense.zero();
+            derived_state_.dJydy_dense_.zero();
             amici_dgemm(
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, ny, ny, 1.0,
                 &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
-                derived_state_.dsigmaydy_.data(), ny, 1.0, tmp_dense.data(), nJ
+                derived_state_.dsigmaydy_.data(), ny, 1.0, derived_state_.dJydy_dense_.data(), nJ
             );
 
-            auto tmp_sparse = SUNMatrixWrapper(tmp_dense, 0.0, CSC_MAT);
+            auto tmp_sparse = SUNMatrixWrapper(derived_state_.dJydy_dense_, 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(
                 1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
