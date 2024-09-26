@@ -1985,20 +1985,20 @@ void Model::fsx0_fixedParameters(AmiVectorArray& sx, AmiVector const& x) {
 
 void Model::fsdx0() {}
 
-void Model::fx_rdata(AmiVector& x_rdata, AmiVector const& x) {
+void Model::fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x) {
     fx_rdata(
         x_rdata.data(), computeX_pos(x), state_.total_cl.data(),
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
     if (always_check_finite_)
         checkFinite(
-            x_rdata.getVector(), ModelQuantity::x_rdata,
+            x_rdata, ModelQuantity::x_rdata,
             std::numeric_limits<realtype>::quiet_NaN()
         );
 }
 
 void Model::fsx_rdata(
-    AmiVectorArray& sx_rdata, AmiVectorArray const& sx,
+    gsl::span<realtype> sx_rdata, AmiVectorArray const& sx,
     AmiVector const& x_solver
 ) {
     realtype* stcl = nullptr;
@@ -2006,7 +2006,7 @@ void Model::fsx_rdata(
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
         fsx_rdata(
-            sx_rdata.data(ip), sx.data(ip), stcl,
+            &sx_rdata[ip * nx_rdata], sx.data(ip), stcl,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             x_solver.data(), state_.total_cl.data(), plist(ip)
         );

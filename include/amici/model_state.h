@@ -332,11 +332,19 @@ struct ModelStateDerived {
 struct SimulationState {
     /** timepoint */
     realtype t;
-    /** state variables */
+    /**
+     * partial state vector, excluding states eliminated from conservation laws
+     */
     AmiVector x;
-    /** state variables */
+    /**
+     * partial time derivative of state vector, excluding states eliminated
+     * from conservation laws
+     */
     AmiVector dx;
-    /** state variable sensitivity */
+    /**
+     * partial sensitivity state vector array, excluding states eliminated from
+     * conservation laws
+     */
     AmiVectorArray sx;
     /** state of the model that was used for simulation */
     ModelState state;
