@@ -323,6 +323,15 @@ struct ModelStateDerived {
 
     /** temporary storage for spline values */
     std::vector<realtype> spl_;
+
+    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
+    std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
+
+    /** Sparse dwdw temporary storage (shape `ndwdw`) */
+    SUNMatrixWrapper dwdw_;
+
+    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
+    std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
 };
 
 /**

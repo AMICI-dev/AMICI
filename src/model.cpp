@@ -222,7 +222,7 @@ Model::Model(
      */
     if (pythonGenerated) {
 
-        dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
+        derived_state_.dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
         // size dynamically adapted for dwdx_ and dwdp_
         derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
         derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), 0, CSC_MAT);
@@ -230,19 +230,19 @@ Model::Model(
         for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
             /* for the first element we know the exact size, while for all
                others we guess the size*/
-            dwdp_hierarchical_.emplace_back(
+            derived_state_.dwdp_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, np(), irec * ndwdw + ndwdp, CSC_MAT)
             );
-            dwdx_hierarchical_.emplace_back(
+            derived_state_.dwdx_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT)
             );
         }
         assert(
-            gsl::narrow<int>(dwdp_hierarchical_.size())
+            gsl::narrow<int>(derived_state_.dwdp_hierarchical_.size())
             == w_recursion_depth_ + 1
         );
         assert(
-            gsl::narrow<int>(dwdx_hierarchical_.size())
+            gsl::narrow<int>(derived_state_.dwdx_hierarchical_.size())
             == w_recursion_depth_ + 1
         );
 
@@ -2903,12 +2903,12 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
         fsspl(t);
         fdwdw(t, x, include_static);
         if (include_static) {
-            dwdp_hierarchical_.at(0).zero();
-            fdwdp_colptrs(dwdp_hierarchical_.at(0));
-            fdwdp_rowvals(dwdp_hierarchical_.at(0));
+            derived_state_.dwdp_hierarchical_.at(0).zero();
+            fdwdp_colptrs(derived_state_.dwdp_hierarchical_.at(0));
+            fdwdp_rowvals(derived_state_.dwdp_hierarchical_.at(0));
         }
         fdwdp(
-            dwdp_hierarchical_.at(0).data(), t, x,
+            derived_state_.dwdp_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
             state_.stotal_cl.data(), derived_state_.spl_.data(),
@@ -2917,12 +2917,12 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
-            dwdw_.sparse_multiply(
-                dwdp_hierarchical_.at(irecursion),
-                dwdp_hierarchical_.at(irecursion - 1)
+            derived_state_.dwdw_.sparse_multiply(
+                derived_state_.dwdp_hierarchical_.at(irecursion),
+                derived_state_.dwdp_hierarchical_.at(irecursion - 1)
             );
         }
-        derived_state_.dwdp_.sparse_sum(dwdp_hierarchical_);
+        derived_state_.dwdp_.sparse_sum(derived_state_.dwdp_hierarchical_);
 
     } else {
         if (!derived_state_.dwdp_.capacity())
@@ -2950,18 +2950,18 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
-        if (!dwdx_hierarchical_.at(0).capacity())
+        if (!derived_state_.dwdx_hierarchical_.at(0).capacity())
             return;
 
         fdwdw(t, x, include_static);
 
         if (include_static) {
-            dwdx_hierarchical_.at(0).zero();
-            fdwdx_colptrs(dwdx_hierarchical_.at(0));
-            fdwdx_rowvals(dwdx_hierarchical_.at(0));
+            derived_state_.dwdx_hierarchical_.at(0).zero();
+            fdwdx_colptrs(derived_state_.dwdx_hierarchical_.at(0));
+            fdwdx_rowvals(derived_state_.dwdx_hierarchical_.at(0));
         }
         fdwdx(
-            dwdx_hierarchical_.at(0).data(), t, x,
+            derived_state_.dwdx_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
             derived_state_.spl_.data(), include_static
@@ -2969,12 +2969,12 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
-            dwdw_.sparse_multiply(
-                dwdx_hierarchical_.at(irecursion),
-                dwdx_hierarchical_.at(irecursion - 1)
+            derived_state_.dwdw_.sparse_multiply(
+                derived_state_.dwdx_hierarchical_.at(irecursion),
+                derived_state_.dwdx_hierarchical_.at(irecursion - 1)
             );
         }
-        derived_state_.dwdx_.sparse_sum(dwdx_hierarchical_);
+        derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
 
     } else {
         if (!derived_state_.dwdx_.capacity())
@@ -2997,19 +2997,19 @@ void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
         return;
 
     if (include_static) {
-        dwdw_.zero();
-        fdwdw_colptrs(dwdw_);
-        fdwdw_rowvals(dwdw_);
+        derived_state_.dwdw_.zero();
+        fdwdw_colptrs(derived_state_.dwdw_);
+        fdwdw_rowvals(derived_state_.dwdw_);
     }
 
     fdwdw(
-        dwdw_.data(), t, x, state_.unscaledParameters.data(),
+        derived_state_.dwdw_.data(), t, x, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
         derived_state_.w_.data(), state_.total_cl.data(), include_static
     );
 
     if (always_check_finite_) {
-        checkFinite(dwdw_, ModelQuantity::dwdw, t);
+        checkFinite(derived_state_.dwdw_, ModelQuantity::dwdw, t);
     }
 }
 
