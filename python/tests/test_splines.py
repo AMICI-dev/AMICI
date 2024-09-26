@@ -103,6 +103,7 @@ def test_multiple_splines(**kwargs):
         os.path.dirname(os.path.abspath(__file__)),
         "test_splines_precomputed.npz",
     )
-    kwargs["groundtruth"] = dict(np.load(precomputed_path))
+    with np.load(precomputed_path) as data:
+        kwargs["groundtruth"] = dict(data)
 
     return check_splines_full(splines, params, tols, **kwargs)

@@ -2,16 +2,9 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.15)
-cmake_policy(VERSION 3.15...3.27)
-
-# cmake >=3.27
-if(POLICY CMP0144)
-  cmake_policy(SET CMP0144 NEW)
-endif(POLICY CMP0144)
-# cmake >= 3.30
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif(POLICY CMP0167)
+# When updating the policy version, please also update it in
+# src/CMakeLists.template.cmake
+cmake_policy(VERSION 3.15...3.30)
 
 project(amici)
 
@@ -377,7 +370,7 @@ export(
 include(CMakePackageConfigHelpers)
 include(version)
 configure_package_config_file(
-  cmake/AmiciConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+  "cmake/AmiciConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)

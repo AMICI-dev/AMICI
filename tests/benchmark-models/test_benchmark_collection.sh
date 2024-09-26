@@ -87,6 +87,12 @@ script_path=$(cd "$script_path" && pwd)
 
 for model in $models; do
   yaml="${model_dir}"/"${model}"/"${model}".yaml
+
+  # different naming scheme
+  if [[ "$model" == "Bertozzi_PNAS2020" ]]; then
+    yaml="${model_dir}"/"${model}"/problem.yaml
+  fi
+
   amici_model_dir=test_bmc/"${model}"
   mkdir -p "$amici_model_dir"
   cmd_import="amici_import_petab ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
