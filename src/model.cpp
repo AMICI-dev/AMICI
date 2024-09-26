@@ -381,7 +381,7 @@ void Model::initializeSplines() {
     splines_ = fcreate_splines(
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
-    state_.spl_.resize(splines_.size(), 0.0);
+    derived_state_.spl_.resize(splines_.size(), 0.0);
     for (auto& spline : splines_) {
         spline.compute_coefficients();
     }
@@ -2107,7 +2107,7 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), plist(ip), derived_state_.w_.data(),
                 state_.total_cl.data(), state_.stotal_cl.data(),
-                state_.spl_.data(), derived_state_.sspl_.data()
+                derived_state_.spl_.data(), derived_state_.sspl_.data()
             );
         } else {
             fdydp(
@@ -2864,7 +2864,7 @@ void Model::fdJrzdsigma(
 
 void Model::fspl(realtype const t) {
     for (int ispl = 0; ispl < nspl; ispl++)
-        state_.spl_[ispl] = splines_[ispl].get_value(t);
+        derived_state_.spl_[ispl] = splines_[ispl].get_value(t);
 }
 
 void Model::fsspl(realtype const t) {
@@ -2873,7 +2873,7 @@ void Model::fsspl(realtype const t) {
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++)
             sspl_data[ispl + nspl * plist(ip)]
-                = splines_[ispl].get_sensitivity(t, ip, state_.spl_[ispl]);
+                = splines_[ispl].get_sensitivity(t, ip, derived_state_.spl_[ispl]);
     }
 }
 
@@ -2884,7 +2884,7 @@ void Model::fw(realtype const t, realtype const* x, bool include_static) {
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
-       state_.spl_.data(), include_static);
+       derived_state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.w_, ModelQuantity::w, t);
@@ -2911,7 +2911,7 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
             dwdp_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), state_.spl_.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
             derived_state_.sspl_.data(), include_static
         );
 
@@ -2932,7 +2932,7 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
             derived_state_.dwdp_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
             derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), state_.spl_.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
             derived_state_.sspl_.data()
         );
     }
@@ -2964,7 +2964,7 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
             dwdx_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.spl_.data(), include_static
+            derived_state_.spl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
@@ -2983,7 +2983,7 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
         fdwdx(
             derived_state_.dwdx_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(), state_.spl_.data()
+            derived_state_.w_.data(), state_.total_cl.data(), derived_state_.spl_.data()
         );
     }
 
