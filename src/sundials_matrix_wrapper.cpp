@@ -10,9 +10,10 @@
 namespace amici {
 
 SUNMatrixWrapper::SUNMatrixWrapper(
-    sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype
+    sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype,
+    SUNContext sunctx
 )
-    : matrix_(SUNSparseMatrix(M, N, NNZ, sparsetype))
+    : matrix_(M * N != 0 ? SUNSparseMatrix(M, N, NNZ, sparsetype, sunctx) : nullptr)
     , id_(SUNMATRIX_SPARSE)
     , sparsetype_(sparsetype) {
 
@@ -30,8 +31,10 @@ SUNMatrixWrapper::SUNMatrixWrapper(
     assert(N == columns() || !matrix_);
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
-    : matrix_(SUNDenseMatrix(M, N))
+SUNMatrixWrapper::SUNMatrixWrapper(
+    sunindextype M, sunindextype N, SUNContext sunctx_
+)
+    : matrix_(M * N != 0 ? SUNDenseMatrix(M, N, sunctx_) : nullptr)
     , id_(SUNMATRIX_DENSE) {
     if (M && N && !matrix_)
         throw std::bad_alloc();
@@ -42,9 +45,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(
-    sunindextype M, sunindextype ubw, sunindextype lbw
+    sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx_
 )
-    : matrix_(SUNBandMatrix(M, ubw, lbw))
+    : matrix_(SUNBandMatrix(M, ubw, lbw, sunctx_))
     , id_(SUNMATRIX_BAND) {
     if (M && !matrix_)
         throw std::bad_alloc();
@@ -142,7 +145,7 @@ void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT.");
 
-    if (int ret = SUNSparseMatrix_Reallocate(matrix_, NNZ) != SUNMAT_SUCCESS)
+    if (int ret = SUNSparseMatrix_Reallocate(matrix_, NNZ) != SUN_SUCCESS)
         throw std::runtime_error(
             "SUNSparseMatrix_Reallocate failed with "
             "error code "
@@ -158,7 +161,7 @@ void SUNMatrixWrapper::realloc() {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT.");
-    if (int ret = SUNSparseMatrix_Realloc(matrix_) != SUNMAT_SUCCESS)
+    if (int ret = SUNSparseMatrix_Realloc(matrix_) != SUN_SUCCESS)
         throw std::runtime_error(
             "SUNSparseMatrix_Realloc failed with "
             "error code "
@@ -768,6 +771,12 @@ void SUNMatrixWrapper::refresh() {
     update_size();
     if (matrix_id() == SUNMATRIX_SPARSE)
         num_nonzeros_ = SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)];
+}
+
+SUNContext SUNMatrixWrapper::get_ctx() const {
+    if (matrix_)
+        return matrix_->sunctx;
+    return nullptr;
 }
 
 SUNMatrix SUNMatrixWrapper::get() const { return matrix_; }

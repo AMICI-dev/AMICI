@@ -12,30 +12,30 @@
 #include <memory>
 #include <sundials/sundials_dense.h>
 
-constexpr realtype conv_thresh = 1.0;
-
 namespace amici {
 
+constexpr realtype conv_thresh = 1.0;
+
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
-    : delta_(model.nx_solver)
-    , delta_old_(model.nx_solver)
-    , ewt_(model.nx_solver)
-    , ewtQB_(model.nplist())
-    , x_old_(model.nx_solver)
-    , xdot_(model.nx_solver)
-    , sdx_(model.nx_solver, model.nplist())
-    , xB_(model.nJ * model.nx_solver)
-    , xQ_(model.nJ * model.nx_solver)
-    , xQB_(model.nplist())
-    , xQBdot_(model.nplist())
-    , steadystate_mask_(AmiVector(model.get_steadystate_mask()))
+    : delta_(model.nx_solver, sunctx_)
+    , delta_old_(model.nx_solver, sunctx_)
+    , ewt_(model.nx_solver, sunctx_)
+    , ewtQB_(model.nplist(), sunctx_)
+    , x_old_(model.nx_solver, sunctx_)
+    , xdot_(model.nx_solver, sunctx_)
+    , sdx_(model.nx_solver, model.nplist(), sunctx_)
+    , xB_(model.nJ * model.nx_solver, sunctx_)
+    , xQ_(model.nJ * model.nx_solver, sunctx_)
+    , xQB_(model.nplist(), sunctx_)
+    , xQBdot_(model.nplist(), sunctx_)
+    , steadystate_mask_(AmiVector(model.get_steadystate_mask(), sunctx_))
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
-          {INFINITY,                                        // t
-           AmiVector(model.nx_solver),                      // x
-           AmiVector(model.nx_solver),                      // dx
-           AmiVectorArray(model.nx_solver, model.nplist()), // sx
+          {INFINITY,                                                 // t
+           AmiVector(model.nx_solver, sunctx_),                      // x
+           AmiVector(model.nx_solver, sunctx_),                      // dx
+           AmiVectorArray(model.nx_solver, model.nplist(), sunctx_), // sx
            model.getModelState()}
       )
     , // state
@@ -552,8 +552,7 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
                 "steady state computations. Stopping."
             );
         wrms = getWrmsNorm(
-            xQB_, xQBdot_, steadystate_mask_, atol_quad_,
-            rtol_quad_, ewtQB_
+            xQB_, xQBdot_, steadystate_mask_, atol_quad_, rtol_quad_, ewtQB_
         );
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
@@ -563,8 +562,8 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
         else
             updateRightHandSide(model);
         wrms = getWrmsNorm(
-            state_.x, newton_step_conv_ ? delta_ : xdot_,
-            steadystate_mask_, atol_, rtol_, ewt_
+            state_.x, newton_step_conv_ ? delta_ : xdot_, steadystate_mask_,
+            atol_, rtol_, ewt_
         );
     }
     return wrms;
@@ -586,8 +585,8 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
         if (newton_step_conv_)
             newton_solver_->solveLinearSystem(xdot_);
         wrms = getWrmsNorm(
-            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_,
-            rtol_sensi_, ewt_
+            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_, rtol_sensi_,
+            ewt_
         );
         /* ideally this function would report the maximum of all wrms over
          all ip, but for practical purposes we can just report the wrms for

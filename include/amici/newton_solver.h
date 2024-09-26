@@ -110,6 +110,8 @@ class NewtonSolver {
     virtual ~NewtonSolver() = default;
 
   protected:
+    // TODO error handler
+    SUNContext sunctx_;
     /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;
     /** dummy state, attached to linear solver */

@@ -8,6 +8,7 @@
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 #include "amici/symbolic_functions.h"
+#include "amici/vector.h"
 
 #include <cmath>
 

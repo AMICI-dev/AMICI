@@ -15,13 +15,13 @@
 
 #include <sstream>
 
-#define ZERO RCONST(0.0)
-#define ONE RCONST(1.0)
-#define FOUR RCONST(4.0)
+#define ZERO SUN_RCONST(0.0)
+#define ONE SUN_RCONST(1.0)
+#define FOUR SUN_RCONST(4.0)
 
 namespace amici {
 
-// Ensure AMICI options are in sync with Sundials options
+// Ensure AMICI options and return codes are in sync with SUNDIALS
 static_assert(
     (int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS, ""
 );
@@ -35,6 +35,49 @@ static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
 static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
+
+static_assert(
+    amici::AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS"
+);
+static_assert(
+    amici::AMICI_DATA_RETURN == CV_TSTOP_RETURN,
+    "AMICI_DATA_RETURN != CV_TSTOP_RETURN"
+);
+static_assert(
+    amici::AMICI_ROOT_RETURN == CV_ROOT_RETURN,
+    "AMICI_ROOT_RETURN != CV_ROOT_RETURN"
+);
+static_assert(
+    amici::AMICI_ILL_INPUT == CV_ILL_INPUT, "AMICI_ILL_INPUT != CV_ILL_INPUT"
+);
+static_assert(amici::AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
+static_assert(
+    amici::AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP"
+);
+static_assert(
+    amici::AMICI_TOO_MUCH_ACC == CV_TOO_MUCH_ACC,
+    "AMICI_TOO_MUCH_ACC != CV_TOO_MUCH_ACC"
+);
+static_assert(
+    amici::AMICI_TOO_MUCH_WORK == CV_TOO_MUCH_WORK,
+    "AMICI_TOO_MUCH_WORK != CV_TOO_MUCH_WORK"
+);
+static_assert(
+    amici::AMICI_ERR_FAILURE == CV_ERR_FAILURE,
+    "AMICI_ERR_FAILURE != CV_ERR_FAILURE"
+);
+static_assert(
+    amici::AMICI_CONV_FAILURE == CV_CONV_FAILURE,
+    "AMICI_CONV_FAILURE != CV_CONV_FAILURE"
+);
+static_assert(
+    amici::AMICI_LSETUP_FAIL == CV_LSETUP_FAIL,
+    "AMICI_LSETUP_FAIL != CV_LSETUP_FAIL"
+);
+static_assert(
+    amici::AMICI_CONSTR_FAIL == CV_CONSTR_FAIL,
+    "AMICI_CONSTR_FAIL != CV_CONSTR_FAIL"
+);
 
 /*
  * The following static members are callback function to CVODES.
@@ -293,7 +336,7 @@ Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
 void CVodeSolver::allocateSolver() const {
     if (!solver_memory_)
         solver_memory_ = std::unique_ptr<void, std::function<void(void*)>>(
-            CVodeCreate(static_cast<int>(lmm_)),
+            CVodeCreate(static_cast<int>(lmm_), sunctx_),
             [](void* ptr) { CVodeFree(&ptr); }
         );
 }
@@ -402,15 +445,6 @@ void CVodeSolver::setNonLinearSolverB(int const which) const {
     );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetNonlinearSolverB");
-}
-
-void CVodeSolver::setErrHandlerFn() const {
-    int status = CVodeSetErrHandlerFn(
-        solver_memory_.get(), wrapErrHandlerFn,
-        reinterpret_cast<void*>(const_cast<CVodeSolver*>(this))
-    );
-    if (status != CV_SUCCESS)
-        throw CvodeException(status, "CVodeSetErrHandlerFn");
 }
 
 void CVodeSolver::setUserData() const {

@@ -130,7 +130,7 @@ elseif(AMICI_TRY_ENABLE_HDF5)
 endif()
 
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
-set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src;${VENDORED_SUNDIALS_DIR}/src/sundials")
 # Handle different sundials build/install dirs, depending on whether we are
 # building the Python extension only or the full C++ interface
 if(AMICI_PYTHON_BUILD_EXT_ONLY)

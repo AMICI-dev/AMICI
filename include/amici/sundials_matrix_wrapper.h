@@ -32,25 +32,31 @@ class SUNMatrixWrapper {
      * @param N Number of columns
      * @param NNZ Number of nonzeros
      * @param sparsetype Sparse type
+     * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(
-        sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype
+    explicit SUNMatrixWrapper(
+        sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype,
+        SUNContext sunctx
     );
 
     /**
      * @brief Create dense matrix. See SUNDenseMatrix in sunmatrix_dense.h
      * @param M Number of rows
      * @param N Number of columns
+     * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(sunindextype M, sunindextype N);
+    SUNMatrixWrapper(sunindextype M, sunindextype N, SUNContext sunctx_);
 
     /**
      * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
      * @param M Number of rows and columns
      * @param ubw Upper bandwidth
      * @param lbw Lower bandwidth
+     * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(sunindextype M, sunindextype ubw, sunindextype lbw);
+    SUNMatrixWrapper(
+        sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx_
+    );
 
     /**
      * @brief Create sparse matrix from dense or banded matrix. See
@@ -494,6 +500,12 @@ class SUNMatrixWrapper {
      */
     void refresh();
 
+    /**
+     * @brief Get SUNDIALS context
+     * @return SUNDIALS context or nullptr if the matrix is empty
+     */
+    SUNContext get_ctx() const;
+
   private:
     /**
      * @brief SUNMatrix to which all methods are applied
@@ -581,12 +593,12 @@ namespace gsl {
  * @param m SUNMatrix
  * @return Created span
  */
-inline span<realtype> make_span(SUNMatrix m) {
+inline span<amici::realtype> make_span(SUNMatrix m) {
     switch (SUNMatGetID(m)) {
     case SUNMATRIX_DENSE:
-        return span<realtype>(SM_DATA_D(m), SM_LDATA_D(m));
+        return span<amici::realtype>(SM_DATA_D(m), SM_LDATA_D(m));
     case SUNMATRIX_SPARSE:
-        return span<realtype>(SM_DATA_S(m), SM_NNZ_S(m));
+        return span<amici::realtype>(SM_DATA_S(m), SM_NNZ_S(m));
     default:
         throw amici::AmiException("Unimplemented SUNMatrix type for make_span");
     }

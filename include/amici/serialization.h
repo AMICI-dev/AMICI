@@ -292,9 +292,16 @@ void serialize(
     Archive& ar, amici::AmiVector& v, unsigned int const /*version*/
 ) {
     if (Archive::is_loading::value) {
-        std::vector<realtype> tmp;
+        std::vector<amici::realtype> tmp;
         ar & tmp;
-        v = amici::AmiVector(tmp);
+        // TODO: how do we get a new sunctx in here??
+        //  for now, create one for construction of the vector, set it to
+        //  nullptr
+        sundials::Context sunctx;
+        v = amici::AmiVector(tmp, sunctx);
+        if (v.getNVector()) {
+            v.getNVector()->sunctx = nullptr;
+        }
     } else {
         auto tmp = v.getVector();
         ar & tmp;

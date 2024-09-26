@@ -3,6 +3,7 @@
 #include <amici/amici.h>
 #include <amici/model.h>
 #include <amici/solver.h>
+#include <amici/vector.h>
 
 #include <sundials/sundials_config.h>  // roundoffs
 #include <sunlinsol/sunlinsol_dense.h> // dense solver
@@ -11,10 +12,11 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(Model const& model)
-    : xdot_(model.nx_solver)
-    , x_(model.nx_solver)
-    , xB_(model.nJ * model.nx_solver)
-    , dxB_(model.nJ * model.nx_solver) {}
+    : sunctx_(sundials::Context())
+    , xdot_(model.nx_solver, sunctx_)
+    , x_(model.nx_solver, sunctx_)
+    , xB_(model.nJ * model.nx_solver, sunctx_)
+    , dxB_(model.nJ * model.nx_solver, sunctx_) {}
 
 std::unique_ptr<NewtonSolver>
 NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
@@ -107,10 +109,10 @@ void NewtonSolver::computeNewtonSensis(
 
 NewtonSolverDense::NewtonSolverDense(Model const& model)
     : NewtonSolver(model)
-    , Jtmp_(model.nx_solver, model.nx_solver)
-    , linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_)) {
+    , Jtmp_(model.nx_solver, model.nx_solver, sunctx_)
+    , linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_, sunctx_)) {
     auto status = SUNLinSolInitialize_Dense(linsol_);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
 }
 
@@ -120,7 +122,7 @@ void NewtonSolverDense::prepareLinearSystem(
     model.fJ(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_);
     Jtmp_.refresh();
     auto status = SUNLinSolSetup_Dense(linsol_, Jtmp_);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
@@ -130,7 +132,7 @@ void NewtonSolverDense::prepareLinearSystemB(
     model.fJB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_);
     Jtmp_.refresh();
     auto status = SUNLinSolSetup_Dense(linsol_, Jtmp_);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
@@ -141,7 +143,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector& rhs) {
     Jtmp_.refresh();
     // last argument is tolerance and does not have any influence on result
 
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }
 
@@ -166,10 +168,10 @@ NewtonSolverDense::~NewtonSolverDense() {
 
 NewtonSolverSparse::NewtonSolverSparse(Model const& model)
     : NewtonSolver(model)
-    , Jtmp_(model.nx_solver, model.nx_solver, model.nnz, CSC_MAT)
-    , linsol_(SUNKLU(x_.getNVector(), Jtmp_)) {
+    , Jtmp_(model.nx_solver, model.nx_solver, model.nnz, CSC_MAT, sunctx_)
+    , linsol_(SUNLinSol_KLU(x_.getNVector(), Jtmp_, sunctx_)) {
     auto status = SUNLinSolInitialize_KLU(linsol_);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
 }
 
@@ -180,7 +182,7 @@ void NewtonSolverSparse::prepareLinearSystem(
     model.fJSparse(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_);
     Jtmp_.refresh();
     auto status = SUNLinSolSetup_KLU(linsol_, Jtmp_);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
@@ -191,7 +193,7 @@ void NewtonSolverSparse::prepareLinearSystemB(
     model.fJSparseB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_);
     Jtmp_.refresh();
     auto status = SUNLinSolSetup_KLU(linsol_, Jtmp_);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
@@ -202,7 +204,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector& rhs) {
     );
     // last argument is tolerance and does not have any influence on result
 
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_KLU");
 }
 
@@ -211,7 +213,7 @@ void NewtonSolverSparse::reinitialize() {
     auto status = SUNLinSol_KLUReInit(
         linsol_, Jtmp_, Jtmp_.capacity(), SUNKLU_REINIT_PARTIAL
     );
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSol_KLUReInit");
 }
 

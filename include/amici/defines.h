@@ -58,6 +58,7 @@ constexpr double pi = M_PI;
 
 constexpr int AMICI_ONEOUTPUT=                 5;
 
+// TODO: still needed? check whether all are still in sync
 // Return codes
 //
 // NOTE: When adding / removing / renaming return codes,
@@ -76,7 +77,7 @@ constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
 constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
-constexpr int AMICI_SINGULAR_JACOBIAN=      -809;
+constexpr int AMICI_SINGULAR_JACOBIAN=     -9987;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
 constexpr int AMICI_NOT_RUN=               -1001;
