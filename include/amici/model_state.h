@@ -43,9 +43,6 @@ struct ModelState {
      * (dimension: nplist)
      */
     std::vector<int> plist;
-
-    /** temporary storage for spline values */
-    std::vector<realtype> spl_;
 };
 
 inline bool operator==(ModelState const& a, ModelState const& b) {
@@ -323,6 +320,18 @@ struct ModelStateDerived {
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: `nx_solver`) */
     AmiVector x_pos_tmp_{0};
+
+    /** temporary storage for spline values */
+    std::vector<realtype> spl_;
+
+    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
+    std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
+
+    /** Sparse dwdw temporary storage (shape `ndwdw`) */
+    SUNMatrixWrapper dwdw_;
+
+    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
+    std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
 };
 
 /**
