@@ -2108,15 +2108,6 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype min_sigma_{50.0};
 
   private:
-    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
-    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
-
-    /** Sparse dwdw temporary storage (shape `ndwdw`) */
-    mutable SUNMatrixWrapper dwdw_;
-
-    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
-    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
-
     /** Recursion */
     int w_recursion_depth_{0};
 
