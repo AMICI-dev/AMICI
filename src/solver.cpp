@@ -130,7 +130,13 @@ Solver::Solver(Solver const& other)
     , max_conv_fails_(other.max_conv_fails_)
     , max_step_size_(other.max_step_size_)
     , maxstepsB_(other.maxstepsB_)
-    , sensi_(other.sensi_) {}
+    , sensi_(other.sensi_) {
+    // AmiVector.setContext()... check for nullptr
+    if(constraints_.data()) {
+    constraints_.sunctx_ = sunctx_;
+    constraints_.getNVector()->sunctx = sunctx_;
+    }
+}
 
 SUNContext Solver::getSunContext() const { return sunctx_; }
 
