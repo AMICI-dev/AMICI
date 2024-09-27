@@ -116,7 +116,7 @@ def get_extensions():
     )
     cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "")
     if cmake_prefix_path:
-        cmake_prefix_path += ":"
+        cmake_prefix_path += ";"
     cmake_prefix_path += "${build_dir}/amici"
     # SUNDIALS
     sundials = CMakeExtension(

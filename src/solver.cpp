@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <memory>
+#include <filesystem>
 
 namespace amici {
 
@@ -25,6 +26,11 @@ void wrapErrHandlerFn(
         buffer, BUF_SIZE, "SUNDIALS ERROR: in %s (%s:%d): %s (%d)", func, file,
         line, msg, err_code
     );
+    // we need a matlab-compatible message ID
+    // i.e. colon separated and only  [A-Za-z0-9_]
+    std::filesystem::path path(file);
+    auto file_stem = path.stem().string();
+
     switch (err_code) {
         // TODO
         /*
@@ -57,7 +63,7 @@ void wrapErrHandlerFn(
     function); break;
     */
      default:
-         snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", file, func);
+         snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", file_stem.c_str(), func);
          break;
      }
 
