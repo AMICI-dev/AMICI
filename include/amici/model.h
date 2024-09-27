@@ -112,10 +112,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
-     * @param pythonGenerated Flag indicating matlab or python wrapping
-     * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
-     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
-     * @param w_recursion_depth Recursion depth of fw
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -123,9 +119,7 @@ class Model : public AbstractModel, public ModelDimensions {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event, bool pythonGenerated = false,
-        int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
-        int w_recursion_depth = 0,
+        std::vector<int> z2event,
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -1458,9 +1452,6 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     std::vector<int> const& getReinitializationStateIdxs() const;
 
-    /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated = false;
-
     /**
      * @brief getter for dxdotdp (matlab generated)
      * @return dxdotdp
@@ -2098,9 +2089,6 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype min_sigma_{50.0};
 
   private:
-    /** Recursion */
-    int w_recursion_depth_{0};
-
     /** Simulation parameters, initial state, etc. */
     SimulationParameters simulation_parameters_;
 

@@ -332,6 +332,9 @@ struct ModelStateDerived {
 
     /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
     std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
+
+    /** Temporary storage for dense dJydy (dimension: `nJ` x `ny`) */
+    SUNMatrixWrapper dJydy_dense_;
 };
 
 /**
