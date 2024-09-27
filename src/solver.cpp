@@ -7,8 +7,8 @@
 #include <sundials/sundials_context.h>
 
 #include <cstdio>
-#include <memory>
 #include <filesystem>
+#include <memory>
 
 namespace amici {
 
@@ -32,40 +32,49 @@ void wrapErrHandlerFn(
     auto file_stem = path.stem().string();
 
     switch (err_code) {
-        // TODO
-        /*
     case 99:
-        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", file_stem.c_str(), func);
         break;
 
-     case AMICI_TOO_MUCH_WORK:
-         snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
-         break;
+    case AMICI_TOO_MUCH_WORK:
+        snprintf(
+            buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", file_stem.c_str(), func
+        );
+        break;
 
-      case AMICI_TOO_MUCH_ACC:
-          snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
-          break;
+    case AMICI_TOO_MUCH_ACC:
+        snprintf(
+            buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", file_stem.c_str(), func
+        );
+        break;
 
-     case AMICI_ERR_FAILURE:
-         snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
-         break;
+    case AMICI_ERR_FAILURE:
+        snprintf(
+            buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", file_stem.c_str(), func
+        );
+        break;
 
-      case AMICI_CONV_FAILURE:
-          snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
-          break;
+    case AMICI_CONV_FAILURE:
+        snprintf(
+            buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", file_stem.c_str(), func
+        );
+        break;
 
-     case AMICI_RHSFUNC_FAIL:
-         snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
-         break;
+    case AMICI_RHSFUNC_FAIL:
+        snprintf(
+            buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", file_stem.c_str(), func
+        );
+        break;
 
-      case AMICI_FIRST_RHSFUNC_ERR:
-          snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module,
-    function); break;
-    */
-     default:
-         snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", file_stem.c_str(), func);
-         break;
-     }
+    case AMICI_FIRST_RHSFUNC_ERR:
+        snprintf(
+            buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", file_stem.c_str(), func
+        );
+        break;
+    default:
+        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", file_stem.c_str(), func);
+        break;
+    }
 
     if (!err_user_data) {
         throw std::runtime_error("eh_data unset");
