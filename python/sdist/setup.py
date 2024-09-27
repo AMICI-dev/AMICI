@@ -45,11 +45,18 @@ def get_extensions():
         f"-DCMAKE_MODULE_PATH={prefix_path.as_posix()}",
     ]
 
+    debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
+        "1",
+        "true",
+    ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
+    build_type = "Debug" if debug_build else "Release"
+
     # SuiteSparse Config
     suitesparse_config = CMakeExtension(
         name="SuiteSparse_config",
         install_prefix="amici",
         source_dir="amici/ThirdParty/SuiteSparse/SuiteSparse_config",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
@@ -69,6 +76,7 @@ def get_extensions():
         name="amd",
         install_prefix="amici",
         source_dir="amici/ThirdParty/SuiteSparse/AMD",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DBUILD_SHARED_LIBS=OFF",
@@ -81,6 +89,7 @@ def get_extensions():
         name="btf",
         install_prefix="amici",
         source_dir="amici/ThirdParty/SuiteSparse/BTF",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DSUITESPARSE_USE_FORTRAN=OFF",
@@ -93,6 +102,7 @@ def get_extensions():
         name="colamd",
         install_prefix="amici",
         source_dir="amici/ThirdParty/SuiteSparse/COLAMD",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DSUITESPARSE_USE_FORTRAN=OFF",
@@ -105,6 +115,7 @@ def get_extensions():
         name="klu",
         install_prefix="amici",
         source_dir="amici/ThirdParty/SuiteSparse/KLU",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DKLU_USE_CHOLMOD=OFF",
@@ -119,6 +130,7 @@ def get_extensions():
         name="sundials",
         install_prefix="amici",
         source_dir="amici/ThirdParty/sundials",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DBUILD_ARKODE=OFF",
@@ -141,14 +153,11 @@ def get_extensions():
         ],
     )
     # AMICI
-    debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
-        "1",
-        "true",
-    ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
     amici_ext = CMakeExtension(
         name="amici",
         install_prefix="amici",
         source_dir="amici",
+        cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-Werror=dev"
@@ -159,7 +168,6 @@ def get_extensions():
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
         ],
-        cmake_build_type="Debug" if debug_build else "Release",
     )
     # Order matters!
     return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_ext]
