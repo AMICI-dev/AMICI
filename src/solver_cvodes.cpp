@@ -839,7 +839,8 @@ void CVodeSolver::solveB(realtype const tBout, int const itaskB) const {
     if (force_reinit_postprocess_B_)
         reInitPostProcessB(tBout);
     int status = CVodeB(solver_memory_.get(), tBout, itaskB);
-    if (status != CV_SUCCESS)
+    // This does not seem to be documented, but CVodeB may also return CV_TSTOP_RETURN
+    if (status != CV_SUCCESS && status != CV_TSTOP_RETURN)
         throw IntegrationFailureB(status, tBout);
     solver_was_called_B_ = true;
 }
