@@ -13,7 +13,7 @@
 namespace amici {
 
 void wrapErrHandlerFn(
-    int line, char const* func, char const* file, char const* msg,
+    [[maybe_unused]] int line, char const* func, char const* file, char const* msg,
     SUNErrCode err_code, void* err_user_data, [[maybe_unused]] SUNContext sunctx
 ) {
     constexpr int BUF_SIZE = 250;
@@ -22,10 +22,16 @@ void wrapErrHandlerFn(
     static_assert(
         std::is_same<SUNErrCode, int>::value, "Must update format string"
     );
+#ifdef NDEBUG
     snprintf(
-        buffer, BUF_SIZE, "SUNDIALS ERROR: in %s (%s:%d): %s (%d)", func, file,
-        line, msg, err_code
+        buffer, BUF_SIZE, "%s:%d: %s (%d)", file,
+        line, msg , err_code
     );
+#else
+    snprintf(
+        buffer, BUF_SIZE, "%s", msg
+    );
+#endif
     // we need a matlab-compatible message ID
     // i.e. colon separated and only  [A-Za-z0-9_]
     std::filesystem::path path(file);
