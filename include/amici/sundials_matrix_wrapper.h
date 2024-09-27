@@ -45,7 +45,7 @@ class SUNMatrixWrapper {
      * @param N Number of columns
      * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(sunindextype M, sunindextype N, SUNContext sunctx_);
+    SUNMatrixWrapper(sunindextype M, sunindextype N, SUNContext sunctx);
 
     /**
      * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
@@ -55,7 +55,7 @@ class SUNMatrixWrapper {
      * @param sunctx SUNDIALS context
      */
     SUNMatrixWrapper(
-        sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx_
+        sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx
     );
 
     /**

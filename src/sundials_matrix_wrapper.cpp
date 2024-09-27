@@ -13,7 +13,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(
     sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype,
     SUNContext sunctx
 )
-    : matrix_(M * N != 0 ? SUNSparseMatrix(M, N, NNZ, sparsetype, sunctx) : nullptr)
+    : matrix_(
+          M * N != 0 ? SUNSparseMatrix(M, N, NNZ, sparsetype, sunctx) : nullptr
+      )
     , id_(SUNMATRIX_SPARSE)
     , sparsetype_(sparsetype) {
 
@@ -32,9 +34,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(
-    sunindextype M, sunindextype N, SUNContext sunctx_
+    sunindextype M, sunindextype N, SUNContext sunctx
 )
-    : matrix_(M * N != 0 ? SUNDenseMatrix(M, N, sunctx_) : nullptr)
+    : matrix_(M * N != 0 ? SUNDenseMatrix(M, N, sunctx) : nullptr)
     , id_(SUNMATRIX_DENSE) {
     if (M && N && !matrix_)
         throw std::bad_alloc();
@@ -45,9 +47,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(
-    sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx_
+    sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx
 )
-    : matrix_(SUNBandMatrix(M, ubw, lbw, sunctx_))
+    : matrix_(SUNBandMatrix(M, ubw, lbw, sunctx))
     , id_(SUNMATRIX_BAND) {
     if (M && !matrix_)
         throw std::bad_alloc();

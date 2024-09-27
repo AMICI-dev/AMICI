@@ -69,6 +69,10 @@ class Solver {
      */
     virtual Solver* clone() const = 0;
 
+    /**
+     * @brief Get SUNDIALS context
+     * @return context
+     */
     SUNContext getSunContext() const;
 
     /**

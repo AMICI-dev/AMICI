@@ -130,7 +130,8 @@ elseif(AMICI_TRY_ENABLE_HDF5)
 endif()
 
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
-set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src;${VENDORED_SUNDIALS_DIR}/src/sundials")
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS
+    "${VENDORED_SUNDIALS_DIR}/src;${VENDORED_SUNDIALS_DIR}/src/sundials")
 # Handle different sundials build/install dirs, depending on whether we are
 # building the Python extension only or the full C++ interface
 if(AMICI_PYTHON_BUILD_EXT_ONLY)
@@ -224,7 +225,14 @@ set(AMICI_CXX_OPTIONS
     ""
     CACHE STRING "C++ options for libamici (semicolon-separated)")
 target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
-
+set_property(
+  SOURCE src/solver_cvodes.cpp
+  APPEND
+  PROPERTY INCLUDE_DIRECTORIES "${SUNDIALS_PRIVATE_INCLUDE_DIRS}")
+set_property(
+  SOURCE src/solver_idas.cpp
+  APPEND
+  PROPERTY INCLUDE_DIRECTORIES "${SUNDIALS_PRIVATE_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} version)
 
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
@@ -237,8 +245,7 @@ target_include_directories(
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
          $<BUILD_INTERFACE:${GSL_LITE_INCLUDE_DIR}>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_DATADIR}/amici/swig>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>
-  PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>)
 
 if("$ENV{ENABLE_AMICI_DEBUGGING}"
    OR "$ENV{ENABLE_GCOV_COVERAGE}"

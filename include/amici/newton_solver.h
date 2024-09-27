@@ -110,6 +110,7 @@ class NewtonSolver {
     virtual ~NewtonSolver() = default;
 
   protected:
+    /** SUNDIALS context */
     // TODO error handler
     SUNContext sunctx_;
     /** dummy rhs, used as dummy argument when computing J and JB */

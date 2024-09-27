@@ -25,9 +25,9 @@ void wrapErrHandlerFn(
         buffer, BUF_SIZE, "SUNDIALS ERROR: in %s (%s:%d): %s (%d)", func, file,
         line, msg, err_code
     );
-    // TODO
-    /*
-    switch (error_code) {
+    switch (err_code) {
+        // TODO
+        /*
     case 99:
         snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
         break;
@@ -55,12 +55,12 @@ void wrapErrHandlerFn(
       case AMICI_FIRST_RHSFUNC_ERR:
           snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module,
     function); break;
-
+    */
      default:
-         snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
+         snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", file, func);
          break;
      }
-     */
+
     if (!err_user_data) {
         throw std::runtime_error("eh_data unset");
     }
