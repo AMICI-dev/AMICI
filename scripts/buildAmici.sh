@@ -49,10 +49,14 @@ fi
 export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
 python3 -m pip install numpy
 
+suitesparse_root="${amici_path}/ThirdParty/SuiteSparse"
+
 ${cmake} \
   -Wdev -DAMICI_CXX_OPTIONS="-Wall;-Wextra${extra_cxx_flags}" \
   -DCMAKE_BUILD_TYPE=$build_type \
-  -DPython3_EXECUTABLE="$(command -v python3)" ..
+  -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH};${suitesparse_root}/install" \
+  -DPython3_EXECUTABLE="$(command -v python3)" \
+   ..
 
 # build, with or without sonarcloud wrapper
 if [ "${CI_SONARCLOUD:-}" = "TRUE" ]; then
