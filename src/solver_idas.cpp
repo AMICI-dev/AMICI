@@ -774,8 +774,10 @@ void IDASolver::solveB(realtype const tBout, int const itaskB) const {
     // This does not seem to be documented, but IDASolveB may also return
     // IDA_TSTOP_RETURN
     // https://github.com/LLNL/sundials/issues/580
-    if (status != IDA_SUCCESS && status != IDA_TSTOP_RETURN)
+    if (status != IDA_SUCCESS && status != IDA_TSTOP_RETURN) {
+        gsl_Expects(status < 0);
         throw IntegrationFailure(status, tBout);
+    }
 }
 
 void IDASolver::setMaxNumStepsB(int const which, long int const mxstepsB)
