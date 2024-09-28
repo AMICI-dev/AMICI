@@ -415,8 +415,6 @@ class AmiVectorArray {
     void copy(AmiVectorArray const& other);
 
   private:
-    /** SUNDIALS context */
-    SUNContext sunctx_{nullptr};
 
     /** main data storage */
     std::vector<AmiVector> vec_array_;

@@ -73,8 +73,7 @@ AmiVector::~AmiVector() {
 AmiVectorArray::AmiVectorArray(
     long int length_inner, long int length_outer, SUNContext sunctx
 )
-    : sunctx_(sunctx)
-    , vec_array_(length_outer, AmiVector(length_inner, sunctx)) {
+    : vec_array_(length_outer, AmiVector(length_inner, sunctx)) {
     nvec_array_.resize(length_outer);
     for (int idx = 0; idx < length_outer; idx++) {
         nvec_array_.at(idx) = vec_array_.at(idx).getNVector();

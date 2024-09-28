@@ -38,7 +38,12 @@ void wrapErrHandlerFn(
     std::filesystem::path path(file);
     auto file_stem = path.stem().string();
 
+    // Error code to string. Remove 'AMICI_' prefix.
     auto err_code_str = simulation_status_to_str(err_code);
+    constexpr std::string_view err_code_prefix = "AMICI_";
+    if (err_code_str.substr(0, err_code_prefix.size()) == err_code_prefix)
+        err_code_str = err_code_str.substr(err_code_prefix.size());
+
     snprintf(
         id_buffer, BUF_SIZE, "%s:%s:%s", file_stem.c_str(), func,
         err_code_str.c_str()
