@@ -60,7 +60,7 @@
 #define SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_ASSUME
 /* #undef SUNDIALS_C_COMPILER_HAS_BUILTIN_ASSUME */
 /* #undef SUNDIALS_C_COMPILER_HAS_ASSUME */
-#define SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_UNUSED
+/* #define SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_UNUSED */
 
 /* Define precision of SUNDIALS data type 'sunrealtype'
  * Depending on the precision level, one of the following
