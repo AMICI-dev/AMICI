@@ -38,9 +38,9 @@ if (NOT (KLU_INCLUDE_DIR OR KLU_LIBRARY_DIR OR KLU_LIBRARY))
   if(TARGET SuiteSparse::KLU)
     if(NOT TARGET SUNDIALS::KLU)
       # AMICI
-      get_target_property(klu_original SuiteSparse::KLU ALIASED_TARGET)
-      if (klu_original)
-          add_library(SUNDIALS::KLU ALIAS ${klu_original})
+      get_target_property(klu_aliased_target SuiteSparse::KLU ALIASED_TARGET)
+      if (klu_aliased_target)
+          add_library(SUNDIALS::KLU ALIAS ${klu_aliased_target})
       else()
           add_library(SUNDIALS::KLU ALIAS SuiteSparse::KLU)
       endif()
@@ -77,9 +77,7 @@ if (KLU_LIBRARY)
 else ()
     # find library with user provided directory path
     set(KLU_LIBRARY_NAME klu)
-    # AMICI
-    # find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    find_library(KLU_LIBRARY NAMES ${KLU_LIBRARY_NAME} klu_static.lib klu.lib PATHS ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
 endif ()
 mark_as_advanced(KLU_LIBRARY)
 
