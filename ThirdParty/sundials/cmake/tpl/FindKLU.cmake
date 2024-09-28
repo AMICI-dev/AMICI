@@ -37,7 +37,7 @@ if (NOT (KLU_INCLUDE_DIR OR KLU_LIBRARY_DIR OR KLU_LIBRARY))
 
   if(TARGET SuiteSparse::KLU)
     if(NOT TARGET SUNDIALS::KLU)
-      # AMICI
+      # AMICI -- https://github.com/LLNL/sundials/issues/579
       get_target_property(klu_aliased_target SuiteSparse::KLU ALIASED_TARGET)
       if (klu_aliased_target)
           add_library(SUNDIALS::KLU ALIAS ${klu_aliased_target})
