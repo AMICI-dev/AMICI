@@ -81,6 +81,10 @@ def get_extensions():
     cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "")
     if cmake_prefix_path:
         cmake_prefix_path += ";"
+    # We need the potentially temporary and unpredictable build path
+    #  to use artifacts from other extensions here. `${build_dir}` will
+    #  be replaced by the actual path by `AmiciBuildCMakeExtension`
+    #  before being passed to CMake.
     cmake_prefix_path += "${build_dir}/amici"
     # SUNDIALS
     sundials = CMakeExtension(
@@ -101,12 +105,6 @@ def get_extensions():
             "-DEXAMPLES_INSTALL=OFF",
             "-DENABLE_KLU=ON",
             f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
-            # We need the potentially temporary and unpredictable build path
-            #  to use artifacts from other extensions here. `${build_dir}` will
-            #  be replaced by the actual path by `AmiciBuildCMakeExtension`
-            #  before being passed to CMake.
-            "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
-            "-DKLU_INCLUDE_DIR='${build_dir}/amici/include/suitesparse'",
         ],
     )
     # AMICI
