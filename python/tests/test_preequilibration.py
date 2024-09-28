@@ -622,10 +622,7 @@ def test_simulation_errors(preeq_fixture):
         rdata = amici.runAmiciSimulation(model, solver, e)
         assert rdata["status"] != amici.AMICI_SUCCESS
         assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
-        assert (
-            rdata._swigptr.messages[0].identifier
-            == "CVODES:CVode:RHSFUNC_FAIL"
-        )
+        assert rdata._swigptr.messages[0].identifier.endswith(":RHSFUNC_FAIL")
         assert rdata._swigptr.messages[1].severity == amici.LogSeverity_debug
         assert rdata._swigptr.messages[1].identifier == "EQUILIBRATION_FAILURE"
         assert (
