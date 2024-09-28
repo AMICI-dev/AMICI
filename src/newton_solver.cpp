@@ -11,12 +11,11 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(Model const& model)
-    : sunctx_(sundials::Context())
-    , xdot_(model.nx_solver, sunctx_)
-    , x_(model.nx_solver, sunctx_)
-    , xB_(model.nJ * model.nx_solver, sunctx_)
-    , dxB_(model.nJ * model.nx_solver, sunctx_) {}
+NewtonSolver::NewtonSolver(Model const& model, SUNContext sunctx)
+    : xdot_(model.nx_solver, sunctx)
+    , x_(model.nx_solver, sunctx)
+    , xB_(model.nJ * model.nx_solver, sunctx)
+    , dxB_(model.nJ * model.nx_solver, sunctx) {}
 
 std::unique_ptr<NewtonSolver>
 NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
@@ -27,7 +26,7 @@ NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
 
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
-        solver.reset(new NewtonSolverDense(model));
+        solver.reset(new NewtonSolverDense(model, simulationSolver.getSunContext()));
         break;
 
     case LinearSolver::band:
@@ -56,7 +55,7 @@ NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
     case LinearSolver::SuperLUMT:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     case LinearSolver::KLU:
-        solver.reset(new NewtonSolverSparse(model));
+        solver.reset(new NewtonSolverSparse(model, simulationSolver.getSunContext()));
         break;
     default:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
@@ -107,10 +106,10 @@ void NewtonSolver::computeNewtonSensis(
     }
 }
 
-NewtonSolverDense::NewtonSolverDense(Model const& model)
-    : NewtonSolver(model)
-    , Jtmp_(model.nx_solver, model.nx_solver, sunctx_)
-    , linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_, sunctx_)) {
+NewtonSolverDense::NewtonSolverDense(Model const& model, SUNContext sunctx)
+    : NewtonSolver(model, sunctx)
+    , Jtmp_(model.nx_solver, model.nx_solver, sunctx)
+    , linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_, sunctx)) {
     auto status = SUNLinSolInitialize_Dense(linsol_);
     if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
@@ -156,7 +155,7 @@ bool NewtonSolverDense::is_singular(Model& model, SimulationState const& state)
     // dense solver doesn't have any implementation for rcond/condest, so use
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
-    NewtonSolverSparse sparse_solver(model);
+    NewtonSolverSparse sparse_solver(model, Jtmp_.get_ctx());
     sparse_solver.prepareLinearSystem(model, state);
     return sparse_solver.is_singular(model, state);
 }
@@ -166,10 +165,10 @@ NewtonSolverDense::~NewtonSolverDense() {
         SUNLinSolFree_Dense(linsol_);
 }
 
-NewtonSolverSparse::NewtonSolverSparse(Model const& model)
-    : NewtonSolver(model)
-    , Jtmp_(model.nx_solver, model.nx_solver, model.nnz, CSC_MAT, sunctx_)
-    , linsol_(SUNLinSol_KLU(x_.getNVector(), Jtmp_, sunctx_)) {
+NewtonSolverSparse::NewtonSolverSparse(Model const& model, SUNContext sunctx)
+    : NewtonSolver(model, sunctx)
+    , Jtmp_(model.nx_solver, model.nx_solver, model.nnz, CSC_MAT, sunctx)
+    , linsol_(SUNLinSol_KLU(x_.getNVector(), Jtmp_, sunctx)) {
     auto status = SUNLinSolInitialize_KLU(linsol_);
     if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");

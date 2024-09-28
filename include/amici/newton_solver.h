@@ -27,15 +27,16 @@ class NewtonSolver {
      * model
      *
      * @param model pointer to the model object
+     * @param sunctx SUNDIALS context
      */
-    explicit NewtonSolver(Model const& model);
+    explicit NewtonSolver(Model const& model, SUNContext sunctx);
 
     /**
      * @brief Factory method to create a NewtonSolver based on linsolType
      *
      * @param simulationSolver solver with settings
      * @param model pointer to the model instance
-     * @return solver NewtonSolver according to the specified linsolType
+     * @param sunctx SUNDIALS context
      */
     static std::unique_ptr<NewtonSolver>
     getSolver(Solver const& simulationSolver, Model const& model);
@@ -110,9 +111,6 @@ class NewtonSolver {
     virtual ~NewtonSolver() = default;
 
   protected:
-    /** SUNDIALS context */
-    // TODO error handler
-    SUNContext sunctx_;
     /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;
     /** dummy state, attached to linear solver */
@@ -136,8 +134,9 @@ class NewtonSolverDense : public NewtonSolver {
      * @brief constructor for sparse solver
      *
      * @param model model instance that provides problem dimensions
+     * @param sunctx SUNDIALS context
      */
-    explicit NewtonSolverDense(Model const& model);
+    explicit NewtonSolverDense(Model const& model, SUNContext sunctx);
 
     NewtonSolverDense(NewtonSolverDense const&) = delete;
 
@@ -177,8 +176,9 @@ class NewtonSolverSparse : public NewtonSolver {
      * @brief constructor for dense solver
      *
      * @param model model instance that provides problem dimensions
+     * @param sunctx SUNDIALS context
      */
-    explicit NewtonSolverSparse(Model const& model);
+    explicit NewtonSolverSparse(Model const& model, SUNContext sunctx);
 
     NewtonSolverSparse(NewtonSolverSparse const&) = delete;
 
