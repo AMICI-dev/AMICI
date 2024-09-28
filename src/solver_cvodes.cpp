@@ -78,6 +78,14 @@ static_assert(
     amici::AMICI_CONSTR_FAIL == CV_CONSTR_FAIL,
     "AMICI_CONSTR_FAIL != CV_CONSTR_FAIL"
 );
+static_assert(
+    amici::AMICI_RHSFUNC_FAIL == CV_RHSFUNC_FAIL,
+    "AMICI_RHSFUNC_FAIL != CV_RHSFUNC_FAIL"
+);
+static_assert(
+    amici::AMICI_FIRST_RHSFUNC_ERR == CV_FIRST_RHSFUNC_ERR,
+    "AMICI_FIRST_RHSFUNC_ERR != CV_FIRST_RHSFUNC_ERR"
+);
 
 /*
  * The following static members are callback function to CVODES.

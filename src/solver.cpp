@@ -13,8 +13,9 @@
 namespace amici {
 
 void wrapErrHandlerFn(
-    [[maybe_unused]] int line, char const* func, char const* file, char const* msg,
-    SUNErrCode err_code, void* err_user_data, [[maybe_unused]] SUNContext sunctx
+    [[maybe_unused]] int line, char const* func, char const* file,
+    char const* msg, SUNErrCode err_code, void* err_user_data,
+    [[maybe_unused]] SUNContext sunctx
 ) {
     constexpr int BUF_SIZE = 250;
     char buffer[BUF_SIZE];
@@ -23,14 +24,9 @@ void wrapErrHandlerFn(
         std::is_same<SUNErrCode, int>::value, "Must update format string"
     );
 #ifdef NDEBUG
-    snprintf(
-        buffer, BUF_SIZE, "%s:%d: %s (%d)", file,
-        line, msg , err_code
-    );
+    snprintf(buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
 #else
-    snprintf(
-        buffer, BUF_SIZE, "%s", msg
-    );
+    snprintf(buffer, BUF_SIZE, "%s", msg);
 #endif
     // we need a matlab-compatible message ID
     // i.e. colon separated and only  [A-Za-z0-9_]
@@ -132,9 +128,9 @@ Solver::Solver(Solver const& other)
     , maxstepsB_(other.maxstepsB_)
     , sensi_(other.sensi_) {
     // AmiVector.setContext()... check for nullptr
-    if(constraints_.data()) {
-    constraints_.sunctx_ = sunctx_;
-    constraints_.getNVector()->sunctx = sunctx_;
+    if (constraints_.data()) {
+        constraints_.sunctx_ = sunctx_;
+        constraints_.getNVector()->sunctx = sunctx_;
     }
 }
 

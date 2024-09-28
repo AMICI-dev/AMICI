@@ -621,16 +621,18 @@ def test_simulation_errors(preeq_fixture):
     for e in [edata_preeq, edata]:
         rdata = amici.runAmiciSimulation(model, solver, e)
         assert rdata["status"] != amici.AMICI_SUCCESS
-        assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[0].identifier.endswith(":RHSFUNC_FAIL")
-        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[1].identifier == "EQUILIBRATION_FAILURE"
-        assert (
-            "exceedingly long simulation time"
-            in rdata._swigptr.messages[1].message
-        )
-        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_error
-        assert rdata._swigptr.messages[2].identifier == "OTHER"
+        messages = []
+        # remove repeated RHSFUNC_FAIL messages
+        for message in rdata._swigptr.messages:
+            if not messages or message.message != messages[-1].message:
+                messages.append(message)
+        assert messages[0].severity == amici.LogSeverity_debug
+        assert messages[0].identifier.endswith(":RHSFUNC_FAIL")
+        assert messages[1].severity == amici.LogSeverity_debug
+        assert messages[1].identifier == "EQUILIBRATION_FAILURE"
+        assert "exceedingly long simulation time" in messages[1].message
+        assert messages[2].severity == amici.LogSeverity_error
+        assert messages[2].identifier == "OTHER"
 
 
 def test_get_model_for_preeq(preeq_fixture):
