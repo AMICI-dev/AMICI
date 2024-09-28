@@ -378,15 +378,6 @@ class SteadystateProblem {
      */
     void getNewtonStep(Model& model);
 
-    /**
-     * @brief SUNDIALS context.
-     *
-     * We use a different context here, because we might
-     * use a different solver than the one used for the simulation, and we
-     * shouldn't use multiple solvers on the same context.
-     */
-    // TODO: attach error handler?
-    sundials::Context sunctx_;
     /** newton step */
     AmiVector delta_;
     /** previous newton step */

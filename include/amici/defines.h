@@ -56,9 +56,6 @@ constexpr double pi = M_PI;
 
 // clang-format off
 
-constexpr int AMICI_ONEOUTPUT=                 5;
-
-// TODO: still needed? check whether all are still in sync
 // Return codes
 //
 // NOTE: When adding / removing / renaming return codes,
@@ -73,6 +70,8 @@ constexpr int AMICI_LSETUP_FAIL=              -6;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
 constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
 constexpr int AMICI_CONSTR_FAIL=             -15;
+constexpr int AMICI_CVODES_CONSTR_FAIL=      -15;
+constexpr int AMICI_IDAS_CONSTR_FAIL=        -11;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;

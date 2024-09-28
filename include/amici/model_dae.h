@@ -50,7 +50,7 @@ class Model_DAE : public Model {
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
               state_independent_events
           ) {
-        auto sunctx = derived_state_.x_pos_tmp_.sunctx_;
+        SUNContext sunctx = derived_state_.sunctx_;
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())

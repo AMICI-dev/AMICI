@@ -40,29 +40,31 @@ class AmiVector {
      */
     AmiVector() = default;
 
-    /** Creates an std::vector<realtype> and attaches the
+    /**
+     * @brief Construct empty vector of given size
+     *
+     * Creates an std::vector<realtype> and attaches the
      * data pointer to a newly created N_Vector_Serial.
      * Using N_VMake_Serial ensures that the N_Vector
      * module does not try to deallocate the data vector
      * when calling N_VDestroy_Serial
-     * @brief empty constructor
      * @param length number of elements in vector
      * @param sunctx SUNDIALS context
      */
     explicit AmiVector(long int const length, SUNContext sunctx)
-        : sunctx_(sunctx)
-        , vec_(static_cast<decltype(vec_)::size_type>(length), 0.0)
+        : vec_(static_cast<decltype(vec_)::size_type>(length), 0.0)
         , nvec_(N_VMake_Serial(length, vec_.data(), sunctx)) {}
 
-    /** Moves data from std::vector and constructs an nvec that points to the
+    /**
+     * @brief Constructor from std::vector
+     *
+     * Moves data from std::vector and constructs an nvec that points to the
      * data
-     * @brief constructor from std::vector,
      * @param rvec vector from which the data will be moved
      * @param sunctx SUNDIALS context
      */
     explicit AmiVector(std::vector<realtype> rvec, SUNContext sunctx)
-        : sunctx_(sunctx)
-        , vec_(std::move(rvec))
+        : vec_(std::move(rvec))
         , nvec_(N_VMake_Serial(
               gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
           )) {}
@@ -80,8 +82,7 @@ class AmiVector {
      * @param vold vector from which the data will be copied
      */
     AmiVector(AmiVector const& vold)
-        : sunctx_(vold.sunctx_)
-        , vec_(vold.vec_) {
+        : vec_(vold.vec_) {
         if (vold.nvec_ == nullptr) {
             nvec_ = nullptr;
             return;
@@ -97,10 +98,9 @@ class AmiVector {
      * @param other vector from which the data will be moved
      */
     AmiVector(AmiVector&& other) noexcept
-        : sunctx_(other.sunctx_)
+        : vec_(std::move(other.vec_))
         , nvec_(nullptr) {
-        vec_ = std::move(other.vec_);
-        synchroniseNVector();
+        synchroniseNVector(other.get_ctx());
     }
 
     /**
@@ -249,8 +249,26 @@ class AmiVector {
         Archive& ar, AmiVector& s, unsigned int version
     );
 
-    /** SUNDIALS context */
-    SUNContext sunctx_{nullptr};
+    /**
+     * @brief Get SUNContext
+     * @return The current SUNContext or nullptr, if this AmiVector is empty
+     */
+    SUNContext get_ctx() const {
+        return nvec_ == nullptr ? nullptr : nvec_->sunctx;
+    }
+
+    /**
+     * @brief Set SUNContext
+     *
+     * If this AmiVector is non-empty, changes the current SUNContext of the
+     * associated N_Vector. If empty, do nothing.
+     *
+     * @param ctx SUNDIALS context to set
+     */
+    void set_ctx(SUNContext ctx) {
+        if (nvec_)
+            nvec_->sunctx = ctx;
+    }
 
   private:
     /** main data storage */
@@ -261,8 +279,9 @@ class AmiVector {
 
     /**
      * @brief reconstructs nvec such that data pointer points to vec data array
+     * @param sunctx SUNDIALS context
      */
-    void synchroniseNVector();
+    void synchroniseNVector(SUNContext sunctx);
 };
 
 /**
@@ -395,10 +414,10 @@ class AmiVectorArray {
      */
     void copy(AmiVectorArray const& other);
 
+  private:
     /** SUNDIALS context */
     SUNContext sunctx_{nullptr};
 
-  private:
     /** main data storage */
     std::vector<AmiVector> vec_array_;
 

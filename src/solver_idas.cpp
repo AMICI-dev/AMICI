@@ -65,9 +65,11 @@ static_assert(
     amici::AMICI_LSETUP_FAIL == IDA_LSETUP_FAIL,
     "AMICI_LSETUP_FAIL != IDA_LSETUP_FAIL"
 );
-// FIXME: this does not match CVODE, we need separate return values
-// static_assert(amici::AMICI_CONSTR_FAIL == IDA_CONSTR_FAIL, "AMICI_CONSTR_FAIL
-// != IDA_CONSTR_FAIL");
+// This does not match the CVODE code, we need separate return values
+static_assert(
+    amici::AMICI_IDAS_CONSTR_FAIL == IDA_CONSTR_FAIL,
+    "AMICI_IDAS_CONSTR_FAIL != IDA_CONSTR_FAIL"
+);
 
 /*
  * The following static members are callback function to IDAS.

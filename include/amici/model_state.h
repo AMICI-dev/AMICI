@@ -208,8 +208,6 @@ struct ModelStateDerived {
      * We could pass the solver's context to the model during initialize() and
      * only create ModelStateDerived there, but this caused issue in tests with
      * FSA for unclear reasons.
-     * TODO: Do we need to attach an error handler here? Not sure if
-     * NVector and SUNMatrix would even use it.
      */
     sundials::Context sunctx_;
 

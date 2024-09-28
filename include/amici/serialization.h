@@ -19,8 +19,13 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 
-/** @file serialization.h Helper functions and forward declarations for
- * boost::serialization */
+/**
+ * @file serialization.h Helper functions and forward declarations for
+ * boost::serialization
+ *
+ * FIXME: Many of the serialization functions seem to be outdated and miss
+ * some fields.
+ */
 namespace boost {
 namespace serialization {
 
@@ -284,6 +289,10 @@ void serialize(
 
 /**
  * @brief Serialize AmiVector to a boost archive
+ *
+ * NOTE: The deserialized AmiVector/NVector will not have a valid SUNContext.
+ *  This needs to be set afterwards.
+ *
  * @param ar archive
  * @param v AmiVector
  */
@@ -294,14 +303,9 @@ void serialize(
     if (Archive::is_loading::value) {
         std::vector<amici::realtype> tmp;
         ar & tmp;
-        // TODO: how do we get a new sunctx in here??
-        //  for now, create one for construction of the vector, set it to
-        //  nullptr
         sundials::Context sunctx;
         v = amici::AmiVector(tmp, sunctx);
-        if (v.getNVector()) {
-            v.getNVector()->sunctx = nullptr;
-        }
+        v.set_ctx(sunctx);
     } else {
         auto tmp = v.getVector();
         ar & tmp;

@@ -6,9 +6,8 @@
 namespace amici {
 
 AmiVector& AmiVector::operator=(AmiVector const& other) {
-    sunctx_ = other.sunctx_;
     vec_ = other.vec_;
-    synchroniseNVector();
+    synchroniseNVector(other.get_ctx());
     return *this;
 }
 
@@ -56,13 +55,13 @@ void AmiVector::copy(AmiVector const& other) {
     std::copy(other.vec_.begin(), other.vec_.end(), vec_.begin());
 }
 
-void AmiVector::synchroniseNVector() {
+void AmiVector::synchroniseNVector(SUNContext sunctx) {
     if (nvec_)
         N_VDestroy_Serial(nvec_);
     nvec_ = vec_.empty()
                 ? nullptr
                 : N_VMake_Serial(
-                      gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx_
+                      gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
                   );
 }
 

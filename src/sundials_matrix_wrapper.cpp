@@ -149,8 +149,7 @@ void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
 
     if (int ret = SUNSparseMatrix_Reallocate(matrix_, NNZ) != SUN_SUCCESS)
         throw std::runtime_error(
-            "SUNSparseMatrix_Reallocate failed with "
-            "error code "
+            "SUNSparseMatrix_Reallocate failed with error code "
             + std::to_string(ret) + "."
         );
 
@@ -165,8 +164,7 @@ void SUNMatrixWrapper::realloc() {
                                     "CSR_MAT.");
     if (int ret = SUNSparseMatrix_Realloc(matrix_) != SUN_SUCCESS)
         throw std::runtime_error(
-            "SUNSparseMatrix_Realloc failed with "
-            "error code "
+            "SUNSparseMatrix_Realloc failed with error code "
             + std::to_string(ret) + "."
         );
 
@@ -510,7 +508,7 @@ void SUNMatrixWrapper::sparse_sum(std::vector<SUNMatrixWrapper> const& mats) {
 
     for (acol = 0; acol < columns(); acol++) {
         set_indexptr(acol, nnz); /* column j of A starts here */
-        for (auto& mat : mats)
+        for (auto const& mat : mats)
             nnz = mat.scatter(
                 acol, 1.0, w.data(), gsl::make_span(x), acol + 1, this, nnz
             );

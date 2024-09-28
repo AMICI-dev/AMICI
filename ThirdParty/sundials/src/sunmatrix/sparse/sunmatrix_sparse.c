@@ -621,6 +621,8 @@ SUNErrCode SUNMatCopy_Sparse(SUNMatrix A, SUNMatrix B)
   return SUN_SUCCESS;
 }
 
+// AMICI: this is the 5.8.0 version of SUNMatScaleAddI_Sparse
+//  see also https://github.com/LLNL/sundials/issues/581
 SUNErrCode SUNMatScaleAddI_Sparse(sunrealtype c, SUNMatrix A)
 {
     sunindextype j, i, p, nz, newvals, M, N, cend;

@@ -36,7 +36,7 @@ class NewtonSolver {
      *
      * @param simulationSolver solver with settings
      * @param model pointer to the model instance
-     * @param sunctx SUNDIALS context
+     * @return NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver>
     getSolver(Solver const& simulationSolver, Model const& model);

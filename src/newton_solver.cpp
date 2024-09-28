@@ -26,7 +26,9 @@ NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
 
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
-        solver.reset(new NewtonSolverDense(model, simulationSolver.getSunContext()));
+        solver.reset(
+            new NewtonSolverDense(model, simulationSolver.getSunContext())
+        );
         break;
 
     case LinearSolver::band:
@@ -55,7 +57,9 @@ NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
     case LinearSolver::SuperLUMT:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     case LinearSolver::KLU:
-        solver.reset(new NewtonSolverSparse(model, simulationSolver.getSunContext()));
+        solver.reset(
+            new NewtonSolverSparse(model, simulationSolver.getSunContext())
+        );
         break;
     default:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");

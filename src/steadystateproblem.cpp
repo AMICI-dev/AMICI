@@ -17,25 +17,29 @@ namespace amici {
 constexpr realtype conv_thresh = 1.0;
 
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
-    : delta_(model.nx_solver, sunctx_)
-    , delta_old_(model.nx_solver, sunctx_)
-    , ewt_(model.nx_solver, sunctx_)
-    , ewtQB_(model.nplist(), sunctx_)
-    , x_old_(model.nx_solver, sunctx_)
-    , xdot_(model.nx_solver, sunctx_)
-    , sdx_(model.nx_solver, model.nplist(), sunctx_)
-    , xB_(model.nJ * model.nx_solver, sunctx_)
-    , xQ_(model.nJ * model.nx_solver, sunctx_)
-    , xQB_(model.nplist(), sunctx_)
-    , xQBdot_(model.nplist(), sunctx_)
-    , steadystate_mask_(AmiVector(model.get_steadystate_mask(), sunctx_))
+    : delta_(model.nx_solver, solver.getSunContext())
+    , delta_old_(model.nx_solver, solver.getSunContext())
+    , ewt_(model.nx_solver, solver.getSunContext())
+    , ewtQB_(model.nplist(), solver.getSunContext())
+    , x_old_(model.nx_solver, solver.getSunContext())
+    , xdot_(model.nx_solver, solver.getSunContext())
+    , sdx_(model.nx_solver, model.nplist(), solver.getSunContext())
+    , xB_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQB_(model.nplist(), solver.getSunContext())
+    , xQBdot_(model.nplist(), solver.getSunContext())
+    , steadystate_mask_(
+          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
+      )
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
-          {INFINITY,                                                 // t
-           AmiVector(model.nx_solver, sunctx_),                      // x
-           AmiVector(model.nx_solver, sunctx_),                      // dx
-           AmiVectorArray(model.nx_solver, model.nplist(), sunctx_), // sx
+          {INFINITY,                                           // t
+           AmiVector(model.nx_solver, solver.getSunContext()), // x
+           AmiVector(model.nx_solver, solver.getSunContext()), // dx
+           AmiVectorArray(
+               model.nx_solver, model.nplist(), solver.getSunContext()
+           ), // sx
            model.getModelState()}
       )
     , // state

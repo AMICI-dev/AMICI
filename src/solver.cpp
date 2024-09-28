@@ -1,5 +1,6 @@
 #include "amici/solver.h"
 
+#include "amici/amici.h"
 #include "amici/exception.h"
 #include "amici/model.h"
 #include "amici/symbolic_functions.h"
@@ -12,78 +13,44 @@
 
 namespace amici {
 
+/* Error handler passed to SUNDIALS. */
 void wrapErrHandlerFn(
     [[maybe_unused]] int line, char const* func, char const* file,
     char const* msg, SUNErrCode err_code, void* err_user_data,
     [[maybe_unused]] SUNContext sunctx
 ) {
     constexpr int BUF_SIZE = 250;
-    char buffer[BUF_SIZE];
-    char buffid[BUF_SIZE];
+
+    char msg_buffer[BUF_SIZE];
+    char id_buffer[BUF_SIZE];
     static_assert(
         std::is_same<SUNErrCode, int>::value, "Must update format string"
     );
+    // for debug builds, include full file path and line numbers
 #ifdef NDEBUG
-    snprintf(buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
+    snprintf(msg_buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
 #else
-    snprintf(buffer, BUF_SIZE, "%s", msg);
+    snprintf(msg_buffer, BUF_SIZE, "%s", msg);
 #endif
     // we need a matlab-compatible message ID
     // i.e. colon separated and only  [A-Za-z0-9_]
+    // see https://mathworks.com/help/matlab/ref/mexception.html
     std::filesystem::path path(file);
     auto file_stem = path.stem().string();
 
-    switch (err_code) {
-    case 99:
-        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", file_stem.c_str(), func);
-        break;
-
-    case AMICI_TOO_MUCH_WORK:
-        snprintf(
-            buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", file_stem.c_str(), func
-        );
-        break;
-
-    case AMICI_TOO_MUCH_ACC:
-        snprintf(
-            buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", file_stem.c_str(), func
-        );
-        break;
-
-    case AMICI_ERR_FAILURE:
-        snprintf(
-            buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", file_stem.c_str(), func
-        );
-        break;
-
-    case AMICI_CONV_FAILURE:
-        snprintf(
-            buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", file_stem.c_str(), func
-        );
-        break;
-
-    case AMICI_RHSFUNC_FAIL:
-        snprintf(
-            buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", file_stem.c_str(), func
-        );
-        break;
-
-    case AMICI_FIRST_RHSFUNC_ERR:
-        snprintf(
-            buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", file_stem.c_str(), func
-        );
-        break;
-    default:
-        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", file_stem.c_str(), func);
-        break;
-    }
+    auto err_code_str = simulation_status_to_str(err_code);
+    snprintf(
+        id_buffer, BUF_SIZE, "%s:%s:%s", file_stem.c_str(), func,
+        err_code_str.c_str()
+    );
 
     if (!err_user_data) {
         throw std::runtime_error("eh_data unset");
     }
+
     auto solver = static_cast<Solver const*>(err_user_data);
     if (solver->logger)
-        solver->logger->log(LogSeverity::debug, buffid, buffer);
+        solver->logger->log(LogSeverity::debug, id_buffer, msg_buffer);
 }
 
 Solver::Solver(Solver const& other)
@@ -127,11 +94,8 @@ Solver::Solver(Solver const& other)
     , max_step_size_(other.max_step_size_)
     , maxstepsB_(other.maxstepsB_)
     , sensi_(other.sensi_) {
-    // AmiVector.setContext()... check for nullptr
-    if (constraints_.data()) {
-        constraints_.sunctx_ = sunctx_;
-        constraints_.getNVector()->sunctx = sunctx_;
-    }
+    // update to our own context
+    constraints_.set_ctx(sunctx_);
 }
 
 SUNContext Solver::getSunContext() const { return sunctx_; }
