@@ -6,6 +6,7 @@ set -eou pipefail
 
 cmake=${CMAKE:-cmake}
 make=${MAKE:-make}
+CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-}
 
 script_path=$(dirname "$BASH_SOURCE")
 amici_path=$(cd "$script_path/.." && pwd)
