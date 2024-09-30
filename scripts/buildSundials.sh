@@ -14,7 +14,8 @@ sundials_build_path="${amici_path}/ThirdParty/sundials/build/"
 cmake=${CMAKE:-cmake}
 make=${MAKE:-make}
 
-if [[ $GITHUB_ACTIONS = true ]]; then
+if [[ "${GITHUB_REPOSITORY:-}" = *"/AMICI" ]] ||
+  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
   # Running on CI server
   build_type="Debug"
 else
