@@ -121,7 +121,7 @@ class SUNLinSolWrapper {
      * @brief Get the matrix A (matrix solvers only).
      * @return A
      */
-    virtual SUNMatrix getMatrix() const;
+    virtual SUNMatrixWrapper& getMatrix();
 
   protected:
     /**
@@ -195,7 +195,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param ordering
      */
     SUNLinSolKLU(
-        AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering
+        AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering = StateOrdering::COLAMD
     );
 
     /**
