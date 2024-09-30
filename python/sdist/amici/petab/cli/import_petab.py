@@ -1,6 +1,6 @@
 import argparse
 
-import petab
+import petab.v1 as petab
 
 from ..petab_import import import_model_sbml
 from petab.v1.models.sbml_model import SbmlModel
