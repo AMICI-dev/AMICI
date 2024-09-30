@@ -11,8 +11,9 @@ SUNLinSolWrapper::SUNLinSolWrapper(SUNLinearSolver linsol)
 
 SUNLinSolWrapper::SUNLinSolWrapper(
     SUNLinearSolver linsol, SUNMatrixWrapper const& A
-)   : solver_(linsol),
-    A_(A){}
+)
+    : solver_(linsol)
+    , A_(A) {}
 
 SUNLinSolWrapper::~SUNLinSolWrapper() {
     if (solver_)
@@ -42,8 +43,7 @@ void SUNLinSolWrapper::setup() const {
         throw AmiException("Solver setup failed with code %d", res);
 }
 
-int SUNLinSolWrapper::solve(N_Vector x, N_Vector b, realtype tol)
-    const {
+int SUNLinSolWrapper::solve(N_Vector x, N_Vector b, realtype tol) const {
     return SUNLinSolSolve(solver_, A_.get(), x, b, tol);
 }
 
@@ -161,15 +161,16 @@ SUNLinSolBand::SUNLinSolBand(N_Vector x, SUNMatrixWrapper A)
 }
 
 SUNLinSolBand::SUNLinSolBand(AmiVector const& x, int ubw, int lbw)
-    : SUNLinSolWrapper(nullptr, SUNMatrixWrapper(x.getLength(), ubw, lbw))
-{
+    : SUNLinSolWrapper(nullptr, SUNMatrixWrapper(x.getLength(), ubw, lbw)) {
     solver_ = SUNLinSol_Band(const_cast<N_Vector>(x.getNVector()), A_);
     if (!solver_)
         throw AmiException("Failed to create solver.");
 }
 
 SUNLinSolDense::SUNLinSolDense(AmiVector const& x)
-    : SUNLinSolWrapper(nullptr, SUNMatrixWrapper(x.getLength(), x.getLength())) {
+    : SUNLinSolWrapper(
+          nullptr, SUNMatrixWrapper(x.getLength(), x.getLength())
+      ) {
     solver_ = SUNLinSol_Dense(const_cast<N_Vector>(x.getNVector()), A_);
     if (!solver_)
         throw AmiException("Failed to create solver.");
@@ -184,7 +185,10 @@ SUNLinSolKLU::SUNLinSolKLU(N_Vector x, SUNMatrixWrapper A)
 SUNLinSolKLU::SUNLinSolKLU(
     AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering
 )
-    : SUNLinSolWrapper(nullptr, SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)) {
+    : SUNLinSolWrapper(
+          nullptr,
+          SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)
+      ) {
     solver_ = SUNLinSol_KLU(const_cast<N_Vector>(x.getNVector()), A_);
     if (!solver_)
         throw AmiException("Failed to create solver.");
@@ -409,7 +413,9 @@ int SUNNonLinSolFixedPoint::getSysFn(SUNNonlinSolSysFn* SysFn) const {
 
 #ifdef SUNDIALS_SUPERLUMT
 
-SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(N_Vector x, SUNMatrixWrapper A, int numThreads)
+SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(
+    N_Vector x, SUNMatrixWrapper A, int numThreads
+)
     : SUNLinSolWrapper(SUNLinSol_SuperLUMT(x, A, numThreads), A) {
     if (!solver)
         throw AmiException("Failed to create solver.");
@@ -419,7 +425,10 @@ SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(
     AmiVector const& x, int nnz, int sparsetype,
     SUNLinSolSuperLUMT::StateOrdering ordering
 )
-    : SUNLinSolWrapper(nullptr, SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)) {
+    : SUNLinSolWrapper(
+          nullptr,
+          SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)
+      ) {
     int numThreads = 1;
     if (auto env = std::getenv("AMICI_SUPERLUMT_NUM_THREADS")) {
         numThreads = std::max(1, std::stoi(env));
@@ -436,7 +445,10 @@ SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(
     AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering,
     int numThreads
 )
-    : SUNLinSolWrapper(nullptr, SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)) {
+    : SUNLinSolWrapper(
+          nullptr,
+          SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)
+      ) {
     solver = SUNLinSol_SuperLUMT(x.getNVector(), A.get(), numThreads);
     if (!solver)
         throw AmiException("Failed to create solver.");

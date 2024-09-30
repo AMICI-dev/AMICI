@@ -44,8 +44,9 @@ class SUNLinSolWrapper {
      * @param linsol SUNLinSolWrapper takes ownership of `linsol`.
      * @param A Matrix
      */
-    explicit SUNLinSolWrapper(SUNLinearSolver linsol, SUNMatrixWrapper const& A);
-
+    explicit SUNLinSolWrapper(
+        SUNLinearSolver linsol, SUNMatrixWrapper const& A
+    );
 
     virtual ~SUNLinSolWrapper();
 
@@ -135,7 +136,6 @@ class SUNLinSolWrapper {
 
     /** Matrix A for solver. */
     SUNMatrixWrapper A_;
-
 };
 
 /**
@@ -158,7 +158,6 @@ class SUNLinSolBand : public SUNLinSolWrapper {
      * @param lbw lower bandwidth of band matrix A
      */
     SUNLinSolBand(AmiVector const& x, int ubw, int lbw);
-
 };
 
 /**

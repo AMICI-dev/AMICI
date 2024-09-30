@@ -2221,10 +2221,12 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, ny, ny, 1.0,
                 &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
-                derived_state_.dsigmaydy_.data(), ny, 1.0, derived_state_.dJydy_dense_.data(), nJ
+                derived_state_.dsigmaydy_.data(), ny, 1.0,
+                derived_state_.dJydy_dense_.data(), nJ
             );
 
-            auto tmp_sparse = SUNMatrixWrapper(derived_state_.dJydy_dense_, 0.0, CSC_MAT);
+            auto tmp_sparse
+                = SUNMatrixWrapper(derived_state_.dJydy_dense_, 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(
                 1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
@@ -3079,7 +3081,7 @@ std::vector<double> Model::get_trigger_timepoints() const {
     return trigger_timepoints;
 }
 
-void Model::set_steadystate_mask(const std::vector<realtype> &mask) {
+void Model::set_steadystate_mask(std::vector<realtype> const& mask) {
     if (mask.size() == 0) {
         steadystate_mask_.clear();
         return;
