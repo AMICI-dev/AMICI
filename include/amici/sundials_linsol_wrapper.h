@@ -195,7 +195,8 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param ordering
      */
     SUNLinSolKLU(
-        AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering = StateOrdering::COLAMD
+        AmiVector const& x, int nnz, int sparsetype,
+        StateOrdering ordering = StateOrdering::COLAMD
     );
 
     /**
@@ -214,6 +215,14 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param ordering
      */
     void setOrdering(StateOrdering ordering);
+
+    /**
+     * @brief Checks whether the linear system is singular
+     *
+     * @return boolean indicating whether the linear system is singular
+     * (condition number < 1/machine precision)
+     */
+    bool is_singular() const;
 };
 
 #ifdef SUNDIALS_SUPERLUMT
