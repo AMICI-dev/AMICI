@@ -415,7 +415,6 @@ class AmiVectorArray {
     void copy(AmiVectorArray const& other);
 
   private:
-
     /** main data storage */
     std::vector<AmiVector> vec_array_;
 

@@ -33,9 +33,20 @@ class SUNLinSolWrapper {
 
     /**
      * @brief Wrap existing SUNLinearSolver
-     * @param linsol
+     *
+     * @param linsol SUNLinSolWrapper takes ownership of `linsol`.
      */
     explicit SUNLinSolWrapper(SUNLinearSolver linsol);
+
+    /**
+     * @brief Wrap existing SUNLinearSolver
+     *
+     * @param linsol SUNLinSolWrapper takes ownership of `linsol`.
+     * @param A Matrix
+     */
+    explicit SUNLinSolWrapper(
+        SUNLinearSolver linsol, SUNMatrixWrapper const& A
+    );
 
     virtual ~SUNLinSolWrapper();
 
@@ -80,26 +91,17 @@ class SUNLinSolWrapper {
     /**
      * @brief Performs any linear solver setup needed, based on an updated
      * system matrix A.
-     * @param A
      */
-    void setup(SUNMatrix A) const;
-
-    /**
-     * @brief Performs any linear solver setup needed, based on an updated
-     * system matrix A.
-     * @param A
-     */
-    void setup(SUNMatrixWrapper const& A) const;
+    void setup() const;
 
     /**
      * @brief Solves a linear system A*x = b
-     * @param A
      * @param x A template for cloning vectors needed within the solver.
      * @param b
      * @param tol Tolerance (weighted 2-norm), iterative solvers only
      * @return error flag
      */
-    int Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) const;
+    int solve(N_Vector x, N_Vector b, realtype tol) const;
 
     /**
      * @brief Returns the last error flag encountered within the linear solver
@@ -119,7 +121,7 @@ class SUNLinSolWrapper {
      * @brief Get the matrix A (matrix solvers only).
      * @return A
      */
-    virtual SUNMatrix getMatrix() const;
+    virtual SUNMatrixWrapper& getMatrix();
 
   protected:
     /**
@@ -131,6 +133,9 @@ class SUNLinSolWrapper {
 
     /** Wrapped solver */
     SUNLinearSolver solver_{nullptr};
+
+    /** Matrix A for solver. */
+    SUNMatrixWrapper A_;
 };
 
 /**
@@ -139,12 +144,12 @@ class SUNLinSolWrapper {
 class SUNLinSolBand : public SUNLinSolWrapper {
   public:
     /**
-     * @brief Create solver using existing matrix A without taking ownership of
-     * A.
+     * @brief Create solver using existing matrix A
+     *
      * @param x A template for cloning vectors needed within the solver.
      * @param A square matrix
      */
-    SUNLinSolBand(N_Vector x, SUNMatrix A);
+    SUNLinSolBand(N_Vector x, SUNMatrixWrapper A);
 
     /**
      * @brief Create new band solver and matrix A.
@@ -153,12 +158,6 @@ class SUNLinSolBand : public SUNLinSolWrapper {
      * @param lbw lower bandwidth of band matrix A
      */
     SUNLinSolBand(AmiVector const& x, int ubw, int lbw);
-
-    SUNMatrix getMatrix() const override;
-
-  private:
-    /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A_;
 };
 
 /**
@@ -171,12 +170,6 @@ class SUNLinSolDense : public SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      */
     explicit SUNLinSolDense(AmiVector const& x);
-
-    SUNMatrix getMatrix() const override;
-
-  private:
-    /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A_;
 };
 
 /**
@@ -192,7 +185,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param A sparse matrix
      */
-    SUNLinSolKLU(N_Vector x, SUNMatrix A);
+    SUNLinSolKLU(N_Vector x, SUNMatrixWrapper A);
 
     /**
      * @brief Create KLU solver and matrix to operate on
@@ -202,10 +195,9 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param ordering
      */
     SUNLinSolKLU(
-        AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering
+        AmiVector const& x, int nnz, int sparsetype,
+        StateOrdering ordering = StateOrdering::COLAMD
     );
-
-    SUNMatrix getMatrix() const override;
 
     /**
      * @brief Reinitializes memory and flags for a new factorization
@@ -223,10 +215,6 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param ordering
      */
     void setOrdering(StateOrdering ordering);
-
-  private:
-    /** Sparse matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A_;
 };
 
 #ifdef SUNDIALS_SUPERLUMT
@@ -249,7 +237,7 @@ class SUNLinSolSuperLUMT : public SUNLinSolWrapper {
      * @param A sparse matrix
      * @param numThreads Number of threads to be used by SuperLUMT
      */
-    SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads);
+    SUNLinSolSuperLUMT(N_Vector x, SUNMatrixWrapper A, int numThreads);
 
     /**
      * @brief Create SuperLUMT solver and matrix to operate on
@@ -279,18 +267,12 @@ class SUNLinSolSuperLUMT : public SUNLinSolWrapper {
         int numThreads
     );
 
-    SUNMatrix getMatrix() const override;
-
     /**
      * @brief Sets the ordering used by SuperLUMT for reducing fill in the
      * linear solve.
      * @param ordering
      */
     void setOrdering(StateOrdering ordering);
-
-  private:
-    /** Sparse matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
 };
 
 #endif
