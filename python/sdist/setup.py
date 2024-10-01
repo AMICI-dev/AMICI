@@ -51,78 +51,31 @@ def get_extensions():
     ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
     build_type = "Debug" if debug_build else "Release"
 
-    # SuiteSparse Config
-    suitesparse_config = CMakeExtension(
-        name="SuiteSparse_config",
+    # SuiteSparse
+    suitesparse = CMakeExtension(
+        name="SuiteSparse",
         install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse/SuiteSparse_config",
+        source_dir="amici/ThirdParty/SuiteSparse",
         cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DBUILD_SHARED_LIBS=OFF",
+            "-DBUILD_TESTING=OFF",
             # Building SuiteSparse_config does not require a BLAS
             #  we just set BLAS_LIBRARIES to skip the search,
             #  the value is not used
             # "-DBLA_VENDOR=All",
             "-DBLAS_LIBRARIES=dummy",
             "-DSUITESPARSE_USE_64BIT_BLAS=ON",
+            "-DSUITESPARSE_ENABLE_PROJECTS=amd;btf;colamd;klu",
             "-DSUITESPARSE_USE_CUDA=OFF",
             "-DSUITESPARSE_USE_FORTRAN=OFF",
-        ],
-    )
-    # SuiteSparse AMD
-    amd = CMakeExtension(
-        name="amd",
-        install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse/AMD",
-        cmake_build_type=build_type,
-        cmake_configure_options=[
-            *global_cmake_configure_options,
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-            "-DSUITESPARSE_USE_FORTRAN=OFF",
-        ],
-    )
-    # SuiteSparse BTF
-    btf = CMakeExtension(
-        name="btf",
-        install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse/BTF",
-        cmake_build_type=build_type,
-        cmake_configure_options=[
-            *global_cmake_configure_options,
-            "-DSUITESPARSE_USE_FORTRAN=OFF",
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-        ],
-    )
-    # SuiteSparse COLAMD
-    colamd = CMakeExtension(
-        name="colamd",
-        install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse/COLAMD",
-        cmake_build_type=build_type,
-        cmake_configure_options=[
-            *global_cmake_configure_options,
-            "-DSUITESPARSE_USE_FORTRAN=OFF",
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
-        ],
-    )
-    # SuiteSparse KLU
-    klu = CMakeExtension(
-        name="klu",
-        install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse/KLU",
-        cmake_build_type=build_type,
-        cmake_configure_options=[
-            *global_cmake_configure_options,
+            "-DSUITESPARSE_USE_PYTHON=OFF",
+            "-DSUITESPARSE_USE_OPENMP=OFF",
+            "-DSUITESPARSE_CONFIG_USE_OPENMP=OFF",
+            "-DCHOLMOD_CAMD=OFF",
             "-DKLU_USE_CHOLMOD=OFF",
-            "-DSUITESPARSE_USE_CUDA=OFF",
-            "-DSUITESPARSE_USE_FORTRAN=OFF",
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
         ],
     )
     # SUNDIALS
@@ -170,7 +123,7 @@ def get_extensions():
         ],
     )
     # Order matters!
-    return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_ext]
+    return [suitesparse, sundials, amici_ext]
 
 
 def main():
