@@ -552,8 +552,7 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
                 "steady state computations. Stopping."
             );
         wrms = getWrmsNorm(
-            xQB_, xQBdot_, steadystate_mask_, atol_quad_,
-            rtol_quad_, ewtQB_
+            xQB_, xQBdot_, steadystate_mask_, atol_quad_, rtol_quad_, ewtQB_
         );
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
@@ -563,8 +562,8 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
         else
             updateRightHandSide(model);
         wrms = getWrmsNorm(
-            state_.x, newton_step_conv_ ? delta_ : xdot_,
-            steadystate_mask_, atol_, rtol_, ewt_
+            state_.x, newton_step_conv_ ? delta_ : xdot_, steadystate_mask_,
+            atol_, rtol_, ewt_
         );
     }
     return wrms;
@@ -586,8 +585,8 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
         if (newton_step_conv_)
             newton_solver_->solveLinearSystem(xdot_);
         wrms = getWrmsNorm(
-            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_,
-            rtol_sensi_, ewt_
+            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_, rtol_sensi_,
+            ewt_
         );
         /* ideally this function would report the maximum of all wrms over
          all ip, but for practical purposes we can just report the wrms for
