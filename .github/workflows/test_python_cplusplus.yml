@@ -338,6 +338,12 @@ jobs:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
+    - name: Install PEtab benchmark collection
+      run: |
+        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+          && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
+
     - name: Python tests
       run: |
         scripts/run-python-tests.sh \
