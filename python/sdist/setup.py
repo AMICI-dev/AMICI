@@ -55,7 +55,7 @@ def get_extensions():
     suitesparse = CMakeExtension(
         name="SuiteSparse",
         install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse/",
+        source_dir="amici/ThirdParty/SuiteSparse",
         cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,

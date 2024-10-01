@@ -10,7 +10,17 @@ amici_path=$(cd "$script_path/.." && pwd)
 suitesparse_root="${amici_path}/ThirdParty/SuiteSparse"
 
 cd "${suitesparse_root}/build"
+
+if [[ "${GITHUB_REPOSITORY:-}" = *"/AMICI" ]] ||
+  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
+  # Running on CI server
+  build_type="Debug"
+else
+  build_type="RelWithDebInfo"
+fi
+
 cmake -DSUITESPARSE_ENABLE_PROJECTS="amd;btf;colamd;klu" \
+  -DCMAKE_BUILD_TYPE="$build_type" \
   -DCMAKE_INSTALL_PREFIX="${suitesparse_root}/install" \
   -DCHOLMOD_CAMD=OFF \
   -DKLU_USE_CHOLMOD=OFF \
