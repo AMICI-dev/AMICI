@@ -400,6 +400,8 @@ class SteadystateProblem {
     AmiVector xQB_;
     /** time-derivative of quadrature state vector */
     AmiVector xQBdot_;
+    /** NVector around Model::steadystate_mask_ */
+    AmiVector steadystate_mask_;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */
     int max_steps_{0};
@@ -450,7 +452,7 @@ class SteadystateProblem {
     realtype rtol_quad_{NAN};
 
     /** newton solver */
-    std::unique_ptr<NewtonSolver> newton_solver_{nullptr};
+    NewtonSolver newton_solver_;
 
     /** damping factor flag */
     NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};

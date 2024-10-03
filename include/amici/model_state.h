@@ -43,9 +43,6 @@ struct ModelState {
      * (dimension: nplist)
      */
     std::vector<int> plist;
-
-    /** temporary storage for spline values */
-    std::vector<realtype> spl_;
 };
 
 inline bool operator==(ModelState const& a, ModelState const& b) {
@@ -323,6 +320,21 @@ struct ModelStateDerived {
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: `nx_solver`) */
     AmiVector x_pos_tmp_{0};
+
+    /** temporary storage for spline values */
+    std::vector<realtype> spl_;
+
+    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
+    std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
+
+    /** Sparse dwdw temporary storage (shape `ndwdw`) */
+    SUNMatrixWrapper dwdw_;
+
+    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
+    std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
+
+    /** Temporary storage for dense dJydy (dimension: `nJ` x `ny`) */
+    SUNMatrixWrapper dJydy_dense_;
 };
 
 /**
@@ -332,11 +344,19 @@ struct ModelStateDerived {
 struct SimulationState {
     /** timepoint */
     realtype t;
-    /** state variables */
+    /**
+     * partial state vector, excluding states eliminated from conservation laws
+     */
     AmiVector x;
-    /** state variables */
+    /**
+     * partial time derivative of state vector, excluding states eliminated
+     * from conservation laws
+     */
     AmiVector dx;
-    /** state variable sensitivity */
+    /**
+     * partial sensitivity state vector array, excluding states eliminated from
+     * conservation laws
+     */
     AmiVectorArray sx;
     /** state of the model that was used for simulation */
     ModelState state;

@@ -14,7 +14,8 @@ sundials_build_path="${amici_path}/ThirdParty/sundials/build/"
 cmake=${CMAKE:-cmake}
 make=${MAKE:-make}
 
-if [[ $GITHUB_ACTIONS = true ]]; then
+if [[ "${GITHUB_REPOSITORY:-}" = *"/AMICI" ]] ||
+  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
   # Running on CI server
   build_type="Debug"
 else
@@ -47,8 +48,8 @@ ${cmake} -DCMAKE_INSTALL_PREFIX="${sundials_build_path}" \
   -DEXAMPLES_ENABLE_C=OFF \
   -DEXAMPLES_INSTALL=OFF \
   -DENABLE_KLU=ON \
-  -DKLU_LIBRARY_DIR="${suitesparse_root}/lib" \
-  -DKLU_INCLUDE_DIR="${suitesparse_root}/include/suitesparse" \
+  -DKLU_LIBRARY_DIR="${suitesparse_root}/install/lib" \
+  -DKLU_INCLUDE_DIR="${suitesparse_root}/install/include/suitesparse" \
   ${SuperLUMT} \
   ..
 
