@@ -621,7 +621,8 @@ SUNErrCode SUNMatCopy_Sparse(SUNMatrix A, SUNMatrix B)
   return SUN_SUCCESS;
 }
 
-// https://github.com/LLNL/sundials/blob/8fdca585eed902d99df3b913f926602009c5d28c/src/sunmatrix/sparse/sunmatrix_sparse.c
+// https://github.com/LLNL/sundials/issues/581
+// https://github.com/LLNL/sundials/blob/736369d543cb80956b1ba87377ffc0c8cf6b342b/src/sunmatrix/sparse/sunmatrix_sparse.c#L625C1-L694C2
 SUNErrCode SUNMatScaleAddI_Sparse(sunrealtype c, SUNMatrix A)
 {
     SUNFunctionBegin(A->sunctx);
@@ -668,7 +669,7 @@ SUNErrCode SUNMatScaleAddI_Sparse(sunrealtype c, SUNMatrix A)
         Ax = SM_DATA_S(A);
     }
 
-    for (sunindextype j = N - 1; j >= 0 && newvals > 0; j--)
+    for (sunindextype j = N - 1; newvals > 0; j--)
     {
         sunbooleantype found = SUNFALSE;
         for (sunindextype i = Ap[j + 1] - 1; i >= Ap[j]; i--)
