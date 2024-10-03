@@ -296,6 +296,7 @@ std::string simulation_status_to_str(int status) {
     } catch (std::out_of_range const&) {
         // Missing mapping - terminate if this is a debug build,
         // but show the number if non-debug.
+        fprintf(stderr, "Unknown simulation status: %d\n", status);
         gsl_ExpectsDebug(false);
         return std::to_string(status);
     }
