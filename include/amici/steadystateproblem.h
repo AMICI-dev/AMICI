@@ -452,7 +452,7 @@ class SteadystateProblem {
     realtype rtol_quad_{NAN};
 
     /** newton solver */
-    std::unique_ptr<NewtonSolver> newton_solver_{nullptr};
+    NewtonSolver newton_solver_;
 
     /** damping factor flag */
     NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};

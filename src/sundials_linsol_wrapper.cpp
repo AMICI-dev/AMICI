@@ -41,14 +41,16 @@ SUNLinearSolver_Type SUNLinSolWrapper::getType() const {
 int SUNLinSolWrapper::initialize() {
     auto res = SUNLinSolInitialize(solver_);
     if (res != SUN_SUCCESS)
-        throw AmiException("Solver initialization failed with code %d", res);
+        throw AmiException(
+            "Linear solver initialization failed with code %d", res
+        );
     return res;
 }
 
 void SUNLinSolWrapper::setup() const {
     auto res = SUNLinSolSetup(solver_, A_.get());
     if (res != SUN_SUCCESS)
-        throw AmiException("Solver setup failed with code %d", res);
+        throw AmiException("Linear solver setup failed with code %d", res);
 }
 
 int SUNLinSolWrapper::solve(N_Vector x, N_Vector b, realtype tol) const {
@@ -222,6 +224,30 @@ void SUNLinSolKLU::setOrdering(StateOrdering ordering) {
     auto status = SUNLinSol_KLUSetOrdering(solver_, static_cast<int>(ordering));
     if (status != SUN_SUCCESS)
         throw AmiException("SUNLinSol_KLUSetOrdering failed with %d", status);
+}
+
+bool SUNLinSolKLU::is_singular() const {
+    // adapted from SUNLinSolSetup_KLU in sunlinsol/klu/sunlinsol_klu.c
+    auto content = (SUNLinearSolverContent_KLU)(solver_->content);
+    // first cheap check via rcond
+    auto status
+        = sun_klu_rcond(content->symbolic, content->numeric, &content->common);
+    if (status == 0)
+        throw AmiException("sun_klu_rcond: %d", content->last_flag);
+
+    auto precision = std::numeric_limits<realtype>::epsilon();
+
+    if (content->common.rcond < precision) {
+        // cheap check indicates singular, expensive check via condest
+        status = sun_klu_condest(
+            SM_INDEXPTRS_S(A_.get()), SM_DATA_S(A_.get()), content->symbolic,
+            content->numeric, &content->common
+        );
+        if (status == 0)
+            throw AmiException("sun_klu_condest: %d", content->last_flag);
+        return content->common.condest > 1.0 / precision;
+    }
+    return false;
 }
 
 SUNLinSolPCG::SUNLinSolPCG(N_Vector y, int pretype, int maxl)
