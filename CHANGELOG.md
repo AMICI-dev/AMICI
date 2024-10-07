@@ -4,6 +4,70 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+
+### v0.26.3 (2024-10-03)
+
+**Fixes**
+
+* Skip building SuiteSparse shared libraries and build all subprojects together
+  for slightly faster package installation
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2514
+  and https://github.com/AMICI-dev/AMICI/pull/2519
+
+* Got rid of petab `DeprecationWarnings` when using the `amici_import_petab`
+  CLI
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2517
+
+* Now also sundials and suitesparse are built in debug mode when installing
+  with `ENABLE_AMICI_DEBUGGING=TRUE`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2515
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.2...v0.26.3
+
+### v0.26.2 (2024-09-25)
+
+**Fixes**
+
+* Fixed a sympy float comparison issue in spline code that would cause
+  an `AssertionError`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2499
+
+* Fixed some warnings from recent CMake versions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2492
+
+* Fixed a potential issue when including AMICI in a CMake project
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2493
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.1...v0.26.2
+
+
+### v0.26.1 (2024-07-11)
+
+**Fixes**
+
+* Fixed some C++ exception handling that previously could crash Python under
+  certain conditions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2484
+
+* Disabled turning warnings into errors when building amici on GitHub Actions
+  in downstream projects
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2481
+
+* Fixed CMP0167 warning with CMake 3.30
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2480
+
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.0...v0.26.1
+
 ### v0.26.0 (2024-07-02)
 
 AMICI v0.26.0 requires sympy>=1.12.1 and petab>=0.4.0.

@@ -31,7 +31,7 @@ import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from itertools import count
 from numbers import Integral
-
+from numbers import Real
 import libsbml
 import numpy as np
 import sympy as sp
@@ -902,7 +902,11 @@ class AbstractSpline(ABC):
 
     def integrate(self, x0: Real | sp.Basic, x1: Real | sp.Basic) -> sp.Basic:
         """Integrate the spline between the points `x0` and `x1`."""
-        x = sp.Dummy("x")
+        # Use integer values to prevent sympy-comparison issues down the line
+        if isinstance(x0, Real) and x0 % 1 == 0:
+            x0 = int(x0)
+        if isinstance(x1, Real) and x1 % 1 == 0:
+            x1 = int(x1)
         x0, x1 = sp.sympify((x0, x1))
 
         if x0 > x1:
@@ -910,6 +914,8 @@ class AbstractSpline(ABC):
 
         if x0 == x1:
             return sp.sympify(0)
+
+        x = sp.Dummy("x")
 
         if self.extrapolate != ("periodic", "periodic"):
             return self._formula(x=x, cache=False).integrate((x, x0, x1))

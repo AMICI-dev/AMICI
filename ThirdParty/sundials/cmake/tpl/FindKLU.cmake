@@ -2,7 +2,7 @@
 # Programmer(s): Steven Smith and Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -30,16 +30,34 @@
 #   KLU_LIBRARIES   - all of the libraries needed for KLU
 # ---------------------------------------------------------------
 
+if (NOT (KLU_INCLUDE_DIR OR KLU_LIBRARY_DIR OR KLU_LIBRARY))
+  # Prefer the import target from upstream SuiteSparse if it is available
+  # and the user didn't point to a specific (different) version.
+  find_package(KLU CONFIG)
+
+  if(TARGET SuiteSparse::KLU)
+    if(NOT TARGET SUNDIALS::KLU)
+      # AMICI -- https://github.com/LLNL/sundials/issues/579
+      get_target_property(klu_aliased_target SuiteSparse::KLU ALIASED_TARGET)
+      if (klu_aliased_target)
+          add_library(SUNDIALS::KLU ALIAS ${klu_aliased_target})
+      else()
+          add_library(SUNDIALS::KLU ALIAS SuiteSparse::KLU)
+      endif()
+      # add_library(SUNDIALS::KLU ALIAS SuiteSparse::KLU)
+      set(KLU_SUITESPARSE_TARGET ON)
+      mark_as_advanced(KLU_SUITESPARSE_TARGET)
+    endif()
+    return()
+  endif()
+endif()
+
 # Set library prefixes for Windows
-if(WIN32)
+if(MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC"))
   set(CMAKE_FIND_LIBRARY_PREFIXES lib ${CMAKE_FIND_LIBRARY_PREFIXES})
   set(CMAKE_FIND_LIBRARY_SUFFIXES d.lib ${CMAKE_FIND_LIBRARY_SUFFIXES})
 elseif(APPLE)
-    # AMICI
-    # set(CMAKE_FIND_LIBRARY_SUFFIXES d.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .a d.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-else()
-  set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES d.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
 ### Find include dir
@@ -59,52 +77,41 @@ if (KLU_LIBRARY)
 else ()
     # find library with user provided directory path
     set(KLU_LIBRARY_NAME klu)
-    # AMICI
-    # find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    find_library(KLU_LIBRARY NAMES ${KLU_LIBRARY_NAME} klu_static.lib klu.lib PATHS ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
 endif ()
 mark_as_advanced(KLU_LIBRARY)
 
 if (NOT AMD_LIBRARY)
     set(AMD_LIBRARY_NAME amd)
-    # AMICI
-    # find_library(AMD_LIBRARY ${AMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    find_library(AMD_LIBRARY NAMES ${AMD_LIBRARY_NAME} amd_static.lib amd.lib PATHS ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(AMD_LIBRARY ${AMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
     mark_as_advanced(AMD_LIBRARY)
 endif ()
 
 if (NOT COLAMD_LIBRARY)
     set(COLAMD_LIBRARY_NAME colamd)
-    # AMICI
-    # find_library(COLAMD_LIBRARY ${COLAMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    find_library(COLAMD_LIBRARY NAMES ${COLAMD_LIBRARY_NAME} colamd_static.lib colamd.lib PATHS ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(COLAMD_LIBRARY ${COLAMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
     mark_as_advanced(COLAMD_LIBRARY)
 endif ()
 
 if (NOT BTF_LIBRARY)
     set(BTF_LIBRARY_NAME btf)
-    # AMICI
-    # find_library( BTF_LIBRARY ${BTF_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    find_library(BTF_LIBRARY NAMES ${BTF_LIBRARY_NAME} btf_static.lib btf.lib PATHS ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library( BTF_LIBRARY ${BTF_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
     mark_as_advanced(BTF_LIBRARY)
 endif ()
 
 if (NOT SUITESPARSECONFIG_LIBRARY)
     set(SUITESPARSECONFIG_LIBRARY_NAME suitesparseconfig)
     # NOTE: no prefix for this library on windows
-    if(WIN32 AND NOT MSYS)
+    if(MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC"))
         set(CMAKE_FIND_LIBRARY_PREFIXES "")
     endif()
-    # AMICI
-    # find_library( SUITESPARSECONFIG_LIBRARY ${SUITESPARSECONFIG_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    find_library(SUITESPARSECONFIG_LIBRARY NAMES suitesparseconfig_static.lib ${SUITESPARSECONFIG_LIBRARY_NAME} suitesparseconfig.lib PATHS ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library( SUITESPARSECONFIG_LIBRARY ${SUITESPARSECONFIG_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
     mark_as_advanced(SUITESPARSECONFIG_LIBRARY)
 endif ()
 
-set(KLU_LIBRARIES "${KLU_LIBRARY}" "${AMD_LIBRARY}" "${COLAMD_LIBRARY}" "${BTF_LIBRARY}" "${SUITESPARSECONFIG_LIBRARY}")
+set(KLU_LIBRARIES ${KLU_LIBRARY} ${AMD_LIBRARY} ${COLAMD_LIBRARY} ${BTF_LIBRARY} ${SUITESPARSECONFIG_LIBRARY})
 
 # set package variables including KLU_FOUND
-include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(KLU
   REQUIRED_VARS
     KLU_LIBRARY

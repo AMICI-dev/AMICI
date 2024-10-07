@@ -1,11 +1,6 @@
 # Build AMICI model
-cmake_minimum_required(VERSION 3.15)
-cmake_policy(VERSION 3.15...3.27)
-
-# cmake >=3.27
-if(POLICY CMP0144)
-  cmake_policy(SET CMP0144 NEW)
-endif(POLICY CMP0144)
+cmake_minimum_required(VERSION 3.22)
+cmake_policy(VERSION 3.22...3.30)
 
 project(model_events)
 
@@ -38,6 +33,10 @@ endif()
 find_package(Amici  REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
+set_target_properties(Upstream::amici PROPERTIES
+    MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo;Release;
+    MAP_IMPORTED_CONFIG_RELEASE Release
+    MAP_IMPORTED_CONFIG_DEBUG Debug;RelWithDebInfo;)
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
@@ -47,7 +46,6 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
   else()
     add_compile_options(-O0 -g)
   endif()
-  set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
 # coverage options

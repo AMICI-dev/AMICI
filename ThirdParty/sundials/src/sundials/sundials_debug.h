@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2021, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 
-#ifdef __cplusplus  /* wrapper to enable C++ usage */
+#ifdef __cplusplus /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
@@ -37,14 +37,14 @@ extern "C" {
  * Macro which prints error messages in debug mode
  */
 #ifdef SUNDIALS_DEBUG
-#define SUNDIALS_DEBUG_ERROR(msg)                 \
-  fprintf(stderr, "ERROR in %s (%s line %d): %s", \
-          __func__, __FILE__, __LINE__, msg);
+#define SUNDIALS_DEBUG_ERROR(msg)                                     \
+  fprintf(stderr, "ERROR in %s (%s line %d): %s", __func__, __FILE__, \
+          __LINE__, msg);
 #else
 #define SUNDIALS_DEBUG_ERROR(msg)
 #endif
 
-#ifdef __cplusplus  /* wrapper to enable C++ usage */
+#ifdef __cplusplus /* wrapper to enable C++ usage */
 }
 #endif
 

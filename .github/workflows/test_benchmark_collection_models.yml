@@ -61,13 +61,14 @@ jobs:
       run: |
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+          && pip3 install -e $BENCHMARK_COLLECTION/../src/python \
           && AMICI_PARALLEL_COMPILE="" tests/benchmark-models/test_benchmark_collection.sh
 
     # run gradient checks
     - name: Run Gradient Checks
       run: |
         pip install git+https://github.com/ICB-DCM/fiddy.git \
-          && cd tests/benchmark-models && pytest ./test_petab_benchmark.py
+          && cd tests/benchmark-models && pytest --durations=10 ./test_petab_benchmark.py
 
     # upload results
     - uses: actions/upload-artifact@v4

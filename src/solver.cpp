@@ -1,13 +1,62 @@
 #include "amici/solver.h"
 
+#include "amici/amici.h"
 #include "amici/exception.h"
 #include "amici/model.h"
 #include "amici/symbolic_functions.h"
 
+#include <sundials/sundials_context.h>
+
 #include <cstdio>
+#include <filesystem>
 #include <memory>
 
 namespace amici {
+
+/* Error handler passed to SUNDIALS. */
+void wrapErrHandlerFn(
+    [[maybe_unused]] int line, char const* func, char const* file,
+    char const* msg, SUNErrCode err_code, void* err_user_data,
+    [[maybe_unused]] SUNContext sunctx
+) {
+    constexpr int BUF_SIZE = 250;
+
+    char msg_buffer[BUF_SIZE];
+    char id_buffer[BUF_SIZE];
+    static_assert(
+        std::is_same<SUNErrCode, int>::value, "Must update format string"
+    );
+    // for debug builds, include full file path and line numbers
+#ifdef NDEBUG
+    snprintf(msg_buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
+#else
+    snprintf(msg_buffer, BUF_SIZE, "%s", msg);
+#endif
+    // we need a matlab-compatible message ID
+    // i.e. colon separated and only  [A-Za-z0-9_]
+    // see https://mathworks.com/help/matlab/ref/mexception.html
+    std::filesystem::path path(file);
+    auto file_stem = path.stem().string();
+
+    // Error code to string. Remove 'AMICI_' prefix.
+    auto err_code_str = simulation_status_to_str(err_code);
+    constexpr std::string_view err_code_prefix = "AMICI_";
+    if (err_code_str.substr(0, err_code_prefix.size()) == err_code_prefix)
+        err_code_str = err_code_str.substr(err_code_prefix.size());
+
+    snprintf(
+        id_buffer, BUF_SIZE, "%s:%s:%s", file_stem.c_str(), func,
+        err_code_str.c_str()
+    );
+
+    if (!err_user_data) {
+        throw std::runtime_error("eh_data unset");
+    }
+
+    auto solver = static_cast<Solver const*>(err_user_data);
+    if (solver->logger)
+        solver->logger->log(LogSeverity::debug, id_buffer, msg_buffer);
+}
 
 Solver::Solver(Solver const& other)
     : ism_(other.ism_)
@@ -49,7 +98,12 @@ Solver::Solver(Solver const& other)
     , max_conv_fails_(other.max_conv_fails_)
     , max_step_size_(other.max_step_size_)
     , maxstepsB_(other.maxstepsB_)
-    , sensi_(other.sensi_) {}
+    , sensi_(other.sensi_) {
+    // update to our own context
+    constraints_.set_ctx(sunctx_);
+}
+
+SUNContext Solver::getSunContext() const { return sunctx_; }
 
 void Solver::apply_max_num_steps() const {
     // set remaining steps, setMaxNumSteps only applies to a single call of
@@ -719,7 +773,7 @@ void Solver::setConstraints(std::vector<realtype> const& constraints) {
         return;
     }
 
-    constraints_ = AmiVector(constraints);
+    constraints_ = AmiVector(constraints, sunctx_);
 }
 
 void Solver::setMaxStepSize(realtype max_step_size) {
@@ -1150,6 +1204,17 @@ void Solver::initializeNonLinearSolverSens(Model const* model) const {
     setNonLinearSolverSens();
 }
 
+void Solver::setErrHandlerFn() const {
+    auto sunerr = SUNContext_PushErrHandler(
+        sunctx_, wrapErrHandlerFn,
+        reinterpret_cast<void*>(const_cast<Solver*>(this))
+    );
+    if (sunerr)
+        throw AmiException(
+            "Error setting error handler function: %s", SUNGetErrMsg(sunerr)
+        );
+}
+
 int Solver::nplist() const { return sx_.getLength(); }
 
 int Solver::nx() const { return x_.getLength(); }
@@ -1210,17 +1275,17 @@ void Solver::resetMutableMemory(int const nx, int const nplist, int const nquad)
     solver_was_called_F_ = false;
     solver_was_called_B_ = false;
 
-    x_ = AmiVector(nx);
-    dx_ = AmiVector(nx);
-    sx_ = AmiVectorArray(nx, nplist);
-    sdx_ = AmiVectorArray(nx, nplist);
+    x_ = AmiVector(nx, sunctx_);
+    dx_ = AmiVector(nx, sunctx_);
+    sx_ = AmiVectorArray(nx, nplist, sunctx_);
+    sdx_ = AmiVectorArray(nx, nplist, sunctx_);
 
-    dky_ = AmiVector(nx);
+    dky_ = AmiVector(nx, sunctx_);
 
-    xB_ = AmiVector(nx);
-    dxB_ = AmiVector(nx);
-    xQB_ = AmiVector(nquad);
-    xQ_ = AmiVector(nx);
+    xB_ = AmiVector(nx, sunctx_);
+    dxB_ = AmiVector(nx, sunctx_);
+    xQB_ = AmiVector(nquad, sunctx_);
+    xQ_ = AmiVector(nx, sunctx_);
 
     solver_memory_B_.clear();
     initializedB_.clear();
@@ -1343,58 +1408,4 @@ AmiVector const& Solver::getQuadrature(realtype t) const {
 }
 
 realtype Solver::gett() const { return t_; }
-
-void wrapErrHandlerFn(
-    int error_code, char const* module, char const* function, char* msg,
-    void* eh_data
-) {
-    constexpr int BUF_SIZE = 250;
-    char buffer[BUF_SIZE];
-    char buffid[BUF_SIZE];
-    snprintf(
-        buffer, BUF_SIZE, "AMICI ERROR: in module %s in function %s : %s ",
-        module, function, msg
-    );
-    switch (error_code) {
-    case 99:
-        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
-        break;
-
-    case AMICI_TOO_MUCH_WORK:
-        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
-        break;
-
-    case AMICI_TOO_MUCH_ACC:
-        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
-        break;
-
-    case AMICI_ERR_FAILURE:
-        snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
-        break;
-
-    case AMICI_CONV_FAILURE:
-        snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
-        break;
-
-    case AMICI_RHSFUNC_FAIL:
-        snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
-        break;
-
-    case AMICI_FIRST_RHSFUNC_ERR:
-        snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
-        break;
-
-    default:
-        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
-        break;
-    }
-
-    if (!eh_data) {
-        throw std::runtime_error("eh_data unset");
-    }
-    auto solver = static_cast<Solver const*>(eh_data);
-    if (solver->logger)
-        solver->logger->log(LogSeverity::debug, buffid, buffer);
-}
-
 } // namespace amici

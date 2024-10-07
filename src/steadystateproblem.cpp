@@ -12,29 +12,34 @@
 #include <memory>
 #include <sundials/sundials_dense.h>
 
-constexpr realtype conv_thresh = 1.0;
-
 namespace amici {
 
+constexpr realtype conv_thresh = 1.0;
+
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
-    : delta_(model.nx_solver)
-    , delta_old_(model.nx_solver)
-    , ewt_(model.nx_solver)
-    , ewtQB_(model.nplist())
-    , x_old_(model.nx_solver)
-    , xdot_(model.nx_solver)
-    , sdx_(model.nx_solver, model.nplist())
-    , xB_(model.nJ * model.nx_solver)
-    , xQ_(model.nJ * model.nx_solver)
-    , xQB_(model.nplist())
-    , xQBdot_(model.nplist())
+    : delta_(model.nx_solver, solver.getSunContext())
+    , delta_old_(model.nx_solver, solver.getSunContext())
+    , ewt_(model.nx_solver, solver.getSunContext())
+    , ewtQB_(model.nplist(), solver.getSunContext())
+    , x_old_(model.nx_solver, solver.getSunContext())
+    , xdot_(model.nx_solver, solver.getSunContext())
+    , sdx_(model.nx_solver, model.nplist(), solver.getSunContext())
+    , xB_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQB_(model.nplist(), solver.getSunContext())
+    , xQBdot_(model.nplist(), solver.getSunContext())
+    , steadystate_mask_(
+          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
+      )
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
-          {INFINITY,                                        // t
-           AmiVector(model.nx_solver),                      // x
-           AmiVector(model.nx_solver),                      // dx
-           AmiVectorArray(model.nx_solver, model.nplist()), // sx
+          {INFINITY,                                           // t
+           AmiVector(model.nx_solver, solver.getSunContext()), // x
+           AmiVector(model.nx_solver, solver.getSunContext()), // dx
+           AmiVectorArray(
+               model.nx_solver, model.nplist(), solver.getSunContext()
+           ), // sx
            model.getModelState()}
       )
     , // state
@@ -44,7 +49,9 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi())
     , atol_quad_(solver.getAbsoluteToleranceQuadratures())
     , rtol_quad_(solver.getRelativeToleranceQuadratures())
-    , newton_solver_(NewtonSolver::getSolver(solver, model))
+    , newton_solver_(
+          NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
+      )
     , damping_factor_mode_(solver.getNewtonDampingFactorMode())
     , damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound())
     , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
@@ -86,7 +93,7 @@ void SteadystateProblem::workSteadyStateProblem(
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
-            newton_solver_->computeNewtonSensis(state_.sx, model, state_);
+            newton_solver_.computeNewtonSensis(state_.sx, model, state_);
         } catch (NewtonFailure const&) {
             throw AmiException(
                 "Steady state sensitivity computation failed due "
@@ -249,7 +256,7 @@ void SteadystateProblem::findSteadyStateBySimulation(
 void SteadystateProblem::initializeForwardProblem(
     int it, Solver const& solver, Model& model
 ) {
-    newton_solver_->reinitialize();
+    newton_solver_.reinitialize();
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -278,7 +285,7 @@ void SteadystateProblem::initializeForwardProblem(
 bool SteadystateProblem::initializeBackwardProblem(
     Solver const& solver, Model& model, BackwardProblem const* bwd
 ) {
-    newton_solver_->reinitialize();
+    newton_solver_.reinitialize();
     /* note that state_ is still set from forward run */
     if (bwd) {
         /* preequilibration */
@@ -358,8 +365,8 @@ void SteadystateProblem::getQuadratureByLinSolve(Model& model) {
     /* try to solve the linear system */
     try {
         /* compute integral over xB and write to xQ */
-        newton_solver_->prepareLinearSystemB(model, state_);
-        newton_solver_->solveLinearSystem(xQ_);
+        newton_solver_.prepareLinearSystemB(model, state_);
+        newton_solver_.solveLinearSystem(xQ_);
         /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
@@ -551,8 +558,7 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
                 "steady state computations. Stopping."
             );
         wrms = getWrmsNorm(
-            xQB_, xQBdot_, model.get_steadystate_mask_av(), atol_quad_,
-            rtol_quad_, ewtQB_
+            xQB_, xQBdot_, steadystate_mask_, atol_quad_, rtol_quad_, ewtQB_
         );
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
@@ -562,8 +568,8 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
         else
             updateRightHandSide(model);
         wrms = getWrmsNorm(
-            state_.x, newton_step_conv_ ? delta_ : xdot_,
-            model.get_steadystate_mask_av(), atol_, rtol_, ewt_
+            state_.x, newton_step_conv_ ? delta_ : xdot_, steadystate_mask_,
+            atol_, rtol_, ewt_
         );
     }
     return wrms;
@@ -583,10 +589,10 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
             state_.t, state_.x, state_.dx, ip, state_.sx[ip], state_.dx, xdot_
         );
         if (newton_step_conv_)
-            newton_solver_->solveLinearSystem(xdot_);
+            newton_solver_.solveLinearSystem(xdot_);
         wrms = getWrmsNorm(
-            state_.sx[ip], xdot_, model.get_steadystate_mask_av(), atol_sensi_,
-            rtol_sensi_, ewt_
+            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_, rtol_sensi_,
+            ewt_
         );
         /* ideally this function would report the maximum of all wrms over
          all ip, but for practical purposes we can just report the wrms for
@@ -887,7 +893,7 @@ void SteadystateProblem::getNewtonStep(Model& model) {
         return;
     updateRightHandSide(model);
     delta_.copy(xdot_);
-    newton_solver_->getStep(delta_, model, state_);
+    newton_solver_.getStep(delta_, model, state_);
     delta_updated_ = true;
 }
 } // namespace amici

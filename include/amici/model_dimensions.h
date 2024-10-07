@@ -9,7 +9,7 @@ namespace amici {
 /**
  * @brief Container for model dimensions.
  *
- * Holds number of states, observables, etc.
+ * Holds number of state variables, observables, etc.
  */
 struct ModelDimensions {
     /** Default ctor */
@@ -54,6 +54,11 @@ struct ModelDimensions {
      * @param nnz Number of nonzero elements in Jacobian
      * @param ubw Upper matrix bandwidth in the Jacobian
      * @param lbw Lower matrix bandwidth in the Jacobian
+     * @param pythonGenerated Flag indicating model creation from Matlab or
+     * Python
+     * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
+     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
+     * @param w_recursion_depth Recursion depth of fw
      */
     ModelDimensions(
         int const nx_rdata, int const nxtrue_rdata, int const nx_solver,
@@ -64,7 +69,8 @@ struct ModelDimensions {
         int const ndwdw, int const ndxdotdw, std::vector<int> ndJydy,
         int const ndxrdatadxsolver, int const ndxrdatadtcl,
         int const ndtotal_cldx_rdata, int const nnz, int const ubw,
-        int const lbw
+        int const lbw, bool pythonGenerated = false, int ndxdotdp_explicit = 0,
+        int ndxdotdx_explicit = 0, int w_recursion_depth = 0
     )
         : nx_rdata(nx_rdata)
         , nxtrue_rdata(nxtrue_rdata)
@@ -92,7 +98,11 @@ struct ModelDimensions {
         , nnz(nnz)
         , nJ(nJ)
         , ubw(ubw)
-        , lbw(lbw) {
+        , lbw(lbw)
+        , pythonGenerated(pythonGenerated)
+        , ndxdotdp_explicit(ndxdotdp_explicit)
+        , ndxdotdx_explicit(ndxdotdx_explicit)
+        , w_recursion_depth(w_recursion_depth) {
         Expects(nxtrue_rdata >= 0);
         Expects(nxtrue_rdata <= nx_rdata);
         Expects(nxtrue_solver >= 0);
@@ -128,6 +138,9 @@ struct ModelDimensions {
         Expects(nJ >= 0);
         Expects(ubw >= 0);
         Expects(lbw >= 0);
+        Expects(ndxdotdp_explicit >= 0);
+        Expects(ndxdotdx_explicit >= 0);
+        Expects(w_recursion_depth >= 0);
     }
 
     /** Number of states */
@@ -229,6 +242,18 @@ struct ModelDimensions {
 
     /** Lower bandwidth of the Jacobian */
     int lbw{0};
+
+    /** Flag indicating model creation from Matlab or Python */
+    bool pythonGenerated = false;
+
+    /** Number of nonzero elements in `dxdotdx_explicit` */
+    int ndxdotdp_explicit = 0;
+
+    /** Number of nonzero elements in `dxdotdp_explicit` */
+    int ndxdotdx_explicit = 0;
+
+    /** Recursion depth of fw */
+    int w_recursion_depth = 0;
 };
 
 } // namespace amici

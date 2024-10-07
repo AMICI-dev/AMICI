@@ -10,42 +10,18 @@
 #include "amici/logging.h"
 #include "amici/steadystateproblem.h"
 
-#include <cvodes/cvodes.h>           //return codes
-#include <sundials/sundials_types.h> //realtype
+#include <sundials/sundials_types.h> //sunrealtype
 
 #include <map>
 #include <memory>
 #include <type_traits>
 
-// ensure definitions are in sync
 static_assert(
-    amici::AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS"
+    amici::AMICI_SINGULAR_JACOBIAN == SUN_ERR_EXT_FAIL,
+    "AMICI_SINGULAR_JACOBIAN != SUN_ERR_EXT_FAIL"
 );
 static_assert(
-    amici::AMICI_DATA_RETURN == CV_TSTOP_RETURN,
-    "AMICI_DATA_RETURN != CV_TSTOP_RETURN"
-);
-static_assert(
-    amici::AMICI_ROOT_RETURN == CV_ROOT_RETURN,
-    "AMICI_ROOT_RETURN != CV_ROOT_RETURN"
-);
-static_assert(
-    amici::AMICI_ILL_INPUT == CV_ILL_INPUT, "AMICI_ILL_INPUT != CV_ILL_INPUT"
-);
-static_assert(amici::AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
-static_assert(
-    amici::AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP"
-);
-static_assert(
-    amici::AMICI_SINGULAR_JACOBIAN == SUNLS_PACKAGE_FAIL_UNREC,
-    "AMICI_SINGULAR_JACOBIAN != SUNLS_PACKAGE_FAIL_UNREC"
-);
-static_assert(
-    amici::AMICI_SINGULAR_JACOBIAN == SUNLS_PACKAGE_FAIL_UNREC,
-    "AMICI_SINGULAR_JACOBIAN != SUNLS_PACKAGE_FAIL_UNREC"
-);
-static_assert(
-    std::is_same<amici::realtype, realtype>::value,
+    std::is_same<amici::realtype, sunrealtype>::value,
     "Definition of realtype does not match"
 );
 
@@ -60,6 +36,8 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_CONV_FAILURE, "AMICI_CONV_FAILURE"},
     {AMICI_FIRST_RHSFUNC_ERR, "AMICI_FIRST_RHSFUNC_ERR"},
     {AMICI_CONSTR_FAIL, "AMICI_CONSTR_FAIL"},
+    {AMICI_CVODES_CONSTR_FAIL, "AMICI_CVODES_CONSTR_FAIL"},
+    {AMICI_IDAS_CONSTR_FAIL, "AMICI_IDAS_CONSTR_FAIL"},
     {AMICI_RHSFUNC_FAIL, "AMICI_RHSFUNC_FAIL"},
     {AMICI_ILL_INPUT, "AMICI_ILL_INPUT"},
     {AMICI_ERROR, "AMICI_ERROR"},
@@ -282,17 +260,28 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
 #pragma omp parallel for num_threads(num_threads)
 #endif
     for (int i = 0; i < (int)edatas.size(); ++i) {
-        auto mySolver = std::unique_ptr<Solver>(solver.clone());
-        auto myModel = std::unique_ptr<Model>(model.clone());
+        // must catch exceptions in parallel section to avoid termination
+        try {
+            auto mySolver = std::unique_ptr<Solver>(solver.clone());
+            auto myModel = std::unique_ptr<Model>(model.clone());
 
-        /* if we fail we need to write empty return datas for the python
-         interface */
-        if (skipThrough) {
-            ConditionContext conditionContext(myModel.get(), edatas[i]);
+            /* if we fail we need to write empty return datas for the python
+             interface */
+            if (skipThrough) {
+                ConditionContext conditionContext(myModel.get(), edatas[i]);
+                results[i]
+                    = std::unique_ptr<ReturnData>(new ReturnData(solver, model)
+                    );
+            } else {
+                results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+            }
+        } catch (std::exception const& ex) {
             results[i]
                 = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
-        } else {
-            results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+            results[i]->status = AMICI_ERROR;
+            results[i]->messages.push_back(
+                LogItem(LogSeverity::error, "OTHER", ex.what())
+            );
         }
 
         skipThrough |= failfast && results[i]->status < 0;
@@ -307,6 +296,7 @@ std::string simulation_status_to_str(int status) {
     } catch (std::out_of_range const&) {
         // Missing mapping - terminate if this is a debug build,
         // but show the number if non-debug.
+        fprintf(stderr, "Unknown simulation status: %d\n", status);
         gsl_ExpectsDebug(false);
         return std::to_string(status);
     }

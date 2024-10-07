@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -38,7 +38,7 @@ endif()
 
 # SUPERLUMT does not support extended precision
 if(SUNDIALS_PRECISION MATCHES "EXTENDED")
-  print_error("SUPERLUMT is not compatible with ${SUNDIALS_PRECISION} precision")
+  message(FATAL_ERROR "SUPERLUMT is not compatible with ${SUNDIALS_PRECISION} precision")
 endif()
 
 # -----------------------------------------------------------------------------
@@ -62,11 +62,12 @@ if(SUPERLUMT_FOUND AND (NOT SUPERLUMT_WORKS))
 
   # Create a CMakeLists.txt file
   file(WRITE ${SUPERLUMT_TEST_DIR}/CMakeLists.txt
-    "CMAKE_MINIMUM_REQUIRED(VERSION 3.1.3)\n"
+    "CMAKE_MINIMUM_REQUIRED(VERSION ${CMAKE_VERSION})\n"
     "PROJECT(ltest C)\n"
     "SET(CMAKE_VERBOSE_MAKEFILE ON)\n"
     "SET(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")\n"
     "SET(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\")\n"
+    "SET(CMAKE_C_STANDARD ${CMAKE_C_STANDARD})\n"
     "SET(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS}\")\n"
     "SET(CMAKE_C_FLAGS_RELEASE \"${CMAKE_C_FLAGS_RELEASE}\")\n"
     "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"
@@ -79,7 +80,7 @@ if(SUPERLUMT_FOUND AND (NOT SUPERLUMT_WORKS))
   # Create a C source file which calls a SUPERLUMT function
   file(WRITE ${SUPERLUMT_TEST_DIR}/ltest.c
     "\#include \"slu_mt_ddefs.h\"\n"
-    "int main(){\n"
+    "int main(void) {\n"
     "SuperMatrix *A;\n"
     "NCformat *Astore;\n"
     "A = NULL;\n"
@@ -105,7 +106,7 @@ if(SUPERLUMT_FOUND AND (NOT SUPERLUMT_WORKS))
     message(STATUS "Checking if SuperLU_MT works with SUNDIALS... FAILED")
     message(STATUS "Check output: ")
     message("${COMPILE_OUTPUT}")
-    print_error("SUNDIALS interface to SuperLU_MT is not functional.")
+    message(FATAL_ERROR "SUNDIALS interface to SuperLU_MT is not functional.")
   endif()
 
 elseif(SUPERLUMT_FOUND AND SUPERLUMT_WORKS)

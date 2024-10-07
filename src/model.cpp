@@ -177,19 +177,15 @@ Model::Model(
     ModelDimensions const& model_dimensions,
     SimulationParameters simulation_parameters, SecondOrderMode o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
-    bool const pythonGenerated, int const ndxdotdp_explicit,
-    int const ndxdotdx_explicit, int const w_recursion_depth,
     std::map<realtype, std::vector<int>> state_independent_events
 )
     : ModelDimensions(model_dimensions)
-    , pythonGenerated(pythonGenerated)
     , o2mode(o2mode)
     , idlist(std::move(idlist))
     , state_independent_events_(std::move(state_independent_events))
     , derived_state_(model_dimensions)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
-    , w_recursion_depth_(w_recursion_depth)
     , simulation_parameters_(std::move(simulation_parameters)) {
     Expects(
         model_dimensions.np
@@ -217,60 +213,6 @@ Model::Model(
 
     root_initial_values_.resize(ne, true);
 
-    /* If Matlab wrapped: dxdotdp is a full AmiVector,
-       if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices
-     */
-    if (pythonGenerated) {
-
-        dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
-        // size dynamically adapted for dwdx_ and dwdp_
-        derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
-        derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), 0, CSC_MAT);
-
-        for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
-            /* for the first element we know the exact size, while for all
-               others we guess the size*/
-            dwdp_hierarchical_.emplace_back(
-                SUNMatrixWrapper(nw, np(), irec * ndwdw + ndwdp, CSC_MAT)
-            );
-            dwdx_hierarchical_.emplace_back(
-                SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT)
-            );
-        }
-        assert(
-            gsl::narrow<int>(dwdp_hierarchical_.size())
-            == w_recursion_depth_ + 1
-        );
-        assert(
-            gsl::narrow<int>(dwdx_hierarchical_.size())
-            == w_recursion_depth_ + 1
-        );
-
-        derived_state_.dxdotdp_explicit
-            = SUNMatrixWrapper(nx_solver, np(), ndxdotdp_explicit, CSC_MAT);
-        // guess size, will be dynamically reallocated
-        derived_state_.dxdotdp_implicit
-            = SUNMatrixWrapper(nx_solver, np(), ndwdp + ndxdotdw, CSC_MAT);
-        derived_state_.dxdotdx_explicit = SUNMatrixWrapper(
-            nx_solver, nx_solver, ndxdotdx_explicit, CSC_MAT
-        );
-        // guess size, will be dynamically reallocated
-        derived_state_.dxdotdx_implicit
-            = SUNMatrixWrapper(nx_solver, nx_solver, ndwdx + ndxdotdw, CSC_MAT);
-        // dynamically allocate on first call
-        derived_state_.dxdotdp_full
-            = SUNMatrixWrapper(nx_solver, np(), 0, CSC_MAT);
-
-        for (int iytrue = 0; iytrue < nytrue; ++iytrue)
-            derived_state_.dJydy_.emplace_back(
-                SUNMatrixWrapper(nJ, ny, ndJydy.at(iytrue), CSC_MAT)
-            );
-    } else {
-        derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
-        derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), ndwdp, CSC_MAT);
-        derived_state_.dJydy_matlab_
-            = std::vector<realtype>(nJ * nytrue * ny, 0.0);
-    }
     requireSensitivitiesForAllParameters();
 }
 
@@ -288,8 +230,7 @@ bool operator==(Model const& a, Model const& b) {
            && (a.state_is_non_negative_ == b.state_is_non_negative_)
            && (a.sigma_res_ == b.sigma_res_) && (a.min_sigma_ == b.min_sigma_)
            && (a.state_ == b.state_)
-           && (a.steadystate_mask_.getVector()
-               == b.steadystate_mask_.getVector());
+           && (a.steadystate_mask_ == b.steadystate_mask_);
 }
 
 bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
@@ -381,14 +322,15 @@ void Model::initializeSplines() {
     splines_ = fcreate_splines(
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
-    state_.spl_.resize(splines_.size(), 0.0);
+    derived_state_.spl_.resize(splines_.size(), 0.0);
     for (auto& spline : splines_) {
         spline.compute_coefficients();
     }
 }
 
 void Model::initializeSplineSensitivities() {
-    derived_state_.sspl_ = SUNMatrixWrapper(splines_.size(), np());
+    derived_state_.sspl_
+        = SUNMatrixWrapper(splines_.size(), np(), derived_state_.sunctx_);
     int allnodes = 0;
     for (auto const& spline : splines_) {
         allnodes += spline.n_nodes();
@@ -1985,20 +1927,20 @@ void Model::fsx0_fixedParameters(AmiVectorArray& sx, AmiVector const& x) {
 
 void Model::fsdx0() {}
 
-void Model::fx_rdata(AmiVector& x_rdata, AmiVector const& x) {
+void Model::fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x) {
     fx_rdata(
         x_rdata.data(), computeX_pos(x), state_.total_cl.data(),
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
     if (always_check_finite_)
         checkFinite(
-            x_rdata.getVector(), ModelQuantity::x_rdata,
+            x_rdata, ModelQuantity::x_rdata,
             std::numeric_limits<realtype>::quiet_NaN()
         );
 }
 
 void Model::fsx_rdata(
-    AmiVectorArray& sx_rdata, AmiVectorArray const& sx,
+    gsl::span<realtype> sx_rdata, AmiVectorArray const& sx,
     AmiVector const& x_solver
 ) {
     realtype* stcl = nullptr;
@@ -2006,7 +1948,7 @@ void Model::fsx_rdata(
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
         fsx_rdata(
-            sx_rdata.data(ip), sx.data(ip), stcl,
+            &sx_rdata[ip * nx_rdata], sx.data(ip), stcl,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             x_solver.data(), state_.total_cl.data(), plist(ip)
         );
@@ -2066,7 +2008,8 @@ void Model::checkLLHBufferSize(
 void Model::initializeVectors() {
     sx0data_.clear();
     if (!pythonGenerated)
-        derived_state_.dxdotdp = AmiVectorArray(nx_solver, nplist());
+        derived_state_.dxdotdp
+            = AmiVectorArray(nx_solver, nplist(), derived_state_.sunctx_);
 }
 
 void Model::fy(realtype const t, AmiVector const& x) {
@@ -2107,7 +2050,7 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), plist(ip), derived_state_.w_.data(),
                 state_.total_cl.data(), state_.stotal_cl.data(),
-                state_.spl_.data(), derived_state_.sspl_.data()
+                derived_state_.spl_.data(), derived_state_.sspl_.data()
             );
         } else {
             fdydp(
@@ -2251,7 +2194,6 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     if (pythonGenerated) {
         fdJydsigma(it, x, edata);
         fdsigmaydy(it, &edata);
-        SUNMatrixWrapper tmp_dense(nJ, ny);
 
         setNaNtoZero(derived_state_.dJydsigma_);
         setNaNtoZero(derived_state_.dsigmaydy_);
@@ -2276,19 +2218,21 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
             // dJydy += dJydsigma * dsigmaydy
             // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
             // sparse    dense       dense
-            tmp_dense.zero();
+            derived_state_.dJydy_dense_.zero();
             amici_dgemm(
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, ny, ny, 1.0,
                 &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
-                derived_state_.dsigmaydy_.data(), ny, 1.0, tmp_dense.data(), nJ
+                derived_state_.dsigmaydy_.data(), ny, 1.0,
+                derived_state_.dJydy_dense_.data(), nJ
             );
 
-            auto tmp_sparse = SUNMatrixWrapper(tmp_dense, 0.0, CSC_MAT);
+            auto tmp_sparse
+                = SUNMatrixWrapper(derived_state_.dJydy_dense_, 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(
                 1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
-            if (ret != SUNMAT_SUCCESS) {
+            if (ret != SUN_SUCCESS) {
                 throw AmiException(
                     "SUNMatScaleAdd failed with status %d in %s", ret, __func__
                 );
@@ -2864,7 +2808,7 @@ void Model::fdJrzdsigma(
 
 void Model::fspl(realtype const t) {
     for (int ispl = 0; ispl < nspl; ispl++)
-        state_.spl_[ispl] = splines_[ispl].get_value(t);
+        derived_state_.spl_[ispl] = splines_[ispl].get_value(t);
 }
 
 void Model::fsspl(realtype const t) {
@@ -2872,8 +2816,9 @@ void Model::fsspl(realtype const t) {
     realtype* sspl_data = derived_state_.sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++)
-            sspl_data[ispl + nspl * plist(ip)]
-                = splines_[ispl].get_sensitivity(t, ip, state_.spl_[ispl]);
+            sspl_data[ispl + nspl * plist(ip)] = splines_[ispl].get_sensitivity(
+                t, ip, derived_state_.spl_[ispl]
+            );
     }
 }
 
@@ -2884,7 +2829,7 @@ void Model::fw(realtype const t, realtype const* x, bool include_static) {
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
-       state_.spl_.data(), include_static);
+       derived_state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.w_, ModelQuantity::w, t);
@@ -2903,26 +2848,26 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
         fsspl(t);
         fdwdw(t, x, include_static);
         if (include_static) {
-            dwdp_hierarchical_.at(0).zero();
-            fdwdp_colptrs(dwdp_hierarchical_.at(0));
-            fdwdp_rowvals(dwdp_hierarchical_.at(0));
+            derived_state_.dwdp_hierarchical_.at(0).zero();
+            fdwdp_colptrs(derived_state_.dwdp_hierarchical_.at(0));
+            fdwdp_rowvals(derived_state_.dwdp_hierarchical_.at(0));
         }
         fdwdp(
-            dwdp_hierarchical_.at(0).data(), t, x,
+            derived_state_.dwdp_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), state_.spl_.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
             derived_state_.sspl_.data(), include_static
         );
 
-        for (int irecursion = 1; irecursion <= w_recursion_depth_;
+        for (int irecursion = 1; irecursion <= w_recursion_depth;
              irecursion++) {
-            dwdw_.sparse_multiply(
-                dwdp_hierarchical_.at(irecursion),
-                dwdp_hierarchical_.at(irecursion - 1)
+            derived_state_.dwdw_.sparse_multiply(
+                derived_state_.dwdp_hierarchical_.at(irecursion),
+                derived_state_.dwdp_hierarchical_.at(irecursion - 1)
             );
         }
-        derived_state_.dwdp_.sparse_sum(dwdp_hierarchical_);
+        derived_state_.dwdp_.sparse_sum(derived_state_.dwdp_hierarchical_);
 
     } else {
         if (!derived_state_.dwdp_.capacity())
@@ -2932,7 +2877,7 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
             derived_state_.dwdp_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
             derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), state_.spl_.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
             derived_state_.sspl_.data()
         );
     }
@@ -2950,31 +2895,31 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
-        if (!dwdx_hierarchical_.at(0).capacity())
+        if (!derived_state_.dwdx_hierarchical_.at(0).capacity())
             return;
 
         fdwdw(t, x, include_static);
 
         if (include_static) {
-            dwdx_hierarchical_.at(0).zero();
-            fdwdx_colptrs(dwdx_hierarchical_.at(0));
-            fdwdx_rowvals(dwdx_hierarchical_.at(0));
+            derived_state_.dwdx_hierarchical_.at(0).zero();
+            fdwdx_colptrs(derived_state_.dwdx_hierarchical_.at(0));
+            fdwdx_rowvals(derived_state_.dwdx_hierarchical_.at(0));
         }
         fdwdx(
-            dwdx_hierarchical_.at(0).data(), t, x,
+            derived_state_.dwdx_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.spl_.data(), include_static
+            derived_state_.spl_.data(), include_static
         );
 
-        for (int irecursion = 1; irecursion <= w_recursion_depth_;
+        for (int irecursion = 1; irecursion <= w_recursion_depth;
              irecursion++) {
-            dwdw_.sparse_multiply(
-                dwdx_hierarchical_.at(irecursion),
-                dwdx_hierarchical_.at(irecursion - 1)
+            derived_state_.dwdw_.sparse_multiply(
+                derived_state_.dwdx_hierarchical_.at(irecursion),
+                derived_state_.dwdx_hierarchical_.at(irecursion - 1)
             );
         }
-        derived_state_.dwdx_.sparse_sum(dwdx_hierarchical_);
+        derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
 
     } else {
         if (!derived_state_.dwdx_.capacity())
@@ -2983,7 +2928,8 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
         fdwdx(
             derived_state_.dwdx_.data(), t, x, state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(), state_.spl_.data()
+            derived_state_.w_.data(), state_.total_cl.data(),
+            derived_state_.spl_.data()
         );
     }
 
@@ -2997,19 +2943,19 @@ void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
         return;
 
     if (include_static) {
-        dwdw_.zero();
-        fdwdw_colptrs(dwdw_);
-        fdwdw_rowvals(dwdw_);
+        derived_state_.dwdw_.zero();
+        fdwdw_colptrs(derived_state_.dwdw_);
+        fdwdw_rowvals(derived_state_.dwdw_);
     }
 
     fdwdw(
-        dwdw_.data(), t, x, state_.unscaledParameters.data(),
+        derived_state_.dwdw_.data(), t, x, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
         derived_state_.w_.data(), state_.total_cl.data(), include_static
     );
 
     if (always_check_finite_) {
-        checkFinite(dwdw_, ModelQuantity::dwdw, t);
+        checkFinite(derived_state_.dwdw_, ModelQuantity::dwdw, t);
     }
 }
 
@@ -3137,11 +3083,9 @@ std::vector<double> Model::get_trigger_timepoints() const {
     return trigger_timepoints;
 }
 
-void Model::set_steadystate_mask(std::vector<double> const& mask) {
+void Model::set_steadystate_mask(std::vector<realtype> const& mask) {
     if (mask.size() == 0) {
-        if (steadystate_mask_.getLength() != 0) {
-            steadystate_mask_ = AmiVector();
-        }
+        steadystate_mask_.clear();
         return;
     }
 
@@ -3151,7 +3095,7 @@ void Model::set_steadystate_mask(std::vector<double> const& mask) {
             gsl::narrow<int>(mask.size()), nx_solver
         );
 
-    steadystate_mask_ = AmiVector(mask);
+    steadystate_mask_ = mask;
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

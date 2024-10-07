@@ -37,17 +37,17 @@ CvodeException::CvodeException(
     int const error_code, char const* function, char const* extra
 )
     : AmiException(
-        "CVODE routine %s failed with error code %i. %s", function, error_code,
-        extra ? extra : ""
-    ) {}
+          "CVODE routine %s failed with error code %i. %s", function,
+          error_code, extra ? extra : ""
+      ) {}
 
 IDAException::IDAException(
     int const error_code, char const* function, char const* extra
 )
     : AmiException(
-        "IDA routine %s failed with error code %i. %s", function, error_code,
-        extra ? extra : ""
-    ) {}
+          "IDA routine %s failed with error code %i. %s", function, error_code,
+          extra ? extra : ""
+      ) {}
 
 IntegrationFailure::IntegrationFailure(int code, realtype t)
     : AmiException("AMICI failed to integrate the forward problem")
@@ -61,8 +61,8 @@ IntegrationFailureB::IntegrationFailureB(int code, realtype t)
 
 NewtonFailure::NewtonFailure(int code, char const* function)
     : AmiException(
-        "NewtonSolver routine %s failed with error code %i", function, code
-    ) {
+          "NewtonSolver routine %s failed with error code %i", function, code
+      ) {
     error_code = code;
 }
 

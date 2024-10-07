@@ -1,17 +1,10 @@
 #
 # Build AMICI library
 #
-cmake_minimum_required(VERSION 3.15)
-cmake_policy(VERSION 3.15...3.27)
-
-# cmake >=3.27
-if(POLICY CMP0144)
-  cmake_policy(SET CMP0144 NEW)
-endif(POLICY CMP0144)
-# cmake >= 3.30
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif(POLICY CMP0167)
+cmake_minimum_required(VERSION 3.22)
+# When updating the policy version, please also update it in
+# src/CMakeLists.template.cmake
+cmake_policy(VERSION 3.22...3.30)
 
 project(amici)
 
@@ -36,10 +29,11 @@ message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  # require at least gcc 4.9, otherwise regex wont work properly
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-    message(FATAL_ERROR "GCC version must be at least 4.9!")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}"
+                                                STREQUAL "MINGW")
+  # require at least gcc 9.1 for proper C+17 support, e.g. std::reduce
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+    message(FATAL_ERROR "GCC version must be at least 9.1!")
   endif()
 endif()
 
@@ -136,7 +130,8 @@ elseif(AMICI_TRY_ENABLE_HDF5)
 endif()
 
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
-set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS
+    "${VENDORED_SUNDIALS_DIR}/src;${VENDORED_SUNDIALS_DIR}/src/sundials")
 # Handle different sundials build/install dirs, depending on whether we are
 # building the Python extension only or the full C++ interface
 if(AMICI_PYTHON_BUILD_EXT_ONLY)
@@ -147,8 +142,7 @@ else()
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 endif()
 set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
-find_package(
-  SUNDIALS REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/")
+find_package(SUNDIALS REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
@@ -231,7 +225,14 @@ set(AMICI_CXX_OPTIONS
     ""
     CACHE STRING "C++ options for libamici (semicolon-separated)")
 target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
-
+set_property(
+  SOURCE src/solver_cvodes.cpp
+  APPEND
+  PROPERTY INCLUDE_DIRECTORIES "${SUNDIALS_PRIVATE_INCLUDE_DIRS}")
+set_property(
+  SOURCE src/solver_idas.cpp
+  APPEND
+  PROPERTY INCLUDE_DIRECTORIES "${SUNDIALS_PRIVATE_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} version)
 
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
@@ -244,8 +245,7 @@ target_include_directories(
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
          $<BUILD_INTERFACE:${GSL_LITE_INCLUDE_DIR}>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_DATADIR}/amici/swig>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>
-  PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>)
 
 if("$ENV{ENABLE_AMICI_DEBUGGING}"
    OR "$ENV{ENABLE_GCOV_COVERAGE}"
@@ -265,8 +265,7 @@ target_compile_definitions(
 
 target_link_libraries(
   ${PROJECT_NAME}
-  PUBLIC SUNDIALS::generic_static
-         SUNDIALS::nvecserial_static
+  PUBLIC SUNDIALS::nvecserial_static
          SUNDIALS::sunmatrixband_static
          SUNDIALS::sunmatrixdense_static
          SUNDIALS::sunmatrixsparse_static
@@ -377,7 +376,7 @@ export(
 include(CMakePackageConfigHelpers)
 include(version)
 configure_package_config_file(
-  cmake/AmiciConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+  "cmake/AmiciConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)

@@ -217,7 +217,7 @@ double seval(
                     j = k; /* move the upper bound */
                 if (u >= x[k])
                     i = k; /* move the lower bound */
-            }              /* there are no more segments to search */
+            } /* there are no more segments to search */
             while (j > i + 1);
         }
     }
@@ -273,7 +273,7 @@ double sinteg(
                 j = k; /* move the upper bound */
             if (u >= x[k])
                 i = k; /* move the lower bound */
-        }              /* there are no more segments to search */
+        } /* there are no more segments to search */
         while (j > i + 1);
     }
 

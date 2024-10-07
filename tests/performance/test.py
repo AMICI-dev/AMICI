@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 
 import amici
-import petab
-from amici.petab_import import import_model
+import petab.v1 as petab
+from amici.petab.petab_import import import_model
 
 
 def parse_args():

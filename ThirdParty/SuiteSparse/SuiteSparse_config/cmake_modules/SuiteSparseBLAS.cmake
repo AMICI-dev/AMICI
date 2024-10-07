@@ -21,8 +21,6 @@ cmake_minimum_required ( VERSION 3.22 )
 if ( DEFINED ENV{BLA_VENDOR} )
     set ( BLA_VENDOR $ENV{BLA_VENDOR} )
 endif ( )
-set ( BLA_VENDOR "ANY" CACHE STRING
-    "if ANY (default): searches for any BLAS. Otherwise: search for a specific BLAS" )
 
 # To allow the use of a BLAS with 64-bit integers, set this to ON
 option ( SUITESPARSE_USE_64BIT_BLAS
@@ -33,9 +31,6 @@ option ( BLA_STATIC
     "OFF (default): dynamic linking of BLAS.  ON: static linking of BLAS" OFF )
 
 if ( DEFINED BLAS_LIBRARIES OR DEFINED BLAS_INCLUDE_DIRS )
-    # AMICI -- silence cmake "Manually-specified variables were not used by the project"
-    set(amici_ignore "${BLAS_LIBRARIES} ${BLAS_INCLUDE_DIRS}")
-
     # User supplied variables for libraries and/or include directories.
     # Use them as-is.
     if ( SUITESPARSE_USE_64BIT_BLAS )
@@ -53,7 +48,7 @@ endif ( )
 # To request specific BLAS, use either (for example):
 #
 #   CMAKE_OPTIONS="-DBLA_VENDOR=Apple" make
-#   cd build && cmake -DBLA_VENDOR=Apple .. ; make
+#   cd build && cmake -DBLA_VENDOR=Apple .. ; cmake --build .
 #
 # Use SUITESPARSE_USE_64BIT_BLAS to select 64-bit or 32-bit BLAS.  If
 # BLA_VENDOR is also defined, this setting is strictly enforced.  If set to
@@ -66,7 +61,7 @@ endif ( )
 #
 # The default for SUITESPARSE_USE_64BIT_BLAS is OFF.
 
-if ( NOT (BLA_VENDOR STREQUAL "ANY" ) )
+if ( NOT ( "${BLA_VENDOR} " STREQUAL " " ) )
     # only look for the BLAS from a single vendor
     if ( ( BLA_VENDOR MATCHES "64ilp" ) OR
          ( BLA_VENDOR MATCHES "ilp64" ) )
