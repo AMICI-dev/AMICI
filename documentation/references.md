@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 92.
+List of publications using AMICI. Total number is 93.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -21,6 +21,16 @@ Robinson, and Wilhelm T. S. Huck. 2024. <span>“Chemical Reservoir
 Computation in a Self-Organizing Reaction Network.”</span>
 <em>Nature</em>, June. <a
 href="https://doi.org/10.1038/s41586-024-07567-x">https://doi.org/10.1038/s41586-024-07567-x</a>.
+</div>
+<div id="ref-BarthelKun2024" class="csl-entry" role="listitem">
+Barthel, Lars, Philipp Kunz, Rudibert King, and Vera Meyer. 2024.
+<span>“Harnessing Genetic and Microfluidic Approaches to Model Shear
+Stress Response in Cell Wall Mutants of the Filamentous Cell Factory
+Aspergillus Niger.”</span> In <em>Dispersity, Structure and Phase
+Changes of Proteins and Bio Agglomerates in Biotechnological
+Processes</em>, edited by Arno Kwade and Ingo Kampen, 467–90. Cham:
+Springer Nature Switzerland. <a
+href="https://doi.org/10.1007/978-3-031-63164-1_15">https://doi.org/10.1007/978-3-031-63164-1_15</a>.
 </div>
 <div id="ref-DoresicGre2024" class="csl-entry" role="listitem">
 Dorešić, Domagoj, Stephan Grein, and Jan Hasenauer. 2024.
