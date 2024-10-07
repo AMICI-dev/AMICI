@@ -48,14 +48,14 @@ ForwardProblem::ForwardProblem(
     , dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0)
     , t_(model->t0())
     , roots_found_(model->ne, 0)
-    , x_(model->nx_solver)
-    , x_old_(model->nx_solver)
-    , dx_(model->nx_solver)
-    , dx_old_(model->nx_solver)
-    , xdot_(model->nx_solver)
-    , xdot_old_(model->nx_solver)
-    , sx_(model->nx_solver, model->nplist())
-    , sdx_(model->nx_solver, model->nplist())
+    , x_(model->nx_solver, solver->getSunContext())
+    , x_old_(model->nx_solver, solver->getSunContext())
+    , dx_(model->nx_solver, solver->getSunContext())
+    , dx_old_(model->nx_solver, solver->getSunContext())
+    , xdot_(model->nx_solver, solver->getSunContext())
+    , xdot_old_(model->nx_solver, solver->getSunContext())
+    , sx_(model->nx_solver, model->nplist(), solver->getSunContext())
+    , sdx_(model->nx_solver, model->nplist(), solver->getSunContext())
     , stau_(model->nplist()) {
     if (preeq) {
         x_ = preeq->getState();

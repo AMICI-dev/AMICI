@@ -54,6 +54,7 @@ using namespace amici;
 %ignore startTimer;
 %ignore switchForwardSensisOff;
 %ignore timeExceeded;
+%ignore getSunContext;
 
 // Solver.__repr__
 %pythoncode %{

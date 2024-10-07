@@ -329,7 +329,8 @@ void Model::initializeSplines() {
 }
 
 void Model::initializeSplineSensitivities() {
-    derived_state_.sspl_ = SUNMatrixWrapper(splines_.size(), np());
+    derived_state_.sspl_
+        = SUNMatrixWrapper(splines_.size(), np(), derived_state_.sunctx_);
     int allnodes = 0;
     for (auto const& spline : splines_) {
         allnodes += spline.n_nodes();
@@ -2007,7 +2008,8 @@ void Model::checkLLHBufferSize(
 void Model::initializeVectors() {
     sx0data_.clear();
     if (!pythonGenerated)
-        derived_state_.dxdotdp = AmiVectorArray(nx_solver, nplist());
+        derived_state_.dxdotdp
+            = AmiVectorArray(nx_solver, nplist(), derived_state_.sunctx_);
 }
 
 void Model::fy(realtype const t, AmiVector const& x) {
@@ -2230,7 +2232,7 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
             auto ret = SUNMatScaleAdd(
                 1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
-            if (ret != SUNMAT_SUCCESS) {
+            if (ret != SUN_SUCCESS) {
                 throw AmiException(
                     "SUNMatScaleAdd failed with status %d in %s", ret, __func__
                 );

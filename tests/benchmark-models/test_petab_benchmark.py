@@ -76,8 +76,9 @@ settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
     rtol_sim=1e-10,
 )
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
-    atol_sim=1e-10,
-    rtol_sim=1e-10,
+    # Avoid "root after reinitialization"
+    atol_sim=1e-12,
+    rtol_sim=1e-12,
 )
 settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     atol_sim=1e-14,
@@ -144,6 +145,8 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         model
         in (
             "Blasi_CellSystems2016",
+            # events with parameter-dependent triggers
+            #  https://github.com/AMICI-dev/AMICI/issues/18
             "Oliveira_NatCommun2021",
         )
         and sensitivity_method == SensitivityMethod.adjoint

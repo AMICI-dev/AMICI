@@ -307,7 +307,7 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -318,7 +318,7 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -364,7 +364,8 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param maxl Maximum number of solver iterations
      */
     explicit SUNLinSolSPBCGS(
-        N_Vector x, int pretype = PREC_NONE, int maxl = SUNSPBCGS_MAXL_DEFAULT
+        N_Vector x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPBCGS_MAXL_DEFAULT
     );
 
     /**
@@ -375,7 +376,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param maxl Maximum number of solver iterations
      */
     explicit SUNLinSolSPBCGS(
-        AmiVector const& x, int pretype = PREC_NONE,
+        AmiVector const& x, int pretype = SUN_PREC_NONE,
         int maxl = SUNSPBCGS_MAXL_DEFAULT
     );
 
@@ -386,7 +387,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -397,7 +398,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -451,7 +452,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -462,7 +463,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -508,7 +509,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param maxl Maximum number of solver iterations
      */
     explicit SUNLinSolSPGMR(
-        AmiVector const& x, int pretype = PREC_NONE,
+        AmiVector const& x, int pretype = SUN_PREC_NONE,
         int maxl = SUNSPGMR_MAXL_DEFAULT
     );
 
@@ -519,7 +520,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -530,7 +531,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -576,7 +577,8 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param maxl Maximum number of solver iterations
      */
     explicit SUNLinSolSPTFQMR(
-        N_Vector x, int pretype = PREC_NONE, int maxl = SUNSPTFQMR_MAXL_DEFAULT
+        N_Vector x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPTFQMR_MAXL_DEFAULT
     );
 
     /**
@@ -587,7 +589,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param maxl Maximum number of solver iterations
      */
     explicit SUNLinSolSPTFQMR(
-        AmiVector const& x, int pretype = PREC_NONE,
+        AmiVector const& x, int pretype = SUN_PREC_NONE,
         int maxl = SUNSPTFQMR_MAXL_DEFAULT
     );
 
@@ -598,7 +600,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -609,7 +611,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear

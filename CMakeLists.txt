@@ -265,8 +265,7 @@ target_compile_definitions(
 
 target_link_libraries(
   ${PROJECT_NAME}
-  PUBLIC SUNDIALS::generic_static
-         SUNDIALS::nvecserial_static
+  PUBLIC SUNDIALS::nvecserial_static
          SUNDIALS::sunmatrixband_static
          SUNDIALS::sunmatrixdense_static
          SUNDIALS::sunmatrixsparse_static

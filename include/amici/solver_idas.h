@@ -133,8 +133,6 @@ class IDASolver : public Solver {
 
     void setQuadErrCon(bool flag) const override;
 
-    void setErrHandlerFn() const override;
-
     void setUserData() const override;
 
     void setUserDataB(int which) const override;

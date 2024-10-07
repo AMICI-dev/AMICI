@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -13,6 +13,12 @@
 # ------------------------------------------------------------------------------
 # SUNMemory level CMakeLists.txt for SUNDIALS
 # ------------------------------------------------------------------------------
+
+if(ENABLE_CALIPER AND SUNDIALS_BUILD_WITH_PROFILING)
+  include_directories(${caliper_INCLUDE_DIR})
+endif()
+
+add_subdirectory(system)
 
 if(ENABLE_CUDA)
   add_subdirectory(cuda)

@@ -78,6 +78,14 @@ def get_extensions():
             "-DKLU_USE_CHOLMOD=OFF",
         ],
     )
+    cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "")
+    if cmake_prefix_path:
+        cmake_prefix_path += ";"
+    # We need the potentially temporary and unpredictable build path
+    #  to use artifacts from other extensions here. `${build_dir}` will
+    #  be replaced by the actual path by `AmiciBuildCMakeExtension`
+    #  before being passed to CMake.
+    cmake_prefix_path += "${build_dir}/amici"
     # SUNDIALS
     sundials = CMakeExtension(
         name="sundials",
@@ -93,16 +101,10 @@ def get_extensions():
             "-DBUILD_SHARED_LIBS=OFF",
             "-DBUILD_STATIC_LIBS=ON",
             "-DBUILD_NVECTOR_MANYVECTOR=OFF",
-            "-DBUILD_SUNNONLINSOL_PETSCSNES=OFF",
             "-DEXAMPLES_ENABLE_C=OFF",
             "-DEXAMPLES_INSTALL=OFF",
             "-DENABLE_KLU=ON",
-            # We need the potentially temporary and unpredictable build path
-            #  to use artifacts from other extensions here. `${build_dir}` will
-            #  be replaced by the actual path by `AmiciBuildCMakeExtension`
-            #  before being passed to CMake.
-            "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
-            "-DKLU_INCLUDE_DIR='${build_dir}/amici/include/suitesparse'",
+            f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
         ],
     )
     # AMICI
@@ -120,6 +122,7 @@ def get_extensions():
             else "-Wno-error=dev",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
+            f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
         ],
     )
     # Order matters!

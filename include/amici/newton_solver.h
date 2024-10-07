@@ -25,8 +25,11 @@ class NewtonSolver {
      *
      * @param model the model object
      * @param linsol_type type of linear solver to use
+     * @param sunctx SUNDIALS context
      */
-    explicit NewtonSolver(Model const& model, LinearSolver linsol_type);
+    explicit NewtonSolver(
+        Model const& model, LinearSolver linsol_type, SUNContext sunctx
+    );
 
     NewtonSolver(NewtonSolver const&) = delete;
 
