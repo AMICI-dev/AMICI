@@ -183,7 +183,8 @@ Model::Model(
     , o2mode(o2mode)
     , idlist(std::move(idlist))
     , state_independent_events_(std::move(state_independent_events))
-    , derived_state_(model_dimensions)
+    , state_(*this)
+    , derived_state_(*this)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
     , simulation_parameters_(std::move(simulation_parameters)) {
@@ -200,10 +201,6 @@ Model::Model(
         model_dimensions.np, ParameterScaling::none
     );
 
-    state_.h.resize(ne, 0.0);
-    state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
-    state_.stotal_cl.resize((nx_rdata - nx_solver) * np(), 0.0);
-    state_.unscaledParameters.resize(np());
     unscaleParameters(
         simulation_parameters_.parameters, simulation_parameters_.pscale,
         state_.unscaledParameters
