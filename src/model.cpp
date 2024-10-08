@@ -196,7 +196,7 @@ Model::Model(
         == gsl::narrow<int>(simulation_parameters_.fixedParameters.size())
     );
 
-    simulation_parameters.pscale = std::vector<ParameterScaling>(
+    simulation_parameters_.pscale = std::vector<ParameterScaling>(
         model_dimensions.np, ParameterScaling::none
     );
 
