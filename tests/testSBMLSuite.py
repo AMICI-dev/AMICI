@@ -24,6 +24,7 @@ import pytest
 from amici.constants import SymbolId
 from amici.gradient_check import check_derivatives
 from numpy.testing import assert_allclose
+from conftest import format_test_id
 
 
 @pytest.fixture(scope="session")
@@ -351,8 +352,3 @@ def read_settings_file(current_test_path: Path, test_id: str):
                 (key, val) = line.split(":")
                 settings[key] = val.strip()
     return settings
-
-
-def format_test_id(test_id) -> str:
-    """Format numeric to 0-padded string"""
-    return f"{test_id:0>5}"
