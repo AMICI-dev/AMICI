@@ -1,4 +1,5 @@
 """Tests for SBML events, including piecewise expressions."""
+
 import numpy as np
 import pytest
 from util import (
@@ -7,6 +8,12 @@ from util import (
     check_trajectories_without_sensitivities,
     create_amici_model,
     create_sbml_model,
+)
+
+pytestmark = pytest.mark.filterwarnings(
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
 )
 
 

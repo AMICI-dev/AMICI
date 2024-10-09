@@ -12,6 +12,7 @@ from amici.testing import skip_on_valgrind
 from splines_utils import check_splines_full, example_spline_1
 
 
+@skip_on_valgrind
 def test_spline_piecewise(**kwargs):
     """
     Test a SBML model containing a single spline.
@@ -44,7 +45,7 @@ def test_two_splines(**kwargs):
         tols1 = (tols1, tols1, tols1)
 
     tols = []
-    for t0, t1 in zip(tols0, tols1):
+    for t0, t1 in zip(tols0, tols1, strict=True):
         keys = set().union(t0.keys(), t1.keys())
         t = {
             key: max(

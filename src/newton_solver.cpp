@@ -3,6 +3,7 @@
 #include <amici/amici.h>
 #include <amici/model.h>
 #include <amici/solver.h>
+#include <amici/vector.h>
 
 #include <sundials/sundials_config.h>  // roundoffs
 #include <sunlinsol/sunlinsol_dense.h> // dense solver
@@ -10,56 +11,33 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(Model const& model)
-    : xdot_(model.nx_solver)
-    , x_(model.nx_solver)
-    , xB_(model.nJ * model.nx_solver)
-    , dxB_(model.nJ * model.nx_solver) {}
-
-std::unique_ptr<NewtonSolver>
-NewtonSolver::getSolver(Solver const& simulationSolver, Model const& model) {
-
-    std::unique_ptr<NewtonSolver> solver;
-
-    switch (simulationSolver.getLinearSolver()) {
-
-    /* DIRECT SOLVERS */
-    case LinearSolver::dense:
-        solver.reset(new NewtonSolverDense(model));
-        break;
-
-    case LinearSolver::band:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    case LinearSolver::LAPACKDense:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    case LinearSolver::LAPACKBand:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    case LinearSolver::diag:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    /* ITERATIVE SOLVERS */
-    case LinearSolver::SPGMR:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    case LinearSolver::SPBCG:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    case LinearSolver::SPTFQMR:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-
-    /* SPARSE SOLVERS */
-    case LinearSolver::SuperLUMT:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
-    case LinearSolver::KLU:
-        solver.reset(new NewtonSolverSparse(model));
-        break;
-    default:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
+NewtonSolver::NewtonSolver(
+    Model const& model, LinearSolver linsol_type, SUNContext sunctx
+)
+    : xdot_(model.nx_solver, sunctx)
+    , x_(model.nx_solver, sunctx)
+    , xB_(model.nJ * model.nx_solver, sunctx)
+    , dxB_(model.nJ * model.nx_solver, sunctx) {
+    try {
+        // NOTE: when adding new linear solvers, make sure to also add them to
+        // NewtonSolver::reinitialize and NewtonSolver::is_singular
+        switch (linsol_type) {
+        case LinearSolver::dense:
+            linsol_.reset(new SUNLinSolDense(x_));
+            break;
+        case LinearSolver::KLU:
+            linsol_.reset(new SUNLinSolKLU(x_, model.nnz, CSC_MAT));
+            break;
+        default:
+            throw NewtonFailure(
+                AMICI_NOT_IMPLEMENTED, "Unknown linear solver type"
+            );
+        }
+    } catch (NewtonFailure const&) {
+        throw;
+    } catch (AmiException const& e) {
+        throw NewtonFailure(AMICI_ERROR, e.what());
     }
-    return solver;
 }
 
 void NewtonSolver::getStep(
@@ -105,146 +83,81 @@ void NewtonSolver::computeNewtonSensis(
     }
 }
 
-NewtonSolverDense::NewtonSolverDense(Model const& model)
-    : NewtonSolver(model)
-    , Jtmp_(model.nx_solver, model.nx_solver)
-    , linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_.get())) {
-    auto status = SUNLinSolInitialize_Dense(linsol_);
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
-}
-
-void NewtonSolverDense::prepareLinearSystem(
+void NewtonSolver::prepareLinearSystem(
     Model& model, SimulationState const& state
 ) {
-    model.fJ(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
-    Jtmp_.refresh();
-    auto status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSetup_Dense");
+    auto& J = linsol_->getMatrix();
+    if (J.matrix_id() == SUNMATRIX_SPARSE) {
+        model.fJSparse(state.t, 0.0, state.x, state.dx, xdot_, J);
+    } else {
+        model.fJ(state.t, 0.0, state.x, state.dx, xdot_, J);
+    }
+    J.refresh();
+    try {
+        linsol_->setup();
+    } catch (AmiException const& e) {
+        throw NewtonFailure(AMICI_SINGULAR_JACOBIAN, e.what());
+    }
 }
 
-void NewtonSolverDense::prepareLinearSystemB(
+void NewtonSolver::prepareLinearSystemB(
     Model& model, SimulationState const& state
 ) {
-    model.fJB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_.get());
-    Jtmp_.refresh();
-    auto status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSetup_Dense");
+    auto& J = linsol_->getMatrix();
+    if (J.matrix_id() == SUNMATRIX_SPARSE) {
+        model.fJSparseB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, J);
+    } else {
+        model.fJB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, J);
+    }
+    J.refresh();
+    try {
+        linsol_->setup();
+    } catch (AmiException const& e) {
+        throw NewtonFailure(AMICI_SINGULAR_JACOBIAN, e.what());
+    }
 }
 
-void NewtonSolverDense::solveLinearSystem(AmiVector& rhs) {
-    auto status = SUNLinSolSolve_Dense(
-        linsol_, Jtmp_.get(), rhs.getNVector(), rhs.getNVector(), 0.0
-    );
-    Jtmp_.refresh();
+void NewtonSolver::solveLinearSystem(AmiVector& rhs) {
     // last argument is tolerance and does not have any influence on result
-
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSolve_Dense");
+    auto status = linsol_->solve(rhs.getNVector(), rhs.getNVector(), 0.0);
+    if (status != SUN_SUCCESS)
+        throw NewtonFailure(status, "SUNLinSolSolve");
 }
 
-void NewtonSolverDense::reinitialize(){
-    /* dense solver does not need reinitialization */
+void NewtonSolver::reinitialize() {
+    // direct solvers do not need reinitialization
+    if (dynamic_cast<SUNLinSolDense*>(linsol_.get())) {
+        return;
+    }
+    if (auto s = dynamic_cast<SUNLinSolKLU*>(linsol_.get())) {
+        try {
+            s->reInit(s->getMatrix().capacity(), SUNKLU_REINIT_PARTIAL);
+            return;
+        } catch (AmiException const&) {
+            throw NewtonFailure(
+                AMICI_ERROR, "Failed to reinitialize KLU solver"
+            );
+        }
+    }
+    throw AmiException(
+        "Unhandled linear solver type in NewtonSolver::reinitialize."
+    );
 };
 
-bool NewtonSolverDense::is_singular(Model& model, SimulationState const& state)
+bool NewtonSolver::is_singular(Model& model, SimulationState const& state)
     const {
+    if (auto s = dynamic_cast<SUNLinSolKLU const*>(linsol_.get())) {
+        return s->is_singular();
+    }
+
     // dense solver doesn't have any implementation for rcond/condest, so use
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
-    NewtonSolverSparse sparse_solver(model);
+    NewtonSolver sparse_solver(
+        model, LinearSolver::KLU, linsol_->get()->sunctx
+    );
     sparse_solver.prepareLinearSystem(model, state);
     return sparse_solver.is_singular(model, state);
-}
-
-NewtonSolverDense::~NewtonSolverDense() {
-    if (linsol_)
-        SUNLinSolFree_Dense(linsol_);
-}
-
-NewtonSolverSparse::NewtonSolverSparse(Model const& model)
-    : NewtonSolver(model)
-    , Jtmp_(model.nx_solver, model.nx_solver, model.nnz, CSC_MAT)
-    , linsol_(SUNKLU(x_.getNVector(), Jtmp_.get())) {
-    auto status = SUNLinSolInitialize_KLU(linsol_);
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
-}
-
-void NewtonSolverSparse::prepareLinearSystem(
-    Model& model, SimulationState const& state
-) {
-    /* Get sparse Jacobian */
-    model.fJSparse(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
-    Jtmp_.refresh();
-    auto status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSetup_KLU");
-}
-
-void NewtonSolverSparse::prepareLinearSystemB(
-    Model& model, SimulationState const& state
-) {
-    /* Get sparse Jacobian */
-    model.fJSparseB(
-        state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_.get()
-    );
-    Jtmp_.refresh();
-    auto status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSetup_KLU");
-}
-
-void NewtonSolverSparse::solveLinearSystem(AmiVector& rhs) {
-    /* Pass pointer to the linear solver */
-    auto status = SUNLinSolSolve_KLU(
-        linsol_, Jtmp_.get(), rhs.getNVector(), rhs.getNVector(), 0.0
-    );
-    // last argument is tolerance and does not have any influence on result
-
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSolve_KLU");
-}
-
-void NewtonSolverSparse::reinitialize() {
-    /* partial reinitialization, don't need to reallocate Jtmp_ */
-    auto status = SUNLinSol_KLUReInit(
-        linsol_, Jtmp_.get(), Jtmp_.capacity(), SUNKLU_REINIT_PARTIAL
-    );
-    if (status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSol_KLUReInit");
-}
-
-bool NewtonSolverSparse::
-    is_singular(Model& /*model*/, SimulationState const& /*state*/) const {
-    // adapted from SUNLinSolSetup_KLU in sunlinsol/klu/sunlinsol_klu.c
-    auto content = (SUNLinearSolverContent_KLU)(linsol_->content);
-    // first cheap check via rcond
-    auto status
-        = sun_klu_rcond(content->symbolic, content->numeric, &content->common);
-    if (status == 0)
-        throw NewtonFailure(content->last_flag, "sun_klu_rcond");
-
-    auto precision = std::numeric_limits<realtype>::epsilon();
-
-    if (content->common.rcond < precision) {
-        // cheap check indicates singular, expensive check via condest
-        status = sun_klu_condest(
-            SM_INDEXPTRS_S(Jtmp_.get()), SM_DATA_S(Jtmp_.get()),
-            content->symbolic, content->numeric, &content->common
-        );
-        if (status == 0)
-            throw NewtonFailure(content->last_flag, "sun_klu_rcond");
-        return content->common.condest > 1.0 / precision;
-    }
-    return false;
-}
-
-NewtonSolverSparse::~NewtonSolverSparse() {
-    if (linsol_)
-        SUNLinSolFree_KLU(linsol_);
 }
 
 } // namespace amici

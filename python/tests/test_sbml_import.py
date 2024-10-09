@@ -1,9 +1,9 @@
 """Tests related to amici.sbml_import"""
+
 import os
 import re
 from numbers import Number
 from pathlib import Path
-from urllib.request import urlopen
 
 import amici
 import libsbml
@@ -369,7 +369,7 @@ def test_solver_reuse(model_steadystate_module):
         assert rdata1.status == amici.AMICI_SUCCESS
 
         for attr in rdata1:
-            if "time" in attr:
+            if "time" in attr or attr == "messages":
                 continue
 
             val1 = getattr(rdata1, attr)
@@ -543,13 +543,13 @@ def test_sympy_exp_monkeypatch():
     monkeypatching sympy.Pow._eval_derivative in order to be able to compute
     non-nan sensitivities
     """
-    url = (
-        "https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?"
-        "filename=BIOMD0000000529_url.xml"
+    import pooch
+
+    model_file = pooch.retrieve(
+        url="https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?filename=BIOMD0000000529_url.xml",
+        known_hash="md5:c6e0b298397485b93d7acfab80b21fd4",
     )
-    importer = amici.SbmlImporter(
-        urlopen(url, timeout=20).read().decode("utf-8"), from_file=False
-    )
+    importer = amici.SbmlImporter(model_file)
     module_name = "BIOMD0000000529"
 
     with TemporaryDirectory() as outdir:
@@ -722,4 +722,54 @@ def test_hardcode_parameters(simple_sbml_model):
             # mutually exclusive
             constant_parameters=["p1"],
             hardcode_symbols=["p1"],
+        )
+
+
+def test_constraints():
+    """Test non-negativity constraint handling."""
+    from amici.antimony_import import antimony2amici
+    from amici import Constraint
+
+    ant_model = """
+    model test_non_negative_species
+        species A = 10
+        species B = 0
+        # R1: A => B; k1f * sqrt(A)
+        R1: A => B; k1f * max(0, A)
+        k1f = 1e10
+    end
+    """
+    module_name = "test_non_negative_species"
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        antimony2amici(
+            ant_model,
+            model_name=module_name,
+            output_dir=outdir,
+            compute_conservation_laws=False,
+        )
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
+        amici_model = model_module.getModel()
+        amici_model.setTimepoints(np.linspace(0, 100, 200))
+        amici_solver = amici_model.getSolver()
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        # should be non-negative in theory, but is expected to become negative
+        #  in practice
+        assert np.any(rdata.x < 0)
+
+        amici_solver.setRelativeTolerance(1e-13)
+        amici_solver.setConstraints(
+            [Constraint.non_negative, Constraint.non_negative]
+        )
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert np.all(rdata.x >= 0)
+        assert np.all(
+            np.sum(rdata.x, axis=1) - np.sum(rdata.x[0])
+            < max(
+                np.sum(rdata.x[0]) * amici_solver.getRelativeTolerance(),
+                amici_solver.getAbsoluteTolerance(),
+            )
         )

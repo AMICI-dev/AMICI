@@ -35,27 +35,20 @@ class Model_ODE : public Model {
      * @param o2mode second order sensitivity mode
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
-     * @param pythonGenerated flag indicating matlab or python wrapping
-     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
-     * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
-     * @param w_recursion_depth Recursion depth of fw
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
     Model_ODE(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
-        const SecondOrderMode o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event, bool const pythonGenerated = false,
-        int const ndxdotdp_explicit = 0, int const ndxdotdx_explicit = 0,
-        int const w_recursion_depth = 0,
+        SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
+        std::vector<int> const& z2event,
         std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
-            model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-            pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
-            w_recursion_depth, state_independent_events
-        ) {}
+              model_dimensions, simulation_parameters, o2mode, idlist, z2event,
+              state_independent_events
+          ) {}
 
     void
     fJ(realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
@@ -75,7 +68,7 @@ class Model_ODE : public Model {
     void fJ(realtype t, const_N_Vector x, const_N_Vector xdot, SUNMatrix J);
 
     void
-    fJB(const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    fJB(realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB) override;
 
@@ -109,7 +102,7 @@ class Model_ODE : public Model {
     void fJSparse(realtype t, const_N_Vector x, SUNMatrix J);
 
     void fJSparseB(
-        const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB
     ) override;
@@ -235,7 +228,7 @@ class Model_ODE : public Model {
     fqBdot(realtype t, const_N_Vector x, const_N_Vector xB, N_Vector qBdot);
 
     void fxBdot_ss(
-        const realtype t, AmiVector const& xB, AmiVector const& /*dxB*/,
+        realtype const t, AmiVector const& xB, AmiVector const& /*dxB*/,
         AmiVector& xBdot
     ) override;
 
@@ -274,7 +267,7 @@ class Model_ODE : public Model {
      * @param xBdot Vector with the adjoint state right hand side
      */
     void writeSteadystateJB(
-        const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;
 

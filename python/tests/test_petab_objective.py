@@ -6,7 +6,7 @@ from pathlib import Path
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 import pytest
 from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import SLLH, simulate_petab
@@ -40,10 +40,7 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     amici_solver.setMaxSteps(int(1e5))
 
     problem_parameters = dict(
-        zip(
-            petab_problem.x_ids,
-            petab_problem.x_nominal,
-        )
+        zip(petab_problem.x_ids, petab_problem.x_nominal, strict=True)
     )
 
     results = {}

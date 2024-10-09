@@ -20,6 +20,10 @@ find_package(
   Python3
   COMPONENTS Interpreter Development NumPy
   REQUIRED)
+message(
+  STATUS
+    "Found numpy ${Python3_NumPy_VERSION} include dir ${Python3_NumPy_INCLUDE_DIRS}"
+)
 set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/amici.i
     ${CMAKE_CURRENT_SOURCE_DIR}/edata.i
@@ -112,10 +116,9 @@ if(${SWIG_VERSION} VERSION_LESS 4.1.0)
     PROPERTY SWIG_COMPILE_OPTIONS -py3)
 endif()
 
-# NOTE: No public definitions of any dependency are forwarded to swig,
-# they are only used for compiling the swig-generated source file.
-# Any definition that are relevant for swig-code generation, need to be
-# forwarded manually.
+# NOTE: No public definitions of any dependency are forwarded to swig, they are
+# only used for compiling the swig-generated source file. Any definition that
+# are relevant for swig-code generation, need to be forwarded manually.
 target_link_libraries(_amici amici Python3::Python)
 if(WIN32)
   add_custom_command(
@@ -123,7 +126,6 @@ if(WIN32)
     POST_BUILD
     COMMAND dumpbin "/DEPENDENTS" "$<TARGET_FILE:_amici>"
     COMMENT "Dumping extension dependencies.")
-  message("Dependencies: ${dump}")
 endif()
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py $<TARGET_FILE:_amici>

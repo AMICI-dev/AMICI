@@ -133,8 +133,6 @@ class IDASolver : public Solver {
 
     void setQuadErrCon(bool flag) const override;
 
-    void setErrHandlerFn() const override;
-
     void setUserData() const override;
 
     void setUserDataB(int which) const override;
@@ -198,7 +196,7 @@ class IDASolver : public Solver {
     init(realtype t0, AmiVector const& x0, AmiVector const& dx0) const override;
 
     void initSteadystate(
-        const realtype t0, AmiVector const& x0, AmiVector const& dx0
+        realtype const t0, AmiVector const& x0, AmiVector const& dx0
     ) const override;
 
     void sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& sdx0)
@@ -229,6 +227,14 @@ class IDASolver : public Solver {
     void setJacTimesVecFnB(int which) const override;
 
     void setSparseJacFn_ss() const override;
+
+    void apply_max_nonlin_iters() const override;
+
+    void apply_max_conv_fails() const override;
+
+    void apply_constraints() const override;
+
+    void apply_max_step_size() const override;
 };
 
 } // namespace amici

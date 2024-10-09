@@ -5,7 +5,7 @@ Test getters, setters, etc.
 
 import copy
 import numbers
-
+from math import nan
 import pytest
 
 import amici
@@ -39,7 +39,7 @@ def test_copy_constructors(pysb_example_presimulation_module):
             val = get_val(obj, attr)
 
             try:
-                modval = get_mod_val(val, attr)
+                modval = get_mod_val(val, attr, obj)
             except ValueError:
                 # happens for everything that is not bool or scalar
                 continue
@@ -78,6 +78,10 @@ model_instance_settings0 = {
     ("getInitialStateSensitivities", "setUnscaledInitialStateSensitivities"): [
         tuple([1.0] + [0.0] * 35),
         tuple([0.1] * 36),
+    ],
+    "_steadystate_mask": [
+        (),
+        tuple([0] * 3),
     ],
     "MinimumSigmaResiduals": [
         50.0,
@@ -361,19 +365,21 @@ def get_val(obj, attr):
         return getattr(obj, attr)
 
 
-def get_mod_val(val, attr):
+def get_mod_val(val, attr, obj):
     if attr == "getReturnDataReportingMode":
         return amici.RDataReporting.likelihood
     elif attr == "getParameterList":
-        return tuple(get_mod_val(val[0], "") for _ in val)
+        return tuple(get_mod_val(val[0], "", obj) for _ in val)
     elif attr == "getStateIsNonNegative":
         raise ValueError("Cannot modify value")
+    elif attr == "get_steadystate_mask":
+        return [0 for _ in range(obj.nx_solver)]
     elif isinstance(val, bool):
         return not val
     elif isinstance(val, numbers.Number):
         return val + 1
     elif isinstance(val, tuple):
-        return tuple(get_mod_val(v, attr) for v in val)
+        return tuple(get_mod_val(v, attr, obj) for v in val)
 
     raise ValueError("Cannot modify value")
 
@@ -511,6 +517,9 @@ def test_rdataview(sbml_example_presimulation_module):
     rdata = amici.runAmiciSimulation(model, model.getSolver())
     assert isinstance(rdata, amici.ReturnDataView)
 
+    # check that non-array attributes are looked up in the wrapped object
+    assert rdata.ptr.ny == rdata.ny
+
     # fields are accessible via dot notation and [] operator,
     #  __contains__ and __getattr__ are implemented correctly
     with pytest.raises(AttributeError):
@@ -525,3 +534,55 @@ def test_rdataview(sbml_example_presimulation_module):
 
     # field names are included by dir()
     assert "x" in dir(rdata)
+
+
+def test_python_exceptions(sbml_example_presimulation_module):
+    """Test that C++ exceptions are correctly caught and re-raised in Python."""
+
+    # amici-base extension throws and its swig-wrapper catches
+    solver = amici.CVodeSolver()
+    with pytest.raises(
+        RuntimeError, match="maxsteps must be a positive number"
+    ):
+        solver.setMaxSteps(-1)
+
+    # model extension throws and its swig-wrapper catches
+    model = sbml_example_presimulation_module.get_model()
+    with pytest.raises(RuntimeError, match="Steadystate mask has wrong size"):
+        model.set_steadystate_mask([1] * model.nx_solver * 2)
+
+    # amici-base extension throws and its swig-wrapper catches
+    edata = amici.ExpData(1, 1, 1, [1])
+    # too short sx0
+    edata.sx0 = (1, 2)
+    with pytest.raises(
+        RuntimeError,
+        match=r"Number of initial conditions sensitivities \(36\) "
+        r"in model does not match ExpData \(2\).",
+    ):
+        amici.runAmiciSimulation(model, solver, edata)
+
+    amici.runAmiciSimulations(
+        model, solver, [edata, edata], failfast=True, num_threads=1
+    )
+
+    # model throws, base catches, swig-exception handling is not involved
+    model.setParameters([nan] * model.np())
+    model.setTimepoints([1])
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR
+
+    edata = amici.ExpData(1, 1, 1, [1])
+    rdatas = amici.runAmiciSimulations(
+        model, solver, [edata, edata], failfast=True, num_threads=1
+    )
+    assert rdatas[0].status == amici.AMICI_FIRST_RHSFUNC_ERR
+
+    # model throws, base catches, swig-exception handling is involved
+    from amici._amici import runAmiciSimulation
+
+    with pytest.raises(
+        RuntimeError, match="AMICI failed to integrate the forward problem"
+    ):
+        # rethrow=True
+        runAmiciSimulation(solver, None, model.get(), True)

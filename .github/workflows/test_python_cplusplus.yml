@@ -15,15 +15,22 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
 
     steps:
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -38,11 +45,11 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: Python tests (part 1)
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pytest \
           --ignore-glob=*petab* \
           --ignore-glob=*test_splines.py \
@@ -57,7 +64,7 @@ jobs:
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pytest \
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
@@ -67,7 +74,7 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v3.1.0
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: build/coverage_py.xml
@@ -87,7 +94,7 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v3.1.0
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.info
@@ -110,15 +117,22 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.10" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -131,7 +145,7 @@ jobs:
 
     - name: Python tests
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pytest \
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
@@ -142,7 +156,7 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v3.1.0
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: build/coverage_py.xml
@@ -162,7 +176,7 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v3.1.0
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.info
@@ -186,15 +200,22 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -207,7 +228,7 @@ jobs:
 
     - name: Install notebook dependencies
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
         && pip install jax[cpu]
 
     - name: example notebooks
@@ -224,11 +245,11 @@ jobs:
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: "3.11"
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - name: Install dependencies
@@ -244,13 +265,24 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: cppcheck
       run: scripts/run-cppcheck.sh
 
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Python tests
       run: |
@@ -265,12 +297,19 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Cache
+      uses: actions/cache@v4
       with:
-        python-version: 3.9
+        path: |
+          ~/Library/Caches/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - name: Install dependencies
@@ -282,10 +321,28 @@ jobs:
         scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh
+
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    - name: Install PEtab benchmark collection
+      run: |
+        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+          && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
 
     - name: Python tests
       run: |

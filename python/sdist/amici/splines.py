@@ -5,6 +5,7 @@ This module provides helper functions for reading/writing splines with AMICI
 annotations from/to SBML files and for adding such splines to the AMICI C++
 code.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
     from numbers import Real
     from typing import (
         Any,
-        Callable,
         Union,
     )
+    from collections.abc import Callable
     from collections.abc import Sequence
 
     from . import sbml_import
@@ -30,7 +31,7 @@ import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from itertools import count
 from numbers import Integral
-
+from numbers import Real
 import libsbml
 import numpy as np
 import sympy as sp
@@ -52,6 +53,7 @@ from .sbml_utils import (
     pretty_xml,
     sbml_mathml,
 )
+from .constants import SymbolId
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -569,8 +571,6 @@ class AbstractSpline(ABC):
         # the AMICI spline implementation.
         # If found, they should be checked for here
         # until (if at all) they are accounted for.
-        from .de_export import SymbolId
-
         fixed_parameters: list[sp.Symbol] = list(
             importer.symbols[SymbolId.FIXED_PARAMETER].keys()
         )
@@ -594,7 +594,9 @@ class AbstractSpline(ABC):
             importer.symbols[SymbolId.FIXED_PARAMETER][fp]["value"]
             for fp in fixed_parameters
         ]
-        subs = dict(zip(fixed_parameters, fixed_parameters_values))
+        subs = dict(
+            zip(fixed_parameters, fixed_parameters_values, strict=True)
+        )
         nodes_values = [sp.simplify(x.subs(subs)) for x in self.nodes]
         for x in nodes_values:
             assert x.is_Number
@@ -900,7 +902,11 @@ class AbstractSpline(ABC):
 
     def integrate(self, x0: Real | sp.Basic, x1: Real | sp.Basic) -> sp.Basic:
         """Integrate the spline between the points `x0` and `x1`."""
-        x = sp.Dummy("x")
+        # Use integer values to prevent sympy-comparison issues down the line
+        if isinstance(x0, Real) and x0 % 1 == 0:
+            x0 = int(x0)
+        if isinstance(x1, Real) and x1 % 1 == 0:
+            x1 = int(x1)
         x0, x1 = sp.sympify((x0, x1))
 
         if x0 > x1:
@@ -908,6 +914,8 @@ class AbstractSpline(ABC):
 
         if x0 == x1:
             return sp.sympify(0)
+
+        x = sp.Dummy("x")
 
         if self.extrapolate != ("periodic", "periodic"):
             return self._formula(x=x, cache=False).integrate((x, x0, x1))
@@ -1093,7 +1101,7 @@ class AbstractSpline(ABC):
                     # It makes no sense to give a single nominal value:
                     # grid values must all be different
                     raise TypeError("x_nominal must be a Sequence!")
-                for _x, _val in zip(self.nodes, x_nominal):
+                for _x, _val in zip(self.nodes, x_nominal, strict=True):
                     if _x.is_Symbol and not model.getParameter(_x.name):
                         add_parameter(
                             model, _x.name, value=_val, units=x_units
@@ -1116,7 +1124,7 @@ class AbstractSpline(ABC):
                 else:
                     y_constant = len(self.values_at_nodes) * [y_constant]
                 for _y, _val, _const in zip(
-                    self.values_at_nodes, y_nominal, y_constant
+                    self.values_at_nodes, y_nominal, y_constant, strict=True
                 ):
                     if _y.is_Symbol and not model.getParameter(_y.name):
                         add_parameter(
@@ -1345,8 +1353,6 @@ class AbstractSpline(ABC):
 
     def parameters(self, importer: sbml_import.SbmlImporter) -> set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
-        from .de_export import SymbolId
-
         return self._parameters().intersection(
             set(importer.symbols[SymbolId.PARAMETER].keys())
         )
@@ -1659,7 +1665,6 @@ class CubicHermiteSpline(AbstractSpline):
         for spline grid points, values, ... contain species symbols.
         """
         # TODO this is very much a draft
-        from .de_export import SymbolId
 
         species: list[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES])
         for d in self.derivatives_at_nodes:

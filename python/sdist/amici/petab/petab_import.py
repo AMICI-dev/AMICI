@@ -9,11 +9,11 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Union
+from warnings import warn
 
 import amici
-import petab
-from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+import petab.v1 as petab
+from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 from ..logging import get_logger
 from .import_helpers import _can_import_model, _create_model_name, check_model
@@ -33,9 +33,9 @@ logger = get_logger(__name__, logging.WARNING)
 
 def import_petab_problem(
     petab_problem: petab.Problem,
-    model_output_dir: Union[str, Path, None] = None,
+    model_output_dir: str | Path | None = None,
     model_name: str = None,
-    force_compile: bool = False,
+    compile_: bool = None,
     non_estimated_parameters_as_constants=True,
     **kwargs,
 ) -> "amici.Model":
@@ -53,9 +53,10 @@ def import_petab_problem(
         Name of the generated model module. Defaults to the ID of the model
         or the model file name without the extension.
 
-    :param force_compile:
-        Whether to compile the model even if the target folder is not empty,
-        or the model exists already.
+    :param compile_:
+        If ``True``, the model will be compiled. If ``False``, the model will
+        not be compiled. If ``None``, the model will be compiled if it cannot
+        be imported.
 
     :param non_estimated_parameters_as_constants:
         Whether parameters marked as non-estimated in PEtab should be
@@ -71,6 +72,17 @@ def import_petab_problem(
     :return:
         The imported model.
     """
+    if "force_compile" in kwargs:
+        if kwargs["force_compile"]:
+            compile_ = True
+            del kwargs["force_compile"]
+        warn(
+            "The `force_compile` option is deprecated, please use the "
+            "new `compile_` option, which also supports 'do not compile'.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
         raise NotImplementedError(
             "Unsupported model type " + petab_problem.model.type_id
@@ -107,12 +119,15 @@ def import_petab_problem(
         os.makedirs(model_output_dir)
 
     # check if compilation necessary
-    if force_compile or not _can_import_model(model_name, model_output_dir):
+    if compile_ or (
+        compile_ is None
+        and not _can_import_model(model_name, model_output_dir)
+    ):
         # check if folder exists
-        if os.listdir(model_output_dir) and not force_compile:
+        if os.listdir(model_output_dir) and not compile_:
             raise ValueError(
                 f"Cannot compile to {model_output_dir}: not empty. "
-                "Please assign a different target or set `force_compile`."
+                "Please assign a different target or set `compile_` to `True`."
             )
 
         # remove folder if exists

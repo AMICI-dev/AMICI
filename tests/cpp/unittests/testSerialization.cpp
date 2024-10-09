@@ -121,6 +121,7 @@ class SolverSerializationTest : public ::testing::Test {
 
 TEST(ModelSerializationTest, ToFile)
 {
+    using amici::realtype;
     int np = 1;
     int nk = 2;
     int nx = 3;
@@ -187,6 +188,7 @@ TEST(ModelSerializationTest, ToFile)
 
 TEST(ReturnDataSerializationTest, ToString)
 {
+    using amici::realtype;
     int np = 1;
     int nk = 2;
     int nx = 3;

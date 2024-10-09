@@ -22,11 +22,12 @@ namespace amici {
  */
 bool is_next_t_too_close(realtype cur_t, realtype t_next) {
     auto tdiff = t_next - cur_t;
-    if(tdiff == 0.0)
+    if (tdiff == 0.0)
         return true;
 
     auto tdist = std::fabs(tdiff);
-    auto tround = std::numeric_limits<realtype>::epsilon() * std::max(std::fabs(cur_t), std::fabs(t_next));
+    auto tround = std::numeric_limits<realtype>::epsilon()
+                  * std::max(std::fabs(cur_t), std::fabs(t_next));
     if (tdist < 2.0 * tround)
         return true;
 
@@ -47,14 +48,14 @@ ForwardProblem::ForwardProblem(
     , dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0)
     , t_(model->t0())
     , roots_found_(model->ne, 0)
-    , x_(model->nx_solver)
-    , x_old_(model->nx_solver)
-    , dx_(model->nx_solver)
-    , dx_old_(model->nx_solver)
-    , xdot_(model->nx_solver)
-    , xdot_old_(model->nx_solver)
-    , sx_(model->nx_solver, model->nplist())
-    , sdx_(model->nx_solver, model->nplist())
+    , x_(model->nx_solver, solver->getSunContext())
+    , x_old_(model->nx_solver, solver->getSunContext())
+    , dx_(model->nx_solver, solver->getSunContext())
+    , dx_old_(model->nx_solver, solver->getSunContext())
+    , xdot_(model->nx_solver, solver->getSunContext())
+    , xdot_old_(model->nx_solver, solver->getSunContext())
+    , sx_(model->nx_solver, model->nplist(), solver->getSunContext())
+    , sdx_(model->nx_solver, model->nplist(), solver->getSunContext())
     , stau_(model->nplist()) {
     if (preeq) {
         x_ = preeq->getState();
@@ -422,7 +423,10 @@ void ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
     }
 }
 
-SimulationState ForwardProblem::getSimulationState() const {
+SimulationState ForwardProblem::getSimulationState() {
+    if (std::isfinite(solver->gett())) {
+        solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+    }
     auto state = SimulationState();
     state.t = t_;
     state.x = x_;

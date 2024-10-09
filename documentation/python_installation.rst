@@ -8,7 +8,7 @@ Short guide
 
 Installation of the AMICI Python package has the following prerequisites:
 
-* Python>=3.9
+* Python>=3.10
 * :term:`SWIG`>=3.0
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
@@ -31,8 +31,8 @@ If this does not work for you, please follow the full instructions below.
 Installation on Linux
 +++++++++++++++++++++
 
-Ubuntu 22.04
-------------
+Ubuntu 22.04 / 24.04
+--------------------
 
 Install the AMICI dependencies via ``apt``
 (this requires superuser privileges):
@@ -44,8 +44,8 @@ Install the AMICI dependencies via ``apt``
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
 
-    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
-    libboost-chrono-dev libboost-math-dev libboost-serialization-dev
+   # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+   libboost-chrono-dev libboost-math-dev libboost-serialization-dev
 
 Install AMICI:
 
@@ -203,9 +203,8 @@ Newer installations could be located under
 
 so that it matches your directory structure.
 This will download OpenBLAS and compile it, creating
-
-    C:\\BLAS\\OpenBLAS\\lib\\openblas.lib
-    C:\\BLAS\\OpenBLAS\\bin\\openblas.dll
+``C:\\BLAS\\OpenBLAS\\lib\\openblas.lib`` and
+``C:\\BLAS\\OpenBLAS\\bin\\openblas.dll``.
 
 You will also need to define two environment variables:
 
@@ -231,8 +230,8 @@ Now you need to make sure that all required DLLs are within the scope of the
 ``PATH`` variable. In particular, the following directories need to be included
 in ``PATH``:
 
-    C:\\BLAS\\OpenBLAS\\bin
-    C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\\DLLs\\x64
+* ``C:\BLAS\OpenBLAS\bin``
+* ``C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64``
 
 The first one is needed for ``openblas.dll`` and the second is needed for the
 Windows Universal C Runtime.
@@ -240,7 +239,7 @@ Windows Universal C Runtime.
 If any DLLs are missing in the ``PATH`` variable, Python will return the
 following error upon ``import amici``:
 
-    ImportError: DLL load failed: The specified module could not be found.
+``ImportError: DLL load failed: The specified module could not be found.``
 
 Almost all of the DLLs are standard Windows DLLs and should be included in
 either Windows or Visual Studio. But, in case it is necessary to test this,
@@ -361,16 +360,19 @@ environment variables:
 |                            | Default: ``ON``                  |                                 |
 +----------------------------+----------------------------------+---------------------------------+
 
-Installation under Anaconda
----------------------------
+Installation under conda
+------------------------
 
-To use an Anaconda installation of Python
-`https://www.anaconda.com/distribution/ <https://www.anaconda.com/distribution/>`_,
-Python>=3.7), proceed as follows:
+There is no amici conda recipe available yet. However, you can install AMICI
+using pip in a conda environment.
 
-Since Anaconda provides own versions of some packages which might not
-work with AMICI (in particular the ``gcc`` compiler), create a minimal
-virtual environment via:
+.. note::
+
+   It is possible, but we currently don't recommend using conda for installing
+   AMICI, as it commonly leads to conflicts with system installations of
+   libraries and compilers.
+
+Create a minimal conda environment via:
 
 .. code-block:: bash
 
@@ -416,7 +418,7 @@ Now, you are ready to use AMICI in the virtual environment.
 
 .. note::
 
-   **Anaconda on Mac**
+   **conda on Mac**
 
    If the above installation does not work for you, try installing AMICI via:
 
@@ -438,6 +440,9 @@ Now, you are ready to use AMICI in the virtual environment.
 
    (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
 
+Known issues:
+
+* ``CMAKE_AR-NOTFOUND: not found``: Try ``conda install binutils``.
 
 Optional Boost support
 ----------------------

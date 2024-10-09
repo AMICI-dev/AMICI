@@ -215,6 +215,19 @@
 
 {
    other
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:resize_compact
+   fun:_PyUnicodeWriter_Finish
+   fun:PyUnicode_FromFormatV
+   fun:PyUnicode_FromFormat
+   fun:PyFortranObject_NewAsAttr
+   ...
+}
+
+{
+   other
    Memcheck:Value8
    ...
    fun:PyBytes_Repr
@@ -548,6 +561,14 @@
 }
 
 {
+   Pandas 2.2.0
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:*site-packages/pandas/*
+}
+
+{
    Scipy extensions
    Memcheck:Leak
    match-leak-kinds: definite
@@ -729,6 +750,16 @@
 }
 
 {
+   _dl_catch_exception
+   Memcheck:Addr8
+   fun:strncmp
+   fun:is_dst
+   ...
+   fun:_dl_catch_exception
+   ...
+}
+
+{
    Python dictkeys_get_index
    Memcheck:Value8
    fun:dictkeys_get_index
@@ -845,5 +876,112 @@
    fun:_ZN7libsbml12SBMLDocument16checkConsistencyEv
    ...
    fun:loadAntimonyString
+   ...
+}
+
+{
+   Python
+   Memcheck:Cond
+   fun:maybe_small_long
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:medium_value
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:Py_INCREF
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:Py_DECREF
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:Py_SIZE
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:Py_TYPE
+   ...
+}
+{
+   Python
+   Memcheck:Value8
+   fun:type_call
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:_PyEval_EvalFrameDefault
+   ...
+}
+
+
+{
+   Python
+   Memcheck:Value8
+   fun:PyType_HasFeature
+   ...
+}
+
+{
+   Python
+   Memcheck:Value8
+   fun:unpack_indices
+   ...
+}
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyFloat_FromDouble
+   fun:fill_time
+   ...
+}
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:gc_alloc
+   ...
+   fun:Py_CompileStringObject
+   ...
+}
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:gc_alloc
+   fun:_PyObject_GC_NewVar
+   ...
+}
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:_PyObject_GC_Resize
+   fun:_PyTuple_Resize
    ...
 }

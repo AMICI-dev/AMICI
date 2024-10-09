@@ -17,9 +17,9 @@ BackwardProblem::BackwardProblem(
     , solver_(fwd.solver)
     , edata_(fwd.edata)
     , t_(fwd.getTime())
-    , xB_(fwd.model->nx_solver)
-    , dxB_(fwd.model->nx_solver)
-    , xQB_(fwd.model->nJ * fwd.model->nplist())
+    , xB_(fwd.model->nx_solver, solver_->getSunContext())
+    , dxB_(fwd.model->nx_solver, solver_->getSunContext())
+    , xQB_(fwd.model->nJ * fwd.model->nplist(), solver_->getSunContext())
     , x_disc_(fwd.getStatesAtDiscontinuities())
     , x_old_disc_(fwd.getStatesBeforeDiscontinuities())
     , xdot_disc_(fwd.getRHSAtDiscontinuities())
@@ -153,7 +153,7 @@ void BackwardProblem::handleEventB() {
 
     model_->updateHeavisideB(rootidx.data());
 
-    auto delta_x = AmiVector(x_disc.getLength());
+    auto delta_x = AmiVector(x_disc.getLength(), solver_->getSunContext());
     for (int iv = 0; iv < xdot_in_event.getLength(); iv++)
         delta_x[iv] = (x_disc.at(iv) - x_old_disc.at(iv));
 

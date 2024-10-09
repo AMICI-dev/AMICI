@@ -1,5 +1,5 @@
 # NOTE: relative paths are expected to be relative to the repository root
-sphinx
+sphinx<8
 mock>=5.0.2
 setuptools>=67.7.2
 pysb>=1.11.0
@@ -13,13 +13,14 @@ sphinx-autodoc-typehints
 git+https://github.com/readthedocs/sphinx-hoverxref@main
 ipython>=8.13.2
 breathe>=4.35.0
-#exhale>=0.3.5
+exhale>=0.3.7
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
 sphinxcontrib-matlabdomain>=0.20.0
 sphinxcontrib-napoleon>=0.7
 pygments>=2.15.1
-Jinja2==3.1.2
+Jinja2==3.1.4
 git+https://github.com/readthedocs/readthedocs-sphinx-ext
 ipykernel
 -e git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab
 -e python/sdist/
+numpy<2.0

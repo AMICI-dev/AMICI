@@ -9,11 +9,11 @@ import copy
 import itertools
 from typing import Literal, Union
 from collections.abc import Iterator
-
+from numbers import Number
 import amici
 import numpy as np
 import sympy as sp
-
+from sympy.abc import _clash
 from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
 
 StrOrExpr = Union[str, sp.Expr]
@@ -37,7 +37,7 @@ class SwigPtrView(collections.abc.Mapping):
     _field_names: list[str] = []
     _field_dimensions: dict[str, list[int]] = dict()
 
-    def __getitem__(self, item: str) -> Union[np.ndarray, float]:
+    def __getitem__(self, item: str) -> np.ndarray | float:
         """
         Access to field names, copies data from C++ object into numpy
         array, reshapes according to field dimensions and stores values in
@@ -55,15 +55,18 @@ class SwigPtrView(collections.abc.Mapping):
         if item in self._cache:
             return self._cache[item]
 
-        if item == "id":
+        if item in self._field_names:
+            value = _field_as_numpy(
+                self._field_dimensions, item, self._swigptr
+            )
+            self._cache[item] = value
+
+            return value
+
+        if not item.startswith("_") and hasattr(self._swigptr, item):
             return getattr(self._swigptr, item)
 
-        if item not in self._field_names:
-            self.__missing__(item)
-
-        value = _field_as_numpy(self._field_dimensions, item, self._swigptr)
-        self._cache[item] = value
-        return value
+        self.__missing__(item)
 
     def __missing__(self, key: str) -> None:
         """
@@ -73,7 +76,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         raise KeyError(f"Unknown field name {key}.")
 
-    def __getattr__(self, item) -> Union[np.ndarray, float]:
+    def __getattr__(self, item) -> np.ndarray | float:
         """
         Attribute accessor for field names
 
@@ -238,9 +241,11 @@ class ReturnDataView(SwigPtrView):
         "numnonlinsolvconvfailsB",
         "cpu_timeB",
         "cpu_time_total",
+        "messages",
+        "t_last",
     ]
 
-    def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
+    def __init__(self, rdata: ReturnDataPtr | ReturnData):
         """
         Constructor
 
@@ -304,7 +309,7 @@ class ReturnDataView(SwigPtrView):
 
     def __getitem__(
         self, item: str
-    ) -> Union[np.ndarray, ReturnDataPtr, ReturnData, float]:
+    ) -> np.ndarray | ReturnDataPtr | ReturnData | float:
         """
         Access fields by name.s
 
@@ -359,7 +364,8 @@ class ReturnDataView(SwigPtrView):
             ) or self._swigptr.parameter_ids
         else:
             raise NotImplementedError(
-                f"Subsetting {field} by ID is not implemented or not possible."
+                f"Subsetting `{field}` by ID (`{entity_id}`) "
+                "is not implemented or not possible."
             )
         col_index = ids.index(entity_id)
         return getattr(self, field)[:, ..., col_index]
@@ -385,7 +391,7 @@ class ExpDataView(SwigPtrView):
         "fixedParametersPresimulation",
     ]
 
-    def __init__(self, edata: Union[ExpDataPtr, ExpData]):
+    def __init__(self, edata: ExpDataPtr | ExpData):
         """
         Constructor
 
@@ -423,7 +429,7 @@ class ExpDataView(SwigPtrView):
 
 def _field_as_numpy(
     field_dimensions: dict[str, list[int]], field: str, data: SwigPtrView
-) -> Union[np.ndarray, float, None]:
+) -> np.ndarray | float | None:
     """
     Convert data object field to numpy array with dimensions according to
     specified field dimensions
@@ -439,7 +445,11 @@ def _field_as_numpy(
     attr = getattr(data, field)
     if field_dim := field_dimensions.get(field, None):
         return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
-    return float(attr)
+
+    if isinstance(attr, Number):
+        return float(attr)
+
+    return attr
 
 
 def _entity_type_from_id(
@@ -487,7 +497,7 @@ def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
     from sympy.utilities.lambdify import lambdify
 
     if isinstance(expr, str):
-        expr = sp.sympify(expr)
+        expr = sp.sympify(expr, locals=_clash)
 
     arg_names = list(sorted(expr.free_symbols, key=lambda x: x.name))
     func = lambdify(arg_names, expr, "numpy")

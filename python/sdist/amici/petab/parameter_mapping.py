@@ -27,17 +27,17 @@ from collections.abc import Collection, Iterator
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 import sympy as sp
 from amici.sbml_import import get_species_initial
-from petab.C import *  # noqa: F403
-from petab.C import (
+from petab.v1.C import *  # noqa: F403
+from petab.v1.C import (
     LIN,
     PARAMETER_SCALE,
     PREEQUILIBRATION_CONDITION_ID,
     SIMULATION_CONDITION_ID,
 )
-from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
 
 from .. import AmiciModel
@@ -385,7 +385,7 @@ def create_parameter_mapping(
 
     parameter_mapping = ParameterMapping()
     for (_, condition), prelim_mapping_for_condition in zip(
-        simulation_conditions.iterrows(), prelim_parameter_mapping
+        simulation_conditions.iterrows(), prelim_parameter_mapping, strict=True
     ):
         mapping_for_condition = create_parameter_mapping_for_condition(
             prelim_mapping_for_condition, condition, petab_problem, amici_model
@@ -486,12 +486,11 @@ def create_parameter_mapping_for_condition(
                     condition_scale_map_preeq,
                     preeq_value,
                 )
-            else:
-                # need to set dummy value for preeq parameter anyways, as it
-                #  is expected below (set to 0, not nan, because will be
-                #  multiplied with indicator variable in initial assignment)
-                condition_map_sim[init_par_id] = 0.0
-                condition_scale_map_sim[init_par_id] = LIN
+            # need to set dummy value for preeq parameter anyways, as it
+            #  is expected below (set to 0, not nan, because will be
+            #  multiplied with indicator variable in initial assignment)
+            condition_map_sim[init_par_id] = 0.0
+            condition_scale_map_sim[init_par_id] = LIN
 
             # for simulation
             condition_id = condition[SIMULATION_CONDITION_ID]
@@ -505,6 +504,10 @@ def create_parameter_mapping_for_condition(
                 condition_scale_map_sim,
                 value,
             )
+            # set dummy value as above
+            if condition_map_preeq:
+                condition_map_preeq[init_par_id] = 0.0
+                condition_scale_map_preeq[init_par_id] = LIN
 
     ##########################################################################
     # separate fixed and variable AMICI parameters, because we may have

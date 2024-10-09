@@ -5,7 +5,7 @@
  *     Aaron Collier @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2021, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -28,12 +28,11 @@
 #define _SUNLINSOL_SPBCGS_H
 
 #include <stdio.h>
-
 #include <sundials/sundials_linearsolver.h>
 #include <sundials/sundials_matrix.h>
 #include <sundials/sundials_nvector.h>
 
-#ifdef __cplusplus  /* wrapper to enable C++ usage */
+#ifdef __cplusplus /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
@@ -44,18 +43,19 @@ extern "C" {
  * SPBCGS Implementation of SUNLinearSolver
  * ---------------------------------------- */
 
-struct _SUNLinearSolverContent_SPBCGS {
+struct _SUNLinearSolverContent_SPBCGS
+{
   int maxl;
   int pretype;
-  booleantype zeroguess;
+  sunbooleantype zeroguess;
   int numiters;
-  realtype resnorm;
+  sunrealtype resnorm;
   int last_flag;
 
-  ATimesFn ATimes;
+  SUNATimesFn ATimes;
   void* ATData;
-  PSetupFn Psetup;
-  PSolveFn Psolve;
+  SUNPSetupFn Psetup;
+  SUNPSolveFn Psolve;
   void* PData;
 
   N_Vector s1;
@@ -67,61 +67,46 @@ struct _SUNLinearSolverContent_SPBCGS {
   N_Vector u;
   N_Vector Ap;
   N_Vector vtemp;
-
-  int print_level;
-  FILE* info_file;
 };
 
-typedef struct _SUNLinearSolverContent_SPBCGS *SUNLinearSolverContent_SPBCGS;
-
+typedef struct _SUNLinearSolverContent_SPBCGS* SUNLinearSolverContent_SPBCGS;
 
 /* ---------------------------------------
  *Exported Functions for SUNLINSOL_SPBCGS
  * --------------------------------------- */
 
-SUNDIALS_EXPORT SUNLinearSolver SUNLinSol_SPBCGS(N_Vector y,
-                                                 int pretype,
-                                                 int maxl);
-SUNDIALS_EXPORT int SUNLinSol_SPBCGSSetPrecType(SUNLinearSolver S,
-                                                int pretype);
-SUNDIALS_EXPORT int SUNLinSol_SPBCGSSetMaxl(SUNLinearSolver S,
-                                            int maxl);
-
-SUNDIALS_DEPRECATED_EXPORT SUNLinearSolver SUNSPBCGS(N_Vector y, int pretype, int maxl);
-SUNDIALS_DEPRECATED_EXPORT int SUNSPBCGSSetPrecType(SUNLinearSolver S, int pretype);
-SUNDIALS_DEPRECATED_EXPORT int SUNSPBCGSSetMaxl(SUNLinearSolver S, int maxl);
-
+SUNDIALS_EXPORT SUNLinearSolver SUNLinSol_SPBCGS(N_Vector y, int pretype,
+                                                 int maxl, SUNContext sunctx);
+SUNDIALS_EXPORT SUNErrCode SUNLinSol_SPBCGSSetPrecType(SUNLinearSolver S,
+                                                       int pretype);
+SUNDIALS_EXPORT SUNErrCode SUNLinSol_SPBCGSSetMaxl(SUNLinearSolver S, int maxl);
 SUNDIALS_EXPORT SUNLinearSolver_Type SUNLinSolGetType_SPBCGS(SUNLinearSolver S);
 SUNDIALS_EXPORT SUNLinearSolver_ID SUNLinSolGetID_SPBCGS(SUNLinearSolver S);
-SUNDIALS_EXPORT int SUNLinSolInitialize_SPBCGS(SUNLinearSolver S);
-SUNDIALS_EXPORT int SUNLinSolSetATimes_SPBCGS(SUNLinearSolver S, void* A_data,
-                                              ATimesFn ATimes);
-SUNDIALS_EXPORT int SUNLinSolSetPreconditioner_SPBCGS(SUNLinearSolver S,
-                                                      void* P_data,
-                                                      PSetupFn Pset,
-                                                      PSolveFn Psol);
-SUNDIALS_EXPORT int SUNLinSolSetScalingVectors_SPBCGS(SUNLinearSolver S,
-                                                      N_Vector s1,
-                                                      N_Vector s2);
-SUNDIALS_EXPORT int SUNLinSolSetZeroGuess_SPBCGS(SUNLinearSolver S,
-                                                 booleantype onoff);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolInitialize_SPBCGS(SUNLinearSolver S);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolSetATimes_SPBCGS(SUNLinearSolver S,
+                                                     void* A_data,
+                                                     SUNATimesFn ATimes);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolSetPreconditioner_SPBCGS(SUNLinearSolver S,
+                                                             void* P_data,
+                                                             SUNPSetupFn Pset,
+                                                             SUNPSolveFn Psol);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolSetScalingVectors_SPBCGS(SUNLinearSolver S,
+                                                             N_Vector s1,
+                                                             N_Vector s2);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolSetZeroGuess_SPBCGS(SUNLinearSolver S,
+                                                        sunbooleantype onoff);
 SUNDIALS_EXPORT int SUNLinSolSetup_SPBCGS(SUNLinearSolver S, SUNMatrix A);
 SUNDIALS_EXPORT int SUNLinSolSolve_SPBCGS(SUNLinearSolver S, SUNMatrix A,
-                                          N_Vector x, N_Vector b, realtype tol);
+                                          N_Vector x, N_Vector b,
+                                          sunrealtype tol);
 SUNDIALS_EXPORT int SUNLinSolNumIters_SPBCGS(SUNLinearSolver S);
-SUNDIALS_EXPORT realtype SUNLinSolResNorm_SPBCGS(SUNLinearSolver S);
+SUNDIALS_EXPORT sunrealtype SUNLinSolResNorm_SPBCGS(SUNLinearSolver S);
 SUNDIALS_EXPORT N_Vector SUNLinSolResid_SPBCGS(SUNLinearSolver S);
 SUNDIALS_EXPORT sunindextype SUNLinSolLastFlag_SPBCGS(SUNLinearSolver S);
-SUNDIALS_EXPORT int SUNLinSolSpace_SPBCGS(SUNLinearSolver S,
-                                          long int *lenrwLS,
-                                          long int *leniwLS);
-SUNDIALS_EXPORT int SUNLinSolFree_SPBCGS(SUNLinearSolver S);
-SUNDIALS_EXPORT int SUNLinSolSetInfoFile_SPBCGS(SUNLinearSolver S,
-                                                FILE* info_file);
-SUNDIALS_EXPORT int SUNLinSolSetPrintLevel_SPBCGS(SUNLinearSolver S,
-                                                  int print_level);
-
-
+SUNDIALS_EXPORT SUNErrCode SUNLinSolSpace_SPBCGS(SUNLinearSolver S,
+                                                 long int* lenrwLS,
+                                                 long int* leniwLS);
+SUNDIALS_EXPORT SUNErrCode SUNLinSolFree_SPBCGS(SUNLinearSolver S);
 
 #ifdef __cplusplus
 }

@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     - name: Install MATLAB
-      uses: matlab-actions/setup-matlab@v1
+      uses: matlab-actions/setup-matlab@v2
     - name: Run script
-      uses: matlab-actions/run-command@v1
+      uses: matlab-actions/run-command@v2
       with:
         command: cd matlab; installAMICI; addpath tests; testModels

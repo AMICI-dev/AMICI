@@ -137,7 +137,11 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   TPL_NDTOTALCLDXRDATA,                        // ndtotal_cldx_rdata
                   0,                                       // nnz
                   TPL_UBW,                                 // ubw
-                  TPL_LBW                                  // lbw
+                  TPL_LBW,                                 // lbw
+                  true,                                    // pythonGenerated
+                  TPL_NDXDOTDP_EXPLICIT,                   // ndxdotdp_explicit
+                  TPL_NDXDOTDX_EXPLICIT,                   // ndxdotdx_explicit
+                  TPL_W_RECURSION_DEPTH                    // w_recursion_depth
               ),
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
@@ -146,10 +150,6 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_ID},   // idlist
               std::vector<int>{TPL_Z2EVENT},               // z2events
-              true,                                        // pythonGenerated
-              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
-              TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
-              TPL_W_RECURSION_DEPTH,                       // w_recursion_depth
               {TPL_STATE_INDEPENDENT_EVENTS}               // state-independent events
           ) {
                  root_initial_values_ = std::vector<bool>(

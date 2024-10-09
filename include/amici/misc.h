@@ -85,7 +85,7 @@ void checkBufferSize(
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 };
@@ -97,7 +97,7 @@ void writeSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
  * @param buffer buffer to which values are to be added
  */
 template <class T>
-void addSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::transform(
         slice.begin(), slice.end(), buffer.begin(), buffer.begin(),

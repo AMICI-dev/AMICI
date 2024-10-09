@@ -1,4 +1,5 @@
 """AMICI model package setup"""
+
 import os
 import sys
 from pathlib import Path
@@ -23,6 +24,11 @@ def get_extension() -> CMakeExtension:
     else:
         os.environ["CMAKE_BUILD_PARALLEL_LEVEL"] = "1"
 
+    debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
+        "1",
+        "true",
+    ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
+
     return CMakeExtension(
         name="model_ext",
         source_dir=os.getcwd(),
@@ -36,6 +42,7 @@ def get_extension() -> CMakeExtension:
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
         ],
+        cmake_build_type="Debug" if debug_build else "Release",
     )
 
 
@@ -71,8 +78,7 @@ setup(
     ext_modules=[MODEL_EXT],
     packages=find_namespace_packages(),
     install_requires=["amici==TPL_AMICI_VERSION"],
-    extras_require={"wurlitzer": ["wurlitzer"]},
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     package_data={},
     zip_safe=False,
     classifiers=CLASSIFIERS,

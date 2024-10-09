@@ -2,7 +2,7 @@
 # Programmer(s): Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -24,33 +24,17 @@ sundials_add_library(sundials_sunlinsollapackband
     ${SUNDIALS_SOURCE_DIR}/include/sunlinsol/sunlinsol_lapackband.h
   INCLUDE_SUBDIR
     sunlinsol
-  OBJECT_LIBRARIES
-    sundials_generic_obj
   LINK_LIBRARIES
-    PUBLIC sundials_sunmatrixband ${LAPACK_LIBRARIES}
+    PUBLIC sundials_core
+  OBJECT_LIBRARIES
+  LINK_LIBRARIES
+    PUBLIC sundials_sunmatrixband "${LAPACK_LIBRARIES}"
   OUTPUT_NAME
     sundials_sunlinsollapackband
   VERSION
     ${sunlinsollib_VERSION}
   SOVERSION
-    ${sunlinsollib_VERSION}
+  ${sunlinsollib_SOVERSION}
 )
 
 message(STATUS "Added SUNLINSOL_LAPACKBAND module")
-
-# If FCMIX is enabled, build and install the Fortran77 library
-if(BUILD_FORTRAN77_INTERFACE)
-  sundials_add_library(sundials_fsunlinsollapackband
-    SOURCES
-    fsunlinsol_lapackband.c
-    LINK_LIBRARIES
-      PRIVATE sundials_fnvecserial sundials_fsunmatrixband sundials_sunlinsollapackband
-    OUTPUT_NAME
-      sundials_fsunlinsollapackband
-    VERSION
-      ${sunlinsollib_VERSION}
-    SOVERSION
-      ${sunlinsollib_SOVERSION}
-  )
-  message(STATUS "Added SUNLINSOL_LAPACKBAND F77 interface")
-endif()

@@ -246,14 +246,16 @@ class SteadystateProblem {
      * w_i = 1 / ( rtol * x_i + atol )
      * @param x current state (sx[ip] for sensitivities)
      * @param xdot current rhs (sxdot[ip] for sensitivities)
+     * @param mask mask for state variables to include in WRMS norm.
+     * Positive value: include; non-positive value: exclude; empty: include all.
      * @param atol absolute tolerance
      * @param rtol relative tolerance
      * @param ewt error weight vector
      * @return root-mean-square norm
      */
     realtype getWrmsNorm(
-        AmiVector const& x, AmiVector const& xdot, realtype atol, realtype rtol,
-        AmiVector& ewt
+        AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
+        realtype atol, realtype rtol, AmiVector& ewt
     ) const;
 
     /**
@@ -398,6 +400,8 @@ class SteadystateProblem {
     AmiVector xQB_;
     /** time-derivative of quadrature state vector */
     AmiVector xQBdot_;
+    /** NVector around Model::steadystate_mask_ */
+    AmiVector steadystate_mask_;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */
     int max_steps_{0};
@@ -448,7 +452,7 @@ class SteadystateProblem {
     realtype rtol_quad_{NAN};
 
     /** newton solver */
-    std::unique_ptr<NewtonSolver> newton_solver_{nullptr};
+    NewtonSolver newton_solver_;
 
     /** damping factor flag */
     NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};

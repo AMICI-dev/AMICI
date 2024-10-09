@@ -1,13 +1,10 @@
 #
 # Build AMICI library
 #
-cmake_minimum_required(VERSION 3.15)
-cmake_policy(VERSION 3.15...3.27)
-
-# cmake >=3.27
-if(POLICY CMP0144)
-  cmake_policy(SET CMP0144 NEW)
-endif(POLICY CMP0144)
+cmake_minimum_required(VERSION 3.22)
+# When updating the policy version, please also update it in
+# src/CMakeLists.template.cmake
+cmake_policy(VERSION 3.22...3.30)
 
 project(amici)
 
@@ -32,10 +29,11 @@ message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  # require at least gcc 4.9, otherwise regex wont work properly
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-    message(FATAL_ERROR "GCC version must be at least 4.9!")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}"
+                                                STREQUAL "MINGW")
+  # require at least gcc 9.1 for proper C+17 support, e.g. std::reduce
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+    message(FATAL_ERROR "GCC version must be at least 9.1!")
   endif()
 endif()
 
@@ -84,8 +82,12 @@ endif()
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-  add_compile_options(-UNDEBUG -O0 -g)
-  set(CMAKE_BUILD_TYPE "Debug")
+  add_compile_options(-UNDEBUG)
+  if(MSVC)
+    add_compile_options(-DEBUG)
+  else()
+    add_compile_options(-O0 -g)
+  endif()
 endif()
 
 # coverage options
@@ -114,6 +116,7 @@ endif()
 # find dependencies
 include(GNUInstallDirs)
 
+include(AmiciFindBLAS)
 find_package(OpenMP)
 find_package(Boost COMPONENTS chrono)
 
@@ -127,57 +130,22 @@ elseif(AMICI_TRY_ENABLE_HDF5)
 endif()
 
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
-set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
-set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
-set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
-find_package(SUNDIALS REQUIRED PATHS
-             "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/sundials/")
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS
+    "${VENDORED_SUNDIALS_DIR}/src;${VENDORED_SUNDIALS_DIR}/src/sundials")
+# Handle different sundials build/install dirs, depending on whether we are
+# building the Python extension only or the full C++ interface
+if(AMICI_PYTHON_BUILD_EXT_ONLY)
+  set(VENDORED_SUNDIALS_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
+else()
+  set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
+  set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
+endif()
+set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
+find_package(SUNDIALS REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
-
-# AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
-# The latter is not supported via CMake yet.
-set(BLAS
-    "CBLAS"
-    CACHE STRING "BLAS library to use")
-set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
-if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
-  if(DEFINED ENV{MKLROOT})
-    # This is set by Environment Modules
-    message(STATUS "Using MKL_INCDIR and MKL_LIB from environment module")
-    set(BLAS
-        "MKL"
-        CACHE STRING "BLAS library to use" FORCE)
-    set(BLAS_INCLUDE_DIRS
-        "$ENV{MKL_INCDIR}"
-        CACHE STRING "" FORCE)
-    set(BLAS_LIBRARIES
-        "$ENV{MKL_LIB}"
-        CACHE STRING "" FORCE)
-  else()
-    set(BLAS_INCLUDE_DIRS
-        ""
-        CACHE STRING "")
-    set(BLAS_LIBRARIES
-        -lmkl
-        CACHE STRING "")
-  endif()
-elseif(NOT DEFINED ENV{BLAS_LIBS} AND NOT DEFINED ENV{BLAS_CFLAGS})
-  # if nothing is specified via environment variables, let's try FindBLAS
-  find_package(BLAS)
-  if(NOT BLAS_FOUND)
-    # Nothing specified by the user and FindBLAS didn't find anything; let's try
-    # if cblas is available on the system paths.
-    set(BLAS_INCLUDE_DIRS
-        ""
-        CACHE STRING "")
-    set(BLAS_LIBRARIES
-        -lcblas
-        CACHE STRING "")
-  endif()
-endif()
-add_compile_definitions(AMICI_BLAS_${BLAS})
 
 # Add target to create version file
 add_custom_target(
@@ -253,21 +221,18 @@ set(AMICI_SRC_LIST
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
-# legacy python package environment variables:
-if(DEFINED ENV{BLAS_CFLAGS})
-  target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
-endif()
-if(DEFINED ENV{BLAS_LIBS})
-  # Note that, on Windows, at least for ninja, this will only work with dashes
-  # instead of slashes in any linker options
-  target_link_libraries(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
-endif()
-
 set(AMICI_CXX_OPTIONS
     ""
     CACHE STRING "C++ options for libamici (semicolon-separated)")
 target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
-
+set_property(
+  SOURCE src/solver_cvodes.cpp
+  APPEND
+  PROPERTY INCLUDE_DIRECTORIES "${SUNDIALS_PRIVATE_INCLUDE_DIRS}")
+set_property(
+  SOURCE src/solver_idas.cpp
+  APPEND
+  PROPERTY INCLUDE_DIRECTORIES "${SUNDIALS_PRIVATE_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} version)
 
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
@@ -280,12 +245,7 @@ target_include_directories(
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
          $<BUILD_INTERFACE:${GSL_LITE_INCLUDE_DIR}>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_DATADIR}/amici/swig>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>
-  PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
-
-if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
-  target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
-endif()
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>)
 
 if("$ENV{ENABLE_AMICI_DEBUGGING}"
    OR "$ENV{ENABLE_GCOV_COVERAGE}"
@@ -305,8 +265,7 @@ target_compile_definitions(
 
 target_link_libraries(
   ${PROJECT_NAME}
-  PUBLIC SUNDIALS::generic_static
-         SUNDIALS::nvecserial_static
+  PUBLIC SUNDIALS::nvecserial_static
          SUNDIALS::sunmatrixband_static
          SUNDIALS::sunmatrixdense_static
          SUNDIALS::sunmatrixsparse_static
@@ -322,11 +281,11 @@ target_link_libraries(
          SUNDIALS::sunnonlinsolfixedpoint_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
-         ${BLAS_LIBRARIES}
          $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
          $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE
+    BLAS::BLAS
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
 )
 
@@ -417,7 +376,7 @@ export(
 include(CMakePackageConfigHelpers)
 include(version)
 configure_package_config_file(
-  cmake/AmiciConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+  "cmake/AmiciConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)
@@ -425,15 +384,20 @@ install(
   EXPORT AmiciTargets
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
   NAMESPACE Upstream::)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/AmiciFindBLAS.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
 
 install(DIRECTORY ThirdParty/gsl/gsl TYPE INCLUDE)
 # When running from setup.py, this is a symlink we need to dereference
 get_filename_component(_swig_realpath "swig" REALPATH)
 install(DIRECTORY "${_swig_realpath}"
         DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
+
+configure_file(cmake/AmiciFindBLAS.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/AmiciFindBLAS.cmake COPYONLY)
 
 # Register package?
 if(EXPORT_PACKAGE)

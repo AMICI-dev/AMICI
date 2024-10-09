@@ -11,10 +11,10 @@ Use cases:
 
 import inspect
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 import pandas as pd
-import petab
+import petab.v1 as petab
 from amici import AmiciModel, SensitivityMethod_none
 
 from .petab_import import import_petab_problem

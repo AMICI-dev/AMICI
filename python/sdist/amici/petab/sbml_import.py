@@ -4,17 +4,15 @@ import os
 import tempfile
 from itertools import chain
 from pathlib import Path
-from typing import Optional, Union
-from warnings import warn
+from typing import Union
 
 import amici
 import libsbml
-import pandas as pd
-import petab
+import petab.v1 as petab
 import sympy as sp
 from _collections import OrderedDict
 from amici.logging import log_execution_time, set_log_level
-from petab.models import MODEL_TYPE_SBML
+from petab.v1.models import MODEL_TYPE_SBML
 from sympy.abc import _clash
 
 from . import PREEQ_INDICATOR_ID
@@ -31,17 +29,14 @@ logger = logging.getLogger(__name__)
 @log_execution_time("Importing PEtab model", logger)
 def import_model_sbml(
     sbml_model: Union[str, Path, "libsbml.Model"] = None,
-    condition_table: Optional[Union[str, Path, pd.DataFrame]] = None,
-    observable_table: Optional[Union[str, Path, pd.DataFrame]] = None,
-    measurement_table: Optional[Union[str, Path, pd.DataFrame]] = None,
     petab_problem: petab.Problem = None,
-    model_name: Optional[str] = None,
-    model_output_dir: Optional[Union[str, Path]] = None,
-    verbose: Optional[Union[bool, int]] = True,
+    model_name: str | None = None,
+    model_output_dir: str | Path | None = None,
+    verbose: bool | int | None = True,
     allow_reinit_fixpar_initcond: bool = True,
     validate: bool = True,
     non_estimated_parameters_as_constants=True,
-    output_parameter_defaults: Optional[dict[str, float]] = None,
+    output_parameter_defaults: dict[str, float] | None = None,
     discard_sbml_annotations: bool = False,
     **kwargs,
 ) -> amici.SbmlImporter:
@@ -51,18 +46,6 @@ def import_model_sbml(
     :param sbml_model:
         PEtab SBML model or SBML file name.
         Deprecated, pass ``petab_problem`` instead.
-
-    :param condition_table:
-        PEtab condition table. If provided, parameters from there will be
-        turned into AMICI constant parameters (i.e. parameters w.r.t. which
-        no sensitivities will be computed).
-        Deprecated, pass ``petab_problem`` instead.
-
-    :param observable_table:
-        PEtab observable table. Deprecated, pass ``petab_problem`` instead.
-
-    :param measurement_table:
-        PEtab measurement table. Deprecated, pass ``petab_problem`` instead.
 
     :param petab_problem:
         PEtab problem.
@@ -107,35 +90,11 @@ def import_model_sbml(
     :return:
         The created :class:`amici.sbml_import.SbmlImporter` instance.
     """
-    from petab.models.sbml_model import SbmlModel
+    from petab.v1.models.sbml_model import SbmlModel
 
     set_log_level(logger, verbose)
 
     logger.info("Importing model ...")
-
-    if any([sbml_model, condition_table, observable_table, measurement_table]):
-        warn(
-            "The `sbml_model`, `condition_table`, `observable_table`, and "
-            "`measurement_table` arguments are deprecated and will be "
-            "removed in a future version. Use `petab_problem` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if petab_problem:
-            raise ValueError(
-                "Must not pass a `petab_problem` argument in "
-                "combination with any of `sbml_model`, "
-                "`condition_table`, `observable_table`, or "
-                "`measurement_table`."
-            )
-
-        petab_problem = petab.Problem(
-            model=SbmlModel(sbml_model)
-            if isinstance(sbml_model, libsbml.Model)
-            else SbmlModel.from_file(sbml_model),
-            condition_df=petab.get_condition_df(condition_table),
-            observable_df=petab.get_observable_df(observable_table),
-        )
 
     if petab_problem.observable_df is None:
         raise NotImplementedError(
@@ -264,12 +223,50 @@ def import_model_sbml(
     #  feels dirty and should be changed (see also #924)
     # <BeginWorkAround>
 
+    # state variable IDs and initial values specified via the conditions' table
     initial_states = get_states_in_condition_table(petab_problem)
+    # is there any condition that involves preequilibration?
+    requires_preequilibration = (
+        petab_problem.measurement_df is not None
+        and petab.PREEQUILIBRATION_CONDITION_ID in petab_problem.measurement_df
+        and petab_problem.measurement_df[petab.PREEQUILIBRATION_CONDITION_ID]
+        .notnull()
+        .any()
+    )
+    estimated_parameters_ids = petab_problem.get_x_ids(free=True, fixed=False)
+    # any initial states overridden to be estimated via the conditions table?
+    has_estimated_initial_states = any(
+        par_id in petab_problem.condition_df[initial_states.keys()].values
+        for par_id in estimated_parameters_ids
+    )
+
+    if (
+        has_estimated_initial_states
+        and requires_preequilibration
+        and kwargs.setdefault("generate_sensitivity_code", True)
+    ):
+        # To support reinitialization of initial conditions after
+        # preequilibration we need fixed parameters for the initial
+        # conditions. If we need sensitivities w.r.t. to initial conditions,
+        # we need to create non-fixed parameters for the initial conditions.
+        # We can't have both for the same state variable.
+        # (We could handle it via separate amici models if pre-equilibration
+        # and estimation of initial values for a given state variable are
+        # used in separate PEtab conditions.)
+        # We currently assume that we do need sensitivities w.r.t. initial
+        # conditions if sensitivities are needed at all.
+        # TODO: check this state by state, then we can support some additional
+        #  cases
+        raise NotImplementedError(
+            "PEtab problems that have both, estimated initial conditions "
+            "specified in the condition table, and preequilibration with "
+            "initial conditions specified in the condition table are not "
+            "supported."
+        )
+
     fixed_parameters = []
-    if initial_states:
+    if initial_states and requires_preequilibration:
         # add preequilibration indicator variable
-        # NOTE: would only be required if we actually have preequilibration
-        #  adding it anyways. can be optimized-out later
         if sbml_model.getParameter(PREEQ_INDICATOR_ID) is not None:
             raise AssertionError(
                 "Model already has a parameter with ID "
@@ -286,11 +283,15 @@ def import_model_sbml(
             "Adding preequilibration indicator "
             f"constant {PREEQ_INDICATOR_ID}"
         )
-    logger.debug(f"Adding initial assignments for {initial_states.keys()}")
+    logger.debug(
+        f"Adding initial assignments for {list(initial_states.keys())}"
+    )
     for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
-        for init_par_id in [init_par_id_preeq, init_par_id_sim]:
+        for init_par_id in (
+            [init_par_id_preeq] if requires_preequilibration else []
+        ) + [init_par_id_sim]:
             if sbml_model.getElementBySId(init_par_id) is not None:
                 raise ValueError(
                     "Cannot create parameter for initial assignment "
@@ -300,6 +301,12 @@ def import_model_sbml(
             init_par = sbml_model.createParameter()
             init_par.setId(init_par_id)
             init_par.setName(init_par_id)
+            if requires_preequilibration:
+                # must be a fixed parameter to allow reinitialization
+                # TODO: also add other initial condition parameters that are
+                #  not estimated
+                fixed_parameters.append(init_par_id)
+
         assignment = sbml_model.getInitialAssignment(assignee_id)
         if assignment is None:
             assignment = sbml_model.createInitialAssignment()
@@ -313,10 +320,13 @@ def import_model_sbml(
                 "be overwritten to handle preequilibration and "
                 "initial values specified by the PEtab problem."
             )
-        formula = (
-            f"{PREEQ_INDICATOR_ID} * {init_par_id_preeq} "
-            f"+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}"
-        )
+        if requires_preequilibration:
+            formula = (
+                f"{PREEQ_INDICATOR_ID} * {init_par_id_preeq} "
+                f"+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}"
+            )
+        else:
+            formula = init_par_id_sim
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
     # <EndWorkAround>
@@ -518,20 +528,32 @@ def _get_fixed_parameters_sbml(
         petab_problem, non_estimated_parameters_as_constants
     )
 
-    # exclude targets of rules or initial assignments
+    # exclude targets of rules or initial assignments that are not numbers
     sbml_model = petab_problem.model.sbml_model
+    parser_settings = libsbml.L3ParserSettings()
+    parser_settings.setModel(sbml_model)
+    parser_settings.setParseUnits(libsbml.L3P_NO_UNITS)
+
     for fixed_parameter in fixed_parameters.copy():
         # check global parameters
-        if sbml_model.getInitialAssignmentBySymbol(
-            fixed_parameter
-        ) or sbml_model.getRuleByVariable(fixed_parameter):
+        if sbml_model.getRuleByVariable(fixed_parameter):
             fixed_parameters.remove(fixed_parameter)
+            continue
+        if ia := sbml_model.getInitialAssignmentBySymbol(fixed_parameter):
+            sym_math = sp.sympify(
+                libsbml.formulaToL3StringWithSettings(
+                    ia.getMath(), parser_settings
+                )
+            )
+            if not sym_math.evalf().is_Number:
+                fixed_parameters.remove(fixed_parameter)
+                continue
 
     return list(sorted(fixed_parameters))
 
 
 def _create_model_output_dir_name(
-    sbml_model: "libsbml.Model", model_name: Optional[str] = None
+    sbml_model: "libsbml.Model", model_name: str | None = None
 ) -> Path:
     """
     Find a folder for storing the compiled amici model.

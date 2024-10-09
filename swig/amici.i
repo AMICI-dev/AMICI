@@ -235,6 +235,14 @@ def __repr__(self):
 %}
 };
 
+%extend amici::LogItem {
+%pythoncode %{
+def __repr__(self):
+    return (f"{self.__class__.__name__}(severity={self.severity}, "
+        f"identifier={self.identifier!r}, message={self.message!r})")
+%}
+};
+
 
 // Convert integer values to enum class
 // defeats the purpose of enum class, but didn't find a better way to allow for
@@ -319,6 +327,7 @@ SteadyStateStatus = enum('SteadyStateStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
+Constraint = enum('Constraint')
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
@@ -332,6 +341,8 @@ def __repr__(self):
 
 // Handle AMICI_DLL_DIRS environment variable
 %pythonbegin %{
+from __future__ import annotations
+
 import sys
 import os
 
@@ -344,13 +355,45 @@ if sys.platform == 'win32' and (dll_dirs := os.environ.get('AMICI_DLL_DIRS')):
 // import additional types for typehints
 // also import np for use in __repr__ functions
 %pythonbegin %{
-from typing import TYPE_CHECKING, Iterable, Sequence
+from typing import TYPE_CHECKING, Iterable, Union
+from collections.abc import Sequence
 import numpy as np
 if TYPE_CHECKING:
     import numpy
 %}
 
 %pythoncode %{
+
+AmiciModel = Union[Model, ModelPtr]
+AmiciSolver = Union[Solver, SolverPtr]
+AmiciExpData = Union[ExpData, ExpDataPtr]
+AmiciReturnData = Union[ReturnData, ReturnDataPtr]
+AmiciExpDataVector = Union[ExpDataPtrVector, Sequence[AmiciExpData]]
+
+
+def _get_ptr(
+    obj: AmiciModel | AmiciExpData | AmiciSolver | AmiciReturnData,
+) -> Model | ExpData | Solver | ReturnData:
+    """
+    Convenience wrapper that returns the smart pointer pointee, if applicable
+
+    :param obj:
+        Potential smart pointer
+
+    :returns:
+        Non-smart pointer
+    """
+    if isinstance(
+        obj,
+        (
+            ModelPtr,
+            ExpDataPtr,
+            SolverPtr,
+            ReturnDataPtr,
+        ),
+    ):
+        return obj.get()
+    return obj
 
 
 __all__ = [
@@ -359,4 +402,5 @@ __all__ = [
     if not x.startswith('_')
     and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence"}
 ]
+
 %}

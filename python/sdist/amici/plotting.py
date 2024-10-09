@@ -3,7 +3,7 @@ Plotting
 --------
 Plotting related functions
 """
-from typing import Optional, Union
+
 from collections.abc import Iterable, Sequence
 
 import matplotlib.pyplot as plt
@@ -12,14 +12,15 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
+import amici
 from . import Model, ReturnDataView
 from .numpy import StrOrExpr, evaluate
 
 
 def plot_state_trajectories(
     rdata: ReturnDataView,
-    state_indices: Optional[Sequence[int]] = None,
-    ax: Optional[Axes] = None,
+    state_indices: Sequence[int] | None = None,
+    ax: Axes | None = None,
     model: Model = None,
     prefer_names: bool = True,
     marker=None,
@@ -64,21 +65,23 @@ def plot_state_trajectories(
     else:
         labels = np.asarray(rdata.ptr.state_ids)[list(state_indices)]
 
-    for ix, label in zip(state_indices, labels):
+    for ix, label in zip(state_indices, labels, strict=True):
         ax.plot(rdata["t"], rdata["x"][:, ix], marker=marker, label=label)
-        ax.set_xlabel("$t$")
-        ax.set_ylabel("$x(t)$")
-        ax.legend()
-        ax.set_title("State trajectories")
+
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$x(t)$")
+    ax.legend()
+    ax.set_title("State trajectories")
 
 
 def plot_observable_trajectories(
     rdata: ReturnDataView,
-    observable_indices: Optional[Iterable[int]] = None,
-    ax: Optional[Axes] = None,
+    observable_indices: Iterable[int] | None = None,
+    ax: Axes | None = None,
     model: Model = None,
     prefer_names: bool = True,
     marker=None,
+    edata: amici.ExpData | amici.ExpDataView = None,
 ) -> None:
     """
     Plot observable trajectories.
@@ -97,12 +100,16 @@ def plot_observable_trajectories(
     :param marker:
         Point marker for plotting (see
         `matplotlib documentation <https://matplotlib.org/stable/api/markers_api.html>`_).
-
+    :param edata:
+        Experimental data to be plotted (no event observables yet).
     """
+    if isinstance(edata, amici.amici.ExpData):
+        edata = amici.ExpDataView(edata)
+
     if not ax:
         fig, ax = plt.subplots()
     if not observable_indices:
-        observable_indices = range(rdata["y"].shape[1])
+        observable_indices = range(rdata.ny)
 
     if marker is None:
         # Show marker if only one time point is available,
@@ -124,12 +131,31 @@ def plot_observable_trajectories(
     else:
         labels = np.asarray(rdata.ptr.observable_ids)[list(observable_indices)]
 
-    for iy, label in zip(observable_indices, labels):
-        ax.plot(rdata["t"], rdata["y"][:, iy], marker=marker, label=label)
-        ax.set_xlabel("$t$")
-        ax.set_ylabel("$y(t)$")
-        ax.legend()
-        ax.set_title("Observable trajectories")
+    for iy, label in zip(observable_indices, labels, strict=True):
+        (l,) = ax.plot(
+            rdata["t"], rdata["y"][:, iy], marker=marker, label=label
+        )
+
+        if edata is not None:
+            ax.plot(
+                edata.ts,
+                edata.observedData[:, iy],
+                "x",
+                label=f"exp. {label}",
+                color=l.get_color(),
+            )
+            ax.errorbar(
+                edata.ts,
+                edata.observedData[:, iy],
+                yerr=rdata.sigmay[:, iy],
+                fmt="none",
+                color=l.get_color(),
+            )
+
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$y(t)$")
+    ax.set_title("Observable trajectories")
+    ax.legend()
 
 
 def plot_jacobian(rdata: ReturnDataView):
@@ -149,7 +175,7 @@ plotObservableTrajectories = plot_observable_trajectories
 
 
 def plot_expressions(
-    exprs: Union[Sequence[StrOrExpr], StrOrExpr], rdata: ReturnDataView
+    exprs: Sequence[StrOrExpr] | StrOrExpr, rdata: ReturnDataView
 ) -> None:
     """Plot the given expressions evaluated on the given simulation outputs.
 

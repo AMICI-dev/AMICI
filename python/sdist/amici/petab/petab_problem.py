@@ -1,11 +1,11 @@
 """PEtab-problem based simulations."""
+
 import copy
-from typing import Optional, Union
 
 import amici
 import pandas as pd
-import petab
-from petab.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
+import petab.v1 as petab
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
 from .conditions import create_edatas, fill_in_parameters
 from .parameter_mapping import create_parameter_mapping
@@ -36,10 +36,10 @@ class PetabProblem:
     def __init__(
         self,
         petab_problem: petab.Problem,
-        amici_model: Optional[amici.Model] = None,
-        problem_parameters: Optional[dict[str, float]] = None,
+        amici_model: amici.Model | None = None,
+        problem_parameters: dict[str, float] | None = None,
         scaled_parameters: bool = False,
-        simulation_conditions: Union[pd.DataFrame, list[dict]] = None,
+        simulation_conditions: pd.DataFrame | list[dict] = None,
         store_edatas: bool = True,
     ):
         self._petab_problem = copy.deepcopy(petab_problem)
@@ -63,9 +63,9 @@ class PetabProblem:
         if (
             preeq_id := PREEQUILIBRATION_CONDITION_ID
         ) in self._simulation_conditions:
-            self._simulation_conditions[
-                preeq_id
-            ] = self._simulation_conditions[preeq_id].fillna("")
+            self._simulation_conditions[preeq_id] = (
+                self._simulation_conditions[preeq_id].fillna("")
+            )
 
         if problem_parameters is None:
             # Use PEtab nominal values as default
@@ -102,7 +102,10 @@ class PetabProblem:
         :param scaled_parameters: Whether the provided parameters are on PEtab
             `parameterScale` or not.
         """
-        if scaled_parameters != self._scaled_parameters and self._parameter_mapping is not None:
+        if (
+            scaled_parameters != self._scaled_parameters
+            and self._parameter_mapping is not None
+        ):
             # redo parameter mapping if scale changed
             self._parameter_mapping = create_parameter_mapping(
                 petab_problem=self._petab_problem,

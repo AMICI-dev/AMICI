@@ -67,6 +67,7 @@ end
 function includesstr = getIncludeString(amici_root_path, sundials_path, ssparse_path)
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include', 'sundials', 'amici_matlab'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src', 'sundials'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path), '"');
@@ -126,13 +127,11 @@ function sources_sundials = getSourcesSundials()
         fullfile('src', 'sunlinsol', 'pcg',     'sunlinsol_pcg.c');
         fullfile('src', 'sunlinsol', 'spbcgs',  'sunlinsol_spbcgs.c');
         fullfile('src', 'sunlinsol', 'band',    'sunlinsol_band.c');
-        fullfile('src', 'idas', 'idas_direct.c');
         fullfile('src', 'idas', 'idaa.c');
         fullfile('src', 'idas', 'idas_ic.c');
         fullfile('src', 'idas', 'idas_nls_stg.c');
         fullfile('src', 'idas', 'idas.c');
         fullfile('src', 'idas', 'idas_bbdpre.c');
-        fullfile('src', 'idas', 'idas_spils.c');
         fullfile('src', 'idas', 'idas_nls.c');
         fullfile('src', 'idas', 'idas_ls.c');
         fullfile('src', 'idas', 'idas_io.c');
@@ -149,11 +148,14 @@ function sources_sundials = getSourcesSundials()
         fullfile('src', 'sundials', 'sundials_nonlinearsolver.c');
         fullfile('src', 'sundials', 'sundials_linearsolver.c');
         fullfile('src', 'sundials', 'sundials_band.c');
+        fullfile('src', 'sundials', 'sundials_context.c');
+        fullfile('src', 'sundials', 'sundials_logger.c');
+        fullfile('src', 'sundials', 'sundials_errors.c');
+        fullfile('src', 'sundials', 'sundials_hashmap.c');
         fullfile('src', 'sunnonlinsol', 'newton', 'sunnonlinsol_newton.c');
         fullfile('src', 'sunnonlinsol', 'fixedpoint', ...
                      'sunnonlinsol_fixedpoint.c');
         fullfile('src', 'nvector', 'serial', 'nvector_serial.c');
-        fullfile('src', 'cvodes', 'cvodes_spils.c');
         fullfile('src', 'cvodes', 'cvodes_nls_stg.c');
         fullfile('src', 'cvodes', 'cvodes_ls.c');
         fullfile('src', 'cvodes', 'cvodes_nls_stg1.c');
@@ -166,7 +168,7 @@ function sources_sundials = getSourcesSundials()
         fullfile('src', 'cvodes', 'cvodes_nls.c');
         fullfile('src', 'cvodes', 'cvodes_diag.c');
         fullfile('src', 'cvodes', 'cvodes_io.c');
-        fullfile('src', 'cvodes', 'cvodes_direct.c');
+        fullfile('src', 'cvodes', 'cvodes_proj.c');
         };
 end
 
@@ -261,18 +263,20 @@ function objects_sundials = getObjectsSundials(o_suffix)
         'sunlinsol_spgmr.o';
         'sunlinsol_sptfqmr.o';
         'sunlinsol_klu.o';
-        'idas_direct.o';
         'idaa.o';
         'idas_ic.o';
         'idas_nls_stg.o';
         'idas.o';
         'idas_bbdpre.o';
-        'idas_spils.o';
         'idas_nls.o';
         'idas_ls.o';
         'idas_io.o';
         'idas_nls_sim.o';
         'idaa_io.o';
+        'sundials_context.o';
+        'sundials_logger.o';
+        'sundials_errors.o';
+        'sundials_hashmap.o';
         'sundials_math.o';
         'sundials_matrix.o';
         'sundials_direct.o';
@@ -294,7 +298,6 @@ function objects_sundials = getObjectsSundials(o_suffix)
         'sunlinsol_spbcgs.o';
         'sunlinsol_band.o';
         'sunlinsol_spfgmr.o';
-        'cvodes_spils.o';
         'cvodes_nls_stg.o';
         'cvodes_ls.o';
         'cvodes_nls_stg1.o';
@@ -307,7 +310,7 @@ function objects_sundials = getObjectsSundials(o_suffix)
         'cvodes_nls.o';
         'cvodes_diag.o';
         'cvodes_io.o';
-        'cvodes_direct.o';
+        'cvodes_proj.o';
         };
 
     if(~strcmp(o_suffix, '.o'))

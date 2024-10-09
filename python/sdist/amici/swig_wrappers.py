@@ -1,14 +1,18 @@
 """Convenience wrappers for the swig interface"""
+
 import logging
-import sys
 import warnings
-from contextlib import contextmanager, suppress
-from typing import Any, Optional, Union
-from collections.abc import Sequence
+from typing import Any
 
 import amici
 import amici.amici as amici_swig
-
+from amici.amici import (
+    _get_ptr,
+    AmiciExpData,
+    AmiciExpDataVector,
+    AmiciModel,
+    AmiciSolver,
+)
 from . import numpy
 from .logging import get_logger
 
@@ -18,76 +22,17 @@ logger = get_logger(__name__, log_level=logging.DEBUG)
 __all__ = [
     "runAmiciSimulation",
     "runAmiciSimulations",
-    "ExpData",
     "readSolverSettingsFromHDF5",
     "writeSolverSettingsToHDF5",
     "set_model_settings",
     "get_model_settings",
-    "AmiciModel",
-    "AmiciSolver",
-    "AmiciExpData",
-    "AmiciReturnData",
-    "AmiciExpDataVector",
 ]
-
-AmiciModel = Union["amici.Model", "amici.ModelPtr"]
-AmiciSolver = Union["amici.Solver", "amici.SolverPtr"]
-AmiciExpData = Union["amici.ExpData", "amici.ExpDataPtr"]
-AmiciReturnData = Union["amici.ReturnData", "amici.ReturnDataPtr"]
-AmiciExpDataVector = Union["amici.ExpDataPtrVector", Sequence[AmiciExpData]]
-
-
-try:
-    from wurlitzer import sys_pipes
-except ModuleNotFoundError:
-    sys_pipes = suppress
-
-
-@contextmanager
-def _capture_cstdout():
-    """Redirect C/C++ stdout to python stdout if python stdout is redirected,
-    e.g. in ipython notebook"""
-    if sys.stdout == sys.__stdout__:
-        yield
-    else:
-        with sys_pipes():
-            yield
-
-
-def _get_ptr(
-    obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData],
-) -> Union[
-    "amici_swig.Model",
-    "amici_swig.ExpData",
-    "amici_swig.Solver",
-    "amici_swig.ReturnData",
-]:
-    """
-    Convenience wrapper that returns the smart pointer pointee, if applicable
-
-    :param obj:
-        Potential smart pointer
-
-    :returns:
-        Non-smart pointer
-    """
-    if isinstance(
-        obj,
-        (
-            amici_swig.ModelPtr,
-            amici_swig.ExpDataPtr,
-            amici_swig.SolverPtr,
-            amici_swig.ReturnDataPtr,
-        ),
-    ):
-        return obj.get()
-    return obj
 
 
 def runAmiciSimulation(
     model: AmiciModel,
     solver: AmiciSolver,
-    edata: Optional[AmiciExpData] = None,
+    edata: AmiciExpData | None = None,
 ) -> "numpy.ReturnDataView":
     """
     Convenience wrapper around :py:func:`amici.amici.runAmiciSimulation`
@@ -115,38 +60,17 @@ def runAmiciSimulation(
         warnings.warn(
             "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested."
             "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
-            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients."
+            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients.",
+            stacklevel=1,
         )
 
-    with _capture_cstdout():
-        rdata = amici_swig.runAmiciSimulation(
-            _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
-        )
+    rdata = amici_swig.runAmiciSimulation(
+        _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
+    )
     _log_simulation(rdata)
     if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
         _ids_and_names_to_rdata(rdata, model)
     return numpy.ReturnDataView(rdata)
-
-
-def ExpData(*args) -> "amici_swig.ExpData":
-    """
-    Convenience wrapper for :py:class:`amici.amici.ExpData` constructors
-
-    :param args: arguments
-
-    :returns: ExpData Instance
-    """
-    if isinstance(args[0], numpy.ReturnDataView):
-        return amici_swig.ExpData(_get_ptr(args[0]["ptr"]), *args[1:])
-    elif isinstance(args[0], (amici_swig.ExpData, amici_swig.ExpDataPtr)):
-        # the *args[:1] should be empty, but by the time you read this,
-        # the constructor signature may have changed, and you are glad this
-        # wrapper did not break.
-        return amici_swig.ExpData(_get_ptr(args[0]), *args[1:])
-    elif isinstance(args[0], (amici_swig.Model, amici_swig.ModelPtr)):
-        return amici_swig.ExpData(_get_ptr(args[0]))
-    else:
-        return amici_swig.ExpData(*args)
 
 
 def runAmiciSimulations(
@@ -177,18 +101,18 @@ def runAmiciSimulations(
         warnings.warn(
             "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested. "
             "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
-            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients."
+            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients.",
+            stacklevel=1,
         )
 
-    with _capture_cstdout():
-        edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
-        rdata_ptr_list = amici_swig.runAmiciSimulations(
-            _get_ptr(solver),
-            edata_ptr_vector,
-            _get_ptr(model),
-            failfast,
-            num_threads,
-        )
+    edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
+    rdata_ptr_list = amici_swig.runAmiciSimulations(
+        _get_ptr(solver),
+        edata_ptr_vector,
+        _get_ptr(model),
+        failfast,
+        num_threads,
+    )
     for rdata in rdata_ptr_list:
         _log_simulation(rdata)
         if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
@@ -198,7 +122,7 @@ def runAmiciSimulations(
 
 
 def readSolverSettingsFromHDF5(
-    file: str, solver: AmiciSolver, location: Optional[str] = "solverSettings"
+    file: str, solver: AmiciSolver, location: str | None = "solverSettings"
 ) -> None:
     """
     Convenience wrapper for :py:func:`amici.readSolverSettingsFromHDF5`
@@ -212,8 +136,8 @@ def readSolverSettingsFromHDF5(
 
 def writeSolverSettingsToHDF5(
     solver: AmiciSolver,
-    file: Union[str, object],
-    location: Optional[str] = "solverSettings",
+    file: str | object,
+    location: str | None = "solverSettings",
 ) -> None:
     """
     Convenience wrapper for :py:func:`amici.amici.writeSolverSettingsToHDF5`
@@ -250,6 +174,7 @@ model_instance_settings = [
     "SteadyStateSensitivityMode",
     ("t0", "setT0"),
     "Timepoints",
+    "_steadystate_mask",
 ]
 
 

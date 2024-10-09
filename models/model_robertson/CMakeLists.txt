@@ -1,5 +1,6 @@
 # Build AMICI model
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22)
+cmake_policy(VERSION 3.22...3.30)
 
 project(model_robertson)
 
@@ -14,7 +15,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 foreach(flag ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(-Werror ${flag} CUR_FLAG_SUPPORTED)
+  check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
   if(${CUR_FLAG_SUPPORTED})
     string(APPEND CMAKE_CXX_FLAGS " ${flag}")
   endif()
@@ -32,6 +33,26 @@ endif()
 find_package(Amici  REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
+set_target_properties(Upstream::amici PROPERTIES
+    MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo;Release;
+    MAP_IMPORTED_CONFIG_RELEASE Release
+    MAP_IMPORTED_CONFIG_DEBUG Debug;RelWithDebInfo;)
+
+# Debug build?
+if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
+  add_compile_options(-UNDEBUG)
+  if(MSVC)
+    add_compile_options(-DEBUG)
+  else()
+    add_compile_options(-O0 -g)
+  endif()
+endif()
+
+# coverage options
+if($ENV{ENABLE_GCOV_COVERAGE})
+  string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
+endif()
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
@@ -72,18 +93,6 @@ if(NOT "${AMICI_PYTHON_BUILD_EXT_ONLY}")
   set(SRC_LIST_EXE main.cpp)
   add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
   target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
-endif()
-
-# Debug build?
-if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-  add_compile_options(-UNDEBUG -O0 -g)
-  set(CMAKE_BUILD_TYPE "Debug")
-endif()
-
-# coverage options
-if($ENV{ENABLE_GCOV_COVERAGE})
-  string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
-  string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
 endif()
 
 # SWIG

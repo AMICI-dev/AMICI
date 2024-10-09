@@ -37,6 +37,7 @@ using namespace amici;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
 %ignore initializeStates;
+%ignore reinitialize;
 %ignore ModelState;
 %ignore getModelState;
 %ignore setModelState;
@@ -94,6 +95,7 @@ using namespace amici;
 %ignore fdx_rdatadtcl;
 %ignore fdx_rdatadx_solver;
 %ignore fdsigmaydy;
+%ignore get_steadystate_mask_av;
 
 %newobject amici::Model::clone;
 

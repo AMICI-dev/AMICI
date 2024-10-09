@@ -56,8 +56,6 @@ constexpr double pi = M_PI;
 
 // clang-format off
 
-constexpr int AMICI_ONEOUTPUT=                 5;
-
 // Return codes
 //
 // NOTE: When adding / removing / renaming return codes,
@@ -68,13 +66,17 @@ constexpr int AMICI_TOO_MUCH_WORK=            -1;
 constexpr int AMICI_TOO_MUCH_ACC=             -2;
 constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
+constexpr int AMICI_LSETUP_FAIL=              -6;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
 constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
+constexpr int AMICI_CONSTR_FAIL=             -15;
+constexpr int AMICI_CVODES_CONSTR_FAIL=      -15;
+constexpr int AMICI_IDAS_CONSTR_FAIL=        -11;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
 constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
-constexpr int AMICI_SINGULAR_JACOBIAN=      -809;
+constexpr int AMICI_SINGULAR_JACOBIAN=     -9987;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
 constexpr int AMICI_NOT_RUN=               -1001;
@@ -252,6 +254,15 @@ enum class SplineExtrapolation {
     linear          =  1,
     polynomial      =  2,
     periodic        =  3,
+};
+
+/** Constraints on state variables */
+enum class Constraint {
+    none = 0,
+    non_negative = 1,
+    non_positive = -1,
+    positive = 2,
+    negative = -2,
 };
 
 // clang-format on

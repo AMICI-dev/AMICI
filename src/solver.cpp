@@ -1,13 +1,62 @@
 #include "amici/solver.h"
 
+#include "amici/amici.h"
 #include "amici/exception.h"
 #include "amici/model.h"
 #include "amici/symbolic_functions.h"
 
+#include <sundials/sundials_context.h>
+
 #include <cstdio>
+#include <filesystem>
 #include <memory>
 
 namespace amici {
+
+/* Error handler passed to SUNDIALS. */
+void wrapErrHandlerFn(
+    [[maybe_unused]] int line, char const* func, char const* file,
+    char const* msg, SUNErrCode err_code, void* err_user_data,
+    [[maybe_unused]] SUNContext sunctx
+) {
+    constexpr int BUF_SIZE = 250;
+
+    char msg_buffer[BUF_SIZE];
+    char id_buffer[BUF_SIZE];
+    static_assert(
+        std::is_same<SUNErrCode, int>::value, "Must update format string"
+    );
+    // for debug builds, include full file path and line numbers
+#ifdef NDEBUG
+    snprintf(msg_buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
+#else
+    snprintf(msg_buffer, BUF_SIZE, "%s", msg);
+#endif
+    // we need a matlab-compatible message ID
+    // i.e. colon separated and only  [A-Za-z0-9_]
+    // see https://mathworks.com/help/matlab/ref/mexception.html
+    std::filesystem::path path(file);
+    auto file_stem = path.stem().string();
+
+    // Error code to string. Remove 'AMICI_' prefix.
+    auto err_code_str = simulation_status_to_str(err_code);
+    constexpr std::string_view err_code_prefix = "AMICI_";
+    if (err_code_str.substr(0, err_code_prefix.size()) == err_code_prefix)
+        err_code_str = err_code_str.substr(err_code_prefix.size());
+
+    snprintf(
+        id_buffer, BUF_SIZE, "%s:%s:%s", file_stem.c_str(), func,
+        err_code_str.c_str()
+    );
+
+    if (!err_user_data) {
+        throw std::runtime_error("eh_data unset");
+    }
+
+    auto solver = static_cast<Solver const*>(err_user_data);
+    if (solver->logger)
+        solver->logger->log(LogSeverity::debug, id_buffer, msg_buffer);
+}
 
 Solver::Solver(Solver const& other)
     : ism_(other.ism_)
@@ -17,6 +66,7 @@ Solver::Solver(Solver const& other)
     , maxsteps_(other.maxsteps_)
     , maxtime_(other.maxtime_)
     , simulation_timer_(other.simulation_timer_)
+    , constraints_(other.constraints_)
     , sensi_meth_(other.sensi_meth_)
     , sensi_meth_preeq_(other.sensi_meth_preeq_)
     , stldet_(other.stldet_)
@@ -44,8 +94,16 @@ Solver::Solver(Solver const& other)
     , rdata_mode_(other.rdata_mode_)
     , newton_step_steadystate_conv_(other.newton_step_steadystate_conv_)
     , check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_)
+    , max_nonlin_iters_(other.max_nonlin_iters_)
+    , max_conv_fails_(other.max_conv_fails_)
+    , max_step_size_(other.max_step_size_)
     , maxstepsB_(other.maxstepsB_)
-    , sensi_(other.sensi_) {}
+    , sensi_(other.sensi_) {
+    // update to our own context
+    constraints_.set_ctx(sunctx_);
+}
+
+SUNContext Solver::getSunContext() const { return sunctx_; }
 
 void Solver::apply_max_num_steps() const {
     // set remaining steps, setMaxNumSteps only applies to a single call of
@@ -81,7 +139,7 @@ void Solver::apply_max_num_steps_B() const {
     }
 }
 
-int Solver::run(const realtype tout) const {
+int Solver::run(realtype const tout) const {
     setStopTime(tout);
     CpuTimer cpu_timer;
     int status = AMICI_SUCCESS;
@@ -100,7 +158,7 @@ int Solver::run(const realtype tout) const {
     return status;
 }
 
-int Solver::step(const realtype tout) const {
+int Solver::step(realtype const tout) const {
     int status = AMICI_SUCCESS;
 
     apply_max_num_steps();
@@ -116,7 +174,7 @@ int Solver::step(const realtype tout) const {
     return status;
 }
 
-void Solver::runB(const realtype tout) const {
+void Solver::runB(realtype const tout) const {
     CpuTimer cpu_timer;
 
     apply_max_num_steps_B();
@@ -128,7 +186,7 @@ void Solver::runB(const realtype tout) const {
 }
 
 void Solver::setup(
-    const realtype t0, Model* model, AmiVector const& x0, AmiVector const& dx0,
+    realtype const t0, Model* model, AmiVector const& x0, AmiVector const& dx0,
     AmiVectorArray const& sx0, AmiVectorArray const& sdx0
 ) const {
     if (nx() != model->nx_solver || nplist() != model->nplist()
@@ -191,12 +249,18 @@ void Solver::setup(
     if (model->nt() > 1)
         calcIC(model->getTimepoint(1));
 
+    apply_max_nonlin_iters();
+    apply_max_conv_fails();
+    apply_max_step_size();
+
     cpu_time_ = 0.0;
     cpu_timeB_ = 0.0;
+
+    apply_constraints();
 }
 
 void Solver::setupB(
-    int* which, const realtype tf, Model* model, AmiVector const& xB0,
+    int* which, realtype const tf, Model* model, AmiVector const& xB0,
     AmiVector const& dxB0, AmiVector const& xQB0
 ) const {
     if (!solver_memory_)
@@ -228,7 +292,7 @@ void Solver::setupB(
 }
 
 void Solver::setupSteadystate(
-    const realtype t0, Model* model, AmiVector const& x0, AmiVector const& dx0,
+    realtype const t0, Model* model, AmiVector const& x0, AmiVector const& dx0,
     AmiVector const& xB0, AmiVector const& dxB0, AmiVector const& xQ0
 ) const {
     /* Initialize CVodes/IDAs solver with steadystate RHS function */
@@ -251,13 +315,14 @@ void Solver::setupSteadystate(
 }
 
 void Solver::updateAndReinitStatesAndSensitivities(Model* model) const {
-    model->fx0_fixedParameters(x_);
-    reInit(t_, x_, dx_);
+    model->reinitialize(
+        t_, x_, sx_, getSensitivityOrder() >= SensitivityOrder::first
+    );
 
-    if (getSensitivityOrder() >= SensitivityOrder::first) {
-        model->fsx0_fixedParameters(sx_, x_);
-        if (getSensitivityMethod() == SensitivityMethod::forward)
-            sensReInit(sx_, sdx_);
+    reInit(t_, x_, dx_);
+    if (getSensitivityOrder() >= SensitivityOrder::first
+        && getSensitivityMethod() == SensitivityMethod::forward) {
+        sensReInit(sx_, sdx_);
     }
 }
 
@@ -552,7 +617,11 @@ bool operator==(Solver const& a, Solver const& b) {
                == b.newton_step_steadystate_conv_)
            && (a.check_sensi_steadystate_conv_
                == b.check_sensi_steadystate_conv_)
-           && (a.rdata_mode_ == b.rdata_mode_);
+           && (a.rdata_mode_ == b.rdata_mode_)
+           && (a.max_conv_fails_ == b.max_conv_fails_)
+           && (a.max_nonlin_iters_ == b.max_nonlin_iters_)
+           && (a.max_step_size_ == b.max_step_size_)
+           && (a.constraints_.getVector() == b.constraints_.getVector());
 }
 
 void Solver::applyTolerances() const {
@@ -636,26 +705,35 @@ void Solver::applySensitivityTolerances() const {
     }
 }
 
+void Solver::apply_constraints() const {
+    if (constraints_.getLength() != 0
+        && gsl::narrow<int>(constraints_.getLength()) != nx()) {
+        throw std::invalid_argument(
+            "Constraints must have the same size as the state vector."
+        );
+    }
+}
+
 SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth_; }
 
 SensitivityMethod Solver::getSensitivityMethodPreequilibration() const {
     return sensi_meth_preeq_;
 }
 
-void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
+void Solver::setSensitivityMethod(SensitivityMethod const sensi_meth) {
     checkSensitivityMethod(sensi_meth, false);
     this->sensi_meth_ = sensi_meth;
 }
 
 void Solver::setSensitivityMethodPreequilibration(
-    const SensitivityMethod sensi_meth_preeq
+    SensitivityMethod const sensi_meth_preeq
 ) {
     checkSensitivityMethod(sensi_meth_preeq, true);
     sensi_meth_preeq_ = sensi_meth_preeq;
 }
 
 void Solver::checkSensitivityMethod(
-    const SensitivityMethod sensi_meth, bool preequilibration
+    SensitivityMethod const sensi_meth, bool preequilibration
 ) const {
     if (rdata_mode_ == RDataReporting::residuals
         && sensi_meth == SensitivityMethod::adjoint)
@@ -664,6 +742,47 @@ void Solver::checkSensitivityMethod(
     if (!preequilibration && sensi_meth != sensi_meth_)
         resetMutableMemory(nx(), nplist(), nquad());
 }
+
+void Solver::setMaxNonlinIters(int max_nonlin_iters) {
+    if (max_nonlin_iters < 0)
+        throw AmiException("max_nonlin_iters must be a non-negative number");
+
+    max_nonlin_iters_ = max_nonlin_iters;
+}
+
+int Solver::getMaxNonlinIters() const { return max_nonlin_iters_; }
+
+void Solver::setMaxConvFails(int max_conv_fails) {
+    if (max_conv_fails < 0)
+        throw AmiException("max_conv_fails must be a non-negative number");
+
+    max_conv_fails_ = max_conv_fails;
+}
+
+int Solver::getMaxConvFails() const { return max_conv_fails_; }
+
+void Solver::setConstraints(std::vector<realtype> const& constraints) {
+    auto any_constraint
+        = std::any_of(constraints.begin(), constraints.end(), [](bool x) {
+              return x != 0.0;
+          });
+
+    if (!any_constraint) {
+        // all-0 must be converted to empty, otherwise sundials will fail
+        constraints_ = AmiVector();
+        return;
+    }
+
+    constraints_ = AmiVector(constraints, sunctx_);
+}
+
+void Solver::setMaxStepSize(realtype max_step_size) {
+    if (max_step_size < 0)
+        throw AmiException("max_step_size must be non-negative.");
+    max_step_size_ = max_step_size;
+}
+
+realtype Solver::getMaxStepSize() const { return max_step_size_; }
 
 int Solver::getNewtonMaxSteps() const { return newton_maxsteps_; }
 
@@ -693,7 +812,7 @@ void Solver::setNewtonDampingFactorLowerBound(double dampingFactorLowerBound) {
 
 SensitivityOrder Solver::getSensitivityOrder() const { return sensi_; }
 
-void Solver::setSensitivityOrder(const SensitivityOrder sensi) {
+void Solver::setSensitivityOrder(SensitivityOrder const sensi) {
     if (sensi_ != sensi)
         resetMutableMemory(nx(), nplist(), nquad());
     sensi_ = sensi;
@@ -950,7 +1069,7 @@ void Solver::setMaxStepsBackwardProblem(long int const maxsteps) {
 
 LinearMultistepMethod Solver::getLinearMultistepMethod() const { return lmm_; }
 
-void Solver::setLinearMultistepMethod(const LinearMultistepMethod lmm) {
+void Solver::setLinearMultistepMethod(LinearMultistepMethod const lmm) {
     if (solver_memory_)
         resetMutableMemory(nx(), nplist(), nquad());
     lmm_ = lmm;
@@ -960,7 +1079,7 @@ NonlinearSolverIteration Solver::getNonlinearSolverIteration() const {
     return iter_;
 }
 
-void Solver::setNonlinearSolverIteration(const NonlinearSolverIteration iter) {
+void Solver::setNonlinearSolverIteration(NonlinearSolverIteration const iter) {
     if (solver_memory_)
         resetMutableMemory(nx(), nplist(), nquad());
     iter_ = iter;
@@ -968,7 +1087,7 @@ void Solver::setNonlinearSolverIteration(const NonlinearSolverIteration iter) {
 
 InterpolationType Solver::getInterpolationType() const { return interp_type_; }
 
-void Solver::setInterpolationType(const InterpolationType interpType) {
+void Solver::setInterpolationType(InterpolationType const interpType) {
     if (!solver_memory_B_.empty())
         resetMutableMemory(nx(), nplist(), nquad());
     interp_type_ = interpType;
@@ -1020,7 +1139,7 @@ InternalSensitivityMethod Solver::getInternalSensitivityMethod() const {
     return ism_;
 }
 
-void Solver::setInternalSensitivityMethod(const InternalSensitivityMethod ism) {
+void Solver::setInternalSensitivityMethod(InternalSensitivityMethod const ism) {
     if (solver_memory_)
         resetMutableMemory(nx(), nplist(), nquad());
     ism_ = ism;
@@ -1085,6 +1204,17 @@ void Solver::initializeNonLinearSolverSens(Model const* model) const {
     setNonLinearSolverSens();
 }
 
+void Solver::setErrHandlerFn() const {
+    auto sunerr = SUNContext_PushErrHandler(
+        sunctx_, wrapErrHandlerFn,
+        reinterpret_cast<void*>(const_cast<Solver*>(this))
+    );
+    if (sunerr)
+        throw AmiException(
+            "Error setting error handler function: %s", SUNGetErrMsg(sunerr)
+        );
+}
+
 int Solver::nplist() const { return sx_.getLength(); }
 
 int Solver::nx() const { return x_.getLength(); }
@@ -1145,15 +1275,17 @@ void Solver::resetMutableMemory(int const nx, int const nplist, int const nquad)
     solver_was_called_F_ = false;
     solver_was_called_B_ = false;
 
-    x_ = AmiVector(nx);
-    dx_ = AmiVector(nx);
-    sx_ = AmiVectorArray(nx, nplist);
-    sdx_ = AmiVectorArray(nx, nplist);
+    x_ = AmiVector(nx, sunctx_);
+    dx_ = AmiVector(nx, sunctx_);
+    sx_ = AmiVectorArray(nx, nplist, sunctx_);
+    sdx_ = AmiVectorArray(nx, nplist, sunctx_);
 
-    xB_ = AmiVector(nx);
-    dxB_ = AmiVector(nx);
-    xQB_ = AmiVector(nquad);
-    xQ_ = AmiVector(nx);
+    dky_ = AmiVector(nx, sunctx_);
+
+    xB_ = AmiVector(nx, sunctx_);
+    dxB_ = AmiVector(nx, sunctx_);
+    xQB_ = AmiVector(nquad, sunctx_);
+    xQ_ = AmiVector(nx, sunctx_);
 
     solver_memory_B_.clear();
     initializedB_.clear();
@@ -1181,7 +1313,7 @@ void Solver::writeSolutionB(
     xQB.copy(getAdjointQuadrature(which, *t));
 }
 
-AmiVector const& Solver::getState(const realtype t) const {
+AmiVector const& Solver::getState(realtype const t) const {
     if (t == t_)
         return x_;
 
@@ -1191,7 +1323,7 @@ AmiVector const& Solver::getState(const realtype t) const {
     return dky_;
 }
 
-AmiVector const& Solver::getDerivativeState(const realtype t) const {
+AmiVector const& Solver::getDerivativeState(realtype const t) const {
     if (t == t_)
         return dx_;
 
@@ -1201,7 +1333,7 @@ AmiVector const& Solver::getDerivativeState(const realtype t) const {
     return dky_;
 }
 
-AmiVectorArray const& Solver::getStateSensitivity(const realtype t) const {
+AmiVectorArray const& Solver::getStateSensitivity(realtype const t) const {
     if (sens_initialized_ && solver_was_called_F_) {
         if (t == t_) {
             getSens();
@@ -1213,7 +1345,7 @@ AmiVectorArray const& Solver::getStateSensitivity(const realtype t) const {
 }
 
 AmiVector const&
-Solver::getAdjointState(int const which, const realtype t) const {
+Solver::getAdjointState(int const which, realtype const t) const {
     if (adj_initialized_) {
         if (solver_was_called_B_) {
             if (t == t_) {
@@ -1229,7 +1361,7 @@ Solver::getAdjointState(int const which, const realtype t) const {
 }
 
 AmiVector const&
-Solver::getAdjointDerivativeState(int const which, const realtype t) const {
+Solver::getAdjointDerivativeState(int const which, realtype const t) const {
     if (adj_initialized_) {
         if (solver_was_called_B_) {
             if (t == t_) {
@@ -1245,7 +1377,7 @@ Solver::getAdjointDerivativeState(int const which, const realtype t) const {
 }
 
 AmiVector const&
-Solver::getAdjointQuadrature(int const which, const realtype t) const {
+Solver::getAdjointQuadrature(int const which, realtype const t) const {
     if (adj_initialized_) {
         if (solver_was_called_B_) {
             if (t == t_) {
@@ -1276,58 +1408,4 @@ AmiVector const& Solver::getQuadrature(realtype t) const {
 }
 
 realtype Solver::gett() const { return t_; }
-
-void wrapErrHandlerFn(
-    int error_code, char const* module, char const* function, char* msg,
-    void* eh_data
-) {
-    constexpr int BUF_SIZE = 250;
-    char buffer[BUF_SIZE];
-    char buffid[BUF_SIZE];
-    snprintf(
-        buffer, BUF_SIZE, "AMICI ERROR: in module %s in function %s : %s ",
-        module, function, msg
-    );
-    switch (error_code) {
-    case 99:
-        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
-        break;
-
-    case AMICI_TOO_MUCH_WORK:
-        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
-        break;
-
-    case AMICI_TOO_MUCH_ACC:
-        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
-        break;
-
-    case AMICI_ERR_FAILURE:
-        snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
-        break;
-
-    case AMICI_CONV_FAILURE:
-        snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
-        break;
-
-    case AMICI_RHSFUNC_FAIL:
-        snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
-        break;
-
-    case AMICI_FIRST_RHSFUNC_ERR:
-        snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
-        break;
-
-    default:
-        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
-        break;
-    }
-
-    if (!eh_data) {
-        throw std::runtime_error("eh_data unset");
-    }
-    auto solver = static_cast<Solver const*>(eh_data);
-    if (solver->logger)
-        solver->logger->log(LogSeverity::debug, buffid, buffer);
-}
-
 } // namespace amici

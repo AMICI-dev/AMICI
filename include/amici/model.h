@@ -92,7 +92,7 @@ enum class ModelQuantity {
     drzdx,
 };
 
-extern const std::map<ModelQuantity, std::string> model_quantity_to_str;
+extern std::map<ModelQuantity, std::string> const model_quantity_to_str;
 
 /**
  * @brief The Model class represents an AMICI ODE/DAE model.
@@ -112,10 +112,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
-     * @param pythonGenerated Flag indicating matlab or python wrapping
-     * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
-     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
-     * @param w_recursion_depth Recursion depth of fw
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -123,9 +119,7 @@ class Model : public AbstractModel, public ModelDimensions {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event, bool pythonGenerated = false,
-        int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
-        int w_recursion_depth = 0,
+        std::vector<int> z2event,
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -237,6 +231,18 @@ class Model : public AbstractModel, public ModelDimensions {
     void initialize(
         AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVectorArray& sdx,
         bool computeSensitivities, std::vector<int>& roots_found
+    );
+
+    /**
+     * @brief Re-initialize model properties after changing simulation context.
+     * @param t Timepoint
+     * @param x Reference to state variables
+     * @param sx Reference to state variable sensitivities
+     * @param computeSensitivities Flag indicating whether sensitivities are to
+     * be computed
+     */
+    void reinitialize(
+        realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
     );
 
     /**
@@ -918,7 +924,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x Current state
      */
     void
-    getExpression(gsl::span<realtype> w, const realtype t, AmiVector const& x);
+    getExpression(gsl::span<realtype> w, realtype const t, AmiVector const& x);
 
     /**
      * @brief Get time-resolved observables.
@@ -927,7 +933,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x Current state
      */
     void
-    getObservable(gsl::span<realtype> y, const realtype t, AmiVector const& x);
+    getObservable(gsl::span<realtype> y, realtype const t, AmiVector const& x);
 
     /**
      * @brief Get scaling type for observable
@@ -947,7 +953,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getObservableSensitivity(
-        gsl::span<realtype> sy, const realtype t, AmiVector const& x,
+        gsl::span<realtype> sy, realtype const t, AmiVector const& x,
         AmiVectorArray const& sx
     );
 
@@ -1045,7 +1051,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x State variables
      */
     void getEvent(
-        gsl::span<realtype> z, int const ie, const realtype t,
+        gsl::span<realtype> z, int const ie, realtype const t,
         AmiVector const& x
     );
     /**
@@ -1060,7 +1066,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getEventSensitivity(
-        gsl::span<realtype> sz, int const ie, const realtype t,
+        gsl::span<realtype> sz, int const ie, realtype const t,
         AmiVector const& x, AmiVectorArray const& sx
     );
 
@@ -1082,7 +1088,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x State variables
      */
     void getEventRegularization(
-        gsl::span<realtype> rz, int const ie, const realtype t,
+        gsl::span<realtype> rz, int const ie, realtype const t,
         AmiVector const& x
     );
 
@@ -1099,7 +1105,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getEventRegularizationSensitivity(
-        gsl::span<realtype> srz, int const ie, const realtype t,
+        gsl::span<realtype> srz, int const ie, realtype const t,
         AmiVector const& x, AmiVectorArray const& sx
     );
     /**
@@ -1113,7 +1119,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getEventSigma(
         gsl::span<realtype> sigmaz, int const ie, int const nroots,
-        const realtype t, ExpData const* edata
+        realtype const t, ExpData const* edata
     );
 
     /**
@@ -1131,7 +1137,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getEventSigmaSensitivity(
         gsl::span<realtype> ssigmaz, int const ie, int const nroots,
-        const realtype t, ExpData const* edata
+        realtype const t, ExpData const* edata
     );
 
     /**
@@ -1144,7 +1150,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addEventObjective(
-        realtype& Jz, int const ie, int const nroots, const realtype t,
+        realtype& Jz, int const ie, int const nroots, realtype const t,
         AmiVector const& x, ExpData const& edata
     );
 
@@ -1158,7 +1164,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addEventObjectiveRegularization(
-        realtype& Jrz, int const ie, int const nroots, const realtype t,
+        realtype& Jrz, int const ie, int const nroots, realtype const t,
         AmiVector const& x, ExpData const& edata
     );
 
@@ -1180,7 +1186,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void addEventObjectiveSensitivity(
         std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const ie,
-        int const nroots, const realtype t, AmiVector const& x,
+        int const nroots, realtype const t, AmiVector const& x,
         AmiVectorArray const& sx, ExpData const& edata
     );
 
@@ -1201,7 +1207,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void addPartialEventObjectiveSensitivity(
         std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const ie,
-        int const nroots, const realtype t, AmiVector const& x,
+        int const nroots, realtype const t, AmiVector const& x,
         ExpData const& edata
     );
 
@@ -1219,7 +1225,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getAdjointStateEventUpdate(
         gsl::span<realtype> dJzdx, int const ie, int const nroots,
-        const realtype t, AmiVector const& x, ExpData const& edata
+        realtype const t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1234,7 +1240,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getEventTimeSensitivity(
-        std::vector<realtype>& stau, const realtype t, int const ie,
+        std::vector<realtype>& stau, realtype const t, int const ie,
         AmiVector const& x, AmiVectorArray const& sx
     );
 
@@ -1247,7 +1253,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_old Value of residual function before event
      */
     void addStateEventUpdate(
-        AmiVector& x, int const ie, const realtype t, AmiVector const& xdot,
+        AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
         AmiVector const& xdot_old
     );
 
@@ -1263,7 +1269,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * `Model::getEventTimeSensitivity`
      */
     void addStateSensitivityEventUpdate(
-        AmiVectorArray& sx, int const ie, const realtype t,
+        AmiVectorArray& sx, int const ie, realtype const t,
         AmiVector const& x_old, AmiVector const& xdot,
         AmiVector const& xdot_old, std::vector<realtype> const& stau
     );
@@ -1279,7 +1285,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xBdot right hand side of adjoint state
      */
     void addAdjointStateEventUpdate(
-        AmiVector& xB, int const ie, const realtype t, AmiVector const& x,
+        AmiVector& xB, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_old, AmiVector const& xBdot
     );
 
@@ -1295,7 +1301,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xBdot right hand side of adjoint state
      */
     void addAdjointQuadratureEventUpdate(
-        AmiVector& xQB, int const ie, const realtype t, AmiVector const& x,
+        AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
         AmiVector const& xBdot
     );
@@ -1325,10 +1331,12 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param array
      * @param model_quantity The model quantity `array` corresponds to
+     * @param t Current timepoint
      * @return
      */
     int checkFinite(
-        gsl::span<realtype const> array, ModelQuantity model_quantity
+        gsl::span<realtype const> array, ModelQuantity model_quantity,
+        realtype t
     ) const;
     /**
      * @brief Check if the given array has only finite elements.
@@ -1338,11 +1346,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param array Flattened matrix
      * @param model_quantity The model quantity `array` corresponds to
      * @param num_cols Number of columns of the non-flattened matrix
+     * @param t Current timepoint
      * @return
      */
     int checkFinite(
         gsl::span<realtype const> array, ModelQuantity model_quantity,
-        size_t num_cols
+        size_t num_cols, realtype t
     ) const;
 
     /**
@@ -1415,19 +1424,20 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_solver State variables with conservation laws applied
      * (solver returns this)
      */
-    void fx_rdata(AmiVector& x_rdata, AmiVector const& x_solver);
+    void fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x_solver);
 
     /**
      * @brief Expand conservation law for state sensitivities.
      * @param sx_rdata Output buffer for state variables sensitivities with
-     * conservation laws expanded (stored in `amici::ReturnData`).
+     * conservation laws expanded
+     * (stored in `amici::ReturnData` shape `nplist` x `nx`, row-major).
      * @param sx_solver State variables sensitivities with conservation laws
      * applied (solver returns this)
      * @param x_solver State variables with conservation laws
      * applied (solver returns this)
      */
     void fsx_rdata(
-        AmiVectorArray& sx_rdata, AmiVectorArray const& sx_solver,
+        gsl::span<realtype> sx_rdata, AmiVectorArray const& sx_solver,
         AmiVector const& x_solver
     );
 
@@ -1444,9 +1454,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @return Those indices.
      */
     std::vector<int> const& getReinitializationStateIdxs() const;
-
-    /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated = false;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
@@ -1468,6 +1475,30 @@ class Model : public AbstractModel, public ModelDimensions {
      * in ascending order.
      */
     virtual std::vector<double> get_trigger_timepoints() const;
+
+    /**
+     * @brief Get steady-state mask as std::vector.
+     *
+     * See `set_steadystate_mask` for details.
+     *
+     * @return Steady-state mask
+     */
+    std::vector<realtype> get_steadystate_mask() const {
+        return steadystate_mask_;
+    };
+
+    /**
+     * @brief Set steady-state mask.
+     *
+     * The mask is used to exclude certain state variables from the steady-state
+     * convergence check. Positive values indicate that the corresponding state
+     * variable should be included in the convergence check, while non-positive
+     * values indicate that the corresponding state variable should be excluded.
+     * An empty mask is interpreted as including all state variables.
+     *
+     * @param mask Mask of length `nx_solver`.
+     */
+    void set_steadystate_mask(std::vector<realtype> const& mask);
 
     /**
      * Flag indicating whether for
@@ -1696,7 +1727,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void fsigmaz(
-        int const ie, int const nroots, const realtype t, ExpData const* edata
+        int const ie, int const nroots, realtype const t, ExpData const* edata
     );
 
     /**
@@ -1730,7 +1761,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void fdJzdz(
-        int const ie, int const nroots, const realtype t, AmiVector const& x,
+        int const ie, int const nroots, realtype const t, AmiVector const& x,
         ExpData const& edata
     );
 
@@ -1744,7 +1775,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Pointer to experimental data instance
      */
     void fdJzdsigma(
-        int const ie, int const nroots, const realtype t, AmiVector const& x,
+        int const ie, int const nroots, realtype const t, AmiVector const& x,
         ExpData const& edata
     );
 
@@ -1797,7 +1828,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void fdJrzdz(
-        int const ie, int const nroots, const realtype t, AmiVector const& x,
+        int const ie, int const nroots, realtype const t, AmiVector const& x,
         ExpData const& edata
     );
 
@@ -1811,7 +1842,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata pointer to experimental data instance
      */
     void fdJrzdsigma(
-        int const ie, int const nroots, const realtype t, AmiVector const& x,
+        int const ie, int const nroots, realtype const t, AmiVector const& x,
         ExpData const& edata
     );
 
@@ -1831,29 +1862,45 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Compute recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fw(realtype t, realtype const* x);
+    void fw(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute parameter derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdp(realtype t, realtype const* x);
+    void fdwdp(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute state derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdx(realtype t, realtype const* x);
+    void fdwdx(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute self derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdw(realtype t, realtype const* x);
+    void fdwdw(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute fx_rdata.
@@ -2019,11 +2066,13 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** method for steady-state computation */
     SteadyStateComputationMode steadystate_computation_mode_{
-        SteadyStateComputationMode::integrateIfNewtonFails};
+        SteadyStateComputationMode::integrateIfNewtonFails
+    };
 
     /** method for steadystate sensitivities computation */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_{
-        SteadyStateSensitivityMode::integrateIfNewtonFails};
+        SteadyStateSensitivityMode::integrateIfNewtonFails
+    };
 
     /**
      * Indicates whether the result of every call to `Model::f*` should be
@@ -2043,20 +2092,17 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype min_sigma_{50.0};
 
   private:
-    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
-    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
-
-    /** Sparse dwdw temporary storage (shape `ndwdw`) */
-    mutable SUNMatrixWrapper dwdw_;
-
-    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
-    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
-
-    /** Recursion */
-    int w_recursion_depth_{0};
-
     /** Simulation parameters, initial state, etc. */
     SimulationParameters simulation_parameters_;
+
+    /**
+     * Mask for state variables that should be checked for steady state
+     * during pre-/post-equilibration. Positive values indicate that the
+     * corresponding state variable should be checked for steady state.
+     * Negative values indicate that the corresponding state variable should
+     * be ignored.
+     */
+    std::vector<realtype> steadystate_mask_;
 };
 
 bool operator==(Model const& a, Model const& b);

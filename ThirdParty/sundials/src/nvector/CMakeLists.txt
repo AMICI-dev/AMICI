@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -67,4 +67,26 @@ endif()
 
 if(BUILD_NVECTOR_TRILINOS)
   add_subdirectory(trilinos)
+endif()
+
+if(BUILD_NVECTOR_KOKKOS)
+  install(CODE "MESSAGE(\"\nInstall NVECTOR_KOKKOS\n\")")
+  message(STATUS "Added BUILD_NVECTOR_KOKKOS module")
+  add_library(sundials_nveckokkos INTERFACE)
+  target_link_libraries(sundials_nveckokkos INTERFACE sundials_core)
+  if(ENABLE_HIP)
+    target_link_libraries(sundials_nveckokkos INTERFACE
+    Kokkos::kokkos hip::device)
+  else()
+    target_link_libraries(sundials_nveckokkos INTERFACE
+    Kokkos::kokkos)
+  endif()
+  target_include_directories(sundials_nveckokkos INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${SUNDIALS_SOURCE_DIR}/src/sundials>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  install(FILES ${PROJECT_SOURCE_DIR}/include/nvector/nvector_kokkos.hpp
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/nvector")
+  set(_SUNDIALS_INSTALLED_COMPONENTS "nveckokkos;${_SUNDIALS_INSTALLED_COMPONENTS}" CACHE INTERNAL "" FORCE)
 endif()
