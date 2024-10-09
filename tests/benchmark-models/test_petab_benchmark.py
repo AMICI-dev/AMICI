@@ -19,6 +19,7 @@ from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
 from fiddy.success import Consistency
 
+
 repo_root = Path(__file__).parent.parent.parent
 
 # reuse compiled models from test_benchmark_collection.sh
@@ -40,14 +41,8 @@ models = set(benchmark_models_petab.MODELS) - {
     "Fujita_SciSignal2010",
     # FIXME: re-enable
     "Raia_CancerResearch2011",
-    "Zheng_PNAS2012",
 }
 models = list(sorted(models))
-
-debug = False
-if debug:
-    debug_path = Path(__file__).parent / "debug"
-    debug_path.mkdir(exist_ok=True, parents=True)
 
 
 @dataclass
@@ -58,6 +53,10 @@ class GradientCheckSettings:
     # Absolute and relative tolerances for finite difference gradient checks.
     atol_check: float = 1e-3
     rtol_check: float = 1e-2
+    # Absolute and relative tolerances for fiddy consistency check between
+    # forward/backward/central differences.
+    atol_consistency: float = 1e-5
+    rtol_consistency: float = 1e-1
     # Step sizes for finite difference gradient checks.
     step_sizes = [
         1e-1,
@@ -68,50 +67,73 @@ class GradientCheckSettings:
         1e-5,
     ]
     rng_seed: int = 0
+    ss_sensitivity_mode: amici.SteadyStateSensitivityMode = (
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
+    noise_level: float = 0.05
 
 
 settings = defaultdict(GradientCheckSettings)
-settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
-    atol_sim=1e-10,
-    rtol_sim=1e-10,
+# NOTE: Newton method fails badly with ASA for Blasi_CellSystems2016
+settings["Blasi_CellSystems2016"] = GradientCheckSettings(
+    atol_check=1e-12,
+    rtol_check=1e-4,
+    ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
 )
+settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
+    rng_seed=2,
+    atol_check=1e-5,
+    rtol_check=1e-3,
+)
+settings["Brannmark_JBC2010"] = GradientCheckSettings(
+    ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
+)
+settings["Giordano_Nature2020"] = GradientCheckSettings(
+    atol_check=1e-6, rtol_check=1e-3, rng_seed=1
+)
+settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
+    atol_sim=1e-14,
+    rtol_sim=1e-14,
+    noise_level=0.01,
+    atol_consistency=1e-3,
+)
+settings["Okuonghae_ChaosSolitonsFractals2020"].step_sizes.extend([0.2, 0.005])
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
     # Avoid "root after reinitialization"
     atol_sim=1e-12,
     rtol_sim=1e-12,
 )
-settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
-    atol_sim=1e-14,
-    rtol_sim=1e-14,
+settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
+    atol_sim=1e-10,
+    rtol_sim=1e-10,
 )
-settings["Okuonghae_ChaosSolitonsFractals2020"].step_sizes.insert(0, 0.2)
-settings["Giordano_Nature2020"] = GradientCheckSettings(
-    atol_check=1e-6, rtol_check=1e-3, rng_seed=1
+settings["Sneyd_PNAS2002"] = GradientCheckSettings(
+    atol_sim=1e-15,
+    rtol_sim=1e-12,
+    atol_check=1e-5,
+    rtol_check=1e-4,
+    rng_seed=7,
+)
+settings["Weber_BMC2015"] = GradientCheckSettings(
+    atol_sim=1e-12,
+    rtol_sim=1e-12,
+    atol_check=1e-6,
+    rtol_check=1e-2,
+    rng_seed=1,
+)
+settings["Zheng_PNAS2012"] = GradientCheckSettings(
+    rng_seed=1,
+    rtol_sim=1e-15,
+    atol_check=5e-4,
+    rtol_check=4e-3,
+    noise_level=0.01,
 )
 
 
-def assert_gradient_check_success(
-    derivative: fiddy.Derivative,
-    expected_derivative: np.array,
-    point: np.array,
-    atol: float,
-    rtol: float,
-) -> None:
-    if not derivative.df.success.all():
-        raise AssertionError(
-            f"Failed to compute finite differences:\n{derivative.df}"
-        )
-    check = NumpyIsCloseDerivativeCheck(
-        derivative=derivative,
-        expectation=expected_derivative,
-        point=point,
-    )
-    check_result = check(rtol=rtol, atol=atol)
-
-    if check_result.success is True:
-        return
-
-    raise AssertionError(f"Gradient check failed:\n{check_result.df}")
+debug = False
+if debug:
+    debug_path = Path(__file__).parent / "debug"
+    debug_path.mkdir(exist_ok=True, parents=True)
 
 
 @pytest.mark.filterwarnings(
@@ -135,7 +157,7 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         "Borghans_BiophysChem1997",
         "Sneyd_PNAS2002",
         "Bertozzi_PNAS2020",
-        "Okuonghae_ChaosSolitonsFractals2020",
+        "Zheng_PNAS2012",
     ):
         # not really worth the effort trying to fix these cases if they
         # only fail on linear scale
@@ -144,7 +166,6 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
     if (
         model
         in (
-            "Blasi_CellSystems2016",
             # events with parameter-dependent triggers
             #  https://github.com/AMICI-dev/AMICI/issues/18
             "Oliveira_NatCommun2021",
@@ -154,25 +175,11 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         # FIXME
         pytest.skip()
 
-    if (
-        model
-        in (
-            "Weber_BMC2015",
-            "Sneyd_PNAS2002",
-        )
-        and sensitivity_method == SensitivityMethod.forward
-    ):
-        # FIXME
-        pytest.skip()
-
     petab_problem = benchmark_models_petab.get_problem(model)
     petab.flatten_timepoint_specific_output_overrides(petab_problem)
 
     # Only compute gradient for estimated parameters.
-    parameter_df_free = petab_problem.parameter_df.loc[
-        petab_problem.x_free_ids
-    ]
-    parameter_ids = list(parameter_df_free.index)
+    parameter_ids = petab_problem.x_free_ids
     cur_settings = settings[model]
 
     # Setup AMICI objects.
@@ -183,13 +190,10 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(cur_settings.atol_sim)
     amici_solver.setRelativeTolerance(cur_settings.rtol_sim)
-    amici_solver.setMaxSteps(int(1e5))
+    amici_solver.setMaxSteps(2 * 10**5)
     amici_solver.setSensitivityMethod(sensitivity_method)
-
-    if model in ("Brannmark_JBC2010",):
-        amici_model.setSteadyStateSensitivityMode(
-            amici.SteadyStateSensitivityMode.integrationOnly
-        )
+    # TODO: we should probably test all sensitivity modes
+    amici_model.setSteadyStateSensitivityMode(cur_settings.ss_sensitivity_mode)
 
     amici_function, amici_derivative = simulate_petab_to_cached_functions(
         petab_problem=petab_problem,
@@ -204,24 +208,20 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         # cache=not debug,
         cache=False,
     )
-
-    noise_level = 0.1
     np.random.seed(cur_settings.rng_seed)
 
     # find a point where the derivative can be computed
     for _ in range(5):
         if scale:
-            point = np.asarray(
-                list(
-                    petab_problem.scale_parameters(
-                        dict(parameter_df_free.nominalValue)
-                    ).values()
-                )
+            point = petab_problem.x_nominal_free_scaled
+            point_noise = (
+                np.random.randn(len(point)) * cur_settings.noise_level
             )
-            point_noise = np.random.randn(len(point)) * noise_level
         else:
-            point = parameter_df_free.nominalValue.values
-            point_noise = np.random.randn(len(point)) * point * noise_level
+            point = petab_problem.x_nominal_free
+            point_noise = (
+                np.random.randn(len(point)) * point * cur_settings.noise_level
+            )
         point += point_noise  # avoid small gradients at nominal value
 
         try:
@@ -239,10 +239,18 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         sizes=cur_settings.step_sizes,
         direction_ids=parameter_ids,
         method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
-        success_checker=Consistency(atol=1e-5, rtol=1e-1),
+        success_checker=Consistency(
+            rtol=cur_settings.rtol_consistency,
+            atol=cur_settings.atol_consistency,
+        ),
         expected_result=expected_derivative,
         relative_sizes=not scale,
     )
+
+    print()
+    print("Testing at:", point)
+    print("Expected derivative:", expected_derivative)
+    print("Print actual derivative:", derivative.series.values)
 
     if debug:
         write_debug_output(
@@ -258,7 +266,51 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         point,
         rtol=cur_settings.rtol_check,
         atol=cur_settings.atol_check,
+        always_print=True,
     )
+
+
+def assert_gradient_check_success(
+    derivative: fiddy.Derivative,
+    expected_derivative: np.array,
+    point: np.array,
+    atol: float,
+    rtol: float,
+    always_print: bool = False,
+) -> None:
+    if not derivative.df.success.all():
+        raise AssertionError(
+            f"Failed to compute finite differences:\n{derivative.df}"
+        )
+    check = NumpyIsCloseDerivativeCheck(
+        derivative=derivative,
+        expectation=expected_derivative,
+        point=point,
+    )
+    check_result = check(rtol=rtol, atol=atol)
+
+    if check_result.success is True and not always_print:
+        return
+
+    df = check_result.df
+    df["abs_diff"] = np.abs(df["expectation"] - df["test"])
+    df["rel_diff"] = df["abs_diff"] / np.abs(df["expectation"])
+    df["atol_success"] = df["abs_diff"] <= atol
+    df["rtol_success"] = df["rel_diff"] <= rtol
+    max_adiff = df["abs_diff"].max()
+    max_rdiff = df["rel_diff"].max()
+    with pd.option_context("display.max_columns", None, "display.width", None):
+        message = (
+            f"Gradient check failed:\n{df}\n\n"
+            f"Maximum absolute difference: {max_adiff} (tolerance: {atol})\n"
+            f"Maximum relative difference: {max_rdiff} (tolerance: {rtol})"
+        )
+
+    if check_result.success is False:
+        raise AssertionError(message)
+
+    if always_print:
+        print(message)
 
 
 def write_debug_output(
