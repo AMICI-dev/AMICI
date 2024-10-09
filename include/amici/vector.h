@@ -88,8 +88,7 @@ class AmiVector {
             return;
         }
         nvec_ = N_VMake_Serial(
-            gsl::narrow<long int>(vold.vec_.size()), vec_.data(),
-            vold.nvec_->sunctx
+            gsl::narrow<long int>(vec_.size()), vec_.data(), vold.nvec_->sunctx
         );
     }
 
