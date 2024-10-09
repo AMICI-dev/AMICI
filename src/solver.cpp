@@ -769,7 +769,7 @@ void Solver::setConstraints(std::vector<realtype> const& constraints) {
 
     if (!any_constraint) {
         // all-0 must be converted to empty, otherwise sundials will fail
-        constraints_ = AmiVector();
+        constraints_ = AmiVector(0, sunctx_);
         return;
     }
 
