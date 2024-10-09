@@ -6,6 +6,8 @@ from pathlib import Path
 
 import libsbml
 import numpy as np
+import pandas as pd
+
 from amici import (
     AmiciModel,
     ExpData,
@@ -185,21 +187,35 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     solver = amici_model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-10)
+    solver.setAbsoluteTolerance(1e-16)
+    solver.setRelativeTolerance(1e-14)
     rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.adjoint)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-10)
-    solver.setAbsoluteToleranceB(1e-15)
-    solver.setRelativeToleranceB(1e-10)
-    solver.setAbsoluteToleranceQuadratures(1e-15)
-    solver.setRelativeToleranceQuadratures(1e-8)
+    solver.setAbsoluteTolerance(1e-16)
+    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteToleranceB(1e-16)
+    solver.setRelativeToleranceB(1e-15)
+    solver.setAbsoluteToleranceQuadratures(1e-16)
+    solver.setRelativeToleranceQuadratures(1e-10)
     rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+
+    assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
+    assert_allclose(rdata_fsa.llh, rdata_asa.llh, atol=1e-14, rtol=1e-10)
+    df = pd.DataFrame(
+        {
+            "fsa": rdata_fsa["sllh"],
+            "asa": rdata_asa["sllh"],
+            "fd": np.nan,
+        },
+        index=list(amici_model.getParameterIds()),
+    )
+    df["abs_diff"] = df["fsa"] - df["asa"]
+    df["rel_diff"] = df["abs_diff"] / df["fsa"]
+    print(df)
 
     # Also test against finite differences
     parameters = amici_model.getUnscaledParameters()
@@ -207,8 +223,8 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     eps = 1e-5
     for i_par, par in enumerate(parameters):
         solver = amici_model.getSolver()
-        solver.setSensitivityOrder(SensitivityOrder.none)
-        solver.setSensitivityMethod(SensitivityMethod.none)
+        solver.setSensitivityOrder(SensitivityOrder.first)
+        solver.setSensitivityMethod(SensitivityMethod.adjoint)
         solver.setAbsoluteTolerance(1e-15)
         solver.setRelativeTolerance(1e-13)
         tmp_par = np.array(parameters[:])
@@ -220,6 +236,7 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
         amici_model.setParameters(tmp_par)
         rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
         sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
+    df["fd"] = sllh_fd
 
     # test less strict in terms of absolute error, as the gradient are
     # typically in the order of 1e3

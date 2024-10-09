@@ -1719,13 +1719,13 @@ class DEModel:
         elif name == "deltaxB":
             event_eqs = []
             for ie, event in enumerate(self._events):
+                # ==== 1st group of terms: Heaviside functions ===========
+                tmp_eq = smart_multiply(
+                    self.sym("xdot") - self.sym("xdot_old"),
+                    self.eq("dtaudx")[ie],
+                )
                 if event._state_update is not None:
-                    # ==== 1st group of terms : Heaviside functions ===========
-                    tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
-                        self.eq("dtaudx")[ie],
-                    )
-                    # ==== 2nd group of terms : Derivatives of Dirac deltas ===
+                    # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         self.eq("ddeltaxdt")[ie], self.eq("dtaudx")[ie]
@@ -1737,28 +1737,22 @@ class DEModel:
                         ),
                         self.eq("dtaudx")[ie],
                     )
-                    # ==== 3rd group of terms : Dirac deltas ==================
+                    # ==== 3rd group of terms: Dirac deltas ==================
                     tmp_eq += self.eq("ddeltaxdx")[ie]
-                    tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
-                else:
-                    tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
-                        self.eq("dtaudx")[ie],
-                    )
-                    tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
+                tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
                 event_eqs.append(tmp_eq)
             self._eqs[name] = event_eqs
 
         elif name == "deltaqB":
             event_eqs = []
             for ie, event in enumerate(self._events):
+                # ==== 1st group of terms: Heaviside functions ===========
+                tmp_eq = smart_multiply(
+                    self.sym("xdot") - self.sym("xdot_old"),
+                    self.eq("dtaudp")[ie],
+                )
                 if event._state_update is not None:
-                    # ==== 1st group of terms : Heaviside functions ===========
-                    tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
-                        self.eq("dtaudp")[ie],
-                    )
-                    # ==== 2nd group of terms : Derivatives of Dirac deltas ===
+                    # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         self.eq("ddeltaxdt")[ie], self.eq("dtaudp")[ie]
@@ -1770,13 +1764,8 @@ class DEModel:
                         ),
                         self.eq("dtaudp")[ie],
                     )
-                    # ==== 3rd group of terms : Dirac deltas ==================
+                    # ==== 3rd group of terms: Dirac deltas ==================
                     tmp_eq += self.eq("ddeltaxdp")[ie]
-                else:
-                    tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
-                        self.eq("dtaudp")[ie],
-                    )
                 event_eqs.append(smart_multiply(self.sym("xB").T, tmp_eq))
             self._eqs[name] = event_eqs
 
