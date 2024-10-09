@@ -1617,15 +1617,12 @@ class DEModel:
             ]
             if name == "dzdx":
                 for ie in range(self.num_events()):
-                    dtaudx = (
-                        -self.eq("drootdx")[ie, :]
-                        / self.eq("drootdt_total")[ie]
-                    )
+                    dtaudx = self.eq("dtaudx")
                     for iz in range(self.num_eventobs()):
                         if ie != self._z2event[iz] - 1:
                             continue
                         dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
-                        self._eqs[name][ie][iz, :] += dzdt * dtaudx
+                        self._eqs[name][ie][iz, :] += dzdt * -dtaudx[ie]
 
         elif name in ["rz", "drzdx", "drzdp"]:
             eq_events = []
@@ -1644,9 +1641,21 @@ class DEModel:
 
         elif name == "stau":
             self._eqs[name] = [
-                -self.eq("sroot")[ie, :] / self.eq("drootdt_total")[ie]
+                self.eq("sroot")[ie, :] / self.eq("drootdt_total")[ie]
                 if not self.eq("drootdt_total")[ie].is_zero
                 else sp.zeros(*self.eq("sroot")[ie, :].shape)
+                for ie in range(self.num_events())
+            ]
+
+        elif name == "dtaudx":
+            self._eqs[name] = [
+                self.eq("drootdx")[ie, :] / self.eq("drootdt_total")[ie]
+                for ie in range(self.num_events())
+            ]
+
+        elif name == "dtaudp":
+            self._eqs[name] = [
+                self.eq("drootdp")[ie, :] / self.eq("drootdt_total")[ie]
                 for ie in range(self.num_events())
             ]
 
@@ -1665,7 +1674,7 @@ class DEModel:
                     self.eq("stau")[ie]
                 ) and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
-                        self.sym("xdot_old") - self.sym("xdot"),
+                        self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
                     )
 
@@ -1682,12 +1691,14 @@ class DEModel:
                     if not smart_is_zero_matrix(self.eq("stau")[ie]):
                         # chain rule for the time point
                         tmp_eq += smart_multiply(
-                            self.eq("ddeltaxdt")[ie], self.sym("stau").T
+                            self.eq("ddeltaxdt")[ie],
+                            -self.sym("stau").T,
                         )
 
                         # additional part of chain rule state variables
                         tmp_dxdp += smart_multiply(
-                            self.sym("xdot_old"), self.sym("stau").T
+                            self.sym("xdot_old"),
+                            -self.sym("stau").T,
                         )
 
                     # finish chain rule for the state variables
@@ -1695,6 +1706,11 @@ class DEModel:
                         self.eq("ddeltaxdx")[ie], tmp_dxdp
                     )
 
+                else:
+                    tmp_eq = smart_multiply(
+                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.eq("stau")[ie],
+                    )
                 event_eqs.append(tmp_eq)
 
             self._eqs[name] = event_eqs
