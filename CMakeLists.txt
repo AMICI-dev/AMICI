@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.22)
 # When updating the policy version, please also update it in
 # src/CMakeLists.template.cmake
-cmake_policy(VERSION 3.22...3.30)
+cmake_policy(VERSION 3.22...3.31)
 
 project(amici)
 
