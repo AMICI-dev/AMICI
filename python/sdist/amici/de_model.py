@@ -1707,6 +1707,7 @@ class DEModel:
                     tmp_eq += smart_multiply(
                         self.eq("ddeltaxdx")[ie], tmp_dxdp
                     )
+
                 else:
                     tmp_eq = smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
