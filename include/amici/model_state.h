@@ -18,6 +18,19 @@ namespace amici {
  * number of attributes that need to be transferred.
  */
 struct ModelState {
+    ModelState() = default;
+    /**
+     * @brief Constructor from model dimensions.
+     * @param dim Model dimensions
+     */
+    explicit ModelState(ModelDimensions const& dim) {
+        h.resize(dim.ne, 0.0);
+        total_cl.resize(dim.nx_rdata - dim.nx_solver, 0.0);
+        stotal_cl.resize((dim.nx_rdata - dim.nx_solver) * dim.np, 0.0);
+        unscaledParameters.resize(dim.np);
+        fixedParameters.resize(dim.nk);
+    }
+
     /**
      * Flag indicating whether a certain Heaviside function should be active or
      * not (dimension: `ne`)
