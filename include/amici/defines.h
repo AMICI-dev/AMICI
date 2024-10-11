@@ -73,6 +73,7 @@ constexpr int AMICI_CONSTR_FAIL=             -15;
 constexpr int AMICI_CVODES_CONSTR_FAIL=      -15;
 constexpr int AMICI_IDAS_CONSTR_FAIL=        -11;
 constexpr int AMICI_ILL_INPUT=               -22;
+constexpr int AMICI_FIRST_QRHSFUNC_ERR=      -32;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
 constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
