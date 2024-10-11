@@ -1,6 +1,6 @@
 # Build AMICI model
 cmake_minimum_required(VERSION 3.22)
-cmake_policy(VERSION 3.22...3.30)
+cmake_policy(VERSION 3.22...3.31)
 
 project(TPL_MODELNAME)
 
