@@ -35,10 +35,7 @@ def get_extension() -> CMakeExtension:
         install_prefix="TPL_MODELNAME",
         cmake_configure_options=[
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
-            "-DCMAKE_MODULE_PATH="
-            f"{prefix_path.as_posix()}/lib/cmake/SuiteSparse;"
-            f"{prefix_path.as_posix()}/lib64/cmake/SuiteSparse",
-            f"-DKLU_ROOT={prefix_path.as_posix()}",
+            f"-DCMAKE_PREFIX_PATH={prefix_path.as_posix()}",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
         ],
