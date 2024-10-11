@@ -1205,6 +1205,7 @@ void Solver::initializeNonLinearSolverSens(Model const* model) const {
 }
 
 void Solver::setErrHandlerFn() const {
+    SUNContext_ClearErrHandlers(sunctx_);
     auto sunerr = SUNContext_PushErrHandler(
         sunctx_, wrapErrHandlerFn,
         reinterpret_cast<void*>(const_cast<Solver*>(this))
