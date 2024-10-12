@@ -49,6 +49,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
     {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
     {AMICI_LSETUP_FAIL, "AMICI_LSETUP_FAIL"},
+    {AMICI_FIRST_QRHSFUNC_ERR, "AMICI_FIRST_QRHSFUNC_ERR"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
