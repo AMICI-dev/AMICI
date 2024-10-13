@@ -6,11 +6,11 @@
 
 #include <sundials/sundials_config.h>
 #include <sundials/sundials_iterative.h>
+#include <sundials/sundials_nonlinearsolver.h>
 #include <sunlinsol/sunlinsol_spbcgs.h>
 #include <sunlinsol/sunlinsol_spfgmr.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
-#include <sundials/sundials_nonlinearsolver.h>
 
 namespace amici {
 

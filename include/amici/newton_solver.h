@@ -2,8 +2,8 @@
 #define amici_newton_solver_h
 
 #include "amici/defines.h"
-#include "amici/vector.h"
 #include "amici/sundials_linsol_wrapper.h"
+#include "amici/vector.h"
 
 namespace amici {
 

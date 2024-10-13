@@ -3,8 +3,8 @@
 
 #include "amici/model.h"
 
-#include <sundials/sundials_nvector.h>
 #include <sundials/sundials_matrix.h>
+#include <sundials/sundials_nvector.h>
 
 #include <vector>
 

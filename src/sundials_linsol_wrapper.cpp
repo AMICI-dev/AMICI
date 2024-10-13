@@ -1,9 +1,9 @@
 #include <amici/sundials_linsol_wrapper.h>
 
 #include <amici/exception.h>
-#include <sunlinsol/sunlinsol_klu.h>
 #include <sunlinsol/sunlinsol_band.h>
 #include <sunlinsol/sunlinsol_dense.h>
+#include <sunlinsol/sunlinsol_klu.h>
 #include <sunlinsol/sunlinsol_pcg.h>
 #ifdef SUNDIALS_SUPERLUMT
 #include <sunlinsol/sunlinsol_superlumt.h>
