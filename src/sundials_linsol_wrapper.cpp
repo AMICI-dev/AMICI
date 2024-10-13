@@ -1,6 +1,15 @@
 #include <amici/sundials_linsol_wrapper.h>
 
 #include <amici/exception.h>
+#include <sunlinsol/sunlinsol_klu.h>
+#include <sunlinsol/sunlinsol_band.h>
+#include <sunlinsol/sunlinsol_dense.h>
+#include <sunlinsol/sunlinsol_pcg.h>
+#ifdef SUNDIALS_SUPERLUMT
+#include <sunlinsol/sunlinsol_superlumt.h>
+#endif
+#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
+#include <sunnonlinsol/sunnonlinsol_newton.h>
 
 #include <utility>
 
