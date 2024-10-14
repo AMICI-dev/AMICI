@@ -6,8 +6,6 @@
 #include <amici/newton_solver.h>
 #include <amici/vector.h>
 
-#include <nvector/nvector_serial.h>
-
 #include <memory>
 
 namespace amici {
@@ -15,6 +13,7 @@ namespace amici {
 class ExpData;
 class Solver;
 class Model;
+class BackwardProblem;
 
 /**
  * @brief The SteadystateProblem class solves a steady-state problem using
