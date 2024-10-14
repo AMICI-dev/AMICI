@@ -3,13 +3,9 @@
 
 #include "amici/model.h"
 
-#include <nvector/nvector_serial.h>
-
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
 #include <numeric>
+#include <sundials/sundials_matrix.h>
+#include <sundials/sundials_nvector.h>
 #include <vector>
 
 namespace amici {

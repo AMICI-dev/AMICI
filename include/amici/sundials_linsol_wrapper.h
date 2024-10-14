@@ -5,19 +5,12 @@
 #include "amici/vector.h"
 
 #include <sundials/sundials_config.h>
-#include <sunlinsol/sunlinsol_band.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol/sunlinsol_klu.h>
-#include <sunlinsol/sunlinsol_pcg.h>
+#include <sundials/sundials_iterative.h>
+#include <sundials/sundials_nonlinearsolver.h>
 #include <sunlinsol/sunlinsol_spbcgs.h>
 #include <sunlinsol/sunlinsol_spfgmr.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
-#ifdef SUNDIALS_SUPERLUMT
-#include <sunlinsol/sunlinsol_superlumt.h>
-#endif
-#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
-#include <sunnonlinsol/sunnonlinsol_newton.h>
 
 namespace amici {
 

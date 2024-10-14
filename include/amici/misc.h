@@ -4,7 +4,6 @@
 #include "amici/defines.h"
 #include "amici/exception.h"
 #include "amici/vector.h"
-#include <sunmatrix/sunmatrix_sparse.h> // SUNMatrixContent_Sparse
 
 #include <algorithm>
 #include <ctime>

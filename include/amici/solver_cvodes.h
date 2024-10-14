@@ -5,8 +5,6 @@
 #include "amici/solver.h"
 #include "amici/vector.h"
 
-#include <sundials/sundials_matrix.h>
-
 namespace amici {
 class ExpData;
 class ReturnData;
