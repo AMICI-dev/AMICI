@@ -38,6 +38,11 @@ jobs:
     - name: Set up AMICI C++ libraries
       uses: ./.github/actions/setup-amici-cpp
 
+    - name: Install libsuitesparse-dev
+      # We don't need libsuitesparse-dev, but let's have it installed,
+      # to ensure that its presence does not break the build
+      run: sudo apt-get install -y libsuitesparse-dev
+
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
