@@ -45,7 +45,7 @@ Install the AMICI dependencies via ``apt``
    sudo apt install libhdf5-serial-dev
 
    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
-   libboost-chrono-dev libboost-math-dev libboost-serialization-dev
+   sudo apt install libboost-chrono-dev libboost-math-dev libboost-serialization-dev
 
 Install AMICI:
 
