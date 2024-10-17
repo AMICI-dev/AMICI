@@ -2226,7 +2226,7 @@ class DEModel:
 
     def _collect_heaviside_roots(
         self,
-        args: Sequence[sp.Expr],
+        args: Sequence[sp.Basic],
     ) -> list[sp.Expr]:
         """
         Recursively checks an expression for the occurrence of Heaviside
@@ -2288,7 +2288,7 @@ class DEModel:
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(dxdt.args)
+        tmp_roots_old = self._collect_heaviside_roots((dxdt,))
         for tmp_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
