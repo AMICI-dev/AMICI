@@ -70,6 +70,10 @@ static_assert(
     amici::AMICI_IDAS_CONSTR_FAIL == IDA_CONSTR_FAIL,
     "AMICI_IDAS_CONSTR_FAIL != IDA_CONSTR_FAIL"
 );
+static_assert(
+    amici::AMICI_WARNING == IDA_WARNING,
+    "AMICI_WARNING != IDA_WARNING"
+);
 
 /*
  * The following static members are callback function to IDAS.

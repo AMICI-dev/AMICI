@@ -60,6 +60,7 @@ constexpr double pi = M_PI;
 //
 // NOTE: When adding / removing / renaming return codes,
 //       please update simulation_status_to_str_map in amici.h
+constexpr int AMICI_WARNING=                  99;
 constexpr int AMICI_RECOVERABLE_ERROR=         1;
 constexpr int AMICI_UNRECOVERABLE_ERROR=     -10;
 constexpr int AMICI_TOO_MUCH_WORK=            -1;
