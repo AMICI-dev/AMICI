@@ -27,7 +27,7 @@ void wrapErrHandlerFn(
         std::is_same<SUNErrCode, int>::value, "Must update format string"
     );
     // for debug builds, include full file path and line numbers
-#ifdef NDEBUG
+#ifndef NDEBUG
     snprintf(msg_buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
 #else
     snprintf(msg_buffer, BUF_SIZE, "%s", msg);

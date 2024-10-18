@@ -90,6 +90,10 @@ static_assert(
     amici::AMICI_FIRST_QRHSFUNC_ERR == CV_FIRST_QRHSFUNC_ERR,
     "AMICI_FIRST_QRHSFUNC_ERR != CV_FIRST_QRHSFUNC_ERR"
 );
+static_assert(
+    amici::AMICI_WARNING == CV_WARNING,
+    "AMICI_WARNING != CV_WARNING"
+);
 
 /*
  * The following static members are callback function to CVODES.
