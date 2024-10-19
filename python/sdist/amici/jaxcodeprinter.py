@@ -1,4 +1,5 @@
 """Jax code generation"""
+
 import re
 from typing import Optional, Union
 from collections.abc import Iterable
@@ -20,6 +21,10 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             raise ValueError(
                 f'Encountered unsupported function in expression "{expr}"'
             ) from e
+
+    def _print_AmiciSpline(self, expr: sp.Expr) -> str:
+        # FIXME: untested, where are spline nodes coming from anyways?
+        return f'interp1d(time, {self.doprint(expr.args[2:])}, kind="cubic")'
 
     def _get_sym_lines(
         self,

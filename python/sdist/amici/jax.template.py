@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from interpax import interp1d
 
 from amici.jax import JAXModel
 
