@@ -3,16 +3,17 @@
 Functionality related to running simulations or evaluating the objective
 function as defined by a PEtab problem.
 """
+
 import copy
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 from collections.abc import Sequence
 
 import amici
 import numpy as np
 import pandas as pd
-import petab
-from petab.C import *  # noqa: F403
+import petab.v1 as petab
+from petab.v1.C import *  # noqa: F403
 
 from .. import AmiciExpData, AmiciModel
 from ..logging import get_logger, log_execution_time
@@ -72,12 +73,12 @@ __all__ = [
 def simulate_petab(
     petab_problem: petab.Problem,
     amici_model: AmiciModel,
-    solver: Optional[amici.Solver] = None,
-    problem_parameters: Optional[dict[str, float]] = None,
-    simulation_conditions: Union[pd.DataFrame, dict] = None,
+    solver: amici.Solver | None = None,
+    problem_parameters: dict[str, float] | None = None,
+    simulation_conditions: pd.DataFrame | dict = None,
     edatas: list[AmiciExpData] = None,
     parameter_mapping: ParameterMapping = None,
-    scaled_parameters: Optional[bool] = False,
+    scaled_parameters: bool | None = False,
     log_level: int = logging.WARNING,
     num_threads: int = 1,
     failfast: bool = True,
@@ -165,29 +166,33 @@ def simulate_petab(
             amici_model=amici_model,
         )
 
-    if problem_parameters is None:
-        # scaled PEtab nominal values
-        problem_parameters = dict(
-            zip(
-                petab_problem.x_ids,
-                petab_problem.x_nominal_scaled,
-            )
-        )
-        # depending on `fill_fixed_parameters` for parameter mapping, the
-        #  parameter mapping may contain values instead of symbols for fixed
-        #  parameters. In this case, we need to filter them here to avoid
-        #  warnings in `fill_in_parameters`.
-        free_parameters = parameter_mapping.free_symbols
-        problem_parameters = {
-            par_id: par_value
-            for par_id, par_value in problem_parameters.items()
-            if par_id in free_parameters
-        }
-
-    elif not scaled_parameters:
+    if problem_parameters is not None and not scaled_parameters:
         problem_parameters = petab_problem.scale_parameters(problem_parameters)
-
     scaled_parameters = True
+
+    if problem_parameters is None:
+        problem_parameters = {}
+
+    # scaled PEtab nominal values
+    default_problem_parameters = dict(
+        zip(
+            petab_problem.x_ids,
+            petab_problem.get_x_nominal(scaled=scaled_parameters),
+            strict=True,
+        )
+    )
+    # depending on `fill_fixed_parameters` for parameter mapping, the
+    #  parameter mapping may contain values instead of symbols for fixed
+    #  parameters. In this case, we need to filter them here to avoid
+    #  warnings in `fill_in_parameters`.
+    free_parameters = parameter_mapping.free_symbols
+    default_problem_parameters = {
+        par_id: par_value
+        for par_id, par_value in default_problem_parameters.items()
+        if par_id in free_parameters
+    }
+
+    problem_parameters = default_problem_parameters | problem_parameters
 
     # Get edatas
     if edatas is None:
@@ -262,11 +267,11 @@ def simulate_petab(
 def aggregate_sllh(
     amici_model: AmiciModel,
     rdatas: Sequence[amici.ReturnDataView],
-    parameter_mapping: Optional[ParameterMapping],
+    parameter_mapping: ParameterMapping | None,
     edatas: list[AmiciExpData],
     petab_scale: bool = True,
     petab_problem: petab.Problem = None,
-) -> Union[None, dict[str, float]]:
+) -> None | dict[str, float]:
     """
     Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.
@@ -310,7 +315,7 @@ def aggregate_sllh(
             )
 
     for condition_parameter_mapping, edata, rdata in zip(
-        parameter_mapping, edatas, rdatas
+        parameter_mapping, edatas, rdatas, strict=True
     ):
         for sllh_parameter_index, condition_parameter_sllh in enumerate(
             rdata.sllh
@@ -432,7 +437,9 @@ def rdatas_to_measurement_df(
     observable_ids = model.getObservableIds()
     rows = []
     # iterate over conditions
-    for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
+    for (_, condition), rdata in zip(
+        simulation_conditions.iterrows(), rdatas, strict=True
+    ):
         # current simulation matrix
         y = rdata.y
         # time array used in rdata

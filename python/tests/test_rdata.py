@@ -1,4 +1,5 @@
 """Test amici.ReturnData(View)-related functionality"""
+
 import amici
 import numpy as np
 import pytest

@@ -1,7 +1,8 @@
 """Objects for AMICI's internal differential equation model representation"""
+
 import abc
 import numbers
-from typing import Optional, SupportsFloat, Union
+from typing import SupportsFloat
 
 import sympy as sp
 
@@ -45,7 +46,7 @@ class ModelQuantity:
         self,
         identifier: sp.Symbol,
         name: str,
-        value: Union[SupportsFloat, numbers.Number, sp.Expr],
+        value: SupportsFloat | numbers.Number | sp.Expr,
     ):
         """
         Create a new ModelQuantity instance.
@@ -165,7 +166,7 @@ class ConservationLaw(ModelQuantity):
         self._ncoeff: sp.Expr = coefficients[state_id]
         super().__init__(identifier, name, value)
 
-    def get_ncoeff(self, state_id) -> Union[sp.Expr, int, float]:
+    def get_ncoeff(self, state_id) -> sp.Expr | int | float:
         """
         Computes the normalized coefficient a_i/a_j where i is the index of
         the provided state_id and j is the index of the state that is
@@ -216,7 +217,7 @@ class State(ModelQuantity):
     Base class for differential and algebraic model states
     """
 
-    _conservation_law: Optional[ConservationLaw] = None
+    _conservation_law: ConservationLaw | None = None
 
     def get_x_rdata(self):
         """
@@ -323,7 +324,7 @@ class DifferentialState(State):
         """
         super().__init__(identifier, name, init)
         self._dt = cast_to_sym(dt, "dt")
-        self._conservation_law: Union[ConservationLaw, None] = None
+        self._conservation_law: ConservationLaw | None = None
 
     def set_conservation_law(self, law: ConservationLaw) -> None:
         """
@@ -394,17 +395,16 @@ class Observable(ModelQuantity):
         function or residuals
     """
 
-    _measurement_symbol: Union[sp.Symbol, None] = None
+    _measurement_symbol: sp.Symbol | None = None
 
     def __init__(
         self,
         identifier: sp.Symbol,
         name: str,
         value: sp.Expr,
-        measurement_symbol: Optional[sp.Symbol] = None,
-        transformation: Optional[
-            ObservableTransformation
-        ] = ObservableTransformation.LIN,
+        measurement_symbol: sp.Symbol | None = None,
+        transformation: None
+        | (ObservableTransformation) = ObservableTransformation.LIN,
     ):
         """
         Create a new Observable instance.
@@ -459,8 +459,8 @@ class EventObservable(Observable):
         name: str,
         value: sp.Expr,
         event: sp.Symbol,
-        measurement_symbol: Optional[sp.Symbol] = None,
-        transformation: Optional[ObservableTransformation] = "lin",
+        measurement_symbol: sp.Symbol | None = None,
+        transformation: ObservableTransformation | None = "lin",
     ):
         """
         Create a new EventObservable instance.
@@ -668,8 +668,8 @@ class Event(ModelQuantity):
         identifier: sp.Symbol,
         name: str,
         value: sp.Expr,
-        state_update: Union[sp.Expr, None],
-        initial_value: Optional[bool] = True,
+        state_update: sp.Expr | None,
+        initial_value: bool | None = True,
     ):
         """
         Create a new Event instance.

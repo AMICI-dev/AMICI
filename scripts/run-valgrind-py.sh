@@ -16,8 +16,8 @@ if [ $# -eq 0 ]
     # No arguments supplied, run all tests
     cd "${amici_path}"/python/tests
     source "${amici_path}"/venv/bin/activate
-    command=(python -m pytest -vv --ignore-glob=*petab* -W 'ignore:Signature ')
-    #                                                    ^ ignores the following warning that occurs only under valgrind,
+    command=(python -m pytest -vv --durations=10 --ignore-glob=*petab* -W 'ignore:Signature ')
+    #                                                                  ^ ignores the following warning that occurs only under valgrind,
     # e.g. `valgrind python -c "import h5py"`:
     # UserWarning: Signature b'\x00\xd0\xcc\xcc\xcc\xcc\xcc\xcc\xfb\xbf\x00\x00\x00\x00\x00\x00'
     # for <class 'numpy.longdouble'> does not match any known type: falling back to type probe function.

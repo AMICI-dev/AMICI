@@ -2,7 +2,7 @@
 # Programmer(s): Eddy Banks and David J. Gardner @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -38,7 +38,8 @@ force_variable(SUPERLUMT_THREAD_TYPE STRING "SuperLU_MT threading type: OPENMP o
 if(SUPERLUMT_THREAD_TYPE AND
     NOT SUPERLUMT_THREAD_TYPE STREQUAL "OPENMP" AND
     NOT SUPERLUMT_THREAD_TYPE STREQUAL "PTHREAD")
-  print_error("Unknown thread type: ${SUPERLUMT_THREAD_TYPE}" "Please enter PTHREAD or OPENMP")
+  message(FATAL_ERROR "Unknown thread type: ${SUPERLUMT_THREAD_TYPE} "
+    "Please enter PTHREAD or OPENMP")
 endif()
 
 # check if the threading library has been found
@@ -51,7 +52,7 @@ if(SUPERLUMT_THREAD_TYPE STREQUAL "PTHREAD")
       message(STATUS "Using Pthreads")
     else()
       set(PTHREADS_FOUND FALSE)
-      print_error("Could not determine Pthreads compiler flags")
+      message(FATAL_ERROR "Could not determine Pthreads compiler flags")
     endif()
   endif()
 else(SUPERLUMT_THREAD_TYPE STREQUAL "OPENMP")
@@ -92,8 +93,9 @@ if(NOT SUPERLUMT_LIBRARY)
 endif()
 
 # set the libraries, stripping out 'NOTFOUND' from previous attempts
-string(REPLACE "SUPERLUMT_LIBRARY-NOTFOUND" "" SUPERLUMT_LIBRARIES "${SUPERLUMT_LIBRARIES}")
-set(SUPERLUMT_LIBRARIES "${SUPERLUMT_LIBRARY};${SUPERLUMT_LIBRARIES}" CACHE STRING "" FORCE)
+if(NOT (SUPERLUMT_LIBRARIES MATCHES "${SUPERLUMT_LIBRARY_NAME}"))
+  set(SUPERLUMT_LIBRARIES "${SUPERLUMT_LIBRARY};${SUPERLUMT_LIBRARIES}" CACHE STRING "" FORCE)
+endif()
 
 # set the library dir option if it wasn't preset
 if(SUPERLUMT_LIBRARY AND (NOT SUPERLUMT_LIBRARY_DIR))
@@ -136,5 +138,7 @@ if(SUPERLUMT_FOUND)
     INTERFACE_INCLUDE_DIRECTORIES "${SUPERLUMT_INCLUDE_DIR}"
     INTERFACE_LINK_LIBRARIES "${SUPERLUMT_LIBRARIES}"
     IMPORTED_LOCATION "${SUPERLUMT_LIBRARY}")
+
+  list2string(SUPERLUMT_LIBRARIES EXAMPLES_SUPERLUMT_LIBRARIES)
 
 endif()

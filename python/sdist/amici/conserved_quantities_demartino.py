@@ -2,7 +2,6 @@ import logging
 import math
 import random
 import sys
-from typing import Optional, Union
 from collections.abc import MutableSequence, Sequence
 
 from .logging import get_logger
@@ -21,8 +20,8 @@ def compute_moiety_conservation_laws(
     num_species: int,
     num_reactions: int,
     max_num_monte_carlo: int = 20,
-    rng_seed: Union[None, bool, int] = False,
-    species_names: Optional[Sequence[str]] = None,
+    rng_seed: None | bool | int = False,
+    species_names: Sequence[str] | None = None,
 ) -> tuple[list[list[int]], list[list[float]]]:
     """Compute moiety conservation laws.
 
@@ -116,7 +115,7 @@ def _output(
     int_matched: list[int],
     species_indices: list[list[int]],
     species_coefficients: list[list[float]],
-    species_names: Optional[Sequence[str]] = None,
+    species_names: Sequence[str] | None = None,
     verbose: bool = False,
     log_level: int = logging.DEBUG,
 ):
@@ -140,7 +139,7 @@ def _output(
     # print all conserved quantities
     if verbose:
         for i, (coefficients, engaged_species_idxs) in enumerate(
-            zip(species_coefficients, species_indices)
+            zip(species_coefficients, species_indices, strict=True)
         ):
             if not engaged_species_idxs:
                 continue
@@ -149,7 +148,7 @@ def _output(
                 "species:"
             )
             for species_idx, coefficient in zip(
-                engaged_species_idxs, coefficients
+                engaged_species_idxs, coefficients, strict=True
             ):
                 name = (
                     species_names[species_idx]
@@ -958,12 +957,12 @@ def _reduce(
                 k2 = order[j]
                 column: list[float] = [0] * num_species
                 for species_idx, coefficient in zip(
-                    cls_species_idxs[k1], cls_coefficients[k1]
+                    cls_species_idxs[k1], cls_coefficients[k1], strict=True
                 ):
                     column[species_idx] = coefficient
                 ok1 = True
                 for species_idx, coefficient in zip(
-                    cls_species_idxs[k2], cls_coefficients[k2]
+                    cls_species_idxs[k2], cls_coefficients[k2], strict=True
                 ):
                     column[species_idx] -= coefficient
                     if column[species_idx] < -_MIN:

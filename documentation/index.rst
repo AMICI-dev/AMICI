@@ -27,6 +27,7 @@ Welcome to AMICI's documentation!
    references
    background
    changelog
+   versioning_policy
    glossary
    contributing
 

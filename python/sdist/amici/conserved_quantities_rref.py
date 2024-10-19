@@ -1,12 +1,12 @@
 """Find conserved quantities deterministically"""
 
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 
 
 def rref(
-    mat: np.array, round_ndigits: Optional[Union[Literal[False], int]] = None
+    mat: np.array, round_ndigits: Literal[False] | int | None = None
 ) -> np.array:
     """
     Bring matrix ``mat`` to reduced row echelon form

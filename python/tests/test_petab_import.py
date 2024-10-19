@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 
-petab = pytest.importorskip("petab", reason="Missing petab")
+petab = pytest.importorskip("petab.v1", reason="Missing petab")
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
     from amici.petab.sbml_import import (
         _get_fixed_parameters_sbml as get_fixed_parameters,
     )
-    from petab.models.sbml_model import SbmlModel
+    from petab.v1.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = get_fixed_parameters_model
     condition_df = petab.get_condition_df(
@@ -117,7 +117,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
 @skip_on_valgrind
 def test_default_output_parameters(simple_sbml_model):
     from amici.petab.petab_import import import_model
-    from petab.models.sbml_model import SbmlModel
+    from petab.v1.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = simple_sbml_model
     condition_df = petab.get_condition_df(

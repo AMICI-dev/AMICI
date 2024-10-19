@@ -20,6 +20,10 @@ find_package(
   Python3
   COMPONENTS Interpreter Development NumPy
   REQUIRED)
+message(
+  STATUS
+    "Found numpy ${Python3_NumPy_VERSION} include dir ${Python3_NumPy_INCLUDE_DIRS}"
+)
 set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/amici.i
     ${CMAKE_CURRENT_SOURCE_DIR}/edata.i
@@ -122,7 +126,6 @@ if(WIN32)
     POST_BUILD
     COMMAND dumpbin "/DEPENDENTS" "$<TARGET_FILE:_amici>"
     COMMENT "Dumping extension dependencies.")
-  message("Dependencies: ${dump}")
 endif()
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py $<TARGET_FILE:_amici>

@@ -12,12 +12,71 @@
 #include <colamd.h>
 #include <klu.h>
 
-#define ONE RCONST(1.0)
-
 namespace amici {
 
+constexpr auto ONE = SUN_RCONST(1.0);
+
+// Ensure AMICI options and return codes are in sync with SUNDIALS
+static_assert(
+    (int)InternalSensitivityMethod::simultaneous == IDA_SIMULTANEOUS, ""
+);
+static_assert((int)InternalSensitivityMethod::staggered == IDA_STAGGERED, "");
+
+static_assert((int)InterpolationType::hermite == IDA_HERMITE, "");
+static_assert((int)InterpolationType::polynomial == IDA_POLYNOMIAL, "");
+
+static_assert(AMICI_ROOT_RETURN == IDA_ROOT_RETURN, "");
+
+static_assert(
+    amici::AMICI_SUCCESS == IDA_SUCCESS, "AMICI_SUCCESS != IDA_SUCCESS"
+);
+static_assert(
+    amici::AMICI_DATA_RETURN == IDA_TSTOP_RETURN,
+    "AMICI_DATA_RETURN != IDA_TSTOP_RETURN"
+);
+static_assert(
+    amici::AMICI_ROOT_RETURN == IDA_ROOT_RETURN,
+    "AMICI_ROOT_RETURN != IDA_ROOT_RETURN"
+);
+static_assert(
+    amici::AMICI_ILL_INPUT == IDA_ILL_INPUT, "AMICI_ILL_INPUT != IDA_ILL_INPUT"
+);
+static_assert(amici::AMICI_NORMAL == IDA_NORMAL, "AMICI_NORMAL != IDA_NORMAL");
+static_assert(
+    amici::AMICI_ONE_STEP == IDA_ONE_STEP, "AMICI_ONE_STEP != IDA_ONE_STEP"
+);
+static_assert(
+    amici::AMICI_TOO_MUCH_ACC == IDA_TOO_MUCH_ACC,
+    "AMICI_TOO_MUCH_ACC != IDA_TOO_MUCH_ACC"
+);
+static_assert(
+    amici::AMICI_TOO_MUCH_WORK == IDA_TOO_MUCH_WORK,
+    "AMICI_TOO_MUCH_WORK != IDA_TOO_MUCH_WORK"
+);
+static_assert(
+    amici::AMICI_ERR_FAILURE == IDA_ERR_FAIL,
+    "AMICI_ERR_FAILURE != IDA_ERR_FAIL"
+);
+static_assert(
+    amici::AMICI_CONV_FAILURE == IDA_CONV_FAIL,
+    "AMICI_CONV_FAILURE != IDA_CONV_FAIL"
+);
+static_assert(
+    amici::AMICI_LSETUP_FAIL == IDA_LSETUP_FAIL,
+    "AMICI_LSETUP_FAIL != IDA_LSETUP_FAIL"
+);
+// This does not match the CVODE code, we need separate return values
+static_assert(
+    amici::AMICI_IDAS_CONSTR_FAIL == IDA_CONSTR_FAIL,
+    "AMICI_IDAS_CONSTR_FAIL != IDA_CONSTR_FAIL"
+);
+static_assert(
+    amici::AMICI_WARNING == IDA_WARNING,
+    "AMICI_WARNING != IDA_WARNING"
+);
+
 /*
- * The following static members are callback function to CVODES.
+ * The following static members are callback function to IDAS.
  * Their signatures must not be changes.
  */
 
@@ -290,7 +349,7 @@ Solver* IDASolver::clone() const { return new IDASolver(*this); }
 void IDASolver::allocateSolver() const {
     if (!solver_memory_)
         solver_memory_ = std::unique_ptr<void, std::function<void(void*)>>(
-            IDACreate(), [](void* ptr) { IDAFree(&ptr); }
+            IDACreate(sunctx_), [](void* ptr) { IDAFree(&ptr); }
         );
 }
 
@@ -333,15 +392,6 @@ void IDASolver::getRootInfo(int* rootsfound) const {
         throw IDAException(status, "IDAGetRootInfo");
 }
 
-void IDASolver::setErrHandlerFn() const {
-    int status = IDASetErrHandlerFn(
-        solver_memory_.get(), wrapErrHandlerFn,
-        reinterpret_cast<void*>(const_cast<IDASolver*>(this))
-    );
-    if (status != IDA_SUCCESS)
-        throw IDAException(status, "IDASetErrHandlerFn");
-}
-
 void IDASolver::setUserData() const {
     int status = IDASetUserData(solver_memory_.get(), &user_data);
     if (status != IDA_SUCCESS)
@@ -368,7 +418,7 @@ void IDASolver::setStabLimDetB(int const /*which*/, int const /*stldet*/)
 void IDASolver::setId(Model const* model) const {
 
     N_Vector id = N_VMake_Serial(
-        model->nx_solver, const_cast<realtype*>(model->idlist.data())
+        model->nx_solver, const_cast<realtype*>(model->idlist.data()), sunctx_
     );
 
     int status = IDASetId(solver_memory_.get(), id);
@@ -437,7 +487,7 @@ void IDASolver::reInitPostProcess(
 
     auto status = IDASetStopTime(ida_mem, tout);
     if (status != IDA_SUCCESS)
-        throw IDAException(status, "CVodeSetStopTime");
+        throw IDAException(status, "IDASetStopTime");
 
     status = IDASolve(
         ami_mem, tout, t, yout->getNVector(), ypout->getNVector(), IDA_ONE_STEP
@@ -454,7 +504,7 @@ void IDASolver::reInitPostProcess(
 
         if (ida_mem->ida_nst % ia_mem->ia_nsteps == 0) {
             /* currently not implemented, we should never get here as we
-             limit cv_mem->cv_nst < ca_mem->ca_nsteps, keeping this for
+             limit IDA_mem->cv_nst < ca_mem->ca_nsteps, keeping this for
              future regression */
             throw IDAException(AMICI_ERROR, "reInitPostProcess");
         }
@@ -727,8 +777,13 @@ void IDASolver::solveB(realtype const tBout, int const itaskB) const {
         reInitPostProcessB(tBout);
     int status = IDASolveB(solver_memory_.get(), tBout, itaskB);
     solver_was_called_B_ = true;
-    if (status != IDA_SUCCESS)
+    // This does not seem to be documented, but IDASolveB may also return
+    // IDA_TSTOP_RETURN
+    // https://github.com/LLNL/sundials/issues/580
+    if (status != IDA_SUCCESS && status != IDA_TSTOP_RETURN) {
+        gsl_Expects(status < 0);
         throw IntegrationFailure(status, tBout);
+    }
 }
 
 void IDASolver::setMaxNumStepsB(int const which, long int const mxstepsB)
@@ -853,7 +908,7 @@ void IDASolver::setNonLinearSolver() const {
         solver_memory_.get(), non_linear_solver_->get()
     );
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "CVodeSetNonlinearSolver");
+        throw IDAException(status, "IDASetNonlinearSolver");
 }
 
 void IDASolver::setNonLinearSolverSens() const {
@@ -883,7 +938,7 @@ void IDASolver::setNonLinearSolverSens() const {
     }
 
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "CVodeSolver::setNonLinearSolverSens");
+        throw IDAException(status, "IDASolver::setNonLinearSolverSens");
 }
 
 void IDASolver::setNonLinearSolverB(int which) const {
@@ -891,7 +946,7 @@ void IDASolver::setNonLinearSolverB(int which) const {
         solver_memory_.get(), which, non_linear_solver_B_->get()
     );
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "CVodeSetNonlinearSolverB");
+        throw IDAException(status, "IDASetNonlinearSolverB");
 }
 
 /**

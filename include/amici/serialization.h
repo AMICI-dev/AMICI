@@ -19,8 +19,13 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 
-/** @file serialization.h Helper functions and forward declarations for
- * boost::serialization */
+/**
+ * @file serialization.h Helper functions and forward declarations for
+ * boost::serialization
+ *
+ * FIXME: Many of the serialization functions seem to be outdated and miss
+ * some fields.
+ */
 namespace boost {
 namespace serialization {
 
@@ -150,6 +155,7 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar & m.steadystate_computation_mode_;
     ar & m.steadystate_sensitivity_mode_;
     ar & m.state_independent_events_;
+    ar & m.steadystate_mask_;
 }
 
 /**
@@ -283,6 +289,10 @@ void serialize(
 
 /**
  * @brief Serialize AmiVector to a boost archive
+ *
+ * NOTE: The deserialized AmiVector/NVector will not have a valid SUNContext.
+ *  This needs to be set afterwards.
+ *
  * @param ar archive
  * @param v AmiVector
  */
@@ -291,9 +301,11 @@ void serialize(
     Archive& ar, amici::AmiVector& v, unsigned int const /*version*/
 ) {
     if (Archive::is_loading::value) {
-        std::vector<realtype> tmp;
+        std::vector<amici::realtype> tmp;
         ar & tmp;
-        v = amici::AmiVector(tmp);
+        sundials::Context sunctx;
+        v = amici::AmiVector(tmp, sunctx);
+        v.set_ctx(sunctx);
     } else {
         auto tmp = v.getVector();
         ar & tmp;

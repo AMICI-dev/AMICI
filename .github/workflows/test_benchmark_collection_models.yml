@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
@@ -52,18 +52,23 @@ jobs:
         AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
+    - run: |
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        &&  python3 -m pip install -U sympy
+
     # retrieve test models
     - name: Download and test benchmark collection
       run: |
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+          && pip3 install -e $BENCHMARK_COLLECTION/../src/python \
           && AMICI_PARALLEL_COMPILE="" tests/benchmark-models/test_benchmark_collection.sh
 
     # run gradient checks
     - name: Run Gradient Checks
       run: |
         pip install git+https://github.com/ICB-DCM/fiddy.git \
-          && cd tests/benchmark-models && pytest ./test_petab_benchmark.py
+          && cd tests/benchmark-models && pytest --durations=10 ./test_petab_benchmark.py
 
     # upload results
     - uses: actions/upload-artifact@v4

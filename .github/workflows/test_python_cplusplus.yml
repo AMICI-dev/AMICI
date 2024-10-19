@@ -15,11 +15,11 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
 
     steps:
     - name: Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cache/pooch
@@ -37,6 +37,11 @@ jobs:
 
     - name: Set up AMICI C++ libraries
       uses: ./.github/actions/setup-amici-cpp
+
+    - name: Install libsuitesparse-dev
+      # We don't need libsuitesparse-dev, but let's have it installed,
+      # to ensure that its presence does not break the build
+      run: sudo apt-get install -y libsuitesparse-dev
 
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
@@ -117,13 +122,20 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.10" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
@@ -193,13 +205,20 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
@@ -233,7 +252,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: "3.11"
 
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
@@ -259,6 +278,17 @@ jobs:
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Python tests
       run: |
         scripts/run-python-tests.sh \
@@ -273,7 +303,7 @@ jobs:
 
     steps:
     - name: Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/Library/Caches/pooch
@@ -282,7 +312,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: "3.11"
 
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
@@ -300,6 +330,24 @@ jobs:
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh
+
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    - name: Install PEtab benchmark collection
+      run: |
+        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+          && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
 
     - name: Python tests
       run: |

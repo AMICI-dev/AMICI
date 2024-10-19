@@ -27,14 +27,14 @@ NAMED_LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
 }
 
-from typing import Callable, Optional, Union
+from collections.abc import Callable
 
 
 def _setup_logger(
-    level: Optional[int] = logging.WARNING,
-    console_output: Optional[bool] = True,
-    file_output: Optional[bool] = False,
-    capture_warnings: Optional[bool] = False,
+    level: int | None = logging.WARNING,
+    console_output: bool | None = True,
+    file_output: bool | None = False,
+    capture_warnings: bool | None = False,
 ) -> logging.Logger:
     """
     Set up a new :class:`logging.Logger` for AMICI logging.
@@ -118,7 +118,7 @@ def _setup_logger(
     return log
 
 
-def set_log_level(logger: logging.Logger, log_level: Union[int, bool]) -> None:
+def set_log_level(logger: logging.Logger, log_level: int | bool) -> None:
     if log_level is not None and log_level is not False:
         if isinstance(log_level, bool):
             log_level = logging.DEBUG
@@ -134,8 +134,8 @@ def set_log_level(logger: logging.Logger, log_level: Union[int, bool]) -> None:
 
 
 def get_logger(
-    logger_name: Optional[str] = BASE_LOGGER_NAME,
-    log_level: Optional[int] = None,
+    logger_name: str | None = BASE_LOGGER_NAME,
+    log_level: int | None = None,
     **kwargs,
 ) -> logging.Logger:
     """
@@ -175,7 +175,8 @@ def get_logger(
     elif kwargs:
         warnings.warn(
             "AMICI logger already exists, ignoring keyword "
-            "arguments to setup_logger"
+            "arguments to setup_logger",
+            stacklevel=2,
         )
 
     logger = logging.getLogger(logger_name)

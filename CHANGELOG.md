@@ -1,6 +1,207 @@
 # Changelog
 
+See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioning_policy.html).
+
 ## v0.X Series
+
+
+### v0.26.3 (2024-10-03)
+
+**Fixes**
+
+* Skip building SuiteSparse shared libraries and build all subprojects together
+  for slightly faster package installation
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2514
+  and https://github.com/AMICI-dev/AMICI/pull/2519
+
+* Got rid of petab `DeprecationWarnings` when using the `amici_import_petab`
+  CLI
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2517
+
+* Now also sundials and suitesparse are built in debug mode when installing
+  with `ENABLE_AMICI_DEBUGGING=TRUE`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2515
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.2...v0.26.3
+
+### v0.26.2 (2024-09-25)
+
+**Fixes**
+
+* Fixed a sympy float comparison issue in spline code that would cause
+  an `AssertionError`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2499
+
+* Fixed some warnings from recent CMake versions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2492
+
+* Fixed a potential issue when including AMICI in a CMake project
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2493
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.1...v0.26.2
+
+
+### v0.26.1 (2024-07-11)
+
+**Fixes**
+
+* Fixed some C++ exception handling that previously could crash Python under
+  certain conditions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2484
+
+* Disabled turning warnings into errors when building amici on GitHub Actions
+  in downstream projects
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2481
+
+* Fixed CMP0167 warning with CMake 3.30
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2480
+
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.0...v0.26.1
+
+### v0.26.0 (2024-07-02)
+
+AMICI v0.26.0 requires sympy>=1.12.1 and petab>=0.4.0.
+
+**Policy changes**
+
+* Updated AMICI's [versioning / deprecation policy](https://amici.readthedocs.io/en/develop/versioning_policy.html)
+
+  We will start removing deprecated features that had a deprecation warning
+  for longer than six months in the next minor release.
+
+**Deprecations**
+
+* Passing individual tables to `amici_import_petab` is now deprecated.
+  Use a `petab.Problem` instance instead.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2464
+
+**Fixes**
+
+* Fixed a bug where during installation of AMICI, an incorrect sundials CMake
+  would be used resulting in installation errors.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2468
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.25.2...v0.26.0
+
+
+### v0.25.2 (2024-06-16)
+
+**Fixes**
+
+* Fixed a bug in PEtab import which led to incorrect gradients
+  *w.r.t. estimated initial values specified via the condition table*
+  **BREAKING CHANGE**:
+  `amici.petab.sbml_import.{import_model_sbml,import_model}` no longer supports
+  passing individual PEtab tables, but only the PEtab problem object.
+  This functionality was deprecated since v0.12.0 (2022-08-26).
+* Fixes for numpy 2.0 compatibility
+  **NOTE**: As long as some amici dependencies don't support numpy 2.0 yet,
+  you may need to pin numpy to <2.0 in your requirements
+  (`pip install amici "numpy<2.0"`).
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.25.1...v0.25.2
+
+### v0.25.1 (2024-05-16)
+
+**Fixes**
+* Avoid clashes with sympy-entities in `plot_expressions`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2440
+* PEtab: fix KeyErrors for missing parameters in `fill_in_parameters`
+  (default values are now used if only a subset of parameters is provided)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2449
+* CMake: Fix Intel MKL detection when not using environment modules
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2443
+* CMake: Fix some issues with multi-config generators
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2445
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.25.0...v0.25.1
+
+
+### v0.25.0 (2024-05-08)
+
+This release requires Python >= 3.10.
+
+**Fixes**
+* Fixed a bug in event handling that could lead to incorrect simulation
+  results for models with events that assign to compartments *and* have
+  additional event assignments
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2428
+* SBML import: handle `useValuesFromTriggerTime` attribute on events.
+  This attribute was previously ignored. It is possible that now AMICI fails
+  to import models that it previously imported successfully. For cases where
+  `useValuesFromTriggerTime=True` made a difference, AMICI might have produced
+  incorrect results before.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2429
+* Faster code generation for models with events if they don't have
+  state-dependent triggers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2417
+* Most warnings now come with a more informative code location
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2421
+* `amici.ExpData` was changed so that `isinstance(edata, amici.ExpData)` works
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2396
+
+**Features**
+* Event-assignments to compartments are now supported. Previously, this only
+  worked for compartments that were rate rule targets.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2425
+* Releases are now deployed to Docker Hub
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2413
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.24.0...v0.25.0
+
+### v0.24.0 (2024-04-22)
+
+This will be the last release supporting Python 3.9.
+Future releases will require Python>=3.10.
+
+**Fixes**
+
+* Fix cmake error `cannot create directory: /cmake/Amici`
+  during model import in cases where BLAS was not found via `FindBLAS`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2389
+* Added status code `AMICI_CONSTR_FAIL`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2379
+* Fixed certain initial state issues with PEtab
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2382
+* Fixed Solver `operator==` and copyctor
+  (constraints were not copied correctly)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2388
+* Avoid confusing warnings about non-finite timepoints
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2395
+* Fixed incorrect exception types / messages for `IDASolver`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2398
+* cmake: set SUNDIALS path hint for python package to help CMake find
+  the correct SUNDIALS installation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2397
+
+**Features**
+
+* Optionally include measurements in `plot_observable_trajectories`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2381
+* Improved type annotations in swig-wrappers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2401
+* Additional attributes are accessible directly via `ReturnDataView` and
+  `ExpDataView`, e.g. `ReturnDataView.ny`, `ReturnDataView.nx`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2405
+* Allow subselection of state variables for convergence check during
+  steady-state simulations via `Model.set_steadystate_mask([1, 0, ..., 1])`
+  (positive value: check; non-positive: don't check).
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2387
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.23.1...v0.24.0
+
 
 ### v0.23.1 (2024-03-11)
 

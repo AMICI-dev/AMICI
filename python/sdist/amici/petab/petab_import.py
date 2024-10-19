@@ -9,12 +9,11 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Union
 from warnings import warn
 
 import amici
-import petab
-from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+import petab.v1 as petab
+from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 from ..logging import get_logger
 from .import_helpers import _can_import_model, _create_model_name, check_model
@@ -34,7 +33,7 @@ logger = get_logger(__name__, logging.WARNING)
 
 def import_petab_problem(
     petab_problem: petab.Problem,
-    model_output_dir: Union[str, Path, None] = None,
+    model_output_dir: str | Path | None = None,
     model_name: str = None,
     compile_: bool = None,
     non_estimated_parameters_as_constants=True,

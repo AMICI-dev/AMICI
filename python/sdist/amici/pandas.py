@@ -7,7 +7,7 @@ between C++ objects from :mod:`amici.amici` and pandas DataFrames
 
 import copy
 import math
-from typing import Optional, SupportsFloat, Union
+from typing import SupportsFloat, Union
 
 import amici
 import numpy as np
@@ -70,7 +70,7 @@ def _process_rdata_list(rdata_list: ReturnDatas) -> list[amici.ReturnDataView]:
 
 
 def getDataObservablesAsDataFrame(
-    model: AmiciModel, edata_list: ExpDatas, by_id: Optional[bool] = False
+    model: AmiciModel, edata_list: ExpDatas, by_id: bool | None = False
 ) -> pd.DataFrame:
     """
     Write Observables from experimental data as DataFrame.
@@ -123,7 +123,7 @@ def getSimulationObservablesAsDataFrame(
     model: amici.Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
-    by_id: Optional[bool] = False,
+    by_id: bool | None = False,
 ) -> pd.DataFrame:
     """
     Write Observables from simulation results as DataFrame.
@@ -155,7 +155,7 @@ def getSimulationObservablesAsDataFrame(
 
     # aggregate records
     dicts = []
-    for edata, rdata in zip(edata_list, rdata_list):
+    for edata, rdata in zip(edata_list, rdata_list, strict=True):
         for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
                 "time": timepoint,
@@ -181,7 +181,7 @@ def getSimulationStatesAsDataFrame(
     model: amici.Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
-    by_id: Optional[bool] = False,
+    by_id: bool | None = False,
 ) -> pd.DataFrame:
     """
     Get model state according to lists of ReturnData and ExpData.
@@ -212,7 +212,7 @@ def getSimulationStatesAsDataFrame(
 
     # aggregate records
     dicts = []
-    for edata, rdata in zip(edata_list, rdata_list):
+    for edata, rdata in zip(edata_list, rdata_list, strict=True):
         for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
                 "time": timepoint,
@@ -237,7 +237,7 @@ def get_expressions_as_dataframe(
     model: amici.Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
-    by_id: Optional[bool] = False,
+    by_id: bool | None = False,
 ) -> pd.DataFrame:
     """
     Get values of model expressions from lists of ReturnData as DataFrame.
@@ -268,7 +268,7 @@ def get_expressions_as_dataframe(
 
     # aggregate records
     dicts = []
-    for edata, rdata in zip(edata_list, rdata_list):
+    for edata, rdata in zip(edata_list, rdata_list, strict=True):
         for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
                 "time": timepoint,
@@ -293,7 +293,7 @@ def getResidualsAsDataFrame(
     model: amici.Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
-    by_id: Optional[bool] = False,
+    by_id: bool | None = False,
 ) -> pd.DataFrame:
     """
     Convert a list of ReturnData and ExpData to pandas DataFrame with
@@ -626,8 +626,8 @@ def _get_names_or_ids(
 
 def _get_specialized_fixed_parameters(
     model: AmiciModel,
-    condition: Union[dict[str, SupportsFloat], pd.Series],
-    overwrite: Union[dict[str, SupportsFloat], pd.Series],
+    condition: dict[str, SupportsFloat] | pd.Series,
+    overwrite: dict[str, SupportsFloat] | pd.Series,
     by_id: bool,
 ) -> list[float]:
     """
@@ -661,7 +661,7 @@ def constructEdataFromDataFrame(
     df: pd.DataFrame,
     model: AmiciModel,
     condition: pd.Series,
-    by_id: Optional[bool] = False,
+    by_id: bool | None = False,
 ) -> amici.amici.ExpData:
     """
     Constructs an ExpData instance according to the provided Model
@@ -778,7 +778,7 @@ def constructEdataFromDataFrame(
 
 
 def getEdataFromDataFrame(
-    model: AmiciModel, df: pd.DataFrame, by_id: Optional[bool] = False
+    model: AmiciModel, df: pd.DataFrame, by_id: bool | None = False
 ) -> list[amici.amici.ExpData]:
     """
     Constructs a ExpData instances according to the provided Model and

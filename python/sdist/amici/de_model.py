@@ -1,4 +1,5 @@
 """Symbolic differential equation model."""
+
 from __future__ import annotations
 
 import contextlib
@@ -6,7 +7,8 @@ import copy
 import itertools
 import re
 from itertools import chain
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from collections.abc import Callable
 from collections.abc import Sequence
 
 import numpy as np
@@ -394,7 +396,9 @@ class DEModel:
     def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
         rate_of_func = sp.core.function.UndefinedFunction("rateOf")
-        species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
+        species_sym_to_xdot = dict(
+            zip(self.sym("x"), self.sym("xdot"), strict=True)
+        )
         species_sym_to_idx = {x: i for i, x in enumerate(self.sym("x"))}
 
         def get_rate(symbol: sp.Symbol):
@@ -425,7 +429,7 @@ class DEModel:
         if made_substitutions:
             # substitute in topological order
             subs = toposort_symbols(
-                dict(zip(self.sym("xdot"), self.eq("xdot")))
+                dict(zip(self.sym("xdot"), self.eq("xdot"), strict=True))
             )
             self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
@@ -467,6 +471,7 @@ class DEModel:
                     zip(
                         self.sym("w")[self.num_cons_law() :, :],
                         self.eq("w")[self.num_cons_law() :, :],
+                        strict=True,
                     )
                 )
             )
@@ -475,6 +480,7 @@ class DEModel:
                     zip(
                         self.sym("w")[: self.num_cons_law(), :],
                         self.eq("w")[: self.num_cons_law(), :],
+                        strict=True,
                     )
                 )
                 | w_sorted
@@ -1025,7 +1031,9 @@ class DEModel:
             #  of non-zeros entries of the sparse matrix
             self._static_indices[name] = [
                 i
-                for i, (expr, row_idx) in enumerate(zip(sparseeq, rowvals))
+                for i, (expr, row_idx) in enumerate(
+                    zip(sparseeq, rowvals, strict=True)
+                )
                 # derivative of a static expression is static
                 if row_idx in static_indices_w
                 # constant expressions
@@ -1394,6 +1402,8 @@ class DEModel:
                                 if not s.has_conservation_law()
                             ),
                             self.sym("dx"),
+                            # dx contains extra elements for algebraic states
+                            strict=False,
                         )
                     ]
                     + [eq.get_val() for eq in self._algebraic_equations]
@@ -1551,14 +1561,18 @@ class DEModel:
             self._eqs[name] = smart_jacobian(self.eq("root"), time_symbol)
 
         elif name == "drootdt_total":
-            # backsubstitution of optimized right-hand side terms into RHS
-            # calling subs() is costly. Due to looping over events though, the
-            # following lines are only evaluated if a model has events
-            w_sorted = toposort_symbols(dict(zip(self.sym("w"), self.eq("w"))))
-            tmp_xdot = smart_subs_dict(self.eq("xdot"), w_sorted)
             self._eqs[name] = self.eq("drootdt")
-            if self.num_states_solver():
-                self._eqs[name] += smart_multiply(self.eq("drootdx"), tmp_xdot)
+            # backsubstitution of optimized right-hand side terms into RHS
+            # calling subs() is costly. We can skip it if we don't have any
+            # state-dependent roots.
+            if self.num_states_solver() and not smart_is_zero_matrix(
+                drootdx := self.eq("drootdx")
+            ):
+                w_sorted = toposort_symbols(
+                    dict(zip(self.sym("w"), self.eq("w"), strict=True))
+                )
+                tmp_xdot = smart_subs_dict(self.eq("xdot"), w_sorted)
+                self._eqs[name] += smart_multiply(drootdx, tmp_xdot)
 
         elif name == "deltax":
             # fill boluses for Heaviside functions, as empty state updates
@@ -1584,7 +1598,7 @@ class DEModel:
                 for event_obs in self._event_observables
             ]
             for (iz, ie), event_obs in zip(
-                enumerate(z2event), self._event_observables
+                enumerate(z2event), self._event_observables, strict=True
             ):
                 event_observables[ie - 1][iz] = event_obs.get_val()
 
@@ -1603,15 +1617,12 @@ class DEModel:
             ]
             if name == "dzdx":
                 for ie in range(self.num_events()):
-                    dtaudx = (
-                        -self.eq("drootdx")[ie, :]
-                        / self.eq("drootdt_total")[ie]
-                    )
+                    dtaudx = self.eq("dtaudx")
                     for iz in range(self.num_eventobs()):
                         if ie != self._z2event[iz] - 1:
                             continue
                         dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
-                        self._eqs[name][ie][iz, :] += dzdt * dtaudx
+                        self._eqs[name][ie][iz, :] += dzdt * -dtaudx[ie]
 
         elif name in ["rz", "drzdx", "drzdp"]:
             eq_events = []
@@ -1630,9 +1641,21 @@ class DEModel:
 
         elif name == "stau":
             self._eqs[name] = [
-                -self.eq("sroot")[ie, :] / self.eq("drootdt_total")[ie]
+                self.eq("sroot")[ie, :] / self.eq("drootdt_total")[ie]
                 if not self.eq("drootdt_total")[ie].is_zero
                 else sp.zeros(*self.eq("sroot")[ie, :].shape)
+                for ie in range(self.num_events())
+            ]
+
+        elif name == "dtaudx":
+            self._eqs[name] = [
+                self.eq("drootdx")[ie, :] / self.eq("drootdt_total")[ie]
+                for ie in range(self.num_events())
+            ]
+
+        elif name == "dtaudp":
+            self._eqs[name] = [
+                self.eq("drootdp")[ie, :] / self.eq("drootdt_total")[ie]
                 for ie in range(self.num_events())
             ]
 
@@ -1651,7 +1674,7 @@ class DEModel:
                     self.eq("stau")[ie]
                 ) and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
-                        self.sym("xdot_old") - self.sym("xdot"),
+                        self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
                     )
 
@@ -1668,12 +1691,14 @@ class DEModel:
                     if not smart_is_zero_matrix(self.eq("stau")[ie]):
                         # chain rule for the time point
                         tmp_eq += smart_multiply(
-                            self.eq("ddeltaxdt")[ie], self.sym("stau").T
+                            self.eq("ddeltaxdt")[ie],
+                            -self.sym("stau").T,
                         )
 
                         # additional part of chain rule state variables
                         tmp_dxdp += smart_multiply(
-                            self.sym("xdot_old"), self.sym("stau").T
+                            self.sym("xdot_old"),
+                            -self.sym("stau").T,
                         )
 
                     # finish chain rule for the state variables
@@ -1681,6 +1706,11 @@ class DEModel:
                         self.eq("ddeltaxdx")[ie], tmp_dxdp
                     )
 
+                else:
+                    tmp_eq = smart_multiply(
+                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.eq("stau")[ie],
+                    )
                 event_eqs.append(tmp_eq)
 
             self._eqs[name] = event_eqs
@@ -1725,7 +1755,7 @@ class DEModel:
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
             xs_in_sigma = {}
-            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name]):
+            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name], strict=True):
                 yz_free_syms = eq_yz.free_symbols
                 if tmp := {x for x in syms_x if x in yz_free_syms}:
                     xs_in_sigma[sym_yz] = tmp
@@ -2196,7 +2226,7 @@ class DEModel:
 
     def _collect_heaviside_roots(
         self,
-        args: Sequence[sp.Expr],
+        args: Sequence[sp.Basic],
     ) -> list[sp.Expr]:
         """
         Recursively checks an expression for the occurrence of Heaviside
@@ -2227,6 +2257,7 @@ class DEModel:
                 zip(
                     [expr.get_id() for expr in self._expressions],
                     [expr.get_val() for expr in self._expressions],
+                    strict=True,
                 )
             )
         )
@@ -2257,7 +2288,7 @@ class DEModel:
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(dxdt.args)
+        tmp_roots_old = self._collect_heaviside_roots((dxdt,))
         for tmp_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)

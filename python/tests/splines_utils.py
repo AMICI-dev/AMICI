@@ -6,15 +6,16 @@ computed ground truth.
 
 import math
 import os
+import platform
 import uuid
 from tempfile import mkdtemp
-from typing import Any, Optional, Union
+from typing import Any
 from collections.abc import Sequence
 
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 import sympy as sp
 from amici.gradient_check import _check_results
 from amici.petab.petab_import import import_petab_problem
@@ -30,7 +31,7 @@ from amici.sbml_utils import (
 )
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-from petab.models.sbml_model import SbmlModel
+from petab.v1.models.sbml_model import SbmlModel
 
 
 def evaluate_spline(
@@ -45,7 +46,7 @@ def evaluate_spline(
 
 def integrate_spline(
     spline: AbstractSpline,
-    params: Union[dict, None],
+    params: dict | None,
     tt: Sequence[float],
     initial_value: float = 0,
 ):
@@ -119,12 +120,12 @@ def species_to_index(name) -> int:
 def create_petab_problem(
     splines: list[AbstractSpline],
     params_true: dict,
-    initial_values: Optional[np.ndarray] = None,
+    initial_values: np.ndarray | None = None,
     use_reactions: bool = False,
     measure_upsample: int = 6,
     sigma: float = 1.0,
     t_extrapolate: float = 0.25,
-    folder: Optional[str] = None,
+    folder: str | None = None,
     model_name: str = "test_splines",
 ):
     """
@@ -216,7 +217,7 @@ def create_petab_problem(
     zz_true = np.array(
         [
             integrate_spline(spline, params_true, tt_obs, iv)
-            for (spline, iv) in zip(splines, initial_values)
+            for (spline, iv) in zip(splines, initial_values, strict=True)
         ],
         dtype=float,
     )
@@ -283,9 +284,9 @@ def simulate_splines(
     params_true,
     initial_values=None,
     *,
-    folder: Optional[str] = None,
+    folder: str | None = None,
     keep_temporary: bool = False,
-    benchmark: Union[bool, int] = False,
+    benchmark: bool | int = False,
     rtol: float = 1e-12,
     atol: float = 1e-12,
     maxsteps: int = 500_000,
@@ -480,7 +481,7 @@ def compute_ground_truth(
     x_true_sym = sp.Matrix(
         [
             integrate_spline(spline, None, times, iv)
-            for (spline, iv) in zip(splines, initial_values)
+            for (spline, iv) in zip(splines, initial_values, strict=True)
         ]
     ).transpose()
     groundtruth = {
@@ -505,8 +506,8 @@ def check_splines(
     discard_annotations: bool = False,
     use_adjoint: bool = False,
     skip_sensitivity: bool = False,
-    debug: Union[bool, str] = False,
-    parameter_lists: Optional[Sequence[Sequence[int]]] = None,
+    debug: bool | str = False,
+    parameter_lists: Sequence[Sequence[int]] | None = None,
     llh_rtol: float = 1e-8,
     sllh_atol: float = 1e-8,
     x_rtol: float = 1e-11,
@@ -515,7 +516,7 @@ def check_splines(
     w_atol: float = 1e-11,
     sx_rtol: float = 1e-10,
     sx_atol: float = 1e-10,
-    groundtruth: Optional[Union[str, dict[str, Any]]] = None,
+    groundtruth: str | dict[str, Any] | None = None,
     **kwargs,
 ):
     """
@@ -604,7 +605,7 @@ def check_splines(
         x_true_sym = sp.Matrix(
             [
                 integrate_spline(spline, None, tt, iv)
-                for (spline, iv) in zip(splines, initial_values)
+                for (spline, iv) in zip(splines, initial_values, strict=True)
             ]
         ).transpose()
         x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
@@ -716,13 +717,7 @@ def check_splines(
             if sllh_atol is None:
                 sllh_atol = np.finfo(float).eps
             sllh_err_abs = abs(sllh).max()
-            if (
-                sllh_err_abs > sllh_atol and debug is not True
-            ) or debug == "print":
-                print(f"sllh_atol={sllh_atol}")
-                print(f"sllh_err_abs = {sllh_err_abs}")
-            if not debug:
-                assert sllh_err_abs <= sllh_atol
+            assert sllh_err_abs <= sllh_atol, f"{sllh_err_abs=} {sllh_atol=}"
     else:
         assert sllh is None
 
@@ -771,8 +766,8 @@ def check_splines_full(
     check_piecewise: bool = True,
     check_forward: bool = True,
     check_adjoint: bool = True,
-    folder: Optional[str] = None,
-    groundtruth: Optional[Union[dict, str]] = "compute",
+    folder: str | None = None,
+    groundtruth: dict | str | None = "compute",
     return_groundtruth: bool = False,
     **kwargs,
 ):
@@ -896,7 +891,7 @@ def example_spline_1(
     yy = list(sp.symbols(f"y{idx}_0:{len(yy_true)}"))
 
     if fixed_values is None:
-        params = dict(zip(yy, yy_true))
+        params = dict(zip(yy, yy_true, strict=True))
     elif fixed_values == "all":
         params = {}
         for i in range(len(yy_true)):
@@ -917,11 +912,11 @@ def example_spline_1(
         extrapolate=extrapolate,
     )
 
-    if os.name == "nt":
+    if os.name == "nt" or platform.system() == "Darwin":
         tols = (
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
-            dict(llh_rtol=1e-15, sllh_atol=5e-8, x_rtol=1e-8, x_atol=1e-7),
+            dict(llh_rtol=1e-15, sllh_atol=5e-7, x_rtol=1e-8, x_atol=1e-7),
         )
     else:
         tols = (
@@ -939,7 +934,7 @@ def example_spline_2(idx: int = 0):
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f"y{idx}_0:{len(yy_true) - 1}"))
     yy.append(yy[0])
-    params = dict(zip(yy, yy_true))
+    params = dict(zip(yy, yy_true, strict=True))
     spline = CubicHermiteSpline(
         f"y{idx}",
         nodes=xx,
@@ -960,7 +955,7 @@ def example_spline_3(idx: int = 0):
     yy_true = [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0]
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f"y{idx}_0:{len(yy_true)}"))
-    params = dict(zip(yy, yy_true))
+    params = dict(zip(yy, yy_true, strict=True))
     spline = CubicHermiteSpline(
         f"y{idx}",
         nodes=xx,

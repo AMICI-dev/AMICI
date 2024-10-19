@@ -11,6 +11,7 @@ include LICENSE.md
 exclude amici/*.so
 exclude amici/*.dll
 prune **/build
+prune **/install
 prune amici/share
 prune amici/lib
 prune amici/ThirdParty/SuiteSparse/lib

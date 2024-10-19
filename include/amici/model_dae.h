@@ -3,13 +3,9 @@
 
 #include "amici/model.h"
 
-#include <nvector/nvector_serial.h>
-
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
 #include <numeric>
+#include <sundials/sundials_matrix.h>
+#include <sundials/sundials_nvector.h>
 #include <vector>
 
 namespace amici {
@@ -36,10 +32,6 @@ class Model_DAE : public Model {
      * @param o2mode second order sensitivity mode
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
-     * @param pythonGenerated flag indicating matlab or python wrapping
-     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
-     * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
-     * @param w_recursion_depth Recursion depth of fw
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -47,24 +39,22 @@ class Model_DAE : public Model {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event, bool const pythonGenerated = false,
-        int const ndxdotdp_explicit = 0, int const ndxdotdx_explicit = 0,
-        int const w_recursion_depth = 0,
+        std::vector<int> const& z2event,
         std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
-            model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-            pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
-            w_recursion_depth, state_independent_events
-        ) {
-        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+              model_dimensions, simulation_parameters, o2mode, idlist, z2event,
+              state_independent_events
+          ) {
+        SUNContext sunctx = derived_state_.sunctx_;
+        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );
         derived_state_.MSparse_
-            = SUNMatrixWrapper(nx_solver, nx_solver, M_nnz, CSC_MAT);
+            = SUNMatrixWrapper(nx_solver, nx_solver, M_nnz, CSC_MAT, sunctx);
         derived_state_.dfdx_
-            = SUNMatrixWrapper(nx_solver, nx_solver, 0, CSC_MAT);
+            = SUNMatrixWrapper(nx_solver, nx_solver, 0, CSC_MAT, sunctx);
     }
 
     void

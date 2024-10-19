@@ -1,8 +1,9 @@
 # References
 
-List of publications using AMICI. Total number is 83.
+List of publications using AMICI. Total number is 92.
 
-If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
+If you applied AMICI in your work and your publication is missing, please let us know via a new
+[GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
 
 
 <style>
@@ -14,12 +15,82 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2024</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="list">
+<div id="ref-BaltussenJon2024" class="csl-entry" role="listitem">
+Baltussen, Mathieu G., Thijs J. de Jong, Quentin Duez, William E.
+Robinson, and Wilhelm T. S. Huck. 2024. <span>“Chemical Reservoir
+Computation in a Self-Organizing Reaction Network.”</span>
+<em>Nature</em>, June. <a
+href="https://doi.org/10.1038/s41586-024-07567-x">https://doi.org/10.1038/s41586-024-07567-x</a>.
+</div>
+<div id="ref-DoresicGre2024" class="csl-entry" role="listitem">
+Dorešić, Domagoj, Stephan Grein, and Jan Hasenauer. 2024.
+<span>“Efficient Parameter Estimation for ODE Models of Cellular
+Processes Using Semi-Quantitative Data.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2024.01.26.577371">https://doi.org/10.1101/2024.01.26.577371</a>.
+</div>
+<div id="ref-DuezWie2024" class="csl-entry" role="listitem">
+Duez, Quentin, Jeroen van de Wiel, Bob van Sluijs, Souvik Ghosh, Mathieu
+G. Baltussen, Max T. G. M. Derks, Jana Roithová, and Wilhelm T. S. Huck.
+2024. <span>“Quantitative Online Monitoring of an Immobilized Enzymatic
+Network by Ion Mobility–Mass Spectrometry.”</span> <em>Journal of the
+American Chemical Society</em> 146 (30): 20778–87. <a
+href="https://doi.org/10.1021/jacs.4c04218">https://doi.org/10.1021/jacs.4c04218</a>.
+</div>
+<div id="ref-JakstaiteZho2024" class="csl-entry" role="listitem">
+Jakštaitė, ‪Miglė, Tao Zhou, Frank Nelissen, Wilhelm T. S. Huck, and Bob
+van Sluijs. 2024. <span>“Active Learning Maps the Emergent Dynamics of
+Enzymatic Reaction Networks.”</span> August. <a
+href="https://doi.org/10.26434/chemrxiv-2024-vxfkz">https://doi.org/10.26434/chemrxiv-2024-vxfkz</a>.
+</div>
+<div id="ref-KissVen2024" class="csl-entry" role="listitem">
+Kiss, Anna E, Anuroop V Venkatasubramani, Dilan Pathirana, Silke Krause,
+Aline Campos Sparr, Jan Hasenauer, Axel Imhof, Marisa Müller, and Peter
+B Becker. 2024. <span>“<span class="nocase">Processivity and specificity
+of histone acetylation by the male-specific lethal
+complex</span>.”</span> <em>Nucleic Acids Research</em>, February,
+gkae123. <a
+href="https://doi.org/10.1093/nar/gkae123">https://doi.org/10.1093/nar/gkae123</a>.
+</div>
+<div id="ref-LakrisenkoPat2024" class="csl-entry" role="listitem">
+Lakrisenko, Polina, Dilan Pathirana, Daniel Weindl, and Jan Hasenauer.
+2024. <span>“Exploration of Methods for Computing Sensitivities in ODE
+Models at Dynamic and Steady States.”</span> <a
+href="https://arxiv.org/abs/2405.16524">https://arxiv.org/abs/2405.16524</a>.
+</div>
 <div id="ref-LangPen2024" class="csl-entry" role="listitem">
 Lang, Paul F., David R. Penas, Julio R. Banga, Daniel Weindl, and Bela
 Novak. 2024. <span>“Reusable Rule-Based Cell Cycle Model Explains
 Compartment-Resolved Dynamics of 16 Observables in RPE-1 Cells.”</span>
 <em>PLOS Computational Biology</em> 20 (1): 1–24. <a
 href="https://doi.org/10.1371/journal.pcbi.1011151">https://doi.org/10.1371/journal.pcbi.1011151</a>.
+</div>
+<div id="ref-MerktAli2024" class="csl-entry" role="listitem">
+Merkt, Simon, Solomon Ali, Esayas Kebede Gudina, Wondimagegn Adissu,
+Addisu Gize, Maximilian Muenchhoff, Alexander Graf, et al. 2024.
+<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
+Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span>
+<em>Nature Communications</em> 15 (1). <a
+href="https://doi.org/10.1038/s41467-024-47556-2">https://doi.org/10.1038/s41467-024-47556-2</a>.
+</div>
+<div id="ref-Mutsuddy2024" class="csl-entry" role="listitem">
+Mutsuddy, Arnab. 2024. <span>“Single Cell Pharmacodynamic Modeling of
+Cancer Cell Lines.”</span> PhD thesis, Clemson University. <a
+href="https://tigerprints.clemson.edu/all_dissertations/3572">https://tigerprints.clemson.edu/all_dissertations/3572</a>.
+</div>
+<div id="ref-PhilippsKoe2024" class="csl-entry" role="listitem">
+Philipps, Maren, Antonia Körner, Jakob Vanhoefer, Dilan Pathirana, and
+Jan Hasenauer. 2024. <span>“Non-Negative Universal Differential
+Equations with Applications in Systems Biology.”</span> <a
+href="https://arxiv.org/abs/2406.14246">https://arxiv.org/abs/2406.14246</a>.
+</div>
+<div id="ref-SchmiesterBra2024" class="csl-entry" role="listitem">
+Schmiester, Leonard, Fara Brasó-Maristany, Blanca González-Farré, Tomás
+Pascual, Joaquín Gavilá, Xavier Tekpli, Jürgen Geisler, et al. 2024.
+<span>“<span class="nocase">Computational Model Predicts Patient
+Outcomes in Luminal B Breast Cancer Treated with Endocrine Therapy and
+CDK4/6 Inhibition</span>.”</span> <em>Clinical Cancer Research</em>,
+July, OF1–9. <a
+href="https://doi.org/10.1158/1078-0432.CCR-24-0244">https://doi.org/10.1158/1078-0432.CCR-24-0244</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
@@ -68,13 +139,6 @@ Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
 Rewiring Contribute to Drug Resistance.”</span> <em>Molecular Systems
 Biology</em> 19 (2): e10988. <a
 href="https://doi.org/10.15252/msb.202210988">https://doi.org/10.15252/msb.202210988</a>.
-</div>
-<div id="ref-HasenauerMer2023" class="csl-entry" role="listitem">
-Hasenauer, Jan, Simon Merkt, Solomon Ali, Esayas Gudina, Wondimagegn
-Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
-<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
-Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
-href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
 </div>
 <div id="ref-HuckBal2023" class="csl-entry" role="listitem">
 Huck, Wilhelm, Mathieu Baltussen, Thijs de Jong, Quentin Duez, and

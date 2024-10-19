@@ -2,18 +2,18 @@
 Functionality for building the C++ extensions of an amici-created model
 package.
 """
+
 import subprocess
 import sys
-from typing import Optional, Union
 from pathlib import Path
 import os
 
 
 def build_model_extension(
-    package_dir: Union[str, Path],
-    verbose: Optional[Union[bool, int]] = False,
-    compiler: Optional[str] = None,
-    extra_msg: Optional[str] = None,
+    package_dir: str | Path,
+    verbose: bool | int | None = False,
+    compiler: str | None = None,
+    extra_msg: str | None = None,
 ) -> None:
     """
     Compile the model extension of an amici-created model package.

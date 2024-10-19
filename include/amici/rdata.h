@@ -5,6 +5,7 @@
 #include "amici/logging.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
 #include <vector>
@@ -104,12 +105,12 @@ class ReturnData : public ModelDimensions {
      */
     std::vector<realtype> ts;
 
-    /** time derivative (shape `nx`) evaluated at `t_last`. */
+    /** time derivative (shape `nx_solver`) evaluated at `t_last`. */
     std::vector<realtype> xdot;
 
     /**
-     * Jacobian of differential equation right hand side (shape `nx` x `nx`,
-     * row-major) evaluated at `t_last`.
+     * Jacobian of differential equation right hand side (shape `nx_solver` x
+     * `nx_solver`, row-major) evaluated at `t_last`.
      */
     std::vector<realtype> J;
 
@@ -156,11 +157,12 @@ class ReturnData : public ModelDimensions {
      */
     std::vector<realtype> s2rz;
 
-    /** state (shape `nt` x `nx`, row-major) */
+    /** state (shape `nt` x `nx_rdata`, row-major) */
     std::vector<realtype> x;
 
     /**
-     * parameter derivative of state (shape `nt` x `nplist` x `nx`, row-major)
+     * parameter derivative of state (shape `nt` x `nplist` x `nx_rdata`,
+     * row-major)
      */
     std::vector<realtype> sx;
 
@@ -358,18 +360,18 @@ class ReturnData : public ModelDimensions {
      */
     realtype posteq_wrms = NAN;
 
-    /** initial state (shape `nx`) */
+    /** initial state (shape `nx_rdata`) */
     std::vector<realtype> x0;
 
-    /** preequilibration steady state (shape `nx`) */
+    /** preequilibration steady state (shape `nx_rdata`) */
     std::vector<realtype> x_ss;
 
-    /** initial sensitivities (shape `nplist` x `nx`, row-major) */
+    /** initial sensitivities (shape `nplist` x `nx_rdata`, row-major) */
     std::vector<realtype> sx0;
 
     /**
      * preequilibration sensitivities
-     * (shape `nplist` x `nx`, row-major)
+     * (shape `nplist` x `nx_rdata`, row-major)
      */
     std::vector<realtype> sx_ss;
 
@@ -463,28 +465,6 @@ class ReturnData : public ModelDimensions {
     /** offset for sigma_residuals */
     realtype sigma_offset;
 
-    /** timepoint for model evaluation*/
-    realtype t_;
-
-    /** partial state vector, excluding states eliminated from conservation laws
-     */
-    AmiVector x_solver_;
-
-    /** partial time derivative of state vector, excluding states eliminated
-     * from conservation laws */
-    AmiVector dx_solver_;
-
-    /** partial sensitivity state vector array, excluding states eliminated from
-     * conservation laws */
-    AmiVectorArray sx_solver_;
-
-    /** full state vector, including states eliminated from conservation laws */
-    AmiVector x_rdata_;
-
-    /** full sensitivity state vector array, including states eliminated from
-     * conservation laws */
-    AmiVectorArray sx_rdata_;
-
     /** array of number of found roots for a certain event type
      * (shape `ne`) */
     std::vector<int> nroots_;
@@ -568,18 +548,26 @@ class ReturnData : public ModelDimensions {
     template <class T>
     void
     storeJacobianAndDerivativeInReturnData(T const& problem, Model& model) {
-        readSimulationState(problem.getFinalSimulationState(), model);
+        auto simulation_state = problem.getFinalSimulationState();
+        model.setModelState(simulation_state.state);
 
-        AmiVector xdot(nx_solver);
+        sundials::Context sunctx;
+        AmiVector xdot(nx_solver, sunctx);
         if (!this->xdot.empty() || !this->J.empty())
-            model.fxdot(t_, x_solver_, dx_solver_, xdot);
+            model.fxdot(
+                simulation_state.t, simulation_state.x, simulation_state.dx,
+                xdot
+            );
 
         if (!this->xdot.empty())
             writeSlice(xdot, this->xdot);
 
         if (!this->J.empty()) {
-            SUNMatrixWrapper J(nx_solver, nx_solver);
-            model.fJ(t_, 0.0, x_solver_, dx_solver_, xdot, J);
+            SUNMatrixWrapper J(nx_solver, nx_solver, sunctx);
+            model.fJ(
+                simulation_state.t, 0.0, simulation_state.x,
+                simulation_state.dx, xdot, J
+            );
             // CVODES uses colmajor, so we need to transform to rowmajor
             for (int ix = 0; ix < model.nx_solver; ix++)
                 for (int jx = 0; jx < model.nx_solver; jx++)
@@ -587,21 +575,18 @@ class ReturnData : public ModelDimensions {
                         = J.data()[ix + model.nx_solver * jx];
         }
     }
-    /**
-     * @brief sets member variables and model state according to provided
-     * simulation state
-     * @param state simulation state provided by Problem
-     * @param model model that was used for forward/backward simulation
-     */
-    void readSimulationState(SimulationState const& state, Model& model);
 
     /**
      * @brief Residual function
      * @param it time index
      * @param model model that was used for forward/backward simulation
+     * @param simulation_state simulation state the timepoint `it`
      * @param edata ExpData instance containing observable data
      */
-    void fres(int it, Model& model, ExpData const& edata);
+    void fres(
+        int it, Model& model, SimulationState const& simulation_state,
+        ExpData const& edata
+    );
 
     /**
      * @brief Chi-squared function
@@ -614,17 +599,25 @@ class ReturnData : public ModelDimensions {
      * @brief Residual sensitivity function
      * @param it time index
      * @param model model that was used for forward/backward simulation
+     * @param simulation_state simulation state the timepoint `it`
      * @param edata ExpData instance containing observable data
      */
-    void fsres(int it, Model& model, ExpData const& edata);
+    void fsres(
+        int it, Model& model, SimulationState const& simulation_state,
+        ExpData const& edata
+    );
 
     /**
      * @brief Fisher information matrix function
      * @param it time index
      * @param model model that was used for forward/backward simulation
+     * @param simulation_state simulation state the timepoint `it`
      * @param edata ExpData instance containing observable data
      */
-    void fFIM(int it, Model& model, ExpData const& edata);
+    void fFIM(
+        int it, Model& model, SimulationState const& simulation_state,
+        ExpData const& edata
+    );
 
     /**
      * @brief Set likelihood, state variables, outputs and respective
@@ -665,46 +658,58 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Extracts output information for data-points, expects that
-     * x_solver_ and sx_solver_ were set appropriately
+     * the model state was set appropriately
      * @param it timepoint index
      * @param model model that was used in forward solve
+     * @param simulation_state simulation state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataOutput(int it, Model& model, ExpData const* edata);
-
-    /**
-     * @brief Extracts data information for forward sensitivity analysis,
-     * expects that x_solver_ and sx_solver_ were set appropriately
-     * @param it index of current timepoint
-     * @param model model that was used in forward solve
-     * @param edata ExpData instance carrying experimental data
-     */
-    void getDataSensisFSA(int it, Model& model, ExpData const* edata);
-
-    /**
-     * @brief Extracts output information for events, expects that x_solver_
-     * and sx_solver_ were set appropriately
-     * @param t event timepoint
-     * @param rootidx information about which roots fired
-     * (1 indicating fired, 0/-1 for not)
-     * @param model model that was used in forward solve
-     * @param edata ExpData instance carrying experimental data
-     */
-    void getEventOutput(
-        realtype t, std::vector<int> const rootidx, Model& model,
+    void getDataOutput(
+        int it, Model& model, SimulationState const& simulation_state,
         ExpData const* edata
     );
 
     /**
+     * @brief Extracts data information for forward sensitivity analysis,
+     * expects that the model state was set appropriately
+     * @param it index of current timepoint
+     * @param model model that was used in forward solve
+     * @param simulation_state simulation state the timepoint `it`
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getDataSensisFSA(
+        int it, Model& model, SimulationState const& simulation_state,
+        ExpData const* edata
+    );
+
+    /**
+     * @brief Extracts output information for events, expects that the model
+     * state was set appropriately
+     * @param t event timepoint
+     * @param rootidx information about which roots fired
+     * (1 indicating fired, 0/-1 for not)
+     * @param model model that was used in forward solve
+     * @param simulation_state simulation state the timepoint `it`
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getEventOutput(
+        realtype t, std::vector<int> const& rootidx, Model& model,
+        SimulationState const& simulation_state, ExpData const* edata
+    );
+
+    /**
      * @brief Extracts event information for forward sensitivity analysis,
-     * expects that x_solver_ and sx_solver_ were set appropriately
+     * expects the model state was set appropriately
      * @param ie index of event type
      * @param t event timepoint
      * @param model model that was used in forward solve
+     * @param simulation_state simulation state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
-    void
-    getEventSensisFSA(int ie, realtype t, Model& model, ExpData const* edata);
+    void getEventSensisFSA(
+        int ie, realtype t, Model& model,
+        SimulationState const& simulation_state, ExpData const* edata
+    );
 
     /**
      * @brief Updates contribution to likelihood from quadratures (xQB),
@@ -725,12 +730,14 @@ class ReturnData : public ModelDimensions {
      * (llhS0), if no preequilibration was run or if forward sensitivities were
      * used
      * @param model model that was used for forward/backward simulation
+     * @param simulation_state simulation state the timepoint `it`
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * @param xB vector with final adjoint state
      * (excluding conservation laws)
      */
     void handleSx0Forward(
-        Model const& model, std::vector<realtype>& llhS0, AmiVector& xB
+        Model const& model, SimulationState const& simulation_state,
+        std::vector<realtype>& llhS0, AmiVector& xB
     ) const;
 };
 

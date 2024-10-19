@@ -27,7 +27,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -76,6 +76,18 @@ jobs:
       run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab,test]
 
     - run: python -m amici
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Run Python tests
       shell: bash

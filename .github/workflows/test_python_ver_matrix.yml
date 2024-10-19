@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12']
         experimental: [false]
 
     steps:
@@ -56,6 +56,20 @@ jobs:
     # until sympy>1.12 is released
     - run: source venv/bin/activate && pip3 install git+https://github.com/sympy/sympy.git@master
       if: matrix.python-version == '3.12'
+
+    - run: source venv/bin/activate && pip3 install "sympy>=1.12.1"
+      if: matrix.python-version != '3.12'
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Python tests
       run: |

@@ -145,9 +145,9 @@ HermiteSpline::HermiteSpline(
     bool logarithmic_parametrization
 )
     : AbstractSpline(
-        std::move(nodes), std::move(node_values), equidistant_spacing,
-        logarithmic_parametrization
-    )
+          std::move(nodes), std::move(node_values), equidistant_spacing,
+          logarithmic_parametrization
+      )
     , node_values_derivative_(std::move(node_values_derivative))
     , first_node_bc_(firstNodeBC)
     , last_node_bc_(lastNodeBC)
@@ -602,21 +602,25 @@ void HermiteSpline::compute_coefficients_extrapolation_sensi(
         case SplineExtrapolation::linear:
             if (first_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
                 sm0 = 0;
-            } else if (get_node_derivative_by_fd() && first_node_bc_ == SplineBoundaryCondition::given) {
+            } else if (get_node_derivative_by_fd()
+                       && first_node_bc_ == SplineBoundaryCondition::given) {
                 sm0 = (dvaluesdp[spline_offset + ip + nplist] - sp0)
                       / (nodes_[1] - nodes_[0]);
 
-            } else if (get_node_derivative_by_fd() && first_node_bc_ == SplineBoundaryCondition::natural) {
+            } else if (get_node_derivative_by_fd()
+                       && first_node_bc_ == SplineBoundaryCondition::natural) {
                 throw AmiException(
                     "Natural boundary condition for "
                     "Hermite splines with linear extrapolation is "
                     "not yet implemented."
                 );
 
-            } else if (!get_node_derivative_by_fd() && first_node_bc_ == SplineBoundaryCondition::given) {
+            } else if (!get_node_derivative_by_fd()
+                       && first_node_bc_ == SplineBoundaryCondition::given) {
                 sm0 = dslopesdp[spline_offset + ip];
 
-            } else if (!get_node_derivative_by_fd() && first_node_bc_ == SplineBoundaryCondition::natural) {
+            } else if (!get_node_derivative_by_fd()
+                       && first_node_bc_ == SplineBoundaryCondition::natural) {
                 throw AmiException(
                     "Natural boundary condition for "
                     "Hermite splines with linear extrapolation is "
@@ -662,24 +666,28 @@ void HermiteSpline::compute_coefficients_extrapolation_sensi(
         case SplineExtrapolation::linear:
             if (last_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
                 sm_end = 0;
-            } else if (get_node_derivative_by_fd() && last_node_bc_ == SplineBoundaryCondition::given) {
+            } else if (get_node_derivative_by_fd()
+                       && last_node_bc_ == SplineBoundaryCondition::given) {
                 sm_end = (sp_end
                           - dvaluesdp
                               [spline_offset + ip + (n_nodes() - 2) * nplist])
                          / (nodes_[n_nodes() - 1] - nodes_[n_nodes() - 2]);
 
-            } else if (get_node_derivative_by_fd() && last_node_bc_ == SplineBoundaryCondition::natural) {
+            } else if (get_node_derivative_by_fd()
+                       && last_node_bc_ == SplineBoundaryCondition::natural) {
                 throw AmiException(
                     "Natural boundary condition for "
                     "Hermite splines with linear extrapolation is "
                     "not yet implemented."
                 );
 
-            } else if (!get_node_derivative_by_fd() && last_node_bc_ == SplineBoundaryCondition::given) {
+            } else if (!get_node_derivative_by_fd()
+                       && last_node_bc_ == SplineBoundaryCondition::given) {
                 sm_end
                     = dslopesdp[spline_offset + ip + (n_nodes() - 1) * nplist];
 
-            } else if (!get_node_derivative_by_fd() && last_node_bc_ == SplineBoundaryCondition::natural) {
+            } else if (!get_node_derivative_by_fd()
+                       && last_node_bc_ == SplineBoundaryCondition::natural) {
                 throw AmiException(
                     "Natural boundary condition for "
                     "Hermite splines with linear extrapolation is "

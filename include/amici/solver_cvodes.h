@@ -5,8 +5,6 @@
 #include "amici/solver.h"
 #include "amici/vector.h"
 
-#include <sundials/sundials_matrix.h>
-
 namespace amici {
 class ExpData;
 class ReturnData;
@@ -132,8 +130,6 @@ class CVodeSolver : public Solver {
     void setQuadErrConB(int which, bool flag) const override;
 
     void setQuadErrCon(bool flag) const override;
-
-    void setErrHandlerFn() const override;
 
     void setUserData() const override;
 

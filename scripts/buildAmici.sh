@@ -6,6 +6,7 @@ set -eou pipefail
 
 cmake=${CMAKE:-cmake}
 make=${MAKE:-make}
+CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-}
 
 script_path=$(dirname "$BASH_SOURCE")
 amici_path=$(cd "$script_path/.." && pwd)
@@ -13,8 +14,9 @@ amici_build_dir="${amici_path}/build"
 mkdir -p "${amici_build_dir}"
 cd "${amici_build_dir}"
 
-if [ "${GITHUB_ACTIONS:-}" = true ] ||
-  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
+if [[ "${GITHUB_REPOSITORY:-}" = *"/AMICI" ]] ||
+  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ] ||
+  [ "${ENABLE_GCOV_COVERAGE:-}" = TRUE ]; then
   # Running on CI server
   build_type="Debug"
   # exceptions instead of terminate()
@@ -48,10 +50,14 @@ fi
 export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
 python3 -m pip install numpy
 
+suitesparse_root="${amici_path}/ThirdParty/SuiteSparse"
+
 ${cmake} \
   -Wdev -DAMICI_CXX_OPTIONS="-Wall;-Wextra${extra_cxx_flags}" \
   -DCMAKE_BUILD_TYPE=$build_type \
-  -DPython3_EXECUTABLE="$(command -v python3)" ..
+  -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH};${suitesparse_root}/install" \
+  -DPython3_EXECUTABLE="$(command -v python3)" \
+   ..
 
 # build, with or without sonarcloud wrapper
 if [ "${CI_SONARCLOUD:-}" = "TRUE" ]; then

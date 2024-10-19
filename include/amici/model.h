@@ -112,10 +112,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
-     * @param pythonGenerated Flag indicating matlab or python wrapping
-     * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
-     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
-     * @param w_recursion_depth Recursion depth of fw
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -123,9 +119,7 @@ class Model : public AbstractModel, public ModelDimensions {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event, bool pythonGenerated = false,
-        int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
-        int w_recursion_depth = 0,
+        std::vector<int> z2event,
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -1427,19 +1421,20 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_solver State variables with conservation laws applied
      * (solver returns this)
      */
-    void fx_rdata(AmiVector& x_rdata, AmiVector const& x_solver);
+    void fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x_solver);
 
     /**
      * @brief Expand conservation law for state sensitivities.
      * @param sx_rdata Output buffer for state variables sensitivities with
-     * conservation laws expanded (stored in `amici::ReturnData`).
+     * conservation laws expanded
+     * (stored in `amici::ReturnData` shape `nplist` x `nx`, row-major).
      * @param sx_solver State variables sensitivities with conservation laws
      * applied (solver returns this)
      * @param x_solver State variables with conservation laws
      * applied (solver returns this)
      */
     void fsx_rdata(
-        AmiVectorArray& sx_rdata, AmiVectorArray const& sx_solver,
+        gsl::span<realtype> sx_rdata, AmiVectorArray const& sx_solver,
         AmiVector const& x_solver
     );
 
@@ -1456,9 +1451,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @return Those indices.
      */
     std::vector<int> const& getReinitializationStateIdxs() const;
-
-    /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated = false;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
@@ -1480,6 +1472,30 @@ class Model : public AbstractModel, public ModelDimensions {
      * in ascending order.
      */
     virtual std::vector<double> get_trigger_timepoints() const;
+
+    /**
+     * @brief Get steady-state mask as std::vector.
+     *
+     * See `set_steadystate_mask` for details.
+     *
+     * @return Steady-state mask
+     */
+    std::vector<realtype> get_steadystate_mask() const {
+        return steadystate_mask_;
+    };
+
+    /**
+     * @brief Set steady-state mask.
+     *
+     * The mask is used to exclude certain state variables from the steady-state
+     * convergence check. Positive values indicate that the corresponding state
+     * variable should be included in the convergence check, while non-positive
+     * values indicate that the corresponding state variable should be excluded.
+     * An empty mask is interpreted as including all state variables.
+     *
+     * @param mask Mask of length `nx_solver`.
+     */
+    void set_steadystate_mask(std::vector<realtype> const& mask);
 
     /**
      * Flag indicating whether for
@@ -2073,20 +2089,17 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype min_sigma_{50.0};
 
   private:
-    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
-    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
-
-    /** Sparse dwdw temporary storage (shape `ndwdw`) */
-    mutable SUNMatrixWrapper dwdw_;
-
-    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
-    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
-
-    /** Recursion */
-    int w_recursion_depth_{0};
-
     /** Simulation parameters, initial state, etc. */
     SimulationParameters simulation_parameters_;
+
+    /**
+     * Mask for state variables that should be checked for steady state
+     * during pre-/post-equilibration. Positive values indicate that the
+     * corresponding state variable should be checked for steady state.
+     * Negative values indicate that the corresponding state variable should
+     * be ignored.
+     */
+    std::vector<realtype> steadystate_mask_;
 };
 
 bool operator==(Model const& a, Model const& b);

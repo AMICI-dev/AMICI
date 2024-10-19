@@ -1,11 +1,13 @@
 """Functions related to SWIG or SWIG-generated code"""
+
+from __future__ import annotations
 import ast
 import contextlib
 import re
 
 
 class TypeHintFixer(ast.NodeTransformer):
-    """Replaces SWIG-generated C++ typehints by corresponding Python types"""
+    """Replaces SWIG-generated C++ typehints by corresponding Python types."""
 
     mapping = {
         "void": None,
@@ -53,9 +55,13 @@ class TypeHintFixer(ast.NodeTransformer):
         "std::allocator< amici::ParameterScaling > > const &": ast.Constant(
             "ParameterScalingVector"
         ),
+        "H5::H5File": None,
     }
 
     def visit_FunctionDef(self, node):
+        # convert type/rtype from docstring to annotation, if possible.
+        #  those may be c++ types, not valid in python, that need to be
+        #  converted to python types below.
         self._annotation_from_docstring(node)
 
         # Has a return type annotation?
@@ -67,14 +73,17 @@ class TypeHintFixer(ast.NodeTransformer):
             for arg in node.args.args:
                 if not arg.annotation:
                     continue
-                if isinstance(arg.annotation, ast.Name):
+                if not isinstance(arg.annotation, ast.Constant):
                     # there is already proper annotation
                     continue
 
                 arg.annotation = self._new_annot(arg.annotation.value)
         return node
 
-    def _new_annot(self, old_annot: str):
+    def _new_annot(self, old_annot: str | ast.Name):
+        if isinstance(old_annot, ast.Name):
+            old_annot = old_annot.id
+
         with contextlib.suppress(KeyError):
             return self.mapping[old_annot]
 
@@ -117,6 +126,8 @@ class TypeHintFixer(ast.NodeTransformer):
 
         Swig sometimes generates ``:type solver: :py:class:`Solver`` instead of
         ``:type solver: Solver``. Those need special treatment.
+
+        Overloaded functions are skipped.
         """
         docstring = ast.get_docstring(node, clean=False)
         if not docstring or "*Overload 1:*" in docstring:
@@ -127,22 +138,18 @@ class TypeHintFixer(ast.NodeTransformer):
         lines_to_remove = set()
 
         for line_no, line in enumerate(docstring):
-            if (
-                match := re.match(
-                    r"\s*:rtype:\s*(?::py:class:`)?(\w+)`?\s+$", line
-                )
-            ) and not match.group(1).startswith(":"):
-                node.returns = ast.Constant(match.group(1))
+            if type_str := self.extract_rtype(line):
+                # handle `:rtype:`
+                node.returns = ast.Constant(type_str)
                 lines_to_remove.add(line_no)
+                continue
 
-            if (
-                match := re.match(
-                    r"\s*:type\s*(\w+):\W*(?::py:class:`)?(\w+)`?\s+$", line
-                )
-            ) and not match.group(1).startswith(":"):
+            arg_name, type_str = self.extract_type(line)
+            if arg_name is not None:
+                # handle `:type ...:`
                 for arg in node.args.args:
-                    if arg.arg == match.group(1):
-                        arg.annotation = ast.Constant(match.group(2))
+                    if arg.arg == arg_name:
+                        arg.annotation = ast.Constant(type_str)
                         lines_to_remove.add(line_no)
 
         if lines_to_remove:
@@ -155,13 +162,42 @@ class TypeHintFixer(ast.NodeTransformer):
             )
             node.body[0].value = ast.Str(new_docstring)
 
+    @staticmethod
+    def extract_type(line: str) -> tuple[str, str] | tuple[None, None]:
+        """Extract argument name and type string from ``:type:`` docstring
+        line."""
+        match = re.match(r"\s*:type\s+(\w+):\s+(.+?)(?:, optional)?\s*$", line)
+        if not match:
+            return None, None
+
+        arg_name = match.group(1)
+
+        # get rid of any :py:class`...` in the type string if necessary
+        if not match.group(2).startswith(":py:"):
+            return arg_name, match.group(2)
+
+        match = re.match(r":py:\w+:`(.+)`", match.group(2))
+        assert match
+        return arg_name, match.group(1)
+
+    @staticmethod
+    def extract_rtype(line: str) -> str | None:
+        """Extract type string from ``:rtype:`` docstring line."""
+        match = re.match(r"\s*:rtype:\s+(.+)\s*$", line)
+        if not match:
+            return None
+
+        # get rid of any :py:class`...` in the type string if necessary
+        if not match.group(1).startswith(":py:"):
+            return match.group(1)
+
+        match = re.match(r":py:\w+:`(.+)`", match.group(1))
+        assert match
+        return match.group(1)
+
 
 def fix_typehints(infilename, outfilename):
     """Change SWIG-generated C++ typehints to Python typehints"""
-    # Only available from Python3.9
-    if not getattr(ast, "unparse", None):
-        return
-
     # file -> AST
     with open(infilename) as f:
         source = f.read()

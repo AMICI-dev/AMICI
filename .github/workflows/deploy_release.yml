@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: ["3.11"]
 
     environment:
       name: pypi
@@ -35,11 +35,6 @@ jobs:
       uses: ./.github/actions/setup-swig
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-
-    - name: Remove direct dependencies from setup.cfg
-      # Remove any "git+https"-based dependencies that are not supported
-      #  by PyPI and are only required for testing.
-      run: sed -i '/git+https/d' python/sdist/setup.cfg
 
     - name: sdist
       run: scripts/buildSdist.sh
@@ -74,3 +69,29 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
               https://api.github.com/repos/${DOWNSTREAM_REPOSITORY}/actions/workflows/${WORKFLOW_FILE}/dispatches \
             -d "{\"ref\": \"dev\", \"inputs\": {\"simulatorVersion\": \"${PACKAGE_VERSION}\", \"simulatorVersionLatest\": \"true\"}}"
+
+  dockerhub:
+    name: Release to Docker Hub
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - uses: actions/checkout@v4
+    - run: git archive -o container/amici.tar.gz --format=tar.gz HEAD
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@v5
+      with:
+        name: dweindl/amici
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: container/
+        dockerfile: Dockerfile
+        tag_semver: true
+        platforms: linux/amd64,linux/arm64

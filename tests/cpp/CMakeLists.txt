@@ -93,6 +93,7 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
     TEST_COMMAND ""
     BUILD_ALWAYS 1
     DEPENDS amici
+    CMAKE_ARGS "-DCMAKE_BUILD_TYPE=Debug"
     BUILD_BYPRODUCTS "${MODEL_LIBRARY}")
   # Rebuild if amici files are updated
   ExternalProject_Add_StepDependencies(external_model_${MODEL} build amici)

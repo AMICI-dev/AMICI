@@ -184,6 +184,7 @@ ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
 ThirdParty/SuiteSparse/include/
 ThirdParty/SuiteSparse/share/*
+ThirdParty/SuiteSparse/install/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
@@ -205,3 +206,4 @@ cache_fiddy/*
 debug/*
 tests/benchmark-models/cache_fiddy/*
 venv/*
+.coverage

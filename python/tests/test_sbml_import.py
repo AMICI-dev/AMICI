@@ -1,4 +1,5 @@
 """Tests related to amici.sbml_import"""
+
 import os
 import re
 from numbers import Number
@@ -758,7 +759,7 @@ def test_constraints():
         #  in practice
         assert np.any(rdata.x < 0)
 
-        amici_solver.setRelativeTolerance(1e-14)
+        amici_solver.setRelativeTolerance(1e-13)
         amici_solver.setConstraints(
             [Constraint.non_negative, Constraint.non_negative]
         )

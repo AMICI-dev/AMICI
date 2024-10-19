@@ -18,6 +18,19 @@ namespace amici {
  * number of attributes that need to be transferred.
  */
 struct ModelState {
+    ModelState() = default;
+    /**
+     * @brief Constructor from model dimensions.
+     * @param dim Model dimensions
+     */
+    explicit ModelState(ModelDimensions const& dim) {
+        h.resize(dim.ne, 0.0);
+        total_cl.resize(dim.nx_rdata - dim.nx_solver, 0.0);
+        stotal_cl.resize((dim.nx_rdata - dim.nx_solver) * dim.np, 0.0);
+        unscaledParameters.resize(dim.np);
+        fixedParameters.resize(dim.nk);
+    }
+
     /**
      * Flag indicating whether a certain Heaviside function should be active or
      * not (dimension: `ne`)
@@ -43,9 +56,6 @@ struct ModelState {
      * (dimension: nplist)
      */
     std::vector<int> plist;
-
-    /** temporary storage for spline values */
-    std::vector<realtype> spl_;
 };
 
 inline bool operator==(ModelState const& a, ModelState const& b) {
@@ -70,6 +80,149 @@ struct ModelStateDerived {
      * @param dim Model dimensions
      */
     explicit ModelStateDerived(ModelDimensions const& dim);
+
+    /**
+     * Copy constructor
+     *
+     * @param other ModelStateDerived object to copy
+     */
+    ModelStateDerived(ModelStateDerived const& other)
+        : sunctx_(sundials::Context())
+        , J_(other.J_)
+        , JB_(other.JB_)
+        , dxdotdw_(other.dxdotdw_)
+        , dwdx_(other.dwdx_)
+        , dwdp_(other.dwdp_)
+        , M_(other.M_)
+        , MSparse_(other.MSparse_)
+        , dfdx_(other.dfdx_)
+        , dxdotdp_full(other.dxdotdp_full)
+        , dxdotdp_explicit(other.dxdotdp_explicit)
+        , dxdotdp_implicit(other.dxdotdp_implicit)
+        , dxdotdx_explicit(other.dxdotdx_explicit)
+        , dxdotdx_implicit(other.dxdotdx_implicit)
+        , dx_rdatadx_solver(other.dx_rdatadx_solver)
+        , dx_rdatadtcl(other.dx_rdatadtcl)
+        , dtotal_cldx_rdata(other.dtotal_cldx_rdata)
+        , dxdotdp(other.dxdotdp)
+        , dJydy_(other.dJydy_)
+        , dJydy_matlab_(other.dJydy_matlab_)
+        , dJydsigma_(other.dJydsigma_)
+        , dJydx_(other.dJydx_)
+        , dJydp_(other.dJydp_)
+        , dJzdz_(other.dJzdz_)
+        , dJzdsigma_(other.dJzdsigma_)
+        , dJrzdz_(other.dJrzdz_)
+        , dJrzdsigma_(other.dJrzdsigma_)
+        , dJzdx_(other.dJzdx_)
+        , dJzdp_(other.dJzdp_)
+        , dzdx_(other.dzdx_)
+        , dzdp_(other.dzdp_)
+        , drzdx_(other.drzdx_)
+        , drzdp_(other.drzdp_)
+        , dydp_(other.dydp_)
+        , dydx_(other.dydx_)
+        , w_(other.w_)
+        , sx_(other.sx_)
+        , sy_(other.sy_)
+        , x_rdata_(other.x_rdata_)
+        , sx_rdata_(other.sx_rdata_)
+        , y_(other.y_)
+        , sigmay_(other.sigmay_)
+        , dsigmaydp_(other.dsigmaydp_)
+        , dsigmaydy_(other.dsigmaydy_)
+        , z_(other.z_)
+        , rz_(other.rz_)
+        , sigmaz_(other.sigmaz_)
+        , dsigmazdp_(other.dsigmazdp_)
+        , deltax_(other.deltax_)
+        , deltasx_(other.deltasx_)
+        , deltaxB_(other.deltaxB_)
+        , deltaqB_(other.deltaqB_)
+        , sspl_(other.sspl_)
+        , x_pos_tmp_(other.x_pos_tmp_)
+        , spl_(other.spl_)
+        , dwdp_hierarchical_(other.dwdp_hierarchical_)
+        , dwdw_(other.dwdw_)
+        , dwdx_hierarchical_(other.dwdx_hierarchical_)
+        , dJydy_dense_(other.dJydy_dense_) {
+        // Update the SUNContext of all matrices
+        if (J_.data()) {
+            J_.get()->sunctx = sunctx_;
+        }
+        if (JB_.data()) {
+            JB_.get()->sunctx = sunctx_;
+        }
+        if (dxdotdw_.data()) {
+            dxdotdw_.get()->sunctx = sunctx_;
+        }
+        if (dwdx_.data()) {
+            dwdx_.get()->sunctx = sunctx_;
+        }
+        if (dwdp_.data()) {
+            dwdp_.get()->sunctx = sunctx_;
+        }
+        if (M_.data()) {
+            M_.get()->sunctx = sunctx_;
+        }
+        if (MSparse_.data()) {
+            MSparse_.get()->sunctx = sunctx_;
+        }
+        if (dfdx_.data()) {
+            dfdx_.get()->sunctx = sunctx_;
+        }
+        if (dxdotdp_full.data()) {
+            dxdotdp_full.get()->sunctx = sunctx_;
+        }
+        if (dxdotdp_explicit.data()) {
+            dxdotdp_explicit.get()->sunctx = sunctx_;
+        }
+        if (dxdotdp_implicit.data()) {
+            dxdotdp_implicit.get()->sunctx = sunctx_;
+        }
+        if (dxdotdx_explicit.data()) {
+            dxdotdx_explicit.get()->sunctx = sunctx_;
+        }
+        if (dxdotdx_implicit.data()) {
+            dxdotdx_implicit.get()->sunctx = sunctx_;
+        }
+        if (dx_rdatadx_solver.data()) {
+            dx_rdatadx_solver.get()->sunctx = sunctx_;
+        }
+        if (dx_rdatadtcl.data()) {
+            dx_rdatadtcl.get()->sunctx = sunctx_;
+        }
+        if (dtotal_cldx_rdata.data()) {
+            dtotal_cldx_rdata.get()->sunctx = sunctx_;
+        }
+        for (auto const& dwdp : dwdp_hierarchical_) {
+            if (dwdp.data()) {
+                dwdp.get()->sunctx = sunctx_;
+            }
+        }
+        for (auto const& dwdx : dwdx_hierarchical_) {
+            if (dwdx.data()) {
+                dwdx.get()->sunctx = sunctx_;
+            }
+        }
+        if (dwdw_.data()) {
+            dwdw_.get()->sunctx = sunctx_;
+        }
+        if (dJydy_dense_.data()) {
+            dJydy_dense_.get()->sunctx = sunctx_;
+        }
+    }
+
+    /**
+     * SUNDIALS context
+     */
+    /* Ideally, we'd use the one from solver, but due to the different lifetimes
+     * of Model and solver, this is tricky.
+     * We could pass the solver's context to the model during initialize() and
+     * only create ModelStateDerived there, but this caused issue in tests with
+     * FSA for unclear reasons.
+     */
+    sundials::Context sunctx_;
 
     /** Sparse Jacobian (dimension: `nx_solver` x `nx_solver`, nnz:
      * `amici::Model::nnz`) */
@@ -162,7 +315,7 @@ struct ModelStateDerived {
      * Temporary storage of `dxdotdp` data across functions, Matlab only
      * (dimension: `nplist` x `nx_solver` , row-major)
      */
-    AmiVectorArray dxdotdp{0, 0};
+    AmiVectorArray dxdotdp;
 
     /** Sparse observable derivative of data likelihood, only used if
      * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
@@ -322,7 +475,22 @@ struct ModelStateDerived {
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: `nx_solver`) */
-    AmiVector x_pos_tmp_{0};
+    AmiVector x_pos_tmp_;
+
+    /** temporary storage for spline values */
+    std::vector<realtype> spl_;
+
+    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
+    std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
+
+    /** Sparse dwdw temporary storage (shape `ndwdw`) */
+    SUNMatrixWrapper dwdw_;
+
+    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
+    std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
+
+    /** Temporary storage for dense dJydy (dimension: `nJ` x `ny`) */
+    SUNMatrixWrapper dJydy_dense_;
 };
 
 /**
@@ -332,11 +500,19 @@ struct ModelStateDerived {
 struct SimulationState {
     /** timepoint */
     realtype t;
-    /** state variables */
+    /**
+     * partial state vector, excluding states eliminated from conservation laws
+     */
     AmiVector x;
-    /** state variables */
+    /**
+     * partial time derivative of state vector, excluding states eliminated
+     * from conservation laws
+     */
     AmiVector dx;
-    /** state variable sensitivity */
+    /**
+     * partial sensitivity state vector array, excluding states eliminated from
+     * conservation laws
+     */
     AmiVectorArray sx;
     /** state of the model that was used for simulation */
     ModelState state;

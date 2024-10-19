@@ -1,4 +1,5 @@
 """PEtab conditions to AMICI ExpDatas."""
+
 import logging
 import numbers
 import warnings
@@ -8,9 +9,9 @@ from collections.abc import Sequence
 import amici
 import numpy as np
 import pandas as pd
-import petab
+import petab.v1 as petab
 from amici import AmiciModel
-from petab.C import (
+from petab.v1.C import (
     MEASUREMENT,
     NOISE_PARAMETERS,
     OBSERVABLE_ID,
@@ -66,9 +67,12 @@ def fill_in_parameters(
             "The following problem parameters were not used: "
             + str(unused_parameters),
             RuntimeWarning,
+            stacklevel=2,
         )
 
-    for edata, mapping_for_condition in zip(edatas, parameter_mapping):
+    for edata, mapping_for_condition in zip(
+        edatas, parameter_mapping, strict=True
+    ):
         fill_in_parameters_for_condition(
             edata,
             problem_parameters,
@@ -218,7 +222,7 @@ def create_parameterized_edatas(
     problem_parameters: dict[str, numbers.Number],
     scaled_parameters: bool = False,
     parameter_mapping: ParameterMapping = None,
-    simulation_conditions: Union[pd.DataFrame, dict] = None,
+    simulation_conditions: pd.DataFrame | dict = None,
 ) -> list[amici.ExpData]:
     """Create list of :class:amici.ExpData objects with parameters filled in.
 
@@ -284,7 +288,7 @@ def create_parameterized_edatas(
 
 
 def create_edata_for_condition(
-    condition: Union[dict, pd.Series],
+    condition: dict | pd.Series,
     measurement_df: pd.DataFrame,
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
@@ -369,7 +373,7 @@ def create_edata_for_condition(
 def create_edatas(
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
-    simulation_conditions: Union[pd.DataFrame, dict] = None,
+    simulation_conditions: pd.DataFrame | dict = None,
 ) -> list[amici.ExpData]:
     """Create list of :class:`amici.amici.ExpData` objects for PEtab problem.
 
@@ -515,7 +519,7 @@ def _get_measurements_and_sigmas(
             if isinstance(
                 measurement.get(NOISE_PARAMETERS, None), numbers.Number
             ):
-                sigma_y[
-                    time_ix_for_obs_ix[observable_ix], observable_ix
-                ] = measurement[NOISE_PARAMETERS]
+                sigma_y[time_ix_for_obs_ix[observable_ix], observable_ix] = (
+                    measurement[NOISE_PARAMETERS]
+                )
     return y, sigma_y
