@@ -241,7 +241,7 @@ void ReturnData::processForwardProblem(
     if (edata)
         initializeObjectiveFunction(model.hasQuadraticLLH());
 
-    auto initialState = fwd.getInitialSimulationState();
+    auto const& initialState = fwd.getInitialSimulationState();
     if (initialState.x.getLength() == 0 && model.nx_solver > 0)
         return; // if x wasn't set forward problem failed during initialization
 
@@ -259,7 +259,7 @@ void ReturnData::processForwardProblem(
     realtype tf = fwd.getFinalTime();
     for (int it = 0; it < model.nt(); it++) {
         if (model.getTimepoint(it) <= tf) {
-            auto simulation_state = fwd.getSimulationStateTimepoint(it);
+            auto const simulation_state = fwd.getSimulationStateTimepoint(it);
             model.setModelState(simulation_state.state);
             getDataOutput(it, model, simulation_state, edata);
         } else {
@@ -273,7 +273,7 @@ void ReturnData::processForwardProblem(
     if (nz > 0) {
         auto rootidx = fwd.getRootIndexes();
         for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
-            auto simulation_state = fwd.getSimulationStateEvent(iroot);
+            auto const simulation_state = fwd.getSimulationStateEvent(iroot);
             model.setModelState(simulation_state.state);
             getEventOutput(
                 simulation_state.t, rootidx.at(iroot), model, simulation_state,

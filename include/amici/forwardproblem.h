@@ -2,6 +2,7 @@
 #define AMICI_FORWARDPROBLEM_H
 
 #include "amici/defines.h"
+#include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/vector.h"
@@ -195,7 +196,7 @@ class ForwardProblem {
         if (model->getTimepoint(it) == initial_state_.t)
             return getInitialSimulationState();
         auto map_iter = timepoint_states_.find(model->getTimepoint(it));
-        assert(map_iter != timepoint_states_.end());
+        Ensures(map_iter != timepoint_states_.end());
         return map_iter->second;
     };
 
@@ -441,8 +442,21 @@ class FinalStateStorer : public ContextManager {
      * @brief destructor, stores simulation state
      */
     ~FinalStateStorer() {
-        if (fwd_)
+        if (fwd_) {
             fwd_->final_state_ = fwd_->getSimulationState();
+            // if there is an associated data point, also store it in
+            // timepoint_states if it's not present there.
+            // this may happen if there is an error just at
+            // (or indistinguishably before) an output timepoint
+            auto final_time = fwd_->getFinalTime();
+            if (!fwd_->timepoint_states_.count(final_time) && fwd_->edata
+                && std::find(
+                       fwd_->edata->ts_.cbegin(), fwd_->edata->ts_.cend(),
+                       final_time
+                   ) != fwd_->edata->ts_.cend()) {
+                fwd_->timepoint_states_[final_time] = fwd_->final_state_;
+            }
+        }
     }
 
   private:
