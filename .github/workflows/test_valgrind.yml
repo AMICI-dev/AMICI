@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - update_valgrind_supp
+      - fix_valgrind_tests
   pull_request:
     branches:
       - master
