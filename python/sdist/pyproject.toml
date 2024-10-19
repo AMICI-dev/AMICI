@@ -74,13 +74,20 @@ test = [
     "scipy",
     "pooch"
 ]
-vis =[
+vis = [
     "matplotlib",
     "seaborn",
 ]
-examples =[
+examples = [
     "jupyter",
     "scipy",
+]
+jax = [
+    "jax>=0.4.34",
+    "jaxlib>=0.4.34",
+    "diffrax>=0.6.0",
+    "equinox>=0.11.8",
+    "optimistix>=0.0.8",
 ]
 
 [project.scripts]
