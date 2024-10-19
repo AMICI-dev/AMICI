@@ -4,6 +4,41 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.27.0 (2024-10-21)
+
+This release comes with an **updated version of the SUNDIALS package (7.1.1)** (https://github.com/AMICI-dev/AMICI/pull/2513).
+  For C++ users of some of AMICI's internal RAII classes, this may include some
+  breaking changes. The Python API is not affected.
+
+*Note regarding **editable** installations (`pip install -e ...`):*
+Due to the SUNDIALS update, it will be necessary to clean out some temporary
+build directories (at least `ThirdParty/sundials/build/`,
+`python/sdist/build/`) before rebuilding the package.
+
+**Fixes**
+
+* Fixed a bug that led to program termination if a root-after-reinitialization
+  error (potentially also others) occurred at an output timepoint
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2555
+
+* CMake: Fixes compilation errors for models named `model`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2547
+
+* Updated CMake export config, making it easier to use AMICI in CMake projects
+  and fixing some potential issues with interferring packages
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2540
+
+* CMake: Set policies for CMake 3.31
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2539
+
+* Documentation fixes by @FFroehlich, @ChocolateCharlie, @dweindl
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.3...v0.27.0
+
 
 ### v0.26.3 (2024-10-03)
 
