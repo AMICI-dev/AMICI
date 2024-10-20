@@ -360,10 +360,9 @@ TEST_F(SolverTest, SettersGettersWithSetup)
     ASSERT_EQ(static_cast<int>(solver.getSensitivityMethod()),
               static_cast<int>(sensi_meth));
 
-    sundials::Context sunctx;
     auto rdata = std::make_unique<ReturnData>(solver, testModel);
-    AmiVector x(nx, sunctx), dx(nx, sunctx);
-    AmiVectorArray sx(nx, 1, sunctx), sdx(nx, 1, sunctx);
+    AmiVector x(nx, solver.getSunContext()), dx(nx, solver.getSunContext());
+    AmiVectorArray sx(nx, 1, solver.getSunContext()), sdx(nx, 1, solver.getSunContext());
 
     testModel.setInitialStates(std::vector<realtype>{ 0 });
 
