@@ -71,8 +71,7 @@ static_assert(
     "AMICI_IDAS_CONSTR_FAIL != IDA_CONSTR_FAIL"
 );
 static_assert(
-    amici::AMICI_WARNING == IDA_WARNING,
-    "AMICI_WARNING != IDA_WARNING"
+    amici::AMICI_WARNING == IDA_WARNING, "AMICI_WARNING != IDA_WARNING"
 );
 
 /*

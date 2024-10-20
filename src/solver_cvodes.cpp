@@ -91,8 +91,7 @@ static_assert(
     "AMICI_FIRST_QRHSFUNC_ERR != CV_FIRST_QRHSFUNC_ERR"
 );
 static_assert(
-    amici::AMICI_WARNING == CV_WARNING,
-    "AMICI_WARNING != CV_WARNING"
+    amici::AMICI_WARNING == CV_WARNING, "AMICI_WARNING != CV_WARNING"
 );
 
 /*
