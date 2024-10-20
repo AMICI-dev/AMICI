@@ -444,16 +444,15 @@ class FinalStateStorer : public ContextManager {
     ~FinalStateStorer() {
         if (fwd_) {
             fwd_->final_state_ = fwd_->getSimulationState();
-            // if there is an associated data point, also store it in
+            // if there is an associated output timepoint, also store it in
             // timepoint_states if it's not present there.
             // this may happen if there is an error just at
             // (or indistinguishably before) an output timepoint
             auto final_time = fwd_->getFinalTime();
-            if (!fwd_->timepoint_states_.count(final_time) && fwd_->edata
-                && std::find(
-                       fwd_->edata->ts_.cbegin(), fwd_->edata->ts_.cend(),
-                       final_time
-                   ) != fwd_->edata->ts_.cend()) {
+            auto const timepoints = fwd_->model->getTimepoints();
+            if (!fwd_->timepoint_states_.count(final_time)
+                && std::find(timepoints.cbegin(), timepoints.cend(), final_time)
+                       != timepoints.cend()) {
                 fwd_->timepoint_states_[final_time] = fwd_->final_state_;
             }
         }
