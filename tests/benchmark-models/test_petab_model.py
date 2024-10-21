@@ -23,7 +23,11 @@ from amici.petab.simulations import (
     RDATAS,
     rdatas_to_measurement_df,
     simulate_petab,
+    create_edatas,
+    fill_in_parameters,
+    create_parameter_mapping,
 )
+from timeit import default_timer as timer
 from petab.v1.visualize import plot_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -132,6 +136,60 @@ def main():
             amici.SteadyStateSensitivityMode.integrationOnly
         )
 
+    res = simulate_petab(
+        petab_problem=problem,
+        amici_model=amici_model,
+        solver=amici_solver,
+        log_level=logging.INFO,
+    )
+    rdatas = res[RDATAS]
+    llh = res[LLH]
+
+    jax_model = model_module.get_jax_model()
+    simulation_conditions = (
+        problem.get_simulation_conditions_from_measurement_df()
+    )
+    edatas = create_edatas(
+        amici_model=amici_model,
+        petab_problem=problem,
+        simulation_conditions=simulation_conditions,
+    )
+    problem_parameters = {
+        t.Index: getattr(t, petab.NOMINAL_VALUE)
+        for t in problem.parameter_df.itertuples()
+    }
+    parameter_mapping = create_parameter_mapping(
+        petab_problem=problem,
+        simulation_conditions=simulation_conditions,
+        scaled_parameters=False,
+        amici_model=amici_model,
+    )
+    fill_in_parameters(
+        edatas=edatas,
+        problem_parameters=problem_parameters,
+        scaled_parameters=False,
+        parameter_mapping=parameter_mapping,
+        amici_model=amici_model,
+    )
+    # run once to JIT
+    jax_model.run_simulations(edatas)
+    start_jax = timer()
+    rdatas_jax = jax_model.run_simulations(edatas)
+    end_jax = timer()
+
+    t_jax = end_jax - start_jax
+    t_amici = sum(r.cpu_time for r in rdatas) / 1e3
+
+    llh_jax = sum(r.llh for r in rdatas_jax)
+
+    print(
+        f'amici (llh={res["llh"]} after {t_amici}s) vs '
+        f'jax (llh={llh_jax} after {t_jax}s)'
+    )
+    assert np.isclose(
+        llh, llh_jax, rtol=1e-3, atol=1e-3
+    ), "LLH mismatch {llh} (amici) vs {llh_jax} (jax)"
+
     times = dict()
 
     for label, sensi_mode in {
@@ -171,6 +229,7 @@ def main():
     times["np"] = sum(problem.parameter_df[petab.ESTIMATE])
 
     pd.Series(times).to_csv(script_dir / f"{args.model_name}_benchmark.csv")
+
     for rdata in rdatas:
         assert (
             rdata.status == amici.AMICI_SUCCESS

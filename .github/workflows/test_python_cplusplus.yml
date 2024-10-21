@@ -231,11 +231,6 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
-    - name: Install notebook dependencies
-      run: |
-        source venv/bin/activate \
-        && pip install jax[cpu]
-
     - name: example notebooks
       run: scripts/runNotebook.sh python/examples/example_*/
 
