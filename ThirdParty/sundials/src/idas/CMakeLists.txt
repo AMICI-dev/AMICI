@@ -3,7 +3,7 @@
 #                Radu Serban, Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -21,7 +21,6 @@ install(CODE "MESSAGE(\"\nInstall IDAS\n\")")
 set(idas_SOURCES
   idas.c
   idaa.c
-  idas_direct.c
   idas_io.c
   idas_ic.c
   idaa_io.c
@@ -30,16 +29,13 @@ set(idas_SOURCES
   idas_nls.c
   idas_nls_sim.c
   idas_nls_stg.c
-  idas_spils.c
   )
 
 # Add variable idas_HEADERS with the exported IDAS header files
 set(idas_HEADERS
   idas.h
   idas_bbdpre.h
-  idas_direct.h
   idas_ls.h
-  idas_spils.h
   )
 
 # Add prefix with complete path to the IDAS header files
@@ -53,8 +49,10 @@ sundials_add_library(sundials_idas
     ${idas_HEADERS}
   INCLUDE_SUBDIR
     idas
+  LINK_LIBRARIES
+    PUBLIC sundials_core
   OBJECT_LIBRARIES
-    sundials_generic_obj
+    sundials_sunmemsys_obj
     sundials_nvecserial_obj
     sundials_sunmatrixband_obj
     sundials_sunmatrixdense_obj
@@ -81,5 +79,5 @@ message(STATUS "Added IDAS module")
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

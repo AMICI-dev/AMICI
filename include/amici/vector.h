@@ -9,7 +9,7 @@
 #include <nvector/nvector_serial.h>
 
 #include <gsl/gsl-lite.hpp>
-
+#include <sundials/sundials_context.hpp>
 namespace amici {
 class AmiVector;
 }
@@ -40,34 +40,42 @@ class AmiVector {
      */
     AmiVector() = default;
 
-    /** Creates an std::vector<realtype> and attaches the
+    /**
+     * @brief Construct empty vector of given size
+     *
+     * Creates an std::vector<realtype> and attaches the
      * data pointer to a newly created N_Vector_Serial.
      * Using N_VMake_Serial ensures that the N_Vector
      * module does not try to deallocate the data vector
      * when calling N_VDestroy_Serial
-     * @brief empty constructor
      * @param length number of elements in vector
+     * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(long int const length)
+    explicit AmiVector(long int const length, SUNContext sunctx)
         : vec_(static_cast<decltype(vec_)::size_type>(length), 0.0)
-        , nvec_(N_VMake_Serial(length, vec_.data())) {}
+        , nvec_(N_VMake_Serial(length, vec_.data(), sunctx)) {}
 
-    /** Moves data from std::vector and constructs an nvec that points to the
+    /**
+     * @brief Constructor from std::vector
+     *
+     * Moves data from std::vector and constructs an nvec that points to the
      * data
-     * @brief constructor from std::vector,
      * @param rvec vector from which the data will be moved
+     * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(std::vector<realtype> rvec)
+    explicit AmiVector(std::vector<realtype> rvec, SUNContext sunctx)
         : vec_(std::move(rvec))
-        , nvec_(N_VMake_Serial(gsl::narrow<long int>(vec_.size()), vec_.data())
-          ) {}
+        , nvec_(N_VMake_Serial(
+              gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
+          )) {}
 
     /** Copy data from gsl::span and constructs a vector
      * @brief constructor from gsl::span,
      * @param rvec vector from which the data will be copied
+     * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(gsl::span<realtype const> rvec)
-        : AmiVector(std::vector<realtype>(rvec.begin(), rvec.end())) {}
+    explicit AmiVector(gsl::span<realtype const> rvec, SUNContext sunctx)
+        : AmiVector(std::vector<realtype>(rvec.begin(), rvec.end()), sunctx) {}
 
     /**
      * @brief copy constructor
@@ -75,8 +83,12 @@ class AmiVector {
      */
     AmiVector(AmiVector const& vold)
         : vec_(vold.vec_) {
+        if (vold.nvec_ == nullptr) {
+            nvec_ = nullptr;
+            return;
+        }
         nvec_ = N_VMake_Serial(
-            gsl::narrow<long int>(vold.vec_.size()), vec_.data()
+            gsl::narrow<long int>(vec_.size()), vec_.data(), vold.nvec_->sunctx
         );
     }
 
@@ -85,9 +97,9 @@ class AmiVector {
      * @param other vector from which the data will be moved
      */
     AmiVector(AmiVector&& other) noexcept
-        : nvec_(nullptr) {
-        vec_ = std::move(other.vec_);
-        synchroniseNVector();
+        : vec_(std::move(other.vec_))
+        , nvec_(nullptr) {
+        synchroniseNVector(other.get_ctx());
     }
 
     /**
@@ -236,6 +248,27 @@ class AmiVector {
         Archive& ar, AmiVector& s, unsigned int version
     );
 
+    /**
+     * @brief Get SUNContext
+     * @return The current SUNContext or nullptr, if this AmiVector is empty
+     */
+    SUNContext get_ctx() const {
+        return nvec_ == nullptr ? nullptr : nvec_->sunctx;
+    }
+
+    /**
+     * @brief Set SUNContext
+     *
+     * If this AmiVector is non-empty, changes the current SUNContext of the
+     * associated N_Vector. If empty, do nothing.
+     *
+     * @param ctx SUNDIALS context to set
+     */
+    void set_ctx(SUNContext ctx) {
+        if (nvec_)
+            nvec_->sunctx = ctx;
+    }
+
   private:
     /** main data storage */
     std::vector<realtype> vec_;
@@ -245,8 +278,9 @@ class AmiVector {
 
     /**
      * @brief reconstructs nvec such that data pointer points to vec data array
+     * @param sunctx SUNDIALS context
      */
-    void synchroniseNVector();
+    void synchroniseNVector(SUNContext sunctx);
 };
 
 /**
@@ -270,8 +304,11 @@ class AmiVectorArray {
      * @brief empty constructor
      * @param length_inner length of vectors
      * @param length_outer number of vectors
+     * @param sunctx SUNDIALS context
      */
-    AmiVectorArray(long int length_inner, long int length_outer);
+    AmiVectorArray(
+        long int length_inner, long int length_outer, SUNContext sunctx
+    );
 
     /**
      * @brief copy constructor
@@ -425,8 +462,10 @@ namespace gsl {
  * @param nv
  * @return
  */
-inline span<realtype> make_span(N_Vector nv) {
-    return span<realtype>(N_VGetArrayPointer(nv), N_VGetLength_Serial(nv));
+inline span<amici::realtype> make_span(N_Vector nv) {
+    return span<amici::realtype>(
+        N_VGetArrayPointer(nv), N_VGetLength_Serial(nv)
+    );
 }
 
 /**
@@ -434,7 +473,7 @@ inline span<realtype> make_span(N_Vector nv) {
  * @param av
  *
  */
-inline span<realtype const> make_span(amici::AmiVector const& av) {
+inline span<amici::realtype const> make_span(amici::AmiVector const& av) {
     return make_span(av.getVector());
 }
 

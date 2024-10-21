@@ -2,7 +2,7 @@
 # Programmer(s): Daniel R. Reynolds @ SMU
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -24,36 +24,20 @@ sundials_add_library(sundials_sunnonlinsolfixedpoint
     ${SUNDIALS_SOURCE_DIR}/include/sunnonlinsol/sunnonlinsol_fixedpoint.h
   INCLUDE_SUBDIR
     sunnonlinsol
+  LINK_LIBRARIES
+    PUBLIC sundials_core
   OBJECT_LIBRARIES
-    sundials_generic_obj
   OUTPUT_NAME
     sundials_sunnonlinsolfixedpoint
   VERSION
     ${sunnonlinsollib_VERSION}
   SOVERSION
-    ${sunnonlinsollib_VERSION}
+    ${sunnonlinsollib_SOVERSION}
 )
 
 message(STATUS "Added SUNNONLINSOL_FIXEDPOINT module")
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
-endif()
-
-# If FCMIX is enabled, build and install the F77 library
-if(BUILD_FORTRAN77_INTERFACE)
-  sundials_add_library(sundials_fsunnonlinsolfixedpoint
-    SOURCES
-      fsunnonlinsol_fixedpoint.c
-    LINK_LIBRARIES
-      PRIVATE sundials_fnvecserial sundials_sunnonlinsolfixedpoint
-    OUTPUT_NAME
-      sundials_fsunnonlinsolfixedpoint
-    VERSION
-      ${sunnonlinsol_VERSION}
-    SOVERSION
-      ${sunnonlinsol_SOVERSION}
-  )
-  message(STATUS "Added SUNNONLINSOL_FIXEDPOINT F77 interface")
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

@@ -80,7 +80,7 @@ struct LogItem {
     )
         : severity(severity)
         , identifier(identifier)
-        , message(message){};
+        , message(message) {};
 
     /** Severity level */
     LogSeverity severity = LogSeverity::error;

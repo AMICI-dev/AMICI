@@ -3,6 +3,7 @@
 #include <amici/amici.h>
 #include <amici/model.h>
 #include <amici/solver.h>
+#include <amici/vector.h>
 
 #include <sundials/sundials_config.h>  // roundoffs
 #include <sunlinsol/sunlinsol_dense.h> // dense solver
@@ -10,11 +11,13 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(Model const& model, LinearSolver linsol_type)
-    : xdot_(model.nx_solver)
-    , x_(model.nx_solver)
-    , xB_(model.nJ * model.nx_solver)
-    , dxB_(model.nJ * model.nx_solver) {
+NewtonSolver::NewtonSolver(
+    Model const& model, LinearSolver linsol_type, SUNContext sunctx
+)
+    : xdot_(model.nx_solver, sunctx)
+    , x_(model.nx_solver, sunctx)
+    , xB_(model.nJ * model.nx_solver, sunctx)
+    , dxB_(model.nJ * model.nx_solver, sunctx) {
     try {
         // NOTE: when adding new linear solvers, make sure to also add them to
         // NewtonSolver::reinitialize and NewtonSolver::is_singular
@@ -117,7 +120,7 @@ void NewtonSolver::prepareLinearSystemB(
 void NewtonSolver::solveLinearSystem(AmiVector& rhs) {
     // last argument is tolerance and does not have any influence on result
     auto status = linsol_->solve(rhs.getNVector(), rhs.getNVector(), 0.0);
-    if (status != SUNLS_SUCCESS)
+    if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve");
 }
 
@@ -150,7 +153,9 @@ bool NewtonSolver::is_singular(Model& model, SimulationState const& state)
     // dense solver doesn't have any implementation for rcond/condest, so use
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
-    NewtonSolver sparse_solver(model, LinearSolver::KLU);
+    NewtonSolver sparse_solver(
+        model, LinearSolver::KLU, linsol_->get()->sunctx
+    );
     sparse_solver.prepareLinearSystem(model, state);
     return sparse_solver.is_singular(model, state);
 }

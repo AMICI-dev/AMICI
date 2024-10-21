@@ -5,6 +5,7 @@
 #include "amici/logging.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
 #include <vector>
@@ -550,7 +551,8 @@ class ReturnData : public ModelDimensions {
         auto simulation_state = problem.getFinalSimulationState();
         model.setModelState(simulation_state.state);
 
-        AmiVector xdot(nx_solver);
+        sundials::Context sunctx;
+        AmiVector xdot(nx_solver, sunctx);
         if (!this->xdot.empty() || !this->J.empty())
             model.fxdot(
                 simulation_state.t, simulation_state.x, simulation_state.dx,
@@ -561,7 +563,7 @@ class ReturnData : public ModelDimensions {
             writeSlice(xdot, this->xdot);
 
         if (!this->J.empty()) {
-            SUNMatrixWrapper J(nx_solver, nx_solver);
+            SUNMatrixWrapper J(nx_solver, nx_solver, sunctx);
             model.fJ(
                 simulation_state.t, 0.0, simulation_state.x,
                 simulation_state.dx, xdot, J

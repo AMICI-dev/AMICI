@@ -1,7 +1,8 @@
 #ifndef amici_newton_solver_h
 #define amici_newton_solver_h
 
-#include "amici/solver.h"
+#include "amici/defines.h"
+#include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
 
 namespace amici {
@@ -25,8 +26,11 @@ class NewtonSolver {
      *
      * @param model the model object
      * @param linsol_type type of linear solver to use
+     * @param sunctx SUNDIALS context
      */
-    explicit NewtonSolver(Model const& model, LinearSolver linsol_type);
+    explicit NewtonSolver(
+        Model const& model, LinearSolver linsol_type, SUNContext sunctx
+    );
 
     NewtonSolver(NewtonSolver const&) = delete;
 

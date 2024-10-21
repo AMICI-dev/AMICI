@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.22)
 # When updating the policy version, please also update it in
 # src/CMakeLists.template.cmake
-cmake_policy(VERSION 3.22...3.30)
+cmake_policy(VERSION 3.22...3.31)
 
 project(amici)
 
@@ -265,21 +265,14 @@ target_compile_definitions(
 
 target_link_libraries(
   ${PROJECT_NAME}
-  PUBLIC SUNDIALS::generic_static
-         SUNDIALS::nvecserial_static
+  PUBLIC SUNDIALS::nvecserial_static
          SUNDIALS::sunmatrixband_static
          SUNDIALS::sunmatrixdense_static
          SUNDIALS::sunmatrixsparse_static
-         SUNDIALS::sunlinsolband_static
-         SUNDIALS::sunlinsoldense_static
-         SUNDIALS::sunlinsolpcg_static
          SUNDIALS::sunlinsolspbcgs_static
          SUNDIALS::sunlinsolspfgmr_static
          SUNDIALS::sunlinsolspgmr_static
          SUNDIALS::sunlinsolsptfqmr_static
-         SUNDIALS::sunlinsolklu_static
-         SUNDIALS::sunnonlinsolnewton_static
-         SUNDIALS::sunnonlinsolfixedpoint_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
          $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
@@ -287,6 +280,12 @@ target_link_libraries(
          ${CMAKE_DL_LIBS}
   PRIVATE
     BLAS::BLAS
+    SUNDIALS::sunnonlinsolnewton_static
+    SUNDIALS::sunnonlinsolfixedpoint_static
+    SUNDIALS::sunlinsolklu_static
+    SUNDIALS::sunlinsolband_static
+    SUNDIALS::sunlinsoldense_static
+    SUNDIALS::sunlinsolpcg_static
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
 )
 

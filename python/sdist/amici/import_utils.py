@@ -471,8 +471,8 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         symbolic expressions for arguments of the piecewise function
     """
     # how many condition-expression pairs will we have?
-    formula = sp.Float(0.0)
-    not_condition = sp.Float(1.0)
+    formula = sp.Integer(0)
+    not_condition = sp.Integer(1)
 
     if all(isinstance(arg, ExprCondPair) for arg in args):
         # sympy piecewise
@@ -483,7 +483,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
 
     for coeff, trigger in grouped_args:
         if isinstance(coeff, BooleanAtom):
-            coeff = sp.Float(int(bool(coeff)))
+            coeff = sp.Integer(int(bool(coeff)))
 
         if trigger == sp.true:
             return formula + coeff * not_condition
@@ -493,7 +493,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
 
         tmp = _parse_heaviside_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
-        not_condition *= 1 - tmp
+        not_condition *= sp.Integer(1) - tmp
 
     return formula
 
@@ -517,21 +517,24 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
         # step with H(0) = 1
         if isinstance(trigger, sp.core.relational.StrictLessThan):
             # x < y => x - y < 0 => r < 0
-            return 1 - sp.Heaviside(root)
+            return sp.Integer(1) - sp.Heaviside(root)
         if isinstance(trigger, sp.core.relational.LessThan):
             # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
             return sp.Heaviside(-root)
         if isinstance(trigger, sp.core.relational.StrictGreaterThan):
             # y > x => y - x < 0 => -r < 0
-            return 1 - sp.Heaviside(-root)
+            return sp.Integer(1) - sp.Heaviside(-root)
         if isinstance(trigger, sp.core.relational.GreaterThan):
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
             return sp.Heaviside(root)
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return 1 - sp.Mul(
-            *[1 - _parse_heaviside_trigger(arg) for arg in trigger.args]
+        return sp.Integer(1) - sp.Mul(
+            *[
+                sp.Integer(1) - _parse_heaviside_trigger(arg)
+                for arg in trigger.args
+            ]
         )
 
     if isinstance(trigger, sp.And):

@@ -12,30 +12,34 @@
 #include <memory>
 #include <sundials/sundials_dense.h>
 
-constexpr realtype conv_thresh = 1.0;
-
 namespace amici {
 
+constexpr realtype conv_thresh = 1.0;
+
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
-    : delta_(model.nx_solver)
-    , delta_old_(model.nx_solver)
-    , ewt_(model.nx_solver)
-    , ewtQB_(model.nplist())
-    , x_old_(model.nx_solver)
-    , xdot_(model.nx_solver)
-    , sdx_(model.nx_solver, model.nplist())
-    , xB_(model.nJ * model.nx_solver)
-    , xQ_(model.nJ * model.nx_solver)
-    , xQB_(model.nplist())
-    , xQBdot_(model.nplist())
-    , steadystate_mask_(AmiVector(model.get_steadystate_mask()))
+    : delta_(model.nx_solver, solver.getSunContext())
+    , delta_old_(model.nx_solver, solver.getSunContext())
+    , ewt_(model.nx_solver, solver.getSunContext())
+    , ewtQB_(model.nplist(), solver.getSunContext())
+    , x_old_(model.nx_solver, solver.getSunContext())
+    , xdot_(model.nx_solver, solver.getSunContext())
+    , sdx_(model.nx_solver, model.nplist(), solver.getSunContext())
+    , xB_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQB_(model.nplist(), solver.getSunContext())
+    , xQBdot_(model.nplist(), solver.getSunContext())
+    , steadystate_mask_(
+          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
+      )
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
-          {INFINITY,                                        // t
-           AmiVector(model.nx_solver),                      // x
-           AmiVector(model.nx_solver),                      // dx
-           AmiVectorArray(model.nx_solver, model.nplist()), // sx
+          {INFINITY,                                           // t
+           AmiVector(model.nx_solver, solver.getSunContext()), // x
+           AmiVector(model.nx_solver, solver.getSunContext()), // dx
+           AmiVectorArray(
+               model.nx_solver, model.nplist(), solver.getSunContext()
+           ), // sx
            model.getModelState()}
       )
     , // state
@@ -45,7 +49,9 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi())
     , atol_quad_(solver.getAbsoluteToleranceQuadratures())
     , rtol_quad_(solver.getRelativeToleranceQuadratures())
-    , newton_solver_(NewtonSolver(model, solver.getLinearSolver()))
+    , newton_solver_(
+          NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
+      )
     , damping_factor_mode_(solver.getNewtonDampingFactorMode())
     , damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound())
     , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())

@@ -15,7 +15,7 @@ Brannmark_JBC2010
 Bruno_JExpBot2016
 Crauste_CellSystems2017
 Elowitz_Nature2000
-Fiedler_BMC2016
+Fiedler_BMCSystBiol2016
 Fujita_SciSignal2010
 Isensee_JCB2018
 Lucarelli_CellSystems2018

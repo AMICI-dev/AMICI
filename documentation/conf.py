@@ -215,7 +215,7 @@ ref = ret.stdout.rstrip().decode()
 nbsphinx_prolog = (
     f"{{% set {ref=} %}}"
     r"""
-    {% set docname = "documentation/" + env.doc2path(env.docname, base=False) %}
+    {% set docname = "documentation/" + env.doc2path(env.docname, base=False)|string %}
     .. raw:: html
 
         <div class="note">

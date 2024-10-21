@@ -3,13 +3,9 @@
 
 #include "amici/model.h"
 
-#include <nvector/nvector_serial.h>
-
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
 #include <numeric>
+#include <sundials/sundials_matrix.h>
+#include <sundials/sundials_nvector.h>
 #include <vector>
 
 namespace amici {
@@ -50,14 +46,15 @@ class Model_DAE : public Model {
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
               state_independent_events
           ) {
-        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+        SUNContext sunctx = derived_state_.sunctx_;
+        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );
         derived_state_.MSparse_
-            = SUNMatrixWrapper(nx_solver, nx_solver, M_nnz, CSC_MAT);
+            = SUNMatrixWrapper(nx_solver, nx_solver, M_nnz, CSC_MAT, sunctx);
         derived_state_.dfdx_
-            = SUNMatrixWrapper(nx_solver, nx_solver, 0, CSC_MAT);
+            = SUNMatrixWrapper(nx_solver, nx_solver, 0, CSC_MAT, sunctx);
     }
 
     void

@@ -71,7 +71,7 @@ def get_states_in_condition_table(
             raise NotImplementedError(
                 "Requires https://github.com/pysb/pysb/pull/570. "
                 "To use this functionality, update pysb via "
-                "`pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching`"
+                "`pip install git+https://github.com/pysb/pysb@master`"
             )
 
         # expose model components as variables so we can evaluate patterns

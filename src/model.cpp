@@ -183,7 +183,8 @@ Model::Model(
     , o2mode(o2mode)
     , idlist(std::move(idlist))
     , state_independent_events_(std::move(state_independent_events))
-    , derived_state_(model_dimensions)
+    , state_(*this)
+    , derived_state_(*this)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
     , simulation_parameters_(std::move(simulation_parameters)) {
@@ -196,14 +197,10 @@ Model::Model(
         == gsl::narrow<int>(simulation_parameters_.fixedParameters.size())
     );
 
-    simulation_parameters.pscale = std::vector<ParameterScaling>(
+    simulation_parameters_.pscale = std::vector<ParameterScaling>(
         model_dimensions.np, ParameterScaling::none
     );
 
-    state_.h.resize(ne, 0.0);
-    state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
-    state_.stotal_cl.resize((nx_rdata - nx_solver) * np(), 0.0);
-    state_.unscaledParameters.resize(np());
     unscaleParameters(
         simulation_parameters_.parameters, simulation_parameters_.pscale,
         state_.unscaledParameters
@@ -329,7 +326,8 @@ void Model::initializeSplines() {
 }
 
 void Model::initializeSplineSensitivities() {
-    derived_state_.sspl_ = SUNMatrixWrapper(splines_.size(), np());
+    derived_state_.sspl_
+        = SUNMatrixWrapper(splines_.size(), np(), derived_state_.sunctx_);
     int allnodes = 0;
     for (auto const& spline : splines_) {
         allnodes += spline.n_nodes();
@@ -2007,7 +2005,8 @@ void Model::checkLLHBufferSize(
 void Model::initializeVectors() {
     sx0data_.clear();
     if (!pythonGenerated)
-        derived_state_.dxdotdp = AmiVectorArray(nx_solver, nplist());
+        derived_state_.dxdotdp
+            = AmiVectorArray(nx_solver, nplist(), derived_state_.sunctx_);
 }
 
 void Model::fy(realtype const t, AmiVector const& x) {
@@ -2230,7 +2229,7 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
             auto ret = SUNMatScaleAdd(
                 1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
-            if (ret != SUNMAT_SUCCESS) {
+            if (ret != SUN_SUCCESS) {
                 throw AmiException(
                     "SUNMatScaleAdd failed with status %d in %s", ret, __func__
                 );
