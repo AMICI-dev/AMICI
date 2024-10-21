@@ -21,6 +21,7 @@ from typing import (
     TYPE_CHECKING,
     Literal,
 )
+
 import sympy as sp
 
 from . import (
@@ -305,7 +306,17 @@ class DEExporter:
                 f"{eq_name.upper()}_EQ": "\n".join(
                     self._code_printer_jax._get_sym_lines(
                         (str(strip_pysb(s)) for s in self.model.sym(eq_name)),
-                        self.model.eq(eq_name),
+                        self.model.eq(eq_name).subs(
+                            dict(
+                                zip(
+                                    self.model.sym("h"),
+                                    (
+                                        sp.Heaviside(x)
+                                        for x in self.model.eq("root")
+                                    ),
+                                )
+                            )
+                        ),
                         indent,
                     )
                 )

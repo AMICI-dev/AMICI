@@ -145,13 +145,16 @@ def main():
     rdatas = res[RDATAS]
     llh = res[LLH]
 
-    if args.model_name not in (
-        "Beer_MolBioSystems2014",
-        "Brannmark_JBC2010",
-        "Fujita_SciSignal2010",
-        "Isensee_JCB2018",
-        "Smith_BMCSystBiol2013",
-        "Weber_BMC2015",
+    if (
+        args.model_name
+        not in (
+            # "Beer_MolBioSystems2014",
+            # "Brannmark_JBC2010",
+            # "Fujita_SciSignal2010",
+            # "Isensee_JCB2018",
+            # "Smith_BMCSystBiol2013",
+            # "Weber_BMC2015",
+        )
     ):
         # Beer: Heaviside
         # Brannmark: Heaviside
