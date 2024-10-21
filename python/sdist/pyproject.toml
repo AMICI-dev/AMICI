@@ -87,7 +87,7 @@ jax = [
     "jaxlib>=0.4.34",
     "diffrax>=0.6.0",
     "equinox>=0.11.8",
-    "optimistix>=0.0.8",
+    "optimistix>=0.0.9",
     "interpax>=0.3.3",
 ]
 
