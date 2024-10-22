@@ -86,17 +86,9 @@ script_path=$(dirname "$BASH_SOURCE")
 script_path=$(cd "$script_path" && pwd)
 
 for model in $models; do
-  yaml="${model_dir}"/"${model}"/"${model}".yaml
-
-  # different naming scheme
-  if [[ "$model" == "Bertozzi_PNAS2020" ]]; then
-    yaml="${model_dir}"/"${model}"/problem.yaml
-  fi
-
-  amici_model_dir=test_bmc/"${model}"
+  amici_model_dir=test_bmc
   mkdir -p "$amici_model_dir"
-  cmd_import="amici_import_petab ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
-  cmd_run="$script_path/test_petab_model.py -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
+  cmd_run="$script_path/test_petab_model.py -d ${amici_model_dir} -m ${model} -c"
 
   printf '=%.0s' {1..40}
   printf "   %s   " "${model}"

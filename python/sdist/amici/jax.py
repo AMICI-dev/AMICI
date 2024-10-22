@@ -49,48 +49,39 @@ class JAXModel(eqx.Module):
 
     @staticmethod
     @abstractmethod
-    def xdot(t, x, args):
-        ...
+    def xdot(t, x, args): ...
 
     @staticmethod
     @abstractmethod
-    def _w(t, x, p, k, tcl):
-        ...
+    def _w(t, x, p, k, tcl): ...
 
     @staticmethod
     @abstractmethod
-    def x0(p, k):
-        ...
+    def x0(p, k): ...
 
     @staticmethod
     @abstractmethod
-    def x_solver(x):
-        ...
+    def x_solver(x): ...
 
     @staticmethod
     @abstractmethod
-    def x_rdata(x, tcl):
-        ...
+    def x_rdata(x, tcl): ...
 
     @staticmethod
     @abstractmethod
-    def tcl(x, p, k):
-        ...
+    def tcl(x, p, k): ...
 
     @staticmethod
     @abstractmethod
-    def y(t, x, p, k, tcl):
-        ...
+    def y(t, x, p, k, tcl): ...
 
     @staticmethod
     @abstractmethod
-    def sigmay(y, p, k):
-        ...
+    def sigmay(y, p, k): ...
 
     @staticmethod
     @abstractmethod
-    def Jy(y, my, sigmay):
-        ...
+    def Jy(y, my, sigmay): ...
 
     def unscale_p(self, p, pscale):
         return jax.vmap(
@@ -136,6 +127,7 @@ class JAXModel(eqx.Module):
             saveat=diffrax.SaveAt(ts=ts),
             throw=False,
         )
+
         return sol.ys, tcl, sol.stats
 
     def _obs(self, ts, x, p, k, tcl):
@@ -162,13 +154,22 @@ class JAXModel(eqx.Module):
         my: jnp.ndarray,
         pscale: np.ndarray,
         checkpointed=True,
+        dynamic=True,
     ):
         ps = self.unscale_p(p, pscale)
         if k_preeq.shape[0] > 0:
             x0 = self._preeq(ps, k_preeq)
         else:
             x0 = self.x0(ps, k)
-        x, tcl, stats = self._solve(ts, ps, k, x0, checkpointed=checkpointed)
+
+        if dynamic:
+            x, tcl, stats = self._solve(
+                ts, ps, k, x0, checkpointed=checkpointed
+            )
+        else:
+            x = tuple(jnp.array([x0_i] * len(ts)) for x0_i in x0)
+            tcl = self.tcl(x0, ps, k)
+            stats = None
         obs = self._obs(ts, x, ps, k, tcl)
         my_r = my.reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
@@ -176,7 +177,7 @@ class JAXModel(eqx.Module):
         x_rdata = self._x_rdata(x, tcl)
         return llh, (x_rdata, obs, stats)
 
-    @eqx.filter_jit
+    # @eqx.filter_jit
     def run(
         self,
         ts: np.ndarray,
@@ -185,8 +186,9 @@ class JAXModel(eqx.Module):
         k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
+        dynamic=True,
     ):
-        return self._run(ts, p, k, k_preeq, my, pscale)
+        return self._run(ts, p, k, k_preeq, my, pscale, dynamic=dynamic)
 
     @eqx.filter_jit
     def srun(
@@ -197,6 +199,7 @@ class JAXModel(eqx.Module):
         k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
+        dynamic=True,
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
@@ -212,6 +215,7 @@ class JAXModel(eqx.Module):
         k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
+        dynamic=True,
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
@@ -232,6 +236,7 @@ class JAXModel(eqx.Module):
         k_preeq = np.asarray(edata.fixedParametersPreequilibration)
         my = np.asarray(edata.getObservedData())
         pscale = np.asarray(edata.pscale)
+        dynamic = np.max(ts) > 0
 
         rdata_kwargs = dict()
 
@@ -239,20 +244,20 @@ class JAXModel(eqx.Module):
             (
                 rdata_kwargs["llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.run(ts, p, k, k_preeq, my, pscale)
+            ) = self.run(ts, p, k, k_preeq, my, pscale, dynamic)
         elif sensitivity_order == amici.SensitivityOrder.first:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.srun(ts, p, k, k_preeq, my, pscale)
+            ) = self.srun(ts, p, k, k_preeq, my, pscale, dynamic)
         elif sensitivity_order == amici.SensitivityOrder.second:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 rdata_kwargs["s2llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.s2run(ts, p, k, k_preeq, my, pscale)
+            ) = self.s2run(ts, p, k, k_preeq, my, pscale, dynamic)
 
         for field in rdata_kwargs.keys():
             if field == "llh":

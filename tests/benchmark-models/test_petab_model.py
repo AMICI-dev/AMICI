@@ -6,7 +6,6 @@ Simulate a PEtab problem and compare results to reference values
 
 import argparse
 import contextlib
-import importlib
 import logging
 import os
 import sys
@@ -29,6 +28,7 @@ from amici.petab.simulations import (
 )
 from timeit import default_timer as timer
 from petab.v1.visualize import plot_problem
+import benchmark_models_petab
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
@@ -67,15 +67,6 @@ def parse_cli_args():
         help="Plot measurement and simulation results",
     )
 
-    # PEtab problem
-    parser.add_argument(
-        "-y",
-        "--yaml",
-        dest="yaml_file_name",
-        required=True,
-        help="PEtab YAML problem filename",
-    )
-
     # Corresponding AMICI model
     parser.add_argument(
         "-m",
@@ -88,7 +79,7 @@ def parse_cli_args():
         "-d",
         "--model-dir",
         dest="model_directory",
-        help="Directory containing the AMICI module of the "
+        help="Parent directory containing the AMICI module of the "
         "model to simulate. Required if model is not "
         "in python path.",
     )
@@ -113,19 +104,20 @@ def main():
 
     logger.info(
         f"Simulating '{args.model_name}' "
-        f"({args.model_directory}) using PEtab data from "
-        f"{args.yaml_file_name}"
+        f"({args.model_directory}) with AMICI"
     )
 
     # load PEtab files
-    problem = petab.Problem.from_yaml(args.yaml_file_name)
+    problem = benchmark_models_petab.get_problem(args.model_name)
     petab.flatten_timepoint_specific_output_overrides(problem)
 
     # load model
-    if args.model_directory:
-        sys.path.insert(0, args.model_directory)
-    model_module = importlib.import_module(args.model_name)
-    amici_model = model_module.getModel()
+    from amici.petab.petab_import import import_petab_problem
+
+    amici_model = import_petab_problem(
+        problem,
+        model_output_dir=Path(args.model_directory) / args.model_name,
+    )
     amici_solver = amici_model.getSolver()
 
     amici_solver.setAbsoluteTolerance(1e-8)
@@ -145,7 +137,11 @@ def main():
     rdatas = res[RDATAS]
     llh = res[LLH]
 
-    jax_model = model_module.get_jax_model()
+    jax_model = import_petab_problem(
+        problem,
+        model_output_dir=Path(args.model_directory) / args.model_name,
+        jax=True,
+    )
     simulation_conditions = (
         problem.get_simulation_conditions_from_measurement_df()
     )

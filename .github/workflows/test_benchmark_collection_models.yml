@@ -59,9 +59,7 @@ jobs:
     # retrieve test models
     - name: Download and test benchmark collection
       run: |
-        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
-          && pip3 install -e $BENCHMARK_COLLECTION/../src/python \
+        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python \
           && AMICI_PARALLEL_COMPILE="" tests/benchmark-models/test_benchmark_collection.sh
 
     # run gradient checks
