@@ -61,9 +61,11 @@ class GradientCheckSettings:
     # Step sizes for finite difference gradient checks.
     step_sizes: list[float] = field(
         default_factory=lambda: [
+            2e-1,
             1e-1,
             5e-2,
             1e-2,
+            5e-1,
             1e-3,
             1e-4,
             1e-5,
@@ -100,7 +102,6 @@ settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     noise_level=0.01,
     atol_consistency=1e-3,
 )
-settings["Okuonghae_ChaosSolitonsFractals2020"].step_sizes.extend([0.2, 0.005])
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
     # Avoid "root after reinitialization"
     atol_sim=1e-12,
