@@ -2,8 +2,6 @@
 # Import and run selected benchmark models with nominal parameters and check
 # agreement with reference values
 #
-# Expects environment variable BENCHMARK_COLLECTION to provide path to
-# benchmark collection model directory
 
 # Confirmed to be working
 models="
@@ -60,8 +58,6 @@ Zheng_PNAS2012"
 
 set -e
 
-[[ -n "${BENCHMARK_COLLECTION}" ]] && model_dir="${BENCHMARK_COLLECTION}"
-
 function show_help() {
   echo "-h: this help; -n: dry run, print commands; -b path_to_models_dir"
 }
@@ -112,7 +108,7 @@ cd "$script_path" && python evaluate_benchmark.py
 
 # Test deprecated import from individual PEtab files
 model="Zheng_PNAS2012"
-problem_dir="${model_dir}/${model}"
+problem_dir=$(python3 -c "import benchmark_models_petab; print(str(benchmark_models_petab.get_problem_yaml_path('Zheng_PNAS2012').parent))")
 amici_model_dir=test_bmc/"${model}-deprecated"
 cmd_import="amici_import_petab -s "${problem_dir}/model_${model}.xml" \
   -m "${problem_dir}/measurementData_${model}.tsv" \
