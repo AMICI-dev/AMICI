@@ -28,6 +28,7 @@ from amici.petab.simulations import (
 )
 from timeit import default_timer as timer
 from petab.v1.visualize import plot_problem
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 import benchmark_models_petab
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -109,7 +110,11 @@ def main():
 
     # load PEtab files
     problem = benchmark_models_petab.get_problem(args.model_name)
-    petab.flatten_timepoint_specific_output_overrides(problem)
+
+    if measurement_table_has_timepoint_specific_mappings(
+        problem.measurement_df
+    ):
+        petab.flatten_timepoint_specific_output_overrides(problem)
 
     # load model
     from amici.petab.petab_import import import_petab_problem
