@@ -62,7 +62,6 @@ problems_for_gradient_check = set(benchmark_models_petab.MODELS) - {
     "Smith_BMCSystBiol2013",
     # excluded due to excessive numerical failures
     "Crauste_CellSystems2017",
-    "Fujita_SciSignal2010",
 }
 problems_for_gradient_check = list(sorted(problems_for_gradient_check))
 
@@ -176,6 +175,10 @@ settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
 )
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
     ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
+)
+settings["Fujita_SciSignal2010"] = GradientCheckSettings(
+    atol_check=1e-10,
+    rtol_check=5e-4,
 )
 settings["Giordano_Nature2020"] = GradientCheckSettings(
     atol_check=1e-6, rtol_check=1e-3, rng_seed=1
