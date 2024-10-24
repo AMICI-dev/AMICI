@@ -260,7 +260,7 @@ def test_nominal_parameters_llh(benchmark_problem):
     """
     problem_id, petab_problem, amici_model = benchmark_problem
     if problem_id not in problems_for_llh_check:
-        pytest.skip()
+        pytest.skip("Excluded from log-likelihood check.")
 
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(1e-8)
@@ -414,7 +414,7 @@ def test_benchmark_gradient(
 ):
     problem_id, petab_problem, amici_model = benchmark_problem
     if problem_id not in problems_for_gradient_check:
-        pytest.skip()
+        pytest.skip("Excluded from gradient check.")
 
     if not scale and problem_id in (
         "Smith_BMCSystBiol2013",
@@ -427,7 +427,7 @@ def test_benchmark_gradient(
     ):
         # not really worth the effort trying to fix these cases if they
         # only fail on linear scale
-        pytest.skip()
+        pytest.skip("scale=False disabled for this problem")
 
     if (
         problem_id
@@ -438,8 +438,7 @@ def test_benchmark_gradient(
         )
         and sensitivity_method == SensitivityMethod.adjoint
     ):
-        # FIXME
-        pytest.skip()
+        pytest.skip("Unsupported ASA+events")
 
     petab_problem = benchmark_models_petab.get_problem(problem_id)
     if measurement_table_has_timepoint_specific_mappings(
