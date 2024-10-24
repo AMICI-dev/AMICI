@@ -31,6 +31,9 @@ from amici.petab.simulations import (
     RDATAS,
     rdatas_to_measurement_df,
     simulate_petab,
+    create_edatas,
+    fill_in_parameters,
+    create_parameter_mapping,
 )
 from petab.v1.visualize import plot_problem
 
@@ -248,6 +251,50 @@ def benchmark_problem(request):
         model_output_dir=benchmark_outdir / problem_id,
     )
     return problem_id, petab_problem, amici_model
+
+
+def test_jax_llh(benchmark_problem):
+    problem_id, petab_problem, amici_model = benchmark_problem
+    if problem_id not in problems_for_llh_check:
+        pytest.skip("Excluded from log-likelihood check.")
+    jax_model = import_petab_problem(
+        problem_id,
+        model_output_dir=benchmark_outdir / problem_id,
+        jax=True,
+    )
+    simulation_conditions = (
+        petab_problem.get_simulation_conditions_from_measurement_df()
+    )
+    edatas = create_edatas(
+        amici_model=amici_model,
+        petab_problem=petab_problem,
+        simulation_conditions=simulation_conditions,
+    )
+    problem_parameters = {
+        t.Index: getattr(t, petab.NOMINAL_VALUE)
+        for t in petab_problem.parameter_df.itertuples()
+    }
+    parameter_mapping = create_parameter_mapping(
+        petab_problem=petab_problem,
+        simulation_conditions=simulation_conditions,
+        scaled_parameters=False,
+        amici_model=amici_model,
+    )
+    fill_in_parameters(
+        edatas=edatas,
+        problem_parameters=problem_parameters,
+        scaled_parameters=False,
+        parameter_mapping=parameter_mapping,
+        amici_model=amici_model,
+    )
+    rdatas_jax = jax_model.run_simulations(edatas)
+
+    llh_jax = sum(r.llh for r in rdatas_jax)
+    ref_llh = reference_values[problem_id]["llh"]
+
+    assert np.isclose(
+        ref_llh, llh_jax, rtol=1e-3, atol=1e-3
+    ), f"LLH mismatch for {problem_id} with {ref_llh} vs {llh_jax} (jax)"
 
 
 @pytest.mark.filterwarnings(
