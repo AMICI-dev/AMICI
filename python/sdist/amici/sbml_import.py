@@ -2052,12 +2052,26 @@ class SbmlImporter:
                 obs["reg_symbol"] = generate_regularization_symbol(obs_id)
 
         if not event_reg:
+            sigmas = {
+                obs_id: self._sympy_from_sbml_math(sigma)
+                for obs_id, sigma in sigmas.items()
+            }
+            obs_syms = set(self.symbols[obs_symbol].keys())
+            for obs_id in self.symbols[obs_symbol]:
+                if (sigma := sigmas.get(str(obs_id))) and sigma.has(
+                    *(obs_syms - {obs_id})
+                ):
+                    raise ValueError(
+                        f"Sigma expression for {obs_id} ({sigma}) must not "
+                        f"contain any observable symbols other than {obs_id}."
+                    )
+            # check that only the corresponding observable ID is used in the
+            #  sigma formula, but not any other observable ID
+            #  https://github.com/AMICI-dev/AMICI/issues/2561
             self.symbols[sigma_symbol] = {
                 symbol_with_assumptions(f"sigma_{obs_id}"): {
                     "name": f'sigma_{obs["name"]}',
-                    "value": self._sympy_from_sbml_math(
-                        sigmas.get(str(obs_id), "1.0")
-                    ),
+                    "value": sigmas.get(str(obs_id), sp.Float(1.0)),
                 }
                 for obs_id, obs in self.symbols[obs_symbol].items()
             }
