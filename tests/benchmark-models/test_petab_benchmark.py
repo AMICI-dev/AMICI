@@ -20,12 +20,33 @@ from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
 from fiddy.success import Consistency
 
+import contextlib
+import logging
+import sys
+
+import yaml
+from amici.logging import get_logger
+from amici.petab.simulations import (
+    LLH,
+    RDATAS,
+    rdatas_to_measurement_df,
+    simulate_petab,
+)
+from petab.v1.visualize import plot_problem
+
+logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
 repo_root = Path(__file__).parent.parent.parent
+script_dir = Path(__file__).parent.absolute()
 
-# reuse compiled models from test_benchmark_collection.sh
 benchmark_outdir = repo_root / "test_bmc"
-models = set(benchmark_models_petab.MODELS) - {
+
+references_yaml = script_dir / "benchmark_models.yaml"
+with open(references_yaml) as f:
+    reference_values = yaml.full_load(f)
+
+
+problems_for_gradient_check = set(benchmark_models_petab.MODELS) - {
     # excluded due to excessive runtime
     "Bachmann_MSB2011",
     "Chen_MSB2009",
@@ -43,7 +64,62 @@ models = set(benchmark_models_petab.MODELS) - {
     # FIXME: re-enable
     "Raia_CancerResearch2011",
 }
-models = list(sorted(models))
+problems_for_gradient_check = list(sorted(problems_for_gradient_check))
+
+
+# Problems for checking the log-likelihood computation at nominal parameters
+#
+# not merged:
+# Becker_Science2010 (multiple models)             https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Becker_Science2010
+# Hass_PONE2017 (???)                              https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Hass_PONE2017
+# Korkut_eLIFE2015 (???)                           https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Korkut_eLIFE2015
+# Casaletto_PNAS2019 (yaml missing)                https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Casaletto_PNAS2019
+# Merkle_PCB2016 (model missing)                   https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Merkle_PCB2016
+# Parmar_PCB2019 (SBML extensions)                 https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Parmar_PCB2019
+# Swameye_PNAS2003 (splines)                       https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Swameye_PNAS2003
+# Sobotta_Frontiers2017 (???)                      https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Sobotta_Frontiers2017
+# Raia_CancerResearch2011 (state dependent sigmas) https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Raia_CancerResearch2011
+#
+# no reference value:
+# Alkan_SciSignal2018 (d2d: Alkan_DDRP_SciSignal2018)
+# Bertozzi_PNAS2020 (gh: vanako, doi: https://doi.org/10.1073/pnas.2006520117, code/data: https://github.com/gomohler/pnas2020 (R))
+# Blasi_CellSystems2016 (gh: Leonard Schmiester, doi: https://doi.org/10.1016/j.cels.2016.01.002, code/data: not available)
+# Giordano_Nature2020 (gh: Paul Jonas Jost, doi: https://doi.org/10.1038/s41591-020-0883-7, code/data: http://users.dimi.uniud.it/~giulia.giordano/docs/papers/SIDARTHEcode.zip (MATLAB))
+# Laske_PLOSComputBiol2019 (gh: Clemens Peiter, doi: https://doi.org/10.1128/JVI.00080-12 (?), code/data: ???)
+# Okuonghae_ChaosSolitonsFractals2020 (gh: Paul Jonas Jost, doi: https://doi.org/10.1016/j.chaos.2020.110032, code/data: ???)
+# Oliveira_NatCommun2021 (gh: lorenapohl, doi: https://doi.org/10.1038/s41467-020-19798-3, code: https://github.com/cidacslab/Mathematical-and-Statistical-Modeling-of-COVID19-in-Brazil (python) data: https://infovis.sei.ba.gov.br/covid19/ )
+# Perelson_Science1996 (gh: Philipp Staedter, doi: https://doi.org/10.1126/science.271.5255.1582, code/data: ???)
+# Rahman_MBS2016 (gh: Yannik Schaelte, doi: https://doi.org/10.1016/j.mbs.2016.07.009, code: not available, data: table in paper ...)
+# Raimundez_PCB2020 (gh: Elba Raimundez, doi: https://doi.org/10.1371/journal.pcbi.1007147, code/data: https://zenodo.org/record/2908234#.Y5hUUS8w3yw (d2d))
+# SalazarCavazos_MBoC2020 (gh: Dilan Pathirana, doi: https://doi.org/10.1091/mbc.E19-09-0548, code/data: supplement (BNGL))
+# Zhao_QuantBiol2020 (gh: Iva Ewert, doi: https://doi.org/10.1007/s40484-020-0199-0, code: not available, data: table in supp)
+#
+# covered by performance test:
+# Froehlich_CellSystems2018
+#
+# Unknown reasons:
+# Chen_MSB2009
+#
+# Confirmed to be working
+problems_for_llh_check = [
+    "Bachmann_MSB2011",
+    "Beer_MolBioSystems2014",
+    "Boehm_JProteomeRes2014",
+    "Borghans_BiophysChem1997",
+    "Brannmark_JBC2010",
+    "Bruno_JExpBot2016",
+    "Crauste_CellSystems2017",
+    "Elowitz_Nature2000",
+    "Fiedler_BMCSystBiol2016",
+    "Fujita_SciSignal2010",
+    "Isensee_JCB2018",
+    "Lucarelli_CellSystems2018",
+    "Schwen_PONE2014",
+    "Smith_BMCSystBiol2013",
+    "Sneyd_PNAS2002",
+    "Weber_BMC2015",
+    "Zheng_PNAS2012",
+]
 
 
 @dataclass
@@ -139,6 +215,171 @@ if debug:
     debug_path = Path(__file__).parent / "debug"
     debug_path.mkdir(exist_ok=True, parents=True)
 
+problems = list(
+    sorted(set(problems_for_gradient_check + problems_for_llh_check))
+)
+
+
+@pytest.fixture(scope="session", params=problems, ids=problems)
+def benchmark_problem(request):
+    """Fixture providing model and PEtab problem for a problem from
+    the benchmark problem collection."""
+    problem_id = request.param
+    petab_problem = benchmark_models_petab.get_problem(problem_id)
+    if measurement_table_has_timepoint_specific_mappings(
+        petab_problem.measurement_df,
+    ):
+        petab.flatten_timepoint_specific_output_overrides(petab_problem)
+
+    # Setup AMICI objects.
+    amici_model = import_petab_problem(
+        petab_problem,
+        model_output_dir=benchmark_outdir / problem_id,
+    )
+    return problem_id, petab_problem, amici_model
+
+
+def test_nominal_parameters_llh(benchmark_problem):
+    problem_id, petab_problem, amici_model = benchmark_problem
+    if problem_id not in problems_for_llh_check:
+        pytest.skip()
+
+    amici_solver = amici_model.getSolver()
+    amici_solver.setAbsoluteTolerance(1e-8)
+    amici_solver.setRelativeTolerance(1e-8)
+    amici_solver.setMaxSteps(int(1e4))
+    if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
+        amici_model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.integrationOnly
+        )
+
+    times = dict()
+
+    for label, sensi_mode in {
+        "t_sim": amici.SensitivityMethod.none,
+        "t_fwd": amici.SensitivityMethod.forward,
+        "t_adj": amici.SensitivityMethod.adjoint,
+    }.items():
+        amici_solver.setSensitivityMethod(sensi_mode)
+        if sensi_mode == amici.SensitivityMethod.none:
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.none)
+        else:
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+        res_repeats = [
+            simulate_petab(
+                petab_problem=petab_problem,
+                amici_model=amici_model,
+                solver=amici_solver,
+                log_level=logging.DEBUG,
+            )
+            for _ in range(3)  # repeat to get more stable timings
+        ]
+        res = res_repeats[0]
+
+        times[label] = np.min(
+            [
+                sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
+                # only forwards/backwards simulation
+                for res in res_repeats
+            ]
+        )
+
+        if sensi_mode == amici.SensitivityMethod.none:
+            rdatas = res[RDATAS]
+            llh = res[LLH]
+
+    times["np"] = sum(petab_problem.parameter_df[petab.ESTIMATE])
+
+    pd.Series(times).to_csv(script_dir / f"{problem_id}_benchmark.csv")
+    for rdata in rdatas:
+        assert (
+            rdata.status == amici.AMICI_SUCCESS
+        ), f"Simulation failed for {rdata.id}"
+
+    if debug:
+        # create simulation PEtab table
+        sim_df = rdatas_to_measurement_df(
+            rdatas=rdatas,
+            model=amici_model,
+            measurement_df=petab_problem.measurement_df,
+        )
+        sim_df.rename(
+            columns={petab.MEASUREMENT: petab.SIMULATION}, inplace=True
+        )
+        sim_df.to_csv(
+            benchmark_outdir / problem_id / f"{problem_id}_simulation.tsv",
+            index=False,
+            sep="\t",
+        )
+
+        # visualize fit, save to file
+        with contextlib.suppress(NotImplementedError):
+            axs = plot_problem(
+                petab_problem=petab_problem, simulations_df=sim_df
+            )
+            for plot_id, ax in axs.items():
+                fig_path = (
+                    benchmark_outdir
+                    / problem_id
+                    / f"{problem_id}_{plot_id}_vis.png"
+                )
+                logger.info(f"Saving figure to {fig_path}")
+                ax.get_figure().savefig(fig_path, dpi=150)
+
+    try:
+        ref_llh = reference_values[problem_id]["llh"]
+        rdiff = np.abs((llh - ref_llh) / ref_llh)
+        rtol = 1e-3
+        adiff = np.abs(llh - ref_llh)
+        atol = 1e-3
+        tolstr = (
+            f" Absolute difference is {adiff:.2e} "
+            f"(tol {atol:.2e}) and relative difference is "
+            f"{rdiff:.2e} (tol {rtol:.2e})."
+        )
+
+        if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
+            logger.info(
+                f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
+                + tolstr
+            )
+        else:
+            logger.error(
+                f"Computed llh {llh:.4e} does not match reference "
+                f"{ref_llh:.4e}." + tolstr
+            )
+            sys.exit(1)
+    except KeyError:
+        logger.error(
+            "No reference likelihood found for "
+            f"{problem_id} in {references_yaml}"
+        )
+
+    for label, key in {
+        "simulation": "t_sim",
+        "adjoint sensitivity": "t_adj",
+        "forward sensitivity": "t_fwd",
+    }.items():
+        try:
+            ref = reference_values[problem_id][key]
+            if times[key] > ref:
+                logger.error(
+                    f"Computation time for {label} ({times[key]:.2e}) "
+                    f"exceeds reference ({ref:.2e})."
+                )
+                sys.exit(1)
+            else:
+                logger.info(
+                    f"Computation time for {label} ({times[key]:.2e}) "
+                    f"within reference ({ref:.2e})."
+                )
+        except KeyError:
+            logger.error(
+                f"No reference time for {label} found for "
+                f"{problem_id} in {references_yaml}"
+            )
+
 
 @pytest.mark.filterwarnings(
     "ignore:divide by zero encountered in log",
@@ -152,9 +393,14 @@ if debug:
     (SensitivityMethod.forward, SensitivityMethod.adjoint),
     ids=["forward", "adjoint"],
 )
-@pytest.mark.parametrize("model", models)
-def test_benchmark_gradient(model, scale, sensitivity_method, request):
-    if not scale and model in (
+def test_benchmark_gradient(
+    benchmark_problem, scale, sensitivity_method, request
+):
+    problem_id, petab_problem, amici_model = benchmark_problem
+    if problem_id not in problems_for_gradient_check:
+        pytest.skip()
+
+    if not scale and problem_id in (
         "Smith_BMCSystBiol2013",
         "Brannmark_JBC2010",
         "Elowitz_Nature2000",
@@ -168,7 +414,7 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         pytest.skip()
 
     if (
-        model
+        problem_id
         in (
             # events with parameter-dependent triggers
             #  https://github.com/AMICI-dev/AMICI/issues/18
@@ -179,7 +425,7 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         # FIXME
         pytest.skip()
 
-    petab_problem = benchmark_models_petab.get_problem(model)
+    petab_problem = benchmark_models_petab.get_problem(problem_id)
     if measurement_table_has_timepoint_specific_mappings(
         petab_problem.measurement_df,
     ):
@@ -187,12 +433,12 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
 
     # Only compute gradient for estimated parameters.
     parameter_ids = petab_problem.x_free_ids
-    cur_settings = settings[model]
+    cur_settings = settings[problem_id]
 
     # Setup AMICI objects.
     amici_model = import_petab_problem(
         petab_problem,
-        model_output_dir=benchmark_outdir / model,
+        model_output_dir=benchmark_outdir / problem_id,
     )
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(cur_settings.atol_sim)
