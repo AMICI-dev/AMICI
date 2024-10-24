@@ -63,8 +63,6 @@ problems_for_gradient_check = set(benchmark_models_petab.MODELS) - {
     # excluded due to excessive numerical failures
     "Crauste_CellSystems2017",
     "Fujita_SciSignal2010",
-    # FIXME: re-enable
-    "Raia_CancerResearch2011",
 }
 problems_for_gradient_check = list(sorted(problems_for_gradient_check))
 
@@ -192,6 +190,10 @@ settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
     # Avoid "root after reinitialization"
     atol_sim=1e-12,
     rtol_sim=1e-12,
+)
+settings["Raia_CancerResearch2011"] = GradientCheckSettings(
+    atol_check=1e-10,
+    rtol_check=1e-3,
 )
 settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
     atol_sim=1e-10,
