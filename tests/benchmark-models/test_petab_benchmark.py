@@ -1,9 +1,12 @@
-"""Tests for simulate_petab on PEtab benchmark problems."""
+"""Tests based on the PEtab benchmark problems.
+
+Tests simulate_petab, correctness of the log-likelihood computation at nominal
+parameters, correctness of the gradient computation, and simulation times
+for a subset of the benchmark problems.
+"""
 
 from pathlib import Path
-
 import fiddy
-
 import amici
 import numpy as np
 import pandas as pd
@@ -19,11 +22,8 @@ from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
 from fiddy.success import Consistency
-
 import contextlib
 import logging
-import sys
-
 import yaml
 from amici.logging import get_logger
 from amici.petab.simulations import (
@@ -34,18 +34,20 @@ from amici.petab.simulations import (
 )
 from petab.v1.visualize import plot_problem
 
+
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
-repo_root = Path(__file__).parent.parent.parent
 script_dir = Path(__file__).parent.absolute()
-
+repo_root = script_dir.parent.parent
 benchmark_outdir = repo_root / "test_bmc"
 
+# reference values for simulation times and log-likelihoods
 references_yaml = script_dir / "benchmark_models.yaml"
 with open(references_yaml) as f:
     reference_values = yaml.full_load(f)
 
-
+# problem IDs for which to check the gradient
+# TODO: extend
 problems_for_gradient_check = set(benchmark_models_petab.MODELS) - {
     # excluded due to excessive runtime
     "Bachmann_MSB2011",
@@ -100,7 +102,8 @@ problems_for_gradient_check = list(sorted(problems_for_gradient_check))
 # Unknown reasons:
 # Chen_MSB2009
 #
-# Confirmed to be working
+# Confirmed to be working:
+# TODO: extend
 problems_for_llh_check = [
     "Bachmann_MSB2011",
     "Beer_MolBioSystems2014",
@@ -121,9 +124,16 @@ problems_for_llh_check = [
     "Zheng_PNAS2012",
 ]
 
+# all PEtab problems we need to import
+problems = list(
+    sorted(set(problems_for_gradient_check + problems_for_llh_check))
+)
+
 
 @dataclass
 class GradientCheckSettings:
+    """Problem-specific settings for gradient checks."""
+
     # Absolute and relative tolerances for simulation
     atol_sim: float = 1e-16
     rtol_sim: float = 1e-12
@@ -215,10 +225,6 @@ if debug:
     debug_path = Path(__file__).parent / "debug"
     debug_path.mkdir(exist_ok=True, parents=True)
 
-problems = list(
-    sorted(set(problems_for_gradient_check + problems_for_llh_check))
-)
-
 
 @pytest.fixture(scope="session", params=problems, ids=problems)
 def benchmark_problem(request):
@@ -239,7 +245,17 @@ def benchmark_problem(request):
     return problem_id, petab_problem, amici_model
 
 
+@pytest.mark.filterwarnings(
+    "ignore:divide by zero encountered in log",
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
+)
 def test_nominal_parameters_llh(benchmark_problem):
+    """Test the log-likelihood computation at nominal parameters.
+
+    Also check that the simulation time is within the reference range.
+    """
     problem_id, petab_problem, amici_model = benchmark_problem
     if problem_id not in problems_for_llh_check:
         pytest.skip()
@@ -247,7 +263,7 @@ def test_nominal_parameters_llh(benchmark_problem):
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(1e-8)
     amici_solver.setRelativeTolerance(1e-8)
-    amici_solver.setMaxSteps(int(1e4))
+    amici_solver.setMaxSteps(10_000)
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
         amici_model.setSteadyStateSensitivityMode(
             amici.SteadyStateSensitivityMode.integrationOnly
@@ -288,7 +304,7 @@ def test_nominal_parameters_llh(benchmark_problem):
         if sensi_mode == amici.SensitivityMethod.none:
             rdatas = res[RDATAS]
             llh = res[LLH]
-
+    # TODO: check that all llh match, check that all sllh match
     times["np"] = sum(petab_problem.parameter_df[petab.ESTIMATE])
 
     pd.Series(times).to_csv(script_dir / f"{problem_id}_benchmark.csv")
@@ -345,11 +361,10 @@ def test_nominal_parameters_llh(benchmark_problem):
                 + tolstr
             )
         else:
-            logger.error(
+            pytest.fail(
                 f"Computed llh {llh:.4e} does not match reference "
                 f"{ref_llh:.4e}." + tolstr
             )
-            sys.exit(1)
     except KeyError:
         logger.error(
             "No reference likelihood found for "
@@ -364,11 +379,10 @@ def test_nominal_parameters_llh(benchmark_problem):
         try:
             ref = reference_values[problem_id][key]
             if times[key] > ref:
-                logger.error(
+                pytest.fail(
                     f"Computation time for {label} ({times[key]:.2e}) "
                     f"exceeds reference ({ref:.2e})."
                 )
-                sys.exit(1)
             else:
                 logger.info(
                     f"Computation time for {label} ({times[key]:.2e}) "
