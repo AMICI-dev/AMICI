@@ -15,7 +15,7 @@ cd "${amici_path}"/python/tests
 source "${amici_path}"/venv/bin/activate
 
 # PEtab tests are run separately
-pytest \
+pytest -s \
   --ignore-glob=*petab* \
   --ignore-glob=*test_splines.py \
   --durations=10 \
