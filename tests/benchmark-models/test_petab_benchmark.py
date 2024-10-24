@@ -12,8 +12,9 @@ import pytest
 from amici.petab.petab_import import import_petab_problem
 import benchmark_models_petab
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from amici import SensitivityMethod
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
@@ -58,14 +59,18 @@ class GradientCheckSettings:
     atol_consistency: float = 1e-5
     rtol_consistency: float = 1e-1
     # Step sizes for finite difference gradient checks.
-    step_sizes = [
-        1e-1,
-        5e-2,
-        1e-2,
-        1e-3,
-        1e-4,
-        1e-5,
-    ]
+    step_sizes: list[float] = field(
+        default_factory=lambda: [
+            2e-1,
+            1e-1,
+            5e-2,
+            1e-2,
+            5e-1,
+            1e-3,
+            1e-4,
+            1e-5,
+        ]
+    )
     rng_seed: int = 0
     ss_sensitivity_mode: amici.SteadyStateSensitivityMode = (
         amici.SteadyStateSensitivityMode.integrateIfNewtonFails
@@ -97,7 +102,6 @@ settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     noise_level=0.01,
     atol_consistency=1e-3,
 )
-settings["Okuonghae_ChaosSolitonsFractals2020"].step_sizes.extend([0.2, 0.005])
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
     # Avoid "root after reinitialization"
     atol_sim=1e-12,
@@ -176,7 +180,10 @@ def test_benchmark_gradient(model, scale, sensitivity_method, request):
         pytest.skip()
 
     petab_problem = benchmark_models_petab.get_problem(model)
-    petab.flatten_timepoint_specific_output_overrides(petab_problem)
+    if measurement_table_has_timepoint_specific_mappings(
+        petab_problem.measurement_df,
+    ):
+        petab.flatten_timepoint_specific_output_overrides(petab_problem)
 
     # Only compute gradient for estimated parameters.
     parameter_ids = petab_problem.x_free_ids

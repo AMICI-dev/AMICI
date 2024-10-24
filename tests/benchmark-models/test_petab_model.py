@@ -25,6 +25,7 @@ from amici.petab.simulations import (
     simulate_petab,
 )
 from petab.v1.visualize import plot_problem
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
@@ -115,7 +116,11 @@ def main():
 
     # load PEtab files
     problem = petab.Problem.from_yaml(args.yaml_file_name)
-    petab.flatten_timepoint_specific_output_overrides(problem)
+
+    if measurement_table_has_timepoint_specific_mappings(
+        problem.measurement_df
+    ):
+        petab.flatten_timepoint_specific_output_overrides(problem)
 
     # load model
     if args.model_directory:
