@@ -69,7 +69,11 @@ jobs:
       run: |
           cd tests/benchmark-models && pytest --durations=10
 
-    # upload results
+    # collect & upload results
+    - name: Aggregate results
+      run: |
+          cd tests/benchmark-models && python3 evaluate_benchmark.py
+
     - uses: actions/upload-artifact@v4
       with:
         name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
