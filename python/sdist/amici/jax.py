@@ -167,7 +167,9 @@ class JAXModel(eqx.Module):
                 ts, ps, k, x0, checkpointed=checkpointed
             )
         else:
-            x = tuple(jnp.array([x0_i] * len(ts)) for x0_i in x0)
+            x = tuple(
+                self.x_solver(jnp.array([x0_i] * len(ts)) for x0_i in x0)
+            )
             tcl = self.tcl(x0, ps, k)
             stats = None
         obs = self._obs(ts, x, ps, k, tcl)
