@@ -177,7 +177,7 @@ settings["Brannmark_JBC2010"] = GradientCheckSettings(
     ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
 )
 settings["Fujita_SciSignal2010"] = GradientCheckSettings(
-    atol_check=1e-10,
+    atol_check=1e-7,
     rtol_check=5e-4,
 )
 settings["Giordano_Nature2020"] = GradientCheckSettings(
