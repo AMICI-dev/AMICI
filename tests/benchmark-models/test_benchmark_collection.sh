@@ -93,9 +93,22 @@ for model in $models; do
     yaml="${model_dir}"/"${model}"/problem.yaml
   fi
 
+  # problems we need to flatten
+  to_flatten=(
+    "Bruno_JExpBot2016" "Chen_MSB2009" "Crauste_CellSystems2017"
+    "Fiedler_BMCSystBiol2016" "Fujita_SciSignal2010" "SalazarCavazos_MBoC2020"
+  )
+  flatten=""
+  for item in "${to_flatten[@]}"; do
+    if [[ "$item" == "$model" ]]; then
+      flatten="--flatten"
+      break
+    fi
+  done
+
   amici_model_dir=test_bmc/"${model}"
   mkdir -p "$amici_model_dir"
-  cmd_import="amici_import_petab ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
+  cmd_import="amici_import_petab ${yaml} -o ${amici_model_dir} -n ${model} ${flatten}"
   cmd_run="$script_path/test_petab_model.py -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
 
   printf '=%.0s' {1..40}
