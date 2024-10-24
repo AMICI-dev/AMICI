@@ -242,6 +242,8 @@ jobs:
   macos_cpp_py:
     name: Tests MacOS C++/Python
     runs-on: macos-latest
+    env:
+      PYTHONFAULTHANDLER: "1"
 
     steps:
     - name: Set up Python
@@ -295,6 +297,8 @@ jobs:
   macos_python:
     name: Tests MacOS Python
     runs-on: macos-latest
+    env:
+      PYTHONFAULTHANDLER: "1"
 
     steps:
     - name: Cache
