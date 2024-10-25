@@ -93,8 +93,14 @@ class JAXModel(eqx.Module):
         )(p, pscale)
 
     def _preeq(self, p, k):
-        x0 = self.x0(p, k)
+        x0 = self.x_solver(self.x0(p, k))
         tcl = self.tcl(x0, p, k)
+        return self._eq(p, k, tcl, x0)
+
+    def _posteq(self, p, k, x, tcl):
+        return self._eq(p, k, tcl, x)
+
+    def _eq(self, p, k, tcl, x0):
         sol = diffrax.diffeqsolve(
             self.term,
             self.solver,
@@ -102,10 +108,10 @@ class JAXModel(eqx.Module):
             t0=0.0,
             t1=jnp.inf,
             dt0=None,
-            y0=self.x_solver(x0),
+            y0=x0,
             stepsize_controller=self.controller,
             max_steps=self.maxsteps,
-            discrete_terminating_event=diffrax.SteadyStateEvent(),
+            event=diffrax.Event(cond_fn=diffrax.steady_state_event()),
         )
         return sol.ys
 
@@ -127,7 +133,6 @@ class JAXModel(eqx.Module):
             saveat=diffrax.SaveAt(ts=ts),
             throw=False,
         )
-
         return sol.ys, tcl, sol.stats
 
     def _obs(self, ts, x, p, k, tcl):
@@ -148,6 +153,7 @@ class JAXModel(eqx.Module):
     def _run(
         self,
         ts: np.ndarray,
+        ts_dyn: np.ndarray,
         p: np.ndarray,
         k: jnp.ndarray,
         k_preeq: jnp.ndarray,
@@ -157,21 +163,44 @@ class JAXModel(eqx.Module):
         dynamic=True,
     ):
         ps = self.unscale_p(p, pscale)
+
+        # Pre-equilibration
         if k_preeq.shape[0] > 0:
             x0 = self._preeq(ps, k_preeq)
         else:
             x0 = self.x0(ps, k)
 
-        if dynamic:
+        # Dynamic simulation
+        if dynamic and ts_dyn.shape[0] > 0:
             x, tcl, stats = self._solve(
-                ts, ps, k, x0, checkpointed=checkpointed
+                ts_dyn, ps, k, x0, checkpointed=checkpointed
             )
         else:
             x = tuple(
-                self.x_solver(jnp.array([x0_i] * len(ts)) for x0_i in x0)
+                jnp.array([x0_i] * len(ts_dyn)) for x0_i in self.x_solver(x0)
             )
             tcl = self.tcl(x0, ps, k)
             stats = None
+
+        # Post-equilibration
+        if len(ts) > len(ts_dyn):
+            if len(ts_dyn) > 0:
+                x_final = tuple(x_i[-1] for x_i in x)
+            else:
+                x_final = self.x_solver(x0)
+            x_posteq = self._posteq(ps, k, x_final, tcl)
+            x_posteq = tuple(
+                jnp.array([x0_i] * (len(ts) - len(ts_dyn)))
+                for x0_i in x_posteq
+            )
+            if len(ts_dyn) > 0:
+                x = tuple(
+                    jnp.concatenate((x_i, x_posteq_i), axis=0)
+                    for x_i, x_posteq_i in zip(x, x_posteq)
+                )
+            else:
+                x = x_posteq
+
         obs = self._obs(ts, x, ps, k, tcl)
         my_r = my.reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
@@ -179,10 +208,11 @@ class JAXModel(eqx.Module):
         x_rdata = self._x_rdata(x, tcl)
         return llh, (x_rdata, obs, stats)
 
-    # @eqx.filter_jit
+    @eqx.filter_jit
     def run(
         self,
         ts: np.ndarray,
+        ts_dyn: np.ndarray,
         p: jnp.ndarray,
         k: np.ndarray,
         k_preeq: np.ndarray,
@@ -190,12 +220,13 @@ class JAXModel(eqx.Module):
         pscale: np.ndarray,
         dynamic=True,
     ):
-        return self._run(ts, p, k, k_preeq, my, pscale, dynamic=dynamic)
+        return self._run(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
 
     @eqx.filter_jit
     def srun(
         self,
         ts: np.ndarray,
+        ts_dyn: np.ndarray,
         p: jnp.ndarray,
         k: np.ndarray,
         k_preeq: np.ndarray,
@@ -205,13 +236,14 @@ class JAXModel(eqx.Module):
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
-        )(ts, p, k, k_preeq, my, pscale)
+        )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
         return llh, sllh, (x, obs, stats)
 
     @eqx.filter_jit
     def s2run(
         self,
         ts: np.ndarray,
+        ts_dyn: np.ndarray,
         p: jnp.ndarray,
         k: np.ndarray,
         k_preeq: np.ndarray,
@@ -221,10 +253,10 @@ class JAXModel(eqx.Module):
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
-        )(ts, p, k, k_preeq, my, pscale)
+        )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
 
         s2llh = jax.hessian(self._run, 1, True)(
-            ts, p, k, k_preeq, my, pscale, False
+            ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic
         )
 
         return llh, sllh, s2llh, (x, obs, stats)
@@ -238,7 +270,8 @@ class JAXModel(eqx.Module):
         k_preeq = np.asarray(edata.fixedParametersPreequilibration)
         my = np.asarray(edata.getObservedData())
         pscale = np.asarray(edata.pscale)
-        dynamic = np.max(ts) > 0
+        ts_dyn = ts[np.isfinite(ts)]
+        dynamic = len(ts_dyn) > 0 and np.max(ts_dyn) > 0
 
         rdata_kwargs = dict()
 
@@ -246,20 +279,20 @@ class JAXModel(eqx.Module):
             (
                 rdata_kwargs["llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.run(ts, p, k, k_preeq, my, pscale, dynamic)
+            ) = self.run(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
         elif sensitivity_order == amici.SensitivityOrder.first:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.srun(ts, p, k, k_preeq, my, pscale, dynamic)
+            ) = self.srun(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
         elif sensitivity_order == amici.SensitivityOrder.second:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 rdata_kwargs["s2llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.s2run(ts, p, k, k_preeq, my, pscale, dynamic)
+            ) = self.s2run(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
 
         for field in rdata_kwargs.keys():
             if field == "llh":

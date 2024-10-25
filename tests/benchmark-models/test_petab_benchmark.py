@@ -25,6 +25,7 @@ from fiddy.success import Consistency
 import contextlib
 import logging
 import yaml
+import equinox as eqx
 from amici.logging import get_logger
 from amici.petab.simulations import (
     LLH,
@@ -144,6 +145,8 @@ class GradientCheckSettings:
     # forward/backward/central differences.
     atol_consistency: float = 1e-5
     rtol_consistency: float = 1e-1
+    # maximum number of integration steps
+    maxsteps: int = 10_000
     # Step sizes for finite difference gradient checks.
     step_sizes: list[float] = field(
         default_factory=lambda: [
@@ -253,12 +256,27 @@ def benchmark_problem(request):
     return problem_id, petab_problem, amici_model
 
 
+@pytest.mark.filterwarnings(
+    "ignore:The following problem parameters were not used *",
+    "ignore: The environment variable *",
+)
 def test_jax_llh(benchmark_problem):
     problem_id, petab_problem, amici_model = benchmark_problem
-    if problem_id not in problems_for_llh_check:
-        pytest.skip("Excluded from log-likelihood check.")
+
+    amici_solver = amici_model.getSolver()
+    amici_solver.setAbsoluteTolerance(settings[problem_id].atol_sim)
+    amici_solver.setRelativeTolerance(settings[problem_id].rtol_sim)
+    amici_solver.setMaxSteps(settings[problem_id].maxsteps)
+
+    llh_amici = simulate_petab(
+        petab_problem=petab_problem,
+        amici_model=amici_model,
+        solver=amici_solver,
+        log_level=logging.DEBUG,
+    )[LLH]
+
     jax_model = import_petab_problem(
-        problem_id,
+        petab_problem,
         model_output_dir=benchmark_outdir / problem_id,
         jax=True,
     )
@@ -287,14 +305,24 @@ def test_jax_llh(benchmark_problem):
         parameter_mapping=parameter_mapping,
         amici_model=amici_model,
     )
+
+    jax_model = eqx.tree_at(
+        lambda x: x.maxsteps, jax_model, settings[problem_id].maxsteps
+    )
+    jax_model = eqx.tree_at(
+        lambda x: x.atol, jax_model, settings[problem_id].atol_sim
+    )
+    jax_model = eqx.tree_at(
+        lambda x: x.rtol, jax_model, settings[problem_id].rtol_sim
+    )
+
     rdatas_jax = jax_model.run_simulations(edatas)
 
     llh_jax = sum(r.llh for r in rdatas_jax)
-    ref_llh = reference_values[problem_id]["llh"]
 
     assert np.isclose(
-        ref_llh, llh_jax, rtol=1e-3, atol=1e-3
-    ), f"LLH mismatch for {problem_id} with {ref_llh} vs {llh_jax} (jax)"
+        llh_amici, llh_jax, rtol=1e-3, atol=1e-3
+    ), f"LLH mismatch for {problem_id} with {llh_amici} (amici) vs {llh_jax} (jax)"
 
 
 @pytest.mark.filterwarnings(
@@ -313,8 +341,8 @@ def test_nominal_parameters_llh(benchmark_problem):
         pytest.skip("Excluded from log-likelihood check.")
 
     amici_solver = amici_model.getSolver()
-    amici_solver.setAbsoluteTolerance(1e-8)
-    amici_solver.setRelativeTolerance(1e-8)
+    amici_solver.setAbsoluteTolerance(settings[problem_id].atol_sim)
+    amici_solver.setRelativeTolerance(settings[problem_id].rtol_sim)
     amici_solver.setMaxSteps(10_000)
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
         amici_model.setSteadyStateSensitivityMode(
