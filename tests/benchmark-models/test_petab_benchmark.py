@@ -35,11 +35,19 @@ from amici.petab.simulations import (
 from petab.v1.visualize import plot_problem
 
 
-logger = get_logger(f"amici.{__name__}", logging.WARNING)
+# Enable various debug output
+debug = False
+
+logger = get_logger(
+    f"amici.{__name__}", logging.DEBUG if debug else logging.INFO
+)
 
 script_dir = Path(__file__).parent.absolute()
 repo_root = script_dir.parent.parent
 benchmark_outdir = repo_root / "test_bmc"
+debug_path = script_dir / "debug"
+if debug:
+    debug_path.mkdir(exist_ok=True, parents=True)
 
 # reference values for simulation times and log-likelihoods
 references_yaml = script_dir / "benchmark_models.yaml"
@@ -223,12 +231,6 @@ settings["Zheng_PNAS2012"] = GradientCheckSettings(
     rtol_check=4e-3,
     noise_level=0.01,
 )
-
-
-debug = False
-if debug:
-    debug_path = Path(__file__).parent / "debug"
-    debug_path.mkdir(exist_ok=True, parents=True)
 
 
 @pytest.fixture(scope="session", params=problems, ids=problems)
@@ -570,9 +572,18 @@ def assert_gradient_check_success(
     df["rtol_success"] = df["rel_diff"] <= rtol
     max_adiff = df["abs_diff"].max()
     max_rdiff = df["rel_diff"].max()
-    with pd.option_context("display.max_columns", None, "display.width", None):
+
+    success_fail = "succeeded" if check_result.success else "failed"
+    with pd.option_context(
+        "display.max_columns",
+        None,
+        "display.width",
+        None,
+        "display.max_rows",
+        None,
+    ):
         message = (
-            f"Gradient check failed:\n{df}\n\n"
+            f"Gradient check {success_fail}:\n{df}\n\n"
             f"Maximum absolute difference: {max_adiff} (tolerance: {atol})\n"
             f"Maximum relative difference: {max_rdiff} (tolerance: {rtol})"
         )
