@@ -25,7 +25,6 @@ from fiddy.success import Consistency
 import contextlib
 import logging
 import yaml
-import equinox as eqx
 from amici.logging import get_logger
 from amici.petab.simulations import (
     LLH,
@@ -145,8 +144,6 @@ class GradientCheckSettings:
     # forward/backward/central differences.
     atol_consistency: float = 1e-5
     rtol_consistency: float = 1e-1
-    # maximum number of integration steps
-    maxsteps: int = 10_000
     # Step sizes for finite difference gradient checks.
     step_sizes: list[float] = field(
         default_factory=lambda: [
@@ -264,9 +261,6 @@ def test_jax_llh(benchmark_problem):
     problem_id, petab_problem, amici_model = benchmark_problem
 
     amici_solver = amici_model.getSolver()
-    amici_solver.setAbsoluteTolerance(settings[problem_id].atol_sim)
-    amici_solver.setRelativeTolerance(settings[problem_id].rtol_sim)
-    amici_solver.setMaxSteps(settings[problem_id].maxsteps)
 
     llh_amici = simulate_petab(
         petab_problem=petab_problem,
@@ -304,16 +298,6 @@ def test_jax_llh(benchmark_problem):
         scaled_parameters=False,
         parameter_mapping=parameter_mapping,
         amici_model=amici_model,
-    )
-
-    jax_model = eqx.tree_at(
-        lambda x: x.maxsteps, jax_model, settings[problem_id].maxsteps
-    )
-    jax_model = eqx.tree_at(
-        lambda x: x.atol, jax_model, settings[problem_id].atol_sim
-    )
-    jax_model = eqx.tree_at(
-        lambda x: x.rtol, jax_model, settings[problem_id].rtol_sim
     )
 
     rdatas_jax = jax_model.run_simulations(edatas)

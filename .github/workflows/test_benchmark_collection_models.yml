@@ -60,8 +60,7 @@ jobs:
 
     - name: Download benchmark collection
       run: |
-        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python \
-          && AMICI_PARALLEL_COMPILE="" tests/benchmark-models/test_benchmark_collection.sh
+        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
 
     - name: Run tests
       env:
