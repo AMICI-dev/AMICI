@@ -258,7 +258,15 @@ class JAXModel(eqx.Module):
         )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic)
 
         s2llh = jax.hessian(self._run, 2, True)(
-            ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
+            ts,
+            ts_dyn,
+            p,
+            k,
+            k_preeq,
+            my,
+            pscale,
+            checkpointed=False,
+            dynamic=dynamic,
         )
 
         return llh, sllh, s2llh, (x, obs, stats)
