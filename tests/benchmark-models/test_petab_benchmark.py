@@ -261,6 +261,9 @@ def test_jax_llh(benchmark_problem):
     problem_id, petab_problem, amici_model = benchmark_problem
 
     amici_solver = amici_model.getSolver()
+    amici_solver.setAbsoluteTolerance(1e-8)
+    amici_solver.setRelativeTolerance(1e-8)
+    amici_solver.setMaxSteps(10_000)
 
     llh_amici = simulate_petab(
         petab_problem=petab_problem,
@@ -325,8 +328,8 @@ def test_nominal_parameters_llh(benchmark_problem):
         pytest.skip("Excluded from log-likelihood check.")
 
     amici_solver = amici_model.getSolver()
-    amici_solver.setAbsoluteTolerance(settings[problem_id].atol_sim)
-    amici_solver.setRelativeTolerance(settings[problem_id].rtol_sim)
+    amici_solver.setAbsoluteTolerance(1e-8)
+    amici_solver.setRelativeTolerance(1e-8)
     amici_solver.setMaxSteps(10_000)
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
         amici_model.setSteadyStateSensitivityMode(
