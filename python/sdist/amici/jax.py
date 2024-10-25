@@ -171,7 +171,7 @@ class JAXModel(eqx.Module):
             x0 = self.x0(ps, k)
 
         # Dynamic simulation
-        if dynamic and ts_dyn.shape[0] > 0:
+        if dynamic == "true":
             x, tcl, stats = self._solve(
                 ts_dyn, ps, k, x0, checkpointed=checkpointed
             )
@@ -220,7 +220,9 @@ class JAXModel(eqx.Module):
         pscale: np.ndarray,
         dynamic=True,
     ):
-        return self._run(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
+        return self._run(
+            ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
+        )
 
     @eqx.filter_jit
     def srun(
@@ -236,7 +238,7 @@ class JAXModel(eqx.Module):
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
-        )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
+        )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic)
         return llh, sllh, (x, obs, stats)
 
     @eqx.filter_jit
@@ -253,10 +255,10 @@ class JAXModel(eqx.Module):
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 1, True)
-        )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
+        )(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic)
 
         s2llh = jax.hessian(self._run, 1, True)(
-            ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic
+            ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
         )
 
         return llh, sllh, s2llh, (x, obs, stats)
@@ -271,7 +273,7 @@ class JAXModel(eqx.Module):
         my = np.asarray(edata.getObservedData())
         pscale = np.asarray(edata.pscale)
         ts_dyn = ts[np.isfinite(ts)]
-        dynamic = len(ts_dyn) > 0 and np.max(ts_dyn) > 0
+        dynamic = "true" if len(ts_dyn) and np.max(ts_dyn) > 0 else "false"
 
         rdata_kwargs = dict()
 
@@ -279,20 +281,26 @@ class JAXModel(eqx.Module):
             (
                 rdata_kwargs["llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.run(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
+            ) = self.run(
+                ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
+            )
         elif sensitivity_order == amici.SensitivityOrder.first:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.srun(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
+            ) = self.srun(
+                ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
+            )
         elif sensitivity_order == amici.SensitivityOrder.second:
             (
                 rdata_kwargs["llh"],
                 rdata_kwargs["sllh"],
                 rdata_kwargs["s2llh"],
                 (rdata_kwargs["x"], rdata_kwargs["y"], rdata_kwargs["stats"]),
-            ) = self.s2run(ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic)
+            ) = self.s2run(
+                ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
+            )
 
         for field in rdata_kwargs.keys():
             if field == "llh":
