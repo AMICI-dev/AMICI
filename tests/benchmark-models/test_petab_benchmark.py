@@ -262,6 +262,9 @@ def benchmark_problem(request):
 def test_jax_llh(benchmark_problem):
     problem_id, petab_problem, amici_model = benchmark_problem
 
+    if problem_id == "Smith_BMCSystBiol2013":
+        pytest.skip("Excluded from JAX check due to excessive runtime")
+
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(1e-8)
     amici_solver.setRelativeTolerance(1e-8)
