@@ -2063,12 +2063,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** method for steady-state computation */
     SteadyStateComputationMode steadystate_computation_mode_{
-        SteadyStateComputationMode::integrateIfNewtonFails
+        SteadyStateComputationMode::integrationOnly
     };
 
     /** method for steadystate sensitivities computation */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_{
-        SteadyStateSensitivityMode::integrateIfNewtonFails
+        SteadyStateSensitivityMode::integrationOnly
     };
 
     /**
