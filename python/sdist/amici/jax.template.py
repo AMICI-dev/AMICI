@@ -106,3 +106,19 @@ TPL_SIGMAY_EQ
 TPL_JY_EQ
 
         return TPL_JY_RET
+
+    @property
+    def parameter_ids(self):
+        return TPL_P_IDS
+
+    @property
+    def fixed_parameter_ids(self):
+        return TPL_K_IDS
+
+    @property
+    def observable_ids(self):
+        return TPL_Y_IDS
+
+    @property
+    def state_ids(self):
+        return TPL_X_IDS
