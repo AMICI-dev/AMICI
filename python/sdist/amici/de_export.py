@@ -345,6 +345,14 @@ class DEExporter:
                 for sym_name in sym_names
             },
             **{
+                f"{sym_name.upper()}_IDS": "".join(
+                    f'"{strip_pysb(s)}", ' for s in self.model.sym(sym_name)
+                )
+                if self.model.sym(sym_name)
+                else "tuple()"
+                for sym_name in ("p", "k", "y", "x")
+            },
+            **{
                 "MODEL_NAME": self.model_name,
             },
         }

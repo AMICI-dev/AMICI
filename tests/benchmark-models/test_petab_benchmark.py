@@ -31,8 +31,6 @@ from amici.petab.simulations import (
     RDATAS,
     rdatas_to_measurement_df,
     simulate_petab,
-    create_edatas,
-    fill_in_parameters,
     create_parameter_mapping,
 )
 from petab.v1.visualize import plot_problem
@@ -292,30 +290,18 @@ def test_jax_llh(benchmark_problem):
     simulation_conditions = (
         petab_problem.get_simulation_conditions_from_measurement_df()
     )
-    edatas = create_edatas(
-        amici_model=amici_model,
-        petab_problem=petab_problem,
-        simulation_conditions=simulation_conditions,
-    )
-    problem_parameters = {
-        t.Index: getattr(t, petab.NOMINAL_VALUE)
-        for t in petab_problem.parameter_df.itertuples()
-    }
-    parameter_mapping = create_parameter_mapping(
+    mappings = create_parameter_mapping(
         petab_problem=petab_problem,
         simulation_conditions=simulation_conditions,
         scaled_parameters=False,
         amici_model=amici_model,
     )
-    fill_in_parameters(
-        edatas=edatas,
-        problem_parameters=problem_parameters,
-        scaled_parameters=False,
-        parameter_mapping=parameter_mapping,
-        amici_model=amici_model,
+    rdatas_jax = jax_model.run_simulations(
+        parameter_mappings=mappings,
+        parameters=petab_problem.parameter_df,
+        simulation_conditions=simulation_conditions,
+        measurements=petab_problem.measurement_df,
     )
-
-    rdatas_jax = jax_model.run_simulations(edatas)
 
     llh_jax = sum(r.llh for r in rdatas_jax)
 
