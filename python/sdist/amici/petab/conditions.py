@@ -41,6 +41,7 @@ def fill_in_parameters(
     scaled_parameters: bool,
     parameter_mapping: ParameterMapping,
     amici_model: AmiciModel,
+    warn_unused: bool = True,
 ) -> None:
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
@@ -59,9 +60,15 @@ def fill_in_parameters(
         Parameter mapping for all conditions.
     :param amici_model:
         AMICI model.
+    :param warn_unused:
+        Whether a warning should be emitted if not all problem parameters
+        were used. I.e., if there are parameters in `problem_parameters`
+        that are not in `parameter_mapping`.
     """
-    if unused_parameters := (
-        set(problem_parameters.keys()) - parameter_mapping.free_symbols
+    if warn_unused and (
+        unused_parameters := (
+            set(problem_parameters.keys()) - parameter_mapping.free_symbols
+        )
     ):
         warnings.warn(
             "The following problem parameters were not used: "
@@ -223,6 +230,7 @@ def create_parameterized_edatas(
     scaled_parameters: bool = False,
     parameter_mapping: ParameterMapping = None,
     simulation_conditions: pd.DataFrame | dict = None,
+    warn_unused: bool = True,
 ) -> list[amici.ExpData]:
     """Create list of :class:amici.ExpData objects with parameters filled in.
 
@@ -244,6 +252,11 @@ def create_parameterized_edatas(
     :param simulation_conditions:
         Result of :func:`petab.get_simulation_conditions`. Can be provided to
         save time if this has been obtained before.
+    :param warn_unused:
+        Whether a warning should be emitted if not all problem parameters
+        were used. I.e., if there are parameters in `problem_parameters`
+        that are not in `parameter_mapping` or in the generated parameter
+        mapping.
 
     :return:
         List with one :class:`amici.amici.ExpData` per simulation condition,
@@ -282,6 +295,7 @@ def create_parameterized_edatas(
         scaled_parameters=scaled_parameters,
         parameter_mapping=parameter_mapping,
         amici_model=amici_model,
+        warn_unused=warn_unused,
     )
 
     return edatas
@@ -387,7 +401,9 @@ def create_edatas(
 
     :return:
         List with one :class:`amici.amici.ExpData` per simulation condition,
-        with filled in timepoints and data.
+        with filled in timepoints and data, but without parameter values
+        (see :func:`create_parameterized_edatas` or
+        :func:`fill_in_parameters` for that).
     """
     if simulation_conditions is None:
         simulation_conditions = (
