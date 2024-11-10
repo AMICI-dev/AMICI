@@ -4,6 +4,63 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.28.0 (2024-11-11)
+
+**Breaking changes**
+
+* Changed the default steady-state method to `integrationOnly`
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2574)
+
+  The default mode for computing steady states and sensitivities at steady
+  state was changed to `integrationOnly`
+  (from previously `integrateIfNewtonFails`).
+
+  This was done for a more robust default behavior. For example, the evaluation
+  in https://doi.org/10.1371/journal.pone.0312148 shows that - at least for
+  some models - Newton's method may easily lead to physically impossible
+  solutions.
+
+  To keep the previous behavior, use:
+  ```python
+  amici_model.setSteadyStateComputationMode(amici.SteadyStateComputationMode.integrateIfNewtonFails)
+  amici_model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrateIfNewtonFails)
+  ```
+
+**Fixes**
+
+* PEtab import: **Fixed potentially incorrect sensitivities** with
+  observable/state-dependent sigmas.
+  This was fixed for all cases amici can handle, others cases will now result
+  in `ValueError`s (https://github.com/AMICI-dev/AMICI/pull/2563).
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2562
+
+* Fixed potentially incorrect disabling of Newton's method
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2576
+
+* Fixed `ModelStateDerived` copy ctor, where previously dangling pointers
+  could lead to crashes in some situations
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2583
+
+* Added missing simulation status codes
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2560
+
+* Check for unsupported observable IDs in sigma expressions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2563
+
+
+**Features**
+
+* Optional warning in `fill_in_parameters`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2578
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.27.0...v0.28.0
+
 ### v0.27.0 (2024-10-21)
 
 This release comes with an **updated version of the SUNDIALS package (7.1.1)** (https://github.com/AMICI-dev/AMICI/pull/2513).
