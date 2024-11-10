@@ -1,8 +1,10 @@
-fixes:
-  - "build/venv/lib/python3.9/site-packages/::python/"
-  - "build/venv/lib/python3.10/site-packages/::python/"
-  - "build/venv/lib/python3.11/site-packages/::python/"
+# see https://docs.codecov.com/docs/codecovyml-reference
 
+fixes:
+  # https://docs.codecov.com/docs/fixing-paths
+  - "build/venv/lib/python[0-9.]+/site-packages/::python/"
+  - "python/sdist/build/temp_amici/CMakeFiles/amici.dir/src/::src/"
+  - "build/CMakeFiles/amici.dir/src/::src/"
 codecov:
   require_ci_to_pass: yes
 
@@ -27,6 +29,8 @@ comment:
 ignore:
   - "tests/*"
   - "tests/**/*"
+  - "build/tests/**"
+  - "amici_models/**"
 
 flags:
   python:
