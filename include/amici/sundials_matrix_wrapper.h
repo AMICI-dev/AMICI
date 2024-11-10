@@ -506,6 +506,19 @@ class SUNMatrixWrapper {
      */
     SUNContext get_ctx() const;
 
+    /**
+     * @brief Set SUNContext
+     *
+     * Update the SUNContext of the wrapped SUNMatrix.
+     *
+     * @param ctx SUNDIALS context to set
+     */
+    void set_ctx(SUNContext ctx) {
+        if (matrix_) {
+            matrix_->sunctx = ctx;
+        }
+    }
+
   private:
     /**
      * @brief SUNMatrix to which all methods are applied
