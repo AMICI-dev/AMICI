@@ -33,7 +33,7 @@ jobs:
           - python-version: '3.12'
             experimental: false
           - python-version: '3.13'
-            experimental: true
+            experimental: false
 
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
