@@ -146,71 +146,37 @@ struct ModelStateDerived {
         , dwdw_(other.dwdw_)
         , dwdx_hierarchical_(other.dwdx_hierarchical_)
         , dJydy_dense_(other.dJydy_dense_) {
-        // Update the SUNContext of all matrices
-        if (J_.data()) {
-            J_.get()->sunctx = sunctx_;
+        // Update the SUNContext of all SUNDIALS objects
+        J_.set_ctx(sunctx_);
+        JB_.set_ctx(sunctx_);
+        dxdotdw_.set_ctx(sunctx_);
+        dwdx_.set_ctx(sunctx_);
+        dwdp_.set_ctx(sunctx_);
+        M_.set_ctx(sunctx_);
+        MSparse_.set_ctx(sunctx_);
+        dfdx_.set_ctx(sunctx_);
+        dxdotdp_full.set_ctx(sunctx_);
+        dxdotdp_explicit.set_ctx(sunctx_);
+        dxdotdp_implicit.set_ctx(sunctx_);
+        dxdotdx_explicit.set_ctx(sunctx_);
+        dxdotdx_implicit.set_ctx(sunctx_);
+        dx_rdatadx_solver.set_ctx(sunctx_);
+        dx_rdatadtcl.set_ctx(sunctx_);
+        dtotal_cldx_rdata.set_ctx(sunctx_);
+        dxdotdp.set_ctx(sunctx_);
+
+        for (auto& dJydy : dJydy_) {
+            dJydy.set_ctx(sunctx_);
         }
-        if (JB_.data()) {
-            JB_.get()->sunctx = sunctx_;
+        for (auto& dwdp : dwdp_hierarchical_) {
+            dwdp.set_ctx(sunctx_);
         }
-        if (dxdotdw_.data()) {
-            dxdotdw_.get()->sunctx = sunctx_;
+        for (auto& dwdx : dwdx_hierarchical_) {
+            dwdx.set_ctx(sunctx_);
         }
-        if (dwdx_.data()) {
-            dwdx_.get()->sunctx = sunctx_;
-        }
-        if (dwdp_.data()) {
-            dwdp_.get()->sunctx = sunctx_;
-        }
-        if (M_.data()) {
-            M_.get()->sunctx = sunctx_;
-        }
-        if (MSparse_.data()) {
-            MSparse_.get()->sunctx = sunctx_;
-        }
-        if (dfdx_.data()) {
-            dfdx_.get()->sunctx = sunctx_;
-        }
-        if (dxdotdp_full.data()) {
-            dxdotdp_full.get()->sunctx = sunctx_;
-        }
-        if (dxdotdp_explicit.data()) {
-            dxdotdp_explicit.get()->sunctx = sunctx_;
-        }
-        if (dxdotdp_implicit.data()) {
-            dxdotdp_implicit.get()->sunctx = sunctx_;
-        }
-        if (dxdotdx_explicit.data()) {
-            dxdotdx_explicit.get()->sunctx = sunctx_;
-        }
-        if (dxdotdx_implicit.data()) {
-            dxdotdx_implicit.get()->sunctx = sunctx_;
-        }
-        if (dx_rdatadx_solver.data()) {
-            dx_rdatadx_solver.get()->sunctx = sunctx_;
-        }
-        if (dx_rdatadtcl.data()) {
-            dx_rdatadtcl.get()->sunctx = sunctx_;
-        }
-        if (dtotal_cldx_rdata.data()) {
-            dtotal_cldx_rdata.get()->sunctx = sunctx_;
-        }
-        for (auto const& dwdp : dwdp_hierarchical_) {
-            if (dwdp.data()) {
-                dwdp.get()->sunctx = sunctx_;
-            }
-        }
-        for (auto const& dwdx : dwdx_hierarchical_) {
-            if (dwdx.data()) {
-                dwdx.get()->sunctx = sunctx_;
-            }
-        }
-        if (dwdw_.data()) {
-            dwdw_.get()->sunctx = sunctx_;
-        }
-        if (dJydy_dense_.data()) {
-            dJydy_dense_.get()->sunctx = sunctx_;
-        }
+        sspl_.set_ctx(sunctx_);
+        dwdw_.set_ctx(sunctx_);
+        dJydy_dense_.set_ctx(sunctx_);
     }
 
     /**

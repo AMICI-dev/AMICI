@@ -34,8 +34,10 @@ static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL, "");
 static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
 static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
-#define STATIC_ASSERT_EQUAL(amici_constant, cv_constant) \
-static_assert(amici_constant == cv_constant, #amici_constant " != " #cv_constant)
+#define STATIC_ASSERT_EQUAL(amici_constant, cv_constant)                       \
+    static_assert(                                                             \
+        amici_constant == cv_constant, #amici_constant " != " #cv_constant     \
+    )
 
 STATIC_ASSERT_EQUAL(amici::AMICI_SUCCESS, CV_SUCCESS);
 STATIC_ASSERT_EQUAL(amici::AMICI_ROOT_RETURN, CV_ROOT_RETURN);

@@ -102,6 +102,7 @@ def get_results(
     sensi_order=0,
     sensi_meth=amici.SensitivityMethod.forward,
     sensi_meth_preeq=amici.SensitivityMethod.forward,
+    stst_mode=amici.SteadyStateComputationMode.integrateIfNewtonFails,
     stst_sensi_mode=amici.SteadyStateSensitivityMode.newtonOnly,
     reinitialize_states=False,
 ):
@@ -115,6 +116,7 @@ def get_results(
     solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
     solver.setSensitivityMethod(sensi_meth)
     model.setSteadyStateSensitivityMode(stst_sensi_mode)
+    model.setSteadyStateComputationMode(stst_mode)
     if edata is None:
         model.setTimepoints(np.linspace(0, 5, 101))
     else:
