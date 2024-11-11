@@ -105,12 +105,12 @@ model_instance_settings0 = {
     # `pysb_example_presimulation_module.getModel()`.
     "StateIsNonNegative": None,
     "SteadyStateComputationMode": [
-        2,
-        1,
+        amici.SteadyStateComputationMode.integrationOnly,
+        amici.SteadyStateComputationMode.integrateIfNewtonFails,
     ],
     "SteadyStateSensitivityMode": [
-        2,
-        1,
+        amici.SteadyStateSensitivityMode.integrationOnly,
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
     ],
     ("t0", "setT0"): [
         0.0,

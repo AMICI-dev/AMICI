@@ -133,8 +133,9 @@ void SteadystateProblem::findSteadyState(
         = model.getSteadyStateComputationMode()
               == SteadyStateComputationMode::integrationOnly
           || solver.getNewtonMaxSteps() == 0
-          || (model.getSteadyStateSensitivityMode()
-                  == SteadyStateSensitivityMode::integrationOnly
+          || (solver.getSensitivityOrder() >= SensitivityOrder::first
+              && model.getSteadyStateSensitivityMode()
+                     == SteadyStateSensitivityMode::integrationOnly
               && ((it == -1
                    && solver.getSensitivityMethodPreequilibration()
                           == SensitivityMethod::forward)

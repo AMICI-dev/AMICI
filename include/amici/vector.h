@@ -413,6 +413,20 @@ class AmiVectorArray {
      */
     void copy(AmiVectorArray const& other);
 
+    /**
+     * @brief Set SUNContext
+     *
+     * If any AmiVector is non-empty, this changes the current SUNContext of the
+     * associated N_Vector. If empty, do nothing.
+     *
+     * @param ctx SUNDIALS context to set
+     */
+    void set_ctx(SUNContext ctx) {
+        for (auto& vec : vec_array_) {
+            vec.set_ctx(ctx);
+        }
+    }
+
   private:
     /** main data storage */
     std::vector<AmiVector> vec_array_;

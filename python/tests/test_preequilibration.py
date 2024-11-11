@@ -18,7 +18,12 @@ from amici.testing import (
 def preeq_fixture(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.getModel()
     model.setReinitializeFixedParameterInitialStates(True)
-
+    model.setSteadyStateComputationMode(
+        amici.SteadyStateComputationMode.integrateIfNewtonFails
+    )
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
     solver = model.getSolver()
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     solver.setSensitivityMethod(amici.SensitivityMethod.forward)

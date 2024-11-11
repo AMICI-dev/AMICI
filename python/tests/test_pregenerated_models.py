@@ -63,6 +63,13 @@ def test_pregenerated_model(sub_test, case):
     amici.readModelDataFromHDF5(
         options_file, model.get(), f"/{sub_test}/{case}/options"
     )
+    if model_name == "model_steadystate":
+        model.setSteadyStateComputationMode(
+            amici.SteadyStateComputationMode.integrateIfNewtonFails
+        )
+        model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+        )
     amici.readSolverSettingsFromHDF5(
         options_file, solver.get(), f"/{sub_test}/{case}/options"
     )
