@@ -186,7 +186,7 @@ class JAXModel(eqx.Module):
         my: jnp.ndarray,
         pscale: np.ndarray,
         checkpointed=True,
-        dynamic=True,
+        dynamic="true",
     ):
         ps = self.unscale_p(p, pscale)
 
@@ -227,11 +227,11 @@ class JAXModel(eqx.Module):
             else:
                 x = x_posteq
 
-        obs = self._obs(ts, x, ps, k, tcl)
+        obs = jnp.stack(self._obs(ts, x, ps, k, tcl), axis=1)
         my_r = my.reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
         llh = self._loss(obs, sigmay, my_r)
-        x_rdata = self._x_rdata(x, tcl)
+        x_rdata = jnp.stack(self._x_rdata(x, tcl), axis=1)
         return llh, (x_rdata, obs, stats)
 
     @eqx.filter_jit
@@ -244,7 +244,7 @@ class JAXModel(eqx.Module):
         k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
-        dynamic=True,
+        dynamic="true",
     ):
         return self._run(
             ts, ts_dyn, p, k, k_preeq, my, pscale, dynamic=dynamic
@@ -260,7 +260,7 @@ class JAXModel(eqx.Module):
         k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
-        dynamic=True,
+        dynamic="true",
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 2, True)
@@ -277,7 +277,7 @@ class JAXModel(eqx.Module):
         k_preeq: np.ndarray,
         my: np.ndarray,
         pscale: np.ndarray,
-        dynamic=True,
+        dynamic="true",
     ):
         (llh, (x, obs, stats)), sllh = (
             jax.value_and_grad(self._run, 2, True)
