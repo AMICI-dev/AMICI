@@ -151,20 +151,20 @@ def check_fields_jax(
         (
             r_jax["llh"],
             (r_jax["x"], r_jax["y"], r_jax["stats"]),
-        ) = jax_model.run(**kwargs)
+        ) = jax_model._fun(**kwargs)
     elif sensi_order == amici.SensitivityOrder.first:
         (
             r_jax["llh"],
             r_jax["sllh"],
             (r_jax["x"], r_jax["y"], r_jax["stats"]),
-        ) = jax_model.srun(**kwargs)
+        ) = jax_model._grad(**kwargs)
     elif sensi_order == amici.SensitivityOrder.second:
         (
             r_jax["llh"],
             r_jax["sllh"],
             r_jax["s2llh"],
             (r_jax["x"], r_jax["y"], r_jax["stats"]),
-        ) = jax_model.s2run(**kwargs)
+        ) = jax_model._hessian(**kwargs)
 
     for field in fields:
         for r_amici, r_jax in zip(rs_amici, [r_jax]):
