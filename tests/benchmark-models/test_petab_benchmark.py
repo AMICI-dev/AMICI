@@ -290,6 +290,9 @@ def test_jax_llh(benchmark_problem):
     simulation_conditions = (
         petab_problem.get_simulation_conditions_from_measurement_df()
     )
+    simulation_conditions = tuple(
+        tuple(row) for _, row in simulation_conditions.iterrows()
+    )
     rdatas_jax = jax_model.run_simulations(
         simulation_conditions=simulation_conditions,
     )
