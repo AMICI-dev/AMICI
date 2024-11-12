@@ -13,8 +13,8 @@ import petab.v1 as petab
 
 import amici
 from amici.petab.parameter_mapping import (
-    ParameterMapping,
     ParameterMappingForCondition,
+    create_parameter_mapping,
 )
 from amici.petab.conditions import (
     _get_timepoints_with_replicates,
@@ -39,6 +39,7 @@ class JAXModel(eqx.Module):
     dcoeff: float
     maxsteps: int
     term: diffrax.ODETerm
+    petab_problem: petab.Problem | None
 
     def __init__(self):
         self.solver = diffrax.Kvaerno5()
@@ -56,6 +57,18 @@ class JAXModel(eqx.Module):
             dcoeff=self.dcoeff,
         )
         self.term = diffrax.ODETerm(self.xdot)
+        self.petab_problem = None
+
+    def set_petab_problem(self, petab_problem: petab.Problem) -> "JAXModel":
+        if self.petab_problem is None:
+            return eqx.tree_at(
+                lambda x: x.petab_problem,
+                self,
+                petab_problem,
+                is_leaf=lambda x: x is None,
+            )
+        else:
+            return eqx.tree_at(lambda x: x.petab_problem, self, petab_problem)
 
     @staticmethod
     @abstractmethod
@@ -108,6 +121,22 @@ class JAXModel(eqx.Module):
     @property
     @abstractmethod
     def fixed_parameter_ids(self): ...
+
+    def getParameterIds(self) -> list[str]:  # noqa: N802
+        """
+        Get the parameter ids of the model. Adds compatibility with AmiciModel, added to enable generation of
+        parameter mappings via :func:`amici.petab.create_parameter_mapping`.
+        :return:
+        """
+        return self.parameter_ids
+
+    def getFixedParameterIds(self) -> list[str]:  # noqa: N802
+        """
+        Get the fixed parameter ids of the model. Adds compatibility with AmiciModel, added to enable generation of
+        parameter mappings via :func:`amici.petab.create_parameter_mapping`.
+        :return:
+        """
+        return self.fixed_parameter_ids
 
     def unscale_p(self, p, pscale):
         return jax.vmap(
@@ -301,7 +330,6 @@ class JAXModel(eqx.Module):
         self,
         parameter_mapping: ParameterMappingForCondition = None,
         measurements: pd.DataFrame = None,
-        parameters: pd.DataFrame = None,
         sensitivity_order: amici.SensitivityOrder = amici.SensitivityOrder.none,
     ):
         cond_id, measurements_df = measurements
@@ -313,8 +341,12 @@ class JAXModel(eqx.Module):
                     pval := parameter_mapping.map_sim_var[par], Number
                 )
                 else petab.scale(
-                    parameters.loc[pval, petab.NOMINAL_VALUE],
-                    parameters.loc[pval, petab.PARAMETER_SCALE],
+                    self.petab_problem.parameter_df.loc[
+                        pval, petab.NOMINAL_VALUE
+                    ],
+                    self.petab_problem.parameter_df.loc[
+                        pval, petab.PARAMETER_SCALE
+                    ],
                 )
                 for par in self.parameter_ids
             ]
@@ -388,32 +420,38 @@ class JAXModel(eqx.Module):
         self,
         sensitivity_order: amici.SensitivityOrder = amici.SensitivityOrder.none,
         num_threads: int = 1,
-        parameter_mappings: ParameterMapping = None,
-        parameters: pd.DataFrame = None,
         simulation_conditions: pd.DataFrame = None,
-        measurements: pd.DataFrame = None,
     ):
         fun = eqx.Partial(
             self.run_simulation,
             sensitivity_order=sensitivity_order,
-            parameters=parameters,
         )
         gb = (
             [
                 petab.PREEQUILIBRATION_CONDITION_ID,
                 petab.SIMULATION_CONDITION_ID,
             ]
-            if petab.PREEQUILIBRATION_CONDITION_ID in measurements.columns
+            if petab.PREEQUILIBRATION_CONDITION_ID
+            in self.petab_problem.measurement_df
             and petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions
             else petab.SIMULATION_CONDITION_ID
         )
 
-        per_condition_measurements = measurements.groupby(gb)
+        per_condition_measurements = self.petab_problem.measurement_df.groupby(
+            gb
+        )
 
         order_conditions = [
             tuple(c) if isinstance(c, np.ndarray) else c
             for c in simulation_conditions[gb].values
         ]
+
+        parameter_mappings = create_parameter_mapping(
+            petab_problem=self.petab_problem,
+            simulation_conditions=simulation_conditions,
+            scaled_parameters=False,
+            amici_model=self,
+        )
 
         sorted_mappings = [
             parameter_mappings[order_conditions.index(condition)]
