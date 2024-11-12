@@ -39,7 +39,7 @@ Install the AMICI dependencies via ``apt``
 
 .. code-block:: bash
 
-   sudo apt install libatlas-base-dev swig
+   sudo apt install libatlas-base-dev swig python3-dev
 
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
