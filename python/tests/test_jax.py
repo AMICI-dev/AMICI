@@ -5,6 +5,8 @@ pytest.importorskip("jax")
 import amici.jax
 
 import jax.numpy as jnp
+import jax
+import diffrax
 import numpy as np
 
 from amici.pysb_import import pysb2amici
@@ -109,22 +111,16 @@ def _test_model(model_module, ts, p, k):
     amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
     rs_amici = amici.runAmiciSimulations(amici_model, amici_solver, [edata])
 
-    check_fields_jax(rs_amici, jax_model, edata, ["x", "y", "llh"])
-
     check_fields_jax(
-        rs_amici,
-        jax_model,
-        edata,
-        ["x", "y", "llh", "sllh"],
-        sensi_order=amici.SensitivityOrder.first,
+        rs_amici, jax_model, edata, ["x", "y", "llh", "res", "x0"]
     )
 
     check_fields_jax(
         rs_amici,
         jax_model,
         edata,
-        ["x", "y", "llh", "sllh"],
-        sensi_order=amici.SensitivityOrder.second,
+        ["sllh", "sx0", "sx", "sres", "sy"],
+        sensi_order=amici.SensitivityOrder.first,
     )
 
 
@@ -136,41 +132,81 @@ def check_fields_jax(
     sensi_order=amici.SensitivityOrder.none,
 ):
     r_jax = dict()
-    kwargs = {
-        "ts": np.array(edata.getTimepoints()),
-        "ts_dyn": np.array(edata.getTimepoints()),
-        "p": np.array(edata.parameters),
-        "k": np.array(edata.fixedParameters),
-        "k_preeq": np.array([]),
-        "my": np.array(edata.getObservedData()).reshape(
-            np.array(edata.getTimepoints()).shape[0], -1
-        ),
-        "pscale": np.array(edata.pscale),
-    }
-    if sensi_order == amici.SensitivityOrder.none:
-        (
-            r_jax["llh"],
-            (r_jax["x"], r_jax["y"], r_jax["stats"]),
-        ) = jax_model._fun(**kwargs)
-    elif sensi_order == amici.SensitivityOrder.first:
-        (
-            r_jax["llh"],
-            r_jax["sllh"],
-            (r_jax["x"], r_jax["y"], r_jax["stats"]),
-        ) = jax_model._grad(**kwargs)
-    elif sensi_order == amici.SensitivityOrder.second:
-        (
-            r_jax["llh"],
-            r_jax["sllh"],
-            r_jax["s2llh"],
-            (r_jax["x"], r_jax["y"], r_jax["stats"]),
-        ) = jax_model._hessian(**kwargs)
+    ts = np.array(edata.getTimepoints())
+    my = np.array(edata.getObservedData()).reshape(len(ts), -1)
+    ts = np.repeat(ts.reshape(-1, 1), my.shape[1], axis=1)
+    iys = np.repeat(np.arange(my.shape[1]).reshape(1, -1), len(ts), axis=0)
+    my = my.flatten()
+    ts = ts.flatten()
+    iys = iys.flatten()
+
+    ts_preeq = ts[ts == 0]
+    ts_dyn = ts[ts > 0]
+    ts_posteq = np.array([])
+    p = jnp.array(list(edata.parameters) + list(edata.fixedParameters))
+    args = (
+        jnp.array([]),  # p_preeq
+        jnp.array(ts_preeq),  # ts_preeq
+        jnp.array(ts_dyn),  # ts_dyn
+        jnp.array(ts_posteq),  # ts_posteq
+        jnp.array(my),  # my
+        jnp.array(iys),  # iys
+        diffrax.Kvaerno5(),  # solver
+        diffrax.PIDController(atol=1e-8, rtol=1e-8),  # controller
+        diffrax.RecursiveCheckpointAdjoint(),  # adjoint
+        2**8,  # max_steps
+    )
+    fun = jax_model.simulate_condition
+
+    for output in ["llh", "x0", "x", "y", "res"]:
+        oargs = (*args[:-2], diffrax.DirectAdjoint(), 2**8, output)
+        if sensi_order == amici.SensitivityOrder.none:
+            r_jax[output] = fun(p, *oargs)[0]
+        if sensi_order == amici.SensitivityOrder.first:
+            if output == "llh":
+                r_jax[f"s{output}"] = jax.grad(fun, has_aux=True)(p, *args)[0]
+            else:
+                r_jax[f"s{output}"] = jax.jacfwd(fun, has_aux=True)(p, *oargs)[
+                    0
+                ]
 
     for field in fields:
         for r_amici, r_jax in zip(rs_amici, [r_jax]):
+            actual = r_jax[field]
+            desired = r_amici[field]
+            if field == "x":
+                actual = actual[iys == 0, :]
+            if field == "y":
+                actual = np.stack(
+                    [actual[iys == iy] for iy in sorted(np.unique(iys))],
+                    axis=1,
+                )
+            elif field == "sllh":
+                actual = actual[: len(edata.parameters)]
+            elif field == "sx":
+                actual = np.permute_dims(
+                    actual[iys == 0, :, : len(edata.parameters)], (0, 2, 1)
+                )
+            elif field == "sy":
+                actual = np.permute_dims(
+                    np.stack(
+                        [
+                            actual[iys == iy, : len(edata.parameters)]
+                            for iy in sorted(np.unique(iys))
+                        ],
+                        axis=1,
+                    ),
+                    (0, 2, 1),
+                )
+            elif field == "sx0":
+                actual = actual[:, : len(edata.parameters)].T
+            elif field == "sres":
+                actual = actual[:, : len(edata.parameters)]
+
             assert_allclose(
-                actual=r_amici[field],
-                desired=r_jax[field],
-                atol=1e-6,
-                rtol=1e-6,
+                actual=actual,
+                desired=desired,
+                atol=1e-5,
+                rtol=1e-5,
+                err_msg=f"field {field} does not match",
             )

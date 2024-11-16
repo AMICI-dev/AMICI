@@ -13,6 +13,7 @@ from collections.abc import Iterable
 
 import diffrax
 import equinox as eqx
+import jax.lax
 import jax.numpy as jnp
 import numpy as np
 import pandas as pd
@@ -22,7 +23,7 @@ from amici.petab.parameter_mapping import (
     ParameterMappingForCondition,
     create_parameter_mapping,
 )
-from amici.jax.model import JAXModel
+from amici.jax.model import JAXModel, simulate_condition
 
 
 def jax_unscale(
@@ -35,7 +36,7 @@ def jax_unscale(
         parameter:
             Parameter to be unscaled.
         scale_str:
-            One of ``'lin'`` (synonymous with ``''``), ``'log'``, ``'log10'``.
+            One of ``petab.LIN``, ``petab.LOG``, ``petab.LOG10``.
 
     Returns:
         The unscaled parameter.
@@ -51,12 +52,6 @@ def jax_unscale(
 
 class JAXProblem(eqx.Module):
     """
-    :ivar solver:
-        Diffrax solver to use for model simulation
-    :ivar controller:
-        Step-size controller to use for model simulation
-    :ivar max_steps:
-        Maximum number of steps to take during a simulation
     :ivar parameters:
         Values for the model parameters. Only populated after setting the PEtab problem via :meth:`set_petab_problem`.
         Do not change dimensions, values may be changed during, e.g. model training.
@@ -72,13 +67,11 @@ class JAXProblem(eqx.Module):
 
     parameters: jnp.ndarray
     model: JAXModel
-    parameter_mappings: dict[tuple[str], ParameterMappingForCondition] = (
-        eqx.field(static=True)
-    )
+    parameter_mappings: dict[tuple[str], ParameterMappingForCondition]
     measurements: dict[
         tuple[str],
-        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, str],
-    ] = eqx.field(static=True)
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    ]
     petab_problem: petab.Problem
 
     def __init__(self, model: JAXModel, petab_problem: petab.Problem):
@@ -122,30 +115,31 @@ class JAXProblem(eqx.Module):
         """
         measurements = dict()
         for _, simulation_condition in simulation_conditions.iterrows():
-            measurements_df = self.petab_problem.measurement_df
-            for k, v in simulation_condition.items():
-                measurements_df = measurements_df.query(f"{k} == '{v}'")
+            query = " & ".join(
+                [f"{k} == '{v}'" for k, v in simulation_condition.items()]
+            )
+            m = self.petab_problem.measurement_df.query(query)
 
-            measurements_df.sort_values(by=petab.TIME, inplace=True)
+            m.sort_values(by=petab.TIME, inplace=True)
 
-            ts = measurements_df[petab.TIME].values
-            ts_dyn = [t for t in ts if np.isfinite(t)]
-            my = measurements_df[petab.MEASUREMENT].values
+            ts = m[petab.TIME].values
+            ts_preeq = ts[np.isfinite(ts) & (ts == 0)]
+            ts_dyn = ts[np.isfinite(ts) & (ts > 0)]
+            ts_posteq = ts[np.logical_not(np.isfinite(ts))]
+            my = m[petab.MEASUREMENT].values
             iys = np.array(
                 [
                     self.model.observable_ids.index(oid)
-                    for oid in measurements_df[petab.OBSERVABLE_ID].values
+                    for oid in m[petab.OBSERVABLE_ID].values
                 ]
             )
 
-            # using strings here prevents tracing in jax
-            dynamic = ts_dyn and max(ts_dyn) > 0
             measurements[tuple(simulation_condition)] = (
-                np.array(ts),
-                np.array(ts_dyn),
+                ts_preeq,
+                ts_dyn,
+                ts_posteq,
                 my,
                 iys,
-                dynamic,
             )
         return measurements
 
@@ -236,21 +230,24 @@ class JAXProblem(eqx.Module):
         controller: diffrax.AbstractStepSizeController,
         max_steps: int,
     ):
-        ts, ts_dyn, my, iys, dynamic = self.measurements[simulation_condition]
+        ts_preeq, ts_dyn, ts_posteq, my, iys = self.measurements[
+            simulation_condition
+        ]
         p = self.load_parameters(simulation_condition[0])
         p_preeq = (
             self.load_parameters(simulation_condition[1])
             if len(simulation_condition) > 1
             else jnp.array([])
         )
-        return self.model.simulate_condition(
-            ts,
-            ts_dyn,
-            my,
-            iys,
+        return simulate_condition(
             p,
             p_preeq,
-            dynamic,
+            self.model,
+            jax.lax.stop_gradient(jnp.array(ts_preeq)),
+            jax.lax.stop_gradient(jnp.array(ts_dyn)),
+            jax.lax.stop_gradient(jnp.array(ts_posteq)),
+            jax.lax.stop_gradient(jnp.array(my)),
+            jax.lax.stop_gradient(jnp.array(iys)),
             solver,
             controller,
             max_steps,

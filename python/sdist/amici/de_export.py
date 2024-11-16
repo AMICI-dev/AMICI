@@ -319,7 +319,7 @@ class DEExporter:
                         ),
                         indent,
                     )
-                )
+                )[indent:]
                 for eq_name in eq_names
             },
             **{

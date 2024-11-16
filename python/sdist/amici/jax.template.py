@@ -8,17 +8,16 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     def __init__(self):
         super().__init__()
 
-    @staticmethod
-    def xdot(t, x, args):
+    def xdot(self, t, x, args):
 
         pk, tcl = args
 
         TPL_X_SYMS = x
         TPL_PK_SYMS = pk
         TPL_TCL_SYMS = tcl
-        TPL_W_SYMS = JAXModel_TPL_MODEL_NAME._w(t, x, pk, tcl)
+        TPL_W_SYMS = self._w(t, x, pk, tcl)
 
-TPL_XDOT_EQ
+        TPL_XDOT_EQ
 
         return TPL_XDOT_RET
 
@@ -29,7 +28,7 @@ TPL_XDOT_EQ
         TPL_PK_SYMS = pk
         TPL_TCL_SYMS = tcl
 
-TPL_W_EQ
+        TPL_W_EQ
 
         return TPL_W_RET
 
@@ -38,7 +37,7 @@ TPL_W_EQ
 
         TPL_PK_SYMS = pk
 
-TPL_X0_EQ
+        TPL_X0_EQ
 
         return TPL_X0_RET
 
@@ -47,7 +46,7 @@ TPL_X0_EQ
 
         TPL_X_RDATA_SYMS = x
 
-TPL_X_SOLVER_EQ
+        TPL_X_SOLVER_EQ
 
         return TPL_X_SOLVER_RET
 
@@ -57,7 +56,7 @@ TPL_X_SOLVER_EQ
         TPL_X_SYMS = x
         TPL_TCL_SYMS = tcl
 
-TPL_X_RDATA_EQ
+        TPL_X_RDATA_EQ
 
         return TPL_X_RDATA_RET
 
@@ -67,7 +66,7 @@ TPL_X_RDATA_EQ
         TPL_X_RDATA_SYMS = x
         TPL_PK_SYMS = pk
 
-TPL_TOTAL_CL_EQ
+        TPL_TOTAL_CL_EQ
 
         return TPL_TOTAL_CL_RET
 
@@ -77,7 +76,7 @@ TPL_TOTAL_CL_EQ
         TPL_PK_SYMS = pk
         TPL_W_SYMS = self._w(t, x, pk, tcl)
 
-TPL_Y_EQ
+        TPL_Y_EQ
 
         return TPL_Y_RET
 
@@ -86,7 +85,7 @@ TPL_Y_EQ
 
         TPL_Y_SYMS = y
 
-TPL_SIGMAY_EQ
+        TPL_SIGMAY_EQ
 
         return TPL_SIGMAY_RET
 
@@ -94,16 +93,11 @@ TPL_SIGMAY_EQ
     def llh(self, t, x, pk, tcl, my, iy):
         y = self.y(t, x, pk, tcl)
         TPL_Y_SYMS = y
-        sigmay = self.sigmay(y, pk)
-        TPL_SIGMAY_SYMS = sigmay
+        TPL_SIGMAY_SYMS = self.sigmay(y, pk)
 
-TPL_JY_EQ
+        TPL_JY_EQ
 
-        return jnp.array([
-            TPL_JY_RET.at[iy].get(),
-            y.at[iy].get(),
-            sigmay.at[iy].get()
-        ])
+        return TPL_JY_RET.at[iy].get()
 
     @property
     def observable_ids(self):

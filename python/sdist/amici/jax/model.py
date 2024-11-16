@@ -3,7 +3,6 @@ from abc import abstractmethod
 import diffrax
 import equinox as eqx
 import jax.numpy as jnp
-import numpy as np
 import jax
 
 # always use 64-bit precision. No-brainer on CPUs and GPUs don't make sense for stiff systems.
@@ -16,10 +15,12 @@ class JAXModel(eqx.Module):
     JAXModel must provide model specific implementations of abstract methods.
     """
 
-    @staticmethod
     @abstractmethod
     def xdot(
-        t: jnp.float_, x: jnp.ndarray, args: tuple[jnp.ndarray, jnp.ndarray]
+        self,
+        t: jnp.float_,
+        x: jnp.ndarray,
+        args: tuple[jnp.ndarray, jnp.ndarray],
     ) -> jnp.ndarray:
         """
         Right-hand side of the ODE system.
@@ -190,21 +191,6 @@ class JAXModel(eqx.Module):
         """
         ...
 
-    def _preeq(self, p, solver, controller, max_steps):
-        """
-        Pre-equilibration of the model.
-        :param p:
-            parameters
-        :return:
-            Initial state vector
-        """
-        x0 = self.x_solver(self.x0(p))
-        tcl = self.tcl(x0, p)
-        return self._eq(p, tcl, x0, solver, controller, max_steps)
-
-    def _posteq(self, p, x, tcl, solver, controller, max_steps):
-        return self._eq(p, tcl, x, solver, controller, max_steps)
-
     def _eq(self, p, tcl, x0, solver, controller, max_steps):
         sol = diffrax.diffeqsolve(
             diffrax.ODETerm(self.xdot),
@@ -216,12 +202,12 @@ class JAXModel(eqx.Module):
             y0=x0,
             stepsize_controller=controller,
             max_steps=max_steps,
+            adjoint=diffrax.DirectAdjoint(),
             event=diffrax.Event(cond_fn=diffrax.steady_state_event()),
         )
-        return sol.ys[-1, :]
+        return sol.ys[-1, :], sol.stats
 
-    def _solve(self, ts, p, x0, solver, controller, max_steps):
-        tcl = self.tcl(x0, p)
+    def _solve(self, p, ts, tcl, x0, solver, controller, max_steps, adjoint):
         sol = diffrax.diffeqsolve(
             diffrax.ODETerm(self.xdot),
             solver,
@@ -229,14 +215,14 @@ class JAXModel(eqx.Module):
             t0=0.0,
             t1=ts[-1],
             dt0=None,
-            y0=self.x_solver(x0),
+            y0=x0,
             stepsize_controller=controller,
             max_steps=max_steps,
-            adjoint=diffrax.RecursiveCheckpointAdjoint(),
+            adjoint=adjoint,
             saveat=diffrax.SaveAt(ts=ts),
             throw=False,
         )
-        return sol.ys, tcl, sol.stats
+        return sol.ys, sol.stats
 
     def _x_rdata(self, x, tcl):
         return jax.vmap(self.x_rdata, in_axes=(0, None))(x, tcl)
@@ -246,62 +232,105 @@ class JAXModel(eqx.Module):
             ts, x, p, tcl, my, iys
         )
 
+    def _y(self, ts, xs, p, tcl, iys):
+        return jax.vmap(
+            lambda t, x, p, tcl, iy: self.y(t, x, p, tcl).at[iy].get(),
+            in_axes=(0, 0, None, None, 0),
+        )(ts, xs, p, tcl, iys)
+
+    def _sigmay(self, ts, xs, p, tcl, iys):
+        return jax.vmap(
+            lambda t, x, p, tcl, iy: self.sigmay(self.y(t, x, p, tcl), p)
+            .at[iy]
+            .get(),
+            in_axes=(0, 0, None, None, 0),
+        )(ts, xs, p, tcl, iys)
+
     # @eqx.filter_jit
     def simulate_condition(
         self,
-        ts: np.ndarray,
-        ts_dyn: np.ndarray,
-        my: np.ndarray,
-        iys: np.ndarray,
         p: jnp.ndarray,
         p_preeq: jnp.ndarray,
-        dynamic: bool,
+        ts_preeq: jnp.ndarray,
+        ts_dyn: jnp.ndarray,
+        ts_posteq: jnp.ndarray,
+        my: jnp.ndarray,
+        iys: jnp.ndarray,
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        adjoint: diffrax.AbstractAdjoint,
         max_steps: int,
+        ret: str = "llh",
     ):
         # Pre-equilibration
         if p_preeq.shape[0] > 0:
-            x0 = self._preeq(p_preeq, solver, controller, max_steps)
+            x0 = self.x0(p_preeq)
+            tcl = self.tcl(x0, p_preeq)
+            current_x = self.x_solver(x0)
+            current_x, stats_preeq = self._eq(
+                p_preeq, tcl, current_x, solver, controller, max_steps
+            )
+            # update tcl with new parameters
+            tcl = self.tcl(self.x_rdata(current_x, tcl), p)
         else:
             x0 = self.x0(p)
+            current_x = self.x_solver(x0)
+            stats_preeq = None
+
+            tcl = self.tcl(x0, p)
+        x_preq = jnp.repeat(
+            current_x.reshape(1, -1), ts_preeq.shape[0], axis=0
+        )
 
         # Dynamic simulation
-        if dynamic:
-            x, tcl, stats = self._solve(
-                ts_dyn, p, x0, solver, controller, max_steps
+        if ts_dyn.shape[0] > 0:
+            x_dyn, stats_dyn = self._solve(
+                p,
+                ts_dyn,
+                tcl,
+                current_x,
+                solver,
+                controller,
+                max_steps,
+                adjoint,
             )
+            current_x = x_dyn[-1, :]
         else:
-            x = jnp.repeat(
-                self.x_solver(x0).reshape(1, -1),
-                len(ts_dyn),
-                axis=0,
+            x_dyn = jnp.repeat(
+                current_x.reshape(1, -1), ts_dyn.shape[0], axis=0
             )
-            tcl = self.tcl(x0, p)
-            stats = None
+            stats_dyn = None
 
         # Post-equilibration
-        if len(ts) > len(ts_dyn):
-            if len(ts_dyn) > 0:
-                x_final = x[-1, :]
-            else:
-                x_final = self.x_solver(x0)
-            x_posteq = self._posteq(
-                p, x_final, tcl, solver, controller, max_steps
+        if ts_posteq.shape[0] > 0:
+            current_x, stats_posteq = self._eq(
+                p, tcl, current_x, solver, controller, max_steps
             )
-            x_posteq = jnp.repeat(
-                x_posteq.reshape(1, -1),
-                len(ts) - len(ts_dyn),
-                axis=0,
-            )
-            if len(ts_dyn) > 0:
-                x = jnp.concatenate((x, x_posteq), axis=0)
-            else:
-                x = x_posteq
+        else:
+            stats_posteq = None
 
-        outputs = self._outputs(ts, x, p, tcl, my, iys)
-        llh = -jnp.sum(outputs[:, 0])
-        obs = outputs[:, 1]
-        sigmay = outputs[:, 2]
-        x_rdata = jnp.stack(self._x_rdata(x, tcl), axis=1)
-        return llh, dict(llh=llh, x=x_rdata, y=obs, sigmay=sigmay, stats=stats)
+        x_posteq = jnp.repeat(
+            current_x.reshape(1, -1), ts_posteq.shape[0], axis=0
+        )
+
+        ts = jnp.concatenate((ts_preeq, ts_dyn, ts_posteq), axis=0)
+        x = jnp.concatenate((x_preq, x_dyn, x_posteq), axis=0)
+
+        llhs = self._outputs(ts, x, p, tcl, my, iys)
+        llh = -jnp.sum(llhs)
+        return {
+            "llh": llh,
+            "llhs": llhs,
+            "x": self._x_rdata(x, tcl),
+            "x_solver": x,
+            "y": self._y(ts, x, p, tcl, iys),
+            "sigmay": self._sigmay(ts, x, p, tcl, iys),
+            "x0": self.x_rdata(x_preq[-1, :], tcl),
+            "x0_solver": x_preq[-1, :],
+            "tcl": tcl,
+            "res": self._y(ts, x, p, tcl, iys) - my,
+        }[ret], dict(
+            stats_preeq=stats_preeq,
+            stats_dyn=stats_dyn,
+            stats_posteq=stats_posteq,
+        )
