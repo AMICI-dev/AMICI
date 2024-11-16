@@ -23,7 +23,7 @@ from amici.petab.parameter_mapping import (
     ParameterMappingForCondition,
     create_parameter_mapping,
 )
-from amici.jax.model import JAXModel, simulate_condition
+from amici.jax.model import JAXModel
 
 
 def jax_unscale(
@@ -239,10 +239,9 @@ class JAXProblem(eqx.Module):
             if len(simulation_condition) > 1
             else jnp.array([])
         )
-        return simulate_condition(
+        return self.model.simulate_condition(
             p,
             p_preeq,
-            self.model,
             jax.lax.stop_gradient(jnp.array(ts_preeq)),
             jax.lax.stop_gradient(jnp.array(ts_dyn)),
             jax.lax.stop_gradient(jnp.array(ts_posteq)),
