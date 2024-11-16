@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from interpax import interp1d
 
-from amici.jax import JAXModel
+from amici.jax.model import JAXModel
 
 
 class JAXModel_TPL_MODEL_NAME(JAXModel):
@@ -11,24 +11,22 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     @staticmethod
     def xdot(t, x, args):
 
-        p, k, tcl = args
+        pk, tcl = args
 
         TPL_X_SYMS = x
-        TPL_P_SYMS = p
-        TPL_K_SYMS = k
+        TPL_PK_SYMS = pk
         TPL_TCL_SYMS = tcl
-        TPL_W_SYMS = JAXModel_TPL_MODEL_NAME._w(t, x, p, k, tcl)
+        TPL_W_SYMS = JAXModel_TPL_MODEL_NAME._w(t, x, pk, tcl)
 
 TPL_XDOT_EQ
 
         return TPL_XDOT_RET
 
     @staticmethod
-    def _w(t, x, p, k, tcl):
+    def _w(t, x, pk, tcl):
 
         TPL_X_SYMS = x
-        TPL_P_SYMS = p
-        TPL_K_SYMS = k
+        TPL_PK_SYMS = pk
         TPL_TCL_SYMS = tcl
 
 TPL_W_EQ
@@ -36,10 +34,9 @@ TPL_W_EQ
         return TPL_W_RET
 
     @staticmethod
-    def x0(p, k):
+    def x0(pk):
 
-        TPL_P_SYMS = p
-        TPL_K_SYMS = k
+        TPL_PK_SYMS = pk
 
 TPL_X0_EQ
 
@@ -65,55 +62,48 @@ TPL_X_RDATA_EQ
         return TPL_X_RDATA_RET
 
     @staticmethod
-    def tcl(x, p, k):
+    def tcl(x, pk):
 
         TPL_X_RDATA_SYMS = x
-        TPL_P_SYMS = p
-        TPL_K_SYMS = k
+        TPL_PK_SYMS = pk
 
 TPL_TOTAL_CL_EQ
 
         return TPL_TOTAL_CL_RET
 
-    @staticmethod
-    def y(t, x, p, k, tcl):
+    def y(self, t, x, pk, tcl):
 
         TPL_X_SYMS = x
-        TPL_P_SYMS = p
-        TPL_K_SYMS = k
-        TPL_W_SYMS = JAXModel_TPL_MODEL_NAME._w(t, x, p, k, tcl)
+        TPL_PK_SYMS = pk
+        TPL_W_SYMS = self._w(t, x, pk, tcl)
 
 TPL_Y_EQ
 
         return TPL_Y_RET
 
-    @staticmethod
-    def sigmay(y, p, k):
+    def sigmay(self, y, pk):
+        TPL_PK_SYMS = pk
+
         TPL_Y_SYMS = y
-        TPL_P_SYMS = p
-        TPL_K_SYMS = k
 
 TPL_SIGMAY_EQ
 
         return TPL_SIGMAY_RET
 
-    @staticmethod
-    def Jy(y, my, sigmay):
+
+    def llh(self, t, x, pk, tcl, my, iy):
+        y = self.y(t, x, pk, tcl)
         TPL_Y_SYMS = y
-        TPL_MY_SYMS = my
+        sigmay = self.sigmay(y, pk)
         TPL_SIGMAY_SYMS = sigmay
 
 TPL_JY_EQ
 
-        return TPL_JY_RET
-
-    @property
-    def parameter_ids(self):
-        return TPL_P_IDS
-
-    @property
-    def fixed_parameter_ids(self):
-        return TPL_K_IDS
+        return jnp.array([
+            TPL_JY_RET.at[iy].get(),
+            y.at[iy].get(),
+            sigmay.at[iy].get()
+        ])
 
     @property
     def observable_ids(self):
@@ -122,3 +112,7 @@ TPL_JY_EQ
     @property
     def state_ids(self):
         return TPL_X_IDS
+
+    @property
+    def parameter_ids(self):
+        return TPL_PK_IDS
