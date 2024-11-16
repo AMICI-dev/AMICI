@@ -5,9 +5,12 @@ parameters, correctness of the gradient computation, and simulation times
 for a subset of the benchmark problems.
 """
 
+from functools import partial
 from pathlib import Path
 import fiddy
 import amici
+import equinox as eqx
+import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
@@ -28,10 +31,12 @@ import yaml
 from amici.logging import get_logger
 from amici.petab.simulations import (
     LLH,
+    SLLH,
     RDATAS,
     rdatas_to_measurement_df,
     simulate_petab,
 )
+from amici.jax.petab import run_simulations, JAXProblem
 from petab.v1.visualize import plot_problem
 
 
@@ -270,38 +275,102 @@ def test_jax_llh(benchmark_problem):
         pytest.skip("Excluded from JAX check due to excessive runtime")
 
     amici_solver = amici_model.getSolver()
+    cur_settings = settings[problem_id]
     amici_solver.setAbsoluteTolerance(1e-8)
     amici_solver.setRelativeTolerance(1e-8)
     amici_solver.setMaxSteps(10_000)
 
-    llh_amici = simulate_petab(
+    simulate_amici = partial(
+        simulate_petab,
         petab_problem=petab_problem,
         amici_model=amici_model,
         solver=amici_solver,
+        scaled_parameters=True,
+        scaled_gradients=True,
         log_level=logging.DEBUG,
-    )[LLH]
+    )
+
+    np.random.seed(cur_settings.rng_seed)
+
+    problems_for_gradient_check_jax = list(
+        set(problems_for_gradient_check) - set("Laske_PLOSComputBiol2019")
+        # Laske has nan values in gradient due to nan values in observables that are not used in the likelihood
+        # but are problematic during backpropagation
+    )
+
+    problem_parameters = None
+    if problem_id in problems_for_gradient_check_jax:
+        point = petab_problem.x_nominal_free_scaled
+        for _ in range(20):
+            amici_solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
+            amici_model.setSteadyStateSensitivityMode(
+                cur_settings.ss_sensitivity_mode
+            )
+            point_noise = (
+                np.random.randn(len(point)) * cur_settings.noise_level
+            )
+            point += point_noise  # avoid small gradients at nominal value
+
+            problem_parameters = dict(zip(petab_problem.x_free_ids, point))
+
+            r_amici = simulate_amici(
+                problem_parameters=problem_parameters,
+            )
+            if np.isfinite(r_amici[LLH]):
+                break
+        else:
+            raise RuntimeError("Could not compute expected derivative.")
+    else:
+        r_amici = simulate_amici()
+    llh_amici = r_amici[LLH]
 
     jax_model = import_petab_problem(
         petab_problem,
         model_output_dir=benchmark_outdir / problem_id,
         jax=True,
     )
-    jax_model = jax_model.set_petab_problem(petab_problem)
+    jax_problem = JAXProblem(jax_model, petab_problem)
     simulation_conditions = (
         petab_problem.get_simulation_conditions_from_measurement_df()
     )
     simulation_conditions = tuple(
         tuple(row) for _, row in simulation_conditions.iterrows()
     )
-    rdatas_jax = jax_model.run_simulations(
-        simulation_conditions=simulation_conditions,
+    if problem_parameters:
+        jax_problem = eqx.tree_at(
+            lambda x: x.parameters,
+            jax_problem,
+            jnp.array(
+                [problem_parameters[pid] for pid in jax_problem.parameter_ids]
+            ),
+        )
+    if problem_id in problems_for_gradient_check_jax:
+        (llh_jax, rdatas_jax), sllh_jax = eqx.filter_jit(
+            eqx.filter_value_and_grad(run_simulations, has_aux=True)
+        )(jax_problem, simulation_conditions)
+    else:
+        llh_jax, rdatas_jax = eqx.filter_jit(run_simulations)(
+            jax_problem, simulation_conditions
+        )
+
+    np.testing.assert_allclose(
+        llh_jax,
+        llh_amici,
+        rtol=1e-3,
+        atol=1e-3,
+        err_msg=f"LLH mismatch for {problem_id}",
     )
 
-    llh_jax = sum(r.llh for r in rdatas_jax)
-
-    assert np.isclose(
-        llh_amici, llh_jax, rtol=1e-3, atol=1e-3
-    ), f"LLH mismatch for {problem_id} with {llh_amici} (amici) vs {llh_jax} (jax)"
+    if problem_id in problems_for_gradient_check_jax:
+        sllh_amici = r_amici[SLLH]
+        np.testing.assert_allclose(
+            sllh_jax.parameters,
+            np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
+            rtol=1e-2,
+            atol=1e-2,
+            err_msg=f"SLLH mismatch for {problem_id}",
+        )
 
 
 @pytest.mark.filterwarnings(

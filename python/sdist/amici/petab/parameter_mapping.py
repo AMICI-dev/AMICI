@@ -309,7 +309,7 @@ def create_parameter_mapping(
     petab_problem: petab.Problem,
     simulation_conditions: pd.DataFrame | list[dict],
     scaled_parameters: bool,
-    amici_model: AmiciModel,
+    amici_model: AmiciModel | None = None,
     **parameter_mapping_kwargs,
 ) -> ParameterMapping:
     """Generate AMICI specific parameter mapping.
@@ -399,7 +399,7 @@ def create_parameter_mapping_for_condition(
     parameter_mapping_for_condition: petab.ParMappingDictQuadruple,
     condition: pd.Series | dict,
     petab_problem: petab.Problem,
-    amici_model: AmiciModel,
+    amici_model: AmiciModel | None = None,
 ) -> ParameterMappingForCondition:
     """Generate AMICI specific parameter mapping for condition.
 
@@ -515,27 +515,38 @@ def create_parameter_mapping_for_condition(
     # have different variable parameters. without splitting,
     # merge_preeq_and_sim_pars_condition below may fail.
     # TODO: This can be done already in parameter mapping creation.
-    variable_par_ids = amici_model.getParameterIds()
-    fixed_par_ids = amici_model.getFixedParameterIds()
+    if amici_model is not None:
+        variable_par_ids = amici_model.getParameterIds()
+        fixed_par_ids = amici_model.getFixedParameterIds()
+        condition_map_preeq_var, condition_map_preeq_fix = _subset_dict(
+            condition_map_preeq, variable_par_ids, fixed_par_ids
+        )
 
-    condition_map_preeq_var, condition_map_preeq_fix = _subset_dict(
-        condition_map_preeq, variable_par_ids, fixed_par_ids
-    )
+        (
+            condition_scale_map_preeq_var,
+            condition_scale_map_preeq_fix,
+        ) = _subset_dict(
+            condition_scale_map_preeq, variable_par_ids, fixed_par_ids
+        )
 
-    (
-        condition_scale_map_preeq_var,
-        condition_scale_map_preeq_fix,
-    ) = _subset_dict(
-        condition_scale_map_preeq, variable_par_ids, fixed_par_ids
-    )
+        condition_map_sim_var, condition_map_sim_fix = _subset_dict(
+            condition_map_sim, variable_par_ids, fixed_par_ids
+        )
 
-    condition_map_sim_var, condition_map_sim_fix = _subset_dict(
-        condition_map_sim, variable_par_ids, fixed_par_ids
-    )
-
-    condition_scale_map_sim_var, condition_scale_map_sim_fix = _subset_dict(
-        condition_scale_map_sim, variable_par_ids, fixed_par_ids
-    )
+        condition_scale_map_sim_var, condition_scale_map_sim_fix = (
+            _subset_dict(
+                condition_scale_map_sim, variable_par_ids, fixed_par_ids
+            )
+        )
+    else:
+        condition_map_preeq_var = condition_map_preeq
+        condition_map_preeq_fix = {}
+        condition_scale_map_preeq_var = condition_scale_map_preeq
+        condition_scale_map_preeq_fix = {}
+        condition_map_sim_var = condition_map_sim
+        condition_map_sim_fix = {}
+        condition_scale_map_sim_var = condition_scale_map_sim
+        condition_scale_map_sim_fix = {}
 
     logger.debug(
         "Fixed parameters preequilibration: " f"{condition_map_preeq_fix}"

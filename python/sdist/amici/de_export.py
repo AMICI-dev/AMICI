@@ -289,17 +289,14 @@ class DEExporter:
             "x_rdata",
             "total_cl",
         )
-        sym_names = ("p", "k", "x", "tcl", "w", "my", "y", "sigmay", "x_rdata")
+        sym_names = ("x", "tcl", "w", "my", "y", "sigmay", "x_rdata")
 
         indent = 8
 
-        def jnp_stack_str(array) -> str:
-            elems = "".join(str(x) + ", " for x in array)
+        def jnp_array_str(array) -> str:
+            elems = ", ".join(str(s) for s in array)
 
-            if not elems:
-                return "tuple()"
-
-            return elems
+            return f"jnp.array([{elems}])"
 
         tpl_data = {
             **{
@@ -309,11 +306,14 @@ class DEExporter:
                         self.model.eq(eq_name).subs(
                             dict(
                                 zip(
-                                    self.model.sym("h"),
-                                    (
+                                    list(self.model.sym("h"))
+                                    + list(self.model.sym("my")),
+                                    [
                                         sp.Heaviside(x)
                                         for x in self.model.eq("root")
-                                    ),
+                                    ]
+                                    + [sp.Symbol("my")]
+                                    * len(self.model.sym("my")),
                                 )
                             )
                         ),
@@ -323,17 +323,11 @@ class DEExporter:
                 for eq_name in eq_names
             },
             **{
-                f"{eq_name.upper()}_RET": jnp_stack_str(
+                f"{eq_name.upper()}_RET": jnp_array_str(
                     strip_pysb(s) for s in self.model.sym(eq_name)
                 )
-                if eq_name != "Jy"
-                else (
-                    "jnp.nansum(jnp.stack(("
-                    + "".join(str(s) + ", " for s in self.model.sym(eq_name))
-                    + "), axis=-1))"
-                )
                 if self.model.sym(eq_name)
-                else "0"
+                else "jnp.array([])"
                 for eq_name in eq_names
             },
             **{
@@ -351,6 +345,18 @@ class DEExporter:
                 if self.model.sym(sym_name)
                 else "tuple()"
                 for sym_name in ("p", "k", "y", "x")
+            },
+            **{
+                "PK_SYMS": "".join(
+                    str(strip_pysb(s)) + ", "
+                    for s in list(self.model.sym("p"))
+                    + list(self.model.sym("k"))
+                ),
+                "PK_IDS": "".join(
+                    f'"{strip_pysb(s)}", '
+                    for s in list(self.model.sym("p"))
+                    + list(self.model.sym("k"))
+                ),
             },
             **{
                 "MODEL_NAME": self.model_name,

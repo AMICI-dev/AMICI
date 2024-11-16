@@ -1,7 +1,6 @@
 """Jax code generation"""
 
 import re
-from typing import Optional, Union
 from collections.abc import Iterable
 
 import sympy as sp
@@ -11,7 +10,7 @@ from sympy.printing.numpy import NumPyPrinter
 class AmiciJaxCodePrinter(NumPyPrinter):
     """JAX code printer"""
 
-    def doprint(self, expr: sp.Expr, assign_to: Optional[str] = None) -> str:
+    def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         try:
             code = super().doprint(expr, assign_to)
             code = re.sub(r"numpy\.", r"jnp.", code)
@@ -28,8 +27,8 @@ class AmiciJaxCodePrinter(NumPyPrinter):
 
     def _get_sym_lines(
         self,
-        symbols: Union[Iterable[str], sp.Matrix],
-        equations: sp.Matrix,
+        symbols: sp.Matrix | Iterable[str],
+        equations: sp.Matrix | Iterable[sp.Expr],
         indent_level: int,
     ) -> list[str]:
         """
