@@ -278,6 +278,8 @@ class DEExporter:
 
     @log_execution_time("generating jax code", logger)
     def _generate_jax_code(self) -> None:
+        from amici.jax.model import JAXModel
+
         eq_names = (
             "xdot",
             "w",
@@ -360,6 +362,7 @@ class DEExporter:
             },
             **{
                 "MODEL_NAME": self.model_name,
+                "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
             },
         }
         os.makedirs(

@@ -18,6 +18,16 @@ class JAXModel(eqx.Module):
     classes inheriting from JAXModel.
     """
 
+    MODEL_API_VERSION = "0.0.1"
+    api_version: str
+
+    def __init__(self):
+        if self.api_version != self.MODEL_API_VERSION:
+            raise ValueError(
+                "JAXModel API version mismatch, please regenerate the model class."
+            )
+        super().__init__()
+
     @abstractmethod
     def _xdot(
         self,
@@ -406,7 +416,7 @@ class JAXModel(eqx.Module):
             in_axes=(0, 0, None, None, 0),
         )(ts, xs, p, tcl, iys)
 
-    # @eqx.filter_jit
+    @eqx.filter_jit
     def simulate_condition(
         self,
         p: jt.Float[jt.Array, "np"],

@@ -5,6 +5,8 @@ from amici.jax.model import JAXModel
 
 
 class JAXModel_TPL_MODEL_NAME(JAXModel):
+    api_version = TPL_MODEL_API_VERSION
+
     def __init__(self):
         super().__init__()
 
