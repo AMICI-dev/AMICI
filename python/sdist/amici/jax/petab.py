@@ -118,9 +118,9 @@ class JAXProblem(eqx.Module):
             query = " & ".join(
                 [f"{k} == '{v}'" for k, v in simulation_condition.items()]
             )
-            m = self.petab_problem.measurement_df.query(query)
-
-            m.sort_values(by=petab.TIME, inplace=True)
+            m = self.petab_problem.measurement_df.query(query).sort_values(
+                by=petab.TIME
+            )
 
             ts = m[petab.TIME].values
             ts_preeq = ts[np.isfinite(ts) & (ts == 0)]
@@ -240,16 +240,17 @@ class JAXProblem(eqx.Module):
             else jnp.array([])
         )
         return self.model.simulate_condition(
-            p,
-            p_preeq,
-            jax.lax.stop_gradient(jnp.array(ts_preeq)),
-            jax.lax.stop_gradient(jnp.array(ts_dyn)),
-            jax.lax.stop_gradient(jnp.array(ts_posteq)),
-            jax.lax.stop_gradient(jnp.array(my)),
-            jax.lax.stop_gradient(jnp.array(iys)),
-            solver,
-            controller,
-            max_steps,
+            p=p,
+            p_preeq=p_preeq,
+            ts_preeq=jax.lax.stop_gradient(jnp.array(ts_preeq)),
+            ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
+            ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),
+            my=jax.lax.stop_gradient(jnp.array(my)),
+            iys=jax.lax.stop_gradient(jnp.array(iys)),
+            solver=solver,
+            controller=controller,
+            max_steps=max_steps,
+            adjoint=diffrax.RecursiveCheckpointAdjoint(),
         )
 
 

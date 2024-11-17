@@ -260,6 +260,7 @@ def benchmark_problem(request):
 @pytest.mark.filterwarnings(
     "ignore:The following problem parameters were not used *",
     "ignore: The environment variable *",
+    "ignore:Adjoint sensitivity analysis for models with discontinuous ",
 )
 def test_jax_llh(benchmark_problem):
     problem_id, petab_problem, amici_model = benchmark_problem
@@ -271,7 +272,7 @@ def test_jax_llh(benchmark_problem):
         "SalazarCavazos_MBoC2020",
         "Smith_BMCSystBiol2013",
     ):
-        # confirmed to work 27/10/2024 but experienced high local runtime (M2 MBA, >30s)
+        # confirmed to work (no gradients) 27/10/2024 but experienced high local runtime (M2 MBA, >30s)
         pytest.skip("Excluded from JAX check due to excessive runtime")
 
     amici_solver = amici_model.getSolver()
@@ -346,11 +347,11 @@ def test_jax_llh(benchmark_problem):
             ),
         )
     if problem_id in problems_for_gradient_check_jax:
-        (llh_jax, rdatas_jax), sllh_jax = eqx.filter_jit(
+        (llh_jax, _), sllh_jax = eqx.filter_jit(
             eqx.filter_value_and_grad(run_simulations, has_aux=True)
         )(jax_problem, simulation_conditions)
     else:
-        llh_jax, rdatas_jax = eqx.filter_jit(run_simulations)(
+        llh_jax, _ = eqx.filter_jit(run_simulations)(
             jax_problem, simulation_conditions
         )
 
