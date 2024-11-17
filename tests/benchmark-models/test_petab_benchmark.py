@@ -294,7 +294,7 @@ def test_jax_llh(benchmark_problem):
     np.random.seed(cur_settings.rng_seed)
 
     problems_for_gradient_check_jax = list(
-        set(problems_for_gradient_check) - set("Laske_PLOSComputBiol2019")
+        set(problems_for_gradient_check) - {"Laske_PLOSComputBiol2019"}
         # Laske has nan values in gradient due to nan values in observables that are not used in the likelihood
         # but are problematic during backpropagation
     )
