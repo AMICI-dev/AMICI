@@ -39,6 +39,7 @@ from amici.petab.simulations import (
 )
 from amici.jax.petab import run_simulations, JAXProblem
 from petab.v1.visualize import plot_problem
+from beartype import beartype
 
 jax.config.update("jax_enable_x64", True)
 
@@ -354,7 +355,7 @@ def test_jax_llh(benchmark_problem):
             eqx.filter_value_and_grad(run_simulations, has_aux=True)
         )(jax_problem, simulation_conditions)
     else:
-        llh_jax, _ = eqx.filter_jit(run_simulations)(
+        llh_jax, _ = beartype(eqx.filter_jit(run_simulations))(
             jax_problem, simulation_conditions
         )
 

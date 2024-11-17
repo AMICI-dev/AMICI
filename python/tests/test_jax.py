@@ -8,6 +8,7 @@ import jax.numpy as jnp
 import jax
 import diffrax
 import numpy as np
+from beartype import beartype
 
 from amici.pysb_import import pysb2amici
 from numpy.testing import assert_allclose
@@ -158,7 +159,7 @@ def check_fields_jax(
         diffrax.RecursiveCheckpointAdjoint(),  # adjoint
         2**8,  # max_steps
     )
-    fun = jax_model.simulate_condition
+    fun = beartype(jax_model.simulate_condition)
 
     for output in ["llh", "x0", "x", "y", "res"]:
         oargs = (*args[:-2], diffrax.DirectAdjoint(), 2**8, output)

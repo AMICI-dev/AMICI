@@ -65,7 +65,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_TOTAL_CL_RET
 
-    def y(self, t, x, pk, tcl):
+    def _y(self, t, x, pk, tcl):
 
         TPL_X_SYMS = x
         TPL_PK_SYMS = pk

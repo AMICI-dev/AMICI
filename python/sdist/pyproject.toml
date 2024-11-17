@@ -71,7 +71,8 @@ test = [
     #  unsupported x86_64 / x86_64h
     "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
     "scipy",
-    "pooch"
+    "pooch",
+    "beartype",
 ]
 vis = [
     "matplotlib",

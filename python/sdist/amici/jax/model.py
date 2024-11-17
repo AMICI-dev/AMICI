@@ -410,16 +410,16 @@ class JAXModel(eqx.Module):
     def simulate_condition(
         self,
         p: jt.Float[jt.Array, "np"],
-        p_preeq: jt.Float[jt.Array, "?np"],
+        p_preeq: jt.Float[jt.Array, "*np"],
         ts_preeq: jt.Float[jt.Array, "nt_preeq"],
         ts_dyn: jt.Float[jt.Array, "nt_dyn"],
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
-        my: jt.Float[jt.Array, "nt_preeq+nt_dyn+nt_posteq"],
-        iys: jt.Float[jt.Array, "nt_preeq+nt_dyn+nt_posteq"],
+        my: jt.Float[jt.Array, "nt"],
+        iys: jt.Int[jt.Array, "nt"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
-        max_steps: jnp.int_,
+        max_steps: int | jnp.int_,
         ret: str = "llh",
     ):
         r"""
