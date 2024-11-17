@@ -14,6 +14,8 @@ from numpy.testing import assert_allclose
 
 pysb = pytest.importorskip("pysb")
 
+jax.config.update("jax_enable_x64", True)
+
 
 def test_conversion():
     pysb.SelfExporter.cleanup()  # reset pysb

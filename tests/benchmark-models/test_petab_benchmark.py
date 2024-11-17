@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
+import jax
 from amici.petab.petab_import import import_petab_problem
 import benchmark_models_petab
 from collections import defaultdict
@@ -38,6 +39,8 @@ from amici.petab.simulations import (
 )
 from amici.jax.petab import run_simulations, JAXProblem
 from petab.v1.visualize import plot_problem
+
+jax.config.update("jax_enable_x64", True)
 
 
 # Enable various debug output

@@ -8,7 +8,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     def __init__(self):
         super().__init__()
 
-    def xdot(self, t, x, args):
+    def _xdot(self, t, x, args):
 
         pk, tcl = args
 
@@ -21,8 +21,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_XDOT_RET
 
-    @staticmethod
-    def _w(t, x, pk, tcl):
+    def _w(self, t, x, pk, tcl):
 
         TPL_X_SYMS = x
         TPL_PK_SYMS = pk
@@ -32,8 +31,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_W_RET
 
-    @staticmethod
-    def x0(pk):
+    def _x0(self, pk):
 
         TPL_PK_SYMS = pk
 
@@ -41,8 +39,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_X0_RET
 
-    @staticmethod
-    def x_solver(x):
+    def _x_solver(self, x):
 
         TPL_X_RDATA_SYMS = x
 
@@ -50,8 +47,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_X_SOLVER_RET
 
-    @staticmethod
-    def x_rdata(x, tcl):
+    def _x_rdata(self, x, tcl):
 
         TPL_X_SYMS = x
         TPL_TCL_SYMS = tcl
@@ -60,8 +56,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_X_RDATA_RET
 
-    @staticmethod
-    def tcl(x, pk):
+    def _tcl(self, x, pk):
 
         TPL_X_RDATA_SYMS = x
         TPL_PK_SYMS = pk
@@ -80,7 +75,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_Y_RET
 
-    def sigmay(self, y, pk):
+    def _sigmay(self, y, pk):
         TPL_PK_SYMS = pk
 
         TPL_Y_SYMS = y
@@ -90,10 +85,10 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return TPL_SIGMAY_RET
 
 
-    def llh(self, t, x, pk, tcl, my, iy):
-        y = self.y(t, x, pk, tcl)
+    def _llh(self, t, x, pk, tcl, my, iy):
+        y = self._y(t, x, pk, tcl)
         TPL_Y_SYMS = y
-        TPL_SIGMAY_SYMS = self.sigmay(y, pk)
+        TPL_SIGMAY_SYMS = self._sigmay(y, pk)
 
         TPL_JY_EQ
 
