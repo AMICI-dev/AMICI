@@ -66,7 +66,21 @@ jobs:
       env:
         AMICI_PARALLEL_COMPILE: ""
       run: |
-          cd tests/benchmark-models && pytest --durations=10
+          cd tests/benchmark-models && pytest \
+              --durations=10
+              --cov=amici \
+              --cov-report=xml:"coverage_py.xml" \
+              --cov-append \
+
+    - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
 
     # collect & upload results
     - name: Aggregate results
