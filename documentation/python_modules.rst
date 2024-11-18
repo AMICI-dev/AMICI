@@ -25,6 +25,7 @@ AMICI Python API
    amici.petab_objective
    amici.petab_simulate
    amici.import_utils
+   amici.jax
    amici.de_export
    amici.de_model
    amici.de_model_components

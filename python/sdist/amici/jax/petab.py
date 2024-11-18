@@ -108,7 +108,7 @@ class JAXProblem(eqx.Module):
             for sim_var, value in mapping.map_sim_var.items():
                 if isinstance(value, Number) and not np.isfinite(value):
                     mapping.map_sim_var[sim_var] = 1.0
-        return dict(zip(scs, mappings))
+        return dict(zip(scs, mappings, strict=True))
 
     def _get_measurements(
         self, simulation_conditions: pd.DataFrame
@@ -117,7 +117,7 @@ class JAXProblem(eqx.Module):
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
     ]:
         """
-        Set measurements for the model based on the provided simulation conditions.
+        Get measurements for the model based on the provided simulation conditions.
 
         :param simulation_conditions:
             Simulation conditions to create parameter mappings for. Same format as returned by
@@ -156,17 +156,13 @@ class JAXProblem(eqx.Module):
             )
         return measurements
 
-    def _get_nominal_parameter_values(self) -> jnp.ndarray:
+    def _get_nominal_parameter_values(self) -> jt.Float[jt.Array, "np"]:
         """
-        Set the nominal parameter values for the model based on the nominal values in the PEtab problem.
+        Get the nominal parameter values for the model based on the nominal values in the PEtab problem.
 
         :return:
-            JAXModel instance with parameter values set to the nominal values.
+            jax array with nominal parameter values
         """
-        if self._petab_problem is None:
-            raise ValueError(
-                "PEtab problem not set, cannot set nominal values."
-            )
         return jnp.array(
             [
                 petab.scale(
@@ -306,7 +302,7 @@ def run_simulations(
         icoeff=0.3,
         dcoeff=0.0,
     ),
-    max_steps: int = 2**14,
+    max_steps: int = 2**10,
 ):
     """
     Run simulations for a problem.

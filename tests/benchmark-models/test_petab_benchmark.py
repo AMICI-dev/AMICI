@@ -9,13 +9,10 @@ from functools import partial
 from pathlib import Path
 import fiddy
 import amici
-import equinox as eqx
-import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
-import jax
 from amici.petab.petab_import import import_petab_problem
 import benchmark_models_petab
 from collections import defaultdict
@@ -37,11 +34,8 @@ from amici.petab.simulations import (
     rdatas_to_measurement_df,
     simulate_petab,
 )
-from amici.jax.petab import run_simulations, JAXProblem
-from petab.v1.visualize import plot_problem
-from beartype import beartype
 
-jax.config.update("jax_enable_x64", True)
+from petab.v1.visualize import plot_problem
 
 
 # Enable various debug output
@@ -267,6 +261,14 @@ def benchmark_problem(request):
     "ignore:Adjoint sensitivity analysis for models with discontinuous ",
 )
 def test_jax_llh(benchmark_problem):
+    import jax
+    import equinox as eqx
+    import jax.numpy as jnp
+    from amici.jax.petab import run_simulations, JAXProblem
+
+    jax.config.update("jax_enable_x64", True)
+    from beartype import beartype
+
     problem_id, petab_problem, amici_model = benchmark_problem
 
     if problem_id in (

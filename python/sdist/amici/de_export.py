@@ -21,6 +21,7 @@ from typing import (
     TYPE_CHECKING,
     Literal,
 )
+from itertools import chain
 
 import sympy as sp
 
@@ -300,30 +301,38 @@ class DEExporter:
 
             return f"jnp.array([{elems}])"
 
+        # replaces Heaviside variables with corresponding functions
+        subs_heaviside = dict(
+            zip(
+                self.model.sym("h"),
+                [sp.Heaviside(x) for x in self.model.eq("root")],
+                strict=True,
+            )
+        )
+        # replaces observables with a generic my variable
+        subs_observables = dict(
+            zip(
+                self.model.sym("my"),
+                [sp.Symbol("my")] * len(self.model.sym("my")),
+                strict=True,
+            )
+        )
+
         tpl_data = {
+            # assign named variable using corresponding algebraic formula (function body)
             **{
                 f"{eq_name.upper()}_EQ": "\n".join(
                     self._code_printer_jax._get_sym_lines(
                         (str(strip_pysb(s)) for s in self.model.sym(eq_name)),
                         self.model.eq(eq_name).subs(
-                            dict(
-                                zip(
-                                    list(self.model.sym("h"))
-                                    + list(self.model.sym("my")),
-                                    [
-                                        sp.Heaviside(x)
-                                        for x in self.model.eq("root")
-                                    ]
-                                    + [sp.Symbol("my")]
-                                    * len(self.model.sym("my")),
-                                )
-                            )
+                            {**subs_heaviside, **subs_observables}
                         ),
                         indent,
                     )
-                )[indent:]
+                )[indent:]  # remove indent for first line
                 for eq_name in eq_names
             },
+            # create jax array from concatenation of named variables
             **{
                 f"{eq_name.upper()}_RET": jnp_array_str(
                     strip_pysb(s) for s in self.model.sym(eq_name)
@@ -332,6 +341,7 @@ class DEExporter:
                 else "jnp.array([])"
                 for eq_name in eq_names
             },
+            # assign named variables from a jax array
             **{
                 f"{sym_name.upper()}_SYMS": "".join(
                     str(strip_pysb(s)) + ", " for s in self.model.sym(sym_name)
@@ -340,6 +350,7 @@ class DEExporter:
                 else "_"
                 for sym_name in sym_names
             },
+            # tuple of variable names (ids as they are unique)
             **{
                 f"{sym_name.upper()}_IDS": "".join(
                     f'"{strip_pysb(s)}", ' for s in self.model.sym(sym_name)
@@ -349,19 +360,19 @@ class DEExporter:
                 for sym_name in ("p", "k", "y", "x")
             },
             **{
+                # in jax model we do not need to distinguish between p (parameters) and
+                # k (fixed parameters) so we use a single variable combining both
                 "PK_SYMS": "".join(
                     str(strip_pysb(s)) + ", "
-                    for s in list(self.model.sym("p"))
-                    + list(self.model.sym("k"))
+                    for s in chain(self.model.sym("p"), self.model.sym("k"))
                 ),
                 "PK_IDS": "".join(
                     f'"{strip_pysb(s)}", '
-                    for s in list(self.model.sym("p"))
-                    + list(self.model.sym("k"))
+                    for s in chain(self.model.sym("p"), self.model.sym("k"))
                 ),
-            },
-            **{
                 "MODEL_NAME": self.model_name,
+                # keep track of the API version that the model was generated with so we
+                # can flag conflicts in the future
                 "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
             },
         }

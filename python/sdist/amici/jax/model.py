@@ -173,6 +173,7 @@ class JAXModel(eqx.Module):
     ) -> jt.Float[jt.Scalar, ""]:
         """
         Compute the log-likelihood of the observable for the specified observable index.
+
         :param t:
             time point
         :param x:
@@ -430,10 +431,11 @@ class JAXModel(eqx.Module):
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
         max_steps: int | jnp.int_,
-        ret: str = "llh",
+        ret: str = "nllh",
     ):
         r"""
         Simulate a condition.
+
         :param p:
             parameters for simulation ordered according to ids in :ivar parameter_ids:
         :param p_preeq:
@@ -464,8 +466,8 @@ class JAXModel(eqx.Module):
             maximum number of solver steps
         :param ret:
             which output to return. Valid values are
-                - `llh`: negative log-likelihood (default)
-                - `llhs`: negative log-likelihoods at each time point
+                - `nllh`: negative log-likelihood (default)
+                - `llhs`: log-likelihoods at each time point
                 - `x0`: full initial state vector (after pre-equilibration)
                 - `x0_solver`: reduced initial state vector (after pre-equilibration)
                 - `x`: full state vector
@@ -532,9 +534,9 @@ class JAXModel(eqx.Module):
         x = jnp.concatenate((x_preq, x_dyn, x_posteq), axis=0)
 
         llhs = self._llhs(ts, x, p, tcl, my, iys)
-        llh = -jnp.sum(llhs)
+        nllh = -jnp.sum(llhs)
         return {
-            "llh": llh,
+            "nllh": nllh,
             "llhs": llhs,
             "x": self._x_rdatas(x, tcl),
             "x_solver": x,
