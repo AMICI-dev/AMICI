@@ -279,7 +279,13 @@ class DEExporter:
 
     @log_execution_time("generating jax code", logger)
     def _generate_jax_code(self) -> None:
-        from amici.jax.model import JAXModel
+        try:
+            from amici.jax.model import JAXModel
+        except ImportError:
+            logger.warning(
+                "Could not import JAXModel. JAX code will not be generated."
+            )
+            return
 
         eq_names = (
             "xdot",
