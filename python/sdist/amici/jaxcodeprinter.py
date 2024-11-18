@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Iterable
+from logging import warning
 
 import sympy as sp
 from sympy.printing.numpy import NumPyPrinter
@@ -22,6 +23,7 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             ) from e
 
     def _print_AmiciSpline(self, expr: sp.Expr) -> str:
+        warning("Spline interpolation is support in JAX is untested")
         # FIXME: untested, where are spline nodes coming from anyways?
         return f'interp1d(time, {self.doprint(expr.args[2:])}, kind="cubic")'
 
