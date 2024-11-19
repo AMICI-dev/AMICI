@@ -156,8 +156,9 @@ def fill_in_parameters_for_condition(
         key: _get_par(key, val, map_sim_fix)
         for key, val in map_sim_fix.items()
     }
+    map_sim_fix_var = dict(map_sim_fix, **map_sim_var)
     map_sim_var = {
-        key: _get_par(key, val, dict(map_sim_fix, **map_sim_var))
+        key: _get_par(key, val, map_sim_fix_var)
         for key, val in map_sim_var.items()
     }
 
