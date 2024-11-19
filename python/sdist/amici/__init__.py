@@ -121,6 +121,11 @@ if not _imported_from_setup():
         assignmentRules2observables,
     )
 
+    try:
+        from .jax import JAXModel
+    except (ImportError, ModuleNotFoundError):
+        JAXModel = object
+
     @runtime_checkable
     class ModelModule(Protocol):  # noqa: F811
         """Type of AMICI-generated model modules.
@@ -134,6 +139,11 @@ if not _imported_from_setup():
         def get_model(self) -> amici.Model:
             """Create a model instance."""
             ...
+
+        def get_jax_model(self) -> JAXModel:
+            ...
+
+    AmiciModel = Union[amici.Model, amici.ModelPtr]
 
 
 class add_path:
