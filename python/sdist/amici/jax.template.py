@@ -87,7 +87,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return TPL_SIGMAY_RET
 
 
-    def _llh(self, t, x, pk, tcl, my, iy):
+    def _nllh(self, t, x, pk, tcl, my, iy):
         y = self._y(t, x, pk, tcl)
         TPL_Y_SYMS = y
         TPL_SIGMAY_SYMS = self._sigmay(y, pk)

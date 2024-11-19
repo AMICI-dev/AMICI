@@ -63,7 +63,7 @@ class JAXProblem(eqx.Module):
     model: JAXModel
     _parameter_mappings: dict[str, ParameterMappingForCondition]
     _measurements: dict[
-        tuple[str],
+        tuple[str, ...],
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
     ]
     _petab_problem: petab.Problem
@@ -156,6 +156,12 @@ class JAXProblem(eqx.Module):
             )
         return measurements
 
+    def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
+        simulation_conditions = (
+            self._petab_problem.get_simulation_conditions_from_measurement_df()
+        )
+        return tuple(tuple(row) for _, row in simulation_conditions.iterrows())
+
     def _get_nominal_parameter_values(self) -> jt.Float[jt.Array, "np"]:
         """
         Get the nominal parameter values for the model based on the nominal values in the PEtab problem.
@@ -245,9 +251,18 @@ class JAXProblem(eqx.Module):
         )
         return self._unscale(p, pscale)
 
+    def update_parameters(self, p: jt.Float[jt.Array, "np"]) -> "JAXProblem":
+        """
+        Update parameters for the model.
+
+        :param p:
+            New problem instance with updated parameters.
+        """
+        return eqx.tree_at(lambda p: p.parameters, self, p)
+
     def run_simulation(
         self,
-        simulation_condition: tuple[str],
+        simulation_condition: tuple[str, ...],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         max_steps: jnp.int_,
@@ -293,7 +308,7 @@ class JAXProblem(eqx.Module):
 
 def run_simulations(
     problem: JAXProblem,
-    simulation_conditions: Iterable[tuple],
+    simulation_conditions: Iterable[tuple] | None = None,
     solver: diffrax.AbstractSolver = diffrax.Kvaerno5(),
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         rtol=1e-8,
@@ -320,6 +335,9 @@ def run_simulations(
     :return:
         Overall negative log-likelihood and condition specific results and statistics.
     """
+    if simulation_conditions is None:
+        simulation_conditions = problem.get_all_simulation_conditions()
+
     results = {
         sc: problem.run_simulation(sc, solver, controller, max_steps)
         for sc in simulation_conditions

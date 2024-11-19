@@ -162,7 +162,7 @@ class JAXModel(eqx.Module):
         ...
 
     @abstractmethod
-    def _llh(
+    def _nllh(
         self,
         t: jt.Float[jt.Scalar, ""],
         x: jt.Float[jt.Array, "nxs"],
@@ -172,7 +172,7 @@ class JAXModel(eqx.Module):
         iy: jt.Int[jt.Array, ""],
     ) -> jt.Float[jt.Scalar, ""]:
         """
-        Compute the log-likelihood of the observable for the specified observable index.
+        Compute the negative log-likelihood of the observable for the specified observable index.
 
         :param t:
             time point
@@ -326,7 +326,7 @@ class JAXModel(eqx.Module):
         """
         return jax.vmap(self._x_rdata, in_axes=(0, None))(x, tcl)
 
-    def _llhs(
+    def _nllhs(
         self,
         ts: jt.Float[jt.Array, "nt nx"],
         xs: jt.Float[jt.Array, "nt nxs"],
@@ -336,7 +336,7 @@ class JAXModel(eqx.Module):
         iys: jt.Int[jt.Array, "nt"],
     ) -> jt.Float[jt.Array, "nt"]:
         """
-        Compute the log-likelihood of the observables.
+        Compute the negative log-likelihood for each observable.
 
         :param ts:
             time points
@@ -351,9 +351,9 @@ class JAXModel(eqx.Module):
         :param iys:
             observable indices
         :return:
-            log-likelihood of the observables
+            negative log-likelihoods of the observables
         """
-        return jax.vmap(self._llh, in_axes=(0, 0, None, None, 0, 0))(
+        return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0))(
             ts, xs, p, tcl, mys, iys
         )
 
@@ -431,8 +431,8 @@ class JAXModel(eqx.Module):
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
         max_steps: int | jnp.int_,
-        ret: str = "nllh",
-    ):
+        ret: str = "llh",
+    ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
         Simulate a condition.
 
@@ -466,8 +466,8 @@ class JAXModel(eqx.Module):
             maximum number of solver steps
         :param ret:
             which output to return. Valid values are
-                - `nllh`: negative log-likelihood (default)
-                - `llhs`: log-likelihoods at each time point
+                - `llh`: log-likelihood (default)
+                - `nllhs`: negative log-likelihood at each time point
                 - `x0`: full initial state vector (after pre-equilibration)
                 - `x0_solver`: reduced initial state vector (after pre-equilibration)
                 - `x`: full state vector
@@ -533,11 +533,11 @@ class JAXModel(eqx.Module):
         ts = jnp.concatenate((ts_preeq, ts_dyn, ts_posteq), axis=0)
         x = jnp.concatenate((x_preq, x_dyn, x_posteq), axis=0)
 
-        llhs = self._llhs(ts, x, p, tcl, my, iys)
-        nllh = -jnp.sum(llhs)
+        nllhs = self._nllhs(ts, x, p, tcl, my, iys)
+        llh = -jnp.sum(nllhs)
         return {
-            "nllh": nllh,
-            "llhs": llhs,
+            "llh": llh,
+            "nllhs": nllhs,
             "x": self._x_rdatas(x, tcl),
             "x_solver": x,
             "y": self._ys(ts, x, p, tcl, iys),
@@ -547,6 +547,7 @@ class JAXModel(eqx.Module):
             "tcl": tcl,
             "res": self._ys(ts, x, p, tcl, iys) - my,
         }[ret], dict(
+            ts=ts,
             x=x,
             stats_preeq=stats_preeq,
             stats_dyn=stats_dyn,
