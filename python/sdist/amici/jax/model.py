@@ -196,6 +196,7 @@ class JAXModel(eqx.Module):
     def state_ids(self) -> list[str]:
         """
         Get the state ids of the model.
+
         :return:
             State ids
         """
@@ -206,6 +207,7 @@ class JAXModel(eqx.Module):
     def observable_ids(self) -> list[str]:
         """
         Get the observable ids of the model.
+
         :return:
             Observable ids
         """
@@ -216,6 +218,7 @@ class JAXModel(eqx.Module):
     def parameter_ids(self) -> list[str]:
         """
         Get the parameter ids of the model.
+
         :return:
             Parameter ids
         """
