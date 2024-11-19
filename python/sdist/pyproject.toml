@@ -129,9 +129,7 @@ line-length = 79
 [tool.ruff]
 line-length = 79
 extend-include = ["*.ipynb"]
-exclude = ['jax.template.py']
-extend-select = ["UP"]
 
 [tool.ruff.lint]
-extend-select = ["B028"]
+extend-select = ["B028", "UP"]
 ignore = ["E402", "F403", "F405", "E741"]
