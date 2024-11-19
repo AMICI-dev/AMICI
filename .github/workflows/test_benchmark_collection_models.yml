@@ -50,7 +50,7 @@ jobs:
       run: |
         pip3 install --user petab[vis] && \
         AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
     - name: Install test dependencies
       run: |
@@ -60,14 +60,27 @@ jobs:
 
     - name: Download benchmark collection
       run: |
-        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && python3 -m pip install -e Benchmark-Models-PEtab/src/python
+        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
 
     - name: Run tests
       env:
         AMICI_PARALLEL_COMPILE: ""
       run: |
-          cd tests/benchmark-models && pytest --durations=10
+          cd tests/benchmark-models && pytest \
+              --durations=10
+              --cov=amici \
+              --cov-report=xml:"coverage_py.xml" \
+              --cov-append \
+
+    - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
 
     # collect & upload results
     - name: Aggregate results
