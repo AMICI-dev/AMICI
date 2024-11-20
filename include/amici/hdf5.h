@@ -164,14 +164,26 @@ std::unique_ptr<ExpData> readSimulationExpData(
 /**
  * @brief Write AMICI experimental data to HDF5 file.
  * @param edata The experimental data which is to be written
- * @param file Name of HDF5 file
- * @param hdf5Location Path inside the HDF5 file to object having ExpData
+ * @param file HDF5 file
+ * @param hdf5Location Path inside the HDF5 file
  */
 
 void writeSimulationExpData(
     ExpData const& edata, H5::H5File const& file,
     std::string const& hdf5Location
 );
+
+/**
+ * @brief Write AMICI experimental data to HDF5 file.
+ * @param edata The experimental data which is to be written
+ * @param file Name of HDF5 file
+ * @param hdf5Location Path inside the HDF5 file
+ */
+void writeSimulationExpData(
+    ExpData const& edata, std::string const& hdf5Filename,
+    std::string const& hdf5Location
+    );
+
 
 /**
  * @brief Check whether an attribute with the given name exists

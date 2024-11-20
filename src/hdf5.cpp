@@ -1388,5 +1388,14 @@ std::vector<double> getDoubleDataset3D(
     return result;
 }
 
+void writeSimulationExpData(
+    ExpData const& edata, std::string const& hdf5Filename,
+    std::string const& hdf5Location
+) {
+    auto file = createOrOpenForWriting(hdf5Filename);
+
+    writeSimulationExpData(edata, file, hdf5Location);
+}
+
 } // namespace hdf5
 } // namespace amici
