@@ -27,5 +27,8 @@ runs:
 
     # install amici dependencies
     - name: homebrew
-      run: brew install hdf5 swig gcc libomp boost
+      # install hdf5 without dependencies, because pkgconf installation fails,
+      # because it's already installed on the runners. install the other
+      # hdf5 dependencies (libaec) manually
+      run: brew install libaec && brew install --ignore-dependencies hdf5 && brew install swig libomp boost
       shell: bash

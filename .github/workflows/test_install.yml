@@ -96,14 +96,8 @@ jobs:
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
-    # install amici dependencies
-    - name: homebrew
-      run: |
-        brew install hdf5 swig gcc cppcheck libomp boost \
-          && brew ls -v boost \
-          && brew ls -v libomp \
-          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
-          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
+    - name: Install dependencies
+      uses: ./.github/actions/install-macos-dependencies
 
     - name: Create AMICI sdist
       run: scripts/buildSdist.sh
