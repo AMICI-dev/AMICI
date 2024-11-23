@@ -195,6 +195,47 @@ std::unique_ptr<ExpData> readSimulationExpData(
             ));
     }
 
+    if (locationExists(file, hdf5Root + "/parameters")) {
+        edata->parameters = getDoubleDataset1D(file, hdf5Root + "/parameters");
+    }
+
+    if (locationExists(file, hdf5Root + "/x0")) {
+        edata->x0 = getDoubleDataset1D(file, hdf5Root + "/x0");
+    }
+
+    if (locationExists(file, hdf5Root + "/sx0")) {
+        edata->sx0 = getDoubleDataset1D(file, hdf5Root + "/sx0");
+    }
+
+    if (locationExists(file, hdf5Root + "/pscale")) {
+        auto pscaleInt = getIntDataset1D(file, hdf5Root + "/pscale");
+        edata->pscale.resize(pscaleInt.size());
+        for (int i = 0; (unsigned)i < pscaleInt.size(); ++i)
+            edata->pscale[i] = static_cast<ParameterScaling>(pscaleInt[i]);
+    }
+
+    if (locationExists(file, hdf5Root + "/plist")) {
+        edata->plist = getIntDataset1D(file, hdf5Root + "/plist");
+    }
+
+    if (locationExists(
+            file, hdf5Root + "/reinitialization_state_idxs_presim"
+        )) {
+        edata->reinitialization_state_idxs_presim = getIntDataset1D(
+            file, hdf5Root + "/reinitialization_state_idxs_presim"
+        );
+    }
+
+    if (locationExists(file, hdf5Root + "/reinitialization_state_idxs_sim")) {
+        edata->reinitialization_state_idxs_sim = getIntDataset1D(
+            file, hdf5Root + "/reinitialization_state_idxs_sim"
+        );
+    }
+
+    if (attributeExists(file, hdf5Root, "tstart")) {
+        edata->tstart_ = getDoubleScalarAttribute(file, hdf5Root, "tstart");
+    }
+
     return edata;
 }
 
@@ -261,6 +302,59 @@ void writeSimulationExpData(
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(),
         "reinitializeFixedParameterInitialStates", &int_attr, 1
+    );
+
+    if (!edata.parameters.empty())
+        createAndWriteDouble1DDataset(
+            file, hdf5Location + "/parameters", edata.parameters
+        );
+
+    if (!edata.x0.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/x0", edata.x0);
+    if (!edata.sx0.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/sx0", edata.sx0);
+
+    std::vector<int> int_buffer;
+
+    if (!edata.pscale.empty()) {
+        int_buffer.resize(edata.pscale.size());
+        for (int i = 0; (unsigned)i < edata.pscale.size(); i++)
+            int_buffer[i] = static_cast<int>(edata.pscale[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/pscale", int_buffer);
+    }
+
+    if (!edata.plist.empty()) {
+        int_buffer.resize(edata.plist.size());
+        for (int i = 0; (unsigned)i < edata.plist.size(); i++)
+            int_buffer[i] = static_cast<int>(edata.plist[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/plist", int_buffer);
+    }
+
+    if (!edata.reinitialization_state_idxs_presim.empty()) {
+        int_buffer.resize(edata.reinitialization_state_idxs_presim.size());
+        for (int i = 0;
+             (unsigned)i < edata.reinitialization_state_idxs_presim.size(); i++)
+            int_buffer[i]
+                = static_cast<int>(edata.reinitialization_state_idxs_presim[i]);
+        createAndWriteInt1DDataset(
+            file, hdf5Location + "/reinitialization_state_idxs_presim",
+            int_buffer
+        );
+    }
+
+    if (!edata.reinitialization_state_idxs_sim.empty()) {
+        int_buffer.resize(edata.reinitialization_state_idxs_sim.size());
+        for (int i = 0;
+             (unsigned)i < edata.reinitialization_state_idxs_sim.size(); i++)
+            int_buffer[i]
+                = static_cast<int>(edata.reinitialization_state_idxs_sim[i]);
+        createAndWriteInt1DDataset(
+            file, hdf5Location + "/reinitialization_state_idxs_sim", int_buffer
+        );
+    }
+
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "tstart", &edata.tstart_, 1
     );
 }
 
