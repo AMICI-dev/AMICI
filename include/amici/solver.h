@@ -1868,10 +1868,6 @@ class Solver {
     /** maximum number of allowed Newton steps for steady state computation */
     long int newton_maxsteps_{0L};
 
-    /** maximum number of allowed linear steps per Newton step for steady state
-     * computation */
-    long int newton_maxlinsteps_{0L};
-
     /** Damping factor state used int the Newton method */
     NewtonDampingFactorMode newton_damping_factor_mode_{
         NewtonDampingFactorMode::on
