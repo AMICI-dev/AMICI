@@ -182,8 +182,7 @@ void writeSimulationExpData(
 void writeSimulationExpData(
     ExpData const& edata, std::string const& hdf5Filename,
     std::string const& hdf5Location
-    );
-
+);
 
 /**
  * @brief Check whether an attribute with the given name exists
