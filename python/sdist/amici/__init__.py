@@ -7,10 +7,12 @@ models and turning them into C++ Python extensions.
 """
 
 import contextlib
+import datetime
 import importlib
 import os
 import re
 import sys
+import sysconfig
 from pathlib import Path
 from types import ModuleType as ModelModule
 from typing import Any
@@ -140,8 +142,7 @@ if not _imported_from_setup():
             """Create a model instance."""
             ...
 
-        def get_jax_model(self) -> JAXModel:
-            ...
+        def get_jax_model(self) -> JAXModel: ...
 
     AmiciModel = Union[amici.Model, amici.ModelPtr]
 
@@ -183,8 +184,53 @@ def import_model_module(
         raise ValueError(f"module_path '{module_path}' is not a directory.")
 
     module_path = os.path.abspath(module_path)
+    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    ext_mod_name = f"{module_name}._{module_name}"
 
     # module already loaded?
+    if (m := sys.modules.get(ext_mod_name)) and m.__file__.endswith(
+        ext_suffix
+    ):
+        # this is the c++ extension we can't unload
+        loaded_file = Path(m.__file__)
+        needed_file = Path(
+            module_path,
+            module_name,
+            f"_{module_name}{ext_suffix}",
+        )
+        if not needed_file.exists():
+            # if we import a matlab-generated model where the extension
+            #  is in a different directory
+            needed_file = Path(
+                module_path,
+                f"_{module_name}{ext_suffix}",
+            )
+
+        if not loaded_file.samefile(needed_file):
+            # this is not the right module, and we can't unload it
+            raise RuntimeError(
+                f"Cannot import extension for {module_name} from "
+                f"{module_path}, because an extension with the same name was "
+                f"has already been imported from {loaded_file.parent}. "
+                "Import the module with a different name or restart the "
+                "Python kernel."
+            )
+        # this is the right file, but did it change on disk?
+        t_imported = m._get_import_time()  # noqa: protected-access
+        t_modified = os.path.getmtime(m.__file__)
+        if t_imported < t_modified:
+            t_imp_str = datetime.datetime.fromtimestamp(t_imported).isoformat()
+            t_mod_str = datetime.datetime.fromtimestamp(t_modified).isoformat()
+            raise RuntimeError(
+                f"Cannot import extension for {module_name} from "
+                f"{module_path}, because an extension in the same location "
+                f"has already been imported, but the file was modified on "
+                f"disk. \nImported at {t_imp_str}\nModified at {t_mod_str}.\n"
+                "Import the module with a different name or restart the "
+                "Python kernel."
+            )
+
+    # unlike extension modules, Python modules can be unloaded
     if module_name in sys.modules:
         # if a module with that name is already in sys.modules, we remove it,
         # along with all other modules from that package. otherwise, there
