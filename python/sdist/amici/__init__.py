@@ -148,7 +148,10 @@ if not _imported_from_setup():
 
 
 class add_path:
-    """Context manager for temporarily changing PYTHONPATH"""
+    """Context manager for temporarily changing PYTHONPATH.
+
+    Add a path to the PYTHONPATH for the duration of the context manager.
+    """
 
     def __init__(self, path: str | Path):
         self.path: str = str(path)
@@ -160,6 +163,23 @@ class add_path:
     def __exit__(self, exc_type, exc_value, traceback):
         with contextlib.suppress(ValueError):
             sys.path.remove(self.path)
+
+
+class set_path:
+    """Context manager for temporarily changing PYTHONPATH.
+
+    Set the PYTHONPATH to a given path for the duration of the context manager.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path: str = str(path)
+
+    def __enter__(self):
+        self.orginal_path = sys.path.copy()
+        sys.path = [self.path]
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.path = self.orginal_path
 
 
 def import_model_module(
@@ -253,7 +273,7 @@ def import_model_module(
         for m in to_unload:
             del sys.modules[m]
 
-    with add_path(module_path):
+    with set_path(module_path):
         return importlib.import_module(module_name)
 
 
