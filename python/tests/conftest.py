@@ -7,7 +7,10 @@ import sys
 
 import amici
 import pytest
-from amici.testing import TemporaryDirectoryWinSafe
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from pathlib import Path
+
+EXAMPLES_DIR = Path(__file__).parent / ".." / "examples"
 
 
 @pytest.fixture(scope="session")
@@ -32,7 +35,7 @@ def sbml_example_presimulation_module():
     )
     module_name = "test_model_presimulation"
 
-    with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
+    with TemporaryDirectory(prefix=module_name) as outdir:
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
@@ -71,7 +74,7 @@ def pysb_example_presimulation_module():
 
     model.name = "test_model_presimulation_pysb"
 
-    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+    with TemporaryDirectory(prefix=model.name) as outdir:
         pysb2amici(
             model,
             outdir,
@@ -81,3 +84,18 @@ def pysb_example_presimulation_module():
         )
 
         yield amici.import_model_module(model.name, outdir)
+
+
+@pytest.fixture(scope="session")
+def model_units_module():
+    sbml_file = EXAMPLES_DIR / "example_units" / "model_units.xml"
+    module_name = "test_model_units"
+
+    sbml_importer = amici.SbmlImporter(sbml_file)
+
+    with TemporaryDirectory() as outdir:
+        sbml_importer.sbml2amici(model_name=module_name, output_dir=outdir)
+
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
