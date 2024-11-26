@@ -89,5 +89,9 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
+    - name: Remove jax
+      # avoid valgrind errors due to jax et al.
+      run: venv/bin/pip uninstall -y jax
+
     - name: Python tests / Valgrind
       run: scripts/run-valgrind-py.sh

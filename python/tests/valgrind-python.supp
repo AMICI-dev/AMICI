@@ -985,3 +985,12 @@
    fun:_PyTuple_Resize
    ...
 }
+
+{
+   Python
+   Memcheck:Cond
+   fun:PyObject_RichCompareBool
+   fun:tuplerichcompare
+   fun:do_richcompare
+   ...
+}

@@ -11,7 +11,7 @@ import numpy as np
 from beartype import beartype
 
 from amici.pysb_import import pysb2amici
-from amici.testing import TemporaryDirectoryWinSafe
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
 
 pysb = pytest.importorskip("pysb")
@@ -23,6 +23,7 @@ ATOL_SIM = 1e-12
 RTOL_SIM = 1e-12
 
 
+@skip_on_valgrind
 def test_conversion():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
@@ -46,6 +47,7 @@ def test_conversion():
         _test_model(model_module, ts, p, k)
 
 
+@skip_on_valgrind
 @pytest.mark.filterwarnings(
     "ignore:Model does not contain any initial conditions"
 )
