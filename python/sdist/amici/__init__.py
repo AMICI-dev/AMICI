@@ -198,13 +198,20 @@ def import_model_module(
             module_name,
             f"_{module_name}{ext_suffix}",
         )
+        # if we import a matlab-generated model where the extension
+        #  is in a different directory
+        needed_file_matlab = Path(
+            module_path,
+            f"_{module_name}{ext_suffix}",
+        )
         if not needed_file.exists():
-            # if we import a matlab-generated model where the extension
-            #  is in a different directory
-            needed_file = Path(
-                module_path,
-                f"_{module_name}{ext_suffix}",
-            )
+            if needed_file_matlab.exists():
+                needed_file = needed_file_matlab
+            else:
+                raise ModuleNotFoundError(
+                    f"Cannot find extension module for {module_name} in "
+                    f"{module_path}."
+                )
 
         if not loaded_file.samefile(needed_file):
             # this is not the right module, and we can't unload it
