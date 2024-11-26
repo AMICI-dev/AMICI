@@ -724,7 +724,7 @@ def test_handling_of_fixed_time_point_event_triggers():
     end
     """
     module_name = "test_events_time_based"
-    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+    with TemporaryDirectory(prefix=module_name) as outdir:
         antimony2amici(
             ant_model,
             model_name=module_name,
@@ -765,7 +765,7 @@ def test_multiple_event_assignment_with_compartment():
     """
     # watch out for too long path names on windows ...
     module_name = "tst_mltple_ea_w_cmprtmnt"
-    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+    with TemporaryDirectory(prefix=module_name) as outdir:
         antimony2amici(
             ant_model,
             model_name=module_name,

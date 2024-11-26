@@ -199,6 +199,7 @@ def test_logging_works(observable_dependent_error_model, caplog):
 @skip_on_valgrind
 def test_model_module_is_set(observable_dependent_error_model):
     model_module = observable_dependent_error_model
+    assert model_module.getModel().module is model_module
     assert isinstance(model_module.getModel().module, amici.ModelModule)
 
 
@@ -763,11 +764,14 @@ def test_constraints():
 
 
 @skip_on_valgrind
-def test_same_extension_error():
+def test_import_same_model_name():
     """Test for error when loading a model with the same extension name as an
     already loaded model."""
     from amici.antimony_import import antimony2amici
+    from amici import import_model_module
 
+    # create three versions of a toy model with different parameter values
+    #  to detect which model was loaded
     ant_model_1 = """
     model test_same_extension_error
         species A = 0
@@ -776,40 +780,75 @@ def test_same_extension_error():
     end
     """
     ant_model_2 = ant_model_1.replace("1", "2")
+    ant_model_3 = ant_model_1.replace("1", "3")
 
     module_name = "test_same_extension"
-    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        outdir_1 = Path(outdir, "model_1")
+        outdir_2 = Path(outdir, "model_2")
+
+        # import the first two models, with the same name,
+        #  but in different location (this is now supported)
         antimony2amici(
             ant_model_1,
             model_name=module_name,
-            output_dir=outdir,
+            output_dir=outdir_1,
             compute_conservation_laws=False,
         )
-        model_module_1 = amici.import_model_module(
-            module_name=module_name, module_path=outdir
-        )
-        assert model_module_1.get_model().getParameters()[0] == 1.0
-        # no error if the same model is loaded again without changes on disk
-        model_module_1 = amici.import_model_module(
-            module_name=module_name, module_path=outdir
-        )
-        assert model_module_1.get_model().getParameters()[0] == 1.0
-
-        # Try to import another model with the same name
-
-        # On Windows, this will give "permission denied" when building the
-        #  extension
-        if sys.platform == "win32":
-            return
 
         antimony2amici(
             ant_model_2,
             model_name=module_name,
-            output_dir=outdir,
+            output_dir=outdir_2,
             compute_conservation_laws=False,
         )
-        with pytest.raises(RuntimeError, match="has already been imported"):
-            amici.import_model_module(
-                module_name=module_name, module_path=outdir
-            )
+
+        model_module_1 = import_model_module(
+            module_name=module_name, module_path=outdir_1
+        )
         assert model_module_1.get_model().getParameters()[0] == 1.0
+
+        # no error if the same model is loaded again without changes on disk
+        model_module_1b = import_model_module(
+            module_name=module_name, module_path=outdir_1
+        )
+        # downside: the modules will compare as different
+        assert (model_module_1 == model_module_1b) is False
+        assert model_module_1.__file__ == model_module_1b.__file__
+        assert model_module_1b.get_model().getParameters()[0] == 1.0
+
+        model_module_2 = import_model_module(
+            module_name=module_name, module_path=outdir_2
+        )
+        assert model_module_1.get_model().getParameters()[0] == 1.0
+        assert model_module_2.get_model().getParameters()[0] == 2.0
+
+        # import the third model, with the same name and location as the second
+        #  model -- this is not supported, because there is some caching at
+        #  the C level we cannot control (or don't know how to)
+
+        # On Windows, this will give "permission denied" when building the
+        #  extension, because we cannot delete a shared library that is in use
+
+        if sys.platform == "win32":
+            return
+
+        antimony2amici(
+            ant_model_3,
+            model_name=module_name,
+            output_dir=outdir_2,
+        )
+
+        with pytest.raises(RuntimeError, match="in the same location"):
+            import_model_module(module_name=module_name, module_path=outdir_2)
+
+        # this should not affect the previously loaded models
+        assert model_module_1.get_model().getParameters()[0] == 1.0
+        assert model_module_2.get_model().getParameters()[0] == 2.0
+
+        # test that we can still import the model classically if we wanted to:
+        with amici.set_path(outdir_1):
+            import test_same_extension as model_module_1c  # noqa: F401
+
+            assert model_module_1c.get_model().getParameters()[0] == 1.0
+            assert model_module_1c.get_model().module is model_module_1c
