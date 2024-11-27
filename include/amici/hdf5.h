@@ -26,6 +26,7 @@ class ReturnData;
 class ExpData;
 class Model;
 class Solver;
+struct LogItem;
 
 namespace hdf5 {
 
@@ -134,6 +135,17 @@ void writeReturnData(
  */
 void writeReturnDataDiagnosis(
     ReturnData const& rdata, H5::H5File const& file,
+    std::string const& hdf5Location
+);
+
+/**
+ * @brief Write log message to HDF5 file
+ * @param file HDF5 file to write to
+ * @param logItems Log items to write
+ * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
+ */
+void writeLogItemsToHDF5(
+    H5::H5File const& file, std::vector<amici::LogItem> const& logItems,
     std::string const& hdf5Location
 );
 
