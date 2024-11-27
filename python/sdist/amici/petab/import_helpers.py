@@ -3,7 +3,6 @@
 Functions for PEtab import that are independent of the model format.
 """
 
-import importlib
 import logging
 import os
 import re
@@ -138,8 +137,7 @@ def _can_import_model(model_name: str, model_output_dir: str | Path) -> bool:
     """
     # try to import (in particular checks version)
     try:
-        with amici.add_path(model_output_dir):
-            model_module = importlib.import_module(model_name)
+        model_module = amici.import_model_module(model_name, model_output_dir)
     except ModuleNotFoundError:
         return False
 

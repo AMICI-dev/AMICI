@@ -148,7 +148,10 @@ if not _imported_from_setup():
 
 
 class add_path:
-    """Context manager for temporarily changing PYTHONPATH"""
+    """Context manager for temporarily changing PYTHONPATH.
+
+    Add a path to the PYTHONPATH for the duration of the context manager.
+    """
 
     def __init__(self, path: str | Path):
         self.path: str = str(path)
@@ -160,6 +163,23 @@ class add_path:
     def __exit__(self, exc_type, exc_value, traceback):
         with contextlib.suppress(ValueError):
             sys.path.remove(self.path)
+
+
+class set_path:
+    """Context manager for temporarily changing PYTHONPATH.
+
+    Set the PYTHONPATH to a given path for the duration of the context manager.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path: str = str(path)
+
+    def __enter__(self):
+        self.orginal_path = sys.path.copy()
+        sys.path = [self.path]
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.path = self.orginal_path
 
 
 def import_model_module(
@@ -198,13 +218,20 @@ def import_model_module(
             module_name,
             f"_{module_name}{ext_suffix}",
         )
+        # if we import a matlab-generated model where the extension
+        #  is in a different directory
+        needed_file_matlab = Path(
+            module_path,
+            f"_{module_name}{ext_suffix}",
+        )
         if not needed_file.exists():
-            # if we import a matlab-generated model where the extension
-            #  is in a different directory
-            needed_file = Path(
-                module_path,
-                f"_{module_name}{ext_suffix}",
-            )
+            if needed_file_matlab.exists():
+                needed_file = needed_file_matlab
+            else:
+                raise ModuleNotFoundError(
+                    f"Cannot find extension module for {module_name} in "
+                    f"{module_path}."
+                )
 
         if not loaded_file.samefile(needed_file):
             # this is not the right module, and we can't unload it
@@ -246,7 +273,7 @@ def import_model_module(
         for m in to_unload:
             del sys.modules[m]
 
-    with add_path(module_path):
+    with set_path(module_path):
         return importlib.import_module(module_name)
 
 
