@@ -88,7 +88,7 @@ class JAXProblem(eqx.Module):
 
     def save(self, directory: Path):
         """
-        Save the problem to a file.
+        Save the problem to a directory.
 
         :param directory:
             Directory to save the problem to.
@@ -109,7 +109,7 @@ class JAXProblem(eqx.Module):
     @classmethod
     def load(cls, directory: Path):
         """
-        Load a problem from a file.
+        Load a problem from a directory.
 
         :param directory:
             Directory to load the problem from.
