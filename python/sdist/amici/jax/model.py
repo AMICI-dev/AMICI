@@ -262,6 +262,7 @@ class JAXModel(eqx.Module):
             max_steps=max_steps,
             adjoint=diffrax.DirectAdjoint(),
             event=diffrax.Event(cond_fn=diffrax.steady_state_event()),
+            throw=False,
         )
         return sol.ys[-1, :], sol.stats
 
