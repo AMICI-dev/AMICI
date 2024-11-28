@@ -39,7 +39,8 @@ namespace amici {
  * variables and status flags) are specified as mutable and not included in
  * serialization or equality checks. No solver setting parameter should be
  * marked mutable.
- *
+ */
+/*
  * NOTE: Any changes in data members here must be propagated to copy ctor,
  * equality operator, serialization functions in serialization.h, and
  * amici::hdf5::(read/write)SolverSettings(From/To)HDF5 in hdf5.cpp.

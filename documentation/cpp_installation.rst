@@ -18,6 +18,7 @@ Prerequisites:
 * a C++17 compatible compiler
 * a C compiler
 * Optional:
+
   * HDF5 libraries
   * boost for serialization
 
