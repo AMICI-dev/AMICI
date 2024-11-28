@@ -37,8 +37,9 @@ def import_petab_problem(
     model_name: str = None,
     compile_: bool = None,
     non_estimated_parameters_as_constants=True,
+    jax=False,
     **kwargs,
-) -> "amici.Model":
+) -> "amici.Model | amici.JAXModel":
     """
     Create an AMICI model for a PEtab problem.
 
@@ -63,6 +64,9 @@ def import_petab_problem(
         considered constant in AMICI. Setting this to ``True`` will reduce
         model size and simulation times. If sensitivities with respect to those
         parameters are required, this should be set to ``False``.
+
+    :param jax:
+        Whether to load the jax version of the model.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -154,6 +158,16 @@ def import_petab_problem(
 
     # import model
     model_module = amici.import_model_module(model_name, model_output_dir)
+
+    if jax:
+        model = model_module.get_jax_model()
+
+        logger.info(
+            f"Successfully loaded jax model {model_name} "
+            f"from {model_output_dir}."
+        )
+        return model
+
     model = model_module.getModel()
     check_model(amici_model=model, petab_problem=petab_problem)
 

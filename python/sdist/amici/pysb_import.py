@@ -180,7 +180,7 @@ def pysb2amici(
     # Sympy code optimizations are incompatible with PySB objects, as
     #  `pysb.Observable` comes with its own `.match` which overrides
     #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.
-    exporter._code_printer._fpoptimizer = None
+    exporter._code_printer_cpp._fpoptimizer = None
     exporter.generate_model_code()
 
     if compile:

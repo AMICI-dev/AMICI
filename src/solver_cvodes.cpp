@@ -1126,7 +1126,8 @@ static int froot(realtype t, N_Vector x, realtype* root, void* user_data) {
     if (model->ne != model->ne_solver) {
         // temporary buffer to store all root function values, not only the ones
         // tracked by the solver
-        static std::vector<realtype> root_buffer(model->ne, 0.0);
+        thread_local static std::vector<realtype> root_buffer(model->ne, 0.0);
+        root_buffer.resize(model->ne);
         model->froot(t, x, root_buffer);
         std::copy_n(root_buffer.begin(), model->ne_solver, root);
     } else {

@@ -26,6 +26,7 @@ class ReturnData;
 class ExpData;
 class Model;
 class Solver;
+struct LogItem;
 
 namespace hdf5 {
 
@@ -138,6 +139,17 @@ void writeReturnDataDiagnosis(
 );
 
 /**
+ * @brief Write log message to HDF5 file
+ * @param file HDF5 file to write to
+ * @param logItems Log items to write
+ * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
+ */
+void writeLogItemsToHDF5(
+    H5::H5File const& file, std::vector<amici::LogItem> const& logItems,
+    std::string const& hdf5Location
+);
+
+/**
  * @brief Create the given group and possibly parents.
  * @param file HDF5 file to write to
  * @param groupPath Path to the group to be created
@@ -164,12 +176,23 @@ std::unique_ptr<ExpData> readSimulationExpData(
 /**
  * @brief Write AMICI experimental data to HDF5 file.
  * @param edata The experimental data which is to be written
- * @param file Name of HDF5 file
- * @param hdf5Location Path inside the HDF5 file to object having ExpData
+ * @param file HDF5 file
+ * @param hdf5Location Path inside the HDF5 file
  */
 
 void writeSimulationExpData(
     ExpData const& edata, H5::H5File const& file,
+    std::string const& hdf5Location
+);
+
+/**
+ * @brief Write AMICI experimental data to HDF5 file.
+ * @param edata The experimental data which is to be written
+ * @param file Name of HDF5 file
+ * @param hdf5Location Path inside the HDF5 file
+ */
+void writeSimulationExpData(
+    ExpData const& edata, std::string const& hdf5Filename,
     std::string const& hdf5Location
 );
 

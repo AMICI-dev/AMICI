@@ -2,6 +2,7 @@
 
 import os
 import re
+import sys
 from numbers import Number
 from pathlib import Path
 
@@ -15,13 +16,13 @@ from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from numpy.testing import assert_allclose, assert_array_equal
 
-EXAMPLES_DIR = Path(__file__).parent / ".." / "examples"
+from conftest import EXAMPLES_DIR
+
 STEADYSTATE_MODEL_FILE = (
     EXAMPLES_DIR / "example_steadystate" / "model_steadystate_scaled.xml"
 )
 
 
-@pytest.fixture
 def simple_sbml_model():
     """Some testmodel"""
     document = libsbml.SBMLDocument(3, 1)
@@ -44,9 +45,9 @@ def simple_sbml_model():
     return document, model
 
 
-def test_sbml2amici_no_observables(simple_sbml_model):
+def test_sbml2amici_no_observables():
     """Test model generation works for model without observables"""
-    sbml_doc, sbml_model = simple_sbml_model
+    sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     model_name = "test_sbml2amici_no_observables"
     with TemporaryDirectory() as tmpdir:
@@ -63,9 +64,9 @@ def test_sbml2amici_no_observables(simple_sbml_model):
 
 
 @skip_on_valgrind
-def test_sbml2amici_nested_observables_fail(simple_sbml_model):
+def test_sbml2amici_nested_observables_fail():
     """Test model generation works for model without observables"""
-    sbml_doc, sbml_model = simple_sbml_model
+    sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     model_name = "test_sbml2amici_nested_observables_fail"
     with TemporaryDirectory() as tmpdir:
@@ -83,8 +84,8 @@ def test_sbml2amici_nested_observables_fail(simple_sbml_model):
             )
 
 
-def test_nosensi(simple_sbml_model):
-    sbml_doc, sbml_model = simple_sbml_model
+def test_nosensi():
+    sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     model_name = "test_nosensi"
     with TemporaryDirectory() as tmpdir:
@@ -109,9 +110,9 @@ def test_nosensi(simple_sbml_model):
         assert rdata.status == amici.AMICI_ERROR
 
 
-@pytest.fixture
-def observable_dependent_error_model(simple_sbml_model):
-    sbml_doc, sbml_model = simple_sbml_model
+@pytest.fixture(scope="session")
+def observable_dependent_error_model():
+    sbml_doc, sbml_model = simple_sbml_model()
     # add parameter and rate rule
     sbml_model.getSpecies("S1").setInitialConcentration(1.0)
     sbml_model.getParameter("p1").setValue(0.2)
@@ -198,6 +199,7 @@ def test_logging_works(observable_dependent_error_model, caplog):
 @skip_on_valgrind
 def test_model_module_is_set(observable_dependent_error_model):
     model_module = observable_dependent_error_model
+    assert model_module.getModel().module is model_module
     assert isinstance(model_module.getModel().module, amici.ModelModule)
 
 
@@ -223,21 +225,6 @@ def model_steadystate_module():
             constant_parameters=["k0"],
             sigmas={"observable_x1withsigma": "observable_x1withsigma_sigma"},
         )
-
-        yield amici.import_model_module(
-            module_name=module_name, module_path=outdir
-        )
-
-
-@pytest.fixture(scope="session")
-def model_units_module():
-    sbml_file = EXAMPLES_DIR / "example_units" / "model_units.xml"
-    module_name = "test_model_units"
-
-    sbml_importer = amici.SbmlImporter(sbml_file)
-
-    with TemporaryDirectory() as outdir:
-        sbml_importer.sbml2amici(model_name=module_name, output_dir=outdir)
 
         yield amici.import_model_module(
             module_name=module_name, module_path=outdir
@@ -521,6 +508,7 @@ def test_likelihoods_error():
 
 
 @skip_on_valgrind
+@pytest.mark.usefixtures("model_units_module")
 def test_units(model_units_module):
     """
     Test whether SBML import works for models using sbml:units annotations.
@@ -694,9 +682,9 @@ def test_code_gen_uses_lhs_symbol_ids():
 
 
 @skip_on_valgrind
-def test_hardcode_parameters(simple_sbml_model):
+def test_hardcode_parameters():
     """Test model generation works for model without observables"""
-    sbml_doc, sbml_model = simple_sbml_model
+    sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     r = sbml_model.createRateRule()
     r.setVariable("S1")
@@ -773,3 +761,94 @@ def test_constraints():
                 amici_solver.getAbsoluteTolerance(),
             )
         )
+
+
+@skip_on_valgrind
+def test_import_same_model_name():
+    """Test for error when loading a model with the same extension name as an
+    already loaded model."""
+    from amici.antimony_import import antimony2amici
+    from amici import import_model_module
+
+    # create three versions of a toy model with different parameter values
+    #  to detect which model was loaded
+    ant_model_1 = """
+    model test_same_extension_error
+        species A = 0
+        p = 1
+        A' = p
+    end
+    """
+    ant_model_2 = ant_model_1.replace("1", "2")
+    ant_model_3 = ant_model_1.replace("1", "3")
+
+    module_name = "test_same_extension"
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        outdir_1 = Path(outdir, "model_1")
+        outdir_2 = Path(outdir, "model_2")
+
+        # import the first two models, with the same name,
+        #  but in different location (this is now supported)
+        antimony2amici(
+            ant_model_1,
+            model_name=module_name,
+            output_dir=outdir_1,
+            compute_conservation_laws=False,
+        )
+
+        antimony2amici(
+            ant_model_2,
+            model_name=module_name,
+            output_dir=outdir_2,
+            compute_conservation_laws=False,
+        )
+
+        model_module_1 = import_model_module(
+            module_name=module_name, module_path=outdir_1
+        )
+        assert model_module_1.get_model().getParameters()[0] == 1.0
+
+        # no error if the same model is loaded again without changes on disk
+        model_module_1b = import_model_module(
+            module_name=module_name, module_path=outdir_1
+        )
+        # downside: the modules will compare as different
+        assert (model_module_1 == model_module_1b) is False
+        assert model_module_1.__file__ == model_module_1b.__file__
+        assert model_module_1b.get_model().getParameters()[0] == 1.0
+
+        model_module_2 = import_model_module(
+            module_name=module_name, module_path=outdir_2
+        )
+        assert model_module_1.get_model().getParameters()[0] == 1.0
+        assert model_module_2.get_model().getParameters()[0] == 2.0
+
+        # import the third model, with the same name and location as the second
+        #  model -- this is not supported, because there is some caching at
+        #  the C level we cannot control (or don't know how to)
+
+        # On Windows, this will give "permission denied" when building the
+        #  extension, because we cannot delete a shared library that is in use
+
+        if sys.platform == "win32":
+            return
+
+        antimony2amici(
+            ant_model_3,
+            model_name=module_name,
+            output_dir=outdir_2,
+        )
+
+        with pytest.raises(RuntimeError, match="in the same location"):
+            import_model_module(module_name=module_name, module_path=outdir_2)
+
+        # this should not affect the previously loaded models
+        assert model_module_1.get_model().getParameters()[0] == 1.0
+        assert model_module_2.get_model().getParameters()[0] == 2.0
+
+        # test that we can still import the model classically if we wanted to:
+        with amici.set_path(outdir_1):
+            import test_same_extension as model_module_1c  # noqa: F401
+
+            assert model_module_1c.get_model().getParameters()[0] == 1.0
+            assert model_module_1c.get_model().module is model_module_1c

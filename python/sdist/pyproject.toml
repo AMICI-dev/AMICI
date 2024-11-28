@@ -71,15 +71,25 @@ test = [
     #  unsupported x86_64 / x86_64h
     "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
     "scipy",
-    "pooch"
+    "pooch",
+    "beartype",
 ]
-vis =[
+vis = [
     "matplotlib",
     "seaborn",
 ]
-examples =[
+examples = [
     "jupyter",
     "scipy",
+]
+jax = [
+    "jax>=0.4.34",
+    "jaxlib>=0.4.34",
+    "diffrax>=0.6.0",
+    "jaxtyping>=0.2.34",
+    "equinox>=0.11.8",
+    "optimistix>=0.0.9",
+    "interpax>=0.3.3",
 ]
 
 [project.scripts]
@@ -121,5 +131,5 @@ line-length = 79
 extend-include = ["*.ipynb"]
 
 [tool.ruff.lint]
-extend-select = ["B028"]
+extend-select = ["B028", "UP"]
 ignore = ["E402", "F403", "F405", "E741"]

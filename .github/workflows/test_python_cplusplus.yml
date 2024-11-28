@@ -79,7 +79,7 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: build/coverage_py.xml
@@ -99,7 +99,7 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.info
@@ -161,7 +161,7 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: build/coverage_py.xml
@@ -181,7 +181,7 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.info
@@ -230,11 +230,6 @@ jobs:
 
     - name: Install python package
       run: scripts/installAmiciSource.sh
-
-    - name: Install notebook dependencies
-      run: |
-        source venv/bin/activate \
-        && pip install jax[cpu]
 
     - name: example notebooks
       run: scripts/runNotebook.sh python/examples/example_*/

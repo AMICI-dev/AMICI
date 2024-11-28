@@ -149,8 +149,8 @@ def model_events_def():
 
 
 models = [
-    (model_neuron_def, "model_neuron", ["v0", "I0"]),
-    (model_events_def, "model_events", ["k1", "k2", "k3", "k4"]),
+    (model_neuron_def, "model_neuron_py", ["v0", "I0"]),
+    (model_events_def, "model_events_py", ["k1", "k2", "k3", "k4"]),
 ]
 
 
@@ -197,6 +197,10 @@ def run_test_cases(model):
     solver = model.getSolver()
 
     model_name = model.getName()
+    # we need a different name for the model module to avoid collisions
+    #  with the matlab-pregenerated models, but we need the old name for
+    #  the expected results
+    model_name = model_name.removesuffix("_py")
 
     for case in list(expected_results[model_name].keys()):
         if case.startswith("sensi2"):
@@ -210,7 +214,7 @@ def run_test_cases(model):
         )
 
         edata = None
-        if "data" in expected_results[model.getName()][case].keys():
+        if "data" in expected_results[model_name][case].keys():
             edata = amici.readSimulationExpData(
                 str(expected_results_file),
                 f"/{model_name}/{case}/data",
@@ -226,6 +230,6 @@ def run_test_cases(model):
 
         verify_simulation_results(
             rdata,
-            expected_results[model.getName()][case]["results"],
+            expected_results[model_name][case]["results"],
             **verify_simulation_opts,
         )

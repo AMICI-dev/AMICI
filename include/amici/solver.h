@@ -39,7 +39,8 @@ namespace amici {
  * variables and status flags) are specified as mutable and not included in
  * serialization or equality checks. No solver setting parameter should be
  * marked mutable.
- *
+ */
+/*
  * NOTE: Any changes in data members here must be propagated to copy ctor,
  * equality operator, serialization functions in serialization.h, and
  * amici::hdf5::(read/write)SolverSettings(From/To)HDF5 in hdf5.cpp.
@@ -1867,10 +1868,6 @@ class Solver {
 
     /** maximum number of allowed Newton steps for steady state computation */
     long int newton_maxsteps_{0L};
-
-    /** maximum number of allowed linear steps per Newton step for steady state
-     * computation */
-    long int newton_maxlinsteps_{0L};
 
     /** Damping factor state used int the Newton method */
     NewtonDampingFactorMode newton_damping_factor_mode_{

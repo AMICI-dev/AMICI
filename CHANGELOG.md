@@ -4,6 +4,60 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.29.0 (2024-11-28)
+
+**Fixes**
+
+* Fixed race conditions in froot, which could have resulted in incorrect
+  simulation results for models with events/heavisides/piecewise, for
+  multi-threaded simulations.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2587
+
+* Fixed race conditions for the max-time check, which could have resulted in
+  incorrect termination of simulations in case of multi-threaded simulations
+  in combination with a time limit.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2587
+
+* Added missing fields in ExpData HDF5 I/O
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2593
+
+* Added missing fields in ReturnData HDF5 output
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2602
+
+
+* **Features**
+
+* Generate models in a JAX-compatible format
+  ([example](https://amici.readthedocs.io/en/develop/ExampleJaxPEtab.html))
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1861
+
+* Faster `fill_in_parameters_for_condition`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2586
+
+* Added Python function `writeSimulationExpData` for writing ExpData to HDF5
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2588
+
+* Improved import of amici-generated models via `amici.import_model_module()`.
+
+  So far, it was not possible to import different model modules with the same
+  name. This is now possible if they are in different directories.
+  Overwriting an already imported module is still not possible (and never
+  was); any attempts to do so will raise a `RuntimeError`.
+  While model packages can, in principle, be imported using regular
+  `import`s, it is strongly recommended to use `amici.import_model_module()`.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2604, https://github.com/AMICI-dev/AMICI/pull/2603, https://github.com/AMICI-dev/AMICI/pull/2596
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.28.0...v0.29.0
+
+
 ### v0.28.0 (2024-11-11)
 
 **Breaking changes**

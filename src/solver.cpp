@@ -1035,7 +1035,7 @@ void Solver::setMaxTime(double maxtime) {
 void Solver::startTimer() const { simulation_timer_.reset(); }
 
 bool Solver::timeExceeded(int interval) const {
-    static int eval_counter = 0;
+    thread_local static int eval_counter = 0;
 
     // 0 means infinite time
     if (maxtime_.count() == 0)
