@@ -1,8 +1,9 @@
+# ruff: noqa: F401, F821, F841
+import jax.numpy as jnp
+from interpax import interp1d
 from pathlib import Path
 
 from amici.jax.model import JAXModel
-
-# ruff: noqa: F821, F841
 
 
 class JAXModel_TPL_MODEL_NAME(JAXModel):
