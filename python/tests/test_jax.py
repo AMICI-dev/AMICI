@@ -17,6 +17,7 @@ from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from amici.petab.petab_import import import_petab_problem
 from amici.jax import JAXProblem
 from numpy.testing import assert_allclose
+from test_petab_objective import lotka_volterra  # noqa: F401
 
 pysb = pytest.importorskip("pysb")
 
@@ -229,7 +230,7 @@ def check_fields_jax(
 
 
 @skip_on_valgrind
-def test_serialisation(lotka_volterra):
+def test_serialisation(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
