@@ -557,3 +557,39 @@ class JAXModel(eqx.Module):
             stats_dyn=stats_dyn,
             stats_posteq=stats_posteq,
         )
+
+
+def safe_log(x: jnp.float_) -> jnp.float_:
+    """
+    Safe logarithm that returns `jnp.log(jnp.finfo(jnp.float_).eps)` for x <= 0.
+
+    :param x:
+        input
+    :return:
+        logarithm of x
+    """
+    # see https://docs.kidger.site/equinox/api/debug/, need double jnp.where to guard
+    # against nans in forward & backward passes
+    safe_x = jnp.where(
+        x > jnp.finfo(jnp.float_).eps, x, jnp.finfo(jnp.float_).eps
+    )
+    return jnp.where(
+        x > 0, jnp.log(safe_x), jnp.log(jnp.finfo(jnp.float_).eps)
+    )
+
+
+def safe_div(x: jnp.float_, y: jnp.float_) -> jnp.float_:
+    """
+    Safe division that returns `x/jnp.finfo(jnp.float_).eps` for `y == 0`.
+
+    :param x:
+        numerator
+    :param y:
+        denominator
+    :return:
+        x / y
+    """
+    # see https://docs.kidger.site/equinox/api/debug/, need double jnp.where to guard
+    # against nans in forward & backward passes
+    safe_y = jnp.where(y != 0, y, jnp.finfo(jnp.float_).eps)
+    return jnp.where(y != 0, x / safe_y, x / jnp.finfo(jnp.float_).eps)
