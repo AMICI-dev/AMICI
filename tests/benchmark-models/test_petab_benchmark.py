@@ -299,14 +299,8 @@ def test_jax_llh(benchmark_problem):
 
     np.random.seed(cur_settings.rng_seed)
 
-    problems_for_gradient_check_jax = list(
-        set(problems_for_gradient_check) - {"Laske_PLOSComputBiol2019"}
-        # Laske has nan values in gradient due to nan values in observables that are not used in the likelihood
-        # but are problematic during backpropagation
-    )
-
     problem_parameters = None
-    if problem_id in problems_for_gradient_check_jax:
+    if problem_id in problems_for_gradient_check:
         point = petab_problem.x_nominal_free_scaled
         for _ in range(20):
             amici_solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
@@ -361,14 +355,14 @@ def test_jax_llh(benchmark_problem):
         err_msg=f"LLH mismatch for {problem_id}",
     )
 
-    if problem_id in problems_for_gradient_check_jax:
+    if problem_id in problems_for_gradient_check:
         sllh_amici = r_amici[SLLH]
         np.testing.assert_allclose(
             sllh_jax.parameters,
             np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
             rtol=1e-2,
             atol=1e-2,
-            err_msg=f"SLLH mismatch for {problem_id}",
+            err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
         )
 
 

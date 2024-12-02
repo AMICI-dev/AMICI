@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from interpax import interp1d
 from pathlib import Path
 
-from amici.jax.model import JAXModel
+from amici.jax.model import JAXModel, safe_log, safe_div
 
 
 class JAXModel_TPL_MODEL_NAME(JAXModel):
