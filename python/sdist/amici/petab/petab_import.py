@@ -94,9 +94,9 @@ def import_petab_problem(
         )
 
     if petab_problem.mapping_df is not None:
-        # It's partially supported. Remove at your own risk...
-        raise NotImplementedError(
-            "PEtab v2.0.0 mapping tables are not yet supported."
+        warn(
+            "PEtab v2.0.0 mapping tables are only partially supported, use at your own risk.",
+            stacklevel=2,
         )
 
     model_name = model_name or petab_problem.model.model_id
@@ -126,7 +126,7 @@ def import_petab_problem(
     # check if compilation necessary
     if compile_ or (
         compile_ is None
-        and not _can_import_model(model_name, model_output_dir)
+        and not _can_import_model(model_name, model_output_dir, jax)
     ):
         # check if folder exists
         if os.listdir(model_output_dir) and not compile_:
@@ -140,6 +140,38 @@ def import_petab_problem(
             shutil.rmtree(model_output_dir)
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
+
+        if "petab_sciml" in petab_problem.extensions_config:
+            from petab_sciml import PetabScimlStandard
+
+            config = petab_problem.extensions_config["petab_sciml"]
+            net_files = config.get("net_files", [])
+            # TODO: net files need to be absolute paths
+            ml_models = [
+                model
+                for net_file in net_files
+                for model in PetabScimlStandard.load_data(
+                    Path() / net_file
+                ).models
+            ]
+            hybridisation = {
+                net: {
+                    "model": next(
+                        ml_model
+                        for ml_model in ml_models
+                        if ml_model.mlmodel_id == net
+                    ),
+                    **hybrid,
+                }
+                for net, hybrid in config["hybridization"].items()
+            }
+            if not jax or petab_problem.model.type_id == MODEL_TYPE_PYSB:
+                raise NotImplementedError(
+                    "petab_sciml extension is currently only supported for JAX models"
+                )
+        else:
+            hybridisation = None
+
         # compile the model
         if petab_problem.model.type_id == MODEL_TYPE_PYSB:
             import_model_pysb(
@@ -156,16 +188,16 @@ def import_petab_problem(
                 model_output_dir=model_output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
                 compile=kwargs.pop("compile", not jax),
+                hybridisation=hybridisation,
                 **kwargs,
             )
 
     # import model
     if not jax:
         model_module = amici.import_model_module(model_name, model_output_dir)
-
     else:
-        jax_model_module = amici._module_from_path(
-            "jax", Path(model_output_dir) / model_name / "jax.py"
+        jax_model_module = amici.import_model_module(
+            model_name + "_jax", model_output_dir
         )
         model = jax_model_module.Model()
 

@@ -131,18 +131,26 @@ def _create_model_name(folder: str | Path) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str, model_output_dir: str | Path) -> bool:
+def _can_import_model(
+    model_name: str, model_output_dir: str | Path, jax: bool
+) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
     # try to import (in particular checks version)
+    suffix = "_jax" if jax else ""
     try:
-        model_module = amici.import_model_module(model_name, model_output_dir)
+        model_module = amici.import_model_module(
+            model_name + suffix, model_output_dir
+        )
     except ModuleNotFoundError:
         return False
 
     # no need to (re-)compile
-    return hasattr(model_module, "getModel")
+    if jax:
+        return hasattr(model_module, "Model")
+    else:
+        return hasattr(model_module, "getModel")
 
 
 def get_fixed_parameters(

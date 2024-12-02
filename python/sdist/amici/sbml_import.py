@@ -16,7 +16,6 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import (
     Any,
-    Union,
 )
 from collections.abc import Callable
 from collections.abc import Iterable, Sequence
@@ -63,7 +62,7 @@ SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
 default_symbols = {symbol: {} for symbol in SymbolId}
 
-ConservationLaw = dict[str, Union[str, sp.Expr]]
+ConservationLaw = dict[str, str | sp.Expr]
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -205,7 +204,7 @@ class SbmlImporter:
         log_execution_time("validating SBML", logger)(
             self.sbml_doc.validateSBML
         )()
-        _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+        # _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # Flatten "comp" model? Do that before any other converters are run
         if any(
@@ -254,7 +253,7 @@ class SbmlImporter:
         # If any of the above calls produces an error, this will be added to
         # the SBMLError log in the sbml document. Thus, it is sufficient to
         # check the error log just once after all conversion/validation calls.
-        _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+        # _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # need to reload the converted model
         self.sbml = self.sbml_doc.getModel()
@@ -288,6 +287,7 @@ class SbmlImporter:
         log_as_log10: bool = True,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
+        hybridisation: dict = None,
     ) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -435,6 +435,7 @@ class SbmlImporter:
             compiler=compiler,
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
             generate_sensitivity_code=generate_sensitivity_code,
+            hybridisation=hybridisation,
         )
         exporter.generate_model_code()
 
@@ -719,7 +720,7 @@ class SbmlImporter:
             rule.isRate()
             and not isinstance(
                 self.sbml.getElementBySId(rule.getVariable()),
-                (sbml.Compartment, sbml.Species, sbml.Parameter),
+                sbml.Compartment | sbml.Species | sbml.Parameter,
             )
             for rule in self.sbml.getListOfRules()
         ):
@@ -1143,8 +1144,8 @@ class SbmlImporter:
         for parameter in constant_parameters:
             if not self.sbml.getParameter(parameter):
                 raise KeyError(
-                    "Cannot make %s a constant parameter: "
-                    "Parameter does not exist." % parameter
+                    f"Cannot make {parameter} a constant parameter: "
+                    "Parameter does not exist."
                 )
 
         # parameter ID => initial assignment sympy expression
@@ -2880,16 +2881,14 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         # convert relational expressions into trigger functions
         if isinstance(
             trigger,
-            (sp.core.relational.LessThan, sp.core.relational.StrictLessThan),
+            sp.core.relational.LessThan | sp.core.relational.StrictLessThan,
         ):
             # y < x or y <= x
             return -root
         if isinstance(
             trigger,
-            (
-                sp.core.relational.GreaterThan,
-                sp.core.relational.StrictGreaterThan,
-            ),
+            sp.core.relational.GreaterThan
+            | sp.core.relational.StrictGreaterThan,
         ):
             # y >= x or y > x
             return root

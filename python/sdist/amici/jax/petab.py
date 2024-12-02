@@ -68,6 +68,7 @@ class JAXProblem(eqx.Module):
         tuple[str, ...],
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
     ]
+    _inputs: dict[str, dict[str, np.ndarray]]
     _petab_problem: petab.Problem
 
     def __init__(self, model: JAXModel, petab_problem: petab.Problem):
@@ -79,12 +80,12 @@ class JAXProblem(eqx.Module):
         :param petab_problem:
             PEtab problem to simulate.
         """
-        self.model = model
         scs = petab_problem.get_simulation_conditions_from_measurement_df()
         self._petab_problem = petab_problem
+        self.parameters, self.model = self._get_nominal_parameter_values(model)
         self._parameter_mappings = self._get_parameter_mappings(scs)
         self._measurements = self._get_measurements(scs)
-        self.parameters = self._get_nominal_parameter_values()
+        self._inputs = self._get_inputs()
 
     def save(self, directory: Path):
         """
@@ -203,13 +204,49 @@ class JAXProblem(eqx.Module):
         )
         return tuple(tuple(row) for _, row in simulation_conditions.iterrows())
 
-    def _get_nominal_parameter_values(self) -> jt.Float[jt.Array, "np"]:
+    def _get_nominal_parameter_values(
+        self, model: JAXModel
+    ) -> tuple[jt.Float[jt.Array, "np"], JAXModel]:
         """
         Get the nominal parameter values for the model based on the nominal values in the PEtab problem.
+        Also set nominal values in the model (where applicable).
 
         :return:
-            jax array with nominal parameter values
+            jax array with nominal parameter values and model with nominal parameter values set.
         """
+        # initialize everything with zeros
+        model_pars = {
+            net_id: {
+                layer_id: {
+                    attribute: jnp.zeros_like(getattr(layer, attribute))
+                    for attribute in ["weight", "bias"]
+                    if hasattr(layer, attribute)
+                }
+                for layer_id, layer in nn.layers.items()
+            }
+            for net_id, nn in model.nns.items()
+        }
+        # extract nominal values from petab problem
+        for pname, row in self._petab_problem.parameter_df.iterrows():
+            if (net := pname.split("_")[0]) in model.nns:
+                nn = model_pars[net]
+                layer = nn[pname.split("_")[1]]
+                attribute = pname.split("_")[2]
+                index = tuple(np.array(pname.split("_")[3:]).astype(int))
+                layer[attribute] = (
+                    layer[attribute].at[index].set(row[petab.NOMINAL_VALUE])
+                )
+        # set values in model
+        for net_id in model_pars:
+            for layer_id in model_pars[net_id]:
+                for attribute in model_pars[net_id][layer_id]:
+                    model = eqx.tree_at(
+                        lambda model: getattr(
+                            model.nns[net_id].layers[layer_id], attribute
+                        ),
+                        model,
+                        model_pars[net_id][layer_id][attribute],
+                    )
         return jnp.array(
             [
                 petab.scale(
@@ -222,7 +259,32 @@ class JAXProblem(eqx.Module):
                 )
                 for pval in self.parameter_ids
             ]
-        )
+        ), model
+
+    def _get_inputs(self):
+        inputs = {
+            net: {} for net in self._petab_problem.mapping_df["netId"].unique()
+        }
+        for petab_id, row in self._petab_problem.mapping_df.iterrows():
+            if (filepath := Path(petab_id)).is_file():
+                data_flat = pd.read_csv(filepath, sep="\t").sort_values(
+                    by="ix"
+                )
+                shape = tuple(
+                    np.stack(
+                        data_flat["ix"]
+                        .astype(str)
+                        .str.split(";")
+                        .apply(np.array)
+                    )
+                    .astype(int)
+                    .max(axis=0)
+                    + 1
+                )
+                inputs[row["netId"]][row[petab.MODEL_ENTITY_ID]] = data_flat[
+                    "value"
+                ].values.reshape(shape)
+        return inputs
 
     @property
     def parameter_ids(self) -> list[str]:
@@ -264,6 +326,15 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
+    def _eval_nn(self, output_par: str):
+        net_id = self._petab_problem.mapping_df.loc[output_par, "netId"]
+        nn = self.model.nns[net_id]
+        net_input = tuple(
+            jax.lax.stop_gradient(self._inputs[net_id][input_id])
+            for input_id in nn.inputs
+        )
+        return nn.forward(*net_input).squeeze()
+
     def load_parameters(
         self, simulation_condition: str
     ) -> jt.Float[jt.Array, "np"]:
@@ -278,7 +349,9 @@ class JAXProblem(eqx.Module):
         mapping = self._parameter_mappings[simulation_condition]
         p = jnp.array(
             [
-                pval
+                self._eval_nn(pname)
+                if pname in self._petab_problem.mapping_df.index
+                else pval
                 if isinstance(pval := mapping.map_sim_var[pname], Number)
                 else self.get_petab_parameter_by_id(pval)
                 for pname in self.model.parameter_ids
@@ -286,7 +359,9 @@ class JAXProblem(eqx.Module):
         )
         pscale = tuple(
             [
-                mapping.scale_map_sim_var[pname]
+                petab.LIN
+                if pname in self._petab_problem.mapping_df.index
+                else mapping.scale_map_sim_var[pname]
                 for pname in self.model.parameter_ids
             ]
         )
@@ -307,6 +382,7 @@ class JAXProblem(eqx.Module):
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         max_steps: jnp.int_,
+        ret: str = "llh",
     ) -> tuple[jnp.float_, dict]:
         """
         Run a simulation for a given simulation condition.
@@ -320,8 +396,20 @@ class JAXProblem(eqx.Module):
             Step size controller to use for simulation
         :param max_steps:
             Maximum number of steps to take during simulation
+        :param ret:
+            which output to return. Valid values are
+                - `llh`: log-likelihood (default)
+                - `nllhs`: negative log-likelihood at each time point
+                - `x0`: full initial state vector (after pre-equilibration)
+                - `x0_solver`: reduced initial state vector (after pre-equilibration)
+                - `x`: full state vector
+                - `x_solver`: reduced state vector
+                - `y`: observables
+                - `sigmay`: standard deviations of the observables
+                - `tcl`: total values for conservation laws (at final timepoint)
+                - `res`: residuals (observed - simulated)
         :return:
-            Tuple of log-likelihood and simulation statistics
+            Tuple of output value and simulation statistics
         """
         ts_preeq, ts_dyn, ts_posteq, my, iys = self._measurements[
             simulation_condition
@@ -343,7 +431,10 @@ class JAXProblem(eqx.Module):
             solver=solver,
             controller=controller,
             max_steps=max_steps,
-            adjoint=diffrax.RecursiveCheckpointAdjoint(),
+            adjoint=diffrax.RecursiveCheckpointAdjoint()
+            if ret == "llh"
+            else diffrax.DirectAdjoint(),
+            ret=ret,
         )
 
 
@@ -359,6 +450,7 @@ def run_simulations(
         dcoeff=0.0,
     ),
     max_steps: int = 2**10,
+    ret: str = "llh",
 ):
     """
     Run simulations for a problem.
@@ -373,6 +465,18 @@ def run_simulations(
         Step size controller to use for simulation.
     :param max_steps:
         Maximum number of steps to take during simulation.
+    :param ret:
+        which output to return. Valid values are
+            - `llh`: log-likelihood (default)
+            - `nllhs`: negative log-likelihood at each time point
+            - `x0`: full initial state vector (after pre-equilibration)
+            - `x0_solver`: reduced initial state vector (after pre-equilibration)
+            - `x`: full state vector
+            - `x_solver`: reduced state vector
+            - `y`: observables
+            - `sigmay`: standard deviations of the observables
+            - `tcl`: total values for conservation laws (at final timepoint)
+            - `res`: residuals (observed - simulated)
     :return:
         Overall negative log-likelihood and condition specific results and statistics.
     """
@@ -380,7 +484,11 @@ def run_simulations(
         simulation_conditions = problem.get_all_simulation_conditions()
 
     results = {
-        sc: problem.run_simulation(sc, solver, controller, max_steps)
+        sc: problem.run_simulation(sc, solver, controller, max_steps, ret)
         for sc in simulation_conditions
     }
-    return sum(llh for llh, _ in results.values()), results
+    if ret == "llh":
+        output = sum(llh for llh, _ in results.values())
+    else:
+        output = {sc: res for sc, (res, _) in results.items()}
+    return output, results

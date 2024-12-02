@@ -56,7 +56,7 @@ from .cxxcodeprinter import (
     AmiciCxxCodePrinter,
     get_switch_statement,
 )
-from .jaxcodeprinter import AmiciJaxCodePrinter
+from amici.jaxcodeprinter import AmiciJaxCodePrinter
 from .de_model import DEModel
 from .de_model_components import *
 from .import_utils import (
@@ -174,6 +174,7 @@ class DEExporter:
         allow_reinit_fixpar_initcond: bool | None = True,
         generate_sensitivity_code: bool | None = True,
         model_name: str | None = "model",
+        hybridisation: dict | None = None,
     ):
         """
         Generate AMICI C++ files for the DE provided to the constructor.
@@ -238,6 +239,7 @@ class DEExporter:
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
         self._build_hints = set()
         self.generate_sensitivity_code: bool = generate_sensitivity_code
+        self.hybridisation = hybridisation
 
     @log_execution_time("generating cpp code", logger)
     def generate_model_code(self) -> None:
@@ -380,15 +382,35 @@ class DEExporter:
                 # keep track of the API version that the model was generated with so we
                 # can flag conflicts in the future
                 "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
+                "NET_IMPORTS": "\n".join(
+                    f"{net} = _module_from_path('{net}', Path(__file__).parent / '{net}.py')"
+                    for net in self.hybridisation.keys()
+                ),
+                "NETS": ",\n".join(
+                    f'"{net}": {net}.net(jr.PRNGKey(0))'
+                    for net in self.hybridisation.keys()
+                ),
             },
         }
         os.makedirs(
-            os.path.join(self.model_path, self.model_name), exist_ok=True
+            os.path.join(self.model_path, self.model_name + "_jax"),
+            exist_ok=True,
         )
+        from amici.jax.nn import generate_equinox
+
+        for net_name, net in self.hybridisation.items():
+            generate_equinox(
+                net["model"],
+                os.path.join(
+                    self.model_path, self.model_name + "_jax", f"{net_name}.py"
+                ),
+            )
 
         apply_template(
-            os.path.join(amiciModulePath, "jax.template.py"),
-            os.path.join(self.model_path, self.model_name, "jax.py"),
+            os.path.join(amiciModulePath, "jax", "jax.template.py"),
+            os.path.join(
+                self.model_path, self.model_name + "_jax", "__init__.py"
+            ),
             tpl_data,
         )
 
@@ -795,7 +817,7 @@ class DEExporter:
         lines = []
 
         if len(equations) == 0 or (
-            isinstance(equations, (sp.Matrix, sp.ImmutableDenseMatrix))
+            isinstance(equations, sp.Matrix | sp.ImmutableDenseMatrix)
             and min(equations.shape) == 0
         ):
             # dJydy is a list
@@ -1136,8 +1158,7 @@ class DEExporter:
                 )
             ),
             "NDXDOTDX_EXPLICIT": len(self.model.sparsesym("dxdotdx_explicit")),
-            "NDJYDY": "std::vector<int>{%s}"
-            % ",".join(str(len(x)) for x in self.model.sparsesym("dJydy")),
+            "NDJYDY": f"std::vector<int>{{{','.join(str(len(x)) for x in self.model.sparsesym('dJydy'))}}}",
             "NDXRDATADXSOLVER": len(self.model.sparsesym("dx_rdatadx_solver")),
             "NDXRDATADTCL": len(self.model.sparsesym("dx_rdatadtcl")),
             "NDTOTALCLDXRDATA": len(self.model.sparsesym("dtotal_cldx_rdata")),

@@ -21,7 +21,7 @@ import numbers
 import re
 from collections.abc import Sequence
 from itertools import chain
-from typing import Any, Union
+from typing import Any
 from collections.abc import Collection, Iterator
 
 import amici
@@ -52,7 +52,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-SingleParameterMapping = dict[str, Union[numbers.Number, str]]
+SingleParameterMapping = dict[str, numbers.Number | str]
 SingleScaleMapping = dict[str, str]
 
 
@@ -346,7 +346,11 @@ def create_parameter_mapping(
     if petab_problem.model.type_id == MODEL_TYPE_SBML:
         import libsbml
 
-        if petab_problem.sbml_document:
+        # v1 guard
+        if (
+            isinstance(petab_problem, petab.Problem)
+            and petab_problem.sbml_document
+        ):
             converter_config = (
                 libsbml.SBMLLocalParameterConverter().getDefaultProperties()
             )

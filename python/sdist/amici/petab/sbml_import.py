@@ -38,6 +38,7 @@ def import_model_sbml(
     non_estimated_parameters_as_constants=True,
     output_parameter_defaults: dict[str, float] | None = None,
     discard_sbml_annotations: bool = False,
+    hybridization: dict = None,
     **kwargs,
 ) -> amici.SbmlImporter:
     """
@@ -111,7 +112,7 @@ def import_model_sbml(
     # Model name from SBML ID or filename
     if model_name is None:
         if not (model_name := petab_problem.model.sbml_model.getId()):
-            if not isinstance(sbml_model, (str, Path)):
+            if not isinstance(sbml_model, str | Path):
                 raise ValueError(
                     "No `model_name` was provided and no model "
                     "ID was specified in the SBML model."
