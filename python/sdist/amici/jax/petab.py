@@ -329,11 +329,34 @@ class JAXProblem(eqx.Module):
     def _eval_nn(self, output_par: str):
         net_id = self._petab_problem.mapping_df.loc[output_par, "netId"]
         nn = self.model.nns[net_id]
-        net_input = tuple(
-            jax.lax.stop_gradient(self._inputs[net_id][input_id])
-            for input_id in nn.inputs
+
+        model_id_map = (
+            self._petab_problem.mapping_df.query(f'netId == "{net_id}"')
+            .reset_index()
+            .set_index(petab.MODEL_ENTITY_ID)[petab.PETAB_ENTITY_ID]
+            .to_dict()
         )
-        return nn.forward(*net_input).squeeze()
+
+        for petab_id in model_id_map.values():
+            if petab_id in self.model.state_ids:
+                raise NotImplementedError(
+                    "State variables as inputs to neural networks are not supported"
+                )
+
+        net_input = jnp.array(
+            [
+                jax.lax.stop_gradient(self._inputs[net_id][model_id])
+                if model_id in self._inputs[net_id]
+                else self.get_petab_parameter_by_id(petab_id)
+                if petab_id in self.parameter_ids
+                else self._petab_problem.parameter_df.loc[
+                    petab_id, petab.NOMINAL_VALUE
+                ]
+                for model_id, petab_id in model_id_map.items()
+                if model_id.startswith("input")
+            ]
+        )
+        return nn.forward(net_input).squeeze()
 
     def load_parameters(
         self, simulation_condition: str
@@ -347,10 +370,17 @@ class JAXProblem(eqx.Module):
             Parameters for the simulation condition.
         """
         mapping = self._parameter_mappings[simulation_condition]
+
+        nn_output_pars = self._petab_problem.mapping_df[
+            self._petab_problem.mapping_df[
+                petab.MODEL_ENTITY_ID
+            ].str.startswith("output")
+        ].index
+
         p = jnp.array(
             [
                 self._eval_nn(pname)
-                if pname in self._petab_problem.mapping_df.index
+                if pname in nn_output_pars
                 else pval
                 if isinstance(pval := mapping.map_sim_var[pname], Number)
                 else self.get_petab_parameter_by_id(pval)

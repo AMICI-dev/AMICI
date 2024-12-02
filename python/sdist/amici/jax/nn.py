@@ -26,6 +26,10 @@ class Flatten(eqx.Module):
             )
 
 
+def tanhshrink(x: jnp.ndarray) -> jnp.ndarray:
+    return x - jnp.tanh(x)
+
+
 def generate_equinox(ml_model: MLModel, filename: Path | str):
     filename = Path(filename)
     layer_indent = 12
@@ -55,6 +59,14 @@ def generate_equinox(ml_model: MLModel, filename: Path | str):
             ]
         )[node_indent:],
         "INPUT": ", ".join([f"'{inp.input_id}'" for inp in ml_model.inputs]),
+        "OUTPUT": ", ".join(
+            [
+                f"'{arg}'"
+                for arg in next(
+                    node for node in ml_model.forward if node.op == "output"
+                ).args
+            ]
+        ),
         "N_LAYERS": len(ml_model.layers),
     }
 
@@ -82,8 +94,19 @@ def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
         "InstanceNorm3d": "eqx.nn.LayerNorm",
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
-        "Flatten": "Flatten",
+        "Flatten": "amici.jax.nn.Flatten",
     }
+    if layer.layer_type.startswith(("BatchNorm", "AlphaDropout")):
+        raise NotImplementedError(
+            f"{layer.layer_type} layers currently not supported"
+        )
+    if layer.layer_type.startswith("MaxPool") and "dilation" in layer.args:
+        raise NotImplementedError("MaxPool layers with dilation not supported")
+    if layer.layer_type.startswith("Dropout") and "inplace" in layer.args:
+        raise NotImplementedError("Dropout layers with inplace not supported")
+    if layer.layer_type == "Bilinear":
+        raise NotImplementedError("Bilinear layers not supported")
+
     kwarg_map = {
         "Linear": {
             "bias": "use_bias",
@@ -106,11 +129,18 @@ def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
             "affine": "elementwise_affine",
             "num_features": "shape",
         },
+        "LayerNorm": {
+            "affine": "elementwise_affine",
+            "normalized_shape": "shape",
+        },
     }
     kwarg_ignore = {
         "InstanceNorm1d": ("track_running_stats", "momentum"),
         "InstanceNorm2d": ("track_running_stats", "momentum"),
         "InstanceNorm3d": ("track_running_stats", "momentum"),
+        "BatchNorm1d": ("track_running_stats", "momentum"),
+        "BatchNorm2d": ("track_running_stats", "momentum"),
+        "BatchNorm3d": ("track_running_stats", "momentum"),
         "Dropout1d": ("inplace",),
         "Dropout2d": ("inplace",),
     }
@@ -120,7 +150,15 @@ def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
         if k not in kwarg_ignore.get(layer.layer_type, ())
     ]
     # add key for initialization
-    if layer.layer_type in ("Linear", "Conv1d", "Conv2d", "Conv3d"):
+    if layer.layer_type in (
+        "Linear",
+        "Conv1d",
+        "Conv2d",
+        "Conv3d",
+        "ConvTranspose1d",
+        "ConvTranspose2d",
+        "ConvTranspose3d",
+    ):
         kwargs += [f"key=keys[{ilayer}]"]
     type_str = layer_map.get(layer.layer_type, f"eqx.nn.{layer.layer_type}")
     layer_str = f"{type_str}({', '.join(kwargs)})"
@@ -141,20 +179,28 @@ def _generate_forward(node: Node, indent, layer_type=str) -> str:
 
     if node.op == "call_module":
         fun_str = f"self.layers['{node.target}']"
-        if layer_type.startswith(("InstanceNorm", "Conv", "Linear")):
+        if layer_type.startswith(
+            ("InstanceNorm", "Conv", "Linear", "LayerNorm")
+        ):
+            if layer_type in ("LayerNorm", "InstanceNorm"):
+                dims = f"len({fun_str}.shape)+1"
             if layer_type == "Linear":
-                dims = 1
-            if layer_type.endswith(("1d",)):
                 dims = 2
-            elif layer_type.endswith(("2d",)):
+            if layer_type.endswith(("1d",)):
                 dims = 3
-            elif layer_type.endswith("3d"):
+            elif layer_type.endswith(("2d",)):
                 dims = 4
-            fun_str = f"(jax.vmap({fun_str}) if len({node.args[0]}.shape) == {dims + 1} else {fun_str})"
+            elif layer_type.endswith("3d"):
+                dims = 5
+            fun_str = f"(jax.vmap({fun_str}) if len({node.args[0]}.shape) == {dims} else {fun_str})"
 
     if node.op in ("call_function", "call_method"):
         map_fun = {
             "hardtanh": "jax.nn.hard_tanh",
+            "hardsigmoid": "jax.nn.hard_sigmoid",
+            "hardswish": "jax.nn.hard_swish",
+            "tanhshrink": "amici.jax.nn.tanhshrink",
+            "softsign": "jax.nn.soft_sign",
         }
         if node.target == "hardtanh":
             if node.kwargs.pop("min_val", -1.0) != -1.0:
@@ -172,7 +218,7 @@ def _generate_forward(node: Node, indent, layer_type=str) -> str:
         f"{k}={v}" for k, v in node.kwargs.items() if k not in ("inplace",)
     ]
     if layer_type.startswith(("Dropout",)):
-        kwargs += ["inference=inference", "key=key"]
+        kwargs += ["key=key"]
     kwargs_str = ", ".join(kwargs)
     if node.op in ("call_module", "call_function", "call_method"):
         return f"{' ' * indent}{node.name} = {fun_str}({args + ', ' + kwargs_str})"
