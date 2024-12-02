@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
 )
-from itertools import chain
 
 import sympy as sp
 
@@ -202,7 +201,7 @@ class ODEExporter:
             "x_rdata",
             "total_cl",
         )
-        sym_names = ("x", "tcl", "w", "my", "y", "sigmay", "x_rdata")
+        sym_names = ("p", "x", "tcl", "w", "my", "y", "sigmay", "x_rdata")
 
         indent = 8
 
@@ -236,16 +235,6 @@ class ODEExporter:
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "x")),
             **{
-                # in jax model we do not need to distinguish between p (parameters) and
-                # k (fixed parameters) so we use a single variable combining both
-                "PK_SYMS": "".join(
-                    str(strip_pysb(s)) + ", "
-                    for s in chain(self.model.sym("p"), self.model.sym("k"))
-                ),
-                "PK_IDS": "".join(
-                    f'"{strip_pysb(s)}", '
-                    for s in chain(self.model.sym("p"), self.model.sym("k"))
-                ),
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we
                 # can flag conflicts in the future
