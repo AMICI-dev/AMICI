@@ -3,6 +3,7 @@
 # ruff: noqa: F821 F722
 
 from abc import abstractmethod
+from pathlib import Path
 
 import diffrax
 import equinox as eqx
@@ -18,8 +19,9 @@ class JAXModel(eqx.Module):
     classes inheriting from JAXModel.
     """
 
-    MODEL_API_VERSION = "0.0.1"
+    MODEL_API_VERSION = "0.0.2"
     api_version: str
+    jax_py_file: Path
 
     def __init__(self):
         if self.api_version != self.MODEL_API_VERSION:

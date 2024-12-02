@@ -1,10 +1,12 @@
 import pytest
 import amici
+from pathlib import Path
 
 pytest.importorskip("jax")
 import amici.jax
 
 import jax.numpy as jnp
+import jax.random as jr
 import jax
 import diffrax
 import numpy as np
@@ -12,7 +14,10 @@ from beartype import beartype
 
 from amici.pysb_import import pysb2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from amici.petab.petab_import import import_petab_problem
+from amici.jax import JAXProblem
 from numpy.testing import assert_allclose
+from test_petab_objective import lotka_volterra  # noqa: F401
 
 pysb = pytest.importorskip("pysb")
 
@@ -221,4 +226,29 @@ def check_fields_jax(
                 atol=1e-5,
                 rtol=1e-5,
                 err_msg=f"field {field} does not match",
+            )
+
+
+@skip_on_valgrind
+def test_serialisation(lotka_volterra):  # noqa: F811
+    petab_problem = lotka_volterra
+    with TemporaryDirectoryWinSafe(
+        prefix=petab_problem.model.model_id
+    ) as model_dir:
+        jax_model = import_petab_problem(
+            petab_problem, jax=True, model_output_dir=model_dir
+        )
+        jax_problem = JAXProblem(jax_model, petab_problem)
+        # change parameters to random values to test serialisation
+        jax_problem.update_parameters(
+            jax_problem.parameters
+            + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
+        )
+
+        with TemporaryDirectoryWinSafe() as outdir:
+            outdir = Path(outdir)
+            jax_problem.save(outdir)
+            jax_problem_loaded = JAXProblem.load(outdir)
+            assert_allclose(
+                jax_problem.parameters, jax_problem_loaded.parameters
             )

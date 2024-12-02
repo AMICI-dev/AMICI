@@ -1,6 +1,7 @@
 # ruff: noqa: F401, F821, F841
 import jax.numpy as jnp
 from interpax import interp1d
+from pathlib import Path
 
 from amici.jax.model import JAXModel, safe_log, safe_div
 
@@ -9,6 +10,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     api_version = TPL_MODEL_API_VERSION
 
     def __init__(self):
+        self.jax_py_file = Path(__file__).resolve()
         super().__init__()
 
     def _xdot(self, t, x, args):
@@ -100,3 +102,6 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     @property
     def parameter_ids(self):
         return TPL_PK_IDS
+
+
+Model = JAXModel_TPL_MODEL_NAME
