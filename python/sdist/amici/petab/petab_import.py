@@ -146,7 +146,6 @@ def import_petab_problem(
                 petab_problem,
                 model_name=model_name,
                 model_output_dir=model_output_dir,
-                compile=kwargs.pop("compile", not jax),
                 jax=jax,
                 **kwargs,
             )
@@ -156,7 +155,6 @@ def import_petab_problem(
                 model_name=model_name,
                 model_output_dir=model_output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-                compile=kwargs.pop("compile", not jax),
                 jax=jax,
                 **kwargs,
             )

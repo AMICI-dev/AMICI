@@ -245,7 +245,7 @@ class ODEExporter:
         outdir.mkdir(parents=True, exist_ok=True)
 
         apply_template(
-            Path(amiciModulePath) / "jax.template.py",
+            Path(amiciModulePath) / "jax" / "jax.template.py",
             outdir / "__init__.py",
             tpl_data,
         )

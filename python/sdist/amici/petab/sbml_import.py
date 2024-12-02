@@ -379,6 +379,7 @@ def import_model_sbml(
             verbose=verbose,
             **kwargs,
         )
+        return sbml_importer
     else:
         sbml_importer.sbml2amici(
             model_name=model_name,

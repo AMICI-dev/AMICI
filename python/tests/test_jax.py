@@ -12,7 +12,7 @@ import diffrax
 import numpy as np
 from beartype import beartype
 
-from amici.pysb_import import pysb2amici
+from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from amici.petab.petab_import import import_petab_problem
 from amici.jax import JAXProblem
@@ -39,17 +39,21 @@ def test_conversion():
     pysb.Rule("conv", a(s="a") >> a(s="b"), pysb.Parameter("kcat", 0.05))
     pysb.Observable("ab", a(s="b"))
 
-    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+    with TemporaryDirectoryWinSafe() as outdir:
         pysb2amici(model, outdir, verbose=True, observables=["ab"])
+        pysb2jax(model, outdir, verbose=True, observables=["ab"])
 
-        model_module = amici.import_model_module(
+        amici_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
+        )
+        jax_module = amici.import_model_module(
+            module_name=model.name + "_jax", module_path=outdir
         )
 
         ts = tuple(np.linspace(0, 1, 10))
         p = jnp.stack((1.0, 0.1), axis=-1)
         k = tuple()
-        _test_model(model_module, ts, p, k)
+        _test_model(amici_module, jax_module, ts, p, k)
 
 
 @skip_on_valgrind
@@ -86,7 +90,7 @@ def test_dimerization():
     pysb.Observable("a_obs", a())
     pysb.Observable("b_obs", b())
 
-    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+    with TemporaryDirectoryWinSafe() as outdir:
         pysb2amici(
             model,
             outdir,
@@ -94,26 +98,30 @@ def test_dimerization():
             observables=["a_obs", "b_obs"],
             constant_parameters=["ksyn_a", "ksyn_b"],
         )
+        pysb2jax(model, outdir, verbose=True, observables=["ab"])
 
-        model_module = amici.import_model_module(
+        amici_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
+        )
+        jax_module = amici.import_model_module(
+            module_name=model.name + "_jax", module_path=outdir
         )
 
         ts = tuple(np.linspace(0, 1, 10))
         p = jnp.stack((5, 0.5, 0.5, 0.5), axis=-1)
         k = (0.5, 5)
-        _test_model(model_module, ts, p, k)
+        _test_model(amici_module, jax_module, ts, p, k)
 
 
-def _test_model(model_module, ts, p, k):
-    amici_model = model_module.getModel()
+def _test_model(amici_module, jax_module, ts, p, k):
+    amici_model = amici_module.getModel()
 
     amici_model.setTimepoints(np.asarray(ts, dtype=np.float64))
     sol_amici_ref = amici.runAmiciSimulation(
         amici_model, amici_model.getSolver()
     )
 
-    jax_model = model_module.get_jax_model()
+    jax_model = jax_module.Model()
 
     amici_model.setParameters(np.asarray(p, dtype=np.float64))
     amici_model.setFixedParameters(np.asarray(k, dtype=np.float64))
