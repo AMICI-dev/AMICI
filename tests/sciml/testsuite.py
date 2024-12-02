@@ -150,7 +150,7 @@ def _test_net(test):
                     "net_050",  # Conv layers
                     "net_021",
                     "net_022",  # Conv layers
-                    # "net_003", "net_004",
+                    "net_004",
                     "net_005",
                     "net_006",
                     "net_007",
@@ -324,14 +324,9 @@ if __name__ == "__main__":
     test_cases = list(test_case_dir.glob("*"))
     for test in test_cases:
         if test.stem.startswith("net_"):
-            continue
             _test_net(test)
         elif test.stem.startswith("0"):
             if test.stem in (
-                "003",
-                "006",
-                "007",
-                "009",  # passing
                 "002",  # nn in ode, rhs assignment
                 "004",  # nn input in condition table
                 "015",  # passing, wrong gradient
