@@ -21,7 +21,7 @@ import numbers
 import re
 from collections.abc import Sequence
 from itertools import chain
-from typing import Any, Union
+from typing import Any
 from collections.abc import Collection, Iterator
 
 import amici
@@ -36,6 +36,8 @@ from petab.v1.C import (
     PARAMETER_SCALE,
     PREEQUILIBRATION_CONDITION_ID,
     SIMULATION_CONDITION_ID,
+    NOMINAL_VALUE,
+    ESTIMATE,
 )
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
@@ -52,7 +54,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-SingleParameterMapping = dict[str, Union[numbers.Number, str]]
+SingleParameterMapping = dict[str, numbers.Number | str]
 SingleScaleMapping = dict[str, str]
 
 
@@ -60,9 +62,9 @@ class ParameterMappingForCondition:
     """Parameter mapping for condition.
 
     Contains mappings for free parameters, fixed parameters, and fixed
-    preequilibration parameters, both for parameters and scales.
+    pre-equilibration parameters, both for parameters and scales.
 
-    In the scale mappings, for each simulation parameter the scale
+    In the scale mappings, for each simulation parameter, the scale
     on which the value is passed (and potentially gradients are to be
     returned) is given. In the parameter mappings, for each simulation
     parameter a corresponding optimization parameter (or a numeric value)
@@ -76,9 +78,9 @@ class ParameterMappingForCondition:
     :param scale_map_sim_var:
         Scales for free simulation parameters.
     :param map_preeq_fix:
-        Mapping for fixed preequilibration parameters.
+        Mapping for fixed pre-equilibration parameters.
     :param scale_map_preeq_fix:
-        Scales for fixed preequilibration parameters.
+        Scales for fixed pre-equilibration parameters.
     :param map_sim_fix:
         Mapping for fixed simulation parameters.
     :param scale_map_sim_fix:
@@ -177,7 +179,7 @@ class ParameterMapping(Sequence):
     def append(
         self, parameter_mapping_for_condition: ParameterMappingForCondition
     ):
-        """Append a condition specific parameter mapping."""
+        """Append a condition-specific parameter mapping."""
         self.parameter_mappings.append(parameter_mapping_for_condition)
 
     def __repr__(self):
@@ -307,9 +309,10 @@ def unscale_parameters_dict(
 
 def create_parameter_mapping(
     petab_problem: petab.Problem,
-    simulation_conditions: pd.DataFrame | list[dict],
+    simulation_conditions: pd.DataFrame | list[dict] | None,
     scaled_parameters: bool,
     amici_model: AmiciModel | None = None,
+    fill_fixed_parameters: bool = True,
     **parameter_mapping_kwargs,
 ) -> ParameterMapping:
     """Generate AMICI specific parameter mapping.
@@ -325,11 +328,14 @@ def create_parameter_mapping(
         are assumed to be in linear scale.
     :param amici_model:
         AMICI model.
+    :param fill_fixed_parameters:
+        Whether to fill in nominal values for fixed parameters
+        (estimate=0 in the parameters table).
+        To allow changing fixed PEtab problem parameters,
+        use ``fill_fixed_parameters=False``.
     :param parameter_mapping_kwargs:
         Optional keyword arguments passed to
         :func:`petab.get_optimization_to_simulation_parameter_mapping`.
-        To allow changing fixed PEtab problem parameters (``estimate=0``),
-        use ``fill_fixed_parameters=False``.
     :return:
         List of the parameter mappings.
     """
@@ -377,6 +383,7 @@ def create_parameter_mapping(
             mapping_df=petab_problem.mapping_df,
             model=petab_problem.model,
             simulation_conditions=simulation_conditions,
+            fill_fixed_parameters=fill_fixed_parameters,
             **dict(
                 default_parameter_mapping_kwargs, **parameter_mapping_kwargs
             ),
@@ -388,7 +395,11 @@ def create_parameter_mapping(
         simulation_conditions.iterrows(), prelim_parameter_mapping, strict=True
     ):
         mapping_for_condition = create_parameter_mapping_for_condition(
-            prelim_mapping_for_condition, condition, petab_problem, amici_model
+            prelim_mapping_for_condition,
+            condition,
+            petab_problem,
+            amici_model,
+            fill_fixed_parameters=fill_fixed_parameters,
         )
         parameter_mapping.append(mapping_for_condition)
 
@@ -400,8 +411,9 @@ def create_parameter_mapping_for_condition(
     condition: pd.Series | dict,
     petab_problem: petab.Problem,
     amici_model: AmiciModel | None = None,
+    fill_fixed_parameters: bool = True,
 ) -> ParameterMappingForCondition:
-    """Generate AMICI specific parameter mapping for condition.
+    """Generate AMICI-specific parameter mapping for a PEtab simulation.
 
     :param parameter_mapping_for_condition:
         Preliminary parameter mapping for condition.
@@ -412,10 +424,12 @@ def create_parameter_mapping_for_condition(
         Underlying PEtab problem.
     :param amici_model:
         AMICI model.
-
+    :param fill_fixed_parameters:
+        Whether to fill in nominal values for fixed parameters
+        (estimate=0 in the parameters table).
     :return:
         The parameter and parameter scale mappings, for fixed
-        preequilibration, fixed simulation, and variable simulation
+        pre-equilibration, fixed simulation, and variable simulation
         parameters, and then the respective scalings.
     """
     (
@@ -436,10 +450,10 @@ def create_parameter_mapping_for_condition(
     if len(condition_map_preeq) and len(condition_map_preeq) != len(
         condition_map_sim
     ):
-        logger.debug(f"Preequilibration parameter map: {condition_map_preeq}")
+        logger.debug(f"Pre-equilibration parameter map: {condition_map_preeq}")
         logger.debug(f"Simulation parameter map: {condition_map_sim}")
         raise AssertionError(
-            "Number of parameters for preequilbration "
+            "Number of parameters for pre-equilbration "
             "and simulation do not match."
         )
 
@@ -451,8 +465,8 @@ def create_parameter_mapping_for_condition(
     # During model generation, parameters for initial concentrations and
     # respective initial assignments have been created for the
     # relevant species, here we add these parameters to the parameter mapping.
-    # In absence of preequilibration this could also be handled via
-    # ExpData.x0, but in the case of preequilibration this would not allow for
+    # In the absence of pre-equilibration this could also be handled via
+    # ExpData.x0, but in the case of pre-equilibration this would not allow for
     # resetting initial states.
 
     if states_in_condition_table := get_states_in_condition_table(
@@ -485,10 +499,11 @@ def create_parameter_mapping_for_condition(
                     condition_map_preeq,
                     condition_scale_map_preeq,
                     preeq_value,
+                    fill_fixed_parameters=fill_fixed_parameters,
                 )
-            # need to set dummy value for preeq parameter anyways, as it
+            # need to set a dummy value for preeq parameter anyways, as it
             #  is expected below (set to 0, not nan, because will be
-            #  multiplied with indicator variable in initial assignment)
+            #  multiplied with the indicator variable in initial assignment)
             condition_map_sim[init_par_id] = 0.0
             condition_scale_map_sim[init_par_id] = LIN
 
@@ -503,6 +518,7 @@ def create_parameter_mapping_for_condition(
                 condition_map_sim,
                 condition_scale_map_sim,
                 value,
+                fill_fixed_parameters=fill_fixed_parameters,
             )
             # set dummy value as above
             if condition_map_preeq:
@@ -549,11 +565,11 @@ def create_parameter_mapping_for_condition(
         condition_scale_map_sim_fix = {}
 
     logger.debug(
-        "Fixed parameters preequilibration: " f"{condition_map_preeq_fix}"
+        "Fixed parameters pre-equilibration: " f"{condition_map_preeq_fix}"
     )
     logger.debug("Fixed parameters simulation: " f"{condition_map_sim_fix}")
     logger.debug(
-        "Variable parameters preequilibration: " f"{condition_map_preeq_var}"
+        "Variable parameters pre-equilibration: " f"{condition_map_preeq_var}"
     )
     logger.debug("Variable parameters simulation: " f"{condition_map_sim_var}")
 
@@ -579,21 +595,46 @@ def create_parameter_mapping_for_condition(
 
 
 def _set_initial_state(
-    petab_problem,
-    condition_id,
-    element_id,
-    init_par_id,
-    par_map,
-    scale_map,
-    value,
-):
+    petab_problem: petab.Problem,
+    condition_id: str,
+    element_id: str,
+    init_par_id: str,
+    par_map: petab.ParMappingDict,
+    scale_map: petab.ScaleMappingDict,
+    value: str | float,
+    fill_fixed_parameters: bool = True,
+) -> None:
+    """
+    Update the initial value for a model entity in the parameter mapping
+    according to the PEtab conditions table.
+
+    :param petab_problem: The PEtab problem
+    :param condition_id: The current condition ID
+    :param element_id: Element for which to set the initial value
+    :param init_par_id: The parameter ID that refers to the initial value
+    :param par_map: Parameter value mapping
+    :param scale_map: Parameter scale mapping
+    :param value: The initial value for `element_id` in `condition_id`
+    :param fill_fixed_parameters:
+        Whether to fill in nominal values for fixed parameters
+        (estimate=0 in the parameters table).
+    """
     value = petab.to_float_if_float(value)
+    # NaN indicates that the initial value is to be taken from the model
+    #  (if this is the pre-equilibration condition, or the simulation condition
+    #  when no pre-equilibration condition is set) or is not to be reset
+    #  (if this is the simulation condition following pre-equilibration)-
+    #  The latter is not handled here.
     if pd.isna(value):
         if petab_problem.model.type_id == MODEL_TYPE_SBML:
             value = _get_initial_state_sbml(petab_problem, element_id)
         elif petab_problem.model.type_id == MODEL_TYPE_PYSB:
             value = _get_initial_state_pysb(petab_problem, element_id)
-
+        else:
+            raise NotImplementedError(
+                f"Model type {petab_problem.model.type_id} not supported."
+            )
+        # the initial value can be a numeric value or a sympy  expression
         try:
             value = float(value)
         except (ValueError, TypeError):
@@ -614,14 +655,24 @@ def _set_initial_state(
             f"defined for the condition {condition_id} in "
             "the PEtab conditions table. The initial value is "
             f"now set to {value}, which is the initial value "
-            "defined in the SBML model."
+            "defined in the original model."
         )
+
     par_map[init_par_id] = value
     if isinstance(value, float):
         # numeric initial state
         scale_map[init_par_id] = petab.LIN
     else:
         # parametric initial state
+        if (
+            fill_fixed_parameters
+            and petab_problem.parameter_df is not None
+            and value in petab_problem.parameter_df.index
+            and petab_problem.parameter_df.loc[value, ESTIMATE] == 0
+        ):
+            par_map[init_par_id] = petab_problem.parameter_df.loc[
+                value, NOMINAL_VALUE
+            ]
         scale_map[init_par_id] = petab_problem.parameter_df[
             PARAMETER_SCALE
         ].get(value, petab.LIN)
@@ -638,7 +689,7 @@ def _subset_dict(
         Collections of keys to be contained in the different subsets
 
     :return:
-        subsetted dictionary
+        Subsetted dictionary
     """
     for keys in args:
         yield {key: val for (key, val) in full.items() if key in keys}
@@ -647,6 +698,11 @@ def _subset_dict(
 def _get_initial_state_sbml(
     petab_problem: petab.Problem, element_id: str
 ) -> float | sp.Basic:
+    """Get the initial value of an SBML model entity.
+
+    Get the initial value of an SBML model entity (species, parameter, ...) as
+    defined in the model (not considering any condition table overrides).
+    """
     import libsbml
 
     element = petab_problem.sbml_model.getElementBySId(element_id)
@@ -688,9 +744,15 @@ def _get_initial_state_sbml(
 def _get_initial_state_pysb(
     petab_problem: petab.Problem, element_id: str
 ) -> float | sp.Symbol:
+    """Get the initial value of a PySB model entity.
+
+    Get the initial value of an PySB model entity as defined in the model
+    (not considering any condition table overrides).
+    """
+    from pysb.pattern import match_complex_pattern
+
     species_idx = int(re.match(r"__s(\d+)$", element_id)[1])
     species_pattern = petab_problem.model.model.species[species_idx]
-    from pysb.pattern import match_complex_pattern
 
     value = next(
         (
