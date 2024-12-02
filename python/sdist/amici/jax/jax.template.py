@@ -101,7 +101,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     @property
     def parameter_ids(self):
-        return TPL_PK_IDS
+        return TPL_P_IDS
 
 
 Model = JAXModel_TPL_MODEL_NAME
