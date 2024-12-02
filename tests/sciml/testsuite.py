@@ -59,7 +59,13 @@ def _test_net(test):
     ):
         return
 
-    ml_models = PetabScimlStandard.load_data(test / solutions["net_file"])
+    if test.stem.endswith("_alt"):
+        net_file = (
+            test.parent / test.stem.replace("_alt", "") / solutions["net_file"]
+        )
+    else:
+        net_file = test / solutions["net_file"]
+    ml_models = PetabScimlStandard.load_data(net_file)
 
     nets = {}
     outdir = Path(__file__).parent / "models" / test.stem
@@ -151,6 +157,7 @@ def _test_net(test):
                     "net_021",
                     "net_022",  # Conv layers
                     "net_004",
+                    "net_004_alt",
                     "net_005",
                     "net_006",
                     "net_007",
@@ -277,7 +284,6 @@ def _test_ude(test):
     )
 
     # gradient
-
     sllh, _ = eqx.filter_grad(run_simulations, has_aux=True)(
         jax_problem,
         solver=diffrax.Tsit5(),
