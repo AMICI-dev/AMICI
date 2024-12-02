@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 from typing import (
     Any,
-    Union,
 )
 from collections.abc import Callable
 from collections.abc import Iterable
@@ -45,9 +44,110 @@ from .import_utils import (
 from .logging import get_logger, log_execution_time, set_log_level
 
 CL_Prototype = dict[str, dict[str, Any]]
-ConservationLaw = dict[str, Union[dict, str, sp.Basic]]
+ConservationLaw = dict[str, dict | str | sp.Basic]
 
 logger = get_logger(__name__, logging.ERROR)
+
+
+def pysb2jax(
+    model: pysb.Model,
+    output_dir: str | Path | None = None,
+    observables: list[str] = None,
+    sigmas: dict[str, str] = None,
+    noise_distributions: dict[str, str | Callable] | None = None,
+    verbose: int | bool = False,
+    compute_conservation_laws: bool = True,
+    simplify: Callable = _default_simplify,
+    # Do not enable by default without testing.
+    # See https://github.com/AMICI-dev/AMICI/pull/1672
+    cache_simplify: bool = False,
+    model_name: str | None = None,
+):
+    r"""
+    Generate AMICI jax files for the provided model.
+
+    .. warning::
+        **PySB models with Compartments**
+
+        When importing a PySB model with ``pysb.Compartment``\ s, BioNetGen
+        scales reaction fluxes with the compartment size. Instead of using the
+        respective symbols, the compartment size Parameter or Expression is
+        evaluated when generating equations. This may lead to unexpected
+        results if the compartment size parameter is changed for AMICI
+        simulations.
+
+    :param model:
+        pysb model, :attr:`pysb.Model.name` will determine the name of the
+        generated module
+
+    :param output_dir:
+        see :meth:`amici.de_export.ODEExporter.set_paths`
+
+    :param observables:
+        list of :class:`pysb.core.Expression` or :class:`pysb.core.Observable`
+        names in the provided model that should be mapped to observables
+
+    :param sigmas:
+        dict of :class:`pysb.core.Expression` names that should be mapped to
+        sigmas
+
+    :param noise_distributions:
+        dict with names of observable Expressions as keys and a noise type
+        identifier, or a callable generating a custom noise formula string
+        (see :py:func:`amici.import_utils.noise_distribution_to_cost_function`
+        ). If nothing is passed for some observable id, a normal model is
+        assumed as default.
+
+    :param verbose: verbosity level for logging, True/False default to
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
+
+    :param compute_conservation_laws:
+        if set to ``True``, conservation laws are automatically computed and
+        applied such that the state-jacobian of the ODE right-hand-side has
+        full rank. This option should be set to ``True`` when using the Newton
+        algorithm to compute steadystates
+
+    :param simplify:
+        see :attr:`amici.DEModel._simplify`
+
+    :param cache_simplify:
+            see :func:`amici.DEModel.__init__`
+            Note that there are possible issues with PySB models:
+            https://github.com/AMICI-dev/AMICI/pull/1672
+
+    :param model_name:
+        Name for the generated model module. If None, :attr:`pysb.Model.name`
+        will be used.
+    """
+    if observables is None:
+        observables = []
+
+    if sigmas is None:
+        sigmas = {}
+
+    model_name = model_name or model.name
+
+    set_log_level(logger, verbose)
+    ode_model = ode_model_from_pysb_importer(
+        model,
+        observables=observables,
+        sigmas=sigmas,
+        noise_distributions=noise_distributions,
+        compute_conservation_laws=compute_conservation_laws,
+        simplify=simplify,
+        cache_simplify=cache_simplify,
+        verbose=verbose,
+    )
+
+    from amici.jax.ode_export import ODEExporter
+
+    exporter = ODEExporter(
+        ode_model,
+        outdir=output_dir,
+        model_name=model_name,
+        verbose=verbose,
+    )
+    exporter.generate_model_code()
 
 
 def pysb2amici(
@@ -180,7 +280,7 @@ def pysb2amici(
     # Sympy code optimizations are incompatible with PySB objects, as
     #  `pysb.Observable` comes with its own `.match` which overrides
     #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.
-    exporter._code_printer_cpp._fpoptimizer = None
+    exporter._code_printer._fpoptimizer = None
     exporter.generate_model_code()
 
     if compile:

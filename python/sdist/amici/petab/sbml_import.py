@@ -26,197 +26,9 @@ from .util import get_states_in_condition_table
 logger = logging.getLogger(__name__)
 
 
-@log_execution_time("Importing PEtab model", logger)
-def import_model_sbml(
-    sbml_model: Union[str, Path, "libsbml.Model"] = None,
-    petab_problem: petab.Problem = None,
-    model_name: str | None = None,
-    model_output_dir: str | Path | None = None,
-    verbose: bool | int | None = True,
-    allow_reinit_fixpar_initcond: bool = True,
-    validate: bool = True,
-    non_estimated_parameters_as_constants=True,
-    output_parameter_defaults: dict[str, float] | None = None,
-    discard_sbml_annotations: bool = False,
-    **kwargs,
-) -> amici.SbmlImporter:
-    """
-    Create AMICI model from PEtab problem
-
-    :param sbml_model:
-        PEtab SBML model or SBML file name.
-        Deprecated, pass ``petab_problem`` instead.
-
-    :param petab_problem:
-        PEtab problem.
-
-    :param model_name:
-        Name of the generated model. If model file name was provided,
-        this defaults to the file name without extension, otherwise
-        the SBML model ID will be used.
-
-    :param model_output_dir:
-        Directory to write the model code to. Will be created if doesn't
-        exist. Defaults to current directory.
-
-    :param verbose:
-        Print/log extra information.
-
-    :param allow_reinit_fixpar_initcond:
-        See :class:`amici.de_export.ODEExporter`. Must be enabled if initial
-        states are to be reset after preequilibration.
-
-    :param validate:
-        Whether to validate the PEtab problem
-
-    :param non_estimated_parameters_as_constants:
-        Whether parameters marked as non-estimated in PEtab should be
-        considered constant in AMICI. Setting this to ``True`` will reduce
-        model size and simulation times. If sensitivities with respect to those
-        parameters are required, this should be set to ``False``.
-
-    :param output_parameter_defaults:
-        Optional default parameter values for output parameters introduced in
-        the PEtab observables table, in particular for placeholder parameters.
-        dictionary mapping parameter IDs to default values.
-
-    :param discard_sbml_annotations:
-        Discard information contained in AMICI SBML annotations (debug).
-
-    :param kwargs:
-        Additional keyword arguments to be passed to
-        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
-
-    :return:
-        The created :class:`amici.sbml_import.SbmlImporter` instance.
-    """
-    from petab.v1.models.sbml_model import SbmlModel
-
-    set_log_level(logger, verbose)
-
-    logger.info("Importing model ...")
-
-    if petab_problem.observable_df is None:
-        raise NotImplementedError(
-            "PEtab import without observables table "
-            "is currently not supported."
-        )
-
-    assert isinstance(petab_problem.model, SbmlModel)
-
-    if validate:
-        logger.info("Validating PEtab problem ...")
-        petab.lint_problem(petab_problem)
-
-    # Model name from SBML ID or filename
-    if model_name is None:
-        if not (model_name := petab_problem.model.sbml_model.getId()):
-            if not isinstance(sbml_model, (str, Path)):
-                raise ValueError(
-                    "No `model_name` was provided and no model "
-                    "ID was specified in the SBML model."
-                )
-            model_name = os.path.splitext(os.path.split(sbml_model)[-1])[0]
-
-    if model_output_dir is None:
-        model_output_dir = os.path.join(
-            os.getcwd(), f"{model_name}-amici{amici.__version__}"
-        )
-
-    logger.info(
-        f"Model name is '{model_name}'.\n"
-        f"Writing model code to '{model_output_dir}'."
-    )
-
-    # Create a copy, because it will be modified by SbmlImporter
-    sbml_doc = petab_problem.model.sbml_model.getSBMLDocument().clone()
-    sbml_model = sbml_doc.getModel()
-
-    show_model_info(sbml_model)
-
-    sbml_importer = amici.SbmlImporter(
-        sbml_model,
-        discard_annotations=discard_sbml_annotations,
-    )
-    sbml_model = sbml_importer.sbml
-
-    allow_n_noise_pars = (
-        not petab.lint.observable_table_has_nontrivial_noise_formula(
-            petab_problem.observable_df
-        )
-    )
-    if (
-        petab_problem.measurement_df is not None
-        and petab.lint.measurement_table_has_timepoint_specific_mappings(
-            petab_problem.measurement_df,
-            allow_scalar_numeric_noise_parameters=allow_n_noise_pars,
-        )
-    ):
-        raise ValueError(
-            "AMICI does not support importing models with timepoint specific "
-            "mappings for noise or observable parameters. Please flatten "
-            "the problem and try again."
-        )
-
-    if petab_problem.observable_df is not None:
-        observables, noise_distrs, sigmas = get_observation_model(
-            petab_problem.observable_df
-        )
-    else:
-        observables = noise_distrs = sigmas = None
-
-    logger.info(f"Observables: {len(observables)}")
-    logger.info(f"Sigmas: {len(sigmas)}")
-
-    if len(sigmas) != len(observables):
-        raise AssertionError(
-            f"Number of provided observables ({len(observables)}) and sigmas "
-            f"({len(sigmas)}) do not match."
-        )
-
-    # TODO: adding extra output parameters is currently not supported,
-    #  so we add any output parameters to the SBML model.
-    #  this should be changed to something more elegant
-    # <BeginWorkAround>
-    formulas = chain(
-        (val["formula"] for val in observables.values()), sigmas.values()
-    )
-    output_parameters = OrderedDict()
-    for formula in formulas:
-        # we want reproducible parameter ordering upon repeated import
-        free_syms = sorted(
-            sp.sympify(formula, locals=_clash).free_symbols,
-            key=lambda symbol: symbol.name,
-        )
-        for free_sym in free_syms:
-            sym = str(free_sym)
-            if (
-                sbml_model.getElementBySId(sym) is None
-                and sym != "time"
-                and sym not in observables
-            ):
-                output_parameters[sym] = None
-    logger.debug(
-        "Adding output parameters to model: "
-        f"{list(output_parameters.keys())}"
-    )
-    output_parameter_defaults = output_parameter_defaults or {}
-    if extra_pars := (
-        set(output_parameter_defaults) - set(output_parameters.keys())
-    ):
-        raise ValueError(
-            f"Default output parameter values were given for {extra_pars}, "
-            "but they those are not output parameters."
-        )
-
-    for par in output_parameters.keys():
-        _add_global_parameter(
-            sbml_model=sbml_model,
-            parameter_id=par,
-            value=output_parameter_defaults.get(par, 0.0),
-        )
-    # <EndWorkAround>
-
+def workaround_initial_states(
+    petab_problem: petab.Problem, sbml_model: libsbml.Model, **kwargs
+):
     # TODO: to parameterize initial states or compartment sizes, we currently
     #  need initial assignments. if they occur in the condition table, we
     #  create a new parameter initial_${speciesOrCompartmentID}.
@@ -331,6 +143,217 @@ def import_model_sbml(
         assignment.setMath(math_ast)
     # <EndWorkAround>
 
+    return fixed_parameters
+
+
+def workaround_observable_parameters(
+    observables, sigmas, sbml_model, output_parameter_defaults
+):
+    # TODO: adding extra output parameters is currently not supported,
+    #  so we add any output parameters to the SBML model.
+    #  this should be changed to something more elegant
+    # <BeginWorkAround>
+    formulas = chain(
+        (val["formula"] for val in observables.values()), sigmas.values()
+    )
+    output_parameters = OrderedDict()
+    for formula in formulas:
+        # we want reproducible parameter ordering upon repeated import
+        free_syms = sorted(
+            sp.sympify(formula, locals=_clash).free_symbols,
+            key=lambda symbol: symbol.name,
+        )
+        for free_sym in free_syms:
+            sym = str(free_sym)
+            if (
+                sbml_model.getElementBySId(sym) is None
+                and sym != "time"
+                and sym not in observables
+            ):
+                output_parameters[sym] = None
+    logger.debug(
+        "Adding output parameters to model: "
+        f"{list(output_parameters.keys())}"
+    )
+    output_parameter_defaults = output_parameter_defaults or {}
+    if extra_pars := (
+        set(output_parameter_defaults) - set(output_parameters.keys())
+    ):
+        raise ValueError(
+            f"Default output parameter values were given for {extra_pars}, "
+            "but they those are not output parameters."
+        )
+
+    for par in output_parameters.keys():
+        _add_global_parameter(
+            sbml_model=sbml_model,
+            parameter_id=par,
+            value=output_parameter_defaults.get(par, 0.0),
+        )
+    # <EndWorkAround>
+
+
+@log_execution_time("Importing PEtab model", logger)
+def import_model_sbml(
+    sbml_model: Union[str, Path, "libsbml.Model"] = None,
+    petab_problem: petab.Problem = None,
+    model_name: str | None = None,
+    model_output_dir: str | Path | None = None,
+    verbose: bool | int | None = True,
+    allow_reinit_fixpar_initcond: bool = True,
+    validate: bool = True,
+    non_estimated_parameters_as_constants=True,
+    output_parameter_defaults: dict[str, float] | None = None,
+    discard_sbml_annotations: bool = False,
+    jax: bool = False,
+    **kwargs,
+) -> amici.SbmlImporter:
+    """
+    Create AMICI model from PEtab problem
+
+    :param sbml_model:
+        PEtab SBML model or SBML file name.
+        Deprecated, pass ``petab_problem`` instead.
+
+    :param petab_problem:
+        PEtab problem.
+
+    :param model_name:
+        Name of the generated model. If model file name was provided,
+        this defaults to the file name without extension, otherwise
+        the SBML model ID will be used.
+
+    :param model_output_dir:
+        Directory to write the model code to. Will be created if doesn't
+        exist. Defaults to current directory.
+
+    :param verbose:
+        Print/log extra information.
+
+    :param allow_reinit_fixpar_initcond:
+        See :class:`amici.de_export.ODEExporter`. Must be enabled if initial
+        states are to be reset after preequilibration.
+
+    :param validate:
+        Whether to validate the PEtab problem
+
+    :param non_estimated_parameters_as_constants:
+        Whether parameters marked as non-estimated in PEtab should be
+        considered constant in AMICI. Setting this to ``True`` will reduce
+        model size and simulation times. If sensitivities with respect to those
+        parameters are required, this should be set to ``False``.
+
+    :param output_parameter_defaults:
+        Optional default parameter values for output parameters introduced in
+        the PEtab observables table, in particular for placeholder parameters.
+        dictionary mapping parameter IDs to default values.
+
+    :param discard_sbml_annotations:
+        Discard information contained in AMICI SBML annotations (debug).
+
+    :param jax:
+        Whether to generate JAX code instead of C++ code.
+
+    :param kwargs:
+        Additional keyword arguments to be passed to
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+
+    :return:
+        The created :class:`amici.sbml_import.SbmlImporter` instance.
+    """
+    from petab.v1.models.sbml_model import SbmlModel
+
+    set_log_level(logger, verbose)
+
+    logger.info("Importing model ...")
+
+    if petab_problem.observable_df is None:
+        raise NotImplementedError(
+            "PEtab import without observables table "
+            "is currently not supported."
+        )
+
+    assert isinstance(petab_problem.model, SbmlModel)
+
+    if validate:
+        logger.info("Validating PEtab problem ...")
+        petab.lint_problem(petab_problem)
+
+    # Model name from SBML ID or filename
+    if model_name is None:
+        if not (model_name := petab_problem.model.sbml_model.getId()):
+            if not isinstance(sbml_model, str | Path):
+                raise ValueError(
+                    "No `model_name` was provided and no model "
+                    "ID was specified in the SBML model."
+                )
+            model_name = os.path.splitext(os.path.split(sbml_model)[-1])[0]
+
+    if model_output_dir is None:
+        model_output_dir = os.path.join(
+            os.getcwd(), f"{model_name}-amici{amici.__version__}"
+        )
+
+    logger.info(
+        f"Model name is '{model_name}'.\n"
+        f"Writing model code to '{model_output_dir}'."
+    )
+
+    # Create a copy, because it will be modified by SbmlImporter
+    sbml_doc = petab_problem.model.sbml_model.getSBMLDocument().clone()
+    sbml_model = sbml_doc.getModel()
+
+    show_model_info(sbml_model)
+
+    sbml_importer = amici.SbmlImporter(
+        sbml_model,
+        discard_annotations=discard_sbml_annotations,
+    )
+    sbml_model = sbml_importer.sbml
+
+    allow_n_noise_pars = (
+        not petab.lint.observable_table_has_nontrivial_noise_formula(
+            petab_problem.observable_df
+        )
+    )
+    if (
+        petab_problem.measurement_df is not None
+        and petab.lint.measurement_table_has_timepoint_specific_mappings(
+            petab_problem.measurement_df,
+            allow_scalar_numeric_noise_parameters=allow_n_noise_pars,
+        )
+    ):
+        raise ValueError(
+            "AMICI does not support importing models with timepoint specific "
+            "mappings for noise or observable parameters. Please flatten "
+            "the problem and try again."
+        )
+
+    if petab_problem.observable_df is not None:
+        observables, noise_distrs, sigmas = get_observation_model(
+            petab_problem.observable_df
+        )
+    else:
+        observables = noise_distrs = sigmas = None
+
+    logger.info(f"Observables: {len(observables)}")
+    logger.info(f"Sigmas: {len(sigmas)}")
+
+    if len(sigmas) != len(observables):
+        raise AssertionError(
+            f"Number of provided observables ({len(observables)}) and sigmas "
+            f"({len(sigmas)}) do not match."
+        )
+
+    workaround_observable_parameters(
+        observables, sigmas, sbml_model, output_parameter_defaults
+    )
+    fixed_parameters = workaround_initial_states(
+        petab_problem=petab_problem,
+        sbml_model=sbml_model,
+        **kwargs,
+    )
+
     fixed_parameters.extend(
         _get_fixed_parameters_sbml(
             petab_problem=petab_problem,
@@ -346,17 +369,28 @@ def import_model_sbml(
     )
 
     # Create Python module from SBML model
-    sbml_importer.sbml2amici(
-        model_name=model_name,
-        output_dir=model_output_dir,
-        observables=observables,
-        constant_parameters=fixed_parameters,
-        sigmas=sigmas,
-        allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
-        noise_distributions=noise_distrs,
-        verbose=verbose,
-        **kwargs,
-    )
+    if jax:
+        sbml_importer.sbml2jax(
+            model_name=model_name,
+            output_dir=model_output_dir,
+            observables=observables,
+            sigmas=sigmas,
+            noise_distributions=noise_distrs,
+            verbose=verbose,
+            **kwargs,
+        )
+    else:
+        sbml_importer.sbml2amici(
+            model_name=model_name,
+            output_dir=model_output_dir,
+            observables=observables,
+            constant_parameters=fixed_parameters,
+            sigmas=sigmas,
+            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+            noise_distributions=noise_distrs,
+            verbose=verbose,
+            **kwargs,
+        )
 
     if kwargs.get(
         "compile",
