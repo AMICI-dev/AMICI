@@ -338,12 +338,6 @@ def test_jax_llh(benchmark_problem):
         jax=True,
     )
     jax_problem = JAXProblem(jax_model, petab_problem)
-    simulation_conditions = (
-        petab_problem.get_simulation_conditions_from_measurement_df()
-    )
-    simulation_conditions = tuple(
-        tuple(row) for _, row in simulation_conditions.iterrows()
-    )
     if problem_parameters:
         jax_problem = eqx.tree_at(
             lambda x: x.parameters,
@@ -355,11 +349,9 @@ def test_jax_llh(benchmark_problem):
     if problem_id in problems_for_gradient_check_jax:
         (llh_jax, _), sllh_jax = eqx.filter_jit(
             eqx.filter_value_and_grad(run_simulations, has_aux=True)
-        )(jax_problem, simulation_conditions)
+        )(jax_problem)
     else:
-        llh_jax, _ = beartype(eqx.filter_jit(run_simulations))(
-            jax_problem, simulation_conditions
-        )
+        llh_jax, _ = beartype(eqx.filter_jit(run_simulations))(jax_problem)
 
     np.testing.assert_allclose(
         llh_jax,
