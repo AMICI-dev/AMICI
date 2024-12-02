@@ -9,13 +9,13 @@ from amici import _module_from_path
 
 TPL_NET_IMPORTS
 
-
 class JAXModel_TPL_MODEL_NAME(JAXModel):
     api_version = TPL_MODEL_API_VERSION
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
         self.nns = {TPL_NETS}
+
         super().__init__()
 
     def _xdot(self, t, x, args):
