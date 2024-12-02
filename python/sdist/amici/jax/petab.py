@@ -126,45 +126,6 @@ class JAXProblem(eqx.Module):
         with open(directory / "parameters.pkl", "rb") as f:
             return eqx.tree_deserialise_leaves(f, problem)
 
-    def save(self, directory: Path):
-        """
-        Save the problem to a directory.
-
-        :param directory:
-            Directory to save the problem to.
-        """
-        self._petab_problem.to_files(
-            prefix_path=directory,
-            model_file="model",
-            condition_file="conditions.tsv",
-            measurement_file="measurements.tsv",
-            parameter_file="parameters.tsv",
-            observable_file="observables.tsv",
-            yaml_file="problem.yaml",
-        )
-        shutil.copy(self.model.jax_py_file, directory / "jax_py_file.py")
-        with open(directory / "parameters.pkl", "wb") as f:
-            eqx.tree_serialise_leaves(f, self)
-
-    @classmethod
-    def load(cls, directory: Path):
-        """
-        Load a problem from a directory.
-
-        :param directory:
-            Directory to load the problem from.
-
-        :return:
-            Loaded problem instance.
-        """
-        petab_problem = petab.Problem.from_yaml(
-            directory / "problem.yaml",
-        )
-        model = _module_from_path("jax", directory / "jax_py_file.py").Model()
-        problem = cls(model, petab_problem)
-        with open(directory / "parameters.pkl", "rb") as f:
-            return eqx.tree_deserialise_leaves(f, problem)
-
     def _get_parameter_mappings(
         self, simulation_conditions: pd.DataFrame
     ) -> dict[str, ParameterMappingForCondition]:

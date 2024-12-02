@@ -9,6 +9,7 @@ from amici import _module_from_path
 
 TPL_NET_IMPORTS
 
+
 class JAXModel_TPL_MODEL_NAME(JAXModel):
     api_version = TPL_MODEL_API_VERSION
 
