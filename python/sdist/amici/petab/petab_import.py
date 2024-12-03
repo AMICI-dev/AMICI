@@ -126,7 +126,7 @@ def import_petab_problem(
     # check if compilation necessary
     if compile_ or (
         compile_ is None
-        and not _can_import_model(model_name, model_output_dir)
+        and not _can_import_model(model_name, model_output_dir, jax)
     ):
         # check if folder exists
         if os.listdir(model_output_dir) and not compile_:
