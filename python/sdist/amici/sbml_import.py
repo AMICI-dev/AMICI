@@ -460,6 +460,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = True,
+        hybridisation: dict = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -549,6 +550,7 @@ class SbmlImporter:
             model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
+            hybridisation=hybridisation,
         )
         exporter.generate_model_code()
 

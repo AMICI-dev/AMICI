@@ -20,7 +20,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         super().__init__()
 
     def _xdot(self, t, x, args):
-        pk, tcl = args
+        p, tcl = args
 
         TPL_X_SYMS = x
         TPL_P_SYMS = p
@@ -30,7 +30,6 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_XDOT_EQ
 
         return TPL_XDOT_RET
-
 
     def _w(self, t, x, p, tcl):
         TPL_X_SYMS = x
