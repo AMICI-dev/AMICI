@@ -994,3 +994,15 @@
    fun:do_richcompare
    ...
 }
+
+
+# https://github.com/crate-py/rpds, via petab->jsonschema
+{
+   rpds
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   ...
+   fun:_ZN4rpds*
+   ...
+}
