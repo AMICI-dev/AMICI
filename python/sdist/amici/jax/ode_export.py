@@ -130,7 +130,7 @@ class ODEExporter:
         outdir: Path | str | None = None,
         verbose: bool | int | None = False,
         model_name: str | None = "model",
-        hybridisation: dict[str, str] = {},
+        hybridisation: dict[str, dict] = None,
     ):
         """
         Generate AMICI jax files for the ODE provided to the constructor.
@@ -159,7 +159,7 @@ class ODEExporter:
 
         self.model: DEModel = ode_model
 
-        self.hybridisation = hybridisation
+        self.hybridisation = hybridisation if hybridisation is not None else {}
 
         self._code_printer = AmiciJaxCodePrinter()
 

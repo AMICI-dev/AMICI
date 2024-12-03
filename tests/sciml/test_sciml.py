@@ -327,8 +327,9 @@ def test_ude(test):
     # gradient
     sllh, _ = eqx.filter_grad(run_simulations, has_aux=True)(
         jax_problem,
-        solver=diffrax.Tsit5(),
-        controller=diffrax.PIDController(atol=1e-10, rtol=1e-10),
+        solver=diffrax.Kvaerno5(),
+        controller=diffrax.PIDController(atol=1e-14, rtol=1e-14),
+        max_steps=2**16,
     )
     expected = (
         pd.concat(

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from petab_sciml import MLModel, Layer, Node
+
 import equinox as eqx
 import jax.numpy as jnp
 
@@ -30,7 +30,10 @@ def tanhshrink(x: jnp.ndarray) -> jnp.ndarray:
     return x - jnp.tanh(x)
 
 
-def generate_equinox(ml_model: MLModel, filename: Path | str):
+def generate_equinox(ml_model: "MLModel", filename: Path | str):  # noqa: F821
+    # TODO: move to top level import and replace forward type definitions
+    from petab_sciml import Layer
+
     filename = Path(filename)
     layer_indent = 12
     node_indent = 8
@@ -87,7 +90,7 @@ def _process_argval(v):
     return str(v)
 
 
-def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
+def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F821
     layer_map = {
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
@@ -146,7 +149,7 @@ def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
     return f"{' ' * indent}'{layer.layer_id}': {layer_str}"
 
 
-def _generate_forward(node: Node, indent, layer_type=str) -> str:
+def _generate_forward(node: "Node", indent, layer_type=str) -> str:  # noqa: F821
     if node.op == "placeholder":
         # TODO: inconsistent target vs name
         return f"{' ' * indent}{node.name} = input"
