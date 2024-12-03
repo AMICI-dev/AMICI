@@ -12,7 +12,7 @@ import diffrax
 import numpy as np
 from beartype import beartype
 
-from amici.pysb_import import pysb2amici
+from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from amici.petab.petab_import import import_petab_problem
 from amici.jax import JAXProblem
@@ -39,17 +39,21 @@ def test_conversion():
     pysb.Rule("conv", a(s="a") >> a(s="b"), pysb.Parameter("kcat", 0.05))
     pysb.Observable("ab", a(s="b"))
 
-    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+    with TemporaryDirectoryWinSafe() as outdir:
         pysb2amici(model, outdir, verbose=True, observables=["ab"])
+        pysb2jax(model, outdir, verbose=True, observables=["ab"])
 
-        model_module = amici.import_model_module(
+        amici_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
+        )
+        jax_module = amici.import_model_module(
+            module_name=model.name + "_jax", module_path=outdir
         )
 
         ts = tuple(np.linspace(0, 1, 10))
         p = jnp.stack((1.0, 0.1), axis=-1)
         k = tuple()
-        _test_model(model_module, ts, p, k)
+        _test_model(amici_module, jax_module, ts, p, k)
 
 
 @skip_on_valgrind
@@ -86,7 +90,7 @@ def test_dimerization():
     pysb.Observable("a_obs", a())
     pysb.Observable("b_obs", b())
 
-    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+    with TemporaryDirectoryWinSafe() as outdir:
         pysb2amici(
             model,
             outdir,
@@ -94,26 +98,34 @@ def test_dimerization():
             observables=["a_obs", "b_obs"],
             constant_parameters=["ksyn_a", "ksyn_b"],
         )
+        pysb2jax(
+            model,
+            outdir,
+            observables=["a_obs", "b_obs"],
+        )
 
-        model_module = amici.import_model_module(
+        amici_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
+        )
+        jax_module = amici.import_model_module(
+            module_name=model.name + "_jax", module_path=outdir
         )
 
         ts = tuple(np.linspace(0, 1, 10))
         p = jnp.stack((5, 0.5, 0.5, 0.5), axis=-1)
         k = (0.5, 5)
-        _test_model(model_module, ts, p, k)
+        _test_model(amici_module, jax_module, ts, p, k)
 
 
-def _test_model(model_module, ts, p, k):
-    amici_model = model_module.getModel()
+def _test_model(amici_module, jax_module, ts, p, k):
+    amici_model = amici_module.getModel()
 
     amici_model.setTimepoints(np.asarray(ts, dtype=np.float64))
     sol_amici_ref = amici.runAmiciSimulation(
         amici_model, amici_model.getSolver()
     )
 
-    jax_model = model_module.get_jax_model()
+    jax_model = jax_module.Model()
 
     amici_model.setParameters(np.asarray(p, dtype=np.float64))
     amici_model.setFixedParameters(np.asarray(k, dtype=np.float64))
@@ -129,12 +141,19 @@ def _test_model(model_module, ts, p, k):
     rs_amici = amici.runAmiciSimulations(amici_model, amici_solver, [edata])
 
     check_fields_jax(
-        rs_amici, jax_model, edata, ["x", "y", "llh", "res", "x0"]
+        rs_amici,
+        jax_model,
+        amici_model.getParameterIds(),
+        amici_model.getFixedParameterIds(),
+        edata,
+        ["x", "y", "llh", "res", "x0"],
     )
 
     check_fields_jax(
         rs_amici,
         jax_model,
+        amici_model.getParameterIds(),
+        amici_model.getFixedParameterIds(),
         edata,
         ["sllh", "sx0", "sx", "sres", "sy"],
         sensi_order=amici.SensitivityOrder.first,
@@ -144,6 +163,8 @@ def _test_model(model_module, ts, p, k):
 def check_fields_jax(
     rs_amici,
     jax_model,
+    parameter_ids,
+    fixed_parameter_ids,
     edata,
     fields,
     sensi_order=amici.SensitivityOrder.none,
@@ -160,7 +181,13 @@ def check_fields_jax(
     ts_preeq = ts[ts == 0]
     ts_dyn = ts[ts > 0]
     ts_posteq = np.array([])
-    p = jnp.array(list(edata.parameters) + list(edata.fixedParameters))
+
+    par_dict = {
+        **dict(zip(parameter_ids, edata.parameters)),
+        **dict(zip(fixed_parameter_ids, edata.fixedParameters)),
+    }
+
+    p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
     args = (
         jnp.array([]),  # p_preeq
         jnp.array(ts_preeq),  # ts_preeq
@@ -187,6 +214,10 @@ def check_fields_jax(
                     0
                 ]
 
+    amici_par_idx = np.array(
+        [jax_model.parameter_ids.index(par_id) for par_id in parameter_ids]
+    )
+
     for field in fields:
         for r_amici, r_jax in zip(rs_amici, [r_jax]):
             actual = r_jax[field]
@@ -199,16 +230,16 @@ def check_fields_jax(
                     axis=1,
                 )
             elif field == "sllh":
-                actual = actual[: len(edata.parameters)]
+                actual = actual[amici_par_idx]
             elif field == "sx":
-                actual = np.permute_dims(
-                    actual[iys == 0, :, : len(edata.parameters)], (0, 2, 1)
-                )
+                actual = actual[:, :, amici_par_idx]
+                actual = np.permute_dims(actual[iys == 0, :, :], (0, 2, 1))
             elif field == "sy":
+                actual = actual[:, amici_par_idx]
                 actual = np.permute_dims(
                     np.stack(
                         [
-                            actual[iys == iy, : len(edata.parameters)]
+                            actual[iys == iy, :]
                             for iy in sorted(np.unique(iys))
                         ],
                         axis=1,
@@ -216,9 +247,9 @@ def check_fields_jax(
                     (0, 2, 1),
                 )
             elif field == "sx0":
-                actual = actual[:, : len(edata.parameters)].T
+                actual = actual[:, amici_par_idx].T
             elif field == "sres":
-                actual = actual[:, : len(edata.parameters)]
+                actual = actual[:, amici_par_idx]
 
             assert_allclose(
                 actual=actual,

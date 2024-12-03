@@ -132,7 +132,7 @@ def _create_model_name(folder: str | Path) -> str:
 
 
 def _can_import_model(
-    model_name: str, model_output_dir: str | Path, jax: bool
+    model_name: str, model_output_dir: str | Path, jax: bool = False
 ) -> bool:
     """
     Check whether a module of that name can already be imported.

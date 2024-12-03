@@ -178,7 +178,7 @@ def import_petab_problem(
                 petab_problem,
                 model_name=model_name,
                 model_output_dir=model_output_dir,
-                compile=kwargs.pop("compile", not jax),
+                jax=jax,
                 **kwargs,
             )
         else:
@@ -187,19 +187,19 @@ def import_petab_problem(
                 model_name=model_name,
                 model_output_dir=model_output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-                compile=kwargs.pop("compile", not jax),
                 hybridisation=hybridisation,
+                jax=jax,
                 **kwargs,
             )
 
     # import model
-    if not jax:
-        model_module = amici.import_model_module(model_name, model_output_dir)
-    else:
-        jax_model_module = amici.import_model_module(
-            model_name + "_jax", model_output_dir
-        )
-        model = jax_model_module.Model()
+    suffix = "_jax" if jax else ""
+    model_module = amici.import_model_module(
+        model_name + suffix, model_output_dir
+    )
+
+    if jax:
+        model = model_module.Model()
 
         logger.info(
             f"Successfully loaded jax model {model_name} "

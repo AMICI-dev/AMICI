@@ -23,25 +23,26 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         pk, tcl = args
 
         TPL_X_SYMS = x
-        TPL_PK_SYMS = pk
+        TPL_P_SYMS = p
         TPL_TCL_SYMS = tcl
-        TPL_W_SYMS = self._w(t, x, pk, tcl)
+        TPL_W_SYMS = self._w(t, x, p, tcl)
 
         TPL_XDOT_EQ
 
         return TPL_XDOT_RET
 
-    def _w(self, t, x, pk, tcl):
+
+    def _w(self, t, x, p, tcl):
         TPL_X_SYMS = x
-        TPL_PK_SYMS = pk
+        TPL_P_SYMS = p
         TPL_TCL_SYMS = tcl
 
         TPL_W_EQ
 
         return TPL_W_RET
 
-    def _x0(self, pk):
-        TPL_PK_SYMS = pk
+    def _x0(self, p):
+        TPL_P_SYMS = p
 
         TPL_X0_EQ
 
@@ -62,25 +63,25 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_X_RDATA_RET
 
-    def _tcl(self, x, pk):
+    def _tcl(self, x, p):
         TPL_X_RDATA_SYMS = x
-        TPL_PK_SYMS = pk
+        TPL_P_SYMS = p
 
         TPL_TOTAL_CL_EQ
 
         return TPL_TOTAL_CL_RET
 
-    def _y(self, t, x, pk, tcl):
+    def _y(self, t, x, p, tcl):
         TPL_X_SYMS = x
-        TPL_PK_SYMS = pk
-        TPL_W_SYMS = self._w(t, x, pk, tcl)
+        TPL_P_SYMS = p
+        TPL_W_SYMS = self._w(t, x, p, tcl)
 
         TPL_Y_EQ
 
         return TPL_Y_RET
 
-    def _sigmay(self, y, pk):
-        TPL_PK_SYMS = pk
+    def _sigmay(self, y, p):
+        TPL_P_SYMS = p
 
         TPL_Y_SYMS = y
 
@@ -88,10 +89,10 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_SIGMAY_RET
 
-    def _nllh(self, t, x, pk, tcl, my, iy):
-        y = self._y(t, x, pk, tcl)
+    def _nllh(self, t, x, p, tcl, my, iy):
+        y = self._y(t, x, p, tcl)
         TPL_Y_SYMS = y
-        TPL_SIGMAY_SYMS = self._sigmay(y, pk)
+        TPL_SIGMAY_SYMS = self._sigmay(y, p)
 
         TPL_JY_EQ
 
@@ -107,7 +108,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     @property
     def parameter_ids(self):
-        return TPL_PK_IDS
+        return TPL_P_IDS
 
 
 Model = JAXModel_TPL_MODEL_NAME
