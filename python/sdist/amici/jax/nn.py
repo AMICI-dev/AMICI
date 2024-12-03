@@ -89,14 +89,13 @@ def _process_argval(v):
 
 def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
     layer_map = {
-        "InstanceNorm1d": "eqx.nn.LayerNorm",
-        "InstanceNorm2d": "eqx.nn.LayerNorm",
-        "InstanceNorm3d": "eqx.nn.LayerNorm",
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
         "Flatten": "amici.jax.nn.Flatten",
     }
-    if layer.layer_type.startswith(("BatchNorm", "AlphaDropout")):
+    if layer.layer_type.startswith(
+        ("BatchNorm", "AlphaDropout", "InstanceNorm")
+    ):
         raise NotImplementedError(
             f"{layer.layer_type} layers currently not supported"
         )
@@ -117,30 +116,12 @@ def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
         "Conv2d": {
             "bias": "use_bias",
         },
-        "InstanceNorm1d": {
-            "affine": "elementwise_affine",
-            "num_features": "shape",
-        },
-        "InstanceNorm2d": {
-            "affine": "elementwise_affine",
-            "num_features": "shape",
-        },
-        "InstanceNorm3d": {
-            "affine": "elementwise_affine",
-            "num_features": "shape",
-        },
         "LayerNorm": {
             "affine": "elementwise_affine",
             "normalized_shape": "shape",
         },
     }
     kwarg_ignore = {
-        "InstanceNorm1d": ("track_running_stats", "momentum"),
-        "InstanceNorm2d": ("track_running_stats", "momentum"),
-        "InstanceNorm3d": ("track_running_stats", "momentum"),
-        "BatchNorm1d": ("track_running_stats", "momentum"),
-        "BatchNorm2d": ("track_running_stats", "momentum"),
-        "BatchNorm3d": ("track_running_stats", "momentum"),
         "Dropout1d": ("inplace",),
         "Dropout2d": ("inplace",),
     }
@@ -162,13 +143,6 @@ def _generate_layer(layer: Layer, indent: int, ilayer: int) -> str:
         kwargs += [f"key=keys[{ilayer}]"]
     type_str = layer_map.get(layer.layer_type, f"eqx.nn.{layer.layer_type}")
     layer_str = f"{type_str}({', '.join(kwargs)})"
-    if layer.layer_type.startswith(("InstanceNorm",)):
-        if layer.layer_type.endswith(("1d", "2d", "3d")):
-            layer_str = f"jax.vmap({layer_str}, in_axes=1, out_axes=1)"
-        if layer.layer_type.endswith(("2d", "3d")):
-            layer_str = f"jax.vmap({layer_str}, in_axes=2, out_axes=2)"
-        if layer.layer_type.endswith("3d"):
-            layer_str = f"jax.vmap({layer_str}, in_axes=3, out_axes=3)"
     return f"{' ' * indent}'{layer.layer_id}': {layer_str}"
 
 
@@ -179,10 +153,8 @@ def _generate_forward(node: Node, indent, layer_type=str) -> str:
 
     if node.op == "call_module":
         fun_str = f"self.layers['{node.target}']"
-        if layer_type.startswith(
-            ("InstanceNorm", "Conv", "Linear", "LayerNorm")
-        ):
-            if layer_type in ("LayerNorm", "InstanceNorm"):
+        if layer_type.startswith(("Conv", "Linear", "LayerNorm")):
+            if layer_type in ("LayerNorm",):
                 dims = f"len({fun_str}.shape)+1"
             if layer_type == "Linear":
                 dims = 2
