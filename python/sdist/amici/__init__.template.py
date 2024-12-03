@@ -2,12 +2,8 @@
 
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 import amici
 
-
-if TYPE_CHECKING:
-    pass
 
 # Ensure we are binary-compatible, see #556
 if "TPL_AMICI_VERSION" != amici.__version__:

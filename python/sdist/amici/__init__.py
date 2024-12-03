@@ -141,8 +141,6 @@ if not _imported_from_setup():
             """Create a model instance."""
             ...
 
-        def get_jax_model(self) -> JAXModel: ...
-
     AmiciModel = Union[amici.Model, amici.ModelPtr]
 else:
     ModelModule = ModuleType
