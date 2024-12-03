@@ -14,9 +14,6 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-)
 
 import sympy as sp
 
@@ -37,9 +34,6 @@ from amici.sympy_utils import (
     _custom_pow_eval_derivative,
     _monkeypatched,
 )
-
-if TYPE_CHECKING:
-    pass
 
 #: python log manager
 logger = get_logger(__name__, logging.ERROR)
@@ -168,8 +162,7 @@ class ODEExporter:
     @log_execution_time("generating jax code", logger)
     def generate_model_code(self) -> None:
         """
-        Generates the native C++ code for the loaded model and a Matlab
-        script that can be run to compile a mex file from the C++ code
+        Generates the jax code for the loaded model
         """
         with _monkeypatched(
             sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
@@ -221,7 +214,7 @@ class ODEExporter:
                 strict=True,
             )
         )
-        subs = {**subs_heaviside, **subs_observables}
+        subs = subs_heaviside | subs_observables
 
         tpl_data = {
             # assign named variable using corresponding algebraic formula (function body)

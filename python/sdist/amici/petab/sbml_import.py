@@ -26,7 +26,7 @@ from .util import get_states_in_condition_table
 logger = logging.getLogger(__name__)
 
 
-def workaround_initial_states(
+def _workaround_initial_states(
     petab_problem: petab.Problem, sbml_model: libsbml.Model, **kwargs
 ):
     # TODO: to parameterize initial states or compartment sizes, we currently
@@ -146,7 +146,7 @@ def workaround_initial_states(
     return fixed_parameters
 
 
-def workaround_observable_parameters(
+def _workaround_observable_parameters(
     observables, sigmas, sbml_model, output_parameter_defaults
 ):
     # TODO: adding extra output parameters is currently not supported,
@@ -345,10 +345,10 @@ def import_model_sbml(
             f"({len(sigmas)}) do not match."
         )
 
-    workaround_observable_parameters(
+    _workaround_observable_parameters(
         observables, sigmas, sbml_model, output_parameter_defaults
     )
-    fixed_parameters = workaround_initial_states(
+    fixed_parameters = _workaround_initial_states(
         petab_problem=petab_problem,
         sbml_model=sbml_model,
         **kwargs,

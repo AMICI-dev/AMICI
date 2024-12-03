@@ -111,9 +111,9 @@ def pysb2jax(
         see :attr:`amici.DEModel._simplify`
 
     :param cache_simplify:
-            see :func:`amici.DEModel.__init__`
-            Note that there are possible issues with PySB models:
-            https://github.com/AMICI-dev/AMICI/pull/1672
+        see :func:`amici.DEModel.__init__`
+        Note that there are possible issues with PySB models:
+        https://github.com/AMICI-dev/AMICI/pull/1672
 
     :param model_name:
         Name for the generated model module. If None, :attr:`pysb.Model.name`
