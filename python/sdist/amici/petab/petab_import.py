@@ -16,7 +16,12 @@ import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 from ..logging import get_logger
-from .import_helpers import _can_import_model, _create_model_name, check_model
+from .import_helpers import (
+    _can_import_model,
+    _create_model_name,
+    check_model,
+    _get_package_name_and_path,
+)
 from .sbml_import import import_model_sbml
 
 try:
@@ -136,7 +141,7 @@ def import_petab_problem(
             )
 
         # remove folder if exists
-        if os.path.exists(model_output_dir):
+        if not jax and os.path.exists(model_output_dir):
             shutil.rmtree(model_output_dir)
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
@@ -160,7 +165,9 @@ def import_petab_problem(
             )
 
     # import model
-    model_module = amici.import_model_module(model_name, model_output_dir)
+    model_module = amici.import_model_module(
+        *_get_package_name_and_path(model_name, model_output_dir, jax=jax)
+    )
 
     if jax:
         model = model_module.Model()

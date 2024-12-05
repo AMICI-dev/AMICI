@@ -139,7 +139,9 @@ def _can_import_model(
     """
     # try to import (in particular checks version)
     try:
-        model_module = amici.import_model_module(model_name, model_output_dir)
+        model_module = amici.import_model_module(
+            *_get_package_name_and_path(model_name, model_output_dir, jax)
+        )
     except ModuleNotFoundError:
         return False
 
@@ -268,3 +270,24 @@ def check_model(
             "the current model might also resolve this. Parameters: "
             f"{amici_ids_free_required.difference(amici_ids_free)}"
         )
+
+
+def _get_package_name_and_path(
+    model_name: str, model_output_dir: str | Path, jax: bool = False
+) -> tuple[str, Path]:
+    """
+    Get the package name and path for the generated model module.
+
+    :param model_name:
+        Name of the model
+    :param model_output_dir:
+        Target directory for the generated model module
+    :param jax:
+        Whether to generate the paths for a JAX or CPP model
+    :return:
+    """
+    if jax:
+        outdir = Path(model_output_dir)
+        return outdir.stem, outdir.parent
+    else:
+        return model_name, Path(model_output_dir)
