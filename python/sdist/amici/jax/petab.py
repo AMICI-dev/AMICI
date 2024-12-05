@@ -154,7 +154,7 @@ class JAXProblem(eqx.Module):
     def _get_measurements(
         self, simulation_conditions: pd.DataFrame
     ) -> dict[
-        str,
+        tuple[str, ...],
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
     ]:
         """
@@ -320,7 +320,7 @@ class JAXProblem(eqx.Module):
             Step size controller to use for simulation
         :param max_steps:
             Maximum number of steps to take during simulation
-        :param preeq:
+        :param x_preeq:
             Pre-equilibration state if available
         :return:
             Tuple of log-likelihood and simulation statistics
@@ -375,7 +375,7 @@ class JAXProblem(eqx.Module):
 
 def run_simulations(
     problem: JAXProblem,
-    simulation_conditions: Iterable[tuple] | None = None,
+    simulation_conditions: Iterable[tuple[str, ...]] | None = None,
     solver: diffrax.AbstractSolver = diffrax.Kvaerno5(),
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         rtol=1e-8,
