@@ -427,12 +427,12 @@ class JAXModel(eqx.Module):
     def simulate_condition(
         self,
         p: jt.Float[jt.Array, "np"],
-        p_preeq: jt.Float[jt.Array, "*np"],
-        ts_preeq: jt.Float[jt.Array, "nt_preeq"],
+        ts_init: jt.Float[jt.Array, "nt_preeq"],
         ts_dyn: jt.Float[jt.Array, "nt_dyn"],
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
+        x_preeq: jt.Float[jt.Array, "nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
@@ -444,12 +444,9 @@ class JAXModel(eqx.Module):
 
         :param p:
             parameters for simulation ordered according to ids in :ivar parameter_ids:
-        :param p_preeq:
-            parameters for pre-equilibration ordered according to ids in :ivar parameter_ids:. May be empty to
-            disable pre-equilibration.
-        :param ts_preeq:
-            time points for pre-equilibration. Usually valued 0.0, but needs to be shaped according to
-            the number of observables that are evaluated after pre-equilibration.
+        :param ts_init:
+            time points that do not require simulation. Usually valued 0.0, but needs to be shaped according to
+            the number of observables that are evaluated before dynamic simulation.
         :param ts_dyn:
             time points for dynamic simulation. Usually valued > 0.0 and sorted in monotonically increasing order.
             Duplicate time points are allowed to facilitate the evaluation of multiple observables at specific time
@@ -486,24 +483,16 @@ class JAXModel(eqx.Module):
             output according to `ret` and statistics
         """
         # Pre-equilibration
-        if p_preeq.shape[0] > 0:
-            x0 = self._x0(p_preeq)
-            tcl = self._tcl(x0, p_preeq)
-            current_x = self._x_solver(x0)
-            current_x, stats_preeq = self._eq(
-                p_preeq, tcl, current_x, solver, controller, max_steps
-            )
+        if x_preeq.shape[0] > 0:
+            current_x = self._x_solver(x_preeq)
             # update tcl with new parameters
-            tcl = self._tcl(self._x_rdata(current_x, tcl), p)
+            tcl = self._tcl(x_preeq, p)
         else:
             x0 = self._x0(p)
             current_x = self._x_solver(x0)
-            stats_preeq = None
 
             tcl = self._tcl(x0, p)
-        x_preq = jnp.repeat(
-            current_x.reshape(1, -1), ts_preeq.shape[0], axis=0
-        )
+        x_preq = jnp.repeat(current_x.reshape(1, -1), ts_init.shape[0], axis=0)
 
         # Dynamic simulation
         if ts_dyn.shape[0] > 0:
@@ -536,7 +525,7 @@ class JAXModel(eqx.Module):
             current_x.reshape(1, -1), ts_posteq.shape[0], axis=0
         )
 
-        ts = jnp.concatenate((ts_preeq, ts_dyn, ts_posteq), axis=0)
+        ts = jnp.concatenate((ts_init, ts_dyn, ts_posteq), axis=0)
         x = jnp.concatenate((x_preq, x_dyn, x_posteq), axis=0)
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
@@ -555,10 +544,41 @@ class JAXModel(eqx.Module):
         }[ret], dict(
             ts=ts,
             x=x,
-            stats_preeq=stats_preeq,
             stats_dyn=stats_dyn,
             stats_posteq=stats_posteq,
         )
+
+    @eqx.filter_jit
+    def preequilibrate_condition(
+        self,
+        p: jt.Float[jt.Array, "np"],
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        max_steps: int | jnp.int_,
+    ) -> tuple[jt.Float[jt.Array, "nx"], dict]:
+        r"""
+        Simulate a condition.
+
+        :param p:
+            parameters for simulation ordered according to ids in :ivar parameter_ids:
+        :param solver:
+            ODE solver
+        :param controller:
+            step size controller
+        :param max_steps:
+            maximum number of solver steps
+        :return:
+            pre-equilibrated state variables and statistics
+        """
+        # Pre-equilibration
+        x0 = self._x0(p)
+        tcl = self._tcl(x0, p)
+        current_x = self._x_solver(x0)
+        current_x, stats_preeq = self._eq(
+            p, tcl, current_x, solver, controller, max_steps
+        )
+
+        return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
 
 
 def safe_log(x: jnp.float_) -> jnp.float_:

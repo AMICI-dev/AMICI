@@ -234,12 +234,10 @@ class ODEExporter:
                 "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
             },
         }
-        outdir = self.model_path / (self.model_name + "_jax")
-        outdir.mkdir(parents=True, exist_ok=True)
 
         apply_template(
             Path(amiciModulePath) / "jax" / "jax.template.py",
-            outdir / "__init__.py",
+            self.model_path / "__init__.py",
             tpl_data,
         )
 
@@ -258,6 +256,7 @@ class ODEExporter:
             output_dir = Path(os.getcwd()) / f"amici-{self.model_name}"
 
         self.model_path = Path(output_dir).resolve()
+        self.model_path.mkdir(parents=True, exist_ok=True)
 
     def set_name(self, model_name: str) -> None:
         """

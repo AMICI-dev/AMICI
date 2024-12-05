@@ -328,7 +328,7 @@ def test_jax_llh(benchmark_problem):
 
     jax_model = import_petab_problem(
         petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
+        model_output_dir=benchmark_outdir / (problem_id + "_jax"),
         jax=True,
     )
     jax_problem = JAXProblem(jax_model, petab_problem)
@@ -340,7 +340,7 @@ def test_jax_llh(benchmark_problem):
                 [problem_parameters[pid] for pid in jax_problem.parameter_ids]
             ),
         )
-    if problem_id in problems_for_gradient_check_jax:
+    if problem_id in problems_for_gradient_check:
         (llh_jax, _), sllh_jax = eqx.filter_jit(
             eqx.filter_value_and_grad(run_simulations, has_aux=True)
         )(jax_problem)
