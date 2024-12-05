@@ -412,7 +412,7 @@ def run_simulations(
     }
 
     results = {
-        sc[0]: problem.run_simulation(
+        sc: problem.run_simulation(
             sc,
             solver,
             controller,
