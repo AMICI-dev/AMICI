@@ -432,13 +432,13 @@ class JAXModel(eqx.Module):
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
-        x_preeq: jt.Float[jt.Array, "nx"],
-        mask_reinit: jt.Bool[jt.Array, "nx"],
-        x_reinit: jt.Float[jt.Array, "nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
         max_steps: int | jnp.int_,
+        x_preeq: jt.Float[jt.Array, "nx"] = jnp.array([]),
+        mask_reinit: jt.Bool[jt.Array, "nx"] = jnp.array([]),
+        x_reinit: jt.Float[jt.Array, "nx"] = jnp.array([]),
         ret: str = "llh",
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
@@ -460,6 +460,13 @@ class JAXModel(eqx.Module):
             observed data
         :param iys:
             indices of the observables according to ordering in :ivar observable_ids:
+        :param x_preeq:
+            initial state vector for pre-equilibration. If not provided, the initial state vector is computed using
+            :meth:`_x0`.
+        :param mask_reinit:
+            mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
+        :param x_reinit:
+            re-initialized state vector. If not provided, the state vector is not re-initialized.
         :param solver:
             ODE solver
         :param controller:
@@ -484,19 +491,21 @@ class JAXModel(eqx.Module):
         :return:
             output according to `ret` and statistics
         """
-        if x_preeq.shape[0] > 0:
+        if x_preeq.shape[0]:
             x = x_preeq
         else:
             x = self._x0(p)
 
-        x = jnp.where(mask_reinit, x_reinit, x)
+        # Re-initialization
+        if x_reinit.shape[0]:
+            x = jnp.where(mask_reinit, x_reinit, x)
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
 
         x_preq = jnp.repeat(x_solver.reshape(1, -1), ts_init.shape[0], axis=0)
 
         # Dynamic simulation
-        if ts_dyn.shape[0] > 0:
+        if ts_dyn.shape[0]:
             x_dyn, stats_dyn = self._solve(
                 p,
                 ts_dyn,
@@ -515,7 +524,7 @@ class JAXModel(eqx.Module):
             stats_dyn = None
 
         # Post-equilibration
-        if ts_posteq.shape[0] > 0:
+        if ts_posteq.shape[0]:
             x_solver, stats_posteq = self._eq(
                 p, tcl, x_solver, solver, controller, max_steps
             )
