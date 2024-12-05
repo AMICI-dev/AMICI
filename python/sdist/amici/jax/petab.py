@@ -406,11 +406,9 @@ def run_simulations(
         simulation_conditions = problem.get_all_simulation_conditions()
 
     preeqs = {
-        sc[1]: problem.run_preequilibration(
-            sc[1], solver, controller, max_steps
-        )
-        for sc in simulation_conditions
-        if len(sc) > 1
+        sc: problem.run_preequilibration(sc, solver, controller, max_steps)
+        # only run preequilibration once per condition
+        for sc in {sc[1] for sc in simulation_conditions if len(sc) > 1}
     }
 
     results = {
