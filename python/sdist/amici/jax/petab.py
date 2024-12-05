@@ -413,7 +413,11 @@ def run_simulations(
 
     results = {
         sc[0]: problem.run_simulation(
-            sc, solver, controller, max_steps, preeqs.get(sc[1])[0]
+            sc,
+            solver,
+            controller,
+            max_steps,
+            preeqs.get(sc[1])[0] if len(sc) > 1 else jnp.array([]),
         )
         for sc in simulation_conditions
     }
