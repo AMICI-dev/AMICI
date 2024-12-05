@@ -292,6 +292,70 @@ class JAXProblem(eqx.Module):
         )
         return self._unscale(p, pscale)
 
+    def load_reinitialisation(
+        self,
+        simulation_condition: str,
+        p: jt.Float[jt.Array, "np"],
+    ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
+        """
+        Load reinitialisation values and mask for the state vector for a simulation condition.
+
+        :param simulation_condition:
+            Simulation condition to load reinitialisation for.
+        :param p:
+            Parameters for the simulation condition.
+        :return:
+            Tuple of reinitialisation masm and value for states.
+        """
+        mask = jax.lax.stop_gradient(
+            jnp.array(
+                [
+                    xname in self._petab_problem.condition_df
+                    and not (
+                        isinstance(
+                            self._petab_problem.condition_df.loc[
+                                simulation_condition, xname
+                            ],
+                            Number,
+                        )
+                        and np.isnan(
+                            self._petab_problem.condition_df.loc[
+                                simulation_condition, xname
+                            ]
+                        )
+                    )
+                    for xname in self.model.state_ids
+                ]
+            )
+        )
+        reinit_x = jnp.array(
+            [
+                0
+                if xname not in self._petab_problem.condition_df
+                or (
+                    isinstance(
+                        xval := self._petab_problem.condition_df.loc[
+                            simulation_condition, xname
+                        ],
+                        Number,
+                    )
+                    and np.isnan(xval)
+                )
+                else xval
+                if isinstance(
+                    xval := self._petab_problem.condition_df.loc[
+                        simulation_condition, xname
+                    ],
+                    Number,
+                )
+                else p
+                if xval in self.model.parameter_ids
+                else self.get_petab_parameter_by_id(xval)
+                for xname in self.model.state_ids
+            ]
+        )
+        return mask, reinit_x
+
     def update_parameters(self, p: jt.Float[jt.Array, "np"]) -> "JAXProblem":
         """
         Update parameters for the model.
@@ -329,6 +393,9 @@ class JAXProblem(eqx.Module):
             simulation_condition
         ]
         p = self.load_parameters(simulation_condition[0])
+        mask_reinit, x_reinit = self.load_reinitialisation(
+            simulation_condition[0], p
+        )
         return self.model.simulate_condition(
             p=p,
             ts_init=jax.lax.stop_gradient(jnp.array(ts_preeq)),
@@ -337,6 +404,8 @@ class JAXProblem(eqx.Module):
             my=jax.lax.stop_gradient(jnp.array(my)),
             iys=jax.lax.stop_gradient(jnp.array(iys)),
             x_preeq=x_preeq,
+            mask_reinit=mask_reinit,
+            x_reinit=x_reinit,
             solver=solver,
             controller=controller,
             max_steps=max_steps,

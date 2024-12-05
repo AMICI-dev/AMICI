@@ -433,6 +433,8 @@ class JAXModel(eqx.Module):
         my: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
         x_preeq: jt.Float[jt.Array, "nx"],
+        mask_reinit: jt.Bool[jt.Array, "nx"],
+        x_reinit: jt.Float[jt.Array, "nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
@@ -482,17 +484,16 @@ class JAXModel(eqx.Module):
         :return:
             output according to `ret` and statistics
         """
-        # Pre-equilibration
         if x_preeq.shape[0] > 0:
-            current_x = self._x_solver(x_preeq)
-            # update tcl with new parameters
-            tcl = self._tcl(x_preeq, p)
+            x = x_preeq
         else:
-            x0 = self._x0(p)
-            current_x = self._x_solver(x0)
+            x = self._x0(p)
 
-            tcl = self._tcl(x0, p)
-        x_preq = jnp.repeat(current_x.reshape(1, -1), ts_init.shape[0], axis=0)
+        x = jnp.where(mask_reinit, x_reinit, x)
+        x_solver = self._x_solver(x)
+        tcl = self._tcl(x, p)
+
+        x_preq = jnp.repeat(x_solver.reshape(1, -1), ts_init.shape[0], axis=0)
 
         # Dynamic simulation
         if ts_dyn.shape[0] > 0:
@@ -500,29 +501,29 @@ class JAXModel(eqx.Module):
                 p,
                 ts_dyn,
                 tcl,
-                current_x,
+                x_solver,
                 solver,
                 controller,
                 max_steps,
                 adjoint,
             )
-            current_x = x_dyn[-1, :]
+            x_solver = x_dyn[-1, :]
         else:
             x_dyn = jnp.repeat(
-                current_x.reshape(1, -1), ts_dyn.shape[0], axis=0
+                x_solver.reshape(1, -1), ts_dyn.shape[0], axis=0
             )
             stats_dyn = None
 
         # Post-equilibration
         if ts_posteq.shape[0] > 0:
-            current_x, stats_posteq = self._eq(
-                p, tcl, current_x, solver, controller, max_steps
+            x_solver, stats_posteq = self._eq(
+                p, tcl, x_solver, solver, controller, max_steps
             )
         else:
             stats_posteq = None
 
         x_posteq = jnp.repeat(
-            current_x.reshape(1, -1), ts_posteq.shape[0], axis=0
+            x_solver.reshape(1, -1), ts_posteq.shape[0], axis=0
         )
 
         ts = jnp.concatenate((ts_init, ts_dyn, ts_posteq), axis=0)
