@@ -490,4 +490,7 @@ def run_simulations(
         )
         for sc in simulation_conditions
     }
-    return sum(llh for llh, _ in results.values()), results | preeqs
+    return sum(llh for llh, _ in results.values()), {
+        sc: res[1] | preeqs[sc[1]][1] if len(sc) > 1 else res[1]
+        for sc, res in results.items()
+    }
