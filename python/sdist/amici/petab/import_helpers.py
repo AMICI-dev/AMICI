@@ -138,11 +138,8 @@ def _can_import_model(
     Check whether a module of that name can already be imported.
     """
     # try to import (in particular checks version)
-    suffix = "_jax" if jax else ""
     try:
-        model_module = amici.import_model_module(
-            model_name + suffix, model_output_dir
-        )
+        model_module = amici.import_model_module(model_name, model_output_dir)
     except ModuleNotFoundError:
         return False
 

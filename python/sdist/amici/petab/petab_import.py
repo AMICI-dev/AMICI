@@ -114,7 +114,7 @@ def import_petab_problem(
         from .sbml_import import _create_model_output_dir_name
 
         model_output_dir = _create_model_output_dir_name(
-            petab_problem.sbml_model, model_name
+            petab_problem.sbml_model, model_name, jax=jax
         )
     else:
         model_output_dir = os.path.abspath(model_output_dir)
@@ -160,10 +160,7 @@ def import_petab_problem(
             )
 
     # import model
-    suffix = "_jax" if jax else ""
-    model_module = amici.import_model_module(
-        model_name + suffix, model_output_dir
-    )
+    model_module = amici.import_model_module(model_name, model_output_dir)
 
     if jax:
         model = model_module.Model()
