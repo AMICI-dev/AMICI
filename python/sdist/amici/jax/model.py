@@ -432,14 +432,13 @@ class JAXModel(eqx.Module):
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
-        x_preeq: jt.Float[jt.Array, "nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
         max_steps: int | jnp.int_,
-        x_preeq: jt.Float[jt.Array, "nx"] = jnp.array([]),
-        mask_reinit: jt.Bool[jt.Array, "nx"] = jnp.array([]),
-        x_reinit: jt.Float[jt.Array, "nx"] = jnp.array([]),
+        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
+        x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         ret: str = "llh",
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
