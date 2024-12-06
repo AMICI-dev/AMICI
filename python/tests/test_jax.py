@@ -177,6 +177,7 @@ def check_fields_jax(
     my = my.flatten()
     ts = ts.flatten()
     iys = iys.flatten()
+    iy_trafos = np.zeros_like(iys)
 
     ts_init = ts[ts == 0]
     ts_dyn = ts[ts > 0]
@@ -194,6 +195,7 @@ def check_fields_jax(
         "ts_posteq": jnp.array(ts_posteq),
         "my": jnp.array(my),
         "iys": jnp.array(iys),
+        "iy_trafos": jnp.array(iy_trafos),
         "x_preeq": jnp.array([]),
         "solver": diffrax.Kvaerno5(),
         "controller": diffrax.PIDController(atol=ATOL_SIM, rtol=RTOL_SIM),

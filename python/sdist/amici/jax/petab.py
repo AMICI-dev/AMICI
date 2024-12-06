@@ -83,7 +83,7 @@ class JAXProblem(eqx.Module):
             np.ndarray,
         ],
     ]
-    _petab_measurement_indices: dict[tuple[str, ...], pd.Index]
+    _petab_measurement_indices: dict[tuple[str, ...], tuple[int, ...]]
     _petab_problem: petab.Problem
 
     def __init__(self, model: JAXModel, petab_problem: petab.Problem):
@@ -247,7 +247,7 @@ class JAXProblem(eqx.Module):
                 iys,
                 iy_trafos,
             )
-            indices[tuple(simulation_condition)] = index
+            indices[tuple(simulation_condition)] = tuple(index.tolist())
         return measurements, indices
 
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
