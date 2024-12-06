@@ -401,9 +401,18 @@ class JAXProblem(eqx.Module):
                     ],
                     Number,
                 )
-                else p
+                else p[self.model.parameter_ids.index(xval)]
                 if xval in self.model.parameter_ids
-                else self.get_petab_parameter_by_id(xval)
+                else jax_unscale(
+                    self.get_petab_parameter_by_id(xval),
+                    self._petab_problem.parameter_df.loc[
+                        xval, petab.PARAMETER_SCALE
+                    ],
+                )
+                if xval in self.parameter_ids
+                else self._petab_problem.parameter_df.loc[
+                    xval, petab.NOMINAL_VALUE
+                ]
                 for xname in self.model.state_ids
             ]
         )
