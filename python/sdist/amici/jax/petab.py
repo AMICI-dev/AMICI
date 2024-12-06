@@ -155,7 +155,7 @@ class JAXProblem(eqx.Module):
     def _get_measurements(
         self, simulation_conditions: pd.DataFrame
     ) -> dict[
-        tuple[str],
+        tuple[str, ...],
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
     ]:
         """
@@ -412,20 +412,22 @@ class JAXProblem(eqx.Module):
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         max_steps: jnp.int_,
+        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),  # noqa: F821, F722
         ret: str = "llh",
     ) -> tuple[jnp.float_, dict]:
         """
         Run a simulation for a given simulation condition.
 
         :param simulation_condition:
-            Tuple of simulation conditions to run the simulation for. can be a single string (simulation only) or a
-            tuple of strings (pre-equilibration followed by simulation).
+            Simulation condition to run simulation for.
         :param solver:
             ODE solver to use for simulation
         :param controller:
             Step size controller to use for simulation
         :param max_steps:
             Maximum number of steps to take during simulation
+        :param x_preeq:
+            Pre-equilibration state if available
         :param ret:
             which output to return. Valid values are
                 - `llh`: log-likelihood (default)
@@ -445,19 +447,14 @@ class JAXProblem(eqx.Module):
             simulation_condition
         ]
         p = self.load_parameters(simulation_condition[0])
-        p_preeq = (
-            self.load_parameters(simulation_condition[1])
-            if len(simulation_condition) > 1
-            else jnp.array([])
-        )
         return self.model.simulate_condition(
             p=p,
-            p_preeq=p_preeq,
-            ts_preeq=jax.lax.stop_gradient(jnp.array(ts_preeq)),
+            ts_init=jax.lax.stop_gradient(jnp.array(ts_preeq)),
             ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
             ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),
             my=jax.lax.stop_gradient(jnp.array(my)),
             iys=jax.lax.stop_gradient(jnp.array(iys)),
+            x_preeq=x_preeq,
             solver=solver,
             controller=controller,
             max_steps=max_steps,
@@ -467,10 +464,39 @@ class JAXProblem(eqx.Module):
             ret=ret,
         )
 
+    def run_preequilibration(
+        self,
+        simulation_condition: str,
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        max_steps: jnp.int_,
+    ) -> tuple[jt.Float[jt.Array, "nx"], dict]:  # noqa: F821
+        """
+        Run a pre-equilibration simulation for a given simulation condition.
+
+        :param simulation_condition:
+            Simulation condition to run simulation for.
+        :param solver:
+            ODE solver to use for simulation
+        :param controller:
+            Step size controller to use for simulation
+        :param max_steps:
+            Maximum number of steps to take during simulation
+        :return:
+            Pre-equilibration state
+        """
+        p = self.load_parameters(simulation_condition)
+        return self.model.preequilibrate_condition(
+            p=p,
+            solver=solver,
+            controller=controller,
+            max_steps=max_steps,
+        )
+
 
 def run_simulations(
     problem: JAXProblem,
-    simulation_conditions: Iterable[tuple] | None = None,
+    simulation_conditions: Iterable[tuple[str, ...]] | None = None,
     solver: diffrax.AbstractSolver = diffrax.Kvaerno5(),
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         rtol=1e-8,
@@ -513,12 +539,28 @@ def run_simulations(
     if simulation_conditions is None:
         simulation_conditions = problem.get_all_simulation_conditions()
 
+    preeqs = {
+        sc: problem.run_preequilibration(sc, solver, controller, max_steps)
+        # only run preequilibration once per condition
+        for sc in {sc[1] for sc in simulation_conditions if len(sc) > 1}
+    }
+
     results = {
-        sc: problem.run_simulation(sc, solver, controller, max_steps, ret)
+        sc: problem.run_simulation(
+            sc,
+            solver,
+            controller,
+            max_steps,
+            preeqs.get(sc[1])[0] if len(sc) > 1 else jnp.array([]),
+            ret,
+        )
         for sc in simulation_conditions
     }
     if ret == "llh":
         output = sum(llh for llh, _ in results.values())
     else:
         output = {sc: res for sc, (res, _) in results.items()}
-    return output, results
+    return output, {
+        sc: res[1] | preeqs[sc[1]][1] if len(sc) > 1 else res[1]
+        for sc, res in results.items()
+    }

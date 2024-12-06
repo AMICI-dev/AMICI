@@ -328,7 +328,7 @@ def test_jax_llh(benchmark_problem):
 
     jax_model = import_petab_problem(
         petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
+        model_output_dir=benchmark_outdir / (problem_id + "_jax"),
         jax=True,
     )
     jax_problem = JAXProblem(jax_model, petab_problem)
