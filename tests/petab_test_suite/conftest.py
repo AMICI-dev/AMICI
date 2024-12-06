@@ -60,7 +60,7 @@ def pytest_generate_tests(metafunc):
 
         if metafunc.config.getoption("--only-sbml"):
             argvalues = [
-                (case, "sbml", version)
+                (case, "sbml", version, False)
                 for version in ("v1.0.0", "v2.0.0")
                 for case in (
                     test_numbers
@@ -70,7 +70,7 @@ def pytest_generate_tests(metafunc):
             ]
         elif metafunc.config.getoption("--only-pysb"):
             argvalues = [
-                (case, "pysb", "v2.0.0")
+                (case, "pysb", "v2.0.0", False)
                 for case in (
                     test_numbers
                     if test_numbers
@@ -81,8 +81,10 @@ def pytest_generate_tests(metafunc):
             argvalues = []
             for version in ("v1.0.0", "v2.0.0"):
                 for format in ("sbml", "pysb"):
-                    argvalues.extend(
-                        (case, format, version)
-                        for case in test_numbers or get_cases(format, version)
-                    )
-        metafunc.parametrize("case,model_type,version", argvalues)
+                    for jax in (True, False):
+                        argvalues.extend(
+                            (case, format, version, jax)
+                            for case in test_numbers
+                            or get_cases(format, version)
+                        )
+        metafunc.parametrize("case,model_type,version,jax", argvalues)

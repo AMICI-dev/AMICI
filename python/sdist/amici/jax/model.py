@@ -432,6 +432,7 @@ class JAXModel(eqx.Module):
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
+        iy_trafos: jt.Int[jt.Array, "nt"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
@@ -488,6 +489,7 @@ class JAXModel(eqx.Module):
                 - `sigmay`: standard deviations of the observables
                 - `tcl`: total values for conservation laws (at final timepoint)
                 - `res`: residuals (observed - simulated)
+                - 'chi2': sum((observed - simulated) ** 2 / sigma ** 2)
         :return:
             output according to `ret` and statistics
         """
@@ -540,6 +542,15 @@ class JAXModel(eqx.Module):
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
         llh = -jnp.sum(nllhs)
+        obs_trafo = jax.vmap(
+            lambda y, iy_trafo: jnp.array(
+                [y, safe_log(y), safe_log(y) / jnp.log(10)]
+            )
+            .at[iy_trafo]
+            .get(),
+        )
+        ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys), iy_trafos)
+        m_obj = obs_trafo(my, iy_trafos)
         return {
             "llh": llh,
             "nllhs": nllhs,
@@ -551,6 +562,10 @@ class JAXModel(eqx.Module):
             "x0_solver": x[0, :],
             "tcl": tcl,
             "res": self._ys(ts, x, p, tcl, iys) - my,
+            "chi2": jnp.sum(
+                jnp.square(ys_obj - m_obj)
+                / jnp.square(self._sigmays(ts, x, p, tcl, iys))
+            ),
         }[ret], dict(
             ts=ts,
             x=x,
@@ -562,6 +577,8 @@ class JAXModel(eqx.Module):
     def preequilibrate_condition(
         self,
         p: jt.Float[jt.Array, "np"],
+        x_reinit: jt.Float[jt.Array, "*nx"],
+        mask_reinit: jt.Bool[jt.Array, "*nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         max_steps: int | jnp.int_,
@@ -582,6 +599,8 @@ class JAXModel(eqx.Module):
         """
         # Pre-equilibration
         x0 = self._x0(p)
+        if x_reinit.shape[0]:
+            x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
         current_x = self._x_solver(x0)
         current_x, stats_preeq = self._eq(
