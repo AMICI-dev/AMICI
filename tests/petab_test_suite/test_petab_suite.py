@@ -211,16 +211,12 @@ def run():
     n_skipped = 0
     n_total = 0
     for version in ("v1.0.0", "v2.0.0"):
-        for model_lang in ("cpp", "jax"):
-            cases = petabtests.get_cases(
-                "sbml", version=version, jax=model_lang == "jax"
-            )
+        for jax in (False, True):
+            cases = petabtests.get_cases("sbml", version=version)
             n_total += len(cases)
             for case in cases:
                 try:
-                    test_case(
-                        case, "sbml", version=version, jax=model_lang == "jax"
-                    )
+                    test_case(case, "sbml", version=version, jax=jax)
                     n_success += 1
                 except Skipped:
                     n_skipped += 1
