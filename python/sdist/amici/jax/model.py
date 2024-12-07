@@ -4,12 +4,27 @@
 
 from abc import abstractmethod
 from pathlib import Path
+import enum
 
 import diffrax
 import equinox as eqx
 import jax.numpy as jnp
 import jax
 import jaxtyping as jt
+
+
+class ReturnValue(enum.Enum):
+    llh = "log-likelihood"
+    nllhs = "pointwise negative log-likelihood"
+    x0 = "full initial state vector"
+    x0_solver = "reduced initial state vector"
+    x = "full state vector"
+    x_solver = "reduced state vector"
+    y = "observables"
+    sigmay = "standard deviations of the observables"
+    tcl = "total values for conservation laws"
+    res = "residuals"
+    chi2 = "sum(((observed - simulated) / sigma ) ** 2)"
 
 
 class JAXModel(eqx.Module):
@@ -440,7 +455,7 @@ class JAXModel(eqx.Module):
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        ret: str = "llh",
+        ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
         Simulate a condition.
@@ -478,18 +493,7 @@ class JAXModel(eqx.Module):
         :param max_steps:
             maximum number of solver steps
         :param ret:
-            which output to return. Valid values are
-                - `llh`: log-likelihood (default)
-                - `nllhs`: negative log-likelihood at each time point
-                - `x0`: full initial state vector (after pre-equilibration)
-                - `x0_solver`: reduced initial state vector (after pre-equilibration)
-                - `x`: full state vector
-                - `x_solver`: reduced state vector
-                - `y`: observables
-                - `sigmay`: standard deviations of the observables
-                - `tcl`: total values for conservation laws (at final timepoint)
-                - `res`: residuals (observed - simulated)
-                - 'chi2': sum((observed - simulated) ** 2 / sigma ** 2)
+            which output to return. See :class:`ReturnValue` for available options.
         :return:
             output according to `ret` and statistics
         """
@@ -542,36 +546,54 @@ class JAXModel(eqx.Module):
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
         llh = -jnp.sum(nllhs)
-        obs_trafo = jax.vmap(
-            lambda y, iy_trafo: jnp.array(
-                [y, safe_log(y), safe_log(y) / jnp.log(10)]
-            )
-            .at[iy_trafo]
-            .get(),
-        )
-        ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys), iy_trafos)
-        m_obj = obs_trafo(my, iy_trafos)
-        return {
-            "llh": llh,
-            "nllhs": nllhs,
-            "x": self._x_rdatas(x, tcl),
-            "x_solver": x,
-            "y": self._ys(ts, x, p, tcl, iys),
-            "sigmay": self._sigmays(ts, x, p, tcl, iys),
-            "x0": self._x_rdata(x[0, :], tcl),
-            "x0_solver": x[0, :],
-            "tcl": tcl,
-            "res": self._ys(ts, x, p, tcl, iys) - my,
-            "chi2": jnp.sum(
-                jnp.square(ys_obj - m_obj)
-                / jnp.square(self._sigmays(ts, x, p, tcl, iys))
-            ),
-        }[ret], dict(
+
+        stats = dict(
             ts=ts,
             x=x,
+            llh=llh,
             stats_dyn=stats_dyn,
             stats_posteq=stats_posteq,
         )
+        if ret == ReturnValue.llh:
+            output = llh
+        elif ret == ReturnValue.nllhs:
+            output = nllhs
+        elif ret == ReturnValue.x:
+            output = self._x_rdatas(x, tcl)
+        elif ret == ReturnValue.x_solver:
+            output = x
+        elif ret == ReturnValue.y:
+            output = self._ys(ts, x, p, tcl, iys)
+        elif ret == ReturnValue.sigmay:
+            output = self._sigmays(ts, x, p, tcl, iys)
+        elif ret == ReturnValue.x0:
+            output = self._x_rdata(x[0, :], tcl)
+        elif ret == ReturnValue.x0_solver:
+            output = x[0, :]
+        elif ret == ReturnValue.tcl:
+            output = tcl
+        elif ret in (ReturnValue.res, ReturnValue.chi2):
+            obs_trafo = jax.vmap(
+                lambda y, iy_trafo: jnp.array(
+                    # needs to follow order in amici.jax.petab.SCALE_TO_INT
+                    [y, safe_log(y), safe_log(y) / jnp.log(10)]
+                )
+                .at[iy_trafo]
+                .get(),
+            )
+            ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys), iy_trafos)
+            m_obj = obs_trafo(my, iy_trafos)
+            if ret == ReturnValue.chi2:
+                output = jnp.sum(
+                    jnp.square(ys_obj - m_obj)
+                    / jnp.square(self._sigmays(ts, x, p, tcl, iys))
+                )
+            else:
+                output = ys_obj - m_obj
+        else:
+            raise NotImplementedError(f"Return value {ret} not implemented.")
+
+        return output, stats
 
     @eqx.filter_jit
     def preequilibrate_condition(
