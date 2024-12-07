@@ -562,7 +562,7 @@ def run_simulations(
         **DEFAULT_CONTROLLER_SETTINGS
     ),
     max_steps: int = 2**10,
-    ret: ReturnValue = ReturnValue.llh,
+    ret: ReturnValue | str = ReturnValue.llh,
 ):
     """
     Run simulations for a problem.
@@ -582,6 +582,8 @@ def run_simulations(
     :return:
         Overall output value and condition specific results and statistics.
     """
+    ret = ReturnValue[ret]
+
     if simulation_conditions is None:
         simulation_conditions = problem.get_all_simulation_conditions()
 

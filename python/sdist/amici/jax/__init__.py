@@ -9,7 +9,12 @@ compatibility.
 
 from warnings import warn
 
-from amici.jax.petab import JAXProblem, run_simulations, petab_simulate
+from amici.jax.petab import (
+    JAXProblem,
+    run_simulations,
+    petab_simulate,
+    ReturnValue,
+)
 from amici.jax.model import JAXModel
 
 warn(
@@ -18,4 +23,10 @@ warn(
     stacklevel=2,
 )
 
-__all__ = ["JAXModel", "JAXProblem", "run_simulations", "petab_simulate"]
+__all__ = [
+    "JAXModel",
+    "JAXProblem",
+    "run_simulations",
+    "petab_simulate",
+    "ReturnValue",
+]

@@ -15,7 +15,7 @@ from beartype import beartype
 from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from amici.petab.petab_import import import_petab_problem
-from amici.jax import JAXProblem
+from amici.jax import JAXProblem, ReturnValue
 from numpy.testing import assert_allclose
 from test_petab_objective import lotka_volterra  # noqa: F401
 
@@ -208,7 +208,7 @@ def check_fields_jax(
         okwargs = kwargs | {
             "adjoint": diffrax.DirectAdjoint(),
             "max_steps": 2**8,
-            "ret": output,
+            "ret": ReturnValue[output],
         }
         if sensi_order == amici.SensitivityOrder.none:
             r_jax[output] = fun(p, **okwargs)[0]
