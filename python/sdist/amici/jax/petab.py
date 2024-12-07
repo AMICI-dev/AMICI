@@ -25,7 +25,7 @@ DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,
     "rtol": 1e-8,
     "pcoeff": 1.0,
-    "icoeff": 1.0,
+    "icoeff": 0.3,
     "dcoeff": 0.0,
 }
 
@@ -582,7 +582,8 @@ def run_simulations(
     :return:
         Overall output value and condition specific results and statistics.
     """
-    ret = ReturnValue[ret]
+    if isinstance(ret, str):
+        ret = ReturnValue[ret]
 
     if simulation_conditions is None:
         simulation_conditions = problem.get_all_simulation_conditions()
