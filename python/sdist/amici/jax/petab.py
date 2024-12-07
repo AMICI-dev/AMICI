@@ -24,7 +24,7 @@ from amici.jax.model import JAXModel, ReturnValue
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,
     "rtol": 1e-8,
-    "pcoeff": 1.0,
+    "pcoeff": 0.4,
     "icoeff": 0.3,
     "dcoeff": 0.0,
 }
