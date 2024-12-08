@@ -369,6 +369,8 @@ class JAXProblem(eqx.Module):
         :return:
             PEtab parameter ids
         """
+        if self._petab_problem.parameter_df is None:
+            return []
         return self._petab_problem.mapping_df[
             self._petab_problem.mapping_df[
                 petab.MODEL_ENTITY_ID
