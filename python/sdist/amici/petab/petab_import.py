@@ -166,13 +166,31 @@ def import_petab_problem(
                         for ml_model in ml_models
                         if ml_model.mlmodel_id == net
                     ),
+                    "input_vars": [
+                        petab_id
+                        for petab_id, model_id in petab_problem.mapping_df.query(
+                            f"netId == '{net}'"
+                        )[petab.MODEL_ENTITY_ID]
+                        .to_dict()
+                        .items()
+                        if model_id.startswith("input")
+                    ],
+                    "output_vars": [
+                        petab_id
+                        for petab_id, model_id in petab_problem.mapping_df.query(
+                            f"netId == '{net}'"
+                        )[petab.MODEL_ENTITY_ID]
+                        .to_dict()
+                        .items()
+                        if model_id.startswith("output")
+                    ],
                     **hybrid,
                 }
                 for net, hybrid in config["hybridization"].items()
             }
             if not jax or petab_problem.model.type_id == MODEL_TYPE_PYSB:
                 raise NotImplementedError(
-                    "petab_sciml extension is currently only supported for JAX models"
+                    "petab_sciml extension is currently only supported for sbml models"
                 )
         else:
             hybridisation = None

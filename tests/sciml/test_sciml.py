@@ -139,7 +139,7 @@ def test_net(test):
                         )
                         w = _reshape_flat_array(df)
                         if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
-                            # see FAQ in  https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
+                            # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
                             w = np.flip(
                                 w, axis=tuple(range(2, w.ndim))
                             ).swapaxes(0, 1)
@@ -268,17 +268,8 @@ def test_ude(test):
         jax_problem = JAXProblem(jax_model, petab_problem)
 
     # llh
-
     if test in (
-        "001",
         "004",
-        "005",
-        "008",
-        "010",
-        "011",
-        "012",
-        "013",
-        "014",
         "016",
     ):
         with pytest.raises(NotImplementedError):
@@ -316,16 +307,12 @@ def test_ude(test):
         controller=diffrax.PIDController(atol=1e-14, rtol=1e-14),
         max_steps=2**16,
     )
-    expected = (
-        pd.concat(
-            [
-                pd.read_csv(test_dir / simulation, sep="\t")
-                for simulation in solutions["grad_llh_files"]
-            ]
-        )
-        .set_index(petab.PARAMETER_ID)
-        .sort_index()
-    )
+    expected = pd.concat(
+        [
+            pd.read_csv(test_dir / simulation, sep="\t")
+            for simulation in solutions["grad_llh_files"]
+        ]
+    ).set_index(petab.PARAMETER_ID)
     actual_dict = {}
     for ip in expected.index:
         if ip in jax_problem.parameter_ids:
@@ -337,12 +324,23 @@ def test_ude(test):
             layer = ip.split("_")[1]
             attribute = ip.split("_")[2]
             index = tuple(np.array(ip.split("_")[3:]).astype(int))
-            actual_dict[ip] = getattr(
-                sllh.model.nns[net].layers[layer], attribute
-            )[*index].item()
-    actual = pd.Series(actual_dict).sort_index()
+
+            attr_grad = getattr(sllh.model.nns[net].layers[layer], attribute)
+            if (
+                isinstance(
+                    sllh.model.nns[net].layers[layer], eqx.nn.ConvTranspose
+                )
+                and attribute == "weight"
+            ):
+                # invert np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(0, 1)
+                attr_grad = np.flip(
+                    attr_grad.swapaxes(0, 1),
+                    axis=tuple(range(2, attr_grad.ndim)),
+                )
+            actual_dict[ip] = attr_grad[*index].item()
+    actual = pd.Series(actual_dict).loc[expected.index].values
     np.testing.assert_allclose(
-        actual.values,
+        actual,
         expected["value"].values,
         atol=solutions["tol_grad_llh"],
         rtol=solutions["tol_grad_llh"],

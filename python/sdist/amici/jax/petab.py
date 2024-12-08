@@ -416,12 +416,6 @@ class JAXProblem(eqx.Module):
             .to_dict()
         )
 
-        for petab_id in model_id_map.values():
-            if petab_id in self.model.state_ids:
-                raise NotImplementedError(
-                    "State variables as inputs to neural networks are not supported"
-                )
-
         net_input = jnp.array(
             [
                 jax.lax.stop_gradient(self._inputs[net_id][model_id])
@@ -494,6 +488,9 @@ class JAXProblem(eqx.Module):
         :return:
             True if state needs reinitialisation, False otherwise
         """
+        if state_id in self.nn_output_ids:
+            return True
+
         if state_id not in self._petab_problem.condition_df:
             return False
         xval = self._petab_problem.condition_df.loc[
