@@ -320,6 +320,11 @@ class JAXProblem(eqx.Module):
         ), model
 
     def _get_inputs(self):
+        if (
+            self._petab_problem.mapping_df is None
+            or "netId" not in self._petab_problem.mapping_df.columns
+        ):
+            return {}
         inputs = {
             net: {} for net in self._petab_problem.mapping_df["netId"].unique()
         }
