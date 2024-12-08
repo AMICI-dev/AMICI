@@ -471,7 +471,8 @@ class JAXProblem(eqx.Module):
         pscale = tuple(
             [
                 petab.LIN
-                if pname in self._petab_problem.mapping_df.index
+                if self._petab_problem.mapping_df is not None
+                and pname in self._petab_problem.mapping_df.index
                 else mapping.scale_map_sim_var[pname]
                 for pname in self.model.parameter_ids
             ]
