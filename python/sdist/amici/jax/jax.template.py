@@ -103,7 +103,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     @property
     def state_ids(self):
-        return TPL_X_IDS
+        return TPL_X_RDATA_IDS
 
     @property
     def parameter_ids(self):

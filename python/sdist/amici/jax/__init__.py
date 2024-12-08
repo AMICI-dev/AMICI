@@ -9,7 +9,12 @@ compatibility.
 
 from warnings import warn
 
-from amici.jax.petab import JAXProblem, run_simulations
+from amici.jax.petab import (
+    JAXProblem,
+    run_simulations,
+    petab_simulate,
+    ReturnValue,
+)
 from amici.jax.model import JAXModel
 from amici.jax.nn import generate_equinox
 
@@ -19,4 +24,11 @@ warn(
     stacklevel=2,
 )
 
-__all__ = ["JAXModel", "JAXProblem", "run_simulations", "generate_equinox"]
+__all__ = [
+    "JAXModel",
+    "JAXProblem",
+    "generate_equinox",
+    "run_simulations",
+    "petab_simulate",
+    "ReturnValue",
+]

@@ -340,6 +340,7 @@ def test_jax_llh(benchmark_problem):
                 [problem_parameters[pid] for pid in jax_problem.parameter_ids]
             ),
         )
+    llh_jax, _ = beartype(run_simulations)(jax_problem)
     if problem_id in problems_for_gradient_check:
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True

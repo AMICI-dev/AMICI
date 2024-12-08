@@ -349,11 +349,14 @@ def import_model_sbml(
     _workaround_observable_parameters(
         observables, sigmas, sbml_model, output_parameter_defaults
     )
-    fixed_parameters = _workaround_initial_states(
-        petab_problem=petab_problem,
-        sbml_model=sbml_model,
-        **kwargs,
-    )
+    if not jax:
+        fixed_parameters = _workaround_initial_states(
+            petab_problem=petab_problem,
+            sbml_model=sbml_model,
+            **kwargs,
+        )
+    else:
+        fixed_parameters = []
 
     fixed_parameters.extend(
         _get_fixed_parameters_sbml(
