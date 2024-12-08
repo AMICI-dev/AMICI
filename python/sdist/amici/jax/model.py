@@ -4,12 +4,27 @@
 
 from abc import abstractmethod
 from pathlib import Path
+import enum
 
 import diffrax
 import equinox as eqx
 import jax.numpy as jnp
 import jax
 import jaxtyping as jt
+
+
+class ReturnValue(enum.Enum):
+    llh = "log-likelihood"
+    nllhs = "pointwise negative log-likelihood"
+    x0 = "full initial state vector"
+    x0_solver = "reduced initial state vector"
+    x = "full state vector"
+    x_solver = "reduced state vector"
+    y = "observables"
+    sigmay = "standard deviations of the observables"
+    tcl = "total values for conservation laws"
+    res = "residuals"
+    chi2 = "sum(((observed - simulated) / sigma ) ** 2)"
 
 
 class JAXModel(eqx.Module):
@@ -432,12 +447,15 @@ class JAXModel(eqx.Module):
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
-        x_preeq: jt.Float[jt.Array, "nx"],
+        iy_trafos: jt.Int[jt.Array, "nt"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
         max_steps: int | jnp.int_,
-        ret: str = "llh",
+        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
+        x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
         Simulate a condition.
@@ -458,6 +476,13 @@ class JAXModel(eqx.Module):
             observed data
         :param iys:
             indices of the observables according to ordering in :ivar observable_ids:
+        :param x_preeq:
+            initial state vector for pre-equilibration. If not provided, the initial state vector is computed using
+            :meth:`_x0`.
+        :param mask_reinit:
+            mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
+        :param x_reinit:
+            re-initialized state vector. If not provided, the state vector is not re-initialized.
         :param solver:
             ODE solver
         :param controller:
@@ -468,61 +493,52 @@ class JAXModel(eqx.Module):
         :param max_steps:
             maximum number of solver steps
         :param ret:
-            which output to return. Valid values are
-                - `llh`: log-likelihood (default)
-                - `nllhs`: negative log-likelihood at each time point
-                - `x0`: full initial state vector (after pre-equilibration)
-                - `x0_solver`: reduced initial state vector (after pre-equilibration)
-                - `x`: full state vector
-                - `x_solver`: reduced state vector
-                - `y`: observables
-                - `sigmay`: standard deviations of the observables
-                - `tcl`: total values for conservation laws (at final timepoint)
-                - `res`: residuals (observed - simulated)
+            which output to return. See :class:`ReturnValue` for available options.
         :return:
             output according to `ret` and statistics
         """
-        # Pre-equilibration
-        if x_preeq.shape[0] > 0:
-            current_x = self._x_solver(x_preeq)
-            # update tcl with new parameters
-            tcl = self._tcl(x_preeq, p)
+        if x_preeq.shape[0]:
+            x = x_preeq
         else:
-            x0 = self._x0(p)
-            current_x = self._x_solver(x0)
+            x = self._x0(p)
 
-            tcl = self._tcl(x0, p)
-        x_preq = jnp.repeat(current_x.reshape(1, -1), ts_init.shape[0], axis=0)
+        # Re-initialization
+        if x_reinit.shape[0]:
+            x = jnp.where(mask_reinit, x_reinit, x)
+        x_solver = self._x_solver(x)
+        tcl = self._tcl(x, p)
+
+        x_preq = jnp.repeat(x_solver.reshape(1, -1), ts_init.shape[0], axis=0)
 
         # Dynamic simulation
-        if ts_dyn.shape[0] > 0:
+        if ts_dyn.shape[0]:
             x_dyn, stats_dyn = self._solve(
                 p,
                 ts_dyn,
                 tcl,
-                current_x,
+                x_solver,
                 solver,
                 controller,
                 max_steps,
                 adjoint,
             )
-            current_x = x_dyn[-1, :]
+            x_solver = x_dyn[-1, :]
         else:
             x_dyn = jnp.repeat(
-                current_x.reshape(1, -1), ts_dyn.shape[0], axis=0
+                x_solver.reshape(1, -1), ts_dyn.shape[0], axis=0
             )
             stats_dyn = None
 
         # Post-equilibration
-        if ts_posteq.shape[0] > 0:
-            current_x, stats_posteq = self._eq(
-                p, tcl, current_x, solver, controller, max_steps
+        if ts_posteq.shape[0]:
+            x_solver, stats_posteq = self._eq(
+                p, tcl, x_solver, solver, controller, max_steps
             )
         else:
             stats_posteq = None
 
         x_posteq = jnp.repeat(
-            current_x.reshape(1, -1), ts_posteq.shape[0], axis=0
+            x_solver.reshape(1, -1), ts_posteq.shape[0], axis=0
         )
 
         ts = jnp.concatenate((ts_init, ts_dyn, ts_posteq), axis=0)
@@ -530,28 +546,61 @@ class JAXModel(eqx.Module):
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
         llh = -jnp.sum(nllhs)
-        return {
-            "llh": llh,
-            "nllhs": nllhs,
-            "x": self._x_rdatas(x, tcl),
-            "x_solver": x,
-            "y": self._ys(ts, x, p, tcl, iys),
-            "sigmay": self._sigmays(ts, x, p, tcl, iys),
-            "x0": self._x_rdata(x[0, :], tcl),
-            "x0_solver": x[0, :],
-            "tcl": tcl,
-            "res": self._ys(ts, x, p, tcl, iys) - my,
-        }[ret], dict(
+
+        stats = dict(
             ts=ts,
             x=x,
+            llh=llh,
             stats_dyn=stats_dyn,
             stats_posteq=stats_posteq,
         )
+        if ret == ReturnValue.llh:
+            output = llh
+        elif ret == ReturnValue.nllhs:
+            output = nllhs
+        elif ret == ReturnValue.x:
+            output = self._x_rdatas(x, tcl)
+        elif ret == ReturnValue.x_solver:
+            output = x
+        elif ret == ReturnValue.y:
+            output = self._ys(ts, x, p, tcl, iys)
+        elif ret == ReturnValue.sigmay:
+            output = self._sigmays(ts, x, p, tcl, iys)
+        elif ret == ReturnValue.x0:
+            output = self._x_rdata(x[0, :], tcl)
+        elif ret == ReturnValue.x0_solver:
+            output = x[0, :]
+        elif ret == ReturnValue.tcl:
+            output = tcl
+        elif ret in (ReturnValue.res, ReturnValue.chi2):
+            obs_trafo = jax.vmap(
+                lambda y, iy_trafo: jnp.array(
+                    # needs to follow order in amici.jax.petab.SCALE_TO_INT
+                    [y, safe_log(y), safe_log(y) / jnp.log(10)]
+                )
+                .at[iy_trafo]
+                .get(),
+            )
+            ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys), iy_trafos)
+            m_obj = obs_trafo(my, iy_trafos)
+            if ret == ReturnValue.chi2:
+                output = jnp.sum(
+                    jnp.square(ys_obj - m_obj)
+                    / jnp.square(self._sigmays(ts, x, p, tcl, iys))
+                )
+            else:
+                output = ys_obj - m_obj
+        else:
+            raise NotImplementedError(f"Return value {ret} not implemented.")
+
+        return output, stats
 
     @eqx.filter_jit
     def preequilibrate_condition(
         self,
         p: jt.Float[jt.Array, "np"],
+        x_reinit: jt.Float[jt.Array, "*nx"],
+        mask_reinit: jt.Bool[jt.Array, "*nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         max_steps: int | jnp.int_,
@@ -572,6 +621,8 @@ class JAXModel(eqx.Module):
         """
         # Pre-equilibration
         x0 = self._x0(p)
+        if x_reinit.shape[0]:
+            x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
         current_x = self._x_solver(x0)
         current_x, stats_preeq = self._eq(
