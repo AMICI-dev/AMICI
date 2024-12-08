@@ -258,9 +258,7 @@ class ODEExporter:
         for net_name, net in self.hybridisation.items():
             generate_equinox(
                 net["model"],
-                os.path.join(
-                    self.model_path, self.model_name + "_jax", f"{net_name}.py"
-                ),
+                self.model_path / f"{net_name}.py",
             )
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:

@@ -4,7 +4,12 @@ import pytest
 from pathlib import Path
 import petab.v1 as petab
 from amici.petab import import_petab_problem
-from amici.jax import JAXProblem, generate_equinox, run_simulations
+from amici.jax import (
+    JAXProblem,
+    generate_equinox,
+    run_simulations,
+    petab_simulate,
+)
 import amici
 import diffrax
 import pandas as pd
@@ -265,17 +270,16 @@ def test_ude(test):
     # llh
 
     if test in (
+        "001",
+        "004",
+        "005",
+        "008",
+        "010",
+        "011",
         "012",
         "013",
         "014",
-        "001",
-        "011",
         "016",
-        "010",
-        "010",
-        "003",
-        "004",
-        "005",
     ):
         with pytest.raises(NotImplementedError):
             run_simulations(jax_problem)
@@ -295,27 +299,8 @@ def test_ude(test):
     )
 
     # simulations
-
-    y, r = run_simulations(jax_problem, ret="y")
-    dfs = []
-    for sc, ys in y.items():
-        obs = [
-            jax_model.observable_ids[io]
-            for io in jax_problem._measurements[sc][4]
-        ]
-        t = jax_problem._measurements[sc][1]
-        dfs.append(
-            pd.DataFrame(
-                {
-                    petab.SIMULATION: ys,
-                    petab.TIME: t,
-                    petab.OBSERVABLE_ID: obs,
-                    petab.SIMULATION_CONDITION_ID: [sc[-1]] * len(t),
-                }
-            )
-        )
     sort_by = [petab.OBSERVABLE_ID, petab.TIME, petab.SIMULATION_CONDITION_ID]
-    actual = pd.concat(dfs).sort_values(by=sort_by)
+    actual = petab_simulate(jax_problem).sort_values(by=sort_by)
     expected = simulations.sort_values(by=sort_by)
     np.testing.assert_allclose(
         actual[petab.SIMULATION].values,

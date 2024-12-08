@@ -107,12 +107,10 @@ class JAXProblem(eqx.Module):
         self._petab_problem = petab_problem
         self.parameters, self.model = self._get_nominal_parameter_values(model)
         self._parameter_mappings = self._get_parameter_mappings(scs)
-        self._measurements = self._get_measurements(scs)
         self._inputs = self._get_inputs()
         self._measurements, self._petab_measurement_indices = (
             self._get_measurements(scs)
         )
-        self.parameters = self._get_nominal_parameter_values()
 
     def save(self, directory: Path):
         """
@@ -358,6 +356,20 @@ class JAXProblem(eqx.Module):
             self._petab_problem.parameter_df[petab.ESTIMATE] == 1
         ].index.tolist()
 
+    @property
+    def nn_output_ids(self) -> list[str]:
+        """
+        Parameter ids that are estimated in the PEtab problem. Same ordering as values in :attr:`parameters`.
+
+        :return:
+            PEtab parameter ids
+        """
+        return self._petab_problem.mapping_df[
+            self._petab_problem.mapping_df[
+                petab.MODEL_ENTITY_ID
+            ].str.startswith("output")
+        ].index.tolist()
+
     def get_petab_parameter_by_id(self, name: str) -> jnp.float_:
         """
         Get the value of a PEtab parameter by name.
@@ -418,7 +430,19 @@ class JAXProblem(eqx.Module):
         )
         return nn.forward(net_input).squeeze()
 
-    def load_parameters(
+    def _map_model_parameter_value(
+        self,
+        mapping: ParameterMappingForCondition,
+        pname: str,
+    ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
+        if pname in self.nn_output_ids:
+            return self._eval_nn(pname)
+        pval = mapping.map_sim_var[pname]
+        if isinstance(pval, Number):
+            return pval
+        return self.get_petab_parameter_by_id(pval)
+
+    def load_model_parameters(
         self, simulation_condition: str
     ) -> jt.Float[jt.Array, "np"]:
         """
@@ -431,19 +455,9 @@ class JAXProblem(eqx.Module):
         """
         mapping = self._parameter_mappings[simulation_condition]
 
-        nn_output_pars = self._petab_problem.mapping_df[
-            self._petab_problem.mapping_df[
-                petab.MODEL_ENTITY_ID
-            ].str.startswith("output")
-        ].index
-
         p = jnp.array(
             [
-                self._eval_nn(pname)
-                if pname in nn_output_pars
-                else pval
-                if isinstance(pval := mapping.map_sim_var[pname], Number)
-                else self.get_petab_parameter_by_id(pval)
+                self._map_model_parameter_value(mapping, pname)
                 for pname in self.model.parameter_ids
             ]
         )
@@ -499,6 +513,9 @@ class JAXProblem(eqx.Module):
         :return:
             reinitialisation value for the state
         """
+        if state_id in self.nn_output_ids:
+            return self._eval_nn(state_id)
+
         if state_id not in self._petab_problem.condition_df:
             # no reinitialisation, return dummy value
             return 0.0
@@ -543,6 +560,7 @@ class JAXProblem(eqx.Module):
         """
         if not any(
             x_id in self._petab_problem.condition_df
+            or x_id in self.nn_output_ids
             for x_id in self.model.state_ids
         ):
             return jnp.array([]), jnp.array([])
@@ -602,7 +620,7 @@ class JAXProblem(eqx.Module):
         ts_preeq, ts_dyn, ts_posteq, my, iys, iy_trafos = self._measurements[
             simulation_condition
         ]
-        p = self.load_parameters(simulation_condition[0])
+        p = self.load_model_parameters(simulation_condition[0])
         mask_reinit, x_reinit = self.load_reinitialisation(
             simulation_condition[0], p
         )
@@ -647,7 +665,7 @@ class JAXProblem(eqx.Module):
         :return:
             Pre-equilibration state
         """
-        p = self.load_parameters(simulation_condition)
+        p = self.load_model_parameters(simulation_condition)
         mask_reinit, x_reinit = self.load_reinitialisation(
             simulation_condition, p
         )
