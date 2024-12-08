@@ -439,7 +439,7 @@ class JAXModel(eqx.Module):
             in_axes=(0, 0, None, None, 0),
         )(ts, xs, p, tcl, iys)
 
-    # @eqx.filter_jit
+    @eqx.filter_jit
     def simulate_condition(
         self,
         p: jt.Float[jt.Array, "np"],

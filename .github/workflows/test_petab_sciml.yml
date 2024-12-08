@@ -75,7 +75,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && pytest --cov-report=xml:coverage.xml \
-              --cov=./ python/tests/sciml/test_sciml.py
+              --cov=./ tests/sciml/test_sciml.py
 
       - name: Codecov
         if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
