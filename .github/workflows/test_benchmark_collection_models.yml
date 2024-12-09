@@ -67,7 +67,7 @@ jobs:
         AMICI_PARALLEL_COMPILE: ""
       run: |
           cd tests/benchmark-models && pytest \
-              --durations=10
+              --durations=10 \
               --cov=amici \
               --cov-report=xml:"coverage_py.xml" \
               --cov-append \
