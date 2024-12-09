@@ -27,6 +27,15 @@ class AmiciJaxCodePrinter(NumPyPrinter):
         # FIXME: untested, where are spline nodes coming from anyways?
         return f'interp1d(time, {self.doprint(expr.args[2:])}, kind="cubic")'
 
+    def _print_log(self, expr: sp.Expr) -> str:
+        return f"safe_log({self.doprint(expr.args[0])})"
+
+    def _print_Mul(self, expr: sp.Expr) -> str:
+        numer, denom = expr.as_numer_denom()
+        if denom == 1:
+            return super()._print_Mul(expr)
+        return f"safe_div({self.doprint(numer)}, {self.doprint(denom)})"
+
     def _get_sym_lines(
         self,
         symbols: sp.Matrix | Iterable[str],

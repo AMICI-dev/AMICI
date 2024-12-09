@@ -175,6 +175,7 @@ struct ModelStateDerived {
             dwdx.set_ctx(sunctx_);
         }
         sspl_.set_ctx(sunctx_);
+        x_pos_tmp_.set_ctx(sunctx_);
         dwdw_.set_ctx(sunctx_);
         dJydy_dense_.set_ctx(sunctx_);
     }

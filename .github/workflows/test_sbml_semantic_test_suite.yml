@@ -58,6 +58,6 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage_SBMLSuite.xml
+        files: coverage_SBMLSuite.xml
         flags: sbmlsuite
         fail_ci_if_error: true

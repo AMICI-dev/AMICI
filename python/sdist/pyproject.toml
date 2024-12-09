@@ -83,7 +83,7 @@ examples = [
     "scipy",
 ]
 jax = [
-    "jax>=0.4.34",
+    "jax>=0.4.34,<0.4.36",
     "jaxlib>=0.4.34",
     "diffrax>=0.6.0",
     "jaxtyping>=0.2.34",
