@@ -16,7 +16,6 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import (
     Any,
-    Union,
 )
 from collections.abc import Callable
 from collections.abc import Iterable, Sequence
@@ -63,7 +62,7 @@ SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
 default_symbols = {symbol: {} for symbol in SymbolId}
 
-ConservationLaw = dict[str, Union[str, sp.Expr]]
+ConservationLaw = dict[str, str | sp.Expr]
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -447,6 +446,110 @@ class SbmlImporter:
                 )
             exporter.compile_model()
 
+    def sbml2jax(
+        self,
+        model_name: str,
+        output_dir: str | Path = None,
+        observables: dict[str, dict[str, str]] = None,
+        sigmas: dict[str, str | float] = None,
+        noise_distributions: dict[str, str | Callable] = None,
+        verbose: int | bool = logging.ERROR,
+        compute_conservation_laws: bool = True,
+        simplify: Callable | None = _default_simplify,
+        cache_simplify: bool = False,
+        log_as_log10: bool = True,
+    ) -> None:
+        """
+        Generate and compile AMICI jax files for the model provided to the
+        constructor.
+
+        The resulting model can be imported as a regular Python module.
+
+        Note that this generates model ODEs for changes in concentrations, not
+        amounts unless the `hasOnlySubstanceUnits` attribute has been
+        defined for a particular species.
+
+        :param model_name:
+            Name of the generated model package.
+            Note that in a given Python session, only one model with a given
+            name can be loaded at a time.
+            The generated Python extensions cannot be unloaded. Therefore,
+            make sure to choose a unique name for each model.
+
+        :param output_dir:
+            Directory where the generated model package will be stored.
+
+        :param observables:
+            Observables to be added to the model:
+            ``dictionary( observableId:{'name':observableName
+            (optional), 'formula':formulaString)})``.
+
+        :param sigmas:
+            dictionary(observableId: sigma value or (existing) parameter name)
+
+        :param noise_distributions:
+            dictionary(observableId: noise type).
+            If nothing is passed for some observable id, a normal model is
+            assumed as default. Either pass a noise type identifier, or a
+            callable generating a custom noise string.
+            For noise identifiers, see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`.
+
+        :param verbose:
+            verbosity level for logging, ``True``/``False`` default to
+            ``logging.Error``/``logging.DEBUG``
+
+        :param compute_conservation_laws:
+            if set to ``True``, conservation laws are automatically computed
+            and applied such that the state-jacobian of the ODE
+            right-hand-side has full rank. This option should be set to
+            ``True`` when using the Newton algorithm to compute steadystate
+            sensitivities.
+            Conservation laws for constant species are enabled by default.
+            Support for conservation laws for non-constant species is
+            experimental and may be enabled by setting an environment variable
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
+            to use the algorithm proposed by De Martino et al. (2014)
+            https://doi.org/10.1371/journal.pone.0100750, or to any other value
+            to use the deterministic algorithm implemented in
+            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            run for a very long time. This has been observed for example in the
+            case of stoichiometric coefficients with many significant digits.
+
+        :param simplify:
+            see :attr:`amici.ODEModel._simplify`
+
+        :param cache_simplify:
+                see :meth:`amici.ODEModel.__init__`
+
+        :param log_as_log10:
+            If ``True``, log in the SBML model will be parsed as ``log10``
+            (default), if ``False``, log will be parsed as natural logarithm
+            ``ln``.
+        """
+        set_log_level(logger, verbose)
+
+        ode_model = self._build_ode_model(
+            observables=observables,
+            sigmas=sigmas,
+            noise_distributions=noise_distributions,
+            verbose=verbose,
+            compute_conservation_laws=compute_conservation_laws,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+            log_as_log10=log_as_log10,
+        )
+
+        from amici.jax.ode_export import ODEExporter
+
+        exporter = ODEExporter(
+            ode_model,
+            model_name=model_name,
+            outdir=output_dir,
+            verbose=verbose,
+        )
+        exporter.generate_model_code()
+
     def _build_ode_model(
         self,
         observables: dict[str, dict[str, str]] = None,
@@ -719,7 +822,7 @@ class SbmlImporter:
             rule.isRate()
             and not isinstance(
                 self.sbml.getElementBySId(rule.getVariable()),
-                (sbml.Compartment, sbml.Species, sbml.Parameter),
+                sbml.Compartment | sbml.Species | sbml.Parameter,
             )
             for rule in self.sbml.getListOfRules()
         ):
@@ -1143,8 +1246,8 @@ class SbmlImporter:
         for parameter in constant_parameters:
             if not self.sbml.getParameter(parameter):
                 raise KeyError(
-                    "Cannot make %s a constant parameter: "
-                    "Parameter does not exist." % parameter
+                    f"Cannot make {parameter} a constant parameter: "
+                    "Parameter does not exist."
                 )
 
         # parameter ID => initial assignment sympy expression
@@ -2880,16 +2983,14 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         # convert relational expressions into trigger functions
         if isinstance(
             trigger,
-            (sp.core.relational.LessThan, sp.core.relational.StrictLessThan),
+            sp.core.relational.LessThan | sp.core.relational.StrictLessThan,
         ):
             # y < x or y <= x
             return -root
         if isinstance(
             trigger,
-            (
-                sp.core.relational.GreaterThan,
-                sp.core.relational.StrictGreaterThan,
-            ),
+            sp.core.relational.GreaterThan
+            | sp.core.relational.StrictGreaterThan,
         ):
             # y >= x or y > x
             return root

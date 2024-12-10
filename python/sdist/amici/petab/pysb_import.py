@@ -168,6 +168,7 @@ def import_model_pysb(
     model_output_dir: str | Path | None = None,
     verbose: bool | int | None = True,
     model_name: str | None = None,
+    jax: bool = False,
     **kwargs,
 ) -> None:
     """
@@ -185,6 +186,9 @@ def import_model_pysb(
 
     :param model_name:
         Name of the generated model module
+
+    :param jax:
+        Whether to generate JAX code instead of C++ code.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -259,16 +263,31 @@ def import_model_pysb(
             petab_problem.observable_df
         )
 
-    from amici.pysb_import import pysb2amici
+    if jax:
+        from amici.pysb_import import pysb2jax
 
-    pysb2amici(
-        model=pysb_model,
-        output_dir=model_output_dir,
-        model_name=model_name,
-        verbose=True,
-        observables=observables,
-        sigmas=sigmas,
-        constant_parameters=constant_parameters,
-        noise_distributions=noise_distrs,
-        **kwargs,
-    )
+        pysb2jax(
+            model=pysb_model,
+            output_dir=model_output_dir,
+            model_name=model_name,
+            verbose=True,
+            observables=observables,
+            sigmas=sigmas,
+            noise_distributions=noise_distrs,
+            **kwargs,
+        )
+        return
+    else:
+        from amici.pysb_import import pysb2amici
+
+        pysb2amici(
+            model=pysb_model,
+            output_dir=model_output_dir,
+            model_name=model_name,
+            verbose=True,
+            observables=observables,
+            sigmas=sigmas,
+            constant_parameters=constant_parameters,
+            noise_distributions=noise_distrs,
+            **kwargs,
+        )

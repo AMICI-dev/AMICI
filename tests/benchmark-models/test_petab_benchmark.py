@@ -123,7 +123,9 @@ problems_for_llh_check = [
     "Elowitz_Nature2000",
     "Fiedler_BMCSystBiol2016",
     "Fujita_SciSignal2010",
-    "Isensee_JCB2018",
+    # Excluded until https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/pull/253
+    #  is sorted out
+    # "Isensee_JCB2018",
     "Lucarelli_CellSystems2018",
     "Schwen_PONE2014",
     "Smith_BMCSystBiol2013",
@@ -299,14 +301,8 @@ def test_jax_llh(benchmark_problem):
 
     np.random.seed(cur_settings.rng_seed)
 
-    problems_for_gradient_check_jax = list(
-        set(problems_for_gradient_check) - {"Laske_PLOSComputBiol2019"}
-        # Laske has nan values in gradient due to nan values in observables that are not used in the likelihood
-        # but are problematic during backpropagation
-    )
-
     problem_parameters = None
-    if problem_id in problems_for_gradient_check_jax:
+    if problem_id in problems_for_gradient_check:
         point = petab_problem.x_nominal_free_scaled
         for _ in range(20):
             amici_solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
@@ -334,16 +330,10 @@ def test_jax_llh(benchmark_problem):
 
     jax_model = import_petab_problem(
         petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
+        model_output_dir=benchmark_outdir / (problem_id + "_jax"),
         jax=True,
     )
     jax_problem = JAXProblem(jax_model, petab_problem)
-    simulation_conditions = (
-        petab_problem.get_simulation_conditions_from_measurement_df()
-    )
-    simulation_conditions = tuple(
-        tuple(row) for _, row in simulation_conditions.iterrows()
-    )
     if problem_parameters:
         jax_problem = eqx.tree_at(
             lambda x: x.parameters,
@@ -352,14 +342,13 @@ def test_jax_llh(benchmark_problem):
                 [problem_parameters[pid] for pid in jax_problem.parameter_ids]
             ),
         )
-    if problem_id in problems_for_gradient_check_jax:
-        (llh_jax, _), sllh_jax = eqx.filter_jit(
-            eqx.filter_value_and_grad(run_simulations, has_aux=True)
-        )(jax_problem, simulation_conditions)
+    llh_jax, _ = beartype(run_simulations)(jax_problem)
+    if problem_id in problems_for_gradient_check:
+        (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
+            run_simulations, has_aux=True
+        )(jax_problem)
     else:
-        llh_jax, _ = beartype(eqx.filter_jit(run_simulations))(
-            jax_problem, simulation_conditions
-        )
+        llh_jax, _ = beartype(run_simulations)(jax_problem)
 
     np.testing.assert_allclose(
         llh_jax,
@@ -369,14 +358,14 @@ def test_jax_llh(benchmark_problem):
         err_msg=f"LLH mismatch for {problem_id}",
     )
 
-    if problem_id in problems_for_gradient_check_jax:
+    if problem_id in problems_for_gradient_check:
         sllh_amici = r_amici[SLLH]
         np.testing.assert_allclose(
             sllh_jax.parameters,
             np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
             rtol=1e-2,
             atol=1e-2,
-            err_msg=f"SLLH mismatch for {problem_id}",
+            err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
         )
 
 
