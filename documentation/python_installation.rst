@@ -28,6 +28,17 @@ If this worked, you can now import the Python module via::
 
 If this does not work for you, please follow the full instructions below.
 
+.. note::
+
+  To re-install a previously installed AMICI version with different
+  build options or changed system libraries, pass the ``--no-cache-dir``
+  option to ``pip`` to ensure a clean re-installation:
+
+  .. code-block:: bash
+
+     pip3 install --no-cache-dir amici
+
+
 Installation on Linux
 +++++++++++++++++++++
 
