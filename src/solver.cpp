@@ -735,10 +735,6 @@ void Solver::setSensitivityMethodPreequilibration(
 void Solver::checkSensitivityMethod(
     SensitivityMethod const sensi_meth, bool preequilibration
 ) const {
-    if (rdata_mode_ == RDataReporting::residuals
-        && sensi_meth == SensitivityMethod::adjoint)
-        throw AmiException("Adjoint Sensitivity Analysis is not compatible with"
-                           " only reporting residuals!");
     if (!preequilibration && sensi_meth != sensi_meth_)
         resetMutableMemory(nx(), nplist(), nquad());
 }
@@ -1150,10 +1146,6 @@ RDataReporting Solver::getReturnDataReportingMode() const {
 };
 
 void Solver::setReturnDataReportingMode(RDataReporting rdrm) {
-    if (rdrm == RDataReporting::residuals
-        && sensi_meth_ == SensitivityMethod::adjoint)
-        throw AmiException("Adjoint Sensitivity Analysis cannot report "
-                           "residuals!");
     rdata_mode_ = rdrm;
 }
 

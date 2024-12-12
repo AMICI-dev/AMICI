@@ -149,20 +149,14 @@ def test_pregenerated_model(sub_test, case):
         )
 
     # test residuals mode
-    if solver.getSensitivityMethod() == amici.SensitivityMethod.adjoint:
-        with pytest.raises(RuntimeError):
-            solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
-    else:
-        solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
-        verify_simulation_results(
-            rdata,
-            expected_results[sub_test][case]["results"],
-            fields=["t", "res", "sres", "y", "sy", "sigmay", "ssigmay"],
-            **verify_simulation_opts,
-        )
-        with pytest.raises(RuntimeError):
-            solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+    solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    verify_simulation_results(
+        rdata,
+        expected_results[sub_test][case]["results"],
+        fields=["t", "res", "sres", "y", "sy", "sigmay", "ssigmay"],
+        **verify_simulation_opts,
+    )
 
     chi2_ref = rdata.chi2
 
