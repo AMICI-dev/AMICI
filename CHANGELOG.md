@@ -4,6 +4,48 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.30.0 (2024-12-10)
+
+*Please note that the amici JAX model generation introduced in v0.29.0 is
+experimental, the API may substantially change in the future.
+Use at your own risk and do not expect backward compatibility.*
+
+**Features**
+
+* Added serialisation for JAX models
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2608
+
+* Disabled building the C++ extension by default when generating a JAX model
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2609
+
+* Separate pre-equilibration and dynamic simulation in jax
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2617
+
+* State reinitialisation in JAX
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2619
+
+**Fixes**
+
+* Fixed ModelStateDerived copy ctor (fixes potential segfaults)
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2612
+
+* PEtab parameter mapping: fill in fixed parameter values for initial values
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2613
+
+* `nan`-safe log&divide for JAX models
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2611
+
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.29.0...v0.30.0
+
+
 ### v0.29.0 (2024-11-28)
 
 **Fixes**
