@@ -244,6 +244,7 @@ enum class RDataReporting {
     full,
     residuals,
     likelihood,
+    observables_likelihood,
 };
 
 /** boundary conditions for splines */
