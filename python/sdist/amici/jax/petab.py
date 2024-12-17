@@ -644,7 +644,7 @@ def petab_simulate(
     for sc, ys in y.items():
         obs = [
             problem.model.observable_ids[io]
-            for io in problem._measurements[sc][4]
+            for io in problem._measurements[sc][3]
         ]
         t = jnp.concat(problem._measurements[sc][:2])
         df_sc = pd.DataFrame(
