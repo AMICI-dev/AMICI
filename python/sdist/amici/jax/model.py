@@ -442,7 +442,6 @@ class JAXModel(eqx.Module):
     def simulate_condition(
         self,
         p: jt.Float[jt.Array, "np"],
-        ts_init: jt.Float[jt.Array, "nt_preeq"],
         ts_dyn: jt.Float[jt.Array, "nt_dyn"],
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
@@ -462,13 +461,9 @@ class JAXModel(eqx.Module):
 
         :param p:
             parameters for simulation ordered according to ids in :ivar parameter_ids:
-        :param ts_init:
-            time points that do not require simulation. Usually valued 0.0, but needs to be shaped according to
-            the number of observables that are evaluated before dynamic simulation.
         :param ts_dyn:
-            time points for dynamic simulation. Usually valued > 0.0 and sorted in monotonically increasing order.
-            Duplicate time points are allowed to facilitate the evaluation of multiple observables at specific time
-            points.
+            time points for dynamic simulation. Sorted in monotonically increasing order but duplicate time points are
+            allowed to facilitate the evaluation of multiple observables at specific time points.
         :param ts_posteq:
             time points for post-equilibration. Usually valued \Infty, but needs to be shaped according to
             the number of observables that are evaluated after post-equilibration.
@@ -508,8 +503,6 @@ class JAXModel(eqx.Module):
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
 
-        x_preq = jnp.repeat(x_solver.reshape(1, -1), ts_init.shape[0], axis=0)
-
         # Dynamic simulation
         if ts_dyn.shape[0]:
             x_dyn, stats_dyn = self._solve(
@@ -541,8 +534,8 @@ class JAXModel(eqx.Module):
             x_solver.reshape(1, -1), ts_posteq.shape[0], axis=0
         )
 
-        ts = jnp.concatenate((ts_init, ts_dyn, ts_posteq), axis=0)
-        x = jnp.concatenate((x_preq, x_dyn, x_posteq), axis=0)
+        ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
+        x = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
         llh = -jnp.sum(nllhs)
