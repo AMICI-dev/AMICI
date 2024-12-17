@@ -281,7 +281,15 @@ class JAXModel(eqx.Module):
             event=diffrax.Event(cond_fn=diffrax.steady_state_event()),
             throw=False,
         )
-        return sol.ys[-1, :], sol.stats
+        # If the event was triggered, the event mask is True and the solution is the steady state. Otherwise, the
+        # solution is the last state and the event mask is False. In the latter case, we return inf for the steady
+        # state.
+        ys = jnp.where(
+            sol.event_mask,
+            sol.ys[-1, :],
+            jnp.inf * jnp.ones_like(sol.ys[-1, :]),
+        )
+        return ys, sol.stats
 
     def _solve(
         self,
