@@ -32,11 +32,22 @@ class JAXModel(eqx.Module):
     JAXModel provides an abstract base class for a JAX-based implementation of an AMICI model. The class implements
     routines for simulation and evaluation of derived quantities, model specific implementations need to be provided by
     classes inheriting from JAXModel.
+
+    :ivar api_version:
+        API version of the derived class. Needs to match the API version of the base class (MODEL_API_VERSION).
+    :ivar MODEL_API_VERSION:
+        API version of the base class.
+    :ivar jax_py_file:
+        Path to the JAX model file.
+    :ivar ss_tol_scale_factor:
+        Tolerance scale factor for the steady state termination check. Multiplied with tolerances of the user-provided
+        step size controller.
     """
 
     MODEL_API_VERSION = "0.0.2"
     api_version: str
     jax_py_file: Path
+    ss_tol_scale_factor: jnp.float_ = 100.0
 
     def __init__(self):
         if self.api_version != self.MODEL_API_VERSION:
@@ -278,7 +289,12 @@ class JAXModel(eqx.Module):
             stepsize_controller=controller,
             max_steps=max_steps,
             adjoint=diffrax.DirectAdjoint(),
-            event=diffrax.Event(cond_fn=diffrax.steady_state_event()),
+            event=diffrax.Event(
+                cond_fn=diffrax.steady_state_event(
+                    rtol=controller.rtol * self.ss_tol_scale_factor,
+                    atol=controller.atol * self.ss_tol_scale_factor,
+                )
+            ),
             throw=False,
         )
         # If the event was triggered, the event mask is True and the solution is the steady state. Otherwise, the
@@ -618,6 +634,10 @@ class JAXModel(eqx.Module):
 
         :param p:
             parameters for simulation ordered according to ids in :ivar parameter_ids:
+        :param x_reinit:
+            re-initialized state vector. If not provided, the state vector is not re-initialized.
+        :param mask_reinit:
+            mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
         :param solver:
             ODE solver
         :param controller:
