@@ -11,7 +11,7 @@ import jax
 import diffrax
 import numpy as np
 from beartype import beartype
-from petab.v2.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
 from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
