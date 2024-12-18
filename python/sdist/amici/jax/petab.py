@@ -3,6 +3,7 @@ import shutil
 from numbers import Number
 from collections.abc import Iterable
 from pathlib import Path
+from collections.abc import Callable
 
 
 import diffrax
@@ -465,6 +466,9 @@ class JAXProblem(eqx.Module):
         simulation_condition: tuple[str, ...],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),  # noqa: F821, F722
         ret: ReturnValue = ReturnValue.llh,
@@ -507,6 +511,7 @@ class JAXProblem(eqx.Module):
             solver=solver,
             controller=controller,
             max_steps=max_steps,
+            steady_state_event=steady_state_event,
             adjoint=diffrax.RecursiveCheckpointAdjoint()
             if ret in (ReturnValue.llh, ReturnValue.chi2)
             else diffrax.DirectAdjoint(),
@@ -518,6 +523,9 @@ class JAXProblem(eqx.Module):
         simulation_condition: str,
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:  # noqa: F821
         """
@@ -539,12 +547,13 @@ class JAXProblem(eqx.Module):
             simulation_condition, p
         )
         return self.model.preequilibrate_condition(
-            p=eqx.debug.backward_nan(p),
+            p=p,
             mask_reinit=mask_reinit,
             x_reinit=x_reinit,
             solver=solver,
             controller=controller,
             max_steps=max_steps,
+            steady_state_event=steady_state_event,
         )
 
 
@@ -555,6 +564,9 @@ def run_simulations(
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         **DEFAULT_CONTROLLER_SETTINGS
     ),
+    steady_state_event: Callable[
+        ..., diffrax._custom_types.BoolScalarLike
+    ] = diffrax.steady_state_event(),
     max_steps: int = 2**10,
     ret: ReturnValue | str = ReturnValue.llh,
 ):
@@ -569,6 +581,9 @@ def run_simulations(
         ODE solver to use for simulation.
     :param controller:
         Step size controller to use for simulation.
+    :param steady_state_event:
+        Steady state event function to use for pre-/post-equilibration. Allows customisation of the steady state
+        condition, see :func:`diffrax.steady_state_event` for details.
     :param max_steps:
         Maximum number of steps to take during simulation.
     :param ret:
@@ -583,7 +598,9 @@ def run_simulations(
         simulation_conditions = problem.get_all_simulation_conditions()
 
     preeqs = {
-        sc: problem.run_preequilibration(sc, solver, controller, max_steps)
+        sc: problem.run_preequilibration(
+            sc, solver, controller, steady_state_event, max_steps
+        )
         # only run preequilibration once per condition
         for sc in {sc[1] for sc in simulation_conditions if len(sc) > 1}
     }
@@ -593,6 +610,7 @@ def run_simulations(
             sc,
             solver,
             controller,
+            steady_state_event,
             max_steps,
             preeqs.get(sc[1])[0] if len(sc) > 1 else jnp.array([]),
             ret=ret,
@@ -617,6 +635,9 @@ def petab_simulate(
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         **DEFAULT_CONTROLLER_SETTINGS
     ),
+    steady_state_event: Callable[
+        ..., diffrax._custom_types.BoolScalarLike
+    ] = diffrax.steady_state_event(),
     max_steps: int = 2**10,
 ):
     """
@@ -637,6 +658,7 @@ def petab_simulate(
         problem,
         solver=solver,
         controller=controller,
+        steady_state_event=steady_state_event,
         max_steps=max_steps,
         ret=ReturnValue.y,
     )

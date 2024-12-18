@@ -4,6 +4,8 @@
 import logging
 import sys
 
+import diffrax
+
 import amici
 import pandas as pd
 import petab.v1 as petab
@@ -68,10 +70,17 @@ def _test_case(case, model_type, version, jax):
     if jax:
         from amici.jax import JAXProblem, run_simulations, petab_simulate
 
+        steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
         jax_problem = JAXProblem(model, problem)
-        llh, ret = run_simulations(jax_problem)
-        chi2, _ = run_simulations(jax_problem, ret="chi2")
-        simulation_df = petab_simulate(jax_problem)
+        llh, ret = run_simulations(
+            jax_problem, steady_state_event=steady_state_event
+        )
+        chi2, _ = run_simulations(
+            jax_problem, ret="chi2", steady_state_event=steady_state_event
+        )
+        simulation_df = petab_simulate(
+            jax_problem, steady_state_event=steady_state_event
+        )
         simulation_df.rename(
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )

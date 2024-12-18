@@ -12,6 +12,8 @@ import jax.numpy as jnp
 import jax
 import jaxtyping as jt
 
+from collections.abc import Callable
+
 
 class ReturnValue(enum.Enum):
     llh = "log-likelihood"
@@ -32,6 +34,13 @@ class JAXModel(eqx.Module):
     JAXModel provides an abstract base class for a JAX-based implementation of an AMICI model. The class implements
     routines for simulation and evaluation of derived quantities, model specific implementations need to be provided by
     classes inheriting from JAXModel.
+
+    :ivar api_version:
+        API version of the derived class. Needs to match the API version of the base class (MODEL_API_VERSION).
+    :ivar MODEL_API_VERSION:
+        API version of the base class.
+    :ivar jax_py_file:
+        Path to the JAX model file.
     """
 
     MODEL_API_VERSION = "0.0.2"
@@ -248,6 +257,9 @@ class JAXModel(eqx.Module):
         x0: jt.Float[jt.Array, "nxs"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "1 nxs"], dict]:
         """
@@ -278,10 +290,20 @@ class JAXModel(eqx.Module):
             stepsize_controller=controller,
             max_steps=max_steps,
             adjoint=diffrax.DirectAdjoint(),
-            event=diffrax.Event(cond_fn=diffrax.steady_state_event()),
+            event=diffrax.Event(
+                cond_fn=steady_state_event,
+            ),
             throw=False,
         )
-        return sol.ys[-1, :], sol.stats
+        # If the event was triggered, the event mask is True and the solution is the steady state. Otherwise, the
+        # solution is the last state and the event mask is False. In the latter case, we return inf for the steady
+        # state.
+        ys = jnp.where(
+            sol.event_mask,
+            sol.ys[-1, :],
+            jnp.inf * jnp.ones_like(sol.ys[-1, :]),
+        )
+        return ys, sol.stats
 
     def _solve(
         self,
@@ -450,6 +472,9 @@ class JAXModel(eqx.Module):
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: int | jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
@@ -525,7 +550,13 @@ class JAXModel(eqx.Module):
         # Post-equilibration
         if ts_posteq.shape[0]:
             x_solver, stats_posteq = self._eq(
-                p, tcl, x_solver, solver, controller, max_steps
+                p,
+                tcl,
+                x_solver,
+                solver,
+                controller,
+                steady_state_event,
+                max_steps,
             )
         else:
             stats_posteq = None
@@ -596,6 +627,9 @@ class JAXModel(eqx.Module):
         mask_reinit: jt.Bool[jt.Array, "*nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: int | jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:
         r"""
@@ -603,6 +637,10 @@ class JAXModel(eqx.Module):
 
         :param p:
             parameters for simulation ordered according to ids in :ivar parameter_ids:
+        :param x_reinit:
+            re-initialized state vector. If not provided, the state vector is not re-initialized.
+        :param mask_reinit:
+            mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
         :param solver:
             ODE solver
         :param controller:
@@ -619,7 +657,13 @@ class JAXModel(eqx.Module):
         tcl = self._tcl(x0, p)
         current_x = self._x_solver(x0)
         current_x, stats_preeq = self._eq(
-            p, tcl, current_x, solver, controller, max_steps
+            p,
+            tcl,
+            current_x,
+            solver,
+            controller,
+            steady_state_event,
+            max_steps,
         )
 
         return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
