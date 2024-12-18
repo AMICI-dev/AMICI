@@ -349,8 +349,8 @@ def test_jax_llh(benchmark_problem):
         kwargs = {}
         if problem_id in ("Zheng_PNAS2012",):
             kwargs["controller"] = diffrax.PIDController(
-                atol=1e-12,
-                rtol=1e-12,
+                atol=1e-14,
+                rtol=1e-14,
                 pcoeff=0.4,
                 icoeff=0.3,
                 dcoeff=0.0,
