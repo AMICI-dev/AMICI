@@ -199,6 +199,7 @@ def check_fields_jax(
         "solver": diffrax.Kvaerno5(),
         "controller": diffrax.PIDController(atol=ATOL_SIM, rtol=RTOL_SIM),
         "adjoint": diffrax.RecursiveCheckpointAdjoint(),
+        "steady_state_event": diffrax.steady_state_event(),
         "max_steps": 2**8,  # max_steps
     }
     fun = beartype(jax_model.simulate_condition)
