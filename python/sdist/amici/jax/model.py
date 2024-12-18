@@ -12,6 +12,8 @@ import jax.numpy as jnp
 import jax
 import jaxtyping as jt
 
+from collections.abc import Callable
+
 
 class ReturnValue(enum.Enum):
     llh = "log-likelihood"
@@ -39,15 +41,11 @@ class JAXModel(eqx.Module):
         API version of the base class.
     :ivar jax_py_file:
         Path to the JAX model file.
-    :ivar ss_tol_scale_factor:
-        Tolerance scale factor for the steady state termination check. Multiplied with tolerances of the user-provided
-        step size controller.
     """
 
     MODEL_API_VERSION = "0.0.2"
     api_version: str
     jax_py_file: Path
-    ss_tol_scale_factor: jnp.float_ = 10.0
 
     def __init__(self):
         if self.api_version != self.MODEL_API_VERSION:
@@ -259,6 +257,9 @@ class JAXModel(eqx.Module):
         x0: jt.Float[jt.Array, "nxs"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "1 nxs"], dict]:
         """
@@ -290,10 +291,7 @@ class JAXModel(eqx.Module):
             max_steps=max_steps,
             adjoint=diffrax.DirectAdjoint(),
             event=diffrax.Event(
-                cond_fn=diffrax.steady_state_event(
-                    rtol=controller.rtol * self.ss_tol_scale_factor,
-                    atol=controller.atol * self.ss_tol_scale_factor,
-                )
+                cond_fn=steady_state_event,
             ),
             throw=False,
         )
@@ -474,6 +472,9 @@ class JAXModel(eqx.Module):
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: int | jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
@@ -549,7 +550,13 @@ class JAXModel(eqx.Module):
         # Post-equilibration
         if ts_posteq.shape[0]:
             x_solver, stats_posteq = self._eq(
-                p, tcl, x_solver, solver, controller, max_steps
+                p,
+                tcl,
+                x_solver,
+                solver,
+                controller,
+                steady_state_event,
+                max_steps,
             )
         else:
             stats_posteq = None
@@ -620,6 +627,9 @@ class JAXModel(eqx.Module):
         mask_reinit: jt.Bool[jt.Array, "*nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: int | jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:
         r"""
@@ -647,7 +657,13 @@ class JAXModel(eqx.Module):
         tcl = self._tcl(x0, p)
         current_x = self._x_solver(x0)
         current_x, stats_preeq = self._eq(
-            p, tcl, current_x, solver, controller, max_steps
+            p,
+            tcl,
+            current_x,
+            solver,
+            controller,
+            steady_state_event,
+            max_steps,
         )
 
         return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)

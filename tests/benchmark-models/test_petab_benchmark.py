@@ -8,7 +8,6 @@ for a subset of the benchmark problems.
 from functools import partial
 from pathlib import Path
 
-import diffrax
 import fiddy
 import amici
 import numpy as np
@@ -287,12 +286,8 @@ def test_jax_llh(benchmark_problem):
 
     amici_solver = amici_model.getSolver()
     cur_settings = settings[problem_id]
-    if problem_id in ("Zheng_PNAS2012",):
-        tol = 1e-12
-    else:
-        tol = 1e-8
-    amici_solver.setAbsoluteTolerance(tol)
-    amici_solver.setRelativeTolerance(tol)
+    amici_solver.setAbsoluteTolerance(1e-8)
+    amici_solver.setRelativeTolerance(1e-8)
     amici_solver.setMaxSteps(10_000)
 
     simulate_amici = partial(
@@ -348,17 +343,9 @@ def test_jax_llh(benchmark_problem):
                 [problem_parameters[pid] for pid in jax_problem.parameter_ids]
             ),
         )
-    llh_jax, _ = beartype(run_simulations)(jax_problem)
+
     if problem_id in problems_for_gradient_check:
-        kwargs = {}
-        if problem_id in ("Zheng_PNAS2012",):
-            kwargs["controller"] = diffrax.PIDController(
-                atol=1e-14,
-                rtol=1e-14,
-                pcoeff=0.4,
-                icoeff=0.3,
-                dcoeff=0.0,
-            )
+        beartype(run_simulations)(jax_problem)
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True
         )(jax_problem)
