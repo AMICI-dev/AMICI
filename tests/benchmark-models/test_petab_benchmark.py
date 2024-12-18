@@ -287,8 +287,12 @@ def test_jax_llh(benchmark_problem):
 
     amici_solver = amici_model.getSolver()
     cur_settings = settings[problem_id]
-    amici_solver.setAbsoluteTolerance(1e-8)
-    amici_solver.setRelativeTolerance(1e-8)
+    if problem_id in ("Zheng_PNAS2012",):
+        tol = 1e-12
+    else:
+        tol = 1e-8
+    amici_solver.setAbsoluteTolerance(tol)
+    amici_solver.setRelativeTolerance(tol)
     amici_solver.setMaxSteps(10_000)
 
     simulate_amici = partial(
