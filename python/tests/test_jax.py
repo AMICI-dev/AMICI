@@ -179,8 +179,7 @@ def check_fields_jax(
     iys = iys.flatten()
     iy_trafos = np.zeros_like(iys)
 
-    ts_init = ts[ts == 0]
-    ts_dyn = ts[ts > 0]
+    ts_dyn = ts
     ts_posteq = np.array([])
 
     par_dict = {
@@ -190,7 +189,6 @@ def check_fields_jax(
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
     kwargs = {
-        "ts_init": jnp.array(ts_init),
         "ts_dyn": jnp.array(ts_dyn),
         "ts_posteq": jnp.array(ts_posteq),
         "my": jnp.array(my),
