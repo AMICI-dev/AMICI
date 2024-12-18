@@ -547,7 +547,7 @@ class JAXProblem(eqx.Module):
             simulation_condition, p
         )
         return self.model.preequilibrate_condition(
-            p=eqx.debug.backward_nan(p),
+            p=p,
             mask_reinit=mask_reinit,
             x_reinit=x_reinit,
             solver=solver,
