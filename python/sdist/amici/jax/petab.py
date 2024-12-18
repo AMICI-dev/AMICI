@@ -495,7 +495,7 @@ class JAXProblem(eqx.Module):
             simulation_condition[0], p
         )
         return self.model.simulate_condition(
-            p=eqx.debug.backward_nan(p),
+            p=p,
             ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
             ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),
             my=jax.lax.stop_gradient(jnp.array(my)),
