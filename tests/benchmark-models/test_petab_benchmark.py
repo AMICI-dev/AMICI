@@ -347,10 +347,10 @@ def test_jax_llh(benchmark_problem):
     llh_jax, _ = beartype(run_simulations)(jax_problem)
     if problem_id in problems_for_gradient_check:
         kwargs = {}
-        if problem_id in ("Brannmark_JBC2010", "Zheng_PNAS2012"):
+        if problem_id in ("Zheng_PNAS2012",):
             kwargs["controller"] = diffrax.PIDController(
-                atol=1e-10,
-                rtol=1e-10,
+                atol=1e-12,
+                rtol=1e-12,
                 pcoeff=0.4,
                 icoeff=0.3,
                 dcoeff=0.0,
