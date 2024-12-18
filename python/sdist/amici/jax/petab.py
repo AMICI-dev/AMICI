@@ -71,7 +71,7 @@ class JAXProblem(eqx.Module):
     :ivar _parameter_mappings:
         :class:`ParameterMappingForCondition` instances for each simulation condition.
     :ivar _measurements:
-        Subset measurement dataframes for each simulation condition.
+        Preprocessed arrays for each simulation condition.
     :ivar _petab_problem:
         PEtab problem to simulate.
     """
@@ -82,7 +82,6 @@ class JAXProblem(eqx.Module):
     _measurements: dict[
         tuple[str, ...],
         tuple[
-            np.ndarray,
             np.ndarray,
             np.ndarray,
             np.ndarray,
@@ -187,7 +186,6 @@ class JAXProblem(eqx.Module):
                 np.ndarray,
                 np.ndarray,
                 np.ndarray,
-                np.ndarray,
             ],
         ],
         dict[tuple[str, ...], tuple[int, ...]],
@@ -213,11 +211,9 @@ class JAXProblem(eqx.Module):
             )
 
             ts = m[petab.TIME]
-            ts_preeq = ts[np.isfinite(ts) & (ts == 0)]
-            ts_dyn = ts[np.isfinite(ts) & (ts > 0)]
+            ts_dyn = ts[np.isfinite(ts)]
             ts_posteq = ts[np.logical_not(np.isfinite(ts))]
-            index = pd.concat([ts_preeq, ts_dyn, ts_posteq]).index
-            ts_preeq = ts_preeq.values
+            index = pd.concat([ts_dyn, ts_posteq]).index
             ts_dyn = ts_dyn.values
             ts_posteq = ts_posteq.values
             my = m[petab.MEASUREMENT].values
@@ -245,7 +241,6 @@ class JAXProblem(eqx.Module):
                 iy_trafos = np.zeros_like(iys)
 
             measurements[tuple(simulation_condition)] = (
-                ts_preeq,
                 ts_dyn,
                 ts_posteq,
                 my,
@@ -492,7 +487,7 @@ class JAXProblem(eqx.Module):
         :return:
             Tuple of output value and simulation statistics
         """
-        ts_preeq, ts_dyn, ts_posteq, my, iys, iy_trafos = self._measurements[
+        ts_dyn, ts_posteq, my, iys, iy_trafos = self._measurements[
             simulation_condition
         ]
         p = self.load_parameters(simulation_condition[0])
@@ -501,7 +496,6 @@ class JAXProblem(eqx.Module):
         )
         return self.model.simulate_condition(
             p=p,
-            ts_init=jax.lax.stop_gradient(jnp.array(ts_preeq)),
             ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
             ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),
             my=jax.lax.stop_gradient(jnp.array(my)),
@@ -650,7 +644,7 @@ def petab_simulate(
     for sc, ys in y.items():
         obs = [
             problem.model.observable_ids[io]
-            for io in problem._measurements[sc][4]
+            for io in problem._measurements[sc][3]
         ]
         t = jnp.concat(problem._measurements[sc][:2])
         df_sc = pd.DataFrame(
