@@ -7,6 +7,8 @@ for a subset of the benchmark problems.
 
 from functools import partial
 from pathlib import Path
+
+import diffrax
 import fiddy
 import amici
 import numpy as np
@@ -344,6 +346,15 @@ def test_jax_llh(benchmark_problem):
         )
     llh_jax, _ = beartype(run_simulations)(jax_problem)
     if problem_id in problems_for_gradient_check:
+        kwargs = {}
+        if problem_id in ("Brannmark_JBC2010", "Zheng_PNAS2012"):
+            kwargs["controller"] = diffrax.PIDController(
+                atol=1e-10,
+                rtol=1e-10,
+                pcoeff=0.4,
+                icoeff=0.3,
+                dcoeff=0.0,
+            )
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True
         )(jax_problem)
