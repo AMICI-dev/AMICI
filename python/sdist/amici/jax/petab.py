@@ -282,14 +282,36 @@ class JAXProblem(eqx.Module):
         }
         # extract nominal values from petab problem
         for pname, row in self._petab_problem.parameter_df.iterrows():
-            if (net := pname.split("_")[0]) in model.nns:
+            if (net := pname.split(".")[0]) in model.nns:
+                to_set = []
                 nn = model_pars[net]
-                layer = nn[pname.split("_")[1]]
-                attribute = pname.split("_")[2]
-                index = tuple(np.array(pname.split("_")[3:]).astype(int))
-                layer[attribute] = (
-                    layer[attribute].at[index].set(row[petab.NOMINAL_VALUE])
-                )
+                if len(pname.split(".")) > 1:
+                    layer = nn[pname.split(".")[1]]
+                    if len(pname.split(".")) > 2:
+                        to_set.append(
+                            (pname.split(".")[1], pname.split(".")[2])
+                        )
+                    else:
+                        to_set.extend(
+                            [
+                                (pname.split(".")[1], attribute)
+                                for attribute in layer.keys()
+                            ]
+                        )
+                else:
+                    to_set.extend(
+                        [
+                            (layer_name, attribute)
+                            for layer_name, layer in nn.items()
+                            for attribute in layer.keys()
+                        ]
+                    )
+
+                for layer, attribute in to_set:
+                    nn[layer][attribute] = row[
+                        petab.NOMINAL_VALUE
+                    ] * jnp.ones_like(nn[layer][attribute])
+
         # set values in model
         for net_id in model_pars:
             for layer_id in model_pars[net_id]:
@@ -316,14 +338,9 @@ class JAXProblem(eqx.Module):
         ), model
 
     def _get_inputs(self):
-        if (
-            self._petab_problem.mapping_df is None
-            or "netId" not in self._petab_problem.mapping_df.columns
-        ):
+        if self._petab_problem.mapping_df is None:
             return {}
-        inputs = {
-            net: {} for net in self._petab_problem.mapping_df["netId"].unique()
-        }
+        inputs = {net: {} for net in self.model.nns.keys()}
         for petab_id, row in self._petab_problem.mapping_df.iterrows():
             if (filepath := Path(petab_id)).is_file():
                 data_flat = pd.read_csv(filepath, sep="\t").sort_values(
@@ -368,9 +385,10 @@ class JAXProblem(eqx.Module):
         if self._petab_problem.mapping_df is None:
             return []
         return self._petab_problem.mapping_df[
-            self._petab_problem.mapping_df[
-                petab.MODEL_ENTITY_ID
-            ].str.startswith("output")
+            self._petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+            .str.split(".")
+            .str[1]
+            .str.startswith("output")
         ].index.tolist()
 
     def get_petab_parameter_by_id(self, name: str) -> jnp.float_:
@@ -402,11 +420,18 @@ class JAXProblem(eqx.Module):
         )
 
     def _eval_nn(self, output_par: str):
-        net_id = self._petab_problem.mapping_df.loc[output_par, "netId"]
+        net_id = self._petab_problem.mapping_df.loc[
+            output_par, petab.MODEL_ENTITY_ID
+        ].split(".")[0]
         nn = self.model.nns[net_id]
 
         model_id_map = (
-            self._petab_problem.mapping_df.query(f'netId == "{net_id}"')
+            self._petab_problem.mapping_df[
+                self._petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                .str.split(".")
+                .str[0]
+                == net_id
+            ]
             .reset_index()
             .set_index(petab.MODEL_ENTITY_ID)[petab.PETAB_ENTITY_ID]
             .to_dict()
@@ -422,7 +447,7 @@ class JAXProblem(eqx.Module):
                     petab_id, petab.NOMINAL_VALUE
                 ]
                 for model_id, petab_id in model_id_map.items()
-                if model_id.startswith("input")
+                if model_id.split(".")[1].startswith("input")
             ]
         )
         return nn.forward(net_input).squeeze()

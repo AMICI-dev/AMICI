@@ -2345,7 +2345,10 @@ class DEModel:
         """
         added_expressions = False
         for net_id, net in hybridisation.items():
-            if not (net["output"] == "ode" or net["input"] == "ode"):
+            if not (
+                net["hybridization"]["output"] == "ode"
+                or net["hybridization"]["input"] == "ode"
+            ):
                 continue  # do not integrate into ODEs, handle in amici.jax.petab
             inputs = [
                 comp
@@ -2400,7 +2403,9 @@ class DEModel:
                     )
 
                 # generate dummy Function
-                out_val = sp.Function(net_id)(*inputs, iout)
+                out_val = sp.Function(net_id)(
+                    *[input.get_id() for input in inputs], iout
+                )
 
                 # add to the model
                 if isinstance(comp, DifferentialState):

@@ -150,43 +150,40 @@ def import_petab_problem(
             from petab_sciml import PetabScimlStandard
 
             config = petab_problem.extensions_config["petab_sciml"]
-            net_files = config.get("net_files", [])
-            # TODO: net files need to be absolute paths
-            ml_models = [
-                model
-                for net_file in net_files
-                for model in PetabScimlStandard.load_data(
-                    Path() / net_file
-                ).models
-            ]
             hybridisation = {
-                net: {
-                    "model": next(
-                        ml_model
-                        for ml_model in ml_models
-                        if ml_model.mlmodel_id == net
-                    ),
+                net_id: {
+                    "model": PetabScimlStandard.load_data(
+                        Path() / net_config["file"]
+                    ).models,
                     "input_vars": [
                         petab_id
-                        for petab_id, model_id in petab_problem.mapping_df.query(
-                            f"netId == '{net}'"
-                        )[petab.MODEL_ENTITY_ID]
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
+                        ]
                         .to_dict()
                         .items()
-                        if model_id.startswith("input")
+                        if model_id.split(".")[1].startswith("input")
                     ],
                     "output_vars": [
                         petab_id
-                        for petab_id, model_id in petab_problem.mapping_df.query(
-                            f"netId == '{net}'"
-                        )[petab.MODEL_ENTITY_ID]
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
+                        ]
                         .to_dict()
                         .items()
-                        if model_id.startswith("output")
+                        if model_id.split(".")[1].startswith("output")
                     ],
-                    **hybrid,
+                    **net_config,
                 }
-                for net, hybrid in config["hybridization"].items()
+                for net_id, net_config in config.items()
             }
             if not jax or petab_problem.model.type_id == MODEL_TYPE_PYSB:
                 raise NotImplementedError(

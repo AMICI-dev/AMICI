@@ -19,6 +19,7 @@ import jax
 import numpy as np
 import equinox as eqx
 import os
+import h5py
 from contextlib import contextmanager
 
 from petab_sciml import PetabScimlStandard
@@ -208,55 +209,27 @@ def test_ude(test):
         solutions = safe_load(f)
 
     with change_directory(test_dir / "petab"):
+        from petab.v2 import Problem
+
         petab_yaml["format_version"] = "2.0.0"
         for problem in petab_yaml["problems"]:
             problem["model_files"] = {
-                file.split(".")[0]: {
-                    "language": "sbml",
-                    "location": file,
-                }
-                for file in problem.pop("sbml_files")
+                problem["model_files"]["location"].split(".")[0]: problem[
+                    "model_files"
+                ]
             }
-            problem["mapping_files"] = [problem.pop("mapping_tables")]
-
             for mapping_file in problem["mapping_files"]:
                 df = pd.read_csv(
                     mapping_file,
                     sep="\t",
                 )
-                df.rename(
-                    columns={
-                        "ioId": petab.MODEL_ENTITY_ID,
-                        "ioValue": petab.PETAB_ENTITY_ID,
-                    }
-                ).to_csv(mapping_file, sep="\t", index=False)
-            for observable_file in problem["observable_files"]:
-                df = pd.read_csv(observable_file, sep="\t")
-                df[petab.OBSERVABLE_ID] = df[petab.OBSERVABLE_ID].map(
-                    lambda x: x + "_o" if not x.endswith("_o") else x
-                )
-                df.to_csv(observable_file, sep="\t", index=False)
-            for measurement_file in problem["measurement_files"]:
-                df = pd.read_csv(measurement_file, sep="\t")
-                df[petab.OBSERVABLE_ID] = df[petab.OBSERVABLE_ID].map(
-                    lambda x: x + "_o" if not x.endswith("_o") else x
-                )
-                df.to_csv(measurement_file, sep="\t", index=False)
-
-        petab_yaml["parameter_file"] = [
-            petab_yaml["parameter_file"],
-            petab_yaml["parameter_file"].replace("ude", "nn"),
-        ]
-        df = pd.read_csv(petab_yaml["parameter_file"][1], sep="\t")
-        df.rename(
-            columns={
-                "value": petab.NOMINAL_VALUE,
-            },
-            inplace=True,
-        )
-        df.to_csv(petab_yaml["parameter_file"][1], sep="\t", index=False)
-
-        from petab.v2 import Problem
+                if df[petab.PETAB_ENTITY_ID].str.startswith("net").any():
+                    df.rename(
+                        columns={
+                            petab.PETAB_ENTITY_ID: petab.MODEL_ENTITY_ID,
+                            petab.MODEL_ENTITY_ID: petab.PETAB_ENTITY_ID,
+                        }
+                    ).to_csv(mapping_file, sep="\t", index=False)
 
         petab_problem = Problem.from_yaml(petab_yaml)
         jax_model = import_petab_problem(
@@ -266,6 +239,35 @@ def test_ude(test):
             jax=True,
         )
         jax_problem = JAXProblem(jax_model, petab_problem)
+        for net, net_config in petab_problem.extensions_config[
+            "petab_sciml"
+        ].items():
+            pars = h5py.File(
+                net_config["parameters"].replace(".h5", ".hf5"), "r"
+            )
+            for layer_name, layer in jax_problem.model.nns[net].layers.items():
+                for attribute in dir(layer):
+                    if not isinstance(
+                        getattr(layer, attribute), jax.numpy.ndarray
+                    ):
+                        continue
+                    value = jnp.array(pars[layer_name][attribute])
+
+                    if (
+                        isinstance(layer, eqx.nn.ConvTranspose)
+                        and attribute == "weight"
+                    ):
+                        # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
+                        value = jnp.flip(
+                            value, axis=tuple(range(2, value.ndim))
+                        ).swapaxes(0, 1)
+                    jax_problem = eqx.tree_at(
+                        lambda x: getattr(
+                            x.model.nns[net].layers[layer_name], attribute
+                        ),
+                        jax_problem,
+                        value,
+                    )
 
     # llh
     if test in (
@@ -307,41 +309,48 @@ def test_ude(test):
         controller=diffrax.PIDController(atol=1e-14, rtol=1e-14),
         max_steps=2**16,
     )
-    expected = pd.concat(
-        [
-            pd.read_csv(test_dir / simulation, sep="\t")
-            for simulation in solutions["grad_llh_files"]
-        ]
-    ).set_index(petab.PARAMETER_ID)
-    actual_dict = {}
-    for ip in expected.index:
-        if ip in jax_problem.parameter_ids:
-            actual_dict[ip] = sllh.parameters[
-                jax_problem.parameter_ids.index(ip)
-            ].item()
-        if ip.split("_")[0] in jax_problem.model.nns:
-            net = ip.split("_")[0]
-            layer = ip.split("_")[1]
-            attribute = ip.split("_")[2]
-            index = tuple(np.array(ip.split("_")[3:]).astype(int))
-
-            attr_grad = getattr(sllh.model.nns[net].layers[layer], attribute)
-            if (
-                isinstance(
-                    sllh.model.nns[net].layers[layer], eqx.nn.ConvTranspose
-                )
-                and attribute == "weight"
-            ):
-                # invert np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(0, 1)
-                attr_grad = np.flip(
-                    attr_grad.swapaxes(0, 1),
-                    axis=tuple(range(2, attr_grad.ndim)),
-                )
-            actual_dict[ip] = attr_grad[*index].item()
-    actual = pd.Series(actual_dict).loc[expected.index].values
-    np.testing.assert_allclose(
-        actual,
-        expected["value"].values,
-        atol=solutions["tol_grad_llh"],
-        rtol=solutions["tol_grad_llh"],
-    )
+    for component, file in solutions["grad_llh_files"].items():
+        actual_dict = {}
+        if component == "mech":
+            expected = pd.read_csv(test_dir / file, sep="\t").set_index(
+                petab.PARAMETER_ID
+            )
+            for ip in expected.index:
+                if ip in jax_problem.parameter_ids:
+                    actual_dict[ip] = sllh.parameters[
+                        jax_problem.parameter_ids.index(ip)
+                    ].item()
+            actual = pd.Series(actual_dict).loc[expected.index].values
+            np.testing.assert_allclose(
+                actual,
+                expected["value"].values,
+                atol=solutions["tol_grad_llh"],
+                rtol=solutions["tol_grad_llh"],
+            )
+        else:
+            expected = h5py.File(test_dir / file, "r")
+            for layer_name, layer in jax_problem.model.nns[
+                component
+            ].layers.items():
+                for attribute in dir(layer):
+                    if not isinstance(
+                        getattr(layer, attribute), jax.numpy.ndarray
+                    ):
+                        continue
+                    actual = getattr(
+                        sllh.model.nns[component].layers[layer_name], attribute
+                    )
+                    if (
+                        isinstance(layer, eqx.nn.ConvTranspose)
+                        and attribute == "weight"
+                    ):
+                        actual = np.flip(
+                            actual.swapaxes(0, 1),
+                            axis=tuple(range(2, actual.ndim)),
+                        )
+                    np.testing.assert_allclose(
+                        actual,
+                        expected[layer_name][attribute][:],
+                        atol=solutions["tol_grad_llh"],
+                        rtol=solutions["tol_grad_llh"],
+                    )
