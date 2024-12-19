@@ -623,7 +623,9 @@ def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
                 assert rdata.sy.size > 0
                 assert rdata.ssigmay.size > 0
                 assert rdata.sllh.size > 0
+                assert not np.isnan(rdata.sllh).any()
             case amici.SensitivityMethod.adjoint:
                 assert rdata.sy is None
                 assert rdata.ssigmay is None
                 assert rdata.sllh.size > 0
+                assert not np.isnan(rdata.sllh).any()
