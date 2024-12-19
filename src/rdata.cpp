@@ -60,13 +60,17 @@ ReturnData::ReturnData(
     case RDataReporting::likelihood:
         initializeLikelihoodReporting(quadratic_llh);
         break;
+
+    case RDataReporting::observables_likelihood:
+        initializeObservablesLikelihoodReporting(quadratic_llh);
+        break;
     }
 }
 
 void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
     llh = getNaN();
     chi2 = getNaN();
-    if (sensi >= SensitivityOrder::first) {
+    if (sensi >= SensitivityOrder::first && sensi_meth != SensitivityMethod::none) {
         sllh.resize(nplist, getNaN());
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
@@ -75,6 +79,21 @@ void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
              || sensi >= SensitivityOrder::second)
             && enable_fim)
             FIM.resize(nplist * nplist, 0.0);
+    }
+}
+
+void ReturnData::initializeObservablesLikelihoodReporting(bool enable_fim) {
+    initializeLikelihoodReporting(enable_fim);
+
+    y.resize(nt * ny, 0.0);
+    sigmay.resize(nt * ny, 0.0);
+
+    if ((sensi_meth == SensitivityMethod::forward
+         && sensi >= SensitivityOrder::first)
+        || sensi >= SensitivityOrder::second) {
+
+        sy.resize(nt * ny * nplist, 0.0);
+        ssigmay.resize(nt * ny * nplist, 0.0);
     }
 }
 

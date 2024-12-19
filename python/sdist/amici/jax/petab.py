@@ -3,6 +3,7 @@ import shutil
 from numbers import Number
 from collections.abc import Iterable
 from pathlib import Path
+from collections.abc import Callable
 
 
 import diffrax
@@ -71,7 +72,7 @@ class JAXProblem(eqx.Module):
     :ivar _parameter_mappings:
         :class:`ParameterMappingForCondition` instances for each simulation condition.
     :ivar _measurements:
-        Subset measurement dataframes for each simulation condition.
+        Preprocessed arrays for each simulation condition.
     :ivar _petab_problem:
         PEtab problem to simulate.
     """
@@ -82,7 +83,6 @@ class JAXProblem(eqx.Module):
     _measurements: dict[
         tuple[str, ...],
         tuple[
-            np.ndarray,
             np.ndarray,
             np.ndarray,
             np.ndarray,
@@ -188,7 +188,6 @@ class JAXProblem(eqx.Module):
                 np.ndarray,
                 np.ndarray,
                 np.ndarray,
-                np.ndarray,
             ],
         ],
         dict[tuple[str, ...], tuple[int, ...]],
@@ -214,11 +213,9 @@ class JAXProblem(eqx.Module):
             )
 
             ts = m[petab.TIME]
-            ts_preeq = ts[np.isfinite(ts) & (ts == 0)]
-            ts_dyn = ts[np.isfinite(ts) & (ts > 0)]
+            ts_dyn = ts[np.isfinite(ts)]
             ts_posteq = ts[np.logical_not(np.isfinite(ts))]
-            index = pd.concat([ts_preeq, ts_dyn, ts_posteq]).index
-            ts_preeq = ts_preeq.values
+            index = pd.concat([ts_dyn, ts_posteq]).index
             ts_dyn = ts_dyn.values
             ts_posteq = ts_posteq.values
             my = m[petab.MEASUREMENT].values
@@ -246,7 +243,6 @@ class JAXProblem(eqx.Module):
                 iy_trafos = np.zeros_like(iys)
 
             measurements[tuple(simulation_condition)] = (
-                ts_preeq,
                 ts_dyn,
                 ts_posteq,
                 my,
@@ -600,6 +596,9 @@ class JAXProblem(eqx.Module):
         simulation_condition: tuple[str, ...],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),  # noqa: F821, F722
         ret: ReturnValue = ReturnValue.llh,
@@ -622,7 +621,7 @@ class JAXProblem(eqx.Module):
         :return:
             Tuple of output value and simulation statistics
         """
-        ts_preeq, ts_dyn, ts_posteq, my, iys, iy_trafos = self._measurements[
+        ts_dyn, ts_posteq, my, iys, iy_trafos = self._measurements[
             simulation_condition
         ]
         p = self.load_model_parameters(simulation_condition[0])
@@ -630,8 +629,7 @@ class JAXProblem(eqx.Module):
             simulation_condition[0], p
         )
         return self.model.simulate_condition(
-            p=eqx.debug.backward_nan(p),
-            ts_init=jax.lax.stop_gradient(jnp.array(ts_preeq)),
+            p=p,
             ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
             ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),
             my=jax.lax.stop_gradient(jnp.array(my)),
@@ -643,6 +641,7 @@ class JAXProblem(eqx.Module):
             solver=solver,
             controller=controller,
             max_steps=max_steps,
+            steady_state_event=steady_state_event,
             adjoint=diffrax.RecursiveCheckpointAdjoint()
             if ret in (ReturnValue.llh, ReturnValue.chi2)
             else diffrax.DirectAdjoint(),
@@ -654,6 +653,9 @@ class JAXProblem(eqx.Module):
         simulation_condition: str,
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
         max_steps: jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:  # noqa: F821
         """
@@ -675,12 +677,13 @@ class JAXProblem(eqx.Module):
             simulation_condition, p
         )
         return self.model.preequilibrate_condition(
-            p=eqx.debug.backward_nan(p),
+            p=p,
             mask_reinit=mask_reinit,
             x_reinit=x_reinit,
             solver=solver,
             controller=controller,
             max_steps=max_steps,
+            steady_state_event=steady_state_event,
         )
 
 
@@ -691,6 +694,9 @@ def run_simulations(
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         **DEFAULT_CONTROLLER_SETTINGS
     ),
+    steady_state_event: Callable[
+        ..., diffrax._custom_types.BoolScalarLike
+    ] = diffrax.steady_state_event(),
     max_steps: int = 2**10,
     ret: ReturnValue | str = ReturnValue.llh,
 ):
@@ -705,6 +711,9 @@ def run_simulations(
         ODE solver to use for simulation.
     :param controller:
         Step size controller to use for simulation.
+    :param steady_state_event:
+        Steady state event function to use for pre-/post-equilibration. Allows customisation of the steady state
+        condition, see :func:`diffrax.steady_state_event` for details.
     :param max_steps:
         Maximum number of steps to take during simulation.
     :param ret:
@@ -719,7 +728,9 @@ def run_simulations(
         simulation_conditions = problem.get_all_simulation_conditions()
 
     preeqs = {
-        sc: problem.run_preequilibration(sc, solver, controller, max_steps)
+        sc: problem.run_preequilibration(
+            sc, solver, controller, steady_state_event, max_steps
+        )
         # only run preequilibration once per condition
         for sc in {sc[1] for sc in simulation_conditions if len(sc) > 1}
     }
@@ -729,6 +740,7 @@ def run_simulations(
             sc,
             solver,
             controller,
+            steady_state_event,
             max_steps,
             preeqs.get(sc[1])[0] if len(sc) > 1 else jnp.array([]),
             ret=ret,
@@ -753,6 +765,9 @@ def petab_simulate(
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         **DEFAULT_CONTROLLER_SETTINGS
     ),
+    steady_state_event: Callable[
+        ..., diffrax._custom_types.BoolScalarLike
+    ] = diffrax.steady_state_event(),
     max_steps: int = 2**10,
 ):
     """
@@ -773,6 +788,7 @@ def petab_simulate(
         problem,
         solver=solver,
         controller=controller,
+        steady_state_event=steady_state_event,
         max_steps=max_steps,
         ret=ReturnValue.y,
     )
@@ -780,7 +796,7 @@ def petab_simulate(
     for sc, ys in y.items():
         obs = [
             problem.model.observable_ids[io]
-            for io in problem._measurements[sc][4]
+            for io in problem._measurements[sc][3]
         ]
         t = jnp.concat(problem._measurements[sc][:2])
         df_sc = pd.DataFrame(

@@ -11,11 +11,12 @@ import jax
 import diffrax
 import numpy as np
 from beartype import beartype
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
 from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from amici.petab.petab_import import import_petab_problem
-from amici.jax import JAXProblem, ReturnValue
+from amici.jax import JAXProblem, ReturnValue, run_simulations
 from numpy.testing import assert_allclose
 from test_petab_objective import lotka_volterra  # noqa: F401
 
@@ -179,8 +180,7 @@ def check_fields_jax(
     iys = iys.flatten()
     iy_trafos = np.zeros_like(iys)
 
-    ts_init = ts[ts == 0]
-    ts_dyn = ts[ts > 0]
+    ts_dyn = ts
     ts_posteq = np.array([])
 
     par_dict = {
@@ -190,7 +190,6 @@ def check_fields_jax(
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
     kwargs = {
-        "ts_init": jnp.array(ts_init),
         "ts_dyn": jnp.array(ts_dyn),
         "ts_posteq": jnp.array(ts_posteq),
         "my": jnp.array(my),
@@ -200,6 +199,7 @@ def check_fields_jax(
         "solver": diffrax.Kvaerno5(),
         "controller": diffrax.PIDController(atol=ATOL_SIM, rtol=RTOL_SIM),
         "adjoint": diffrax.RecursiveCheckpointAdjoint(),
+        "steady_state_event": diffrax.steady_state_event(),
         "max_steps": 2**8,  # max_steps
     }
     fun = beartype(jax_model.simulate_condition)
@@ -266,6 +266,28 @@ def check_fields_jax(
                 rtol=1e-5,
                 err_msg=f"field {field} does not match",
             )
+
+
+def test_preequilibration_failure(lotka_volterra):  # noqa: F811
+    petab_problem = lotka_volterra
+    # oscillating system, preequilibation should fail when interaction is active
+    with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
+        jax_model = import_petab_problem(
+            petab_problem, jax=True, model_output_dir=model_dir
+        )
+        jax_problem = JAXProblem(jax_model, petab_problem)
+        r = run_simulations(jax_problem)
+        assert not np.isinf(r[0].item())
+    petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
+        petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    )
+    with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
+        jax_model = import_petab_problem(
+            petab_problem, jax=True, model_output_dir=model_dir
+        )
+        jax_problem = JAXProblem(jax_model, petab_problem)
+        r = run_simulations(jax_problem)
+        assert np.isinf(r[0].item())
 
 
 @skip_on_valgrind
