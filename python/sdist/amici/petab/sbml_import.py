@@ -205,6 +205,7 @@ def import_model_sbml(
     non_estimated_parameters_as_constants=True,
     output_parameter_defaults: dict[str, float] | None = None,
     discard_sbml_annotations: bool = False,
+    hybridization: dict = None,
     jax: bool = False,
     **kwargs,
 ) -> amici.SbmlImporter:
