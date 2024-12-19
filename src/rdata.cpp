@@ -811,6 +811,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
 
 void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
     if (rdata_reporting == RDataReporting::likelihood
+        || rdata_reporting == RDataReporting::observables_likelihood
         || rdata_reporting == RDataReporting::full) {
         llh = 0.0;
         std::fill(sllh.begin(), sllh.end(), 0.0);
