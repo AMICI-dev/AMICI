@@ -10,11 +10,11 @@ def dict2hdf5(object, dictionary):
             if not len(value):
                 dtype = "f8"
             elif isArray(value[0]):
-                if isinstance(value[0][0], (np.float64, float)):
+                if isinstance(value[0][0], (np.float64 | float)):
                     dtype = "f8"
                 else:
                     dtype = "<i4"
-            elif isinstance(value[0], (np.float64, float)):
+            elif isinstance(value[0], (np.float64 | float)):
                 dtype = "f8"
             else:
                 dtype = "<i4"
@@ -32,14 +32,7 @@ def dict2attrs(object, dictionary):
 
 def isArray(var):
     return isinstance(
-        var,
-        (
-            list,
-            tuple,
-            np.ndarray,
-            pd.core.frame.DataFrame,
-            pd.core.series.Series,
-        ),
+        var, list | tuple | np.ndarray | pd.DataFrame | pd.Series
     )
 
 

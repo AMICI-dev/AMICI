@@ -3,7 +3,6 @@
 import logging
 import numbers
 import warnings
-from typing import Union
 from collections.abc import Sequence
 
 import amici
@@ -31,7 +30,7 @@ from .util import get_states_in_condition_table
 
 logger = logging.getLogger(__name__)
 
-SingleParameterMapping = dict[str, Union[numbers.Number, str]]
+SingleParameterMapping = dict[str, numbers.Number | str]
 SingleScaleMapping = dict[str, str]
 
 
