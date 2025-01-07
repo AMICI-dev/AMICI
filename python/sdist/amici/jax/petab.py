@@ -1,4 +1,5 @@
 """PEtab wrappers for JAX models.""" ""
+
 import shutil
 from numbers import Number
 from collections.abc import Iterable

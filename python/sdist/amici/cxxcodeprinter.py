@@ -75,12 +75,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         )
         if len(expr.args) == 1:
             return self._print(arg0)
-        return "{}{}({}, {})".format(
-            self._ns,
-            cpp_fun,
-            self._print(arg0),
-            self._print(sympy_fun(*expr.args[1:])),
-        )
+        return f"{self._ns}{cpp_fun}({self._print(arg0)}, {self._print(sympy_fun(*expr.args[1:]))})"
 
     def _print_Min(self, expr):
         from sympy.functions.elementary.miscellaneous import Min
