@@ -150,7 +150,7 @@ def import_petab_problem(
             from petab_sciml import PetabScimlStandard
 
             config = petab_problem.extensions_config["petab_sciml"]
-            hybridisation = {
+            hybridization = {
                 net_id: {
                     "model": PetabScimlStandard.load_data(
                         Path() / net_config["file"]
@@ -190,7 +190,7 @@ def import_petab_problem(
                     "petab_sciml extension is currently only supported for sbml models"
                 )
         else:
-            hybridisation = None
+            hybridization = None
 
         # compile the model
         if petab_problem.model.type_id == MODEL_TYPE_PYSB:
@@ -207,7 +207,7 @@ def import_petab_problem(
                 model_name=model_name,
                 model_output_dir=model_output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-                hybridisation=hybridisation,
+                hybridization=hybridization,
                 jax=jax,
                 **kwargs,
             )

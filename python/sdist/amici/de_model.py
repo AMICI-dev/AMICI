@@ -2336,15 +2336,15 @@ class DEModel:
             + self._splines
         )
 
-    def _process_hybridisation(self, hybridisation: dict) -> None:
+    def _process_hybridization(self, hybridization: dict) -> None:
         """
         Parses the hybridisation information and updates the model accordingly
 
-        :param hybridisation:
-            hybridisation information
+        :param hybridization:
+            hybridization information
         """
         added_expressions = False
-        for net_id, net in hybridisation.items():
+        for net_id, net in hybridization.items():
             if not (
                 net["hybridization"]["output"] == "ode"
                 or net["hybridization"]["input"] == "ode"

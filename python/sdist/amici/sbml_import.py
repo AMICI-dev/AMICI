@@ -458,7 +458,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = True,
-        hybridisation: dict = None,
+        hybridization: dict = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -539,7 +539,7 @@ class SbmlImporter:
             simplify=simplify,
             cache_simplify=cache_simplify,
             log_as_log10=log_as_log10,
-            hybridisation=hybridisation,
+            hybridization=hybridization,
         )
 
         from amici.jax.ode_export import ODEExporter
@@ -549,7 +549,7 @@ class SbmlImporter:
             model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
-            hybridisation=hybridisation,
+            hybridisation=hybridization,
         )
         exporter.generate_model_code()
 
@@ -568,7 +568,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         log_as_log10: bool = True,
         hardcode_symbols: Sequence[str] = None,
-        hybridisation: dict = None,
+        hybridization: dict = None,
     ) -> DEModel:
         """Generate an ODEModel from this SBML model.
 
@@ -731,8 +731,8 @@ class SbmlImporter:
         if compute_conservation_laws:
             self._process_conservation_laws(ode_model)
 
-        if hybridisation:
-            ode_model._process_hybridisation(hybridisation)
+        if hybridization:
+            ode_model._process_hybridization(hybridization)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         ode_model.generate_basic_variables()
