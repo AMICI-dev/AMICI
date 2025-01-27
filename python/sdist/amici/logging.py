@@ -127,8 +127,8 @@ def set_log_level(logger: logging.Logger, log_level: int | bool) -> None:
 
         if logger.getEffectiveLevel() != log_level:
             logger.debug(
-                "Changing log_level from %d to %d"
-                % (logger.getEffectiveLevel(), log_level)
+                f"Changing log_level from {logger.getEffectiveLevel()} "
+                f"to {log_level}"
             )
             logger.setLevel(log_level)
 
