@@ -903,6 +903,9 @@ def petab_simulate(
         Step size controller to use for simulation.
     :param max_steps:
         Maximum number of steps to take during simulation.
+    :param steady_state_event:
+        Steady state event function to use for pre-/post-equilibration. Allows customisation of the steady state
+        condition, see :func:`diffrax.steady_state_event` for details.
     :return:
         petab simulation dataframe.
     """
@@ -915,20 +918,25 @@ def petab_simulate(
         ret=ReturnValue.y,
     )
     dfs = []
-    for sc, ys in y.items():
+    for ic, sc in enumerate(r["dynamic_conditions"]):
         obs = [
             problem.model.observable_ids[io]
-            for io in problem._measurements[sc][3]
+            for io in problem._iys[ic, problem._ts_masks[ic, :]]
         ]
-        t = jnp.concat(problem._measurements[sc][:2])
+        t = jnp.concat(
+            (
+                problem._ts_dyn[ic, :],
+                problem._ts_posteq[ic, :],
+            )
+        )
         df_sc = pd.DataFrame(
             {
-                petab.SIMULATION: ys,
-                petab.TIME: t,
+                petab.SIMULATION: y[ic, problem._ts_masks[ic, :]],
+                petab.TIME: t[problem._ts_masks[ic, :]],
                 petab.OBSERVABLE_ID: obs,
-                petab.SIMULATION_CONDITION_ID: [sc[0]] * len(t),
+                petab.SIMULATION_CONDITION_ID: [sc] * len(t),
             },
-            index=problem._petab_measurement_indices[sc],
+            index=problem._petab_measurement_indices[ic, :],
         )
         if (
             petab.OBSERVABLE_PARAMETERS
@@ -936,19 +944,23 @@ def petab_simulate(
         ):
             df_sc[petab.OBSERVABLE_PARAMETERS] = (
                 problem._petab_problem.measurement_df.query(
-                    f"{petab.SIMULATION_CONDITION_ID} == '{sc[0]}'"
+                    f"{petab.SIMULATION_CONDITION_ID} == '{sc}'"
                 )[petab.OBSERVABLE_PARAMETERS]
             )
         if petab.NOISE_PARAMETERS in problem._petab_problem.measurement_df:
             df_sc[petab.NOISE_PARAMETERS] = (
                 problem._petab_problem.measurement_df.query(
-                    f"{petab.SIMULATION_CONDITION_ID} == '{sc[0]}'"
+                    f"{petab.SIMULATION_CONDITION_ID} == '{sc}'"
                 )[petab.NOISE_PARAMETERS]
             )
         if (
             petab.PREEQUILIBRATION_CONDITION_ID
             in problem._petab_problem.measurement_df
         ):
-            df_sc[petab.PREEQUILIBRATION_CONDITION_ID] = sc[1]
+            df_sc[petab.PREEQUILIBRATION_CONDITION_ID] = (
+                problem._petab_problem.measurement_df.query(
+                    f"{petab.SIMULATION_CONDITION_ID} == '{sc}'"
+                )[petab.PREEQUILIBRATION_CONDITION_ID]
+            )
         dfs.append(df_sc)
     return pd.concat(dfs).sort_index()
