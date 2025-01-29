@@ -479,6 +479,7 @@ class JAXModel(eqx.Module):
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
@@ -521,6 +522,9 @@ class JAXModel(eqx.Module):
             x = x_preeq
         else:
             x = self._x0(p)
+
+        if not ts_mask.shape[0]:
+            ts_mask = jnp.zeros_like(my, dtype=jnp.bool_)
 
         # Re-initialization
         if x_reinit.shape[0]:
@@ -566,9 +570,11 @@ class JAXModel(eqx.Module):
         )
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
+
         x = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
+        nllhs = jnp.where(ts_mask, nllhs, 0.0)
         llh = -jnp.sum(nllhs)
 
         stats = dict(
@@ -608,10 +614,8 @@ class JAXModel(eqx.Module):
             ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys), iy_trafos)
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
-                output = jnp.sum(
-                    jnp.square(ys_obj - m_obj)
-                    / jnp.square(self._sigmays(ts, x, p, tcl, iys))
-                )
+                sigma_obj = self._sigmays(ts, x, p, tcl, iys)
+                output = jnp.sum(jnp.square((ys_obj - m_obj) / sigma_obj))
             else:
                 output = ys_obj - m_obj
         else:
