@@ -80,6 +80,7 @@ class JAXProblem(eqx.Module):
 
     parameters: jnp.ndarray
     model: JAXModel
+    simulation_conditions: tuple[tuple[str, ...], ...]
     _parameter_mappings: dict[str, ParameterMappingForCondition]
     _ts_dyn: np.ndarray
     _ts_posteq: np.ndarray
@@ -101,6 +102,7 @@ class JAXProblem(eqx.Module):
         """
         self.model = model
         scs = petab_problem.get_simulation_conditions_from_measurement_df()
+        self.simulation_conditions = tuple(tuple(sc) for sc in scs.values)
         self._petab_problem = petab_problem
         self._parameter_mappings = self._get_parameter_mappings(scs)
         (
@@ -333,8 +335,6 @@ class JAXProblem(eqx.Module):
                 )
             ]
         )
-
-        # create mask for my
 
         return ts_dyn, ts_posteq, my, iys, iy_trafos, ts_masks, petab_indices
 
@@ -811,7 +811,9 @@ def run_simulations(
     :param problem:
         Problem to run simulations for.
     :param simulation_conditions:
-        Simulation conditions to run simulations for.
+        Simulation conditions to run simulations for. This is a list of tuples, where each tuple contains the values for
+        the simulation condition. The first element in the tuple is the dynamic condition, the second element is the
+        Default is to run simulations for all conditions.
     :param solver:
         ODE solver to use for simulation.
     :param controller:
@@ -837,6 +839,12 @@ def run_simulations(
         {sc[1] for sc in simulation_conditions if len(sc) > 1}
     )
 
+    conditions = {
+        "dynamic_conditions": dynamic_conditions,
+        "preequilibration_conditions": preequilibration_conditions,
+        "simulation_conditions": simulation_conditions,
+    }
+
     if preequilibration_conditions:
         preeqs, preresults = problem.run_preequilibrations(
             preequilibration_conditions,
@@ -850,35 +858,38 @@ def run_simulations(
             "stats_preeq": None,
         }
 
-    preeq_array = jnp.stack(
-        [
-            preeqs[preequilibration_conditions.index(sc[1]), :]
-            if len(sc) > 1
-            else jnp.array([])
-            for sc in simulation_conditions
-        ]
-    )
-
-    output, results = problem.run_simulations(
-        dynamic_conditions,
-        preeq_array,
-        solver,
-        controller,
-        steady_state_event,
-        max_steps,
-        ret,
-    )
+    if dynamic_conditions:
+        preeq_array = jnp.stack(
+            [
+                preeqs[preequilibration_conditions.index(sc[1]), :]
+                if len(sc) > 1
+                else jnp.array([])
+                for sc in simulation_conditions
+            ]
+        )
+        output, results = problem.run_simulations(
+            dynamic_conditions,
+            preeq_array,
+            solver,
+            controller,
+            steady_state_event,
+            max_steps,
+            ret,
+        )
+    else:
+        output = jnp.array(0.0)
+        results = {
+            "llh": jnp.array([]),
+            "stats_dyn": None,
+            "stats_posteq": None,
+            "ts": jnp.array([]),
+            "x": jnp.array([]),
+        }
 
     if ret in (ReturnValue.llh, ReturnValue.chi2):
         output = jnp.sum(output)
 
-    return output, {
-        "preequilibration_conditions": preequilibration_conditions,
-        "dynamic_conditions": dynamic_conditions,
-        "dynamic": results["stats_dyn"],
-        "posteq": results["stats_posteq"],
-        "preeq": preresults["stats_preeq"],
-    }
+    return output, results | preresults | conditions
 
 
 def petab_simulate(
