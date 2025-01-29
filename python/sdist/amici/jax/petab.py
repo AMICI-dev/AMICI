@@ -811,9 +811,9 @@ def run_simulations(
     :param problem:
         Problem to run simulations for.
     :param simulation_conditions:
-        Simulation conditions to run simulations for. This is a list of tuples, where each tuple contains the values for
-        the simulation condition. The first element in the tuple is the dynamic condition, the second element is the
-        Default is to run simulations for all conditions.
+        Simulation conditions to run simulations for. This is a series of tuples, where each tuple contains the
+        simulation condition or the pre-equilibration condition followed by the simulation condition. Default is to run
+        simulations for all conditions.
     :param solver:
         ODE solver to use for simulation.
     :param controller:
