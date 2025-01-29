@@ -548,6 +548,37 @@ class JAXProblem(eqx.Module):
         """
         return eqx.tree_at(lambda p: p.parameters, self, p)
 
+    def _prepare_conditions(
+        self, conditions: Iterable[str]
+    ) -> tuple[
+        jt.Float[jt.Array, "np"],  # noqa: F821
+        jt.Bool[jt.Array, "nx"],  # noqa: F821
+        jt.Float[jt.Array, "nx"],  # noqa: F821
+    ]:
+        """
+        Prepare conditions for simulation.
+
+        :param conditions:
+            Simulation conditions to prepare.
+        :return:
+            Tuple of parameter arrays, reinitialisation masks and reinitialisation values.
+        """
+        p_array = jnp.stack([self.load_parameters(sc) for sc in conditions])
+
+        mask_reinit_array = jnp.stack(
+            [
+                self.load_reinitialisation(sc, p)[0]
+                for sc, p in zip(conditions, p_array)
+            ]
+        )
+        x_reinit_array = jnp.stack(
+            [
+                self.load_reinitialisation(sc, p)[1]
+                for sc, p in zip(conditions, p_array)
+            ]
+        )
+        return p_array, mask_reinit_array, x_reinit_array
+
     @eqx.filter_vmap(
         in_axes={
             "max_steps": None,
@@ -577,14 +608,36 @@ class JAXProblem(eqx.Module):
         """
         Run a simulation for a given simulation condition.
 
+        :param p:
+            Parameters for the simulation condition
+        :param ts_dyn:
+            (Padded) dynamic time points
+        :param ts_posteq:
+            (Padded) ost-equilibrium time points
+        :param my:
+            (Padded) measurements
+        :param iys:
+            (Padded) observable indices
+        :param iy_trafos:
+            (Padded) observable transformations indices
+        :param mask_reinit:
+            Mask for states that need reinitialisation
+        :param x_reinit:
+            Reinitialisation values for states
         :param solver:
             ODE solver to use for simulation
         :param controller:
             Step size controller to use for simulation
+        :param steady_state_event:
+            Steady state event function to use for post-equilibration. Allows customisation of the steady state
+            condition, see :func:`diffrax.steady_state_event` for details.
         :param max_steps:
             Maximum number of steps to take during simulation
         :param x_preeq:
-            Pre-equilibration state if available
+            Pre-equilibration state. Can be empty if no pre-equilibration is available, in which case the states will
+            be initialised to the model default values.
+        :param ts_mask:
+            padding mask, see :meth:`JAXModel.simulate_condition` for details.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
         :return:
@@ -611,6 +664,61 @@ class JAXProblem(eqx.Module):
             ret=ret,
         )
 
+    def run_simulations(
+        self,
+        simulation_conditions: list[str],
+        preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
+        max_steps: jnp.int_,
+        ret: ReturnValue = ReturnValue.llh,
+    ):
+        """
+        Run simulations for a list of simulation conditions.
+        :param simulation_conditions:
+            List of simulation conditions to run simulations for.
+        :param preeq_array:
+            Matrix of pre-equilibrated states for the simulation conditions. Ordering must match the simulation
+            conditions. If no pre-equilibration is available for a condition, the corresponding row must be empty.
+        :param solver:
+            ODE solver to use for simulation.
+        :param controller:
+            Step size controller to use for simulation.
+        :param steady_state_event:
+            Steady state event function to use for post-equilibration. Allows customisation of the steady state
+            condition, see :func:`diffrax.steady_state_event` for details.
+        :param max_steps:
+            Maximum number of steps to take during simulation.
+        :param ret:
+            which output to return. See :class:`ReturnValue` for available options.
+        :return:
+            Output value and condition specific results and statistics. Results and statistics are returned as a dict
+            with arrays with the leading dimension corresponding to the simulation conditions.
+        """
+        p_array, mask_reinit_array, x_reinit_array = self._prepare_conditions(
+            simulation_conditions
+        )
+        return self.run_simulation(
+            p_array,
+            self._ts_dyn,
+            self._ts_posteq,
+            self._my,
+            self._iys,
+            self._iy_trafos,
+            mask_reinit_array,
+            x_reinit_array,
+            solver,
+            controller,
+            steady_state_event,
+            max_steps,
+            preeq_array,
+            self._ts_masks,
+            ret,
+        )
+
     @eqx.filter_vmap(
         in_axes={
             "max_steps": None,
@@ -632,12 +740,19 @@ class JAXProblem(eqx.Module):
         """
         Run a pre-equilibration simulation for a given simulation condition.
 
-        :param simulation_condition:
-            Simulation condition to run simulation for.
+        :param p:
+            Parameters for the simulation condition
+        :param mask_reinit:
+            Mask for states that need reinitialisation
+        :param x_reinit:
+            Reinitialisation values for states
         :param solver:
             ODE solver to use for simulation
         :param controller:
             Step size controller to use for simulation
+        :param steady_state_event:
+            Steady state event function to use for pre-equilibration. Allows customisation of the steady state
+            condition, see :func:`diffrax.steady_state_event` for details.
         :param max_steps:
             Maximum number of steps to take during simulation
         :return:
@@ -651,6 +766,29 @@ class JAXProblem(eqx.Module):
             controller=controller,
             max_steps=max_steps,
             steady_state_event=steady_state_event,
+        )
+
+    def run_preequilibrations(
+        self,
+        simulation_conditions: list[str],
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
+        max_steps: jnp.int_,
+    ):
+        p_array, mask_reinit_array, x_reinit_array = self._prepare_conditions(
+            simulation_conditions
+        )
+        return self.run_preequilibration(
+            p_array,
+            mask_reinit_array,
+            x_reinit_array,
+            solver,
+            controller,
+            steady_state_event,
+            max_steps,
         )
 
 
@@ -700,13 +838,8 @@ def run_simulations(
     )
 
     if preequilibration_conditions:
-        p_array, mask_reinit_array, x_reinit_array = _prepare_conditions(
-            problem, preequilibration_conditions
-        )
-        preeqs, preresults = problem.run_preequilibration(
-            p_array,
-            mask_reinit_array,
-            x_reinit_array,
+        preeqs, preresults = problem.run_preequilibrations(
+            preequilibration_conditions,
             solver,
             controller,
             steady_state_event,
@@ -726,25 +859,13 @@ def run_simulations(
         ]
     )
 
-    ### simulation
-    p_array, mask_reinit_array, x_reinit_array = _prepare_conditions(
-        problem, dynamic_conditions
-    )
-    output, results = problem.run_simulation(
-        p_array,
-        problem._ts_dyn,
-        problem._ts_posteq,
-        problem._my,
-        problem._iys,
-        problem._iy_trafos,
-        mask_reinit_array,
-        x_reinit_array,
+    output, results = problem.run_simulations(
+        dynamic_conditions,
+        preeq_array,
         solver,
         controller,
         steady_state_event,
         max_steps,
-        preeq_array,
-        problem._ts_masks,
         ret,
     )
 
@@ -758,24 +879,6 @@ def run_simulations(
         "posteq": results["stats_posteq"],
         "preeq": preresults["stats_preeq"],
     }
-
-
-def _prepare_conditions(problem: JAXProblem, conditions: Iterable[str]):
-    p_array = jnp.stack([problem.load_parameters(sc) for sc in conditions])
-
-    mask_reinit_array = jnp.stack(
-        [
-            problem.load_reinitialisation(sc, p)[0]
-            for sc, p in zip(conditions, p_array)
-        ]
-    )
-    x_reinit_array = jnp.stack(
-        [
-            problem.load_reinitialisation(sc, p)[1]
-            for sc, p in zip(conditions, p_array)
-        ]
-    )
-    return p_array, mask_reinit_array, x_reinit_array
 
 
 def petab_simulate(

@@ -511,10 +511,15 @@ class JAXModel(eqx.Module):
         :param adjoint:
             adjoint method. Recommended values are `diffrax.DirectAdjoint()` for jax.jacfwd (with vector-valued
             outputs) and  `diffrax.RecursiveCheckpointAdjoint()` for jax.grad (for scalar-valued outputs).
+        :param steady_state_event:
+            event function for steady state. See :func:`diffrax.steady_state_event` for details.
         :param max_steps:
             maximum number of solver steps
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
+        :param ts_mask:
+            mask to remove (padded) time points. If `True`, the corresponding time point is used for the evaluation of
+            the output. Only applied if ret is ReturnValue.llh, ReturnValue.nllhs, ReturnValue.res, or ReturnValue.chi2.
         :return:
             output according to `ret` and statistics
         """
@@ -524,7 +529,7 @@ class JAXModel(eqx.Module):
             x = self._x0(p)
 
         if not ts_mask.shape[0]:
-            ts_mask = jnp.zeros_like(my, dtype=jnp.bool_)
+            ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
 
         # Re-initialization
         if x_reinit.shape[0]:
@@ -615,9 +620,12 @@ class JAXModel(eqx.Module):
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
                 sigma_obj = self._sigmays(ts, x, p, tcl, iys)
-                output = jnp.sum(jnp.square((ys_obj - m_obj) / sigma_obj))
+                chi2 = jnp.square((ys_obj - m_obj) / sigma_obj)
+                chi2 = jnp.where(ts_mask, chi2, 0.0)
+                output = jnp.sum(chi2)
             else:
                 output = ys_obj - m_obj
+                output = jnp.where(ts_mask, output, 0.0)
         else:
             raise NotImplementedError(f"Return value {ret} not implemented.")
 
