@@ -2,7 +2,7 @@
 
 import shutil
 from numbers import Number
-from collections.abc import Iterable
+from collections.abc import Sized, Iterable
 from pathlib import Path
 from collections.abc import Callable
 
@@ -88,6 +88,8 @@ class JAXProblem(eqx.Module):
     _iys: np.ndarray
     _iy_trafos: np.ndarray
     _ts_masks: np.ndarray
+    _ops: np.ndarray
+    _nps: np.ndarray
     _petab_measurement_indices: np.ndarray
     _petab_problem: petab.Problem
 
@@ -113,6 +115,8 @@ class JAXProblem(eqx.Module):
             self._iy_trafos,
             self._ts_masks,
             self._petab_measurement_indices,
+            self._ops,
+            self._nps,
         ) = self._get_measurements(scs)
 
         self.parameters = self._get_nominal_parameter_values()
@@ -192,6 +196,8 @@ class JAXProblem(eqx.Module):
         np.ndarray,
         np.ndarray,
         np.ndarray,
+        np.ndarray,
+        np.ndarray,
     ]:
         """
         Get measurements for the model based on the provided simulation conditions.
@@ -211,6 +217,27 @@ class JAXProblem(eqx.Module):
         """
         measurements = dict()
         petab_indices = dict()
+
+        n_pars = dict()
+        for col in [petab.OBSERVABLE_PARAMETERS, petab.NOISE_PARAMETERS]:
+            n_pars[col] = 0
+            if col in self._petab_problem.measurement_df:
+                if self._petab_problem.measurement_df[col].dtype == np.float64:
+                    n_pars[col] = 1 - int(
+                        self._petab_problem.measurement_df[col].isna().all()
+                    )
+                else:
+                    n_pars[col] = (
+                        self._petab_problem.measurement_df[col]
+                        .str.split(";")
+                        .apply(
+                            lambda x: len(x)
+                            if isinstance(x, Sized)
+                            else 1 - int(pd.isna(x))
+                        )
+                        .max()
+                    )
+
         for _, simulation_condition in simulation_conditions.iterrows():
             query = " & ".join(
                 [f"{k} == '{v}'" for k, v in simulation_condition.items()]
@@ -249,42 +276,85 @@ class JAXProblem(eqx.Module):
             else:
                 iy_trafos = np.zeros_like(iys)
 
+            parameter_overrides = dict()
+            for col in [petab.OBSERVABLE_PARAMETERS, petab.NOISE_PARAMETERS]:
+                if col not in m or m[col].isna().all():
+                    mat = jnp.ones((len(m), n_pars[col]))
+
+                elif m[col].dtype == np.float64:
+                    mat = np.pad(
+                        jnp.array(m[col].values),
+                        ((0, 0), (0, n_pars[col])),
+                        mode="edge",
+                    )
+
+                else:
+                    split_vals = m[col].str.split(";")
+                    list_vals = split_vals.apply(
+                        lambda x: x
+                        if isinstance(x, list)
+                        else []
+                        if pd.isna(x)
+                        else [float(x)]
+                    )
+                    vals = list_vals.apply(
+                        lambda x: np.pad(
+                            x,
+                            (0, n_pars[col] - len(x)),
+                            mode="constant",
+                            constant_values=1.0,
+                        )
+                    )
+                    mat = np.stack(vals)
+
+                parameter_overrides[col] = mat
+
             measurements[tuple(simulation_condition)] = (
                 ts_dyn,
                 ts_posteq,
                 my,
                 iys,
                 iy_trafos,
+                parameter_overrides[petab.OBSERVABLE_PARAMETERS],
+                parameter_overrides[petab.NOISE_PARAMETERS],
             )
             petab_indices[tuple(simulation_condition)] = tuple(index.tolist())
 
         # compute maximum lengths
         n_ts_dyn = max(
-            len(ts_dyn) for ts_dyn, _, _, _, _ in measurements.values()
+            len(ts_dyn) for ts_dyn, _, _, _, _, _, _ in measurements.values()
         )
         n_ts_posteq = max(
-            len(ts_posteq) for _, ts_posteq, _, _, _ in measurements.values()
+            len(ts_posteq)
+            for _, ts_posteq, _, _, _, _, _ in measurements.values()
         )
 
         # pad with last value and stack
         ts_dyn = np.stack(
             [
                 np.pad(x, (0, n_ts_dyn - len(x)), mode="edge")
-                for x, _, _, _, _ in measurements.values()
+                for x, _, _, _, _, _, _ in measurements.values()
             ]
         )
         ts_posteq = np.stack(
             [
                 np.pad(x, (0, n_ts_posteq - len(x)), mode="edge")
-                for _, x, _, _, _ in measurements.values()
+                for _, x, _, _, _, _, _ in measurements.values()
             ]
         )
 
         def pad_measurement(x_dyn, x_peq, n_ts_dyn, n_ts_posteq):
+            # only pad first axis
+            pad_width_dyn = tuple(
+                [(0, n_ts_dyn - len(x_dyn))] + [(0, 0)] * (x_dyn.ndim - 1)
+            )
+            pad_width_peq = tuple(
+                [(0, n_ts_posteq - len(x_peq))] + [(0, 0)] * (x_peq.ndim - 1)
+            )
             return np.concatenate(
                 (
-                    np.pad(x_dyn, (0, n_ts_dyn - len(x_dyn)), mode="edge"),
-                    np.pad(x_peq, (0, n_ts_posteq - len(x_peq)), mode="edge"),
+                    np.pad(x_dyn, pad_width_dyn, mode="edge"),
+                    np.pad(x_peq, pad_width_peq, mode="edge"),
                 )
             )
 
@@ -293,7 +363,7 @@ class JAXProblem(eqx.Module):
                 pad_measurement(
                     x[: len(tdyn)], x[len(tdyn) :], n_ts_dyn, n_ts_posteq
                 )
-                for tdyn, tpeq, x, _, _ in measurements.values()
+                for tdyn, tpeq, x, _, _, _, _ in measurements.values()
             ]
         )
         iys = np.stack(
@@ -301,7 +371,7 @@ class JAXProblem(eqx.Module):
                 pad_measurement(
                     x[: len(tdyn)], x[len(tdyn) :], n_ts_dyn, n_ts_posteq
                 )
-                for tdyn, tpeq, _, x, _ in measurements.values()
+                for tdyn, tpeq, _, x, _, _, _ in measurements.values()
             ]
         )
         iy_trafos = np.stack(
@@ -309,7 +379,23 @@ class JAXProblem(eqx.Module):
                 pad_measurement(
                     x[: len(tdyn)], x[len(tdyn) :], n_ts_dyn, n_ts_posteq
                 )
-                for tdyn, tpeq, _, _, x in measurements.values()
+                for tdyn, tpeq, _, _, x, _, _ in measurements.values()
+            ]
+        )
+        ops = np.stack(
+            [
+                pad_measurement(
+                    x[: len(tdyn)], x[len(tdyn) :], n_ts_dyn, n_ts_posteq
+                )
+                for tdyn, tpeq, _, _, _, x, _ in measurements.values()
+            ]
+        )
+        nps = np.stack(
+            [
+                pad_measurement(
+                    x[: len(tdyn)], x[len(tdyn) :], n_ts_dyn, n_ts_posteq
+                )
+                for tdyn, tpeq, _, _, _, _, x in measurements.values()
             ]
         )
         ts_masks = np.stack(
@@ -322,21 +408,34 @@ class JAXProblem(eqx.Module):
                         ),
                     )
                 )
-                for tdyn, tpeq, _, _, _ in measurements.values()
+                for tdyn, tpeq, _, _, _, _, _ in measurements.values()
             ]
         ).astype(bool)
         petab_indices = np.stack(
             [
                 pad_measurement(
-                    idx[: len(tdyn)], idx[len(tdyn) :], n_ts_dyn, n_ts_posteq
+                    np.array(idx[: len(tdyn)]),
+                    np.array(idx[len(tdyn) :]),
+                    n_ts_dyn,
+                    n_ts_posteq,
                 )
-                for (tdyn, tpeq, _, _, _), idx in zip(
+                for (tdyn, tpeq, _, _, _, _, _), idx in zip(
                     measurements.values(), petab_indices.values()
                 )
             ]
         )
 
-        return ts_dyn, ts_posteq, my, iys, iy_trafos, ts_masks, petab_indices
+        return (
+            ts_dyn,
+            ts_posteq,
+            my,
+            iys,
+            iy_trafos,
+            ts_masks,
+            petab_indices,
+            ops,
+            nps,
+        )
 
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
         simulation_conditions = (
@@ -549,35 +648,77 @@ class JAXProblem(eqx.Module):
         return eqx.tree_at(lambda p: p.parameters, self, p)
 
     def _prepare_conditions(
-        self, conditions: Iterable[str]
+        self,
+        conditions: list[tuple[str, ...]],
+        op_array: np.ndarray,
+        np_array: np.ndarray,
     ) -> tuple[
         jt.Float[jt.Array, "np"],  # noqa: F821
         jt.Bool[jt.Array, "nx"],  # noqa: F821
         jt.Float[jt.Array, "nx"],  # noqa: F821
+        jt.Float[jt.Array, "nt *nop"],  # noqa: F821
+        jt.Float[jt.Array, "nt *nnp"],  # noqa: F821
     ]:
         """
         Prepare conditions for simulation.
 
         :param conditions:
             Simulation conditions to prepare.
+        :param ts_mask:
+            Time point mask to use for padding.
         :return:
-            Tuple of parameter arrays, reinitialisation masks and reinitialisation values.
+            Tuple of parameter arrays, reinitialisation masks and reinitialisation values, observable parameters and
+            noise parameters.
         """
-        p_array = jnp.stack([self.load_parameters(sc) for sc in conditions])
+        p_array = jnp.stack([self.load_parameters(sc[0]) for sc in conditions])
+
+        def map_parameter(x, p):
+            if isinstance(x, Number):
+                return x
+            if x in self.model.parameter_ids:
+                return p[self.model.parameter_ids.index(x)]
+            if x in self.parameter_ids:
+                return jax_unscale(
+                    self.get_petab_parameter_by_id(x),
+                    self._petab_problem.parameter_df.loc[
+                        x, petab.PARAMETER_SCALE
+                    ],
+                )
+            return float(x)
+
+        if op_array.size:
+            op_array = jnp.stack(
+                [
+                    jnp.array(
+                        [map_parameter(x, p) for x in op_array[ic, :].ravel()]
+                    ).reshape(op_array.shape[1:])
+                    for ic, p in enumerate(p_array)
+                ]
+            )
+
+        if np_array.size:
+            np_array = jnp.stack(
+                [
+                    jnp.array(
+                        [map_parameter(x, p) for x in np_array[ic, :].ravel()]
+                    ).reshape(np_array.shape[1:])
+                    for ic, p in enumerate(p_array)
+                ]
+            )
 
         mask_reinit_array = jnp.stack(
             [
-                self.load_reinitialisation(sc, p)[0]
+                self.load_reinitialisation(sc[0], p)[0]
                 for sc, p in zip(conditions, p_array)
             ]
         )
         x_reinit_array = jnp.stack(
             [
-                self.load_reinitialisation(sc, p)[1]
+                self.load_reinitialisation(sc[0], p)[1]
                 for sc, p in zip(conditions, p_array)
             ]
         )
-        return p_array, mask_reinit_array, x_reinit_array
+        return p_array, mask_reinit_array, x_reinit_array, op_array, np_array
 
     @eqx.filter_vmap(
         in_axes={
@@ -593,6 +734,8 @@ class JAXProblem(eqx.Module):
         my: np.ndarray,
         iys: np.ndarray,
         iy_trafos: np.ndarray,
+        ops: jt.Float[jt.Array, "nt *nop"],  # noqa: F821, F722
+        nps: jt.Float[jt.Array, "nt *nnp"],  # noqa: F821, F722
         mask_reinit: jt.Bool[jt.Array, "nx"],  # noqa: F821, F722
         x_reinit: jt.Float[jt.Array, "nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
@@ -620,6 +763,10 @@ class JAXProblem(eqx.Module):
             (Padded) observable indices
         :param iy_trafos:
             (Padded) observable transformations indices
+        :param ops:
+            (Padded) observable parameters
+        :param nps:
+            (Padded) noise parameters
         :param mask_reinit:
             Mask for states that need reinitialisation
         :param x_reinit:
@@ -650,6 +797,8 @@ class JAXProblem(eqx.Module):
             my=jax.lax.stop_gradient(jnp.array(my)),
             iys=jax.lax.stop_gradient(jnp.array(iys)),
             iy_trafos=jax.lax.stop_gradient(jnp.array(iy_trafos)),
+            nps=nps,
+            ops=ops,
             x_preeq=x_preeq,
             mask_reinit=jax.lax.stop_gradient(mask_reinit),
             x_reinit=x_reinit,
@@ -666,7 +815,7 @@ class JAXProblem(eqx.Module):
 
     def run_simulations(
         self,
-        simulation_conditions: list[str],
+        simulation_conditions: list[tuple[str, ...]],
         preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
@@ -699,8 +848,10 @@ class JAXProblem(eqx.Module):
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
         """
-        p_array, mask_reinit_array, x_reinit_array = self._prepare_conditions(
-            simulation_conditions
+        p_array, mask_reinit_array, x_reinit_array, op_array, np_array = (
+            self._prepare_conditions(
+                simulation_conditions, self._ops, self._nps
+            )
         )
         return self.run_simulation(
             p_array,
@@ -709,6 +860,8 @@ class JAXProblem(eqx.Module):
             self._my,
             self._iys,
             self._iy_trafos,
+            op_array,
+            np_array,
             mask_reinit_array,
             x_reinit_array,
             solver,
@@ -779,8 +932,8 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        p_array, mask_reinit_array, x_reinit_array = self._prepare_conditions(
-            simulation_conditions
+        p_array, mask_reinit_array, x_reinit_array, _, _ = (
+            self._prepare_conditions(simulation_conditions)
         )
         return self.run_preequilibration(
             p_array,
@@ -869,7 +1022,7 @@ def run_simulations(
             ]
         )
         output, results = problem.run_simulations(
-            dynamic_conditions,
+            simulation_conditions,
             preeq_array,
             solver,
             controller,

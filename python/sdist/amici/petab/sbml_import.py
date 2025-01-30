@@ -1,4 +1,6 @@
 import logging
+import re
+
 import math
 import os
 import tempfile
@@ -345,16 +347,24 @@ def import_model_sbml(
             f"({len(sigmas)}) do not match."
         )
 
-    _workaround_observable_parameters(
-        observables, sigmas, sbml_model, output_parameter_defaults
-    )
     if not jax:
+        _workaround_observable_parameters(
+            observables, sigmas, sbml_model, output_parameter_defaults
+        )
         fixed_parameters = _workaround_initial_states(
             petab_problem=petab_problem,
             sbml_model=sbml_model,
             **kwargs,
         )
     else:
+        sigmas = {
+            obs: re.sub(f"(noiseParameter[0-9]+)_{obs}", r"\1", sigma)
+            for obs, sigma in sigmas.items()
+        }
+        for obs, obs_def in observables.items():
+            obs_def["formula"] = re.sub(
+                f"(observableParameter[0-9]+)_{obs}", r"\1", obs_def["formula"]
+            )
         fixed_parameters = []
 
     fixed_parameters.extend(
