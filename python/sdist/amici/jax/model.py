@@ -479,6 +479,7 @@ class JAXModel(eqx.Module):
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
         r"""
@@ -510,10 +511,15 @@ class JAXModel(eqx.Module):
         :param adjoint:
             adjoint method. Recommended values are `diffrax.DirectAdjoint()` for jax.jacfwd (with vector-valued
             outputs) and  `diffrax.RecursiveCheckpointAdjoint()` for jax.grad (for scalar-valued outputs).
+        :param steady_state_event:
+            event function for steady state. See :func:`diffrax.steady_state_event` for details.
         :param max_steps:
             maximum number of solver steps
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
+        :param ts_mask:
+            mask to remove (padded) time points. If `True`, the corresponding time point is used for the evaluation of
+            the output. Only applied if ret is ReturnValue.llh, ReturnValue.nllhs, ReturnValue.res, or ReturnValue.chi2.
         :return:
             output according to `ret` and statistics
         """
@@ -521,6 +527,9 @@ class JAXModel(eqx.Module):
             x = x_preeq
         else:
             x = self._x0(p)
+
+        if not ts_mask.shape[0]:
+            ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
 
         # Re-initialization
         if x_reinit.shape[0]:
@@ -566,9 +575,11 @@ class JAXModel(eqx.Module):
         )
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
+
         x = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
         nllhs = self._nllhs(ts, x, p, tcl, my, iys)
+        nllhs = jnp.where(ts_mask, nllhs, 0.0)
         llh = -jnp.sum(nllhs)
 
         stats = dict(
@@ -608,12 +619,13 @@ class JAXModel(eqx.Module):
             ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys), iy_trafos)
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
-                output = jnp.sum(
-                    jnp.square(ys_obj - m_obj)
-                    / jnp.square(self._sigmays(ts, x, p, tcl, iys))
-                )
+                sigma_obj = self._sigmays(ts, x, p, tcl, iys)
+                chi2 = jnp.square((ys_obj - m_obj) / sigma_obj)
+                chi2 = jnp.where(ts_mask, chi2, 0.0)
+                output = jnp.sum(chi2)
             else:
                 output = ys_obj - m_obj
+                output = jnp.where(ts_mask, output, 0.0)
         else:
             raise NotImplementedError(f"Return value {ret} not implemented.")
 

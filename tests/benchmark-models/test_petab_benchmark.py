@@ -274,16 +274,6 @@ def test_jax_llh(benchmark_problem):
 
     problem_id, petab_problem, amici_model = benchmark_problem
 
-    if problem_id in (
-        "Bachmann_MSB2011",
-        "Isensee_JCB2018",
-        "Lucarelli_CellSystems2018",
-        "SalazarCavazos_MBoC2020",
-        "Smith_BMCSystBiol2013",
-    ):
-        # confirmed to work (no gradients) 27/10/2024 but experienced high local runtime (M2 MBA, >30s)
-        pytest.skip("Excluded from JAX check due to excessive runtime")
-
     amici_solver = amici_model.getSolver()
     cur_settings = settings[problem_id]
     amici_solver.setAbsoluteTolerance(1e-8)
