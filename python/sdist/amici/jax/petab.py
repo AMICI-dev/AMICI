@@ -613,7 +613,7 @@ class JAXProblem(eqx.Module):
         :param ts_dyn:
             (Padded) dynamic time points
         :param ts_posteq:
-            (Padded) ost-equilibrium time points
+            (Padded) post-equilibrium time points
         :param my:
             (Padded) measurements
         :param iys:
