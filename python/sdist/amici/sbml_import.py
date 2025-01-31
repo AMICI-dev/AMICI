@@ -2305,6 +2305,10 @@ class SbmlImporter:
                 # recursive!
                 init = self._make_initial(get_species_initial(species))
                 sym_math = sym_math.subs(var, init)
+            elif var in self.symbols[SymbolId.SPECIES]:
+                sym_math = sym_math.subs(
+                    var, self.symbols[SymbolId.SPECIES][var]["init"]
+                )
             elif (
                 element := self.sbml.getElementBySId(element_id)
             ) and self.is_rate_rule_target(element):
