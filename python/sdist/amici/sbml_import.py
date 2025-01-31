@@ -1985,14 +1985,17 @@ class SbmlImporter:
             self.symbols[SymbolId.OBSERVABLE], "eventObservable"
         )
 
-        noise_pars = list(
-            {
-                name
-                for sigma in sigmas.values()
-                for symbol in sp.sympify(sigma).free_symbols
-                if re.match(r"noiseParameter\d+$", (name := str(symbol)))
-            }
-        )
+        if sigmas:
+            noise_pars = list(
+                {
+                    name
+                    for sigma in sigmas.values()
+                    for symbol in sp.sympify(sigma).free_symbols
+                    if re.match(r"noiseParameter\d+$", (name := str(symbol)))
+                }
+            )
+        else:
+            noise_pars = []
         self.symbols[SymbolId.NOISE_PARAMETER] = {
             symbol_with_assumptions(np): {"name": np}
             for np in sorted(
@@ -2000,14 +2003,19 @@ class SbmlImporter:
             )
         }
 
-        observable_pars = list(
-            {
-                name
-                for obs in observables.values()
-                for symbol in sp.sympify(obs["formula"]).free_symbols
-                if re.match(r"observableParameter\d+$", (name := str(symbol)))
-            }
-        )
+        if observables:
+            observable_pars = list(
+                {
+                    name
+                    for obs in observables.values()
+                    for symbol in sp.sympify(obs["formula"]).free_symbols
+                    if re.match(
+                        r"observableParameter\d+$", (name := str(symbol))
+                    )
+                }
+            )
+        else:
+            observable_pars = []
         self.symbols[SymbolId.OBSERVABLE_PARAMETER] = {
             symbol_with_assumptions(op): {"name": op}
             for op in sorted(
