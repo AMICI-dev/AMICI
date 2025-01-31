@@ -716,8 +716,18 @@ class JAXProblem(eqx.Module):
 
         :param conditions:
             Simulation conditions to prepare.
-        :param ts_mask:
-            Time point mask to use for padding.
+        :param op_numeric:
+            Numeric values for observable parameter overrides. If None, no overrides are used.
+        :param op_mask:
+            Mask for observable parameter overrides. True for free parameter overrides, False for numeric values.
+        :param op_indices:
+            Free parameter indices (wrt. `self.parameters`) for observable parameter overrides.
+        :param np_numeric:
+            Numeric values for noise parameter overrides. If None, no overrides are used.
+        :param np_mask:
+            Mask for noise parameter overrides. True for free parameter overrides, False for numeric values.
+        :param np_indices:
+            Free parameter indices (wrt. `self.parameters`) for noise parameter overrides.
         :return:
             Tuple of parameter arrays, reinitialisation masks and reinitialisation values, observable parameters and
             noise parameters.
