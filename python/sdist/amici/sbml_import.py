@@ -2292,9 +2292,16 @@ class SbmlImporter:
 
         sym_math, rateof_to_dummy = _rateof_to_dummy(sym_math)
 
-        for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            if "init" in species:
-                sym_math = smart_subs(sym_math, species_id, species["init"])
+        for var in sym_math.free_symbols:
+            # already recursive since _get_element_initial_assignment calls _make_initial
+            ia = self._get_element_initial_assignment(str(var))
+            if ia is not None:
+                sym_math = sym_math.subs(var, ia)
+
+            elif (species := self.sbml.getSpecies(str(var))) is not None:
+                # recursive!
+                init = self._make_initial(get_species_initial(species))
+                sym_math = sym_math.subs(var, init)
 
         sym_math = smart_subs(sym_math, sbml_time_symbol, sp.Float(0))
 
