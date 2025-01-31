@@ -2005,7 +2005,7 @@ class SbmlImporter:
                 name
                 for obs in observables.values()
                 for symbol in sp.sympify(obs["formula"]).free_symbols
-                if re.match(r"observableParameter\d+", (name := str(symbol)))
+                if re.match(r"observableParameter\d+$", (name := str(symbol)))
             }
         )
         self.symbols[SymbolId.OBSERVABLE_PARAMETER] = {
