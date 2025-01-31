@@ -1,5 +1,6 @@
 """PEtab wrappers for JAX models.""" ""
 
+import copy
 import shutil
 from numbers import Number
 from collections.abc import Sized, Iterable
@@ -173,13 +174,22 @@ class JAXProblem(eqx.Module):
             Dictionary mapping simulation conditions to parameter mappings.
         """
         scs = list(set(simulation_conditions.values.flatten()))
+        petab_problem = copy.deepcopy(self._petab_problem)
+        # remove observable and noise parameters from measurement dataframe as we are mapping them elsewhere
+        petab_problem.measurement_df.drop(
+            columns=[petab.OBSERVABLE_PARAMETERS, petab.NOISE_PARAMETERS],
+            inplace=True,
+            errors="ignore",
+        )
         mappings = create_parameter_mapping(
-            petab_problem=self._petab_problem,
+            petab_problem=petab_problem,
             simulation_conditions=[
                 {petab.SIMULATION_CONDITION_ID: sc} for sc in scs
             ],
             scaled_parameters=False,
+            allow_timepoint_specific_numeric_noise_parameters=True,
         )
+        # fill in dummy variables
         for mapping in mappings:
             for sim_var, value in mapping.map_sim_var.items():
                 if isinstance(value, Number) and not np.isfinite(value):
@@ -222,7 +232,9 @@ class JAXProblem(eqx.Module):
         for col in [petab.OBSERVABLE_PARAMETERS, petab.NOISE_PARAMETERS]:
             n_pars[col] = 0
             if col in self._petab_problem.measurement_df:
-                if self._petab_problem.measurement_df[col].dtype == np.float64:
+                if np.issubdtype(
+                    self._petab_problem.measurement_df[col].dtype, np.number
+                ):
                     n_pars[col] = 1 - int(
                         self._petab_problem.measurement_df[col].isna().all()
                     )
@@ -281,13 +293,8 @@ class JAXProblem(eqx.Module):
                 if col not in m or m[col].isna().all():
                     mat = jnp.ones((len(m), n_pars[col]))
 
-                elif m[col].dtype == np.float64:
-                    mat = np.pad(
-                        jnp.array(m[col].values),
-                        ((0, 0), (0, n_pars[col])),
-                        mode="edge",
-                    )
-
+                elif np.issubdtype(m[col].dtype, np.number):
+                    mat = np.expand_dims(m[col].values, axis=1)
                 else:
                     split_vals = m[col].str.split(";")
                     list_vals = split_vals.apply(
@@ -649,9 +656,9 @@ class JAXProblem(eqx.Module):
 
     def _prepare_conditions(
         self,
-        conditions: list[tuple[str, ...]],
-        op_array: np.ndarray,
-        np_array: np.ndarray,
+        conditions: list[str],
+        op_array: np.ndarray | None,
+        np_array: np.ndarray | None,
     ) -> tuple[
         jt.Float[jt.Array, "np"],  # noqa: F821
         jt.Bool[jt.Array, "nx"],  # noqa: F821
@@ -670,11 +677,9 @@ class JAXProblem(eqx.Module):
             Tuple of parameter arrays, reinitialisation masks and reinitialisation values, observable parameters and
             noise parameters.
         """
-        p_array = jnp.stack([self.load_parameters(sc[0]) for sc in conditions])
+        p_array = jnp.stack([self.load_parameters(sc) for sc in conditions])
 
         def map_parameter(x, p):
-            if isinstance(x, Number):
-                return x
             if x in self.model.parameter_ids:
                 return p[self.model.parameter_ids.index(x)]
             if x in self.parameter_ids:
@@ -684,9 +689,15 @@ class JAXProblem(eqx.Module):
                         x, petab.PARAMETER_SCALE
                     ],
                 )
-            return float(x)
+            if x in self._petab_problem.parameter_df.index:
+                return self._petab_problem.parameter_df.loc[
+                    x, petab.NOMINAL_VALUE
+                ]
+            if isinstance(x, str):
+                return float(x)
+            return x
 
-        if op_array.size:
+        if op_array is not None and op_array.size:
             op_array = jnp.stack(
                 [
                     jnp.array(
@@ -696,7 +707,7 @@ class JAXProblem(eqx.Module):
                 ]
             )
 
-        if np_array.size:
+        if np_array is not None and np_array.size:
             np_array = jnp.stack(
                 [
                     jnp.array(
@@ -708,13 +719,13 @@ class JAXProblem(eqx.Module):
 
         mask_reinit_array = jnp.stack(
             [
-                self.load_reinitialisation(sc[0], p)[0]
+                self.load_reinitialisation(sc, p)[0]
                 for sc, p in zip(conditions, p_array)
             ]
         )
         x_reinit_array = jnp.stack(
             [
-                self.load_reinitialisation(sc[0], p)[1]
+                self.load_reinitialisation(sc, p)[1]
                 for sc, p in zip(conditions, p_array)
             ]
         )
@@ -815,7 +826,7 @@ class JAXProblem(eqx.Module):
 
     def run_simulations(
         self,
-        simulation_conditions: list[tuple[str, ...]],
+        simulation_conditions: list[str],
         preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
@@ -933,7 +944,7 @@ class JAXProblem(eqx.Module):
         max_steps: jnp.int_,
     ):
         p_array, mask_reinit_array, x_reinit_array, _, _ = (
-            self._prepare_conditions(simulation_conditions)
+            self._prepare_conditions(simulation_conditions, None, None)
         )
         return self.run_preequilibration(
             p_array,
@@ -1022,7 +1033,7 @@ def run_simulations(
             ]
         )
         output, results = problem.run_simulations(
-            simulation_conditions,
+            dynamic_conditions,
             preeq_array,
             solver,
             controller,
