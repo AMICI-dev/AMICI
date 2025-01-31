@@ -1990,7 +1990,7 @@ class SbmlImporter:
                 name
                 for sigma in sigmas.values()
                 for symbol in sp.sympify(sigma).free_symbols
-                if (name := str(symbol)).startswith("noiseParameter")
+                if re.match(r"noiseParameter\d+$", (name := str(symbol)))
             }
         )
         self.symbols[SymbolId.NOISE_PARAMETER] = {
@@ -2005,7 +2005,7 @@ class SbmlImporter:
                 name
                 for obs in observables.values()
                 for symbol in sp.sympify(obs["formula"]).free_symbols
-                if (name := str(symbol)).startswith("observableParameter")
+                if re.match(r"observableParameter\d+", (name := str(symbol)))
             }
         )
         self.symbols[SymbolId.OBSERVABLE_PARAMETER] = {
