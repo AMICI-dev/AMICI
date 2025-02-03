@@ -704,12 +704,10 @@ def _add_expression(
             else "normal"
         )
 
-        obs_name = name if pysb_model_has_obs_and_noise else f"obs_{name}"
-
-        y = sp.Symbol(obs_name)
+        y = sp.Symbol(name)
         trafo = noise_distribution_to_observable_transformation(noise_dist)
         obs = Observable(
-            y, obs_name, _parse_special_functions(expr), transformation=trafo
+            y, name, _parse_special_functions(expr), transformation=trafo
         )
         ode_model.add_component(obs)
 

@@ -1999,10 +1999,7 @@ class SbmlImporter:
         else:
             noise_pars = []
         self.symbols[SymbolId.NOISE_PARAMETER] = {
-            symbol_with_assumptions(np): {"name": np}
-            for np in sorted(
-                noise_pars, key=lambda x: int(x.replace("noiseParameter", ""))
-            )
+            symbol_with_assumptions(np): {"name": np} for np in noise_pars
         }
 
         if observables:
@@ -2021,11 +2018,7 @@ class SbmlImporter:
         else:
             observable_pars = []
         self.symbols[SymbolId.OBSERVABLE_PARAMETER] = {
-            symbol_with_assumptions(op): {"name": op}
-            for op in sorted(
-                observable_pars,
-                key=lambda x: int(x.replace("observableParameter", "")),
-            )
+            symbol_with_assumptions(op): {"name": op} for op in observable_pars
         }
 
         self._process_log_likelihood(sigmas, noise_distributions)

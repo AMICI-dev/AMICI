@@ -1103,6 +1103,21 @@ class DEModel:
         """
         if name in self._variable_prototype:
             components = self._variable_prototype[name]()
+            # ensure placeholder parameters are consistently and correctly ordered
+            if name == "op":
+                components = sorted(
+                    components,
+                    key=lambda x: int(
+                        x.get_name().replace("observableParameter", "")
+                    ),
+                )
+            if name == "np":
+                components = sorted(
+                    components,
+                    key=lambda x: int(
+                        x.get_name().replace("noiseParameter", "")
+                    ),
+                )
             self._syms[name] = sp.Matrix(
                 [comp.get_id() for comp in components]
             )
