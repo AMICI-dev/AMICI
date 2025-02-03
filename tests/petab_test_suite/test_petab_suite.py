@@ -115,7 +115,7 @@ def _test_case(case, model_type, version, jax):
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
-    if case.startswith("0006"):
+    if case.startswith("0006") and not jax:
         # account for flattening
         gt_simulation_dfs[0].loc[:, petab.OBSERVABLE_ID] = (
             "obs_a__10__c0",
