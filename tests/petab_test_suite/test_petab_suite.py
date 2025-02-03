@@ -54,7 +54,7 @@ def _test_case(case, model_type, version, jax):
     problem = petab.Problem.from_yaml(yaml_file)
 
     # compile amici model
-    if case.startswith("0006"):
+    if case.startswith("0006") and not jax:
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_name = (
         f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
