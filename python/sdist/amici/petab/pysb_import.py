@@ -292,6 +292,7 @@ def import_model_pysb(
             observables=observables,
             sigmas=sigmas,
             noise_distributions=noise_distrs,
+            pysb_model_has_obs_and_noise=True,
             **kwargs,
         )
         return
@@ -307,5 +308,6 @@ def import_model_pysb(
             sigmas=sigmas,
             constant_parameters=constant_parameters,
             noise_distributions=noise_distrs,
+            pysb_model_has_obs_and_noise=True,
             **kwargs,
         )
