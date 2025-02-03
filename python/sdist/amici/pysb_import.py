@@ -656,8 +656,12 @@ def _add_expression(
         see :py:func:`_process_pysb_expressions`
     """
     if name not in observables:
+        if name in list(sigmas.values()):
+            component = SigmaY
+        else:
+            component = Expression
         ode_model.add_component(
-            Expression(sym, name, _parse_special_functions(expr))
+            component(sym, name, _parse_special_functions(expr))
         )
     else:
         noise_dist = (
@@ -677,8 +681,7 @@ def _add_expression(
             pysb_model, name, sigmas
         )
 
-        sigma = sp.Symbol(sigma_name)
-        ode_model.add_component(SigmaY(sigma, f"{sigma_name}", sigma_value))
+        sigma = pysb_model.expressions[sigma_name]
 
         cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
         my = generate_measurement_symbol(obs.get_id())
