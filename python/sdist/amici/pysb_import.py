@@ -8,6 +8,7 @@ in the :class:`pysb.core.Model` format.
 import itertools
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 from typing import (
@@ -33,6 +34,7 @@ from .de_export import (
     SigmaY,
 )
 from .de_model import DEModel
+from .de_model_components import NoiseParameter, ObservableParameter
 from .import_utils import (
     _get_str_symbol_identifiers,
     _parse_special_functions,
@@ -137,6 +139,7 @@ def pysb2jax(
         simplify=simplify,
         cache_simplify=cache_simplify,
         verbose=verbose,
+        jax=True,
     )
 
     from amici.jax.ode_export import ODEExporter
@@ -300,6 +303,7 @@ def ode_model_from_pysb_importer(
     # See https://github.com/AMICI-dev/AMICI/pull/1672
     cache_simplify: bool = False,
     verbose: int | bool = False,
+    jax: bool = False,
 ) -> DEModel:
     """
     Creates an :class:`amici.DEModel` instance from a :class:`pysb.Model`
@@ -335,6 +339,9 @@ def ode_model_from_pysb_importer(
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
+    :param jax:
+        if set to ``True``, the generated model will be compatible with JAX export
+
     :return:
         New DEModel instance according to pysbModel
     """
@@ -357,7 +364,7 @@ def ode_model_from_pysb_importer(
     pysb.bng.generate_equations(model, verbose=verbose)
 
     _process_pysb_species(model, ode)
-    _process_pysb_parameters(model, ode, constant_parameters)
+    _process_pysb_parameters(model, ode, constant_parameters, jax)
     if compute_conservation_laws:
         _process_pysb_conservation_laws(model, ode)
     _process_pysb_observables(
@@ -510,7 +517,10 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
 
 @log_execution_time("processing PySB parameters", logger)
 def _process_pysb_parameters(
-    pysb_model: pysb.Model, ode_model: DEModel, constant_parameters: list[str]
+    pysb_model: pysb.Model,
+    ode_model: DEModel,
+    constant_parameters: list[str],
+    jax: bool = False,
 ) -> None:
     """
     Converts pysb parameters into Parameters or Constants and adds them to
@@ -522,16 +532,26 @@ def _process_pysb_parameters(
     :param constant_parameters:
         list of Parameters that should be constants
 
+    :param jax:
+        if set to ``True``, the generated model will be compatible JAX export
+
     :param ode_model:
         DEModel instance
     """
     for par in pysb_model.parameters:
+        args = [par, f"{par.name}"]
         if par.name in constant_parameters:
             comp = Constant
+            args.append(par.value)
+        elif jax and re.match(r"noiseParameter\d+", par.name):
+            comp = NoiseParameter
+        elif jax and re.match(r"observableParameter\d+", par.name):
+            comp = ObservableParameter
         else:
             comp = Parameter
+            args.append(par.value)
 
-        ode_model.add_component(comp(par, f"{par.name}", par.value))
+        ode_model.add_component(comp(*args))
 
 
 @log_execution_time("processing PySB expressions", logger)
@@ -635,11 +655,11 @@ def _add_expression(
     :param ode_model:
         see :py:func:`_process_pysb_expressions`
     """
-    ode_model.add_component(
-        Expression(sym, name, _parse_special_functions(expr))
-    )
-
-    if name in observables:
+    if name not in observables:
+        ode_model.add_component(
+            Expression(sym, name, _parse_special_functions(expr))
+        )
+    else:
         noise_dist = (
             noise_distributions.get(name, "normal")
             if noise_distributions
@@ -648,7 +668,9 @@ def _add_expression(
 
         y = sp.Symbol(f"{name}")
         trafo = noise_distribution_to_observable_transformation(noise_dist)
-        obs = Observable(y, name, sym, transformation=trafo)
+        obs = Observable(
+            y, name, _parse_special_functions(expr), transformation=trafo
+        )
         ode_model.add_component(obs)
 
         sigma_name, sigma_value = _get_sigma_name_and_value(
