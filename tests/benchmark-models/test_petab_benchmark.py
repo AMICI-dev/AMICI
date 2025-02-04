@@ -325,12 +325,6 @@ def test_jax_llh(benchmark_problem):
         r_amici = simulate_amici()
     llh_amici = r_amici[LLH]
 
-    if problem_id == "Zhao_QuantBiol2020":
-        # temp workaround for https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/pull/261
-        petab_problem.observable_df.loc[
-            "observable_unquarantined_infected", petab.NOISE_FORMULA
-        ] = "noiseParameter1_observable_unquarantined_infected"
-
     jax_model = import_petab_problem(
         petab_problem,
         model_output_dir=benchmark_outdir / (problem_id + "_jax"),
