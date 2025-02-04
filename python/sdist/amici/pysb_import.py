@@ -706,6 +706,10 @@ def _add_expression(
 
         y = sp.Symbol(name)
         trafo = noise_distribution_to_observable_transformation(noise_dist)
+        # note that this is a bit iffy since we are potentially using the same symbolic identifier in expressions (w)
+        # and observables (y). This is not a problem as there currently are no model functions that use both. If this
+        # changes, I would expect symbol redefinition warnings in CPP models and overwriting in JAX models, but as both
+        # symbols refer to the same symbolic entity, this should not be a problem (untested)
         obs = Observable(
             y, name, _parse_special_functions(expr), transformation=trafo
         )
@@ -714,9 +718,7 @@ def _add_expression(
         sigma = _get_sigma(pysb_model, name, sigmas)
         if not pysb_model_has_obs_and_noise:
             ode_model.add_component(
-                SigmaY(
-                    sp.Symbol(f"sigma_{name}"), f"sigma_{name}", float(sigma)
-                )
+                SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))
             )
 
         cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
@@ -740,7 +742,7 @@ def _add_expression(
 
 def _get_sigma(
     pysb_model: pysb.Model, obs_name: str, sigmas: dict[str, str]
-) -> sp.Basic:
+) -> sp.Symbol:
     """
     Tries to extract standard deviation symbolic identifier and formula
     for a given observable name from the pysb model and if no specification is
@@ -767,7 +769,7 @@ def _get_sigma(
             f"value of sigma {obs_name} is not a " f"valid expression."
         )
     else:
-        return sp.Float(1.0)
+        return sp.Symbol(f"sigma_{obs_name}")
 
 
 @log_execution_time("processing PySB observables", logger)
