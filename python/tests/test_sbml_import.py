@@ -856,7 +856,7 @@ def test_import_same_model_name():
 
 @skip_on_valgrind
 def test_regression_2642():
-    sbml_file = Path(".") / "sbml_models" / "regression_2642.xml"
+    sbml_file = Path(__file__).parent / "sbml_models" / "regression_2642.xml"
     sbml_importer = amici.SbmlImporter(sbml_file)
     model_name = "regression_2642"
     with TemporaryDirectory(prefix="regression_2642") as outdir:
