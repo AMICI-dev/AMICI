@@ -1109,14 +1109,18 @@ class DEModel:
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        x.get_id().replace("observableParameter", "")
+                        str(strip_pysb(x.get_id())).replace(
+                            "observableParameter", ""
+                        )
                     ),
                 )
             if name == "np":
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        x.get_id().replace("noiseParameter", "")
+                        str(strip_pysb(x.get_id())).replace(
+                            "noiseParameter", ""
+                        )
                     ),
                 )
             self._syms[name] = sp.Matrix(
