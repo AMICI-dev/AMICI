@@ -16,6 +16,7 @@ import sympy as sp
 from petab.v1.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
 from petab.v1.models.pysb_model import PySBModel
 
+from ..import_utils import strip_pysb
 from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
@@ -48,6 +49,7 @@ def _add_observation_model(
             if not isinstance(formula, str):
                 continue
 
+            changed_formula = False
             sym = sp.sympify(formula, locals=local_syms)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
@@ -65,11 +67,12 @@ def _add_observation_model(
 
                     # replace placeholder with parameter
                     if jax and name != str(s):
+                        changed_formula = True
                         sym = sym.subs(s, local_syms[name])
 
             # update forum
-            if jax:
-                obs_df.at[ir, col] = str(sym)
+            if jax and changed_formula:
+                obs_df.at[ir, col] = str(strip_pysb(sym))
 
     # add observables and sigmas to pysb model
     for observable_id, observable_formula, noise_formula in zip(
