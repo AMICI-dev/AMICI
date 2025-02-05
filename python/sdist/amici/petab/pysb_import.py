@@ -45,6 +45,9 @@ def _add_observation_model(
         (NOISE_FORMULA, r"^(noiseParameter\d+)_\w+$"),
     ):
         for ir, formula in petab_problem.observable_df[col].items():
+            if not isinstance(formula, str):
+                continue
+
             sym = sp.sympify(formula, locals=local_syms)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
@@ -66,7 +69,7 @@ def _add_observation_model(
 
             # update forum
             if jax:
-                obs_df.at[ir, col] = sym
+                obs_df.at[ir, col] = str(sym)
 
     # add observables and sigmas to pysb model
     for observable_id, observable_formula, noise_formula in zip(
