@@ -766,7 +766,7 @@ def _get_sigma(
         if sigma_name in pysb_model.expressions.keys():
             return pysb_model.expressions[sigma_name]
         raise ValueError(
-            f"value of sigma {obs_name} is not a " f"valid expression."
+            f"value of sigma {obs_name} is not a valid expression."
         )
     else:
         return sp.Symbol(f"sigma_{obs_name}")

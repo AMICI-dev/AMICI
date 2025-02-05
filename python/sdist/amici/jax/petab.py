@@ -259,7 +259,7 @@ class JAXProblem(eqx.Module):
                 else:
                     n_pars[col] = (
                         self._petab_problem.measurement_df[col]
-                        .str.split(";")
+                        .str.split(petab.C.PARAMETER_SEPARATOR)
                         .apply(
                             lambda x: len(x)
                             if isinstance(x, Sized)
@@ -332,7 +332,7 @@ class JAXProblem(eqx.Module):
                     par_mask = np.zeros_like(mat_numeric, dtype=bool)
                     par_index = np.zeros_like(mat_numeric, dtype=int)
                 else:
-                    split_vals = m[col].str.split(";")
+                    split_vals = m[col].str.split(petab.C.PARAMETER_SEPARATOR)
                     list_vals = split_vals.apply(
                         lambda x: [get_parameter_override(y) for y in x]
                         if isinstance(x, list)
