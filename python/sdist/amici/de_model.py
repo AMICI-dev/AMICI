@@ -1104,18 +1104,19 @@ class DEModel:
         if name in self._variable_prototype:
             components = self._variable_prototype[name]()
             # ensure placeholder parameters are consistently and correctly ordered
+            # we want that components are ordered by their placeholder index
             if name == "op":
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        x.get_name().replace("observableParameter", "")
+                        x.get_id().replace("observableParameter", "")
                     ),
                 )
             if name == "np":
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        x.get_name().replace("noiseParameter", "")
+                        x.get_id().replace("noiseParameter", "")
                     ),
                 )
             self._syms[name] = sp.Matrix(
