@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model metaid="debug" id="debug" substanceUnits="substance" timeUnits="time_unit" volumeUnits="volume" areaUnits="area" lengthUnits="length">
+    <listOfUnitDefinitions>
+      <unitDefinition id="length">
+        <listOfUnits>
+          <unit kind="metre" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="area">
+        <listOfUnits>
+          <unit kind="metre" exponent="2" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="volume">
+        <listOfUnits>
+          <unit kind="litre" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="time_unit" name="time">
+        <listOfUnits>
+          <unit kind="second" exponent="1" scale="1" multiplier="6"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="substance">
+        <listOfUnits>
+          <unit kind="mole" exponent="1" scale="-9" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="cytosol" spatialDimensions="3" size="0.0005" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="MR_i" compartment="cytosol" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="MR_m" compartment="cytosol" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="synthesis_MR" constant="true"/>
+      <parameter id="recycling" value="0.0000045" constant="true"/>
+      <parameter id="binding" constant="true"/>
+      <parameter id="MR_i_t0" value="1400000" constant="true"/>
+      <parameter id="MR_m_t0" value="600000" constant="true"/>
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="MR_i">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> MR_i_t0 </ci>
+        </math>
+      </initialAssignment>
+      <initialAssignment symbol="MR_m">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> MR_m_t0 </ci>
+        </math>
+      </initialAssignment>
+      <initialAssignment symbol="synthesis_MR">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <cn> 0.00585177319092733 </cn>
+            <cn> 0.00606 </cn>
+          </apply>
+        </math>
+      </initialAssignment>
+      <initialAssignment symbol="binding">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <apply>
+              <minus/>
+              <apply>
+                <times/>
+                <ci> recycling </ci>
+                <ci> MR_i </ci>
+              </apply>
+              <ci> synthesis_MR </ci>
+            </apply>
+            <ci> MR_m </ci>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+    <listOfReactions>
+      <reaction id="_J0" reversible="true">
+        <listOfProducts>
+          <speciesReference species="MR_i" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <ci> synthesis_MR </ci>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="_J1" reversible="true">
+        <listOfReactants>
+          <speciesReference species="MR_i" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="MR_m" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> recycling </ci>
+              <ci> MR_i </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="_J2" reversible="true">
+        <listOfReactants>
+          <speciesReference species="MR_m" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="MR_i" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> binding </ci>
+              <ci> MR_m </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>
