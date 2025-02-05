@@ -852,3 +852,26 @@ def test_import_same_model_name():
 
             assert model_module_1c.get_model().getParameters()[0] == 1.0
             assert model_module_1c.get_model().module is model_module_1c
+
+
+@skip_on_valgrind
+def test_regression_2642():
+    sbml_file = Path(".") / "sbml_models" / "regression_2642.xml"
+    sbml_importer = amici.SbmlImporter(sbml_file)
+    model_name = "regression_2642"
+    with TemporaryDirectory(prefix="regression_2642") as outdir:
+        sbml_importer.sbml2amici(
+            model_name=model_name,
+            output_dir=outdir,
+        )
+        module = amici.import_model_module(
+            module_name=model_name, module_path=outdir
+        )
+        model = module.getModel()
+        solver = model.getSolver()
+        model.setTimepoints(np.linspace(0, 1, 3))
+        r = amici.runAmiciSimulation(model, solver)
+        assert (
+            len(np.unique(r.w[:, model.getExpressionIds().index("binding")]))
+            == 1
+        )
