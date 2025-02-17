@@ -441,19 +441,37 @@ class FinalStateStorer : public ContextManager {
     /**
      * @brief destructor, stores simulation state
      */
-    ~FinalStateStorer() {
+    ~FinalStateStorer() noexcept(false) {
         if (fwd_) {
-            fwd_->final_state_ = fwd_->getSimulationState();
-            // if there is an associated output timepoint, also store it in
-            // timepoint_states if it's not present there.
-            // this may happen if there is an error just at
-            // (or indistinguishably before) an output timepoint
-            auto final_time = fwd_->getFinalTime();
-            auto const timepoints = fwd_->model->getTimepoints();
-            if (!fwd_->timepoint_states_.count(final_time)
-                && std::find(timepoints.cbegin(), timepoints.cend(), final_time)
-                       != timepoints.cend()) {
-                fwd_->timepoint_states_[final_time] = fwd_->final_state_;
+            try {
+                // This may throw in `CVodeSolver::getSens`
+                // due to https://github.com/LLNL/sundials/issues/82.
+                // Therefore, this dtor must be `noexcept(false)` to avoid
+                // programm termination.
+                fwd_->final_state_ = fwd_->getSimulationState();
+                // if there is an associated output timepoint, also store it in
+                // timepoint_states if it's not present there.
+                // this may happen if there is an error just at
+                // (or indistinguishably before) an output timepoint
+                auto final_time = fwd_->getFinalTime();
+                auto const timepoints = fwd_->model->getTimepoints();
+                if (!fwd_->timepoint_states_.count(final_time)
+                    && std::find(timepoints.cbegin(), timepoints.cend(), final_time)
+                           != timepoints.cend()) {
+                    fwd_->timepoint_states_[final_time] = fwd_->final_state_;
+                }
+            } catch (std::exception const&) {
+                // We must not throw in case we are already in the stack
+                // unwinding phase due to some other active exception, otherwise
+                // this will also lead to termination.
+                //
+                // In case there is another active exception,
+                // `fwd_->{final_state_,timepoint_states_}` won't be set,
+                // and we assume that they are either not accessed anymore, or
+                // that there is appropriate error handling in place.
+                if(!std::uncaught_exceptions()) {
+                    throw;
+                }
             }
         }
     }
