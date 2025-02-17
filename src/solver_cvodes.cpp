@@ -716,7 +716,7 @@ void CVodeSolver::adjInit() const {
         status = CVodeAdjReInit(solver_memory_.get());
     } else {
         status = CVodeAdjInit(
-            solver_memory_.get(), static_cast<int>(maxsteps_),
+            solver_memory_.get(), static_cast<int>(maxsteps_ + 1),
             static_cast<int>(interp_type_)
         );
         setAdjInitDone();
