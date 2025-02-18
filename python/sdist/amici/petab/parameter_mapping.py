@@ -692,6 +692,7 @@ def _subset_dict(
         Subsetted dictionary
     """
     for keys in args:
+        keys = set(keys)
         yield {key: val for (key, val) in full.items() if key in keys}
 
 

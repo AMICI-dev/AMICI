@@ -8,7 +8,6 @@ import sys
 from typing import (
     Any,
     SupportsFloat,
-    Union,
 )
 from collections.abc import Callable
 from collections.abc import Iterable, Sequence
@@ -30,7 +29,7 @@ class SBMLException(Exception):
     pass
 
 
-SymbolDef = dict[sp.Symbol, Union[dict[str, sp.Expr], sp.Expr]]
+SymbolDef = dict[sp.Symbol, dict[str, sp.Expr] | sp.Expr]
 
 
 # Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
@@ -407,7 +406,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
 
-    if isinstance(sym, (sp.Function, sp.Mul, sp.Add, sp.Pow)):
+    if isinstance(sym, (sp.Function | sp.Mul | sp.Add | sp.Pow)):
         sym._args = args
 
     elif toplevel and isinstance(sym, BooleanAtom):
@@ -637,7 +636,7 @@ def cast_to_sym(
     :return:
         typecast value
     """
-    if isinstance(value, (sp.RealNumber, numbers.Number)):
+    if isinstance(value, (sp.RealNumber | numbers.Number)):
         value = sp.Float(float(value))
     elif isinstance(value, BooleanAtom):
         value = sp.Float(float(bool(value)))

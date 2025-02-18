@@ -586,3 +586,46 @@ def test_python_exceptions(sbml_example_presimulation_module):
     ):
         # rethrow=True
         runAmiciSimulation(solver, None, model.get(), True)
+
+
+def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
+    model_module = sbml_example_presimulation_module
+    model = model_module.getModel()
+    solver = model.getSolver()
+
+    solver.setReturnDataReportingMode(
+        amici.RDataReporting.observables_likelihood
+    )
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+    for sens_method in (
+        amici.SensitivityMethod.none,
+        amici.SensitivityMethod.forward,
+        amici.SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityMethod(sens_method)
+        rdata = amici.runAmiciSimulation(
+            model, solver, amici.ExpData(1, 1, 1, [1])
+        )
+        assert (
+            rdata.rdata_reporting
+            == amici.RDataReporting.observables_likelihood
+        )
+
+        assert rdata.y.size > 0
+        assert rdata.sigmay.size > 0
+        assert rdata.J is None
+
+        match solver.getSensitivityMethod():
+            case amici.SensitivityMethod.none:
+                assert rdata.sllh is None
+            case amici.SensitivityMethod.forward:
+                assert rdata.sy.size > 0
+                assert rdata.ssigmay.size > 0
+                assert rdata.sllh.size > 0
+                assert not np.isnan(rdata.sllh).any()
+            case amici.SensitivityMethod.adjoint:
+                assert rdata.sy is None
+                assert rdata.ssigmay is None
+                assert rdata.sllh.size > 0
+                assert not np.isnan(rdata.sllh).any()

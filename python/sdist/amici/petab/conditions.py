@@ -3,7 +3,6 @@
 import logging
 import numbers
 import warnings
-from typing import Union
 from collections.abc import Sequence
 
 import amici
@@ -31,7 +30,7 @@ from .util import get_states_in_condition_table
 
 logger = logging.getLogger(__name__)
 
-SingleParameterMapping = dict[str, Union[numbers.Number, str]]
+SingleParameterMapping = dict[str, numbers.Number | str]
 SingleScaleMapping = dict[str, str]
 
 
@@ -135,16 +134,21 @@ def fill_in_parameters_for_condition(
                 # condition table overrides must have been handled already,
                 # e.g. by the PEtab parameter mapping, but parameters from
                 # InitialAssignments may still be present.
-                if mapping[value] == model_par:
+                if (mapped_value := mapping[value]) == model_par:
                     # prevent infinite recursion
                     raise
-                return _get_par(value, mapping[value], mapping)
-        if model_par in problem_parameters:
+                return _get_par(value, mapped_value, mapping)
+
+        try:
             # user-provided
             return problem_parameters[model_par]
+        except KeyError:
+            pass
+
         # prevent nan-propagation in derivative
         if np.isnan(value):
             return 0.0
+
         # constant value
         return value
 

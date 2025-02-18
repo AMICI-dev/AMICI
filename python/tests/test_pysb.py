@@ -11,7 +11,7 @@ pysb = pytest.importorskip("pysb")
 
 import amici
 import numpy as np
-import pysb.examples
+import pysb.examples  # noqa: F811
 import pytest
 import sympy as sp
 from amici import ParameterScaling, parameterScalingFromIntVector

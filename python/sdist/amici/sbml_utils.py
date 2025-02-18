@@ -11,9 +11,9 @@ from typing import TYPE_CHECKING
 import sympy as sp
 
 if TYPE_CHECKING:
-    from typing import Any, Union
+    from typing import Any
 
-    SbmlID = Union[str, sp.Symbol]
+    SbmlID = str | sp.Symbol
 
 import xml.dom.minidom
 

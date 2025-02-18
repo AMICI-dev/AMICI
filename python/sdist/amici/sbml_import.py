@@ -1985,6 +1985,42 @@ class SbmlImporter:
             self.symbols[SymbolId.OBSERVABLE], "eventObservable"
         )
 
+        if sigmas:
+            noise_pars = list(
+                {
+                    name
+                    for sigma in sigmas.values()
+                    for symbol in self._sympy_from_sbml_math(
+                        sigma
+                    ).free_symbols
+                    if re.match(r"noiseParameter\d+$", (name := str(symbol)))
+                }
+            )
+        else:
+            noise_pars = []
+        self.symbols[SymbolId.NOISE_PARAMETER] = {
+            symbol_with_assumptions(np): {"name": np} for np in noise_pars
+        }
+
+        if observables:
+            observable_pars = list(
+                {
+                    name
+                    for obs in observables.values()
+                    for symbol in self._sympy_from_sbml_math(
+                        obs["formula"]
+                    ).free_symbols
+                    if re.match(
+                        r"observableParameter\d+$", (name := str(symbol))
+                    )
+                }
+            )
+        else:
+            observable_pars = []
+        self.symbols[SymbolId.OBSERVABLE_PARAMETER] = {
+            symbol_with_assumptions(op): {"name": op} for op in observable_pars
+        }
+
         self._process_log_likelihood(sigmas, noise_distributions)
 
     @log_execution_time("processing SBML event observables", logger)

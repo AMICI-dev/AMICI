@@ -16,7 +16,7 @@ import sympy as sp
 from sympy.abc import _clash
 from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
 
-StrOrExpr = Union[str, sp.Expr]
+StrOrExpr = str | sp.Expr
 
 
 class SwigPtrView(collections.abc.Mapping):
@@ -251,7 +251,7 @@ class ReturnDataView(SwigPtrView):
 
         :param rdata: pointer to the ``ReturnData`` instance
         """
-        if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
+        if not isinstance(rdata, (ReturnDataPtr | ReturnData)):
             raise TypeError(
                 f"Unsupported pointer {type(rdata)}, must be"
                 f"amici.ReturnDataPtr or amici.ReturnData!"
@@ -397,7 +397,7 @@ class ExpDataView(SwigPtrView):
 
         :param edata: pointer to the ExpData instance
         """
-        if not isinstance(edata, (ExpDataPtr, ExpData)):
+        if not isinstance(edata, (ExpDataPtr | ExpData)):
             raise TypeError(
                 f"Unsupported pointer {type(edata)}, must be"
                 f"amici.ExpDataPtr!"

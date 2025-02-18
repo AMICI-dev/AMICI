@@ -7,7 +7,7 @@ between C++ objects from :mod:`amici.amici` and pandas DataFrames
 
 import copy
 import math
-from typing import SupportsFloat, Union
+from typing import SupportsFloat
 
 import amici
 import numpy as np
@@ -24,15 +24,16 @@ __all__ = [
     "getResidualsAsDataFrame",
 ]
 
-ExpDatas = Union[
-    list[amici.amici.ExpData],
-    list[amici.ExpDataPtr],
-    amici.amici.ExpData,
-    amici.ExpDataPtr,
-]
-ReturnDatas = Union[list[amici.ReturnDataView], amici.ReturnDataView]
+ExpDatas = (
+    list[amici.amici.ExpData]
+    | list[amici.ExpDataPtr]
+    | amici.amici.ExpData
+    | amici.ExpDataPtr
+)
 
-AmiciModel = Union[amici.ModelPtr, amici.Model]
+ReturnDatas = list[amici.ReturnDataView] | amici.ReturnDataView
+
+AmiciModel = amici.ModelPtr | amici.Model
 
 
 def _process_edata_list(edata_list: ExpDatas) -> list[amici.amici.ExpData]:
@@ -46,7 +47,7 @@ def _process_edata_list(edata_list: ExpDatas) -> list[amici.amici.ExpData]:
     :return:
         list of instance(s)
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.ExpDataPtr)):
+    if isinstance(edata_list, (amici.amici.ExpData | amici.ExpDataPtr)):
         return [edata_list]
     else:
         return edata_list

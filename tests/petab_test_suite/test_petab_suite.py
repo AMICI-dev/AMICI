@@ -4,6 +4,8 @@
 import logging
 import sys
 
+import diffrax
+
 import amici
 import pandas as pd
 import petab.v1 as petab
@@ -52,7 +54,7 @@ def _test_case(case, model_type, version, jax):
     problem = petab.Problem.from_yaml(yaml_file)
 
     # compile amici model
-    if case.startswith("0006"):
+    if case.startswith("0006") and not jax:
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_name = (
         f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
@@ -68,10 +70,17 @@ def _test_case(case, model_type, version, jax):
     if jax:
         from amici.jax import JAXProblem, run_simulations, petab_simulate
 
+        steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
         jax_problem = JAXProblem(model, problem)
-        llh, ret = run_simulations(jax_problem)
-        chi2, _ = run_simulations(jax_problem, ret="chi2")
-        simulation_df = petab_simulate(jax_problem)
+        llh, ret = run_simulations(
+            jax_problem, steady_state_event=steady_state_event
+        )
+        chi2, _ = run_simulations(
+            jax_problem, ret="chi2", steady_state_event=steady_state_event
+        )
+        simulation_df = petab_simulate(
+            jax_problem, steady_state_event=steady_state_event
+        )
         simulation_df.rename(
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
@@ -106,7 +115,7 @@ def _test_case(case, model_type, version, jax):
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
-    if case.startswith("0006"):
+    if case.startswith("0006") and not jax:
         # account for flattening
         gt_simulation_dfs[0].loc[:, petab.OBSERVABLE_ID] = (
             "obs_a__10__c0",

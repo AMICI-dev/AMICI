@@ -82,12 +82,7 @@ def get_model_override_implementation(
             eval_signature=remove_argument_types(func_info.arguments(ode)),
         )
     )
-    return "{return_type} f{fun}({signature}) override {{{body}}}\n".format(
-        return_type=func_info.return_type,
-        fun=fun,
-        signature=func_info.arguments(ode),
-        body=body,
-    )
+    return f"{func_info.return_type} f{fun}({func_info.arguments(ode)}) override {{{body}}}\n"
 
 
 def get_sunindex_override_implementation(

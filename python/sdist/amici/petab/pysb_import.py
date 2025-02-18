@@ -16,6 +16,7 @@ import sympy as sp
 from petab.v1.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
 from petab.v1.models.pysb_model import PySBModel
 
+from ..import_utils import strip_pysb
 from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
@@ -28,7 +29,7 @@ logger = get_logger(__name__, logging.WARNING)
 
 
 def _add_observation_model(
-    pysb_model: pysb.Model, petab_problem: petab.Problem
+    pysb_model: pysb.Model, petab_problem: petab.Problem, jax: bool = False
 ):
     """Extend PySB model by observation model as defined in the PEtab
     observables table"""
@@ -39,22 +40,45 @@ def _add_observation_model(
         for comp in pysb_model.components
         if isinstance(comp, sp.Symbol)
     }
-    for formula in [
-        *petab_problem.observable_df[OBSERVABLE_FORMULA],
-        *petab_problem.observable_df[NOISE_FORMULA],
-    ]:
-        sym = sp.sympify(formula, locals=local_syms)
-        for s in sym.free_symbols:
-            if not isinstance(s, pysb.Component):
-                p = pysb.Parameter(str(s), 1.0)
-                pysb_model.add_component(p)
-                local_syms[sp.Symbol.__str__(p)] = p
+    obs_df = petab_problem.observable_df.copy()
+    for col, placeholder_pattern in (
+        (OBSERVABLE_FORMULA, r"^(observableParameter\d+)_\w+$"),
+        (NOISE_FORMULA, r"^(noiseParameter\d+)_\w+$"),
+    ):
+        for ir, formula in petab_problem.observable_df[col].items():
+            if not isinstance(formula, str):
+                continue
+
+            changed_formula = False
+            sym = sp.sympify(formula, locals=local_syms)
+            for s in sym.free_symbols:
+                if not isinstance(s, pysb.Component):
+                    if jax:
+                        name = re.sub(placeholder_pattern, r"\1", str(s))
+                    else:
+                        name = str(s)
+                    p = pysb.Parameter(name, 1.0)
+                    pysb_model.add_component(p)
+
+                    # placeholders for multiple observables are mapped to the same symbol, so only add to local_syms
+                    # when necessary
+                    if name not in local_syms:
+                        local_syms[name] = p
+
+                    # replace placeholder with parameter
+                    if jax and name != str(s):
+                        changed_formula = True
+                        sym = sym.subs(s, local_syms[name])
+
+            # update forum
+            if jax and changed_formula:
+                obs_df.at[ir, col] = str(strip_pysb(sym))
 
     # add observables and sigmas to pysb model
     for observable_id, observable_formula, noise_formula in zip(
-        petab_problem.observable_df.index,
-        petab_problem.observable_df[OBSERVABLE_FORMULA],
-        petab_problem.observable_df[NOISE_FORMULA],
+        obs_df.index,
+        obs_df[OBSERVABLE_FORMULA],
+        obs_df[NOISE_FORMULA],
         strict=True,
     ):
         obs_symbol = sp.sympify(observable_formula, locals=local_syms)
@@ -210,7 +234,7 @@ def import_model_pysb(
         name=petab_problem.model.model_id,
     )
 
-    _add_observation_model(pysb_model, petab_problem)
+    _add_observation_model(pysb_model, petab_problem, jax)
     # generate species for the _original_ model
     pysb.bng.generate_equations(petab_problem.model.model)
     fixed_parameters = _add_initialization_variables(pysb_model, petab_problem)
@@ -274,6 +298,7 @@ def import_model_pysb(
             observables=observables,
             sigmas=sigmas,
             noise_distributions=noise_distrs,
+            pysb_model_has_obs_and_noise=True,
             **kwargs,
         )
         return
@@ -289,5 +314,6 @@ def import_model_pysb(
             sigmas=sigmas,
             constant_parameters=constant_parameters,
             noise_distributions=noise_distrs,
+            pysb_model_has_obs_and_noise=True,
             **kwargs,
         )
