@@ -4,6 +4,27 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.31.0 (2025-02-18)
+
+* Added `RDataReporting::observables_likelihood` for computing observables,
+  likelihood and the respective sensitivities
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2627,
+  https://github.com/AMICI-dev/AMICI/pull/2633
+* JAX:
+  * Updated diffrax & jaxlib
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2632
+  * Avoid silent preequilibration failure in JAX
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2631
+  * jax vectorisation
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2636
+  * No flattening of timepoint specific overrides in jax
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2641
+* Faster PEtab parameter mapping
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2638,
+  https://github.com/AMICI-dev/AMICI/pull/2640
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.30.1...v0.31.0
+
 ### v0.30.1 (2025-02-18)
 
 Bugfix-only release.
