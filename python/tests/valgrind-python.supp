@@ -1006,3 +1006,33 @@
    fun:_ZN4rpds*
    ...
 }
+
+{
+   Python
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:_PyUnicodeWriter_Finish
+   obj:/usr/bin/python3.*
+   ...
+}
+
+{
+   Something matplotlib. Cannot reproduce.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZL14PyFT2Font_initN8pybind116objectElSt8optionalISt6vectorIP9PyFT2FontSaIS4_EEEi.lto_priv.0
+   fun:_ZZN8pybind1112cpp_function10initializeIZNOS_6detail8initimpl7factoryIPFP9PyFT2FontNS_6objectElSt8optionalISt6vectorIS6_SaIS6_EEEiEPFNS2_9void_typeEvESD_SG_E7executeINS_6class_IS5_JEEEJNS_3argENS_5arg_vENS_7kw_onlyESN_SN_PKcEEEvRT_DpRKT0_EUlRNS2_16value_and_holderES7_lSC_iE_vJSY_S7_lSC_iEJNS_4nameENS_9is_methodENS_7siblingENS2_24is_new_style_constructorESM_SN_SO_SN_SN_SQ_EEEvOSR_PFT0_DpT1_EDpRKT2_ENUlRNS2_13function_callEE1_4_FUNES1F_
+   fun:_ZN8pybind1112cpp_function10dispatcherEP7_objectS2_S2_
+   fun:cfunction_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:slot_tp_init
+   fun:type_call
+   fun:pybind11_meta_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyEval_EvalFrameDefault
+}

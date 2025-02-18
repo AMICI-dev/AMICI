@@ -23,7 +23,7 @@ if [ $# -eq 0 ]
     # for <class 'numpy.longdouble'> does not match any known type: falling back to type probe function.
 else
     # Run whatever was passed as arguments
-    command=($@)
+    command=("$@")
 fi
 
 
