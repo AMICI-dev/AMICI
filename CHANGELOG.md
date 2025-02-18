@@ -4,6 +4,27 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.30.1 (2025-02-18)
+
+Bugfix-only release.
+
+* Removed `eqx.debug.nan`, fixes #2629
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2630
+* Fixes an SBML import issue that led to incorrect results for models with
+  species-dependent initial assignments (fixes #2642)
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2643
+* Fixed `CVodeGetSensDky` error message
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2644
+* Disabled `CvodeF` checkpointing to prevent certain rare crashes when forward
+  integration takes exactly `maxsteps` integration steps, plus some additional
+  yet unclear condition.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2645
+* Fixed rare crashes due to uncaught exceptions in `~FinalStateStorer`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2647
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.30.0...v0.30.1
+
+
 ### v0.30.0 (2024-12-10)
 
 *Please note that the amici JAX model generation introduced in v0.29.0 is
