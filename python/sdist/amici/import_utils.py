@@ -387,10 +387,10 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         "arccoth": sp.functions.acoth,
         "arcsech": sp.functions.asech,
         "arccsch": sp.functions.acsch,
-        "lt": lambda *args: sp.StrictLessThan(*args),
-        "gt": lambda *args: sp.StrictGreaterThan(*args),
-        "geq": lambda *args: sp.GreaterThan(*args),
-        "leq": lambda *args: sp.LessThan(*args),
+        "lt": sp.StrictLessThan,
+        "gt": sp.StrictGreaterThan,
+        "geq": sp.GreaterThan,
+        "leq": sp.LessThan,
     }
 
     if sym.__class__.__name__ in fun_mappings:
