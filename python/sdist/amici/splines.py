@@ -1367,7 +1367,7 @@ class AbstractSpline(ABC):
     ) -> sp.Function:
         """
         Returns the `sympy` object to be used by
-        :py:class:`amici.de_export.ODEModel`.
+        :py:class:`amici.de_model.DEModel`.
         This expression can be differentiated and easily mapped to the C++
         code.
         """

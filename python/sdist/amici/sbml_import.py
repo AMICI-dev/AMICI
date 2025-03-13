@@ -387,10 +387,10 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`amici.ODEModel._simplify`
+            see :attr:`amici.DEModel._simplify`
 
         :param cache_simplify:
-                see :meth:`amici.ODEModel.__init__`
+                see :meth:`amici.DEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
@@ -517,10 +517,10 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`amici.ODEModel._simplify`
+            see :attr:`amici.DEModel._simplify`
 
         :param cache_simplify:
-                see :meth:`amici.ODEModel.__init__`
+                see :meth:`amici.DEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
@@ -566,7 +566,7 @@ class SbmlImporter:
         log_as_log10: bool = True,
         hardcode_symbols: Sequence[str] = None,
     ) -> DEModel:
-        """Generate an ODEModel from this SBML model.
+        """Generate a DEModel from this SBML model.
 
         See :py:func:`sbml2amici` for parameters.
         """
@@ -2557,7 +2557,7 @@ class SbmlImporter:
         """Add non-constant species to conservation laws
 
         :param model:
-            ODEModel object with basic definitions
+            DEModel object with basic definitions
         :param conservation_laws:
             List of already known conservation laws
         :returns:
@@ -3111,7 +3111,7 @@ def _add_conservation_for_constant_species(
     Adds constant species to conservations laws
 
     :param ode_model:
-        ODEModel object with basic definitions
+        DEModel object with basic definitions
 
     :param conservation_laws:
         List of already known conservation laws
