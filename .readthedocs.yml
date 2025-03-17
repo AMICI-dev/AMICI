@@ -18,10 +18,10 @@ python:
   install:
     - requirements: doc/rtd_requirements.txt
 build:
-  os: "ubuntu-22.04"
+  os: "ubuntu-24.04"
   apt_packages:
     - libatlas-base-dev
     - libhdf5-serial-dev
     - swig
   tools:
-    python: "3.11"
+    python: "3.12"
