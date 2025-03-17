@@ -14,7 +14,7 @@ on:
 jobs:
   valgrind_cpp:
     name: Valgrind C++
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -62,7 +62,7 @@ jobs:
   valgrind_python:
     name: Valgrind Python
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
