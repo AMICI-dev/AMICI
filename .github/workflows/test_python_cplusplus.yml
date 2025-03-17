@@ -82,7 +82,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: build/coverage_py.xml
+        files: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
         verbose: true
@@ -102,7 +102,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage.info
+        files: coverage.info
         flags: cpp
         fail_ci_if_error: true
 
@@ -164,7 +164,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: build/coverage_py.xml
+        files: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
         verbose: true
@@ -184,7 +184,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage.info
+        files: coverage.info
         flags: cpp_python
         fail_ci_if_error: true
 
