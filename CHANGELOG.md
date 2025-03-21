@@ -4,6 +4,15 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.31.1 (2025-03-21)
+
+Bugfix-only release.
+
+* Handle relational operators in SBML import
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2652
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.0...v0.31.1
+
 ### v0.31.0 (2025-02-18)
 
 * Added `RDataReporting::observables_likelihood` for computing observables,
