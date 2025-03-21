@@ -8,7 +8,7 @@ jobs:
   pypi:
     name: Deploy PyPI
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -47,7 +47,7 @@ jobs:
   bioSimulatorsUpdateCliAndDockerImage:
     name: Release to BioSimulators
     needs: pypi
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       # Owner/repository-id for the GitHub repository for the downstream command-line interface and Docker image
       DOWNSTREAM_REPOSITORY: biosimulators/Biosimulators_AMICI
@@ -72,7 +72,7 @@ jobs:
 
   dockerhub:
     name: Release to Docker Hub
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Set up Python

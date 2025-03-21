@@ -17,7 +17,7 @@ jobs:
   build:
     name: Benchmark Collection
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -77,7 +77,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage_py.xml
+        files: coverage_py.xml
         flags: python
         fail_ci_if_error: true
         verbose: true
