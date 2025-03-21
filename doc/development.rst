@@ -26,13 +26,13 @@ done via merge commits.
 When starting to work on some issue
 -----------------------------------
 
-When starting to work on some Github issue, please assign yourself to
+When starting to work on some GitHub issue, please assign yourself to
 let other developers know that you are working on it to avoid duplicate
 work. If the respective issue is not completely clear, it is generally a
 good idea to ask for clarification before starting to work on it.
 
-If you want to work on something new, please create a Github issue
-first.
+If you want to work on something new, please create a
+`GitHub issue <https://github.com/AMICI-dev/AMICI/issues>`__ first.
 
 Code contributions
 ------------------
@@ -40,9 +40,9 @@ Code contributions
 When making code contributions, please follow our style guide and the
 process described below:
 
--  Check if you agree to release your contribution under the conditions
-   provided in ``LICENSE``. By opening a pull requests you confirm us
-   that you do agree.
+-  Check if you agree to release your contribution under
+  `AMICI's license conditions <https://github.com/AMICI-dev/AMICI/blob/master/LICENSE.md>`__.
+   By opening a pull requests you confirm us that you do agree.
 
 -  Start a new branch from ``develop`` (on your fork, or at the main
    repository if you have access)
@@ -99,10 +99,10 @@ Python
 -  For the Python code we want to follow
    `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__. Although this
    is not the case for all existing code, any new contributions should
-   do so. We use `black <https://black.readthedocs.io/en/stable/index.html>`__
-   for code formatting.
+   do so. We use `ruff <https://docs.astral.sh/ruff/>`__ for automated
+   code formatting.
 
-   To run black as pre-commit hook, install the
+   To run ruff as pre-commit hook, install the
    `pre-commit <https://pre-commit.com/>`_ package
    (e.g. ``pip install pre-commit``), and enable AMICI-hooks by running
    ``pre-commit install`` from within the AMICI directory.
