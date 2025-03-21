@@ -41,7 +41,7 @@ When making code contributions, please follow our style guide and the
 process described below:
 
 -  Check if you agree to release your contribution under
-  `AMICI's license conditions <https://github.com/AMICI-dev/AMICI/blob/master/LICENSE.md>`__.
+   `AMICI's license conditions <https://github.com/AMICI-dev/AMICI/blob/master/LICENSE.md>`__.
    By opening a pull requests you confirm us that you do agree.
 
 -  Start a new branch from ``develop`` (on your fork, or at the main
