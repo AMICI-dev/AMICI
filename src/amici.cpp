@@ -237,12 +237,12 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
     if (!posteq)
         gsl_EnsuresDebug(
-            std::is_sorted(rdata->numsteps.begin(), rdata->numsteps.end())
+            std::ranges::is_sorted(rdata->numsteps)
             || rdata->status != AMICI_SUCCESS
         );
     if (!preeq)
         gsl_EnsuresDebug(
-            std::is_sorted(rdata->numstepsB.begin(), rdata->numstepsB.end())
+            std::ranges::is_sorted(rdata->numstepsB)
             || rdata->status != AMICI_SUCCESS
         );
     rdata->messages = logger.items;

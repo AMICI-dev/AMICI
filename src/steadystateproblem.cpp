@@ -609,11 +609,9 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
 
 bool SteadystateProblem::checkSteadyStateSuccess() const {
     /* Did one of the attempts yield s steady state? */
-    return std::any_of(
-        steady_state_status_.begin(), steady_state_status_.end(),
-        [](SteadyStateStatus status) {
-            return status == SteadyStateStatus::success;
-        }
+    return std::ranges::any_of(
+        steady_state_status_, [](SteadyStateStatus status
+                              ) { return status == SteadyStateStatus::success; }
     );
 }
 

@@ -811,12 +811,12 @@ void HermiteSpline::compute_final_sensitivity(
          */
         int last = n_nodes() - 1;
         if (get_node_derivative_scaled(last) == 0)
-            std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+            std::ranges::fill(finalSensitivity, NAN);
     } else if (last_node_ep_ == SplineExtrapolation::polynomial) {
         /* Yes, that's not correct. But I don't see any good reason for
          * implementing a case, which anybody with more than a dead fish
          * between the ears will never use. */
-        std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+        std::ranges::fill(finalSensitivity, NAN);
     } else {
         /* Periodic: will not yield a steady state
          * (unless the spline is the constant funtion,
@@ -824,7 +824,7 @@ void HermiteSpline::compute_final_sensitivity(
          * whether the steady state continues to exist in a neighbourhood of the
          * current parameters
          */
-        std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+        std::ranges::fill(finalSensitivity, NAN);
     }
     set_final_sensitivity_scaled(finalSensitivity);
 }

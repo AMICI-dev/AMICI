@@ -467,10 +467,9 @@ void SUNMatrixWrapper::sparse_add(
 
 void SUNMatrixWrapper::sparse_sum(std::vector<SUNMatrixWrapper> const& mats) {
     // matrix_ == nullptr is allowed on the first call
-    auto all_empty
-        = std::all_of(mats.begin(), mats.end(), [](SUNMatrixWrapper const& m) {
-              return !m.matrix_;
-          });
+    auto all_empty = std::ranges::all_of(mats, [](SUNMatrixWrapper const& m) {
+        return !m.matrix_;
+    });
     if (all_empty)
         return;
 
