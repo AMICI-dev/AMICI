@@ -6,7 +6,6 @@ import os
 import tempfile
 from itertools import chain
 from pathlib import Path
-from typing import Union
 
 import amici
 import libsbml
@@ -215,7 +214,6 @@ def _workaround_observable_parameters(
 
 @log_execution_time("Importing PEtab model", logger)
 def import_model_sbml(
-    sbml_model: Union[str, Path, "libsbml.Model"] = None,
     petab_problem: petab.Problem = None,
     model_name: str | None = None,
     model_output_dir: str | Path | None = None,
@@ -230,10 +228,6 @@ def import_model_sbml(
 ) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
-
-    :param sbml_model:
-        PEtab SBML model or SBML file name.
-        Deprecated, pass ``petab_problem`` instead.
 
     :param petab_problem:
         PEtab problem.
@@ -302,12 +296,10 @@ def import_model_sbml(
     # Model name from SBML ID or filename
     if model_name is None:
         if not (model_name := petab_problem.model.sbml_model.getId()):
-            if not isinstance(sbml_model, str | Path):
-                raise ValueError(
-                    "No `model_name` was provided and no model "
-                    "ID was specified in the SBML model."
-                )
-            model_name = os.path.splitext(os.path.split(sbml_model)[-1])[0]
+            raise ValueError(
+                "No `model_name` was provided and no model "
+                "ID was specified in the SBML model."
+            )
 
     if model_output_dir is None:
         model_output_dir = os.path.join(
