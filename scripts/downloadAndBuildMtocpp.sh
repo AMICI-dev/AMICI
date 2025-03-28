@@ -43,7 +43,7 @@ if [ ! -d "mtocpp-master" ]; then
 
     if command -v cmake &> /dev/null; then
       echo "Building mtocpp using CMake..."
-      cd mtocpp-master/build && cmake .. && make mtocpp mtocpp_post
+      cd mtocpp-master/build && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. && make mtocpp mtocpp_post
       if [ $? -ne 0 ] ; then
           exit 1
       fi
