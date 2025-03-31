@@ -2812,12 +2812,18 @@ class SbmlImporter:
             try:
                 formula = sp.sympify(
                     _parse_logical_operators(math_string),
+                    # for correctly parsing '=='
+                    #  -> https://github.com/sympy/sympy/issues/26227
+                    evaluate=False,
                     locals=self._local_symbols,
                 )
             except TypeError as err:
                 if str(err) == "BooleanAtom not allowed in this context.":
                     formula = sp.sympify(
                         _parse_logical_operators(math_string),
+                        # for correctly parsing '=='
+                        #  -> https://github.com/sympy/sympy/issues/26227
+                        evaluate=False,
                         locals={
                             "true": sp.Float(1.0),
                             "false": sp.Float(0.0),
