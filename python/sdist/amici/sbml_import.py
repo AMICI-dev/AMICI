@@ -3045,7 +3045,9 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         # convert relational expressions into trigger functions
         if isinstance(
             trigger,
-            sp.core.relational.LessThan | sp.core.relational.StrictLessThan,
+            sp.core.relational.LessThan
+            | sp.core.relational.StrictLessThan
+            | sp.core.relational.Equality,
         ):
             # y < x or y <= x
             return -root
