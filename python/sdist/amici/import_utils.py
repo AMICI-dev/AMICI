@@ -598,6 +598,7 @@ def _check_unsupported_functions(
         sp.functions.factorial,
         sp.functions.ceiling,
         sp.functions.floor,
+        sp.functions.tan,
         sp.functions.sec,
         sp.functions.csc,
         sp.functions.cot,

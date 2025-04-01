@@ -2807,6 +2807,7 @@ class SbmlImporter:
         | int
         | sp.Basic
         | str,
+        piecewise_to_heaviside: bool = True,
     ) -> sp.Expr | None:
         """
         Sympify Math of SBML variables with all sanity checks and
@@ -2904,12 +2905,18 @@ class SbmlImporter:
                 "Xor is currently not supported as logical operation."
             )
 
-        _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+        try:
+            _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+        except SBMLException:
+            # try to (partially) evaluate expressions that would otherwise be unsupported
+            expr = expr.evalf()
+            _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
         # piecewise to heavisides
-        expr = expr.replace(
-            sp.Piecewise, lambda *args: _parse_piecewise_to_heaviside(args)
-        )
+        if piecewise_to_heaviside:
+            expr = expr.replace(
+                sp.Piecewise, lambda *args: _parse_piecewise_to_heaviside(args)
+            )
 
         return expr
 
@@ -2927,7 +2934,9 @@ class SbmlImporter:
         assignment = self.sbml.getInitialAssignment(element_id)
         if assignment is None:
             return None
-        sym = self._sympy_from_sbml_math(assignment)
+        sym = self._sympy_from_sbml_math(
+            assignment, piecewise_to_heaviside=False
+        )
         # this is an initial assignment so we need to use
         # initial conditions
         sym = self._make_initial(sym)
