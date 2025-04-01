@@ -109,28 +109,10 @@ Python
 
 -  We use Python `type
    hints <https://docs.python.org/3/library/typing.html>`__ for all
-   functions (but not for class attributes, since they are not supported
-   by the current Python doxygen filter). In Python code, type hints
-   should be used instead of doxygen ``@type``.
+   functions and attributes. We do not include any other redundant
+   type annotation in docstrings.
 
-   For function docstrings, follow this format:
-
-   ::
-
-      """One-line description.
-
-      Possible a more detailed description
-
-      Arguments:
-          Argument1: This needs to start on the same line, otherwise the current
-              doxygen filter will fail.
-
-          Returns:
-              Return value
-
-          Raises:
-              SomeError in case of some error.
-      """
+-  We use the `sphinx docstring-style <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`__ for new code.
 
 C++
 ^^^
