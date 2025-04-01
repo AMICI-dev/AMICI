@@ -21,7 +21,7 @@ from collections.abc import Callable
 from collections.abc import Iterable, Sequence
 
 import libsbml
-from sbmlmath import SBMLMathMLParser, TimeSymbol
+from sbmlmath import SBMLMathMLParser, TimeSymbol, CSymbol
 import numpy as np
 import sympy as sp
 from sympy.logic.boolalg import BooleanFalse, BooleanTrue
@@ -2835,7 +2835,7 @@ class SbmlImporter:
                 {
                     sym: local
                     for sym in var_or_math.free_symbols
-                    if (local := self._local_symbols[sym]) != sym
+                    if (local := self._local_symbols.get(str(sym), sym)) != sym
                 }
             )
 
@@ -2887,12 +2887,17 @@ class SbmlImporter:
             # replace special time object by `sbml_time_symbol`
             #  which will later be replaced by `amici_time_symbol`
             expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
+            avogadro = CSymbol(
+                "avogadro",
+                definition_url="http://www.sbml.org/sbml/symbols/avogadro",
+            )
+            expr = expr.subs(avogadro, sp.Float(float(avogadro)))
             # replace other symbols, e.g. for handling hardcoded parameters
             expr = expr.subs(
                 {
                     sym: local
                     for sym in expr.free_symbols
-                    if (local := self._local_symbols[str(sym)]) != sym
+                    if (local := self._local_symbols.get(str(sym), sym)) != sym
                 }
             )
         else:
