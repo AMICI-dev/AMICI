@@ -8,7 +8,8 @@ cmake -S . -B build ^
     -DCMAKE_INSTALL_PREFIX:PATH="C:/BLAS/OpenBLAS" ^
     -DCMAKE_C_COMPILER:FILEPATH=cl ^
     -DCMAKE_BUILD_TYPE=Release ^
-    -DCMAKE_MAKE_PROGRAM=ninja
+    -DCMAKE_MAKE_PROGRAM=ninja ^
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 cmake --build build --parallel
 cmake --install build
 echo compileBLAS.cmd completed
