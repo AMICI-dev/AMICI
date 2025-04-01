@@ -198,6 +198,7 @@ class SbmlImporter:
             sbml_level=self.sbml.getLevel(),
             sbml_version=self.sbml.getVersion(),
             symbol_kwargs={"real": True},
+            ignore_units=True,
         )
 
     @log_execution_time("loading SBML", logger)
@@ -2898,12 +2899,17 @@ class SbmlImporter:
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
             )
 
+        if expr.has(sp.Xor):
+            raise SBMLException(
+                "Xor is currently not supported as logical operation."
+            )
+
+        _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+
         # piecewise to heavisides
         expr = expr.replace(
             sp.Piecewise, lambda *args: _parse_piecewise_to_heaviside(args)
         )
-
-        _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
         return expr
 
