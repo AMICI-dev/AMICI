@@ -5,6 +5,7 @@ cmake -S . -B build ^
     -G "Ninja" ^
     -DBUILD_DOUBLE=1 ^
     -DBUILD_SINGLE=1 ^
+    -DBUILD_WITHOUT_LAPACK=1 ^
     -DBUILD_SHARED_LIBS=ON ^
     -DCMAKE_INSTALL_PREFIX:PATH="C:/BLAS/OpenBLAS" ^
     -DCMAKE_C_COMPILER:FILEPATH=cl ^
