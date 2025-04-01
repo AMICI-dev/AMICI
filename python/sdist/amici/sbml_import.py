@@ -288,7 +288,7 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = True,
+        log_as_log10: bool = None,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
@@ -397,9 +397,8 @@ class SbmlImporter:
                 see :meth:`amici.DEModel.__init__`
 
         :param log_as_log10:
-            If ``True``, log in the SBML model will be parsed as ``log10``
-            (default), if ``False``, log will be parsed as natural logarithm
-            ``ln``.
+            This option is deprecated and will be removed in a future version.
+            Also, this option never had any effect on model import.
 
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
@@ -408,10 +407,20 @@ class SbmlImporter:
         :param hardcode_symbols:
             List of SBML entity IDs that are to be hardcoded in the generated model.
             Their values cannot be changed anymore after model import.
-            Currently only parameters that are not targets of rules or
+            Currently, only parameters that are not targets of rules or
             initial assignments are supported.
         """
         set_log_level(logger, verbose)
+
+        if log_as_log10 is not None:
+            # deprecated 04/2025
+            warnings.warn(
+                "The `log_as_log10` argument is deprecated and will be "
+                "removed in a future version. This argument can safely be "
+                "dropped without replacement.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
 
         ode_model = self._build_ode_model(
             observables=observables,
@@ -425,7 +434,6 @@ class SbmlImporter:
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
             cache_simplify=cache_simplify,
-            log_as_log10=log_as_log10,
             hardcode_symbols=hardcode_symbols,
         )
 
@@ -461,7 +469,7 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = True,
+        log_as_log10: bool = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -527,11 +535,19 @@ class SbmlImporter:
                 see :meth:`amici.DEModel.__init__`
 
         :param log_as_log10:
-            If ``True``, log in the SBML model will be parsed as ``log10``
-            (default), if ``False``, log will be parsed as natural logarithm
-            ``ln``.
+            This option is deprecated and will be removed in a future version.
+            Also, this option never had any effect on model import.
         """
         set_log_level(logger, verbose)
+
+        if log_as_log10 is not None:
+            warnings.warn(
+                "The `log_as_log10` argument is deprecated and will be "
+                "removed in a future version. This argument can safely be "
+                "dropped without replacement.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
 
         ode_model = self._build_ode_model(
             observables=observables,
@@ -541,7 +557,6 @@ class SbmlImporter:
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
             cache_simplify=cache_simplify,
-            log_as_log10=log_as_log10,
         )
 
         from amici.jax.ode_export import ODEExporter
@@ -567,7 +582,6 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = True,
         hardcode_symbols: Sequence[str] = None,
     ) -> DEModel:
         """Generate a DEModel from this SBML model.
@@ -598,11 +612,6 @@ class SbmlImporter:
             event_noise_distributions = {}
 
         self._reset_symbols()
-        self.sbml_parser_settings.setParseLog(
-            libsbml.L3P_PARSE_LOG_AS_LOG10
-            if log_as_log10
-            else libsbml.L3P_PARSE_LOG_AS_LN
-        )
         self._process_sbml(
             constant_parameters=constant_parameters,
             hardcode_symbols=hardcode_symbols,
