@@ -2789,7 +2789,13 @@ class SbmlImporter:
                     }
 
     def _sympy_from_sbml_math(
-        self, var_or_math: [libsbml.SBase, libsbml.ASTNode, float | int]
+        self,
+        var_or_math: libsbml.SBase
+        | libsbml.ASTNode
+        | float
+        | int
+        | sp.Basic
+        | str,
     ) -> sp.Expr | None:
         """
         Sympify Math of SBML variables with all sanity checks and
@@ -2800,9 +2806,7 @@ class SbmlImporter:
         :return:
             Sympified symbolic expression
         """
-        if isinstance(var_or_math, sp.Basic):
-            return var_or_math
-
+        # numeric values
         if isinstance(var_or_math, float | int):
             return (
                 sp.Integer(var_or_math)
@@ -2810,37 +2814,70 @@ class SbmlImporter:
                 else sp.Float(var_or_math)
             )
 
-        if isinstance(var_or_math, libsbml.ASTNode):
-            ast_node = var_or_math
-            sbml_obj = ast_node.getParentSBMLObject()
-        elif isinstance(var_or_math, libsbml.SBase):
-            sbml_obj = var_or_math
-            ast_node = var_or_math.getMath()
+        # already a sympy object
+        if isinstance(var_or_math, sp.Basic):
+            # substitute free symbols to match assumptions of other model
+            #  entities where necessary
+            expr = var_or_math.subs(
+                {
+                    sym: local
+                    for sym in var_or_math.free_symbols
+                    if (local := self._local_symbols[sym]) != sym
+                }
+            )
+
+        # an expression string
+        elif isinstance(var_or_math, str):
+            # TODO: this has nothing to do with SBML math and should be moved
+            #  out of here
+            ele_name = "Expression string"
+            try:
+                expr = sp.sympify(
+                    var_or_math,
+                    locals={
+                        "true": sp.Float(1.0),
+                        "false": sp.Float(0.0),
+                        **self._local_symbols,
+                    },
+                )
+            except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
+                raise SBMLException(
+                    f'{ele_name} "{var_or_math}" '
+                    "contains an unsupported expression: "
+                    f"{err}."
+                )
+
+        # actual libSBML objects
+        elif isinstance(var_or_math, libsbml.ASTNode | libsbml.SBase):
+            if isinstance(var_or_math, libsbml.ASTNode):
+                ast_node = var_or_math
+                sbml_obj = ast_node.getParentSBMLObject()
+            elif isinstance(var_or_math, libsbml.SBase):
+                sbml_obj = var_or_math
+                ast_node = var_or_math.getMath()
+            ele_name = sbml_obj.getId()
+
+            mathml = libsbml.writeMathMLWithNamespaceToString(
+                ast_node,
+                libsbml.SBMLNamespaces(
+                    self.sbml.getLevel(), self.sbml.getVersion()
+                ),
+            )
+            try:
+                expr = self._mathml_parser.parse_str(mathml)
+            except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
+                raise SBMLException(
+                    f'{ele_name} "{mathml}" '
+                    "contains an unsupported expression: "
+                    f"{err}."
+                )
+
         else:
             raise ValueError(
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
             )
 
-        ele_name = sbml_obj.getId()
-        mathml = libsbml.writeMathMLWithNamespaceToString(
-            ast_node,
-            libsbml.SBMLNamespaces(
-                self.sbml.getLevel(), self.sbml.getVersion()
-            ),
-        )
-
-        try:
-            expr = self._mathml_parser.parse_str(mathml)
-        except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
-            raise SBMLException(
-                f'{ele_name} "{mathml}" '
-                "contains an unsupported expression: "
-                f"{err}."
-            )
-
         # piecewise to heavisides
-        # TODO: it might be more efficient to do that directly during parsing
-        #  the sbml expression
         expr = expr.replace(
             sp.Piecewise, lambda *args: _parse_piecewise_to_heaviside(args)
         )
