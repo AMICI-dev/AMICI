@@ -24,6 +24,7 @@ dependencies = [
     "python-libsbml",
     "pandas>=2.0.2",
     "pyarrow",
+    "sbmlmath>=0.3.0",
     "toposort",
     "setuptools>=48",
     "mpmath",

@@ -2,7 +2,7 @@
 SBML Import
 -----------
 This module provides all necessary functionality to import a model specified
-in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
+in the `Systems Biology Markup Language (SBML) <https://sbml.org/>`_.
 """
 
 import copy
@@ -21,6 +21,7 @@ from collections.abc import Callable
 from collections.abc import Iterable, Sequence
 
 import libsbml
+from sbmlmath import SBMLMathMLParser
 import numpy as np
 import sympy as sp
 from sympy.logic.boolalg import BooleanFalse, BooleanTrue
@@ -37,7 +38,6 @@ from .import_utils import (
     RESERVED_SYMBOLS,
     _check_unsupported_functions,
     _get_str_symbol_identifiers,
-    _parse_special_functions,
     amici_time_symbol,
     annotation_namespace,
     generate_measurement_symbol,
@@ -51,9 +51,10 @@ from .import_utils import (
     toposort_symbols,
     _default_simplify,
     generate_flux_symbol,
+    _parse_piecewise_to_heaviside,
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .sbml_utils import SBMLException, _parse_logical_operators
+from .sbml_utils import SBMLException
 from .splines import AbstractSpline
 from sympy.matrices.dense import MutableDenseMatrix
 
@@ -193,6 +194,11 @@ class SbmlImporter:
         self.sbml_parser_settings.setParseUnits(libsbml.L3P_NO_UNITS)
 
         self._discard_annotations: bool = discard_annotations
+        self._mathml_parser = SBMLMathMLParser(
+            sbml_level=self.sbml.getLevel(),
+            sbml_version=self.sbml.getVersion(),
+            symbol_kwargs={"real": True},
+        )
 
     @log_execution_time("loading SBML", logger)
     def _process_document(self) -> None:
@@ -1250,12 +1256,7 @@ class SbmlImporter:
 
         # parameter ID => initial assignment sympy expression
         par_id_to_ia = {
-            par.getId(): ia.subs(
-                {
-                    BooleanTrue(): sp.Float(1.0),
-                    BooleanFalse(): sp.Float(0.0),
-                }
-            ).evalf()
+            par.getId(): ia.simplify().evalf()
             for par in self.sbml.getListOfParameters()
             if (ia := self._get_element_initial_assignment(par.getId()))
             is not None
@@ -2222,6 +2223,8 @@ class SbmlImporter:
             symbol = symbol_with_assumptions(f"J{obs_id}")
             dist = noise_distributions.get(str(obs_id), "normal")
             cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
+            # TODO: clarify expected grammar for cost_fun
+            #   python vs SBML L3 vs PEtab
             value = sp.sympify(
                 cost_fun,
                 locals=dict(
@@ -2786,57 +2789,65 @@ class SbmlImporter:
                     }
 
     def _sympy_from_sbml_math(
-        self, var_or_math: [libsbml.SBase, str]
-    ) -> sp.Expr | float | None:
+        self, var_or_math: [libsbml.SBase, libsbml.ASTNode, float | int]
+    ) -> sp.Expr | None:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
 
         :param var_or_math:
-            SBML variable that has a getMath() function or math string
+            SBML object that has a ``getMath()`` function or an ASTNode.
         :return:
-            sympfified symbolic expression
+            Sympified symbolic expression
         """
-        if isinstance(var_or_math, libsbml.SBase):
-            math_string = libsbml.formulaToL3StringWithSettings(
-                var_or_math.getMath(), self.sbml_parser_settings
+        if isinstance(var_or_math, sp.Basic):
+            return var_or_math
+
+        if isinstance(var_or_math, float | int):
+            return (
+                sp.Integer(var_or_math)
+                if var_or_math.is_integer()
+                else sp.Float(var_or_math)
             )
-            ele_name = var_or_math.element_name
+
+        if isinstance(var_or_math, libsbml.ASTNode):
+            ast_node = var_or_math
+            sbml_obj = ast_node.getParentSBMLObject()
+        elif isinstance(var_or_math, libsbml.SBase):
+            sbml_obj = var_or_math
+            ast_node = var_or_math.getMath()
         else:
-            math_string = var_or_math
-            ele_name = "string"
-        math_string = replace_logx(math_string)
+            raise ValueError(
+                f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
+            )
+
+        ele_name = sbml_obj.getId()
+        mathml = libsbml.writeMathMLWithNamespaceToString(
+            ast_node,
+            libsbml.SBMLNamespaces(
+                self.sbml.getLevel(), self.sbml.getVersion()
+            ),
+        )
+
         try:
-            try:
-                formula = sp.sympify(
-                    _parse_logical_operators(math_string),
-                    locals=self._local_symbols,
-                )
-            except TypeError as err:
-                if str(err) == "BooleanAtom not allowed in this context.":
-                    formula = sp.sympify(
-                        _parse_logical_operators(math_string),
-                        locals={
-                            "true": sp.Float(1.0),
-                            "false": sp.Float(0.0),
-                            **self._local_symbols,
-                        },
-                    )
-                else:
-                    raise
+            expr = self._mathml_parser.parse_str(mathml)
         except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
             raise SBMLException(
-                f'{ele_name} "{math_string}" '
+                f'{ele_name} "{mathml}" '
                 "contains an unsupported expression: "
                 f"{err}."
             )
 
-        if isinstance(formula, sp.Expr):
-            formula = _parse_special_functions_sbml(formula)
-            _check_unsupported_functions_sbml(
-                formula, expression_type=ele_name
-            )
-        return formula
+        # piecewise to heavisides
+        # TODO: it might be more efficient to do that directly during parsing
+        #  the sbml expression
+        expr = expr.replace(
+            sp.Piecewise, lambda *args: _parse_piecewise_to_heaviside(args)
+        )
+
+        _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+
+        return expr
 
     def _get_element_initial_assignment(
         self, element_id: str
@@ -3223,22 +3234,6 @@ def _get_list_of_species_references(
     ]
 
 
-def replace_logx(math_str: str | float | None) -> str | float | None:
-    """
-    Replace logX(.) by log(., X) since sympy cannot parse the former
-
-    :param math_str:
-        string for sympification
-
-    :return:
-        sympifiable string
-    """
-    if not isinstance(math_str, str):
-        return math_str
-
-    return re.sub(r"(^|\W)log(\d+)\(", r"\g<1>1/ln(\2)*ln(", math_str)
-
-
 def _collect_event_assignment_parameter_targets(
     sbml_model: libsbml.Model,
 ) -> list[sp.Symbol]:
@@ -3262,15 +3257,6 @@ def _check_unsupported_functions_sbml(
 ):
     try:
         _check_unsupported_functions(sym, expression_type, full_sym)
-    except RuntimeError as err:
-        raise SBMLException(str(err))
-
-
-def _parse_special_functions_sbml(
-    sym: sp.Expr, toplevel: bool = True
-) -> sp.Expr:
-    try:
-        return _parse_special_functions(sym, toplevel)
     except RuntimeError as err:
         raise SBMLException(str(err))
 
