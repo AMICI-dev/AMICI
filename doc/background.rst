@@ -52,13 +52,13 @@ publications:
 .. note::
 
    Implementation details of the latest AMICI versions may differ from the ones
-   given in the references manuscripts.
+   given in the referenced manuscripts.
 
 
 Third-Party numerical algorithms used by AMICI
 ----------------------------------------------
 
-AMICI uses the following packages from SUNDIALS:
+AMICI uses the following packages from `SUNDIALS <https://computing.llnl.gov/projects/sundials>`__:
 
 * CVODES:
 
@@ -70,7 +70,7 @@ AMICI uses the following packages from SUNDIALS:
 
 * IDAS
 
-AMICI uses the following packages from SuiteSparse:
+AMICI uses the following packages from `SuiteSparse <https://github.com/DrTimothyAldenDavis/SuiteSparse>`__:
 
 * Algorithm 907: **KLU** A Direct Sparse Solver for Circuit Simulation
   Problems. Timothy A. Davis, Ekanathan Palamadai Natarajan,
