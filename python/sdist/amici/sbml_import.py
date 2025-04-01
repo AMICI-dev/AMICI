@@ -2818,6 +2818,7 @@ class SbmlImporter:
         if isinstance(var_or_math, sp.Basic):
             # substitute free symbols to match assumptions of other model
             #  entities where necessary
+            ele_name = "SymPy expression"
             expr = var_or_math.subs(
                 {
                     sym: local
@@ -3373,7 +3374,9 @@ def _non_const_conservation_laws_supported(sbml_model: libsbml.Model) -> bool:
     return True
 
 
-def _rateof_to_dummy(sym_math):
+def _rateof_to_dummy(
+    sym_math: sp.Expr,
+) -> tuple[sp.Expr, dict[sp.Function, sp.Dummy]]:
     """Replace rateOf(...) by dummy variable
 
     if `rateOf(some_species)` is used in an initial assignment, we don't want to substitute the species argument
@@ -3384,18 +3387,20 @@ def _rateof_to_dummy(sym_math):
             [...substitute...]
             sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
     """
-    if rate_ofs := sym_math.find(sp.core.function.UndefinedFunction("rateOf")):
-        # replace by dummies to avoid species substitution
-        rateof_dummies = {
-            rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}")
-            for rate_of in rate_ofs
-        }
+    from sbmlmath import rate_of
 
-        return sym_math.subs(rateof_dummies), rateof_dummies
-    return sym_math, {}
+    new_expr, rateof_to_dummies = sym_math.replace(
+        # `x` is the rateOf argument
+        rate_of,
+        lambda x: sp.Dummy(f"Dummy_RateOf_{x.name}"),
+        map=True,
+    )
+    return new_expr, rateof_to_dummies
 
 
-def _dummy_to_rateof(sym_math, rateof_dummies):
+def _dummy_to_rateof(
+    sym_math: sp.Expr, rateof_dummies: dict[sp.Function, sp.Dummy]
+) -> sp.Expr:
     """Back-substitution of dummies from `_rateof_to_dummy`"""
     if rateof_dummies:
         return sym_math.subs({v: k for k, v in rateof_dummies.items()})
