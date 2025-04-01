@@ -21,7 +21,7 @@ from collections.abc import Callable
 from collections.abc import Iterable, Sequence
 
 import libsbml
-from sbmlmath import SBMLMathMLParser
+from sbmlmath import SBMLMathMLParser, TimeSymbol
 import numpy as np
 import sympy as sp
 from sympy.logic.boolalg import BooleanFalse, BooleanTrue
@@ -2881,7 +2881,9 @@ class SbmlImporter:
                     "contains an unsupported expression: "
                     f"{err}."
                 )
-
+            # replace special time object by `sbml_time_symbol`
+            #  which will later be replaced by `amici_time_symbol`
+            expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
         else:
             raise ValueError(
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
