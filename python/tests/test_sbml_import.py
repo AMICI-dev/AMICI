@@ -61,7 +61,7 @@ def test_sbml2amici_no_observables():
 
 @skip_on_valgrind
 def test_sbml2amici_nested_observables_fail():
-    """Test model generation works for model without observables"""
+    """Test that import fails if nested observables are used."""
     sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     model_name = "test_sbml2amici_nested_observables_fail"
@@ -679,7 +679,7 @@ def test_code_gen_uses_lhs_symbol_ids():
 
 @skip_on_valgrind
 def test_hardcode_parameters():
-    """Test model generation works for model without observables"""
+    """Test hardcoding parameters."""
     sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     r = sbml_model.createRateRule()

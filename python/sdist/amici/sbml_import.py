@@ -936,6 +936,7 @@ class SbmlImporter:
             # to the most recent SI definition.
             "avogadro": sp.Float(6.02214179e23),
             "exponentiale": sp.E,
+            "log10": lambda x: sp.log(x, 10),
         }
         for s, v in special_symbols_and_funs.items():
             self.add_local_symbol(s, v)
@@ -2884,6 +2885,14 @@ class SbmlImporter:
             # replace special time object by `sbml_time_symbol`
             #  which will later be replaced by `amici_time_symbol`
             expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
+            # replace other symbols, e.g. for handling hardcoded parameters
+            expr = expr.subs(
+                {
+                    sym: local
+                    for sym in expr.free_symbols
+                    if (local := self._local_symbols[str(sym)]) != sym
+                }
+            )
         else:
             raise ValueError(
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
