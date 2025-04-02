@@ -540,6 +540,8 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
             ]
         )
 
+    # TODO: x XOR y = (A & ~B) | (~A & B)
+    # TODO: x == y
     if isinstance(trigger, sp.And):
         return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
 

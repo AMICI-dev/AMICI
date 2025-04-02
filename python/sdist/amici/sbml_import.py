@@ -2884,6 +2884,10 @@ class SbmlImporter:
                     "contains an unsupported expression: "
                     f"{err}."
                 )
+            # SBML math is currently parsed with evaluate=False, causing
+            #  some problems that are solved by .simplify(), e.g.,
+            #  evaluating constant piecewise conditions
+            expr = expr.simplify()
             # replace special time object by `sbml_time_symbol`
             #  which will later be replaced by `amici_time_symbol`
             expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
@@ -2919,10 +2923,13 @@ class SbmlImporter:
 
         # piecewise to heavisides
         if piecewise_to_heaviside:
-            expr = expr.replace(
-                sp.Piecewise, lambda *args: _parse_piecewise_to_heaviside(args)
-            )
-
+            try:
+                expr = expr.replace(
+                    sp.Piecewise,
+                    lambda *args: _parse_piecewise_to_heaviside(args),
+                )
+            except RuntimeError as err:
+                raise SBMLException(str(err)) from err
         return expr
 
     def _get_element_initial_assignment(
@@ -3117,7 +3124,7 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     # Events can be defined without trigger, i.e., the event will never fire.
     # In this case, set a dummy trigger:
-    if trigger is None:
+    if trigger is None or trigger is sp.false:
         return sp.Float(1.0)
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
