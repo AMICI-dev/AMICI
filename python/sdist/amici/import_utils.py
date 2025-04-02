@@ -509,6 +509,8 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     :param trigger:
     :return: real valued root function expression
     """
+    trigger = trigger.simplify()
+
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
         _check_unsupported_functions(root, "sympy.Expression")

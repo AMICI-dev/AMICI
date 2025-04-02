@@ -199,6 +199,7 @@ class SbmlImporter:
             sbml_version=self.sbml.getVersion(),
             symbol_kwargs={"real": True},
             ignore_units=True,
+            evaluate=True,
         )
 
     @log_execution_time("loading SBML", logger)
@@ -2892,10 +2893,6 @@ class SbmlImporter:
                     "contains an unsupported expression: "
                     f"{err}."
                 )
-            # SBML math is currently parsed with evaluate=False, causing
-            #  some problems that are solved by .simplify(), e.g.,
-            #  evaluating constant piecewise conditions
-            expr = expr.simplify()
             # replace special time object by `sbml_time_symbol`
             #  which will later be replaced by `amici_time_symbol`
             expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
