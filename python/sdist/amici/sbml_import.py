@@ -24,7 +24,7 @@ import libsbml
 from sbmlmath import SBMLMathMLParser, TimeSymbol, CSymbol
 import numpy as np
 import sympy as sp
-from sympy.logic.boolalg import BooleanFalse, BooleanTrue
+from sympy.logic.boolalg import BooleanFalse, BooleanTrue, BooleanFunction
 
 from . import has_clibs
 from .de_model import DEModel
@@ -2904,6 +2904,7 @@ class SbmlImporter:
                 definition_url="http://www.sbml.org/sbml/symbols/avogadro",
             )
             expr = expr.subs(avogadro, sp.Float(float(avogadro)))
+
             # replace other symbols, e.g. for handling hardcoded parameters
             expr = expr.subs(
                 {
@@ -2928,6 +2929,12 @@ class SbmlImporter:
             # try to (partially) evaluate expressions that would otherwise be unsupported
             expr = expr.evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+
+        # boolean to numeric piecewise
+        if isinstance(expr, BooleanFunction):
+            from sbmlmath.mathml_parser import _bool2num
+
+            expr = _bool2num(expr)
 
         # piecewise to heavisides
         if piecewise_to_heaviside:

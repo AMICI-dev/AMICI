@@ -45,6 +45,7 @@ jobs:
       uses: ./.github/actions/install-apt-dependencies
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
+    - run: venv/bin/python -m pip install git+https://github.com/dweindl/sbmlmath.git#egg=sbmlmath
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
