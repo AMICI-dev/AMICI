@@ -2136,12 +2136,12 @@ class SbmlImporter:
             }.items()
         }
 
-        for variable in itt.chain(
-            self.parameter_assignment_rules,
-            self.initial_assignments,
-            self.compartment_assignment_rules,
-            self.species_assignment_rules,
-            self.compartments,
+        for variable, formula in itt.chain(
+            self.parameter_assignment_rules.items(),
+            self.initial_assignments.items(),
+            self.compartment_assignment_rules.items(),
+            self.species_assignment_rules.items(),
+            self.compartments.items(),
         ):
             symbol = symbol_with_assumptions(f"y{variable}")
             # Assignment rules take precedence over compartment volume
@@ -2154,7 +2154,7 @@ class SbmlImporter:
                 continue
             self.symbols[SymbolId.OBSERVABLE][symbol] = {
                 "name": str(variable),
-                "value": variable,
+                "value": formula,
             }
 
     def _process_log_likelihood(
