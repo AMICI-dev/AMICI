@@ -648,7 +648,7 @@ def cast_to_sym(
     elif isinstance(value, BooleanAtom):
         value = sp.Float(float(bool(value)))
 
-    if not isinstance(value, sp.Basic):
+    if not isinstance(value, sp.Expr):
         raise TypeError(
             f"Couldn't cast {input_name} to sympy.Expr, was " f"{type(value)}"
         )
