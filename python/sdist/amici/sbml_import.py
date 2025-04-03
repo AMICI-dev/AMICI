@@ -2920,7 +2920,7 @@ class SbmlImporter:
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
         except SBMLException:
             # try to (partially) evaluate expressions that would otherwise be unsupported
-            expr = expr.evalf()
+            expr = expr.simplify().evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
         # boolean to numeric piecewise

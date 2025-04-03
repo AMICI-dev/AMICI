@@ -20,7 +20,6 @@ import xml.dom.minidom
 import libsbml
 from sympy.core.parameters import evaluate
 
-# TODO: remove
 from sympy.printing.mathml import MathMLContentPrinter
 
 from .import_utils import (
