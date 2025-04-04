@@ -870,7 +870,7 @@ class SbmlImporter:
             delay = event.getDelay()
             if delay is not None:
                 try:
-                    delay_time = float(self._sympy_from_sbml_math(delay))
+                    delay_time = float(self._sympify(delay))
                     if delay_time != 0:
                         raise ValueError
                 # `TypeError` would be raised in the above `float(...)`
@@ -992,7 +992,7 @@ class SbmlImporter:
                 continue
             self.add_local_symbol(
                 r.getId(),
-                self._sympy_from_sbml_math(r.getKineticLaw() or sp.Float(0)),
+                self._sympify(r.getKineticLaw() or sp.Float(0)),
             )
 
     def add_local_symbol(self, key: str, value: sp.Expr):
@@ -1036,7 +1036,7 @@ class SbmlImporter:
             init = sp.Float(1.0)
 
             if comp.isSetVolume():
-                init = self._sympy_from_sbml_math(comp.getVolume())
+                init = self._sympify(comp.getVolume())
 
             ia_sym = self._get_element_initial_assignment(comp.getId())
             if ia_sym is not None:
@@ -1137,7 +1137,7 @@ class SbmlImporter:
                 continue
 
             variable = symbol_with_assumptions(rule.getVariable())
-            formula = self._sympy_from_sbml_math(rule)
+            formula = self._sympify(rule)
             if formula is None:
                 continue
 
@@ -1155,7 +1155,7 @@ class SbmlImporter:
                 del self.compartments[variable]
 
             elif variable in self.symbols[SymbolId.PARAMETER]:
-                init = self._sympy_from_sbml_math(
+                init = self._sympify(
                     self.symbols[SymbolId.PARAMETER][variable]["value"],
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]["name"]
@@ -1397,7 +1397,7 @@ class SbmlImporter:
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
-                sym_math = self._sympy_from_sbml_math(
+                sym_math = self._sympify(
                     reaction.getKineticLaw() or sp.Float(0)
                 )
 
@@ -1450,7 +1450,7 @@ class SbmlImporter:
             )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
-        formula = self._sympy_from_sbml_math(rule)
+        formula = self._sympify(rule)
         if formula is None:
             return
 
@@ -1602,7 +1602,7 @@ class SbmlImporter:
                     self.splines.append(spline)
                     return
 
-        formula = self._sympy_from_sbml_math(rule)
+        formula = self._sympify(rule)
         if formula is None:
             return
 
@@ -1757,7 +1757,7 @@ class SbmlImporter:
 
             # get and parse the trigger function
             trigger_sbml = event.getTrigger()
-            trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
+            trigger_sym = self._sympify(trigger_sbml)
             trigger = _parse_event_trigger(trigger_sym)
 
             # parse the boluses / event assignments
@@ -1773,7 +1773,7 @@ class SbmlImporter:
                 if event_assignment.getMath() is None:
                     # Ignore event assignments with no change in value.
                     continue
-                formula = self._sympy_from_sbml_math(event_assignment)
+                formula = self._sympify(event_assignment)
                 try:
                     # Try to find the species in the state vector.
                     index = state_vector.index(variable_sym)
@@ -1976,7 +1976,7 @@ class SbmlImporter:
             self.symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(obs): {
                     "name": definition.get("name", f"y{iobs}"),
-                    "value": self._sympy_from_sbml_math(definition["formula"]),
+                    "value": self._sympify(definition["formula"]),
                     "transformation": noise_distribution_to_observable_transformation(
                         noise_distributions.get(obs, "normal")
                     ),
@@ -2006,9 +2006,7 @@ class SbmlImporter:
                 {
                     name
                     for sigma in sigmas.values()
-                    for symbol in self._sympy_from_sbml_math(
-                        sigma
-                    ).free_symbols
+                    for symbol in self._sympify(sigma).free_symbols
                     if re.match(r"noiseParameter\d+$", (name := str(symbol)))
                 }
             )
@@ -2023,9 +2021,7 @@ class SbmlImporter:
                 {
                     name
                     for obs in observables.values()
-                    for symbol in self._sympy_from_sbml_math(
-                        obs["formula"]
-                    ).free_symbols
+                    for symbol in self._sympify(obs["formula"]).free_symbols
                     if re.match(
                         r"observableParameter\d+$", (name := str(symbol))
                     )
@@ -2086,7 +2082,7 @@ class SbmlImporter:
         self.symbols[SymbolId.EVENT_OBSERVABLE] = {
             symbol_with_assumptions(obs): {
                 "name": definition.get("name", f"z{iobs}"),
-                "value": self._sympy_from_sbml_math(definition["formula"]),
+                "value": self._sympify(definition["formula"]),
                 "event": sp.Symbol(definition.get("event")),
                 "transformation": noise_distribution_to_observable_transformation(
                     event_noise_distributions.get(obs, "normal")
@@ -2208,7 +2204,7 @@ class SbmlImporter:
 
         if not event_reg:
             sigmas = {
-                obs_id: self._sympy_from_sbml_math(sigma)
+                obs_id: self._sympify(sigma)
                 for obs_id, sigma in sigmas.items()
             }
             obs_syms = set(self.symbols[obs_symbol].keys())
@@ -2326,7 +2322,7 @@ class SbmlImporter:
             stoich = self._get_element_stoichiometry(species_reference)
             self._replace_in_all_expressions(
                 _get_identifier_symbol(species_reference),
-                self._sympy_from_sbml_math(stoich),
+                self._sympify(stoich),
             )
 
     def _make_initial(
@@ -2805,7 +2801,7 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(
+    def _sympify(
         self,
         var_or_math: libsbml.SBase
         | libsbml.ASTNode
@@ -2816,13 +2812,23 @@ class SbmlImporter:
         piecewise_to_heaviside: bool = True,
     ) -> sp.Expr | None:
         """
-        Sympify Math of SBML variables with all sanity checks and
-        transformations
+        Sympify math expressions with all sanity checks and transformations.
 
         :param var_or_math:
-            SBML object that has a ``getMath()`` function or an ASTNode.
-        :return:
-            Sympified symbolic expression
+            A math expression to sympify:
+
+            * a string (see `sympy.sympify`)
+            * a number
+            * a libSBML ASTNode
+            * a libSBML object that has a ``getMath()`` function
+        :param piecewise_to_heaviside:
+            If ``True``, piecewise expressions are transformed to Heaviside
+            expressions. If ``False``, piecewise expressions are returned as
+            is.
+        :raises SBMLException:
+            In case of unsupported expressions.
+        :returns:
+            The sympy expression or None if the input was None or an empty string.
         """
         if var_or_math is None:
             return None
@@ -2850,8 +2856,9 @@ class SbmlImporter:
 
         # an expression string
         elif isinstance(var_or_math, str):
-            # TODO: this has nothing to do with SBML math and should be moved
-            #  out of here
+            if not var_or_math:
+                return None
+
             ele_name = "Expression string"
             try:
                 expr = sp.sympify(
@@ -2954,9 +2961,7 @@ class SbmlImporter:
         assignment = self.sbml.getInitialAssignment(element_id)
         if assignment is None:
             return None
-        sym = self._sympy_from_sbml_math(
-            assignment, piecewise_to_heaviside=False
-        )
+        sym = self._sympify(assignment, piecewise_to_heaviside=False)
         # this is an initial assignment so we need to use
         # initial conditions
         sym = self._make_initial(sym)
@@ -3001,7 +3006,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        return a is not None and self._sympy_from_sbml_math(a) is not None
+        return a is not None and self._sympify(a) is not None
 
     def is_rate_rule_target(self, element: libsbml.SBase) -> bool:
         """
@@ -3015,7 +3020,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getRateRuleByVariable(element.getId())
-        return a is not None and self._sympy_from_sbml_math(a) is not None
+        return a is not None and self._sympify(a) is not None
 
     def _transform_dxdt_to_concentration(
         self, species_id: sp.Symbol, dxdt: sp.Expr
