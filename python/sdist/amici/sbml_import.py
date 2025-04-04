@@ -1757,7 +1757,7 @@ class SbmlImporter:
 
             # get and parse the trigger function
             trigger_sbml = event.getTrigger()
-            trigger_sym = self._sympify(trigger_sbml)
+            trigger_sym = self._sympify(trigger_sbml, bool2num=False)
             trigger = _parse_event_trigger(trigger_sym)
 
             # parse the boluses / event assignments
@@ -2810,6 +2810,7 @@ class SbmlImporter:
         | sp.Basic
         | str,
         piecewise_to_heaviside: bool = True,
+        bool2num: bool = True,
     ) -> sp.Expr | None:
         """
         Sympify math expressions with all sanity checks and transformations.
@@ -2825,6 +2826,9 @@ class SbmlImporter:
             If ``True``, piecewise expressions are transformed to Heaviside
             expressions. If ``False``, piecewise expressions are returned as
             is.
+        :param bool2num:
+            If ``True``, boolean expressions are transformed to numeric
+            expressions. If ``False``, boolean expressions are returned as is.
         :raises SBMLException:
             In case of unsupported expressions.
         :returns:
@@ -2930,12 +2934,6 @@ class SbmlImporter:
             expr = expr.simplify().evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
-        # boolean to numeric piecewise
-        if isinstance(expr, BooleanFunction):
-            from sbmlmath.mathml_parser import _bool2num
-
-            expr = _bool2num(expr)
-
         # piecewise to heavisides
         if piecewise_to_heaviside:
             try:
@@ -2945,6 +2943,13 @@ class SbmlImporter:
                 )
             except RuntimeError as err:
                 raise SBMLException(str(err)) from err
+
+        # boolean to numeric piecewise
+        if bool2num and isinstance(expr, BooleanFunction):
+            from sbmlmath.mathml_parser import _bool2num
+
+            expr = _bool2num(expr)
+
         return expr
 
     def _get_element_initial_assignment(
