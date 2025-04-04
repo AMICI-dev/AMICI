@@ -2845,18 +2845,24 @@ class SbmlImporter:
                 else sp.Float(var_or_math)
             )
 
-        # already a sympy object
-        if isinstance(var_or_math, sp.Basic):
-            # substitute free symbols to match assumptions of other model
-            #  entities where necessary
-            ele_name = "SymPy expression"
-            expr = var_or_math.subs(
+        def subs_locals(expr: sp.Basic) -> sp.Basic:
+            """
+            Substitute free symbols to match assumptions of other model
+            entities where necessary, and replace parameters by values in case
+            of hardcoded parameters.
+            """
+            return expr.subs(
                 {
                     sym: local
-                    for sym in var_or_math.free_symbols
+                    for sym in expr.free_symbols
                     if (local := self._local_symbols.get(str(sym), sym)) != sym
                 }
             )
+
+        # already a sympy object
+        if isinstance(var_or_math, sp.Basic):
+            ele_name = "SymPy expression"
+            expr = subs_locals(var_or_math)
 
         # an expression string
         elif isinstance(var_or_math, str):
@@ -2898,7 +2904,7 @@ class SbmlImporter:
             )
             try:
                 expr = self._mathml_parser.parse_str(mathml)
-            except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
+            except (ValueError, NotImplementedError) as err:
                 raise SBMLException(
                     f'{ele_name} "{mathml}" '
                     "contains an unsupported expression: "
@@ -2908,15 +2914,7 @@ class SbmlImporter:
             #  which will later be replaced by `amici_time_symbol`
             expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
             expr = expr.subs(avogadro, avogadro.evalf())
-
-            # replace other symbols, e.g. for handling hardcoded parameters
-            expr = expr.subs(
-                {
-                    sym: local
-                    for sym in expr.free_symbols
-                    if (local := self._local_symbols.get(str(sym), sym)) != sym
-                }
-            )
+            expr = subs_locals(expr)
         else:
             raise ValueError(
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
@@ -2930,7 +2928,8 @@ class SbmlImporter:
         try:
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
         except SBMLException:
-            # try to (partially) evaluate expressions that would otherwise be unsupported
+            # try to (partially) evaluate expressions
+            #  that would otherwise be unsupported
             expr = expr.simplify().evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
