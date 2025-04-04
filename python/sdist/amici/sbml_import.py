@@ -2901,6 +2901,8 @@ class SbmlImporter:
             elif isinstance(var_or_math, libsbml.SBase):
                 sbml_obj = var_or_math
                 ast_node = var_or_math.getMath()
+                if ast_node is None:
+                    return None
             ele_name = sbml_obj.getId()
 
             mathml = libsbml.writeMathMLWithNamespaceToString(
