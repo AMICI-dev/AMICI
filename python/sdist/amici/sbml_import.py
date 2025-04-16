@@ -1927,9 +1927,16 @@ class SbmlImporter:
             return
 
         # check if events are guaranteed to not trigger at the same time
+        def try_solve_t(expr: sp.Expr) -> list:
+            """Try to solve the expression for time."""
+            try:
+                return sp.solve(expr, sbml_time_symbol)
+            except NotImplementedError:
+                return []
+
         trigger_times = [
-            sp.solve(event["value"], sbml_time_symbol)
-            for event_sym, event in self.symbols[SymbolId.EVENT].items()
+            try_solve_t(event["value"])
+            for event in self.symbols[SymbolId.EVENT].values()
         ]
         # for now, we only check for single/fixed/unique time points, but there
         # are probably other cases we could cover
