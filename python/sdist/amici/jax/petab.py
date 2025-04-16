@@ -16,6 +16,7 @@ import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
+import h5py
 
 from amici import _module_from_path
 from amici.petab.parameter_mapping import (
@@ -127,8 +128,6 @@ class JAXProblem(eqx.Module):
             self._np_mask,
             self._np_indices,
         ) = self._get_measurements(scs)
-
-        self.parameters = self._get_nominal_parameter_values()
 
     def save(self, directory: Path):
         """
@@ -518,6 +517,13 @@ class JAXProblem(eqx.Module):
             if (net := pname.split(".")[0]) in model.nns:
                 to_set = []
                 nn = model_pars[net]
+                scalar = True
+                try:
+                    value = float(row[petab.NOMINAL_VALUE])
+                except ValueError:
+                    value = h5py.File(row[petab.NOMINAL_VALUE], "r")
+                    scalar = False
+
                 if len(pname.split(".")) > 1:
                     layer = nn[pname.split(".")[1]]
                     if len(pname.split(".")) > 2:
@@ -541,9 +547,12 @@ class JAXProblem(eqx.Module):
                     )
 
                 for layer, attribute in to_set:
-                    nn[layer][attribute] = row[
-                        petab.NOMINAL_VALUE
-                    ] * jnp.ones_like(nn[layer][attribute])
+                    if scalar:
+                        nn[layer][attribute] = value * jnp.ones_like(
+                            nn[layer][attribute]
+                        )
+                    else:
+                        nn[layer][attribute] = value[layer][attribute]
 
         # set values in model
         for net_id in model_pars:
@@ -559,9 +568,11 @@ class JAXProblem(eqx.Module):
         return jnp.array(
             [
                 petab.scale(
-                    self._petab_problem.parameter_df.loc[
-                        pval, petab.NOMINAL_VALUE
-                    ],
+                    float(
+                        self._petab_problem.parameter_df.loc[
+                            pval, petab.NOMINAL_VALUE
+                        ]
+                    ),
                     self._petab_problem.parameter_df.loc[
                         pval, petab.PARAMETER_SCALE
                     ],
@@ -604,7 +615,12 @@ class JAXProblem(eqx.Module):
             PEtab parameter ids
         """
         return self._petab_problem.parameter_df[
-            self._petab_problem.parameter_df[petab.ESTIMATE] == 1
+            self._petab_problem.parameter_df[petab.ESTIMATE]
+            == 1
+            & pd.to_numeric(
+                self._petab_problem.parameter_df[petab.NOMINAL_VALUE],
+                errors="coerce",
+            ).notna()
         ].index.tolist()
 
     @property
@@ -886,7 +902,9 @@ class JAXProblem(eqx.Module):
             Tuple of parameter arrays, reinitialisation masks and reinitialisation values, observable parameters and
             noise parameters.
         """
-        p_array = jnp.stack([self.load_parameters(sc) for sc in conditions])
+        p_array = jnp.stack(
+            [self.load_model_parameters(sc) for sc in conditions]
+        )
         unscaled_parameters = jnp.stack(
             [
                 jax_unscale(

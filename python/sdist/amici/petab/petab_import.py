@@ -146,14 +146,16 @@ def import_petab_problem(
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
 
-        if "petab_sciml" in petab_problem.extensions_config:
+        if "neural_nets" in petab_problem.extensions_config:  # TODO: fixme
             from petab_sciml import PetabScimlStandard
 
-            config = petab_problem.extensions_config["petab_sciml"]
+            config = petab_problem.extensions_config
+            # TODO: only accept YAML format for now
+            # TODO: edit petab library to load hybridization table and map input and output vars here
             hybridization = {
                 net_id: {
                     "model": PetabScimlStandard.load_data(
-                        Path() / net_config["file"]
+                        Path() / net_config["location"]
                     ).models,
                     "input_vars": [
                         petab_id
@@ -183,7 +185,7 @@ def import_petab_problem(
                     ],
                     **net_config,
                 }
-                for net_id, net_config in config.items()
+                for net_id, net_config in config["neural_nets"].items()
             }
             if not jax or petab_problem.model.type_id == MODEL_TYPE_PYSB:
                 raise NotImplementedError(

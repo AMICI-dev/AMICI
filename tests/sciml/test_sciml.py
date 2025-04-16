@@ -44,6 +44,8 @@ jax.config.update("jax_enable_x64", True)
 # pip install git+https://github.com/sebapersson/petab_sciml@add_standard#egg=petab_sciml\&subdirectory=src/python
 
 cases_dir = Path(__file__).parent / "testsuite" / "test_cases"
+net_cases_dir = cases_dir / "net_import"
+ude_cases_dir = cases_dir / "hybrid"
 
 
 def _reshape_flat_array(array_flat):
@@ -65,10 +67,10 @@ def _reshape_flat_array(array_flat):
 
 
 @pytest.mark.parametrize(
-    "test", sorted([d.stem for d in cases_dir.glob("net_[0-9]*")])
+    "test", sorted([d.stem for d in net_cases_dir.glob("[0-9]*")])
 )
 def test_net(test):
-    test_dir = cases_dir / test
+    test_dir = net_cases_dir / test
     with open(test_dir / "solutions.yaml") as f:
         solutions = safe_load(f)
 
@@ -83,20 +85,20 @@ def test_net(test):
     for ml_model in ml_models.models:
         module_dir = outdir / f"{ml_model.mlmodel_id}.py"
         if test in (
-            "net_002",
-            "net_009",
-            "net_018",
-            "net_019",
-            "net_020",
-            "net_021",
-            "net_022",
-            "net_042",
-            "net_043",
-            "net_044",
-            "net_045",
-            "net_046",
-            "net_047",
-            "net_048",
+            "002",
+            "009",
+            "018",
+            "019",
+            "020",
+            "021",
+            "022",
+            "042",
+            "043",
+            "044",
+            "045",
+            "046",
+            "047",
+            "048",
         ):
             with pytest.raises(NotImplementedError):
                 generate_equinox(ml_model, module_dir)
@@ -111,34 +113,20 @@ def test_net(test):
         solutions.get("net_ps", solutions["net_input"]),
         solutions["net_output"],
     ):
-        input_flat = pd.read_csv(test_dir / input_file, sep="\t")
-        input = _reshape_flat_array(input_flat)
-
-        output_flat = pd.read_csv(test_dir / output_file, sep="\t")
-        output = _reshape_flat_array(output_flat)
+        input = h5py.File(test_dir / input_file, "r")["input"][:]
+        output = h5py.File(test_dir / output_file, "r")["output"][:]
 
         if "net_ps" in solutions:
-            par = pd.read_csv(test_dir / par_file, sep="\t")
+            par = h5py.File(test_dir / par_file, "r")
             for ml_model in ml_models.models:
                 net = nets[ml_model.mlmodel_id](jr.PRNGKey(0))
                 for layer in net.layers.keys():
-                    layer_prefix = f"net_{layer}"
                     if (
                         isinstance(net.layers[layer], eqx.Module)
                         and hasattr(net.layers[layer], "weight")
                         and net.layers[layer].weight is not None
                     ):
-                        prefix = layer_prefix + "_weight"
-                        df = par[
-                            par[petab.PARAMETER_ID].str.startswith(prefix)
-                        ]
-                        df["ix"] = (
-                            df[petab.PARAMETER_ID]
-                            .str.split("_")
-                            .str[3:]
-                            .apply(lambda x: ";".join(x))
-                        )
-                        w = _reshape_flat_array(df)
+                        w = par[layer]["weight"][:]
                         if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
                             # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
                             w = np.flip(
@@ -155,17 +143,7 @@ def test_net(test):
                         and hasattr(net.layers[layer], "bias")
                         and net.layers[layer].bias is not None
                     ):
-                        prefix = layer_prefix + "_bias"
-                        df = par[
-                            par[petab.PARAMETER_ID].str.startswith(prefix)
-                        ]
-                        df["ix"] = (
-                            df[petab.PARAMETER_ID]
-                            .str.split("_")
-                            .str[3:]
-                            .apply(lambda x: ";".join(x))
-                        )
-                        b = _reshape_flat_array(df)
+                        b = par[layer]["bias"][:]
                         if isinstance(
                             net.layers[layer],
                             eqx.nn.Conv | eqx.nn.ConvTranspose,
@@ -199,11 +177,11 @@ def test_net(test):
 
 
 @pytest.mark.parametrize(
-    "test", sorted([d.stem for d in cases_dir.glob("[0-9]*")])
+    "test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")])
 )
 def test_ude(test):
-    test_dir = cases_dir / test
-    with open(test_dir / "petab" / "problem_ude.yaml") as f:
+    test_dir = ude_cases_dir / test
+    with open(test_dir / "petab" / "problem.yaml") as f:
         petab_yaml = safe_load(f)
     with open(test_dir / "solutions.yaml") as f:
         solutions = safe_load(f)
@@ -211,26 +189,7 @@ def test_ude(test):
     with change_directory(test_dir / "petab"):
         from petab.v2 import Problem
 
-        petab_yaml["format_version"] = "2.0.0"
-        for problem in petab_yaml["problems"]:
-            problem["model_files"] = {
-                problem["model_files"]["location"].split(".")[0]: problem[
-                    "model_files"
-                ]
-            }
-            for mapping_file in problem["mapping_files"]:
-                df = pd.read_csv(
-                    mapping_file,
-                    sep="\t",
-                )
-                if df[petab.PETAB_ENTITY_ID].str.startswith("net").any():
-                    df.rename(
-                        columns={
-                            petab.PETAB_ENTITY_ID: petab.MODEL_ENTITY_ID,
-                            petab.MODEL_ENTITY_ID: petab.PETAB_ENTITY_ID,
-                        }
-                    ).to_csv(mapping_file, sep="\t", index=False)
-
+        petab_yaml["format_version"] = "2.0.0"  # TODO: fixme
         petab_problem = Problem.from_yaml(petab_yaml)
         jax_model = import_petab_problem(
             petab_problem,
@@ -238,36 +197,49 @@ def test_ude(test):
             compile_=True,
             jax=True,
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
-        for net, net_config in petab_problem.extensions_config[
-            "petab_sciml"
-        ].items():
-            pars = h5py.File(
-                net_config["parameters"].replace(".h5", ".hf5"), "r"
-            )
-            for layer_name, layer in jax_problem.model.nns[net].layers.items():
-                for attribute in dir(layer):
-                    if not isinstance(
-                        getattr(layer, attribute), jax.numpy.ndarray
-                    ):
-                        continue
-                    value = jnp.array(pars[layer_name][attribute])
+        # non_numeric = pd.to_numeric(petab_problem.parameter_df[petab.NOMINAL_VALUE], errors='coerce').isna()
+        # par_files = petab_problem.parameter_df.loc[non_numeric, petab.NOMINAL_VALUE].unique()
+        # par_values = {
+        #     par_file: h5py.File(par_file, "r")
+        #     for par_file in par_files
+        # }
+        # for par_id, row in petab_problem.parameter_df.iterrows():
+        #     if not non_numeric[par_id]:
+        #         continue
+        #     petab_problem.parameter_df.loc[par_id, petab.NOMINAL_VALUE] = \
+        #         (par_values[row[petab.NOMINAL_VALUE]],)
+        # petab_problem.parameter_df.loc[np.logical_not(non_numeric), petab.NOMINAL_VALUE] = pd.to_numeric(
+        #     petab_problem.parameter_df.loc[np.logical_not(non_numeric), petab.NOMINAL_VALUE]
+        # )
 
-                    if (
-                        isinstance(layer, eqx.nn.ConvTranspose)
-                        and attribute == "weight"
-                    ):
-                        # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-                        value = jnp.flip(
-                            value, axis=tuple(range(2, value.ndim))
-                        ).swapaxes(0, 1)
-                    jax_problem = eqx.tree_at(
-                        lambda x: getattr(
-                            x.model.nns[net].layers[layer_name], attribute
-                        ),
-                        jax_problem,
-                        value,
-                    )
+        jax_problem = JAXProblem(jax_model, petab_problem)
+        # for net, net_config in petab_problem.extensions_config.items(): # TODO: FIXME (https://github.com/sebapersson/petab_sciml_testsuite/issues/1)
+        #     pars = h5py.File(
+        #         net_config["net1_ps_file"]['location'], "r" # TODO: check format and actually use propoer petab nominal parameter infrastructure
+        #     )
+        #     for layer_name, layer in jax_problem.model.nns[net].layers.items():
+        #         for attribute in dir(layer):
+        #             if not isinstance(
+        #                 getattr(layer, attribute), jax.numpy.ndarray
+        #             ):
+        #                 continue
+        #             value = jnp.array(pars[layer_name][attribute])
+        #
+        #             if (
+        #                 isinstance(layer, eqx.nn.ConvTranspose)
+        #                 and attribute == "weight"
+        #             ):
+        #                 # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
+        #                 value = jnp.flip(
+        #                     value, axis=tuple(range(2, value.ndim))
+        #                 ).swapaxes(0, 1)
+        #             jax_problem = eqx.tree_at(
+        #                 lambda x: getattr(
+        #                     x.model.nns[net].layers[layer_name], attribute
+        #                 ),
+        #                 jax_problem,
+        #                 value,
+        #             )
 
     # llh
     if test in (

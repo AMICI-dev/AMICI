@@ -2381,10 +2381,7 @@ class DEModel:
         """
         added_expressions = False
         for net_id, net in hybridization.items():
-            if not (
-                net["hybridization"]["output"] == "ode"
-                or net["hybridization"]["input"] == "ode"
-            ):
+            if net["static"]:
                 continue  # do not integrate into ODEs, handle in amici.jax.petab
             inputs = [
                 comp
