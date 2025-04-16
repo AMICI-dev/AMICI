@@ -37,6 +37,8 @@ from .de_model_components import (
     LogLikelihoodY,
     LogLikelihoodZ,
     LogLikelihoodRZ,
+    NoiseParameter,
+    ObservableParameter,
     Expression,
     ConservationLaw,
     Event,
@@ -229,6 +231,8 @@ class DEModel:
         self._log_likelihood_ys: list[LogLikelihoodY] = []
         self._log_likelihood_zs: list[LogLikelihoodZ] = []
         self._log_likelihood_rzs: list[LogLikelihoodRZ] = []
+        self._noise_parameters: list[NoiseParameter] = []
+        self._observable_parameters: list[ObservableParameter] = []
         self._expressions: list[Expression] = []
         self._conservation_laws: list[ConservationLaw] = []
         self._events: list[Event] = []
@@ -276,6 +280,8 @@ class DEModel:
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
             "h": self.events,
+            "np": self.noise_parameters,
+            "op": self.observable_parameters,
         }
         self._value_prototype: dict[str, Callable] = {
             "p": self.parameters,
@@ -387,6 +393,14 @@ class DEModel:
     def log_likelihood_rzs(self) -> list[LogLikelihoodRZ]:
         """Get all event observable regularization log likelihoods."""
         return self._log_likelihood_rzs
+
+    def noise_parameters(self) -> list[NoiseParameter]:
+        """Get all noise parameters."""
+        return self._noise_parameters
+
+    def observable_parameters(self) -> list[ObservableParameter]:
+        """Get all observable parameters."""
+        return self._observable_parameters
 
     def is_ode(self) -> bool:
         """Check if model is ODE model."""
@@ -568,6 +582,8 @@ class DEModel:
             ConservationLaw,
             Event,
             EventObservable,
+            NoiseParameter,
+            ObservableParameter,
         }:
             raise ValueError(f"Invalid component type {type(component)}")
 
@@ -1090,6 +1106,26 @@ class DEModel:
         """
         if name in self._variable_prototype:
             components = self._variable_prototype[name]()
+            # ensure placeholder parameters are consistently and correctly ordered
+            # we want that components are ordered by their placeholder index
+            if name == "op":
+                components = sorted(
+                    components,
+                    key=lambda x: int(
+                        str(strip_pysb(x.get_id())).replace(
+                            "observableParameter", ""
+                        )
+                    ),
+                )
+            if name == "np":
+                components = sorted(
+                    components,
+                    key=lambda x: int(
+                        str(strip_pysb(x.get_id())).replace(
+                            "noiseParameter", ""
+                        )
+                    ),
+                )
             self._syms[name] = sp.Matrix(
                 [comp.get_id() for comp in components]
             )

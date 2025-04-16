@@ -16,11 +16,7 @@ from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from numpy.testing import assert_allclose, assert_array_equal
 
-from conftest import EXAMPLES_DIR
-
-STEADYSTATE_MODEL_FILE = (
-    EXAMPLES_DIR / "example_steadystate" / "model_steadystate_scaled.xml"
-)
+from conftest import MODEL_STEADYSTATE_SCALED_XML
 
 
 def simple_sbml_model():
@@ -205,7 +201,7 @@ def test_model_module_is_set(observable_dependent_error_model):
 
 @pytest.fixture(scope="session")
 def model_steadystate_module():
-    sbml_file = STEADYSTATE_MODEL_FILE
+    sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     observables = amici.assignmentRules2observables(
@@ -377,7 +373,7 @@ def test_solver_reuse(model_steadystate_module):
 def model_test_likelihoods():
     """Test model for various likelihood functions."""
     # load sbml model
-    sbml_file = STEADYSTATE_MODEL_FILE
+    sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # define observables
@@ -486,7 +482,7 @@ def test_likelihoods(model_test_likelihoods):
 @skip_on_valgrind
 def test_likelihoods_error():
     """Test whether wrong inputs lead to expected errors."""
-    sbml_file = STEADYSTATE_MODEL_FILE
+    sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # define observables
@@ -649,7 +645,7 @@ def test_code_gen_uses_cse(extract_cse):
     old_environ = os.environ.copy()
     try:
         os.environ["AMICI_EXTRACT_CSE"] = str(extract_cse)
-        sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
+        sbml_importer = amici.SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
         model_name = "test_code_gen_uses_cse"
         with TemporaryDirectory() as tmpdir:
             sbml_importer.sbml2amici(
@@ -668,7 +664,7 @@ def test_code_gen_uses_cse(extract_cse):
 def test_code_gen_uses_lhs_symbol_ids():
     """Check that code generation uses symbol IDs instead of plain array
     indices"""
-    sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
+    sbml_importer = amici.SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
     model_name = "test_code_gen_uses_lhs_symbol_ids"
     with TemporaryDirectory() as tmpdir:
         sbml_importer.sbml2amici(
@@ -852,3 +848,26 @@ def test_import_same_model_name():
 
             assert model_module_1c.get_model().getParameters()[0] == 1.0
             assert model_module_1c.get_model().module is model_module_1c
+
+
+@skip_on_valgrind
+def test_regression_2642():
+    sbml_file = Path(__file__).parent / "sbml_models" / "regression_2642.xml"
+    sbml_importer = amici.SbmlImporter(sbml_file)
+    model_name = "regression_2642"
+    with TemporaryDirectory(prefix="regression_2642") as outdir:
+        sbml_importer.sbml2amici(
+            model_name=model_name,
+            output_dir=outdir,
+        )
+        module = amici.import_model_module(
+            module_name=model_name, module_path=outdir
+        )
+        model = module.getModel()
+        solver = model.getSolver()
+        model.setTimepoints(np.linspace(0, 1, 3))
+        r = amici.runAmiciSimulation(model, solver)
+        assert (
+            len(np.unique(r.w[:, model.getExpressionIds().index("binding")]))
+            == 1
+        )

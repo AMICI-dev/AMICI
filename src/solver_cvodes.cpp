@@ -667,7 +667,7 @@ void CVodeSolver::getSensDky(realtype const t, int const k) const {
     int status
         = CVodeGetSensDky(solver_memory_.get(), t, k, sx_.getNVectorArray());
     if (status != CV_SUCCESS)
-        throw CvodeException(status, "CVodeGetSens");
+        throw CvodeException(status, "CVodeGetSensDky");
 }
 
 void CVodeSolver::getDkyB(realtype const t, int const k, int const which)
@@ -716,7 +716,7 @@ void CVodeSolver::adjInit() const {
         status = CVodeAdjReInit(solver_memory_.get());
     } else {
         status = CVodeAdjInit(
-            solver_memory_.get(), static_cast<int>(maxsteps_),
+            solver_memory_.get(), static_cast<int>(maxsteps_ + 1),
             static_cast<int>(interp_type_)
         );
         setAdjInitDone();

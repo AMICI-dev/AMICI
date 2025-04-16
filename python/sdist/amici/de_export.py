@@ -409,6 +409,7 @@ class DEExporter:
         filename = os.path.join(self.model_path, f"{name}.h")
         with open(filename, "w") as fileout:
             fileout.write("\n".join(lines))
+            fileout.write("\n")
 
     def _write_function_file(self, function: str) -> None:
         """

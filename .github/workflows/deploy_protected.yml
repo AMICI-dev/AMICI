@@ -32,7 +32,7 @@ jobs:
     name: Deploy Docker Hub
     needs: [check-secret]
     if: needs.check-secret.outputs.secrets-defined == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
