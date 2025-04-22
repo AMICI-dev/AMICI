@@ -323,11 +323,6 @@ class SbmlImporter:
 
         .. note::
 
-            When passing sympy expressions, all Symbols therein must have the
-            ``real=True`` assumption.
-
-        .. note::
-
             In any math expressions passed to this function, ``time`` will
             be interpreted as the time symbol.
 
