@@ -275,11 +275,11 @@ class SbmlImporter:
         self,
         model_name: str,
         output_dir: str | Path = None,
-        observables: dict[str, dict[str, str]] = None,
-        event_observables: dict[str, dict[str, str]] = None,
+        observables: dict[str, dict[str, str | sp.Expr]] = None,
+        event_observables: dict[str, dict[str, str | sp.Expr]] = None,
         constant_parameters: Iterable[str] = None,
-        sigmas: dict[str, str | float] = None,
-        event_sigmas: dict[str, str | float] = None,
+        sigmas: dict[str, str | float | sp.Expr] = None,
+        event_sigmas: dict[str, str | float | sp.Expr] = None,
         noise_distributions: dict[str, str | Callable] = None,
         event_noise_distributions: dict[str, str | Callable] = None,
         verbose: int | bool = logging.ERROR,
@@ -304,10 +304,32 @@ class SbmlImporter:
 
         Note that this generates model ODEs for changes in concentrations, not
         amounts unless the `hasOnlySubstanceUnits` attribute has been
-        defined for a particular species.
+        defined in the SBML model for a particular species.
 
         Sensitivity analysis for local parameters is enabled by creating
         global parameters ``_{reactionId}_{localParameterName}``.
+
+        .. note::
+
+            When providing expressions for (event) observables and their sigmas
+            as strings (see below), those will be passed to
+            :func:`sympy.sympify`. The supported grammar is not well defined.
+            Note there can be issues with, for example, ``==`` or n-ary (n>2)
+            comparison operators.
+            Also note that operator precedence and function names may differ
+            from SBML L3 formulas or PEtab math expressions.
+            Passing a sympy expression directly will
+            be the safer option for more complex expressions.
+
+        .. note::
+
+            When passing sympy expressions, all Symbols therein must have the
+            ``real=True`` assumption.
+
+        .. note::
+
+            In any math expressions passed to this function, ``time`` will
+            be interpreted as the time symbol.
 
         :param model_name:
             Name of the generated model package.
@@ -321,23 +343,53 @@ class SbmlImporter:
 
         :param observables:
             Observables to be added to the model:
-            ``dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)})``.
+
+            .. code-block::
+
+              dict(
+                observableId: {
+                    'name': observableName, # optional
+                    'formula': formulaString or sympy expression,
+                }
+              )
+
+            If the observation function is passed as a string,
+            it will be passed to :func:`sympy.sympify` (see note above).
 
         :param event_observables:
             Event observables to be added to the model:
-            ``dictionary( eventObservableId:{'name':eventObservableName
-            (optional), 'event':eventId, 'formula':formulaString)})``
+
+            .. code-block::
+
+              dict(
+                eventObservableId: {
+                    'name': eventObservableName, # optional
+                    'event':eventId,
+                    'formula': formulaString or sympy expression,
+                }
+              )
+
+            If the formula is passed as a string, it will be passed to
+            :func:`sympy.sympify` (see note above).
 
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
 
         :param sigmas:
-            dictionary(observableId: sigma value or (existing) parameter name)
+            Expression for the scale parameter of the noise distribution for
+            each observable. This can be a numeric value, a sympy expression,
+            or an expression string that will be passed to
+            :func:`sympy.sympify`.
+
+            ``{observableId: sigma}``
 
         :param event_sigmas:
-            dictionary(eventObservableId: sigma value or (existing) parameter
-            name)
+            Expression for the scale parameter of the noise distribution for
+            each observable. This can be a numeric value, a sympy expression,
+            or an expression string that will be passed to
+            :func:`sympy.sympify`.
+
+            ``{eventObservableId: sigma}``
 
         :param noise_distributions:
             dictionary(observableId: noise type).
@@ -356,8 +408,8 @@ class SbmlImporter:
             :func:`amici.import_utils.noise_distribution_to_cost_function`.
 
         :param verbose:
-            verbosity level for logging, ``True``/``False`` default to
-            ``logging.Error``/``logging.DEBUG``
+            Verbosity level for logging, ``True``/``False`` defaults to
+            ``logging.Error``/``logging.DEBUG``.
 
         :param assume_pow_positivity:
             if set to ``True``, a special pow function is
@@ -369,7 +421,7 @@ class SbmlImporter:
             extension, e.g. ``/usr/bin/clang``.
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.de_export.ODEExporter`
+            See :class:`amici.de_export.DEExporter`.
 
         :param compile:
             If ``True``, compile the generated Python package,
@@ -393,10 +445,10 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`amici.DEModel._simplify`
+            See :attr:`amici.DEModel._simplify`.
 
         :param cache_simplify:
-                see :meth:`amici.DEModel.__init__`
+            See :meth:`amici.DEModel.__init__`.
 
         :param log_as_log10:
             This option is deprecated and will be removed in a future version.
@@ -1947,8 +1999,8 @@ class SbmlImporter:
     @log_execution_time("processing SBML observables", logger)
     def _process_observables(
         self,
-        observables: dict[str, dict[str, str]] | None,
-        sigmas: dict[str, str | float],
+        observables: dict[str, dict[str, str | sp.Expr]] | None,
+        sigmas: dict[str, str | float | sp.Expr],
         noise_distributions: dict[str, str],
     ) -> None:
         """
@@ -2045,8 +2097,8 @@ class SbmlImporter:
     @log_execution_time("processing SBML event observables", logger)
     def _process_event_observables(
         self,
-        event_observables: dict[str, dict[str, str]],
-        event_sigmas: dict[str, str | float],
+        event_observables: dict[str, dict[str, str | sp.Expr]],
+        event_sigmas: dict[str, str | float | sp.Float],
         event_noise_distributions: dict[str, str],
     ) -> None:
         """
@@ -3373,8 +3425,8 @@ def _check_unsupported_functions_sbml(
 
 
 def _validate_observables(
-    observables: dict[str, dict[str, str]] | None,
-    sigmas: dict[str, str | float],
+    observables: dict[str, dict[str, str | sp.Expr]] | None,
+    sigmas: dict[str, str | float | sp.Expr],
     noise_distributions: dict[str, str],
     events: bool = False,
 ) -> None:
