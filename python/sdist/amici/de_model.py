@@ -409,7 +409,8 @@ class DEModel:
 
     def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
-        rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+        from sbmlmath import rate_of as rate_of_func
+
         species_sym_to_xdot = dict(
             zip(self.sym("x"), self.sym("xdot"), strict=True)
         )
@@ -449,25 +450,21 @@ class DEModel:
 
         # replace rateOf-instances in x0 by xdot equation
         for i_state in range(len(self.eq("x0"))):
-            if rate_ofs := self._eqs["x0"][i_state].find(rate_of_func):
-                self._eqs["x0"][i_state] = self._eqs["x0"][i_state].subs(
-                    {
-                        rate_of: get_rate(rate_of.args[0])
-                        for rate_of in rate_ofs
-                    }
-                )
+            new, replacement = self._eqs["x0"][i_state].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["x0"][i_state] = new
 
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w
         made_substitutions = False
         for i_expr in range(len(self.eq("w"))):
-            if rate_ofs := self._eqs["w"][i_expr].find(rate_of_func):
-                self._eqs["w"][i_expr] = self._eqs["w"][i_expr].subs(
-                    {
-                        rate_of: get_rate(rate_of.args[0])
-                        for rate_of in rate_ofs
-                    }
-                )
+            new, replacement = self._eqs["w"][i_expr].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["w"][i_expr] = new
                 made_substitutions = True
 
         if made_substitutions:
