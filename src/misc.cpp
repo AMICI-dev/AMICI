@@ -83,10 +83,10 @@ std::string backtraceString(int const maxFrames, int const first_frame) {
     trace_buf << "stacktrace not available on windows platforms\n";
 #else
     int const last_frame = first_frame + maxFrames;
-    void* callstack[last_frame];
+    std::vector<void*> callstack(last_frame);
     char buf[1024];
-    int nFrames = backtrace(callstack, last_frame);
-    char** symbols = backtrace_symbols(callstack, nFrames);
+    int nFrames = backtrace(callstack.data(), last_frame);
+    char** symbols = backtrace_symbols(callstack.data(), nFrames);
 
     for (int i = first_frame; i < nFrames; i++) {
         // call

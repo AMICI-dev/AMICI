@@ -89,7 +89,7 @@ jax = [
     "jaxtyping>=0.2.34",
     "equinox>=0.11.10",
     "optimistix>=0.0.9",
-    "interpax>=0.3.3",
+    "interpax>=0.3.3,<=0.3.6",
 ]
 
 [project.scripts]
