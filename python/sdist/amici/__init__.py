@@ -16,6 +16,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 from collections.abc import Callable
+import warnings
 
 
 def _get_amici_path():
@@ -102,7 +103,18 @@ __commit__ = _get_commit_hash()
 # Import SWIG module and swig-dependent submodules if required and available
 if not _imported_from_setup():
     if has_clibs:
-        from . import amici
+        # prevent segfaults under pytest
+        #  see also:
+        #  https://github.com/swig/swig/issues/2881
+        #  https://github.com/AMICI-dev/AMICI/issues/2565
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+                message="builtin type .* has no __module__ attribute",
+            )
+            from . import amici
+
         from .amici import *
 
         # has to be done before importing readSolverSettingsFromHDF5
