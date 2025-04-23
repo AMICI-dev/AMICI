@@ -288,8 +288,7 @@ jobs:
 
     - name: Python tests
       run: |
-        # ignore warnings until https://github.com/swig/swig/issues/3061 is resolved
-        scripts/run-python-tests.sh -W ignore:: \
+        scripts/run-python-tests.sh \
           test_pregenerated_models.py \
           test_splines_short.py \
           test_misc.py
@@ -351,8 +350,7 @@ jobs:
 
     - name: Python tests
       run: |
-        # ignore warnings until https://github.com/swig/swig/issues/3061 is resolved
-        scripts/run-python-tests.sh -W ignore:: \
+        scripts/run-python-tests.sh \
           --ignore=test_pregenerated_models.py \
           --ignore=test_splines_short.py \
           --ignore=test_misc.py
