@@ -87,9 +87,7 @@ void ForwardProblem::workForwardProblem() {
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
 
     if (model->ne
-        && std::any_of(roots_found_.begin(), roots_found_.end(), [](int rf) {
-               return rf == 1;
-           }))
+        && std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; }))
         handleEvent(&t0, false, true);
 
     /* perform presimulation if necessary */
@@ -101,10 +99,9 @@ void ForwardProblem::workForwardProblem() {
         t_ = model->t0();
         if (model->ne) {
             model->initEvents(x_, dx_, roots_found_);
-            if (std::any_of(
-                    roots_found_.begin(), roots_found_.end(),
-                    [](int rf) { return rf == 1; }
-                ))
+            if (std::ranges::any_of(roots_found_, [](int rf) {
+                    return rf == 1;
+                }))
                 handleEvent(&t0, false, true);
         }
     }
@@ -136,10 +133,10 @@ void ForwardProblem::workForwardProblem() {
 
     // get list of trigger timepoints for fixed-time triggered events
     auto trigger_timepoints = model->get_trigger_timepoints();
-    auto it_trigger_timepoints = std::find_if(
-        trigger_timepoints.begin(), trigger_timepoints.end(),
-        [this](auto t) { return t > this->t_; }
-    );
+    auto it_trigger_timepoints
+        = std::ranges::find_if(trigger_timepoints, [this](auto t) {
+              return t > this->t_;
+          });
 
     /* loop over timepoints */
     for (it_ = 0; it_ < model->nt(); it_++) {
@@ -333,7 +330,7 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
             }
         }
         if (initial_event) // t0 has no parameter dependency
-            std::fill(stau_.begin(), stau_.end(), 0.0);
+            std::ranges::fill(stau_, 0.0);
     } else if (solver->computingASA()) {
         /* store x to compute jump in discontinuity */
         x_disc_.push_back(x_);

@@ -26,12 +26,10 @@ int AmiVector::getLength() const { return gsl::narrow<int>(vec_.size()); }
 void AmiVector::zero() { set(0.0); }
 
 void AmiVector::minus() {
-    std::transform(
-        vec_.begin(), vec_.end(), vec_.begin(), std::negate<realtype>()
-    );
+    std::ranges::transform(vec_, vec_.begin(), std::negate<realtype>());
 }
 
-void AmiVector::set(realtype val) { std::fill(vec_.begin(), vec_.end(), val); }
+void AmiVector::set(realtype val) { std::ranges::fill(vec_, val); }
 
 realtype& AmiVector::operator[](int pos) {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
@@ -52,7 +50,7 @@ void AmiVector::copy(AmiVector const& other) {
             "match input dimension (%i)",
             getLength(), other.getLength()
         );
-    std::copy(other.vec_.begin(), other.vec_.end(), vec_.begin());
+    std::ranges::copy(other.vec_, vec_.begin());
 }
 
 void AmiVector::synchroniseNVector(SUNContext sunctx) {
