@@ -191,7 +191,7 @@ from within Matlab. This not quite comfortable yet, but it is possible.
 Here for proof of concept:
 
 * Install the python package as described in the documentation
-* Ensure `pyversion` shows the correct python version (>= 3.10)
+* Ensure `pyversion` shows the correct python version (>= 3.11)
 * Then, from within the AMICI `matlab/` directory:
 
     ```
