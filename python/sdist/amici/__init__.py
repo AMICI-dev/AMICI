@@ -247,7 +247,17 @@ def import_model_module(
     module_path_matlab = Path(model_root, f"{module_name}.py")
     if not module_path.is_file() and module_path_matlab.is_file():
         with set_path(model_root):
-            return _module_from_path(module_name, module_path_matlab)
+            # prevent segfaults under pytest
+            #  see also:
+            #  https://github.com/swig/swig/issues/2881
+            #  https://github.com/AMICI-dev/AMICI/issues/2565
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=DeprecationWarning,
+                    message="builtin type .* has no __module__ attribute",
+                )
+                return _module_from_path(module_name, module_path_matlab)
 
     module = _module_from_path(module_name, module_path)
     module._self = module
