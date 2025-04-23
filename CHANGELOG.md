@@ -4,6 +4,24 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.31.2 (2025-04-23)
+
+Bugfix-only release.
+
+* SBML import: Handle unsolvable event triggers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2686
+* Fixed a clang compiler warning related to variable length arrays
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2688
+* Temporarily require interpax<=0.3.6
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2678
+* Update OpenBLAS installation script to work with CMake>=4
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2679
+* GHA: Don't run cron jobs on forks by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2669
+* Fixed Matlab documentation build with CMake 4.0
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2676
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.1...v0.31.2
+
 ### v0.31.1 (2025-03-21)
 
 Bugfix-only release.
