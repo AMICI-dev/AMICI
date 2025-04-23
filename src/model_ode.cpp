@@ -91,7 +91,7 @@ void Model_ODE::froot(
 
 void Model_ODE::froot(realtype t, const_N_Vector x, gsl::span<realtype> root) {
     auto x_pos = computeX_pos(x);
-    std::fill(root.begin(), root.end(), 0.0);
+    std::ranges::fill(root, 0.0);
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaledParameters.data(), state_.fixedParameters.data(),

@@ -699,8 +699,8 @@ void writeReturnDataDiagnosis(
 // work-around for macos segfaults, use struct without std::string
 struct LogItemCStr {
     int severity;
-    const char* identifier;
-    const char* message;
+    char const* identifier;
+    char const* message;
 };
 
 void writeLogItemsToHDF5(
@@ -738,8 +738,7 @@ void writeLogItemsToHDF5(
         // ... therefore, as a workaround, we use a struct without std::string
         H5::CompType logItemType(sizeof(LogItemCStr));
         logItemType.insertMember(
-            "severity", HOFFSET(LogItemCStr, severity),
-            H5::PredType::NATIVE_INT
+            "severity", HOFFSET(LogItemCStr, severity), H5::PredType::NATIVE_INT
         );
         auto vlstr_type = H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
         logItemType.insertMember(

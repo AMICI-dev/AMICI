@@ -31,14 +31,14 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}"
                                                 STREQUAL "MINGW")
-  # require at least gcc 9.1 for proper C+17 support, e.g. std::reduce
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
-    message(FATAL_ERROR "GCC version must be at least 9.1!")
+  # require at least gcc 10.1 for std::ranges (C++20) support
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.1)
+    message(FATAL_ERROR "GCC version must be at least 10.1!")
   endif()
 endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags

@@ -70,7 +70,8 @@ ReturnData::ReturnData(
 void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
     llh = getNaN();
     chi2 = getNaN();
-    if (sensi >= SensitivityOrder::first && sensi_meth != SensitivityMethod::none) {
+    if (sensi >= SensitivityOrder::first
+        && sensi_meth != SensitivityMethod::none) {
         sllh.resize(nplist, getNaN());
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
@@ -636,8 +637,8 @@ void ReturnData::invalidateLLH() {
 
 void ReturnData::invalidateSLLH() {
     if (!sllh.empty()) {
-        std::fill(sllh.begin(), sllh.end(), getNaN());
-        std::fill(s2llh.begin(), s2llh.end(), getNaN());
+        std::ranges::fill(sllh, getNaN());
+        std::ranges::fill(s2llh, getNaN());
     }
 }
 
@@ -814,8 +815,8 @@ void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
         || rdata_reporting == RDataReporting::observables_likelihood
         || rdata_reporting == RDataReporting::full) {
         llh = 0.0;
-        std::fill(sllh.begin(), sllh.end(), 0.0);
-        std::fill(s2llh.begin(), s2llh.end(), 0.0);
+        std::ranges::fill(sllh, 0.0);
+        std::ranges::fill(s2llh, 0.0);
     }
     if ((rdata_reporting == RDataReporting::residuals
          || rdata_reporting == RDataReporting::full)
