@@ -531,6 +531,11 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
             return sp.Heaviside(root)
 
+    # rewrite n-ary XOR to OR to be handled below:
+    trigger = trigger.replace(sp.Xor, _xor_to_or)
+
+    # TODO: x == y
+
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
         return sp.Integer(1) - sp.Mul(
@@ -540,8 +545,6 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
             ]
         )
 
-    # TODO: x XOR y = (A & ~B) | (~A & B)
-    # TODO: x == y
     if isinstance(trigger, sp.And):
         return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
 
@@ -549,6 +552,25 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
         "AMICI can not parse piecewise/event trigger functions with argument "
         f"{trigger}."
     )
+
+
+def _xor_to_or(*args):
+    """
+    Replace XOR by OR expression.
+
+    ``xor(x, y, ...) = (x & ~y & ...) | (~x & y & ...) | ...``.
+
+    to be used in ``trigger = trigger.replace(sp.Xor, _xor_to_or)``.
+    """
+    res = sp.false
+    for i in range(len(args)):
+        res = sp.Or(
+            res,
+            sp.And(
+                *(arg if i == j else sp.Not(arg) for j, arg in enumerate(args))
+            ),
+        )
+    return res.simplify()
 
 
 def grouper(

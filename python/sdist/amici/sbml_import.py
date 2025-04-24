@@ -52,6 +52,7 @@ from .import_utils import (
     _default_simplify,
     generate_flux_symbol,
     _parse_piecewise_to_heaviside,
+    _xor_to_or,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import SBMLException
@@ -2976,11 +2977,6 @@ class SbmlImporter:
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
             )
 
-        if expr.has(sp.Xor):
-            raise SBMLException(
-                "Xor is currently not supported as logical operation."
-            )
-
         try:
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
         except SBMLException:
@@ -3217,6 +3213,9 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         ):
             # y >= x or y > x
             return root
+
+    # rewrite n-ary XOR to OR to be handled below:
+    trigger = trigger.replace(sp.Xor, _xor_to_or)
 
     # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
     if isinstance(trigger, sp.Or):
