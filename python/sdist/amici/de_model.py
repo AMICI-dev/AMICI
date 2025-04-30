@@ -2267,22 +2267,22 @@ class DEModel:
     def _collect_heaviside_roots(
         self,
         args: Sequence[sp.Basic],
-    ) -> list[sp.Expr]:
+    ) -> list[tuple[sp.Expr, sp.Expr]]:
         """
-        Recursively checks an expression for the occurrence of Heaviside
-        functions and return all roots found
+        Recursively check an expression for the occurrence of Heaviside
+        functions and return all roots found.
 
         :param args:
             args attribute of the expanded expression
 
         :returns:
-            root functions that were extracted from Heaviside function
-            arguments
+            List of (root function, Heaviside x0)-tuples that were extracted
+            from Heaviside function arguments.
         """
         root_funs = []
         for arg in args:
             if arg.func == sp.Heaviside:
-                root_funs.append(arg.args[0])
+                root_funs.append(arg.args)
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
@@ -2301,7 +2301,9 @@ class DEModel:
                 )
             )
         )
-        root_funs = [r.subs(w_sorted) for r in root_funs]
+        root_funs = [
+            (r[0].subs(w_sorted), r[1].subs(w_sorted)) for r in root_funs
+        ]
 
         return root_funs
 
@@ -2329,15 +2331,17 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots((dxdt,))
-        for tmp_old in unique_preserve_order(tmp_roots_old):
+        for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
-            tmp_new = self._get_unique_root(tmp_old, roots)
+            tmp_root_new = self._get_unique_root(tmp_root_old, roots)
             # `tmp_new` is None if the root is not time-dependent.
-            if tmp_new is None:
+            if tmp_root_new is None:
                 continue
             # For Heavisides, we need to add the negative function as well
-            self._get_unique_root(sp.sympify(-tmp_old), roots)
-            heavisides.append((sp.Heaviside(tmp_old), tmp_new))
+            self._get_unique_root(sp.sympify(-tmp_root_old), roots)
+            heavisides.append(
+                (sp.Heaviside(tmp_root_old, tmp_x0_old), tmp_root_new)
+            )
 
         if heavisides:
             # only apply subs if necessary
