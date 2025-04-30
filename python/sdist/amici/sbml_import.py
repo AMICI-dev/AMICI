@@ -53,6 +53,7 @@ from .import_utils import (
     generate_flux_symbol,
     _parse_piecewise_to_heaviside,
     _xor_to_or,
+    _eq_to_and,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import SBMLException
@@ -3216,6 +3217,8 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # rewrite n-ary XOR to OR to be handled below:
     trigger = trigger.replace(sp.Xor, _xor_to_or)
+    # rewrite equality
+    trigger = trigger.replace(sp.Eq, _eq_to_and)
 
     # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
     if isinstance(trigger, sp.Or):

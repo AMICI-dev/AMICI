@@ -533,8 +533,8 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # rewrite n-ary XOR to OR to be handled below:
     trigger = trigger.replace(sp.Xor, _xor_to_or)
-
-    # TODO: x == y
+    # rewrite equality
+    trigger = trigger.replace(sp.Eq, _eq_to_and)
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
@@ -571,6 +571,18 @@ def _xor_to_or(*args):
             ),
         )
     return res.simplify()
+
+
+def _eq_to_and(*args):
+    """
+    Replace equality expression with numerical arguments by inequalities.
+
+    ``Eq(x, y) = (x >= y) & (x <= y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Eq, _eq_to_and)``.
+    """
+    x, y = args
+    return (x >= y) & (x <= y)
 
 
 def grouper(
