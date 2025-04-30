@@ -2875,6 +2875,8 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
 }
 
 void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
+    // NOTE: (at least) Model_{ODE,DAE}::fJSparse rely on `fw` and `fdwdw`
+    //  being called from here. They need to be executed even if nx_solver==0.
     if (!nw)
         return;
 
@@ -2882,18 +2884,19 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
-        if (!derived_state_.dwdx_hierarchical_.at(0).capacity())
-            return;
-
         fdwdw(t, x, include_static);
 
+        auto&& dwdx_hierarchical_0 = derived_state_.dwdx_hierarchical_.at(0);
+        if (!dwdx_hierarchical_0.data() || !dwdx_hierarchical_0.capacity())
+            return;
+
         if (include_static) {
-            derived_state_.dwdx_hierarchical_.at(0).zero();
-            fdwdx_colptrs(derived_state_.dwdx_hierarchical_.at(0));
-            fdwdx_rowvals(derived_state_.dwdx_hierarchical_.at(0));
+            dwdx_hierarchical_0.zero();
+            fdwdx_colptrs(dwdx_hierarchical_0);
+            fdwdx_rowvals(dwdx_hierarchical_0);
         }
         fdwdx(
-            derived_state_.dwdx_hierarchical_.at(0).data(), t, x,
+            dwdx_hierarchical_0.data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
             derived_state_.spl_.data(), include_static
