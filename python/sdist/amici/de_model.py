@@ -1693,9 +1693,14 @@ class DEModel:
             ]
 
         elif name == "deltasx":
-            if self.num_states_solver() * self.num_par() == 0:
+            if (
+                self.num_states_solver() * self.num_par() * self.num_events()
+                == 0
+            ):
                 self._eqs[name] = []
                 return
+
+            xdot_is_zero = smart_is_zero_matrix(self.eq("xdot"))
 
             event_eqs = []
             for ie, event in enumerate(self._events):
@@ -1703,9 +1708,11 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(
-                    self.eq("stau")[ie]
-                ) and not smart_is_zero_matrix(self.eq("xdot")):
+
+                if (
+                    not smart_is_zero_matrix(self.eq("stau")[ie])
+                    and not xdot_is_zero
+                ):
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
@@ -1739,7 +1746,7 @@ class DEModel:
                         self.eq("ddeltaxdx")[ie], tmp_dxdp
                     )
 
-                else:
+                elif not xdot_is_zero:
                     tmp_eq = smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.eq("stau")[ie],
