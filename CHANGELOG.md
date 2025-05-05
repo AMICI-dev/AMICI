@@ -4,6 +4,56 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.32.0 (2025-05-09)
+
+**Breaking changes**
+
+* Removed deprecated `amici.petab_*` modules (now under `amici.petab.*`)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2658
+* Removed deprecated CLI options to `amici_import_petab`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2671
+
+**Changed requirements**
+
+* AMICI now requires a C++20 compatible compiler
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2660
+* AMICI now requires swig>=4.1
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2693
+* AMICI now uses the [sbmlmath](https://github.com/dweindl/sbmlmath/) package
+  for sympification of SBML math constructs
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2681
+
+**Fixes**
+
+* Fixed Heaviside functions for `<`, `>` `<=`, `>=` which could have lead to
+  incorrect simulation results
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2701
+* Prevent segfaults under pytest after swig4.3 wrapping
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2696
+* Fixed `SetuptoolsDeprecationWarning: \`project.license\` as a TOML table is deprecated`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2697
+* Updated Dockerfile, use Ubuntu 24.04 LTS
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2698
+* SBML import: Handle unsolvable event triggers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2705
+* Added RTFUNC_FAIL simulation status
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2702
+* doc: Enable building docs with Python 3.13
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2704
+* Fixed crash for models without state variables
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2703
+* SBML import: avoid repeated xdot==0 checks
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2706
+
+**Features**
+
+* Support for XOR, `==` and `!=` operators in SBML models
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2699,
+  https://github.com/AMICI-dev/AMICI/pull/2708,
+  and https://github.com/AMICI-dev/AMICI/pull/2716
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.2...v0.32.0
+
 ### v0.31.2 (2025-04-23)
 
 Bugfix-only release.
