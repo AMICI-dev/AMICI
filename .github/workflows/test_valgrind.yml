@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
@@ -71,7 +71,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
