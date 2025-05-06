@@ -232,10 +232,10 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: example notebooks
-      run: scripts/runNotebook.sh python/examples/example_*/
+      run: scripts/runNotebook.sh doc/examples/example_*/
 
-    - name: doc notebooks
-      run: scripts/runNotebook.sh documentation/GettingStarted.ipynb
+    - name: getting started notebooks
+      run: scripts/runNotebook.sh doc/getting_started*
 
     # TODO: Include notebooks in coverage report
 
