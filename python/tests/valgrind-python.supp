@@ -1054,7 +1054,7 @@
 # https://github.com/python/cpython/pull/113601#issuecomment-1881587197
 # for Python 3.13:
 {
-   PyUnicode_New
+   Python 3.13 PyUnicode_New
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -1063,7 +1063,7 @@
 }
 
 {
-   PyInit_readline
+   Python 3.13 PyInit_readline
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -1071,5 +1071,28 @@
    ...
    fun:setup_readline
    fun:PyInit_readline
+   ...
+}
+
+{
+   Python 3.13 resize_compact
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   fun:resize_compact
+   ...
+}
+
+{
+   Python 3.13 PyUFunc_AddLoopFromSpec_int
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_MallocWithType
+   fun:gc_alloc
+   fun:_PyObject_GC_NewVar
+   fun:tuple_alloc
+   fun:PyTuple_Pack
+   fun:PyUFunc_AddLoopFromSpec_int
    ...
 }
