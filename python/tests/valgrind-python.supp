@@ -1050,3 +1050,26 @@
    fun:_imp_create_dynamic
    ...
 }
+
+# https://github.com/python/cpython/pull/113601#issuecomment-1881587197
+# for Python 3.13:
+{
+   PyUnicode_New
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyUnicode_New
+   ...
+}
+
+{
+   PyInit_readline
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:*
+   ...
+   fun:setup_readline
+   fun:PyInit_readline
+   ...
+}
