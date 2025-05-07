@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 97.
+List of publications using AMICI. Total number is 99.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -14,18 +14,32 @@ If you applied AMICI in your work and your publication is missing, please let us
 
 <h1 class="unnumbered" id="section">2025</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-HuckJak2025" class="csl-entry" role="listitem">
 Huck, Wilhelm, Miglė Jakštaitė, Tao Zhou, Frank Nelissen, and Bob van
 Sluijs. 2025. <span>“Timed Batch Inputs Unlock Significantly Higher
 Yields for Enzymatic Cascades.”</span> 2025. <a
 href="https://doi.org/10.21203/rs.3.rs-5917349/v1">https://doi.org/10.21203/rs.3.rs-5917349/v1</a>.
 </div>
+<div id="ref-JostWei2025" class="csl-entry" role="listitem">
+Jost, Paul Jonas, Daniel Weindl, Klaus Wunderling, Christoph Thiele, and
+Jan Hasenauer. 2025. <span>“Pseudo-Time Trajectory of Single-Cell
+Lipidomics: Suggestion for Experimental Setup and Computational
+Analysis.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2025.04.11.648323">https://doi.org/10.1101/2025.04.11.648323</a>.
+</div>
 <div id="ref-NoordijkRei2025" class="csl-entry" role="listitem">
 Noordijk, Ben, Marcel Reinders, Aalt D. J. van Dijk, and Dick de Ridder.
 2025. <span>“<span>BADDADAN</span>: Mechanistic Modelling of Time Series
 Gene Module Expression.”</span> <em>bioRxiv</em>. <a
 href="https://doi.org/10.1101/2025.02.18.638670">https://doi.org/10.1101/2025.02.18.638670</a>.
+</div>
+<div id="ref-PerssonFro2025" class="csl-entry" role="listitem">
+Persson, Sebastian, Fabian Frohlich, Stephan Grein, Torkel Lomna,
+Damiano Ognissanti, Viktor Hassselgren, Jan Hasenauer, and Marija
+Cvijovic. 2025. <span>“PEtab.jl: Advancing the Efficiency and Utility of
+Dynamic Modelling.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2025.04.30.651378">https://doi.org/10.1101/2025.04.30.651378</a>.
 </div>
 <div id="ref-SmithMal2025" class="csl-entry" role="listitem">
 Smith, Lucian, Rahuman S. Malik-Sheriff, Tung V. N. Nguyen, Henning
@@ -38,7 +52,7 @@ href="https://doi.org/10.1101/2025.01.16.633337">https://doi.org/10.1101/2025.01
 </div>
 <h1 class="unnumbered" id="section">2024</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-ArmisteadHoe2024" class="csl-entry" role="listitem">
 Armistead, Joy, Sebastian Höpfl, Pierre Goldhausen, Andrea
 Müller-Hartmann, Evelin Fahle, Julia Hatzold, Rainer Franzen, Susanne
@@ -146,7 +160,7 @@ href="https://doi.org/10.1038/s41467-024-45886-9">https://doi.org/10.1038/s41467
 </div>
 <h1 class="unnumbered" id="section">2023</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-BuckBas2023" class="csl-entry" role="listitem">
 Buck, Michèle C., Lisa Bast, Judith S. Hecker, Jennifer Rivière, Maja
 Rothenberg-Thurley, Luisa Vogel, Dantong Wang, et al. 2023.
@@ -231,7 +245,7 @@ href="https://doi.org/10.1113/JP284652">https://doi.org/10.1113/JP284652</a>.
 </div>
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-AlbadryHoe2022" class="csl-entry" role="listitem">
 Albadry, Mohamed, Sebastian Höpfl, Nadia Ehteshamzad, Matthias König,
 Michael Böttcher, Jasna Neumann, Amelie Lupp, et al. 2022.
@@ -310,7 +324,7 @@ href="https://doi.org/10.1109/TCBB.2022.3213914">https://doi.org/10.1109/TCBB.20
 </div>
 <h1 class="unnumbered" id="section">2021</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-AdlungSta2021" class="csl-entry" role="listitem">
 Adlung, Lorenz, Paul Stapor, Christian Tönsing, Leonard Schmiester,
 Luisa E. Schwarzmüller, Lena Postawa, Dantong Wang, et al. 2021.
@@ -409,7 +423,7 @@ href="https://doi.org/10.1093/bib/bbab387">https://doi.org/10.1093/bib/bbab387</
 </div>
 <h1 class="unnumbered" id="section">2020</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-AlabertLoo2020" class="csl-entry" role="listitem">
 Alabert, Constance, Carolin Loos, Moritz Voelker-Albert, Simona
 Graziano, Ignasi Forné, Nazaret Reveron-Gomez, Lea Schuh, et al. 2020.
@@ -497,7 +511,7 @@ href="https://doi.org/10.1007/s00449-020-02360-2">https://doi.org/10.1007/s00449
 </div>
 <h1 class="unnumbered" id="section">2019</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-DharmarajanKal2019" class="csl-entry" role="listitem">
 Dharmarajan, Lekshmi, Hans-Michael Kaltenbach, Fabian Rudolf, and Joerg
 Stelling. 2019. <span>“A Simple and Flexible Computational Framework for
@@ -584,7 +598,7 @@ href="https://hdl.handle.net/20.500.12380/256855">https://hdl.handle.net/20.500.
 </div>
 <h1 class="unnumbered" id="section">2018</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-BallnusSch2018" class="csl-entry" role="listitem">
 Ballnus, Benjamin, Steffen Schaper, Fabian J Theis, and Jan Hasenauer.
 2018. <span>“Bayesian Parameter Estimation for Biochemical Reaction
@@ -666,7 +680,7 @@ href="https://doi.org/10.1093/bioinformatics/bty736">https://doi.org/10.1093/bio
 </div>
 <h1 class="unnumbered" id="section">2017</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-BallnusHug2017" class="csl-entry" role="listitem">
 Ballnus, B., S. Hug, K. Hatz, L. Görlitz, J. Hasenauer, and F. J. Theis.
 2017. <span>“Comprehensive Benchmarking of <span>Markov</span> Chain
@@ -703,7 +717,7 @@ href="https://doi.org/10.1093/bioinformatics/btw703">https://doi.org/10.1093/bio
 </div>
 <h1 class="unnumbered" id="section">2016</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-BoigerHas2016" class="csl-entry" role="listitem">
 Boiger, R., J. Hasenauer, S. Hross, and B. Kaltenbacher. 2016.
 <span>“Integration Based Profile Likelihood Calculation for
@@ -753,7 +767,7 @@ href="https://doi.org/10.1007/978-3-319-45177-0">https://doi.org/10.1007/978-3-3
 </div>
 <h1 class="unnumbered" id="section">2015</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
+data-entry-spacing="0" role="list">
 <div id="ref-LoosMar2015" class="csl-entry" role="listitem">
 Loos, C., C. Marr, F. J. Theis, and J. Hasenauer. 2015.
 <span>“Computational Methods in Systems Biology.”</span> In, edited by
