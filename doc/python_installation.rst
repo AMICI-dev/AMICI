@@ -64,7 +64,7 @@ Install AMICI:
 
    pip3 install amici
 
-Fedora 32
+Fedora 42
 ---------
 
 Install the AMICI dependencies via ``apt``
@@ -72,7 +72,7 @@ Install the AMICI dependencies via ``apt``
 
 .. code-block:: bash
 
-   sudo dnf install blas-devel swig
+   sudo dnf install openblas-devel swig
 
 Install AMICI:
 
