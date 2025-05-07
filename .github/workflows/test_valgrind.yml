@@ -15,7 +15,8 @@ jobs:
   valgrind_cpp:
     name: Valgrind C++
     # don't run cron job on forks
-    if: github.repository == 'AMICI-dev/AMICI'
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
 
     runs-on: ubuntu-24.04
 
@@ -65,7 +66,8 @@ jobs:
   valgrind_python:
     name: Valgrind Python
     # don't run cron job on forks
-    if: github.repository == 'AMICI-dev/AMICI'
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
 
     runs-on: ubuntu-24.04
 
