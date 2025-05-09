@@ -763,9 +763,7 @@ int Solver::getMaxConvFails() const { return max_conv_fails_; }
 
 void Solver::setConstraints(std::vector<realtype> const& constraints) {
     auto any_constraint
-        = std::any_of(constraints.begin(), constraints.end(), [](bool x) {
-              return x != 0.0;
-          });
+        = std::ranges::any_of(constraints, [](bool x) { return x != 0.0; });
 
     if (!any_constraint) {
         // all-0 must be converted to empty, otherwise sundials will fail

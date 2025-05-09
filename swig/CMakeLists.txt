@@ -6,7 +6,7 @@
 set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 find_package(SWIG REQUIRED)
 
-set(SWIG_VERSION_MIN "3.0")
+set(SWIG_VERSION_MIN "4.1")
 if(${SWIG_VERSION} VERSION_LESS ${SWIG_VERSION_MIN})
   message(FATAL_ERROR "Requiring SWIG>=${SWIG_VERSION_MIN} "
                       "but found only ${SWIG_VERSION}.")
@@ -98,23 +98,10 @@ if(NOT HDF5_FOUND)
                                           AMICI_SWIG_WITHOUT_HDF5)
 endif()
 
-if(${SWIG_VERSION} VERSION_GREATER_EQUAL 4.0.0)
-  set_property(
-    TARGET _amici
-    APPEND
-    PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
-else()
-  set_property(
-    TARGET _amici
-    APPEND
-    PROPERTY SWIG_COMPILE_OPTIONS -modern)
-endif()
-if(${SWIG_VERSION} VERSION_LESS 4.1.0)
-  set_property(
-    TARGET _amici
-    APPEND
-    PROPERTY SWIG_COMPILE_OPTIONS -py3)
-endif()
+set_property(
+  TARGET _amici
+  APPEND
+  PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
 
 # NOTE: No public definitions of any dependency are forwarded to swig, they are
 # only used for compiling the swig-generated source file. Any definition that

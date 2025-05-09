@@ -10,6 +10,7 @@ on:
       - .github/workflows/test_sbml_semantic_test_suite.yml
       - python/sdist/amici/de_export.py
       - python/sdist/amici/de_model_components.py
+      - python/sdist/amici/de_model.py
       - python/sdist/amici/sbml_import.py
       - python/sdist/amici/import_utils.py
       - scripts/run-SBMLTestsuite.sh
@@ -29,7 +30,7 @@ jobs:
       matrix:
         cases: ["1-250", "251-500", "501-750", "751-1000",
                 "1000-1250", "1251-"]
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}

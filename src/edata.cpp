@@ -129,7 +129,7 @@ ExpData::ExpData(
 }
 
 void ExpData::setTimepoints(std::vector<realtype> const& ts) {
-    if (!std::is_sorted(ts.begin(), ts.end()))
+    if (!std::ranges::is_sorted(ts))
         throw AmiException(
             "Encountered non-monotonic timepoints, please order timepoints "
             "such that they are monotonically increasing!"
@@ -196,9 +196,7 @@ void ExpData::setObservedDataStdDev(
 
 void ExpData::setObservedDataStdDev(realtype const stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
-    std::fill(
-        observed_data_std_dev_.begin(), observed_data_std_dev_.end(), stdDev
-    );
+    std::ranges::fill(observed_data_std_dev_, stdDev);
 }
 
 void ExpData::setObservedDataStdDev(
@@ -292,9 +290,7 @@ void ExpData::setObservedEventsStdDev(
 
 void ExpData::setObservedEventsStdDev(realtype const stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
-    std::fill(
-        observed_events_std_dev_.begin(), observed_events_std_dev_.end(), stdDev
-    );
+    std::ranges::fill(observed_events_std_dev_, stdDev);
 }
 
 void ExpData::setObservedEventsStdDev(
@@ -339,15 +335,10 @@ realtype const* ExpData::getObservedEventsStdDevPtr(int ie) const {
 }
 
 void ExpData::clear_observations() {
-    std::fill(observed_data_.begin(), observed_data_.end(), getNaN());
-    std::fill(
-        observed_data_std_dev_.begin(), observed_data_std_dev_.end(), getNaN()
-    );
-    std::fill(observed_events_.begin(), observed_events_.end(), getNaN());
-    std::fill(
-        observed_events_std_dev_.begin(), observed_events_std_dev_.end(),
-        getNaN()
-    );
+    std::ranges::fill(observed_data_, getNaN());
+    std::ranges::fill(observed_data_std_dev_, getNaN());
+    std::ranges::fill(observed_events_, getNaN());
+    std::ranges::fill(observed_events_std_dev_, getNaN());
 }
 
 void ExpData::applyDimensions() {

@@ -15,6 +15,7 @@ from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from numpy.testing import assert_allclose, assert_array_equal
+from amici import import_model_module
 
 from conftest import MODEL_STEADYSTATE_SCALED_XML
 
@@ -61,7 +62,7 @@ def test_sbml2amici_no_observables():
 
 @skip_on_valgrind
 def test_sbml2amici_nested_observables_fail():
-    """Test model generation works for model without observables"""
+    """Test that import fails if nested observables are used."""
     sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     model_name = "test_sbml2amici_nested_observables_fail"
@@ -679,7 +680,7 @@ def test_code_gen_uses_lhs_symbol_ids():
 
 @skip_on_valgrind
 def test_hardcode_parameters():
-    """Test model generation works for model without observables"""
+    """Test hardcoding parameters."""
     sbml_doc, sbml_model = simple_sbml_model()
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
     r = sbml_model.createRateRule()
@@ -764,7 +765,6 @@ def test_import_same_model_name():
     """Test for error when loading a model with the same extension name as an
     already loaded model."""
     from amici.antimony_import import antimony2amici
-    from amici import import_model_module
 
     # create three versions of a toy model with different parameter values
     #  to detect which model was loaded
@@ -871,3 +871,33 @@ def test_regression_2642():
             len(np.unique(r.w[:, model.getExpressionIds().index("binding")]))
             == 1
         )
+
+
+@skip_on_valgrind
+def test_regression_2700():
+    """Check comparison operators."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "regression_2700"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            """
+        a = 1
+        # condition is always true, so `pp` should be 1
+        pp := piecewise(1, a >= 1 && a <= 1, 0)
+        """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+
+        model.setTimepoints([0, 1, 2])
+
+        solver = model.getSolver()
+
+        rdata = amici.runAmiciSimulation(model, solver)
+
+        assert np.all(rdata.by_id("pp") == [1, 1, 1])

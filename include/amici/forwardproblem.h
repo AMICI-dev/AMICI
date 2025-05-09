@@ -456,8 +456,9 @@ class FinalStateStorer : public ContextManager {
                 auto final_time = fwd_->getFinalTime();
                 auto const timepoints = fwd_->model->getTimepoints();
                 if (!fwd_->timepoint_states_.count(final_time)
-                    && std::find(timepoints.cbegin(), timepoints.cend(), final_time)
-                           != timepoints.cend()) {
+                    && std::find(
+                           timepoints.cbegin(), timepoints.cend(), final_time
+                       ) != timepoints.cend()) {
                     fwd_->timepoint_states_[final_time] = fwd_->final_state_;
                 }
             } catch (std::exception const&) {
@@ -469,7 +470,7 @@ class FinalStateStorer : public ContextManager {
                 // `fwd_->{final_state_,timepoint_states_}` won't be set,
                 // and we assume that they are either not accessed anymore, or
                 // that there is appropriate error handling in place.
-                if(!std::uncaught_exceptions()) {
+                if (!std::uncaught_exceptions()) {
                     throw;
                 }
             }

@@ -19,6 +19,7 @@ import xml.dom.minidom
 
 import libsbml
 from sympy.core.parameters import evaluate
+
 from sympy.printing.mathml import MathMLContentPrinter
 
 from .import_utils import (
@@ -487,6 +488,7 @@ def set_sbml_math(obj: libsbml.SBase, expr, **kwargs) -> None:
         )
 
 
+# TODO: replace by `sbmlmath` functions
 def mathml2sympy(
     mathml: str,
     *,
@@ -516,6 +518,7 @@ def mathml2sympy(
     return expr
 
 
+# TODO: remove after getting rid of `mathml2sympy`
 def _parse_logical_operators(
     math_str: str | float | None,
 ) -> str | float | None:

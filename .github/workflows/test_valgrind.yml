@@ -15,13 +15,14 @@ jobs:
   valgrind_cpp:
     name: Valgrind C++
     # don't run cron job on forks
-    if: github.repository == 'AMICI-dev/AMICI'
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
 
     runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
@@ -65,13 +66,14 @@ jobs:
   valgrind_python:
     name: Valgrind Python
     # don't run cron job on forks
-    if: github.repository == 'AMICI-dev/AMICI'
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
 
     runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"

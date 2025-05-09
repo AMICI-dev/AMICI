@@ -3,7 +3,6 @@ import argparse
 import petab.v1 as petab
 
 from ..petab_import import import_model_sbml
-from petab.v1.models.sbml_model import SbmlModel
 
 
 def _parse_cli_args():
@@ -59,48 +58,6 @@ def _parse_cli_args():
         help="Skip generation of sensitivity code",
     )
 
-    # Call with set of files
-    group = parser.add_argument_group(
-        "Providing individual PEtab tables *DEPRECATED*. "
-        "Pass a PEtab yaml file instead."
-    )
-
-    group.add_argument(
-        "-s", "--sbml", dest="sbml_file_name", help="SBML model filename"
-    )
-    group.add_argument(
-        "-m",
-        "--measurements",
-        dest="measurement_file_name",
-        help="Measurement table",
-    )
-    group.add_argument(
-        "-c",
-        "--conditions",
-        dest="condition_file_name",
-        help="Conditions table",
-    )
-    group.add_argument(
-        "-p",
-        "--parameters",
-        dest="parameter_file_name",
-        help="Parameter table",
-    )
-    group.add_argument(
-        "-b",
-        "--observables",
-        dest="observable_file_name",
-        help="Observable table",
-    )
-
-    parser.add_argument(
-        "-y",
-        "--yaml",
-        dest="yaml_file_name_deprecated",
-        help="PEtab YAML problem filename. *DEPRECATED* Pass the YAML file "
-        "as positional argument instead.",
-    )
-
     parser.add_argument(
         dest="yaml_file_name",
         help="PEtab YAML problem filename.",
@@ -115,42 +72,8 @@ def _parse_cli_args():
     )
 
     args = parser.parse_args()
-    if any(
-        [
-            args.sbml_file_name,
-            args.condition_file_name,
-            args.observable_file_name,
-            args.measurement_file_name,
-            args.parameter_file_name,
-        ]
-    ):
-        print(
-            "WARNING: Passing individual tables to amico_import_petab is "
-            "deprecated, please pass a PEtab YAML file instead."
-        )
-    if (
-        not args.yaml_file_name and not args.yaml_file_name_deprecated
-    ) and not all(
-        (
-            args.sbml_file_name,
-            args.condition_file_name,
-            args.observable_file_name,
-            args.measurement_file_name,
-            args.parameter_file_name,
-        )
-    ):
-        parser.error(
-            "When not specifying a model name or YAML file, then "
-            "SBML, condition, observable, measurement and parameter file must "
-            "be specified."
-        )
-
-    if args.yaml_file_name_deprecated:
-        print(
-            "WARNING: -y/--yaml is deprecated. Pass the YAML file as "
-            "positional argument instead."
-        )
-        args.yaml_file_name = args.yaml_file_name_deprecated
+    if not args.yaml_file_name:
+        parser.error("Missing PEtab yaml file.")
 
     return args
 
@@ -162,18 +85,7 @@ def _main():
     """
     args = _parse_cli_args()
 
-    if args.yaml_file_name:
-        pp = petab.Problem.from_yaml(args.yaml_file_name)
-    else:
-        pp = petab.Problem(
-            model=SbmlModel.from_file(args.sbml_file_name),
-            condition_df=petab.get_condition_df(args.condition_file_name),
-            measurement_df=petab.get_measurement_df(
-                args.measurement_file_name
-            ),
-            parameter_df=petab.get_parameter_df(args.parameter_file_name),
-            observable_df=petab.get_observable_df(args.observable_file_name),
-        )
+    pp = petab.Problem.from_yaml(args.yaml_file_name)
 
     # Check for valid PEtab before potentially modifying it
     if args.validate:
