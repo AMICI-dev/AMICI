@@ -533,8 +533,9 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # rewrite n-ary XOR to OR to be handled below:
     trigger = trigger.replace(sp.Xor, _xor_to_or)
-    # rewrite equality
+    # rewrite ==, !==
     trigger = trigger.replace(sp.Eq, _eq_to_and)
+    trigger = trigger.replace(sp.Ne, _ne_to_or)
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
@@ -583,6 +584,23 @@ def _eq_to_and(*args):
     """
     x, y = args
     return (x >= y) & (x <= y)
+
+
+def _ne_to_or(*args):
+    """
+    Replace not-equal expression with numerical arguments by inequalities.
+
+    ``Ne(x, y) = (x > y) | (x < y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Ne, _ne_to_or)``.
+
+    This expects x and y to be not-NaN. No model should rely on NaN semantics
+    anyways: In sympy, NaNs are equal, but they don't support <, >, >=, <=.
+    In SBML, NaNs are equal, but support all comparisons. In IEEE 754, NaNs
+    are not equal, but support all comparisons.
+    """
+    x, y = args
+    return (x > y) | (x < y)
 
 
 def grouper(
