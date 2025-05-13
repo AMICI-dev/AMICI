@@ -264,7 +264,8 @@ void Solver::setupB(
     AmiVector const& dxB0, AmiVector const& xQB0
 ) const {
     if (!solver_memory_)
-        throw AmiException("Solver for the forward problem must be setup first"
+        throw AmiException(
+            "Solver for the forward problem must be setup first"
         );
 
     /* allocate memory for the backward problem */
@@ -306,8 +307,9 @@ void Solver::setupSteadystate(
 
     /* Check linear solver (works only with KLU atm) */
     if (linsol_ != LinearSolver::KLU)
-        throw AmiException("Backward steady state computation via integration "
-                           "is currently only implemented for KLU linear solver"
+        throw AmiException(
+            "Backward steady state computation via integration "
+            "is currently only implemented for KLU linear solver"
         );
     /* Set Jacobian function and initialize values */
     setSparseJacFn_ss();
@@ -488,8 +490,9 @@ void Solver::initializeNonLinearSolver() const {
     setNonLinearSolver();
 }
 
-void Solver::initializeLinearSolverB(Model const* model, int const which)
-    const {
+void Solver::initializeLinearSolverB(
+    Model const* model, int const which
+) const {
     switch (linsol_) {
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
@@ -626,16 +629,20 @@ bool operator==(Solver const& a, Solver const& b) {
 
 void Solver::applyTolerances() const {
     if (!getInitDone())
-        throw AmiException("Solver instance was not yet set up, the "
-                           "tolerances cannot be applied yet!");
+        throw AmiException(
+            "Solver instance was not yet set up, the "
+            "tolerances cannot be applied yet!"
+        );
 
     setSStolerances(rtol_, atol_);
 }
 
 void Solver::applyTolerancesFSA() const {
     if (!getInitDone())
-        throw AmiException("Solver instance was not yet set up, the "
-                           "tolerances cannot be applied yet!");
+        throw AmiException(
+            "Solver instance was not yet set up, the "
+            "tolerances cannot be applied yet!"
+        );
 
     if (sensi_ < SensitivityOrder::first)
         return;
@@ -649,8 +656,10 @@ void Solver::applyTolerancesFSA() const {
 
 void Solver::applyTolerancesASA(int const which) const {
     if (!getAdjInitDone())
-        throw AmiException("Adjoint solver instance was not yet set up, the "
-                           "tolerances cannot be applied yet!");
+        throw AmiException(
+            "Adjoint solver instance was not yet set up, the "
+            "tolerances cannot be applied yet!"
+        );
 
     if (sensi_ < SensitivityOrder::first)
         return;
@@ -661,8 +670,10 @@ void Solver::applyTolerancesASA(int const which) const {
 
 void Solver::applyQuadTolerancesASA(int const which) const {
     if (!getAdjInitDone())
-        throw AmiException("Adjoint solver instance was not yet set up, the "
-                           "tolerances cannot be applied yet!");
+        throw AmiException(
+            "Adjoint solver instance was not yet set up, the "
+            "tolerances cannot be applied yet!"
+        );
 
     if (sensi_ < SensitivityOrder::first)
         return;
@@ -678,8 +689,10 @@ void Solver::applyQuadTolerancesASA(int const which) const {
 
 void Solver::applyQuadTolerances() const {
     if (!getQuadInitDone())
-        throw AmiException("Quadratures were not initialized, the "
-                           "tolerances cannot be applied yet!");
+        throw AmiException(
+            "Quadratures were not initialized, the "
+            "tolerances cannot be applied yet!"
+        );
 
     if (sensi_ < SensitivityOrder::first)
         return;
@@ -737,8 +750,10 @@ void Solver::checkSensitivityMethod(
 ) const {
     if (rdata_mode_ == RDataReporting::residuals
         && sensi_meth == SensitivityMethod::adjoint)
-        throw AmiException("Adjoint Sensitivity Analysis is not compatible with"
-                           " only reporting residuals!");
+        throw AmiException(
+            "Adjoint Sensitivity Analysis is not compatible with"
+            " only reporting residuals!"
+        );
     if (!preequilibration && sensi_meth != sensi_meth_)
         resetMutableMemory(nx(), nplist(), nquad());
 }
@@ -988,7 +1003,8 @@ double Solver::getSteadyStateSensiToleranceFactor() const {
     return static_cast<double>(ss_tol_sensi_factor_);
 }
 
-void Solver::setSteadyStateSensiToleranceFactor(double const ss_tol_sensi_factor
+void Solver::setSteadyStateSensiToleranceFactor(
+    double const ss_tol_sensi_factor
 ) {
     if (ss_tol_sensi_factor < 0)
         throw AmiException("ss_tol_sensi_factor must be a non-negative number");
@@ -1104,11 +1120,13 @@ void Solver::setStateOrdering(int ordering) {
 #ifdef SUNDIALS_SUPERLUMT
     if (solverMemory && linsol == LinearSolver::SuperLUMT) {
         auto klu = dynamic_cast<SUNLinSolSuperLUMT*>(linearSolver.get());
-        klu->setOrdering(static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering
-        ));
+        klu->setOrdering(
+            static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering)
+        );
         klu = dynamic_cast<SUNLinSolSuperLUMT*>(linearSolverB.get());
-        klu->setOrdering(static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering
-        ));
+        klu->setOrdering(
+            static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering)
+        );
     }
 #endif
 }
@@ -1150,8 +1168,10 @@ RDataReporting Solver::getReturnDataReportingMode() const {
 void Solver::setReturnDataReportingMode(RDataReporting rdrm) {
     if (rdrm == RDataReporting::residuals
         && sensi_meth_ == SensitivityMethod::adjoint)
-        throw AmiException("Adjoint Sensitivity Analysis cannot report "
-                           "residuals!");
+        throw AmiException(
+            "Adjoint Sensitivity Analysis cannot report "
+            "residuals!"
+        );
     rdata_mode_ = rdrm;
 }
 
@@ -1264,8 +1284,9 @@ realtype Solver::getCpuTime() const { return cpu_time_; }
 
 realtype Solver::getCpuTimeB() const { return cpu_timeB_; }
 
-void Solver::resetMutableMemory(int const nx, int const nplist, int const nquad)
-    const {
+void Solver::resetMutableMemory(
+    int const nx, int const nplist, int const nquad
+) const {
     solver_memory_ = nullptr;
     initialized_ = false;
     adj_initialized_ = false;

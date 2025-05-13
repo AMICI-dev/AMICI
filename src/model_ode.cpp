@@ -441,8 +441,9 @@ void Model_ODE::fxBdot_ss(
     fxBdot_ss(t, xB.getNVector(), xBdot.getNVector());
 }
 
-void Model_ODE::fxBdot_ss(realtype /*t*/, const_N_Vector xB, N_Vector xBdot)
-    const {
+void Model_ODE::fxBdot_ss(
+    realtype /*t*/, const_N_Vector xB, N_Vector xBdot
+) const {
     /* Right hand side of the adjoint state for steady state computations.
        J is fixed (as x remains in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);

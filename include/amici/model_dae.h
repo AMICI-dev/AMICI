@@ -299,8 +299,9 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      */
     void fdxdotdp(realtype t, const_N_Vector const x, const_N_Vector const dx);
-    void fdxdotdp(realtype const t, AmiVector const& x, AmiVector const& dx)
-        override {
+    void fdxdotdp(
+        realtype const t, AmiVector const& x, AmiVector const& dx
+    ) override {
         fdxdotdp(t, x.getNVector(), dx.getNVector());
     };
 

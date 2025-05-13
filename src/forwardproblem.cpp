@@ -93,8 +93,10 @@ void ForwardProblem::workForwardProblem() {
     /* perform presimulation if necessary */
     if (presimulate) {
         if (solver->computingASA())
-            throw AmiException("Presimulation with adjoint sensitivities"
-                               " is currently not implemented.");
+            throw AmiException(
+                "Presimulation with adjoint sensitivities"
+                " is currently not implemented."
+            );
         handlePresimulation();
         t_ = model->t0();
         if (model->ne) {
@@ -225,10 +227,12 @@ void ForwardProblem::handleEvent(
         /* only check this in the first event fired, otherwise this will always
          * be true */
         if (t_ == *tlastroot) {
-            throw AmiException("AMICI is stuck in an event, as the initial "
-                               "step-size after the event is too small. "
-                               "To fix this, increase absolute and relative "
-                               "tolerances!");
+            throw AmiException(
+                "AMICI is stuck in an event, as the initial "
+                "step-size after the event is too small. "
+                "To fix this, increase absolute and relative "
+                "tolerances!"
+            );
         }
         *tlastroot = t_;
     }
