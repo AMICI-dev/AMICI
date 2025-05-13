@@ -243,12 +243,12 @@ class ForwardProblem {
     /**
      * @brief Execute everything necessary for the handling of events
      *
-     * @param tlastroot pointer to the timepoint of the last event
+     * @param tlastroot Reference to the timepoint of the last event
      * @param seflag Secondary event flag
      * @param initial_event initial event flag
      */
 
-    void handleEvent(realtype* tlastroot, bool seflag, bool initial_event);
+    void handleEvent(realtype& tlastroot, bool seflag, bool initial_event);
 
     /**
      * @brief Store pre-event model state
@@ -261,9 +261,9 @@ class ForwardProblem {
     /**
      * @brief Check for, and if applicable, handle any secondary events
      *
-     * @param tlastroot pointer to the timepoint of the last event
+     * @param tlastroot Reference to the timepoint of the last event
      */
-    void handle_secondary_event(realtype* tlastroot);
+    void handle_secondary_event(realtype& tlastroot);
 
     /**
      * @brief Extract output information for events
@@ -334,12 +334,8 @@ class ForwardProblem {
     std::vector<realtype> rval_tmp_;
 
     /** array containing the time-points of discontinuities
-     * (dimension: nmaxevent x ne, ordering = ?) */
+     * (dimension: dynamic) */
     std::vector<realtype> discs_;
-
-    /** array containing the index of discontinuities
-     * (dimension: nmaxevent x ne, ordering = ?) */
-    std::vector<realtype> irdiscs_;
 
     /** array of state vectors (dimension nx) for all so far encountered
      * discontinuities, extended as needed (dimension dynamic) */
@@ -373,16 +369,16 @@ class ForwardProblem {
      */
     std::vector<int> roots_found_;
 
-    /** simulation states history at timepoints  */
+    /** simulation states history at timepoints */
     std::map<realtype, SimulationState> timepoint_states_;
 
-    /** simulation state history at events*/
+    /** simulation state history at events */
     std::vector<SimulationState> event_states_;
 
     /** simulation state after initialization*/
     SimulationState initial_state_;
 
-    /** simulation state after simulation*/
+    /** simulation state after simulation */
     SimulationState final_state_;
 
     /** state vector (dimension: nx_solver) */
