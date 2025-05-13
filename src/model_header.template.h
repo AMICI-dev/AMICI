@@ -6,6 +6,7 @@
 
 #include "amici/model_TPL_MODEL_TYPE_LOWER.h"
 #include "amici/splinefunctions.h"
+#include "amici/event.h"
 
 namespace amici {
 
@@ -25,7 +26,6 @@ extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 extern std::array<const char*, TPL_NW> expressionIds;
 extern std::array<int, TPL_NX_SOLVER> stateIdxsSolver;
-extern std::array<bool, TPL_NEVENT> rootInitialValues;
 
 TPL_JY_DEF
 TPL_DJYDSIGMA_DEF
@@ -148,11 +148,9 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_ID},   // idlist
               std::vector<int>{TPL_Z2EVENT},               // z2events
+              std::vector<Event>{TPL_EVENT_LIST_INITIALIZER}, // events
               {TPL_STATE_INDEPENDENT_EVENTS}               // state-independent events
           ) {
-                 root_initial_values_ = std::vector<bool>(
-                     rootInitialValues.begin(), rootInitialValues.end()
-                 );
           }
 
     /**

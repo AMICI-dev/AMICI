@@ -982,6 +982,18 @@ class DEExporter:
         Write model-specific header and cpp file (MODELNAME.{h,cpp}).
         """
         model_type = "ODE" if self.model.is_ode() else "DAE"
+
+        def event_initializer(event: Event) -> str:
+            """Return amici::Event initializer for the given event."""
+            init = AmiciCxxCodePrinter.print_bool(event.get_initial_value())
+            return f'Event("{event.get_id()}", {init})'
+
+        def event_initializer_list() -> str:
+            if events := self.model.events():
+                lst = f",\n{' ' * 18}".join(map(event_initializer, events))
+                return f"\n{' ' * 18}{lst}\n{' ' * 14}"
+            return ""
+
         tpl_data = {
             "MODEL_TYPE_LOWER": model_type.lower(),
             "MODEL_TYPE_UPPER": model_type,
@@ -1081,14 +1093,7 @@ class DEExporter:
             "QUADRATIC_LLH": AmiciCxxCodePrinter.print_bool(
                 self.model._has_quadratic_nllh
             ),
-            "ROOT_INITIAL_VALUES": ", ".join(
-                map(
-                    lambda event: AmiciCxxCodePrinter.print_bool(
-                        event.get_initial_value()
-                    ),
-                    self.model.events(),
-                )
-            ),
+            "EVENT_LIST_INITIALIZER": event_initializer_list(),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
             "STATE_INDEPENDENT_EVENTS": get_state_independent_event_intializer(
                 self.model.events()

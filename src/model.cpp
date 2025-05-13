@@ -177,6 +177,7 @@ Model::Model(
     ModelDimensions const& model_dimensions,
     SimulationParameters simulation_parameters, SecondOrderMode o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
+    std::vector<Event> events,
     std::map<realtype, std::vector<int>> state_independent_events
 )
     : ModelDimensions(model_dimensions)
@@ -187,7 +188,8 @@ Model::Model(
     , derived_state_(*this)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
-    , simulation_parameters_(std::move(simulation_parameters)) {
+    , simulation_parameters_(std::move(simulation_parameters))
+    , events_(std::move(events)) {
     Expects(
         model_dimensions.np
         == gsl::narrow<int>(simulation_parameters_.parameters.size())
@@ -207,8 +209,6 @@ Model::Model(
     );
     state_.fixedParameters = simulation_parameters_.fixedParameters;
     state_.plist = simulation_parameters_.plist;
-
-    root_initial_values_.resize(ne, true);
 
     requireSensitivitiesForAllParameters();
 }
@@ -411,8 +411,10 @@ void Model::initEvents(
             state_.h.at(ie) = 0.0;
         } else {
             state_.h.at(ie) = 1.0;
-            if (!root_initial_values_.at(ie)) // only false->true triggers event
+            if (pythonGenerated && !events_.at(ie).get_initial_value()) {
+                // only false->true triggers event
                 roots_found.at(ie) = 1;
+            }
         }
     }
 }

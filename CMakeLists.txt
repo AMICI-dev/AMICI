@@ -165,6 +165,7 @@ set(AMICI_SRC_LIST
     src/splinefunctions.cpp
     src/cblas.cpp
     src/amici.cpp
+    src/event.cpp
     src/misc.cpp
     src/rdata.cpp
     src/edata.cpp
@@ -193,6 +194,7 @@ set(AMICI_SRC_LIST
     include/amici/cblas.h
     include/amici/defines.h
     include/amici/edata.h
+    include/amici/event.h
     include/amici/exception.h
     include/amici/forwardproblem.h
     include/amici/hdf5.h
