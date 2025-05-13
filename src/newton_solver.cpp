@@ -144,8 +144,9 @@ void NewtonSolver::reinitialize() {
     );
 };
 
-bool NewtonSolver::is_singular(Model& model, SimulationState const& state)
-    const {
+bool NewtonSolver::is_singular(
+    Model& model, SimulationState const& state
+) const {
     if (auto s = dynamic_cast<SUNLinSolKLU const*>(linsol_.get())) {
         return s->is_singular();
     }

@@ -168,7 +168,8 @@ void Model_DAE::fdxdotdp(
 
     if (pythonGenerated) {
         // python generated, not yet implemented for DAEs
-        throw AmiException("Wrapping of DAEs is not yet implemented from Python"
+        throw AmiException(
+            "Wrapping of DAEs is not yet implemented from Python"
         );
     } else {
         // matlab generated
@@ -498,7 +499,8 @@ void Model_DAE::fsxdot(
 
     if (pythonGenerated) {
         // python generated, not yet implemented for DAEs
-        throw AmiException("Wrapping of DAEs is not yet implemented from Python"
+        throw AmiException(
+            "Wrapping of DAEs is not yet implemented from Python"
         );
     } else {
         /* copy dxdotdp over */

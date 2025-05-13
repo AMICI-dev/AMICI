@@ -31,9 +31,11 @@ class SimulationParameters {
     )
         : fixedParameters(std::move(fixedParameters))
         , parameters(std::move(parameters))
-        , pscale(std::vector<ParameterScaling>(
-              this->parameters.size(), ParameterScaling::none
-          )) {}
+        , pscale(
+              std::vector<ParameterScaling>(
+                  this->parameters.size(), ParameterScaling::none
+              )
+          ) {}
 
 #ifndef SWIGPYTHON
     /*
@@ -61,9 +63,11 @@ class SimulationParameters {
     )
         : fixedParameters(std::move(fixedParameters))
         , parameters(std::move(parameters))
-        , pscale(std::vector<ParameterScaling>(
-              this->parameters.size(), ParameterScaling::none
-          ))
+        , pscale(
+              std::vector<ParameterScaling>(
+                  this->parameters.size(), ParameterScaling::none
+              )
+          )
         , plist(std::move(plist)) {}
 
     /**
@@ -78,9 +82,11 @@ class SimulationParameters {
     )
         : fixedParameters(std::move(fixedParameters))
         , parameters(std::move(parameters))
-        , pscale(std::vector<ParameterScaling>(
-              this->parameters.size(), ParameterScaling::none
-          ))
+        , pscale(
+              std::vector<ParameterScaling>(
+                  this->parameters.size(), ParameterScaling::none
+              )
+          )
         , ts_(std::move(timepoints)) {}
 #endif
 

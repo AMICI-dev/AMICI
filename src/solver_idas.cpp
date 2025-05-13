@@ -189,8 +189,9 @@ void IDASolver::initSteadystate(
     ida_mem->ida_res = fxBdot_ss;
 }
 
-void IDASolver::sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& sdx0)
-    const {
+void IDASolver::sensInit1(
+    AmiVectorArray const& sx0, AmiVectorArray const& sdx0
+) const {
     int status = IDA_SUCCESS;
     sx_ = sx0;
     sdx_ = sdx0;
@@ -352,14 +353,16 @@ void IDASolver::allocateSolver() const {
         );
 }
 
-void IDASolver::setSStolerances(realtype const rtol, realtype const atol)
-    const {
+void IDASolver::setSStolerances(
+    realtype const rtol, realtype const atol
+) const {
     int status = IDASStolerances(solver_memory_.get(), rtol, atol);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASStolerances");
 }
-void IDASolver::setSensSStolerances(realtype const rtol, realtype const* atol)
-    const {
+void IDASolver::setSensSStolerances(
+    realtype const rtol, realtype const* atol
+) const {
     int status = IDASensSStolerances(
         solver_memory_.get(), rtol, const_cast<realtype*>(atol)
     );
@@ -411,8 +414,8 @@ void IDASolver::setMaxNumSteps(long int const mxsteps) const {
 
 void IDASolver::setStabLimDet(int const /*stldet*/) const {}
 
-void IDASolver::setStabLimDetB(int const /*which*/, int const /*stldet*/)
-    const {}
+void IDASolver::
+    setStabLimDetB(int const /*which*/, int const /*stldet*/) const {}
 
 void IDASolver::setId(Model const* model) const {
 
@@ -757,8 +760,9 @@ int IDASolver::solve(realtype const tout, int const itask) const {
     return status;
 }
 
-int IDASolver::solveF(realtype const tout, int const itask, int* ncheckPtr)
-    const {
+int IDASolver::solveF(
+    realtype const tout, int const itask, int* ncheckPtr
+) const {
     if (force_reinit_postprocess_F_)
         reInitPostProcessF(tout);
     int status = IDASolveF(
@@ -785,8 +789,9 @@ void IDASolver::solveB(realtype const tBout, int const itaskB) const {
     }
 }
 
-void IDASolver::setMaxNumStepsB(int const which, long int const mxstepsB)
-    const {
+void IDASolver::setMaxNumStepsB(
+    int const which, long int const mxstepsB
+) const {
     int status = IDASetMaxNumStepsB(solver_memory_.get(), which, mxstepsB);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetMaxNumStepsB");
@@ -806,8 +811,9 @@ void IDASolver::getNumSteps(void const* ami_mem, long int* numsteps) const {
         throw IDAException(status, "IDAGetNumSteps");
 }
 
-void IDASolver::getNumRhsEvals(void const* ami_mem, long int* numrhsevals)
-    const {
+void IDASolver::getNumRhsEvals(
+    void const* ami_mem, long int* numrhsevals
+) const {
     int status = IDAGetNumResEvals(const_cast<void*>(ami_mem), numrhsevals);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetNumResEvals");

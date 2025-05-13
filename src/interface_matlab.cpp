@@ -331,9 +331,11 @@ void setSolverOptions(mxArray const* prhs[], int nrhs, Solver& solver) {
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm")) {
-            solver.setLinearMultistepMethod(static_cast<LinearMultistepMethod>(
-                dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm")))
-            ));
+            solver.setLinearMultistepMethod(
+                static_cast<LinearMultistepMethod>(dbl2int(
+                    mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm"))
+                ))
+            );
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "iter")) {
@@ -345,21 +347,27 @@ void setSolverOptions(mxArray const* prhs[], int nrhs, Solver& solver) {
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType")) {
-            solver.setInterpolationType(static_cast<InterpolationType>(dbl2int(
-                mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType"))
-            )));
+            solver.setInterpolationType(
+                static_cast<InterpolationType>(dbl2int(mxGetScalar(
+                    mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType")
+                )))
+            );
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol")) {
-            solver.setLinearSolver(static_cast<LinearSolver>(dbl2int(
-                mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol"))
-            )));
+            solver.setLinearSolver(
+                static_cast<LinearSolver>(dbl2int(
+                    mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol"))
+                ))
+            );
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")) {
-            solver.setSensitivityOrder(static_cast<SensitivityOrder>(dbl2int(
-                mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi"))
-            )));
+            solver.setSensitivityOrder(
+                static_cast<SensitivityOrder>(dbl2int(
+                    mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi"))
+                ))
+            );
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ism")) {
@@ -371,9 +379,11 @@ void setSolverOptions(mxArray const* prhs[], int nrhs, Solver& solver) {
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")) {
-            solver.setSensitivityMethod(static_cast<SensitivityMethod>(dbl2int(
-                mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth"))
-            )));
+            solver.setSensitivityMethod(
+                static_cast<SensitivityMethod>(dbl2int(mxGetScalar(
+                    mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")
+                )))
+            );
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth_preeq")) {
@@ -443,11 +453,14 @@ void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
 
     if (prhs[RHS_TIMEPOINTS]
         && mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS]) > 0) {
-        model.setTimepoints(std::vector<double>(
-            mxGetPr(prhs[RHS_TIMEPOINTS]),
-            mxGetPr(prhs[RHS_TIMEPOINTS]
-            ) + (int)mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS])
-        ));
+        model.setTimepoints(
+            std::vector<double>(
+                mxGetPr(prhs[RHS_TIMEPOINTS]),
+                mxGetPr(prhs[RHS_TIMEPOINTS])
+                    + (int)mxGetM(prhs[RHS_TIMEPOINTS])
+                          * mxGetN(prhs[RHS_TIMEPOINTS])
+            )
+        );
     }
 
     if (model.np() > 0) {
@@ -456,12 +469,14 @@ void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
                     mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS])
                 )
                 == model.np()) {
-                model.setParameters(std::vector<double>(
-                    mxGetPr(prhs[RHS_PARAMETERS]),
-                    mxGetPr(prhs[RHS_PARAMETERS])
-                        + mxGetM(prhs[RHS_PARAMETERS])
-                              * mxGetN(prhs[RHS_PARAMETERS])
-                ));
+                model.setParameters(
+                    std::vector<double>(
+                        mxGetPr(prhs[RHS_PARAMETERS]),
+                        mxGetPr(prhs[RHS_PARAMETERS])
+                            + mxGetM(prhs[RHS_PARAMETERS])
+                                  * mxGetN(prhs[RHS_PARAMETERS])
+                    )
+                );
             }
         }
     }
@@ -472,21 +487,25 @@ void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
                     mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS])
                 )
                 == model.nk()) {
-                model.setFixedParameters(std::vector<double>(
-                    mxGetPr(prhs[RHS_CONSTANTS]),
-                    mxGetPr(prhs[RHS_CONSTANTS])
-                        + mxGetM(prhs[RHS_CONSTANTS])
-                              * mxGetN(prhs[RHS_CONSTANTS])
-                ));
+                model.setFixedParameters(
+                    std::vector<double>(
+                        mxGetPr(prhs[RHS_CONSTANTS]),
+                        mxGetPr(prhs[RHS_CONSTANTS])
+                            + mxGetM(prhs[RHS_CONSTANTS])
+                                  * mxGetN(prhs[RHS_CONSTANTS])
+                    )
+                );
             }
         }
     }
     if (mxGetPr(prhs[RHS_PLIST])) {
-        model.setParameterList(std::vector<int>(
-            mxGetPr(prhs[RHS_PLIST]),
-            mxGetPr(prhs[RHS_PLIST])
-                + mxGetM(prhs[RHS_PLIST]) * mxGetN(prhs[RHS_PLIST])
-        ));
+        model.setParameterList(
+            std::vector<int>(
+                mxGetPr(prhs[RHS_PLIST]),
+                mxGetPr(prhs[RHS_PLIST])
+                    + mxGetM(prhs[RHS_PLIST]) * mxGetN(prhs[RHS_PLIST])
+            )
+        );
     } else {
         model.requireSensitivitiesForAllParameters();
     }
@@ -503,9 +522,11 @@ void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
                 );
             }
             if (gsl::narrow<int>(mxGetM(x0)) != model.nx_rdata) {
-                throw AmiException("Number of columns in x0 field "
-                                   "does not agree with number of "
-                                   "model states!");
+                throw AmiException(
+                    "Number of columns in x0 field "
+                    "does not agree with number of "
+                    "model states!"
+                );
             }
         }
     }
@@ -522,40 +543,52 @@ void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
                 );
             }
             if (gsl::narrow<int>(mxGetM(x0)) != model.nx_rdata) {
-                throw AmiException("Number of columns in x0 field "
-                                   "does not agree with number of "
-                                   "model states!");
+                throw AmiException(
+                    "Number of columns in x0 field "
+                    "does not agree with number of "
+                    "model states!"
+                );
             }
 
-            model.setInitialStates(std::vector<double>(
-                mxGetPr(x0), mxGetPr(x0) + mxGetM(x0) * mxGetN(x0)
-            ));
+            model.setInitialStates(
+                std::vector<double>(
+                    mxGetPr(x0), mxGetPr(x0) + mxGetM(x0) * mxGetN(x0)
+                )
+            );
         }
 
         mxArray* sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
         if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
             if (gsl::narrow<int>(mxGetN(sx0)) != model.nplist()) {
-                throw AmiException("Number of rows in sx0 field "
-                                   "does not agree with number of "
-                                   "model parameters!");
+                throw AmiException(
+                    "Number of rows in sx0 field "
+                    "does not agree with number of "
+                    "model parameters!"
+                );
             }
             if (gsl::narrow<int>(mxGetM(sx0)) != model.nx_rdata) {
-                throw AmiException("Number of columns in sx0 "
-                                   "field does not agree with "
-                                   "number of model states!");
+                throw AmiException(
+                    "Number of columns in sx0 "
+                    "field does not agree with "
+                    "number of model states!"
+                );
             }
-            model.setInitialStateSensitivities(std::vector<double>(
-                mxGetPr(sx0), mxGetPr(sx0) + mxGetM(sx0) * mxGetN(sx0)
-            ));
+            model.setInitialStateSensitivities(
+                std::vector<double>(
+                    mxGetPr(sx0), mxGetPr(sx0) + mxGetM(sx0) * mxGetN(sx0)
+                )
+            );
         }
     }
     // preequilibration condition parameters
     if (mxGetPr(prhs[RHS_DATA])
         && mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates"))
-        model.setReinitializeFixedParameterInitialStates(static_cast<bool>(
-            mxGetScalar(mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates"))
-        ));
+        model.setReinitializeFixedParameterInitialStates(
+            static_cast<bool>(mxGetScalar(
+                mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates")
+            ))
+        );
 }
 
 } // namespace amici

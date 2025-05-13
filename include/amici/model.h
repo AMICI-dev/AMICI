@@ -252,8 +252,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xQB Adjoint quadratures
      * @param posteq Flag indicating whether postequilibration was performed
      */
-    void initializeB(AmiVector& xB, AmiVector& dxB, AmiVector& xQB, bool posteq)
-        const;
+    void initializeB(
+        AmiVector& xB, AmiVector& dxB, AmiVector& xQB, bool posteq
+    ) const;
 
     /**
      * @brief Initialize initial states.

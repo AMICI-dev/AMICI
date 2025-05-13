@@ -61,20 +61,24 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
         && solver.getSensitivityMethodPreequilibration()
                == SensitivityMethod::adjoint
         && solver.getSensitivityOrder() > SensitivityOrder::none)
-        throw AmiException("Preequilibration using adjoint sensitivities "
-                           "is not compatible with using forward "
-                           "sensitivities during simulation");
+        throw AmiException(
+            "Preequilibration using adjoint sensitivities "
+            "is not compatible with using forward "
+            "sensitivities during simulation"
+        );
     if (solver.getSensitivityMethod() == SensitivityMethod::forward
         && model.getSteadyStateComputationMode()
                == SteadyStateComputationMode::newtonOnly
         && model.getSteadyStateSensitivityMode()
                == SteadyStateSensitivityMode::integrationOnly)
-        throw AmiException("For forward sensitivity analysis steady-state "
-                           "computation mode 'newtonOnly' and steady-state "
-                           "sensitivity mode 'integrationOnly' are not "
-                           "compatible as numerical integration of the model "
-                           "ODEs and corresponding forward sensitivities ODEs "
-                           "is coupled");
+        throw AmiException(
+            "For forward sensitivity analysis steady-state "
+            "computation mode 'newtonOnly' and steady-state "
+            "sensitivity mode 'integrationOnly' are not "
+            "compatible as numerical integration of the model "
+            "ODEs and corresponding forward sensitivities ODEs "
+            "is coupled"
+        );
 }
 
 void SteadystateProblem::workSteadyStateProblem(
@@ -511,8 +515,10 @@ bool SteadystateProblem::getSensitivityFlag(
         return needForwardSensiAtCreation;
 
     default:
-        throw AmiException("Requested invalid context in sensitivity "
-                           "processing during steady state computation");
+        throw AmiException(
+            "Requested invalid context in sensitivity "
+            "processing during steady state computation"
+        );
     }
 }
 
