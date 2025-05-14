@@ -901,3 +901,49 @@ def test_regression_2700():
         rdata = amici.runAmiciSimulation(model, solver)
 
         assert np.all(rdata.by_id("pp") == [1, 1, 1])
+
+
+def test_heaviside_init_values_and_bool_to_float_conversion():
+    """
+    Test that Boolean expressions are properly converted in a float context.
+
+    FIXME: Test that Heavisides for Boolean / piecewise functions use a correct
+    initial value. https://github.com/AMICI-dev/AMICI/issues/2724
+    """
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_bool2float"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            """
+        # https://github.com/AMICI-dev/AMICI/issues/2717
+        a := 2 * (time >= t_a)  # TODO: change '>=' to '>' to trigger gh-2724
+        b := time >= t_b
+
+        # to trigger at t_0, to test for proper root function initial value
+        #  see https://github.com/AMICI-dev/AMICI/issues/2724
+        t_a = 0
+        # we need some differential state, otherwise root-finding won't work
+        t_a' = 0
+
+        # trigger after t_0
+        t_b = 1
+        """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+        model.setTimepoints([0, 1, 2])
+
+        solver = model.getSolver()
+        rdata = amici.runAmiciSimulation(model, solver)
+
+        assert np.all(rdata.by_id("a") == np.array([2, 2, 2])), rdata.by_id(
+            "a"
+        )
+        assert np.all(rdata.by_id("b") == np.array([0, 1, 1])), rdata.by_id(
+            "b"
+        )

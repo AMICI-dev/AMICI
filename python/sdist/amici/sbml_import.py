@@ -24,7 +24,7 @@ import libsbml
 from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
 import numpy as np
 import sympy as sp
-from sympy.logic.boolalg import BooleanFalse, BooleanTrue, BooleanFunction
+from sympy.logic.boolalg import BooleanFalse, BooleanTrue, Boolean
 
 from . import has_clibs
 from .de_model import DEModel
@@ -1318,12 +1318,7 @@ class SbmlImporter:
 
         # parameter ID => initial assignment sympy expression
         par_id_to_ia = {
-            par.getId(): ia.subs(
-                {
-                    BooleanTrue(): sp.Float(1.0),
-                    BooleanFalse(): sp.Float(0.0),
-                }
-            ).evalf()
+            par.getId(): _try_evalf(ia)
             for par in self.sbml.getListOfParameters()
             if (ia := self._get_element_initial_assignment(par.getId()))
             is not None
@@ -2987,6 +2982,14 @@ class SbmlImporter:
             expr = expr.simplify().evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
+        # boolean to numeric piecewise
+        #  (this may introduce piecewise functions and must happen before
+        #   piecewise_to_heaviside)
+        if bool2num and isinstance(expr, Boolean):
+            from sbmlmath.mathml_parser import _bool2num
+
+            expr = _bool2num(expr)
+
         # piecewise to heavisides
         if piecewise_to_heaviside:
             try:
@@ -2996,12 +2999,6 @@ class SbmlImporter:
                 )
             except RuntimeError as err:
                 raise SBMLException(str(err)) from err
-
-        # boolean to numeric piecewise
-        if bool2num and isinstance(expr, BooleanFunction):
-            from sbmlmath.mathml_parser import _bool2num
-
-            expr = _bool2num(expr)
 
         return expr
 
@@ -3529,3 +3526,28 @@ def _dummy_to_rateof(
     if rateof_dummies:
         return sym_math.subs({v: k for k, v in rateof_dummies.items()})
     return sym_math
+
+
+def _try_evalf(x: sp.Basic) -> sp.Basic:
+    """Try to convert a sympy object to sympy.Float.
+
+    :returns: The value of `x` as sympy.Float if there is a known conversion;
+        `x` otherwise.
+    """
+    if hasattr(x, "evalf") and isinstance((x := x.evalf()), sp.Float):
+        return x
+
+    try:
+        if (
+            x := x.subs(
+                {
+                    BooleanTrue(): sp.Float(1.0),
+                    BooleanFalse(): sp.Float(0.0),
+                }
+            )
+        ) and isinstance(x, sp.Float):
+            return x
+    except TypeError:
+        pass
+
+    return x
