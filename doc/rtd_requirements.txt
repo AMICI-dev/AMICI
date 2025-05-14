@@ -7,9 +7,6 @@ setuptools>=67.7.2
 #  https://github.com/pysb/pysb/pull/599
 #  for building the documentation, we don't care whether this fully works
 git+https://github.com/pysb/pysb@0afeaab385e9a1d813ecf6fdaf0153f4b91358af
-jax>=0.4.26
-diffrax>=0.5.0
-interpax>=0.3.4
 matplotlib>=3.7.1
 nbsphinx==0.9.1
 nbformat==5.8.0
@@ -29,4 +26,4 @@ Jinja2>=3.1.6
 git+https://github.com/readthedocs/readthedocs-sphinx-ext
 ipykernel
 -e git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab
--e python/sdist/
+-e python/sdist/[jax]
