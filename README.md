@@ -14,11 +14,11 @@ differential equation models specified as [SBML](http://sbml.org/)
 or [PySB](http://pysb.org/)
 and automatically compiles such models into Python modules, C++ libraries or
 Matlab `.mex` simulation files.
+The generated model expressions along with the corresponding sensitivity
+equations are transformed into native C++ code which allows for a significantly
+faster simulation.
 
-In contrast to the (no longer maintained)
-[sundialsTB](https://computing.llnl.gov/projects/sundials/sundials-software)
-Matlab interface, all necessary functions are transformed into native
-C++ code, which allows for a significantly faster simulation.
+**NOTE: The MATLAB interface is no longer supported and will be removed soon.**
 
 Beyond forward integration, the compiled simulation file also allows for
 forward sensitivity analysis, steady state sensitivity analysis and
