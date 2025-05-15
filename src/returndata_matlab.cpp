@@ -449,8 +449,10 @@ double* initAndAttachArray(
 void checkFieldNames(char const** fieldNames, int const fieldCount) {
     for (int ifield = 0; ifield < fieldCount; ifield++) {
         if (!fieldNames[ifield])
-            throw AmiException("Incorrect field name allocation, number of "
-                               "fields is smaller than fieldCount!");
+            throw AmiException(
+                "Incorrect field name allocation, number of "
+                "fields is smaller than fieldCount!"
+            );
     }
 }
 

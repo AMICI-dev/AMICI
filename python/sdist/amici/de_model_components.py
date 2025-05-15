@@ -737,7 +737,11 @@ class Event(ModelQuantity):
         self._initial_value = initial_value
 
         # expression(s) for the timepoint(s) at which the event triggers
-        self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+        try:
+            self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+        except NotImplementedError:
+            # the trigger can't be solved for `t`
+            self._t_root = []
 
     def get_initial_value(self) -> bool:
         """

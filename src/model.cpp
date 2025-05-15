@@ -78,7 +78,7 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
 };
 
 static void setNaNtoZero(std::vector<realtype>& vec) {
-    std::for_each(vec.begin(), vec.end(), [](double& val) {
+    std::ranges::for_each(vec, [](double& val) {
         if (std::isnan(val)) {
             val = 0.0;
         }
@@ -98,7 +98,7 @@ static realtype getValueById(
     std::vector<std::string> const& ids, std::vector<realtype> const& values,
     std::string const& id, char const* variable_name, char const* id_name
 ) {
-    auto it = std::find(ids.begin(), ids.end(), id);
+    auto it = std::ranges::find(ids, id);
     if (it != ids.end())
         return values.at(it - ids.begin());
 
@@ -121,7 +121,7 @@ static void setValueById(
     realtype value, std::string const& id, char const* variable_name,
     char const* id_name
 ) {
-    auto it = std::find(ids.begin(), ids.end(), id);
+    auto it = std::ranges::find(ids, id);
     if (it != ids.end())
         values.at(it - ids.begin()) = value;
     else
@@ -177,6 +177,7 @@ Model::Model(
     ModelDimensions const& model_dimensions,
     SimulationParameters simulation_parameters, SecondOrderMode o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
+    std::vector<Event> events,
     std::map<realtype, std::vector<int>> state_independent_events
 )
     : ModelDimensions(model_dimensions)
@@ -187,7 +188,8 @@ Model::Model(
     , derived_state_(*this)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
-    , simulation_parameters_(std::move(simulation_parameters)) {
+    , simulation_parameters_(std::move(simulation_parameters))
+    , events_(std::move(events)) {
     Expects(
         model_dimensions.np
         == gsl::narrow<int>(simulation_parameters_.parameters.size())
@@ -207,8 +209,6 @@ Model::Model(
     );
     state_.fixedParameters = simulation_parameters_.fixedParameters;
     state_.plist = simulation_parameters_.plist;
-
-    root_initial_values_.resize(ne, true);
 
     requireSensitivitiesForAllParameters();
 }
@@ -338,8 +338,8 @@ void Model::initializeSplineSensitivities() {
     std::vector<realtype> tmp_dvalues(allnodes, 0.0);
     std::vector<realtype> tmp_dslopes(allnodes, 0.0);
     for (int ip = 0; ip < nplist(); ip++) {
-        std::fill(tmp_dvalues.begin(), tmp_dvalues.end(), 0.0);
-        std::fill(tmp_dslopes.begin(), tmp_dslopes.end(), 0.0);
+        std::ranges::fill(tmp_dvalues, 0.0);
+        std::ranges::fill(tmp_dslopes, 0.0);
         fdspline_valuesdp(
             tmp_dvalues.data(), state_.unscaledParameters.data(),
             state_.fixedParameters.data(), plist(ip)
@@ -405,14 +405,16 @@ void Model::initEvents(
 ) {
     std::vector<realtype> rootvals(ne, 0.0);
     froot(simulation_parameters_.tstart_, x, dx, rootvals);
-    std::fill(roots_found.begin(), roots_found.end(), 0);
+    std::ranges::fill(roots_found, 0);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             state_.h.at(ie) = 0.0;
         } else {
             state_.h.at(ie) = 1.0;
-            if (!root_initial_values_.at(ie)) // only false->true triggers event
+            if (pythonGenerated && !events_.at(ie).get_initial_value()) {
+                // only false->true triggers event
                 roots_found.at(ie) = 1;
+            }
         }
     }
 }
@@ -458,8 +460,10 @@ void Model::setParameterScale(ParameterScaling pscale) {
 
 void Model::setParameterScale(std::vector<ParameterScaling> const& pscaleVec) {
     if (pscaleVec.size() != simulation_parameters_.parameters.size())
-        throw AmiException("Dimension mismatch. Size of parameter scaling does "
-                           "not match number of model parameters.");
+        throw AmiException(
+            "Dimension mismatch. Size of parameter scaling does "
+            "not match number of model parameters."
+        );
     simulation_parameters_.pscale = pscaleVec;
     scaleParameters(
         state_.unscaledParameters, simulation_parameters_.pscale,
@@ -500,8 +504,10 @@ realtype Model::getParameterByName(std::string const& par_name) const {
 
 void Model::setParameters(std::vector<realtype> const& p) {
     if (p.size() != (unsigned)np())
-        throw AmiException("Dimension mismatch. Size of parameters does not "
-                           "match number of model parameters.");
+        throw AmiException(
+            "Dimension mismatch. Size of parameters does not "
+            "match number of model parameters."
+        );
     simulation_parameters_.parameters = p;
     state_.unscaledParameters.resize(simulation_parameters_.parameters.size());
     unscaleParameters(
@@ -636,8 +642,10 @@ realtype Model::getFixedParameterByName(std::string const& par_name) const {
 
 void Model::setFixedParameters(std::vector<realtype> const& k) {
     if (k.size() != (unsigned)nk())
-        throw AmiException("Dimension mismatch. Size of fixedParameters does "
-                           "not match number of fixed model parameters.");
+        throw AmiException(
+            "Dimension mismatch. Size of fixedParameters does "
+            "not match number of fixed model parameters."
+        );
     state_.fixedParameters = k;
 }
 
@@ -796,10 +804,12 @@ double Model::getTimepoint(int const it) const {
 }
 
 void Model::setTimepoints(std::vector<realtype> const& ts) {
-    if (!std::is_sorted(ts.begin(), ts.end()))
-        throw AmiException("Encountered non-monotonic timepoints, please order"
-                           " timepoints such that they are monotonically"
-                           " increasing!");
+    if (!std::ranges::is_sorted(ts))
+        throw AmiException(
+            "Encountered non-monotonic timepoints, please order"
+            " timepoints such that they are monotonically"
+            " increasing!"
+        );
     simulation_parameters_.ts_ = ts;
 }
 
@@ -813,13 +823,13 @@ std::vector<bool> const& Model::getStateIsNonNegative() const {
 
 void Model::setStateIsNonNegative(std::vector<bool> const& nonNegative) {
     auto any_state_non_negative
-        = std::any_of(nonNegative.begin(), nonNegative.end(), [](bool x) {
-              return x;
-          });
+        = std::ranges::any_of(nonNegative, [](bool x) { return x; });
     if (nx_solver != nx_rdata) {
         if (any_state_non_negative)
-            throw AmiException("Non-negative states are not supported with"
-                               " conservation laws enabled.");
+            throw AmiException(
+                "Non-negative states are not supported with"
+                " conservation laws enabled."
+            );
         // nothing to do, as `state_is_non_negative_` will always be all-false
         // in case of conservation laws
         return;
@@ -845,7 +855,7 @@ int Model::plist(int pos) const { return state_.plist.at(pos); }
 
 void Model::setParameterList(std::vector<int> const& plist) {
     int np = this->np(); // cannot capture 'this' in lambda expression
-    if (std::any_of(plist.begin(), plist.end(), [&np](int idx) {
+    if (std::ranges::any_of(plist, [&np](int idx) {
             return idx < 0 || idx >= np;
         })) {
         throw AmiException("Indices in plist must be in [0..np]");
@@ -872,8 +882,10 @@ std::vector<realtype> Model::getInitialStates() {
 
 void Model::setInitialStates(std::vector<realtype> const& x0) {
     if (x0.size() != (unsigned)nx_rdata && !x0.empty())
-        throw AmiException("Dimension mismatch. Size of x0 does not match "
-                           "number of model states.");
+        throw AmiException(
+            "Dimension mismatch. Size of x0 does not match "
+            "number of model states."
+        );
 
     if (x0.empty()) {
         x0data_.clear();
@@ -908,9 +920,11 @@ std::vector<realtype> Model::getInitialStateSensitivities() {
 
 void Model::setInitialStateSensitivities(std::vector<realtype> const& sx0) {
     if (sx0.size() != (unsigned)nx_rdata * nplist() && !sx0.empty())
-        throw AmiException("Dimension mismatch. Size of sx0 does not match "
-                           "number of model states * number of parameter "
-                           "selected for sensitivities.");
+        throw AmiException(
+            "Dimension mismatch. Size of sx0 does not match "
+            "number of model states * number of parameter "
+            "selected for sensitivities."
+        );
 
     if (sx0.empty()) {
         sx0data_.clear();
@@ -950,9 +964,11 @@ void Model::setUnscaledInitialStateSensitivities(
     std::vector<realtype> const& sx0
 ) {
     if (sx0.size() != (unsigned)nx_rdata * nplist() && !sx0.empty())
-        throw AmiException("Dimension mismatch. Size of sx0 does not match "
-                           "number of model states * number of parameter "
-                           "selected for sensitivities.");
+        throw AmiException(
+            "Dimension mismatch. Size of sx0 does not match "
+            "number of model states * number of parameter "
+            "selected for sensitivities."
+        );
 
     if (sx0.empty()) {
         sx0data_.clear();
@@ -962,7 +978,8 @@ void Model::setUnscaledInitialStateSensitivities(
     sx0data_ = sx0;
 }
 
-void Model::setSteadyStateComputationMode(SteadyStateComputationMode const mode
+void Model::setSteadyStateComputationMode(
+    SteadyStateComputationMode const mode
 ) {
     steadystate_computation_mode_ = mode;
 }
@@ -971,7 +988,8 @@ SteadyStateComputationMode Model::getSteadyStateComputationMode() const {
     return steadystate_computation_mode_;
 }
 
-void Model::setSteadyStateSensitivityMode(SteadyStateSensitivityMode const mode
+void Model::setSteadyStateSensitivityMode(
+    SteadyStateSensitivityMode const mode
 ) {
     steadystate_sensitivity_mode_ = mode;
 }
@@ -1112,7 +1130,7 @@ void Model::addObservableObjective(
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iyt = 0; iyt < nytrue; iyt++) {
         if (edata.isSetObservedData(it, iyt)) {
-            std::fill(nllh.begin(), nllh.end(), 0.0);
+            std::ranges::fill(nllh, 0.0);
             fJy(nllh.data(), iyt, state_.unscaledParameters.data(),
                 state_.fixedParameters.data(), derived_state_.y_.data(),
                 derived_state_.sigmay_.data(), edata.getObservedDataPtr(it));
@@ -1303,7 +1321,7 @@ void Model::addEventObjective(
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (edata.isSetObservedEvents(nroots, iztrue)) {
-            std::fill(nllh.begin(), nllh.end(), 0.0);
+            std::ranges::fill(nllh, 0.0);
             fJz(nllh.data(), iztrue, state_.unscaledParameters.data(),
                 state_.fixedParameters.data(), derived_state_.z_.data(),
                 derived_state_.sigmaz_.data(),
@@ -1323,7 +1341,7 @@ void Model::addEventObjectiveRegularization(
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (edata.isSetObservedEvents(nroots, iztrue)) {
-            std::fill(nllh.begin(), nllh.end(), 0.0);
+            std::ranges::fill(nllh, 0.0);
             fJrz(
                 nllh.data(), iztrue, state_.unscaledParameters.data(),
                 state_.fixedParameters.data(), derived_state_.rz_.data(),
@@ -1395,7 +1413,7 @@ void Model::getEventTimeSensitivity(
     AmiVector const& x, AmiVectorArray const& sx
 ) {
 
-    std::fill(stau.begin(), stau.end(), 0.0);
+    std::ranges::fill(stau, 0.0);
 
     for (int ip = 0; ip < nplist(); ip++) {
         fstau(
@@ -1525,7 +1543,7 @@ void Model::updateHeavisideB(int const* rootsfound) {
 int Model::checkFinite(
     gsl::span<realtype const> array, ModelQuantity model_quantity, realtype t
 ) const {
-    auto it = std::find_if(array.begin(), array.end(), [](realtype x) {
+    auto it = std::ranges::find_if(array, [](realtype x) {
         return !std::isfinite(x);
     });
     if (it == array.end()) {
@@ -1624,7 +1642,7 @@ int Model::checkFinite(
     gsl::span<realtype const> array, ModelQuantity model_quantity,
     size_t num_cols, realtype t
 ) const {
-    auto it = std::find_if(array.begin(), array.end(), [](realtype x) {
+    auto it = std::ranges::find_if(array, [](realtype x) {
         return !std::isfinite(x);
     });
     if (it == array.end()) {
@@ -1734,12 +1752,13 @@ int Model::checkFinite(
     return AMICI_RECOVERABLE_ERROR;
 }
 
-int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t)
-    const {
+int Model::checkFinite(
+    SUNMatrix m, ModelQuantity model_quantity, realtype t
+) const {
     // check flat array, to see if there are any issues
     // (faster, in particular for sparse arrays)
     auto m_flat = gsl::make_span(m);
-    auto it = std::find_if(m_flat.begin(), m_flat.end(), [](realtype x) {
+    auto it = std::ranges::find_if(m_flat, [](realtype x) {
         return !std::isfinite(x);
     });
     if (it == m_flat.end()) {
@@ -1831,9 +1850,7 @@ void Model::setAlwaysCheckFinite(bool alwaysCheck) {
 bool Model::getAlwaysCheckFinite() const { return always_check_finite_; }
 
 void Model::fx0(AmiVector& x) {
-    std::fill(
-        derived_state_.x_rdata_.begin(), derived_state_.x_rdata_.end(), 0.0
-    );
+    std::ranges::fill(derived_state_.x_rdata_, 0.0);
     /* this function  also computes initial total abundances */
     fx0(derived_state_.x_rdata_.data(), simulation_parameters_.tstart_,
         state_.unscaledParameters.data(), state_.fixedParameters.data());
@@ -1877,10 +1894,7 @@ void Model::fsx0(AmiVectorArray& sx, AmiVector const& x) {
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
-        std::fill(
-            derived_state_.sx_rdata_.begin(), derived_state_.sx_rdata_.end(),
-            0.0
-        );
+        std::ranges::fill(derived_state_.sx_rdata_, 0.0);
         fsx0(
             derived_state_.sx_rdata_.data(), simulation_parameters_.tstart_,
             computeX_pos(x), state_.unscaledParameters.data(),
@@ -2244,10 +2258,7 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
             }
         }
     } else {
-        std::fill(
-            derived_state_.dJydy_matlab_.begin(),
-            derived_state_.dJydy_matlab_.end(), 0.0
-        );
+        std::ranges::fill(derived_state_.dJydy_matlab_, 0.0);
         for (int iyt = 0; iyt < nytrue; iyt++) {
             if (!edata.isSetObservedData(it, iyt))
                 continue;
@@ -2821,7 +2832,7 @@ void Model::fsspl(realtype const t) {
 
 void Model::fw(realtype const t, realtype const* x, bool include_static) {
     if (include_static) {
-        std::fill(derived_state_.w_.begin(), derived_state_.w_.end(), 0.0);
+        std::ranges::fill(derived_state_.w_, 0.0);
     }
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
@@ -2885,6 +2896,8 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
 }
 
 void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
+    // NOTE: (at least) Model_{ODE,DAE}::fJSparse rely on `fw` and `fdwdw`
+    //  being called from here. They need to be executed even if nx_solver==0.
     if (!nw)
         return;
 
@@ -2892,20 +2905,21 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
-        if (!derived_state_.dwdx_hierarchical_.at(0).capacity())
-            return;
-
         fdwdw(t, x, include_static);
 
+        auto&& dwdx_hierarchical_0 = derived_state_.dwdx_hierarchical_.at(0);
+        if (!dwdx_hierarchical_0.data() || !dwdx_hierarchical_0.capacity())
+            return;
+
         if (include_static) {
-            derived_state_.dwdx_hierarchical_.at(0).zero();
-            fdwdx_colptrs(derived_state_.dwdx_hierarchical_.at(0));
-            fdwdx_rowvals(derived_state_.dwdx_hierarchical_.at(0));
+            dwdx_hierarchical_0.zero();
+            fdwdx_colptrs(dwdx_hierarchical_0);
+            fdwdx_rowvals(dwdx_hierarchical_0);
         }
         fdwdx(
-            derived_state_.dwdx_hierarchical_.at(0).data(), t, x,
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
+            dwdx_hierarchical_0.data(), t, x, state_.unscaledParameters.data(),
+            state_.fixedParameters.data(), state_.h.data(),
+            derived_state_.w_.data(), state_.total_cl.data(),
             derived_state_.spl_.data(), include_static
         );
 
@@ -3076,7 +3090,7 @@ std::vector<double> Model::get_trigger_timepoints() const {
     for (auto const& kv : state_independent_events_) {
         *(it++) = kv.first;
     }
-    std::sort(trigger_timepoints.begin(), trigger_timepoints.end());
+    std::ranges::sort(trigger_timepoints);
     return trigger_timepoints;
 }
 

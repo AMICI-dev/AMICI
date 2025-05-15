@@ -39,8 +39,10 @@ AbstractSpline::AbstractSpline(
     /* In case we have equidistant spacing, compute node locations */
     if (equidistant_spacing_) {
         if (nodes_.size() != 2)
-            throw AmiException("Splines with equidistant spacing need a nodes "
-                               "vector with two elements (first/last node).");
+            throw AmiException(
+                "Splines with equidistant spacing need a nodes "
+                "vector with two elements (first/last node)."
+            );
         realtype node_start = nodes_[0];
         realtype node_step = (nodes_[1] - nodes_[0]) / (n_nodes_ - 1);
         nodes_.resize(n_nodes_);
@@ -198,8 +200,10 @@ void HermiteSpline::handle_boundary_conditions() {
     if ((first_node_bc_ == SplineBoundaryCondition::periodic
          || last_node_bc_ == SplineBoundaryCondition::periodic)
         && first_node_bc_ != last_node_bc_)
-        throw AmiException("If one of the boundary conditions is periodic, "
-                           "the other one must be periodic too.");
+        throw AmiException(
+            "If one of the boundary conditions is periodic, "
+            "the other one must be periodic too."
+        );
 
     /* We have to take special care of the first node */
     switch (first_node_bc_) {
@@ -221,8 +225,10 @@ void HermiteSpline::handle_boundary_conditions() {
         break;
 
     case SplineBoundaryCondition::naturalZeroDerivative:
-        throw AmiException("Natural boundary condition with zero "
-                           "derivative is not allowed for Hermite splines.");
+        throw AmiException(
+            "Natural boundary condition with zero "
+            "derivative is not allowed for Hermite splines."
+        );
 
     case SplineBoundaryCondition::periodic:
         if (node_derivative_by_FD_) {
@@ -266,8 +272,10 @@ void HermiteSpline::handle_boundary_conditions() {
         break;
 
     case SplineBoundaryCondition::naturalZeroDerivative:
-        throw AmiException("Natural boundary condition with zero "
-                           "derivative is not allowed for Hermite splines.");
+        throw AmiException(
+            "Natural boundary condition with zero "
+            "derivative is not allowed for Hermite splines."
+        );
 
     case SplineBoundaryCondition::periodic:
         if (node_derivative_by_FD_)
@@ -496,8 +504,10 @@ void HermiteSpline::compute_slope_sensitivities_by_fd(
         break;
 
     case SplineBoundaryCondition::natural:
-        throw AmiException("Natural boundary condition for Hermite "
-                           "splines is not implemented yet.");
+        throw AmiException(
+            "Natural boundary condition for Hermite "
+            "splines is not implemented yet."
+        );
 
     case SplineBoundaryCondition::periodic:
         if (get_equidistant_spacing()) {
@@ -544,12 +554,16 @@ void HermiteSpline::compute_slope_sensitivities_by_fd(
         break;
 
     case SplineBoundaryCondition::natural:
-        throw AmiException("Natural boundary condition for Hermite "
-                           "splines is not implemented yet.");
+        throw AmiException(
+            "Natural boundary condition for Hermite "
+            "splines is not implemented yet."
+        );
 
     case SplineBoundaryCondition::naturalZeroDerivative:
-        throw AmiException("Natural boundary condition with zero "
-                           "derivative is not allowed for Hermite splines.");
+        throw AmiException(
+            "Natural boundary condition with zero "
+            "derivative is not allowed for Hermite splines."
+        );
 
     case SplineBoundaryCondition::periodic:
         // if one bc is periodic, the other is periodic too
@@ -811,12 +825,12 @@ void HermiteSpline::compute_final_sensitivity(
          */
         int last = n_nodes() - 1;
         if (get_node_derivative_scaled(last) == 0)
-            std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+            std::ranges::fill(finalSensitivity, NAN);
     } else if (last_node_ep_ == SplineExtrapolation::polynomial) {
         /* Yes, that's not correct. But I don't see any good reason for
          * implementing a case, which anybody with more than a dead fish
          * between the ears will never use. */
-        std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+        std::ranges::fill(finalSensitivity, NAN);
     } else {
         /* Periodic: will not yield a steady state
          * (unless the spline is the constant funtion,
@@ -824,7 +838,7 @@ void HermiteSpline::compute_final_sensitivity(
          * whether the steady state continues to exist in a neighbourhood of the
          * current parameters
          */
-        std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+        std::ranges::fill(finalSensitivity, NAN);
     }
     set_final_sensitivity_scaled(finalSensitivity);
 }

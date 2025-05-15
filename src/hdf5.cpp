@@ -43,8 +43,10 @@ void checkMeasurementDimensionsCompatible(
     }
 
     if (!compatible)
-        throw(AmiException("HDF5 measurement data does not match model. "
-                           "Incompatible dimensions."));
+        throw(AmiException(
+            "HDF5 measurement data does not match model. "
+            "Incompatible dimensions."
+        ));
 }
 
 /**
@@ -71,8 +73,10 @@ void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
     }
 
     if (!compatible)
-        throw(AmiException("HDF5 event data does not match model. "
-                           "Incompatible dimensions."));
+        throw(AmiException(
+            "HDF5 event data does not match model. "
+            "Incompatible dimensions."
+        ));
 }
 
 void createGroup(
@@ -699,8 +703,8 @@ void writeReturnDataDiagnosis(
 // work-around for macos segfaults, use struct without std::string
 struct LogItemCStr {
     int severity;
-    const char* identifier;
-    const char* message;
+    char const* identifier;
+    char const* message;
 };
 
 void writeLogItemsToHDF5(
@@ -738,8 +742,7 @@ void writeLogItemsToHDF5(
         // ... therefore, as a workaround, we use a struct without std::string
         H5::CompType logItemType(sizeof(LogItemCStr));
         logItemType.insertMember(
-            "severity", HOFFSET(LogItemCStr, severity),
-            H5::PredType::NATIVE_INT
+            "severity", HOFFSET(LogItemCStr, severity), H5::PredType::NATIVE_INT
         );
         auto vlstr_type = H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
         logItemType.insertMember(
@@ -1258,9 +1261,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "lmm")) {
-        solver.setLinearMultistepMethod(static_cast<LinearMultistepMethod>(
-            getIntScalarAttribute(file, datasetPath, "lmm")
-        ));
+        solver.setLinearMultistepMethod(
+            static_cast<LinearMultistepMethod>(
+                getIntScalarAttribute(file, datasetPath, "lmm")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "iter")) {
@@ -1284,15 +1289,19 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "interpType")) {
-        solver.setInterpolationType(static_cast<InterpolationType>(
-            getIntScalarAttribute(file, datasetPath, "interpType")
-        ));
+        solver.setInterpolationType(
+            static_cast<InterpolationType>(
+                getIntScalarAttribute(file, datasetPath, "interpType")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "sensi_meth")) {
-        solver.setSensitivityMethod(static_cast<SensitivityMethod>(
-            getIntScalarAttribute(file, datasetPath, "sensi_meth")
-        ));
+        solver.setSensitivityMethod(
+            static_cast<SensitivityMethod>(
+                getIntScalarAttribute(file, datasetPath, "sensi_meth")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "sensi_meth_preeq")) {
@@ -1304,9 +1313,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "sensi")) {
-        solver.setSensitivityOrder(static_cast<SensitivityOrder>(
-            getIntScalarAttribute(file, datasetPath, "sensi")
-        ));
+        solver.setSensitivityOrder(
+            static_cast<SensitivityOrder>(
+                getIntScalarAttribute(file, datasetPath, "sensi")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "newton_maxsteps")) {
@@ -1332,9 +1343,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "linsol")) {
-        solver.setLinearSolver(static_cast<LinearSolver>(
-            getIntScalarAttribute(file, datasetPath, "linsol")
-        ));
+        solver.setLinearSolver(
+            static_cast<LinearSolver>(
+                getIntScalarAttribute(file, datasetPath, "linsol")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "ism")) {
@@ -1346,9 +1359,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "rdrm")) {
-        solver.setReturnDataReportingMode(static_cast<RDataReporting>(
-            getIntScalarAttribute(file, datasetPath, "rdrm")
-        ));
+        solver.setReturnDataReportingMode(
+            static_cast<RDataReporting>(
+                getIntScalarAttribute(file, datasetPath, "rdrm")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
@@ -1420,9 +1435,11 @@ void readModelDataFromHDF5(
     } else if (attributeExists(file, datasetPath, "pscale")) {
         // if pscale is the same for all parameters,
         // it can be set as scalar attribute for convenience
-        model.setParameterScale(static_cast<ParameterScaling>(
-            getDoubleScalarAttribute(file, datasetPath, "pscale")
-        ));
+        model.setParameterScale(
+            static_cast<ParameterScaling>(
+                getDoubleScalarAttribute(file, datasetPath, "pscale")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "nmaxevent")) {

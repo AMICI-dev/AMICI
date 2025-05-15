@@ -61,20 +61,24 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
         && solver.getSensitivityMethodPreequilibration()
                == SensitivityMethod::adjoint
         && solver.getSensitivityOrder() > SensitivityOrder::none)
-        throw AmiException("Preequilibration using adjoint sensitivities "
-                           "is not compatible with using forward "
-                           "sensitivities during simulation");
+        throw AmiException(
+            "Preequilibration using adjoint sensitivities "
+            "is not compatible with using forward "
+            "sensitivities during simulation"
+        );
     if (solver.getSensitivityMethod() == SensitivityMethod::forward
         && model.getSteadyStateComputationMode()
                == SteadyStateComputationMode::newtonOnly
         && model.getSteadyStateSensitivityMode()
                == SteadyStateSensitivityMode::integrationOnly)
-        throw AmiException("For forward sensitivity analysis steady-state "
-                           "computation mode 'newtonOnly' and steady-state "
-                           "sensitivity mode 'integrationOnly' are not "
-                           "compatible as numerical integration of the model "
-                           "ODEs and corresponding forward sensitivities ODEs "
-                           "is coupled");
+        throw AmiException(
+            "For forward sensitivity analysis steady-state "
+            "computation mode 'newtonOnly' and steady-state "
+            "sensitivity mode 'integrationOnly' are not "
+            "compatible as numerical integration of the model "
+            "ODEs and corresponding forward sensitivities ODEs "
+            "is coupled"
+        );
 }
 
 void SteadystateProblem::workSteadyStateProblem(
@@ -511,8 +515,10 @@ bool SteadystateProblem::getSensitivityFlag(
         return needForwardSensiAtCreation;
 
     default:
-        throw AmiException("Requested invalid context in sensitivity "
-                           "processing during steady state computation");
+        throw AmiException(
+            "Requested invalid context in sensitivity "
+            "processing during steady state computation"
+        );
     }
 }
 
@@ -609,11 +615,9 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
 
 bool SteadystateProblem::checkSteadyStateSuccess() const {
     /* Did one of the attempts yield s steady state? */
-    return std::any_of(
-        steady_state_status_.begin(), steady_state_status_.end(),
-        [](SteadyStateStatus status) {
-            return status == SteadyStateStatus::success;
-        }
+    return std::ranges::any_of(
+        steady_state_status_, [](SteadyStateStatus status
+                              ) { return status == SteadyStateStatus::success; }
     );
 }
 
