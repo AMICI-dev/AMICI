@@ -11,7 +11,6 @@
 #include <cstring>
 #include <numeric>
 #include <regex>
-#include <typeinfo>
 #include <utility>
 
 namespace amici {
@@ -198,6 +197,20 @@ Model::Model(
         model_dimensions.nk
         == gsl::narrow<int>(simulation_parameters_.fixedParameters.size())
     );
+
+    Expects(
+        (events_.size() == 0 && !pythonGenerated)
+        || (events_.size() == (unsigned long)ne)
+    );
+
+    if (events_.size() == 0) {
+        // for matlab generated models, create event objects here
+        for (int ie = 0; ie < ne; ie++) {
+            events_.emplace_back(
+                std::string("event_") + std::to_string(ie), true
+            );
+        }
+    }
 
     simulation_parameters_.pscale = std::vector<ParameterScaling>(
         model_dimensions.np, ParameterScaling::none

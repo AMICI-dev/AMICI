@@ -1501,6 +1501,13 @@ class Model : public AbstractModel, public ModelDimensions {
     void set_steadystate_mask(std::vector<realtype> const& mask);
 
     /**
+     * @brief Get event object for event index.
+     * @param ie event index
+     * @return The corresponding Event object.
+     */
+    Event const& get_event(int ie) const { return events_.at(ie); }
+
+    /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
      * directional or full second order derivative will be computed

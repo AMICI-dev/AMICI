@@ -24,6 +24,7 @@ using namespace amici;
 %ignore getAdjointStateEventUpdate;
 %ignore getEventTimeSensitivity;
 %ignore getAdjointStateObservableUpdate;
+%ignore get_event;
 %ignore getEvent;
 %ignore getEventRegularization;
 %ignore getEventRegularizationSensitivity;
