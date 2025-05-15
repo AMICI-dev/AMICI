@@ -210,6 +210,15 @@ class DEExporter:
         self.model_path: str = ""
         self.model_swig_path: str = ""
 
+        if (
+            de_model.num_states_solver() == 0
+            and de_model.num_events_solver() > 0
+        ):
+            raise NotImplementedError(
+                "Root-finding for models without differential states is "
+                "currently not supported."
+            )
+
         self.set_name(model_name)
         self.set_paths(outdir)
 
