@@ -1,7 +1,44 @@
 Background
 ==========
 
-*This section is to be extended.*
+History
+-------
+
+The development of AMICI started out in 2015 by Fabian Fröhlich in the
+Jan Hasenauer lab as an *Advanced MATLAB Interface to CVODES and IDAS*.
+The goal was to provide a fast and flexible interface to the SUNDIALS
+:term:`CVODES` and :term:`IDAS` solvers for the efficient simulation and
+sensitivity analysis of large-scale biochemical reaction networks while
+supporting high-level model descriptions in :term:`SBML` as the de facto
+standard for systems biology models.
+In contrast to the (no longer maintained)
+`sundialsTB <https://computing.llnl.gov/projects/sundials/sundials-software>`__
+MATLAB interface, all necessary functions were transformed into native
+C++ code, which allowed for significantly faster simulations.
+
+Over time, various other researchers contributed to AMICI's development.
+AMICI's C core was reshaped into a reusable stand-alone C++ library,
+that was the basis for its Python interface. These additional interfaces lead
+to the reinterpretation of "AMICI" as "Advanced *Multi-language* Interface to
+CVODES and IDAS".
+
+Due to changes in MATLAB's symbolic math library and to foster open and
+reusable research, the development of AMICI's MATLAB interface
+was meanwhile discontinued, and the focus shifted to the Python interface.
+
+Over the years, AMICI has evolved into a powerful and flexible
+tool for the simulation and sensitivity analysis of large-scale
+biochemical reaction networks, supporting different input formats,
+different types of sensitivity analysis, discrete events,
+and many other features.
+Meanwhile, the use of AMICI has been documented in around 100 research papers
+from different labs and companies.
+
+AMICI is currently maintained by Fabian Fröhlich
+(`@FFroehlich <https://github.com/FFroehlich>`__,
+`Fröhlich lab <https://www.frohlichlab.com/>`__) and Daniel Weindl
+(`@dweindl <https://github.com/dweindl>`__,
+`Hasenauer lab <https://www.mathematics-and-life-sciences.uni-bonn.de/en/research/hasenauer-group>`__).
 
 Publications on various features of AMICI
 -----------------------------------------
