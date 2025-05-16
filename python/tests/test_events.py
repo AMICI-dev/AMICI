@@ -5,7 +5,7 @@ from copy import deepcopy
 import amici
 import numpy as np
 import pytest
-from amici import import_model_module
+from amici import import_model_module, SensitivityMethod, SensitivityOrder
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
@@ -832,6 +832,9 @@ def test_multiple_event_assignment_with_compartment():
         )
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+)
 @skip_on_valgrind
 def test_event_priorities():
     """Test SBML event priorities."""
@@ -840,25 +843,35 @@ def test_event_priorities():
     model_name = "test_event_priorities"
     with TemporaryDirectory(prefix=model_name) as outdir:
         antimony2amici(
-            """
+            r"""
             target1 = 1
             target2 = 2
             target3 = 3
+            target3_rate = 0
+            target3' = target3_rate
+            trigger_time = 1
 
             # test time- and state-dependent triggers
             some_time = time
             some_time' = 1
 
+            two = 2
+
             # three events with different priorities, where priorities
             #  don't match alphabetical order of IDs or anything the like
-            two: at some_time >= 1, priority=22, fromTrigger=false: target2 = 2 * target1 + target2 - 2;
-            one: at some_time >= 1, priority=111, fromTrigger=false: target1 = 10 + time;
-            three: at some_time >= 1, priority=3, fromTrigger=false: target3 = target1 + target2;
+            E_two: \
+                at some_time >= trigger_time, priority=22, fromTrigger=false:
+                target2 = two * target1 + target2 - two;
+            E_one: \
+                at some_time >= trigger_time, priority=111, fromTrigger=false:
+                target1 = 10 + time;
+            E_three: \
+                at some_time >= trigger_time, priority=3, fromTrigger=false:
+                target3 = target1 + target2, target3_rate = 1;
             """,
             model_name=model_name,
             output_dir=outdir,
         )
-        # TODO: parameterize and add finite difference checks
 
         model_module = import_model_module(model_name, outdir)
 
@@ -866,13 +879,41 @@ def test_event_priorities():
 
         # check just after the trigger time,
         # the event does not fire at *exactly* 1
-        model.setTimepoints([0, 1 + 1e-8, 2])
+        model.setTimepoints([0, 1 + 1e-6, 2])
 
         solver = model.getSolver()
+        solver.setAbsoluteTolerance(1e-16)
+        solver.setRelativeTolerance(1e-14)
+        solver.setSensitivityOrder(SensitivityOrder.first)
+        solver.setSensitivityMethod(SensitivityMethod.forward)
 
         rdata = amici.runAmiciSimulation(model, solver)
-        print(model.getStateIds())
-        print(rdata.x)
+
         assert np.all(rdata.by_id("target1") == [1, 11, 11])
         assert np.all(rdata.by_id("target2") == [2, 22, 22])
-        assert np.all(rdata.by_id("target3") == [3, 33, 33])
+        assert_allclose(rdata.by_id("target3"), [3, 33 + 1e-6, 33 + 1])
+
+        # generate synthetic measurements
+        edata = amici.ExpData(rdata, 1, 0)
+
+        # check forward sensitivities against finite differences
+        # FIXME: sensitivities w.r.t. the bolus parameter are not correct
+        model.setParameterList(
+            [
+                ip
+                for ip, par in enumerate(model.getParameterIds())
+                if par != "two"
+            ]
+        )
+
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            # smaller than the offset from the trigger time
+            epsilon=1e-8,
+        )
+
+        # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
