@@ -244,11 +244,10 @@ class ForwardProblem {
      * @brief Execute everything necessary for the handling of events
      *
      * @param tlastroot Reference to the timepoint of the last event
-     * @param seflag Secondary event flag
      * @param initial_event initial event flag
      */
 
-    void handleEvent(realtype& tlastroot, bool seflag, bool initial_event);
+    void handleEvent(realtype& tlastroot, bool initial_event);
 
     /**
      * @brief Store pre-event model state
@@ -260,10 +259,9 @@ class ForwardProblem {
 
     /**
      * @brief Check for, and if applicable, handle any secondary events
-     *
-     * @param tlastroot Reference to the timepoint of the last event
+     * @return the number of secondary events found
      */
-    void handle_secondary_event(realtype& tlastroot);
+    int detect_secondary_events();
 
     /**
      * @brief Extract output information for events
@@ -276,16 +274,6 @@ class ForwardProblem {
      * @param t measurement timepoint
      */
     void handleDataPoint(realtype t);
-
-    /**
-     * @brief Applies the event bolus to the current state
-     */
-    void applyEventBolus();
-
-    /**
-     * @brief Applies the event bolus to the current sensitivities
-     */
-    void applyEventSensiBolusFSA();
 
     /**
      * @brief checks whether there are any events to fill
@@ -348,6 +336,9 @@ class ForwardProblem {
     /** array of old differential state vectors (dimension nx) for all so far
      * encountered discontinuities, extended as needed (dimension dynamic) */
     std::vector<AmiVector> xdot_old_disc_;
+
+    /** Events that are waiting to be handled at the current timepoint. */
+    EventQueue pending_events_;
 
     /** state derivative of data likelihood
      * (dimension nJ x nx x nt, ordering =?) */

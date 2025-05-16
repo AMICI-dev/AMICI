@@ -88,7 +88,7 @@ void ForwardProblem::workForwardProblem() {
 
     if (model->ne
         && std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; }))
-        handleEvent(t0, false, true);
+        handleEvent(t0, true);
 
     // perform presimulation if necessary
     if (presimulate) {
@@ -104,7 +104,7 @@ void ForwardProblem::workForwardProblem() {
             if (std::ranges::any_of(roots_found_, [](int rf) {
                     return rf == 1;
                 }))
-                handleEvent(t0, false, true);
+                handleEvent(t0, true);
         }
     }
 
@@ -121,9 +121,9 @@ void ForwardProblem::workForwardProblem() {
     // update x0 after computing consistence IC/reinitialization
     x_ = solver->getState(model->t0());
     // When computing forward sensitivities, we generally want to update sx
-    // after presimulation/preequilibration, and if we didn't do either this also
-    // wont harm. when computing ASA, we only want to update here, if we didn't
-    // update before presimulation (if applicable).
+    // after presimulation/preequilibration, and if we didn't do either this
+    // also wont harm. when computing ASA, we only want to update here, if we
+    // didn't update before presimulation (if applicable).
     if (solver->computingFSA() || (solver->computingASA() && !presimulate))
         sx_ = solver->getStateSensitivity(model->t0());
 
@@ -187,7 +187,7 @@ void ForwardProblem::workForwardProblem() {
                         ++it_trigger_timepoints;
                     }
 
-                    handleEvent(tlastroot_, false, false);
+                    handleEvent(tlastroot_, false);
                 }
             }
         }
@@ -210,21 +210,12 @@ void ForwardProblem::handlePresimulation() {
 }
 
 void ForwardProblem::handleEvent(
-    realtype& tlastroot, bool const seflag, bool const initial_event
+    realtype& tlastroot, bool const initial_event
 ) {
-    // store Heaviside information at event occurrence
-    model->froot(t_, x_, dx_, rootvals_);
+    // Some event triggered. This may be due to some discontinuity, a bolus to
+    // be applied, or an event observable to process.
 
-    // store timepoint at which the event occurred
-    discs_.push_back(t_);
-
-    root_idx_.push_back(roots_found_);
-
-    rval_tmp_ = rootvals_;
-
-    if (!seflag && !initial_event) {
-        // only check this in the first event fired, otherwise this will always
-        // be true
+    if (!initial_event) {
         if (t_ == tlastroot) {
             throw AmiException(
                 "AMICI is stuck in an event, as the initial "
@@ -236,35 +227,86 @@ void ForwardProblem::handleEvent(
         tlastroot = t_;
     }
 
-    if (model->nz > 0)
-        storeEvent();
+    // store the event info and pre-event simulation state
+    // whenever a new event is triggered
+    auto store_pre_event_info = [this, initial_event](bool seflag) {
+        // store Heaviside information at event occurrence
+        model->froot(t_, x_, dx_, rootvals_);
 
-    store_pre_event_state(seflag, initial_event);
+        // store timepoint at which the event occurred, the root function
+        // values, and the direction of any zero crossings of the root function
+        discs_.push_back(t_);
+        root_idx_.push_back(roots_found_);
+        rval_tmp_ = rootvals_;
 
-    if (!initial_event)
-        model->updateHeaviside(roots_found_);
+        if (model->nz > 0)
+            storeEvent();
 
-    applyEventBolus();
+        store_pre_event_state(seflag, initial_event);
 
-    if (solver->computingFSA()) {
-        // compute the new xdot
-        model->fxdot(t_, x_, dx_, xdot_);
-        applyEventSensiBolusFSA();
+        if (!initial_event) {
+            model->updateHeaviside(roots_found_);
+        }
+    };
+
+    auto event_to_index = [&](Event const& event) {
+        // find the index of the given event in the model
+        for (int ie = 0; ie < model->ne; ie++) {
+            if (&model->get_event(ie) == &event) {
+                return ie;
+            }
+        }
+        gsl_FailFast();
+    };
+
+    store_pre_event_info(false);
+
+    // Collect all triggered events waiting for execution
+    for (int ie = 0; ie < model->ne; ie++) {
+        // only consider transitions false -> true
+        if (roots_found_.at(ie) == 1) {
+            pending_events_.push(model->get_event(ie));
+        }
     }
 
-    handle_secondary_event(tlastroot);
+    while (!pending_events_.empty()) {
+        // get the next event to be handled
+        auto const& event = pending_events_.pop();
+        auto ie = event_to_index(event);
 
-    // only reinitialise in the first event fired
-    if (!seflag) {
-        solver->reInit(t_, x_, dx_);
+        // TODO: if this is not the first event, check the "persistent"
+        // attribute of the event trigger, re-evaluate the trigger if necessary
+        // and process or just remove the event from the queue
+
+        // Execute the event
+        // Apply bolus to the state and the sensitivities
+        model->addStateEventUpdate(x_, ie, t_, xdot_, xdot_old_);
         if (solver->computingFSA()) {
-            solver->sensReInit(sx_, sdx_);
+            // compute the new xdot
+            model->fxdot(t_, x_, dx_, xdot_);
+            model->addStateSensitivityEventUpdate(
+                sx_, ie, t_, x_old_, xdot_, xdot_old_, stau_
+            );
         }
+
+        // check if the event assignment triggered another event
+        // and add it to the list of pending events if necessary
+        if (detect_secondary_events()) {
+            store_pre_event_info(true);
+        }
+    }
+
+    // reinitialize the solver after all events have been processed
+    solver->reInit(t_, x_, dx_);
+    if (solver->computingFSA()) {
+        solver->sensReInit(sx_, sdx_);
     }
 }
 
 void ForwardProblem::storeEvent() {
-    if (t_ == model->getTimepoint(model->nt() - 1)) {
+    bool is_last_timepoint = (t_ == model->getTimepoint(model->nt() - 1));
+
+    if (is_last_timepoint) {
         // call from fillEvent at last timepoint
         model->froot(t_, x_, dx_, rootvals_);
         for (int ie = 0; ie < model->ne; ie++) {
@@ -288,8 +330,7 @@ void ForwardProblem::storeEvent() {
             continue;
 
         // only consider transitions false -> true or event filling
-        if (roots_found_.at(ie) != 1
-            && t_ != model->getTimepoint(model->nt() - 1)) {
+        if (roots_found_.at(ie) != 1 && !is_last_timepoint) {
             continue;
         }
 
@@ -302,7 +343,7 @@ void ForwardProblem::storeEvent() {
         nroots_.at(ie)++;
     }
 
-    if (t_ == model->getTimepoint(model->nt() - 1)) {
+    if (is_last_timepoint) {
         // call from fillEvent at last timepoint
         // loop until all events are filled
         fillEvents(model->nMaxEvent());
@@ -344,7 +385,7 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
     }
 }
 
-void ForwardProblem::handle_secondary_event(realtype& tlastroot) {
+int ForwardProblem::detect_secondary_events() {
     int secondevent = 0;
 
     // check whether we need to fire a secondary event
@@ -356,6 +397,7 @@ void ForwardProblem::handle_secondary_event(realtype& tlastroot) {
             if (0 > rval_tmp_.at(ie) * rootvals_.at(ie)) {
                 if (rval_tmp_.at(ie) < rootvals_.at(ie)) {
                     roots_found_.at(ie) = 1;
+                    pending_events_.push(model->get_event(ie));
                 } else {
                     roots_found_.at(ie) = -1;
                 }
@@ -380,8 +422,9 @@ void ForwardProblem::handle_secondary_event(realtype& tlastroot) {
                 "the bolus of the secondary event, forward "
                 "sensitivities can be incorrect."
             );
-        handleEvent(tlastroot, true, false);
     }
+
+    return secondevent;
 }
 
 void ForwardProblem::handleDataPoint(realtype t) {
@@ -391,26 +434,6 @@ void ForwardProblem::handleDataPoint(realtype t) {
         timepoint_states_[t] = getSimulationState();
     // store diagnosis information for debugging
     solver->storeDiagnosis();
-}
-
-void ForwardProblem::applyEventBolus() {
-    for (int ie = 0; ie < model->ne; ie++) {
-        // only consider transitions false -> true
-        if (roots_found_.at(ie) == 1) {
-            model->addStateEventUpdate(x_, ie, t_, xdot_, xdot_old_);
-        }
-    }
-}
-
-void ForwardProblem::applyEventSensiBolusFSA() {
-    for (int ie = 0; ie < model->ne; ie++) {
-        // only consider transitions false -> true
-        if (roots_found_.at(ie) == 1) {
-            model->addStateSensitivityEventUpdate(
-                sx_, ie, t_, x_old_, xdot_, xdot_old_, stau_
-            );
-        }
-    }
 }
 
 void ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
