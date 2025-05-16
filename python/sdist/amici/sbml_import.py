@@ -761,7 +761,7 @@ class SbmlImporter:
                 args += ["value"]
 
             if symbol_name == SymbolId.EVENT:
-                args += ["state_update", "initial_value"]
+                args += ["state_update", "initial_value", "priority"]
             elif symbol_name == SymbolId.OBSERVABLE:
                 args += ["transformation"]
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
@@ -931,12 +931,13 @@ class SbmlImporter:
                         "currently not supported in AMICI."
                     )
             # Check for priorities
-            if event.getPriority() is not None:
-                raise SBMLException(
-                    f"Event {event_id} has a priority "
-                    "specified. This is currently not "
-                    "supported in AMICI."
-                )
+            if (prio := event.getPriority()) is not None:
+                if (prio := self._sympify(prio)) and not prio.is_Number:
+                    raise SBMLException(
+                        f"Event {event_id} has a non-numeric priority "
+                        "specified. This is currently not "
+                        "supported in AMICI."
+                    )
 
             # check trigger
             trigger_sbml = event.getTrigger()
@@ -1915,6 +1916,7 @@ class SbmlImporter:
                 "state_update": sp.MutableDenseMatrix(bolus),
                 "initial_value": initial_value,
                 "use_values_from_trigger_time": use_trig_val,
+                "priority": self._sympify(event.getPriority()),
             }
 
         # Check `useValuesFromTriggerTime` attribute
@@ -1956,18 +1958,6 @@ class SbmlImporter:
             if len(trigger_times) == len(set(trigger_times)):
                 # all trigger times are unique
                 return
-
-        # If all events assign to different species, we are fine. This is the
-        # case if the list of assigned-to variables across all events contains
-        # only unique values.
-        assigned_to_species = [
-            variable
-            for event in self.symbols[SymbolId.EVENT].values()
-            for variable, update in zip(state_vector, event["state_update"])
-            if not update.is_zero
-        ]
-        if len(assigned_to_species) == len(set(assigned_to_species)):
-            return
 
         # if all assignments are absolute (not referring to other non-constant
         # model entities), we are fine.

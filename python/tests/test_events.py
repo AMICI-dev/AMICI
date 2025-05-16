@@ -5,6 +5,7 @@ from copy import deepcopy
 import amici
 import numpy as np
 import pytest
+from amici import import_model_module
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
@@ -731,7 +732,7 @@ def test_handling_of_fixed_time_point_event_triggers():
             output_dir=outdir,
             verbose=True,
         )
-        model_module = amici.import_model_module(
+        model_module = import_model_module(
             module_name=module_name, module_path=outdir
         )
         amici_model = model_module.getModel()
@@ -772,7 +773,7 @@ def test_multiple_event_assignment_with_compartment():
             output_dir=outdir,
             verbose=True,
         )
-        model_module = amici.import_model_module(
+        model_module = import_model_module(
             module_name=module_name, module_path=outdir
         )
         amici_model = model_module.getModel()
@@ -829,3 +830,49 @@ def test_multiple_event_assignment_with_compartment():
             rtol=0,
             atol=1e-15,
         )
+
+
+@skip_on_valgrind
+def test_event_priorities():
+    """Test SBML event priorities."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_priorities"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            """
+            target1 = 1
+            target2 = 2
+            target3 = 3
+
+            # test time- and state-dependent triggers
+            some_time = time
+            some_time' = 1
+
+            # three events with different priorities, where priorities
+            #  don't match alphabetical order of IDs or anything the like
+            two: at some_time >= 1, priority=22, fromTrigger=false: target2 = 2 * target1 + target2 - 2;
+            one: at some_time >= 1, priority=111, fromTrigger=false: target1 = 10 + time;
+            three: at some_time >= 1, priority=3, fromTrigger=false: target3 = target1 + target2;
+            """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+        # TODO: parameterize and add finite difference checks
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+
+        # check just after the trigger time,
+        # the event does not fire at *exactly* 1
+        model.setTimepoints([0, 1 + 1e-8, 2])
+
+        solver = model.getSolver()
+
+        rdata = amici.runAmiciSimulation(model, solver)
+        print(model.getStateIds())
+        print(rdata.x)
+        assert np.all(rdata.by_id("target1") == [1, 11, 11])
+        assert np.all(rdata.by_id("target2") == [2, 22, 22])
+        assert np.all(rdata.by_id("target3") == [3, 33, 33])
