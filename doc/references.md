@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 100.
+List of publications using AMICI. Total number is 101.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -41,6 +41,13 @@ Noordijk, Ben, Marcel Reinders, Aalt D. J. van Dijk, and Dick de Ridder.
 2025. <span>“<span>BADDADAN</span>: Mechanistic Modelling of Time Series
 Gene Module Expression.”</span> <em>bioRxiv</em>. <a
 href="https://doi.org/10.1101/2025.02.18.638670">https://doi.org/10.1101/2025.02.18.638670</a>.
+</div>
+<div id="ref-PathiranaBer2025" class="csl-entry" role="listitem">
+Pathirana, Dilan, Frank T. Bergmann, Domagoj Doresic, Polina Lakrisenko,
+Sebastian Persson, Niklas Neubrand, Jens Timmer, et al. 2025.
+<span>“<span>PEtab Select</span>: Specification Standard and Supporting
+Software for Automated Model Selection.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2025.05.12.653312">https://doi.org/10.1101/2025.05.12.653312</a>.
 </div>
 <div id="ref-PerssonFro2025" class="csl-entry" role="listitem">
 Persson, Sebastian, Fabian Frohlich, Stephan Grein, Torkel Lomna,
