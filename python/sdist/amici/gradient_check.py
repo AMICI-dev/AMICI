@@ -226,7 +226,14 @@ def check_derivatives(
     if edata is not None:
         fields.append("llh")
 
+    # only check the sensitivities w.r.t. the selected parameters
+    plist = model.getParameterList()
+    if edata and edata.plist:
+        plist = edata.plist
+
     for ip, pval in enumerate(p):
+        if plist and ip not in plist:
+            continue
         if pval == 0.0 and skip_zero_pars:
             continue
         check_finite_difference(
