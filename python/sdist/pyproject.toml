@@ -73,6 +73,7 @@ test = [
     "scipy",
     "pooch",
     "beartype",
+    ""
 ]
 vis = [
     "matplotlib",
@@ -90,6 +91,9 @@ jax = [
     "equinox>=0.11.10",
     "optimistix>=0.0.9",
     "interpax>=0.3.3,<=0.3.6",
+]
+sciml = [
+    "h5py"
 ]
 
 [project.scripts]

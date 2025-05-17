@@ -12,6 +12,7 @@ from pathlib import Path
 from warnings import warn
 
 import amici
+import pandas as pd
 import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
@@ -151,14 +152,28 @@ def import_petab_problem(
 
             config = petab_problem.extensions_config
             # TODO: only accept YAML format for now
-            # TODO: edit petab library to load hybridization table and map input and output vars here
+            hybridization_table = pd.read_csv(
+                config["hybridization_file"], sep="\t"
+            )
+            input_mapping = dict(
+                zip(
+                    hybridization_table["targetId"],
+                    hybridization_table["targetValue"],
+                )
+            )
+            output_mapping = dict(
+                zip(
+                    hybridization_table["targetValue"],
+                    hybridization_table["targetId"],
+                )
+            )
             hybridization = {
                 net_id: {
                     "model": PetabScimlStandard.load_data(
                         Path() / net_config["location"]
                     ).models,
                     "input_vars": [
-                        petab_id
+                        input_mapping[petab_id]
                         for petab_id, model_id in petab_problem.mapping_df.loc[
                             petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
                             .str.split(".")
@@ -171,7 +186,7 @@ def import_petab_problem(
                         if model_id.split(".")[1].startswith("input")
                     ],
                     "output_vars": [
-                        petab_id
+                        output_mapping[petab_id]
                         for petab_id, model_id in petab_problem.mapping_df.loc[
                             petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
                             .str.split(".")
