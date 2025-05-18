@@ -710,6 +710,7 @@ class Event(ModelQuantity):
         value: sp.Expr,
         state_update: sp.Expr | None,
         initial_value: bool | None = True,
+        priority: sp.Basic | None = None,
     ):
         """
         Create a new Event instance.
@@ -736,6 +737,13 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._initial_value = initial_value
 
+        if priority is not None and not priority.is_Number:
+            raise NotImplementedError(
+                "Currently, only numeric values are supported as event priority."
+            )
+        # the priority of the event assignment
+        self._priority = priority
+
         # expression(s) for the timepoint(s) at which the event triggers
         try:
             self._t_root = sp.solve(self.get_val(), amici_time_symbol)
@@ -751,6 +759,10 @@ class Event(ModelQuantity):
             initial value formula
         """
         return self._initial_value
+
+    def get_priority(self) -> sp.Basic | None:
+        """Return the priority of the event assignment."""
+        return self._priority
 
     def __eq__(self, other):
         """

@@ -1,7 +1,10 @@
 #ifndef AMICI_EVENT_H
 #define AMICI_EVENT_H
 
+#include "amici/defines.h"
+#include <algorithm>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <stdexcept>
 #include <string>
@@ -26,10 +29,12 @@ class Event {
      * @brief Event constructor
      * @param id ID of the event
      * @param initial_value Initial value of the root function
+     * @param priority Priority of the event assignments
      */
-    Event(std::string id, bool initial_value)
+    Event(std::string id, bool initial_value, realtype priority)
         : id_(id)
-        , initial_value_(initial_value) {}
+        , initial_value_(initial_value)
+        , priority_(priority) {}
 
     /**
      * @brief Get the ID of the event
@@ -42,6 +47,12 @@ class Event {
      * @return The value of the root function at t_0.
      */
     bool get_initial_value() { return initial_value_; }
+
+    /**
+     * @brief Get the priority of the event assignments
+     * @return The priority of the event assignments, or NAN if undefined.
+     */
+    realtype get_priority() const { return priority_; }
 
   private:
     /** The unique ID of this event. */
@@ -56,6 +67,17 @@ class Event {
      */
 
     bool initial_value_ = true;
+
+    /**
+     * @brief The priority of the event assignments.
+     *
+     * When multiple events to be executed at the same time, their order is
+     * determined by their priority. Higher priority event assignments are
+     * executed first. If at least one priority is undefined (represented
+     * by NaN), the order is undefined.
+     */
+
+    realtype priority_ = NAN;
 };
 
 /**
@@ -63,7 +85,7 @@ class Event {
  *
  * Stores events that trigger and are waiting to be handled.
  *
- * Until event priorities are implemented, this is a FIFO queue.
+ * Manages the order of event execution based on their priority value.
  */
 class EventQueue {
   public:
@@ -96,9 +118,49 @@ class EventQueue {
             throw std::runtime_error("No pending events");
         }
 
-        // TODO: FIFO for now. Implement priority handling here.
-        auto event = pending_events_.front();
-        pending_events_.pop_front();
+        // Sort events by priority from high to low.
+        pending_events_.sort([](Event const& a, Event const& b) {
+            // The priority is to NaN in AMICI if not defined.
+            // In this case, the execution order is undefined,
+            // so this does not need any special treatment.
+            return a.get_priority() > b.get_priority();
+        });
+
+        // If there is any undefined (NaN) priority, the order of all
+        // simulataneously executed events is undefined. We just proceed
+        // with the first one in the list.
+        if (std::any_of(
+                pending_events_.begin(), pending_events_.end(),
+                [](Event const& event) {
+                    return std::isnan(event.get_priority());
+                }
+            )) {
+            auto event = pending_events_.front();
+            pending_events_.pop_front();
+            return event.get();
+        }
+
+        // If there are multiple events with the same not-NaN priority,
+        // then *their* ordering is random (not undefined).
+        int num_equal_priority = 0;
+        for (auto it = pending_events_.begin(); it != pending_events_.end();
+             ++it) {
+            if (it->get().get_priority()
+                == pending_events_.front().get().get_priority()) {
+                num_equal_priority++;
+            } else {
+                break;
+            }
+        }
+
+        auto it = pending_events_.begin();
+        if (num_equal_priority > 1) {
+            // choose randomly among the events with the same priority
+            std::advance(it, rand() % num_equal_priority);
+        }
+
+        auto event = *it;
+        pending_events_.erase(it);
         return event.get();
     }
 

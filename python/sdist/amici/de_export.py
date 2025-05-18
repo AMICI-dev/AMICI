@@ -995,7 +995,13 @@ class DEExporter:
         def event_initializer(event: Event) -> str:
             """Return amici::Event initializer for the given event."""
             init = AmiciCxxCodePrinter.print_bool(event.get_initial_value())
-            return f'Event("{event.get_id()}", {init})'
+            priority = event.get_priority()
+            priority = (
+                "NAN"
+                if priority is None
+                else self._code_printer.doprint(priority)
+            )
+            return f'Event("{event.get_id()}", {init}, {priority})'
 
         def event_initializer_list() -> str:
             if events := self.model.events():
