@@ -739,7 +739,7 @@ class Event(ModelQuantity):
 
         if priority is not None and not priority.is_Number:
             raise NotImplementedError(
-                "Only fixed numbers are currently supported as event priority."
+                "Currently, only numeric values are supported as event priority."
             )
         # the priority of the event assignment
         self._priority = priority
