@@ -2268,6 +2268,7 @@ class DEModel:
                 name=root_symstr,
                 value=root_found,
                 assignments=None,
+                use_values_from_trigger_time=True,
             )
         )
         return roots[-1].get_id()

@@ -1001,7 +1001,10 @@ class DEExporter:
                 if priority is None
                 else self._code_printer.doprint(priority)
             )
-            return f'Event("{event.get_id()}", {init}, {priority})'
+            trig_val = AmiciCxxCodePrinter.print_bool(
+                event.uses_values_from_trigger_time
+            )
+            return f'Event("{event.get_id()}", {trig_val}, {init}, {priority})'
 
         def event_initializer_list() -> str:
             if events := self.model.events():

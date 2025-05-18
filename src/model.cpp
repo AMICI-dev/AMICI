@@ -207,7 +207,11 @@ Model::Model(
         // for matlab generated models, create event objects here
         for (int ie = 0; ie < ne; ie++) {
             events_.emplace_back(
-                std::string("event_") + std::to_string(ie), true, 0
+                // The default for use_values_from_trigger_time used to be
+                // `true` in SBML. However, the matlab interface always
+                // implicitly used `false`, so we keep it that way until it
+                // will be removed completely.
+                std::string("event_") + std::to_string(ie), false, true, 0
             );
         }
     }

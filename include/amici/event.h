@@ -28,11 +28,19 @@ class Event {
     /**
      * @brief Event constructor
      * @param id ID of the event
+     * @param use_values_from_trigger_time Whether the event assignment is
+     * evaluated using the state from the time point at which the event
+     * triggered (true), or at the time point at which the event assignment
+     * is evaluated (False).
      * @param initial_value Initial value of the root function
      * @param priority Priority of the event assignments
      */
-    Event(std::string id, bool initial_value, realtype priority)
+    Event(
+        std::string id, bool use_values_from_trigger_time, bool initial_value,
+        realtype priority
+    )
         : id_(id)
+        , use_values_from_trigger_time_(use_values_from_trigger_time)
         , initial_value_(initial_value)
         , priority_(priority) {}
 
@@ -54,9 +62,24 @@ class Event {
      */
     realtype get_priority() const { return priority_; }
 
+    /**
+     * @brief Check if the event assignment is evaluated using the state from
+     * the time point at which the event is triggered or executed.
+     * @return True if the event assignment is evaluated using the state from
+     * the time point at which the event triggered, false otherwise.
+     */
+    bool uses_values_from_trigger_time() const {
+        return use_values_from_trigger_time_;
+    }
+
   private:
     /** The unique ID of this event. */
     std::string id_;
+
+    /** Whether the event assignment is evaluated on the state from the time
+     * point at which the event triggered (true), or at the time point at
+     * which the event assignment is evaluated (false). */
+    bool use_values_from_trigger_time_;
 
     /**
      * @brief Initial value of the trigger function.
