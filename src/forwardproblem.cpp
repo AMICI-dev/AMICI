@@ -355,10 +355,10 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         // store x and xdot to compute jump in sensitivities
         x_old_.copy(x_);
-    }
-    if (solver->computingFSA()) {
         model->fxdot(t_, x_, dx_, xdot_);
         xdot_old_.copy(xdot_);
+    }
+    if (solver->computingFSA()) {
         // compute event-time derivative only for primary events, we get
         // into trouble with multiple simultaneously firing events here (but
         // is this really well defined then?), in that case just use the
