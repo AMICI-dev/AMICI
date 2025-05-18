@@ -1,0 +1,7 @@
+_build/
+_doxyoutput_amici_cpp/
+_doxyoutput_amici_matlab/
+_exhale_cpp_api/
+_exhale_matlab_api/
+examples/example_presimulation/model_presimulation/
+generated/
