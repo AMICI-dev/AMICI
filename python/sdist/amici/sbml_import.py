@@ -933,6 +933,10 @@ class SbmlImporter:
             # Check for priorities
             if (prio := event.getPriority()) is not None:
                 if (prio := self._sympify(prio)) and not prio.is_Number:
+                    # Computing sensitivities with respect to event priorities
+                    #  is not implemented, so let's import such models at all.
+                    #  We could support expressions that only depend on
+                    #  constant parameters, though. But who needs that anyway?
                     raise SBMLException(
                         f"Event {event_id} has a non-numeric priority "
                         "specified. This is currently not "
