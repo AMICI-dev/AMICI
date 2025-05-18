@@ -750,6 +750,7 @@ def test_handling_of_fixed_time_point_event_triggers():
         check_derivatives(amici_model, amici_solver, edata=None)
 
 
+@skip_on_valgrind
 def test_multiple_event_assignment_with_compartment():
     """see https://github.com/AMICI-dev/AMICI/issues/2426"""
     ant_model = """
@@ -917,3 +918,56 @@ def test_event_priorities():
         )
 
         # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+
+
+@skip_on_valgrind
+def test_random_event_ordering():
+    """For simultaneously executed events, the order of execution
+    must be random."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_prio_rnd"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            r"""
+            target = 0
+            # test time- and state-dependent triggers
+            some_time = time
+            some_time' = 1
+            trigger_time = 1
+
+            E1: at some_time >= trigger_time, priority=1, fromTrigger=false:
+                target = 1;
+            E2: at some_time >= trigger_time, priority=1, fromTrigger=false:
+                target = 2;
+            E3: at some_time >= trigger_time, priority=1, fromTrigger=false:
+                target = 3;
+            """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+        model.setTimepoints([0, 2, 3])
+        solver = model.getSolver()
+
+        N = 1000
+        outcomes = []
+        for i in range(N):
+            rdata = amici.runAmiciSimulation(model, solver)
+            traj = rdata.by_id("target")
+            assert traj[0] == 0
+            assert traj[1] == traj[2]
+            outcomes.append(traj[2])
+
+        assert set(outcomes) == {1, 2, 3}
+
+        # check that the outcomes are about equally distributed
+        # between 1, 2, and 3
+        assert np.allclose(
+            [outcomes.count(1), outcomes.count(2), outcomes.count(3)],
+            [N / 3, N / 3, N / 3],
+            rtol=0.1,
+        )

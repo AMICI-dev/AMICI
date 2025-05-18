@@ -2,7 +2,9 @@
 #define AMICI_EVENT_H
 
 #include "amici/defines.h"
+#include <algorithm>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <stdexcept>
 #include <string>
@@ -118,13 +120,47 @@ class EventQueue {
 
         // Sort events by priority from high to low.
         pending_events_.sort([](Event const& a, Event const& b) {
-            // The priority is NaN if not defined. In this case, the execution
-            // order is undefined, so this does not need any special treatment.
+            // The priority is to NaN in AMICI if not defined.
+            // In this case, the execution order is undefined,
+            // so this does not need any special treatment.
             return a.get_priority() > b.get_priority();
         });
 
-        auto event = pending_events_.front();
-        pending_events_.pop_front();
+        // If there is any undefined (NaN) priority, the order of all
+        // simulataneously executed events is undefined. We just proceed
+        // with the first one in the list.
+        if (std::any_of(
+                pending_events_.begin(), pending_events_.end(),
+                [](Event const& event) {
+                    return std::isnan(event.get_priority());
+                }
+            )) {
+            auto event = pending_events_.front();
+            pending_events_.pop_front();
+            return event.get();
+        }
+
+        // If there are multiple events with the same not-NaN priority,
+        // then *their* ordering is random (not undefined).
+        int num_equal_priority = 0;
+        for (auto it = pending_events_.begin(); it != pending_events_.end();
+             ++it) {
+            if (it->get().get_priority()
+                == pending_events_.front().get().get_priority()) {
+                num_equal_priority++;
+            } else {
+                break;
+            }
+        }
+
+        auto it = pending_events_.begin();
+        if (num_equal_priority > 1) {
+            // choose randomly among the events with the same priority
+            std::advance(it, rand() % num_equal_priority);
+        }
+
+        auto event = *it;
+        pending_events_.erase(it);
         return event.get();
     }
 
