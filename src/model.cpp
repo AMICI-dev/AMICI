@@ -1443,7 +1443,7 @@ void Model::getEventTimeSensitivity(
 
 void Model::addStateEventUpdate(
     AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-    AmiVector const& xdot_old
+    AmiVector const& xdot_old, AmiVector const& x_old, ModelState const& state
 ) {
 
     derived_state_.deltax_.assign(nx_solver, 0.0);
@@ -1452,9 +1452,9 @@ void Model::addStateEventUpdate(
 
     // compute update
     fdeltax(
-        derived_state_.deltax_.data(), t, x.data(),
-        state_.unscaledParameters.data(), state_.fixedParameters.data(),
-        state_.h.data(), ie, xdot.data(), xdot_old.data()
+        derived_state_.deltax_.data(), t, x_old.data(),
+        state.unscaledParameters.data(), state.fixedParameters.data(),
+        state.h.data(), ie, xdot.data(), xdot_old.data()
     );
 
     if (always_check_finite_) {
@@ -1468,7 +1468,7 @@ void Model::addStateEventUpdate(
 void Model::addStateSensitivityEventUpdate(
     AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x_old,
     AmiVector const& xdot, AmiVector const& xdot_old,
-    std::vector<realtype> const& stau
+    AmiVectorArray const& sx_old, std::vector<realtype> const& stau
 ) {
     fw(t, x_old.data(), false);
 
@@ -1480,8 +1480,9 @@ void Model::addStateSensitivityEventUpdate(
         fdeltasx(
             derived_state_.deltasx_.data(), t, x_old.data(),
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            // TODO: we need the pre-event `h` and `w`, right?
             state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
-            xdot.data(), xdot_old.data(), sx.data(ip), &stau.at(ip),
+            xdot.data(), xdot_old.data(), sx_old.data(ip), &stau.at(ip),
             state_.total_cl.data()
         );
 

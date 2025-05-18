@@ -985,3 +985,45 @@ def test_random_event_ordering():
             [N / 3, N / 3, N / 3],
             rtol=0.25,
         )
+
+
+@skip_on_valgrind
+def test_event_uses_values_from_trigger_tine():
+    """For simultaneously executed events, check that values from trigger
+    times are used to compute the state update."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_vals_trig_time"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            r"""
+            some_time = time
+            some_time' = 1
+            trigger_time = 0.5
+            target1 = 2
+            target2 = 0
+
+            E1: at some_time >= trigger_time, priority=10, fromTrigger=false:
+                target1 = 10,
+                target2 = target1 + 1;
+
+            E2: at some_time >= trigger_time, priority=-10, fromTrigger=true:
+                # this must reset `target1` to its initial value,
+                #  instead of doing nothing at all!
+                target1 = target1,
+                target2 = 2 * target2
+            """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+        model.setTimepoints([0, 1, 2])
+        solver = model.getSolver()
+
+        rdata = amici.runAmiciSimulation(model, solver)
+        # FIXME: currently deltax will be 0 for E2 / target1, we need to use x_old symbols
+        assert np.all(rdata.by_id("target1") == [2, 2, 2])
+        assert np.all(rdata.by_id("target1") == [0, 3, 3])

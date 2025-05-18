@@ -2,10 +2,12 @@
 #define AMICI_EVENT_H
 
 #include "amici/defines.h"
+#include "amici/model_state.h"
+
 #include <algorithm>
-#include <functional>
 #include <iterator>
 #include <list>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -104,6 +106,23 @@ class Event {
 };
 
 /**
+ * @brief PendingEvent struct
+ *
+ * Represents an event that has triggered and is waiting to be executed.
+ *
+ */
+struct PendingEvent {
+    /** The event to be handled. */
+    Event const& event;
+    /** The index of `event` in the model */
+    int idx;
+    /** The simulation state at the time `event` triggered.
+     * Optional if `event.uses_values_from_trigger_time()` is false.
+     */
+    std::optional<SimulationState> state_old;
+};
+
+/**
  * @brief Manages pending events.
  *
  * Stores events that trigger and are waiting to be handled.
@@ -127,26 +146,24 @@ class EventQueue {
      * @brief Push an event to the queue
      * @param event The event to push
      */
-    void push(Event const& event) {
-        pending_events_.push_back(std::ref(event));
-    }
+    void push(PendingEvent event) { pending_events_.push_back(event); }
 
     /**
      * @brief Get the next event to handle and remove it from the queue
      * @return The next event to handle
      * @throws std::runtime_error if there are no pending events
      */
-    Event const& pop() {
+    PendingEvent pop() {
         if (empty()) {
             throw std::runtime_error("No pending events");
         }
 
         // Sort events by priority from high to low.
-        pending_events_.sort([](Event const& a, Event const& b) {
+        pending_events_.sort([](PendingEvent const& a, PendingEvent const& b) {
             // The priority is to NaN in AMICI if not defined.
             // In this case, the execution order is undefined,
             // so this does not need any special treatment.
-            return a.get_priority() > b.get_priority();
+            return a.event.get_priority() > b.event.get_priority();
         });
 
         // If there is any undefined (NaN) priority, the order of all
@@ -154,13 +171,13 @@ class EventQueue {
         // with the first one in the list.
         if (std::any_of(
                 pending_events_.begin(), pending_events_.end(),
-                [](Event const& event) {
-                    return std::isnan(event.get_priority());
+                [](PendingEvent const& e) {
+                    return std::isnan(e.event.get_priority());
                 }
             )) {
             auto event = pending_events_.front();
             pending_events_.pop_front();
-            return event.get();
+            return event;
         }
 
         // If there are multiple events with the same not-NaN priority,
@@ -168,8 +185,8 @@ class EventQueue {
         int num_equal_priority = 0;
         for (auto it = pending_events_.begin(); it != pending_events_.end();
              ++it) {
-            if (it->get().get_priority()
-                == pending_events_.front().get().get_priority()) {
+            if (it->event.get_priority()
+                == pending_events_.front().event.get_priority()) {
                 num_equal_priority++;
             } else {
                 break;
@@ -184,12 +201,12 @@ class EventQueue {
 
         auto event = *it;
         pending_events_.erase(it);
-        return event.get();
+        return event;
     }
 
   private:
     /** The events waiting to be handled. */
-    std::list<std::reference_wrapper<Event const>> pending_events_;
+    std::list<PendingEvent> pending_events_;
 };
 } // namespace amici
 
