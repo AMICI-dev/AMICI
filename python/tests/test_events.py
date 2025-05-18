@@ -930,18 +930,28 @@ def test_random_event_ordering():
     with TemporaryDirectory(prefix=model_name) as outdir:
         antimony2amici(
             r"""
-            target = 0
+            target_rnd = 0
+            target_first = 0
+            target_last = 0
             # test time- and state-dependent triggers
             some_time = time
             some_time' = 1
             trigger_time = 1
 
+            # {E1, E2, E3} must be executed in random order after E_first,
+            # but before E_last
             E1: at some_time >= trigger_time, priority=1, fromTrigger=false:
-                target = 1;
+                target_rnd = 1;
             E2: at some_time >= trigger_time, priority=1, fromTrigger=false:
-                target = 2;
+                target_rnd = 2;
             E3: at some_time >= trigger_time, priority=1, fromTrigger=false:
-                target = 3;
+                target_rnd = 3;
+            E_first: \
+                at some_time >= trigger_time, priority=10, fromTrigger=false:
+                target_first = target_rnd + 2;
+            E_last: \
+                at some_time >= trigger_time, priority=-1, fromTrigger=false:
+                target_last = target_rnd >= 1;
             """,
             model_name=model_name,
             output_dir=outdir,
@@ -953,13 +963,17 @@ def test_random_event_ordering():
         model.setTimepoints([0, 2, 3])
         solver = model.getSolver()
 
-        N = 1000
+        # the outcomes of the random assignment
         outcomes = []
+        N = 1000
         for i in range(N):
             rdata = amici.runAmiciSimulation(model, solver)
-            traj = rdata.by_id("target")
+            assert np.all(rdata.by_id("target_first") == [0, 2, 2])
+            assert np.all(rdata.by_id("target_last") == [0, 1, 1])
+            traj = rdata.by_id("target_rnd")
             assert traj[0] == 0
             assert traj[1] == traj[2]
+            # collect the random outputs
             outcomes.append(traj[2])
 
         assert set(outcomes) == {1, 2, 3}
