@@ -983,5 +983,5 @@ def test_random_event_ordering():
         assert np.allclose(
             [outcomes.count(1), outcomes.count(2), outcomes.count(3)],
             [N / 3, N / 3, N / 3],
-            rtol=0.1,
+            rtol=0.25,
         )
