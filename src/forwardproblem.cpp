@@ -51,7 +51,6 @@ ForwardProblem::ForwardProblem(
     , x_(model->nx_solver, solver->getSunContext())
     , x_old_(model->nx_solver, solver->getSunContext())
     , dx_(model->nx_solver, solver->getSunContext())
-    , dx_old_(model->nx_solver, solver->getSunContext())
     , xdot_(model->nx_solver, solver->getSunContext())
     , xdot_old_(model->nx_solver, solver->getSunContext())
     , sx_(model->nx_solver, model->nplist(), solver->getSunContext())
@@ -360,7 +359,6 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
     if (solver->computingFSA()) {
         model->fxdot(t_, x_, dx_, xdot_);
         xdot_old_.copy(xdot_);
-        dx_old_.copy(dx_);
         // compute event-time derivative only for primary events, we get
         // into trouble with multiple simultaneously firing events here (but
         // is this really well defined then?), in that case just use the

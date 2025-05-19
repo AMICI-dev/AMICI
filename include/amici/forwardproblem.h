@@ -381,9 +381,6 @@ class ForwardProblem {
     /** differential state vector (dimension: nx_solver) */
     AmiVector dx_;
 
-    /** old differential state vector (dimension: nx_solver) */
-    AmiVector dx_old_;
-
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_;
 
