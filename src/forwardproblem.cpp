@@ -286,6 +286,10 @@ void ForwardProblem::handleEvent(
             model->addStateSensitivityEventUpdate(
                 sx_, ie, t_, x_old_, xdot_, xdot_old_, stau_
             );
+        } else if (solver->computingASA()) {
+            // store x to compute jump in discontinuity
+            x_disc_.push_back(x_);
+            xdot_disc_.push_back(xdot_);
         }
 
         // check if the event assignment triggered another event
@@ -376,9 +380,6 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
             std::ranges::fill(stau_, 0.0);
         }
     } else if (solver->computingASA()) {
-        // store x to compute jump in discontinuity
-        x_disc_.push_back(x_);
-        xdot_disc_.push_back(xdot_);
         xdot_old_disc_.push_back(xdot_old_);
     }
 }
