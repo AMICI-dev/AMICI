@@ -333,20 +333,32 @@ class ForwardProblem {
      * (dimension: dynamic) */
     std::vector<realtype> discs_;
 
-    /** array of state vectors (dimension nx) for all so far encountered
-     * discontinuities, extended as needed (dimension dynamic) */
+    /**
+     * array of post-event state vectors (dimension nx) for all so far
+     * encountered discontinuities, (extended as needed;
+     * after event processing, same dimension as discs_)
+     */
     std::vector<AmiVector> x_disc_;
 
-    /** array of old state vectors (dimension nx) for all so far encountered
-     * discontinuities, extended as needed (dimension dynamic) */
+    /**
+     * array of pre-event state vectors (dimension nx) for all so far
+     * encountered discontinuities, (extended as needed;
+     * after event processing, same dimension as discs_)
+     */
     std::vector<AmiVector> x_old_disc_;
 
-    /** array of differential state vectors (dimension nx) for all so far
-     * encountered discontinuities, extended as needed (dimension dynamic) */
+    /**
+     * array of post-event differential state vectors (dimension nx) for all so
+     * far encountered discontinuities, (extended as needed; after event
+     * processing, same dimension as discs_)
+     */
     std::vector<AmiVector> xdot_disc_;
 
-    /** array of old differential state vectors (dimension nx) for all so far
-     * encountered discontinuities, extended as needed (dimension dynamic) */
+    /**
+     * array of old (pre-event) differential state vectors (dimension nx) for
+     * all so far encountered discontinuities, (extended as needed; after event
+     * processing, same dimension as discs_)
+     */
     std::vector<AmiVector> xdot_old_disc_;
 
     /** Events that are waiting to be handled at the current timepoint. */
