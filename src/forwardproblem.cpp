@@ -248,6 +248,17 @@ void ForwardProblem::handleEvent(
         }
     };
 
+    // store post-event information that is to be saved
+    //  not after processing every single event, but after processing all events
+    //  that did not trigger a secondary event
+    auto store_post_event_info = [this]() {
+        if (solver->computingASA()) {
+            // store x to compute jump in discontinuity
+            x_disc_.push_back(x_);
+            xdot_disc_.push_back(xdot_);
+        }
+    };
+
     auto event_to_index = [&](Event const& event) {
         // find the index of the given event in the model
         for (int ie = 0; ie < model->ne; ie++) {
@@ -291,9 +302,11 @@ void ForwardProblem::handleEvent(
         // check if the event assignment triggered another event
         // and add it to the list of pending events if necessary
         if (detect_secondary_events()) {
+            store_post_event_info();
             store_pre_event_info(true);
         }
     }
+    store_post_event_info();
 
     // reinitialize the solver after all events have been processed
     solver->reInit(t_, x_, dx_);
@@ -355,10 +368,10 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         // store x and xdot to compute jump in sensitivities
         x_old_.copy(x_);
-    }
-    if (solver->computingFSA()) {
         model->fxdot(t_, x_, dx_, xdot_);
         xdot_old_.copy(xdot_);
+    }
+    if (solver->computingFSA()) {
         // compute event-time derivative only for primary events, we get
         // into trouble with multiple simultaneously firing events here (but
         // is this really well defined then?), in that case just use the
@@ -376,9 +389,6 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
             std::ranges::fill(stau_, 0.0);
         }
     } else if (solver->computingASA()) {
-        // store x to compute jump in discontinuity
-        x_disc_.push_back(x_);
-        xdot_disc_.push_back(xdot_);
         xdot_old_disc_.push_back(xdot_old_);
     }
 }
