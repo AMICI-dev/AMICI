@@ -930,6 +930,19 @@ def test_event_priorities():
         )
 
         # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+        # FIXME: sensitivities w.r.t. the bolus and trigger parameter are totally off
+        solver.setSensitivityMethod(SensitivityMethod.adjoint)
+        edata.plist = []
+        model.requireSensitivitiesForAllParameters()
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            # smaller than the offset from the trigger time
+            epsilon=1e-8,
+        )
 
 
 @skip_on_valgrind
