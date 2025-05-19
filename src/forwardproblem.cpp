@@ -248,6 +248,17 @@ void ForwardProblem::handleEvent(
         }
     };
 
+    // store post-event information that is to be saved
+    //  not after processing every single event, but after processing all events
+    //  that did not trigger a secondary event
+    auto store_post_event_info = [this]() {
+        if (solver->computingASA()) {
+            // store x to compute jump in discontinuity
+            x_disc_.push_back(x_);
+            xdot_disc_.push_back(xdot_);
+        }
+    };
+
     auto event_to_index = [&](Event const& event) {
         // find the index of the given event in the model
         for (int ie = 0; ie < model->ne; ie++) {
@@ -286,18 +297,16 @@ void ForwardProblem::handleEvent(
             model->addStateSensitivityEventUpdate(
                 sx_, ie, t_, x_old_, xdot_, xdot_old_, stau_
             );
-        } else if (solver->computingASA()) {
-            // store x to compute jump in discontinuity
-            x_disc_.push_back(x_);
-            xdot_disc_.push_back(xdot_);
         }
 
         // check if the event assignment triggered another event
         // and add it to the list of pending events if necessary
         if (detect_secondary_events()) {
+            store_post_event_info();
             store_pre_event_info(true);
         }
     }
+    store_post_event_info();
 
     // reinitialize the solver after all events have been processed
     solver->reInit(t_, x_, dx_);
