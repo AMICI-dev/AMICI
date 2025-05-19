@@ -534,11 +534,14 @@ class DEModel:
                 )
 
         for event in self.events():
-            if event._state_update is None:
+            state_update = event.get_state_update(
+                x=self.sym("x"), x_old=self.sym("x")
+            )
+            if state_update is None:
                 continue
 
-            for i_state in range(len(event._state_update)):
-                if rate_ofs := event._state_update[i_state].find(rate_of_func):
+            for i_state in range(len(state_update)):
+                if rate_ofs := state_update[i_state].find(rate_of_func):
                     raise SBMLException(
                         "AMICI does currently not support rateOf(.) inside event state updates."
                     )
@@ -1612,10 +1615,15 @@ class DEModel:
             # would cause problems when writing the function file later
             event_eqs = []
             for event in self._events:
-                if event._state_update is None:
+                # TODO https://github.com/AMICI-dev/AMICI/issues/2719
+                #   with use_values_from_trigger_time=True: x_old != x
+                state_update = event.get_state_update(
+                    x=self.sym("x"), x_old=self.sym("x")
+                )
+                if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
                 else:
-                    event_eqs.append(event._state_update)
+                    event_eqs.append(state_update)
 
             self._eqs[name] = event_eqs
 
@@ -1718,8 +1726,8 @@ class DEModel:
                         self.sym("stau").T,
                     )
 
-                # only add deltax part if there is state update
-                if event._state_update is not None:
+                # only add deltax part if there is a state update
+                if event._assignments is not None:
                     # partial derivative for the parameters
                     tmp_eq += self.eq("ddeltaxdp")[ie]
 
@@ -2259,7 +2267,7 @@ class DEModel:
                 identifier=sp.Symbol(root_symstr),
                 name=root_symstr,
                 value=root_found,
-                state_update=None,
+                assignments=None,
             )
         )
         return roots[-1].get_id()
