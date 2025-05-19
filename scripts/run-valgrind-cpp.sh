@@ -10,4 +10,4 @@ set -eou pipefail
 # run tests
 cd "${AMICI_PATH}/build/"
 VALGRIND_OPTS="--leak-check=full --error-exitcode=1 --trace-children=yes --show-leak-kinds=definite"
-valgrind ${VALGRIND_OPTS} ctest
+CTEST_OUTPUT_ON_FAILURE=1 valgrind ${VALGRIND_OPTS} ctest

@@ -35,6 +35,8 @@ from .de_model_components import (
     LogLikelihoodY,
     LogLikelihoodZ,
     LogLikelihoodRZ,
+    NoiseParameter,
+    ObservableParameter,
     Expression,
     ConservationLaw,
     Event,
@@ -226,6 +228,8 @@ class DEModel:
         self._log_likelihood_ys: list[LogLikelihoodY] = []
         self._log_likelihood_zs: list[LogLikelihoodZ] = []
         self._log_likelihood_rzs: list[LogLikelihoodRZ] = []
+        self._noise_parameters: list[NoiseParameter] = []
+        self._observable_parameters: list[ObservableParameter] = []
         self._expressions: list[Expression] = []
         self._conservation_laws: list[ConservationLaw] = []
         self._events: list[Event] = []
@@ -273,6 +277,8 @@ class DEModel:
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
             "h": self.events,
+            "np": self.noise_parameters,
+            "op": self.observable_parameters,
         }
         self._value_prototype: dict[str, Callable] = {
             "p": self.parameters,
@@ -385,6 +391,14 @@ class DEModel:
         """Get all event observable regularization log likelihoods."""
         return self._log_likelihood_rzs
 
+    def noise_parameters(self) -> list[NoiseParameter]:
+        """Get all noise parameters."""
+        return self._noise_parameters
+
+    def observable_parameters(self) -> list[ObservableParameter]:
+        """Get all observable parameters."""
+        return self._observable_parameters
+
     def is_ode(self) -> bool:
         """Check if model is ODE model."""
         return len(self._algebraic_equations) == 0
@@ -395,7 +409,8 @@ class DEModel:
 
     def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
-        rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+        from sbmlmath import rate_of as rate_of_func
+
         species_sym_to_xdot = dict(
             zip(self.sym("x"), self.sym("xdot"), strict=True)
         )
@@ -435,25 +450,21 @@ class DEModel:
 
         # replace rateOf-instances in x0 by xdot equation
         for i_state in range(len(self.eq("x0"))):
-            if rate_ofs := self._eqs["x0"][i_state].find(rate_of_func):
-                self._eqs["x0"][i_state] = self._eqs["x0"][i_state].subs(
-                    {
-                        rate_of: get_rate(rate_of.args[0])
-                        for rate_of in rate_ofs
-                    }
-                )
+            new, replacement = self._eqs["x0"][i_state].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["x0"][i_state] = new
 
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w
         made_substitutions = False
         for i_expr in range(len(self.eq("w"))):
-            if rate_ofs := self._eqs["w"][i_expr].find(rate_of_func):
-                self._eqs["w"][i_expr] = self._eqs["w"][i_expr].subs(
-                    {
-                        rate_of: get_rate(rate_of.args[0])
-                        for rate_of in rate_ofs
-                    }
-                )
+            new, replacement = self._eqs["w"][i_expr].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["w"][i_expr] = new
                 made_substitutions = True
 
         if made_substitutions:
@@ -565,6 +576,8 @@ class DEModel:
             ConservationLaw,
             Event,
             EventObservable,
+            NoiseParameter,
+            ObservableParameter,
         }:
             raise ValueError(f"Invalid component type {type(component)}")
 
@@ -1087,6 +1100,26 @@ class DEModel:
         """
         if name in self._variable_prototype:
             components = self._variable_prototype[name]()
+            # ensure placeholder parameters are consistently and correctly ordered
+            # we want that components are ordered by their placeholder index
+            if name == "op":
+                components = sorted(
+                    components,
+                    key=lambda x: int(
+                        str(strip_pysb(x.get_id())).replace(
+                            "observableParameter", ""
+                        )
+                    ),
+                )
+            if name == "np":
+                components = sorted(
+                    components,
+                    key=lambda x: int(
+                        str(strip_pysb(x.get_id())).replace(
+                            "noiseParameter", ""
+                        )
+                    ),
+                )
             self._syms[name] = sp.Matrix(
                 [comp.get_id() for comp in components]
             )
@@ -1662,9 +1695,14 @@ class DEModel:
             ]
 
         elif name == "deltasx":
-            if self.num_states_solver() * self.num_par() == 0:
+            if (
+                self.num_states_solver() * self.num_par() * self.num_events()
+                == 0
+            ):
                 self._eqs[name] = []
                 return
+
+            xdot_is_zero = smart_is_zero_matrix(self.eq("xdot"))
 
             event_eqs = []
             for ie, event in enumerate(self._events):
@@ -1672,9 +1710,11 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(
-                    self.eq("stau")[ie]
-                ) and not smart_is_zero_matrix(self.eq("xdot")):
+
+                if (
+                    not smart_is_zero_matrix(self.eq("stau")[ie])
+                    and not xdot_is_zero
+                ):
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
@@ -1708,7 +1748,7 @@ class DEModel:
                         self.eq("ddeltaxdx")[ie], tmp_dxdp
                     )
 
-                else:
+                elif not xdot_is_zero:
                     tmp_eq = smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.eq("stau")[ie],
@@ -2285,23 +2325,23 @@ class DEModel:
 
     def _collect_heaviside_roots(
         self,
-        args: Sequence[sp.Expr],
-    ) -> list[sp.Expr]:
+        args: Sequence[sp.Basic],
+    ) -> list[tuple[sp.Expr, sp.Expr]]:
         """
-        Recursively checks an expression for the occurrence of Heaviside
-        functions and return all roots found
+        Recursively check an expression for the occurrence of Heaviside
+        functions and return all roots found.
 
         :param args:
             args attribute of the expanded expression
 
         :returns:
-            root functions that were extracted from Heaviside function
-            arguments
+            List of (root function, Heaviside x0)-tuples that were extracted
+            from Heaviside function arguments.
         """
         root_funs = []
         for arg in args:
             if arg.func == sp.Heaviside:
-                root_funs.append(arg.args[0])
+                root_funs.append(arg.args)
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
@@ -2320,7 +2360,9 @@ class DEModel:
                 )
             )
         )
-        root_funs = [r.subs(w_sorted) for r in root_funs]
+        root_funs = [
+            (r[0].subs(w_sorted), r[1].subs(w_sorted)) for r in root_funs
+        ]
 
         return root_funs
 
@@ -2347,16 +2389,18 @@ class DEModel:
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(dxdt.args)
-        for tmp_old in unique_preserve_order(tmp_roots_old):
+        tmp_roots_old = self._collect_heaviside_roots((dxdt,))
+        for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
-            tmp_new = self._get_unique_root(tmp_old, roots)
+            tmp_root_new = self._get_unique_root(tmp_root_old, roots)
             # `tmp_new` is None if the root is not time-dependent.
-            if tmp_new is None:
+            if tmp_root_new is None:
                 continue
             # For Heavisides, we need to add the negative function as well
-            self._get_unique_root(sp.sympify(-tmp_old), roots)
-            heavisides.append((sp.Heaviside(tmp_old), tmp_new))
+            self._get_unique_root(sp.sympify(-tmp_root_old), roots)
+            heavisides.append(
+                (sp.Heaviside(tmp_root_old, tmp_x0_old), tmp_root_new)
+            )
 
         if heavisides:
             # only apply subs if necessary

@@ -21,6 +21,7 @@ from typing import (
     TYPE_CHECKING,
     Literal,
 )
+
 import sympy as sp
 
 from . import (
@@ -208,6 +209,15 @@ class DEExporter:
 
         self.model_path: str = ""
         self.model_swig_path: str = ""
+
+        if (
+            de_model.num_states_solver() == 0
+            and de_model.num_events_solver() > 0
+        ):
+            raise NotImplementedError(
+                "Root-finding for models without differential states is "
+                "currently not supported."
+            )
 
         self.set_name(model_name)
         self.set_paths(outdir)
@@ -406,6 +416,7 @@ class DEExporter:
         filename = os.path.join(self.model_path, f"{name}.h")
         with open(filename, "w") as fileout:
             fileout.write("\n".join(lines))
+            fileout.write("\n")
 
     def _write_function_file(self, function: str) -> None:
         """
@@ -672,7 +683,7 @@ class DEExporter:
         lines = []
 
         if len(equations) == 0 or (
-            isinstance(equations, (sp.Matrix, sp.ImmutableDenseMatrix))
+            isinstance(equations, sp.Matrix | sp.ImmutableDenseMatrix)
             and min(equations.shape) == 0
         ):
             # dJydy is a list
@@ -980,6 +991,24 @@ class DEExporter:
         Write model-specific header and cpp file (MODELNAME.{h,cpp}).
         """
         model_type = "ODE" if self.model.is_ode() else "DAE"
+
+        def event_initializer(event: Event) -> str:
+            """Return amici::Event initializer for the given event."""
+            init = AmiciCxxCodePrinter.print_bool(event.get_initial_value())
+            priority = event.get_priority()
+            priority = (
+                "NAN"
+                if priority is None
+                else self._code_printer.doprint(priority)
+            )
+            return f'Event("{event.get_id()}", {init}, {priority})'
+
+        def event_initializer_list() -> str:
+            if events := self.model.events():
+                lst = f",\n{' ' * 18}".join(map(event_initializer, events))
+                return f"\n{' ' * 18}{lst}\n{' ' * 14}"
+            return ""
+
         tpl_data = {
             "MODEL_TYPE_LOWER": model_type.lower(),
             "MODEL_TYPE_UPPER": model_type,
@@ -1013,8 +1042,7 @@ class DEExporter:
                 )
             ),
             "NDXDOTDX_EXPLICIT": len(self.model.sparsesym("dxdotdx_explicit")),
-            "NDJYDY": "std::vector<int>{%s}"
-            % ",".join(str(len(x)) for x in self.model.sparsesym("dJydy")),
+            "NDJYDY": f"std::vector<int>{{{','.join(str(len(x)) for x in self.model.sparsesym('dJydy'))}}}",
             "NDXRDATADXSOLVER": len(self.model.sparsesym("dx_rdatadx_solver")),
             "NDXRDATADTCL": len(self.model.sparsesym("dx_rdatadtcl")),
             "NDTOTALCLDXRDATA": len(self.model.sparsesym("dtotal_cldx_rdata")),
@@ -1080,14 +1108,7 @@ class DEExporter:
             "QUADRATIC_LLH": AmiciCxxCodePrinter.print_bool(
                 self.model._has_quadratic_nllh
             ),
-            "ROOT_INITIAL_VALUES": ", ".join(
-                map(
-                    lambda event: AmiciCxxCodePrinter.print_bool(
-                        event.get_initial_value()
-                    ),
-                    self.model.events(),
-                )
-            ),
+            "EVENT_LIST_INITIALIZER": event_initializer_list(),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
             "STATE_INDEPENDENT_EVENTS": get_state_independent_event_intializer(
                 self.model.events()

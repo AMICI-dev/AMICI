@@ -6,10 +6,6 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
 #include <memory>
 
 namespace amici {
@@ -1049,15 +1045,15 @@ class AbstractModel {
      * @brief Model-specific implementation of fdtotal_cldx_rdata, colptrs part
      * @param dtotal_cldx_rdata sparse matrix to which colptrs will be written
      */
-    virtual void fdtotal_cldx_rdata_colptrs(SUNMatrixWrapper& dtotal_cldx_rdata
-    );
+    virtual void
+    fdtotal_cldx_rdata_colptrs(SUNMatrixWrapper& dtotal_cldx_rdata);
 
     /**
      * @brief Model-specific implementation of fdtotal_cldx_rdata, rowvals part
      * @param dtotal_cldx_rdata sparse matrix to which rowvals will be written
      */
-    virtual void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper& dtotal_cldx_rdata
-    );
+    virtual void
+    fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper& dtotal_cldx_rdata);
 
     /**
      * @brief Model-specific implementation of spline creation

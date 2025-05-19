@@ -14,16 +14,15 @@ if TYPE_CHECKING:
     from numbers import Real
     from typing import (
         Any,
-        Union,
     )
     from collections.abc import Callable
     from collections.abc import Sequence
 
     from . import sbml_import
 
-    BClike = Union[None, str, tuple[Union[None, str], Union[None, str]]]
+    BClike = None | str | tuple[None | str, None | str]
 
-    NormalizedBC = tuple[Union[None, str], Union[None, str]]
+    NormalizedBC = tuple[None | str, None | str]
 
 import collections.abc
 import logging
@@ -1368,7 +1367,7 @@ class AbstractSpline(ABC):
     ) -> sp.Function:
         """
         Returns the `sympy` object to be used by
-        :py:class:`amici.de_export.ODEModel`.
+        :py:class:`amici.de_model.DEModel`.
         This expression can be differentiated and easily mapped to the C++
         code.
         """

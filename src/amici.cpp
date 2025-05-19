@@ -49,6 +49,15 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
     {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
     {AMICI_LSETUP_FAIL, "AMICI_LSETUP_FAIL"},
+    {AMICI_FIRST_QRHSFUNC_ERR, "AMICI_FIRST_QRHSFUNC_ERR"},
+    {AMICI_WARNING, "AMICI_WARNING"},
+    {AMICI_BAD_T, "AMICI_BAD_T"},
+    {AMICI_BAD_DKY, "AMICI_BAD_DKY"},
+    {AMICI_FIRST_SRHSFUNC_ERR, "AMICI_FIRST_SRHSFUNC_ERR"},
+    {AMICI_SRHSFUNC_FAIL, "AMICI_SRHSFUNC_FAIL"},
+    {AMICI_REPTD_SRHSFUNC_ERR, "AMICI_REPTD_SRHSFUNC_ERR"},
+    {AMICI_UNREC_SRHSFUNC_ERR, "AMICI_UNREC_SRHSFUNC_ERR"},
+    {AMICI_RTFUNC_FAIL, "AMICI_RTFUNC_FAIL"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
@@ -229,12 +238,12 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
     if (!posteq)
         gsl_EnsuresDebug(
-            std::is_sorted(rdata->numsteps.begin(), rdata->numsteps.end())
+            std::ranges::is_sorted(rdata->numsteps)
             || rdata->status != AMICI_SUCCESS
         );
     if (!preeq)
         gsl_EnsuresDebug(
-            std::is_sorted(rdata->numstepsB.begin(), rdata->numstepsB.end())
+            std::ranges::is_sorted(rdata->numstepsB)
             || rdata->status != AMICI_SUCCESS
         );
     rdata->messages = logger.items;

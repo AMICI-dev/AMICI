@@ -329,7 +329,8 @@ template <typename T> char* serializeToChar(T const& data, int* size) {
 
     try {
         std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized
+        ::boost::iostreams::back_insert_device<std::string> inserter(
+            serialized
         );
         ::boost::iostreams::stream<
             ::boost::iostreams::back_insert_device<std::string>>

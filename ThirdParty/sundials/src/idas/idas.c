@@ -8779,6 +8779,8 @@ void IDAProcessError(IDAMem IDA_mem, int error_code, int line, const char* func,
       break;
     }
 
+/* AMICI: https://github.com/AMICI-dev/AMICI/issues/2550 */
+#ifdef AMICI_SUNLOGGER_WARNINGS
     if (error_code == IDA_WARNING)
     {
 #if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_WARNING
@@ -8789,6 +8791,7 @@ void IDAProcessError(IDAMem IDA_mem, int error_code, int line, const char* func,
 #endif
       break;
     }
+#endif
 
     /* Call the SUNDIALS main error handler */
     SUNHandleErrWithMsg(line, func, file, msg, error_code, IDA_mem->ida_sunctx);

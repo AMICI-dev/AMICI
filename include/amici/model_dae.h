@@ -1,15 +1,12 @@
 #ifndef AMICI_MODEL_DAE_H
 #define AMICI_MODEL_DAE_H
 
+#include "amici/event.h"
 #include "amici/model.h"
 
-#include <nvector/nvector_serial.h>
-
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
 #include <numeric>
+#include <sundials/sundials_matrix.h>
+#include <sundials/sundials_nvector.h>
 #include <vector>
 
 namespace amici {
@@ -36,6 +33,7 @@ class Model_DAE : public Model {
      * @param o2mode second order sensitivity mode
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param events Vector of events
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -43,12 +41,12 @@ class Model_DAE : public Model {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event,
+        std::vector<int> const& z2event, std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-              state_independent_events
+              events, state_independent_events
           ) {
         SUNContext sunctx = derived_state_.sunctx_;
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
@@ -308,8 +306,9 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      */
     void fdxdotdp(realtype t, const_N_Vector const x, const_N_Vector const dx);
-    void fdxdotdp(realtype const t, AmiVector const& x, AmiVector const& dx)
-        override {
+    void fdxdotdp(
+        realtype const t, AmiVector const& x, AmiVector const& dx
+    ) override {
         fdxdotdp(t, x.getNVector(), dx.getNVector());
     };
 

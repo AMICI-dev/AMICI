@@ -3,7 +3,6 @@
 Functions for PEtab import that are independent of the model format.
 """
 
-import importlib
 import logging
 import os
 import re
@@ -47,8 +46,8 @@ def get_observation_model(
 
     observables = {}
     sigmas = {}
-
     nan_pat = r"^[nN]a[nN]$"
+
     for _, observable in observable_df.iterrows():
         oid = str(observable.name)
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
@@ -56,20 +55,18 @@ def get_observation_model(
         formula_obs = re.sub(nan_pat, "", str(observable[OBSERVABLE_FORMULA]))
         formula_noise = re.sub(nan_pat, "", str(observable[NOISE_FORMULA]))
         observables[oid] = {"name": name, "formula": formula_obs}
-        sigmas[oid] = formula_noise
-
-    # PEtab does currently not allow observables in noiseFormula and AMICI
-    #  cannot handle states in sigma expressions. Therefore, where possible,
-    #  replace species occurring in error model definition by observableIds.
-    replacements = {
-        sp.sympify(observable["formula"], locals=_clash): sp.Symbol(
-            observable_id
+        formula_noise_sym = sp.sympify(formula_noise, locals=_clash)
+        formula_obs_sym = sp.sympify(formula_obs, locals=_clash)
+        # PEtab does currently not allow observables in noiseFormula, and
+        #  AMICI cannot handle state variables in sigma expressions.
+        #  Therefore, where possible, replace state variables occurring in
+        #  the error model definition by equivalent observableIds.
+        #  Do not use observableIds from other rows
+        #  (https://github.com/AMICI-dev/AMICI/issues/2561).
+        formula_noise_sym = formula_noise_sym.subs(
+            formula_obs_sym, sp.Symbol(oid)
         )
-        for observable_id, observable in observables.items()
-    }
-    for observable_id, formula in sigmas.items():
-        repl = sp.sympify(formula, locals=_clash).subs(replacements)
-        sigmas[observable_id] = str(repl)
+        sigmas[oid] = str(formula_noise_sym)
 
     noise_distrs = petab_noise_distributions_to_amici(observable_df)
 
@@ -134,19 +131,25 @@ def _create_model_name(folder: str | Path) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str, model_output_dir: str | Path) -> bool:
+def _can_import_model(
+    model_name: str, model_output_dir: str | Path, jax: bool = False
+) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
     # try to import (in particular checks version)
     try:
-        with amici.add_path(model_output_dir):
-            model_module = importlib.import_module(model_name)
+        model_module = amici.import_model_module(
+            *_get_package_name_and_path(model_name, model_output_dir, jax)
+        )
     except ModuleNotFoundError:
         return False
 
     # no need to (re-)compile
-    return hasattr(model_module, "getModel")
+    if jax:
+        return hasattr(model_module, "Model")
+    else:
+        return hasattr(model_module, "getModel")
 
 
 def get_fixed_parameters(
@@ -267,3 +270,24 @@ def check_model(
             "the current model might also resolve this. Parameters: "
             f"{amici_ids_free_required.difference(amici_ids_free)}"
         )
+
+
+def _get_package_name_and_path(
+    model_name: str, model_output_dir: str | Path, jax: bool = False
+) -> tuple[str, Path]:
+    """
+    Get the package name and path for the generated model module.
+
+    :param model_name:
+        Name of the model
+    :param model_output_dir:
+        Target directory for the generated model module
+    :param jax:
+        Whether to generate the paths for a JAX or CPP model
+    :return:
+    """
+    if jax:
+        outdir = Path(model_output_dir)
+        return outdir.stem, outdir.parent
+    else:
+        return model_name, Path(model_output_dir)

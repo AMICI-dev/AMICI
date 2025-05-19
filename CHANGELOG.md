@@ -4,6 +4,350 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.32.0 (2025-05-15)
+
+**Breaking changes**
+
+* Removed deprecated `amici.petab_*` modules (now under `amici.petab.*`)
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2658
+
+* Removed deprecated CLI options to `amici_import_petab`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2671
+
+**Changed requirements**
+
+* AMICI now requires a C++20-compatible compiler
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2660
+
+* AMICI now requires swig>=4.1
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2693
+
+* AMICI now uses the [sbmlmath](https://github.com/dweindl/sbmlmath/) package
+  for sympification of SBML math constructs
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2681
+
+**Fixes**
+
+* Fixed Heaviside functions for `<`, `>` `<=`, `>=` which could have lead to
+  incorrect simulation results.
+
+  Note that `>` and `>=`, as well as `<` and `<=` can't be distinguished in
+  some cases (see https://github.com/AMICI-dev/AMICI/issues/2707).
+  Avoid situations where this would matter.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2701
+
+* Prevent segfaults under pytest after swig4.3 wrapping
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2696
+
+* Fixed `SetuptoolsDeprecationWarning: \`project.license\` as a TOML table is deprecated`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2697
+
+* Updated Dockerfile, use Ubuntu 24.04 LTS
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2698
+
+* SBML import: Handle unsolvable event triggers
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2705
+
+* Added RTFUNC_FAIL simulation status
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2702
+
+* doc: Enable building docs with Python 3.13
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2704
+
+* Fixed crash for models without state variables
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2703
+
+* SBML import: avoid repeated xdot==0 checks
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2706
+
+* Fixed Boolean to float conversion issues during SBML import
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2725
+
+**Features**
+
+* Support for XOR, `==` and `!=` operators in SBML models
+
+  *Note that not all (combinations of) Boolean functions will work well with*
+  *AMICI's root-finding. It's recommended to verify the results.*
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2699,
+  https://github.com/AMICI-dev/AMICI/pull/2708,
+  and https://github.com/AMICI-dev/AMICI/pull/2716
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.2...v0.32.0
+
+### v0.31.2 (2025-04-23)
+
+Bugfix-only release.
+
+* SBML import: Handle unsolvable event triggers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2686
+* Fixed a clang compiler warning related to variable length arrays
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2688
+* Temporarily require interpax<=0.3.6
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2678
+* Update OpenBLAS installation script to work with CMake>=4
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2679
+* GHA: Don't run cron jobs on forks by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2669
+* Fixed Matlab documentation build with CMake 4.0
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2676
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.1...v0.31.2
+
+### v0.31.1 (2025-03-21)
+
+Bugfix-only release.
+
+* Handle relational operators in SBML import
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2652
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.0...v0.31.1
+
+### v0.31.0 (2025-02-18)
+
+* Added `RDataReporting::observables_likelihood` for computing observables,
+  likelihood and the respective sensitivities
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2627,
+  https://github.com/AMICI-dev/AMICI/pull/2633
+* JAX:
+  * Updated diffrax & jaxlib
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2632
+  * Avoid silent preequilibration failure in JAX
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2631
+  * jax vectorisation
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2636
+  * No flattening of timepoint specific overrides in jax
+    by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2641
+* Faster PEtab parameter mapping
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2638,
+  https://github.com/AMICI-dev/AMICI/pull/2640
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.30.1...v0.31.0
+
+### v0.30.1 (2025-02-18)
+
+Bugfix-only release.
+
+* Removed `eqx.debug.nan`, fixes #2629
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2630
+* Fixes an SBML import issue that led to incorrect results for models with
+  species-dependent initial assignments (fixes #2642)
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2643
+* Fixed `CVodeGetSensDky` error message
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2644
+* Disabled `CvodeF` checkpointing to prevent certain rare crashes when forward
+  integration takes exactly `maxsteps` integration steps, plus some additional
+  yet unclear condition.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2645
+* Fixed rare crashes due to uncaught exceptions in `~FinalStateStorer`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2647
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.30.0...v0.30.1
+
+
+### v0.30.0 (2024-12-10)
+
+*Please note that the amici JAX model generation introduced in v0.29.0 is
+experimental, the API may substantially change in the future.
+Use at your own risk and do not expect backward compatibility.*
+
+**Features**
+
+* Added serialisation for JAX models
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2608
+
+* Disabled building the C++ extension by default when generating a JAX model
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2609
+
+* Separate pre-equilibration and dynamic simulation in jax
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2617
+
+* State reinitialisation in JAX
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2619
+
+**Fixes**
+
+* Fixed ModelStateDerived copy ctor (fixes potential segfaults)
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2612
+
+* PEtab parameter mapping: fill in fixed parameter values for initial values
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2613
+
+* `nan`-safe log&divide for JAX models
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2611
+
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.29.0...v0.30.0
+
+
+### v0.29.0 (2024-11-28)
+
+**Fixes**
+
+* Fixed race conditions in froot, which could have resulted in incorrect
+  simulation results for models with events/heavisides/piecewise, for
+  multi-threaded simulations.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2587
+
+* Fixed race conditions for the max-time check, which could have resulted in
+  incorrect termination of simulations in case of multi-threaded simulations
+  in combination with a time limit.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2587
+
+* Added missing fields in ExpData HDF5 I/O
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2593
+
+* Added missing fields in ReturnData HDF5 output
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2602
+
+
+* **Features**
+
+* Generate models in a JAX-compatible format
+  ([example](https://amici.readthedocs.io/en/develop/ExampleJaxPEtab.html))
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1861
+
+* Faster `fill_in_parameters_for_condition`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2586
+
+* Added Python function `writeSimulationExpData` for writing ExpData to HDF5
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2588
+
+* Improved import of amici-generated models via `amici.import_model_module()`.
+
+  So far, it was not possible to import different model modules with the same
+  name. This is now possible if they are in different directories.
+  Overwriting an already imported module is still not possible (and never
+  was); any attempts to do so will raise a `RuntimeError`.
+  While model packages can, in principle, be imported using regular
+  `import`s, it is strongly recommended to use `amici.import_model_module()`.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2604, https://github.com/AMICI-dev/AMICI/pull/2603, https://github.com/AMICI-dev/AMICI/pull/2596
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.28.0...v0.29.0
+
+
+### v0.28.0 (2024-11-11)
+
+**Breaking changes**
+
+* Changed the default steady-state method to `integrationOnly`
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2574)
+
+  The default mode for computing steady states and sensitivities at steady
+  state was changed to `integrationOnly`
+  (from previously `integrateIfNewtonFails`).
+
+  This was done for a more robust default behavior. For example, the evaluation
+  in https://doi.org/10.1371/journal.pone.0312148 shows that - at least for
+  some models - Newton's method may easily lead to physically impossible
+  solutions.
+
+  To keep the previous behavior, use:
+  ```python
+  amici_model.setSteadyStateComputationMode(amici.SteadyStateComputationMode.integrateIfNewtonFails)
+  amici_model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrateIfNewtonFails)
+  ```
+
+**Fixes**
+
+* PEtab import: **Fixed potentially incorrect sensitivities** with
+  observable/state-dependent sigmas.
+  This was fixed for all cases amici can handle, others cases will now result
+  in `ValueError`s (https://github.com/AMICI-dev/AMICI/pull/2563).
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2562
+
+* Fixed potentially incorrect disabling of Newton's method
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2576
+
+* Fixed `ModelStateDerived` copy ctor, where previously dangling pointers
+  could lead to crashes in some situations
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2583
+
+* Added missing simulation status codes
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2560
+
+* Check for unsupported observable IDs in sigma expressions
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2563
+
+
+**Features**
+
+* Optional warning in `fill_in_parameters`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2578
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.27.0...v0.28.0
+
+### v0.27.0 (2024-10-21)
+
+This release comes with an **updated version of the SUNDIALS package (7.1.1)** (https://github.com/AMICI-dev/AMICI/pull/2513).
+  For C++ users of some of AMICI's internal RAII classes, this may include some
+  breaking changes. The Python API is not affected.
+
+*Note regarding **editable** installations (`pip install -e ...`):*
+Due to the SUNDIALS update, it will be necessary to clean out some temporary
+build directories (at least `ThirdParty/sundials/build/`,
+`python/sdist/build/`) before rebuilding the package.
+
+**Fixes**
+
+* Fixed a bug that led to program termination if a root-after-reinitialization
+  error (potentially also others) occurred at an output timepoint
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2555
+
+* CMake: Fixes compilation errors for models named `model`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2547
+
+* Updated CMake export config, making it easier to use AMICI in CMake projects
+  and fixing some potential issues with interferring packages
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2540
+
+* CMake: Set policies for CMake 3.31
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2539
+
+* Documentation fixes by @FFroehlich, @ChocolateCharlie, @dweindl
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.26.3...v0.27.0
+
 
 ### v0.26.3 (2024-10-03)
 

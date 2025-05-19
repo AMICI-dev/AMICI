@@ -1,14 +1,10 @@
 #ifndef AMICI_MODEL_ODE_H
 #define AMICI_MODEL_ODE_H
 
+#include "amici/event.h"
 #include "amici/model.h"
-
-#include <nvector/nvector_serial.h>
-
 #include <sundials/sundials_matrix.h>
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
+#include <sundials/sundials_nvector.h>
 
 #include <vector>
 
@@ -35,6 +31,7 @@ class Model_ODE : public Model {
      * @param o2mode second order sensitivity mode
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param events Vector of events
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -42,12 +39,12 @@ class Model_ODE : public Model {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event,
+        std::vector<int> const& z2event, std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-              state_independent_events
+              events, state_independent_events
           ) {}
 
     void

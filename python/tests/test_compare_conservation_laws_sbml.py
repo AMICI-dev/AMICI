@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from amici.testing import skip_on_valgrind
+from conftest import MODEL_CONSTANT_SPECIES_XML
 
 
 @pytest.fixture
@@ -44,14 +45,7 @@ def edata_fixture():
 @pytest.fixture(scope="session")
 def models():
     # SBML model we want to import
-    sbml_file = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "examples",
-        "example_constant_species",
-        "model_constant_species.xml",
-    )
-    sbml_importer = amici.SbmlImporter(sbml_file)
+    sbml_importer = amici.SbmlImporter(MODEL_CONSTANT_SPECIES_XML)
 
     # Name of the model that will also be the name of the python module
     model_name = model_output_dir = "model_constant_species"
@@ -102,6 +96,7 @@ def get_results(
     sensi_order=0,
     sensi_meth=amici.SensitivityMethod.forward,
     sensi_meth_preeq=amici.SensitivityMethod.forward,
+    stst_mode=amici.SteadyStateComputationMode.integrateIfNewtonFails,
     stst_sensi_mode=amici.SteadyStateSensitivityMode.newtonOnly,
     reinitialize_states=False,
 ):
@@ -115,6 +110,7 @@ def get_results(
     solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
     solver.setSensitivityMethod(sensi_meth)
     model.setSteadyStateSensitivityMode(stst_sensi_mode)
+    model.setSteadyStateComputationMode(stst_mode)
     if edata is None:
         model.setTimepoints(np.linspace(0, 5, 101))
     else:

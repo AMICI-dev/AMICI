@@ -20,8 +20,10 @@ SUNMatrixWrapper::SUNMatrixWrapper(
     , sparsetype_(sparsetype) {
 
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
-        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
-                                    "CSR_MAT");
+        throw std::invalid_argument(
+            "Invalid sparsetype. Must be CSC_MAT or "
+            "CSR_MAT"
+        );
 
     if (NNZ && M && N && !matrix_)
         throw std::bad_alloc();
@@ -62,8 +64,10 @@ SUNMatrixWrapper::SUNMatrixWrapper(
     : id_(SUNMATRIX_SPARSE)
     , sparsetype_(sparsetype) {
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
-        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
-                                    "CSR_MAT");
+        throw std::invalid_argument(
+            "Invalid sparsetype. Must be CSC_MAT or "
+            "CSR_MAT"
+        );
 
     switch (A.matrix_id()) {
     case SUNMATRIX_DENSE:
@@ -73,8 +77,10 @@ SUNMatrixWrapper::SUNMatrixWrapper(
         matrix_ = SUNSparseFromBandMatrix(A.get(), droptol, sparsetype);
         break;
     default:
-        throw std::invalid_argument("Invalid Matrix. Must be SUNMATRIX_DENSE or"
-                                    " SUNMATRIX_BAND");
+        throw std::invalid_argument(
+            "Invalid Matrix. Must be SUNMATRIX_DENSE or"
+            " SUNMATRIX_BAND"
+        );
     }
     if (!matrix_)
         throw std::bad_alloc();
@@ -144,8 +150,10 @@ SUNMatrixWrapper& SUNMatrixWrapper::operator=(SUNMatrixWrapper&& other) {
 
 void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
-        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
-                                    "CSR_MAT.");
+        throw std::invalid_argument(
+            "Invalid sparsetype. Must be CSC_MAT or "
+            "CSR_MAT."
+        );
 
     if (int ret = SUNSparseMatrix_Reallocate(matrix_, NNZ) != SUN_SUCCESS)
         throw std::runtime_error(
@@ -160,8 +168,10 @@ void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
 
 void SUNMatrixWrapper::realloc() {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
-        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
-                                    "CSR_MAT.");
+        throw std::invalid_argument(
+            "Invalid sparsetype. Must be CSC_MAT or "
+            "CSR_MAT."
+        );
     if (int ret = SUNSparseMatrix_Realloc(matrix_) != SUN_SUCCESS)
         throw std::runtime_error(
             "SUNSparseMatrix_Realloc failed with error code "
@@ -467,10 +477,9 @@ void SUNMatrixWrapper::sparse_add(
 
 void SUNMatrixWrapper::sparse_sum(std::vector<SUNMatrixWrapper> const& mats) {
     // matrix_ == nullptr is allowed on the first call
-    auto all_empty
-        = std::all_of(mats.begin(), mats.end(), [](SUNMatrixWrapper const& m) {
-              return !m.matrix_;
-          });
+    auto all_empty = std::ranges::all_of(mats, [](SUNMatrixWrapper const& m) {
+        return !m.matrix_;
+    });
     if (all_empty)
         return;
 

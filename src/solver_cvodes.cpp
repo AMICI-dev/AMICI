@@ -34,58 +34,33 @@ static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL, "");
 static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
 static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
-static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
+#define STATIC_ASSERT_EQUAL(amici_constant, cv_constant)                       \
+    static_assert(                                                             \
+        amici_constant == cv_constant, #amici_constant " != " #cv_constant     \
+    )
 
-static_assert(
-    amici::AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS"
-);
-static_assert(
-    amici::AMICI_DATA_RETURN == CV_TSTOP_RETURN,
-    "AMICI_DATA_RETURN != CV_TSTOP_RETURN"
-);
-static_assert(
-    amici::AMICI_ROOT_RETURN == CV_ROOT_RETURN,
-    "AMICI_ROOT_RETURN != CV_ROOT_RETURN"
-);
-static_assert(
-    amici::AMICI_ILL_INPUT == CV_ILL_INPUT, "AMICI_ILL_INPUT != CV_ILL_INPUT"
-);
-static_assert(amici::AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
-static_assert(
-    amici::AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP"
-);
-static_assert(
-    amici::AMICI_TOO_MUCH_ACC == CV_TOO_MUCH_ACC,
-    "AMICI_TOO_MUCH_ACC != CV_TOO_MUCH_ACC"
-);
-static_assert(
-    amici::AMICI_TOO_MUCH_WORK == CV_TOO_MUCH_WORK,
-    "AMICI_TOO_MUCH_WORK != CV_TOO_MUCH_WORK"
-);
-static_assert(
-    amici::AMICI_ERR_FAILURE == CV_ERR_FAILURE,
-    "AMICI_ERR_FAILURE != CV_ERR_FAILURE"
-);
-static_assert(
-    amici::AMICI_CONV_FAILURE == CV_CONV_FAILURE,
-    "AMICI_CONV_FAILURE != CV_CONV_FAILURE"
-);
-static_assert(
-    amici::AMICI_LSETUP_FAIL == CV_LSETUP_FAIL,
-    "AMICI_LSETUP_FAIL != CV_LSETUP_FAIL"
-);
-static_assert(
-    amici::AMICI_CONSTR_FAIL == CV_CONSTR_FAIL,
-    "AMICI_CONSTR_FAIL != CV_CONSTR_FAIL"
-);
-static_assert(
-    amici::AMICI_RHSFUNC_FAIL == CV_RHSFUNC_FAIL,
-    "AMICI_RHSFUNC_FAIL != CV_RHSFUNC_FAIL"
-);
-static_assert(
-    amici::AMICI_FIRST_RHSFUNC_ERR == CV_FIRST_RHSFUNC_ERR,
-    "AMICI_FIRST_RHSFUNC_ERR != CV_FIRST_RHSFUNC_ERR"
-);
+STATIC_ASSERT_EQUAL(amici::AMICI_SUCCESS, CV_SUCCESS);
+STATIC_ASSERT_EQUAL(amici::AMICI_ROOT_RETURN, CV_ROOT_RETURN);
+STATIC_ASSERT_EQUAL(amici::AMICI_DATA_RETURN, CV_TSTOP_RETURN);
+STATIC_ASSERT_EQUAL(amici::AMICI_ILL_INPUT, CV_ILL_INPUT);
+STATIC_ASSERT_EQUAL(amici::AMICI_NORMAL, CV_NORMAL);
+STATIC_ASSERT_EQUAL(amici::AMICI_ONE_STEP, CV_ONE_STEP);
+STATIC_ASSERT_EQUAL(amici::AMICI_TOO_MUCH_ACC, CV_TOO_MUCH_ACC);
+STATIC_ASSERT_EQUAL(amici::AMICI_TOO_MUCH_WORK, CV_TOO_MUCH_WORK);
+STATIC_ASSERT_EQUAL(amici::AMICI_ERR_FAILURE, CV_ERR_FAILURE);
+STATIC_ASSERT_EQUAL(amici::AMICI_CONV_FAILURE, CV_CONV_FAILURE);
+STATIC_ASSERT_EQUAL(amici::AMICI_LSETUP_FAIL, CV_LSETUP_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_CONSTR_FAIL, CV_CONSTR_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_RHSFUNC_FAIL, CV_RHSFUNC_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_FIRST_RHSFUNC_ERR, CV_FIRST_RHSFUNC_ERR);
+STATIC_ASSERT_EQUAL(amici::AMICI_FIRST_QRHSFUNC_ERR, CV_FIRST_QRHSFUNC_ERR);
+STATIC_ASSERT_EQUAL(amici::AMICI_BAD_T, CV_BAD_T);
+STATIC_ASSERT_EQUAL(amici::AMICI_BAD_DKY, CV_BAD_DKY);
+STATIC_ASSERT_EQUAL(amici::AMICI_SRHSFUNC_FAIL, CV_SRHSFUNC_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_FIRST_SRHSFUNC_ERR, CV_FIRST_SRHSFUNC_ERR);
+STATIC_ASSERT_EQUAL(amici::AMICI_REPTD_SRHSFUNC_ERR, CV_REPTD_SRHSFUNC_ERR);
+STATIC_ASSERT_EQUAL(amici::AMICI_UNREC_SRHSFUNC_ERR, CV_UNREC_SRHSFUNC_ERR);
+STATIC_ASSERT_EQUAL(amici::AMICI_RTFUNC_FAIL, CV_RTFUNC_FAIL);
 
 /*
  * The following static members are callback function to CVODES.
@@ -154,9 +129,9 @@ static int fsxdot(
 
 /* Function implementations */
 
-void CVodeSolver::
-    init(realtype const t0, AmiVector const& x0, AmiVector const& /*dx0*/)
-        const {
+void CVodeSolver::init(
+    realtype const t0, AmiVector const& x0, AmiVector const& /*dx0*/
+) const {
     solver_was_called_F_ = false;
     force_reinit_postprocess_F_ = false;
     t_ = t0;
@@ -355,8 +330,9 @@ void CVodeSolver::setSStolerances(double const rtol, double const atol) const {
         throw CvodeException(status, "CVodeSStolerances");
 }
 
-void CVodeSolver::setSensSStolerances(double const rtol, double const* atol)
-    const {
+void CVodeSolver::setSensSStolerances(
+    double const rtol, double const* atol
+) const {
     int status = CVodeSensSStolerances(
         solver_memory_.get(), rtol, const_cast<double*>(atol)
     );
@@ -603,9 +579,9 @@ void CVodeSolver::reInitPostProcess(
     }
 }
 
-void CVodeSolver::
-    reInit(realtype const t0, AmiVector const& yy0, AmiVector const& /*yp0*/)
-        const {
+void CVodeSolver::reInit(
+    realtype const t0, AmiVector const& yy0, AmiVector const& /*yp0*/
+) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_tn = t0;
     if (solver_was_called_F_)
@@ -614,9 +590,9 @@ void CVodeSolver::
     resetState(cv_mem, x_.getNVector());
 }
 
-void CVodeSolver::
-    sensReInit(AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/)
-        const {
+void CVodeSolver::sensReInit(
+    AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/
+) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)
@@ -693,11 +669,12 @@ void CVodeSolver::getSensDky(realtype const t, int const k) const {
     int status
         = CVodeGetSensDky(solver_memory_.get(), t, k, sx_.getNVectorArray());
     if (status != CV_SUCCESS)
-        throw CvodeException(status, "CVodeGetSens");
+        throw CvodeException(status, "CVodeGetSensDky");
 }
 
-void CVodeSolver::getDkyB(realtype const t, int const k, int const which)
-    const {
+void CVodeSolver::getDkyB(
+    realtype const t, int const k, int const which
+) const {
     int status = CVodeGetDky(
         CVodeGetAdjCVodeBmem(solver_memory_.get(), which), t, k,
         dky_.getNVector()
@@ -742,7 +719,7 @@ void CVodeSolver::adjInit() const {
         status = CVodeAdjReInit(solver_memory_.get());
     } else {
         status = CVodeAdjInit(
-            solver_memory_.get(), static_cast<int>(maxsteps_),
+            solver_memory_.get(), static_cast<int>(maxsteps_ + 1),
             static_cast<int>(interp_type_)
         );
         setAdjInitDone();
@@ -830,8 +807,9 @@ int CVodeSolver::solve(realtype const tout, int const itask) const {
     return status;
 }
 
-int CVodeSolver::solveF(realtype const tout, int const itask, int* ncheckPtr)
-    const {
+int CVodeSolver::solveF(
+    realtype const tout, int const itask, int* ncheckPtr
+) const {
     if (force_reinit_postprocess_F_)
         reInitPostProcessF(tout);
     int status = CVodeF(
@@ -881,8 +859,9 @@ void CVodeSolver::getNumSteps(void const* ami_mem, long int* numsteps) const {
         throw CvodeException(status, "CVodeGetNumSteps");
 }
 
-void CVodeSolver::getNumRhsEvals(void const* ami_mem, long int* numrhsevals)
-    const {
+void CVodeSolver::getNumRhsEvals(
+    void const* ami_mem, long int* numrhsevals
+) const {
     int status = CVodeGetNumRhsEvals(const_cast<void*>(ami_mem), numrhsevals);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetNumRhsEvals");
@@ -936,8 +915,10 @@ void CVodeSolver::turnOffRootFinding() const {
 
 Model const* CVodeSolver::getModel() const {
     if (!solver_memory_)
-        throw AmiException("Solver has not been allocated, information is not "
-                           "available");
+        throw AmiException(
+            "Solver has not been allocated, information is not "
+            "available"
+        );
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
 
     auto typed_udata = static_cast<user_data_type*>(cv_mem->cv_user_data);
@@ -1152,7 +1133,8 @@ static int froot(realtype t, N_Vector x, realtype* root, void* user_data) {
     if (model->ne != model->ne_solver) {
         // temporary buffer to store all root function values, not only the ones
         // tracked by the solver
-        static std::vector<realtype> root_buffer(model->ne, 0.0);
+        thread_local static std::vector<realtype> root_buffer(model->ne, 0.0);
+        root_buffer.resize(model->ne);
         model->froot(t, x, root_buffer);
         std::copy_n(root_buffer.begin(), model->ne_solver, root);
     } else {

@@ -11,11 +11,11 @@ on:
 jobs:
   ubuntu-cpp-python-tests:
     name: C++/Python tests Ubuntu
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.12" ]
 
     steps:
     - name: Cache
@@ -37,6 +37,11 @@ jobs:
 
     - name: Set up AMICI C++ libraries
       uses: ./.github/actions/setup-amici-cpp
+
+    - name: Install libsuitesparse-dev
+      # We don't need libsuitesparse-dev, but let's have it installed,
+      # to ensure that its presence does not break the build
+      run: sudo apt-get install -y libsuitesparse-dev
 
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
@@ -74,10 +79,10 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: build/coverage_py.xml
+        files: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
         verbose: true
@@ -94,10 +99,10 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage.info
+        files: coverage.info
         flags: cpp
         fail_ci_if_error: true
 
@@ -113,11 +118,11 @@ jobs:
 
   ubuntu-python-tests:
     name: Python tests Ubuntu
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [ "3.10" ]
+        python-version: [ "3.12" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -156,10 +161,10 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: build/coverage_py.xml
+        files: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
         verbose: true
@@ -176,10 +181,10 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage.info
+        files: coverage.info
         flags: cpp_python
         fail_ci_if_error: true
 
@@ -196,7 +201,7 @@ jobs:
 
   ubuntu-notebook-tests:
     name: Notebook tests Ubuntu
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -226,22 +231,19 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
-    - name: Install notebook dependencies
-      run: |
-        source venv/bin/activate \
-        && pip install jax[cpu]
-
     - name: example notebooks
-      run: scripts/runNotebook.sh python/examples/example_*/
+      run: scripts/runNotebook.sh doc/examples/example_*/
 
-    - name: doc notebooks
-      run: scripts/runNotebook.sh documentation/GettingStarted.ipynb
+    - name: getting started notebooks
+      run: scripts/runNotebook.sh doc/getting_started*
 
     # TODO: Include notebooks in coverage report
 
   macos_cpp_py:
     name: Tests MacOS C++/Python
     runs-on: macos-latest
+    env:
+      PYTHONFAULTHANDLER: "1"
 
     steps:
     - name: Set up Python
@@ -295,6 +297,8 @@ jobs:
   macos_python:
     name: Tests MacOS Python
     runs-on: macos-latest
+    env:
+      PYTHONFAULTHANDLER: "1"
 
     steps:
     - name: Cache

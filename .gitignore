@@ -9,15 +9,9 @@ tests/cpp/build_xcode/*
 tests/cpp/Testing/*
 
 doc-venv/*
-doc/*
 fonts/*
 images/*
 stylesheets/*
-documentation/_build/*
-documentation/_exhale_cpp_api/*
-documentation/_exhale_matlab_api/*
-documentation/_doxyoutput_amici_cpp/*
-documentation/_doxyoutput_amici_matlab/*
 sed-ml/*
 
 models/*
@@ -137,6 +131,8 @@ tests/test/*
 */tests/explicit_amici/*
 */tests/fixed_initial_amici/*
 */tests/localfunc_amici/*
+*/tests/conversion/*
+*/tests/dimerization/*
 tests/cpp/writeResults.h5
 tests/cpp/writeResults.h5.bak
 tests/sbml-test-suite/*

@@ -47,7 +47,8 @@ void SimulationParameters::
 void SimulationParameters::reinitializeAllFixedParameterDependentInitialStates(
     int nx_rdata
 ) {
-    reinitializeAllFixedParameterDependentInitialStatesForPresimulation(nx_rdata
+    reinitializeAllFixedParameterDependentInitialStatesForPresimulation(
+        nx_rdata
     );
     reinitializeAllFixedParameterDependentInitialStatesForSimulation(nx_rdata);
 }

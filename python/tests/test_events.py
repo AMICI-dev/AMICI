@@ -5,6 +5,7 @@ from copy import deepcopy
 import amici
 import numpy as np
 import pytest
+from amici import import_model_module, SensitivityMethod, SensitivityOrder
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
@@ -736,14 +737,14 @@ def test_handling_of_fixed_time_point_event_triggers():
     end
     """
     module_name = "test_events_time_based"
-    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+    with TemporaryDirectory(prefix=module_name) as outdir:
         antimony2amici(
             ant_model,
             model_name=module_name,
             output_dir=outdir,
             verbose=True,
         )
-        model_module = amici.import_model_module(
+        model_module = import_model_module(
             module_name=module_name, module_path=outdir
         )
         amici_model = model_module.getModel()
@@ -761,6 +762,7 @@ def test_handling_of_fixed_time_point_event_triggers():
         check_derivatives(amici_model, amici_solver, edata=None)
 
 
+@skip_on_valgrind
 def test_multiple_event_assignment_with_compartment():
     """see https://github.com/AMICI-dev/AMICI/issues/2426"""
     ant_model = """
@@ -777,14 +779,14 @@ def test_multiple_event_assignment_with_compartment():
     """
     # watch out for too long path names on windows ...
     module_name = "tst_mltple_ea_w_cmprtmnt"
-    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+    with TemporaryDirectory(prefix=module_name) as outdir:
         antimony2amici(
             ant_model,
             model_name=module_name,
             output_dir=outdir,
             verbose=True,
         )
-        model_module = amici.import_model_module(
+        model_module = import_model_module(
             module_name=module_name, module_path=outdir
         )
         amici_model = model_module.getModel()
@@ -840,4 +842,158 @@ def test_multiple_event_assignment_with_compartment():
             0.1,
             rtol=0,
             atol=1e-15,
+        )
+
+
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+)
+@skip_on_valgrind
+def test_event_priorities():
+    """Test SBML event priorities."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_priorities"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            r"""
+            target1 = 1
+            target2 = 2
+            target3 = 3
+            target3_rate = 0
+            target3' = target3_rate
+            trigger_time = 1
+
+            # test time- and state-dependent triggers
+            some_time = time
+            some_time' = 1
+
+            two = 2
+
+            # three events with different priorities, where priorities
+            #  don't match alphabetical order of IDs or anything the like
+            E_two: \
+                at some_time >= trigger_time, priority=22, fromTrigger=false:
+                target2 = two * target1 + target2 - two;
+            E_one: \
+                at some_time >= trigger_time, priority=111, fromTrigger=false:
+                target1 = 10 + time;
+            E_three: \
+                at some_time >= trigger_time, priority=3, fromTrigger=false:
+                target3 = target1 + target2, target3_rate = 1;
+            """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+
+        # check just after the trigger time,
+        # the event does not fire at *exactly* 1
+        model.setTimepoints([0, 1 + 1e-6, 2])
+
+        solver = model.getSolver()
+        solver.setAbsoluteTolerance(1e-16)
+        solver.setRelativeTolerance(1e-14)
+        solver.setSensitivityOrder(SensitivityOrder.first)
+        solver.setSensitivityMethod(SensitivityMethod.forward)
+
+        rdata = amici.runAmiciSimulation(model, solver)
+
+        assert np.all(rdata.by_id("target1") == [1, 11, 11])
+        assert np.all(rdata.by_id("target2") == [2, 22, 22])
+        assert_allclose(rdata.by_id("target3"), [3, 33 + 1e-6, 33 + 1])
+
+        # generate synthetic measurements
+        edata = amici.ExpData(rdata, 1, 0)
+
+        # check forward sensitivities against finite differences
+        # FIXME: sensitivities w.r.t. the bolus parameter are not correct
+        model.setParameterList(
+            [
+                ip
+                for ip, par in enumerate(model.getParameterIds())
+                if par != "two"
+            ]
+        )
+
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            # smaller than the offset from the trigger time
+            epsilon=1e-8,
+        )
+
+        # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+
+
+@skip_on_valgrind
+def test_random_event_ordering():
+    """For simultaneously executed events, the order of execution
+    must be random."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_prio_rnd"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            r"""
+            target_rnd = 0
+            target_first = 0
+            target_last = 0
+            # test time- and state-dependent triggers
+            some_time = time
+            some_time' = 1
+            trigger_time = 1
+
+            # {E1, E2, E3} must be executed in random order after E_first,
+            # but before E_last
+            E1: at some_time >= trigger_time, priority=1, fromTrigger=false:
+                target_rnd = 1;
+            E2: at some_time >= trigger_time, priority=1, fromTrigger=false:
+                target_rnd = 2;
+            E3: at some_time >= trigger_time, priority=1, fromTrigger=false:
+                target_rnd = 3;
+            E_first: \
+                at some_time >= trigger_time, priority=10, fromTrigger=false:
+                target_first = target_rnd + 2;
+            E_last: \
+                at some_time >= trigger_time, priority=-1, fromTrigger=false:
+                target_last = target_rnd >= 1;
+            """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+        model.setTimepoints([0, 2, 3])
+        solver = model.getSolver()
+
+        # the outcomes of the random assignment
+        outcomes = []
+        N = 1000
+        for i in range(N):
+            rdata = amici.runAmiciSimulation(model, solver)
+            assert np.all(rdata.by_id("target_first") == [0, 2, 2])
+            assert np.all(rdata.by_id("target_last") == [0, 1, 1])
+            traj = rdata.by_id("target_rnd")
+            assert traj[0] == 0
+            assert traj[1] == traj[2]
+            # collect the random outputs
+            outcomes.append(traj[2])
+
+        assert set(outcomes) == {1, 2, 3}
+
+        # check that the outcomes are about equally distributed
+        # between 1, 2, and 3
+        assert np.allclose(
+            [outcomes.count(1), outcomes.count(2), outcomes.count(3)],
+            [N / 3, N / 3, N / 3],
+            rtol=0.25,
         )

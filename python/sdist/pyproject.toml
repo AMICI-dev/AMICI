@@ -2,7 +2,7 @@
 # https://setuptools.pypa.io/en/latest/userguide/index.html
 [build-system]
 requires = [
-    "setuptools>=61",
+    "setuptools>=77",
     "wheel",
     "numpy>=2.0",
     "cmake-build-extension==0.6.0",
@@ -17,7 +17,6 @@ requires-python = ">=3.10"
 dependencies = [
     "cmake-build-extension==0.6.0",
     "sympy>=1.12.1",
-    "numpy>=1.19.3; python_version=='3.9'",
     "numpy>=1.21.4; python_version>='3.10'",
     "numpy>=1.23.2; python_version=='3.11'",
     "numpy>=1.26.2; python_version=='3.12'",
@@ -25,11 +24,12 @@ dependencies = [
     "python-libsbml",
     "pandas>=2.0.2",
     "pyarrow",
+    "sbmlmath>=0.4.0",
     "toposort",
     "setuptools>=48",
     "mpmath",
 ]
-license = {text = "BSD 3-Clause License"}
+license = "BSD-3-Clause"
 authors = [
     {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},
@@ -46,7 +46,6 @@ keywords =["differential equations", "simulation", "ode", "cvodes",
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python",
@@ -72,15 +71,25 @@ test = [
     #  unsupported x86_64 / x86_64h
     "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
     "scipy",
-    "pooch"
+    "pooch",
+    "beartype",
 ]
-vis =[
+vis = [
     "matplotlib",
     "seaborn",
 ]
-examples =[
+examples = [
     "jupyter",
     "scipy",
+]
+jax = [
+    "jax>=0.4.36",
+    "jaxlib>=0.4.36",
+    "diffrax>=0.6.1",
+    "jaxtyping>=0.2.34",
+    "equinox>=0.11.10",
+    "optimistix>=0.0.9",
+    "interpax>=0.3.3,<=0.3.6",
 ]
 
 [project.scripts]
@@ -122,5 +131,5 @@ line-length = 79
 extend-include = ["*.ipynb"]
 
 [tool.ruff.lint]
-extend-select = ["B028"]
+extend-select = ["B028", "UP"]
 ignore = ["E402", "F403", "F405", "E741"]

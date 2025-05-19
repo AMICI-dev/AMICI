@@ -14,11 +14,15 @@ on:
 jobs:
   valgrind_cpp:
     name: Valgrind C++
-    runs-on: ubuntu-22.04
+    # don't run cron job on forks
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
+
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
@@ -29,7 +33,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - name: Checkout code (scheduled)
+      if: github.event_name == 'schedule'
+      uses: actions/checkout@v4
+      with:
+        ref: develop
+
+    - name: Checkout code (manual, push, pull request)
+      if: github.event_name != 'schedule'
+      uses: actions/checkout@v4
+
     - run: git fetch --prune --unshallow
 
     - name: Install apt dependencies
@@ -52,12 +65,15 @@ jobs:
 
   valgrind_python:
     name: Valgrind Python
+    # don't run cron job on forks
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.13" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
@@ -88,6 +104,10 @@ jobs:
 
     - name: Install python package
       run: scripts/installAmiciSource.sh
+
+    - name: Remove jax
+      # avoid valgrind errors due to jax et al.
+      run: venv/bin/pip uninstall -y jax
 
     - name: Python tests / Valgrind
       run: scripts/run-valgrind-py.sh

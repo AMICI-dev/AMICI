@@ -7,14 +7,16 @@ models and turning them into C++ Python extensions.
 """
 
 import contextlib
+import importlib.util
 import importlib
 import os
 import re
 import sys
 from pathlib import Path
-from types import ModuleType as ModelModule
+from types import ModuleType
 from typing import Any
 from collections.abc import Callable
+import warnings
 
 
 def _get_amici_path():
@@ -101,7 +103,18 @@ __commit__ = _get_commit_hash()
 # Import SWIG module and swig-dependent submodules if required and available
 if not _imported_from_setup():
     if has_clibs:
-        from . import amici
+        # prevent segfaults under pytest
+        #  see also:
+        #  https://github.com/swig/swig/issues/2881
+        #  https://github.com/AMICI-dev/AMICI/issues/2565
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+                message="builtin type .* has no __module__ attribute",
+            )
+            from . import amici
+
         from .amici import *
 
         # has to be done before importing readSolverSettingsFromHDF5
@@ -121,6 +134,11 @@ if not _imported_from_setup():
         assignmentRules2observables,
     )
 
+    try:
+        from .jax import JAXModel
+    except (ImportError, ModuleNotFoundError):
+        JAXModel = object
+
     @runtime_checkable
     class ModelModule(Protocol):  # noqa: F811
         """Type of AMICI-generated model modules.
@@ -135,9 +153,16 @@ if not _imported_from_setup():
             """Create a model instance."""
             ...
 
+    AmiciModel = Union[amici.Model, amici.ModelPtr]
+else:
+    ModelModule = ModuleType
+
 
 class add_path:
-    """Context manager for temporarily changing PYTHONPATH"""
+    """Context manager for temporarily changing PYTHONPATH.
+
+    Add a path to the PYTHONPATH for the duration of the context manager.
+    """
 
     def __init__(self, path: str | Path):
         self.path: str = str(path)
@@ -149,6 +174,46 @@ class add_path:
     def __exit__(self, exc_type, exc_value, traceback):
         with contextlib.suppress(ValueError):
             sys.path.remove(self.path)
+
+
+class set_path:
+    """Context manager for temporarily changing PYTHONPATH.
+
+    Set the PYTHONPATH to a given path for the duration of the context manager.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path: str = str(path)
+
+    def __enter__(self):
+        self.orginal_path = sys.path.copy()
+        sys.path = [self.path]
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.path = self.orginal_path
+
+
+def _module_from_path(module_name: str, module_path: Path | str) -> ModuleType:
+    """Import a module from a given path.
+
+    Import a module from a given path. The module is not added to
+    `sys.modules`. The `_self` attribute of the module is set to the module
+    itself.
+
+    :param module_name:
+        Name of the module.
+    :param module_path:
+        Path to the module file. Absolute or relative to the current working
+        directory.
+    """
+    module_path = Path(module_path).resolve()
+    if not module_path.is_file():
+        raise ModuleNotFoundError(f"Module file not found: {module_path}")
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
+    module._self = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def import_model_module(
@@ -164,34 +229,39 @@ def import_model_module(
     :return:
         The model module
     """
-    module_path = str(module_path)
+    model_root = str(module_path)
 
     # ensure we will find the newly created module
     importlib.invalidate_caches()
 
     if not os.path.isdir(module_path):
-        raise ValueError(f"module_path '{module_path}' is not a directory.")
+        raise ValueError(f"module_path '{model_root}' is not a directory.")
 
-    module_path = os.path.abspath(module_path)
+    module_path = Path(model_root, module_name, "__init__.py")
 
-    # module already loaded?
-    if module_name in sys.modules:
-        # if a module with that name is already in sys.modules, we remove it,
-        # along with all other modules from that package. otherwise, there
-        # will be trouble if two different models with the same name are to
-        # be imported.
-        del sys.modules[module_name]
-        # collect first, don't delete while iterating
-        to_unload = {
-            loaded_module_name
-            for loaded_module_name in sys.modules.keys()
-            if loaded_module_name.startswith(f"{module_name}.")
-        }
-        for m in to_unload:
-            del sys.modules[m]
+    # We may want to import a matlab-generated model where the extension
+    #  is in a different directory. This is not a regular use case. It's only
+    #  used in the amici tests and can be removed at any time.
+    #  The models (currently) use the default swig-import and require
+    #  modifying sys.path.
+    module_path_matlab = Path(model_root, f"{module_name}.py")
+    if not module_path.is_file() and module_path_matlab.is_file():
+        with set_path(model_root):
+            # prevent segfaults under pytest
+            #  see also:
+            #  https://github.com/swig/swig/issues/2881
+            #  https://github.com/AMICI-dev/AMICI/issues/2565
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=DeprecationWarning,
+                    message="builtin type .* has no __module__ attribute",
+                )
+                return _module_from_path(module_name, module_path_matlab)
 
-    with add_path(module_path):
-        return importlib.import_module(module_name)
+    module = _module_from_path(module_name, module_path)
+    module._self = module
+    return module
 
 
 class AmiciVersionError(RuntimeError):

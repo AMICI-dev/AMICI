@@ -607,6 +607,46 @@ class Constant(ModelQuantity):
         super().__init__(identifier, name, value)
 
 
+class NoiseParameter(ModelQuantity):
+    """
+    A NoiseParameter is an input variable for the computation of ``sigma`` that can be specified in a data-point
+    specific manner, abbreviated by ``np``. Only used for jax models.
+    """
+
+    def __init__(self, identifier: sp.Symbol, name: str):
+        """
+        Create a new Expression instance.
+
+        :param identifier:
+            unique identifier of the NoiseParameter
+
+        :param name:
+            individual name of the NoiseParameter (does not need to be
+            unique)
+        """
+        super().__init__(identifier, name, 0.0)
+
+
+class ObservableParameter(ModelQuantity):
+    """
+    A NoiseParameter is an input variable for the computation of ``y`` that can be specified in a data-point specific
+    manner, abbreviated by ``op``. Only used for jax models.
+    """
+
+    def __init__(self, identifier: sp.Symbol, name: str):
+        """
+        Create a new Expression instance.
+
+        :param identifier:
+            unique identifier of the ObservableParameter
+
+        :param name:
+            individual name of the ObservableParameter (does not need to be
+            unique)
+        """
+        super().__init__(identifier, name, 0.0)
+
+
 class LogLikelihood(ModelQuantity):
     """
     A LogLikelihood defines the distance between measurements and
@@ -670,6 +710,7 @@ class Event(ModelQuantity):
         value: sp.Expr,
         state_update: sp.Expr | None,
         initial_value: bool | None = True,
+        priority: sp.Basic | None = None,
     ):
         """
         Create a new Event instance.
@@ -696,8 +737,19 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._initial_value = initial_value
 
+        if priority is not None and not priority.is_Number:
+            raise NotImplementedError(
+                "Currently, only numeric values are supported as event priority."
+            )
+        # the priority of the event assignment
+        self._priority = priority
+
         # expression(s) for the timepoint(s) at which the event triggers
-        self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+        try:
+            self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+        except NotImplementedError:
+            # the trigger can't be solved for `t`
+            self._t_root = []
 
     def get_initial_value(self) -> bool:
         """
@@ -707,6 +759,10 @@ class Event(ModelQuantity):
             initial value formula
         """
         return self._initial_value
+
+    def get_priority(self) -> sp.Basic | None:
+        """Return the priority of the event assignment."""
+        return self._priority
 
     def __eq__(self, other):
         """
@@ -751,4 +807,6 @@ symbol_to_type = {
     SymbolId.LLHRZ: LogLikelihoodRZ,
     SymbolId.EXPRESSION: Expression,
     SymbolId.EVENT: Event,
+    SymbolId.NOISE_PARAMETER: NoiseParameter,
+    SymbolId.OBSERVABLE_PARAMETER: ObservableParameter,
 }

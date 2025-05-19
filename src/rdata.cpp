@@ -60,13 +60,18 @@ ReturnData::ReturnData(
     case RDataReporting::likelihood:
         initializeLikelihoodReporting(quadratic_llh);
         break;
+
+    case RDataReporting::observables_likelihood:
+        initializeObservablesLikelihoodReporting(quadratic_llh);
+        break;
     }
 }
 
 void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
     llh = getNaN();
     chi2 = getNaN();
-    if (sensi >= SensitivityOrder::first) {
+    if (sensi >= SensitivityOrder::first
+        && sensi_meth != SensitivityMethod::none) {
         sllh.resize(nplist, getNaN());
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
@@ -75,6 +80,21 @@ void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
              || sensi >= SensitivityOrder::second)
             && enable_fim)
             FIM.resize(nplist * nplist, 0.0);
+    }
+}
+
+void ReturnData::initializeObservablesLikelihoodReporting(bool enable_fim) {
+    initializeLikelihoodReporting(enable_fim);
+
+    y.resize(nt * ny, 0.0);
+    sigmay.resize(nt * ny, 0.0);
+
+    if ((sensi_meth == SensitivityMethod::forward
+         && sensi >= SensitivityOrder::first)
+        || sensi >= SensitivityOrder::second) {
+
+        sy.resize(nt * ny * nplist, 0.0);
+        ssigmay.resize(nt * ny * nplist, 0.0);
     }
 }
 
@@ -241,7 +261,7 @@ void ReturnData::processForwardProblem(
     if (edata)
         initializeObjectiveFunction(model.hasQuadraticLLH());
 
-    auto initialState = fwd.getInitialSimulationState();
+    auto const& initialState = fwd.getInitialSimulationState();
     if (initialState.x.getLength() == 0 && model.nx_solver > 0)
         return; // if x wasn't set forward problem failed during initialization
 
@@ -259,7 +279,7 @@ void ReturnData::processForwardProblem(
     realtype tf = fwd.getFinalTime();
     for (int it = 0; it < model.nt(); it++) {
         if (model.getTimepoint(it) <= tf) {
-            auto simulation_state = fwd.getSimulationStateTimepoint(it);
+            auto const simulation_state = fwd.getSimulationStateTimepoint(it);
             model.setModelState(simulation_state.state);
             getDataOutput(it, model, simulation_state, edata);
         } else {
@@ -273,7 +293,7 @@ void ReturnData::processForwardProblem(
     if (nz > 0) {
         auto rootidx = fwd.getRootIndexes();
         for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
-            auto simulation_state = fwd.getSimulationStateEvent(iroot);
+            auto const simulation_state = fwd.getSimulationStateEvent(iroot);
             model.setModelState(simulation_state.state);
             getEventOutput(
                 simulation_state.t, rootidx.at(iroot), model, simulation_state,
@@ -617,8 +637,8 @@ void ReturnData::invalidateLLH() {
 
 void ReturnData::invalidateSLLH() {
     if (!sllh.empty()) {
-        std::fill(sllh.begin(), sllh.end(), getNaN());
-        std::fill(s2llh.begin(), s2llh.end(), getNaN());
+        std::ranges::fill(sllh, getNaN());
+        std::ranges::fill(s2llh, getNaN());
     }
 }
 
@@ -792,10 +812,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
 
 void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
     if (rdata_reporting == RDataReporting::likelihood
+        || rdata_reporting == RDataReporting::observables_likelihood
         || rdata_reporting == RDataReporting::full) {
         llh = 0.0;
-        std::fill(sllh.begin(), sllh.end(), 0.0);
-        std::fill(s2llh.begin(), s2llh.end(), 0.0);
+        std::ranges::fill(sllh, 0.0);
+        std::ranges::fill(s2llh, 0.0);
     }
     if ((rdata_reporting == RDataReporting::residuals
          || rdata_reporting == RDataReporting::full)

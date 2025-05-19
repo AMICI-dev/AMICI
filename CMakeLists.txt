@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.22)
 # When updating the policy version, please also update it in
 # src/CMakeLists.template.cmake
-cmake_policy(VERSION 3.22...3.30)
+cmake_policy(VERSION 3.22...3.31)
 
 project(amici)
 
@@ -31,14 +31,14 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}"
                                                 STREQUAL "MINGW")
-  # require at least gcc 9.1 for proper C+17 support, e.g. std::reduce
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
-    message(FATAL_ERROR "GCC version must be at least 9.1!")
+  # require at least gcc 10.1 for std::ranges (C++20) support
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.1)
+    message(FATAL_ERROR "GCC version must be at least 10.1!")
   endif()
 endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
@@ -165,6 +165,7 @@ set(AMICI_SRC_LIST
     src/splinefunctions.cpp
     src/cblas.cpp
     src/amici.cpp
+    src/event.cpp
     src/misc.cpp
     src/rdata.cpp
     src/edata.cpp
@@ -193,6 +194,7 @@ set(AMICI_SRC_LIST
     include/amici/cblas.h
     include/amici/defines.h
     include/amici/edata.h
+    include/amici/event.h
     include/amici/exception.h
     include/amici/forwardproblem.h
     include/amici/hdf5.h
@@ -269,16 +271,10 @@ target_link_libraries(
          SUNDIALS::sunmatrixband_static
          SUNDIALS::sunmatrixdense_static
          SUNDIALS::sunmatrixsparse_static
-         SUNDIALS::sunlinsolband_static
-         SUNDIALS::sunlinsoldense_static
-         SUNDIALS::sunlinsolpcg_static
          SUNDIALS::sunlinsolspbcgs_static
          SUNDIALS::sunlinsolspfgmr_static
          SUNDIALS::sunlinsolspgmr_static
          SUNDIALS::sunlinsolsptfqmr_static
-         SUNDIALS::sunlinsolklu_static
-         SUNDIALS::sunnonlinsolnewton_static
-         SUNDIALS::sunnonlinsolfixedpoint_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
          $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
@@ -286,6 +282,12 @@ target_link_libraries(
          ${CMAKE_DL_LIBS}
   PRIVATE
     BLAS::BLAS
+    SUNDIALS::sunnonlinsolnewton_static
+    SUNDIALS::sunnonlinsolfixedpoint_static
+    SUNDIALS::sunlinsolklu_static
+    SUNDIALS::sunlinsolband_static
+    SUNDIALS::sunlinsoldense_static
+    SUNDIALS::sunlinsolpcg_static
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
 )
 

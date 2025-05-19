@@ -103,7 +103,7 @@ void Model_DAE::froot(
 void Model_DAE::froot(
     realtype t, const_N_Vector x, const_N_Vector dx, gsl::span<realtype> root
 ) {
-    std::fill(root.begin(), root.end(), 0.0);
+    std::ranges::fill(root, 0.0);
     auto x_pos = computeX_pos(x);
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
@@ -168,7 +168,8 @@ void Model_DAE::fdxdotdp(
 
     if (pythonGenerated) {
         // python generated, not yet implemented for DAEs
-        throw AmiException("Wrapping of DAEs is not yet implemented from Python"
+        throw AmiException(
+            "Wrapping of DAEs is not yet implemented from Python"
         );
     } else {
         // matlab generated
@@ -508,7 +509,8 @@ void Model_DAE::fsxdot(
 
     if (pythonGenerated) {
         // python generated, not yet implemented for DAEs
-        throw AmiException("Wrapping of DAEs is not yet implemented from Python"
+        throw AmiException(
+            "Wrapping of DAEs is not yet implemented from Python"
         );
     } else {
         /* copy dxdotdp over */

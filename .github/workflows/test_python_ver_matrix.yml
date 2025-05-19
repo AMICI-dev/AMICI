@@ -16,7 +16,7 @@ jobs:
   build:
     name: Python Version Matrix
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     continue-on-error: ${{ matrix.experimental }}
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
@@ -25,8 +25,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
-        experimental: [false]
+        include:
+          - python-version: '3.10'
+            experimental: false
+          - python-version: '3.11'
+            experimental: false
+          - python-version: '3.12'
+            experimental: false
+          - python-version: '3.13'
+            experimental: false
 
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -53,12 +60,7 @@ jobs:
     # install pysb before sympy to allow for sympy>=1.12 (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
     - run: source venv/bin/activate && pip3 install git+https://github.com/pysb/pysb
 
-    # until sympy>1.12 is released
-    - run: source venv/bin/activate && pip3 install git+https://github.com/sympy/sympy.git@master
-      if: matrix.python-version == '3.12'
-
-    - run: source venv/bin/activate && pip3 install "sympy>=1.12.1"
-      if: matrix.python-version != '3.12'
+    - run: source venv/bin/activate && pip3 install "sympy>1.12"
 
     - name: Get Pooch Cache Directory
       id: get-pooch-cache

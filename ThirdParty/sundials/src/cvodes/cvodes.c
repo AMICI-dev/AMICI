@@ -9930,6 +9930,8 @@ void cvProcessError(CVodeMem cv_mem, int error_code, int line, const char* func,
       break;
     }
 
+/* AMICI: https://github.com/AMICI-dev/AMICI/issues/2550 */
+#ifdef AMICI_SUNLOGGER_WARNINGS
     if (error_code == CV_WARNING)
     {
 #if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_WARNING
@@ -9940,6 +9942,7 @@ void cvProcessError(CVodeMem cv_mem, int error_code, int line, const char* func,
 #endif
       break;
     }
+#endif
 
     /* Call the SUNDIALS main error handler */
     SUNHandleErrWithMsg(line, func, file, msg, error_code, cv_mem->cv_sunctx);

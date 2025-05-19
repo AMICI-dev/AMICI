@@ -4,6 +4,8 @@
 import logging
 import sys
 
+import diffrax
+
 import amici
 import pandas as pd
 import petab.v1 as petab
@@ -23,10 +25,10 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 
 
-def test_case(case, model_type, version):
+def test_case(case, model_type, version, jax):
     """Wrapper for _test_case for handling test outcomes"""
     try:
-        _test_case(case, model_type, version)
+        _test_case(case, model_type, version, jax)
     except Exception as e:
         if isinstance(
             e, NotImplementedError
@@ -41,10 +43,10 @@ def test_case(case, model_type, version):
             raise e
 
 
-def _test_case(case, model_type, version):
+def _test_case(case, model_type, version, jax):
     """Run a single PEtab test suite case"""
     case = petabtests.test_id_str(case)
-    logger.debug(f"Case {case} [{model_type}] [{version}]")
+    logger.debug(f"Case {case} [{model_type}] [{version}] [{jax}]")
 
     # load
     case_dir = petabtests.get_case_dir(case, model_type, version)
@@ -52,35 +54,58 @@ def _test_case(case, model_type, version):
     problem = petab.Problem.from_yaml(yaml_file)
 
     # compile amici model
-    if case.startswith("0006"):
+    if case.startswith("0006") and not jax:
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_name = (
         f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
     )
-    model_output_dir = f"amici_models/{model_name}"
+    model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
     model = import_petab_problem(
         petab_problem=problem,
         model_output_dir=model_output_dir,
         model_name=model_name,
         compile_=True,
+        jax=jax,
     )
-    solver = model.getSolver()
-    solver.setSteadyStateToleranceFactor(1.0)
+    if jax:
+        from amici.jax import JAXProblem, run_simulations, petab_simulate
 
-    # simulate
-    ret = simulate_petab(
-        problem,
-        model,
-        solver=solver,
-        log_level=logging.DEBUG,
-    )
+        steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
+        jax_problem = JAXProblem(model, problem)
+        llh, ret = run_simulations(
+            jax_problem, steady_state_event=steady_state_event
+        )
+        chi2, _ = run_simulations(
+            jax_problem, ret="chi2", steady_state_event=steady_state_event
+        )
+        simulation_df = petab_simulate(
+            jax_problem, steady_state_event=steady_state_event
+        )
+        simulation_df.rename(
+            columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
+        )
+    else:
+        solver = model.getSolver()
+        solver.setSteadyStateToleranceFactor(1.0)
+        problem_parameters = dict(
+            zip(problem.x_free_ids, problem.x_nominal_free, strict=True)
+        )
 
-    rdatas = ret["rdatas"]
-    chi2 = sum(rdata["chi2"] for rdata in rdatas)
-    llh = ret["llh"]
-    simulation_df = rdatas_to_measurement_df(
-        rdatas, model, problem.measurement_df
-    )
+        # simulate
+        ret = simulate_petab(
+            problem,
+            model,
+            problem_parameters=problem_parameters,
+            solver=solver,
+            log_level=logging.DEBUG,
+        )
+
+        rdatas = ret["rdatas"]
+        chi2 = sum(rdata["chi2"] for rdata in rdatas)
+        llh = ret["llh"]
+        simulation_df = rdatas_to_measurement_df(
+            rdatas, model, problem.measurement_df
+        )
     petab.check_measurement_df(simulation_df, problem.observable_df)
     simulation_df = simulation_df.rename(
         columns={petab.MEASUREMENT: petab.SIMULATION}
@@ -90,7 +115,7 @@ def _test_case(case, model_type, version):
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
-    if case.startswith("0006"):
+    if case.startswith("0006") and not jax:
         # account for flattening
         gt_simulation_dfs[0].loc[:, petab.OBSERVABLE_ID] = (
             "obs_a__10__c0",
@@ -138,7 +163,10 @@ def _test_case(case, model_type, version):
         f"LLH: simulated: {llh}, expected: {gt_llh}, " f"match = {llhs_match}",
     )
 
-    check_derivatives(problem, model, solver)
+    if jax:
+        pass  # skip derivative checks for now
+    else:
+        check_derivatives(problem, model, solver, problem_parameters)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
@@ -150,7 +178,10 @@ def _test_case(case, model_type, version):
 
 
 def check_derivatives(
-    problem: petab.Problem, model: amici.Model, solver: amici.Solver
+    problem: petab.Problem,
+    model: amici.Model,
+    solver: amici.Solver,
+    problem_parameters: dict[str, float],
 ) -> None:
     """Check derivatives using finite differences for all experimental
     conditions
@@ -159,11 +190,8 @@ def check_derivatives(
         problem: PEtab problem
         model: AMICI model matching ``problem``
         solver: AMICI solver
+        problem_parameters: Dictionary of problem parameters
     """
-    problem_parameters = {
-        t.Index: getattr(t, petab.NOMINAL_VALUE)
-        for t in problem.parameter_df.itertuples()
-    }
     solver.setSensitivityMethod(amici.SensitivityMethod.forward)
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     # Required for case 9 to not fail in
@@ -192,18 +220,19 @@ def run():
     n_skipped = 0
     n_total = 0
     for version in ("v1.0.0", "v2.0.0"):
-        cases = petabtests.get_cases("sbml", version=version)
-        n_total += len(cases)
-        for case in cases:
-            try:
-                test_case(case, "sbml", version=version)
-                n_success += 1
-            except Skipped:
-                n_skipped += 1
-            except Exception as e:
-                # run all despite failures
-                logger.error(f"Case {case} failed.")
-                logger.error(e)
+        for jax in (False, True):
+            cases = petabtests.get_cases("sbml", version=version)
+            n_total += len(cases)
+            for case in cases:
+                try:
+                    test_case(case, "sbml", version=version, jax=jax)
+                    n_success += 1
+                except Skipped:
+                    n_skipped += 1
+                except Exception as e:
+                    # run all despite failures
+                    logger.error(f"Case {case} failed.")
+                    logger.error(e)
 
     logger.info(f"{n_success} / {n_total} successful, " f"{n_skipped} skipped")
     if n_success != len(cases):

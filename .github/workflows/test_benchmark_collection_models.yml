@@ -17,12 +17,12 @@ jobs:
   build:
     name: Benchmark Collection
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.12" ]
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
@@ -50,27 +50,43 @@ jobs:
       run: |
         pip3 install --user petab[vis] && \
         AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
-    - run: |
+    - name: Install test dependencies
+      run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
-        &&  python3 -m pip install -U sympy
+        &&  python3 -m pip install -U sympy \
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
 
-    # retrieve test models
-    - name: Download and test benchmark collection
+    - name: Download benchmark collection
       run: |
-        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
-          && pip3 install -e $BENCHMARK_COLLECTION/../src/python \
-          && AMICI_PARALLEL_COMPILE="" tests/benchmark-models/test_benchmark_collection.sh
+        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
 
-    # run gradient checks
-    - name: Run Gradient Checks
+    - name: Run tests
+      env:
+        AMICI_PARALLEL_COMPILE: ""
       run: |
-        pip install git+https://github.com/ICB-DCM/fiddy.git \
-          && cd tests/benchmark-models && pytest --durations=10 ./test_petab_benchmark.py
+          cd tests/benchmark-models && pytest \
+              --durations=10 \
+              --cov=amici \
+              --cov-report=xml:"coverage_py.xml" \
+              --cov-append \
 
-    # upload results
+    - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
+
+    # collect & upload results
+    - name: Aggregate results
+      run: |
+          cd tests/benchmark-models && python3 evaluate_benchmark.py
+
     - uses: actions/upload-artifact@v4
       with:
         name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}

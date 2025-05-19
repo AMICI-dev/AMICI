@@ -10,6 +10,7 @@
 #include <amici/hdf5.h>
 
 #include <amici/edata.h>
+#include <amici/logging.h>
 #include <amici/model.h>
 #include <amici/rdata.h>
 #include <amici/solver.h>
@@ -42,8 +43,10 @@ void checkMeasurementDimensionsCompatible(
     }
 
     if (!compatible)
-        throw(AmiException("HDF5 measurement data does not match model. "
-                           "Incompatible dimensions."));
+        throw(AmiException(
+            "HDF5 measurement data does not match model. "
+            "Incompatible dimensions."
+        ));
 }
 
 /**
@@ -70,8 +73,10 @@ void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
     }
 
     if (!compatible)
-        throw(AmiException("HDF5 event data does not match model. "
-                           "Incompatible dimensions."));
+        throw(AmiException(
+            "HDF5 event data does not match model. "
+            "Incompatible dimensions."
+        ));
 }
 
 void createGroup(
@@ -195,6 +200,47 @@ std::unique_ptr<ExpData> readSimulationExpData(
             ));
     }
 
+    if (locationExists(file, hdf5Root + "/parameters")) {
+        edata->parameters = getDoubleDataset1D(file, hdf5Root + "/parameters");
+    }
+
+    if (locationExists(file, hdf5Root + "/x0")) {
+        edata->x0 = getDoubleDataset1D(file, hdf5Root + "/x0");
+    }
+
+    if (locationExists(file, hdf5Root + "/sx0")) {
+        edata->sx0 = getDoubleDataset1D(file, hdf5Root + "/sx0");
+    }
+
+    if (locationExists(file, hdf5Root + "/pscale")) {
+        auto pscaleInt = getIntDataset1D(file, hdf5Root + "/pscale");
+        edata->pscale.resize(pscaleInt.size());
+        for (int i = 0; (unsigned)i < pscaleInt.size(); ++i)
+            edata->pscale[i] = static_cast<ParameterScaling>(pscaleInt[i]);
+    }
+
+    if (locationExists(file, hdf5Root + "/plist")) {
+        edata->plist = getIntDataset1D(file, hdf5Root + "/plist");
+    }
+
+    if (locationExists(
+            file, hdf5Root + "/reinitialization_state_idxs_presim"
+        )) {
+        edata->reinitialization_state_idxs_presim = getIntDataset1D(
+            file, hdf5Root + "/reinitialization_state_idxs_presim"
+        );
+    }
+
+    if (locationExists(file, hdf5Root + "/reinitialization_state_idxs_sim")) {
+        edata->reinitialization_state_idxs_sim = getIntDataset1D(
+            file, hdf5Root + "/reinitialization_state_idxs_sim"
+        );
+    }
+
+    if (attributeExists(file, hdf5Root, "tstart")) {
+        edata->tstart_ = getDoubleScalarAttribute(file, hdf5Root, "tstart");
+    }
+
     return edata;
 }
 
@@ -262,6 +308,59 @@ void writeSimulationExpData(
         file.getId(), hdf5Location.c_str(),
         "reinitializeFixedParameterInitialStates", &int_attr, 1
     );
+
+    if (!edata.parameters.empty())
+        createAndWriteDouble1DDataset(
+            file, hdf5Location + "/parameters", edata.parameters
+        );
+
+    if (!edata.x0.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/x0", edata.x0);
+    if (!edata.sx0.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/sx0", edata.sx0);
+
+    std::vector<int> int_buffer;
+
+    if (!edata.pscale.empty()) {
+        int_buffer.resize(edata.pscale.size());
+        for (int i = 0; (unsigned)i < edata.pscale.size(); i++)
+            int_buffer[i] = static_cast<int>(edata.pscale[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/pscale", int_buffer);
+    }
+
+    if (!edata.plist.empty()) {
+        int_buffer.resize(edata.plist.size());
+        for (int i = 0; (unsigned)i < edata.plist.size(); i++)
+            int_buffer[i] = static_cast<int>(edata.plist[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/plist", int_buffer);
+    }
+
+    if (!edata.reinitialization_state_idxs_presim.empty()) {
+        int_buffer.resize(edata.reinitialization_state_idxs_presim.size());
+        for (int i = 0;
+             (unsigned)i < edata.reinitialization_state_idxs_presim.size(); i++)
+            int_buffer[i]
+                = static_cast<int>(edata.reinitialization_state_idxs_presim[i]);
+        createAndWriteInt1DDataset(
+            file, hdf5Location + "/reinitialization_state_idxs_presim",
+            int_buffer
+        );
+    }
+
+    if (!edata.reinitialization_state_idxs_sim.empty()) {
+        int_buffer.resize(edata.reinitialization_state_idxs_sim.size());
+        for (int i = 0;
+             (unsigned)i < edata.reinitialization_state_idxs_sim.size(); i++)
+            int_buffer[i]
+                = static_cast<int>(edata.reinitialization_state_idxs_sim[i]);
+        createAndWriteInt1DDataset(
+            file, hdf5Location + "/reinitialization_state_idxs_sim", int_buffer
+        );
+    }
+
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "tstart", &edata.tstart_, 1
+    );
 }
 
 void writeReturnData(
@@ -316,6 +415,11 @@ void writeReturnData(
     if (!rdata.y.empty())
         createAndWriteDouble2DDataset(
             file, hdf5Location + "/y", rdata.y, rdata.nt, rdata.ny
+        );
+
+    if (!rdata.w.empty())
+        createAndWriteDouble2DDataset(
+            file, hdf5Location + "/w", rdata.w, rdata.nt, rdata.nw
         );
 
     if (!rdata.z.empty())
@@ -385,6 +489,51 @@ void writeReturnData(
             file, hdf5Location + "/ssigmaz", rdata.ssigmaz, rdata.nmaxevent,
             rdata.nplist, rdata.nz
         );
+
+    // TODO currently unused
+    /*
+    if (!rdata.s2rz.empty())
+        createAndWriteDouble4DDataset(
+            file, hdf5Location + "/s2rz", rdata.s2rz, rdata.nmaxevent,
+            rdata.nztrue, rdata.nplist, rdata.nplist
+        );
+    */
+
+    std::vector<int> int_buffer(1);
+
+    int_buffer[0] = gsl::narrow<int>(rdata.newton_maxsteps);
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "newton_maxsteps",
+        int_buffer.data(), 1
+    );
+
+    int_buffer[0] = static_cast<int>(rdata.o2mode);
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "o2mode", int_buffer.data(), 1
+    );
+
+    int_buffer[0] = static_cast<int>(rdata.sensi);
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "sensi", int_buffer.data(), 1
+    );
+
+    int_buffer[0] = static_cast<int>(rdata.sensi_meth);
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "sensi_meth", int_buffer.data(), 1
+    );
+
+    int_buffer[0] = static_cast<int>(rdata.rdata_reporting);
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "rdrm", int_buffer.data(), 1
+    );
+
+    if (!rdata.pscale.empty()) {
+        int_buffer.resize(rdata.pscale.size());
+        for (int i = 0; (unsigned)i < rdata.pscale.size(); i++)
+            int_buffer[i] = static_cast<int>(rdata.pscale[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/pscale", int_buffer);
+    }
+    writeLogItemsToHDF5(file, rdata.messages, hdf5Location + "/messages");
 
     writeReturnDataDiagnosis(rdata, file, hdf5Location + "/diagnosis");
 }
@@ -540,6 +689,84 @@ void writeReturnDataDiagnosis(
         createAndWriteDouble2DDataset(
             file, hdf5Location + "/J", rdata.J, rdata.nx, rdata.nx
         );
+
+    if (!rdata.x_ss.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/x_ss", rdata.x_ss);
+
+    if (!rdata.sx_ss.empty())
+        createAndWriteDouble2DDataset(
+            file, hdf5Location + "/sx_ss", rdata.sx_ss, rdata.nplist,
+            rdata.nx_rdata
+        );
+}
+
+// work-around for macos segfaults, use struct without std::string
+struct LogItemCStr {
+    int severity;
+    char const* identifier;
+    char const* message;
+};
+
+void writeLogItemsToHDF5(
+    H5::H5File const& file, std::vector<amici::LogItem> const& logItems,
+    std::string const& hdf5Location
+) {
+    if (logItems.empty())
+        return;
+
+    try {
+        hsize_t dims[1] = {logItems.size()};
+        H5::DataSpace dataspace(1, dims);
+
+        // works on Ubuntu, but segfaults on macos:
+        /*
+        // Create a compound datatype for the LogItem struct.
+        H5::CompType logItemType(sizeof(amici::LogItem));
+        logItemType.insertMember(
+            "severity", HOFFSET(amici::LogItem, severity),
+            H5::PredType::NATIVE_INT
+        );
+        auto vlstr_type = H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
+        logItemType.insertMember(
+            "identifier", HOFFSET(amici::LogItem, identifier), vlstr_type
+        );
+        logItemType.insertMember(
+            "message", HOFFSET(amici::LogItem, message), vlstr_type
+        );
+        H5::DataSet dataset
+            = file.createDataSet(hdf5Location, logItemType, dataspace);
+
+        dataset.write(logItems.data(), logItemType);
+        */
+
+        // ... therefore, as a workaround, we use a struct without std::string
+        H5::CompType logItemType(sizeof(LogItemCStr));
+        logItemType.insertMember(
+            "severity", HOFFSET(LogItemCStr, severity), H5::PredType::NATIVE_INT
+        );
+        auto vlstr_type = H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
+        logItemType.insertMember(
+            "identifier", HOFFSET(LogItemCStr, identifier), vlstr_type
+        );
+        logItemType.insertMember(
+            "message", HOFFSET(LogItemCStr, message), vlstr_type
+        );
+        H5::DataSet dataset
+            = file.createDataSet(hdf5Location, logItemType, dataspace);
+
+        // Convert std::vector<LogItem> to std::vector<LogItemCStr>
+        std::vector<LogItemCStr> buffer(logItems.size());
+        for (size_t i = 0; i < logItems.size(); ++i) {
+            buffer[i].severity = static_cast<int>(logItems[i].severity);
+            buffer[i].identifier = logItems[i].identifier.c_str();
+            buffer[i].message = logItems[i].message.c_str();
+        }
+
+        // Write the data to the dataset.
+        dataset.write(buffer.data(), logItemType);
+    } catch (H5::Exception& e) {
+        throw AmiException(e.getCDetailMsg());
+    }
 }
 
 void writeReturnData(
@@ -659,6 +886,7 @@ void createAndWriteDouble2DDataset(
     const H5::H5File& file, std::string const& datasetName,
     gsl::span<double const> buffer, hsize_t m, hsize_t n
 ) {
+    Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
     H5::DataSpace dataspace(2, adims);
     auto dataset = file.createDataSet(
@@ -671,6 +899,7 @@ void createAndWriteInt2DDataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<int const> buffer, hsize_t m, hsize_t n
 ) {
+    Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
     H5::DataSpace dataspace(2, adims);
     auto dataset = file.createDataSet(
@@ -683,6 +912,7 @@ void createAndWriteDouble3DDataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> buffer, hsize_t m, hsize_t n, hsize_t o
 ) {
+    Expects(buffer.size() == m * n * o);
     hsize_t const adims[]{m, n, o};
     H5::DataSpace dataspace(3, adims);
     auto dataset = file.createDataSet(
@@ -1031,9 +1261,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "lmm")) {
-        solver.setLinearMultistepMethod(static_cast<LinearMultistepMethod>(
-            getIntScalarAttribute(file, datasetPath, "lmm")
-        ));
+        solver.setLinearMultistepMethod(
+            static_cast<LinearMultistepMethod>(
+                getIntScalarAttribute(file, datasetPath, "lmm")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "iter")) {
@@ -1057,15 +1289,19 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "interpType")) {
-        solver.setInterpolationType(static_cast<InterpolationType>(
-            getIntScalarAttribute(file, datasetPath, "interpType")
-        ));
+        solver.setInterpolationType(
+            static_cast<InterpolationType>(
+                getIntScalarAttribute(file, datasetPath, "interpType")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "sensi_meth")) {
-        solver.setSensitivityMethod(static_cast<SensitivityMethod>(
-            getIntScalarAttribute(file, datasetPath, "sensi_meth")
-        ));
+        solver.setSensitivityMethod(
+            static_cast<SensitivityMethod>(
+                getIntScalarAttribute(file, datasetPath, "sensi_meth")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "sensi_meth_preeq")) {
@@ -1077,9 +1313,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "sensi")) {
-        solver.setSensitivityOrder(static_cast<SensitivityOrder>(
-            getIntScalarAttribute(file, datasetPath, "sensi")
-        ));
+        solver.setSensitivityOrder(
+            static_cast<SensitivityOrder>(
+                getIntScalarAttribute(file, datasetPath, "sensi")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "newton_maxsteps")) {
@@ -1105,9 +1343,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "linsol")) {
-        solver.setLinearSolver(static_cast<LinearSolver>(
-            getIntScalarAttribute(file, datasetPath, "linsol")
-        ));
+        solver.setLinearSolver(
+            static_cast<LinearSolver>(
+                getIntScalarAttribute(file, datasetPath, "linsol")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "ism")) {
@@ -1119,9 +1359,11 @@ void readSolverSettingsFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "rdrm")) {
-        solver.setReturnDataReportingMode(static_cast<RDataReporting>(
-            getIntScalarAttribute(file, datasetPath, "rdrm")
-        ));
+        solver.setReturnDataReportingMode(
+            static_cast<RDataReporting>(
+                getIntScalarAttribute(file, datasetPath, "rdrm")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
@@ -1193,9 +1435,11 @@ void readModelDataFromHDF5(
     } else if (attributeExists(file, datasetPath, "pscale")) {
         // if pscale is the same for all parameters,
         // it can be set as scalar attribute for convenience
-        model.setParameterScale(static_cast<ParameterScaling>(
-            getDoubleScalarAttribute(file, datasetPath, "pscale")
-        ));
+        model.setParameterScale(
+            static_cast<ParameterScaling>(
+                getDoubleScalarAttribute(file, datasetPath, "pscale")
+            )
+        );
     }
 
     if (attributeExists(file, datasetPath, "nmaxevent")) {
@@ -1386,6 +1630,15 @@ std::vector<double> getDoubleDataset3D(
         dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;
+}
+
+void writeSimulationExpData(
+    ExpData const& edata, std::string const& hdf5Filename,
+    std::string const& hdf5Location
+) {
+    auto file = createOrOpenForWriting(hdf5Filename);
+
+    writeSimulationExpData(edata, file, hdf5Location);
 }
 
 } // namespace hdf5

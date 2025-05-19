@@ -3,6 +3,7 @@
 
 #include "amici/abstract_model.h"
 #include "amici/defines.h"
+#include "amici/event.h"
 #include "amici/logging.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
@@ -112,6 +113,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
+     * @param events Vector of events
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -119,7 +121,7 @@ class Model : public AbstractModel, public ModelDimensions {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event,
+        std::vector<int> z2event, std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -252,8 +254,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xQB Adjoint quadratures
      * @param posteq Flag indicating whether postequilibration was performed
      */
-    void initializeB(AmiVector& xB, AmiVector& dxB, AmiVector& xQB, bool posteq)
-        const;
+    void initializeB(
+        AmiVector& xB, AmiVector& dxB, AmiVector& xQB, bool posteq
+    ) const;
 
     /**
      * @brief Initialize initial states.
@@ -1501,6 +1504,13 @@ class Model : public AbstractModel, public ModelDimensions {
     void set_steadystate_mask(std::vector<realtype> const& mask);
 
     /**
+     * @brief Get event object for event index.
+     * @param ie event index
+     * @return The corresponding Event object.
+     */
+    Event const& get_event(int ie) const { return events_.at(ie); }
+
+    /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
      * directional or full second order derivative will be computed
@@ -2039,7 +2049,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /** Storage for splines of the model */
     std::vector<HermiteSpline> splines_;
 
-    /** index indicating to which event an event output belongs */
+    /** index indicating to which event an event output belongs (size nz) */
     std::vector<int> z2event_;
 
     /** state initialization (size nx_solver) */
@@ -2052,12 +2062,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * be positive */
     std::vector<bool> state_is_non_negative_;
 
-    /** Vector of booleans indicating the initial boolean value for every event
-     * trigger function. Events at t0 can only trigger if the initial value is
-     * set to `false`. Must be specified during model compilation by setting the
-     * `initialValue` attribute of an event trigger. */
-    std::vector<bool> root_initial_values_;
-
     /** boolean indicating whether any entry in stateIsNonNegative is `true` */
     bool any_state_non_negative_{false};
 
@@ -2066,12 +2070,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** method for steady-state computation */
     SteadyStateComputationMode steadystate_computation_mode_{
-        SteadyStateComputationMode::integrateIfNewtonFails
+        SteadyStateComputationMode::integrationOnly
     };
 
     /** method for steadystate sensitivities computation */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_{
-        SteadyStateSensitivityMode::integrateIfNewtonFails
+        SteadyStateSensitivityMode::integrationOnly
     };
 
     /**
@@ -2103,6 +2107,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * be ignored.
      */
     std::vector<realtype> steadystate_mask_;
+
+    /** The events encoded in this model. */
+    std::vector<Event> events_;
 };
 
 bool operator==(Model const& a, Model const& b);

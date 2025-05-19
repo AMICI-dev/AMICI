@@ -2,12 +2,11 @@
 #define AMICI_FORWARDPROBLEM_H
 
 #include "amici/defines.h"
+#include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/vector.h"
-#include <amici/amici.h>
 
-#include <sundials/sundials_direct.h>
 #include <vector>
 
 namespace amici {
@@ -205,7 +204,7 @@ class ForwardProblem {
         if (model->getTimepoint(it) == initial_state_.t)
             return getInitialSimulationState();
         auto map_iter = timepoint_states_.find(model->getTimepoint(it));
-        assert(map_iter != timepoint_states_.end());
+        Ensures(map_iter != timepoint_states_.end());
         return map_iter->second;
     };
 
@@ -252,12 +251,11 @@ class ForwardProblem {
     /**
      * @brief Execute everything necessary for the handling of events
      *
-     * @param tlastroot pointer to the timepoint of the last event
-     * @param seflag Secondary event flag
+     * @param tlastroot Reference to the timepoint of the last event
      * @param initial_event initial event flag
      */
 
-    void handleEvent(realtype* tlastroot, bool seflag, bool initial_event);
+    void handleEvent(realtype& tlastroot, bool initial_event);
 
     /**
      * @brief Store pre-event model state
@@ -269,10 +267,9 @@ class ForwardProblem {
 
     /**
      * @brief Check for, and if applicable, handle any secondary events
-     *
-     * @param tlastroot pointer to the timepoint of the last event
+     * @return the number of secondary events found
      */
-    void handle_secondary_event(realtype* tlastroot);
+    int detect_secondary_events();
 
     /**
      * @brief Extract output information for events
@@ -285,16 +282,6 @@ class ForwardProblem {
      * @param t measurement timepoint
      */
     void handleDataPoint(realtype t);
-
-    /**
-     * @brief Applies the event bolus to the current state
-     */
-    void applyEventBolus();
-
-    /**
-     * @brief Applies the event bolus to the current sensitivities
-     */
-    void applyEventSensiBolusFSA();
 
     /**
      * @brief checks whether there are any events to fill
@@ -343,12 +330,8 @@ class ForwardProblem {
     std::vector<realtype> rval_tmp_;
 
     /** array containing the time-points of discontinuities
-     * (dimension: nmaxevent x ne, ordering = ?) */
+     * (dimension: dynamic) */
     std::vector<realtype> discs_;
-
-    /** array containing the index of discontinuities
-     * (dimension: nmaxevent x ne, ordering = ?) */
-    std::vector<realtype> irdiscs_;
 
     /** array of state vectors (dimension nx) for all so far encountered
      * discontinuities, extended as needed (dimension dynamic) */
@@ -365,6 +348,9 @@ class ForwardProblem {
     /** array of old differential state vectors (dimension nx) for all so far
      * encountered discontinuities, extended as needed (dimension dynamic) */
     std::vector<AmiVector> xdot_old_disc_;
+
+    /** Events that are waiting to be handled at the current timepoint. */
+    EventQueue pending_events_;
 
     /** state derivative of data likelihood
      * (dimension nJ x nx x nt, ordering =?) */
@@ -386,16 +372,16 @@ class ForwardProblem {
      */
     std::vector<int> roots_found_;
 
-    /** simulation states history at timepoints  */
+    /** simulation states history at timepoints */
     std::map<realtype, SimulationState> timepoint_states_;
 
-    /** simulation state history at events*/
+    /** simulation state history at events */
     std::vector<SimulationState> event_states_;
 
     /** simulation state after initialization*/
     SimulationState initial_state_;
 
-    /** simulation state after simulation*/
+    /** simulation state after simulation */
     SimulationState final_state_;
 
     /** state vector (dimension: nx_solver) */
@@ -406,9 +392,6 @@ class ForwardProblem {
 
     /** differential state vector (dimension: nx_solver) */
     AmiVector dx_;
-
-    /** old differential state vector (dimension: nx_solver) */
-    AmiVector dx_old_;
 
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_;
@@ -454,9 +437,40 @@ class FinalStateStorer : public ContextManager {
     /**
      * @brief destructor, stores simulation state
      */
-    ~FinalStateStorer() {
-        if (fwd_)
-            fwd_->final_state_ = fwd_->getSimulationState();
+    ~FinalStateStorer() noexcept(false) {
+        if (fwd_) {
+            try {
+                // This may throw in `CVodeSolver::getSens`
+                // due to https://github.com/LLNL/sundials/issues/82.
+                // Therefore, this dtor must be `noexcept(false)` to avoid
+                // programm termination.
+                fwd_->final_state_ = fwd_->getSimulationState();
+                // if there is an associated output timepoint, also store it in
+                // timepoint_states if it's not present there.
+                // this may happen if there is an error just at
+                // (or indistinguishably before) an output timepoint
+                auto final_time = fwd_->getFinalTime();
+                auto const timepoints = fwd_->model->getTimepoints();
+                if (!fwd_->timepoint_states_.count(final_time)
+                    && std::find(
+                           timepoints.cbegin(), timepoints.cend(), final_time
+                       ) != timepoints.cend()) {
+                    fwd_->timepoint_states_[final_time] = fwd_->final_state_;
+                }
+            } catch (std::exception const&) {
+                // We must not throw in case we are already in the stack
+                // unwinding phase due to some other active exception, otherwise
+                // this will also lead to termination.
+                //
+                // In case there is another active exception,
+                // `fwd_->{final_state_,timepoint_states_}` won't be set,
+                // and we assume that they are either not accessed anymore, or
+                // that there is appropriate error handling in place.
+                if (!std::uncaught_exceptions()) {
+                    throw;
+                }
+            }
+        }
     }
 
   private:

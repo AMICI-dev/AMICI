@@ -16,7 +16,12 @@ import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 from ..logging import get_logger
-from .import_helpers import _can_import_model, _create_model_name, check_model
+from .import_helpers import (
+    _can_import_model,
+    _create_model_name,
+    check_model,
+    _get_package_name_and_path,
+)
 from .sbml_import import import_model_sbml
 
 try:
@@ -37,8 +42,9 @@ def import_petab_problem(
     model_name: str = None,
     compile_: bool = None,
     non_estimated_parameters_as_constants=True,
+    jax=False,
     **kwargs,
-) -> "amici.Model":
+) -> "amici.Model | amici.JAXModel":
     """
     Create an AMICI model for a PEtab problem.
 
@@ -63,6 +69,10 @@ def import_petab_problem(
         considered constant in AMICI. Setting this to ``True`` will reduce
         model size and simulation times. If sensitivities with respect to those
         parameters are required, this should be set to ``False``.
+
+    :param jax:
+        Whether to load the jax version of the model. Note that this disables
+        compilation of the model module unless `compile` is set to `True`.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -109,7 +119,7 @@ def import_petab_problem(
         from .sbml_import import _create_model_output_dir_name
 
         model_output_dir = _create_model_output_dir_name(
-            petab_problem.sbml_model, model_name
+            petab_problem.sbml_model, model_name, jax=jax
         )
     else:
         model_output_dir = os.path.abspath(model_output_dir)
@@ -121,7 +131,7 @@ def import_petab_problem(
     # check if compilation necessary
     if compile_ or (
         compile_ is None
-        and not _can_import_model(model_name, model_output_dir)
+        and not _can_import_model(model_name, model_output_dir, jax)
     ):
         # check if folder exists
         if os.listdir(model_output_dir) and not compile_:
@@ -131,7 +141,7 @@ def import_petab_problem(
             )
 
         # remove folder if exists
-        if os.path.exists(model_output_dir):
+        if not jax and os.path.exists(model_output_dir):
             shutil.rmtree(model_output_dir)
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
@@ -141,6 +151,7 @@ def import_petab_problem(
                 petab_problem,
                 model_name=model_name,
                 model_output_dir=model_output_dir,
+                jax=jax,
                 **kwargs,
             )
         else:
@@ -149,11 +160,24 @@ def import_petab_problem(
                 model_name=model_name,
                 model_output_dir=model_output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
+                jax=jax,
                 **kwargs,
             )
 
     # import model
-    model_module = amici.import_model_module(model_name, model_output_dir)
+    model_module = amici.import_model_module(
+        *_get_package_name_and_path(model_name, model_output_dir, jax=jax)
+    )
+
+    if jax:
+        model = model_module.Model()
+
+        logger.info(
+            f"Successfully loaded jax model {model_name} "
+            f"from {model_output_dir}."
+        )
+        return model
+
     model = model_module.getModel()
     check_model(amici_model=model, petab_problem=petab_problem)
 

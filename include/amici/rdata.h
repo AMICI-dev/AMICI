@@ -453,7 +453,7 @@ class ReturnData : public ModelDimensions {
 
     /** boolean indicating whether residuals for standard deviations have been
      * added */
-    bool sigma_res;
+    bool sigma_res{false};
 
     /** log messages */
     std::vector<LogItem> messages;
@@ -463,7 +463,7 @@ class ReturnData : public ModelDimensions {
 
   protected:
     /** offset for sigma_residuals */
-    realtype sigma_offset;
+    realtype sigma_offset{0.0};
 
     /** array of number of found roots for a certain event type
      * (shape `ne`) */
@@ -475,6 +475,13 @@ class ReturnData : public ModelDimensions {
      * res, sres and FIM makes sense.
      */
     void initializeLikelihoodReporting(bool quadratic_llh);
+
+    /**
+     * @brief initializes storage for observables + likelihood reporting mode
+     * @param quadratic_llh whether model defines a quadratic nllh and computing
+     * res, sres and FIM makes sense.
+     */
+    void initializeObservablesLikelihoodReporting(bool quadratic_llh);
 
     /**
      * @brief initializes storage for residual reporting mode

@@ -8,7 +8,6 @@ import sys
 from typing import (
     Any,
     SupportsFloat,
-    Union,
 )
 from collections.abc import Callable
 from collections.abc import Iterable, Sequence
@@ -30,7 +29,7 @@ class SBMLException(Exception):
     pass
 
 
-SymbolDef = dict[sp.Symbol, Union[dict[str, sp.Expr], sp.Expr]]
+SymbolDef = dict[sp.Symbol, dict[str, sp.Expr] | sp.Expr]
 
 
 # Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
@@ -388,6 +387,10 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         "arccoth": sp.functions.acoth,
         "arcsech": sp.functions.asech,
         "arccsch": sp.functions.acsch,
+        "lt": sp.StrictLessThan,
+        "gt": sp.StrictGreaterThan,
+        "geq": sp.GreaterThan,
+        "leq": sp.LessThan,
     }
 
     if sym.__class__.__name__ in fun_mappings:
@@ -407,7 +410,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
 
-    if isinstance(sym, (sp.Function, sp.Mul, sp.Add, sp.Pow)):
+    if isinstance(sym, (sp.Function | sp.Mul | sp.Add | sp.Pow)):
         sym._args = args
 
     elif toplevel and isinstance(sym, BooleanAtom):
@@ -517,16 +520,22 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
         # step with H(0) = 1
         if isinstance(trigger, sp.core.relational.StrictLessThan):
             # x < y => x - y < 0 => r < 0
-            return sp.Integer(1) - sp.Heaviside(root)
+            return sp.Integer(1) - sp.Heaviside(root, 1)
         if isinstance(trigger, sp.core.relational.LessThan):
             # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
-            return sp.Heaviside(-root)
+            return sp.Heaviside(-root, 1)
         if isinstance(trigger, sp.core.relational.StrictGreaterThan):
             # y > x => y - x < 0 => -r < 0
-            return sp.Integer(1) - sp.Heaviside(-root)
+            return sp.Integer(1) - sp.Heaviside(-root, 1)
         if isinstance(trigger, sp.core.relational.GreaterThan):
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
-            return sp.Heaviside(root)
+            return sp.Heaviside(root, 1)
+
+    # rewrite n-ary XOR to OR to be handled below:
+    trigger = trigger.replace(sp.Xor, _xor_to_or)
+    # rewrite ==, !==
+    trigger = trigger.replace(sp.Eq, _eq_to_and)
+    trigger = trigger.replace(sp.Ne, _ne_to_or)
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
@@ -544,6 +553,54 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
         "AMICI can not parse piecewise/event trigger functions with argument "
         f"{trigger}."
     )
+
+
+def _xor_to_or(*args):
+    """
+    Replace XOR by OR expression.
+
+    ``xor(x, y, ...) = (x & ~y & ...) | (~x & y & ...) | ...``.
+
+    to be used in ``trigger = trigger.replace(sp.Xor, _xor_to_or)``.
+    """
+    res = sp.false
+    for i in range(len(args)):
+        res = sp.Or(
+            res,
+            sp.And(
+                *(arg if i == j else sp.Not(arg) for j, arg in enumerate(args))
+            ),
+        )
+    return res.simplify()
+
+
+def _eq_to_and(*args):
+    """
+    Replace equality expression with numerical arguments by inequalities.
+
+    ``Eq(x, y) = (x >= y) & (x <= y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Eq, _eq_to_and)``.
+    """
+    x, y = args
+    return (x >= y) & (x <= y)
+
+
+def _ne_to_or(*args):
+    """
+    Replace not-equal expression with numerical arguments by inequalities.
+
+    ``Ne(x, y) = (x > y) | (x < y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Ne, _ne_to_or)``.
+
+    This expects x and y to be not-NaN. No model should rely on NaN semantics
+    anyways: In sympy, NaNs are equal, but they don't support <, >, >=, <=.
+    In SBML, NaNs are equal, but support all comparisons. In IEEE 754, NaNs
+    are not equal, but support all comparisons.
+    """
+    x, y = args
+    return (x > y) | (x < y)
 
 
 def grouper(
@@ -595,6 +652,7 @@ def _check_unsupported_functions(
         sp.functions.factorial,
         sp.functions.ceiling,
         sp.functions.floor,
+        sp.functions.tan,
         sp.functions.sec,
         sp.functions.csc,
         sp.functions.cot,
@@ -637,7 +695,7 @@ def cast_to_sym(
     :return:
         typecast value
     """
-    if isinstance(value, (sp.RealNumber, numbers.Number)):
+    if isinstance(value, (sp.RealNumber | numbers.Number)):
         value = sp.Float(float(value))
     elif isinstance(value, BooleanAtom):
         value = sp.Float(float(bool(value)))
