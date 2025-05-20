@@ -761,7 +761,7 @@ class SbmlImporter:
                 args += ["value"]
 
             if symbol_name == SymbolId.EVENT:
-                args += ["state_update", "initial_value"]
+                args += ["assignments", "initial_value", "priority"]
             elif symbol_name == SymbolId.OBSERVABLE:
                 args += ["transformation"]
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
@@ -931,12 +931,17 @@ class SbmlImporter:
                         "currently not supported in AMICI."
                     )
             # Check for priorities
-            if event.getPriority() is not None:
-                raise SBMLException(
-                    f"Event {event_id} has a priority "
-                    "specified. This is currently not "
-                    "supported in AMICI."
-                )
+            if (prio := event.getPriority()) is not None:
+                if (prio := self._sympify(prio)) and not prio.is_Number:
+                    # Computing sensitivities with respect to event priorities
+                    #  is not implemented, so let's import such models at all.
+                    #  We could support expressions that only depend on
+                    #  constant parameters, though. But who needs that anyway?
+                    raise SBMLException(
+                        f"Event {event_id} has a non-numeric priority "
+                        "specified. This is currently not "
+                        "supported in AMICI."
+                    )
 
             # check trigger
             trigger_sbml = event.getTrigger()
@@ -1528,11 +1533,17 @@ class SbmlImporter:
                 and sbml_var.isSetBoundaryCondition()
                 and sbml_var.getBoundaryCondition()
             )
-            is_involved_in_reaction = is_species and not smart_is_zero_matrix(
-                self.stoichiometric_matrix[
-                    list(self.symbols[SymbolId.SPECIES].keys()).index(symbol),
-                    :,
-                ]
+            is_involved_in_reaction = (
+                is_species
+                and symbol in self.symbols[SymbolId.SPECIES]
+                and not smart_is_zero_matrix(
+                    self.stoichiometric_matrix[
+                        list(self.symbols[SymbolId.SPECIES].keys()).index(
+                            symbol
+                        ),
+                        :,
+                    ]
+                )
             )
             if (
                 is_species
@@ -1764,13 +1775,6 @@ class SbmlImporter:
         """Process SBML events."""
         events = self.sbml.getListOfEvents()
 
-        def get_empty_bolus_value() -> sp.Float:
-            """
-            Used in the event update vector for species that are not affected
-            by the event.
-            """
-            return sp.Symbol("AMICI_EMTPY_BOLUS")
-
         # Used to update species concentrations when an event affects a
         # compartment.
         concentration_species_by_compartment = {
@@ -1806,7 +1810,7 @@ class SbmlImporter:
             trigger = _parse_event_trigger(trigger_sym)
 
             # parse the boluses / event assignments
-            bolus = [get_empty_bolus_value() for _ in state_vector]
+            assignment_exprs = {}
             event_assignments = event.getListOfEventAssignments()
             compartment_event_assignments: set[tuple[sp.Symbol, sp.Expr]] = (
                 set()
@@ -1821,8 +1825,8 @@ class SbmlImporter:
                 formula = self._sympify(event_assignment)
                 try:
                     # Try to find the species in the state vector.
-                    index = state_vector.index(variable_sym)
-                    bolus[index] = formula
+                    _ = state_vector.index(variable_sym)
+                    assignment_exprs[variable_sym] = formula
                 except ValueError:
                     raise SBMLException(
                         "Could not process event assignment for "
@@ -1859,29 +1863,16 @@ class SbmlImporter:
                 ]:
                     # If the species was not affected by an event assignment,
                     # then the old value should be updated.
-                    if (
-                        bolus[state_vector.index(species_sym)]
-                        == get_empty_bolus_value()
-                    ):
+                    if species_sym not in assignment_exprs:
                         species_value = species_sym
                     # else the species was affected by an event assignment,
                     # hence the updated value should be updated further.
                     else:
-                        species_value = bolus[state_vector.index(species_sym)]
+                        species_value = assignment_exprs[species_sym]
                     # New species value is old amount / new volume.
-                    bolus[state_vector.index(species_sym)] = (
+                    assignment_exprs[species_sym] = (
                         species_value * compartment_sym / formula
                     )
-
-            # Subtract the current species value from each species with an
-            # update, as the bolus will be added on to the current species
-            # value during simulation.
-            for index in range(len(bolus)):
-                if bolus[index] != get_empty_bolus_value():
-                    bolus[index] -= state_vector[index]
-                bolus[index] = bolus[index].subs(
-                    get_empty_bolus_value(), sp.Float(0.0)
-                )
 
             initial_value = (
                 trigger_sbml.getInitialValue()
@@ -1912,9 +1903,10 @@ class SbmlImporter:
             self.symbols[SymbolId.EVENT][event_sym] = {
                 "name": event_id,
                 "value": trigger,
-                "state_update": sp.MutableDenseMatrix(bolus),
+                "assignments": assignment_exprs,
                 "initial_value": initial_value,
                 "use_values_from_trigger_time": use_trig_val,
+                "priority": self._sympify(event.getPriority()),
             }
 
         # Check `useValuesFromTriggerTime` attribute
@@ -1957,25 +1949,13 @@ class SbmlImporter:
                 # all trigger times are unique
                 return
 
-        # If all events assign to different species, we are fine. This is the
-        # case if the list of assigned-to variables across all events contains
-        # only unique values.
-        assigned_to_species = [
-            variable
-            for event in self.symbols[SymbolId.EVENT].values()
-            for variable, update in zip(state_vector, event["state_update"])
-            if not update.is_zero
-        ]
-        if len(assigned_to_species) == len(set(assigned_to_species)):
-            return
-
         # if all assignments are absolute (not referring to other non-constant
         # model entities), we are fine.
         if all(
-            update.is_zero or (update + variable).is_Number
+            assignment.is_Number
             for event in self.symbols[SymbolId.EVENT].values()
-            for variable, update in zip(state_vector, event["state_update"])
-            if not update.is_zero
+            for assignment in event["assignments"].values()
+            if event["assignments"] is not None
         ):
             return
 
@@ -2802,13 +2782,16 @@ class SbmlImporter:
             for element in self.symbols[symbol].values():
                 element["value"] = smart_subs(element["value"], old, new)
 
-        # replace in event state updates (boluses)
+        # replace in event assignments
         if self.symbols.get(SymbolId.EVENT, False):
             for event in self.symbols[SymbolId.EVENT].values():
-                for index in range(len(event["state_update"])):
-                    event["state_update"][index] = smart_subs(
-                        event["state_update"][index], old, new
-                    )
+                if event["assignments"] is not None:
+                    event["assignments"] = {
+                        smart_subs(target, old, new): smart_subs(
+                            expr, old, new
+                        )
+                        for target, expr in event["assignments"].items()
+                    }
 
         for state in {
             **self.symbols[SymbolId.SPECIES],
