@@ -277,6 +277,7 @@ class DEModel:
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
             "h": self.events,
+            "x_old": self.states,
             "np": self.noise_parameters,
             "op": self.observable_parameters,
         }
@@ -535,7 +536,7 @@ class DEModel:
 
         for event in self.events():
             state_update = event.get_state_update(
-                x=self.sym("x"), x_old=self.sym("x")
+                x=self.sym("x"), x_old=self.sym("x_old")
             )
             if state_update is None:
                 continue
@@ -1201,6 +1202,8 @@ class DEModel:
             return
         elif name == "xdot_old":
             length = len(self.eq("xdot"))
+        elif name == "x_old":
+            length = len(self.eq("x"))
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
             return
@@ -1618,7 +1621,7 @@ class DEModel:
                 # TODO https://github.com/AMICI-dev/AMICI/issues/2719
                 #   with use_values_from_trigger_time=True: x_old != x
                 state_update = event.get_state_update(
-                    x=self.sym("x"), x_old=self.sym("x")
+                    x=self.sym("x"), x_old=self.sym("x_old")
                 )
                 if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
@@ -1764,6 +1767,9 @@ class DEModel:
             self._eqs[name] = event_eqs
 
         elif name == "xdot_old":
+            # force symbols
+            self._eqs[name] = self.sym(name)
+        elif name == "x_old":
             # force symbols
             self._eqs[name] = self.sym(name)
 

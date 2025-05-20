@@ -1257,7 +1257,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void addStateEventUpdate(
         AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-        AmiVector const& xdot_old
+        AmiVector const& xdot_old, AmiVector const& x_old
     );
 
     /**

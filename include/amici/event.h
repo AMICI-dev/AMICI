@@ -31,10 +31,12 @@ class Event {
      * @param initial_value Initial value of the root function
      * @param priority Priority of the event assignments
      */
-    Event(std::string id, bool initial_value, realtype priority)
+    Event(std::string id, bool initial_value, realtype priority,
+          bool use_values_from_trigger_time = false)
         : id_(id)
         , initial_value_(initial_value)
-        , priority_(priority) {}
+        , priority_(priority)
+        , use_values_from_trigger_time_(use_values_from_trigger_time) {}
 
     /**
      * @brief Get the ID of the event
@@ -53,6 +55,10 @@ class Event {
      * @return The priority of the event assignments, or NAN if undefined.
      */
     realtype get_priority() const { return priority_; }
+
+    bool get_use_values_from_trigger_time() const {
+        return use_values_from_trigger_time_;
+    }
 
   private:
     /** The unique ID of this event. */
@@ -78,6 +84,9 @@ class Event {
      */
 
     realtype priority_ = NAN;
+
+    /** use values from trigger time */
+    bool use_values_from_trigger_time_ = false;
 };
 
 /**

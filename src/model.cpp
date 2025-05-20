@@ -207,7 +207,7 @@ Model::Model(
         // for matlab generated models, create event objects here
         for (int ie = 0; ie < ne; ie++) {
             events_.emplace_back(
-                std::string("event_") + std::to_string(ie), true, 0
+                std::string("event_") + std::to_string(ie), true, 0, false
             );
         }
     }
@@ -1439,16 +1439,20 @@ void Model::getEventTimeSensitivity(
 
 void Model::addStateEventUpdate(
     AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-    AmiVector const& xdot_old
+    AmiVector const& xdot_old, AmiVector const& x_old
 ) {
 
     derived_state_.deltax_.assign(nx_solver, 0.0);
 
     std::copy_n(computeX_pos(x), nx_solver, x.data());
 
+    auto const& event = get_event(ie);
+    auto x_eval = event.get_use_values_from_trigger_time() ? computeX_pos(x_old)
+                                                          : computeX_pos(x);
+
     // compute update
     fdeltax(
-        derived_state_.deltax_.data(), t, x.data(),
+        derived_state_.deltax_.data(), t, x_eval,
         state_.unscaledParameters.data(), state_.fixedParameters.data(),
         state_.h.data(), ie, xdot.data(), xdot_old.data()
     );

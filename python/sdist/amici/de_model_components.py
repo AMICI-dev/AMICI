@@ -711,6 +711,7 @@ class Event(ModelQuantity):
         assignments: dict[sp.Symbol, sp.Expr] | None = None,
         initial_value: bool | None = True,
         priority: sp.Basic | None = None,
+        use_values_from_trigger_time: bool = False,
     ):
         """
         Create a new Event instance.
@@ -730,11 +731,16 @@ class Event(ModelQuantity):
         :param initial_value:
             initial boolean value of the trigger function at t0. If set to
             `False`, events may trigger at ``t==t0``, otherwise not.
+
+        :param use_values_from_trigger_time:
+            If ``True``, evaluate event assignments using the state
+            at the trigger time.
         """
         super().__init__(identifier, name, value)
         # add the Event specific components
         self._assignments = assignments if assignments is not None else {}
         self._initial_value = initial_value
+        self._use_values_from_trigger_time = use_values_from_trigger_time
 
         if priority is not None and not priority.is_Number:
             raise NotImplementedError(
@@ -763,7 +769,10 @@ class Event(ModelQuantity):
         if len(self._assignments) == 0:
             return None
 
-        x_to_x_old = dict(zip(x, x_old))
+        if self._use_values_from_trigger_time:
+            x_to_x_old = dict(zip(x, x_old))
+        else:
+            x_to_x_old = {xi: xi for xi in x}
 
         def get_bolus(x_i: sp.Symbol) -> sp.Expr:
             """
@@ -791,6 +800,10 @@ class Event(ModelQuantity):
     def get_priority(self) -> sp.Basic | None:
         """Return the priority of the event assignment."""
         return self._priority
+
+    def get_use_values_from_trigger_time(self) -> bool:
+        """Return the value of `useValuesFromTriggerTime`."""
+        return self._use_values_from_trigger_time
 
     def __eq__(self, other):
         """

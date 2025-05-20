@@ -290,7 +290,7 @@ void ForwardProblem::handleEvent(
 
         // Execute the event
         // Apply bolus to the state and the sensitivities
-        model->addStateEventUpdate(x_, ie, t_, xdot_, xdot_old_);
+        model->addStateEventUpdate(x_, ie, t_, xdot_, xdot_old_, x_old_);
         if (solver->computingFSA()) {
             // compute the new xdot
             model->fxdot(t_, x_, dx_, xdot_);
