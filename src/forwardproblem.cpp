@@ -299,7 +299,6 @@ void ForwardProblem::handleEvent(
         // Apply bolus to the state and the sensitivities
         model->addStateEventUpdate(
             x_, ie, t_,
-            // TODO: do we really need xdot and xdot_old here?
             xdot_, xdot_old_, state_old.has_value() ? state_old->x : x_,
             state_old.has_value() ? state_old->state : model->getModelState()
         );
@@ -307,7 +306,7 @@ void ForwardProblem::handleEvent(
             // compute the new xdot
             model->fxdot(t_, x_, dx_, xdot_);
             model->addStateSensitivityEventUpdate(
-                sx_, ie, t_, x_old_, xdot_, xdot_old_,
+                sx_, ie, t_, x_, x_old_, xdot_, xdot_old_,
                 state_old.has_value() ? state_old->sx : sx_, stau_
             );
         }

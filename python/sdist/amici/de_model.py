@@ -1633,7 +1633,7 @@ class DEModel:
             ]
             event_ids = [e.get_id() for e in self._events]
             # TODO: get rid of this stupid 1-based indexing as soon as we can
-            # the matlab interface
+            #  drop the matlab interface
             z2event = [
                 event_ids.index(event_obs.get_event()) + 1
                 for event_obs in self._event_observables
@@ -1646,7 +1646,14 @@ class DEModel:
             self._eqs[name] = event_observables
             self._z2event = z2event
 
-        elif name in ["ddeltaxdx", "ddeltaxdp", "ddeltaxdt", "dzdp", "dzdx"]:
+        elif name in [
+            "ddeltaxdx",
+            "ddeltaxdx_old",
+            "ddeltaxdp",
+            "ddeltaxdt",
+            "dzdp",
+            "dzdx",
+        ]:
             if match_deriv[2] == "t":
                 var = time_symbol
             else:
@@ -1751,7 +1758,9 @@ class DEModel:
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
-                        self.eq("ddeltaxdx")[ie], tmp_dxdp
+                        self.eq("ddeltaxdx")[ie]
+                        + self.eq("ddeltaxdx_old")[ie],
+                        tmp_dxdp,
                     )
 
                 elif not xdot_is_zero:

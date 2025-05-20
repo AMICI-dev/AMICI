@@ -248,6 +248,21 @@ void AbstractModel::fdeltasx(
     );
 }
 
+void AbstractModel::fdeltasx(
+    realtype* /*deltasx*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*w*/, int const /*ip*/, int const /*ie*/,
+    realtype const* /*xdot*/, realtype const* /*xdot_old*/,
+    realtype const* /*sx*/, realtype const* /*stau*/, realtype const* /*tcl*/,
+    realtype const* /*x_old*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s is "
+        "not implemented for this model!",
+        __func__
+    );
+}
+
 void AbstractModel::fdeltaxB(
     realtype* /*deltaxB*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
