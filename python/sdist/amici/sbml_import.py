@@ -1533,11 +1533,17 @@ class SbmlImporter:
                 and sbml_var.isSetBoundaryCondition()
                 and sbml_var.getBoundaryCondition()
             )
-            is_involved_in_reaction = is_species and not smart_is_zero_matrix(
-                self.stoichiometric_matrix[
-                    list(self.symbols[SymbolId.SPECIES].keys()).index(symbol),
-                    :,
-                ]
+            is_involved_in_reaction = (
+                is_species
+                and symbol in self.symbols[SymbolId.SPECIES]
+                and not smart_is_zero_matrix(
+                    self.stoichiometric_matrix[
+                        list(self.symbols[SymbolId.SPECIES].keys()).index(
+                            symbol
+                        ),
+                        :,
+                    ]
+                )
             )
             if (
                 is_species
