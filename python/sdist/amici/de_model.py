@@ -1199,6 +1199,8 @@ class DEModel:
                 ]
             )
             return
+        elif name == "x_old":
+            length = len(self.eq("xdot"))
         elif name == "xdot_old":
             length = len(self.eq("xdot"))
         elif name in sparse_functions:
@@ -1615,10 +1617,8 @@ class DEModel:
             # would cause problems when writing the function file later
             event_eqs = []
             for event in self._events:
-                # TODO https://github.com/AMICI-dev/AMICI/issues/2719
-                #   with use_values_from_trigger_time=True: x_old != x
                 state_update = event.get_state_update(
-                    x=self.sym("x"), x_old=self.sym("x")
+                    x=self.sym("x"), x_old=self.sym("x_old")
                 )
                 if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))

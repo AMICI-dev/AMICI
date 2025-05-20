@@ -266,8 +266,6 @@ void ForwardProblem::handleEvent(
         // only consider transitions false -> true
         if (roots_found_.at(ie) == 1) {
             auto const& event = model->get_event(ie);
-            // TODO: it might be easier to just save the pre-computed deltax
-            //  instead of the full state
             pending_events_.push(
                 {.event = event,
                  .idx = ie,

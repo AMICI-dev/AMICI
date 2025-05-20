@@ -1451,11 +1451,22 @@ void Model::addStateEventUpdate(
     std::copy_n(computeX_pos(x), nx_solver, x.data());
 
     // compute update
-    fdeltax(
-        derived_state_.deltax_.data(), t, x_old.data(),
-        state.unscaledParameters.data(), state.fixedParameters.data(),
-        state.h.data(), ie, xdot.data(), xdot_old.data()
-    );
+    if (pythonGenerated) {
+        fdeltax(
+            derived_state_.deltax_.data(), t, x.data(),
+            state.unscaledParameters.data(), state.fixedParameters.data(),
+            state.h.data(), ie, xdot.data(), xdot_old.data(), x_old.data()
+        );
+
+    } else {
+        // For matlab-imported models, use_values_from_trigger_time=true
+        // is not supported, and thus, x_old == x, always.
+        fdeltax(
+            derived_state_.deltax_.data(), t, x_old.data(),
+            state.unscaledParameters.data(), state.fixedParameters.data(),
+            state.h.data(), ie, xdot.data(), xdot_old.data()
+        );
+    }
 
     if (always_check_finite_) {
         checkFinite(derived_state_.deltax_, ModelQuantity::deltax, t);
@@ -1480,7 +1491,6 @@ void Model::addStateSensitivityEventUpdate(
         fdeltasx(
             derived_state_.deltasx_.data(), t, x_old.data(),
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            // TODO: we need the pre-event `h` and `w`, right?
             state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
             xdot.data(), xdot_old.data(), sx_old.data(ip), &stau.at(ip),
             state_.total_cl.data()

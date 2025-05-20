@@ -511,7 +511,7 @@ class AbstractModel {
     );
 
     /**
-     * @brief Model-specific implementation of fdeltax
+     * @brief Model-specific implementation of fdeltax (MATLAB-only)
      * @param deltax state update
      * @param t current time
      * @param x current state
@@ -526,6 +526,25 @@ class AbstractModel {
         realtype* deltax, realtype const t, realtype const* x,
         realtype const* p, realtype const* k, realtype const* h, int ie,
         realtype const* xdot, realtype const* xdot_old
+    );
+
+    /**
+     * @brief Model-specific implementation of fdeltax (Python-only)
+     * @param deltax state update
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param ie event index
+     * @param xdot new model right hand side
+     * @param xdot_old previous model right hand side
+     * @param x_old pre-event state
+     */
+    virtual void fdeltax(
+        realtype* deltax, realtype const t, realtype const* x,
+        realtype const* p, realtype const* k, realtype const* h, int ie,
+        realtype const* xdot, realtype const* xdot_old, realtype const* x_old
     );
 
     /**

@@ -109,14 +109,14 @@ class Event {
  * @brief PendingEvent struct
  *
  * Represents an event that has triggered and is waiting to be executed.
- *
  */
 struct PendingEvent {
     /** The event to be handled. */
     Event const& event;
     /** The index of `event` in the model */
     int idx;
-    /** The simulation state at the time `event` triggered.
+    /**
+     * The simulation state at the time `event` triggered.
      * Optional if `event.uses_values_from_trigger_time()` is false.
      */
     std::optional<SimulationState> state_old;

@@ -768,6 +768,7 @@ class Event(ModelQuantity):
 
         :param x: The current state vector.
         :param x_old: The previous state vector.
+            If ``use_values_from_trigger_time=True``, this is equal to `x`.
         :return: State-update matrix or ``None`` if no state update is defined.
         """
         if len(self._assignments) == 0:
