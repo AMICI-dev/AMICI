@@ -255,6 +255,8 @@ void ForwardProblem::handleEvent(
         if (solver->computingASA()) {
             // store x to compute jump in discontinuity
             x_disc_.push_back(x_);
+            // compute the new xdot
+            model->fxdot(t_, x_, dx_, xdot_);
             xdot_disc_.push_back(xdot_);
         }
     };
@@ -375,8 +377,8 @@ void ForwardProblem::storeEvent() {
 }
 
 void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
-    // If we need to do forward sensitivities later on we need to store the old
-    // x and the old xdot.
+    // if we need to do forward sensitivities later on,
+    // we need to store the old x and the old xdot
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         // store x and xdot to compute jump in sensitivities
         x_old_.copy(x_);
@@ -401,6 +403,8 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
             std::ranges::fill(stau_, 0.0);
         }
     } else if (solver->computingASA()) {
+        // store x to compute jump in discontinuity
+        x_old_disc_.push_back(x_old_);
         xdot_old_disc_.push_back(xdot_old_);
     }
 }

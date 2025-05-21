@@ -89,6 +89,14 @@ class ForwardProblem {
     }
 
     /**
+     * @brief Accessor for x_old_disc
+     * @return x_old_disc
+     */
+    std::vector<AmiVector> const& getStatesBeforeDiscontinuities() const {
+        return x_old_disc_;
+    }
+
+    /**
      * @brief Accessor for xdot_disc
      * @return xdot_disc
      */
@@ -331,6 +339,13 @@ class ForwardProblem {
      * after event processing, same dimension as discs_)
      */
     std::vector<AmiVector> x_disc_;
+
+    /**
+     * array of pre-event state vectors (dimension nx) for all so far
+     * encountered discontinuities, (extended as needed;
+     * after event processing, same dimension as discs_)
+     */
+    std::vector<AmiVector> x_old_disc_;
 
     /**
      * array of post-event differential state vectors (dimension nx) for all so
