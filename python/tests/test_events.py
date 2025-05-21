@@ -985,3 +985,73 @@ def test_random_event_ordering():
             [N / 3, N / 3, N / 3],
             rtol=0.25,
         )
+
+
+@skip_on_valgrind
+def test_event_uses_values_from_trigger_time():
+    """For simultaneously executed events, check that values from trigger
+    times are used to compute the state update."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_vals_trig_time"
+    with TemporaryDirectory(prefix=model_name) as outdir:
+        antimony2amici(
+            r"""
+            some_time = time
+            some_time' = 1
+            trigger_time = 0.5
+            target1 = 2
+            target2 = 0
+            one = 1
+            three = 3
+
+            E1: at some_time >= trigger_time, priority=10, fromTrigger=false:
+                target1 = 10,
+                target2 = target1 + one;
+
+            E2: at some_time >= trigger_time, priority=-10, fromTrigger=true:
+                # this must reset `target1` to its initial value!!
+                target1 = target1,
+                target2 = target2 + three
+            """,
+            model_name=model_name,
+            output_dir=outdir,
+        )
+
+        model_module = import_model_module(model_name, outdir)
+
+        model = model_module.get_model()
+        model.setTimepoints([0, 1.1, 2])
+        solver = model.getSolver()
+        solver.setSensitivityOrder(SensitivityOrder.first)
+        solver.setSensitivityMethod(SensitivityMethod.forward)
+
+        rdata = amici.runAmiciSimulation(model, solver)
+        assert np.all(rdata.by_id("target1") == [2, 2, 2])
+        assert np.all(rdata.by_id("target2") == [0, 3, 3])
+
+        # generate synthetic measurements
+        edata = amici.ExpData(rdata, 1, 0)
+
+        # check forward sensitivities against finite differences
+        # FIXME: sensitivities w.r.t. the bolus parameter of the first event
+        #  are wrong
+        model.setParameterList(
+            [
+                ip
+                for ip, par in enumerate(model.getParameterIds())
+                if par not in ["one"]
+            ]
+        )
+
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            # smaller than the offset from the trigger time
+            epsilon=1e-8,
+        )
+
+        # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539

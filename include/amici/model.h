@@ -1254,10 +1254,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
+     * @param x_old Current or old state from which to compute the state update
+     * @param state The model state based on which to compute the update.
      */
     void addStateEventUpdate(
         AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-        AmiVector const& xdot_old
+        AmiVector const& xdot_old, AmiVector const& x_old,
+        ModelState const& state
     );
 
     /**
@@ -1265,16 +1268,19 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx Current state sensitivity (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param x_old Current state
+     * @param x Current state
+     * @param x_old Pre-event state
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
+     * @param sx_old Pre-event state sensitivity
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
      */
     void addStateSensitivityEventUpdate(
-        AmiVectorArray& sx, int const ie, realtype const t,
+        AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& x_old, AmiVector const& xdot,
-        AmiVector const& xdot_old, std::vector<realtype> const& stau
+        AmiVector const& xdot_old, AmiVectorArray const& sx_old,
+        std::vector<realtype> const& stau
     );
 
     /**

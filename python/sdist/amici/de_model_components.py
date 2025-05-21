@@ -708,6 +708,7 @@ class Event(ModelQuantity):
         identifier: sp.Symbol,
         name: str,
         value: sp.Expr,
+        use_values_from_trigger_time: bool,
         assignments: dict[sp.Symbol, sp.Expr] | None = None,
         initial_value: bool | None = True,
         priority: sp.Basic | None = None,
@@ -730,6 +731,13 @@ class Event(ModelQuantity):
         :param initial_value:
             initial boolean value of the trigger function at t0. If set to
             `False`, events may trigger at ``t==t0``, otherwise not.
+
+        :param priority: The priority of the event assignment.
+
+        :param use_values_from_trigger_time:
+            Whether the event assignment is evaluated using the state from
+            the time point at which the event triggered (True), or at the time
+            point at which the event assignment is evaluated (False).
         """
         super().__init__(identifier, name, value)
         # add the Event specific components
@@ -740,8 +748,10 @@ class Event(ModelQuantity):
             raise NotImplementedError(
                 "Currently, only numeric values are supported as event priority."
             )
-        # the priority of the event assignment
+
         self._priority = priority
+
+        self._use_values_from_trigger_time = use_values_from_trigger_time
 
         # expression(s) for the timepoint(s) at which the event triggers
         try:
@@ -758,6 +768,7 @@ class Event(ModelQuantity):
 
         :param x: The current state vector.
         :param x_old: The previous state vector.
+            If ``use_values_from_trigger_time=True``, this is equal to `x`.
         :return: State-update matrix or ``None`` if no state update is defined.
         """
         if len(self._assignments) == 0:
@@ -817,6 +828,14 @@ class Event(ModelQuantity):
                 "This event does not trigger at a fixed timepoint."
             )
         return self._t_root[0]
+
+    @property
+    def uses_values_from_trigger_time(self) -> bool:
+        """Whether the event assignment is evaluated using the state from
+        the time point at which the event triggered (True), or at the time
+        point at which the event assignment is evaluated (False).
+        """
+        return self._use_values_from_trigger_time
 
 
 # defines the type of some attributes in DEModel
