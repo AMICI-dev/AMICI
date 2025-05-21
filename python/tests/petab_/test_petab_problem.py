@@ -1,6 +1,7 @@
 from amici.petab.petab_problem import PetabProblem
 from benchmark_models_petab import get_problem
 from amici.testing import skip_on_valgrind
+from amici.petab.petab_import import import_petab_problem
 
 
 @skip_on_valgrind
@@ -68,13 +69,19 @@ def test_amici_petab_problem_on_demand():
 
 
 @skip_on_valgrind
-def test_amici_petab_problem_pregenerate_equals_on_demand():
+def test_amici_petab_problem_pregenerate_equals_on_demand(tempdir):
     """Check that PetabProblem produces the same ExpDatas
     independent of the `store_edatas` parameter."""
     # any example is fine
     petab_problem = get_problem("Boehm_JProteomeRes2014")
-    app_store_true = PetabProblem(petab_problem, store_edatas=True)
-    app_store_false = PetabProblem(petab_problem, store_edatas=False)
+    amici_model = import_petab_problem(petab_problem, model_output_dir=tempdir)
+
+    app_store_true = PetabProblem(
+        petab_problem, store_edatas=True, amici_model=amici_model
+    )
+    app_store_false = PetabProblem(
+        petab_problem, store_edatas=False, amici_model=amici_model
+    )
 
     parameter_update = {app_store_true.model.getParameterIds()[0]: 0.12345}
     app_store_true.set_parameters(parameter_update, scaled_parameters=True)
