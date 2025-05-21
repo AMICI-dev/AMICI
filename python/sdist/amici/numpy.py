@@ -311,7 +311,7 @@ class ReturnDataView(SwigPtrView):
         self, item: str
     ) -> np.ndarray | ReturnDataPtr | ReturnData | float:
         """
-        Access fields by name.s
+        Access fields by name.
 
         Custom ``__getitem__`` implementation shim to map ``t`` to ``ts``.
 
@@ -416,7 +416,7 @@ class ExpDataView(SwigPtrView):
                 len(edata.fixedParametersPreequilibration)
             ],
             "fixedParametersPresimulation": [
-                len(edata.fixedParametersPreequilibration)
+                len(edata.fixedParametersPresimulation)
             ],
         }
         edata.ts = edata.ts_
