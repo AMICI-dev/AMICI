@@ -812,7 +812,7 @@ class Solver {
     bool computingFSA() const {
         return getSensitivityOrder() >= SensitivityOrder::first
                && getSensitivityMethod() == SensitivityMethod::forward
-               && nplist() > 0;
+               && nplist() > 0 && nx() > 0;
     }
 
     /**

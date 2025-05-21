@@ -526,7 +526,7 @@ class AbstractModel {
     );
 
     /**
-     * @brief Model-specific implementation of fdeltax
+     * @brief Model-specific implementation of fdeltax (MATLAB-only)
      * @param deltax state update
      * @param t current time
      * @param x current state
@@ -544,7 +544,26 @@ class AbstractModel {
     );
 
     /**
-     * @brief Model-specific implementation of fdeltasx
+     * @brief Model-specific implementation of fdeltax (Python-only)
+     * @param deltax state update
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param ie event index
+     * @param xdot new model right hand side
+     * @param xdot_old previous model right hand side
+     * @param x_old pre-event state
+     */
+    virtual void fdeltax(
+        realtype* deltax, realtype const t, realtype const* x,
+        realtype const* p, realtype const* k, realtype const* h, int ie,
+        realtype const* xdot, realtype const* xdot_old, realtype const* x_old
+    );
+
+    /**
+     * @brief Model-specific implementation of fdeltasx (MATLAB-only)
      * @param deltasx sensitivity update
      * @param t current time
      * @param x current state
@@ -566,6 +585,32 @@ class AbstractModel {
         realtype const* w, int ip, int ie, realtype const* xdot,
         realtype const* xdot_old, realtype const* sx, realtype const* stau,
         realtype const* tcl
+    );
+
+    /**
+     * @brief Model-specific implementation of fdeltasx (Python-only)
+     * @param deltasx sensitivity update
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param w repeating elements vector
+     * @param ip sensitivity index
+     * @param ie event index
+     * @param xdot new model right hand side
+     * @param xdot_old previous model right hand side
+     * @param sx state sensitivity
+     * @param stau event-time sensitivity
+     * @param tcl total abundances for conservation laws
+     * @param x_old pre-event state
+     */
+    virtual void fdeltasx(
+        realtype* deltasx, realtype const t, realtype const* x,
+        realtype const* p, realtype const* k, realtype const* h,
+        realtype const* w, int ip, int ie, realtype const* xdot,
+        realtype const* xdot_old, realtype const* sx, realtype const* stau,
+        realtype const* tcl, realtype const* x_old
     );
 
     /**
