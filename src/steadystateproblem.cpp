@@ -111,6 +111,13 @@ void SteadystateProblem::workSteadyStateProblem(
 void SteadystateProblem::workSteadyStateBackwardProblem(
     Solver const& solver, Model& model, BackwardProblem const* bwd
 ) {
+    if (model.ne > 0) {
+        solver.logger->log(
+            LogSeverity::warning, "STEADY_STATE_SIMULATION",
+            "Steady-state simulation with events is not supported. "
+            "Events will be ignored. This is subject to change."
+            );
+    }
 
     if (!initializeBackwardProblem(solver, model, bwd))
         return;

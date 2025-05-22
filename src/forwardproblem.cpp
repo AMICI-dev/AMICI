@@ -96,6 +96,13 @@ void ForwardProblem::workForwardProblem() {
                 "Presimulation with adjoint sensitivities"
                 " is currently not implemented."
             );
+        if (model->ne > 0) {
+            solver->logger->log(
+                LogSeverity::warning, "PRESIMULATION",
+                "Presimulation with events is not supported. "
+                "Events will be ignored. This is subject to change."
+                );
+        }
         handlePresimulation();
         t_ = model->t0();
         if (model->ne) {
