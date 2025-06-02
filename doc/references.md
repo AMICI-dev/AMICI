@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 102.
+List of publications using AMICI. Total number is 103.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -263,6 +263,14 @@ Insights from a <span>4D</span> Flow <span
 class="nocase">MRI-based</span> Personalized Cardiovascular Mathematical
 Model.”</span> <em>The Journal of Physiology</em> n/a (n/a). <a
 href="https://doi.org/10.1113/JP284652">https://doi.org/10.1113/JP284652</a>.
+</div>
+<div id="ref-WangRau2023" class="csl-entry" role="listitem">
+Wang, Dantong, Christian Rausch, Simon A. Buerger, Sebastian Tschuri,
+Maja Rothenberg-Thurley, Melanie Schulz, Jan Hasenauer, Frank Ziemann,
+Klaus H. Metzeler, and Carsten Marr. 2023. <span>“Modeling Early
+Treatment Response in AML from Cell-Free Tumor DNA.”</span>
+<em>iScience</em> 26 (12): 108271. <a
+href="https://doi.org/10.1016/j.isci.2023.108271">https://doi.org/10.1016/j.isci.2023.108271</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2022</h1>
