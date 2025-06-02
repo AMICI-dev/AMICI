@@ -20,7 +20,12 @@ import pandas as pd
 import petab.v1 as petab
 import pytest
 import yaml
-from amici import SensitivityMethod, get_model_root_dir
+from amici import (
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+    get_model_root_dir
+)
 from amici.adapters.fiddy import simulate_petab_to_cached_functions
 from amici.logging import get_logger
 from amici.petab.petab_import import import_petab_problem
@@ -165,8 +170,8 @@ class GradientCheckSettings:
         ]
     )
     rng_seed: int = 0
-    ss_sensitivity_mode: amici.SteadyStateSensitivityMode = (
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+    ss_sensitivity_mode: SteadyStateSensitivityMode = (
+        SteadyStateSensitivityMode.integrateIfNewtonFails
     )
     noise_level: float = 0.05
 
@@ -176,7 +181,7 @@ settings = defaultdict(GradientCheckSettings)
 settings["Blasi_CellSystems2016"] = GradientCheckSettings(
     atol_check=1e-12,
     rtol_check=1e-4,
-    ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
+    ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
 )
 settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
     rng_seed=2,
@@ -184,7 +189,7 @@ settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
     rtol_check=1e-3,
 )
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
-    ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
+    ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
 )
 settings["Fujita_SciSignal2010"] = GradientCheckSettings(
     atol_check=1e-7,
@@ -262,15 +267,15 @@ def test_nominal_parameters_llh(benchmark_problem):
     times = dict()
 
     for label, sensi_mode in {
-        "t_sim": amici.SensitivityMethod.none,
-        "t_fwd": amici.SensitivityMethod.forward,
-        "t_adj": amici.SensitivityMethod.adjoint,
+        "t_sim": SensitivityMethod.none,
+        "t_fwd": SensitivityMethod.forward,
+        "t_adj": SensitivityMethod.adjoint,
     }.items():
         amici_solver.set_sensitivity_method(sensi_mode)
-        if sensi_mode == amici.SensitivityMethod.none:
-            amici_solver.set_sensitivity_order(amici.SensitivityOrder.none)
+        if sensi_mode == SensitivityMethod.none:
+            amici_solver.set_sensitivity_order(SensitivityOrder.none)
         else:
-            amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
+            amici_solver.set_sensitivity_order(SensitivityOrder.first)
 
         res_repeats = [
             simulate_petab(
@@ -291,7 +296,7 @@ def test_nominal_parameters_llh(benchmark_problem):
             ]
         )
 
-        if sensi_mode == amici.SensitivityMethod.none:
+        if sensi_mode == SensitivityMethod.none:
             rdatas = res[RDATAS]
             llh = res[LLH]
     # TODO: check that all llh match, check that all sllh match
@@ -594,3 +599,134 @@ def write_debug_output(
     df["rel_diff"] = df["abs_diff"] / np.abs(df[("amici", "", "")])
 
     df.to_csv(file_name, sep="\t")
+
+
+# TODO: gradient check for PEtab v2
+# problems_for_llh_check = [
+#     "Brannmark_JBC2010",
+# ]
+
+
+@pytest.mark.filterwarnings(
+    "ignore:divide by zero encountered in log",
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
+    "ignore:.*has `useValuesFromTriggerTime=true'.*:UserWarning",
+    "ignore:.*Using `log-normal` instead.*:UserWarning",
+)
+@pytest.mark.parametrize("problem_id", problems_for_llh_check)
+def test_nominal_parameters_llh_v2(problem_id):
+    """Test the log-likelihood computation at nominal parameters.
+
+    Also check that the simulation time is within the reference range.
+    """
+    from amici.petab.petab_importer import PetabImporter
+    from petab import v2
+    from petab.v2 import Problem
+
+    # TODO: differences in llh -- check simulations--
+    #  log10-normal -> log-normal:
+    #   Bachmann_MSB2011
+    #   Borghans_BiophysChem1997
+    #   Elowitz_Nature2000
+    #   Lucarelli_CellSystems2018
+    #   Perelson_Science1996
+    #   Schwen_PONE2014
+    #
+    # Fiedler_BMCSystBiol2016: timepoint-specific output overrides
+
+    if problem_id not in problems_for_llh_check:
+        pytest.skip("Excluded from log-likelihood check.")
+
+    repo_root = script_dir.parent.parent
+    benchmark_outdir = repo_root / "test_bmc_v2"
+    model_output_dir = benchmark_outdir / problem_id
+
+    try:
+        problem = Problem.from_yaml(
+            benchmark_models_petab.get_problem_yaml_path(problem_id)
+        )
+    except ValueError as e:
+        cause = f": {e.__cause__}" if e.__cause__ else ""
+        pytest.skip(f"Could not load problem {problem_id}: {e}{cause}")
+
+    model_name = f"{problem_id}_v2"
+    jax = False
+
+    pi = PetabImporter(
+        petab_problem=problem,
+        model_id=model_name,
+        outdir=model_output_dir,
+        compile_=True,
+        jax=jax,
+        force_import=True,
+    )
+
+    # TODO force re-import
+    import shutil
+
+    shutil.rmtree(pi.outdir, ignore_errors=True)
+
+    ps = pi.create_simulator()
+    ps._solver.set_absolute_tolerance(1e-8)
+    ps._solver.set_relative_tolerance(1e-8)
+    ps._solver.set_max_steps(10_000)
+    if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
+        ps._model.set_steady_state_sensitivity_mode(
+            SteadyStateSensitivityMode.integrationOnly
+        )
+    problem_parameters = dict(
+        zip(problem.x_free_ids, problem.x_nominal_free, strict=True)
+    )
+
+    ret = ps.simulate(problem_parameters=problem_parameters)
+
+    rdatas = ret["rdatas"]
+    # chi2 = sum(rdata["chi2"] for rdata in rdatas)
+    llh = ret["llh"]
+
+    from amici.petab.petab_importer import rdatas_to_measurement_df
+
+    simulation_df = rdatas_to_measurement_df(
+        rdatas, ps._model, pi.petab_problem
+    )
+    # # TODO petab.check_measurement_df(simulation_df, problem.observable_df)
+    simulation_df = simulation_df.rename(
+        columns={v2.C.MEASUREMENT: v2.C.SIMULATION}
+    )
+    # revert setting default experiment Id
+    simulation_df.loc[
+        simulation_df[v2.C.EXPERIMENT_ID] == "__default__", v2.C.EXPERIMENT_ID
+    ] = np.nan
+
+    print(simulation_df)
+    simulation_df.to_csv("benchmark_sim.tsv", sep="\t")
+
+    try:
+        ref_llh = reference_values[problem_id]["llh"]
+        rdiff = np.abs((llh - ref_llh) / ref_llh)
+        rtol = 1e-3
+        adiff = np.abs(llh - ref_llh)
+        atol = 1e-3
+        tolstr = (
+            f" Absolute difference is {adiff:.2e} "
+            f"(tol {atol:.2e}) and relative difference is "
+            f"{rdiff:.2e} (tol {rtol:.2e})."
+        )
+
+        if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
+            logger.info(
+                f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
+                + tolstr
+            )
+        else:
+            pytest.fail(
+                f"Computed llh {llh:.4e} does not match reference "
+                f"{ref_llh:.4e}." + tolstr
+            )
+    except KeyError:
+        logger.error(
+            "No reference likelihood found for "
+            f"{problem_id} in {references_yaml}"
+        )

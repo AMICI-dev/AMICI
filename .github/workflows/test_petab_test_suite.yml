@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  petab_v1:
     name: PEtab Testsuite
 
     runs-on: ubuntu-latest
@@ -102,11 +102,108 @@ jobs:
       - name: Run PEtab test suite
         run: |
           source ./venv/bin/activate \
-          && AMICI_PARALLEL_COMPILE="" pytest -v \
+          && AMICI_PARALLEL_COMPILE="" pytest -rxXs -v \
             --cov-report=xml:coverage.xml \
             --cov-append \
             --cov=amici \
-            tests/petab_test_suite/
+            tests/petab_test_suite/test_petab_suite.py
+
+      - name: Codecov
+        if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          flags: petab
+          fail_ci_if_error: true
+
+
+  petab_v2:
+    name: PEtab v2 Testsuite
+
+    runs-on: ubuntu-latest
+
+    env:
+      ENABLE_GCOV_COVERAGE: TRUE
+
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Install apt dependencies
+        uses: ./.github/actions/install-apt-dependencies
+
+      # install dependencies
+      - name: apt
+        run: |
+          sudo apt-get update \
+            && sudo apt-get install -y python3-venv
+
+      - name: Build BNGL
+        run: scripts/buildBNGL.sh
+
+      - run: |
+          echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+          echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
+          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+
+      # install AMICI
+      - name: Install python package
+        run: scripts/installAmiciSource.sh
+
+      - name: Install petab
+        run: |
+          source ./venv/bin/activate \
+            && pip3 install wheel pytest shyaml pytest-cov pysb>=1.16
+
+      # retrieve test models
+      - name: Download and install PEtab test suite
+        run: |
+          git clone https://github.com/PEtab-dev/petab_test_suite \
+            && source ./venv/bin/activate \
+            && cd petab_test_suite \
+            && git checkout dc4204db2bc9618b68d77d28e4df29d3f89266aa \
+            && pip3 install -e .
+
+#      - name: Install PEtab benchmark collection
+#        run: |
+#          git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+#            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+#            && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
+
+      - name: Install petab
+        run: |
+          source ./venv/bin/activate \
+            && python3 -m pip uninstall -y petab \
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
+            && python3 -m pip install git+https://github.com/pysb/pysb@master \
+            && python3 -m pip install sympy>=1.12.1
+
+#      - name: Run PEtab-related unit tests
+#        run: |
+#          source ./venv/bin/activate \
+#            && pytest --cov-report=xml:coverage.xml \
+#              --cov=./ python/tests/test_*petab*.py python/tests/petab_/
+
+      # run test models
+      - name: Run PEtab test suite
+        run: |
+          source ./venv/bin/activate \
+          && AMICI_PARALLEL_COMPILE="" pytest -rxXs -v \
+            --cov-report=xml:coverage.xml \
+            --cov-append \
+            --cov=amici \
+            tests/petab_test_suite/test_petab_v2_suite.py
 
       - name: Codecov
         if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
