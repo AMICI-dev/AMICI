@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 101.
+List of publications using AMICI. Total number is 102.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -164,6 +164,13 @@ Outcomes in Luminal B Breast Cancer Treated with Endocrine Therapy and
 CDK4/6 Inhibition</span>.”</span> <em>Clinical Cancer Research</em>,
 July, OF1–9. <a
 href="https://doi.org/10.1158/1078-0432.CCR-24-0244">https://doi.org/10.1158/1078-0432.CCR-24-0244</a>.
+</div>
+<div id="ref-SchulzBle2024" class="csl-entry" role="listitem">
+Schulz, Melanie, Sanne Bleser, Manouk Groels, Dragan Bošnački, Jan A.
+Burger, Nicholas Chiorazzi, and Carsten Marr. 2024. <span>“Mathematical
+Multi-Compartment Modeling of Chronic Lymphocytic Leukemia Cell Kinetics
+Under Ibrutinib.”</span> <em>iScience</em> 27 (12): 111242. <a
+href="https://doi.org/10.1016/j.isci.2024.111242">https://doi.org/10.1016/j.isci.2024.111242</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
