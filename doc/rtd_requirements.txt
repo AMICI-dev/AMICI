@@ -30,3 +30,4 @@ ipykernel
 -e python/sdist/[jax]
 antimony>=2.13
 fiddy>=0.0.3
+-e git+https://github.com/petab-dev/libpetab-python.git@main#egg=petab

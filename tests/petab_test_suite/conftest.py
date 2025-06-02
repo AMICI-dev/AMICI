@@ -41,9 +41,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_generate_tests(metafunc):
-    """Parameterize tests"""
-
+def generate_v1_tests(metafunc):
     # Run for all PEtab test suite cases
     if (
         "case" in metafunc.fixturenames
@@ -88,3 +86,58 @@ def pytest_generate_tests(metafunc):
                             or get_cases(format, version)
                         )
         metafunc.parametrize("case,model_type,version,jax", argvalues)
+
+
+def generate_v2_tests(metafunc):
+    # Run for all PEtab test suite cases
+    if (
+        "case" in metafunc.fixturenames
+        and "model_type" in metafunc.fixturenames
+    ):
+        # Get CLI option
+        cases = metafunc.config.getoption("--petab-cases")
+        if cases:
+            # Run selected tests
+            test_numbers = parse_selection(cases)
+        else:
+            # Run all tests
+            test_numbers = None
+
+        if metafunc.config.getoption("--only-sbml"):
+            argvalues = [
+                (case, "sbml", version, False)
+                for version in ("v2.0.0",)
+                for case in (
+                    test_numbers
+                    if test_numbers
+                    else get_cases("sbml", version=version)
+                )
+            ]
+        elif metafunc.config.getoption("--only-pysb"):
+            argvalues = [
+                (case, "pysb", "v2.0.0", False)
+                for case in (
+                    test_numbers
+                    if test_numbers
+                    else get_cases("pysb", version="v2.0.0")
+                )
+            ]
+        else:
+            argvalues = []
+            for version in ("v2.0.0",):
+                for format in ("sbml", "pysb"):
+                    for jax in (True, False):
+                        argvalues.extend(
+                            (case, format, version, jax)
+                            for case in test_numbers
+                            or get_cases(format, version)
+                        )
+        metafunc.parametrize("case,model_type,version,jax", argvalues)
+
+
+def pytest_generate_tests(metafunc):
+    """Parameterize tests"""
+    if metafunc.module.__name__ == "test_petab_v2_suite":
+        generate_v2_tests(metafunc)
+    elif metafunc.module.__name__ == "test_petab_suite":
+        generate_v1_tests(metafunc)
