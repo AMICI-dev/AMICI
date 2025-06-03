@@ -158,7 +158,7 @@ void SteadystateProblem::workSteadyStateProblem(
             "Steady-state simulation with events is not supported. "
             "Events will be ignored during pre- and post-equilibration. "
             "This is subject to change."
-            );
+        );
     }
 
     initializeForwardProblem(it, solver, model);
@@ -826,10 +826,6 @@ void SteadystateProblem::runSteadystateSimulation(
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     Solver const& solver, Model& model, bool forwardSensis, bool backward
 ) const {
-    auto sim_solver = std::unique_ptr<Solver>(solver.clone());
-
-    sim_solver->logger = solver.logger;
-
     switch (solver.getLinearSolver()) {
     case LinearSolver::dense:
     case LinearSolver::KLU:
@@ -837,6 +833,10 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     default:
         throw AmiException("Invalid solver for steady state simulation");
     }
+
+    auto sim_solver = std::unique_ptr<Solver>(solver.clone());
+
+    sim_solver->logger = solver.logger;
 
     // do we need sensitivities?
     if (forwardSensis) {
@@ -848,7 +848,6 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     }
     // use x and sx as dummies for dx and sdx
     // (they won't get touched in a CVodeSolver)
-    sim_solver->setup(model.t0(), &model, state_.x, state_.dx, state_.sx, sdx_);
     if (backward) {
         sim_solver->setup(model.t0(), &model, xB_, xB_, state_.sx, sdx_);
         sim_solver->setupSteadystate(
