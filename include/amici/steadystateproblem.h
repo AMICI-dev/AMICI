@@ -59,13 +59,17 @@ class SteadystateProblem {
      * @brief Return the stored SimulationState.
      * @return stored SimulationState
      */
-    [[nodiscard]] SimulationState const& getFinalSimulationState() const { return state_; };
+    [[nodiscard]] SimulationState const& getFinalSimulationState() const {
+        return state_;
+    };
 
     /**
      * @brief Return the quadratures from pre- or postequilibration
      * @return xQB Vector with quadratures
      */
-    [[nodiscard]] AmiVector const& getEquilibrationQuadratures() const { return xQB_; }
+    [[nodiscard]] AmiVector const& getEquilibrationQuadratures() const {
+        return xQB_;
+    }
     /**
      * @brief Return state at steady state
      * @return x
@@ -76,13 +80,17 @@ class SteadystateProblem {
      * @brief Return state sensitivity at steady state
      * @return sx
      */
-    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const { return state_.sx; };
+    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
+        return state_.sx;
+    };
 
     /**
      * @brief Accessor for dJydx
      * @return dJydx
      */
-    [[nodiscard]] std::vector<realtype> const& getDJydx() const { return dJydx_; }
+    [[nodiscard]] std::vector<realtype> const& getDJydx() const {
+        return dJydx_;
+    }
 
     /**
      * @brief Get the CPU time taken to solvethe forward problem.
@@ -101,7 +109,8 @@ class SteadystateProblem {
      * @return Execution status of the different approaches
      * [newton, simulation, newton].
      */
-    [[nodiscard]] std::vector<SteadyStateStatus> const& getSteadyStateStatus() const {
+    [[nodiscard]] std::vector<SteadyStateStatus> const&
+    getSteadyStateStatus() const {
         return steady_state_status_;
     }
 
@@ -122,7 +131,9 @@ class SteadystateProblem {
      * @return Number of steps taken to find the steady state as
      * [newton, simulation, newton].
      */
-    [[nodiscard]] std::vector<int> const& getNumSteps() const { return numsteps_; }
+    [[nodiscard]] std::vector<int> const& getNumSteps() const {
+        return numsteps_;
+    }
 
     /**
      * @brief Get the number of steps taken to find the steady state in the
@@ -158,7 +169,8 @@ class SteadystateProblem {
     [[nodiscard]] bool hasQuadrature() const { return hasQuadrature_; }
 
     /**
-     * @brief Check, whether any approach to find the steady state was successful.
+     * @brief Check, whether any approach to find the steady state was
+     * successful.
      * @return Whether any approach to find the steady state was successful.
      */
     [[nodiscard]] bool checkSteadyStateSuccess() const;
@@ -222,7 +234,7 @@ class SteadystateProblem {
      * @param tried_newton_2 Whether any Newton step was attempted after
      * simulation
      */
-    [[noreturn]] void handleSteadyStateFailure (
+    [[noreturn]] void handleSteadyStateFailure(
         bool tried_newton_1, bool tried_simulation, bool tried_newton_2
     ) const;
 
@@ -236,7 +248,7 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return Whether sensitivities have to be computed.
      */
-    bool getSensitivityFlag (
+    bool getSensitivityFlag(
         Model const& model, Solver const& solver, int it,
         SteadyStateContext context
     ) const;

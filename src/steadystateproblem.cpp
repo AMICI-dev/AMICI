@@ -16,7 +16,6 @@ namespace amici {
 
 constexpr realtype conv_thresh = 1.0;
 
-
 /**
  * @brief Assemble the error message to be thrown according to steady state
  * computation status.
@@ -43,7 +42,6 @@ writeErrorString(std::string& errorString, SteadyStateStatus status) {
         break;
     }
 }
-
 
 /**
  * @brief Compute the weighted root-mean-square norm of xdot.
@@ -105,16 +103,15 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
-          {.t=INFINITY,
-           .x=AmiVector(model.nx_solver, solver.getSunContext()),
-           .dx=AmiVector(model.nx_solver, solver.getSunContext()),
-           .sx=AmiVectorArray(
+          {.t = INFINITY,
+           .x = AmiVector(model.nx_solver, solver.getSunContext()),
+           .dx = AmiVector(model.nx_solver, solver.getSunContext()),
+           .sx = AmiVectorArray(
                model.nx_solver, model.nplist(), solver.getSunContext()
            ),
-           .state=model.getModelState()}
+           .state = model.getModelState()}
       )
-    ,
-    atol_(solver.getAbsoluteToleranceSteadyState())
+    , atol_(solver.getAbsoluteToleranceSteadyState())
     , rtol_(solver.getRelativeToleranceSteadyState())
     , atol_sensi_(solver.getAbsoluteToleranceSteadyStateSensi())
     , rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi())
@@ -199,8 +196,8 @@ void SteadystateProblem::findSteadyState(
     // Turn off Newton's method if 'integrationOnly' approach is chosen for
     // steady-state computation or newton_maxsteps is set to 0 or
     // if 'integrationOnly' approach is chosen for sensitivity computation
-    // in combination with forward sensitivities approach. The latter is necessary
-    // as numerical integration of the model ODEs and corresponding
+    // in combination with forward sensitivities approach. The latter is
+    // necessary as numerical integration of the model ODEs and corresponding
     // forward sensitivities ODEs is coupled. If 'integrationOnly' approach is
     // chosen for sensitivity computation it is enforced that steady state is
     // computed only by numerical integration as well.
@@ -796,10 +793,10 @@ void SteadystateProblem::runSteadystateSimulation(
         sim_steps++;
         // One step of ODE integration
         // Reason for tout specification:
-        // max with 1 ensures the correct direction (any positive value would do)
-        // multiplication with 10 ensures nonzero difference and should ensure
-        // stable computation value is not important for AMICI_ONE_STEP mode,
-        // only direction w.r.t. current t
+        // max with 1 ensures the correct direction (any positive value would
+        // do) multiplication with 10 ensures nonzero difference and should
+        // ensure stable computation value is not important for AMICI_ONE_STEP
+        // mode, only direction w.r.t. current t
 
         solver.step(std::max(state_.t, 1.0) * 10);
 
