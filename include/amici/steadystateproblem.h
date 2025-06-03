@@ -222,17 +222,9 @@ class SteadystateProblem {
      * @param tried_newton_2 Whether any Newton step was attempted after
      * simulation
      */
-    [[noreturn]] void handleSteadyStateFailure(
+    [[noreturn]] void handleSteadyStateFailure (
         bool tried_newton_1, bool tried_simulation, bool tried_newton_2
-    );
-
-    /**
-     * @brief Assemble the error message to be thrown.
-     * @param errorString Pointer to the error string to be filled.
-     * @param status Status of the steady state computation.
-     */
-    void
-    writeErrorString(std::string* errorString, SteadyStateStatus status) const;
+    ) const;
 
     /**
      * @brief Checks depending on the status of the Newton solver,
@@ -244,28 +236,9 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return Whether sensitivities have to be computed.
      */
-    bool getSensitivityFlag(
+    bool getSensitivityFlag (
         Model const& model, Solver const& solver, int it,
         SteadyStateContext context
-    );
-
-    /**
-     * @brief Compute the weighted root mean square norm of xdot.
-     *
-     * The weights are computed according to x:
-     * w_i = 1 / ( rtol * x_i + atol )
-     * @param x current state (sx[ip] for sensitivities)
-     * @param xdot current rhs (sxdot[ip] for sensitivities)
-     * @param mask mask for state variables to include in WRMS norm.
-     * Positive value: include; non-positive value: exclude; empty: include all.
-     * @param atol absolute tolerance
-     * @param rtol relative tolerance
-     * @param ewt error weight vector
-     * @return root-mean-square norm
-     */
-    realtype getWrmsNorm(
-        AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
-        realtype atol, realtype rtol, AmiVector& ewt
     ) const;
 
     /**

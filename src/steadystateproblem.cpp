@@ -16,6 +16,76 @@ namespace amici {
 
 constexpr realtype conv_thresh = 1.0;
 
+
+/**
+ * @brief Assemble the error message to be thrown according to steady state
+ * computation status.
+ * @param errorString The error string to append to.
+ * @param status Status of the steady state computation.
+ */
+static void
+writeErrorString(std::string& errorString, SteadyStateStatus status) {
+    switch (status) {
+    case SteadyStateStatus::failed_too_long_simulation:
+        errorString.append(": System could not be equilibrated.");
+        break;
+    case SteadyStateStatus::failed_damping:
+        errorString.append(": Damping factor reached lower bound.");
+        break;
+    case SteadyStateStatus::failed_factorization:
+        errorString.append(": RHS could not be factorized.");
+        break;
+    case SteadyStateStatus::failed_convergence:
+        errorString.append(": No convergence was achieved.");
+        break;
+    default:
+        errorString.append(".");
+        break;
+    }
+}
+
+
+/**
+ * @brief Compute the weighted root-mean-square norm of xdot.
+ *
+ * The weights are computed according to x:
+ * w_i = 1 / ( rtol * x_i + atol )
+ * @param x current state (sx[ip] for sensitivities)
+ * @param xdot current rhs (sxdot[ip] for sensitivities)
+ * @param mask mask for state variables to include in WRMS norm.
+ * Positive value: include; non-positive value: exclude; empty: include all.
+ * @param atol absolute tolerance
+ * @param rtol relative tolerance
+ * @param ewt error weight vector
+ * @return root-mean-square norm
+ */
+realtype getWrmsNorm(
+    AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
+    realtype atol, realtype rtol, AmiVector& ewt
+) {
+    /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
+       we need to pass ewt[QB], as xdot and xQBdot have different sizes */
+    /* ewt = x */
+    N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
+    /* ewt *= rtol */
+    N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
+    /* ewt += atol */
+    N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
+    /* ewt = 1/ewt (ewt = 1/(rtol*x+atol)) */
+    N_VInv(ewt.getNVector(), ewt.getNVector());
+
+    // wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector
+    if (mask.getLength()) {
+        return N_VWrmsNormMask(
+            const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector(),
+            const_cast<N_Vector>(mask.getNVector())
+        );
+    }
+    return N_VWrmsNorm(
+        const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector()
+    );
+}
+
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     : delta_(model.nx_solver, solver.getSunContext())
     , delta_old_(model.nx_solver, solver.getSunContext())
@@ -90,7 +160,7 @@ void SteadystateProblem::workSteadyStateProblem(
     CpuTimer cpu_timer;
     findSteadyState(solver, model, it);
 
-    /* Check whether state sensis still need to be computed */
+    /* Check whether state sensitivities still need to be computed */
     if (getSensitivityFlag(
             model, solver, it, SteadyStateContext::newtonSensi
         )) {
@@ -388,8 +458,8 @@ void SteadystateProblem::getQuadratureBySimulation(
     Solver const& solver, Model& model
 ) {
     /* If the Jacobian is singular, the integral over xB must be computed
-       by usual integration over time, but  simplifications can be applied:
-       x is not time dependent, no forward trajectory is needed. */
+       by usual integration over time, but simplifications can be applied:
+       x is not time-dependent, no forward trajectory is needed. */
 
     /* set starting timepoint for the simulation solver */
     state_.t = model.t0();
@@ -410,50 +480,27 @@ void SteadystateProblem::getQuadratureBySimulation(
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(
     bool tried_newton_1, bool tried_simulation, bool tried_newton_2
-) {
+) const {
     /* Throw error message according to error codes */
     std::string errorString = "Steady state computation failed.";
     if (tried_newton_1) {
         errorString.append(" First run of Newton solver failed");
-        writeErrorString(&errorString, steady_state_status_[0]);
+        writeErrorString(errorString, steady_state_status_[0]);
     }
     if (tried_simulation) {
         errorString.append(" Simulation to steady state failed");
-        writeErrorString(&errorString, steady_state_status_[1]);
+        writeErrorString(errorString, steady_state_status_[1]);
     }
     if (tried_newton_2) {
         errorString.append(" Second run of Newton solver failed");
-        writeErrorString(&errorString, steady_state_status_[2]);
+        writeErrorString(errorString, steady_state_status_[2]);
     }
     throw AmiException(errorString.c_str());
 }
 
-void SteadystateProblem::writeErrorString(
-    std::string* errorString, SteadyStateStatus status
-) const {
-    /* write error message according to steady state status */
-    switch (status) {
-    case SteadyStateStatus::failed_too_long_simulation:
-        (*errorString).append(": System could not be equilibrated.");
-        break;
-    case SteadyStateStatus::failed_damping:
-        (*errorString).append(": Damping factor reached lower bound.");
-        break;
-    case SteadyStateStatus::failed_factorization:
-        (*errorString).append(": RHS could not be factorized.");
-        break;
-    case SteadyStateStatus::failed_convergence:
-        (*errorString).append(": No convergence was achieved.");
-        break;
-    default:
-        (*errorString).append(".");
-        break;
-    }
-}
-
 bool SteadystateProblem::getSensitivityFlag(
     Model const& model, Solver const& solver, int it, SteadyStateContext context
-) {
+) const {
     /* We need to check whether we need to compute forward sensitivities.
        Depending on the situation (pre-/postequilibration) and the solver
        settings, the logic may be involved and is handled here.
@@ -520,33 +567,6 @@ bool SteadystateProblem::getSensitivityFlag(
             "processing during steady state computation"
         );
     }
-}
-
-realtype SteadystateProblem::getWrmsNorm(
-    AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
-    realtype atol, realtype rtol, AmiVector& ewt
-) const {
-    /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
-       we need to pass ewt[QB], as xdot and xQBdot have different sizes */
-    /* ewt = x */
-    N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
-    /* ewt *= rtol */
-    N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
-    /* ewt += atol */
-    N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
-    /* ewt = 1/ewt (ewt = 1/(rtol*x+atol)) */
-    N_VInv(ewt.getNVector(), ewt.getNVector());
-
-    // wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector
-    if (mask.getLength()) {
-        return N_VWrmsNormMask(
-            const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector(),
-            const_cast<N_Vector>(mask.getNVector())
-        );
-    }
-    return N_VWrmsNorm(
-        const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector()
-    );
 }
 
 realtype
@@ -807,11 +827,10 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
     switch (solver.getLinearSolver()) {
     case LinearSolver::dense:
-        break;
     case LinearSolver::KLU:
         break;
     default:
-        throw AmiException("invalid solver for steadystate simulation");
+        throw AmiException("Invalid solver for steady state simulation");
     }
     /* do we need sensitivities? */
     if (forwardSensis) {
