@@ -49,7 +49,8 @@ class SteadystateProblem {
      *
      * @param solver The solver instance
      * @param model The model instance
-     * @param bwd The backward problem instance
+     * @param bwd The backward problem instance in case of pre-equilibration,
+     * or nullptr otherwise.
      */
     void workSteadyStateBackwardProblem(
         Solver const& solver, Model& model, BackwardProblem const* bwd

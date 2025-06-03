@@ -74,6 +74,8 @@ class BackwardProblem {
     AmiVector const& getAdjointQuadrature() const { return xQB_; }
 
   private:
+    void handlePostequilibration();
+
     /**
      * @brief Execute everything necessary for the handling of events
      * for the backward problem
