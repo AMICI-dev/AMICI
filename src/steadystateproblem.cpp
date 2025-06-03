@@ -471,7 +471,7 @@ void SteadystateProblem::getQuadratureByLinSolve(Model& model) {
     //   xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
     // This integral xQ over xB is given as the solution of
     //   JB^T(x_ss, p) * xQ = xB(0)
-    // So we first try to solve the linear system, if possible. */
+    // So we first try to solve the linear system, if possible.
 
     // copy content of xB into vector with integral
     xQ_.copy(xB_);
@@ -611,17 +611,19 @@ realtype
 SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
     realtype wrms = INFINITY;
     if (sensi_method == SensitivityMethod::adjoint) {
-        // In the adjoint case, only xQB contributes to the gradient, the exact
-        // steadystate is less important, as xB = xQdot may even not converge
-        // to zero at all. So we need xQBdot, hence compute xQB first.
-        computeQBfromQ(model, xQ_, xQB_, state_);
-        computeQBfromQ(model, xB_, xQBdot_, state_);
-        if (newton_step_conv_)
+        if (newton_step_conv_) {
             throw NewtonFailure(
                 AMICI_NOT_IMPLEMENTED,
                 "Newton type convergence check is not implemented for adjoint "
                 "steady state computations. Stopping."
             );
+        }
+
+        // In the adjoint case, only xQB contributes to the gradient, the exact
+        // steadystate is less important, as xB = xQdot may even not converge
+        // to zero at all. So we need xQBdot, hence compute xQB first.
+        computeQBfromQ(model, xQ_, xQB_, state_);
+        computeQBfromQ(model, xB_, xQBdot_, state_);
         wrms = getWrmsNorm(
             xQB_, xQBdot_, steadystate_mask_, atol_quad_, rtol_quad_, ewtQB_
         );
@@ -682,7 +684,9 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 void SteadystateProblem::applyNewtonsMethod(Model& model, bool newton_retry) {
     int& i_newtonstep = numsteps_.at(newton_retry ? 2 : 0);
     i_newtonstep = 0;
-    gamma_ = 1.0;
+
+    // Stepsize for the the Newton step.
+    double gamma{1.0};
 
     if (model.nx_solver == 0)
         return;
@@ -706,8 +710,7 @@ void SteadystateProblem::applyNewtonsMethod(Model& model, bool newton_retry) {
 
         // Try step with new gamma_/delta_
         linearSum(
-            1.0, x_old_, gamma_, update_direction ? delta_ : delta_old_,
-            state_.x
+            1.0, x_old_, gamma, update_direction ? delta_ : delta_old_, state_.x
         );
         flagUpdatedState();
 
@@ -727,7 +730,7 @@ void SteadystateProblem::applyNewtonsMethod(Model& model, bool newton_retry) {
             x_old_.copy(state_.x);
         }
 
-        update_direction = updateDampingFactor(step_successful);
+        update_direction = updateDampingFactor(step_successful, gamma);
         // increase step counter
         i_newtonstep++;
     }
@@ -750,21 +753,25 @@ bool SteadystateProblem::makePositiveAndCheckConvergence(Model& model) {
     return wrms_ < conv_thresh;
 }
 
-bool SteadystateProblem::updateDampingFactor(bool step_successful) {
+bool SteadystateProblem::updateDampingFactor(
+    bool step_successful, double& gamma
+) {
     if (damping_factor_mode_ != NewtonDampingFactorMode::on)
         return true;
 
-    if (step_successful)
-        gamma_ = fmin(1.0, 2.0 * gamma_);
-    else
-        gamma_ = gamma_ / 4.0;
+    if (step_successful) {
+        gamma = fmin(1.0, 2.0 * gamma);
+    } else {
+        gamma /= 4.0;
+    }
 
-    if (gamma_ < damping_factor_lower_bound_)
+    if (gamma < damping_factor_lower_bound_) {
         throw NewtonFailure(
             AMICI_DAMPING_FACTOR_ERROR,
             "Newton solver failed: the damping factor "
             "reached its lower bound"
         );
+    }
     return step_successful;
 }
 

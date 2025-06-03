@@ -332,11 +332,12 @@ class SteadystateProblem {
      *
      * @param step_successful flag indicating whether the previous step was
      * successful
+     * @param gamma reference to the damping factor that is updated
      * @return boolean flag indicating whether search direction should be
      * updated (true) or the same direction should be retried with the updated
      * dampening (false)
      */
-    bool updateDampingFactor(bool step_successful);
+    bool updateDampingFactor(bool step_successful, double& gamma);
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -396,8 +397,10 @@ class SteadystateProblem {
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
-    /** state derivative of data likelihood
-     * (dimension nJ x nx x nt, ordering =?) */
+    /**
+     * state derivative of data likelihood
+     * (dimension nJ x nx x nt, ordering =?)
+     */
     std::vector<realtype> dJydx_;
 
     SimulationState state_;
@@ -417,10 +420,8 @@ class SteadystateProblem {
     /** flag indicating whether backward mode was run */
     bool hasQuadrature_{false};
 
-    /** Stepsize for the the Newton step. */
-    double gamma_{1.0};
-
-    /** Execution status of the different approaches
+    /**
+     * Execution status of the different approaches
      * [newton, simulation, newton] (length = 3)
      */
     std::vector<SteadyStateStatus> steady_state_status_;
@@ -447,17 +448,21 @@ class SteadystateProblem {
     realtype damping_factor_lower_bound_{1e-8};
     /** whether newton step should be used for convergence steps */
     bool newton_step_conv_{false};
-    /** whether sensitivities should be checked for convergence to steady state
+    /**
+     * whether sensitivities should be checked for convergence to steady state
      */
     bool check_sensi_conv_{true};
 
     /** flag indicating whether xdot_ has been computed for the current state */
     bool xdot_updated_{false};
-    /** flag indicating whether delta_ has been computed for the current state
+    /**
+     * flag indicating whether delta_ has been computed for the current state
      */
     bool delta_updated_{false};
-    /** flag indicating whether simulation sensitivities have been retrieved for
-     * the current state */
+    /**
+     * flag indicating whether simulation sensitivities have been retrieved for
+     * the current state
+     */
     bool sensis_updated_{false};
 };
 
