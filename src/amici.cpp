@@ -76,8 +76,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     CpuTimer cpu_timer;
     solver.startTimer();
 
-    /* Applies condition-specific model settings and restores them when going
-     * out of scope */
+    // Applies condition-specific model settings and restores them when going
+    // out of scope. (This also sets `plist`, which is required for initializing
+    // ReturnData below.)
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
 
     std::unique_ptr<ReturnData> rdata
@@ -92,7 +93,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     bool bwd_success = true;
 
     try {
-
         fwd = std::make_unique<ForwardProblem>(edata, &model, &solver);
         fwd->workForwardProblem();
 
@@ -106,7 +106,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         }
 
         rdata->status = AMICI_SUCCESS;
-
     } catch (amici::IntegrationFailure const& ex) {
         if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
@@ -191,7 +190,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     }
 
     rdata->t_last = solver.gett();
-
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
     // verify that reported CPU times are plausible
@@ -211,7 +209,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             std::ranges::is_sorted(rdata->numstepsB)
             || rdata->status != AMICI_SUCCESS
         );
+
     rdata->messages = logger.items;
+
     return rdata;
 }
 

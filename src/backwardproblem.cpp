@@ -53,10 +53,10 @@ void BackwardProblem::workBackwardProblem() {
             if (!posteq_problem_)
                 throw AmiException(
                     "Model has non-finite timepoint but, "
-                    "postequilibration did not run"
+                    "postequilibration did not run."
                 );
 
-            /* copy adjoint update to postequilibration */
+            // copy adjoint update to postequilibration
             writeSlice(
                 slice(
                     posteq_problem_->getDJydx(), it,

@@ -30,7 +30,10 @@ class ForwardProblem {
      * @param solver pointer to Solver instance
      * problem, pass nullptr for no initialization
      */
-    ForwardProblem(ExpData const* edata, Model* model, Solver* solver);
+    ForwardProblem(
+        ExpData const* edata, gsl::not_null<Model*> model,
+        gsl::not_null<Solver*> solver
+    );
 
     ~ForwardProblem() = default;
 
@@ -475,7 +478,7 @@ class ForwardProblem {
     bool preequilibrated_{false};
 
     /** current iteration number for time index */
-    int it_;
+    int it_ = 0;
 
     /** Whether the current model/data requires presimulation. */
     bool uses_presimulation_{false};

@@ -35,7 +35,8 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
 }
 
 ForwardProblem::ForwardProblem(
-    ExpData const* edata, Model* model, Solver* solver
+    ExpData const* edata, gsl::not_null<Model*> model,
+    gsl::not_null<Solver*> solver
 )
     : model(model)
     , solver(solver)
