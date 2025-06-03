@@ -152,6 +152,15 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
 void SteadystateProblem::workSteadyStateProblem(
     Solver const& solver, Model& model, int it
 ) {
+    if (model.ne > 0) {
+        solver.logger->log(
+            LogSeverity::warning, "STEADY_STATE_SIMULATION",
+            "Steady-state simulation with events is not supported. "
+            "Events will be ignored during pre- and post-equilibration. "
+            "This is subject to change."
+            );
+    }
+
     initializeForwardProblem(it, solver, model);
 
     // Compute steady state, track computation time
@@ -179,7 +188,6 @@ void SteadystateProblem::workSteadyStateProblem(
 void SteadystateProblem::workSteadyStateBackwardProblem(
     Solver const& solver, Model& model, BackwardProblem const* bwd
 ) {
-
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
 
