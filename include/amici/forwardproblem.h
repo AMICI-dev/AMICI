@@ -280,6 +280,10 @@ class ForwardProblem {
   private:
     /**
      * @brief Handle preequilibration if necessary.
+     *
+     * Preequilibration starts at `Model::t0()`.
+     *
+     * So far, no event handling takes place during preequilibration.
      */
     void handlePreequilibration();
 
@@ -291,16 +295,30 @@ class ForwardProblem {
 
     /**
      * @brief Handle pre-simulation if required.
+     *
+     * Pre-simulation starts at `Model::t0() - ExpData::t_presim`.
+     *
+     * So far, no event handling takes place during presimulation.
      */
     void handlePresimulation();
 
     /**
      * @brief Handle the main simulation.
+     *
+     * Simulation starts at `Model::t0()`.
+     * During this period, events are processed and data points are
+     * handled.
      */
     void handleMainSimulation();
 
     /**
      * @brief Handle postequilibration if necessary.
+     *
+     * Postequilibration starts after the last finite output timepoint
+     * or the last event timepoint that is known a priori, whichever is later.
+     *
+     * So far, no event handling takes place during postequilibration.
+     * This also includes the processing of event observables.
      */
     void handlePostequilibration();
 

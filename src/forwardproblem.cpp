@@ -61,11 +61,14 @@ ForwardProblem::ForwardProblem(
 void ForwardProblem::workForwardProblem() {
     handlePreequilibration();
 
-    FinalStateStorer fss(this);
+    {
+        FinalStateStorer fss(this);
 
-    initialize();
-    handlePresimulation();
-    handleMainSimulation();
+        initialize();
+        handlePresimulation();
+        handleMainSimulation();
+    }
+
     handlePostequilibration();
 
     if (edata && solver->computingASA()) {
