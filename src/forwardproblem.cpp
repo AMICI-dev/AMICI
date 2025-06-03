@@ -298,8 +298,8 @@ void ForwardProblem::handleEvent(
         // Execute the event
         // Apply bolus to the state and the sensitivities
         model->addStateEventUpdate(
-            x_, ie, t_,
-            xdot_, xdot_old_, state_old.has_value() ? state_old->x : x_,
+            x_, ie, t_, xdot_, xdot_old_,
+            state_old.has_value() ? state_old->x : x_,
             state_old.has_value() ? state_old->state : model->getModelState()
         );
         if (solver->computingFSA()) {
