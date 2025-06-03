@@ -6,9 +6,10 @@
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/vector.h"
+#include "amici/steadystateproblem.h"
 
 #include <vector>
-
+#include <optional>
 namespace amici {
 
 class ExpData;
@@ -27,12 +28,10 @@ class ForwardProblem {
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
-     * @param preeq preequilibration with which to initialize the forward
      * problem, pass nullptr for no initialization
      */
     ForwardProblem(
-        ExpData const* edata, Model* model, Solver* solver,
-        SteadystateProblem const* preeq
+        ExpData const* edata, Model* model, Solver* solver
     );
 
     ~ForwardProblem() = default;
@@ -228,6 +227,26 @@ class ForwardProblem {
         return final_state_;
     };
 
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem* getPreequilibrationProblem() {
+        if(preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem const* getPreequilibrationProblem() const {
+        if(preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
     /** pointer to model instance */
     Model* model;
 
@@ -239,7 +258,13 @@ class ForwardProblem {
 
   private:
     /**
-     * @brief Initialize model and solver.
+     * @brief Handle preequilibration if necessary.
+     */
+    void handlePreequilibration();
+
+    /**
+     * @brief Initialize model and solver for presimulation or
+     * the main simulation if there is no presimulation.
      */
     void initialize();
 
@@ -429,12 +454,11 @@ class ForwardProblem {
     /** current iteration number for time index */
     int it_;
 
-    /** Whether the current model/data requires preequilibration. */
-    // TODO
-    bool uses_preequilibration_ {false};
-
     /** Whether the current model/data requires presimulation. */
     bool uses_presimulation_ {false};
+
+    /** The preequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> preeq_problem_;
 };
 
 /**

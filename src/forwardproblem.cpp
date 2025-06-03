@@ -35,8 +35,7 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
 }
 
 ForwardProblem::ForwardProblem(
-    ExpData const* edata, Model* model, Solver* solver,
-    SteadystateProblem const* preeq
+    ExpData const* edata, Model* model, Solver* solver
 )
     : model(model)
     , solver(solver)
@@ -57,20 +56,37 @@ ForwardProblem::ForwardProblem(
     , sdx_(model->nx_solver, model->nplist(), solver->getSunContext())
     , stau_(model->nplist())
     , uses_presimulation_(edata && edata->t_presim > 0) {
-    if (preeq) {
-        x_ = preeq->getState();
-        sx_ = preeq->getStateSensitivity();
-        preequilibrated_ = true;
-    }
 }
 
 void ForwardProblem::workForwardProblem() {
+    handlePreequilibration();
+
+
     FinalStateStorer fss(this);
 
     initialize();
     handlePresimulation();
     handleMainSimulation();
 }
+
+void ForwardProblem::handlePreequilibration() {
+    if (!edata || edata->fixedParametersPreequilibration.empty()) {
+        return;
+    }
+
+    ConditionContext cc2(
+        model, edata, FixedParameterContext::preequilibration
+        );
+
+    preeq_problem_.emplace(*solver, *model);
+    preeq_problem_->workSteadyStateProblem(*solver, *model, -1);
+
+    x_ = preeq_problem_->getState();
+    sx_ = preeq_problem_->getStateSensitivity();
+    preequilibrated_ = true;
+}
+
+
 void ForwardProblem::initialize() {
     // if preequilibration was done, model was already initialized
     if (!preequilibrated_)

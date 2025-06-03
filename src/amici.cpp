@@ -86,7 +86,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         rdata->id = edata->id;
     }
 
-    std::unique_ptr<SteadystateProblem> preeq{};
     std::unique_ptr<ForwardProblem> fwd{};
     std::unique_ptr<BackwardProblem> bwd{};
     std::unique_ptr<SteadystateProblem> posteq{};
@@ -94,17 +93,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     bool bwd_success = true;
 
     try {
-        if (edata && !edata->fixedParametersPreequilibration.empty()) {
-            ConditionContext cc2(
-                &model, edata, FixedParameterContext::preequilibration
-            );
-
-            preeq = std::make_unique<SteadystateProblem>(solver, model);
-            preeq->workSteadyStateProblem(solver, model, -1);
-        }
 
         fwd = std::make_unique<ForwardProblem>(
-            edata, &model, &solver, preeq.get()
+            edata, &model, &solver
         );
         fwd->workForwardProblem();
 
@@ -130,13 +121,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             bwd->workBackwardProblem();
 
             bwd_success = true;
-
-            if (preeq) {
-                ConditionContext cc2(
-                    &model, edata, FixedParameterContext::preequilibration
-                );
-                preeq->workSteadyStateBackwardProblem(solver, model, bwd.get());
-            }
         }
 
         rdata->status = AMICI_SUCCESS;
@@ -212,7 +196,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
         rdata->processSimulationObjects(
-            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr,
+            fwd.get(), bwd_success ? bwd.get() : nullptr,
             posteq.get(), model, solver, edata
         );
     } catch (std::exception const& ex) {
@@ -241,7 +225,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             std::ranges::is_sorted(rdata->numsteps)
             || rdata->status != AMICI_SUCCESS
         );
-    if (!preeq)
+    if (!fwd->getPreequilibrationProblem())
         gsl_EnsuresDebug(
             std::ranges::is_sorted(rdata->numstepsB)
             || rdata->status != AMICI_SUCCESS

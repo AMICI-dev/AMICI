@@ -11,7 +11,7 @@
 namespace amici {
 
 BackwardProblem::BackwardProblem(
-    ForwardProblem const& fwd, SteadystateProblem const* posteq
+    ForwardProblem & fwd, SteadystateProblem const* posteq
 )
     : model_(fwd.model)
     , solver_(fwd.solver)
@@ -28,7 +28,8 @@ BackwardProblem::BackwardProblem(
     , discs_(fwd.getDiscontinuities())
     , root_idx_(fwd.getRootIndexes())
     , dJydx_(fwd.getDJydx())
-    , dJzdx_(fwd.getDJzdx()) {
+    , dJzdx_(fwd.getDJzdx())
+    , preeq_problem_(fwd.getPreequilibrationProblem()){
     /* complement dJydx from postequilibration. This shouldn't overwrite
      * anything but only fill in previously 0 values, as only non-inf
      * timepoints are filled from fwd.
@@ -119,6 +120,7 @@ void BackwardProblem::workBackwardProblem() {
         solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
     }
 
+    // handle presimulation
     if (edata_ && edata_->t_presim > 0) {
         ConditionContext cc(
             model_, edata_, FixedParameterContext::presimulation
@@ -126,6 +128,15 @@ void BackwardProblem::workBackwardProblem() {
         solver_->runB(model_->t0() - edata_->t_presim);
         solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
     }
+
+    // handle pre-equilibration
+    if (preeq_problem_) {
+        ConditionContext cc2(
+            model_, edata_, FixedParameterContext::preequilibration
+            );
+        preeq_problem_->workSteadyStateBackwardProblem(*solver_, *model_, this);
+    }
+
 }
 
 void BackwardProblem::handleEventB() {

@@ -28,7 +28,7 @@ class BackwardProblem {
      * @param posteq pointer to postequilibration problem, can be nullptr
      */
     explicit BackwardProblem(
-        ForwardProblem const& fwd, SteadystateProblem const* posteq
+        ForwardProblem& fwd, SteadystateProblem const* posteq
     );
 
     /**
@@ -135,6 +135,9 @@ class BackwardProblem {
     std::vector<realtype> dJydx_;
     /** state derivative of event likelihood */
     std::vector<realtype> const dJzdx_;
+
+    /** The preequilibration steadystate problem from the forward problem. */
+    SteadystateProblem* preeq_problem_;
 };
 
 } // namespace amici

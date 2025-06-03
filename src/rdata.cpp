@@ -176,7 +176,7 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
 }
 
 void ReturnData::processSimulationObjects(
-    SteadystateProblem const* preeq, ForwardProblem const* fwd,
+    ForwardProblem const* fwd,
     BackwardProblem const* bwd, SteadystateProblem const* posteq, Model& model,
     Solver const& solver, ExpData const* edata
 ) {
@@ -184,6 +184,9 @@ void ReturnData::processSimulationObjects(
 
     processSolver(solver);
 
+    SteadystateProblem const* preeq = nullptr;
+    if (fwd)
+        preeq = fwd->getPreequilibrationProblem();
     if (preeq)
         processPreEquilibration(*preeq, model);
 
