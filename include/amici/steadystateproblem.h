@@ -321,16 +321,6 @@ class SteadystateProblem {
     );
 
     /**
-     * @brief Compute the backward quadratures, which contribute to the
-     * gradient (xQB) from the quadrature over the backward state itself (xQ)
-     * @param model Model instance.
-     * @param yQ vector to be multiplied with dxdotdp
-     * @param yQB resulting vector after multiplication
-     */
-    void
-    computeQBfromQ(Model& model, AmiVector const& yQ, AmiVector& yQB) const;
-
-    /**
      * @brief Ensure state positivity if requested, and repeat the convergence
      * check if necessary.
      * @param model Model instance.

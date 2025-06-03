@@ -85,6 +85,36 @@ realtype getWrmsNorm(
     );
 }
 
+/**
+ * @brief Compute the backward quadratures, which contribute to the
+ * gradient (xQB) from the quadrature over the backward state itself (xQ)
+ * @param model Model instance.
+ * @param yQ vector to be multiplied with dxdotdp
+ * @param yQB resulting vector after multiplication
+ * @param state Simulation state for which to compute dxdot/dp
+ */
+void computeQBfromQ(
+    Model& model, AmiVector const& yQ, AmiVector& yQB,
+    SimulationState const& state
+) {
+    // Compute the quadrature as the inner product: `yQB = dxdotdp * yQ`.
+
+    // set to zero first, as multiplication adds to existing value
+    yQB.zero();
+    // yQB += dxdotdp * yQ
+    if (model.pythonGenerated) {
+        // fill dxdotdp with current values
+        auto const& plist = model.getParameterList();
+        model.fdxdotdp(state.t, state.x, state.dx);
+        model.get_dxdotdp_full().multiply(
+            yQB.getNVector(), yQ.getNVector(), plist, true
+        );
+    } else {
+        for (int ip = 0; ip < model.nplist(); ++ip)
+            yQB[ip] = dotProd(yQ, model.get_dxdotdp()[ip]);
+    }
+}
+
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     : delta_(model.nx_solver, solver.getSunContext())
     , delta_old_(model.nx_solver, solver.getSunContext())
@@ -158,7 +188,7 @@ void SteadystateProblem::workSteadyStateProblem(
             "Steady-state simulation with events is not supported. "
             "Events will be ignored during pre- and post-equilibration. "
             "This is subject to change."
-            );
+        );
     }
 
     initializeForwardProblem(it, solver, model);
@@ -452,7 +482,7 @@ void SteadystateProblem::getQuadratureByLinSolve(Model& model) {
         newton_solver_.prepareLinearSystemB(model, state_);
         newton_solver_.solveLinearSystem(xQ_);
         // Compute the quadrature as the inner product xQ * dxdotdp
-        computeQBfromQ(model, xQ_, xQB_);
+        computeQBfromQ(model, xQ_, xQB_, state_);
         // set flag that quadratures is available (for processing in ReturnData)
         hasQuadrature_ = true;
 
@@ -584,8 +614,8 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
         // In the adjoint case, only xQB contributes to the gradient, the exact
         // steadystate is less important, as xB = xQdot may even not converge
         // to zero at all. So we need xQBdot, hence compute xQB first.
-        computeQBfromQ(model, xQ_, xQB_);
-        computeQBfromQ(model, xB_, xQBdot_);
+        computeQBfromQ(model, xQ_, xQB_, state_);
+        computeQBfromQ(model, xB_, xQBdot_, state_);
         if (newton_step_conv_)
             throw NewtonFailure(
                 AMICI_NOT_IMPLEMENTED,
@@ -767,10 +797,7 @@ void SteadystateProblem::runSteadystateSimulation(
 
     int& sim_steps = backward ? numstepsB_ : numsteps_.at(1);
 
-    int convergence_check_frequency = 1;
-
-    if (newton_step_conv_)
-        convergence_check_frequency = 25;
+    int convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
     while (true) {
         if (sim_steps % convergence_check_frequency == 0) {
@@ -799,13 +826,15 @@ void SteadystateProblem::runSteadystateSimulation(
 
         // increase counter
         sim_steps++;
+
         // One step of ODE integration
         // Reason for tout specification:
-        // max with 1 ensures the correct direction (any positive value would
-        // do) multiplication with 10 ensures nonzero difference and should
-        // ensure stable computation value is not important for AMICI_ONE_STEP
-        // mode, only direction w.r.t. current t
-
+        // * max with 1 ensures the correct direction
+        //  (any positive value would do)
+        // * multiplication with 10 ensures nonzero difference and should
+        //   ensure stable computation.
+        // The value is not important for AMICI_ONE_STEP mode, only the
+        // direction w.r.t. current t.
         solver.step(std::max(state_.t, 1.0) * 10);
 
         if (backward) {
@@ -861,27 +890,6 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     }
 
     return sim_solver;
-}
-
-void SteadystateProblem::computeQBfromQ(
-    Model& model, AmiVector const& yQ, AmiVector& yQB
-) const {
-    // Compute the quadrature as the inner product: `yQB = dxdotdp * yQ`.
-
-    // set to zero first, as multiplication adds to existing value
-    yQB.zero();
-    // yQB += dxdotdp * yQ
-    if (model.pythonGenerated) {
-        // fill dxdotdp with current values
-        auto const& plist = model.getParameterList();
-        model.fdxdotdp(state_.t, state_.x, state_.dx);
-        model.get_dxdotdp_full().multiply(
-            yQB.getNVector(), yQ.getNVector(), plist, true
-        );
-    } else {
-        for (int ip = 0; ip < model.nplist(); ++ip)
-            yQB[ip] = dotProd(yQ, model.get_dxdotdp()[ip]);
-    }
 }
 
 void SteadystateProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
