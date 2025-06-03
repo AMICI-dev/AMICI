@@ -93,13 +93,11 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
 
-        fwd = std::make_unique<ForwardProblem>(
-            edata, &model, &solver
-        );
+        fwd = std::make_unique<ForwardProblem>(edata, &model, &solver);
         fwd->workForwardProblem();
 
         if (edata && solver.computingASA()) {
-            bwd_success = false; //NOLINT
+            bwd_success = false; // NOLINT
 
             bwd = std::make_unique<BackwardProblem>(*fwd);
             bwd->workBackwardProblem();

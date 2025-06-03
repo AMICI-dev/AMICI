@@ -88,9 +88,8 @@ class ReturnData : public ModelDimensions {
      * @param edata matching experimental data
      */
     void processSimulationObjects(
-        ForwardProblem const* fwd,
-        BackwardProblem const* bwd,
-        Model& model, Solver const& solver, ExpData const* edata
+        ForwardProblem const* fwd, BackwardProblem const* bwd, Model& model,
+        Solver const& solver, ExpData const* edata
     );
     /**
      * @brief Arbitrary (not necessarily unique) identifier.

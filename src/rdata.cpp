@@ -176,8 +176,7 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
 }
 
 void ReturnData::processSimulationObjects(
-    ForwardProblem const* fwd,
-    BackwardProblem const* bwd, Model& model,
+    ForwardProblem const* fwd, BackwardProblem const* bwd, Model& model,
     Solver const& solver, ExpData const* edata
 ) {
     ModelContext mc(&model);

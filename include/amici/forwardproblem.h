@@ -5,11 +5,11 @@
 #include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
-#include "amici/vector.h"
 #include "amici/steadystateproblem.h"
+#include "amici/vector.h"
 
-#include <vector>
 #include <optional>
+#include <vector>
 namespace amici {
 
 class ExpData;
@@ -30,9 +30,7 @@ class ForwardProblem {
      * @param solver pointer to Solver instance
      * problem, pass nullptr for no initialization
      */
-    ForwardProblem(
-        ExpData const* edata, Model* model, Solver* solver
-    );
+    ForwardProblem(ExpData const* edata, Model* model, Solver* solver);
 
     ~ForwardProblem() = default;
 
@@ -232,7 +230,7 @@ class ForwardProblem {
      * @return The preequilibration SteadystateProblem, if any.
      */
     SteadystateProblem* getPreequilibrationProblem() {
-        if(preeq_problem_.has_value())
+        if (preeq_problem_.has_value())
             return &*preeq_problem_;
         return nullptr;
     }
@@ -242,7 +240,7 @@ class ForwardProblem {
      * @return The preequilibration SteadystateProblem, if any.
      */
     SteadystateProblem const* getPreequilibrationProblem() const {
-        if(preeq_problem_.has_value())
+        if (preeq_problem_.has_value())
             return &*preeq_problem_;
         return nullptr;
     }
@@ -252,7 +250,7 @@ class ForwardProblem {
      * @return The postequilibration SteadystateProblem, if any.
      */
     SteadystateProblem* getPostequilibrationProblem() {
-        if(posteq_problem_.has_value())
+        if (posteq_problem_.has_value())
             return &*posteq_problem_;
         return nullptr;
     }
@@ -262,11 +260,10 @@ class ForwardProblem {
      * @return The postequilibration SteadystateProblem, if any.
      */
     SteadystateProblem const* getPostequilibrationProblem() const {
-        if(posteq_problem_.has_value())
+        if (posteq_problem_.has_value())
             return &*posteq_problem_;
         return nullptr;
     }
-
 
     /** pointer to model instance */
     Model* model;
@@ -481,14 +478,13 @@ class ForwardProblem {
     int it_;
 
     /** Whether the current model/data requires presimulation. */
-    bool uses_presimulation_ {false};
+    bool uses_presimulation_{false};
 
     /** The preequilibration steady-state problem, if any. */
     std::optional<SteadystateProblem> preeq_problem_;
 
     /** The postequilibration steady-state problem, if any. */
     std::optional<SteadystateProblem> posteq_problem_;
-
 };
 
 /**

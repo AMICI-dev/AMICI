@@ -26,9 +26,7 @@ class BackwardProblem {
      * @brief Construct backward problem from forward problem
      * @param fwd pointer to corresponding forward problem
      */
-    explicit BackwardProblem(
-        ForwardProblem& fwd
-    );
+    explicit BackwardProblem(ForwardProblem& fwd);
 
     /**
      * @brief Solve the backward problem.
@@ -140,7 +138,6 @@ class BackwardProblem {
 
     /** The postequilibration steadystate problem from the forward problem. */
     SteadystateProblem* posteq_problem_;
-
 };
 
 } // namespace amici

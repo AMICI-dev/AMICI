@@ -10,9 +10,7 @@
 
 namespace amici {
 
-BackwardProblem::BackwardProblem(
-    ForwardProblem & fwd
-)
+BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     : model_(fwd.model)
     , solver_(fwd.solver)
     , edata_(fwd.edata)
@@ -30,8 +28,7 @@ BackwardProblem::BackwardProblem(
     , dJydx_(fwd.getDJydx())
     , dJzdx_(fwd.getDJzdx())
     , preeq_problem_(fwd.getPreequilibrationProblem())
-    , posteq_problem_(fwd.getPostequilibrationProblem()){
-}
+    , posteq_problem_(fwd.getPostequilibrationProblem()) {}
 
 void BackwardProblem::workBackwardProblem() {
 
@@ -42,10 +39,10 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
 
-    if(posteq_problem_) {
+    if (posteq_problem_) {
         posteq_problem_->workSteadyStateBackwardProblem(
             *solver_, *model_, this
-            );
+        );
     }
     /* complement dJydx from postequilibration. This shouldn't overwrite
      * anything but only fill in previously 0 values, as only non-inf
@@ -57,22 +54,22 @@ void BackwardProblem::workBackwardProblem() {
                 throw AmiException(
                     "Model has non-finite timepoint but, "
                     "postequilibration did not run"
-                    );
+                );
 
             /* copy adjoint update to postequilibration */
             writeSlice(
                 slice(
-                    posteq_problem_->getDJydx(), it, model_->nx_solver * model_->nJ
-                    ),
+                    posteq_problem_->getDJydx(), it,
+                    model_->nx_solver * model_->nJ
+                ),
                 slice(dJydx_, it, model_->nx_solver * model_->nJ)
-                );
+            );
 
             /* If adjoint sensis were computed, copy also quadratures */
             xQB_.zero();
             xQB_ = posteq_problem_->getEquilibrationQuadratures();
         }
     }
-
 
     int it = model_->nt() - 1;
     /* If we have posteq, infinity timepoints were already treated */
@@ -141,10 +138,9 @@ void BackwardProblem::workBackwardProblem() {
     if (preeq_problem_) {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
-            );
+        );
         preeq_problem_->workSteadyStateBackwardProblem(*solver_, *model_, this);
     }
-
 }
 
 void BackwardProblem::handleEventB() {
