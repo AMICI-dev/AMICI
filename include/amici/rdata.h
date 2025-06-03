@@ -83,15 +83,13 @@ class ReturnData : public ModelDimensions {
      * appropriately initialize fields
      * @param fwd simulated forward problem, pass `nullptr` to ignore
      * @param bwd simulated backward problem, pass `nullptr` to ignore
-     * @param posteq simulated postequilibration problem, pass `nullptr` to
-     * ignore
      * @param model matching model instance
      * @param solver matching solver instance
      * @param edata matching experimental data
      */
     void processSimulationObjects(
         ForwardProblem const* fwd,
-        BackwardProblem const* bwd, SteadystateProblem const* posteq,
+        BackwardProblem const* bwd,
         Model& model, Solver const& solver, ExpData const* edata
     );
     /**

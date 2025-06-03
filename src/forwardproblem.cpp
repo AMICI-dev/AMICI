@@ -67,6 +67,14 @@ void ForwardProblem::workForwardProblem() {
     initialize();
     handlePresimulation();
     handleMainSimulation();
+    handlePostequilibration();
+
+    if (edata && solver->computingASA()) {
+        getAdjointUpdates(*model, *edata);
+        if (posteq_problem_.has_value()) {
+            posteq_problem_->getAdjointUpdates(*model, *edata);
+        }
+    }
 }
 
 void ForwardProblem::handlePreequilibration() {
@@ -242,6 +250,15 @@ void ForwardProblem::handleMainSimulation() {
            // fill events
     if (model->nz > 0 && model->nt() > 0) {
         fillEvents(model->nMaxEvent());
+    }
+}
+
+void ForwardProblem::handlePostequilibration() {
+    if (getCurrentTimeIteration() < model->nt()) {
+        posteq_problem_.emplace(*solver, *model);
+        posteq_problem_->workSteadyStateProblem(
+            *solver, *model, getCurrentTimeIteration()
+            );
     }
 }
 

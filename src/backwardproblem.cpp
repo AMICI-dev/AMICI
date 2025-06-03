@@ -11,7 +11,7 @@
 namespace amici {
 
 BackwardProblem::BackwardProblem(
-    ForwardProblem & fwd, SteadystateProblem const* posteq
+    ForwardProblem & fwd
 )
     : model_(fwd.model)
     , solver_(fwd.solver)
@@ -29,32 +29,8 @@ BackwardProblem::BackwardProblem(
     , root_idx_(fwd.getRootIndexes())
     , dJydx_(fwd.getDJydx())
     , dJzdx_(fwd.getDJzdx())
-    , preeq_problem_(fwd.getPreequilibrationProblem()){
-    /* complement dJydx from postequilibration. This shouldn't overwrite
-     * anything but only fill in previously 0 values, as only non-inf
-     * timepoints are filled from fwd.
-     */
-    for (int it = 0; it < fwd.model->nt(); it++) {
-        if (std::isinf(fwd.model->getTimepoint(it))) {
-            if (!posteq)
-                throw AmiException(
-                    "Model has non-finite timepoint but, "
-                    "postequilibration did not run"
-                );
-
-            /* copy adjoint update to postequilibration */
-            writeSlice(
-                slice(
-                    posteq->getDJydx(), it, fwd.model->nx_solver * fwd.model->nJ
-                ),
-                slice(dJydx_, it, fwd.model->nx_solver * fwd.model->nJ)
-            );
-
-            /* If adjoint sensis were computed, copy also quadratures */
-            xQB_.zero();
-            xQB_ = posteq->getEquilibrationQuadratures();
-        }
-    }
+    , preeq_problem_(fwd.getPreequilibrationProblem())
+    , posteq_problem_(fwd.getPostequilibrationProblem()){
 }
 
 void BackwardProblem::workBackwardProblem() {
@@ -65,6 +41,38 @@ void BackwardProblem::workBackwardProblem() {
         || model_->nplist() == 0) {
         return;
     }
+
+    if(posteq_problem_) {
+        posteq_problem_->workSteadyStateBackwardProblem(
+            *solver_, *model_, this
+            );
+    }
+    /* complement dJydx from postequilibration. This shouldn't overwrite
+     * anything but only fill in previously 0 values, as only non-inf
+     * timepoints are filled from fwd.
+     */
+    for (int it = 0; it < model_->nt(); it++) {
+        if (std::isinf(model_->getTimepoint(it))) {
+            if (!posteq_problem_)
+                throw AmiException(
+                    "Model has non-finite timepoint but, "
+                    "postequilibration did not run"
+                    );
+
+            /* copy adjoint update to postequilibration */
+            writeSlice(
+                slice(
+                    posteq_problem_->getDJydx(), it, model_->nx_solver * model_->nJ
+                    ),
+                slice(dJydx_, it, model_->nx_solver * model_->nJ)
+                );
+
+            /* If adjoint sensis were computed, copy also quadratures */
+            xQB_.zero();
+            xQB_ = posteq_problem_->getEquilibrationQuadratures();
+        }
+    }
+
 
     int it = model_->nt() - 1;
     /* If we have posteq, infinity timepoints were already treated */

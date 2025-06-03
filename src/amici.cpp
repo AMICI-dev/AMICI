@@ -88,7 +88,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     std::unique_ptr<ForwardProblem> fwd{};
     std::unique_ptr<BackwardProblem> bwd{};
-    std::unique_ptr<SteadystateProblem> posteq{};
     // tracks whether backwards integration finished without exceptions
     bool bwd_success = true;
 
@@ -99,25 +98,10 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         );
         fwd->workForwardProblem();
 
-        if (fwd->getCurrentTimeIteration() < model.nt()) {
-            posteq = std::make_unique<SteadystateProblem>(solver, model);
-            posteq->workSteadyStateProblem(
-                solver, model, fwd->getCurrentTimeIteration()
-            );
-        }
-
         if (edata && solver.computingASA()) {
-            fwd->getAdjointUpdates(model, *edata);
-            if (posteq) {
-                posteq->getAdjointUpdates(model, *edata);
-                posteq->workSteadyStateBackwardProblem(
-                    solver, model, bwd.get()
-                );
-            }
+            bwd_success = false; //NOLINT
 
-            bwd_success = false;
-
-            bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
+            bwd = std::make_unique<BackwardProblem>(*fwd);
             bwd->workBackwardProblem();
 
             bwd_success = true;
@@ -196,8 +180,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
         rdata->processSimulationObjects(
-            fwd.get(), bwd_success ? bwd.get() : nullptr,
-            posteq.get(), model, solver, edata
+            fwd.get(), bwd_success ? bwd.get() : nullptr, model, solver, edata
         );
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
@@ -220,12 +203,12 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
-    if (!posteq)
+    if (fwd && !fwd->getPostequilibrationProblem())
         gsl_EnsuresDebug(
             std::ranges::is_sorted(rdata->numsteps)
             || rdata->status != AMICI_SUCCESS
         );
-    if (!fwd->getPreequilibrationProblem())
+    if (fwd && !fwd->getPreequilibrationProblem())
         gsl_EnsuresDebug(
             std::ranges::is_sorted(rdata->numstepsB)
             || rdata->status != AMICI_SUCCESS

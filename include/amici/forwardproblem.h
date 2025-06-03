@@ -247,6 +247,27 @@ class ForwardProblem {
         return nullptr;
     }
 
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem* getPostequilibrationProblem() {
+        if(posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem const* getPostequilibrationProblem() const {
+        if(posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
+
     /** pointer to model instance */
     Model* model;
 
@@ -277,6 +298,11 @@ class ForwardProblem {
      * @brief Handle the main simulation.
      */
     void handleMainSimulation();
+
+    /**
+     * @brief Handle postequilibration if necessary.
+     */
+    void handlePostequilibration();
 
     /**
      * @brief Execute everything necessary for the handling of events
@@ -459,6 +485,10 @@ class ForwardProblem {
 
     /** The preequilibration steady-state problem, if any. */
     std::optional<SteadystateProblem> preeq_problem_;
+
+    /** The postequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> posteq_problem_;
+
 };
 
 /**
