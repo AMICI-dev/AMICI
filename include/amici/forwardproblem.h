@@ -238,7 +238,20 @@ class ForwardProblem {
     ExpData const* edata;
 
   private:
+    /**
+     * @brief Initialize model and solver.
+     */
+    void initialize();
+
+    /**
+     * @brief Handle pre-simulation if required.
+     */
     void handlePresimulation();
+
+    /**
+     * @brief Handle the main simulation.
+     */
+    void handleMainSimulation();
 
     /**
      * @brief Execute everything necessary for the handling of events
@@ -415,6 +428,13 @@ class ForwardProblem {
 
     /** current iteration number for time index */
     int it_;
+
+    /** Whether the current model/data requires preequilibration. */
+    // TODO
+    bool uses_preequilibration_ {false};
+
+    /** Whether the current model/data requires presimulation. */
+    bool uses_presimulation_ {false};
 };
 
 /**

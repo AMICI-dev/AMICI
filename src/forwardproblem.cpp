@@ -55,7 +55,8 @@ ForwardProblem::ForwardProblem(
     , xdot_old_(model->nx_solver, solver->getSunContext())
     , sx_(model->nx_solver, model->nplist(), solver->getSunContext())
     , sdx_(model->nx_solver, model->nplist(), solver->getSunContext())
-    , stau_(model->nplist()) {
+    , stau_(model->nplist())
+    , uses_presimulation_(edata && edata->t_presim > 0) {
     if (preeq) {
         x_ = preeq->getState();
         sx_ = preeq->getStateSensitivity();
@@ -66,87 +67,108 @@ ForwardProblem::ForwardProblem(
 void ForwardProblem::workForwardProblem() {
     FinalStateStorer fss(this);
 
-    auto presimulate = edata && edata->t_presim > 0;
-
+    initialize();
+    handlePresimulation();
+    handleMainSimulation();
+}
+void ForwardProblem::initialize() {
     // if preequilibration was done, model was already initialized
     if (!preequilibrated_)
         model->initialize(
             x_, dx_, sx_, sdx_,
             solver->getSensitivityOrder() >= SensitivityOrder::first,
             roots_found_
-        );
+            );
     else if (model->ne) {
         model->initEvents(x_, dx_, roots_found_);
     }
 
     // compute initial time and setup solver for (pre-)simulation
     auto t0 = model->t0();
-    if (presimulate)
+    if (uses_presimulation_)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
 
     if (model->ne
-        && std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; }))
+        && std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; })) {
         handleEvent(t0, true);
-
-    // perform presimulation if necessary
-    if (presimulate) {
-        if (solver->computingASA())
-            throw AmiException(
-                "Presimulation with adjoint sensitivities"
-                " is currently not implemented."
-            );
-        if (model->ne > 0) {
-            solver->logger->log(
-                LogSeverity::warning, "PRESIMULATION",
-                "Presimulation with events is not supported. "
-                "Events will be ignored during pre- and post-equilibration. "
-                "This is subject to change."
-                );
-        }
-        handlePresimulation();
-        t_ = model->t0();
-        if (model->ne) {
-            model->initEvents(x_, dx_, roots_found_);
-            if (std::ranges::any_of(roots_found_, [](int rf) {
-                    return rf == 1;
-                }))
-                handleEvent(t0, true);
-        }
     }
 
+}
+
+void ForwardProblem::handlePresimulation() {
+    if(!uses_presimulation_)
+        return;
+
+    if (solver->computingASA()) {
+        throw AmiException(
+            "Presimulation with adjoint sensitivities"
+            " is currently not implemented."
+            );
+    }
+
+    if (model->ne > 0) {
+        solver->logger->log(
+            LogSeverity::warning, "PRESIMULATION",
+            "Presimulation with events is not supported. "
+            "Events will be ignored during pre- and post-equilibration. "
+            "This is subject to change."
+            );
+    }
+
+    // Are there dedicated condition preequilibration parameters provided?
+    ConditionContext cond(model, edata, FixedParameterContext::presimulation);
+    solver->updateAndReinitStatesAndSensitivities(model);
+
+    solver->run(model->t0());
+    solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+
+    // Reset the time and re-initialize events
+    t_ = model->t0();
+    if (model->ne) {
+        model->initEvents(x_, dx_, roots_found_);
+        if (std::ranges::any_of(roots_found_, [](int rf) {
+                return rf == 1;
+            })) {
+            auto t0 = model->t0();
+            handleEvent(t0, true);
+        }
+    }
+}
+
+void ForwardProblem::handleMainSimulation() {
     // When computing adjoint sensitivity analysis with presimulation,
     // we need to store sx after the reinitialization after preequilibration
     // but before reinitialization after presimulation. As presimulation with
     // ASA will not update sx, we can simply extract the values here.
-    if (solver->computingASA() && presimulate)
+    if (solver->computingASA() && uses_presimulation_)
         sx_ = solver->getStateSensitivity(model->t0());
 
-    if (presimulate || preequilibrated_)
+    if (uses_presimulation_ || preequilibrated_)
         solver->updateAndReinitStatesAndSensitivities(model);
 
-    // update x0 after computing consistence IC/reinitialization
+           // update x0 after computing consistence IC/reinitialization
     x_ = solver->getState(model->t0());
     // When computing forward sensitivities, we generally want to update sx
     // after presimulation/preequilibration, and if we didn't do either this
     // also wont harm. when computing ASA, we only want to update here, if we
     // didn't update before presimulation (if applicable).
-    if (solver->computingFSA() || (solver->computingASA() && !presimulate))
+    if (solver->computingFSA() || (solver->computingASA() && !uses_presimulation_))
         sx_ = solver->getStateSensitivity(model->t0());
 
-    // store initial state and sensitivity
+           // store initial state and sensitivity
     initial_state_ = getSimulationState();
     // store root information at t0
     model->froot(t_, x_, dx_, rootvals_);
 
-    // get list of trigger timepoints for fixed-time triggered events
+           // get list of trigger timepoints for fixed-time triggered events
     auto trigger_timepoints = model->get_trigger_timepoints();
     auto it_trigger_timepoints
         = std::ranges::find_if(trigger_timepoints, [this](auto t) {
               return t > this->t_;
           });
 
-    // loop over timepoints
+           // loop over timepoints
     for (it_ = 0; it_ < model->nt(); it_++) {
         // next output time-point
         auto next_t_out = model->getTimepoint(it_);
@@ -163,8 +185,8 @@ void ForwardProblem::workForwardProblem() {
                     break;
                 }
 
-                // next stop time is next output timepoint or next
-                // time-triggered event
+                       // next stop time is next output timepoint or next
+                       // time-triggered event
                 auto next_t_event
                     = it_trigger_timepoints != trigger_timepoints.end()
                           ? *it_trigger_timepoints
@@ -183,8 +205,8 @@ void ForwardProblem::workForwardProblem() {
                     // solver-tracked or time-triggered event
                     solver->getRootInfo(roots_found_.data());
 
-                    // check if we are at a trigger timepoint.
-                    // if so, set the root-found flag
+                           // check if we are at a trigger timepoint.
+                           // if so, set the root-found flag
                     if (t_ == next_t_event) {
                         for (auto ie : model->state_independent_events_[t_]) {
                             // determine direction of root crossing from
@@ -201,19 +223,10 @@ void ForwardProblem::workForwardProblem() {
         handleDataPoint(next_t_out);
     }
 
-    // fill events
+           // fill events
     if (model->nz > 0 && model->nt() > 0) {
         fillEvents(model->nMaxEvent());
     }
-}
-
-void ForwardProblem::handlePresimulation() {
-    // Are there dedicated condition preequilibration parameters provided?
-    ConditionContext cond(model, edata, FixedParameterContext::presimulation);
-    solver->updateAndReinitStatesAndSensitivities(model);
-
-    solver->run(model->t0());
-    solver->writeSolution(&t_, x_, dx_, sx_, dx_);
 }
 
 void ForwardProblem::handleEvent(
