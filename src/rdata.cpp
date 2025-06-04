@@ -297,13 +297,14 @@ void ReturnData::processForwardProblem(
 
     // process event data
     if (nz > 0) {
-        auto rootidx = fwd.getRootIndexes();
+        auto const& discontinuities = fwd.getDiscontinuities();
+        Expects(static_cast<int>(discontinuities.size()) == fwd.getEventCounter() + 1);
         for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
             auto const simulation_state = fwd.getSimulationStateEvent(iroot);
             model.setModelState(simulation_state.state);
             getEventOutput(
-                simulation_state.t, rootidx.at(iroot), model, simulation_state,
-                edata
+                simulation_state.t, discontinuities.at(iroot).root_info, model,
+                simulation_state, edata
             );
         }
     }

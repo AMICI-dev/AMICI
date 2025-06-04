@@ -18,13 +18,9 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , xB_(model_->nx_solver, solver_->getSunContext())
     , dxB_(model_->nx_solver, solver_->getSunContext())
     , xQB_(model_->nJ * model_->nplist(), solver_->getSunContext())
-    , x_disc_(fwd.getStatesAtDiscontinuities())
-    , xdot_disc_(fwd.getRHSAtDiscontinuities())
-    , xdot_old_disc_(fwd.getRHSBeforeDiscontinuities())
     , sx0_(fwd.getStateSensitivity())
     , nroots_(fwd.getNumberOfRoots())
     , discs_(fwd.getDiscontinuities())
-    , root_idx_(fwd.getRootIndexes())
     , dJydx_(fwd.getDJydx())
     , dJzdx_(fwd.getDJzdx())
     , preeq_problem_(fwd.getPreequilibrationProblem())
@@ -71,9 +67,9 @@ void BackwardProblem::workBackwardProblem() {
             }
 
             /* handle discontinuity */
-            if (!discs_.empty() && tnext == discs_.back()) {
+            if (!discs_.empty() && tnext == discs_.back().time) {
+                handleEventB(discs_.back());
                 discs_.pop_back();
-                handleEventB();
             }
 
             /* handle data-point */
@@ -148,30 +144,18 @@ void BackwardProblem::handlePostequilibration() {
     }
 }
 
-void BackwardProblem::handleEventB() {
-    auto rootidx = root_idx_.back();
-    this->root_idx_.pop_back();
-
-    auto x_disc = this->x_disc_.back();
-    this->x_disc_.pop_back();
-
-    auto xdot_disc = this->xdot_disc_.back();
-    this->xdot_disc_.pop_back();
-
-    auto xdot_old_disc = this->xdot_old_disc_.back();
-    this->xdot_old_disc_.pop_back();
-
+void BackwardProblem::handleEventB(Discontinuity const& disc) {
     for (int ie = 0; ie < model_->ne; ie++) {
 
-        if (rootidx[ie] == 0) {
+        if (disc.root_info[ie] == 0) {
             continue;
         }
 
         model_->addAdjointQuadratureEventUpdate(
-            xQB_, ie, t_, x_disc, xB_, xdot_disc, xdot_old_disc
+            xQB_, ie, t_, disc.x_post, xB_, disc.xdot_post, disc.xdot_pre
         );
         model_->addAdjointStateEventUpdate(
-            xB_, ie, t_, x_disc, xdot_disc, xdot_old_disc
+            xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre
         );
 
         if (model_->nz > 0) {
@@ -187,7 +171,7 @@ void BackwardProblem::handleEventB() {
         nroots_[ie]--;
     }
 
-    model_->updateHeavisideB(rootidx.data());
+    model_->updateHeavisideB(disc.root_info.data());
 }
 
 void BackwardProblem::handleDataPointB(int const it) {
@@ -216,8 +200,8 @@ realtype BackwardProblem::getTnext(int const it) {
     }
 
     if (!discs_.empty()
-        && (it < 0 || discs_.back() > model_->getTimepoint(it))) {
-        double tdisc = discs_.back();
+        && (it < 0 || discs_.back().time > model_->getTimepoint(it))) {
+        double tdisc = discs_.back().time;
         return tdisc;
     }
 

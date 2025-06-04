@@ -2,6 +2,7 @@
 #define AMICI_BACKWARDPROBLEM_H
 
 #include "amici/defines.h"
+#include "amici/forwardproblem.h"
 #include "amici/vector.h"
 
 #include <vector>
@@ -79,8 +80,9 @@ class BackwardProblem {
     /**
      * @brief Execute everything necessary for the handling of events
      * for the backward problem
+     * @param disc The discontinuity to handle
      */
-    void handleEventB();
+    void handleEventB(Discontinuity const& disc);
 
     /**
      * @brief Execute everything necessary for the handling of data
@@ -113,22 +115,14 @@ class BackwardProblem {
     AmiVector dxB_;
     /** quadrature state vector */
     AmiVector xQB_;
-    /** array of state vectors at discontinuities*/
-    std::vector<AmiVector> x_disc_;
-    /** array of differential state vectors at discontinuities*/
-    std::vector<AmiVector> xdot_disc_;
-    /** array of old differential state vectors at discontinuities*/
-    std::vector<AmiVector> xdot_old_disc_;
     /** sensitivity state vector array */
     AmiVectorArray sx0_;
     /** array of number of found roots for a certain event type */
     std::vector<int> nroots_;
     /** array containing the time-points of discontinuities*/
-    std::vector<realtype> discs_;
+    std::vector<Discontinuity> discs_;
     /** index of the backward problem */
     int which = 0;
-    /** array of index which root has been found */
-    std::vector<std::vector<int>> root_idx_;
 
     /** state derivative of data likelihood */
     std::vector<realtype> dJydx_;
