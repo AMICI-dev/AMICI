@@ -785,20 +785,21 @@ void SteadystateProblem::runSteadystateSimulation(
     // *backward* parameter.
 
     // Do we also have to check for convergence of sensitivities?
-    SensitivityMethod sensitivityFlag = SensitivityMethod::none;
+    SensitivityMethod sensitivity_method = SensitivityMethod::none;
     if (solver.getSensitivityOrder() > SensitivityOrder::none
-        && solver.getSensitivityMethod() == SensitivityMethod::forward)
-        sensitivityFlag = SensitivityMethod::forward;
+        && solver.getSensitivityMethod() == SensitivityMethod::forward) {
+        sensitivity_method = SensitivityMethod::forward;
+    }
     // If forward sensitivity computation by simulation is disabled,
     // disable forward sensitivity integration in the solver.
     // Sensitivities will be computed by newtonsolver.computeNewtonSensis then.
     if (model.getSteadyStateSensitivityMode()
         == SteadyStateSensitivityMode::newtonOnly) {
         solver.switchForwardSensisOff();
-        sensitivityFlag = SensitivityMethod::none;
+        sensitivity_method = SensitivityMethod::none;
     }
     if (backward)
-        sensitivityFlag = SensitivityMethod::adjoint;
+        sensitivity_method = SensitivityMethod::adjoint;
 
     int& sim_steps = backward ? numstepsB_ : numsteps_.at(1);
 
@@ -808,10 +809,10 @@ void SteadystateProblem::runSteadystateSimulation(
         if (sim_steps % convergence_check_frequency == 0) {
             // Check for convergence (already before simulation, since we might
             // start in steady state)
-            wrms_ = getWrms(model, sensitivityFlag);
+            wrms_ = getWrms(model, sensitivity_method);
             if (wrms_ < conv_thresh) {
                 if (check_sensi_conv_
-                    && sensitivityFlag == SensitivityMethod::forward) {
+                    && sensitivity_method == SensitivityMethod::forward) {
                     updateSensiSimulation(solver);
                     // getWrms needs to be called before getWrmsFSA
                     // such that the linear system is prepared for newton-type
@@ -853,7 +854,7 @@ void SteadystateProblem::runSteadystateSimulation(
     }
 
     // if check_sensi_conv_ is deactivated, we still have to update sensis
-    if (sensitivityFlag == SensitivityMethod::forward)
+    if (sensitivity_method == SensitivityMethod::forward)
         updateSensiSimulation(solver);
 }
 
