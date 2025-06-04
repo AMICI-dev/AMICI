@@ -761,7 +761,12 @@ class SbmlImporter:
                 args += ["value"]
 
             if symbol_name == SymbolId.EVENT:
-                args += ["assignments", "initial_value", "priority"]
+                args += [
+                    "assignments",
+                    "initial_value",
+                    "priority",
+                    "use_values_from_trigger_time",
+                ]
             elif symbol_name == SymbolId.OBSERVABLE:
                 args += ["transformation"]
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
@@ -1908,66 +1913,6 @@ class SbmlImporter:
                 "use_values_from_trigger_time": use_trig_val,
                 "priority": self._sympify(event.getPriority()),
             }
-
-        # Check `useValuesFromTriggerTime` attribute
-        # AMICI does not support events with
-        # `useValuesFromTriggerTime=true`, unless
-        # 1) there is only a single event
-        # 2) there are multiple events, but they are guaranteed to not
-        #    trigger at the same time
-        # 3) event assignments from events triggering at the same time
-        #    are independent
-        # in these cases, the attribute value doesn't matter, as long
-        # as we don't support delays.
-        # We can't check this in `check_event_support` without already
-        #  processing all trigger expressions, so we do it here
-
-        # are there any events with `useValuesFromTriggerTime=true`?
-        if len(self.symbols[SymbolId.EVENT]) <= 1 or not any(
-            event["use_values_from_trigger_time"]
-            for event in self.symbols[SymbolId.EVENT].values()
-        ):
-            return
-
-        # check if events are guaranteed to not trigger at the same time
-        def try_solve_t(expr: sp.Expr) -> list:
-            """Try to solve the expression for time."""
-            try:
-                return sp.solve(expr, sbml_time_symbol)
-            except NotImplementedError:
-                return []
-
-        trigger_times = [
-            try_solve_t(event["value"])
-            for event in self.symbols[SymbolId.EVENT].values()
-        ]
-        # for now, we only check for single/fixed/unique time points, but there
-        # are probably other cases we could cover
-        if all(len(ts) == 1 and ts[0].is_Number for ts in trigger_times):
-            trigger_times = [ts[0] for ts in trigger_times]
-            if len(trigger_times) == len(set(trigger_times)):
-                # all trigger times are unique
-                return
-
-        # if all assignments are absolute (not referring to other non-constant
-        # model entities), we are fine.
-        if all(
-            assignment.is_Number
-            for event in self.symbols[SymbolId.EVENT].values()
-            for assignment in event["assignments"].values()
-            if event["assignments"] is not None
-        ):
-            return
-
-        raise SBMLException(
-            "Events with `useValuesFromTriggerTime=true` are not "
-            "supported when there are multiple events.\n"
-            "If it is guaranteed that 1) events do not trigger at the same "
-            "time, or 2) different event assignments do not affect the same "
-            "entities, or 3) event assignments do not depend on the "
-            "pre-event state, then you can set "
-            "`useValuesFromTriggerTime=false` and retry."
-        )
 
     @log_execution_time("processing SBML observables", logger)
     def _process_observables(

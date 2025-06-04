@@ -1199,6 +1199,8 @@ class DEModel:
                 ]
             )
             return
+        elif name == "x_old":
+            length = len(self.eq("xdot"))
         elif name == "xdot_old":
             length = len(self.eq("xdot"))
         elif name in sparse_functions:
@@ -1615,10 +1617,8 @@ class DEModel:
             # would cause problems when writing the function file later
             event_eqs = []
             for event in self._events:
-                # TODO https://github.com/AMICI-dev/AMICI/issues/2719
-                #   with use_values_from_trigger_time=True: x_old != x
                 state_update = event.get_state_update(
-                    x=self.sym("x"), x_old=self.sym("x")
+                    x=self.sym("x"), x_old=self.sym("x_old")
                 )
                 if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
@@ -1633,7 +1633,7 @@ class DEModel:
             ]
             event_ids = [e.get_id() for e in self._events]
             # TODO: get rid of this stupid 1-based indexing as soon as we can
-            # the matlab interface
+            #  drop the matlab interface
             z2event = [
                 event_ids.index(event_obs.get_event()) + 1
                 for event_obs in self._event_observables
@@ -1646,7 +1646,14 @@ class DEModel:
             self._eqs[name] = event_observables
             self._z2event = z2event
 
-        elif name in ["ddeltaxdx", "ddeltaxdp", "ddeltaxdt", "dzdp", "dzdx"]:
+        elif name in [
+            "ddeltaxdx",
+            "ddeltaxdx_old",
+            "ddeltaxdp",
+            "ddeltaxdt",
+            "dzdp",
+            "dzdx",
+        ]:
             if match_deriv[2] == "t":
                 var = time_symbol
             else:
@@ -1751,7 +1758,9 @@ class DEModel:
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
-                        self.eq("ddeltaxdx")[ie], tmp_dxdp
+                        self.eq("ddeltaxdx")[ie]
+                        + self.eq("ddeltaxdx_old")[ie],
+                        tmp_dxdp,
                     )
 
                 elif not xdot_is_zero:
@@ -2268,6 +2277,7 @@ class DEModel:
                 name=root_symstr,
                 value=root_found,
                 assignments=None,
+                use_values_from_trigger_time=True,
             )
         )
         return roots[-1].get_id()

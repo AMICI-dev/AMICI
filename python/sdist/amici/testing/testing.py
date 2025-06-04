@@ -6,6 +6,8 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+__all__ = ["TemporaryDirectoryWinSafe", "skip_on_valgrind"]
+
 # Indicates whether we are currently running under valgrind
 #  see also https://stackoverflow.com/a/62364698
 ON_VALGRIND = any(

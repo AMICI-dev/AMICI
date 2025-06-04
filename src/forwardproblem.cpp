@@ -96,6 +96,14 @@ void ForwardProblem::workForwardProblem() {
                 "Presimulation with adjoint sensitivities"
                 " is currently not implemented."
             );
+        if (model->ne > 0) {
+            solver->logger->log(
+                LogSeverity::warning, "PRESIMULATION",
+                "Presimulation with events is not supported. "
+                "Events will be ignored during pre- and post-equilibration. "
+                "This is subject to change."
+            );
+        }
         handlePresimulation();
         t_ = model->t0();
         if (model->ne) {
@@ -259,30 +267,37 @@ void ForwardProblem::handleEvent(
         }
     };
 
-    auto event_to_index = [&](Event const& event) {
-        // find the index of the given event in the model
-        for (int ie = 0; ie < model->ne; ie++) {
-            if (&model->get_event(ie) == &event) {
-                return ie;
-            }
-        }
-        gsl_FailFast();
-    };
-
     store_pre_event_info(false);
 
     // Collect all triggered events waiting for execution
     for (int ie = 0; ie < model->ne; ie++) {
         // only consider transitions false -> true
         if (roots_found_.at(ie) == 1) {
-            pending_events_.push(model->get_event(ie));
+            auto const& event = model->get_event(ie);
+            pending_events_.push(
+                {.event = event,
+                 .idx = ie,
+                 .state_old
+                 = (event.uses_values_from_trigger_time()
+                        ? std::optional<SimulationState>(getSimulationState())
+                        : std::nullopt)}
+            );
         }
     }
 
     while (!pending_events_.empty()) {
         // get the next event to be handled
-        auto const& event = pending_events_.pop();
-        auto ie = event_to_index(event);
+        auto const& pending_event = pending_events_.pop();
+        auto ie = pending_event.idx;
+        auto const& state_old = pending_event.state_old;
+
+        gsl_Assert(
+            // storing the old state is not always necessary,
+            // (e.g., if there is only 1 single event and there are no delays)
+            // but for now, that's the assumption
+            state_old.has_value()
+            || !pending_event.event.uses_values_from_trigger_time()
+        );
 
         // TODO: if this is not the first event, check the "persistent"
         // attribute of the event trigger, re-evaluate the trigger if necessary
@@ -290,12 +305,17 @@ void ForwardProblem::handleEvent(
 
         // Execute the event
         // Apply bolus to the state and the sensitivities
-        model->addStateEventUpdate(x_, ie, t_, xdot_, xdot_old_);
+        model->addStateEventUpdate(
+            x_, ie, t_, xdot_, xdot_old_,
+            state_old.has_value() ? state_old->x : x_,
+            state_old.has_value() ? state_old->state : model->getModelState()
+        );
         if (solver->computingFSA()) {
             // compute the new xdot
             model->fxdot(t_, x_, dx_, xdot_);
             model->addStateSensitivityEventUpdate(
-                sx_, ie, t_, x_old_, xdot_, xdot_old_, stau_
+                sx_, ie, t_, x_, x_old_, xdot_, xdot_old_,
+                state_old.has_value() ? state_old->sx : sx_, stau_
             );
         }
 
@@ -405,7 +425,17 @@ int ForwardProblem::detect_secondary_events() {
             if (0 > rval_tmp_.at(ie) * rootvals_.at(ie)) {
                 if (rval_tmp_.at(ie) < rootvals_.at(ie)) {
                     roots_found_.at(ie) = 1;
-                    pending_events_.push(model->get_event(ie));
+                    auto const& event = model->get_event(ie);
+                    pending_events_.push(
+                        {.event = event,
+                         .idx = ie,
+                         .state_old
+                         = (event.uses_values_from_trigger_time()
+                                ? std::optional<SimulationState>(
+                                      getSimulationState()
+                                  )
+                                : std::nullopt)}
+                    );
                 } else {
                     roots_found_.at(ie) = -1;
                 }
