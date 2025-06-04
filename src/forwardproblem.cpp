@@ -242,8 +242,7 @@ void ForwardProblem::handleEvent(
 
         // store timepoint at which the event occurred, the root function
         // values, and the direction of any zero crossings of the root function
-        discs_.push_back(t_);
-        root_idx_.push_back(roots_found_);
+        discs_.emplace_back(t_, roots_found_);
         rval_tmp_ = rootvals_;
 
         if (model->nz > 0)
@@ -261,9 +260,9 @@ void ForwardProblem::handleEvent(
     //  that did not trigger a secondary event
     auto store_post_event_info = [this]() {
         if (solver->computingASA()) {
-            // store x to compute jump in discontinuity
-            x_disc_.push_back(x_);
-            xdot_disc_.push_back(xdot_);
+            // store updated x to compute jump in discontinuity
+            discs_.back().x_post = x_;
+            discs_.back().xdot_post = xdot_;
         }
     };
 
@@ -344,7 +343,7 @@ void ForwardProblem::storeEvent() {
         for (int ie = 0; ie < model->ne; ie++) {
             roots_found_.at(ie) = (nroots_.at(ie) < model->nMaxEvent()) ? 1 : 0;
         }
-        root_idx_.push_back(roots_found_);
+        discs_.back().root_info = roots_found_;
     }
 
     if (getRootCounter() < getEventCounter()) {
@@ -409,7 +408,7 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
             std::ranges::fill(stau_, 0.0);
         }
     } else if (solver->computingASA()) {
-        xdot_old_disc_.push_back(xdot_old_);
+        discs_.back().xdot_pre = xdot_old_;
     }
 }
 
