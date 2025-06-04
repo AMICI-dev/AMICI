@@ -198,7 +198,7 @@ void SteadystateProblem::workSteadyStateProblem(
     findSteadyState(solver, model, it);
 
     // Check whether state sensitivities still need to be computed.
-    if (getSensitivityFlag(
+    if (requires_state_sensitivities(
             model, solver, it, SteadyStateContext::newtonSensi
         )) {
         try {
@@ -261,7 +261,8 @@ void SteadystateProblem::findSteadyState(
 
     // Newton solver didn't work, so try to simulate to steady state.
     if (!turnOffSimulation && !checkSteadyStateSuccess())
-        findSteadyStateBySimulation(solver, model, it);
+        steady_state_status_[1]
+            = findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
     if (!turnOffNewton && !turnOffSimulation && !checkSteadyStateSuccess())
@@ -304,13 +305,13 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(
     }
 }
 
-void SteadystateProblem::findSteadyStateBySimulation(
+SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
     Solver const& solver, Model& model, int it
 ) {
     try {
         if (it < 0) {
             // Preequilibration? -> Create a new solver instance for simulation
-            bool integrateSensis = getSensitivityFlag(
+            bool integrateSensis = requires_state_sensitivities(
                 model, solver, it, SteadyStateContext::solverCreation
             );
             auto newtonSimSolver = createSteadystateSimSolver(
@@ -321,11 +322,10 @@ void SteadystateProblem::findSteadyStateBySimulation(
             // Solver was already created, use this one
             runSteadystateSimulation(solver, model, false);
         }
-        steady_state_status_[1] = SteadyStateStatus::success;
+        return SteadyStateStatus::success;
     } catch (IntegrationFailure const& ex) {
         switch (ex.error_code) {
         case AMICI_TOO_MUCH_WORK:
-            steady_state_status_[1] = SteadyStateStatus::failed_convergence;
             if (model.logger)
                 model.logger->log(
                     LogSeverity::debug, "EQUILIBRATION_FAILURE",
@@ -333,10 +333,8 @@ void SteadystateProblem::findSteadyStateBySimulation(
                     " integration steps at t=%g.",
                     ex.time
                 );
-            break;
+            return SteadyStateStatus::failed_convergence;
         case AMICI_RHSFUNC_FAIL:
-            steady_state_status_[1]
-                = SteadyStateStatus::failed_too_long_simulation;
             if (model.logger)
                 model.logger->log(
                     LogSeverity::debug, "EQUILIBRATION_FAILURE",
@@ -344,14 +342,14 @@ void SteadystateProblem::findSteadyStateBySimulation(
                     " long simulation time at t=%g.",
                     ex.time
                 );
-            break;
+            return SteadyStateStatus::failed_too_long_simulation;
         default:
-            steady_state_status_[1] = SteadyStateStatus::failed;
             if (model.logger)
                 model.logger->log(
                     LogSeverity::debug, "OTHER",
                     "AMICI equilibration failed at t=%g.", ex.time
                 );
+            return SteadyStateStatus::failed;
         }
     } catch (AmiException const& ex) {
         if (model.logger)
@@ -359,7 +357,7 @@ void SteadystateProblem::findSteadyStateBySimulation(
                 LogSeverity::debug, "OTHER", "AMICI equilibration failed: %s",
                 ex.what()
             );
-        steady_state_status_[1] = SteadyStateStatus::failed;
+        return SteadyStateStatus::failed;
     }
 }
 
@@ -536,7 +534,7 @@ void SteadystateProblem::getQuadratureBySimulation(
     throw AmiException(errorString.c_str());
 }
 
-bool SteadystateProblem::getSensitivityFlag(
+bool SteadystateProblem::requires_state_sensitivities(
     Model const& model, Solver const& solver, int it, SteadyStateContext context
 ) const {
     // We need to check whether we need to compute forward sensitivities.

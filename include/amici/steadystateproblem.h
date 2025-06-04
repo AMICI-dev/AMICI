@@ -200,8 +200,10 @@ class SteadystateProblem {
      * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
+     * @return SteadyStateStatus indicating whether the steady state was found
+     * successfully, or if it failed.
      */
-    void
+    SteadyStateStatus
     findSteadyStateBySimulation(Solver const& solver, Model& model, int it);
 
     /**
@@ -239,16 +241,18 @@ class SteadystateProblem {
     ) const;
 
     /**
-     * @brief Checks depending on the status of the Newton solver,
+     * @brief Get whether state sensitivities need to be computed.
+     *
+     * Checks depending on the status of the Newton solver,
      * solver settings, and the model, whether state sensitivities
-     * still need to be computed via a linear system solve or stored
+     * still need to be computed (via a linear system solve or integration).
      * @param model Model instance.
      * @param solver Solver instance.
      * @param it Index of the current output time point.
      * @param context SteadyStateContext giving the situation for the flag
      * @return Whether sensitivities have to be computed.
      */
-    bool getSensitivityFlag(
+    bool requires_state_sensitivities(
         Model const& model, Solver const& solver, int it,
         SteadyStateContext context
     ) const;
