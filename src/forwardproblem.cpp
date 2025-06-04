@@ -102,7 +102,7 @@ void ForwardProblem::workForwardProblem() {
                 "Presimulation with events is not supported. "
                 "Events will be ignored during pre- and post-equilibration. "
                 "This is subject to change."
-                );
+            );
         }
         handlePresimulation();
         t_ = model->t0();
