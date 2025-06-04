@@ -153,30 +153,6 @@ class ForwardProblem {
     std::vector<realtype> const& getDJzdx() const { return dJzdx_; }
 
     /**
-     * @brief Accessor for pointer to x
-     * @return &x
-     */
-    AmiVector* getStatePointer() { return &x_; }
-
-    /**
-     * @brief Accessor for pointer to dx
-     * @return &dx
-     */
-    AmiVector* getStateDerivativePointer() { return &dx_; }
-
-    /**
-     * @brief accessor for pointer to sx
-     * @return &sx
-     */
-    AmiVectorArray* getStateSensitivityPointer() { return &sx_; }
-
-    /**
-     * @brief Accessor for pointer to sdx
-     * @return &sdx
-     */
-    AmiVectorArray* getStateDerivativeSensitivityPointer() { return &sdx_; }
-
-    /**
      * @brief Accessor for it
      * @return it
      */
