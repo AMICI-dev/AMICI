@@ -17,6 +17,52 @@ class SteadystateProblem;
 class FinalStateStorer;
 
 /**
+ * @brief Data structure to store some state of a simulation at a discontinuity.
+ */
+struct Discontinuity {
+    /**
+     * @brief Constructor.
+     * @param time
+     * @param root_info
+     * @param xdot_pre
+     * @param x_post
+     * @param xdot_post
+     */
+    explicit Discontinuity(
+        realtype time, std::vector<int> const& root_info = std::vector<int>(),
+        AmiVector const& xdot_pre = AmiVector(),
+        AmiVector const& x_post = AmiVector(),
+        AmiVector const& xdot_post = AmiVector()
+    )
+        : time(time)
+        , x_post(x_post)
+        , xdot_post(xdot_post)
+        , xdot_pre(xdot_pre)
+        , root_info(root_info) {}
+
+    /** Time of discontinuity. */
+    realtype time;
+
+    /** Post-event state vector (dimension nx). */
+    AmiVector x_post;
+
+    /** Post-event differential state vectors (dimension nx). */
+    AmiVector xdot_post;
+
+    /** Pre-event differential state vectors (dimension nx). */
+    AmiVector xdot_pre;
+
+    /**
+     * @brief Array of flags indicating which root has been found.
+     *
+     * Array of length nr (ne) with the indices of the user functions gi found
+     * to have a root. For i = 0, . . . ,nr 1 or -1 if gi has a root, and = 0
+     * if not. See CVodeGetRootInfo for details.
+     */
+    std::vector<int> root_info;
+};
+
+/**
  * @brief The ForwardProblem class groups all functions for solving the
  * forward problem.
  */
@@ -81,47 +127,17 @@ class ForwardProblem {
     AmiVectorArray const& getStateSensitivity() const { return sx_; }
 
     /**
-     * @brief Accessor for x_disc
-     * @return x_disc
-     */
-    std::vector<AmiVector> const& getStatesAtDiscontinuities() const {
-        return x_disc_;
-    }
-
-    /**
-     * @brief Accessor for xdot_disc
-     * @return xdot_disc
-     */
-    std::vector<AmiVector> const& getRHSAtDiscontinuities() const {
-        return xdot_disc_;
-    }
-
-    /**
-     * @brief Accessor for xdot_old_disc
-     * @return xdot_old_disc
-     */
-    std::vector<AmiVector> const& getRHSBeforeDiscontinuities() const {
-        return xdot_old_disc_;
-    }
-
-    /**
      * @brief Accessor for nroots
      * @return nroots
      */
     std::vector<int> const& getNumberOfRoots() const { return nroots_; }
 
     /**
-     * @brief Accessor for discs
-     * @return discs
+     * @brief Get information on the discontinuities encountered so far.
+     * @return The vector of discontinuities.
      */
-    std::vector<realtype> const& getDiscontinuities() const { return discs_; }
-
-    /**
-     * @brief Accessor for rootidx
-     * @return rootidx
-     */
-    std::vector<std::vector<int>> const& getRootIndexes() const {
-        return root_idx_;
+    std::vector<Discontinuity> const& getDiscontinuities() const {
+        return discs_;
     }
 
     /**
@@ -294,7 +310,7 @@ class ForwardProblem {
      */
     void fillEvents(int nmaxevent) {
         if (checkEventsToFill(nmaxevent)) {
-            discs_.push_back(t_);
+            discs_.emplace_back(t_);
             storeEvent();
         }
     }
@@ -304,11 +320,6 @@ class ForwardProblem {
      * @return state
      */
     SimulationState getSimulationState();
-
-    /** array of index vectors (dimension ne) indicating whether the respective
-     * root has been detected for all so far encountered discontinuities,
-     * extended as needed (dimension: dynamic) */
-    std::vector<std::vector<int>> root_idx_;
 
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
@@ -321,30 +332,8 @@ class ForwardProblem {
      * (dimension: ne) */
     std::vector<realtype> rval_tmp_;
 
-    /** array containing the time-points of discontinuities
-     * (dimension: dynamic) */
-    std::vector<realtype> discs_;
-
-    /**
-     * array of post-event state vectors (dimension nx) for all so far
-     * encountered discontinuities, (extended as needed;
-     * after event processing, same dimension as discs_)
-     */
-    std::vector<AmiVector> x_disc_;
-
-    /**
-     * array of post-event differential state vectors (dimension nx) for all so
-     * far encountered discontinuities, (extended as needed; after event
-     * processing, same dimension as discs_)
-     */
-    std::vector<AmiVector> xdot_disc_;
-
-    /**
-     * array of old (pre-event) differential state vectors (dimension nx) for
-     * all so far encountered discontinuities, (extended as needed; after event
-     * processing, same dimension as discs_)
-     */
-    std::vector<AmiVector> xdot_old_disc_;
+    /** Discontinuities encountered so far (dimension: dynamic) */
+    std::vector<Discontinuity> discs_;
 
     /** Events that are waiting to be handled at the current timepoint. */
     EventQueue pending_events_;

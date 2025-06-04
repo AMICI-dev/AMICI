@@ -158,7 +158,7 @@ void SteadystateProblem::workSteadyStateProblem(
             "Steady-state simulation with events is not supported. "
             "Events will be ignored during pre- and post-equilibration. "
             "This is subject to change."
-            );
+        );
     }
 
     initializeForwardProblem(it, solver, model);
