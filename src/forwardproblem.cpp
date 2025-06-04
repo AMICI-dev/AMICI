@@ -138,14 +138,18 @@ void ForwardProblem::handlePresimulation() {
         );
     }
 
-    // Are there dedicated condition preequilibration parameters provided?
-    ConditionContext cond(model, edata, FixedParameterContext::presimulation);
-    solver->updateAndReinitStatesAndSensitivities(model);
+    {
+        // Are there dedicated condition preequilibration parameters provided?
+        ConditionContext cond(
+            model, edata, FixedParameterContext::presimulation
+        );
+        solver->updateAndReinitStatesAndSensitivities(model);
 
-    solver->run(model->t0());
-    solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+        solver->run(model->t0());
+        solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+    }
 
-    // Reset the time and re-initialize events
+    // Reset the time and re-initialize events for the main simulation
     t_ = model->t0();
     if (model->ne) {
         model->initEvents(x_, dx_, roots_found_);
