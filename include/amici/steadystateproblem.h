@@ -64,6 +64,83 @@ class WRMSComputer {
 };
 
 /**
+ * @brief Implements Newton's method for finding steady states.
+ *
+ * TODO: To be extended after further disentangling SteadyStateProblem.
+ */
+class NewtonsMethod {
+  public:
+    /**
+     * @brief Constructor.
+     * @param nx Number of solver states (nx_solver).
+     * @param sunctx A SUNDIALS context for the NVector.
+     * @param max_steps
+     * @param damping_factor_mode
+     * @param damping_factor_lower_bound
+     */
+    NewtonsMethod(
+        int nx, SUNContext sunctx,
+        NewtonDampingFactorMode damping_factor_mode,
+        realtype damping_factor_lower_bound,
+        int max_steps
+    )
+        : max_steps_(max_steps)
+        , delta_(nx, sunctx)
+        , delta_old_(nx, sunctx)
+        , damping_factor_mode_(damping_factor_mode)
+        , damping_factor_lower_bound_(damping_factor_lower_bound) {}
+
+    /**
+     * @brief Update the damping factor gamma that determines step size.
+     *
+     * @param step_successful flag indicating whether the previous step was
+     * successful
+     * @param gamma reference to the damping factor that is updated
+     * @return boolean flag indicating whether search direction should be
+     * updated (true) or the same direction should be retried with the updated
+     * dampening (false)
+     */
+
+    bool updateDampingFactor(bool step_successful, double& gamma) {
+        if (damping_factor_mode_ != NewtonDampingFactorMode::on)
+            return true;
+
+        if (step_successful) {
+            gamma = fmin(1.0, 2.0 * gamma);
+        } else {
+            gamma /= 4.0;
+        }
+
+        if (gamma < damping_factor_lower_bound_) {
+            throw NewtonFailure(
+                AMICI_DAMPING_FACTOR_ERROR,
+                "Newton solver failed: the damping factor "
+                "reached its lower bound"
+            );
+        }
+        return step_successful;
+    }
+
+    // TODO: make private after further disentangling SteadyStateProblem
+
+    /** Maximum number of iterations. */
+    int max_steps_{0};
+
+    /** Newton step (size: nx_solver). */
+    AmiVector delta_;
+
+    /** previous newton step (size: nx_solver). */
+    AmiVector delta_old_;
+
+  private:
+    /** damping factor flag */
+    NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};
+
+    /** damping factor lower bound */
+    realtype damping_factor_lower_bound_{1e-8};
+};
+
+/**
  * @brief The SteadystateProblem class solves a steady-state problem using
  * Newton's method and falls back to integration on failure.
  */
@@ -379,17 +456,6 @@ class SteadystateProblem {
      */
     bool makePositiveAndCheckConvergence(Model& model);
 
-    /**
-     * @brief Update the damping factor gamma that determines step size.
-     *
-     * @param step_successful flag indicating whether the previous step was
-     * successful
-     * @param gamma reference to the damping factor that is updated
-     * @return boolean flag indicating whether search direction should be
-     * updated (true) or the same direction should be retried with the updated
-     * dampening (false)
-     */
-    bool updateDampingFactor(bool step_successful, double& gamma);
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -418,10 +484,6 @@ class SteadystateProblem {
      */
     void getNewtonStep(Model& model);
 
-    /** Newton step (size: nx_solver). */
-    AmiVector delta_;
-    /** previous newton step (size: nx_solver). */
-    AmiVector delta_old_;
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
     /** WRMS computer for xQB */
@@ -442,9 +504,6 @@ class SteadystateProblem {
     AmiVector xQB_;
     /** time-derivative of quadrature state vector */
     AmiVector xQBdot_;
-
-    /** maximum number of steps for Newton solver for allocating numlinsteps */
-    int max_steps_{0};
 
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
@@ -481,10 +540,9 @@ class SteadystateProblem {
     /** Newton solver */
     NewtonSolver newton_solver_;
 
-    /** damping factor flag */
-    NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};
-    /** damping factor lower bound */
-    realtype damping_factor_lower_bound_{1e-8};
+    /** Newton's method for finding steady states */
+    NewtonsMethod newtons_method_;
+
     /** whether newton step should be used for convergence steps */
     bool newton_step_conv_{false};
     /**
