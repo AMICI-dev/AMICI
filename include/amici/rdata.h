@@ -763,7 +763,7 @@ class ModelContext : public ContextManager {
 
     ModelContext& operator=(ModelContext const& other) = delete;
 
-    ~ModelContext();
+    ~ModelContext() noexcept(false);
 
     /**
      * @brief Restore original state on constructor-supplied amici::Model.
