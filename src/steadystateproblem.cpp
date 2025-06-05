@@ -143,9 +143,6 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
     , xQB_(model.nplist(), solver.getSunContext())
     , xQBdot_(model.nplist(), solver.getSunContext())
-    , steadystate_mask_(
-          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
-      )
     , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
