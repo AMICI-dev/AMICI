@@ -16,6 +16,54 @@ class Model;
 class BackwardProblem;
 
 /**
+ * @brief Computes the weighted root mean square norm.
+ *
+ * This class is used to compute the weighted root mean square of the residuals
+ * and maintains its work space to avoid reallocation.
+ */
+class WRMSComputer {
+  public:
+    /**
+     * @brief Constructor.
+     * @param n The length of the vectors for which to compute the WRMS.
+     * @param sunctx A SUNDIALS context for the NVector.
+     * @param atol Absolute tolerance to compute error weights.
+     * @param rtol Relative tolerance to compute error weights.
+     * @param mask Mask for entries to include in the WRMS norm.
+     * Positive value: include; non-positive value: exclude; empty: include all.
+     */
+    WRMSComputer(
+        int n, SUNContext sunctx, realtype atol, realtype rtol, AmiVector mask
+    )
+        : ewt_(n, sunctx)
+        , rtol_(rtol)
+        , atol_(atol)
+        , mask_(mask) {}
+
+    /**
+     * @brief Compute the weighted root mean square of the residuals.
+     * @param x Vector to compute the WRMS for.
+     * @param x_ref The reference vector from which to compute the error
+     * weights.
+     * @return The WRMS norm.
+     */
+    realtype wrms(AmiVector const& x, AmiVector const& x_ref);
+
+  private:
+    /** Error weights for the residuals. */
+    AmiVector ewt_;
+    /** Relative tolerance to compute error weights. */
+    realtype rtol_;
+    /** Absolute tolerance to compute error weights. */
+    realtype atol_;
+    /**
+     * Mask for entries to include in the WRMS norm.
+     * Positive value: include; non-positive value: exclude; empty: include all.
+     */
+    AmiVector mask_;
+};
+
+/**
  * @brief The SteadystateProblem class solves a steady-state problem using
  * Newton's method and falls back to integration on failure.
  */
@@ -375,10 +423,12 @@ class SteadystateProblem {
     AmiVector delta_;
     /** previous newton step (size: nx_solver). */
     AmiVector delta_old_;
-    /** error weights for solver state, dimension nx_solver */
-    AmiVector ewt_;
-    /** error weights for backward quadratures, dimension nplist() */
-    AmiVector ewtQB_;
+    /** WRMS computer for x */
+    WRMSComputer wrms_computer_x_;
+    /** WRMS computer for xQB */
+    WRMSComputer wrms_computer_xQB_;
+    /** WRMS computer for sx */
+    WRMSComputer wrms_computer_sx_;
     /** old state vector */
     AmiVector x_old_;
     /** time derivative state vector */
@@ -430,19 +480,6 @@ class SteadystateProblem {
      * [newton, simulation, newton] (length = 3)
      */
     std::vector<SteadyStateStatus> steady_state_status_;
-
-    /** absolute tolerance for convergence check (state)*/
-    realtype atol_{NAN};
-    /** relative tolerance for convergence check (state)*/
-    realtype rtol_{NAN};
-    /** absolute tolerance for convergence check (state sensi)*/
-    realtype atol_sensi_{NAN};
-    /** relative tolerance for convergence check (state sensi)*/
-    realtype rtol_sensi_{NAN};
-    /** absolute tolerance for convergence check (quadratures)*/
-    realtype atol_quad_{NAN};
-    /** relative tolerance for convergence check (quadratures)*/
-    realtype rtol_quad_{NAN};
 
     /** Newton solver */
     NewtonSolver newton_solver_;

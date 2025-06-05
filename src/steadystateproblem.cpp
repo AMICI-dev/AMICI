@@ -61,9 +61,6 @@ realtype getWrmsNorm(
     AmiVector const& x, AmiVector const& xdot, AmiVector const& mask,
     realtype atol, realtype rtol, AmiVector& ewt
 ) {
-    // Depending on what convergence we want to check (xdot, sxdot, xQBdot)
-    //  we need to pass ewt[QB], as xdot and xQBdot have different sizes.
-
     // ewt = x
     N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
     // ewt *= rtol
@@ -83,6 +80,10 @@ realtype getWrmsNorm(
     return N_VWrmsNorm(
         const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector()
     );
+}
+
+realtype WRMSComputer::wrms(AmiVector const& x, AmiVector const& x_ref) {
+    return getWrmsNorm(x_ref, x, mask_, atol_, rtol_, ewt_);
 }
 
 /**
@@ -118,8 +119,23 @@ void computeQBfromQ(
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     : delta_(model.nx_solver, solver.getSunContext())
     , delta_old_(model.nx_solver, solver.getSunContext())
-    , ewt_(model.nx_solver, solver.getSunContext())
-    , ewtQB_(model.nplist(), solver.getSunContext())
+    , wrms_computer_x_(
+          model.nx_solver, solver.getSunContext(),
+          solver.getAbsoluteToleranceSteadyState(),
+          solver.getRelativeToleranceSteadyState(),
+          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
+      )
+    , wrms_computer_xQB_(
+          model.nplist(), solver.getSunContext(),
+          solver.getAbsoluteToleranceQuadratures(),
+          solver.getRelativeToleranceQuadratures(), AmiVector()
+      )
+    , wrms_computer_sx_(
+          model.nx_solver, solver.getSunContext(),
+          solver.getAbsoluteToleranceSteadyStateSensi(),
+          solver.getRelativeToleranceSteadyStateSensi(),
+          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
+      )
     , x_old_(model.nx_solver, solver.getSunContext())
     , xdot_(model.nx_solver, solver.getSunContext())
     , sdx_(model.nx_solver, model.nplist(), solver.getSunContext())
@@ -141,12 +157,6 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
            ),
            .state = model.getModelState()}
       )
-    , atol_(solver.getAbsoluteToleranceSteadyState())
-    , rtol_(solver.getRelativeToleranceSteadyState())
-    , atol_sensi_(solver.getAbsoluteToleranceSteadyStateSensi())
-    , rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi())
-    , atol_quad_(solver.getAbsoluteToleranceQuadratures())
-    , rtol_quad_(solver.getRelativeToleranceQuadratures())
     , newton_solver_(
           NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
       )
@@ -607,7 +617,6 @@ bool SteadystateProblem::requires_state_sensitivities(
 
 realtype
 SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
-    realtype wrms = INFINITY;
     if (sensi_method == SensitivityMethod::adjoint) {
         if (newton_step_conv_) {
             throw NewtonFailure(
@@ -622,22 +631,18 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
         // to zero at all. So we need xQBdot, hence compute xQB first.
         computeQBfromQ(model, xQ_, xQB_, state_);
         computeQBfromQ(model, xB_, xQBdot_, state_);
-        wrms = getWrmsNorm(
-            xQB_, xQBdot_, steadystate_mask_, atol_quad_, rtol_quad_, ewtQB_
-        );
-    } else {
-        // If we're doing a forward simulation (with or without sensitivities),
-        // get RHS and compute weighted error norm.
-        if (newton_step_conv_)
-            getNewtonStep(model);
-        else
-            updateRightHandSide(model);
-        wrms = getWrmsNorm(
-            state_.x, newton_step_conv_ ? delta_ : xdot_, steadystate_mask_,
-            atol_, rtol_, ewt_
-        );
+        return wrms_computer_xQB_.wrms(xQBdot_, xQB_);
     }
-    return wrms;
+
+    if (newton_step_conv_) {
+        getNewtonStep(model);
+        return wrms_computer_x_.wrms(delta_, state_.x);
+    }
+
+    // If we're doing a forward simulation (with or without sensitivities),
+    // get RHS and compute weighted error norm.
+    updateRightHandSide(model);
+    return wrms_computer_x_.wrms(xdot_, state_.x);
 }
 
 realtype SteadystateProblem::getWrmsFSA(Model& model) {
@@ -655,10 +660,7 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
         );
         if (newton_step_conv_)
             newton_solver_.solveLinearSystem(xdot_);
-        wrms = getWrmsNorm(
-            state_.sx[ip], xdot_, steadystate_mask_, atol_sensi_, rtol_sensi_,
-            ewt_
-        );
+        wrms = wrms_computer_sx_.wrms(xdot_, state_.sx[ip]);
         // ideally this function would report the maximum of all wrms over
         // all ip, but for practical purposes we can just report the wrms for
         // the first ip where we know that the convergence threshold is not
@@ -939,4 +941,5 @@ void SteadystateProblem::getNewtonStep(Model& model) {
     newton_solver_.getStep(delta_, model, state_);
     delta_updated_ = true;
 }
+
 } // namespace amici
