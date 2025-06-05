@@ -186,11 +186,11 @@ class set_path:
         self.path: str = str(path)
 
     def __enter__(self):
-        self.orginal_path = sys.path.copy()
+        self.original_path = sys.path.copy()
         sys.path = [self.path]
 
     def __exit__(self, exc_type, exc_value, traceback):
-        sys.path = self.orginal_path
+        sys.path = self.original_path
 
 
 def _module_from_path(module_name: str, module_path: Path | str) -> ModuleType:
