@@ -10,6 +10,7 @@
 #include "amici/symbolic_functions.h"
 #include "amici/vector.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace amici {
@@ -298,7 +299,10 @@ void ReturnData::processForwardProblem(
     // process event data
     if (nz > 0) {
         auto const& discontinuities = fwd.getDiscontinuities();
-        Expects(static_cast<int>(discontinuities.size()) == fwd.getEventCounter() + 1);
+        Expects(
+            static_cast<int>(discontinuities.size())
+            == fwd.getEventCounter() + 1
+        );
         for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
             auto const simulation_state = fwd.getSimulationStateEvent(iroot);
             model.setModelState(simulation_state.state);
@@ -560,59 +564,51 @@ void ReturnData::handleSx0Forward(
 }
 
 void ReturnData::processSolver(Solver const& solver) {
+    using std::ranges::copy;
 
     cpu_time = solver.getCpuTime();
 
-    std::vector<int> const* tmp;
-
     if (!numsteps.empty()) {
-        tmp = &solver.getNumSteps();
-        // copy_n instead of assignment to ensure length `nt`
+        // copy instead of assignment to ensure length `nt`
         // (vector from solver may be shorter in case of integration errors)
-        std::copy_n(tmp->cbegin(), tmp->size(), numsteps.begin());
+        copy(solver.getNumSteps(), numsteps.begin());
     }
 
     if (!numsteps.empty()) {
-        tmp = &solver.getNumRhsEvals();
-        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevals.begin());
+        copy(solver.getNumRhsEvals(), numrhsevals.begin());
     }
 
     if (!numerrtestfails.empty()) {
-        tmp = &solver.getNumErrTestFails();
-        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfails.begin());
+        copy(solver.getNumErrTestFails(), numerrtestfails.begin());
     }
 
     if (!numnonlinsolvconvfails.empty()) {
-        tmp = &solver.getNumNonlinSolvConvFails();
-        std::copy_n(tmp->cbegin(), tmp->size(), numnonlinsolvconvfails.begin());
+        copy(
+            solver.getNumNonlinSolvConvFails(), numnonlinsolvconvfails.begin()
+        );
     }
 
     if (!order.empty()) {
-        tmp = &solver.getLastOrder();
-        std::copy_n(tmp->cbegin(), tmp->size(), order.begin());
+        copy(solver.getLastOrder(), order.begin());
     }
 
     cpu_timeB = solver.getCpuTimeB();
 
     if (!numstepsB.empty()) {
-        tmp = &solver.getNumStepsB();
-        std::copy_n(tmp->cbegin(), tmp->size(), numstepsB.begin());
+        copy(solver.getNumStepsB(), numstepsB.begin());
     }
 
     if (!numrhsevalsB.empty()) {
-        tmp = &solver.getNumRhsEvalsB();
-        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevalsB.begin());
+        copy(solver.getNumRhsEvalsB(), numrhsevalsB.begin());
     }
 
     if (!numerrtestfailsB.empty()) {
-        tmp = &solver.getNumErrTestFailsB();
-        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfailsB.begin());
+        copy(solver.getNumErrTestFailsB(), numerrtestfailsB.begin());
     }
 
     if (!numnonlinsolvconvfailsB.empty()) {
-        tmp = &solver.getNumNonlinSolvConvFailsB();
-        std::copy_n(
-            tmp->cbegin(), tmp->size(), numnonlinsolvconvfailsB.begin()
+        copy(
+            solver.getNumNonlinSolvConvFailsB(), numnonlinsolvconvfailsB.begin()
         );
     }
 }
@@ -1065,7 +1061,7 @@ ModelContext::ModelContext(Model* model)
     : model_(model)
     , original_state_(model->getModelState()) {}
 
-ModelContext::~ModelContext() { restore(); }
+ModelContext::~ModelContext() noexcept(false) { restore(); }
 
 void ModelContext::restore() { model_->setModelState(original_state_); }
 

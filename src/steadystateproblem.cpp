@@ -117,9 +117,7 @@ void computeQBfromQ(
 }
 
 SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
-    : delta_(model.nx_solver, solver.getSunContext())
-    , delta_old_(model.nx_solver, solver.getSunContext())
-    , wrms_computer_x_(
+    : wrms_computer_x_(
           model.nx_solver, solver.getSunContext(),
           solver.getAbsoluteToleranceSteadyState(),
           solver.getRelativeToleranceSteadyState(),
@@ -143,10 +141,6 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
     , xQB_(model.nplist(), solver.getSunContext())
     , xQBdot_(model.nplist(), solver.getSunContext())
-    , steadystate_mask_(
-          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
-      )
-    , max_steps_(solver.getNewtonMaxSteps())
     , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
           {.t = INFINITY,
@@ -160,8 +154,12 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
     , newton_solver_(
           NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
       )
-    , damping_factor_mode_(solver.getNewtonDampingFactorMode())
-    , damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound())
+    , newtons_method_(
+          model.nx_solver, solver.getSunContext(),
+          solver.getNewtonDampingFactorMode(),
+          solver.getNewtonDampingFactorLowerBound(),
+          solver.getNewtonMaxSteps()
+      )
     , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
     , check_sensi_conv_(solver.getSensiSteadyStateCheck()) {
     // Check for compatibility of options
@@ -636,7 +634,7 @@ SteadystateProblem::getWrms(Model& model, SensitivityMethod sensi_method) {
 
     if (newton_step_conv_) {
         getNewtonStep(model);
-        return wrms_computer_x_.wrms(delta_, state_.x);
+        return wrms_computer_x_.wrms(newtons_method_.delta_, state_.x);
     }
 
     // If we're doing a forward simulation (with or without sensitivities),
@@ -692,25 +690,25 @@ void SteadystateProblem::applyNewtonsMethod(Model& model, bool newton_retry) {
         return;
 
     // initialize output of linear solver for Newton step
-    delta_.zero();
+    newtons_method_.delta_.zero();
     x_old_.copy(state_.x);
     bool converged = false;
     wrms_ = getWrms(model, SensitivityMethod::none);
     converged = newton_retry ? false : wrms_ < conv_thresh;
     bool update_direction = true;
 
-    while (!converged && i_newtonstep < max_steps_) {
+    while (!converged && i_newtonstep < newtons_method_.max_steps_) {
 
         // If Newton steps are necessary, compute the initial search direction
         if (update_direction) {
             getNewtonStep(model);
             // we store delta_ here as later convergence checks may update it
-            delta_old_.copy(delta_);
+            newtons_method_.delta_old_.copy(newtons_method_.delta_);
         }
 
         // Try step with new gamma_/delta_
         linearSum(
-            1.0, x_old_, gamma, update_direction ? delta_ : delta_old_, state_.x
+            1.0, x_old_, gamma, update_direction ? newtons_method_.delta_ : newtons_method_.delta_old_, state_.x
         );
         flagUpdatedState();
 
@@ -730,7 +728,8 @@ void SteadystateProblem::applyNewtonsMethod(Model& model, bool newton_retry) {
             x_old_.copy(state_.x);
         }
 
-        update_direction = updateDampingFactor(step_successful, gamma);
+        update_direction
+            = newtons_method_.updateDampingFactor(step_successful, gamma);
         // increase step counter
         i_newtonstep++;
     }
@@ -751,28 +750,6 @@ bool SteadystateProblem::makePositiveAndCheckConvergence(Model& model) {
     }
     wrms_ = getWrms(model, SensitivityMethod::none);
     return wrms_ < conv_thresh;
-}
-
-bool SteadystateProblem::updateDampingFactor(
-    bool step_successful, double& gamma
-) {
-    if (damping_factor_mode_ != NewtonDampingFactorMode::on)
-        return true;
-
-    if (step_successful) {
-        gamma = fmin(1.0, 2.0 * gamma);
-    } else {
-        gamma /= 4.0;
-    }
-
-    if (gamma < damping_factor_lower_bound_) {
-        throw NewtonFailure(
-            AMICI_DAMPING_FACTOR_ERROR,
-            "Newton solver failed: the damping factor "
-            "reached its lower bound"
-        );
-    }
-    return step_successful;
 }
 
 void SteadystateProblem::runSteadystateSimulation(
@@ -937,8 +914,8 @@ void SteadystateProblem::getNewtonStep(Model& model) {
     if (delta_updated_)
         return;
     updateRightHandSide(model);
-    delta_.copy(xdot_);
-    newton_solver_.getStep(delta_, model, state_);
+    newtons_method_.delta_.copy(xdot_);
+    newton_solver_.getStep(newtons_method_.delta_, model, state_);
     delta_updated_ = true;
 }
 
