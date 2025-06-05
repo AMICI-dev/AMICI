@@ -1459,19 +1459,19 @@ class Model : public AbstractModel, public ModelDimensions {
      * constants / fixed parameters
      * @return Those indices.
      */
-    std::vector<int> const& getReinitializationStateIdxs() const;
+    [[nodiscard]] std::vector<int> const& getReinitializationStateIdxs() const;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
      * @return dxdotdp
      */
-    AmiVectorArray const& get_dxdotdp() const;
+    [[nodiscard]] AmiVectorArray const& get_dxdotdp() const;
 
     /**
      * @brief getter for dxdotdp (python generated)
      * @return dxdotdp
      */
-    SUNMatrixWrapper const& get_dxdotdp_full() const;
+    [[nodiscard]] SUNMatrixWrapper const& get_dxdotdp_full() const;
 
     /**
      * @brief Get trigger times for events that don't require root-finding.
@@ -1480,7 +1480,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * root-finding (i.e. that trigger at predetermined timepoints),
      * in ascending order.
      */
-    virtual std::vector<double> get_trigger_timepoints() const;
+    [[nodiscard]] virtual std::vector<double> get_trigger_timepoints() const;
 
     /**
      * @brief Get steady-state mask as std::vector.
@@ -1489,7 +1489,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Steady-state mask
      */
-    std::vector<realtype> get_steadystate_mask() const {
+    [[nodiscard]] std::vector<realtype> get_steadystate_mask() const {
         return steadystate_mask_;
     };
 
@@ -1511,7 +1511,18 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie event index
      * @return The corresponding Event object.
      */
-    Event const& get_event(int ie) const { return events_.at(ie); }
+    [[nodiscard]] Event const& get_event(int ie) const {
+        return events_.at(ie);
+    }
+
+    /**
+     * @brief Whether there is at least one state variable for which
+     * non-negativity is to be enforced.
+     * @return Vector of all events.
+     */
+    [[nodiscard]] bool get_any_state_nonnegative() const {
+        return any_state_non_negative_;
+    }
 
     /**
      * Flag indicating whether for
