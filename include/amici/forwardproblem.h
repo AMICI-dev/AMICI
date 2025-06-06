@@ -95,12 +95,13 @@ class ForwardProblem {
     void workForwardProblem();
 
     /**
-     * @brief computes adjoint updates dJydx according to provided model and
-     * expdata
+     * @brief Computes adjoint updates dJydx according to the provided model
+     * and ExpData.
      * @param model Model instance
      * @param edata experimental data
+     * @return dJydx
      */
-    void getAdjointUpdates(Model& model, ExpData const& edata);
+    std::vector<realtype> getAdjointUpdates(Model& model, ExpData const& edata);
 
     /**
      * @brief Accessor for t
@@ -139,12 +140,6 @@ class ForwardProblem {
     std::vector<Discontinuity> const& getDiscontinuities() const {
         return discs_;
     }
-
-    /**
-     * @brief Accessor for dJydx
-     * @return dJydx
-     */
-    std::vector<realtype> const& getDJydx() const { return dJydx_; }
 
     /**
      * @brief Accessor for dJzdx
@@ -395,10 +390,6 @@ class ForwardProblem {
 
     /** Events that are waiting to be handled at the current timepoint. */
     EventQueue pending_events_;
-
-    /** state derivative of data likelihood
-     * (dimension nJ x nx x nt, ordering =?) */
-    std::vector<realtype> dJydx_;
 
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */

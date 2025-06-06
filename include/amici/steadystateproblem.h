@@ -244,11 +244,11 @@ class SteadystateProblem {
      *
      * @param solver The solver instance
      * @param model The model instance
-     * @param bwd The backward problem instance in case of pre-equilibration,
-     * or nullptr otherwise.
+     * @param xB0 Initial adjoint state vector.
+     * @param is_preeq Flag indicating whether this is a preequilibration.
      */
     void workSteadyStateBackwardProblem(
-        Solver const& solver, Model& model, BackwardProblem const* bwd
+        Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq
     );
 
     /**
@@ -279,14 +279,6 @@ class SteadystateProblem {
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
         return state_.sx;
     };
-
-    /**
-     * @brief Accessor for dJydx
-     * @return dJydx
-     */
-    [[nodiscard]] std::vector<realtype> const& getDJydx() const {
-        return dJydx_;
-    }
 
     /**
      * @brief Get the CPU time taken to solve the forward problem.
@@ -343,8 +335,11 @@ class SteadystateProblem {
      * data.
      * @param model Model instance
      * @param edata Experimental data
+     * @param dJydx output argument for dJydx
      */
-    void getAdjointUpdates(Model& model, ExpData const& edata);
+    void getAdjointUpdates(
+        Model& model, ExpData const& edata, std::vector<realtype>& dJydx
+    );
 
     /**
      * @brief Return the adjoint state
@@ -506,17 +501,6 @@ class SteadystateProblem {
     void initializeForwardProblem(int it, Solver const& solver, Model& model);
 
     /**
-     * @brief Initialize backward computation.
-     * @param solver Solver instance
-     * @param model Model instance.
-     * @param bwd pointer to the backward problem
-     * @return flag indicating whether backward computation to be carried out
-     */
-    bool initializeBackwardProblem(
-        Solver const& solver, Model& model, BackwardProblem const* bwd
-    );
-
-    /**
      * @brief Update member variables to indicate that state_.x has been
      * updated and xdot_, delta_, etc. need to be recomputed.
      */
@@ -559,12 +543,6 @@ class SteadystateProblem {
 
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
-
-    /**
-     * state derivative of data likelihood
-     * (dimension nJ x nx x nt, ordering =?)
-     */
-    std::vector<realtype> dJydx_;
 
     SimulationState state_;
 

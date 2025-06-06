@@ -44,7 +44,6 @@ ForwardProblem::ForwardProblem(
     , nroots_(gsl::narrow<decltype(nroots_)::size_type>(model->ne), 0)
     , rootvals_(gsl::narrow<decltype(rootvals_)::size_type>(model->ne), 0.0)
     , rval_tmp_(gsl::narrow<decltype(rval_tmp_)::size_type>(model->ne), 0.0)
-    , dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0)
     , dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0)
     , t_(model->t0())
     , roots_found_(model->ne, 0)
@@ -70,13 +69,6 @@ void ForwardProblem::workForwardProblem() {
     }
 
     handlePostequilibration();
-
-    if (edata && solver->computingASA()) {
-        getAdjointUpdates(*model, *edata);
-        if (posteq_problem_.has_value()) {
-            posteq_problem_->getAdjointUpdates(*model, *edata);
-        }
-    }
 }
 
 void ForwardProblem::handlePreequilibration() {
@@ -520,15 +512,26 @@ void ForwardProblem::handleDataPoint(realtype t) {
     solver->storeDiagnosis();
 }
 
-void ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
+std::vector<realtype>
+ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
+    std::vector<realtype> dJydx(model.nJ * model.nx_solver * model.nt(), 0.0);
+
     for (int it = 0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it)))
-            return;
+            break;
         model.getAdjointStateObservableUpdate(
-            slice(dJydx_, it, model.nx_solver * model.nJ), it,
+            slice(dJydx, it, model.nx_solver * model.nJ), it,
             getSimulationStateTimepoint(it).x, edata
         );
     }
+
+    if (posteq_problem_.has_value()) {
+        // Complement dJydx from postequilibration. This shouldn't overwrite
+        // anything but only fill in previously 0 values, as only non-inf
+        // timepoints were filled above.
+        posteq_problem_->getAdjointUpdates(model, edata, dJydx);
+    }
+    return dJydx;
 }
 
 SimulationState ForwardProblem::getSimulationState() {

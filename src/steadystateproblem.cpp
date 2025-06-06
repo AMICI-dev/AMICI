@@ -140,7 +140,6 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model& model)
     , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
     , xQB_(model.nplist(), solver.getSunContext())
     , xQBdot_(model.nplist(), solver.getSunContext())
-    , dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0)
     , state_(
           {.t = INFINITY,
            .x = AmiVector(model.nx_solver, solver.getSunContext()),
@@ -223,10 +222,37 @@ void SteadystateProblem::workSteadyStateProblem(
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
-    Solver const& solver, Model& model, BackwardProblem const* bwd
+    Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq
 ) {
-    if (!initializeBackwardProblem(solver, model, bwd))
-        return;
+    // note that state_ is still set from forward run
+    if (is_preeq) {
+        if (solver.getSensitivityMethodPreequilibration()
+            != SensitivityMethod::adjoint) {
+            // if not adjoint mode, there's nothing to do
+            return;
+        }
+
+        // If we need to reinitialize solver states, this won't work yet.
+        if (model.nx_reinit() > 0)
+            throw NewtonFailure(
+                AMICI_NOT_IMPLEMENTED,
+                "Adjoint preequilibration with reinitialization of "
+                "non-constant states is not yet implemented. Stopping."
+            );
+
+        // only preequilibrations needs a reInit,
+        // postequilibration does not
+        solver.reInit(state_.t, state_.x, state_.dx);
+        solver.updateAndReinitStatesAndSensitivities(&model);
+    }
+
+    newton_solver_.reinitialize();
+    xB_.copy(xB0);
+
+    // initialize quadratures
+    xQ_.zero();
+    xQB_.zero();
+    xQBdot_.zero();
 
     // Compute quadratures, track computation time
     CpuTimer cpu_timer;
@@ -403,40 +429,6 @@ void SteadystateProblem::initializeForwardProblem(
 
     state_.state = model.getModelState();
     flagUpdatedState();
-}
-
-bool SteadystateProblem::initializeBackwardProblem(
-    Solver const& solver, Model& model, BackwardProblem const* bwd
-) {
-    newton_solver_.reinitialize();
-    // note that state_ is still set from forward run
-    if (bwd) {
-        // preequilibration
-        if (solver.getSensitivityMethodPreequilibration()
-            != SensitivityMethod::adjoint) {
-            // if not adjoint mode, there's nothing to do
-            return false;
-        }
-        // If we need to reinitialize solver states, this won't work yet.
-        if (model.nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
-            );
-
-        solver.reInit(state_.t, state_.x, state_.dx);
-        solver.updateAndReinitStatesAndSensitivities(&model);
-        xB_.copy(bwd->getAdjointState());
-    }
-    // postequilibration does not need a reInit
-
-    // initialize quadratures
-    xQ_.zero();
-    xQB_.zero();
-    xQBdot_.zero();
-
-    return true;
 }
 
 void SteadystateProblem::computeSteadyStateQuadrature(
@@ -834,16 +826,15 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     return sim_solver;
 }
 
-void SteadystateProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
-    xB_.zero();
+void SteadystateProblem::getAdjointUpdates(
+    Model& model, ExpData const& edata, std::vector<realtype>& dJydx
+) {
     for (int it = 0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
-                slice(dJydx_, it, model.nx_solver * model.nJ), it, state_.x,
+                slice(dJydx, it, model.nx_solver * model.nJ), it, state_.x,
                 edata
             );
-            for (int ix = 0; ix < model.nxtrue_solver; ix++)
-                xB_[ix] += dJydx_[ix + it * model.nx_solver];
         }
     }
 }

@@ -3,7 +3,6 @@
 #include "amici/edata.h"
 #include "amici/exception.h"
 #include "amici/forwardproblem.h"
-#include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
@@ -21,7 +20,7 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , sx0_(fwd.getStateSensitivity())
     , nroots_(fwd.getNumberOfRoots())
     , discs_(fwd.getDiscontinuities())
-    , dJydx_(fwd.getDJydx())
+    , dJydx_(fwd.getAdjointUpdates(*model_, *edata_))
     , dJzdx_(fwd.getDJzdx())
     , preeq_problem_(fwd.getPreequilibrationProblem())
     , posteq_problem_(fwd.getPostequilibrationProblem()) {}
@@ -105,43 +104,29 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-        preeq_problem_->workSteadyStateBackwardProblem(*solver_, *model_, this);
+        preeq_problem_->workSteadyStateBackwardProblem(
+            *solver_, *model_, xB_, true
+        );
     }
 }
 
 void BackwardProblem::handlePostequilibration() {
-    if (posteq_problem_) {
-        posteq_problem_->workSteadyStateBackwardProblem(
-            *solver_, *model_, nullptr
-        );
+    if (!posteq_problem_) {
+        return;
     }
-    /* complement dJydx from postequilibration. This shouldn't overwrite
-     * anything but only fill in previously 0 values, as only non-inf
-     * timepoints are filled from fwd.
-     */
+
+    // initialize xB - only process the postequilibration timepoints
     for (int it = 0; it < model_->nt(); it++) {
         if (std::isinf(model_->getTimepoint(it))) {
-            if (!posteq_problem_) {
-                throw AmiException(
-                    "Model has non-finite timepoint but, "
-                    "postequilibration did not run."
-                );
-            }
-
-            // copy adjoint update to postequilibration
-            writeSlice(
-                slice(
-                    posteq_problem_->getDJydx(), it,
-                    model_->nx_solver * model_->nJ
-                ),
-                slice(dJydx_, it, model_->nx_solver * model_->nJ)
-            );
-
-            /* If adjoint sensis were computed, copy also quadratures */
-            xQB_.zero();
-            xQB_ = posteq_problem_->getEquilibrationQuadratures();
+            for (int ix = 0; ix < model_->nxtrue_solver; ix++)
+                xB_[ix] += dJydx_[ix + it * model_->nx_solver];
         }
     }
+
+    posteq_problem_->workSteadyStateBackwardProblem(
+        *solver_, *model_, xB_, false
+    );
+    xQB_ = posteq_problem_->getEquilibrationQuadratures();
 }
 
 void BackwardProblem::handleEventB(Discontinuity const& disc) {
