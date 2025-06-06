@@ -16,9 +16,9 @@ class Model;
 class BackwardProblem;
 
 /**
- * @brief Computes the weighted root mean square norm.
+ * @brief Computes the weighted root-mean-square norm.
  *
- * This class is used to compute the weighted root mean square of the residuals
+ * This class is used to compute the weighted root-mean-square of the residuals
  * and maintains its work space to avoid reallocation.
  */
 class WRMSComputer {
@@ -41,7 +41,7 @@ class WRMSComputer {
         , mask_(mask) {}
 
     /**
-     * @brief Compute the weighted root mean square of the residuals.
+     * @brief Compute the weighted root-mean-square of the residuals.
      * @param x Vector to compute the WRMS for.
      * @param x_ref The reference vector from which to compute the error
      * weights.
@@ -66,30 +66,67 @@ class WRMSComputer {
 /**
  * @brief Implements Newton's method for finding steady states.
  *
- * TODO: To be extended after further disentangling SteadyStateProblem.
+ * See also:
+ *  Lines et al. (2019), IFAC-PapersOnLine 52 (26): 32–37.
+ *  https://doi.org/10.1016/j.ifacol.2019.12.232
  */
 class NewtonsMethod {
   public:
     /**
      * @brief Constructor.
-     * @param nx Number of solver states (nx_solver).
+     * @param model Number of solver states (nx_solver).
+     * @param solver NewtonSolver instance to compute the Newton step.
+     * Expected to be correctly initialized.
      * @param sunctx A SUNDIALS context for the NVector.
      * @param max_steps
      * @param damping_factor_mode
      * @param damping_factor_lower_bound
+     * @param check_delta
      */
     NewtonsMethod(
-        int nx, SUNContext sunctx,
+        gsl::not_null<Model*> model, SUNContext sunctx,
+        gsl::not_null<NewtonSolver*> solver,
         NewtonDampingFactorMode damping_factor_mode,
-        realtype damping_factor_lower_bound,
-        int max_steps
-    )
-        : max_steps_(max_steps)
-        , delta_(nx, sunctx)
-        , delta_old_(nx, sunctx)
-        , damping_factor_mode_(damping_factor_mode)
-        , damping_factor_lower_bound_(damping_factor_lower_bound) {}
+        realtype damping_factor_lower_bound, int max_steps, bool check_delta
+    );
 
+    /**
+     * @brief Run the Newton solver iterations and checks for convergence
+     * to steady state.
+     * @param xdot Time derivative of the state vector `state.x`.
+     * @param state SimulationState instance containing the current state.
+     * @param wrms_computer WRMSComputer instance to compute the WRMS norm.
+     */
+    void
+    run(AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer);
+
+    /**
+     * @brief Compute the Newton step for the current state_.x and xdot and
+     * store it in delta_.
+     * @param xdot Time derivative of the state vector `state.x`.
+     * @param state SimulationState instance containing the current state.
+     */
+    void compute_step(AmiVector const& xdot, SimulationState const& state);
+
+    /**
+     * @brief Get the last Newton step.
+     * @return Newton step
+     */
+    [[nodiscard]] AmiVector const& get_delta() const { return delta_; }
+
+    /**
+     * @brief Get the number of steps taken in the current iteration.
+     * @return Number of steps taken.
+     */
+    [[nodiscard]] int get_num_steps() const { return i_step; }
+
+    /**
+     * @brief Get the current WRMS norm.
+     * @return The current WRMS norm.
+     */
+    [[nodiscard]] realtype get_wrms() const { return wrms_; }
+
+  private:
     /**
      * @brief Update the damping factor gamma that determines step size.
      *
@@ -101,43 +138,76 @@ class NewtonsMethod {
      * dampening (false)
      */
 
-    bool updateDampingFactor(bool step_successful, double& gamma) {
-        if (damping_factor_mode_ != NewtonDampingFactorMode::on)
-            return true;
+    bool update_damping_factor(bool step_successful, double& gamma);
 
-        if (step_successful) {
-            gamma = fmin(1.0, 2.0 * gamma);
-        } else {
-            gamma /= 4.0;
-        }
+    /**
+     * @brief Compute the weighted root-mean-square of the residuals.
+     * @param xdot
+     * @param state
+     * @param wrms_computer
+     * @return WRMS norm.
+     */
+    realtype compute_wrms(
+        AmiVector const& xdot, SimulationState const& state,
+        WRMSComputer& wrms_computer
+    );
 
-        if (gamma < damping_factor_lower_bound_) {
-            throw NewtonFailure(
-                AMICI_DAMPING_FACTOR_ERROR,
-                "Newton solver failed: the damping factor "
-                "reached its lower bound"
-            );
-        }
-        return step_successful;
-    }
+    /**
+     * @brief Check for convergence.
+     *
+     * Check if NewtonsMethod::wrms_ is below the convergence threshold,
+     * make the state non-negative if requested, and recompute and check
+     * the WRMS norm again.
+     *
+     * @param xdot
+     * @param state
+     * @param wrms_computer
+     * @return Whether convergence has been reached.
+     */
+    bool has_converged(
+        AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer
+    );
 
-    // TODO: make private after further disentangling SteadyStateProblem
+    static constexpr realtype conv_thresh = 1.0;
+
+    /** Pointer to the model instance. */
+    gsl::not_null<Model*> model_;
 
     /** Maximum number of iterations. */
     int max_steps_{0};
 
-    /** Newton step (size: nx_solver). */
-    AmiVector delta_;
-
-    /** previous newton step (size: nx_solver). */
-    AmiVector delta_old_;
-
-  private:
     /** damping factor flag */
     NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};
 
     /** damping factor lower bound */
     realtype damping_factor_lower_bound_{1e-8};
+
+    /**
+     * Whether to check the Newton step (delta) or the right-hand side (xdot)
+     * during the convergence check.
+     */
+    bool check_delta_;
+
+    /** Pointer to the Newton solver instance to compute the Newton step. */
+    gsl::not_null<NewtonSolver*> solver_;
+
+    /** Newton step (size: nx_solver). */
+    AmiVector delta_;
+
+    /** Previous Newton step (size: nx_solver). */
+    AmiVector delta_old_;
+
+    /** Newton step (size: nx_solver). */
+    AmiVector x_old_;
+
+    /**
+     * WRMS norm based on the current state and delta or xdot
+     * (depending on `check_delta_`).
+     */
+    realtype wrms_ = INFINITY;
+
+    /** The current number of Newton iterations. */
+    int i_step = 0;
 };
 
 /**
@@ -152,7 +222,7 @@ class SteadystateProblem {
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(Solver const& solver, Model const& model);
+    explicit SteadystateProblem(Solver const& solver, Model& model);
 
     /**
      * @brief Compute the steady state in the forward case.
@@ -219,7 +289,7 @@ class SteadystateProblem {
     }
 
     /**
-     * @brief Get the CPU time taken to solvethe forward problem.
+     * @brief Get the CPU time taken to solve the forward problem.
      * @return The CPU time in milliseconds.
      */
     [[nodiscard]] double getCPUTime() const { return cpu_time_; }
@@ -248,7 +318,7 @@ class SteadystateProblem {
 
     /**
      * @brief Get the weighted root mean square of the residuals.
-     * @return The weighted root mean square of the residuals.
+     * @return The weighted root-mean-square of the residuals.
      */
     [[nodiscard]] realtype getResidualNorm() const { return wrms_; }
 
@@ -305,7 +375,7 @@ class SteadystateProblem {
     /**
      * @brief Handle the computation of the steady state.
      *
-     * Throws an AmiException, if no steady state was found.
+     * Throws an AmiException if no steady state was found.
      *
      * @param solver Solver instance.
      * @param model Model instance.
@@ -398,15 +468,7 @@ class SteadystateProblem {
     realtype getWrmsFSA(Model& model);
 
     /**
-     * @brief Run the Newton solver iterations and checks for convergence
-     * to steady state.
-     * @param model Model instance.
-     * @param newton_retry flag indicating if Newton solver is rerun
-     */
-    void applyNewtonsMethod(Model& model, bool newton_retry);
-
-    /**
-     * @brief Launch forward simulation if Newton solver or linear system solve
+     * @brief Launch simulation if Newton solver or linear system solve
      * fail or are disabled.
      * @param solver Solver instance.
      * @param model Model instance.
@@ -428,7 +490,7 @@ class SteadystateProblem {
      * @param solver Solver instance
      * @param model Model instance.
      * @param forwardSensis flag switching on integration with FSA
-     * @param backward flag switching on quadratures computation
+     * @param backward flag switching on quadrature computation
      * @return A unique pointer to the created Solver instance.
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(
@@ -447,20 +509,12 @@ class SteadystateProblem {
      * @brief Initialize backward computation.
      * @param solver Solver instance
      * @param model Model instance.
-     * @param bwd pointer to backward problem
+     * @param bwd pointer to the backward problem
      * @return flag indicating whether backward computation to be carried out
      */
     bool initializeBackwardProblem(
         Solver const& solver, Model& model, BackwardProblem const* bwd
     );
-
-    /**
-     * @brief Ensure state positivity if requested, and repeat the convergence
-     * check if necessary.
-     * @param model Model instance.
-     */
-    bool makePositiveAndCheckConvergence(Model& model);
-
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -481,13 +535,6 @@ class SteadystateProblem {
      * @param model model instance
      */
     void updateRightHandSide(Model& model);
-
-    /**
-     * @brief Compute the Newton step for the current state_.x and set the
-     * corresponding flag to indicate delta_ is up to date.
-     * @param model Model instance
-     */
-    void getNewtonStep(Model& model);
 
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
@@ -548,7 +595,10 @@ class SteadystateProblem {
     /** Newton's method for finding steady states */
     NewtonsMethod newtons_method_;
 
-    /** whether newton step should be used for convergence steps */
+    /**
+     * Whether the Newton step should be used instead of xdot for convergence
+     * checks during simulation and Newton's method.
+     */
     bool newton_step_conv_{false};
     /**
      * whether sensitivities should be checked for convergence to steady state
@@ -557,10 +607,6 @@ class SteadystateProblem {
 
     /** flag indicating whether xdot_ has been computed for the current state */
     bool xdot_updated_{false};
-    /**
-     * flag indicating whether delta_ has been computed for the current state
-     */
-    bool delta_updated_{false};
     /**
      * flag indicating whether simulation sensitivities have been retrieved for
      * the current state
