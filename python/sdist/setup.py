@@ -78,14 +78,13 @@ def get_extensions():
             "-DKLU_USE_CHOLMOD=OFF",
         ],
     )
-    cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "")
-    if cmake_prefix_path:
-        cmake_prefix_path += ";"
+    cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "").split(os.pathsep)
     # We need the potentially temporary and unpredictable build path
     #  to use artifacts from other extensions here. `${build_dir}` will
     #  be replaced by the actual path by `AmiciBuildCMakeExtension`
     #  before being passed to CMake.
-    cmake_prefix_path += "${build_dir}/amici"
+    cmake_prefix_path.append("${build_dir}/amici")
+
     # SUNDIALS
     sundials = CMakeExtension(
         name="sundials",
@@ -104,9 +103,21 @@ def get_extensions():
             "-DEXAMPLES_ENABLE_C=OFF",
             "-DEXAMPLES_INSTALL=OFF",
             "-DENABLE_KLU=ON",
-            f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
+            f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
         ],
     )
+
+    # If scipy_openblas64 is installed, we make it cmake configuration
+    # available
+    try:
+        import scipy_openblas64
+
+        cmake_prefix_path.append(
+            f"{scipy_openblas64.get_lib_dir()}/cmake/openblas"
+        )
+    except ImportError:
+        pass
+
     # AMICI
     amici_ext = CMakeExtension(
         name="amici",
@@ -122,7 +133,7 @@ def get_extensions():
             else "-Wno-error=dev",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
-            f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
+            f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
         ],
     )
     # Order matters!

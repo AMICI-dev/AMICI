@@ -29,13 +29,27 @@ def get_extension() -> CMakeExtension:
         "true",
     ] or os.getenv("ENABLE_GCOV_COVERAGE", "").lower() in ["1", "true"]
 
+    cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "").split(os.pathsep)
+    cmake_prefix_path.append(prefix_path.as_posix())
+
+    # If scipy_openblas64 is installed, we make it cmake configuration
+    # available
+    try:
+        import scipy_openblas64
+
+        cmake_prefix_path.append(
+            f"{scipy_openblas64.get_lib_dir()}/cmake/openblas"
+        )
+    except ImportError:
+        pass
+
     return CMakeExtension(
         name="model_ext",
         source_dir=os.getcwd(),
         install_prefix="TPL_MODELNAME",
         cmake_configure_options=[
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
-            f"-DCMAKE_PREFIX_PATH={prefix_path.as_posix()}",
+            f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
         ],
