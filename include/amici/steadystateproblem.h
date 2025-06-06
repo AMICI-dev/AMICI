@@ -383,13 +383,11 @@ class SteadystateProblem {
     ) const;
 
     /**
-     * @brief Checks convergence for state or adjoint quadratures, depending on
-     * sensi method
+     * @brief Checks steady-state convergence for state variables
      * @param model Model instance
-     * @param sensi_method sensitivity method
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrms(Model& model, SensitivityMethod sensi_method);
+    realtype getWrmsState(Model& model);
 
     /**
      * @brief Checks convergence for state sensitivities
@@ -407,15 +405,21 @@ class SteadystateProblem {
     void applyNewtonsMethod(Model& model, bool newton_retry);
 
     /**
-     * @brief Launch simulation if Newton solver or linear system solve
+     * @brief Launch forward simulation if Newton solver or linear system solve
      * fail or are disabled.
      * @param solver Solver instance.
      * @param model Model instance.
-     * @param backward Whether to run the forward (`false`) or backward (`true`)
      * simulation.
      */
-    void
-    runSteadystateSimulation(Solver const& solver, Model& model, bool backward);
+    void runSteadystateSimulationFwd(Solver const& solver, Model& model);
+
+    /**
+     * @brief Launch backward simulation if Newton solver or linear system solve
+     * fail or are disabled.
+     * @param solver Solver instance.
+     * @param model Model instance.
+     */
+    void runSteadystateSimulationBwd(Solver const& solver, Model& model);
 
     /**
      * @brief Create and initialize a CVodeSolver instance for
