@@ -35,8 +35,8 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
 }
 
 ForwardProblem::ForwardProblem(
-    ExpData const* edata, Model* model, Solver* solver,
-    SteadystateProblem const* preeq
+    ExpData const* edata, gsl::not_null<Model*> model,
+    gsl::not_null<Solver*> solver
 )
     : model(model)
     , solver(solver)
@@ -55,19 +55,46 @@ ForwardProblem::ForwardProblem(
     , xdot_old_(model->nx_solver, solver->getSunContext())
     , sx_(model->nx_solver, model->nplist(), solver->getSunContext())
     , sdx_(model->nx_solver, model->nplist(), solver->getSunContext())
-    , stau_(model->nplist()) {
-    if (preeq) {
-        x_ = preeq->getState();
-        sx_ = preeq->getStateSensitivity();
-        preequilibrated_ = true;
+    , stau_(model->nplist())
+    , uses_presimulation_(edata && edata->t_presim > 0) {}
+
+void ForwardProblem::workForwardProblem() {
+    handlePreequilibration();
+
+    {
+        FinalStateStorer fss(this);
+
+        initialize();
+        handlePresimulation();
+        handleMainSimulation();
+    }
+
+    handlePostequilibration();
+
+    if (edata && solver->computingASA()) {
+        getAdjointUpdates(*model, *edata);
+        if (posteq_problem_.has_value()) {
+            posteq_problem_->getAdjointUpdates(*model, *edata);
+        }
     }
 }
 
-void ForwardProblem::workForwardProblem() {
-    FinalStateStorer fss(this);
+void ForwardProblem::handlePreequilibration() {
+    if (!edata || edata->fixedParametersPreequilibration.empty()) {
+        return;
+    }
 
-    auto presimulate = edata && edata->t_presim > 0;
+    ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
+    preeq_problem_.emplace(*solver, *model);
+    preeq_problem_->workSteadyStateProblem(*solver, *model, -1);
+
+    x_ = preeq_problem_->getState();
+    sx_ = preeq_problem_->getStateSensitivity();
+    preequilibrated_ = true;
+}
+
+void ForwardProblem::initialize() {
     // if preequilibration was done, model was already initialized
     if (!preequilibrated_)
         model->initialize(
@@ -81,48 +108,67 @@ void ForwardProblem::workForwardProblem() {
 
     // compute initial time and setup solver for (pre-)simulation
     auto t0 = model->t0();
-    if (presimulate)
+    if (uses_presimulation_)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
 
     if (model->ne
-        && std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; }))
+        && std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; })) {
         handleEvent(t0, true);
+    }
+}
 
-    // perform presimulation if necessary
-    if (presimulate) {
-        if (solver->computingASA())
-            throw AmiException(
-                "Presimulation with adjoint sensitivities"
-                " is currently not implemented."
-            );
-        if (model->ne > 0) {
-            solver->logger->log(
-                LogSeverity::warning, "PRESIMULATION",
-                "Presimulation with events is not supported. "
-                "Events will be ignored during pre- and post-equilibration. "
-                "This is subject to change."
-            );
-        }
-        handlePresimulation();
-        t_ = model->t0();
-        if (model->ne) {
-            model->initEvents(x_, dx_, roots_found_);
-            if (std::ranges::any_of(roots_found_, [](int rf) {
-                    return rf == 1;
-                }))
-                handleEvent(t0, true);
-        }
+void ForwardProblem::handlePresimulation() {
+    if (!uses_presimulation_)
+        return;
+
+    if (solver->computingASA()) {
+        throw AmiException(
+            "Presimulation with adjoint sensitivities"
+            " is currently not implemented."
+        );
     }
 
+    if (model->ne > 0) {
+        solver->logger->log(
+            LogSeverity::warning, "PRESIMULATION",
+            "Presimulation with events is not supported. "
+            "Events will be ignored during pre- and post-equilibration. "
+            "This is subject to change."
+        );
+    }
+
+    {
+        // Are there dedicated condition preequilibration parameters provided?
+        ConditionContext cond(
+            model, edata, FixedParameterContext::presimulation
+        );
+        solver->updateAndReinitStatesAndSensitivities(model);
+
+        solver->run(model->t0());
+        solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+    }
+
+    // Reset the time and re-initialize events for the main simulation
+    t_ = model->t0();
+    if (model->ne) {
+        model->initEvents(x_, dx_, roots_found_);
+        if (std::ranges::any_of(roots_found_, [](int rf) { return rf == 1; })) {
+            auto t0 = model->t0();
+            handleEvent(t0, true);
+        }
+    }
+}
+
+void ForwardProblem::handleMainSimulation() {
     // When computing adjoint sensitivity analysis with presimulation,
     // we need to store sx after the reinitialization after preequilibration
     // but before reinitialization after presimulation. As presimulation with
     // ASA will not update sx, we can simply extract the values here.
-    if (solver->computingASA() && presimulate)
+    if (solver->computingASA() && uses_presimulation_)
         sx_ = solver->getStateSensitivity(model->t0());
 
-    if (presimulate || preequilibrated_)
+    if (uses_presimulation_ || preequilibrated_)
         solver->updateAndReinitStatesAndSensitivities(model);
 
     // update x0 after computing consistence IC/reinitialization
@@ -131,7 +177,8 @@ void ForwardProblem::workForwardProblem() {
     // after presimulation/preequilibration, and if we didn't do either this
     // also wont harm. when computing ASA, we only want to update here, if we
     // didn't update before presimulation (if applicable).
-    if (solver->computingFSA() || (solver->computingASA() && !presimulate))
+    if (solver->computingFSA()
+        || (solver->computingASA() && !uses_presimulation_))
         sx_ = solver->getStateSensitivity(model->t0());
 
     // store initial state and sensitivity
@@ -207,13 +254,13 @@ void ForwardProblem::workForwardProblem() {
     }
 }
 
-void ForwardProblem::handlePresimulation() {
-    // Are there dedicated condition preequilibration parameters provided?
-    ConditionContext cond(model, edata, FixedParameterContext::presimulation);
-    solver->updateAndReinitStatesAndSensitivities(model);
-
-    solver->run(model->t0());
-    solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+void ForwardProblem::handlePostequilibration() {
+    if (getCurrentTimeIteration() < model->nt()) {
+        posteq_problem_.emplace(*solver, *model);
+        posteq_problem_->workSteadyStateProblem(
+            *solver, *model, getCurrentTimeIteration()
+        );
+    }
 }
 
 void ForwardProblem::handleEvent(

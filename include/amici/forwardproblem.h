@@ -5,10 +5,11 @@
 #include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/steadystateproblem.h"
 #include "amici/vector.h"
 
+#include <optional>
 #include <vector>
-
 namespace amici {
 
 class ExpData;
@@ -73,12 +74,11 @@ class ForwardProblem {
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
-     * @param preeq preequilibration with which to initialize the forward
      * problem, pass nullptr for no initialization
      */
     ForwardProblem(
-        ExpData const* edata, Model* model, Solver* solver,
-        SteadystateProblem const* preeq
+        ExpData const* edata, gsl::not_null<Model*> model,
+        gsl::not_null<Solver*> solver
     );
 
     ~ForwardProblem() = default;
@@ -220,6 +220,46 @@ class ForwardProblem {
         return final_state_;
     };
 
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem* getPreequilibrationProblem() {
+        if (preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem const* getPreequilibrationProblem() const {
+        if (preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem* getPostequilibrationProblem() {
+        if (posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem const* getPostequilibrationProblem() const {
+        if (posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
     /** pointer to model instance */
     Model* model;
 
@@ -230,7 +270,49 @@ class ForwardProblem {
     ExpData const* edata;
 
   private:
+    /**
+     * @brief Handle preequilibration if necessary.
+     *
+     * Preequilibration starts at `Model::t0()`.
+     *
+     * So far, no event handling takes place during preequilibration.
+     */
+    void handlePreequilibration();
+
+    /**
+     * @brief Initialize model and solver for presimulation or
+     * the main simulation if there is no presimulation.
+     */
+    void initialize();
+
+    /**
+     * @brief Handle pre-simulation if required.
+     *
+     * Pre-simulation starts at `Model::t0() - ExpData::t_presim`.
+     *
+     * So far, no event handling takes place during presimulation.
+     */
     void handlePresimulation();
+
+    /**
+     * @brief Handle the main simulation.
+     *
+     * Simulation starts at `Model::t0()`.
+     * During this period, events are processed and data points are
+     * handled.
+     */
+    void handleMainSimulation();
+
+    /**
+     * @brief Handle postequilibration if necessary.
+     *
+     * Postequilibration starts after the last finite output timepoint
+     * or the last event timepoint that is known a priori, whichever is later.
+     *
+     * So far, no event handling takes place during postequilibration.
+     * This also includes the processing of event observables.
+     */
+    void handlePostequilibration();
 
     /**
      * @brief Execute everything necessary for the handling of events
@@ -379,7 +461,16 @@ class ForwardProblem {
     bool preequilibrated_{false};
 
     /** current iteration number for time index */
-    int it_;
+    int it_ = 0;
+
+    /** Whether the current model/data requires presimulation. */
+    bool uses_presimulation_{false};
+
+    /** The preequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> preeq_problem_;
+
+    /** The postequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> posteq_problem_;
 };
 
 /**

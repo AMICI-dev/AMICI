@@ -10,47 +10,21 @@
 
 namespace amici {
 
-BackwardProblem::BackwardProblem(
-    ForwardProblem const& fwd, SteadystateProblem const* posteq
-)
+BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     : model_(fwd.model)
     , solver_(fwd.solver)
     , edata_(fwd.edata)
     , t_(fwd.getTime())
-    , xB_(fwd.model->nx_solver, solver_->getSunContext())
-    , dxB_(fwd.model->nx_solver, solver_->getSunContext())
-    , xQB_(fwd.model->nJ * fwd.model->nplist(), solver_->getSunContext())
+    , xB_(model_->nx_solver, solver_->getSunContext())
+    , dxB_(model_->nx_solver, solver_->getSunContext())
+    , xQB_(model_->nJ * model_->nplist(), solver_->getSunContext())
     , sx0_(fwd.getStateSensitivity())
     , nroots_(fwd.getNumberOfRoots())
     , discs_(fwd.getDiscontinuities())
     , dJydx_(fwd.getDJydx())
-    , dJzdx_(fwd.getDJzdx()) {
-    /* complement dJydx from postequilibration. This shouldn't overwrite
-     * anything but only fill in previously 0 values, as only non-inf
-     * timepoints are filled from fwd.
-     */
-    for (int it = 0; it < fwd.model->nt(); it++) {
-        if (std::isinf(fwd.model->getTimepoint(it))) {
-            if (!posteq)
-                throw AmiException(
-                    "Model has non-finite timepoint but, "
-                    "postequilibration did not run"
-                );
-
-            /* copy adjoint update to postequilibration */
-            writeSlice(
-                slice(
-                    posteq->getDJydx(), it, fwd.model->nx_solver * fwd.model->nJ
-                ),
-                slice(dJydx_, it, fwd.model->nx_solver * fwd.model->nJ)
-            );
-
-            /* If adjoint sensis were computed, copy also quadratures */
-            xQB_.zero();
-            xQB_ = posteq->getEquilibrationQuadratures();
-        }
-    }
-}
+    , dJzdx_(fwd.getDJzdx())
+    , preeq_problem_(fwd.getPreequilibrationProblem())
+    , posteq_problem_(fwd.getPostequilibrationProblem()) {}
 
 void BackwardProblem::workBackwardProblem() {
 
@@ -60,6 +34,8 @@ void BackwardProblem::workBackwardProblem() {
         || model_->nplist() == 0) {
         return;
     }
+
+    handlePostequilibration();
 
     int it = model_->nt() - 1;
     /* If we have posteq, infinity timepoints were already treated */
@@ -115,12 +91,56 @@ void BackwardProblem::workBackwardProblem() {
         solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
     }
 
+    // handle presimulation
     if (edata_ && edata_->t_presim > 0) {
         ConditionContext cc(
             model_, edata_, FixedParameterContext::presimulation
         );
         solver_->runB(model_->t0() - edata_->t_presim);
         solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
+    }
+
+    // handle pre-equilibration
+    if (preeq_problem_) {
+        ConditionContext cc2(
+            model_, edata_, FixedParameterContext::preequilibration
+        );
+        preeq_problem_->workSteadyStateBackwardProblem(*solver_, *model_, this);
+    }
+}
+
+void BackwardProblem::handlePostequilibration() {
+    if (posteq_problem_) {
+        posteq_problem_->workSteadyStateBackwardProblem(
+            *solver_, *model_, nullptr
+        );
+    }
+    /* complement dJydx from postequilibration. This shouldn't overwrite
+     * anything but only fill in previously 0 values, as only non-inf
+     * timepoints are filled from fwd.
+     */
+    for (int it = 0; it < model_->nt(); it++) {
+        if (std::isinf(model_->getTimepoint(it))) {
+            if (!posteq_problem_) {
+                throw AmiException(
+                    "Model has non-finite timepoint but, "
+                    "postequilibration did not run."
+                );
+            }
+
+            // copy adjoint update to postequilibration
+            writeSlice(
+                slice(
+                    posteq_problem_->getDJydx(), it,
+                    model_->nx_solver * model_->nJ
+                ),
+                slice(dJydx_, it, model_->nx_solver * model_->nJ)
+            );
+
+            /* If adjoint sensis were computed, copy also quadratures */
+            xQB_.zero();
+            xQB_ = posteq_problem_->getEquilibrationQuadratures();
+        }
     }
 }
 

@@ -26,11 +26,8 @@ class BackwardProblem {
     /**
      * @brief Construct backward problem from forward problem
      * @param fwd pointer to corresponding forward problem
-     * @param posteq pointer to postequilibration problem, can be nullptr
      */
-    explicit BackwardProblem(
-        ForwardProblem const& fwd, SteadystateProblem const* posteq
-    );
+    explicit BackwardProblem(ForwardProblem& fwd);
 
     /**
      * @brief Solve the backward problem.
@@ -78,6 +75,8 @@ class BackwardProblem {
     AmiVector const& getAdjointQuadrature() const { return xQB_; }
 
   private:
+    void handlePostequilibration();
+
     /**
      * @brief Execute everything necessary for the handling of events
      * for the backward problem
@@ -129,6 +128,12 @@ class BackwardProblem {
     std::vector<realtype> dJydx_;
     /** state derivative of event likelihood */
     std::vector<realtype> const dJzdx_;
+
+    /** The preequilibration steadystate problem from the forward problem. */
+    SteadystateProblem* preeq_problem_;
+
+    /** The postequilibration steadystate problem from the forward problem. */
+    SteadystateProblem* posteq_problem_;
 };
 
 } // namespace amici
