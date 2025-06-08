@@ -6,6 +6,7 @@ requires = [
     "wheel",
     "numpy>=2.0",
     "cmake-build-extension==0.6.0",
+    "swig",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -27,6 +28,7 @@ dependencies = [
     "toposort",
     "setuptools>=48",
     "mpmath",
+    "swig"
 ]
 license = "BSD-3-Clause"
 authors = [
