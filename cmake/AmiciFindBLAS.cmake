@@ -95,6 +95,7 @@ elseif(
       set(BLAS_INCLUDE_DIRS ${OpenBLAS_INCLUDE_DIRS})
       set(BLAS_LIBRARIES ${OpenBLAS_LIBRARIES})
       # fix incorrect path, replace /bin/ by /lib/
+      #  https://github.com/MacPython/openblas-libs/issues/202
       string(REPLACE "/bin/" "/lib/" BLAS_LIBRARIES "${BLAS_LIBRARIES}")
       string(REPLACE "/libscipy_openblas64_.dll" "/libscipy_openblas64_.lib" BLAS_LIBRARIES "${BLAS_LIBRARIES}")
 
