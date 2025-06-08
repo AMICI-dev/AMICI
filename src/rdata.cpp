@@ -729,25 +729,37 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                     FIM.at(jp + ip * nplist)
                         *= pcoefficient.at(ip) * pcoefficient.at(jp);
 
-#define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                              \
-    if (!s##QUANT.empty())                                                     \
-        for (int IND1 = 0; (IND1) < (N1T); ++(IND1))                           \
-            for (int ip = 0; ip < nplist; ++ip)                                \
-                for (int IND2 = 0; (IND2) < (N2); ++(IND2)) {                  \
-                    s##QUANT.at(((IND2) * nplist + ip) * (N1) + (IND1))        \
-                        *= pcoefficient.at(ip);                                \
-                }
+        // apply chain rule to sensitivities
+        auto chain_rule = [&](auto& sens, int n1, int stride1, int n2) {
+            if (sens.empty()) {
+                return;
+            }
+            using index_type =
+                typename std::remove_reference_t<decltype(sens)>::size_type;
+            Expects(
+                sens.size() == gsl::narrow<index_type>(n2 * nplist * stride1)
+            );
+            Expects(n1 <= stride1);
+            Expects(pcoefficient.size() == gsl::narrow<index_type>(nplist));
+            for (index_type i1 = 0; i1 < gsl::narrow<index_type>(n1); ++i1)
+                for (index_type ip = 0; ip < gsl::narrow<index_type>(nplist);
+                     ++ip)
+                    for (index_type i2 = 0; i2 < gsl::narrow<index_type>(n2);
+                         ++i2)
+                        sens[(i2 * nplist + ip) * (stride1) + (i1)]
+                            *= pcoefficient[ip];
+        };
 
-        chainRule(x, ix, nxtrue, nx, it, nt);
-        chainRule(y, iy, nytrue, ny, it, nt);
-        chainRule(sigmay, iy, nytrue, ny, it, nt);
-        chainRule(z, iz, nztrue, nz, ie, nmaxevent);
-        chainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
-        chainRule(rz, iz, nztrue, nz, ie, nmaxevent);
-        chainRule(x0, ix, nxtrue, nx, it, 1);
+        chain_rule(sx, nxtrue, nx, nt);
+        chain_rule(sy, nytrue, ny, nt);
+        chain_rule(ssigmay, nytrue, ny, nt);
+        chain_rule(sz, nztrue, nz, nmaxevent);
+        chain_rule(ssigmaz, nztrue, nz, nmaxevent);
+        chain_rule(srz, nztrue, nz, nmaxevent);
+        chain_rule(sx0, nxtrue, nx, 1);
     }
 
-    if (o2mode == SecondOrderMode::full) { // full
+    if (o2mode == SecondOrderMode::full) {
         if (!s2llh.empty() && !sllh.empty()) {
             for (int ip = 0; ip < nplist; ++ip) {
                 for (int iJ = 1; iJ < nJ; ++iJ) {
@@ -760,56 +772,78 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
             }
         }
 
-#define s2ChainRule(QUANT, IND1, N1T, N1, IND2, N2)                            \
-    if (!s##QUANT.empty())                                                     \
-        for (int ip = 0; ip < nplist; ++ip)                                    \
-            for (int iJ = 1; iJ < nJ; ++iJ)                                    \
-                for (int IND1 = 0; IND1 < N1T; ++IND1)                         \
-                    for (int IND2 = 0; IND2 < N2; ++IND2) {                    \
-                        s##QUANT.at(                                           \
-                            (IND2 * nplist + ip) * N1 + IND1 + iJ * N1T        \
-                        ) *= pcoefficient.at(ip) * augcoefficient[iJ - 1];     \
-                        if (model.plist(ip) == iJ - 1)                         \
-                            s##QUANT.at(                                       \
-                                (IND2 * nplist + ip) * N1 + IND1 + iJ * N1T    \
-                            ) += s##QUANT.at((IND2 * nplist + ip) * N1 + IND1) \
-                                 * coefficient[ip];                            \
-                    }
+        auto chain_rule = [&](auto& sens, int n1, int stride1, int n2) {
+            if (sens.empty())
+                return;
 
-        s2ChainRule(x, ix, nxtrue, nx, it, nt);
-        s2ChainRule(y, iy, nytrue, ny, it, nt);
-        s2ChainRule(sigmay, iy, nytrue, ny, it, nt);
-        s2ChainRule(z, iz, nztrue, nz, ie, nmaxevent);
-        s2ChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
-        s2ChainRule(rz, iz, nztrue, nz, ie, nmaxevent);
-    }
+            using index_type =
+                typename std::remove_reference_t<decltype(sens)>::size_type;
+            Expects(
+                sens.size() == gsl::narrow<index_type>(n2 * nplist * stride1)
+            );
+            Expects(n1 <= stride1);
+            Expects(pcoefficient.size() == gsl::narrow<index_type>(nplist));
+            Expects(coefficient.size() == gsl::narrow<index_type>(nplist));
 
-    if (o2mode == SecondOrderMode::directional) { // directional
+            for (int ip = 0; ip < nplist; ++ip)
+                for (int iJ = 1; iJ < nJ; ++iJ)
+                    for (int i1 = 0; i1 < n1; ++i1)
+                        for (int i2 = 0; i2 < n2; ++i2) {
+                            auto idx
+                                = (i2 * nplist + ip) * stride1 + i1 + iJ * n1;
+                            sens.at(idx)
+                                *= pcoefficient.at(ip) * augcoefficient[iJ - 1];
+                            if (model.plist(ip) == iJ - 1)
+                                sens.at(
+                                    idx
+                                ) += sens.at((i2 * nplist + ip) * stride1 + i1)
+                                     * coefficient[ip];
+                        }
+        };
+
+        chain_rule(sx, nxtrue, nx, nt);
+        chain_rule(sy, nytrue, ny, nt);
+        chain_rule(ssigmay, nytrue, ny, nt);
+        chain_rule(sz, nztrue, nz, nmaxevent);
+        chain_rule(ssigmaz, nztrue, nz, nmaxevent);
+        chain_rule(srz, nztrue, nz, nmaxevent);
+    } else if (o2mode == SecondOrderMode::directional) {
         for (int ip = 0; ip < nplist; ++ip) {
             s2llh.at(ip) *= pcoefficient.at(ip);
             s2llh.at(ip) += model.k()[nk - nplist + ip] * sllh.at(ip)
                             / unscaledParameters[model.plist(ip)];
         }
 
-#define s2vecChainRule(QUANT, IND1, N1T, N1, IND2, N2)                         \
-    if (!s##QUANT.empty())                                                     \
-        for (int ip = 0; ip < nplist; ++ip)                                    \
-            for (int IND1 = 0; IND1 < N1T; ++IND1)                             \
-                for (int IND2 = 0; IND2 < N2; ++IND2) {                        \
-                    s##QUANT.at((IND2 * nplist + ip) * N1 + IND1 + N1T)        \
-                        *= pcoefficient.at(ip);                                \
-                    s##QUANT.at((IND2 * nplist + ip) * N1 + IND1 + N1T)        \
-                        += model.k()[nk - nplist + ip]                         \
-                           * s##QUANT.at((IND2 * nplist + ip) * N1 + IND1)     \
-                           / unscaledParameters[model.plist(ip)];              \
-                }
+        auto chain_rule = [&](auto& sens, int n1, int stride1, int n2) {
+            if (sens.empty())
+                return;
 
-        s2vecChainRule(x, ix, nxtrue, nx, it, nt);
-        s2vecChainRule(y, iy, nytrue, ny, it, nt);
-        s2vecChainRule(sigmay, iy, nytrue, ny, it, nt);
-        s2vecChainRule(z, iz, nztrue, nz, ie, nmaxevent);
-        s2vecChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
-        s2vecChainRule(rz, iz, nztrue, nz, ie, nmaxevent);
+            using index_type =
+                typename std::remove_reference_t<decltype(sens)>::size_type;
+            Expects(
+                sens.size() == gsl::narrow<index_type>(n2 * nplist * stride1)
+            );
+            Expects(n1 <= stride1);
+            Expects(pcoefficient.size() == gsl::narrow<index_type>(nplist));
+
+            for (int ip = 0; ip < nplist; ++ip)
+                for (int i1 = 0; i1 < n1; ++i1)
+                    for (int i2 = 0; i2 < n2; ++i2) {
+                        auto idx = (i2 * nplist + ip) * stride1 + i1 + n1;
+                        sens.at(idx) *= pcoefficient.at(ip);
+                        sens.at(idx)
+                            += model.k()[nk - nplist + ip]
+                               * sens.at((i2 * nplist + ip) * stride1 + i1)
+                               / unscaledParameters[model.plist(ip)];
+                    }
+        };
+
+        chain_rule(sx, nxtrue, nx, nt);
+        chain_rule(sy, nytrue, ny, nt);
+        chain_rule(ssigmay, nytrue, ny, nt);
+        chain_rule(sz, nztrue, nz, nmaxevent);
+        chain_rule(ssigmaz, nztrue, nz, nmaxevent);
+        chain_rule(srz, nztrue, nz, nmaxevent);
     }
 }
 
