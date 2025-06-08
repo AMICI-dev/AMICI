@@ -5,3 +5,4 @@ _exhale_cpp_api/
 _exhale_matlab_api/
 examples/example_presimulation/model_presimulation/
 generated/
+build_doxygen/
