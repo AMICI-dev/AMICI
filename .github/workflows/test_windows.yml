@@ -17,9 +17,6 @@ jobs:
 
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
-#      openBLAS_version: "0.3.29"
-#      AMICI_DLL_DIRS: "C:\\BLAS\\OpenBLAS\\bin"
-#      LIB: "C:/BLAS/OpenBLAS/lib"
       CFLAGS: "-nologo"
       CXXFLAGS: "-nologo"
       LDFLAGS: "-nologo"
@@ -39,12 +36,6 @@ jobs:
 
     - shell: bash
       run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-#    - shell: bash
-#      run: echo "C:\\BLAS\\OpenBLAS\\bin" >> $GITHUB_PATH
-#    - shell: bash
-#      run: echo "BLAS_LIBS=-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib" >> $GITHUB_ENV
-#    - shell: bash
-#      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS/include/openblas/" >> $GITHUB_ENV
 
     # Developer Command Prompt for Microsoft Visual C++
     - uses: ilammy/msvc-dev-cmd@v1
@@ -53,15 +44,6 @@ jobs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-
-#    - name: Install OpenBLAS
-#      shell: powershell
-#      run: scripts/installOpenBLAS
-
-#    - uses: actions/upload-artifact@v4
-#      with:
-#        name: OpenBLAS
-#        path: C:\BLAS\OpenBLAS
 
     - name: Create sdist
       working-directory: python/sdist
