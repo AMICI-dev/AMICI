@@ -5,6 +5,7 @@
 #include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 #include "amici/vector.h"
 
@@ -64,6 +65,51 @@ struct Discontinuity {
 };
 
 /**
+ * @brief The FwdSimWorkspace class is used to store temporary simulation
+ * state during forward simulations.
+ */
+struct FwdSimWorkspace {
+    FwdSimWorkspace(gsl::not_null<Model*> model, gsl::not_null<Solver*> solver)
+        : x(model->nx_solver, solver->getSunContext())
+        , x_old(model->nx_solver, solver->getSunContext())
+        , dx(model->nx_solver, solver->getSunContext())
+        , xdot(model->nx_solver, solver->getSunContext())
+        , xdot_old(model->nx_solver, solver->getSunContext())
+        , sx(model->nx_solver, model->nplist(), solver->getSunContext())
+        , sdx(model->nx_solver, model->nplist(), solver->getSunContext())
+        , stau(model->nplist())
+    {};
+
+    /** state vector (dimension: nx_solver) */
+    AmiVector x;
+
+    /** old state vector (dimension: nx_solver) */
+    AmiVector x_old;
+
+    /** differential state vector (dimension: nx_solver) */
+    AmiVector dx;
+
+    /** time derivative state vector (dimension: nx_solver) */
+    AmiVector xdot;
+
+    /** old time derivative state vector (dimension: nx_solver) */
+    AmiVector xdot_old;
+
+    /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
+    AmiVectorArray sx;
+
+    /** differential sensitivity state vector array
+     * (dimension: nx_cl x nplist, row-major) */
+    AmiVectorArray sdx;
+
+    /** sensitivity of the event timepoint (dimension: nplist) */
+    std::vector<realtype> stau;
+
+    /** storage for last found root */
+    realtype tlastroot{0.0};
+};
+
+/**
  * @brief The ForwardProblem class groups all functions for solving the
  * forward problem.
  */
@@ -109,23 +155,12 @@ class ForwardProblem {
      */
     realtype getTime() const { return t_; }
 
-    /**
-     * @brief Accessor for x
-     * @return x
-     */
-    AmiVector const& getState() const { return x_; }
-
-    /**
-     * @brief Accessor for dx
-     * @return dx
-     */
-    AmiVector const& getStateDerivative() const { return dx_; }
 
     /**
      * @brief Accessor for sx
      * @return sx
      */
-    AmiVectorArray const& getStateSensitivity() const { return sx_; }
+    AmiVectorArray const& getStateSensitivity() const { return ws_.sx; }
 
     /**
      * @brief Accessor for nroots
@@ -419,34 +454,6 @@ class ForwardProblem {
     /** simulation state after simulation */
     SimulationState final_state_;
 
-    /** state vector (dimension: nx_solver) */
-    AmiVector x_;
-
-    /** old state vector (dimension: nx_solver) */
-    AmiVector x_old_;
-
-    /** differential state vector (dimension: nx_solver) */
-    AmiVector dx_;
-
-    /** time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_;
-
-    /** old time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_old_;
-
-    /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sx_;
-
-    /** differential sensitivity state vector array
-     * (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sdx_;
-
-    /** sensitivity of the event timepoint (dimension: nplist) */
-    std::vector<realtype> stau_;
-
-    /** storage for last found root */
-    realtype tlastroot_{0.0};
-
     /** flag to indicate whether solver was preeinitialized via preequilibration
      */
     bool preequilibrated_{false};
@@ -462,6 +469,8 @@ class ForwardProblem {
 
     /** The postequilibration steady-state problem, if any. */
     std::optional<SteadystateProblem> posteq_problem_;
+
+    FwdSimWorkspace ws_;
 };
 
 /**
