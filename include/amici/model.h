@@ -221,6 +221,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize model properties.
+     * @param t Timepoint
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
      * @param sx Reference to state variable sensitivities
@@ -231,8 +232,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * at t0 by this fun
      */
     void initialize(
-        AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVectorArray& sdx,
-        bool computeSensitivities, std::vector<int>& roots_found
+        realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
+        AmiVectorArray& sdx, bool computeSensitivities,
+        std::vector<int>& roots_found
     );
 
     /**
@@ -260,16 +262,20 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize initial states.
+     * @param t Timepoint
      * @param x State vector to be initialized
      */
-    void initializeStates(AmiVector& x);
+    void initializeStates(realtype t, AmiVector& x);
 
     /**
      * @brief Initialize initial state sensitivities.
+     * @param t Timepoint.
      * @param sx Reference to state variable sensitivities
      * @param x Reference to state variables
      */
-    void initializeStateSensitivities(AmiVectorArray& sx, AmiVector const& x);
+    void initializeStateSensitivities(
+        realtype t, AmiVectorArray& sx, AmiVector const& x
+    );
 
     /**
      * @brief Initialization of spline functions
@@ -286,13 +292,15 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Heaviside variables activate/deactivate on event occurrences.
      *
+     * @param t Timepoint
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
      * @param roots_found boolean indicators indicating whether roots were found
      * at t0 by this fun
      */
     void initEvents(
-        AmiVector const& x, AmiVector const& dx, std::vector<int>& roots_found
+        realtype t, AmiVector const& x, AmiVector const& dx,
+        std::vector<int>& roots_found
     );
 
     /**
@@ -827,9 +835,16 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial states.
+     * @param t0 Custom t0 for which to get initial states.
      * @return Initial state vector
      */
-    std::vector<realtype> getInitialStates();
+    std::vector<realtype> getInitialStates(realtype t0);
+
+    /**
+     * @brief Get the initial states.
+     * @return Initial state vector
+     */
+    std::vector<realtype> getInitialStates() { return getInitialStates(t0()); };
 
     /**
      * @brief Set the initial states.
@@ -847,7 +862,16 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Get the initial states sensitivities.
      * @return vector of initial state sensitivities
      */
-    std::vector<realtype> getInitialStateSensitivities();
+    std::vector<realtype> getInitialStateSensitivities() {
+        return getInitialStateSensitivities(t0());
+    };
+
+    /**
+     * @brief Get the initial states sensitivities.
+     * @param t0 Custom t0 for which to get initial states.
+     * @return vector of initial state sensitivities
+     */
+    std::vector<realtype> getInitialStateSensitivities(realtype t0);
 
     /**
      * @brief Set the initial state sensitivities.
@@ -1389,31 +1413,36 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute/get initial states.
+     * @param t Timepoint.
      * @param x Output buffer.
      */
-    void fx0(AmiVector& x);
+    void fx0(realtype t, AmiVector& x);
 
     /**
      * @brief Set only those initial states that are specified via
      * fixed parameters.
+     * @param t Timepoint.
      * @param x Output buffer.
      */
-    void fx0_fixedParameters(AmiVector& x);
+    void fx0_fixedParameters(realtype t, AmiVector& x);
 
     /**
      * @brief Compute/get initial value for initial state sensitivities.
+     * @param t Timepoint.
      * @param sx Output buffer for state sensitivities
      * @param x State variables
      */
-    void fsx0(AmiVectorArray& sx, AmiVector const& x);
+    void fsx0(realtype t, AmiVectorArray& sx, AmiVector const& x);
 
     /**
      * @brief Get only those initial states sensitivities that are affected
      * from `amici::Model::fx0_fixedParameters`.
+     * @param t Timepoint
      * @param sx Output buffer for state sensitivities
      * @param x State variables
      */
-    void fsx0_fixedParameters(AmiVectorArray& sx, AmiVector const& x);
+    void
+    fsx0_fixedParameters(realtype t, AmiVectorArray& sx, AmiVector const& x);
 
     /**
      * @brief Compute sensitivity of derivative initial states sensitivities
