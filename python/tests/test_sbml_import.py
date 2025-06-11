@@ -929,3 +929,30 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
 
     assert np.all(rdata.by_id("a") == np.array([2, 2, 2])), rdata.by_id("a")
     assert np.all(rdata.by_id("b") == np.array([0, 1, 1])), rdata.by_id("b")
+
+
+@skip_on_valgrind
+def test_t0(tempdir):
+    """Test that a custom initial time for the simulation is applied correctly
+    during species initialization."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_t0"
+    antimony2amici(
+        """
+        my_time = time
+        my_time' = 1
+    """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+    model.setTimepoints([2])
+    model.setT0(2)
+
+    solver = model.getSolver()
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.x == [[2.0]], rdata.x
