@@ -4,6 +4,56 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.33.0 (2025-06-11)
+
+Note that this release requires Python >= 3.11.
+
+**Fixes**
+
+* Fixed an issue in SBML AlgebraicRule processing leading to import failure if
+  a species occurred in multiple AlgebraicRules
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2744
+
+* Fixed a potential segfault when running forward sensitivity analysis for
+  models without state variables
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2749
+
+* Fixed a dimension bug for presimulation parameters in ExpDataView
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2746
+
+* Fixed incorrect initialization for initial assignments with explicit time
+  dependence
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2779
+
+**Features**
+
+* AMICI now supports SBML events with `use_values_from_trigger_time=true`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2741
+
+* AMICI now supports SBML events with constant priorities
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2730
+
+**Other changes**
+
+* doc: Added a caveats section listing some known issues and potentially
+  unexpected behavior in AMICI
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2735
+
+* Added warnings for presimulation and steady state simulation with events.
+  So far, events were not fully supported in these modes. This is subject to
+  change.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2755
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.32.0...v0.33.0
+
 ### v0.32.0 (2025-05-15)
 
 **Breaking changes**
