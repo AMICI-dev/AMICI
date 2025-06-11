@@ -76,8 +76,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     CpuTimer cpu_timer;
     solver.startTimer();
 
-    /* Applies condition-specific model settings and restores them when going
-     * out of scope */
+    // Applies condition-specific model settings and restores them when going
+    // out of scope. (This also sets `plist`, which is required for initializing
+    // ReturnData below.)
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
 
     std::unique_ptr<ReturnData> rdata
@@ -86,61 +87,25 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         rdata->id = edata->id;
     }
 
-    std::unique_ptr<SteadystateProblem> preeq{};
     std::unique_ptr<ForwardProblem> fwd{};
     std::unique_ptr<BackwardProblem> bwd{};
-    std::unique_ptr<SteadystateProblem> posteq{};
     // tracks whether backwards integration finished without exceptions
     bool bwd_success = true;
 
     try {
-        if (edata && !edata->fixedParametersPreequilibration.empty()) {
-            ConditionContext cc2(
-                &model, edata, FixedParameterContext::preequilibration
-            );
-
-            preeq = std::make_unique<SteadystateProblem>(solver, model);
-            preeq->workSteadyStateProblem(solver, model, -1);
-        }
-
-        fwd = std::make_unique<ForwardProblem>(
-            edata, &model, &solver, preeq.get()
-        );
+        fwd = std::make_unique<ForwardProblem>(edata, &model, &solver);
         fwd->workForwardProblem();
 
-        if (fwd->getCurrentTimeIteration() < model.nt()) {
-            posteq = std::make_unique<SteadystateProblem>(solver, model);
-            posteq->workSteadyStateProblem(
-                solver, model, fwd->getCurrentTimeIteration()
-            );
-        }
-
         if (edata && solver.computingASA()) {
-            fwd->getAdjointUpdates(model, *edata);
-            if (posteq) {
-                posteq->getAdjointUpdates(model, *edata);
-                posteq->workSteadyStateBackwardProblem(
-                    solver, model, bwd.get()
-                );
-            }
+            bwd_success = false; // NOLINT
 
-            bwd_success = false;
-
-            bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
+            bwd = std::make_unique<BackwardProblem>(*fwd);
             bwd->workBackwardProblem();
 
             bwd_success = true;
-
-            if (preeq) {
-                ConditionContext cc2(
-                    &model, edata, FixedParameterContext::preequilibration
-                );
-                preeq->workSteadyStateBackwardProblem(solver, model, bwd.get());
-            }
         }
 
         rdata->status = AMICI_SUCCESS;
-
     } catch (amici::IntegrationFailure const& ex) {
         if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
@@ -212,8 +177,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
         rdata->processSimulationObjects(
-            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr,
-            posteq.get(), model, solver, edata
+            fwd.get(), bwd_success ? bwd.get() : nullptr, model, solver, edata
         );
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
@@ -226,7 +190,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     }
 
     rdata->t_last = solver.gett();
-
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
     // verify that reported CPU times are plausible
@@ -236,17 +199,19 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
-    if (!posteq)
+    if (fwd && !fwd->getPostequilibrationProblem())
         gsl_EnsuresDebug(
             std::ranges::is_sorted(rdata->numsteps)
             || rdata->status != AMICI_SUCCESS
         );
-    if (!preeq)
+    if (fwd && !fwd->getPreequilibrationProblem())
         gsl_EnsuresDebug(
             std::ranges::is_sorted(rdata->numstepsB)
             || rdata->status != AMICI_SUCCESS
         );
+
     rdata->messages = logger.items;
+
     return rdata;
 }
 

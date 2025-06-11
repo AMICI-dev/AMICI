@@ -534,11 +534,14 @@ class DEModel:
                 )
 
         for event in self.events():
-            if event._state_update is None:
+            state_update = event.get_state_update(
+                x=self.sym("x"), x_old=self.sym("x")
+            )
+            if state_update is None:
                 continue
 
-            for i_state in range(len(event._state_update)):
-                if rate_ofs := event._state_update[i_state].find(rate_of_func):
+            for i_state in range(len(state_update)):
+                if rate_ofs := state_update[i_state].find(rate_of_func):
                     raise SBMLException(
                         "AMICI does currently not support rateOf(.) inside event state updates."
                     )
@@ -1196,6 +1199,8 @@ class DEModel:
                 ]
             )
             return
+        elif name == "x_old":
+            length = len(self.eq("xdot"))
         elif name == "xdot_old":
             length = len(self.eq("xdot"))
         elif name in sparse_functions:
@@ -1612,10 +1617,13 @@ class DEModel:
             # would cause problems when writing the function file later
             event_eqs = []
             for event in self._events:
-                if event._state_update is None:
+                state_update = event.get_state_update(
+                    x=self.sym("x"), x_old=self.sym("x_old")
+                )
+                if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
                 else:
-                    event_eqs.append(event._state_update)
+                    event_eqs.append(state_update)
 
             self._eqs[name] = event_eqs
 
@@ -1625,7 +1633,7 @@ class DEModel:
             ]
             event_ids = [e.get_id() for e in self._events]
             # TODO: get rid of this stupid 1-based indexing as soon as we can
-            # the matlab interface
+            #  drop the matlab interface
             z2event = [
                 event_ids.index(event_obs.get_event()) + 1
                 for event_obs in self._event_observables
@@ -1638,7 +1646,14 @@ class DEModel:
             self._eqs[name] = event_observables
             self._z2event = z2event
 
-        elif name in ["ddeltaxdx", "ddeltaxdp", "ddeltaxdt", "dzdp", "dzdx"]:
+        elif name in [
+            "ddeltaxdx",
+            "ddeltaxdx_old",
+            "ddeltaxdp",
+            "ddeltaxdt",
+            "dzdp",
+            "dzdx",
+        ]:
             if match_deriv[2] == "t":
                 var = time_symbol
             else:
@@ -1718,8 +1733,8 @@ class DEModel:
                         self.sym("stau").T,
                     )
 
-                # only add deltax part if there is state update
-                if event._state_update is not None:
+                # only add deltax part if there is a state update
+                if event._assignments is not None:
                     # partial derivative for the parameters
                     tmp_eq += self.eq("ddeltaxdp")[ie]
 
@@ -1743,7 +1758,9 @@ class DEModel:
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
-                        self.eq("ddeltaxdx")[ie], tmp_dxdp
+                        self.eq("ddeltaxdx")[ie]
+                        + self.eq("ddeltaxdx_old")[ie],
+                        tmp_dxdp,
                     )
 
                 elif not xdot_is_zero:
@@ -2259,7 +2276,8 @@ class DEModel:
                 identifier=sp.Symbol(root_symstr),
                 name=root_symstr,
                 value=root_found,
-                state_update=None,
+                assignments=None,
+                use_values_from_trigger_time=True,
             )
         )
         return roots[-1].get_id()

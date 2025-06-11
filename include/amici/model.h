@@ -1254,10 +1254,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
+     * @param x_old Current or old state from which to compute the state update
+     * @param state The model state based on which to compute the update.
      */
     void addStateEventUpdate(
         AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-        AmiVector const& xdot_old
+        AmiVector const& xdot_old, AmiVector const& x_old,
+        ModelState const& state
     );
 
     /**
@@ -1265,16 +1268,19 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx Current state sensitivity (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param x_old Current state
+     * @param x Current state
+     * @param x_old Pre-event state
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
+     * @param sx_old Pre-event state sensitivity
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
      */
     void addStateSensitivityEventUpdate(
-        AmiVectorArray& sx, int const ie, realtype const t,
+        AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& x_old, AmiVector const& xdot,
-        AmiVector const& xdot_old, std::vector<realtype> const& stau
+        AmiVector const& xdot_old, AmiVectorArray const& sx_old,
+        std::vector<realtype> const& stau
     );
 
     /**
@@ -1453,19 +1459,19 @@ class Model : public AbstractModel, public ModelDimensions {
      * constants / fixed parameters
      * @return Those indices.
      */
-    std::vector<int> const& getReinitializationStateIdxs() const;
+    [[nodiscard]] std::vector<int> const& getReinitializationStateIdxs() const;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
      * @return dxdotdp
      */
-    AmiVectorArray const& get_dxdotdp() const;
+    [[nodiscard]] AmiVectorArray const& get_dxdotdp() const;
 
     /**
      * @brief getter for dxdotdp (python generated)
      * @return dxdotdp
      */
-    SUNMatrixWrapper const& get_dxdotdp_full() const;
+    [[nodiscard]] SUNMatrixWrapper const& get_dxdotdp_full() const;
 
     /**
      * @brief Get trigger times for events that don't require root-finding.
@@ -1474,7 +1480,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * root-finding (i.e. that trigger at predetermined timepoints),
      * in ascending order.
      */
-    virtual std::vector<double> get_trigger_timepoints() const;
+    [[nodiscard]] virtual std::vector<double> get_trigger_timepoints() const;
 
     /**
      * @brief Get steady-state mask as std::vector.
@@ -1483,7 +1489,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Steady-state mask
      */
-    std::vector<realtype> get_steadystate_mask() const {
+    [[nodiscard]] std::vector<realtype> get_steadystate_mask() const {
         return steadystate_mask_;
     };
 
@@ -1499,6 +1505,24 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param mask Mask of length `nx_solver`.
      */
     void set_steadystate_mask(std::vector<realtype> const& mask);
+
+    /**
+     * @brief Get event object for event index.
+     * @param ie event index
+     * @return The corresponding Event object.
+     */
+    [[nodiscard]] Event const& get_event(int ie) const {
+        return events_.at(ie);
+    }
+
+    /**
+     * @brief Whether there is at least one state variable for which
+     * non-negativity is to be enforced.
+     * @return Vector of all events.
+     */
+    [[nodiscard]] bool get_any_state_nonnegative() const {
+        return any_state_non_negative_;
+    }
 
     /**
      * Flag indicating whether for

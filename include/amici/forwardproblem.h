@@ -5,16 +5,63 @@
 #include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/steadystateproblem.h"
 #include "amici/vector.h"
 
+#include <optional>
 #include <vector>
-
 namespace amici {
 
 class ExpData;
 class Solver;
 class SteadystateProblem;
 class FinalStateStorer;
+
+/**
+ * @brief Data structure to store some state of a simulation at a discontinuity.
+ */
+struct Discontinuity {
+    /**
+     * @brief Constructor.
+     * @param time
+     * @param root_info
+     * @param xdot_pre
+     * @param x_post
+     * @param xdot_post
+     */
+    explicit Discontinuity(
+        realtype time, std::vector<int> const& root_info = std::vector<int>(),
+        AmiVector const& xdot_pre = AmiVector(),
+        AmiVector const& x_post = AmiVector(),
+        AmiVector const& xdot_post = AmiVector()
+    )
+        : time(time)
+        , x_post(x_post)
+        , xdot_post(xdot_post)
+        , xdot_pre(xdot_pre)
+        , root_info(root_info) {}
+
+    /** Time of discontinuity. */
+    realtype time;
+
+    /** Post-event state vector (dimension nx). */
+    AmiVector x_post;
+
+    /** Post-event differential state vectors (dimension nx). */
+    AmiVector xdot_post;
+
+    /** Pre-event differential state vectors (dimension nx). */
+    AmiVector xdot_pre;
+
+    /**
+     * @brief Array of flags indicating which root has been found.
+     *
+     * Array of length nr (ne) with the indices of the user functions gi found
+     * to have a root. For i = 0, . . . ,nr 1 or -1 if gi has a root, and = 0
+     * if not. See CVodeGetRootInfo for details.
+     */
+    std::vector<int> root_info;
+};
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
@@ -27,12 +74,11 @@ class ForwardProblem {
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
-     * @param preeq preequilibration with which to initialize the forward
      * problem, pass nullptr for no initialization
      */
     ForwardProblem(
-        ExpData const* edata, Model* model, Solver* solver,
-        SteadystateProblem const* preeq
+        ExpData const* edata, gsl::not_null<Model*> model,
+        gsl::not_null<Solver*> solver
     );
 
     ~ForwardProblem() = default;
@@ -49,12 +95,13 @@ class ForwardProblem {
     void workForwardProblem();
 
     /**
-     * @brief computes adjoint updates dJydx according to provided model and
-     * expdata
+     * @brief Computes adjoint updates dJydx according to the provided model
+     * and ExpData.
      * @param model Model instance
      * @param edata experimental data
+     * @return dJydx
      */
-    void getAdjointUpdates(Model& model, ExpData const& edata);
+    std::vector<realtype> getAdjointUpdates(Model& model, ExpData const& edata);
 
     /**
      * @brief Accessor for t
@@ -81,84 +128,24 @@ class ForwardProblem {
     AmiVectorArray const& getStateSensitivity() const { return sx_; }
 
     /**
-     * @brief Accessor for x_disc
-     * @return x_disc
-     */
-    std::vector<AmiVector> const& getStatesAtDiscontinuities() const {
-        return x_disc_;
-    }
-
-    /**
-     * @brief Accessor for xdot_disc
-     * @return xdot_disc
-     */
-    std::vector<AmiVector> const& getRHSAtDiscontinuities() const {
-        return xdot_disc_;
-    }
-
-    /**
-     * @brief Accessor for xdot_old_disc
-     * @return xdot_old_disc
-     */
-    std::vector<AmiVector> const& getRHSBeforeDiscontinuities() const {
-        return xdot_old_disc_;
-    }
-
-    /**
      * @brief Accessor for nroots
      * @return nroots
      */
     std::vector<int> const& getNumberOfRoots() const { return nroots_; }
 
     /**
-     * @brief Accessor for discs
-     * @return discs
+     * @brief Get information on the discontinuities encountered so far.
+     * @return The vector of discontinuities.
      */
-    std::vector<realtype> const& getDiscontinuities() const { return discs_; }
-
-    /**
-     * @brief Accessor for rootidx
-     * @return rootidx
-     */
-    std::vector<std::vector<int>> const& getRootIndexes() const {
-        return root_idx_;
+    std::vector<Discontinuity> const& getDiscontinuities() const {
+        return discs_;
     }
-
-    /**
-     * @brief Accessor for dJydx
-     * @return dJydx
-     */
-    std::vector<realtype> const& getDJydx() const { return dJydx_; }
 
     /**
      * @brief Accessor for dJzdx
      * @return dJzdx
      */
     std::vector<realtype> const& getDJzdx() const { return dJzdx_; }
-
-    /**
-     * @brief Accessor for pointer to x
-     * @return &x
-     */
-    AmiVector* getStatePointer() { return &x_; }
-
-    /**
-     * @brief Accessor for pointer to dx
-     * @return &dx
-     */
-    AmiVector* getStateDerivativePointer() { return &dx_; }
-
-    /**
-     * @brief accessor for pointer to sx
-     * @return &sx
-     */
-    AmiVectorArray* getStateSensitivityPointer() { return &sx_; }
-
-    /**
-     * @brief Accessor for pointer to sdx
-     * @return &sdx
-     */
-    AmiVectorArray* getStateDerivativeSensitivityPointer() { return &sdx_; }
 
     /**
      * @brief Accessor for it
@@ -228,6 +215,46 @@ class ForwardProblem {
         return final_state_;
     };
 
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem* getPreequilibrationProblem() {
+        if (preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem const* getPreequilibrationProblem() const {
+        if (preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem* getPostequilibrationProblem() {
+        if (posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    SteadystateProblem const* getPostequilibrationProblem() const {
+        if (posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
     /** pointer to model instance */
     Model* model;
 
@@ -238,17 +265,58 @@ class ForwardProblem {
     ExpData const* edata;
 
   private:
+    /**
+     * @brief Handle preequilibration if necessary.
+     *
+     * Preequilibration starts at `Model::t0()`.
+     *
+     * So far, no event handling takes place during preequilibration.
+     */
+    void handlePreequilibration();
+
+    /**
+     * @brief Initialize model and solver for presimulation or
+     * the main simulation if there is no presimulation.
+     */
+    void initialize();
+
+    /**
+     * @brief Handle pre-simulation if required.
+     *
+     * Pre-simulation starts at `Model::t0() - ExpData::t_presim`.
+     *
+     * So far, no event handling takes place during presimulation.
+     */
     void handlePresimulation();
+
+    /**
+     * @brief Handle the main simulation.
+     *
+     * Simulation starts at `Model::t0()`.
+     * During this period, events are processed and data points are
+     * handled.
+     */
+    void handleMainSimulation();
+
+    /**
+     * @brief Handle postequilibration if necessary.
+     *
+     * Postequilibration starts after the last finite output timepoint
+     * or the last event timepoint that is known a priori, whichever is later.
+     *
+     * So far, no event handling takes place during postequilibration.
+     * This also includes the processing of event observables.
+     */
+    void handlePostequilibration();
 
     /**
      * @brief Execute everything necessary for the handling of events
      *
      * @param tlastroot Reference to the timepoint of the last event
-     * @param seflag Secondary event flag
      * @param initial_event initial event flag
      */
 
-    void handleEvent(realtype& tlastroot, bool seflag, bool initial_event);
+    void handleEvent(realtype& tlastroot, bool initial_event);
 
     /**
      * @brief Store pre-event model state
@@ -260,10 +328,9 @@ class ForwardProblem {
 
     /**
      * @brief Check for, and if applicable, handle any secondary events
-     *
-     * @param tlastroot Reference to the timepoint of the last event
+     * @return the number of secondary events found
      */
-    void handle_secondary_event(realtype& tlastroot);
+    int detect_secondary_events();
 
     /**
      * @brief Extract output information for events
@@ -276,16 +343,6 @@ class ForwardProblem {
      * @param t measurement timepoint
      */
     void handleDataPoint(realtype t);
-
-    /**
-     * @brief Applies the event bolus to the current state
-     */
-    void applyEventBolus();
-
-    /**
-     * @brief Applies the event bolus to the current sensitivities
-     */
-    void applyEventSensiBolusFSA();
 
     /**
      * @brief checks whether there are any events to fill
@@ -306,7 +363,7 @@ class ForwardProblem {
      */
     void fillEvents(int nmaxevent) {
         if (checkEventsToFill(nmaxevent)) {
-            discs_.push_back(t_);
+            discs_.emplace_back(t_);
             storeEvent();
         }
     }
@@ -316,11 +373,6 @@ class ForwardProblem {
      * @return state
      */
     SimulationState getSimulationState();
-
-    /** array of index vectors (dimension ne) indicating whether the respective
-     * root has been detected for all so far encountered discontinuities,
-     * extended as needed (dimension: dynamic) */
-    std::vector<std::vector<int>> root_idx_;
 
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
@@ -333,25 +385,11 @@ class ForwardProblem {
      * (dimension: ne) */
     std::vector<realtype> rval_tmp_;
 
-    /** array containing the time-points of discontinuities
-     * (dimension: dynamic) */
-    std::vector<realtype> discs_;
+    /** Discontinuities encountered so far (dimension: dynamic) */
+    std::vector<Discontinuity> discs_;
 
-    /** array of state vectors (dimension nx) for all so far encountered
-     * discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> x_disc_;
-
-    /** array of differential state vectors (dimension nx) for all so far
-     * encountered discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> xdot_disc_;
-
-    /** array of old differential state vectors (dimension nx) for all so far
-     * encountered discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> xdot_old_disc_;
-
-    /** state derivative of data likelihood
-     * (dimension nJ x nx x nt, ordering =?) */
-    std::vector<realtype> dJydx_;
+    /** Events that are waiting to be handled at the current timepoint. */
+    EventQueue pending_events_;
 
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
@@ -390,9 +428,6 @@ class ForwardProblem {
     /** differential state vector (dimension: nx_solver) */
     AmiVector dx_;
 
-    /** old differential state vector (dimension: nx_solver) */
-    AmiVector dx_old_;
-
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_;
 
@@ -417,7 +452,16 @@ class ForwardProblem {
     bool preequilibrated_{false};
 
     /** current iteration number for time index */
-    int it_;
+    int it_ = 0;
+
+    /** Whether the current model/data requires presimulation. */
+    bool uses_presimulation_{false};
+
+    /** The preequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> preeq_problem_;
+
+    /** The postequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> posteq_problem_;
 };
 
 /**

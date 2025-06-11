@@ -708,8 +708,10 @@ class Event(ModelQuantity):
         identifier: sp.Symbol,
         name: str,
         value: sp.Expr,
-        state_update: sp.Expr | None,
+        use_values_from_trigger_time: bool,
+        assignments: dict[sp.Symbol, sp.Expr] | None = None,
         initial_value: bool | None = True,
+        priority: sp.Basic | None = None,
     ):
         """
         Create a new Event instance.
@@ -723,18 +725,33 @@ class Event(ModelQuantity):
         :param value:
             formula for the root / trigger function
 
-        :param state_update:
-            formula for the bolus function (None for Heaviside functions,
-            zero vector for events without bolus)
+        :param assignments:
+            Dictionary of event assignments: state symbol -> new value.
 
         :param initial_value:
             initial boolean value of the trigger function at t0. If set to
             `False`, events may trigger at ``t==t0``, otherwise not.
+
+        :param priority: The priority of the event assignment.
+
+        :param use_values_from_trigger_time:
+            Whether the event assignment is evaluated using the state from
+            the time point at which the event triggered (True), or at the time
+            point at which the event assignment is evaluated (False).
         """
         super().__init__(identifier, name, value)
         # add the Event specific components
-        self._state_update = state_update
+        self._assignments = assignments if assignments is not None else {}
         self._initial_value = initial_value
+
+        if priority is not None and not priority.is_Number:
+            raise NotImplementedError(
+                "Currently, only numeric values are supported as event priority."
+            )
+
+        self._priority = priority
+
+        self._use_values_from_trigger_time = use_values_from_trigger_time
 
         # expression(s) for the timepoint(s) at which the event triggers
         try:
@@ -742,6 +759,36 @@ class Event(ModelQuantity):
         except NotImplementedError:
             # the trigger can't be solved for `t`
             self._t_root = []
+
+    def get_state_update(
+        self, x: sp.Matrix, x_old: sp.Matrix
+    ) -> sp.Matrix | None:
+        """
+        Get the state update (bolus) expression for the event assignment.
+
+        :param x: The current state vector.
+        :param x_old: The previous state vector.
+            If ``use_values_from_trigger_time=True``, this is equal to `x`.
+        :return: State-update matrix or ``None`` if no state update is defined.
+        """
+        if len(self._assignments) == 0:
+            return None
+
+        x_to_x_old = dict(zip(x, x_old))
+
+        def get_bolus(x_i: sp.Symbol) -> sp.Expr:
+            """
+            Get the bolus expression for a state variable.
+
+            :param x_i: state variable symbol
+            :return: bolus expression
+            """
+            if (assignment := self._assignments.get(x_i)) is not None:
+                return assignment.subs(x_to_x_old) - x_i
+            else:
+                return sp.Float(0.0)
+
+        return sp.Matrix([get_bolus(x_i) for x_i in x])
 
     def get_initial_value(self) -> bool:
         """
@@ -751,6 +798,10 @@ class Event(ModelQuantity):
             initial value formula
         """
         return self._initial_value
+
+    def get_priority(self) -> sp.Basic | None:
+        """Return the priority of the event assignment."""
+        return self._priority
 
     def __eq__(self, other):
         """
@@ -777,6 +828,14 @@ class Event(ModelQuantity):
                 "This event does not trigger at a fixed timepoint."
             )
         return self._t_root[0]
+
+    @property
+    def uses_values_from_trigger_time(self) -> bool:
+        """Whether the event assignment is evaluated using the state from
+        the time point at which the event triggered (True), or at the time
+        point at which the event assignment is evaluated (False).
+        """
+        return self._use_values_from_trigger_time
 
 
 # defines the type of some attributes in DEModel

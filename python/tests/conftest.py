@@ -6,8 +6,11 @@ import sys
 
 import amici
 import pytest
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from pathlib import Path
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+
+
+pytest_plugins = ["amici.testing.fixtures"]
 
 EXAMPLES_DIR = Path(__file__).parents[2] / "doc" / "examples"
 TEST_DIR = Path(__file__).parent

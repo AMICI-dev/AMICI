@@ -125,7 +125,17 @@ def check_finite_difference(
         else:
             raise NotImplementedError()
 
-        _check_close(sensi, fd, atol=atol, rtol=rtol, field=field, ip=ip)
+        _check_close(
+            sensi,
+            fd,
+            atol=atol,
+            rtol=rtol,
+            field=field,
+            ip=ip,
+            parameter_id=model.getParameterIds()[ip]
+            if model.hasParameterIds()
+            else None,
+        )
 
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
@@ -226,7 +236,14 @@ def check_derivatives(
     if edata is not None:
         fields.append("llh")
 
+    # only check the sensitivities w.r.t. the selected parameters
+    plist = model.getParameterList()
+    if edata and edata.plist:
+        plist = edata.plist
+
     for ip, pval in enumerate(p):
+        if plist and ip not in plist:
+            continue
         if pval == 0.0 and skip_zero_pars:
             continue
         check_finite_difference(
@@ -249,6 +266,7 @@ def _check_close(
     rtol: float,
     field: str,
     ip: int | None = None,
+    parameter_id: str | None = None,
     verbose: bool | None = True,
 ) -> None:
     """
@@ -273,6 +291,9 @@ def _check_close(
     :param ip:
         parameter index, for more informative output
 
+    :param parameter_id:
+        parameter ID, for more informative output
+
     :param verbose:
         produce a more verbose error message in case of unmatched expectations
     """
@@ -285,6 +306,8 @@ def _check_close(
         check_type = "Regression check"
     else:
         index_str = f"at index ip={ip} "
+        if parameter_id:
+            index_str += f"({parameter_id}) "
         check_type = "FD check"
 
     lines = [

@@ -11,7 +11,6 @@
 #include <cstring>
 #include <numeric>
 #include <regex>
-#include <typeinfo>
 #include <utility>
 
 namespace amici {
@@ -198,6 +197,24 @@ Model::Model(
         model_dimensions.nk
         == gsl::narrow<int>(simulation_parameters_.fixedParameters.size())
     );
+
+    Expects(
+        (events_.size() == 0 && !pythonGenerated)
+        || (events_.size() == (unsigned long)ne)
+    );
+
+    if (events_.size() == 0) {
+        // for MATLAB generated models, create event objects here
+        for (int ie = 0; ie < ne; ie++) {
+            events_.emplace_back(
+                // The default for use_values_from_trigger_time used to be
+                // `true` in SBML. However, the MATLAB interface always
+                // implicitly used `false`, so we keep it that way until it
+                // will be removed completely.
+                std::string("event_") + std::to_string(ie), false, true, 0
+            );
+        }
+    }
 
     simulation_parameters_.pscale = std::vector<ParameterScaling>(
         model_dimensions.np, ParameterScaling::none
@@ -1426,7 +1443,7 @@ void Model::getEventTimeSensitivity(
 
 void Model::addStateEventUpdate(
     AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-    AmiVector const& xdot_old
+    AmiVector const& xdot_old, AmiVector const& x_old, ModelState const& state
 ) {
 
     derived_state_.deltax_.assign(nx_solver, 0.0);
@@ -1434,11 +1451,22 @@ void Model::addStateEventUpdate(
     std::copy_n(computeX_pos(x), nx_solver, x.data());
 
     // compute update
-    fdeltax(
-        derived_state_.deltax_.data(), t, x.data(),
-        state_.unscaledParameters.data(), state_.fixedParameters.data(),
-        state_.h.data(), ie, xdot.data(), xdot_old.data()
-    );
+    if (pythonGenerated) {
+        fdeltax(
+            derived_state_.deltax_.data(), t, x.data(),
+            state.unscaledParameters.data(), state.fixedParameters.data(),
+            state.h.data(), ie, xdot.data(), xdot_old.data(), x_old.data()
+        );
+
+    } else {
+        // For MATLAB-imported models, use_values_from_trigger_time=true
+        // is not supported, and thus, x_old == x, always.
+        fdeltax(
+            derived_state_.deltax_.data(), t, x_old.data(),
+            state.unscaledParameters.data(), state.fixedParameters.data(),
+            state.h.data(), ie, xdot.data(), xdot_old.data()
+        );
+    }
 
     if (always_check_finite_) {
         checkFinite(derived_state_.deltax_, ModelQuantity::deltax, t);
@@ -1449,9 +1477,9 @@ void Model::addStateEventUpdate(
 }
 
 void Model::addStateSensitivityEventUpdate(
-    AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x_old,
-    AmiVector const& xdot, AmiVector const& xdot_old,
-    std::vector<realtype> const& stau
+    AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
+    AmiVector const& x_old, AmiVector const& xdot, AmiVector const& xdot_old,
+    AmiVectorArray const& sx_old, std::vector<realtype> const& stau
 ) {
     fw(t, x_old.data(), false);
 
@@ -1460,14 +1488,25 @@ void Model::addStateSensitivityEventUpdate(
         derived_state_.deltasx_.assign(nx_solver, 0.0);
 
         // compute update
-        fdeltasx(
-            derived_state_.deltasx_.data(), t, x_old.data(),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
-            xdot.data(), xdot_old.data(), sx.data(ip), &stau.at(ip),
-            state_.total_cl.data()
-        );
-
+        if (pythonGenerated) {
+            fdeltasx(
+                derived_state_.deltasx_.data(), t, x.data(),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
+                xdot.data(), xdot_old.data(), sx_old.data(ip), &stau.at(ip),
+                state_.total_cl.data(), x_old.data()
+            );
+        } else {
+            // For MATLAB-imported models, use_values_from_trigger_time=true
+            // is not supported, and thus, x_old == x, always.
+            fdeltasx(
+                derived_state_.deltasx_.data(), t, x_old.data(),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
+                xdot.data(), xdot_old.data(), sx.data(ip), &stau.at(ip),
+                state_.total_cl.data()
+            );
+        }
         if (always_check_finite_) {
             checkFinite(
                 derived_state_.deltasx_, ModelQuantity::deltasx, nplist()

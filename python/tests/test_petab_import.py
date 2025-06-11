@@ -3,7 +3,7 @@
 import libsbml
 import pandas as pd
 import pytest
-from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from amici.testing import skip_on_valgrind
 
 petab = pytest.importorskip("petab.v1", reason="Missing petab")
 
@@ -115,7 +115,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
 
 
 @skip_on_valgrind
-def test_default_output_parameters(simple_sbml_model):
+def test_default_output_parameters(simple_sbml_model, tempdir):
     from amici.petab.petab_import import import_model
     from petab.v1.models.sbml_model import SbmlModel
 
@@ -146,24 +146,23 @@ def test_default_output_parameters(simple_sbml_model):
         observable_df=observable_df,
     )
 
-    with TemporaryDirectoryWinSafe() as outdir:
-        sbml_importer = import_model(
-            petab_problem=petab_problem,
-            output_parameter_defaults={"observableParameter1_obs1": 1.0},
-            compile=False,
-            model_output_dir=outdir,
-        )
-        assert (
-            1.0
-            == sbml_importer.sbml.getParameter(
-                "observableParameter1_obs1"
-            ).getValue()
-        )
+    sbml_importer = import_model(
+        petab_problem=petab_problem,
+        output_parameter_defaults={"observableParameter1_obs1": 1.0},
+        compile=False,
+        model_output_dir=tempdir,
+    )
+    assert (
+        1.0
+        == sbml_importer.sbml.getParameter(
+            "observableParameter1_obs1"
+        ).getValue()
+    )
 
-        with pytest.raises(ValueError):
-            import_model(
-                petab_problem=petab_problem,
-                output_parameter_defaults={"nonExistentParameter": 1.0},
-                compile=False,
-                model_output_dir=outdir,
-            )
+    with pytest.raises(ValueError):
+        import_model(
+            petab_problem=petab_problem,
+            output_parameter_defaults={"nonExistentParameter": 1.0},
+            compile=False,
+            model_output_dir=tempdir,
+        )

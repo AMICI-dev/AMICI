@@ -81,19 +81,15 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
-     * @param preeq simulated preequilibration problem, pass `nullptr` to ignore
      * @param fwd simulated forward problem, pass `nullptr` to ignore
      * @param bwd simulated backward problem, pass `nullptr` to ignore
-     * @param posteq simulated postequilibration problem, pass `nullptr` to
-     * ignore
      * @param model matching model instance
      * @param solver matching solver instance
      * @param edata matching experimental data
      */
     void processSimulationObjects(
-        SteadystateProblem const* preeq, ForwardProblem const* fwd,
-        BackwardProblem const* bwd, SteadystateProblem const* posteq,
-        Model& model, Solver const& solver, ExpData const* edata
+        ForwardProblem const* fwd, BackwardProblem const* bwd, Model& model,
+        Solver const& solver, ExpData const* edata
     );
     /**
      * @brief Arbitrary (not necessarily unique) identifier.
@@ -763,7 +759,7 @@ class ModelContext : public ContextManager {
 
     ModelContext& operator=(ModelContext const& other) = delete;
 
-    ~ModelContext();
+    ~ModelContext() noexcept(false);
 
     /**
      * @brief Restore original state on constructor-supplied amici::Model.
