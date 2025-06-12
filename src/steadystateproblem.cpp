@@ -408,7 +408,7 @@ void SteadystateProblem::initializeForwardProblem(
         // The solver was not run before, set up everything.
         auto roots_found = std::vector<int>(model.ne, 0);
         model.initialize(
-            state_.x, state_.dx, state_.sx, sdx_,
+            model.t0(), state_.x, state_.dx, state_.sx, sdx_,
             solver.getSensitivityOrder() >= SensitivityOrder::first, roots_found
         );
         state_.t = model.t0();

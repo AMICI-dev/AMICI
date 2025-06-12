@@ -251,6 +251,91 @@ def test_presimulation(sbml_example_presimulation_module):
     check_derivatives(model, solver, edata, epsilon=1e-4)
 
 
+def test_presimulation_events(tempdir):
+    """Test that events are handled during presimulation."""
+
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_presim_events"
+    antimony2amici(
+        """
+    t_initial_presim = -2
+    one = 1
+    presim_indicator = -1
+    presim_target_initial = 0
+    presim_target_1 = 0
+    mainsim_target = 0
+
+    some_time = time
+    some_time' = 1
+
+    at time >= t_initial_presim and presim_indicator == 1, t0=false: presim_target_initial = time
+    at time >= -one and presim_indicator == 1: presim_target_1 = presim_target_1 + one
+    at time >= one and presim_indicator == 0: mainsim_target = mainsim_target + 1
+    """,
+        constant_parameters=["presim_indicator"],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+    model.setTimepoints([0, 1, 2])
+    edata = amici.ExpData(model)
+    edata.t_presim = 2
+    edata.fixedParametersPresimulation = [1]
+    edata.fixedParameters = [0]
+    solver = model.getSolver()
+
+    # generate artificial data
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    edata_tmp = amici.ExpData(rdata, 1, 0)
+    edata.setTimepoints(np.array(edata_tmp.getTimepoints()) + 0.1)
+    edata.setObservedData(edata_tmp.getObservedData())
+    edata.setObservedDataStdDev(edata_tmp.getObservedDataStdDev())
+
+    # sensitivities w.r.t. t_initial_presim (trigger time of an initial event)
+    #  are not supported
+    edata.plist = [
+        ip
+        for ip, p in enumerate(model.getParameterIds())
+        if p != "t_initial_presim"
+    ]
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+    for sensi_method in (
+        amici.SensitivityMethod.forward,
+        # TODO ASA
+        # amici.SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityMethod(sensi_method)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert_allclose(
+            rdata.by_id("some_time"), np.array([0, 1, 2]) + 0.1, atol=1e-14
+        )
+        assert np.all(
+            rdata.by_id("presim_target_initial") == np.array([-2, -2, -2])
+        ), rdata.by_id("presim_target_initial")
+        assert np.all(
+            rdata.by_id("presim_target_1") == np.array([1, 1, 1])
+        ), rdata.by_id("presim_target_1")
+        assert np.all(
+            rdata.by_id("mainsim_target") == np.array([0, 1, 1])
+        ), rdata.by_id("mainsim_target")
+
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            epsilon=1e-8,
+        )
+
+
 def test_steadystate_simulation(model_steadystate_module):
     model = model_steadystate_module.getModel()
     model.setTimepoints(np.linspace(0, 60, 60))
