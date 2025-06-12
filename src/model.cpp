@@ -3110,7 +3110,7 @@ void Model::fstotal_cl(
     // 2) stotal_cl += dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
     derived_state_.dtotal_cldx_rdata.zero();
     fdtotal_cldx_rdata(
-        derived_state_.dtotal_cldx_rdata.data(), x_rdata, tcl, p, k
+        derived_state_.dtotal_cldx_rdata.data(), x_rdata, p, k, tcl
     );
     fdtotal_cldx_rdata_colptrs(derived_state_.dtotal_cldx_rdata);
     fdtotal_cldx_rdata_rowvals(derived_state_.dtotal_cldx_rdata);
