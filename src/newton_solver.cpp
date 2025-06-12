@@ -12,7 +12,7 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(
-    Model const& model, LinearSolver linsol_type, SUNContext sunctx
+    Model const& model, LinearSolver const linsol_type, SUNContext sunctx
 )
     : xdot_(model.nx_solver, sunctx)
     , x_(model.nx_solver, sunctx)

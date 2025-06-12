@@ -21,7 +21,7 @@ static_assert(
     "AMICI_SINGULAR_JACOBIAN != SUN_ERR_EXT_FAIL"
 );
 static_assert(
-    std::is_same<amici::realtype, sunrealtype>::value,
+    std::is_same_v<amici::realtype, sunrealtype>,
     "Definition of realtype does not match"
 );
 
@@ -61,7 +61,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
-    Solver& solver, ExpData const* edata, Model& model, bool rethrow
+    Solver& solver, ExpData const* edata, Model& model, bool const rethrow
 ) {
     // create a temporary logger instance for Solver and Model to capture
     // messages from only this simulation
@@ -81,8 +81,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     // ReturnData below.)
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
 
-    std::unique_ptr<ReturnData> rdata
-        = std::make_unique<ReturnData>(solver, model);
+    auto rdata = std::make_unique<ReturnData>(solver, model);
     if (edata) {
         rdata->id = edata->id;
     }
@@ -106,7 +105,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         }
 
         rdata->status = AMICI_SUCCESS;
-    } catch (amici::IntegrationFailure const& ex) {
+    } catch (IntegrationFailure const& ex) {
         if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if (rethrow)
@@ -127,7 +126,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
                 ex.what()
             );
         }
-    } catch (amici::IntegrationFailureB const& ex) {
+    } catch (IntegrationFailureB const& ex) {
         if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if (rethrow)
@@ -151,7 +150,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
                 ex.time, ex.what()
             );
         }
-    } catch (amici::AmiException const& ex) {
+    } catch (AmiException const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
@@ -217,7 +216,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
 std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
     Solver const& solver, std::vector<ExpData*> const& edatas,
-    Model const& model, bool failfast,
+    Model const& model, bool const failfast,
 #if defined(_OPENMP)
     int num_threads
 #else
@@ -243,18 +242,15 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
              interface */
             if (skipThrough) {
                 ConditionContext conditionContext(myModel.get(), edatas[i]);
-                results[i]
-                    = std::unique_ptr<ReturnData>(new ReturnData(solver, model)
-                    );
+                results[i] = std::make_unique<ReturnData>(solver, model);
             } else {
                 results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
             }
         } catch (std::exception const& ex) {
-            results[i]
-                = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
+            results[i] = std::make_unique<ReturnData>(solver, model);
             results[i]->status = AMICI_ERROR;
-            results[i]->messages.push_back(
-                LogItem(LogSeverity::error, "OTHER", ex.what())
+            results[i]->messages.emplace_back(
+                LogSeverity::error, "OTHER", ex.what()
             );
         }
 
@@ -264,7 +260,7 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
     return results;
 }
 
-std::string simulation_status_to_str(int status) {
+std::string simulation_status_to_str(int const status) {
     try {
         return simulation_status_to_str_map.at(status);
     } catch (std::out_of_range const&) {

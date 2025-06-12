@@ -117,7 +117,7 @@ static realtype getValueById(
  */
 static void setValueById(
     std::vector<std::string> const& ids, std::vector<realtype>& values,
-    realtype value, std::string const& id, char const* variable_name,
+    realtype const value, std::string const& id, char const* variable_name,
     char const* id_name
 ) {
     auto it = std::ranges::find(ids, id);
@@ -174,7 +174,7 @@ static int setValueByIdRegex(
 
 Model::Model(
     ModelDimensions const& model_dimensions,
-    SimulationParameters simulation_parameters, SecondOrderMode o2mode,
+    SimulationParameters simulation_parameters, SecondOrderMode const o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
     std::vector<Event> events,
     std::map<realtype, std::vector<int>> state_independent_events
@@ -199,11 +199,11 @@ Model::Model(
     );
 
     Expects(
-        (events_.size() == 0 && !pythonGenerated)
+        (events_.empty() && !pythonGenerated)
         || (events_.size() == (unsigned long)ne)
     );
 
-    if (events_.size() == 0) {
+    if (events_.empty()) {
         // for MATLAB generated models, create event objects here
         for (int ie = 0; ie < ne; ie++) {
             events_.emplace_back(
@@ -265,7 +265,7 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
 
 void Model::initialize(
     AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVectorArray& /*sdx*/,
-    bool computeSensitivities, std::vector<int>& roots_found
+    bool const computeSensitivities, std::vector<int>& roots_found
 ) {
     initializeStates(x);
     initializeSplines();
@@ -292,7 +292,8 @@ void Model::initialize(
 }
 
 void Model::reinitialize(
-    realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
+    realtype const t, AmiVector& x, AmiVectorArray& sx,
+    bool const computeSensitivities
 ) {
     fx0_fixedParameters(x);
 
@@ -534,11 +535,11 @@ void Model::setParameters(std::vector<realtype> const& p) {
 }
 
 void Model::setParameterById(
-    std::map<std::string, realtype> const& p, bool ignoreErrors
+    std::map<std::string, realtype> const& p, bool const ignoreErrors
 ) {
-    for (auto& kv : p) {
+    for (auto const& [parameter_id, value] : p) {
         try {
-            setParameterById(kv.first, kv.second);
+            setParameterById(parameter_id, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -546,7 +547,7 @@ void Model::setParameterById(
     }
 }
 
-void Model::setParameterById(std::string const& par_id, realtype value) {
+void Model::setParameterById(std::string const& par_id, realtype const value) {
     if (!hasParameterIds())
         throw AmiException(
             "Could not access parameters by id as they are not set"
@@ -563,7 +564,7 @@ void Model::setParameterById(std::string const& par_id, realtype value) {
 }
 
 int Model::setParametersByIdRegex(
-    std::string const& par_id_regex, realtype value
+    std::string const& par_id_regex, realtype const value
 ) {
     if (!hasParameterIds())
         throw AmiException(
@@ -580,7 +581,9 @@ int Model::setParametersByIdRegex(
     return n_found;
 }
 
-void Model::setParameterByName(std::string const& par_name, realtype value) {
+void Model::setParameterByName(
+    std::string const& par_name, realtype const value
+) {
     if (!hasParameterNames())
         throw AmiException(
             "Could not access parameters by name as they are not set"
@@ -726,89 +729,65 @@ bool Model::hasParameterNames() const {
     return np() == 0 || !getParameterNames().empty();
 }
 
-std::vector<std::string> Model::getParameterNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getParameterNames() const { return {}; }
 
 bool Model::hasStateNames() const {
     return nx_rdata == 0 || !getStateNames().empty();
 }
 
-std::vector<std::string> Model::getStateNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateNames() const { return {}; }
 
-std::vector<std::string> Model::getStateNamesSolver() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateNamesSolver() const { return {}; }
 
 bool Model::hasFixedParameterNames() const {
     return nk() == 0 || !getFixedParameterNames().empty();
 }
 
-std::vector<std::string> Model::getFixedParameterNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getFixedParameterNames() const { return {}; }
 
 bool Model::hasObservableNames() const {
     return ny == 0 || !getObservableNames().empty();
 }
 
-std::vector<std::string> Model::getObservableNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getObservableNames() const { return {}; }
 
 bool Model::hasExpressionNames() const {
     return ny == 0 || !getExpressionNames().empty();
 }
 
-std::vector<std::string> Model::getExpressionNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getExpressionNames() const { return {}; }
 
 bool Model::hasParameterIds() const {
     return np() == 0 || !getParameterIds().empty();
 }
 
-std::vector<std::string> Model::getParameterIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getParameterIds() const { return {}; }
 
 bool Model::hasStateIds() const {
     return nx_rdata == 0 || !getStateIds().empty();
 }
 
-std::vector<std::string> Model::getStateIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateIds() const { return {}; }
 
-std::vector<std::string> Model::getStateIdsSolver() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateIdsSolver() const { return {}; }
 
 bool Model::hasFixedParameterIds() const {
     return nk() == 0 || !getFixedParameterIds().empty();
 }
 
-std::vector<std::string> Model::getFixedParameterIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getFixedParameterIds() const { return {}; }
 
 bool Model::hasObservableIds() const {
     return ny == 0 || !getObservableIds().empty();
 }
 
-std::vector<std::string> Model::getObservableIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getObservableIds() const { return {}; }
 
 bool Model::hasExpressionIds() const {
     return ny == 0 || !getExpressionIds().empty();
 }
 
-std::vector<std::string> Model::getExpressionIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getExpressionIds() const { return {}; }
 
 bool Model::hasQuadraticLLH() const { return true; }
 
@@ -3134,7 +3113,7 @@ std::vector<double> Model::get_trigger_timepoints() const {
 }
 
 void Model::set_steadystate_mask(std::vector<realtype> const& mask) {
-    if (mask.size() == 0) {
+    if (mask.empty()) {
         steadystate_mask_.clear();
         return;
     }
