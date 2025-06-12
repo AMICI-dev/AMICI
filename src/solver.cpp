@@ -23,9 +23,7 @@ void wrapErrHandlerFn(
 
     char msg_buffer[BUF_SIZE];
     char id_buffer[BUF_SIZE];
-    static_assert(
-        std::is_same<SUNErrCode, int>::value, "Must update format string"
-    );
+    static_assert(std::is_same_v<SUNErrCode, int>, "Must update format string");
     // for debug builds, include full file path and line numbers
 #ifndef NDEBUG
     snprintf(msg_buffer, BUF_SIZE, "%s:%d: %s (%d)", file, line, msg, err_code);
@@ -411,8 +409,6 @@ void Solver::initializeLinearSolver(Model const* model) const {
         break;
 
     case LinearSolver::LAPACKDense:
-        throw AmiException("Solver currently not supported!");
-
     case LinearSolver::LAPACKBand:
         throw AmiException("Solver currently not supported!");
 
@@ -509,8 +505,6 @@ void Solver::initializeLinearSolverB(
         break;
 
     case LinearSolver::LAPACKDense:
-        throw AmiException("Solver currently not supported!");
-
     case LinearSolver::LAPACKBand:
         throw AmiException("Solver currently not supported!");
 

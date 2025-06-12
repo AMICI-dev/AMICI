@@ -1314,8 +1314,8 @@ static int fqBdot_ss(
  * @param cj scalar in Jacobian (inverse stepsize)
  * @param x Vector with the states
  * @param dx Vector with the derivative states
- * @param xdot Vector with the right hand side
- * @param J Matrix to which the Jacobian will be written
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the backwards Jacobian will be written
  * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector

@@ -13,7 +13,8 @@ void Logger::log(
 }
 
 void Logger::log(
-    LogSeverity severity, std::string const& identifier, char const* format, ...
+    LogSeverity const severity, std::string const& identifier,
+    char const* format, ...
 ) {
     va_list argptr;
     va_start(argptr, format);

@@ -506,7 +506,7 @@ int ForwardProblem::detect_secondary_events() {
 void ForwardProblem::handleDataPoint(realtype t) {
     // We only store the simulation state if it's not the initial state, as the
     // initial state is stored anyway and we want to avoid storing it twice
-    if (t != model->t0() && timepoint_states_.count(t) == 0)
+    if (t != model->t0() && !timepoint_states_.contains(t))
         timepoint_states_[t] = getSimulationState();
     // store diagnosis information for debugging
     solver->storeDiagnosis();

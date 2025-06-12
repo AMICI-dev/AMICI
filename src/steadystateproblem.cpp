@@ -663,7 +663,7 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         return;
 
     // Do we also have to check for convergence of sensitivities?
-    SensitivityMethod sensitivity_method = SensitivityMethod::none;
+    auto sensitivity_method = SensitivityMethod::none;
     if (solver.getSensitivityOrder() > SensitivityOrder::none
         && solver.getSensitivityMethod() == SensitivityMethod::forward) {
         sensitivity_method = SensitivityMethod::forward;

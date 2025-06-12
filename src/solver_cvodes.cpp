@@ -22,17 +22,15 @@
 namespace amici {
 
 // Ensure AMICI options and return codes are in sync with SUNDIALS
-static_assert(
-    (int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS, ""
-);
-static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED, "");
-static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1, "");
+static_assert((int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS);
+static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED);
+static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1);
 
-static_assert((int)InterpolationType::hermite == CV_HERMITE, "");
-static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL, "");
+static_assert((int)InterpolationType::hermite == CV_HERMITE);
+static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL);
 
-static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
-static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
+static_assert((int)LinearMultistepMethod::adams == CV_ADAMS);
+static_assert((int)LinearMultistepMethod::BDF == CV_BDF);
 
 #define STATIC_ASSERT_EQUAL(amici_constant, cv_constant)                       \
     static_assert(                                                             \
