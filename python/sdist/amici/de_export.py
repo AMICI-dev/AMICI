@@ -57,6 +57,13 @@ from .cxxcodeprinter import (
 )
 from .de_model import DEModel
 from .de_model_components import *
+from .constants import SymbolId
+from .cxxcodeprinter import (
+    AmiciCxxCodePrinter,
+    get_switch_statement,
+    get_initializer_list,
+)
+from .de_model import *
 from .import_utils import (
     strip_pysb,
 )
@@ -619,10 +626,8 @@ class DEExporter:
                     f"{static_array_name} = {{{{"
                 )
                 lines.extend(
-                    [
-                        "    {" + ", ".join(map(str, index_vector)) + "}, "
-                        for index_vector in values
-                    ]
+                    f"    {get_initializer_list(index_vector)}, "
+                    for index_vector in values
                 )
                 lines.append("}};")
             else:
@@ -1045,7 +1050,8 @@ class DEExporter:
                 )
             ),
             "NDXDOTDX_EXPLICIT": len(self.model.sparsesym("dxdotdx_explicit")),
-            "NDJYDY": f"std::vector<int>{{{','.join(str(len(x)) for x in self.model.sparsesym('dJydy'))}}}",
+            "NDJYDY": "std::vector<int>"
+            + get_initializer_list(map(len, self.model.sparsesym("dJydy"))),
             "NDXRDATADXSOLVER": len(self.model.sparsesym("dx_rdatadx_solver")),
             "NDXRDATADTCL": len(self.model.sparsesym("dx_rdatadtcl")),
             "NDTOTALCLDXRDATA": len(self.model.sparsesym("dtotal_cldx_rdata")),
