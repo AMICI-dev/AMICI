@@ -36,7 +36,7 @@ void BackwardProblem::workBackwardProblem() {
 
     // If we have posteq, infinity timepoints were already treated
     int it = model_->nt() - 1;
-    while(it >= 0 && std::isinf(model_->getTimepoint(it))) {
+    while (it >= 0 && std::isinf(model_->getTimepoint(it))) {
         --it;
     }
 
