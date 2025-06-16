@@ -193,7 +193,7 @@ void scaleParameters(
  * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames, int const first_frame = 0);
+std::string backtraceString(int maxFrames, int first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
@@ -276,7 +276,7 @@ class CpuTimer {
      * @brief Get elapsed CPU time in seconds since initialization or last reset
      * @return CPU time in seconds
      */
-    double elapsed_seconds() const {
+    [[nodiscard]] double elapsed_seconds() const {
         return d_seconds(clock::now() - start_).count();
     }
 
@@ -285,7 +285,7 @@ class CpuTimer {
      * reset
      * @return CPU time in milliseconds
      */
-    double elapsed_milliseconds() const {
+    [[nodiscard]] double elapsed_milliseconds() const {
         return d_milliseconds(clock::now() - start_).count();
     }
 

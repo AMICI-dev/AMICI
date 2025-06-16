@@ -443,7 +443,7 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return Whether sensitivities have to be computed.
      */
-    bool requires_state_sensitivities(
+    [[nodiscard]] bool requires_state_sensitivities(
         Model const& model, Solver const& solver, int it,
         SteadyStateContext context
     ) const;

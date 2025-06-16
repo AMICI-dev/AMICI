@@ -119,9 +119,9 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     Model(
         ModelDimensions const& model_dimensions,
-        SimulationParameters simulation_parameters,
-        amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event, std::vector<Event> events = {},
+        SimulationParameters simulation_parameters, SecondOrderMode o2mode,
+        std::vector<realtype> idlist, std::vector<int> z2event,
+        std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 

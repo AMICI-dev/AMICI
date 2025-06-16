@@ -909,7 +909,7 @@ void NewtonsMethod::run(
             // delta-convergence check
             if (!check_delta_) {
                 compute_step(xdot, state);
-            };
+            }
 
             // we store delta_ here as later convergence checks may update
             // it

@@ -1748,11 +1748,6 @@ class Solver {
     void setSensInitDone() const;
 
     /**
-     * @brief sets that memory for forward sensitivities has not been allocated
-     */
-    void setSensInitOff() const;
-
-    /**
      * @brief sets that memory for forward interpolation has been allocated
      */
     void setAdjInitDone() const;

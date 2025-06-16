@@ -339,7 +339,7 @@ template <typename T> char* serializeToChar(T const& data, int* size) {
         oar << data;
         s.flush();
 
-        char* charBuffer = new char[serialized.size()];
+        auto charBuffer = new char[serialized.size()];
         memcpy(charBuffer, serialized.data(), serialized.size());
 
         if (size)
