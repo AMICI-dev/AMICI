@@ -117,7 +117,7 @@ static realtype getValueById(
  */
 static void setValueById(
     std::vector<std::string> const& ids, std::vector<realtype>& values,
-    realtype value, std::string const& id, char const* variable_name,
+    realtype const value, std::string const& id, char const* variable_name,
     char const* id_name
 ) {
     auto it = std::ranges::find(ids, id);
@@ -174,7 +174,7 @@ static int setValueByIdRegex(
 
 Model::Model(
     ModelDimensions const& model_dimensions,
-    SimulationParameters simulation_parameters, SecondOrderMode o2mode,
+    SimulationParameters simulation_parameters, SecondOrderMode const o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
     std::vector<Event> events,
     std::map<realtype, std::vector<int>> state_independent_events
@@ -199,11 +199,11 @@ Model::Model(
     );
 
     Expects(
-        (events_.size() == 0 && !pythonGenerated)
+        (events_.empty() && !pythonGenerated)
         || (events_.size() == (unsigned long)ne)
     );
 
-    if (events_.size() == 0) {
+    if (events_.empty()) {
         // for MATLAB generated models, create event objects here
         for (int ie = 0; ie < ne; ie++) {
             events_.emplace_back(
@@ -264,13 +264,14 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
 }
 
 void Model::initialize(
-    AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVectorArray& /*sdx*/,
-    bool computeSensitivities, std::vector<int>& roots_found
+    realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
+    AmiVectorArray& /*sdx*/, bool const computeSensitivities,
+    std::vector<int>& roots_found
 ) {
-    initializeStates(x);
+    initializeStates(t, x);
     initializeSplines();
     if (computeSensitivities) {
-        initializeStateSensitivities(sx, x);
+        initializeStateSensitivities(t, sx, x);
         initializeSplineSensitivities();
     }
 
@@ -279,22 +280,23 @@ void Model::initialize(
         fsdx0();
 
     if (ne)
-        initEvents(x, dx, roots_found);
+        initEvents(t, x, dx, roots_found);
 
     // evaluate static expressions once
     auto x_pos = computeX_pos(x);
-    fw(t0(), x_pos, true);
-    fdwdw(t0(), x_pos, true);
-    fdwdx(t0(), x_pos, true);
+    fw(t, x_pos, true);
+    fdwdw(t, x_pos, true);
+    fdwdx(t, x_pos, true);
     if (computeSensitivities) {
-        fdwdp(t0(), x_pos, true);
+        fdwdp(t, x_pos, true);
     }
 }
 
 void Model::reinitialize(
-    realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
+    realtype const t, AmiVector& x, AmiVectorArray& sx,
+    bool const computeSensitivities
 ) {
-    fx0_fixedParameters(x);
+    fx0_fixedParameters(t, x);
 
     // re-evaluate static expressions once
     auto x_pos = computeX_pos(x);
@@ -302,7 +304,7 @@ void Model::reinitialize(
     fdwdw(t, x_pos, true);
     fdwdx(t, x_pos, true);
     if (computeSensitivities) {
-        fsx0_fixedParameters(sx, x);
+        fsx0_fixedParameters(t, sx, x);
         fdwdp(t, x_pos, true);
     }
 }
@@ -316,9 +318,9 @@ void Model::initializeB(
         xQB.zero();
 }
 
-void Model::initializeStates(AmiVector& x) {
+void Model::initializeStates(realtype t, AmiVector& x) {
     if (x0data_.empty()) {
-        fx0(x);
+        fx0(t, x);
     } else {
         std::vector<realtype> x0_solver(nx_solver, 0.0);
         ftotal_cl(
@@ -329,7 +331,7 @@ void Model::initializeStates(AmiVector& x) {
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 
-    checkFinite(x.getVector(), ModelQuantity::x0, t0());
+    checkFinite(x.getVector(), ModelQuantity::x0, t);
 }
 
 void Model::initializeSplines() {
@@ -393,10 +395,10 @@ void Model::initializeSplineSensitivities() {
 }
 
 void Model::initializeStateSensitivities(
-    AmiVectorArray& sx, AmiVector const& x
+    realtype t, AmiVectorArray& sx, AmiVector const& x
 ) {
     if (sx0data_.empty()) {
-        fsx0(sx, x);
+        fsx0(t, sx, x);
     } else {
         realtype* stcl = nullptr;
         std::vector<realtype> sx0_solver_slice(nx_solver, 0.0);
@@ -418,10 +420,11 @@ void Model::initializeStateSensitivities(
 }
 
 void Model::initEvents(
-    AmiVector const& x, AmiVector const& dx, std::vector<int>& roots_found
+    realtype t, AmiVector const& x, AmiVector const& dx,
+    std::vector<int>& roots_found
 ) {
     std::vector<realtype> rootvals(ne, 0.0);
-    froot(simulation_parameters_.tstart_, x, dx, rootvals);
+    froot(t, x, dx, rootvals);
     std::ranges::fill(roots_found, 0);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
@@ -534,11 +537,11 @@ void Model::setParameters(std::vector<realtype> const& p) {
 }
 
 void Model::setParameterById(
-    std::map<std::string, realtype> const& p, bool ignoreErrors
+    std::map<std::string, realtype> const& p, bool const ignoreErrors
 ) {
-    for (auto& kv : p) {
+    for (auto const& [parameter_id, value] : p) {
         try {
-            setParameterById(kv.first, kv.second);
+            setParameterById(parameter_id, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -546,7 +549,7 @@ void Model::setParameterById(
     }
 }
 
-void Model::setParameterById(std::string const& par_id, realtype value) {
+void Model::setParameterById(std::string const& par_id, realtype const value) {
     if (!hasParameterIds())
         throw AmiException(
             "Could not access parameters by id as they are not set"
@@ -563,7 +566,7 @@ void Model::setParameterById(std::string const& par_id, realtype value) {
 }
 
 int Model::setParametersByIdRegex(
-    std::string const& par_id_regex, realtype value
+    std::string const& par_id_regex, realtype const value
 ) {
     if (!hasParameterIds())
         throw AmiException(
@@ -580,7 +583,9 @@ int Model::setParametersByIdRegex(
     return n_found;
 }
 
-void Model::setParameterByName(std::string const& par_name, realtype value) {
+void Model::setParameterByName(
+    std::string const& par_name, realtype const value
+) {
     if (!hasParameterNames())
         throw AmiException(
             "Could not access parameters by name as they are not set"
@@ -726,89 +731,65 @@ bool Model::hasParameterNames() const {
     return np() == 0 || !getParameterNames().empty();
 }
 
-std::vector<std::string> Model::getParameterNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getParameterNames() const { return {}; }
 
 bool Model::hasStateNames() const {
     return nx_rdata == 0 || !getStateNames().empty();
 }
 
-std::vector<std::string> Model::getStateNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateNames() const { return {}; }
 
-std::vector<std::string> Model::getStateNamesSolver() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateNamesSolver() const { return {}; }
 
 bool Model::hasFixedParameterNames() const {
     return nk() == 0 || !getFixedParameterNames().empty();
 }
 
-std::vector<std::string> Model::getFixedParameterNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getFixedParameterNames() const { return {}; }
 
 bool Model::hasObservableNames() const {
     return ny == 0 || !getObservableNames().empty();
 }
 
-std::vector<std::string> Model::getObservableNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getObservableNames() const { return {}; }
 
 bool Model::hasExpressionNames() const {
     return ny == 0 || !getExpressionNames().empty();
 }
 
-std::vector<std::string> Model::getExpressionNames() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getExpressionNames() const { return {}; }
 
 bool Model::hasParameterIds() const {
     return np() == 0 || !getParameterIds().empty();
 }
 
-std::vector<std::string> Model::getParameterIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getParameterIds() const { return {}; }
 
 bool Model::hasStateIds() const {
     return nx_rdata == 0 || !getStateIds().empty();
 }
 
-std::vector<std::string> Model::getStateIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateIds() const { return {}; }
 
-std::vector<std::string> Model::getStateIdsSolver() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getStateIdsSolver() const { return {}; }
 
 bool Model::hasFixedParameterIds() const {
     return nk() == 0 || !getFixedParameterIds().empty();
 }
 
-std::vector<std::string> Model::getFixedParameterIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getFixedParameterIds() const { return {}; }
 
 bool Model::hasObservableIds() const {
     return ny == 0 || !getObservableIds().empty();
 }
 
-std::vector<std::string> Model::getObservableIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getObservableIds() const { return {}; }
 
 bool Model::hasExpressionIds() const {
     return ny == 0 || !getExpressionIds().empty();
 }
 
-std::vector<std::string> Model::getExpressionIds() const {
-    return std::vector<std::string>();
-}
+std::vector<std::string> Model::getExpressionIds() const { return {}; }
 
 bool Model::hasQuadraticLLH() const { return true; }
 
@@ -882,7 +863,7 @@ void Model::setParameterList(std::vector<int> const& plist) {
     initializeVectors();
 }
 
-std::vector<realtype> Model::getInitialStates() {
+std::vector<realtype> Model::getInitialStates(realtype t0) {
     if (!x0data_.empty()) {
         return x0data_;
     }
@@ -892,8 +873,8 @@ std::vector<realtype> Model::getInitialStates() {
      * changing parameters etc.
      */
     std::vector<realtype> x0(nx_rdata, 0.0);
-    fx0(x0.data(), simulation_parameters_.tstart_,
-        state_.unscaledParameters.data(), state_.fixedParameters.data());
+    fx0(x0.data(), t0, state_.unscaledParameters.data(),
+        state_.fixedParameters.data());
     return x0;
 }
 
@@ -914,7 +895,7 @@ void Model::setInitialStates(std::vector<realtype> const& x0) {
 
 bool Model::hasCustomInitialStates() const { return !x0data_.empty(); }
 
-std::vector<realtype> Model::getInitialStateSensitivities() {
+std::vector<realtype> Model::getInitialStateSensitivities(realtype t0) {
     if (!sx0data_.empty()) {
         return sx0data_;
     }
@@ -924,12 +905,11 @@ std::vector<realtype> Model::getInitialStateSensitivities() {
      * invalidated upon changing parameters etc.
      */
     std::vector<realtype> sx0(nx_rdata * nplist(), 0.0);
-    auto x0 = getInitialStates();
+    auto x0 = getInitialStates(t0);
     for (int ip = 0; ip < nplist(); ip++) {
         fsx0(
-            sx0.data(), simulation_parameters_.tstart_, x0.data(),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            plist(ip)
+            sx0.data(), t0, x0.data(), state_.unscaledParameters.data(),
+            state_.fixedParameters.data(), plist(ip)
         );
     }
     return sx0;
@@ -1548,6 +1528,7 @@ void Model::addAdjointQuadratureEventUpdate(
     AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
     AmiVector const& xBdot
+
 ) {
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
@@ -1889,21 +1870,21 @@ void Model::setAlwaysCheckFinite(bool alwaysCheck) {
 
 bool Model::getAlwaysCheckFinite() const { return always_check_finite_; }
 
-void Model::fx0(AmiVector& x) {
+void Model::fx0(realtype t, AmiVector& x) {
     std::ranges::fill(derived_state_.x_rdata_, 0.0);
     /* this function  also computes initial total abundances */
-    fx0(derived_state_.x_rdata_.data(), simulation_parameters_.tstart_,
-        state_.unscaledParameters.data(), state_.fixedParameters.data());
+    fx0(derived_state_.x_rdata_.data(), t, state_.unscaledParameters.data(),
+        state_.fixedParameters.data());
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     ftotal_cl(
         state_.total_cl.data(), derived_state_.x_rdata_.data(),
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
 
-    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, t0());
+    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, t);
 }
 
-void Model::fx0_fixedParameters(AmiVector& x) {
+void Model::fx0_fixedParameters(realtype t, AmiVector& x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
 
@@ -1916,8 +1897,8 @@ void Model::fx0_fixedParameters(AmiVector& x) {
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
     fx0_fixedParameters(
-        derived_state_.x_rdata_.data(), simulation_parameters_.tstart_,
-        state_.unscaledParameters.data(), state_.fixedParameters.data(),
+        derived_state_.x_rdata_.data(), t, state_.unscaledParameters.data(),
+        state_.fixedParameters.data(),
         simulation_parameters_.reinitialization_state_idxs_sim
     );
     fx_solver(x.data(), derived_state_.x_rdata_.data());
@@ -1928,7 +1909,7 @@ void Model::fx0_fixedParameters(AmiVector& x) {
     );
 }
 
-void Model::fsx0(AmiVectorArray& sx, AmiVector const& x) {
+void Model::fsx0(realtype t, AmiVectorArray& sx, AmiVector const& x) {
     /* this function  also computes initial total abundance sensitivities */
     realtype* stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
@@ -1936,9 +1917,9 @@ void Model::fsx0(AmiVectorArray& sx, AmiVector const& x) {
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
         std::ranges::fill(derived_state_.sx_rdata_, 0.0);
         fsx0(
-            derived_state_.sx_rdata_.data(), simulation_parameters_.tstart_,
-            computeX_pos(x), state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), plist(ip)
+            derived_state_.sx_rdata_.data(), t, computeX_pos(x),
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            plist(ip)
         );
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(
@@ -1949,7 +1930,9 @@ void Model::fsx0(AmiVectorArray& sx, AmiVector const& x) {
     }
 }
 
-void Model::fsx0_fixedParameters(AmiVectorArray& sx, AmiVector const& x) {
+void Model::fsx0_fixedParameters(
+    realtype t, AmiVectorArray& sx, AmiVector const& x
+) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
     realtype* stcl = nullptr;
@@ -1962,10 +1945,9 @@ void Model::fsx0_fixedParameters(AmiVectorArray& sx, AmiVector const& x) {
             x.data(), state_.total_cl.data(), plist(ip)
         );
         fsx0_fixedParameters(
-            derived_state_.sx_rdata_.data(), simulation_parameters_.tstart_,
-            computeX_pos(x), state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), plist(ip),
-            simulation_parameters_.reinitialization_state_idxs_sim
+            derived_state_.sx_rdata_.data(), t, computeX_pos(x),
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            plist(ip), simulation_parameters_.reinitialization_state_idxs_sim
         );
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(
@@ -3111,7 +3093,7 @@ void Model::fstotal_cl(
     // 2) stotal_cl += dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
     derived_state_.dtotal_cldx_rdata.zero();
     fdtotal_cldx_rdata(
-        derived_state_.dtotal_cldx_rdata.data(), x_rdata, tcl, p, k
+        derived_state_.dtotal_cldx_rdata.data(), x_rdata, p, k, tcl
     );
     fdtotal_cldx_rdata_colptrs(derived_state_.dtotal_cldx_rdata);
     fdtotal_cldx_rdata_rowvals(derived_state_.dtotal_cldx_rdata);
@@ -3135,7 +3117,7 @@ std::vector<double> Model::get_trigger_timepoints() const {
 }
 
 void Model::set_steadystate_mask(std::vector<realtype> const& mask) {
-    if (mask.size() == 0) {
+    if (mask.empty()) {
         steadystate_mask_.clear();
         return;
     }

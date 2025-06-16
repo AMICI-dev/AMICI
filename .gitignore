@@ -185,8 +185,6 @@ ThirdParty/swig-*
 ThirdParty/ragel-*.tar.gz
 _untracked/
 
-documentation/generated/*
-
 # vim
 *.swp
 tests/performance/CS_Signalling_ERBB_RAS_AKT/

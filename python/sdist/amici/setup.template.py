@@ -75,7 +75,7 @@ setup(
     ext_modules=[MODEL_EXT],
     packages=find_namespace_packages(),
     install_requires=["amici==TPL_AMICI_VERSION"],
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     package_data={},
     zip_safe=False,
     classifiers=CLASSIFIERS,

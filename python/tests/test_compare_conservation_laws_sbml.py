@@ -259,6 +259,10 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 reinitialize_states=reinit,
             )
 
+            assert rff_cl.status == amici.AMICI_SUCCESS
+            assert rfa_cl.status == amici.AMICI_SUCCESS
+            assert raa_cl.status == amici.AMICI_SUCCESS
+
             # assert all are close
             assert_allclose(
                 rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
@@ -281,6 +285,7 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 stst_sensi_mode=amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
                 reinitialize_states=reinit,
             )
+            assert raa.status == amici.AMICI_SUCCESS
 
             # assert gradients are close (quadrature tolerances are laxer)
             assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)

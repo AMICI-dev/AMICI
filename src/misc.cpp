@@ -24,7 +24,9 @@ void writeSlice(AmiVector const& s, gsl::span<realtype> b) {
     writeSlice(s.getVector(), b);
 };
 
-double getUnscaledParameter(double scaledParameter, ParameterScaling scaling) {
+double getUnscaledParameter(
+    double const scaledParameter, ParameterScaling const scaling
+) {
     switch (scaling) {
     case ParameterScaling::log10:
         return pow(10, scaledParameter);

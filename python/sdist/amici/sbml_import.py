@@ -1382,7 +1382,7 @@ class SbmlImporter:
                     ),
                 }
 
-        # Parameters that need to be turned into expressions
+        # Parameters that need to be turned into expressions or species
         #  so far, this concerns parameters with symbolic initial assignments
         #  (those have been skipped above) that are not rate rule targets
         for par in self.sbml.getListOfParameters():
@@ -1391,12 +1391,33 @@ class SbmlImporter:
                 and not ia.is_Number
                 and not self.is_rate_rule_target(par)
             ):
-                self.symbols[SymbolId.EXPRESSION][
-                    _get_identifier_symbol(par)
-                ] = {
-                    "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": ia,
-                }
+                if not ia.has(sbml_time_symbol):
+                    self.symbols[SymbolId.EXPRESSION][
+                        _get_identifier_symbol(par)
+                    ] = {
+                        "name": par.getName()
+                        if par.isSetName()
+                        else par.getId(),
+                        "value": ia,
+                    }
+                else:
+                    # Convert parameters with initial assignments that
+                    #  explicitly depend on time to species.
+                    #  We can't represent that as expression, since the
+                    #  initial simulation time is only known at the time of the
+                    #  simulation, so we can't substitute it.
+                    self.symbols[SymbolId.SPECIES][
+                        _get_identifier_symbol(par)
+                    ] = {
+                        "name": par.getName()
+                        if par.isSetName()
+                        else par.getId(),
+                        "init": ia,
+                        "dt": sp.Float(0),
+                        "amount": True,
+                        "constant": True,
+                        "index": len(self.symbols[SymbolId.SPECIES]),
+                    }
 
     @log_execution_time("processing SBML reactions", logger)
     def _process_reactions(self):
@@ -2342,8 +2363,6 @@ class SbmlImporter:
                 # no need to recurse here, as value is numeric
                 init = sp.Float(element.getValue())
                 sym_math = sym_math.subs(var, init)
-
-        sym_math = smart_subs(sym_math, sbml_time_symbol, sp.Float(0))
 
         sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 

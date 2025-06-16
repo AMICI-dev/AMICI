@@ -9,6 +9,7 @@ import copy
 from functools import partial
 from pathlib import Path
 
+import os
 import fiddy
 import amici
 import numpy as np
@@ -599,6 +600,7 @@ def test_benchmark_gradient(
         #  but not with cache=False
         # cache=not debug,
         cache=False,
+        num_threads=os.cpu_count(),
     )
     np.random.seed(cur_settings.rng_seed)
 

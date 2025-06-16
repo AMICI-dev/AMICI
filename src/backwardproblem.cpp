@@ -3,59 +3,25 @@
 #include "amici/edata.h"
 #include "amici/exception.h"
 #include "amici/forwardproblem.h"
-#include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 
 namespace amici {
 
-BackwardProblem::BackwardProblem(
-    ForwardProblem const& fwd, SteadystateProblem const* posteq
-)
+BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     : model_(fwd.model)
     , solver_(fwd.solver)
     , edata_(fwd.edata)
     , t_(fwd.getTime())
-    , xB_(fwd.model->nx_solver, solver_->getSunContext())
-    , dxB_(fwd.model->nx_solver, solver_->getSunContext())
-    , xQB_(fwd.model->nJ * fwd.model->nplist(), solver_->getSunContext())
-    , x_disc_(fwd.getStatesAtDiscontinuities())
-    , x_old_disc_(fwd.getStatesBeforeDiscontinuities())
-    , xdot_disc_(fwd.getRHSAtDiscontinuities())
-    , xdot_old_disc_(fwd.getRHSBeforeDiscontinuities())
     , sx0_(fwd.getStateSensitivity())
-    , nroots_(fwd.getNumberOfRoots())
     , discs_(fwd.getDiscontinuities())
-    , root_idx_(fwd.getRootIndexes())
-    , dJydx_(fwd.getDJydx())
-    , dJzdx_(fwd.getDJzdx()) {
-    /* complement dJydx from postequilibration. This shouldn't overwrite
-     * anything but only fill in previously 0 values, as only non-inf
-     * timepoints are filled from fwd.
-     */
-    for (int it = 0; it < fwd.model->nt(); it++) {
-        if (std::isinf(fwd.model->getTimepoint(it))) {
-            if (!posteq)
-                throw AmiException(
-                    "Model has non-finite timepoint but, "
-                    "postequilibration did not run"
-                );
-
-            /* copy adjoint update to postequilibration */
-            writeSlice(
-                slice(
-                    posteq->getDJydx(), it, fwd.model->nx_solver * fwd.model->nJ
-                ),
-                slice(dJydx_, it, fwd.model->nx_solver * fwd.model->nJ)
-            );
-
-            /* If adjoint sensis were computed, copy also quadratures */
-            xQB_.zero();
-            xQB_ = posteq->getEquilibrationQuadratures();
-        }
-    }
-}
+    , dJydx_(fwd.getAdjointUpdates(*model_, *edata_))
+    , dJzdx_(fwd.getDJzdx())
+    , preeq_problem_(fwd.getPreequilibrationProblem())
+    , posteq_problem_(fwd.getPostequilibrationProblem())
+    , ws_(model_, solver_)
+    , simulator_(model_, solver_, &ws_) {}
 
 void BackwardProblem::workBackwardProblem() {
 
@@ -66,157 +32,214 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
 
+    handlePostequilibration();
+
+    // If we have posteq, infinity timepoints were already treated
     int it = model_->nt() - 1;
-    /* If we have posteq, infinity timepoints were already treated */
-    for (int jt = model_->nt() - 1; jt >= 0; jt--)
-        if (std::isinf(model_->getTimepoint(jt)))
-            --it;
-
-    /* initialize state vectors, depending on postequilibration */
-    model_->initializeB(xB_, dxB_, xQB_, it < model_->nt() - 1);
-
-    if ((it >= 0 || !discs_.empty())
-        && model_->getTimepoint(it) > model_->t0()) {
-        handleDataPointB(it);
-        solver_->setupB(
-            &which, model_->getTimepoint(it), model_, xB_, dxB_, xQB_
-        );
-        /* for initial datapoint diagnosis needs to be stored after setup as
-         it is not called in handleDataPointB*/
-        solver_->storeDiagnosisB(which);
+    while (it >= 0 && std::isinf(model_->getTimepoint(it))) {
         --it;
-
-        while (it >= 0 || discs_.size() > 0) {
-            /* check if next timepoint is a discontinuity or a data-point */
-            double tnext = getTnext(it);
-
-            if (tnext < t_) {
-                solver_->runB(tnext);
-                solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
-            }
-
-            /* handle data-point */
-            if (it >= 0 && tnext == model_->getTimepoint(it)) {
-                handleDataPointB(it);
-                it--;
-            }
-
-            /* handle discontinuity */
-            if (!discs_.empty() && tnext == discs_.back()) {
-                discs_.pop_back();
-                handleEventB();
-            }
-
-            /* reinit states */
-            solver_->reInitB(which, t_, xB_, dxB_);
-            solver_->quadReInitB(which, xQB_);
-        }
     }
 
-    /* we still need to integrate from first datapoint to tstart */
-    if (t_ > model_->t0()) {
-        /* solve for backward problems */
-        solver_->runB(model_->t0());
-        solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
-    }
+    // initialize state vectors, depending on postequilibration
+    model_->initializeB(ws_.xB_, ws_.dxB_, ws_.xQB_, it < model_->nt() - 1);
+    ws_.discs_ = discs_;
+    ws_.nroots_ = compute_nroots(discs_, model_->ne, model_->nMaxEvent());
+    simulator_.run(
+        t_, model_->t0(), it, model_->getTimepoints(), &dJydx_, &dJzdx_
+    );
 
+    // handle presimulation
     if (edata_ && edata_->t_presim > 0) {
         ConditionContext cc(
             model_, edata_, FixedParameterContext::presimulation
         );
         solver_->runB(model_->t0() - edata_->t_presim);
-        solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
+        solver_->writeSolutionB(&t_, ws_.xB_, ws_.dxB_, ws_.xQB_, ws_.which);
+    }
+
+    // handle pre-equilibration
+    if (preeq_problem_) {
+        ConditionContext cc2(
+            model_, edata_, FixedParameterContext::preequilibration
+        );
+        preeq_problem_->workSteadyStateBackwardProblem(
+            *solver_, *model_, ws_.xB_, true
+        );
     }
 }
 
-void BackwardProblem::handleEventB() {
-    auto rootidx = root_idx_.back();
-    this->root_idx_.pop_back();
+void BackwardProblem::handlePostequilibration() {
+    if (!posteq_problem_) {
+        return;
+    }
 
-    auto x_disc = this->x_disc_.back();
-    this->x_disc_.pop_back();
+    // initialize xB - only process the postequilibration timepoints
+    for (int it = 0; it < model_->nt(); it++) {
+        if (std::isinf(model_->getTimepoint(it))) {
+            for (int ix = 0; ix < model_->nxtrue_solver; ix++)
+                ws_.xB_[ix] += dJydx_[ix + it * model_->nx_solver];
+        }
+    }
 
-    auto x_old_disc = this->x_old_disc_.back();
-    this->x_old_disc_.pop_back();
+    posteq_problem_->workSteadyStateBackwardProblem(
+        *solver_, *model_, ws_.xB_, false
+    );
+    ws_.xQB_ = posteq_problem_->getEquilibrationQuadratures();
+}
 
-    auto xdot_disc = this->xdot_disc_.back();
-    this->xdot_disc_.pop_back();
+void EventHandlingBwdSimulator::handleEventB(
+    Discontinuity const& disc, std::vector<realtype> const* dJzdx
+) {
 
-    auto xdot_old_disc = this->xdot_old_disc_.back();
-    this->xdot_old_disc_.pop_back();
-
-    auto x_in_event = AmiVector(x_disc);
+    // TODO: unused!
+    auto x_in_event = AmiVector(disc.x_post);
     for (int iv = 0; iv < x_in_event.getLength(); iv++)
-        x_in_event[iv] = 0.5 * (x_disc.at(iv) + x_old_disc.at(iv));
+        x_in_event[iv] = 0.5 * (disc.x_post.at(iv) + disc.x_pre.at(iv));
 
-    auto xdot_in_event = AmiVector(xdot_disc);
+    // TODO: unused!
+    auto xdot_in_event = AmiVector(disc.xdot_post);
     for (int iv = 0; iv < xdot_in_event.getLength(); iv++)
-        xdot_in_event[iv] = 0.5 * (xdot_disc.at(iv) + xdot_old_disc.at(iv));
+        xdot_in_event[iv]
+            = 0.5 * (disc.xdot_post.at(iv) + disc.xdot_pre.at(iv));
 
-    model_->updateHeavisideB(rootidx.data());
-
-    auto delta_x = AmiVector(x_disc.getLength(), solver_->getSunContext());
+    auto delta_x = AmiVector(disc.x_post.getLength(), solver_->getSunContext());
     for (int iv = 0; iv < xdot_in_event.getLength(); iv++)
-        delta_x[iv] = (x_disc.at(iv) - x_old_disc.at(iv));
+        delta_x[iv] = (disc.x_post.at(iv) - disc.x_pre.at(iv));
+
+    model_->updateHeavisideB(disc.root_info.data());
 
     for (int ie = 0; ie < model_->ne; ie++) {
 
-        if (rootidx[ie] == 1) {
+        if (disc.root_info[ie] != 1) {
+            continue;
+        }
 
-            model_->addAdjointQuadratureEventUpdate(
-                xQB_, ie, t_, x_old_disc, xB_, xdot_disc, xdot_old_disc, delta_x
-            );
-            model_->addAdjointStateEventUpdate(
-                xB_, ie, t_, x_old_disc, xdot_disc, xdot_old_disc, delta_x
-            );
+        model_->addAdjointQuadratureEventUpdate(
+            ws_->xQB_, ie, t_, disc.x_pre, ws_->xB_, disc.xdot_post,
+            disc.xdot_pre, delta_x
+        );
+        model_->addAdjointStateEventUpdate(
+            ws_->xB_, ie, t_, disc.x_pre, disc.xdot_post, disc.xdot_pre, delta_x
+        );
 
-            if (model_->nz > 0) {
-                for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
-                    for (int iJ = 0; iJ < model_->nJ; ++iJ) {
-                        xB_[ix + iJ * model_->nxtrue_solver] += dJzdx_
-                            [iJ
-                             + (ix + nroots_[ie] * model_->nx_solver)
-                                   * model_->nJ];
-                    }
+        if (model_->nz > 0) {
+            for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
+                for (int iJ = 0; iJ < model_->nJ; ++iJ) {
+                    ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx
+                    )[iJ
+                      + (ix + ws_->nroots_[ie] * model_->nx_solver)
+                            * model_->nJ];
                 }
             }
-            nroots_[ie]--;
         }
+
+        ws_->nroots_[ie]--;
     }
 }
 
-void BackwardProblem::handleDataPointB(int const it) {
-    /* solver wasn't reset yet, as xB_ is necessary for solver setup.
-     For initial time point (we are integrating backwards!), diagnosis needs
-     to be stored outside this function. */
+void EventHandlingBwdSimulator::handleDataPointB(
+    int const it, std::vector<realtype> const* dJydx
+) {
+    // The solver wasn't reset yet, as xB_ is necessary for solver setup.
+    // For initial time point (we are integrating backwards!), diagnosis needs
+    // to be stored outside this function.
     if (it < model_->nt() - 1)
-        solver_->storeDiagnosisB(which);
+        solver_->storeDiagnosisB(ws_->which);
 
+    Expects(dJydx != nullptr);
     for (int ix = 0; ix < model_->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model_->nJ; iJ++)
             // we only need the 1:nxtrue_solver (not the nx_true) slice here!
-            xB_[ix + iJ * model_->nxtrue_solver]
-                += dJydx_[iJ + (ix + it * model_->nx_solver) * model_->nJ];
+            ws_->xB_[ix + iJ * model_->nxtrue_solver]
+                += (*dJydx)[iJ + (ix + it * model_->nx_solver) * model_->nJ];
     }
 }
 
-realtype BackwardProblem::getTnext(int const it) {
-    if (it < 0 && discs_.empty()) {
+realtype EventHandlingBwdSimulator::getTnext(int const it) {
+    if (it < 0 && ws_->discs_.empty()) {
         throw AmiException(
             "No more timepoints (it=%d, ie=%d) available at %f. This should "
             "not happen, please report a bug including this stacktrace at "
             "https://github.com/AMICI-dev/AMICI/issues/new/choose",
-            it, discs_.size(), this->t_
+            it, ws_->discs_.size(), this->t_
         );
     }
 
-    if (!discs_.empty()
-        && (it < 0 || discs_.back() > model_->getTimepoint(it))) {
-        double tdisc = discs_.back();
+    if (!ws_->discs_.empty()
+        && (it < 0 || ws_->discs_.back().time > model_->getTimepoint(it))) {
+        double tdisc = ws_->discs_.back().time;
         return tdisc;
     }
 
     return model_->getTimepoint(it);
+}
+
+BwdSimWorkspace::BwdSimWorkspace(
+    gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver
+)
+    : model_(model)
+    , xB_(model_->nx_solver, solver->getSunContext())
+    , dxB_(model_->nx_solver, solver->getSunContext())
+    , xQB_(model_->nJ * model_->nplist(), solver->getSunContext()) {}
+
+void EventHandlingBwdSimulator::run(
+    realtype t_start, realtype t_end, realtype it,
+    std::vector<realtype> const& timepoints, std::vector<realtype> const* dJydx,
+    std::vector<realtype> const* dJzdx
+) {
+    Expects(model_->nz == 0 || dJzdx != nullptr);
+    Expects(t_start >= t_end);
+    Expects(it < 0 || t_start >= timepoints[it]);
+    Expects(it < 0 || t_end <= timepoints.front());
+
+    t_ = t_start;
+
+    if ((it >= 0 || !ws_->discs_.empty()) && timepoints[it] > t_end) {
+        handleDataPointB(it, dJydx);
+        solver_->setupB(
+            &ws_->which, timepoints[it], model_, ws_->xB_, ws_->dxB_, ws_->xQB_
+        );
+        // for the initial datapoint, diagnosis needs to be stored after setup
+        // as it is not called in handleDataPointB
+        solver_->storeDiagnosisB(ws_->which);
+        --it;
+
+        while (it >= 0 || !ws_->discs_.empty()) {
+            // check if next timepoint is a discontinuity or a data-point
+            double tnext = getTnext(it);
+
+            if (tnext < t_) {
+                solver_->runB(tnext);
+                solver_->writeSolutionB(
+                    &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
+                );
+            }
+
+            // handle data-point
+            if (it >= 0 && tnext == timepoints[it]) {
+                handleDataPointB(it, dJydx);
+                it--;
+            }
+
+            // handle discontinuity
+            if (!ws_->discs_.empty() && tnext == ws_->discs_.back().time) {
+                handleEventB(ws_->discs_.back(), dJzdx);
+                ws_->discs_.pop_back();
+            }
+
+            // reinitialize state
+            solver_->reInitB(ws_->which, t_, ws_->xB_, ws_->dxB_);
+            solver_->quadReInitB(ws_->which, ws_->xQB_);
+        }
+    }
+
+    // we still need to integrate from first datapoint to t_start
+    if (t_ > t_end) {
+        solver_->runB(t_end);
+        solver_->writeSolutionB(
+            &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
+        );
+    }
 }
 
 } // namespace amici

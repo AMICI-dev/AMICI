@@ -27,7 +27,7 @@ namespace hdf5 {
  * @param model
  */
 void checkMeasurementDimensionsCompatible(
-    hsize_t m, hsize_t n, Model const& model
+    hsize_t const m, hsize_t const n, Model const& model
 ) {
     bool compatible = true;
     // if this is rank 1, n and m can be swapped
@@ -55,7 +55,9 @@ void checkMeasurementDimensionsCompatible(
  * @param n
  * @param model
  */
-void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
+void checkEventDimensionsCompatible(
+    hsize_t const m, hsize_t const n, Model const& model
+) {
     bool compatible = true;
 
     // if this is rank 1, n and m can be swapped
@@ -116,7 +118,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
 
     hsize_t m, n;
 
-    auto edata = std::unique_ptr<ExpData>(new ExpData(model));
+    auto edata = std::make_unique<ExpData>(model);
 
     if (attributeExists(file, hdf5Root, "id")) {
         edata->id = getStringAttribute(file, hdf5Root, "id");
@@ -810,7 +812,7 @@ std::string getStringAttribute(
             optionsObject.c_str()
         );
 
-    return std::string(value.data());
+    return {value.data()};
 }
 
 double getDoubleScalarAttribute(
@@ -884,7 +886,7 @@ void createAndWriteDouble1DDataset(
 
 void createAndWriteDouble2DDataset(
     const H5::H5File& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t m, hsize_t n
+    gsl::span<double const> buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -897,7 +899,7 @@ void createAndWriteDouble2DDataset(
 
 void createAndWriteInt2DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<int const> buffer, hsize_t m, hsize_t n
+    gsl::span<int const> buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -910,7 +912,8 @@ void createAndWriteInt2DDataset(
 
 void createAndWriteDouble3DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t m, hsize_t n, hsize_t o
+    gsl::span<double const> buffer, hsize_t const m, hsize_t const n,
+    hsize_t const o
 ) {
     Expects(buffer.size() == m * n * o);
     hsize_t const adims[]{m, n, o};

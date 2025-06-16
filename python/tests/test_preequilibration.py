@@ -508,7 +508,7 @@ def test_newton_steadystate_check(preeq_fixture):
         assert rdatas[newton_check]["status"] == amici.AMICI_SUCCESS
 
     # assert correct results
-    for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
+    for variable in ["x_ss", "llh", "sx0", "sx_ss", "sllh"]:
         assert_allclose(
             rdatas[True][variable],
             rdatas[False][variable],
