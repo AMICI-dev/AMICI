@@ -64,6 +64,16 @@ struct Discontinuity {
 };
 
 /**
+ * @brief Compute the number of roots for each root function from a vector of
+ * discontinuities.
+ * @param discs Encountered discontinuities.
+ * @param ne Number of root functions (ne).
+ * @param nmaxevents Maximum number of events to track (nmaxevents).
+ * @return The number of roots for each root function.
+ */
+std::vector<int> compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
+
+/**
  * @brief The FwdSimWorkspace class is used to store temporary simulation
  * state during forward simulations.
  */
@@ -312,6 +322,7 @@ class EventHandlingSimulator {
     std::vector<realtype>* dJzdx_ = nullptr;
 };
 
+
 /**
  * @brief The ForwardProblem class groups all functions for solving the
  * forward problem.
@@ -364,14 +375,6 @@ class ForwardProblem {
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
         return ws_.sx;
-    }
-
-    /**
-     * @brief Accessor for nroots
-     * @return nroots
-     */
-    [[nodiscard]] std::vector<int> const& getNumberOfRoots() const {
-        return main_simulator_.result.nroots;
     }
 
     /**
