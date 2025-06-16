@@ -573,7 +573,7 @@ SimulationState EventHandlingSimulator::get_simulation_state() {
 
 std::vector<int> compute_nroots(
     std::vector<Discontinuity> const& discs, int ne, int nmaxevents
-    ) {
+) {
     auto size = gsl::narrow<std::vector<int>::size_type>(ne);
     std::vector<int> nroots(size, 0);
     for (auto const& disc : discs) {
@@ -591,6 +591,5 @@ std::vector<int> compute_nroots(
     }
     return nroots;
 }
-
 
 } // namespace amici

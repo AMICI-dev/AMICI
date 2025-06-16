@@ -71,7 +71,8 @@ struct Discontinuity {
  * @param nmaxevents Maximum number of events to track (nmaxevents).
  * @return The number of roots for each root function.
  */
-std::vector<int> compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
+std::vector<int>
+compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
 
 /**
  * @brief The FwdSimWorkspace class is used to store temporary simulation
@@ -321,7 +322,6 @@ class EventHandlingSimulator {
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype>* dJzdx_ = nullptr;
 };
-
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
