@@ -63,11 +63,11 @@ void EventHandlingSimulator::run(
     if (model_->ne && std::ranges::any_of(ws_->roots_found, [](int rf) {
             return rf == 1;
         })) {
-        handleEvent(true, edata);
+        handle_event(true, edata);
     }
 
     // store initial state and sensitivity
-    result.initial_state_ = getSimulationState();
+    result.initial_state_ = get_simulation_state();
     // store root information at t0
     model_->froot(t_, ws_->x, ws_->dx, ws_->rootvals);
 
@@ -96,7 +96,7 @@ void EventHandlingSimulator::run(
             // Solve for next output timepoint
             while (t_ < next_t_out) {
                 if (is_next_t_too_close(t_, next_t_out)) {
-                    // next timepoint is too close to current timepoint.
+                    // the next timepoint is too close to the current timepoint.
                     // we use the state of the current timepoint.
                     break;
                 }
@@ -107,9 +107,9 @@ void EventHandlingSimulator::run(
                     = it_trigger_timepoints != trigger_timepoints.end()
                           ? *it_trigger_timepoints
                           : std::numeric_limits<realtype>::infinity();
-                auto next_t_stop = std::min(next_t_out, next_t_event);
+                auto const next_t_stop = std::min(next_t_out, next_t_event);
 
-                int status = solver_->run(next_t_stop);
+                int const status = solver_->run(next_t_stop);
                 // sx will be copied from solver on demand if sensitivities
                 // are computed
                 solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx, ws_->dx);
@@ -124,8 +124,9 @@ void EventHandlingSimulator::run(
                     // check if we are at a trigger timepoint.
                     // if so, set the root-found flag
                     if (t_ == next_t_event) {
-                        for (auto ie : model_->state_independent_events_[t_]) {
-                            // determine direction of root crossing from
+                        for (auto const ie :
+                             model_->state_independent_events_[t_]) {
+                            // determine the direction of root crossing from
                             // root function value at the previous event
                             ws_->roots_found[ie]
                                 = std::copysign(1, -ws_->rootvals[ie]);
@@ -133,16 +134,16 @@ void EventHandlingSimulator::run(
                         ++it_trigger_timepoints;
                     }
 
-                    handleEvent(false, edata);
+                    handle_event(false, edata);
                 }
             }
         }
-        handleDataPoint(next_t_out);
+        handle_datapoint(next_t_out);
     }
 
     // fill events
     if (model_->nz > 0 && model_->nt() > 0) {
-        fillEvents(model_->nMaxEvent(), edata);
+        fill_events(model_->nMaxEvent(), edata);
     }
 
     result.nroots = ws_->nroots;
@@ -209,7 +210,7 @@ void ForwardProblem::handlePresimulation() {
         solver->setup(t_, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
         solver->updateAndReinitStatesAndSensitivities(model);
 
-        std::vector<realtype> timepoints{model->t0()};
+        std::vector<realtype> const timepoints{model->t0()};
         pre_simulator_.run(t_, edata, timepoints);
         solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx, ws_.dx);
     }
@@ -224,7 +225,7 @@ void ForwardProblem::handleMainSimulation() {
         ws_.sx = solver->getStateSensitivity(model->t0());
 
     if (!preequilibrated_ && !uses_presimulation_) {
-        // if preequilibration or presimulation was done, model was already
+        // if preequilibration or presimulation was done, the model was already
         // initialized
         model->initialize(
             model->t0(), ws_.x, ws_.dx, ws_.sx, ws_.sdx,
@@ -249,7 +250,7 @@ void ForwardProblem::handleMainSimulation() {
     ws_.x = solver->getState(model->t0());
     // When computing forward sensitivities, we generally want to update sx
     // after presimulation/preequilibration, and if we didn't do either this
-    // also wont harm. when computing ASA, we only want to update here, if we
+    // also won't harm. when computing ASA, we only want to update here if we
     // didn't update before presimulation (if applicable).
     if (solver->computingFSA()
         || (solver->computingASA() && !uses_presimulation_))
@@ -269,7 +270,7 @@ void ForwardProblem::handlePostequilibration() {
     }
 }
 
-void EventHandlingSimulator::handleEvent(
+void EventHandlingSimulator::handle_event(
     bool const initial_event, amici::ExpData const* edata
 ) {
     // Some event triggered. This may be due to some discontinuity, a bolus to
@@ -287,24 +288,26 @@ void EventHandlingSimulator::handleEvent(
 
     // store the event info and pre-event simulation state
     // whenever a new event is triggered
-    auto store_pre_event_info = [this, initial_event, edata](bool seflag) {
-        // store Heaviside information at event occurrence
-        model_->froot(t_, ws_->x, ws_->dx, ws_->rootvals);
+    auto store_pre_event_info
+        = [this, initial_event, edata](bool const seflag) {
+              // store Heaviside information at event occurrence
+              model_->froot(t_, ws_->x, ws_->dx, ws_->rootvals);
 
-        // store timepoint at which the event occurred, the root function
-        // values, and the direction of any zero crossings of the root function
-        result.discs.emplace_back(t_, ws_->roots_found);
-        ws_->rval_tmp = ws_->rootvals;
+              // store timepoint at which the event occurred, the root function
+              // values, and the direction of any zero crossings of the root
+              // function
+              result.discs.emplace_back(t_, ws_->roots_found);
+              ws_->rval_tmp = ws_->rootvals;
 
-        if (model_->nz > 0)
-            storeEvent(edata);
+              if (model_->nz > 0)
+                  store_event(edata);
 
-        store_pre_event_state(seflag, initial_event);
+              store_pre_event_state(seflag, initial_event);
 
-        if (!initial_event) {
-            model_->updateHeaviside(ws_->roots_found);
-        }
-    };
+              if (!initial_event) {
+                  model_->updateHeaviside(ws_->roots_found);
+              }
+          };
 
     // store post-event information that is to be saved
     //  not after processing every single event, but after processing all events
@@ -329,7 +332,7 @@ void EventHandlingSimulator::handleEvent(
                  .idx = ie,
                  .state_old
                  = (event.uses_values_from_trigger_time()
-                        ? std::optional<SimulationState>(getSimulationState())
+                        ? std::optional<SimulationState>(get_simulation_state())
                         : std::nullopt)}
             );
         }
@@ -338,7 +341,7 @@ void EventHandlingSimulator::handleEvent(
     while (!ws_->pending_events.empty()) {
         // get the next event to be handled
         auto const& pending_event = ws_->pending_events.pop();
-        auto ie = pending_event.idx;
+        auto const ie = pending_event.idx;
         auto const& state_old = pending_event.state_old;
 
         gsl_Assert(
@@ -385,8 +388,9 @@ void EventHandlingSimulator::handleEvent(
     }
 }
 
-void EventHandlingSimulator::storeEvent(ExpData const* edata) {
-    bool is_last_timepoint = (t_ == model_->getTimepoint(model_->nt() - 1));
+void EventHandlingSimulator::store_event(ExpData const* edata) {
+    bool const is_last_timepoint
+        = (t_ == model_->getTimepoint(model_->nt() - 1));
 
     if (is_last_timepoint) {
         // call from fillEvent at last timepoint
@@ -398,17 +402,17 @@ void EventHandlingSimulator::storeEvent(ExpData const* edata) {
         result.discs.back().root_info = ws_->roots_found;
     }
 
-    if (getRootCounter() < getEventCounter()) {
+    if (get_root_counter() < get_event_counter()) {
         // update stored state (sensi)
-        result.event_states_.at(getRootCounter()) = getSimulationState();
+        result.event_states_.at(get_root_counter()) = get_simulation_state();
     } else {
         // add stored state (sensi)
-        result.event_states_.push_back(getSimulationState());
+        result.event_states_.push_back(get_simulation_state());
     }
 
     // EVENT OUTPUT
     for (int ie = 0; ie < model_->ne; ie++) {
-        // only look for roots of the rootfunction not discontinuities
+        // only look for roots of the root function, not discontinuities
         if (ws_->nroots.at(ie) >= model_->nMaxEvent())
             continue;
 
@@ -431,14 +435,14 @@ void EventHandlingSimulator::storeEvent(ExpData const* edata) {
     if (is_last_timepoint) {
         // call from fillEvent at last timepoint
         // loop until all events are filled
-        fillEvents(model_->nMaxEvent(), edata);
+        fill_events(model_->nMaxEvent(), edata);
     }
 }
 
 void EventHandlingSimulator::store_pre_event_state(
-    bool seflag, bool initial_event
+    bool seflag, bool const initial_event
 ) {
-    // If we need to do forward sensitivities later on we need to store the old
+    // If we need to do forward sensitivities later on, we need to store the old
     // x and the old xdot.
     if (solver_->getSensitivityOrder() >= SensitivityOrder::first) {
         // store x and xdot to compute jump in sensitivities
@@ -449,7 +453,7 @@ void EventHandlingSimulator::store_pre_event_state(
     if (solver_->computingFSA()) {
         // compute event-time derivative only for primary events, we get
         // into trouble with multiple simultaneously firing events here (but
-        // is this really well defined then?), in that case just use the
+        // is this really well-defined then?), in that case, just use the
         // last ie and hope for the best.
         if (!seflag && !initial_event) {
             for (int ie = 0; ie < model_->ne; ie++) {
@@ -489,7 +493,7 @@ int EventHandlingSimulator::detect_secondary_events() {
                          .state_old
                          = (event.uses_values_from_trigger_time()
                                 ? std::optional<SimulationState>(
-                                      getSimulationState()
+                                      get_simulation_state()
                                   )
                                 : std::nullopt)}
                     );
@@ -508,7 +512,7 @@ int EventHandlingSimulator::detect_secondary_events() {
 
     // fire the secondary event?
     if (secondevent > 0) {
-        // Secondary events may result in wrong forward sensitivities,
+        // Secondary events may result in wrong forward sensitivities
         // if the secondary event has a bolus...
         if (solver_->computingFSA() && solver_->logger)
             solver_->logger->log(
@@ -522,11 +526,11 @@ int EventHandlingSimulator::detect_secondary_events() {
     return secondevent;
 }
 
-void EventHandlingSimulator::handleDataPoint(realtype t) {
+void EventHandlingSimulator::handle_datapoint(realtype t) {
     // We only store the simulation state if it's not the initial state, as the
-    // initial state is stored anyway and we want to avoid storing it twice
+    // initial state is stored anyway, and we want to avoid storing it twice
     if (t != t0_ && !result.timepoint_states_.contains(t))
-        result.timepoint_states_[t] = getSimulationState();
+        result.timepoint_states_[t] = get_simulation_state();
     // store diagnosis information for debugging
     solver_->storeDiagnosis();
 }
@@ -553,7 +557,7 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
     return dJydx;
 }
 
-SimulationState EventHandlingSimulator::getSimulationState() {
+SimulationState EventHandlingSimulator::get_simulation_state() {
     if (std::isfinite(solver_->gett())) {
         solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx, ws_->dx);
     }

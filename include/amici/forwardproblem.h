@@ -12,7 +12,6 @@
 #include <optional>
 #include <vector>
 namespace amici {
-
 class ExpData;
 class Solver;
 class SteadystateProblem;
@@ -58,7 +57,7 @@ struct Discontinuity {
      * @brief Array of flags indicating which root has been found.
      *
      * Array of length nr (ne) with the indices of the user functions gi found
-     * to have a root. For i = 0, . . . ,nr 1 or -1 if gi has a root, and = 0
+     * to have a root. For i = 0, ..., nr: 1 or -1 if gi has a root, and = 0
      * if not. See CVodeGetRootInfo for details.
      */
     std::vector<int> root_info;
@@ -74,7 +73,9 @@ struct FwdSimWorkspace {
      * @param model The model for which to set up the workspace.
      * @param solver The solver for which to set up this workspace.
      */
-    FwdSimWorkspace(gsl::not_null<Model*> model, gsl::not_null<Solver*> solver)
+    FwdSimWorkspace(
+        gsl::not_null<Model*> const& model, gsl::not_null<Solver*> solver
+    )
         : x(model->nx_solver, solver->getSunContext())
         , x_old(model->nx_solver, solver->getSunContext())
         , dx(model->nx_solver, solver->getSunContext())
@@ -124,7 +125,7 @@ struct FwdSimWorkspace {
      */
     std::vector<int> roots_found;
 
-    /** Timepoint at which the last root was found */
+    /** Timepoint, at which the last root was found */
     realtype tlastroot{0.0};
 
     /** Events that are waiting to be handled at the current timepoint. */
@@ -216,7 +217,7 @@ class EventHandlingSimulator {
      * @brief Returns maximal event index for which the timepoint is available
      * @return index
      */
-    int getRootCounter() const {
+    [[nodiscard]] int get_root_counter() const {
         return gsl::narrow<int>(result.discs.size()) - 1;
     }
 
@@ -224,7 +225,7 @@ class EventHandlingSimulator {
      * @brief Returns maximal event index for which simulations are available
      * @return index
      */
-    int getEventCounter() const {
+    [[nodiscard]] int get_event_counter() const {
         return gsl::narrow<int>(result.event_states_.size()) - 1;
     }
 
@@ -232,14 +233,14 @@ class EventHandlingSimulator {
      * @brief Creates a carbon copy of the current simulation state variables
      * @return state
      */
-    SimulationState getSimulationState();
+    SimulationState get_simulation_state();
 
     /** Results for the current simulation period. */
     PeriodResult result;
+
     /** The current time. */
     realtype t_;
-    /** Initial time of the current period. */
-    realtype t0_;
+
     /** Time index in the current list of timepoints */
     int it_;
 
@@ -248,8 +249,9 @@ class EventHandlingSimulator {
      * @brief Execute everything necessary for the handling of events
      *
      * @param initial_event initial event flag
+     * @param edata experimental data
      */
-    void handleEvent(bool initial_event, amici::ExpData const* edata);
+    void handle_event(bool initial_event, ExpData const* edata);
 
     /**
      * @brief Store pre-event model state
@@ -268,38 +270,33 @@ class EventHandlingSimulator {
     /**
      * @brief Extract output information for events
      */
-    void storeEvent(amici::ExpData const* edata);
+    void store_event(amici::ExpData const* edata);
 
     /**
      * @brief Execute everything necessary for the handling of data points
      *
      * @param t measurement timepoint
      */
-    void handleDataPoint(realtype t);
+    void handle_datapoint(realtype t);
 
     /**
      * @brief fills events at final timepoint if necessary
      *
      * @param nmaxevent maximal number of events
+     * @param edata experimental data
      */
-    void fillEvents(int nmaxevent, amici::ExpData const* edata) {
-        if (checkEventsToFill(nmaxevent)) {
-            result.discs.emplace_back(t_);
-            storeEvent(edata);
-        }
+    void fill_events(int nmaxevent, ExpData const* edata) {
+        if (!std::ranges::any_of(ws_->nroots, [nmaxevent](int curNRoots) {
+                return curNRoots < nmaxevent;
+            }))
+            return;
+
+        result.discs.emplace_back(t_);
+        store_event(edata);
     }
 
-    /**
-     * @brief checks whether there are any events to fill
-     *
-     * @param nmaxevent maximal number of events
-     */
-    bool checkEventsToFill(int nmaxevent) const {
-        return std::any_of(
-            ws_->nroots.cbegin(), ws_->nroots.cend(),
-            [nmaxevent](int curNRoots) { return curNRoots < nmaxevent; }
-        );
-    };
+    /** Initial time of the current period. */
+    realtype t0_;
 
     /** The model to simulate. */
     Model* model_;
@@ -359,19 +356,21 @@ class ForwardProblem {
      * @brief Accessor for t
      * @return t
      */
-    realtype getTime() const { return t_; }
+    [[nodiscard]] realtype getTime() const { return t_; }
 
     /**
      * @brief Accessor for sx
      * @return sx
      */
-    AmiVectorArray const& getStateSensitivity() const { return ws_.sx; }
+    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
+        return ws_.sx;
+    }
 
     /**
      * @brief Accessor for nroots
      * @return nroots
      */
-    std::vector<int> const& getNumberOfRoots() const {
+    [[nodiscard]] std::vector<int> const& getNumberOfRoots() const {
         return main_simulator_.result.nroots;
     }
 
@@ -379,7 +378,7 @@ class ForwardProblem {
      * @brief Get information on the discontinuities encountered so far.
      * @return The vector of discontinuities.
      */
-    std::vector<Discontinuity> const& getDiscontinuities() const {
+    [[nodiscard]] std::vector<Discontinuity> const& getDiscontinuities() const {
         return main_simulator_.result.discs;
     }
 
@@ -387,19 +386,21 @@ class ForwardProblem {
      * @brief Accessor for dJzdx
      * @return dJzdx
      */
-    std::vector<realtype> const& getDJzdx() const { return dJzdx_; }
+    [[nodiscard]] std::vector<realtype> const& getDJzdx() const {
+        return dJzdx_;
+    }
 
     /**
      * @brief Accessor for it
      * @return it
      */
-    int getCurrentTimeIteration() const { return it_; }
+    [[nodiscard]] int getCurrentTimeIteration() const { return it_; }
 
     /**
      * @brief Returns final time point for which simulations are available
      * @return time point
      */
-    realtype getFinalTime() const {
+    [[nodiscard]] realtype getFinalTime() const {
         return main_simulator_.result.final_state_.t;
     }
 
@@ -407,7 +408,9 @@ class ForwardProblem {
      * @brief Returns maximal event index for which simulations are available
      * @return index
      */
-    int getEventCounter() const { return main_simulator_.getEventCounter(); }
+    [[nodiscard]] int getEventCounter() const {
+        return main_simulator_.get_event_counter();
+    }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
@@ -415,7 +418,8 @@ class ForwardProblem {
      * @param it timepoint index
      * @return state
      */
-    SimulationState const& getSimulationStateTimepoint(int it) const {
+    [[nodiscard]] SimulationState const&
+    getSimulationStateTimepoint(int it) const {
         if (model->getTimepoint(it) == main_simulator_.result.initial_state_.t)
             return getInitialSimulationState();
         auto map_iter = main_simulator_.result.timepoint_states_.find(
@@ -431,7 +435,8 @@ class ForwardProblem {
      * @param iroot event index
      * @return SimulationState
      */
-    SimulationState const& getSimulationStateEvent(int iroot) const {
+    [[nodiscard]] SimulationState const&
+    getSimulationStateEvent(int iroot) const {
         return main_simulator_.result.event_states_.at(iroot);
     };
 
@@ -440,16 +445,16 @@ class ForwardProblem {
      * initial timepoint
      * @return SimulationState
      */
-    SimulationState const& getInitialSimulationState() const {
+    [[nodiscard]] SimulationState const& getInitialSimulationState() const {
         return main_simulator_.result.initial_state_;
     };
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
-     * final timepoint (or when simulation failed)
+     * final timepoint (or when the simulation failed)
      * @return SimulationState
      */
-    SimulationState const& getFinalSimulationState() const {
+    [[nodiscard]] SimulationState const& getFinalSimulationState() const {
         return main_simulator_.result.final_state_;
     };
 
@@ -457,7 +462,7 @@ class ForwardProblem {
      * @brief Return the preequilibration SteadystateProblem.
      * @return The preequilibration SteadystateProblem, if any.
      */
-    SteadystateProblem* getPreequilibrationProblem() {
+    [[nodiscard]] SteadystateProblem* getPreequilibrationProblem() {
         if (preeq_problem_.has_value())
             return &*preeq_problem_;
         return nullptr;
@@ -467,7 +472,7 @@ class ForwardProblem {
      * @brief Return the preequilibration SteadystateProblem.
      * @return The preequilibration SteadystateProblem, if any.
      */
-    SteadystateProblem const* getPreequilibrationProblem() const {
+    [[nodiscard]] SteadystateProblem const* getPreequilibrationProblem() const {
         if (preeq_problem_.has_value())
             return &*preeq_problem_;
         return nullptr;
@@ -477,7 +482,7 @@ class ForwardProblem {
      * @brief Return the postequilibration SteadystateProblem.
      * @return The postequilibration SteadystateProblem, if any.
      */
-    SteadystateProblem* getPostequilibrationProblem() {
+    [[nodiscard]] SteadystateProblem* getPostequilibrationProblem() {
         if (posteq_problem_.has_value())
             return &*posteq_problem_;
         return nullptr;
@@ -487,7 +492,8 @@ class ForwardProblem {
      * @brief Return the postequilibration SteadystateProblem.
      * @return The postequilibration SteadystateProblem, if any.
      */
-    SteadystateProblem const* getPostequilibrationProblem() const {
+    [[nodiscard]] SteadystateProblem const*
+    getPostequilibrationProblem() const {
         if (posteq_problem_.has_value())
             return &*posteq_problem_;
         return nullptr;
@@ -592,21 +598,20 @@ class FinalStateStorer : public ContextManager {
                 // This may throw in `CVodeSolver::getSens`
                 // due to https://github.com/LLNL/sundials/issues/82.
                 // Therefore, this dtor must be `noexcept(false)` to avoid
-                // programm termination.
+                // program termination.
                 fwd_->main_simulator_.result.final_state_
-                    = fwd_->main_simulator_.getSimulationState();
+                    = fwd_->main_simulator_.get_simulation_state();
                 // if there is an associated output timepoint, also store it in
                 // timepoint_states if it's not present there.
                 // this may happen if there is an error just at
                 // (or indistinguishably before) an output timepoint
                 auto final_time = fwd_->getFinalTime();
                 auto const timepoints = fwd_->model->getTimepoints();
-                if (!fwd_->main_simulator_.result.timepoint_states_.count(
+                if (!fwd_->main_simulator_.result.timepoint_states_.contains(
                         final_time
                     )
-                    && std::find(
-                           timepoints.cbegin(), timepoints.cend(), final_time
-                       ) != timepoints.cend()) {
+                    && std::ranges::find(timepoints, final_time)
+                           != timepoints.cend()) {
                     fwd_->main_simulator_.result.timepoint_states_[final_time]
                         = fwd_->main_simulator_.result.final_state_;
                 }
@@ -632,4 +637,4 @@ class FinalStateStorer : public ContextManager {
 
 } // namespace amici
 
-#endif // FORWARDPROBLEM_H
+#endif // AMICI_FORWARDPROBLEM_H
