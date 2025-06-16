@@ -30,7 +30,7 @@ def tanhshrink(x: jnp.ndarray) -> jnp.ndarray:
     return x - jnp.tanh(x)
 
 
-def generate_equinox(ml_model: "MLModel", filename: Path | str):  # noqa: F821
+def generate_equinox(nn_model: "NNModel", filename: Path | str):  # noqa: F821
     # TODO: move to top level import and replace forward type definitions
     from petab_sciml import Layer
 
@@ -38,14 +38,14 @@ def generate_equinox(ml_model: "MLModel", filename: Path | str):  # noqa: F821
     layer_indent = 12
     node_indent = 8
 
-    layers = {layer.layer_id: layer for layer in ml_model.layers}
+    layers = {layer.layer_id: layer for layer in nn_model.layers}
 
     tpl_data = {
-        "MODEL_ID": ml_model.mlmodel_id,
+        "MODEL_ID": nn_model.nn_model_id,
         "LAYERS": ",\n".join(
             [
                 _generate_layer(layer, layer_indent, ilayer)
-                for ilayer, layer in enumerate(ml_model.layers)
+                for ilayer, layer in enumerate(nn_model.layers)
             ]
         )[layer_indent:],
         "FORWARD": "\n".join(
@@ -58,19 +58,19 @@ def generate_equinox(ml_model: "MLModel", filename: Path | str):  # noqa: F821
                         Layer(layer_id="dummy", layer_type="Linear"),
                     ).layer_type,
                 )
-                for node in ml_model.forward
+                for node in nn_model.forward
             ]
         )[node_indent:],
-        "INPUT": ", ".join([f"'{inp.input_id}'" for inp in ml_model.inputs]),
+        "INPUT": ", ".join([f"'{inp.input_id}'" for inp in nn_model.inputs]),
         "OUTPUT": ", ".join(
             [
                 f"'{arg}'"
                 for arg in next(
-                    node for node in ml_model.forward if node.op == "output"
+                    node for node in nn_model.forward if node.op == "output"
                 ).args
             ]
         ),
-        "N_LAYERS": len(ml_model.layers),
+        "N_LAYERS": len(nn_model.layers),
     }
 
     filename.parent.mkdir(parents=True, exist_ok=True)

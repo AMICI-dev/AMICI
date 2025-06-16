@@ -6,6 +6,7 @@ from numbers import Number
 from collections.abc import Sized, Iterable
 from pathlib import Path
 from collections.abc import Callable
+import logging
 
 
 import diffrax
@@ -23,6 +24,7 @@ from amici.petab.parameter_mapping import (
     ParameterMappingForCondition,
     create_parameter_mapping,
 )
+from amici.logging import get_logger
 from amici.jax.model import JAXModel, ReturnValue
 
 DEFAULT_CONTROLLER_SETTINGS = {
@@ -38,6 +40,8 @@ SCALE_TO_INT = {
     petab.LOG: 1,
     petab.LOG10: 2,
 }
+
+logger = get_logger(__name__, logging.WARNING)
 
 
 def jax_unscale(
@@ -512,28 +516,35 @@ class JAXProblem(eqx.Module):
             }
             for net_id, nn in model.nns.items()
         }
+        # load nn parameters from file
+        par_arrays = {
+            array_id: h5py.File(file_spec["location"], "r")
+            for array_id, file_spec in self._petab_problem.extensions_config[
+                "array_files"
+            ].items()
+            # TODO: FIXME (https://github.com/sebapersson/petab_sciml_testsuite/issues/1)
+        }
+
         # extract nominal values from petab problem
         for pname, row in self._petab_problem.parameter_df.iterrows():
             if (net := pname.split(".")[0]) in model.nns:
                 to_set = []
                 nn = model_pars[net]
-                scalar = True
                 try:
                     value = float(row[petab.NOMINAL_VALUE])
                 except ValueError:
-                    value = h5py.File(row[petab.NOMINAL_VALUE], "r")
+                    value = par_arrays[row[petab.NOMINAL_VALUE]]
                     scalar = False
-
                 if len(pname.split(".")) > 1:
-                    layer = nn[pname.split(".")[1]]
+                    layer_name = pname.split(".")[1]
+                    layer = nn[layer_name]
                     if len(pname.split(".")) > 2:
-                        to_set.append(
-                            (pname.split(".")[1], pname.split(".")[2])
-                        )
+                        attribute_name = pname.split(".")[2]
+                        to_set.append((layer_name, attribute_name))
                     else:
                         to_set.extend(
                             [
-                                (pname.split(".")[1], attribute)
+                                (layer_name, attribute)
                                 for attribute in layer.keys()
                             ]
                         )
@@ -549,15 +560,20 @@ class JAXProblem(eqx.Module):
                 for layer, attribute in to_set:
                     if scalar:
                         nn[layer][attribute] = value * jnp.ones_like(
-                            nn[layer][attribute]
+                            model.nns[net].layers[layer][attribute]
                         )
                     else:
-                        nn[layer][attribute] = value[layer][attribute]
+                        nn[layer][attribute] = jnp.array(
+                            value[layer][attribute]
+                        )
 
         # set values in model
         for net_id in model_pars:
             for layer_id in model_pars[net_id]:
                 for attribute in model_pars[net_id][layer_id]:
+                    logger.debug(
+                        f"Setting {attribute} of layer {layer_id} in network {net_id} to {model_pars[net_id][layer_id][attribute]}"
+                    )
                     model = eqx.tree_at(
                         lambda model: getattr(
                             model.nns[net_id].layers[layer_id], attribute

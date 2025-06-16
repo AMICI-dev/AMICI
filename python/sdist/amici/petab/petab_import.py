@@ -148,7 +148,7 @@ def import_petab_problem(
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
 
         if "neural_nets" in petab_problem.extensions_config:  # TODO: fixme
-            from petab_sciml import PetabScimlStandard
+            from petab_sciml.standard import NNModelStandard
 
             config = petab_problem.extensions_config
             # TODO: only accept YAML format for now
@@ -169,9 +169,9 @@ def import_petab_problem(
             )
             hybridization = {
                 net_id: {
-                    "model": PetabScimlStandard.load_data(
+                    "model": NNModelStandard.load_data(
                         Path() / net_config["location"]
-                    ).models,
+                    ),
                     "input_vars": [
                         input_mapping[petab_id]
                         for petab_id, model_id in petab_problem.mapping_df.loc[

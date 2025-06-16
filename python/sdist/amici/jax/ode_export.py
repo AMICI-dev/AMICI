@@ -267,11 +267,10 @@ class ODEExporter:
 
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridisation.items():
-            for model in net["model"]:
-                generate_equinox(
-                    model,
-                    self.model_path / f"{net_name}.py",
-                )
+            generate_equinox(
+                net["model"],
+                self.model_path / f"{net_name}.py",
+            )
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:
         """

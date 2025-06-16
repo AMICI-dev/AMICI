@@ -22,7 +22,7 @@ import os
 import h5py
 from contextlib import contextmanager
 
-from petab_sciml import PetabScimlStandard
+from petab_sciml import NNModelStandard
 
 
 @contextmanager
@@ -78,7 +78,7 @@ def test_net(test):
         net_file = cases_dir / test.replace("_alt", "") / solutions["net_file"]
     else:
         net_file = test_dir / solutions["net_file"]
-    ml_models = PetabScimlStandard.load_data(net_file)
+    ml_models = NNModelStandard.load_data(net_file)
 
     nets = {}
     outdir = Path(__file__).parent / "models" / test
@@ -197,49 +197,8 @@ def test_ude(test):
             compile_=True,
             jax=True,
         )
-        # non_numeric = pd.to_numeric(petab_problem.parameter_df[petab.NOMINAL_VALUE], errors='coerce').isna()
-        # par_files = petab_problem.parameter_df.loc[non_numeric, petab.NOMINAL_VALUE].unique()
-        # par_values = {
-        #     par_file: h5py.File(par_file, "r")
-        #     for par_file in par_files
-        # }
-        # for par_id, row in petab_problem.parameter_df.iterrows():
-        #     if not non_numeric[par_id]:
-        #         continue
-        #     petab_problem.parameter_df.loc[par_id, petab.NOMINAL_VALUE] = \
-        #         (par_values[row[petab.NOMINAL_VALUE]],)
-        # petab_problem.parameter_df.loc[np.logical_not(non_numeric), petab.NOMINAL_VALUE] = pd.to_numeric(
-        #     petab_problem.parameter_df.loc[np.logical_not(non_numeric), petab.NOMINAL_VALUE]
-        # )
 
         jax_problem = JAXProblem(jax_model, petab_problem)
-        # for net, net_config in petab_problem.extensions_config.items(): # TODO: FIXME (https://github.com/sebapersson/petab_sciml_testsuite/issues/1)
-        #     pars = h5py.File(
-        #         net_config["net1_ps_file"]['location'], "r" # TODO: check format and actually use propoer petab nominal parameter infrastructure
-        #     )
-        #     for layer_name, layer in jax_problem.model.nns[net].layers.items():
-        #         for attribute in dir(layer):
-        #             if not isinstance(
-        #                 getattr(layer, attribute), jax.numpy.ndarray
-        #             ):
-        #                 continue
-        #             value = jnp.array(pars[layer_name][attribute])
-        #
-        #             if (
-        #                 isinstance(layer, eqx.nn.ConvTranspose)
-        #                 and attribute == "weight"
-        #             ):
-        #                 # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-        #                 value = jnp.flip(
-        #                     value, axis=tuple(range(2, value.ndim))
-        #                 ).swapaxes(0, 1)
-        #             jax_problem = eqx.tree_at(
-        #                 lambda x: getattr(
-        #                     x.model.nns[net].layers[layer_name], attribute
-        #                 ),
-        #                 jax_problem,
-        #                 value,
-        #             )
 
     # llh
     if test in (
@@ -281,7 +240,7 @@ def test_ude(test):
         controller=diffrax.PIDController(atol=1e-14, rtol=1e-14),
         max_steps=2**16,
     )
-    for component, file in solutions["grad_llh_files"].items():
+    for component, file in solutions["grad_files"].items():
         actual_dict = {}
         if component == "mech":
             expected = pd.read_csv(test_dir / file, sep="\t").set_index(

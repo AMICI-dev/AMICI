@@ -22,7 +22,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
@@ -56,13 +56,10 @@ jobs:
             && pip3 install wheel pytest shyaml pytest-cov
 
       # retrieve test models
-      - name: Download and install PEtab SciML test suite
+      - name: Download and install PEtab SciML
         run: |
-          git clone --depth 1 --branch main \
-            https://github.com/sebapersson/petab_sciml.git \
-            && export SCIML_TESTSUITE="$(pwd)/petab_sciml" \
-            && source venv/bin/activate \
-            && python -m pip install -e $SCIML_TESTSUITE/src/python
+          source ./venv/bin/activate \
+            && python -m pip install git+https://github.com/sebapersson/petab_sciml.git@unify_data#subdirectory=src/python \
 
 
       - name: Install petab

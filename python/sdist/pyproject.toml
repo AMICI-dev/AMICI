@@ -72,7 +72,6 @@ test = [
     "scipy",
     "pooch",
     "beartype",
-    ""
 ]
 vis = [
     "matplotlib",
