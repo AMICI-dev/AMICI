@@ -64,6 +64,16 @@ struct Discontinuity {
 };
 
 /**
+ * @brief Compute the number of roots for each root function from a vector of
+ * discontinuities.
+ * @param discs Encountered discontinuities.
+ * @param ne Number of root functions (ne).
+ * @param nmaxevents Maximum number of events to track (nmaxevents).
+ * @return The number of roots for each root function.
+ */
+std::vector<int> compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
+
+/**
  * @brief The ForwardProblem class groups all functions for solving the
  * forward problem.
  */
@@ -126,12 +136,6 @@ class ForwardProblem {
      * @return sx
      */
     AmiVectorArray const& getStateSensitivity() const { return sx_; }
-
-    /**
-     * @brief Accessor for nroots
-     * @return nroots
-     */
-    std::vector<int> const& getNumberOfRoots() const { return nroots_; }
 
     /**
      * @brief Get information on the discontinuities encountered so far.

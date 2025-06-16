@@ -548,4 +548,26 @@ SimulationState ForwardProblem::getSimulationState() {
     return state;
 }
 
+std::vector<int> compute_nroots(
+    std::vector<Discontinuity> const& discs, int ne, int nmaxevents
+    ) {
+    auto size = gsl::narrow<std::vector<int>::size_type>(ne);
+    std::vector<int> nroots(size, 0);
+    for (auto const& disc : discs) {
+        for (std::vector<int>::size_type i = 0; i < size; ++i) {
+            if (disc.root_info[i] == 1) {
+                nroots[i]++;
+            }
+        }
+    }
+
+    for (auto& n : nroots) {
+        if (n > nmaxevents) {
+            n = nmaxevents;
+        }
+    }
+    return nroots;
+}
+
+
 } // namespace amici

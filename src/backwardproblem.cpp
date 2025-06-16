@@ -15,7 +15,6 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , edata_(fwd.edata)
     , t_(fwd.getTime())
     , sx0_(fwd.getStateSensitivity())
-    , nroots_(fwd.getNumberOfRoots())
     , discs_(fwd.getDiscontinuities())
     , dJydx_(fwd.getAdjointUpdates(*model_, *edata_))
     , dJzdx_(fwd.getDJzdx())
@@ -44,7 +43,7 @@ void BackwardProblem::workBackwardProblem() {
     // initialize state vectors, depending on postequilibration
     model_->initializeB(ws_.xB_, ws_.dxB_, ws_.xQB_, it < model_->nt() - 1);
     ws_.discs_ = discs_;
-    ws_.nroots_ = nroots_;
+    ws_.nroots_ = compute_nroots(discs_, model_->ne, model_->nMaxEvent());
     simulator_.run(
         t_, model_->t0(), it, model_->getTimepoints(), &dJydx_, &dJzdx_
     );
