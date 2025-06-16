@@ -102,6 +102,7 @@ void EventHandlingBwdSimulator::handleEventB(
         xdot_in_event[iv]
             = 0.5 * (disc.xdot_post.at(iv) + disc.xdot_pre.at(iv));
 
+    // TODO: not used?! delta is computed inside addAdjoint*
     auto delta_x = AmiVector(disc.x_post.getLength(), solver_->getSunContext());
     for (int iv = 0; iv < xdot_in_event.getLength(); iv++)
         delta_x[iv] = (disc.x_post.at(iv) - disc.x_pre.at(iv));
@@ -116,10 +117,11 @@ void EventHandlingBwdSimulator::handleEventB(
 
         model_->addAdjointQuadratureEventUpdate(
             ws_->xQB_, ie, t_, disc.x_pre, ws_->xB_, disc.xdot_post,
-            disc.xdot_pre, delta_x
+            disc.xdot_pre, disc.x_pre, delta_x
         );
         model_->addAdjointStateEventUpdate(
-            ws_->xB_, ie, t_, disc.x_pre, disc.xdot_post, disc.xdot_pre, delta_x
+            ws_->xB_, ie, t_, disc.x_pre, disc.xdot_post, disc.xdot_pre,
+            disc.x_pre, delta_x
         );
 
         if (model_->nz > 0) {
