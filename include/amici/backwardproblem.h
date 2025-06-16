@@ -57,7 +57,6 @@ class EventHandlingBwdSimulator {
      * @param model The model to simulate.
      * @param solver The solver to use for the simulation.
      * @param ws The workspace to use for the simulation.
-     * (dimension nJ x nx x nMaxEvent, ordering =?)
      */
     EventHandlingBwdSimulator(
         gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
@@ -83,8 +82,10 @@ class EventHandlingBwdSimulator {
      * @param timepoints The output timepoints or measurement timepoints of
      * this period. This must contain at least the final timepoint of this
      * period.
-     * @param dJydx State-derivative of data likelihood
-     * @param dJzdx State-derivative of event likelihood
+     * @param dJydx State-derivative of data likelihood. Must be non-null if
+     * there are any data points in this period.
+     * @param dJzdx State-derivative of event likelihood. Must be non-null if
+     * the model has any event-observables.
      */
     void
     run(realtype t_start, realtype t_end, realtype it,
