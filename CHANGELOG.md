@@ -4,6 +4,161 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.33.0 (2025-06-11)
+
+Note that this release requires Python >= 3.11.
+
+**Fixes**
+
+* Fixed an issue in SBML AlgebraicRule processing leading to import failure if
+  a species occurred in multiple AlgebraicRules
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2744
+
+* Fixed a potential segfault when running forward sensitivity analysis for
+  models without state variables
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2749
+
+* Fixed a dimension bug for presimulation parameters in ExpDataView
+
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2746
+
+* Fixed incorrect initialization for initial assignments with explicit time
+  dependence
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2779
+
+**Features**
+
+* AMICI now supports SBML events with `use_values_from_trigger_time=true`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2741
+
+* AMICI now supports SBML events with constant priorities
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2730
+
+**Other changes**
+
+* doc: Added a caveats section listing some known issues and potentially
+  unexpected behavior in AMICI
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2735
+
+* Added warnings for presimulation and steady state simulation with events.
+  So far, events were not fully supported in these modes. This is subject to
+  change.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2755
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.32.0...v0.33.0
+
+### v0.32.0 (2025-05-15)
+
+**Breaking changes**
+
+* Removed deprecated `amici.petab_*` modules (now under `amici.petab.*`)
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2658
+
+* Removed deprecated CLI options to `amici_import_petab`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2671
+
+**Changed requirements**
+
+* AMICI now requires a C++20-compatible compiler
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2660
+
+* AMICI now requires swig>=4.1
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2693
+
+* AMICI now uses the [sbmlmath](https://github.com/dweindl/sbmlmath/) package
+  for sympification of SBML math constructs
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2681
+
+**Fixes**
+
+* Fixed Heaviside functions for `<`, `>` `<=`, `>=` which could have lead to
+  incorrect simulation results.
+
+  Note that `>` and `>=`, as well as `<` and `<=` can't be distinguished in
+  some cases (see https://github.com/AMICI-dev/AMICI/issues/2707).
+  Avoid situations where this would matter.
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2701
+
+* Prevent segfaults under pytest after swig4.3 wrapping
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2696
+
+* Fixed `SetuptoolsDeprecationWarning: \`project.license\` as a TOML table is deprecated`
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2697
+
+* Updated Dockerfile, use Ubuntu 24.04 LTS
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2698
+
+* SBML import: Handle unsolvable event triggers
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2705
+
+* Added RTFUNC_FAIL simulation status
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2702
+
+* doc: Enable building docs with Python 3.13
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2704
+
+* Fixed crash for models without state variables
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2703
+
+* SBML import: avoid repeated xdot==0 checks
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2706
+
+* Fixed Boolean to float conversion issues during SBML import
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2725
+
+**Features**
+
+* Support for XOR, `==` and `!=` operators in SBML models
+
+  *Note that not all (combinations of) Boolean functions will work well with*
+  *AMICI's root-finding. It's recommended to verify the results.*
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2699,
+  https://github.com/AMICI-dev/AMICI/pull/2708,
+  and https://github.com/AMICI-dev/AMICI/pull/2716
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.2...v0.32.0
+
+### v0.31.2 (2025-04-23)
+
+Bugfix-only release.
+
+* SBML import: Handle unsolvable event triggers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2686
+* Fixed a clang compiler warning related to variable length arrays
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2688
+* Temporarily require interpax<=0.3.6
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2678
+* Update OpenBLAS installation script to work with CMake>=4
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2679
+* GHA: Don't run cron jobs on forks by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2669
+* Fixed Matlab documentation build with CMake 4.0
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2676
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.31.1...v0.31.2
+
 ### v0.31.1 (2025-03-21)
 
 Bugfix-only release.

@@ -12,7 +12,7 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(
-    Model const& model, LinearSolver linsol_type, SUNContext sunctx
+    Model const& model, LinearSolver const linsol_type, SUNContext sunctx
 )
     : xdot_(model.nx_solver, sunctx)
     , x_(model.nx_solver, sunctx)
@@ -144,8 +144,9 @@ void NewtonSolver::reinitialize() {
     );
 };
 
-bool NewtonSolver::is_singular(Model& model, SimulationState const& state)
-    const {
+bool NewtonSolver::is_singular(
+    Model& model, SimulationState const& state
+) const {
     if (auto s = dynamic_cast<SUNLinSolKLU const*>(linsol_.get())) {
         return s->is_singular();
     }

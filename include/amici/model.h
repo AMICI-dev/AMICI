@@ -3,6 +3,7 @@
 
 #include "amici/abstract_model.h"
 #include "amici/defines.h"
+#include "amici/event.h"
 #include "amici/logging.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
@@ -112,6 +113,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
+     * @param events Vector of events
      * @param state_independent_events Map of events with state-independent
      * triggers functions, mapping trigger timepoints to event indices.
      */
@@ -119,7 +121,7 @@ class Model : public AbstractModel, public ModelDimensions {
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event,
+        std::vector<int> z2event, std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -252,8 +254,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xQB Adjoint quadratures
      * @param posteq Flag indicating whether postequilibration was performed
      */
-    void initializeB(AmiVector& xB, AmiVector& dxB, AmiVector& xQB, bool posteq)
-        const;
+    void initializeB(
+        AmiVector& xB, AmiVector& dxB, AmiVector& xQB, bool posteq
+    ) const;
 
     /**
      * @brief Initialize initial states.
@@ -1251,10 +1254,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
+     * @param x_old Current or old state from which to compute the state update
+     * @param state The model state based on which to compute the update.
      */
     void addStateEventUpdate(
         AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
-        AmiVector const& xdot_old
+        AmiVector const& xdot_old, AmiVector const& x_old,
+        ModelState const& state
     );
 
     /**
@@ -1262,16 +1268,19 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx Current state sensitivity (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param x_old Current state
+     * @param x Current state
+     * @param x_old Pre-event state
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
+     * @param sx_old Pre-event state sensitivity
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
      */
     void addStateSensitivityEventUpdate(
-        AmiVectorArray& sx, int const ie, realtype const t,
+        AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& x_old, AmiVector const& xdot,
-        AmiVector const& xdot_old, std::vector<realtype> const& stau
+        AmiVector const& xdot_old, AmiVectorArray const& sx_old,
+        std::vector<realtype> const& stau
     );
 
     /**
@@ -1450,19 +1459,19 @@ class Model : public AbstractModel, public ModelDimensions {
      * constants / fixed parameters
      * @return Those indices.
      */
-    std::vector<int> const& getReinitializationStateIdxs() const;
+    [[nodiscard]] std::vector<int> const& getReinitializationStateIdxs() const;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
      * @return dxdotdp
      */
-    AmiVectorArray const& get_dxdotdp() const;
+    [[nodiscard]] AmiVectorArray const& get_dxdotdp() const;
 
     /**
      * @brief getter for dxdotdp (python generated)
      * @return dxdotdp
      */
-    SUNMatrixWrapper const& get_dxdotdp_full() const;
+    [[nodiscard]] SUNMatrixWrapper const& get_dxdotdp_full() const;
 
     /**
      * @brief Get trigger times for events that don't require root-finding.
@@ -1471,7 +1480,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * root-finding (i.e. that trigger at predetermined timepoints),
      * in ascending order.
      */
-    virtual std::vector<double> get_trigger_timepoints() const;
+    [[nodiscard]] virtual std::vector<double> get_trigger_timepoints() const;
 
     /**
      * @brief Get steady-state mask as std::vector.
@@ -1480,7 +1489,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Steady-state mask
      */
-    std::vector<realtype> get_steadystate_mask() const {
+    [[nodiscard]] std::vector<realtype> get_steadystate_mask() const {
         return steadystate_mask_;
     };
 
@@ -1496,6 +1505,24 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param mask Mask of length `nx_solver`.
      */
     void set_steadystate_mask(std::vector<realtype> const& mask);
+
+    /**
+     * @brief Get event object for event index.
+     * @param ie event index
+     * @return The corresponding Event object.
+     */
+    [[nodiscard]] Event const& get_event(int ie) const {
+        return events_.at(ie);
+    }
+
+    /**
+     * @brief Whether there is at least one state variable for which
+     * non-negativity is to be enforced.
+     * @return Vector of all events.
+     */
+    [[nodiscard]] bool get_any_state_nonnegative() const {
+        return any_state_non_negative_;
+    }
 
     /**
      * Flag indicating whether for
@@ -2036,7 +2063,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /** Storage for splines of the model */
     std::vector<HermiteSpline> splines_;
 
-    /** index indicating to which event an event output belongs */
+    /** index indicating to which event an event output belongs (size nz) */
     std::vector<int> z2event_;
 
     /** state initialization (size nx_solver) */
@@ -2048,12 +2075,6 @@ class Model : public AbstractModel, public ModelDimensions {
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
     std::vector<bool> state_is_non_negative_;
-
-    /** Vector of booleans indicating the initial boolean value for every event
-     * trigger function. Events at t0 can only trigger if the initial value is
-     * set to `false`. Must be specified during model compilation by setting the
-     * `initialValue` attribute of an event trigger. */
-    std::vector<bool> root_initial_values_;
 
     /** boolean indicating whether any entry in stateIsNonNegative is `true` */
     bool any_state_non_negative_{false};
@@ -2100,6 +2121,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * be ignored.
      */
     std::vector<realtype> steadystate_mask_;
+
+    /** The events encoded in this model. */
+    std::vector<Event> events_;
 };
 
 bool operator==(Model const& a, Model const& b);

@@ -412,7 +412,8 @@ class DEModel:
 
     def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
-        rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+        from sbmlmath import rate_of as rate_of_func
+
         species_sym_to_xdot = dict(
             zip(self.sym("x"), self.sym("xdot"), strict=True)
         )
@@ -452,25 +453,21 @@ class DEModel:
 
         # replace rateOf-instances in x0 by xdot equation
         for i_state in range(len(self.eq("x0"))):
-            if rate_ofs := self._eqs["x0"][i_state].find(rate_of_func):
-                self._eqs["x0"][i_state] = self._eqs["x0"][i_state].subs(
-                    {
-                        rate_of: get_rate(rate_of.args[0])
-                        for rate_of in rate_ofs
-                    }
-                )
+            new, replacement = self._eqs["x0"][i_state].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["x0"][i_state] = new
 
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w
         made_substitutions = False
         for i_expr in range(len(self.eq("w"))):
-            if rate_ofs := self._eqs["w"][i_expr].find(rate_of_func):
-                self._eqs["w"][i_expr] = self._eqs["w"][i_expr].subs(
-                    {
-                        rate_of: get_rate(rate_of.args[0])
-                        for rate_of in rate_ofs
-                    }
-                )
+            new, replacement = self._eqs["w"][i_expr].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["w"][i_expr] = new
                 made_substitutions = True
 
         if made_substitutions:
@@ -540,11 +537,14 @@ class DEModel:
                 )
 
         for event in self.events():
-            if event._state_update is None:
+            state_update = event.get_state_update(
+                x=self.sym("x"), x_old=self.sym("x")
+            )
+            if state_update is None:
                 continue
 
-            for i_state in range(len(event._state_update)):
-                if rate_ofs := event._state_update[i_state].find(rate_of_func):
+            for i_state in range(len(state_update)):
+                if rate_ofs := state_update[i_state].find(rate_of_func):
                     raise SBMLException(
                         "AMICI does currently not support rateOf(.) inside event state updates."
                     )
@@ -1202,6 +1202,8 @@ class DEModel:
                 ]
             )
             return
+        elif name == "x_old":
+            length = len(self.eq("xdot"))
         elif name == "xdot_old":
             length = len(self.eq("xdot"))
         elif name in sparse_functions:
@@ -1618,10 +1620,13 @@ class DEModel:
             # would cause problems when writing the function file later
             event_eqs = []
             for event in self._events:
-                if event._state_update is None:
+                state_update = event.get_state_update(
+                    x=self.sym("x"), x_old=self.sym("x_old")
+                )
+                if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
                 else:
-                    event_eqs.append(event._state_update)
+                    event_eqs.append(state_update)
 
             self._eqs[name] = event_eqs
 
@@ -1631,7 +1636,7 @@ class DEModel:
             ]
             event_ids = [e.get_id() for e in self._events]
             # TODO: get rid of this stupid 1-based indexing as soon as we can
-            # the matlab interface
+            #  drop the matlab interface
             z2event = [
                 event_ids.index(event_obs.get_event()) + 1
                 for event_obs in self._event_observables
@@ -1644,7 +1649,14 @@ class DEModel:
             self._eqs[name] = event_observables
             self._z2event = z2event
 
-        elif name in ["ddeltaxdx", "ddeltaxdp", "ddeltaxdt", "dzdp", "dzdx"]:
+        elif name in [
+            "ddeltaxdx",
+            "ddeltaxdx_old",
+            "ddeltaxdp",
+            "ddeltaxdt",
+            "dzdp",
+            "dzdx",
+        ]:
             if match_deriv[2] == "t":
                 var = time_symbol
             else:
@@ -1699,9 +1711,14 @@ class DEModel:
             ]
 
         elif name == "deltasx":
-            if self.num_states_solver() * self.num_par() == 0:
+            if (
+                self.num_states_solver() * self.num_par() * self.num_events()
+                == 0
+            ):
                 self._eqs[name] = []
                 return
+
+            xdot_is_zero = smart_is_zero_matrix(self.eq("xdot"))
 
             event_eqs = []
             for ie, event in enumerate(self._events):
@@ -1709,16 +1726,18 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(
-                    self.eq("stau")[ie]
-                ) and not smart_is_zero_matrix(self.eq("xdot")):
+
+                if (
+                    not smart_is_zero_matrix(self.eq("stau")[ie])
+                    and not xdot_is_zero
+                ):
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
                     )
 
-                # only add deltax part if there is state update
-                if event._state_update is not None:
+                # only add deltax part if there is a state update
+                if event._assignments is not None:
                     # partial derivative for the parameters
                     tmp_eq += self.eq("ddeltaxdp")[ie]
 
@@ -1742,10 +1761,12 @@ class DEModel:
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
-                        self.eq("ddeltaxdx")[ie], tmp_dxdp
+                        self.eq("ddeltaxdx")[ie]
+                        + self.eq("ddeltaxdx_old")[ie],
+                        tmp_dxdp,
                     )
 
-                else:
+                elif not xdot_is_zero:
                     tmp_eq = smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.eq("stau")[ie],
@@ -2258,7 +2279,8 @@ class DEModel:
                 identifier=sp.Symbol(root_symstr),
                 name=root_symstr,
                 value=root_found,
-                state_update=None,
+                assignments=None,
+                use_values_from_trigger_time=True,
             )
         )
         return roots[-1].get_id()
@@ -2266,22 +2288,22 @@ class DEModel:
     def _collect_heaviside_roots(
         self,
         args: Sequence[sp.Basic],
-    ) -> list[sp.Expr]:
+    ) -> list[tuple[sp.Expr, sp.Expr]]:
         """
-        Recursively checks an expression for the occurrence of Heaviside
-        functions and return all roots found
+        Recursively check an expression for the occurrence of Heaviside
+        functions and return all roots found.
 
         :param args:
             args attribute of the expanded expression
 
         :returns:
-            root functions that were extracted from Heaviside function
-            arguments
+            List of (root function, Heaviside x0)-tuples that were extracted
+            from Heaviside function arguments.
         """
         root_funs = []
         for arg in args:
             if arg.func == sp.Heaviside:
-                root_funs.append(arg.args[0])
+                root_funs.append(arg.args)
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
@@ -2300,7 +2322,9 @@ class DEModel:
                 )
             )
         )
-        root_funs = [r.subs(w_sorted) for r in root_funs]
+        root_funs = [
+            (r[0].subs(w_sorted), r[1].subs(w_sorted)) for r in root_funs
+        ]
 
         return root_funs
 
@@ -2328,15 +2352,17 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots((dxdt,))
-        for tmp_old in unique_preserve_order(tmp_roots_old):
+        for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
-            tmp_new = self._get_unique_root(tmp_old, roots)
+            tmp_root_new = self._get_unique_root(tmp_root_old, roots)
             # `tmp_new` is None if the root is not time-dependent.
-            if tmp_new is None:
+            if tmp_root_new is None:
                 continue
             # For Heavisides, we need to add the negative function as well
-            self._get_unique_root(sp.sympify(-tmp_old), roots)
-            heavisides.append((sp.Heaviside(tmp_old), tmp_new))
+            self._get_unique_root(sp.sympify(-tmp_root_old), roots)
+            heavisides.append(
+                (sp.Heaviside(tmp_root_old, tmp_x0_old), tmp_root_new)
+            )
 
         if heavisides:
             # only apply subs if necessary

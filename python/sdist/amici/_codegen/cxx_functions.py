@@ -239,9 +239,11 @@ functions = {
     "deltax": _FunctionInfo(
         "double *deltax, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const int ie, const realtype *xdot, const realtype *xdot_old"
+        "const int ie, const realtype *xdot, const realtype *xdot_old, "
+        "const realtype *x_old"
     ),
     "ddeltaxdx": _FunctionInfo(generate_body=False),
+    "ddeltaxdx_old": _FunctionInfo(generate_body=False),
     "ddeltaxdt": _FunctionInfo(generate_body=False),
     "ddeltaxdp": _FunctionInfo(generate_body=False),
     "deltasx": _FunctionInfo(
@@ -249,7 +251,8 @@ functions = {
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const int ip, const int ie, "
         "const realtype *xdot, const realtype *xdot_old, "
-        "const realtype *sx, const realtype *stau, const realtype *tcl"
+        "const realtype *sx, const realtype *stau, const realtype *tcl, "
+        "const realtype *x_old"
     ),
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "

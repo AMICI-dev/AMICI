@@ -2,7 +2,7 @@
 # https://setuptools.pypa.io/en/latest/userguide/index.html
 [build-system]
 requires = [
-    "setuptools>=61",
+    "setuptools>=77",
     "wheel",
     "numpy>=2.0",
     "cmake-build-extension==0.6.0",
@@ -13,22 +13,22 @@ build-backend = "setuptools.build_meta"
 name = "amici"
 dynamic = ["version"]
 description = "Advanced multi-language Interface to CVODES and IDAS"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "cmake-build-extension==0.6.0",
     "sympy>=1.12.1",
-    "numpy>=1.21.4; python_version>='3.10'",
     "numpy>=1.23.2; python_version=='3.11'",
     "numpy>=1.26.2; python_version=='3.12'",
     "numpy; python_version>='3.13'",
     "python-libsbml",
     "pandas>=2.0.2",
     "pyarrow",
+    "sbmlmath>=0.4.0",
     "toposort",
     "setuptools>=48",
     "mpmath",
 ]
-license = {text = "BSD 3-Clause License"}
+license = "BSD-3-Clause"
 authors = [
     {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},
@@ -45,7 +45,6 @@ keywords =["differential equations", "simulation", "ode", "cvodes",
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python",

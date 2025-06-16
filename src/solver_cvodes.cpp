@@ -22,17 +22,15 @@
 namespace amici {
 
 // Ensure AMICI options and return codes are in sync with SUNDIALS
-static_assert(
-    (int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS, ""
-);
-static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED, "");
-static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1, "");
+static_assert((int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS);
+static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED);
+static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1);
 
-static_assert((int)InterpolationType::hermite == CV_HERMITE, "");
-static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL, "");
+static_assert((int)InterpolationType::hermite == CV_HERMITE);
+static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL);
 
-static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
-static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
+static_assert((int)LinearMultistepMethod::adams == CV_ADAMS);
+static_assert((int)LinearMultistepMethod::BDF == CV_BDF);
 
 #define STATIC_ASSERT_EQUAL(amici_constant, cv_constant)                       \
     static_assert(                                                             \
@@ -60,6 +58,7 @@ STATIC_ASSERT_EQUAL(amici::AMICI_SRHSFUNC_FAIL, CV_SRHSFUNC_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_FIRST_SRHSFUNC_ERR, CV_FIRST_SRHSFUNC_ERR);
 STATIC_ASSERT_EQUAL(amici::AMICI_REPTD_SRHSFUNC_ERR, CV_REPTD_SRHSFUNC_ERR);
 STATIC_ASSERT_EQUAL(amici::AMICI_UNREC_SRHSFUNC_ERR, CV_UNREC_SRHSFUNC_ERR);
+STATIC_ASSERT_EQUAL(amici::AMICI_RTFUNC_FAIL, CV_RTFUNC_FAIL);
 
 /*
  * The following static members are callback function to CVODES.
@@ -128,9 +127,9 @@ static int fsxdot(
 
 /* Function implementations */
 
-void CVodeSolver::
-    init(realtype const t0, AmiVector const& x0, AmiVector const& /*dx0*/)
-        const {
+void CVodeSolver::init(
+    realtype const t0, AmiVector const& x0, AmiVector const& /*dx0*/
+) const {
     solver_was_called_F_ = false;
     force_reinit_postprocess_F_ = false;
     t_ = t0;
@@ -329,8 +328,9 @@ void CVodeSolver::setSStolerances(double const rtol, double const atol) const {
         throw CvodeException(status, "CVodeSStolerances");
 }
 
-void CVodeSolver::setSensSStolerances(double const rtol, double const* atol)
-    const {
+void CVodeSolver::setSensSStolerances(
+    double const rtol, double const* atol
+) const {
     int status = CVodeSensSStolerances(
         solver_memory_.get(), rtol, const_cast<double*>(atol)
     );
@@ -577,9 +577,9 @@ void CVodeSolver::reInitPostProcess(
     }
 }
 
-void CVodeSolver::
-    reInit(realtype const t0, AmiVector const& yy0, AmiVector const& /*yp0*/)
-        const {
+void CVodeSolver::reInit(
+    realtype const t0, AmiVector const& yy0, AmiVector const& /*yp0*/
+) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_tn = t0;
     if (solver_was_called_F_)
@@ -588,9 +588,9 @@ void CVodeSolver::
     resetState(cv_mem, x_.getNVector());
 }
 
-void CVodeSolver::
-    sensReInit(AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/)
-        const {
+void CVodeSolver::sensReInit(
+    AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/
+) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)
@@ -670,8 +670,9 @@ void CVodeSolver::getSensDky(realtype const t, int const k) const {
         throw CvodeException(status, "CVodeGetSensDky");
 }
 
-void CVodeSolver::getDkyB(realtype const t, int const k, int const which)
-    const {
+void CVodeSolver::getDkyB(
+    realtype const t, int const k, int const which
+) const {
     int status = CVodeGetDky(
         CVodeGetAdjCVodeBmem(solver_memory_.get(), which), t, k,
         dky_.getNVector()
@@ -804,8 +805,9 @@ int CVodeSolver::solve(realtype const tout, int const itask) const {
     return status;
 }
 
-int CVodeSolver::solveF(realtype const tout, int const itask, int* ncheckPtr)
-    const {
+int CVodeSolver::solveF(
+    realtype const tout, int const itask, int* ncheckPtr
+) const {
     if (force_reinit_postprocess_F_)
         reInitPostProcessF(tout);
     int status = CVodeF(
@@ -855,8 +857,9 @@ void CVodeSolver::getNumSteps(void const* ami_mem, long int* numsteps) const {
         throw CvodeException(status, "CVodeGetNumSteps");
 }
 
-void CVodeSolver::getNumRhsEvals(void const* ami_mem, long int* numrhsevals)
-    const {
+void CVodeSolver::getNumRhsEvals(
+    void const* ami_mem, long int* numrhsevals
+) const {
     int status = CVodeGetNumRhsEvals(const_cast<void*>(ami_mem), numrhsevals);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetNumRhsEvals");
@@ -910,8 +913,10 @@ void CVodeSolver::turnOffRootFinding() const {
 
 Model const* CVodeSolver::getModel() const {
     if (!solver_memory_)
-        throw AmiException("Solver has not been allocated, information is not "
-                           "available");
+        throw AmiException(
+            "Solver has not been allocated, information is not "
+            "available"
+        );
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
 
     auto typed_udata = static_cast<user_data_type*>(cv_mem->cv_user_data);

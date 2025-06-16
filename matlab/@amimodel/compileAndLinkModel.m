@@ -34,9 +34,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     % compile flags
-    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++17'''];
+    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++20'''];
     if(debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++17 -Wno-unused-function -Wno-unused-variable'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++20 -Wno-unused-function -Wno-unused-variable'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
@@ -220,7 +220,7 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
         'model', 'model_ode', 'model_dae', 'returndata_matlab', ...
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver', ...
         'abstract_model', 'sundials_matrix_wrapper', 'sundials_linsol_wrapper', ...
-        'vector', 'splinefunctions'
+        'vector', 'splinefunctions', 'event'
     };
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy

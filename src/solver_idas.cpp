@@ -25,54 +25,25 @@ static_assert((int)InternalSensitivityMethod::staggered == IDA_STAGGERED, "");
 static_assert((int)InterpolationType::hermite == IDA_HERMITE, "");
 static_assert((int)InterpolationType::polynomial == IDA_POLYNOMIAL, "");
 
-static_assert(AMICI_ROOT_RETURN == IDA_ROOT_RETURN, "");
+#define STATIC_ASSERT_EQUAL(amici_constant, ida_constant)                      \
+    static_assert(                                                             \
+        amici_constant == ida_constant, #amici_constant " != " #ida_constant   \
+    )
 
-static_assert(
-    amici::AMICI_SUCCESS == IDA_SUCCESS, "AMICI_SUCCESS != IDA_SUCCESS"
-);
-static_assert(
-    amici::AMICI_DATA_RETURN == IDA_TSTOP_RETURN,
-    "AMICI_DATA_RETURN != IDA_TSTOP_RETURN"
-);
-static_assert(
-    amici::AMICI_ROOT_RETURN == IDA_ROOT_RETURN,
-    "AMICI_ROOT_RETURN != IDA_ROOT_RETURN"
-);
-static_assert(
-    amici::AMICI_ILL_INPUT == IDA_ILL_INPUT, "AMICI_ILL_INPUT != IDA_ILL_INPUT"
-);
-static_assert(amici::AMICI_NORMAL == IDA_NORMAL, "AMICI_NORMAL != IDA_NORMAL");
-static_assert(
-    amici::AMICI_ONE_STEP == IDA_ONE_STEP, "AMICI_ONE_STEP != IDA_ONE_STEP"
-);
-static_assert(
-    amici::AMICI_TOO_MUCH_ACC == IDA_TOO_MUCH_ACC,
-    "AMICI_TOO_MUCH_ACC != IDA_TOO_MUCH_ACC"
-);
-static_assert(
-    amici::AMICI_TOO_MUCH_WORK == IDA_TOO_MUCH_WORK,
-    "AMICI_TOO_MUCH_WORK != IDA_TOO_MUCH_WORK"
-);
-static_assert(
-    amici::AMICI_ERR_FAILURE == IDA_ERR_FAIL,
-    "AMICI_ERR_FAILURE != IDA_ERR_FAIL"
-);
-static_assert(
-    amici::AMICI_CONV_FAILURE == IDA_CONV_FAIL,
-    "AMICI_CONV_FAILURE != IDA_CONV_FAIL"
-);
-static_assert(
-    amici::AMICI_LSETUP_FAIL == IDA_LSETUP_FAIL,
-    "AMICI_LSETUP_FAIL != IDA_LSETUP_FAIL"
-);
+STATIC_ASSERT_EQUAL(amici::AMICI_SUCCESS, IDA_SUCCESS);
+STATIC_ASSERT_EQUAL(amici::AMICI_ROOT_RETURN, IDA_ROOT_RETURN);
+STATIC_ASSERT_EQUAL(amici::AMICI_DATA_RETURN, IDA_TSTOP_RETURN);
+STATIC_ASSERT_EQUAL(amici::AMICI_ILL_INPUT, IDA_ILL_INPUT);
+STATIC_ASSERT_EQUAL(amici::AMICI_NORMAL, IDA_NORMAL);
+STATIC_ASSERT_EQUAL(amici::AMICI_ONE_STEP, IDA_ONE_STEP);
+STATIC_ASSERT_EQUAL(amici::AMICI_TOO_MUCH_ACC, IDA_TOO_MUCH_ACC);
+STATIC_ASSERT_EQUAL(amici::AMICI_TOO_MUCH_WORK, IDA_TOO_MUCH_WORK);
+STATIC_ASSERT_EQUAL(amici::AMICI_ERR_FAILURE, IDA_ERR_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_CONV_FAILURE, IDA_CONV_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_LSETUP_FAIL, IDA_LSETUP_FAIL);
 // This does not match the CVODE code, we need separate return values
-static_assert(
-    amici::AMICI_IDAS_CONSTR_FAIL == IDA_CONSTR_FAIL,
-    "AMICI_IDAS_CONSTR_FAIL != IDA_CONSTR_FAIL"
-);
-static_assert(
-    amici::AMICI_WARNING == IDA_WARNING, "AMICI_WARNING != IDA_WARNING"
-);
+STATIC_ASSERT_EQUAL(amici::AMICI_IDAS_CONSTR_FAIL, IDA_CONSTR_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_WARNING, IDA_WARNING);
 
 /*
  * The following static members are callback function to IDAS.
@@ -189,8 +160,9 @@ void IDASolver::initSteadystate(
     ida_mem->ida_res = fxBdot_ss;
 }
 
-void IDASolver::sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& sdx0)
-    const {
+void IDASolver::sensInit1(
+    AmiVectorArray const& sx0, AmiVectorArray const& sdx0
+) const {
     int status = IDA_SUCCESS;
     sx_ = sx0;
     sdx_ = sdx0;
@@ -352,14 +324,16 @@ void IDASolver::allocateSolver() const {
         );
 }
 
-void IDASolver::setSStolerances(realtype const rtol, realtype const atol)
-    const {
+void IDASolver::setSStolerances(
+    realtype const rtol, realtype const atol
+) const {
     int status = IDASStolerances(solver_memory_.get(), rtol, atol);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASStolerances");
 }
-void IDASolver::setSensSStolerances(realtype const rtol, realtype const* atol)
-    const {
+void IDASolver::setSensSStolerances(
+    realtype const rtol, realtype const* atol
+) const {
     int status = IDASensSStolerances(
         solver_memory_.get(), rtol, const_cast<realtype*>(atol)
     );
@@ -411,8 +385,8 @@ void IDASolver::setMaxNumSteps(long int const mxsteps) const {
 
 void IDASolver::setStabLimDet(int const /*stldet*/) const {}
 
-void IDASolver::setStabLimDetB(int const /*which*/, int const /*stldet*/)
-    const {}
+void IDASolver::
+    setStabLimDetB(int const /*which*/, int const /*stldet*/) const {}
 
 void IDASolver::setId(Model const* model) const {
 
@@ -757,8 +731,9 @@ int IDASolver::solve(realtype const tout, int const itask) const {
     return status;
 }
 
-int IDASolver::solveF(realtype const tout, int const itask, int* ncheckPtr)
-    const {
+int IDASolver::solveF(
+    realtype const tout, int const itask, int* ncheckPtr
+) const {
     if (force_reinit_postprocess_F_)
         reInitPostProcessF(tout);
     int status = IDASolveF(
@@ -785,8 +760,9 @@ void IDASolver::solveB(realtype const tBout, int const itaskB) const {
     }
 }
 
-void IDASolver::setMaxNumStepsB(int const which, long int const mxstepsB)
-    const {
+void IDASolver::setMaxNumStepsB(
+    int const which, long int const mxstepsB
+) const {
     int status = IDASetMaxNumStepsB(solver_memory_.get(), which, mxstepsB);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetMaxNumStepsB");
@@ -806,8 +782,9 @@ void IDASolver::getNumSteps(void const* ami_mem, long int* numsteps) const {
         throw IDAException(status, "IDAGetNumSteps");
 }
 
-void IDASolver::getNumRhsEvals(void const* ami_mem, long int* numrhsevals)
-    const {
+void IDASolver::getNumRhsEvals(
+    void const* ami_mem, long int* numrhsevals
+) const {
     int status = IDAGetNumResEvals(const_cast<void*>(ami_mem), numrhsevals);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetNumResEvals");
@@ -1337,8 +1314,8 @@ static int fqBdot_ss(
  * @param cj scalar in Jacobian (inverse stepsize)
  * @param x Vector with the states
  * @param dx Vector with the derivative states
- * @param xdot Vector with the right hand side
- * @param J Matrix to which the Jacobian will be written
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the backwards Jacobian will be written
  * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector

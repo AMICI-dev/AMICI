@@ -8,12 +8,12 @@ Short guide
 
 Installation of the AMICI Python package has the following prerequisites:
 
-* Python>=3.10
-* :term:`SWIG`>=3.0
+* Python>=3.11
+* :term:`SWIG`>=4.1
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
-* a C++17 compatible C++ compiler and a C compiler
-  (e.g., g++>=9.1, clang>=12, Intel C++ compiler, mingw)
+* a C++20 compatible C++ compiler and a C compiler
+  (e.g., g++>=10.1, clang>=13, Intel C++ compiler, mingw)
 
 If these requirements are fulfilled and all relevant paths are setup properly,
 AMICI can be installed using:
@@ -64,7 +64,7 @@ Install AMICI:
 
    pip3 install amici
 
-Fedora 32
+Fedora 42
 ---------
 
 Install the AMICI dependencies via ``apt``
@@ -72,7 +72,7 @@ Install the AMICI dependencies via ``apt``
 
 .. code-block:: bash
 
-   sudo dnf install blas-devel swig
+   sudo dnf install openblas-devel swig
 
 Install AMICI:
 

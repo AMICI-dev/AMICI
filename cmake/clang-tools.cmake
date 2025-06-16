@@ -29,7 +29,7 @@ if(CLANG_TIDY)
     clang-tidy
     COMMAND
       sh -c
-      "${CLANG_TIDY} ${ALL_CXX_SOURCE_FILES} -- -std=c++17 -I${CMAKE_SOURCE_DIR}"
+      "${CLANG_TIDY} ${ALL_CXX_SOURCE_FILES} -- -std=c++20 -I${CMAKE_SOURCE_DIR}"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 else()
   message(STATUS "clang-tidy was not found")

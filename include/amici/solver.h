@@ -215,8 +215,8 @@ class Solver {
      * @brief Set sensitivity method for preequilibration
      * @param sensi_meth_preeq
      */
-    void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq
-    );
+    void
+    setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq);
 
     /**
      * @brief Disable forward sensitivity integration (used in steady state sim)
@@ -812,7 +812,7 @@ class Solver {
     bool computingFSA() const {
         return getSensitivityOrder() >= SensitivityOrder::first
                && getSensitivityMethod() == SensitivityMethod::forward
-               && nplist() > 0;
+               && nplist() > 0 && nx() > 0;
     }
 
     /**

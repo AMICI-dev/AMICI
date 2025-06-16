@@ -16,6 +16,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 from collections.abc import Callable
+import warnings
 
 
 def _get_amici_path():
@@ -102,7 +103,18 @@ __commit__ = _get_commit_hash()
 # Import SWIG module and swig-dependent submodules if required and available
 if not _imported_from_setup():
     if has_clibs:
-        from . import amici
+        # prevent segfaults under pytest
+        #  see also:
+        #  https://github.com/swig/swig/issues/2881
+        #  https://github.com/AMICI-dev/AMICI/issues/2565
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+                message="builtin type .* has no __module__ attribute",
+            )
+            from . import amici
+
         from .amici import *
 
         # has to be done before importing readSolverSettingsFromHDF5
@@ -174,11 +186,11 @@ class set_path:
         self.path: str = str(path)
 
     def __enter__(self):
-        self.orginal_path = sys.path.copy()
+        self.original_path = sys.path.copy()
         sys.path = [self.path]
 
     def __exit__(self, exc_type, exc_value, traceback):
-        sys.path = self.orginal_path
+        sys.path = self.original_path
 
 
 def _module_from_path(module_name: str, module_path: Path | str) -> ModuleType:
@@ -235,7 +247,17 @@ def import_model_module(
     module_path_matlab = Path(model_root, f"{module_name}.py")
     if not module_path.is_file() and module_path_matlab.is_file():
         with set_path(model_root):
-            return _module_from_path(module_name, module_path_matlab)
+            # prevent segfaults under pytest
+            #  see also:
+            #  https://github.com/swig/swig/issues/2881
+            #  https://github.com/AMICI-dev/AMICI/issues/2565
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=DeprecationWarning,
+                    message="builtin type .* has no __module__ attribute",
+                )
+                return _module_from_path(module_name, module_path_matlab)
 
     module = _module_from_path(module_name, module_path)
     module._self = module

@@ -39,11 +39,13 @@ class IDASolver : public Solver {
 
     void reInitPostProcessB(realtype tnext) const override;
 
-    void reInit(realtype t0, AmiVector const& yy0, AmiVector const& yp0)
-        const override;
+    void reInit(
+        realtype t0, AmiVector const& yy0, AmiVector const& yp0
+    ) const override;
 
-    void sensReInit(AmiVectorArray const& yyS0, AmiVectorArray const& ypS0)
-        const override;
+    void sensReInit(
+        AmiVectorArray const& yyS0, AmiVectorArray const& ypS0
+    ) const override;
 
     void sensToggleOff() const override;
 
@@ -53,8 +55,9 @@ class IDASolver : public Solver {
 
     void quadReInitB(int which, AmiVector const& yQB0) const override;
 
-    void quadSStolerancesB(int which, realtype reltolQB, realtype abstolQB)
-        const override;
+    void quadSStolerancesB(
+        int which, realtype reltolQB, realtype abstolQB
+    ) const override;
 
     void quadSStolerances(realtype reltolQ, realtype abstolQ) const override;
 
@@ -167,8 +170,9 @@ class IDASolver : public Solver {
 
     void setMaxNumStepsB(int which, long int mxstepsB) const override;
 
-    void setSStolerancesB(int which, realtype relTolB, realtype absTolB)
-        const override;
+    void setSStolerancesB(
+        int which, realtype relTolB, realtype absTolB
+    ) const override;
 
     void diag() const override;
 
@@ -179,8 +183,9 @@ class IDASolver : public Solver {
     void
     getNumRhsEvals(void const* ami_mem, long int* numrhsevals) const override;
 
-    void getNumErrTestFails(void const* ami_mem, long int* numerrtestfails)
-        const override;
+    void getNumErrTestFails(
+        void const* ami_mem, long int* numerrtestfails
+    ) const override;
 
     void getNumNonlinSolvConvFails(
         void const* ami_mem, long int* numnonlinsolvconvfails
@@ -197,8 +202,9 @@ class IDASolver : public Solver {
         realtype const t0, AmiVector const& x0, AmiVector const& dx0
     ) const override;
 
-    void sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& sdx0)
-        const override;
+    void sensInit1(
+        AmiVectorArray const& sx0, AmiVectorArray const& sdx0
+    ) const override;
 
     void binit(
         int which, realtype tf, AmiVector const& xB0, AmiVector const& dxB0
