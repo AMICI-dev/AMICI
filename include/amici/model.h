@@ -261,15 +261,15 @@ class Model : public AbstractModel, public ModelDimensions {
     ) const;
 
     /**
-     * @brief Initialize initial states.
-     * @param t Timepoint
-     * @param x State vector to be initialized
+     * @brief Initialize model state.
+     * @param t Initial timepoint
+     * @param x State vector to be initialized (size: nx_solver).
      */
     void initializeStates(realtype t, AmiVector& x);
 
     /**
      * @brief Initialize initial state sensitivities.
-     * @param t Timepoint.
+     * @param t Initial timepoint.
      * @param sx Reference to state variable sensitivities
      * @param x Reference to state variables
      */
@@ -834,32 +834,32 @@ class Model : public AbstractModel, public ModelDimensions {
     void setParameterList(std::vector<int> const& plist);
 
     /**
-     * @brief Get the initial states.
+     * @brief Get the initial state.
      * @param t0 Custom t0 for which to get initial states.
-     * @return Initial state vector
+     * @return Initial state vector, before any events are executed.
      */
     std::vector<realtype> getInitialStates(realtype t0);
 
     /**
-     * @brief Get the initial states.
-     * @return Initial state vector
+     * @brief Get the initial state for Model::t0()`.
+     * @return Initial state vector, before any events are executed.
      */
     std::vector<realtype> getInitialStates() { return getInitialStates(t0()); };
 
     /**
-     * @brief Set the initial states.
+     * @brief Set the pre-event initial state.
      * @param x0 Initial state vector
      */
     void setInitialStates(std::vector<realtype> const& x0);
 
     /**
-     * @brief Return whether custom initial states have been set.
-     * @return `true` if has custom initial states, otherwise `false`
+     * @brief Return whether custom initial state have been set.
+     * @return `true` if has custom initial state, otherwise `false`
      */
     bool hasCustomInitialStates() const;
 
     /**
-     * @brief Get the initial states sensitivities.
+     * @brief Get the initial state sensitivities.
      * @return vector of initial state sensitivities
      */
     std::vector<realtype> getInitialStateSensitivities() {
@@ -1412,9 +1412,9 @@ class Model : public AbstractModel, public ModelDimensions {
     bool getAlwaysCheckFinite() const;
 
     /**
-     * @brief Compute/get initial states.
+     * @brief Compute/get pre-event initial state.
      * @param t Timepoint.
-     * @param x Output buffer.
+     * @param x Output buffer (size: nx_solver).
      */
     void fx0(realtype t, AmiVector& x);
 

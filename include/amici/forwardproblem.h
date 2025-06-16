@@ -234,7 +234,7 @@ class EventHandlingSimulator {
      */
     SimulationState getSimulationState();
 
-    /** Results for the currentb simulation period. */
+    /** Results for the current simulation period. */
     PeriodResult result;
     /** The current time. */
     realtype t_;
