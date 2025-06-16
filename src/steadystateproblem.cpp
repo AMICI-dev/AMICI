@@ -242,7 +242,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 
         // only preequilibrations needs a reInit,
         // postequilibration does not
-        solver.reInit(state_.t, state_.x, state_.dx);
         solver.updateAndReinitStatesAndSensitivities(&model);
     }
 
