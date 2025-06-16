@@ -1332,7 +1332,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_old Value of residual function before event
      */
     void addAdjointQuadratureEventUpdate(
-        AmiVector xQB, int const ie, realtype const t, AmiVector const& x,
+        AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
     );
 
