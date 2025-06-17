@@ -192,7 +192,7 @@ class SimulationParameters {
     /**
      * @brief The initial time for pre-equilibration..
      *
-     * NAN indicates that tstart_ should be used.
+     * NAN indicates that `tstart_` should be used.
      */
     realtype tstart_preeq_{NAN};
 

@@ -127,6 +127,11 @@ model_instance_settings0 = {
 }
 
 
+def same_or_nan(a, b):
+    """Check if two values are the same or both NaN."""
+    return a == b or (isinstance(a, float) and np.isnan(a) and np.isnan(b))
+
+
 def test_model_instance_settings(pysb_example_presimulation_module):
     model0 = pysb_example_presimulation_module.getModel()
 
@@ -166,11 +171,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         getter = name[i_getter] if isinstance(name, tuple) else f"get{name}"
         setter = name[i_setter] if isinstance(name, tuple) else f"set{name}"
         # Default values are as expected.
-        assert (actual := getattr(model0, getter)()) == default or (
-            isinstance(actual, float)
-            and np.isnan(actual)
-            and np.isnan(default)
-        )
+        assert same_or_nan(getattr(model0, getter)(), default), name
         # Custom value is set correctly.
         getattr(model0, setter)(custom)
         assert getattr(model0, getter)() == custom
@@ -199,9 +200,9 @@ def test_model_instance_settings(pysb_example_presimulation_module):
             # Here the expected value differs from what the getter would return
             assert model_default_settings[name] == []
         else:
-            assert (
-                model_default_settings[name]
-                == model_instance_settings[name][i_default]
+            assert same_or_nan(
+                model_default_settings[name],
+                model_instance_settings[name][i_default],
             ), name
 
     # The grouped setter method works.
@@ -212,7 +213,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     }
     amici.set_model_settings(model, custom_settings_not_none)
     assert all(
-        value == custom_settings_not_none[name]
+        same_or_nan(value, custom_settings_not_none[name])
         for name, value in amici.get_model_settings(model).items()
         if name in custom_settings_not_none
     )
@@ -403,6 +404,13 @@ def set_val(obj, attr, val):
 def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     """Check that settings are applied in the correct order, and only if
     required"""
+
+    def assert_same(a: dict, b: dict):
+        """Assert that two model settings dictionaries are the same."""
+        assert set(a.keys()) == set(b.keys()), a.keys() ^ b.keys()
+        for key in a:
+            assert same_or_nan(a[key], b[key]), f"{key}: {a[key]} != {b[key]}"
+
     model = pysb_example_presimulation_module.getModel()
 
     # ensure no-custom-(s)x0 is restored
@@ -417,8 +425,8 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert not model.hasCustomInitialStates()
     assert not model.hasCustomInitialStateSensitivities()
     # ensure everything was set correctly, and there wasn't any problem
-    #  due to, e.g. interactions of different setters
-    assert settings == amici.get_model_settings(model)
+    #  due to, e.g., interactions of different setters
+    assert_same(settings, amici.get_model_settings(model))
 
     # ensure custom (s)x0 is restored
     model.setInitialStates(model.getInitialStates())
@@ -433,7 +441,7 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert model2.hasCustomInitialStates()
     assert model2.hasCustomInitialStateSensitivities()
     assert model2.getInitialStateSensitivities() == sx0
-    assert settings == amici.get_model_settings(model2)
+    assert_same(settings, amici.get_model_settings(model2))
 
 
 def test_solver_repr():
