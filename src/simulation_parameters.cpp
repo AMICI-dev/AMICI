@@ -20,7 +20,8 @@ bool operator==(SimulationParameters const& a, SimulationParameters const& b) {
                == b.reinitializeFixedParameterInitialStates)
            && is_equal(a.sx0, b.sx0) && (a.t_presim == b.t_presim)
            && (a.tstart_ == b.tstart_) && (a.ts_ == b.ts_)
-           && (a.tstart_preeq_ == b.tstart_preeq_);
+           && ((a.tstart_preeq_ == b.tstart_preeq_)
+               || (std::isnan(a.tstart_preeq_) && std::isnan(b.tstart_preeq_)));
 }
 
 void SimulationParameters::
