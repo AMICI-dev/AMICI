@@ -145,7 +145,7 @@ void writeReturnDataDiagnosis(
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
  */
 void writeLogItemsToHDF5(
-    H5::H5File const& file, std::vector<amici::LogItem> const& logItems,
+    H5::H5File const& file, std::vector<LogItem> const& logItems,
     std::string const& hdf5Location
 );
 
@@ -192,7 +192,7 @@ void writeSimulationExpData(
  * @param hdf5Location Path inside the HDF5 file
  */
 void writeSimulationExpData(
-    ExpData const& edata, std::string const& hdf5Filename,
+    ExpData const& edata, std::string const& file,
     std::string const& hdf5Location
 );
 

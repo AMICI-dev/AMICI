@@ -20,7 +20,7 @@ class AmiException : public std::exception {
      * @brief Default ctor.
      * @param first_frame Index of first frame to include
      */
-    AmiException(int const first_frame = 3);
+    explicit AmiException(int first_frame = 3);
 
     /**
      * @brief Constructor with printf style interface
@@ -33,20 +33,20 @@ class AmiException : public std::exception {
      * @brief Override of default error message function
      * @return msg error message
      */
-    char const* what() const noexcept override;
+    [[nodiscard]] char const* what() const noexcept override;
 
     /**
      * @brief Returns the stored backtrace
      * @return trace backtrace
      */
-    char const* getBacktrace() const;
+    [[nodiscard]] char const* getBacktrace() const;
 
     /**
      * @brief Stores the current backtrace
      * @param nMaxFrames number of frames to go back in stacktrace
      * @param first_frame Index of first frame to include
      */
-    void storeBacktrace(int nMaxFrames, int const first_frame);
+    void storeBacktrace(int nMaxFrames, int first_frame);
 
   protected:
     /**

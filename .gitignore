@@ -71,7 +71,6 @@ python/.idea/*
 *.mexmaci32
 *.mexa32
 *.mexw32
-*.eps
 *.md5
 *.json
 *.mat
@@ -100,7 +99,6 @@ __pycache__
 
 /misc.xml
 
-python/testSpeedy.py
 python/test.txt
 
 tests/test/*
