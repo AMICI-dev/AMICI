@@ -181,39 +181,35 @@ void ForwardProblem::handlePresimulation() {
     if (!uses_presimulation_)
         return;
 
-    if (solver->computingASA()) {
+    // Are there dedicated condition preequilibration parameters provided?
+    ConditionContext cond(model, edata, FixedParameterContext::presimulation);
+
+    // If we need to reinitialize solver states, this won't work yet.
+    if (model->nx_reinit() > 0)
         throw AmiException(
-            "Presimulation with adjoint sensitivities"
-            " is currently not implemented."
-        );
-    }
-
-    {
-        // Are there dedicated condition preequilibration parameters provided?
-        ConditionContext cond(
-            model, edata, FixedParameterContext::presimulation
+            "Adjoint presimulation with reinitialization of "
+            "non-constant states is not yet implemented. Stopping."
         );
 
-        // compute initial time and setup solver for (pre-)simulation
-        t_ = model->t0() - edata->t_presim;
+    // compute initial time and setup solver for (pre-)simulation
+    t_ = model->t0() - edata->t_presim;
 
-        // if preequilibration was done, model was already initialized
-        if (!preequilibrated_) {
-            model->initialize(
-                t_, ws_.x, ws_.dx, ws_.sx, ws_.sdx,
-                solver->getSensitivityOrder() >= SensitivityOrder::first,
-                ws_.roots_found
-            );
-        } else if (model->ne) {
-            model->initEvents(t_, ws_.x, ws_.dx, ws_.roots_found);
-        }
-        solver->setup(t_, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
-        solver->updateAndReinitStatesAndSensitivities(model);
-
-        std::vector<realtype> const timepoints{model->t0()};
-        pre_simulator_.run(t_, edata, timepoints);
-        solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx, ws_.dx);
+    // if preequilibration was done, model was already initialized
+    if (!preequilibrated_) {
+        model->initialize(
+            t_, ws_.x, ws_.dx, ws_.sx, ws_.sdx,
+            solver->getSensitivityOrder() >= SensitivityOrder::first,
+            ws_.roots_found
+        );
+    } else if (model->ne) {
+        model->initEvents(t_, ws_.x, ws_.dx, ws_.roots_found);
     }
+    solver->setup(t_, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
+    solver->updateAndReinitStatesAndSensitivities(model);
+
+    std::vector<realtype> const timepoints{model->t0()};
+    pre_simulator_.run(t_, edata, timepoints);
+    solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx, ws_.dx);
 }
 
 void ForwardProblem::handleMainSimulation() {
@@ -236,7 +232,10 @@ void ForwardProblem::handleMainSimulation() {
 
     t_ = model->t0();
 
-    solver->setup(t_, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
+    // in case of presimulation, the solver was set up already
+    if (!uses_presimulation_) {
+        solver->setup(t_, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
+    }
 
     if (preequilibrated_ || uses_presimulation_) {
         // Reset the time and re-initialize events for the main simulation
@@ -278,10 +277,11 @@ void EventHandlingSimulator::handle_event(
 
     if (!initial_event && t_ == ws_->tlastroot) {
         throw AmiException(
-            "AMICI is stuck in an event, as the initial "
+            "AMICI is stuck in an event at time %g, as the initial "
             "step-size after the event is too small. "
             "To fix this, increase absolute and relative "
-            "tolerances!"
+            "tolerances!",
+            t_
         );
     }
     ws_->tlastroot = t_;
@@ -316,6 +316,7 @@ void EventHandlingSimulator::handle_event(
         if (solver_->computingASA()) {
             // store updated x to compute jump in discontinuity
             result.discs.back().x_post = ws_->x;
+            // Update xdot after the state update
             model_->fxdot(t_, ws_->x, ws_->dx, ws_->xdot);
             result.discs.back().xdot_post = ws_->xdot;
         }

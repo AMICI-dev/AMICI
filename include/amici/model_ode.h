@@ -65,7 +65,7 @@ class Model_ODE : public Model {
     void fJ(realtype t, const_N_Vector x, const_N_Vector xdot, SUNMatrix J);
 
     void
-    fJB(realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    fJB(realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB) override;
 
@@ -99,7 +99,7 @@ class Model_ODE : public Model {
     void fJSparse(realtype t, const_N_Vector x, SUNMatrix J);
 
     void fJSparseB(
-        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB
     ) override;
@@ -225,7 +225,7 @@ class Model_ODE : public Model {
     fqBdot(realtype t, const_N_Vector x, const_N_Vector xB, N_Vector qBdot);
 
     void fxBdot_ss(
-        realtype const t, AmiVector const& xB, AmiVector const& /*dxB*/,
+        realtype t, AmiVector const& xB, AmiVector const& /*dxB*/,
         AmiVector& xBdot
     ) override;
 
@@ -264,7 +264,7 @@ class Model_ODE : public Model {
      * @param xBdot Vector with the adjoint state right hand side
      */
     void writeSteadystateJB(
-        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;
 

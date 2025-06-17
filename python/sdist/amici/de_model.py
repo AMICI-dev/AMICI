@@ -1736,7 +1736,7 @@ class DEModel:
                     )
 
                 # only add deltax part if there is a state update
-                if event._assignments:
+                if event.updates_state:
                     # partial derivative for the parameters
                     tmp_eq += self.eq("ddeltaxdp")[ie]
 
@@ -1782,7 +1782,7 @@ class DEModel:
                     self.sym("xdot") - self.sym("xdot_old"),
                     self.eq("dtaudx")[ie],
                 )
-                if event._assignments:
+                if event.updates_state:
                     # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(

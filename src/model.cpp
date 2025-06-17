@@ -1529,7 +1529,6 @@ void Model::addAdjointQuadratureEventUpdate(
     AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
     AmiVector const& x_old, AmiVector const& xBdot
-
 ) {
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);

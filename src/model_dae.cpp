@@ -215,7 +215,7 @@ void Model_DAE::fM(realtype t, const_N_Vector x) {
 }
 
 std::unique_ptr<Solver> Model_DAE::getSolver() {
-    return std::unique_ptr<Solver>(new amici::IDASolver());
+    return std::unique_ptr<Solver>(new IDASolver());
 }
 
 void Model_DAE::fJSparse(

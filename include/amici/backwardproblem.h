@@ -197,6 +197,9 @@ class BackwardProblem {
     /** The postequilibration steadystate problem from the forward problem. */
     SteadystateProblem* posteq_problem_;
 
+    /** Presimulation results */
+    PeriodResult presim_result;
+
     BwdSimWorkspace ws_;
 
     EventHandlingBwdSimulator simulator_;

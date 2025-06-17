@@ -837,6 +837,11 @@ class Event(ModelQuantity):
         """
         return self._use_values_from_trigger_time
 
+    @property
+    def updates_state(self) -> bool:
+        """Whether the event assignment updates the model state."""
+        return bool(self._assignments)
+
 
 # defines the type of some attributes in DEModel
 symbol_to_type = {
