@@ -100,7 +100,7 @@ void EventHandlingBwdSimulator::handleEventB(
 ) {
     for (int ie = 0; ie < model_->ne; ie++) {
 
-        if (disc.root_info[ie] == 0) {
+        if (disc.root_info[ie] != 1) {
             continue;
         }
 
@@ -113,6 +113,7 @@ void EventHandlingBwdSimulator::handleEventB(
         );
 
         if (model_->nz > 0) {
+            Expects(ws_->nroots_[ie] >= 0);
             for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
                 for (int iJ = 0; iJ < model_->nJ; ++iJ) {
                     ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx
