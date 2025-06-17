@@ -299,44 +299,6 @@ def test_parameter_in_expdata(preeq_fixture):
         )
 
 
-def test_raise_presimulation_with_adjoints(preeq_fixture):
-    """Test simulation failures with adjoin+presimulation"""
-
-    (
-        model,
-        solver,
-        edata,
-        edata_preeq,
-        edata_presim,
-        edata_sim,
-        pscales,
-        plists,
-    ) = preeq_fixture
-
-    # preequilibration and presimulation with adjoints:
-    # this needs to fail unless we remove presimulation
-    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
-
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-    assert rdata["status"] == amici.AMICI_ERROR
-
-    # add postequilibration
-    y = edata.getObservedData()
-    stdy = edata.getObservedDataStdDev()
-    ts = np.hstack([*edata.getTimepoints(), np.inf])
-    edata.setTimepoints(ts)
-    edata.setObservedData(np.hstack([y, y[0]]))
-    edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
-
-    # remove presimulation
-    edata.t_presim = 0
-    edata.fixedParametersPresimulation = ()
-
-    # no presim any more, this should work
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-    assert rdata["status"] == amici.AMICI_SUCCESS
-
-
 def test_equilibration_methods_with_adjoints(preeq_fixture):
     """Test different combinations of equilibration and simulation
     sensitivity methods"""

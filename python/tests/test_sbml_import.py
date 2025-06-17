@@ -251,6 +251,9 @@ def test_presimulation(sbml_example_presimulation_module):
     check_derivatives(model, solver, edata, epsilon=1e-4)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+)
 def test_presimulation_events(tempdir):
     """Test that events are handled during presimulation."""
 
@@ -306,7 +309,8 @@ def test_presimulation_events(tempdir):
 
     for sensi_method in (
         amici.SensitivityMethod.forward,
-        # TODO ASA
+        # FIXME: test with adjoints. currently there is some CVodeF issue
+        #  that fails forward simulation with adjoint sensitivities
         # amici.SensitivityMethod.adjoint,
     ):
         solver.setSensitivityMethod(sensi_method)
@@ -325,6 +329,87 @@ def test_presimulation_events(tempdir):
         assert np.all(
             rdata.by_id("mainsim_target") == np.array([0, 1, 1])
         ), rdata.by_id("mainsim_target")
+
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            epsilon=1e-8,
+        )
+
+
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+)
+def test_presimulation_events_and_sensitivities(tempdir):
+    """Test that presimulation with adjoint sensitivities works
+    and test that events are handled during presimulation."""
+
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_presim_events2"
+    antimony2amici(
+        """
+    some_time = time
+    some_time' = 1
+    bolus = 1
+
+    k_pre = 3
+    k_main = 2
+    xx = 0
+    xx' = piecewise(k_pre, time < 0, k_main)
+
+    # this will trigger twice, once in presimulation
+    # and once in the main simulation
+    at time >= -1 , t0=false: some_time = some_time + bolus
+    """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+    model.setTimepoints([0, 1, 2])
+    edata = amici.ExpData(model)
+    edata.t_presim = 2
+    solver = model.getSolver()
+
+    # generate artificial data
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    edata_tmp = amici.ExpData(rdata, 1, 0)
+    edata.setTimepoints(np.array(edata_tmp.getTimepoints()) + 0.1)
+    edata.setObservedData(edata_tmp.getObservedData())
+    edata.setObservedDataStdDev(edata_tmp.getObservedDataStdDev())
+
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+    for sensi_method in (
+        amici.SensitivityMethod.forward,
+        amici.SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityMethod(sensi_method)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert_allclose(
+            rdata.by_id("some_time"), np.array([0, 1, 2]) + 2.1, atol=1e-14
+        )
+
+        if sensi_method == amici.SensitivityMethod.forward:
+            model.requireSensitivitiesForAllParameters()
+        else:
+            # FIXME ASA with events:
+            #   https://github.com/AMICI-dev/AMICI/pull/1539
+            model.setParameterList(
+                [
+                    i
+                    for i, p in enumerate(model.getParameterIds())
+                    if p != "bolus"
+                ]
+            )
 
         check_derivatives(
             model,
