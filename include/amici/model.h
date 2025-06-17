@@ -119,9 +119,9 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     Model(
         ModelDimensions const& model_dimensions,
-        SimulationParameters simulation_parameters,
-        amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event, std::vector<Event> events = {},
+        SimulationParameters simulation_parameters, SecondOrderMode o2mode,
+        std::vector<realtype> idlist, std::vector<int> z2event,
+        std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -1332,7 +1332,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_old Value of residual function before event
      */
     void addAdjointQuadratureEventUpdate(
-        AmiVector xQB, int const ie, realtype const t, AmiVector const& x,
+        AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
     );
 

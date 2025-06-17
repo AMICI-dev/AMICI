@@ -242,7 +242,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 
         // only preequilibrations needs a reInit,
         // postequilibration does not
-        solver.reInit(state_.t, state_.x, state_.dx);
         solver.updateAndReinitStatesAndSensitivities(&model);
     }
 
@@ -910,7 +909,7 @@ void NewtonsMethod::run(
             // delta-convergence check
             if (!check_delta_) {
                 compute_step(xdot, state);
-            };
+            }
 
             // we store delta_ here as later convergence checks may update
             // it

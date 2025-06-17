@@ -1525,7 +1525,7 @@ void Model::addAdjointStateEventUpdate(
 }
 
 void Model::addAdjointQuadratureEventUpdate(
-    AmiVector xQB, int const ie, realtype const t, AmiVector const& x,
+    AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
 ) {
     for (int ip = 0; ip < nplist(); ip++) {

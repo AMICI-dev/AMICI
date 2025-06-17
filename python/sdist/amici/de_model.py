@@ -1664,8 +1664,8 @@ class DEModel:
                 for ie in range(self.num_events())
             ]
             if name == "dzdx":
+                dtaudx = self.eq("dtaudx")
                 for ie in range(self.num_events()):
-                    dtaudx = self.eq("dtaudx")
                     for iz in range(self.num_eventobs()):
                         if ie != self._z2event[iz] - 1:
                             continue
@@ -1734,7 +1734,7 @@ class DEModel:
                     )
 
                 # only add deltax part if there is a state update
-                if event._assignments is not None:
+                if event.updates_state:
                     # partial derivative for the parameters
                     tmp_eq += self.eq("ddeltaxdp")[ie]
 

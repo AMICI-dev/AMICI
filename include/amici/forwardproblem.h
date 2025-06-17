@@ -502,6 +502,14 @@ class ForwardProblem {
         return nullptr;
     }
 
+    /**
+     * @brief Get the presimulation results.
+     * @return Presimulation results.
+     */
+    PeriodResult const& get_presimulation_result() const {
+        return pre_simulator_.result;
+    }
+
     /** pointer to model instance */
     Model* model;
 
