@@ -14,8 +14,8 @@ on:
     - cron:  '48 4 * * *'
 
 jobs:
-  non_jax:
-    name: Benchmark Collection
+  cpp:
+    name: Benchmark Collection CPP
 
     runs-on: ubuntu-24.04
 
@@ -125,7 +125,7 @@ jobs:
     - name: Install AMICI sdist
       run: |
         pip3 install --user petab[vis] && \
-        AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
+        pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
     - name: Install test dependencies

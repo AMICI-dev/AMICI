@@ -12,10 +12,7 @@ from amici.jax.petab import run_simulations, JAXProblem
 from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import simulate_petab, LLH, SLLH
 
-try:  # allow running from this directory or package root
-    from . import test_petab_benchmark as common
-except ImportError:  # pragma: no cover - executed when run from this dir
-    import test_petab_benchmark as common
+import test_petab_benchmark as common
 
 benchmark_problem = common.benchmark_problem
 settings = common.settings
