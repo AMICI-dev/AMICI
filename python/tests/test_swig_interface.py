@@ -116,6 +116,10 @@ model_instance_settings0 = {
         0.0,
         1.0,
     ],
+    ("t0_preeq", "set_t0_preeq"): [
+        nan,
+        -10.0,
+    ],
     "Timepoints": [
         tuple(),
         (1.0, 2.0, 3.0),
@@ -162,7 +166,11 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         getter = name[i_getter] if isinstance(name, tuple) else f"get{name}"
         setter = name[i_setter] if isinstance(name, tuple) else f"set{name}"
         # Default values are as expected.
-        assert getattr(model0, getter)() == default
+        assert (actual := getattr(model0, getter)()) == default or (
+            isinstance(actual, float)
+            and np.isnan(actual)
+            and np.isnan(default)
+        )
         # Custom value is set correctly.
         getattr(model0, setter)(custom)
         assert getattr(model0, getter)() == custom

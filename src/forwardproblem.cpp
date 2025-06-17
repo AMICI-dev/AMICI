@@ -265,7 +265,7 @@ void ForwardProblem::handlePostequilibration() {
     if (getCurrentTimeIteration() < model->nt()) {
         posteq_problem_.emplace(*solver, *model);
         auto it = getCurrentTimeIteration();
-        auto t0 = it < 0 ? model->t0() : model->getTimepoint(it);
+        auto t0 = it < 1 ? model->t0() : model->getTimepoint(it - 1);
         posteq_problem_->workSteadyStateProblem(*solver, *model, it, t0);
     }
 }
