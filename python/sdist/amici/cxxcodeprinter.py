@@ -87,6 +87,15 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         return self._print_min_max(expr, "max", Max)
 
+    def _print_Infinity(self, expr):
+        return "std::numeric_limits<double>::infinity()"
+
+    def _print_NegativeInfinity(self, expr):
+        return "-std::numeric_limits<double>::infinity()"
+
+    def _print_ComplexInfinity(self, expr):
+        return "std::numeric_limits<double>::infinity()"
+
     def _get_sym_lines_array(
         self, equations: sp.Matrix, variable: str, indent_level: int
     ) -> list[str]:
@@ -290,6 +299,7 @@ def get_switch_statement(
         indent0 + "}",
     ]
 
+
 def csc_matrix(
     matrix: sp.Matrix,
     rownames: list[sp.Symbol],
@@ -369,6 +379,7 @@ def csc_matrix(
         symbol_list,
         sparse_matrix,
     )
+
 
 def get_initializer_list(values: Iterable) -> str:
     """Generate C++ initializer list for given values.
