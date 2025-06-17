@@ -815,6 +815,12 @@ double Model::t0() const { return simulation_parameters_.tstart_; }
 
 void Model::setT0(double t0) { simulation_parameters_.tstart_ = t0; }
 
+double Model::t0_preeq() const { return simulation_parameters_.tstart_preeq_; }
+
+void Model::set_t0_preeq(double t0_preeq) {
+    simulation_parameters_.tstart_preeq_ = t0_preeq;
+}
+
 std::vector<bool> const& Model::getStateIsNonNegative() const {
     return state_is_non_negative_;
 }

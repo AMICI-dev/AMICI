@@ -176,6 +176,7 @@ void serialize(
     ar & s.pscale;
     ar & s.plist;
     ar & s.ts_;
+    ar & s.tstart_preeq_;
     ar & s.tstart_;
     ar & s.t_presim;
     ar & s.reinitializeFixedParameterInitialStates;
