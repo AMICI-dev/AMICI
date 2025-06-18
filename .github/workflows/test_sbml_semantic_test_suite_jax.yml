@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
       - python/sdist/amici/jax/**
-      - scripts/run-SBMLTestsuiteJax.sh
+      - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuiteJax.py
       - tests/sbml/conftest.py
   check_suite:
@@ -41,7 +41,7 @@ jobs:
       uses: ./.github/actions/install-apt-dependencies
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
-    - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuiteJax.sh ${{ matrix.cases }}
+    - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v4

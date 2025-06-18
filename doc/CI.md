@@ -43,7 +43,8 @@ To run the SBML Test Suite test cases, the easiest way is:
 2. Running `scripts/run-SBMLTestsuite.sh`. This will download the test cases
    if necessary and run them all. A subset of test cases can be selected with
    an optional argument (e.g. `scripts/run-SBMLTestsuite.sh 1,3-6,8`, to run
-   cases 1, 3, 4, 5, 6 and 8).
+   cases 1, 3, 4, 5, 6 and 8). Use `--jax` as the first argument to run the
+   SBML tests using the JAX backend.
 
    Once the test cases are available locally, for debugging it might be easier
    to directly use `pytest` with `tests/sbml/testSBMLSuite.py`.
