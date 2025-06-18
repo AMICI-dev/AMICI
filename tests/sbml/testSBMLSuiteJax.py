@@ -26,6 +26,8 @@ from tests.sbml.testSBMLSuite import (
 )
 from tests.sbml.conftest import format_test_id
 
+jax.config.update("jax_enable_x64", True)
+
 
 @pytest.fixture(scope="session")
 def result_path_jax() -> Path:
@@ -76,7 +78,7 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
 def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
     p = jnp.array(
         [
-            importer.sbml.getParameter(pid).getValue()
+            importer.sbml.getParameter(pid.replace("amici_", "", 1)).getValue()
             for pid in model.parameter_ids
         ]
     )

@@ -153,6 +153,11 @@ class ODEExporter:
                 "The JAX backend does not support models with event assignments."
             )
 
+        if ode_model._algebraic_equations:
+            raise NotImplementedError(
+                "The JAX backend does not support models with algebraic equations."
+            )
+
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
         self.model_path: Path = Path()
