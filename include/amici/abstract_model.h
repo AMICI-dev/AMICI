@@ -69,21 +69,6 @@ class AbstractModel {
     ) = 0;
 
     /**
-     * @brief Residual function of adjoint state
-     * @param t time
-     * @param x state
-     * @param dx time derivative of state (DAE only)
-     * @param xB adjoint state
-     * @param dxB time derivative of adjoint state (DAE only)
-     * @param xBdot array to which values of the residual function will be
-     * written
-     */
-    virtual void fxBdot(
-        realtype t, AmiVector const& x, AmiVector const& dx,
-        AmiVector const& xB, AmiVector const& dxB, AmiVector& xBdot
-    ) = 0;
-
-    /**
      * @brief Residual function backward when running in steady state mode
      * @param t time
      * @param xB adjoint state

@@ -6,7 +6,6 @@
 %ignore fJv;
 %ignore fJB;
 %ignore fJSparseB;
-%ignore fxBdot;
 %ignore fxBdot_ss;
 %ignore fJSparseB_ss;
 %ignore writeSteadystateJB;
