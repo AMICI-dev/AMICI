@@ -1203,8 +1203,6 @@ class DEModel:
             length = len(self.eq("xdot"))
         elif name == "xdot_old":
             length = len(self.eq("xdot"))
-        elif name == "xBdot":
-            length = len(self.eq("xdot"))
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
             return
@@ -1828,10 +1826,6 @@ class DEModel:
             self._eqs[name] = event_eqs
 
         elif name == "xdot_old":
-            # force symbols
-            self._eqs[name] = self.sym(name)
-
-        elif name == "xBdot":
             # force symbols
             self._eqs[name] = self.sym(name)
 
