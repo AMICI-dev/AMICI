@@ -5,6 +5,7 @@
 from abc import abstractmethod
 from pathlib import Path
 import enum
+from dataclasses import field
 
 import diffrax
 import equinox as eqx
@@ -46,6 +47,7 @@ class JAXModel(eqx.Module):
     MODEL_API_VERSION = "0.0.4"
     api_version: str
     jax_py_file: Path
+    parameters: jnp.ndarray = field(default_factory=lambda: jnp.array([]))
 
     def __init__(self):
         if self.api_version != self.MODEL_API_VERSION:
@@ -512,7 +514,7 @@ class JAXModel(eqx.Module):
     @eqx.filter_jit
     def simulate_condition(
         self,
-        p: jt.Float[jt.Array, "np"],
+        p: jt.Float[jt.Array, "np"] | None,
         ts_dyn: jt.Float[jt.Array, "nt_dyn"],
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         my: jt.Float[jt.Array, "nt"],
@@ -537,7 +539,8 @@ class JAXModel(eqx.Module):
         Simulate a condition.
 
         :param p:
-            parameters for simulation ordered according to ids in :ivar parameter_ids:
+            parameters for simulation ordered according to ids in :ivar parameter_ids:. If ``None``,
+            the values stored in :attr:`parameters` are used.
         :param ts_dyn:
             time points for dynamic simulation. Sorted in monotonically increasing order but duplicate time points are
             allowed to facilitate the evaluation of multiple observables at specific time points.
@@ -580,6 +583,9 @@ class JAXModel(eqx.Module):
         :return:
             output according to `ret` and general results/statistics
         """
+        if p is None:
+            p = self.parameters
+
         if x_preeq.shape[0]:
             x = x_preeq
         else:
@@ -691,7 +697,7 @@ class JAXModel(eqx.Module):
     @eqx.filter_jit
     def preequilibrate_condition(
         self,
-        p: jt.Float[jt.Array, "np"],
+        p: jt.Float[jt.Array, "np"] | None,
         x_reinit: jt.Float[jt.Array, "*nx"],
         mask_reinit: jt.Bool[jt.Array, "*nx"],
         solver: diffrax.AbstractSolver,
@@ -705,7 +711,8 @@ class JAXModel(eqx.Module):
         Simulate a condition.
 
         :param p:
-            parameters for simulation ordered according to ids in :ivar parameter_ids:
+            parameters for simulation ordered according to ids in :ivar parameter_ids:. If ``None``,
+            the values stored in :attr:`parameters` are used.
         :param x_reinit:
             re-initialized state vector. If not provided, the state vector is not re-initialized.
         :param mask_reinit:
@@ -720,6 +727,9 @@ class JAXModel(eqx.Module):
             pre-equilibrated state variables and statistics
         """
         # Pre-equilibration
+        if p is None:
+            p = self.parameters
+
         x0 = self._x0(0.0, p)
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)

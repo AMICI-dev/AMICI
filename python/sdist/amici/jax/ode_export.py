@@ -248,6 +248,7 @@ class ODEExporter:
             **_jax_variable_assignments(self.model, sym_names),
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
+            "P_VALUES": _jnp_array_str(self.model.val("p")),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we

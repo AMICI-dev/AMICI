@@ -11,6 +11,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
+        self.parameters = TPL_P_VALUES
         super().__init__()
 
     def _xdot(self, t, x, args):
