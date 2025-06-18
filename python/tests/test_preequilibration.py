@@ -698,7 +698,7 @@ def test_preequilibration_t0(tempdir):
         preeq_indicator = 0
         t0_preeq = time * preeq_indicator
         # we need some state variable for simulation to work
-        T = time
+        T = 0
         # at some large value of T, we will "reach steady state" due to
         # the tiny relative change
         T' = 1
@@ -716,10 +716,10 @@ def test_preequilibration_t0(tempdir):
     )
     amici_model = model_module.getModel()
     edata = amici.ExpData(amici_model)
-    edata.setTimepoints([0.0, 10.0])
+    edata.setTimepoints([0.0, 10_000.0])
     edata.fixedParametersPreequilibration = [1.0]
     edata.fixedParameters = [0.0]
-    amici_model.setT0Preeq(-10.0)
+    amici_model.setT0Preeq(-10_000.0)
     amici_model.setT0(-2.0)
     amici_solver = amici_model.getSolver()
     amici_solver.setRelativeToleranceSteadyState(1e-5)
@@ -729,4 +729,8 @@ def test_preequilibration_t0(tempdir):
 
     rdata = amici.runAmiciSimulation(amici_model, amici_solver, edata)
     assert rdata.status == amici.AMICI_SUCCESS
-    assert set(rdata.by_id("t0_preeq")) == {-10.0}
+    assert set(rdata.by_id("t0_preeq")) == {-10_000.0}
+    idx_time_integral = amici_model.getStateIds().index("T")
+    assert np.isclose(
+        rdata.x_ss[idx_time_integral], rdata.preeq_t - amici_model.t0Preeq()
+    )
