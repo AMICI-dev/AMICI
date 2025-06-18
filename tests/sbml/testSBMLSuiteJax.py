@@ -73,8 +73,7 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
 
 
 def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
-    p = None
-    p_vals = model.parameters
+    p = model.parameters
     ts_jnp = jnp.asarray(ts, dtype=float)
     zeros = jnp.zeros_like(ts_jnp)
     solver = diffrax.Kvaerno5()
@@ -105,14 +104,14 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         lambda t, x_solver, x_rdata: model._y(
             t,
             x_solver,
-            p_vals,
-            model._tcl(x_rdata, p_vals),
+            p,
+            model._tcl(x_rdata, p),
             jnp.zeros(len(model.observable_ids)),
         )
     )(ts_jnp, stats["x"], x)
     w = jax.vmap(
         lambda t, x_solver, x_rdata: model._w(
-            t, x_solver, p_vals, model._tcl(x_rdata, p_vals)
+            t, x_solver, p, model._tcl(x_rdata, p)
         )
     )(ts_jnp, stats["x"], x)
 
