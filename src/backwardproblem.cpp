@@ -70,8 +70,10 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
+        auto t0
+            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
         preeq_problem_->workSteadyStateBackwardProblem(
-            *solver_, *model_, ws_.xB_, true
+            *solver_, *model_, ws_.xB_, true, t0
         );
     }
 }
@@ -90,7 +92,7 @@ void BackwardProblem::handlePostequilibration() {
     }
 
     posteq_problem_->workSteadyStateBackwardProblem(
-        *solver_, *model_, ws_.xB_, false
+        *solver_, *model_, ws_.xB_, false, model_->t0()
     );
     ws_.xQB_ = posteq_problem_->getEquilibrationQuadratures();
 }

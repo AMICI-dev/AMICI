@@ -687,3 +687,50 @@ def test_partial_eq():
             rtol=amici_solver.getRelativeToleranceSteadyState(),
         )
         assert rdata.t_last < 100
+
+
+def test_preequilibration_t0(tempdir):
+    """Test that preequilibration uses the correct initial time."""
+    from amici.antimony_import import antimony2amici
+
+    ant_str = """
+    model test_preequilibration_t0
+        preeq_indicator = 0
+        t0_preeq = time * preeq_indicator
+        # we need some state variable for simulation to work
+        T = 0
+        # at some large value of T, we will "reach steady state" due to
+        # the tiny relative change
+        T' = 1
+    end
+    """
+    module_name = "test_preequilibration_t0"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        constant_parameters=["preeq_indicator"],
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    edata = amici.ExpData(amici_model)
+    edata.setTimepoints([0.0, 10_000.0])
+    edata.fixedParametersPreequilibration = [1.0]
+    edata.fixedParameters = [0.0]
+    amici_model.setT0Preeq(-10_000.0)
+    amici_model.setT0(-2.0)
+    amici_solver = amici_model.getSolver()
+    amici_solver.setRelativeToleranceSteadyState(1e-5)
+    amici_model.setSteadyStateComputationMode(
+        amici.SteadyStateComputationMode.integrationOnly
+    )
+
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver, edata)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert set(rdata.by_id("t0_preeq")) == {-10_000.0}
+    idx_time_integral = amici_model.getStateIds().index("T")
+    assert np.isclose(
+        rdata.x_ss[idx_time_integral], rdata.preeq_t - amici_model.t0Preeq()
+    )

@@ -243,6 +243,11 @@ std::unique_ptr<ExpData> readSimulationExpData(
         edata->tstart_ = getDoubleScalarAttribute(file, hdf5Root, "tstart");
     }
 
+    if (attributeExists(file, hdf5Root, "tstart_preeq")) {
+        edata->tstart_preeq_
+            = getDoubleScalarAttribute(file, hdf5Root, "tstart_preeq");
+    }
+
     return edata;
 }
 
@@ -362,6 +367,11 @@ void writeSimulationExpData(
 
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "tstart", &edata.tstart_, 1
+    );
+
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "tstart_preeq",
+        &edata.tstart_preeq_, 1
     );
 }
 
@@ -1427,6 +1437,12 @@ void readModelDataFromHDF5(
 ) {
     if (attributeExists(file, datasetPath, "tstart")) {
         model.setT0(getDoubleScalarAttribute(file, datasetPath, "tstart"));
+    }
+
+    if (attributeExists(file, datasetPath, "tstart_preeq")) {
+        model.setT0Preeq(
+            getDoubleScalarAttribute(file, datasetPath, "tstart_preeq")
+        );
     }
 
     if (locationExists(file, datasetPath + "/pscale")) {
