@@ -176,6 +176,22 @@ void serialize(
     ar & s.pscale;
     ar & s.plist;
     ar & s.ts_;
+    // for some reason, serializing NAN fails
+    if (Archive::is_loading::value) {
+        bool tstart_preeq_is_nan;
+        ar & tstart_preeq_is_nan;
+        if (tstart_preeq_is_nan) {
+            s.tstart_preeq_ = std::numeric_limits<amici::realtype>::quiet_NaN();
+        } else {
+            ar & s.tstart_preeq_;
+        }
+    } else {
+        bool tstart_preeq_is_nan = std::isnan(s.tstart_preeq_);
+        ar & tstart_preeq_is_nan;
+        if (!tstart_preeq_is_nan) {
+            ar & s.tstart_preeq_;
+        }
+    }
     ar & s.tstart_;
     ar & s.t_presim;
     ar & s.reinitializeFixedParameterInitialStates;
