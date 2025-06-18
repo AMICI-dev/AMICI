@@ -16,6 +16,20 @@ import pandas as pd
 import pytest
 from amici.constants import SymbolId
 
+
+def _steady_state_event(rtol=None, atol=None, norm=None):
+    """Replicate :func:`diffrax.steady_state_event` without using it."""
+
+    def cond_fn(t, y, args, *, terms, solver, stepsize_controller, **kwargs):
+        del kwargs
+        _rtol = rtol if rtol is not None else stepsize_controller.rtol
+        _atol = atol if atol is not None else stepsize_controller.atol
+        _norm = norm if norm is not None else stepsize_controller.norm
+        vf = solver.func(terms, t, y, args)
+        return _norm(vf) < _atol + _rtol * _norm(y)
+
+    return cond_fn
+
 from testSBMLSuite import (
     verify_results,
     write_result_file,
@@ -86,7 +100,7 @@ def run_jax_simulation(model, importer, ts, atol, rtol):
         solver,
         controller,
         diffrax.DirectAdjoint(),
-        diffrax.steady_state_event(),
+        _steady_state_event(),
         2 ** 8,
         ret=amici.jax.ReturnValue.x,
     )
