@@ -14,8 +14,8 @@ on:
       - python/sdist/amici/sbml_import.py
       - python/sdist/amici/import_utils.py
       - scripts/run-SBMLTestsuite.sh
-      - tests/sbml/tests/testSBMLSuite.py
-      - tests/sbml/tests/conftest.py
+      - tests/sbml/testSBMLSuite.py
+      - tests/sbml/conftest.py
   check_suite:
    types: [requested]
   workflow_dispatch:

@@ -31,18 +31,18 @@ def _steady_state_event(rtol=None, atol=None, norm=None):
     return cond_fn
 
 
-from tests.sbml.tests.testSBMLSuite import (
+from tests.sbml.testSBMLSuite import (
     verify_results,
     write_result_file,
     find_model_file,
     read_settings_file,
 )
-from tests.sbml.tests.conftest import format_test_id
+from tests.sbml.conftest import format_test_id
 
 
 @pytest.fixture(scope="session")
 def result_path_jax() -> Path:
-    return Path(__file__).parents[1] / "amici-semantic-results-jax"
+    return Path(__file__).parent / "amici-semantic-results-jax"
 
 
 @pytest.fixture(scope="function", autouse=True)

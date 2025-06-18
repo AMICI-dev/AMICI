@@ -46,7 +46,7 @@ To run the SBML Test Suite test cases, the easiest way is:
    cases 1, 3, 4, 5, 6 and 8).
 
    Once the test cases are available locally, for debugging it might be easier
-   to directly use `pytest` with `tests/sbml/tests/testSBMLSuite.py`.
+   to directly use `pytest` with `tests/sbml/testSBMLSuite.py`.
 
 
 ## Matlab tests (not included in CI pipeline)
