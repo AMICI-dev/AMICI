@@ -619,14 +619,13 @@ class AbstractModel {
      * @param xdot_old previous model right hand side
      * @param x_old pre-event state
      * @param xB current adjoint state
-     * @param xBdot right hand side of adjoint state
      * @param tcl total abundances for conservation laws
      */
     virtual void fdeltaxB(
         realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, int ie, realtype const* xdot,
         realtype const* xdot_old, realtype const* x_old, realtype const* xB,
-        realtype const* xBdot, realtype const* tcl
+        realtype const* tcl
     );
 
     /**
@@ -643,13 +642,12 @@ class AbstractModel {
      * @param xdot_old previous model right hand side
      * @param x_old pre-event state
      * @param xB adjoint state
-     * @param xBdot right hand side of adjoint state
      */
     virtual void fdeltaqB(
         realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, int ip, int ie,
         realtype const* xdot, realtype const* xdot_old, realtype const* x_old,
-        realtype const* xB, realtype const* xBdot
+        realtype const* xB
     );
 
     /**

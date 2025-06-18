@@ -100,11 +100,6 @@ void BackwardProblem::handlePostequilibration() {
 void EventHandlingBwdSimulator::handleEventB(
     Discontinuity const& disc, std::vector<realtype> const* dJzdx
 ) {
-    // TODO: not used?! delta is computed inside addAdjoint*
-    auto delta_x = AmiVector(disc.x_post.getLength(), solver_->getSunContext());
-    for (int iv = 0; iv < delta_x.getLength(); iv++)
-        delta_x[iv] = (disc.x_post.at(iv) - disc.x_pre.at(iv));
-
     model_->updateHeavisideB(disc.root_info.data());
 
     for (int ie = 0; ie < model_->ne; ie++) {
@@ -115,11 +110,11 @@ void EventHandlingBwdSimulator::handleEventB(
 
         model_->addAdjointQuadratureEventUpdate(
             ws_->xQB_, ie, t_, disc.x_post, ws_->xB_, disc.xdot_post,
-            disc.xdot_pre, disc.x_pre, delta_x
+            disc.xdot_pre, disc.x_pre
         );
         model_->addAdjointStateEventUpdate(
             ws_->xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre,
-            disc.x_pre, delta_x
+            disc.x_pre
         );
 
         if (model_->nz > 0) {
