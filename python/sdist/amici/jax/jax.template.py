@@ -110,10 +110,6 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return TPL_P_IDS
 
     @property
-    def parameter_values(self):
-        return self.parameters
-
-    @property
     def expression_ids(self):
         return TPL_W_IDS
 

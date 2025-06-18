@@ -70,7 +70,7 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
 
 
 def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
-    p = model.parameter_values
+    p = None
     ts_jnp = jnp.asarray(ts, dtype=float)
     zeros = jnp.zeros_like(ts_jnp)
     solver = diffrax.Kvaerno5()
