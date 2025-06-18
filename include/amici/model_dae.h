@@ -77,7 +77,7 @@ class Model_DAE : public Model {
        const_N_Vector xdot, SUNMatrix J);
 
     void
-    fJB(realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    fJB(realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB) override;
 
@@ -114,7 +114,7 @@ class Model_DAE : public Model {
     );
 
     void fJSparseB(
-        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB
     ) override;
@@ -245,8 +245,7 @@ class Model_DAE : public Model {
     );
 
     void fxBdot_ss(
-        realtype const t, AmiVector const& xB, AmiVector const& dxB,
-        AmiVector& xBdot
+        realtype t, AmiVector const& xB, AmiVector const& dxB, AmiVector& xBdot
     ) override;
 
     /**
@@ -290,7 +289,7 @@ class Model_DAE : public Model {
      * @param xBdot Vector with the adjoint state right hand side
      */
     void writeSteadystateJB(
-        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;
 
@@ -300,7 +299,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param dx Vector with the derivative states
      */
-    void fdxdotdp(realtype t, const_N_Vector const x, const_N_Vector const dx);
+    void fdxdotdp(realtype t, const_N_Vector x, const_N_Vector dx);
     void fdxdotdp(
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {
@@ -519,7 +518,7 @@ class Model_DAE : public Model {
      * @param k constants vector
      */
     virtual void
-    fM(realtype* M, realtype const t, realtype const* x, realtype const* p,
+    fM(realtype* M, realtype t, realtype const* x, realtype const* p,
        realtype const* k);
 };
 } // namespace amici

@@ -25,8 +25,7 @@ void serialize(Archive& ar, amici::AmiVector& s, unsigned int version);
 namespace amici {
 
 /** Since const N_Vector is not what we want */
-using const_N_Vector
-    = std::add_const_t<typename std::remove_pointer_t<N_Vector>>*;
+using const_N_Vector = std::add_const_t<std::remove_pointer_t<N_Vector>>*;
 
 inline realtype const* N_VGetArrayPointerConst(const_N_Vector x) {
     return N_VGetArrayPointer(const_cast<N_Vector>(x));
@@ -97,8 +96,7 @@ class AmiVector {
      * @param other vector from which the data will be moved
      */
     AmiVector(AmiVector&& other) noexcept
-        : vec_(std::move(other.vec_))
-        , nvec_(nullptr) {
+        : vec_(std::move(other.vec_)) {
         synchroniseNVector(other.get_ctx());
     }
 
@@ -164,7 +162,7 @@ class AmiVector {
      * @brief const data accessor
      * @return const pointer to data array
      */
-    realtype const* data() const;
+    [[nodiscard]] realtype const* data() const;
 
     /**
      * @brief N_Vector accessor
@@ -176,19 +174,19 @@ class AmiVector {
      * @brief N_Vector accessor
      * @return N_Vector
      */
-    const_N_Vector getNVector() const;
+    [[nodiscard]] const_N_Vector getNVector() const;
 
     /**
      * @brief Vector accessor
      * @return Vector
      */
-    std::vector<realtype> const& getVector() const;
+    [[nodiscard]] std::vector<realtype> const& getVector() const;
 
     /**
      * @brief returns the length of the vector
      * @return length
      */
-    int getLength() const;
+    [[nodiscard]] int getLength() const;
 
     /**
      * @brief fills vector with zero values
@@ -224,7 +222,7 @@ class AmiVector {
      * @param pos index of element
      * @return element
      */
-    realtype const& at(int pos) const;
+    [[nodiscard]] realtype const& at(int pos) const;
 
     /**
      * @brief copies data from another AmiVector
@@ -252,7 +250,7 @@ class AmiVector {
      * @brief Get SUNContext
      * @return The current SUNContext or nullptr, if this AmiVector is empty
      */
-    SUNContext get_ctx() const {
+    [[nodiscard]] SUNContext get_ctx() const {
         return nvec_ == nullptr ? nullptr : nvec_->sunctx;
     }
 
@@ -337,7 +335,7 @@ class AmiVectorArray {
      * @param pos index of AmiVector
      * @return const pointer to data array
      */
-    realtype const* data(int pos) const;
+    [[nodiscard]] realtype const* data(int pos) const;
 
     /**
      * @brief accessor to elements of AmiVector elements
@@ -353,7 +351,7 @@ class AmiVectorArray {
      * @param jpos outer index in AmiVectorArray
      * @return element
      */
-    realtype const& at(int ipos, int jpos) const;
+    [[nodiscard]] realtype const& at(int ipos, int jpos) const;
 
     /**
      * @brief accessor to NVectorArray
@@ -373,7 +371,7 @@ class AmiVectorArray {
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    const_N_Vector getNVector(int pos) const;
+    [[nodiscard]] const_N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements

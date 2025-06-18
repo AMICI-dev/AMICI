@@ -173,6 +173,7 @@ model_instance_settings = [
     "SteadyStateComputationMode",
     "SteadyStateSensitivityMode",
     ("t0", "setT0"),
+    ("t0Preeq", "setT0Preeq"),
     "Timepoints",
     "_steadystate_mask",
 ]

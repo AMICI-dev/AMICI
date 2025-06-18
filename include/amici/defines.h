@@ -6,6 +6,7 @@
 #endif
 
 #include <cmath>
+#include <limits>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
 #if defined(_USE_MATH_DEFINES)
@@ -51,6 +52,8 @@
 #endif
 
 namespace amici {
+// verify that we have infinity, NaN, and that negative infinity is -inf
+static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required");
 
 constexpr double pi = M_PI;
 

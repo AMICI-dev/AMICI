@@ -27,7 +27,7 @@ namespace hdf5 {
  * @param model
  */
 void checkMeasurementDimensionsCompatible(
-    hsize_t m, hsize_t n, Model const& model
+    hsize_t const m, hsize_t const n, Model const& model
 ) {
     bool compatible = true;
     // if this is rank 1, n and m can be swapped
@@ -55,7 +55,9 @@ void checkMeasurementDimensionsCompatible(
  * @param n
  * @param model
  */
-void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
+void checkEventDimensionsCompatible(
+    hsize_t const m, hsize_t const n, Model const& model
+) {
     bool compatible = true;
 
     // if this is rank 1, n and m can be swapped
@@ -116,7 +118,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
 
     hsize_t m, n;
 
-    auto edata = std::unique_ptr<ExpData>(new ExpData(model));
+    auto edata = std::make_unique<ExpData>(model);
 
     if (attributeExists(file, hdf5Root, "id")) {
         edata->id = getStringAttribute(file, hdf5Root, "id");
@@ -241,6 +243,11 @@ std::unique_ptr<ExpData> readSimulationExpData(
         edata->tstart_ = getDoubleScalarAttribute(file, hdf5Root, "tstart");
     }
 
+    if (attributeExists(file, hdf5Root, "tstart_preeq")) {
+        edata->tstart_preeq_
+            = getDoubleScalarAttribute(file, hdf5Root, "tstart_preeq");
+    }
+
     return edata;
 }
 
@@ -360,6 +367,11 @@ void writeSimulationExpData(
 
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "tstart", &edata.tstart_, 1
+    );
+
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "tstart_preeq",
+        &edata.tstart_preeq_, 1
     );
 }
 
@@ -810,7 +822,7 @@ std::string getStringAttribute(
             optionsObject.c_str()
         );
 
-    return std::string(value.data());
+    return {value.data()};
 }
 
 double getDoubleScalarAttribute(
@@ -884,7 +896,7 @@ void createAndWriteDouble1DDataset(
 
 void createAndWriteDouble2DDataset(
     const H5::H5File& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t m, hsize_t n
+    gsl::span<double const> buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -897,7 +909,7 @@ void createAndWriteDouble2DDataset(
 
 void createAndWriteInt2DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<int const> buffer, hsize_t m, hsize_t n
+    gsl::span<int const> buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -910,7 +922,8 @@ void createAndWriteInt2DDataset(
 
 void createAndWriteDouble3DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t m, hsize_t n, hsize_t o
+    gsl::span<double const> buffer, hsize_t const m, hsize_t const n,
+    hsize_t const o
 ) {
     Expects(buffer.size() == m * n * o);
     hsize_t const adims[]{m, n, o};
@@ -1424,6 +1437,12 @@ void readModelDataFromHDF5(
 ) {
     if (attributeExists(file, datasetPath, "tstart")) {
         model.setT0(getDoubleScalarAttribute(file, datasetPath, "tstart"));
+    }
+
+    if (attributeExists(file, datasetPath, "tstart_preeq")) {
+        model.setT0Preeq(
+            getDoubleScalarAttribute(file, datasetPath, "tstart_preeq")
+        );
     }
 
     if (locationExists(file, datasetPath + "/pscale")) {

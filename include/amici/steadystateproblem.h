@@ -233,8 +233,11 @@ class SteadystateProblem {
      * @param solver The solver instance
      * @param model The model instance
      * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void workSteadyStateProblem(Solver const& solver, Model& model, int it);
+    void workSteadyStateProblem(
+        Solver const& solver, Model& model, int it, realtype t0
+    );
 
     /**
      * @brief Compute the gradient via adjoint steady state sensitivities.
@@ -246,9 +249,11 @@ class SteadystateProblem {
      * @param model The model instance
      * @param xB0 Initial adjoint state vector.
      * @param is_preeq Flag indicating whether this is a preequilibration.
+     * @param t0 Initial time for the steady state simulation.
      */
     void workSteadyStateBackwardProblem(
-        Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq
+        Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
+        realtype t0
     );
 
     /**
@@ -375,8 +380,10 @@ class SteadystateProblem {
      * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void findSteadyState(Solver const& solver, Model& model, int it);
+    void
+    findSteadyState(Solver const& solver, Model& model, int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
@@ -391,18 +398,23 @@ class SteadystateProblem {
      * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
      * successfully, or if it failed.
      */
-    SteadyStateStatus
-    findSteadyStateBySimulation(Solver const& solver, Model& model, int it);
+    SteadyStateStatus findSteadyStateBySimulation(
+        Solver const& solver, Model& model, int it, realtype t0
+    );
 
     /**
      * @brief Compute quadratures in adjoint mode
      * @param solver Solver instance.
      * @param model Model instance.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void computeSteadyStateQuadrature(Solver const& solver, Model& model);
+    void computeSteadyStateQuadrature(
+        Solver const& solver, Model& model, realtype t0
+    );
 
     /**
      * @brief Compute the quadrature in steady state backward mode by
@@ -416,8 +428,10 @@ class SteadystateProblem {
      * numerical integration of xB forward in time.
      * @param solver Solver instance.
      * @param model Model instance.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void getQuadratureBySimulation(Solver const& solver, Model& model);
+    void
+    getQuadratureBySimulation(Solver const& solver, Model& model, realtype t0);
 
     /**
      * @brief Store state and throw an exception if equilibration failed
@@ -443,7 +457,7 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return Whether sensitivities have to be computed.
      */
-    bool requires_state_sensitivities(
+    [[nodiscard]] bool requires_state_sensitivities(
         Model const& model, Solver const& solver, int it,
         SteadyStateContext context
     ) const;
@@ -486,10 +500,12 @@ class SteadystateProblem {
      * @param model Model instance.
      * @param forwardSensis flag switching on integration with FSA
      * @param backward flag switching on quadrature computation
+     * @param t0 Initial time for the steady state simulation.
      * @return A unique pointer to the created Solver instance.
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(
-        Solver const& solver, Model& model, bool forwardSensis, bool backward
+        Solver const& solver, Model& model, bool forwardSensis, bool backward,
+        realtype t0
     ) const;
 
     /**
@@ -497,8 +513,11 @@ class SteadystateProblem {
      * @param it Index of the current output time point.
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param t0 Initial time for the steady state simulation.
      */
-    void initializeForwardProblem(int it, Solver const& solver, Model& model);
+    void initializeForwardProblem(
+        int it, Solver const& solver, Model& model, realtype t0
+    );
 
     /**
      * @brief Update member variables to indicate that state_.x has been

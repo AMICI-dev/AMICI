@@ -87,6 +87,15 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         return self._print_min_max(expr, "max", Max)
 
+    def _print_Infinity(self, expr):
+        return "std::numeric_limits<double>::infinity()"
+
+    def _print_NegativeInfinity(self, expr):
+        return "-std::numeric_limits<double>::infinity()"
+
+    def _print_ComplexInfinity(self, expr):
+        return "std::numeric_limits<double>::infinity()"
+
     def _get_sym_lines_array(
         self, equations: sp.Matrix, variable: str, indent_level: int
     ) -> list[str]:
@@ -231,7 +240,7 @@ def get_switch_statement(
     cases: dict[int, list[str]],
     indentation_level: int | None = 0,
     indentation_step: str | None = " " * 4,
-):
+) -> list[str]:
     """
     Generate code for a C++ switch statement.
 
@@ -370,3 +379,14 @@ def csc_matrix(
         symbol_list,
         sparse_matrix,
     )
+
+
+def get_initializer_list(values: Iterable) -> str:
+    """Generate C++ initializer list for given values.
+
+    :param values:
+        Values to be included in the initializer list.
+        They will be converted to strings, assuming :func:`str` will yield
+        valid C++ expressions.
+    """
+    return f"{{{', '.join(map(str, values))}}}"

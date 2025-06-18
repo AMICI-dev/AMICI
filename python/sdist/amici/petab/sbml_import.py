@@ -29,12 +29,18 @@ logger = logging.getLogger(__name__)
 
 def _workaround_initial_states(
     petab_problem: petab.Problem, sbml_model: libsbml.Model, **kwargs
-):
+) -> list[str]:
+    """Add initial assignments and their targets to represent initial states
+    from the PEtab condition table.
+
+    :return: List of parameters that were added to the model and need to be
+        processed as fixed parameters during SBML import.
+    """
+
     # TODO: to parameterize initial states or compartment sizes, we currently
     #  need initial assignments. if they occur in the condition table, we
     #  create a new parameter initial_${speciesOrCompartmentID}.
     #  feels dirty and should be changed (see also #924)
-    # <BeginWorkAround>
 
     # state variable IDs and initial values specified via the conditions' table
     initial_states = get_states_in_condition_table(petab_problem)
@@ -142,18 +148,24 @@ def _workaround_initial_states(
             formula = init_par_id_sim
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
-    # <EndWorkAround>
 
     return fixed_parameters
 
 
 def _workaround_observable_parameters(
-    observables, sigmas, sbml_model, output_parameter_defaults, jax=False
-):
-    # TODO: adding extra output parameters is currently not supported,
-    #  so we add any output parameters to the SBML model.
-    #  this should be changed to something more elegant
-    # <BeginWorkAround>
+    observables: dict[str, dict[str, str]],
+    sigmas: dict[str, str | float],
+    sbml_model: libsbml.Model,
+    output_parameter_defaults: dict[str, float] | None,
+    jax: bool = False,
+) -> None:
+    """
+    Add PEtab observable parameters to the SBML model.
+
+    The PEtab observable table may contain placeholder parameters that are
+    not defined in the SBML model. We need to add them to the SBML model before
+    the actual SBML import.
+    """
     formulas = chain(
         (val["formula"] for val in observables.values()), sigmas.values()
     )
@@ -209,7 +221,6 @@ def _workaround_observable_parameters(
             parameter_id=par,
             value=output_parameter_defaults.get(par, 0.0),
         )
-    # <EndWorkAround>
 
 
 @log_execution_time("Importing PEtab model", logger)
