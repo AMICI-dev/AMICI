@@ -554,6 +554,7 @@ class ConditionContext : public ContextManager {
     std::vector<realtype> original_parameters_;
     std::vector<realtype> original_fixed_parameters_;
     realtype original_tstart_;
+    realtype original_tstart_preeq_;
     std::vector<realtype> original_timepoints_;
     std::vector<int> original_parameter_list_;
     std::vector<ParameterScaling> original_scaling_;
