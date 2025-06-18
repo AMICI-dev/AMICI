@@ -116,7 +116,7 @@ model_instance_settings0 = {
         0.0,
         1.0,
     ],
-    ("t0_preeq", "set_t0_preeq"): [
+    ("t0Preeq", "setT0Preeq"): [
         nan,
         -10.0,
     ],

@@ -735,7 +735,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Get the initial time to use for pre-equilibration.
      * @return Initial time, or NAN to use the model's t0.
      */
-    double t0_preeq() const;
+    double t0Preeq() const;
 
     /**
      * @brief Set the initial time to use for pre-equilibration.
@@ -743,7 +743,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t0_preeq The initial time for pre-equilibration or NAN to use the
      * model's t0.
      */
-    void set_t0_preeq(double t0_preeq);
+    void setT0Preeq(double t0_preeq);
 
     /**
      * @brief Get flags indicating whether states should be treated as

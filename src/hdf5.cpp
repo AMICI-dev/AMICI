@@ -1440,7 +1440,7 @@ void readModelDataFromHDF5(
     }
 
     if (attributeExists(file, datasetPath, "tstart_preeq")) {
-        model.set_t0_preeq(
+        model.setT0Preeq(
             getDoubleScalarAttribute(file, datasetPath, "tstart_preeq")
         );
     }

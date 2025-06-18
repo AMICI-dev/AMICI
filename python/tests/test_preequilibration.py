@@ -719,7 +719,7 @@ def test_preequilibration_t0(tempdir):
     edata.setTimepoints([0.0, 10.0])
     edata.fixedParametersPreequilibration = [1.0]
     edata.fixedParameters = [0.0]
-    amici_model.set_t0_preeq(-10.0)
+    amici_model.setT0Preeq(-10.0)
     amici_model.setT0(-2.0)
     amici_solver = amici_model.getSolver()
     amici_solver.setRelativeToleranceSteadyState(1e-5)

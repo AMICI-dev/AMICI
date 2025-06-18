@@ -70,8 +70,8 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-        auto t0 = std::isnan(model_->t0_preeq()) ? model_->t0()
-                                                 : model_->t0_preeq();
+        auto t0
+            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
         preeq_problem_->workSteadyStateBackwardProblem(
             *solver_, *model_, ws_.xB_, true, t0
         );

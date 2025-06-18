@@ -170,7 +170,7 @@ void ForwardProblem::handlePreequilibration() {
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
     preeq_problem_.emplace(*solver, *model);
-    auto t0 = std::isnan(model->t0_preeq()) ? model->t0() : model->t0_preeq();
+    auto t0 = std::isnan(model->t0Preeq()) ? model->t0() : model->t0Preeq();
     preeq_problem_->workSteadyStateProblem(*solver, *model, -1, t0);
 
     ws_.x = preeq_problem_->getState();
