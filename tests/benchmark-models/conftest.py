@@ -8,10 +8,7 @@ from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 import benchmark_models_petab
 from amici.petab.petab_import import import_petab_problem
 
-try:  # allow importing problems list from test module
-    from .test_petab_benchmark import problems
-except Exception:  # pragma: no cover - when run from this directory
-    from test_petab_benchmark import problems
+from test_petab_benchmark import problems
 
 script_dir = Path(__file__).parent
 repo_root = script_dir.parent.parent
