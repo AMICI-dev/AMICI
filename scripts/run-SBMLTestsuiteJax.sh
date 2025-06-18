@@ -9,6 +9,7 @@ if [[ ! -d "tests/sbml-test-suite" ]]; then
 fi
 
 source venv/bin/activate
+export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}."
 pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
 pip install coverage pytest-cov
 
@@ -24,6 +25,5 @@ if [[ -d "${RESULT_DIR}" ]]; then
 fi
 mkdir "${RESULT_DIR}"
 
-pytest ./tests/sbml/testSBMLSuiteJax.py $cases -rfsE -n auto \
+pytest ./tests/sbml/tests/testSBMLSuiteJax.py $cases -rfsE -n auto \
   --cov=amici --cov-report=xml:"coverage_SBMLSuite_jax.xml" --cov-append
-

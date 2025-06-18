@@ -24,12 +24,12 @@ import pytest
 from amici.constants import SymbolId
 from amici.gradient_check import check_derivatives
 from numpy.testing import assert_allclose
-from tests.conftest import format_test_id
+from tests.sbml.tests.conftest import format_test_id
 
 
 @pytest.fixture(scope="session")
 def result_path() -> Path:
-    return Path(__file__).parent / "amici-semantic-results"
+    return Path(__file__).parents[1] / "amici-semantic-results"
 
 
 @pytest.fixture(scope="function", autouse=True)

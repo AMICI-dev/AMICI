@@ -10,8 +10,8 @@ on:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
       - python/sdist/amici/jax/**
       - scripts/run-SBMLTestsuiteJax.sh
-      - tests/sbml/testSBMLSuiteJax.py
-      - tests/conftest.py
+      - tests/sbml/tests/testSBMLSuiteJax.py
+      - tests/sbml/tests/conftest.py
   check_suite:
    types: [requested]
   workflow_dispatch:
@@ -57,4 +57,3 @@ jobs:
         files: coverage_SBMLSuite_jax.xml
         flags: sbmlsuite-jax
         fail_ci_if_error: true
-

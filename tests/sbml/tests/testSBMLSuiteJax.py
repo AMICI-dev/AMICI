@@ -30,18 +30,19 @@ def _steady_state_event(rtol=None, atol=None, norm=None):
 
     return cond_fn
 
-from .testSBMLSuite import (
+
+from tests.sbml.tests.testSBMLSuite import (
     verify_results,
     write_result_file,
     find_model_file,
     read_settings_file,
 )
-from tests.conftest import format_test_id
+from tests.sbml.tests.conftest import format_test_id
 
 
 @pytest.fixture(scope="session")
 def result_path_jax() -> Path:
-    return Path(__file__).parent / "amici-semantic-results-jax"
+    return Path(__file__).parents[1] / "amici-semantic-results-jax"
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -67,7 +68,10 @@ class DummyModel:
 
     def getExpressionIds(self):
         exprs = list(map(str, self.importer.flux_ids))
-        exprs += [str(k) for k in self.importer.symbols.get(SymbolId.EXPRESSION, {}).keys()]
+        exprs += [
+            str(k)
+            for k in self.importer.symbols.get(SymbolId.EXPRESSION, {}).keys()
+        ]
         return exprs
 
 
@@ -83,7 +87,12 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
 
 
 def run_jax_simulation(model, importer, ts, atol, rtol):
-    p = jnp.array([importer.sbml.getParameter(pid).getValue() for pid in model.parameter_ids])
+    p = jnp.array(
+        [
+            importer.sbml.getParameter(pid).getValue()
+            for pid in model.parameter_ids
+        ]
+    )
     ts_jnp = jnp.asarray(ts, dtype=float)
     zeros = jnp.zeros_like(ts_jnp)
     solver = diffrax.Kvaerno5()
@@ -101,13 +110,15 @@ def run_jax_simulation(model, importer, ts, atol, rtol):
         controller,
         diffrax.DirectAdjoint(),
         _steady_state_event(),
-        2 ** 8,
+        2**8,
         ret=amici.jax.ReturnValue.x,
     )
     tcl = model._tcl(x[0], p)
-    y = jax.vmap(lambda t, xs: model._y(t, xs, p, tcl, jnp.zeros(len(model.observable_ids))))(
-        ts_jnp, stats["x"]
-    )
+    y = jax.vmap(
+        lambda t, xs: model._y(
+            t, xs, p, tcl, jnp.zeros(len(model.observable_ids))
+        )
+    )(ts_jnp, stats["x"])
     w = jax.vmap(lambda t, xs: model._w(t, xs, p, tcl))(ts_jnp, stats["x"])
 
     class RData(dict):
@@ -121,16 +132,23 @@ def run_jax_simulation(model, importer, ts, atol, rtol):
     )
 
 
-def test_sbml_testsuite_case_jax(test_number, result_path_jax, sbml_semantic_cases_dir):
+def test_sbml_testsuite_case_jax(
+    test_number, result_path_jax, sbml_semantic_cases_dir
+):
     test_id = format_test_id(test_number)
     model_dir = Path(__file__).parent / "SBMLTestModelsJax" / test_id
     try:
         current_test_path = sbml_semantic_cases_dir / test_id
         results_file = current_test_path / f"{test_id}-results.csv"
         results = pd.read_csv(results_file, delimiter=",")
-        results.rename(columns={c: c.replace(" ", "") for c in results.columns}, inplace=True)
+        results.rename(
+            columns={c: c.replace(" ", "") for c in results.columns},
+            inplace=True,
+        )
 
-        model, wrapper = compile_model_jax(current_test_path, test_id, model_dir)
+        model, wrapper = compile_model_jax(
+            current_test_path, test_id, model_dir
+        )
         settings = read_settings_file(current_test_path, test_id)
         ts = np.linspace(
             float(settings["start"] or 0),
@@ -142,10 +160,11 @@ def test_sbml_testsuite_case_jax(test_number, result_path_jax, sbml_semantic_cas
 
         rdata = run_jax_simulation(model, wrapper, ts, atol, rtol)
         dummy = DummyModel(model, wrapper)
-        simulated = verify_results(settings, rdata, results, wrapper, dummy, atol, rtol)
+        simulated = verify_results(
+            settings, rdata, results, wrapper, dummy, atol, rtol
+        )
         write_result_file(simulated, test_id, result_path_jax)
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
     finally:
         shutil.rmtree(model_dir, ignore_errors=True)
-
