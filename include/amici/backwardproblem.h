@@ -31,11 +31,11 @@ struct BwdSimWorkspace {
     /** The model. */
     Model* model_;
 
-    /** adjoint state vector */
+    /** adjoint state vector (size: nx_solver)  */
     AmiVector xB_;
-    /** differential adjoint state vector */
+    /** differential adjoint state vector (size: nx_solver) */
     AmiVector dxB_;
-    /** quadrature state vector */
+    /** quadrature state vector (size: nJ x nplist, col-major) */
     AmiVector xQB_;
 
     /** array of number of found roots for a certain event type */
