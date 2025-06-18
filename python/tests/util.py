@@ -8,6 +8,7 @@ import libsbml
 import numpy as np
 import pandas as pd
 
+import amici
 from amici import (
     AmiciModel,
     ExpData,
@@ -181,15 +182,17 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
+    assert rdata.status == amici.AMICI_SUCCESS
     edata = ExpData(rdata, 1.0, 1.0)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-16)
-    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
     rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    assert rdata_fsa.status == amici.AMICI_SUCCESS
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
@@ -202,6 +205,7 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     solver.setAbsoluteToleranceQuadratures(1e-14)
     solver.setRelativeToleranceQuadratures(1e-8)
     rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    assert rdata_asa.status == amici.AMICI_SUCCESS
 
     assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
     assert_allclose(rdata_fsa.llh, rdata_asa.llh, atol=1e-14, rtol=1e-10)
