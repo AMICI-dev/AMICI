@@ -259,6 +259,7 @@ exclude_patterns = [
     "MATLAB_.md",
     "CPP_.md",
     "gfx",
+    "AGENTS.md",
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
