@@ -14,7 +14,6 @@ import diffrax
 import numpy as np
 import pandas as pd
 import pytest
-from amici.constants import SymbolId
 from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
 
@@ -49,19 +48,14 @@ class DummyModel:
         self.importer = importer
 
     def getParameterIds(self):
-        return list(map(str, self.jax_model.parameter_ids))
+        return list(self.jax_model.parameter_ids)
 
     def getParameterById(self, pid: str):
         par = self.importer.sbml.getParameter(pid)
         return par.getValue() if par else np.nan
 
     def getExpressionIds(self):
-        exprs = list(map(str, self.importer.flux_ids))
-        exprs += [
-            str(k)
-            for k in self.importer.symbols.get(SymbolId.EXPRESSION, {}).keys()
-        ]
-        return exprs
+        return list(self.jax_model.expression_ids)
 
 
 def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
@@ -162,7 +156,25 @@ def test_sbml_testsuite_case_jax(
 
         dummy = DummyModel(model, wrapper)
 
-        rdata = run_jax_simulation(model, wrapper, ts, atol, rtol)
+        tol_factor = 1e2
+        if int(test_id) in (
+            191,
+            192,
+            193,
+            194,
+            198,
+            199,
+            201,
+            270,
+            272,
+            273,
+            274,
+            276,
+            277,
+            279,
+        ):
+            tol_factor = 1e4
+        rdata = run_jax_simulation(model, wrapper, ts, atol, rtol, tol_factor)
         simulated = verify_results(
             settings, rdata, results, wrapper, dummy, atol, rtol
         )

@@ -34,7 +34,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_W_RET
 
-    def _x0(self, p):
+    def _x0(self, t, p):
         TPL_P_SYMS = p
 
         TPL_X0_EQ
@@ -86,6 +86,9 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     def _nllh(self, t, x, p, tcl, my, iy, op, np):
         y = self._y(t, x, p, tcl, op)
+        if not y.size:
+            return jnp.array(0.0)
+
         TPL_Y_SYMS = y
         TPL_SIGMAY_SYMS = self._sigmay(y, p, np)
 
@@ -104,6 +107,10 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     @property
     def parameter_ids(self):
         return TPL_P_IDS
+
+    @property
+    def expression_ids(self):
+        return TPL_W_IDS
 
 
 Model = JAXModel_TPL_MODEL_NAME

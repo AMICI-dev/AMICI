@@ -43,7 +43,7 @@ class JAXModel(eqx.Module):
         Path to the JAX model file.
     """
 
-    MODEL_API_VERSION = "0.0.3"
+    MODEL_API_VERSION = "0.0.4"
     api_version: str
     jax_py_file: Path
 
@@ -93,11 +93,16 @@ class JAXModel(eqx.Module):
         ...
 
     @abstractmethod
-    def _x0(self, p: jt.Float[jt.Array, "np"]) -> jt.Float[jt.Array, "nx"]:
+    def _x0(
+        self, t: jnp.float_, p: jt.Float[jt.Array, "np"]
+    ) -> jt.Float[jt.Array, "nx"]:
         """
         Compute the initial state vector.
 
+        :param t: initial time point
         :param p: parameters
+        :return:
+            Initial state vector.
         """
         ...
 
@@ -261,6 +266,17 @@ class JAXModel(eqx.Module):
 
         :return:
             Parameter ids
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def expression_ids(self) -> list[str]:
+        """
+        Get the expression ids of the model.
+
+        :return:
+            Expression ids
         """
         ...
 
@@ -567,7 +583,7 @@ class JAXModel(eqx.Module):
         if x_preeq.shape[0]:
             x = x_preeq
         else:
-            x = self._x0(p)
+            x = self._x0(0.0, p)
 
         if not ts_mask.shape[0]:
             ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
@@ -704,7 +720,7 @@ class JAXModel(eqx.Module):
             pre-equilibrated state variables and statistics
         """
         # Pre-equilibration
-        x0 = self._x0(p)
+        x0 = self._x0(0.0, p)
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
