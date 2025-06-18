@@ -10,7 +10,7 @@ on:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
       - python/sdist/amici/jax/**
       - scripts/run-SBMLTestsuiteJax.sh
-      - tests/testSBMLSuiteJax.py
+      - tests/sbml/testSBMLSuiteJax.py
       - tests/conftest.py
   check_suite:
    types: [requested]
@@ -47,7 +47,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: amici-semantic-results-jax-${{ matrix.cases }}
-        path: tests/amici-semantic-results-jax
+        path: tests/sbml/amici-semantic-results-jax
 
     - name: Codecov SBMLSuiteJax
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'

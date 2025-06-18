@@ -14,7 +14,7 @@ on:
       - python/sdist/amici/sbml_import.py
       - python/sdist/amici/import_utils.py
       - scripts/run-SBMLTestsuite.sh
-      - tests/testSBMLSuite.py
+      - tests/sbml/testSBMLSuite.py
       - tests/conftest.py
   check_suite:
    types: [requested]
@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: amici-semantic-results-${{ matrix.cases }}
-        path: tests/amici-semantic-results
+        path: tests/sbml/amici-semantic-results
 
     - name: Codecov SBMLSuite
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'

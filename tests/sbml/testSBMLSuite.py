@@ -4,7 +4,7 @@ Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
 
 Usage:
-    pytest tests.testSBMLSuite -n CORES --cases=SELECTION
+    pytest tests.sbml.testSBMLSuite -n CORES --cases=SELECTION
         CORES can be an integer or `auto` for all available cores.
         SELECTION can be e.g.: `1`, `1,3`, `-3,4,6-7`, or `100-` to select
         specific test cases. If `--cases` is omitted, all cases are run.
@@ -24,7 +24,7 @@ import pytest
 from amici.constants import SymbolId
 from amici.gradient_check import check_derivatives
 from numpy.testing import assert_allclose
-from conftest import format_test_id
+from tests.conftest import format_test_id
 
 
 @pytest.fixture(scope="session")

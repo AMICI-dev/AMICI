@@ -22,11 +22,11 @@ else
 fi
 
 # delete old result directory and recreate
-RESULT_DIR=tests/amici-semantic-results
+RESULT_DIR=tests/sbml/amici-semantic-results
 if [[ -d "${RESULT_DIR}" ]]; then
   rm -rf "${RESULT_DIR}"
 fi
 mkdir "${RESULT_DIR}"
 
-pytest ./tests/testSBMLSuite.py $cases -rfsE -n auto \
+pytest ./tests/sbml/testSBMLSuite.py $cases -rfsE -n auto \
   --cov=amici --cov-report=xml:"coverage_SBMLSuite.xml" --cov-append

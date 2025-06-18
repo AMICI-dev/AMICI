@@ -30,13 +30,13 @@ def _steady_state_event(rtol=None, atol=None, norm=None):
 
     return cond_fn
 
-from testSBMLSuite import (
+from .testSBMLSuite import (
     verify_results,
     write_result_file,
     find_model_file,
     read_settings_file,
 )
-from conftest import format_test_id
+from tests.conftest import format_test_id
 
 
 @pytest.fixture(scope="session")
