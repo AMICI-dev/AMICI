@@ -336,7 +336,7 @@ struct ModelStateDerived {
     std::vector<realtype> dJzdx_;
 
     /** parameter derivative of event likelihood for current timepoint
-     * (dimension: nJ x nplist x, row-major)
+     * (dimension: nJ x nplist, col-major)
      */
     std::vector<realtype> dJzdp_;
 
@@ -433,7 +433,7 @@ struct ModelStateDerived {
     std::vector<realtype> deltaxB_;
 
     /** temporary storage for change in qB after event
-     * (dimension: nJ x nplist, row-major)
+     * (dimension: nJ)
      */
     std::vector<realtype> deltaqB_;
 
