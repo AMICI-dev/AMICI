@@ -1539,11 +1539,11 @@ void Model::addAdjointQuadratureEventUpdate(
         );
 
         for (int iJ = 0; iJ < nJ; ++iJ)
-            xQB.at(iJ) += derived_state_.deltaqB_.at(iJ);
+            xQB.at(ip * nJ + iJ) += derived_state_.deltaqB_.at(iJ);
     }
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.deltaqB_, ModelQuantity::deltaqB, nplist());
+        checkFinite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
     }
 }
 
