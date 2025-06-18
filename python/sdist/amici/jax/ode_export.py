@@ -148,6 +148,11 @@ class ODEExporter:
         """
         set_log_level(logger, verbose)
 
+        if any(event.updates_state for event in ode_model._events):
+            raise NotImplementedError(
+                "The JAX backend does not support models with event assignments."
+            )
+
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
         self.model_path: Path = Path()

@@ -255,6 +255,7 @@ def write_result_file(
     """
     # TODO: only states are reported here, not compartments or parameters
 
+    result_path.mkdir(parents=True, exist_ok=True)
     filename = result_path / f"{test_id}.csv"
     simulated.to_csv(filename, index=False)
 

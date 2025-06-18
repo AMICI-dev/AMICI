@@ -15,20 +15,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from amici.constants import SymbolId
-
-
-def _steady_state_event(rtol=None, atol=None, norm=None):
-    """Replicate :func:`diffrax.steady_state_event` without using it."""
-
-    def cond_fn(t, y, args, *, terms, solver, stepsize_controller, **kwargs):
-        del kwargs
-        _rtol = rtol if rtol is not None else stepsize_controller.rtol
-        _atol = atol if atol is not None else stepsize_controller.atol
-        _norm = norm if norm is not None else stepsize_controller.norm
-        vf = solver.func(terms, t, y, args)
-        return _norm(vf) < _atol + _rtol * _norm(y)
-
-    return cond_fn
+from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
 
 from tests.sbml.testSBMLSuite import (
@@ -86,7 +73,7 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
     return jax_model, sbml_importer
 
 
-def run_jax_simulation(model, importer, ts, atol, rtol):
+def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
     p = jnp.array(
         [
             importer.sbml.getParameter(pid).getValue()
@@ -96,7 +83,13 @@ def run_jax_simulation(model, importer, ts, atol, rtol):
     ts_jnp = jnp.asarray(ts, dtype=float)
     zeros = jnp.zeros_like(ts_jnp)
     solver = diffrax.Kvaerno5()
-    controller = diffrax.PIDController(rtol=rtol / 1e4, atol=atol / 1e4)
+    controller = diffrax.PIDController(
+        rtol=rtol / tol_factor,
+        atol=atol / tol_factor,
+        pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
+        icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
+        dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
+    )
     x, stats = model.simulate_condition(
         p,
         ts_jnp,
@@ -109,17 +102,24 @@ def run_jax_simulation(model, importer, ts, atol, rtol):
         solver,
         controller,
         diffrax.DirectAdjoint(),
-        _steady_state_event(),
-        2**8,
+        diffrax.SteadyStateEvent(),
+        2**10,
         ret=amici.jax.ReturnValue.x,
     )
-    tcl = model._tcl(x[0], p)
     y = jax.vmap(
-        lambda t, xs: model._y(
-            t, xs, p, tcl, jnp.zeros(len(model.observable_ids))
+        lambda t, x_solver, x_rdata: model._y(
+            t,
+            x_solver,
+            p,
+            model._tcl(x_rdata, p),
+            jnp.zeros(len(model.observable_ids)),
         )
-    )(ts_jnp, stats["x"])
-    w = jax.vmap(lambda t, xs: model._w(t, xs, p, tcl))(ts_jnp, stats["x"])
+    )(ts_jnp, stats["x"], x)
+    w = jax.vmap(
+        lambda t, x_solver, x_rdata: model._w(
+            t, x_solver, p, model._tcl(x_rdata, p)
+        )
+    )(ts_jnp, stats["x"], x)
 
     class RData(dict):
         __getattr__ = dict.__getitem__
@@ -158,13 +158,18 @@ def test_sbml_testsuite_case_jax(
         atol = float(settings["absolute"])
         rtol = float(settings["relative"])
 
-        rdata = run_jax_simulation(model, wrapper, ts, atol, rtol)
         dummy = DummyModel(model, wrapper)
+
+        rdata = run_jax_simulation(model, wrapper, ts, atol, rtol)
         simulated = verify_results(
             settings, rdata, results, wrapper, dummy, atol, rtol
         )
         write_result_file(simulated, test_id, result_path_jax)
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
+    except NotImplementedError as err:
+        if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        raise err
     finally:
         shutil.rmtree(model_dir, ignore_errors=True)
