@@ -5,40 +5,42 @@ parameters, correctness of the gradient computation, and simulation times
 for a subset of the benchmark problems.
 """
 
-import copy
-from functools import partial
 from pathlib import Path
 
+import contextlib
+import logging
 import os
-import fiddy
-import amici
+
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
-from amici.petab.petab_import import import_petab_problem
-import benchmark_models_petab
-from collections import defaultdict
-from dataclasses import dataclass, field
-from amici import SensitivityMethod
-from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
-from fiddy import MethodId, get_derivative
-from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
-from fiddy.extensions.amici import simulate_petab_to_cached_functions
-from fiddy.success import Consistency
-import contextlib
-import logging
 import yaml
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
+from petab.v1.visualize import plot_problem
+
+import amici
+from amici import SensitivityMethod
 from amici.logging import get_logger
+from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import (
     LLH,
-    SLLH,
     RDATAS,
     rdatas_to_measurement_df,
     simulate_petab,
 )
+import benchmark_models_petab
+import fiddy
+from fiddy import MethodId, get_derivative
+from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
+from fiddy.extensions.amici import simulate_petab_to_cached_functions
+from fiddy.success import Consistency
 
-from petab.v1.visualize import plot_problem
+from conftest import (
+    benchmark_outdir,
+    problems_for_gradient_check,
+    settings,
+)
 
 
 # Enable various debug output
@@ -50,7 +52,6 @@ logger = get_logger(
 
 script_dir = Path(__file__).parent.absolute()
 repo_root = script_dir.parent.parent
-benchmark_outdir = repo_root / "test_bmc"
 debug_path = script_dir / "debug"
 if debug:
     debug_path.mkdir(exist_ok=True, parents=True)
@@ -62,22 +63,6 @@ with open(references_yaml) as f:
 
 # problem IDs for which to check the gradient
 # TODO: extend
-problems_for_gradient_check = set(benchmark_models_petab.MODELS) - {
-    # excluded due to excessive runtime
-    "Bachmann_MSB2011",
-    "Chen_MSB2009",
-    "Froehlich_CellSystems2018",
-    "Raimundez_PCB2020",
-    "Lucarelli_CellSystems2018",
-    "Isensee_JCB2018",
-    "Beer_MolBioSystems2014",
-    "Alkan_SciSignal2018",
-    "Lang_PLOSComputBiol2024",
-    "Smith_BMCSystBiol2013",
-    # excluded due to excessive numerical failures
-    "Crauste_CellSystems2017",
-}
-problems_for_gradient_check = list(sorted(problems_for_gradient_check))
 
 
 # Problems for checking the log-likelihood computation at nominal parameters
@@ -141,231 +126,6 @@ problems_for_llh_check = [
 problems = list(
     sorted(set(problems_for_gradient_check + problems_for_llh_check))
 )
-
-
-@dataclass
-class GradientCheckSettings:
-    """Problem-specific settings for gradient checks."""
-
-    # Absolute and relative tolerances for simulation
-    atol_sim: float = 1e-16
-    rtol_sim: float = 1e-12
-    # Absolute and relative tolerances for finite difference gradient checks.
-    atol_check: float = 1e-3
-    rtol_check: float = 1e-2
-    # Absolute and relative tolerances for fiddy consistency check between
-    # forward/backward/central differences.
-    atol_consistency: float = 1e-5
-    rtol_consistency: float = 1e-1
-    # Step sizes for finite difference gradient checks.
-    step_sizes: list[float] = field(
-        default_factory=lambda: [
-            2e-1,
-            1e-1,
-            5e-2,
-            1e-2,
-            5e-1,
-            1e-3,
-            1e-4,
-            1e-5,
-        ]
-    )
-    rng_seed: int = 0
-    ss_sensitivity_mode: amici.SteadyStateSensitivityMode = (
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
-    )
-    noise_level: float = 0.05
-
-
-settings = defaultdict(GradientCheckSettings)
-# NOTE: Newton method fails badly with ASA for Blasi_CellSystems2016
-settings["Blasi_CellSystems2016"] = GradientCheckSettings(
-    atol_check=1e-12,
-    rtol_check=1e-4,
-    ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
-)
-settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
-    rng_seed=2,
-    atol_check=1e-5,
-    rtol_check=1e-3,
-)
-settings["Brannmark_JBC2010"] = GradientCheckSettings(
-    ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
-)
-settings["Fujita_SciSignal2010"] = GradientCheckSettings(
-    atol_check=1e-7,
-    rtol_check=5e-4,
-)
-settings["Giordano_Nature2020"] = GradientCheckSettings(
-    atol_check=1e-6, rtol_check=1e-3, rng_seed=1
-)
-settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
-    atol_sim=1e-14,
-    rtol_sim=1e-14,
-    noise_level=0.01,
-    atol_consistency=1e-3,
-)
-settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
-    # Avoid "root after reinitialization"
-    atol_sim=1e-12,
-    rtol_sim=1e-12,
-)
-settings["Raia_CancerResearch2011"] = GradientCheckSettings(
-    atol_check=1e-10,
-    rtol_check=1e-3,
-)
-settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
-    atol_sim=1e-10,
-    rtol_sim=1e-10,
-)
-settings["Sneyd_PNAS2002"] = GradientCheckSettings(
-    atol_sim=1e-15,
-    rtol_sim=1e-12,
-    atol_check=1e-5,
-    rtol_check=1e-4,
-    rng_seed=7,
-)
-settings["Weber_BMC2015"] = GradientCheckSettings(
-    atol_sim=1e-12,
-    rtol_sim=1e-12,
-    atol_check=1e-6,
-    rtol_check=1e-2,
-    rng_seed=1,
-)
-settings["Zheng_PNAS2012"] = GradientCheckSettings(
-    rng_seed=1,
-    rtol_sim=1e-15,
-    atol_check=5e-4,
-    rtol_check=4e-3,
-    noise_level=0.01,
-)
-
-
-@pytest.fixture(scope="session", params=problems, ids=problems)
-def benchmark_problem(request):
-    """Fixture providing model and PEtab problem for a problem from
-    the benchmark problem collection."""
-    problem_id = request.param
-    petab_problem = benchmark_models_petab.get_problem(problem_id)
-    flat_petab_problem = copy.deepcopy(petab_problem)
-    if measurement_table_has_timepoint_specific_mappings(
-        petab_problem.measurement_df,
-    ):
-        petab.flatten_timepoint_specific_output_overrides(flat_petab_problem)
-
-    # Setup AMICI objects.
-    amici_model = import_petab_problem(
-        flat_petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
-    )
-    return problem_id, flat_petab_problem, petab_problem, amici_model
-
-
-@pytest.mark.filterwarnings(
-    "ignore:The following problem parameters were not used *",
-    "ignore: The environment variable *",
-    "ignore:Adjoint sensitivity analysis for models with discontinuous ",
-)
-def test_jax_llh(benchmark_problem):
-    import jax
-    import equinox as eqx
-    import jax.numpy as jnp
-    from amici.jax.petab import run_simulations, JAXProblem
-
-    jax.config.update("jax_enable_x64", True)
-    from beartype import beartype
-
-    problem_id, flat_petab_problem, petab_problem, amici_model = (
-        benchmark_problem
-    )
-
-    amici_solver = amici_model.getSolver()
-    cur_settings = settings[problem_id]
-    amici_solver.setAbsoluteTolerance(1e-8)
-    amici_solver.setRelativeTolerance(1e-8)
-    amici_solver.setMaxSteps(10_000)
-
-    simulate_amici = partial(
-        simulate_petab,
-        petab_problem=flat_petab_problem,
-        amici_model=amici_model,
-        solver=amici_solver,
-        scaled_parameters=True,
-        scaled_gradients=True,
-        log_level=logging.DEBUG,
-    )
-
-    np.random.seed(cur_settings.rng_seed)
-
-    problem_parameters = None
-    if problem_id in problems_for_gradient_check:
-        point = flat_petab_problem.x_nominal_free_scaled
-        for _ in range(20):
-            amici_solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
-            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            amici_model.setSteadyStateSensitivityMode(
-                cur_settings.ss_sensitivity_mode
-            )
-            point_noise = (
-                np.random.randn(len(point)) * cur_settings.noise_level
-            )
-            point += point_noise  # avoid small gradients at nominal value
-
-            problem_parameters = dict(
-                zip(flat_petab_problem.x_free_ids, point)
-            )
-
-            r_amici = simulate_amici(
-                problem_parameters=problem_parameters,
-            )
-            if np.isfinite(r_amici[LLH]):
-                break
-        else:
-            raise RuntimeError("Could not compute expected derivative.")
-    else:
-        r_amici = simulate_amici()
-    llh_amici = r_amici[LLH]
-
-    jax_model = import_petab_problem(
-        petab_problem,
-        model_output_dir=benchmark_outdir / (problem_id + "_jax"),
-        jax=True,
-    )
-    jax_problem = JAXProblem(jax_model, petab_problem)
-    if problem_parameters:
-        jax_problem = eqx.tree_at(
-            lambda x: x.parameters,
-            jax_problem,
-            jnp.array(
-                [problem_parameters[pid] for pid in jax_problem.parameter_ids]
-            ),
-        )
-
-    if problem_id in problems_for_gradient_check:
-        beartype(run_simulations)(jax_problem)
-        (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
-            run_simulations, has_aux=True
-        )(jax_problem)
-    else:
-        llh_jax, _ = beartype(run_simulations)(jax_problem)
-
-    np.testing.assert_allclose(
-        llh_jax,
-        llh_amici,
-        rtol=1e-3,
-        atol=1e-3,
-        err_msg=f"LLH mismatch for {problem_id}",
-    )
-
-    if problem_id in problems_for_gradient_check:
-        sllh_amici = r_amici[SLLH]
-        np.testing.assert_allclose(
-            sllh_jax.parameters,
-            np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
-            rtol=1e-2,
-            atol=1e-2,
-            err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
-        )
 
 
 @pytest.mark.filterwarnings(
