@@ -5,7 +5,6 @@ parameters, correctness of the gradient computation, and simulation times
 for a subset of the benchmark problems.
 """
 
-import copy
 from pathlib import Path
 
 import contextlib
@@ -238,26 +237,6 @@ settings["Zheng_PNAS2012"] = GradientCheckSettings(
     rtol_check=4e-3,
     noise_level=0.01,
 )
-
-
-@pytest.fixture(scope="session", params=problems, ids=problems)
-def benchmark_problem(request):
-    """Fixture providing model and PEtab problem for a problem from
-    the benchmark problem collection."""
-    problem_id = request.param
-    petab_problem = benchmark_models_petab.get_problem(problem_id)
-    flat_petab_problem = copy.deepcopy(petab_problem)
-    if measurement_table_has_timepoint_specific_mappings(
-        petab_problem.measurement_df,
-    ):
-        petab.flatten_timepoint_specific_output_overrides(flat_petab_problem)
-
-    # Setup AMICI objects.
-    amici_model = import_petab_problem(
-        flat_petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
-    )
-    return problem_id, flat_petab_problem, petab_problem, amici_model
 
 
 @pytest.mark.filterwarnings(
