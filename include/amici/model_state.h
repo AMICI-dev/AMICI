@@ -428,7 +428,8 @@ struct ModelStateDerived {
      */
     std::vector<realtype> deltasx_;
 
-    /** temporary storage for change in xB after event (dimension: `nx_solver`)
+    /** temporary storage for change in xB after event
+     * (dimension: `nxtrue_solver` * `nJ`, row-major)
      */
     std::vector<realtype> deltaxB_;
 
