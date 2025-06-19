@@ -21,7 +21,18 @@ jobs:
     name: SBML Semantic Test Suite JAX
     runs-on: ubuntu-24.04
 
+    strategy:
+      fail-fast: false
+      matrix:
+        cases: ["1-600", "601-1200", "1200-"]
+        python-version: [ "3.13" ]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - name: Set up Python 3.13
       uses: actions/setup-python@v5
       with:
@@ -35,12 +46,12 @@ jobs:
       uses: ./.github/actions/install-apt-dependencies
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
-    - run: ./scripts/run-SBMLTestsuite.sh --jax 1-
+    - run: ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v4
       with:
-        name: amici-semantic-results-jax
+        name: amici-semantic-results-jax-${{ matrix.cases }}
         path: tests/sbml/amici-semantic-results-jax
 
     - name: Codecov SBMLSuiteJax
