@@ -13,7 +13,6 @@ from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import simulate_petab, LLH, SLLH
 import test_petab_benchmark as common
 
-benchmark_problem = common.benchmark_problem
 settings = common.settings
 problems_for_gradient_check = common.problems_for_gradient_check
 benchmark_outdir = common.benchmark_outdir
