@@ -4,9 +4,9 @@ REPO_URL="https://github.com/sbmlteam/sbml-test-suite/"
 set -e
 
 # run tests
-if [[ ! -d "tests/sbml-test-suite" ]]; then
+if [[ ! -d "tests/sbml/sbml-test-suite" ]]; then
     git clone --depth=1 ${REPO_URL}
-    mv -f ./sbml-test-suite ./tests/sbml-test-suite
+    mv -f ./sbml-test-suite ./tests/sbml/sbml-test-suite
 fi
 
 source venv/bin/activate
