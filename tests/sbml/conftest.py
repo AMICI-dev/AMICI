@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 passed_ids = []
 
 SBML_SEMANTIC_CASES_DIR = (
-    Path(__file__).parents[1] / "sbml-test-suite" / "cases" / "semantic"
+    Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
 )
 
 
