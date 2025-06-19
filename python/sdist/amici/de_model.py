@@ -1807,7 +1807,7 @@ class DEModel:
                     self.sym("xdot") - self.sym("xdot_old"),
                     self.eq("dtaudp")[ie],
                 )
-                if event._assignments:
+                if event.updates_state:
                     # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
