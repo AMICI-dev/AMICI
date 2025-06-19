@@ -2,6 +2,8 @@
 import jax.numpy as jnp
 from interpax import interp1d
 from pathlib import Path
+from jax.numpy import inf as oo
+from jax.numpy import nan as nan
 
 from amici.jax.model import JAXModel, safe_log, safe_div
 
