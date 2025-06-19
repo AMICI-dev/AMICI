@@ -44,6 +44,35 @@ class _FunctionInfo:
             return self.ode_arguments
         return self.dae_arguments
 
+    def get_deps(self, ode: bool) -> list[str]:
+        """Get the variables this function depends on.
+
+        :param ode: whether to get the ODE (``True``) or DAE (``False``)
+            dependencies.
+        :return: list of variable names this function depends on
+        """
+        return re.findall(
+            r"const (?:realtype|double) \*(\w+)0?(?:,|\s*$)",
+            self.arguments(ode=ode),
+        )
+
+    def var_in_signature(self, varname: str, ode: bool = True) -> bool:
+        """Check if a variable is in the function signature.
+
+        :param varname: name of the variable to check
+        :param ode: whether to check the ODE (``True``) or DAE (``False``)
+            signature.
+        :return: ``True`` if the variable is in the function signature,
+            ``False`` otherwise
+        """
+        return (
+            re.search(
+                rf"const (?:realtype|double) \*{varname}0?(?:,|\s*$)+",
+                self.arguments(ode=ode),
+            )
+            is not None
+        )
+
 
 # Information on a model-specific generated C++ function
 # prototype for generated C++ functions, keys are the names of functions
@@ -405,7 +434,7 @@ multiobs_functions = [
 
 def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
     """
-    Checks if the values for a symbolic variable is passed in the signature
+    Checks if the values for a symbolic variable are passed in the signature
     of a function
 
     :param name:
@@ -419,7 +448,4 @@ def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
         boolean indicating whether the variable occurs in the function
         signature
     """
-    return name in functions and re.search(
-        rf"const (realtype|double) \*{varname}[0]*(,|$)+",
-        functions[name].arguments(ode=ode),
-    )
+    return name in functions and functions[name].var_in_signature(varname, ode)

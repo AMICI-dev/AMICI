@@ -186,9 +186,15 @@ class BackwardProblem {
     /** array containing the time-points of discontinuities*/
     std::vector<Discontinuity> discs_;
 
-    /** state derivative of data likelihood */
+    /**
+     * state derivative of data likelihood
+     * dimensions: nt * nJ * nx_solver
+     */
     std::vector<realtype> dJydx_;
-    /** state derivative of event likelihood */
+    /**
+     * state derivative of event likelihood
+     * dimensions: nJ * nx_solver * nmaxevent
+     */
     std::vector<realtype> const dJzdx_;
 
     /** The preequilibration steadystate problem from the forward problem. */
