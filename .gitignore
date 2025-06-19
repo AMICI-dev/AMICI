@@ -133,11 +133,10 @@ tests/test/*
 */tests/dimerization/*
 tests/cpp/writeResults.h5
 tests/cpp/writeResults.h5.bak
-tests/sbml-test-suite/*
-tests/sbml-test-suite/
-tests/sedml-test-suite/
+tests/sbml/sbml-test-suite/*
+tests/sbml/sbml-test-suite/
 */sbml-semantic-test-cases/*
-tests/SBMLTestModels/
+tests/sbml/SBMLTestModels/
 tests/benchmark-models/test_bmc
 tests/petab_test_suite
 petab_test_suite

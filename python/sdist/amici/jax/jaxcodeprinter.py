@@ -8,6 +8,12 @@ import sympy as sp
 from sympy.printing.numpy import NumPyPrinter
 
 
+def _jnp_array_str(array) -> str:
+    elems = ", ".join(str(s) for s in array)
+
+    return f"jnp.array([{elems}])"
+
+
 class AmiciJaxCodePrinter(NumPyPrinter):
     """JAX code printer"""
 
@@ -35,6 +41,18 @@ class AmiciJaxCodePrinter(NumPyPrinter):
         if denom == 1:
             return super()._print_Mul(expr)
         return f"safe_div({self.doprint(numer)}, {self.doprint(denom)})"
+
+    def _print_Max(self, expr: sp.Expr) -> str:
+        """
+        Print the max function, replacing it with jnp.max.
+        """
+        return f"jnp.max({_jnp_array_str(expr.args)})"
+
+    def _print_Min(self, expr: sp.Expr) -> str:
+        """
+        Print the min function, replacing it with jnp.min.
+        """
+        return f"jnp.min({_jnp_array_str(expr.args)})"
 
     def _get_sym_lines(
         self,
