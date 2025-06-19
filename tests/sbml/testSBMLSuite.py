@@ -51,9 +51,6 @@ def test_sbml_testsuite_case(
     test_id = format_test_id(test_number)
     model_dir = None
 
-    if test_id == "01395":
-        pytest.skip("NaNs in the Jacobian")
-
     # test cases for which sensitivities are to be checked
     #  key: case ID; value: epsilon for finite differences
     sensitivity_check_cases = {
