@@ -18,7 +18,6 @@ import re
 import shutil
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Literal,
 )
 
@@ -54,16 +53,10 @@ from ._codegen.template import apply_template
 from .cxxcodeprinter import (
     AmiciCxxCodePrinter,
     get_switch_statement,
-)
-from .de_model import DEModel
-from .de_model_components import *
-from .constants import SymbolId
-from .cxxcodeprinter import (
-    AmiciCxxCodePrinter,
-    get_switch_statement,
     get_initializer_list,
 )
-from .de_model import *
+from .de_model_components import *
+from .de_model import DEModel
 from .import_utils import (
     strip_pysb,
 )
@@ -74,10 +67,6 @@ from .sympy_utils import (
     _monkeypatched,
     smart_is_zero_matrix,
 )
-
-if TYPE_CHECKING:
-    pass
-
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, "main.template.cpp")
@@ -490,10 +479,7 @@ class DEExporter:
         # don't add includes for files that won't be generated.
         # Unfortunately we cannot check for `self.functions[sym].body`
         # here since it may not have been generated yet.
-        for sym in re.findall(
-            r"const (?:realtype|double) \*([\w]+)[0]*(?:,|$)",
-            func_info.arguments(self.model.is_ode()),
-        ):
+        for sym in func_info.get_deps(ode=self.model.is_ode()):
             if sym not in self.model.sym_names():
                 continue
 

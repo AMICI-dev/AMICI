@@ -70,6 +70,10 @@ logger = get_logger(__name__, logging.ERROR)
 
 DERIVATIVE_PATTERN = re.compile(r"^d(x_rdata|xdot|\w+?)d(\w+?)(?:_explicit)?$")
 
+__all__ = [
+    "DEModel",
+]
+
 
 class DEModel:
     """
