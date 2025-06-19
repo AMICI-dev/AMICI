@@ -128,15 +128,34 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
         ],
     )
     simulated["time"] = rdata["ts"]
+
+    parameter_data = {}
+
     # collect parameters
     for par in model.getParameterIds():
-        simulated[par] = rdata["ts"] * 0 + model.getParameterById(par)
-    # collect fluxes and other expressions
+        parameter_data[par] = rdata["ts"] * 0 + model.getParameterById(par)
+
+    expression_data = {}
+
     for expr_idx, expr_id in enumerate(model.getExpressionIds()):
         if expr_id.startswith("flux_"):
-            simulated[expr_id.removeprefix("flux_")] = rdata.w[:, expr_idx]
-        elif expr_id.removeprefix("amici_") not in simulated.columns:
-            simulated[expr_id] = rdata.w[:, expr_idx]
+            new_key = expr_id.removeprefix("flux_")
+        else:
+            new_key = expr_id
+            if expr_id.removeprefix("amici_") in simulated.columns:
+                continue  # skip if already present
+        expression_data[new_key] = rdata.w[:, expr_idx]
+
+    # consolidated concatenation instead of columnwise insert to avoid data fragmentation in test 01395
+    simulated = pd.concat(
+        [
+            simulated,
+            pd.DataFrame(expression_data),
+            pd.DataFrame(parameter_data),
+        ],
+        axis=1,
+    )
+
     # handle renamed reserved symbols
     simulated.rename(
         columns={c: c.replace("amici_", "") for c in simulated.columns},

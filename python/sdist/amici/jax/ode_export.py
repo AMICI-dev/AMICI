@@ -22,7 +22,7 @@ from amici import (
 )
 
 from amici._codegen.template import apply_template
-from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter
+from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
 from amici.de_model import DEModel
 from amici.de_export import is_valid_identifier
@@ -94,12 +94,6 @@ def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
         else "tuple()"
         for sym_name in sym_names
     }
-
-
-def _jnp_array_str(array) -> str:
-    elems = ", ".join(str(s) for s in array)
-
-    return f"jnp.array([{elems}])"
 
 
 class ODEExporter:

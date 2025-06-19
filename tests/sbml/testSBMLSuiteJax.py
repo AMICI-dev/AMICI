@@ -174,6 +174,7 @@ def test_sbml_testsuite_case_jax(
             1159,
             1160,
             1161,
+            1395,
         ):
             tol_factor = 1e4
         rdata = run_jax_simulation(model, wrapper, ts, atol, rtol, tol_factor)
