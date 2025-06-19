@@ -425,17 +425,6 @@ def test_benchmark_gradient(
         # only fail on linear scale
         pytest.skip("scale=False disabled for this problem")
 
-    if (
-        problem_id
-        in (
-            # events with parameter-dependent triggers
-            #  https://github.com/AMICI-dev/AMICI/issues/18
-            "Oliveira_NatCommun2021",
-        )
-        and sensitivity_method == SensitivityMethod.adjoint
-    ):
-        pytest.skip("Unsupported ASA+events")
-
     petab_problem = benchmark_models_petab.get_problem(problem_id)
     if measurement_table_has_timepoint_specific_mappings(
         petab_problem.measurement_df,
