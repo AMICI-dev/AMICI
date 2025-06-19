@@ -6,6 +6,7 @@ import pytest
 import jax
 import jax.numpy as jnp
 import equinox as eqx
+from beartype import beartype
 
 import amici
 from amici.jax.petab import run_simulations, JAXProblem
@@ -17,6 +18,8 @@ settings = common.settings
 problems_for_gradient_check = common.problems_for_gradient_check
 benchmark_outdir = common.benchmark_outdir
 
+jax.config.update("jax_enable_x64", True)
+
 
 @pytest.mark.filterwarnings(
     "ignore:The following problem parameters were not used *",
@@ -24,12 +27,13 @@ benchmark_outdir = common.benchmark_outdir
     "ignore:Adjoint sensitivity analysis for models with discontinuous ",
 )
 def test_jax_llh(benchmark_problem):
-    jax.config.update("jax_enable_x64", True)
-    from beartype import beartype
-
     problem_id, flat_petab_problem, petab_problem, amici_model = (
         benchmark_problem
     )
+    if problem_id == "Smith_BMCSystBiol2013":
+        pytest.skip(
+            "Skipping Smith_BMCSystBiol2013 due to non-supported events in JAX."
+        )
 
     amici_solver = amici_model.getSolver()
     cur_settings = settings[problem_id]
