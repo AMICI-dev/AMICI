@@ -123,23 +123,11 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model& model)
           solver.getRelativeToleranceSteadyState(),
           AmiVector(model.get_steadystate_mask(), solver.getSunContext())
       )
-    , wrms_computer_xQB_(
-          model.nplist(), solver.getSunContext(),
-          solver.getAbsoluteToleranceQuadratures(),
-          solver.getRelativeToleranceQuadratures(), AmiVector()
-      )
-    , wrms_computer_sx_(
-          model.nx_solver, solver.getSunContext(),
-          solver.getAbsoluteToleranceSteadyStateSensi(),
-          solver.getRelativeToleranceSteadyStateSensi(),
-          AmiVector(model.get_steadystate_mask(), solver.getSunContext())
-      )
     , xdot_(model.nx_solver, solver.getSunContext())
     , sdx_(model.nx_solver, model.nplist(), solver.getSunContext())
     , xB_(model.nJ * model.nx_solver, solver.getSunContext())
     , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
     , xQB_(model.nplist(), solver.getSunContext())
-    , xQBdot_(model.nplist(), solver.getSunContext())
     , state_(
           {.t = INFINITY,
            .x = AmiVector(model.nx_solver, solver.getSunContext()),
@@ -158,8 +146,7 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model& model)
           solver.getNewtonDampingFactorLowerBound(), solver.getNewtonMaxSteps(),
           solver.getNewtonStepSteadyStateCheck()
       )
-    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
-    , check_sensi_conv_(solver.getSensiSteadyStateCheck()) {
+    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck()) {
     // Check for compatibility of options
     if (solver.getSensitivityMethod() == SensitivityMethod::forward
         && solver.getSensitivityMethodPreequilibration()
@@ -252,7 +239,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
     // initialize quadratures
     xQ_.zero();
     xQB_.zero();
-    xQBdot_.zero();
 
     // Compute quadratures, track computation time
     CpuTimer cpu_timer;
@@ -627,7 +613,8 @@ realtype SteadystateProblem::getWrmsState(Model& model) {
     return wrms_computer_x_.wrms(xdot_, state_.x);
 }
 
-realtype SteadystateProblem::getWrmsFSA(Model& model) {
+realtype
+SteadystateProblem::getWrmsFSA(Model& model, WRMSComputer& wrms_computer_sx) {
     // Forward sensitivities: Compute weighted error norm for their RHS
     realtype wrms = 0.0;
 
@@ -643,7 +630,7 @@ realtype SteadystateProblem::getWrmsFSA(Model& model) {
         if (newton_step_conv_) {
             newton_solver_.solveLinearSystem(xdot_);
         }
-        wrms = wrms_computer_sx_.wrms(xdot_, state_.sx[ip]);
+        wrms = wrms_computer_sx.wrms(xdot_, state_.sx[ip]);
         // ideally this function would report the maximum of all wrms over
         // all ip, but for practical purposes we can just report the wrms for
         // the first ip where we know that the convergence threshold is not
@@ -685,6 +672,28 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         sensitivity_method = SensitivityMethod::none;
     }
 
+    // function for sensitivity convergence check or dummy
+    std::function<bool()> sensi_converged;
+    if (solver.getSensiSteadyStateCheck()
+        && sensitivity_method == SensitivityMethod::forward) {
+        sensi_converged =
+            [&,
+             wrms_computer_sx = WRMSComputer(
+                 model.nx_solver, solver.getSunContext(),
+                 solver.getAbsoluteToleranceSteadyStateSensi(),
+                 solver.getRelativeToleranceSteadyStateSensi(),
+                 AmiVector(model.get_steadystate_mask(), solver.getSunContext())
+             )]() mutable -> bool {
+            updateSensiSimulation(solver);
+            // getWrms needs to be called before getWrmsFSA
+            // such that the linear system is prepared for newton-type
+            // convergence check
+            return getWrmsFSA(model, wrms_computer_sx) < conv_thresh;
+        };
+    } else {
+        sensi_converged = []() { return true; };
+    }
+
     int& sim_steps = numsteps_.at(1);
     int convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
@@ -693,18 +702,8 @@ void SteadystateProblem::runSteadystateSimulationFwd(
             // Check for convergence (already before simulation, since we might
             // start in steady state)
             wrms_ = getWrmsState(model);
-            if (wrms_ < conv_thresh) {
-                if (check_sensi_conv_
-                    && sensitivity_method == SensitivityMethod::forward) {
-                    updateSensiSimulation(solver);
-                    // getWrms needs to be called before getWrmsFSA
-                    // such that the linear system is prepared for newton-type
-                    // convergence check
-                    if (getWrmsFSA(model) < conv_thresh)
-                        break; // converged
-                } else {
-                    break; // converged
-                }
+            if (wrms_ < conv_thresh && sensi_converged()) {
+                break;
             }
         }
 
@@ -751,6 +750,16 @@ void SteadystateProblem::runSteadystateSimulationBwd(
 
     int& sim_steps = numstepsB_;
 
+    // WRMS computer for xQB
+    WRMSComputer wrms_computer_xQB_(
+        model.nplist(), solver.getSunContext(),
+        solver.getAbsoluteToleranceQuadratures(),
+        solver.getRelativeToleranceQuadratures(), AmiVector()
+    );
+
+    // time-derivative of quadrature state vector
+    AmiVector xQBdot(model.nplist(), solver.getSunContext());
+
     int convergence_check_frequency = newton_step_conv_ ? 25 : 1;
     auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
                          ? solver.getMaxStepsBackwardProblem()
@@ -766,8 +775,8 @@ void SteadystateProblem::runSteadystateSimulationBwd(
             // converge to zero at all. So we need xQBdot, hence compute xQB
             // first.
             computeQBfromQ(model, xQ_, xQB_, state_);
-            computeQBfromQ(model, xB_, xQBdot_, state_);
-            wrms_ = wrms_computer_xQB_.wrms(xQBdot_, xQB_);
+            computeQBfromQ(model, xB_, xQBdot, state_);
+            wrms_ = wrms_computer_xQB_.wrms(xQBdot, xQB_);
             if (wrms_ < conv_thresh) {
                 break; // converged
             }

@@ -472,9 +472,10 @@ class SteadystateProblem {
     /**
      * @brief Checks convergence for state sensitivities
      * @param model Model instance
+     * @param wrms_computer_sx WRMSComputer instance for state sensitivities
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrmsFSA(Model& model);
+    realtype getWrmsFSA(Model& model, WRMSComputer& wrms_computer_sx);
 
     /**
      * @brief Launch simulation if Newton solver or linear system solve
@@ -526,12 +527,6 @@ class SteadystateProblem {
 
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
-    /** WRMS computer for xQB */
-    WRMSComputer wrms_computer_xQB_;
-    /** WRMS computer for sx */
-    WRMSComputer wrms_computer_sx_;
-    /** old state vector */
-    AmiVector x_old_;
     /** time derivative state vector */
     AmiVector xdot_;
     /** state differential sensitivities */
@@ -542,9 +537,6 @@ class SteadystateProblem {
     AmiVector xQ_;
     /** quadrature state vector */
     AmiVector xQB_;
-    /** time-derivative of quadrature state vector */
-    AmiVector xQBdot_;
-
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
@@ -582,10 +574,6 @@ class SteadystateProblem {
      * checks during simulation and Newton's method.
      */
     bool newton_step_conv_{false};
-    /**
-     * whether sensitivities should be checked for convergence to steady state
-     */
-    bool check_sensi_conv_{true};
 
     /** flag indicating whether xdot_ has been computed for the current state */
     bool xdot_updated_{false};
