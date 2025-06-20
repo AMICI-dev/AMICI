@@ -190,7 +190,7 @@ def _generate_forward(node: "Node", indent, layer_type=str) -> str:  # noqa: F82
 
     args = ", ".join([f"{arg}" for arg in node.args])
     kwargs = [
-        f"{k}={v}" for k, v in node.kwargs.items() if k not in ("inplace",)
+        "=".join(item) for item in node.kwargs.items() if k not in ("inplace",)
     ]
     if layer_type.startswith(("Dropout",)):
         kwargs += ["key=key"]
