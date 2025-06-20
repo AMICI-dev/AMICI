@@ -51,12 +51,12 @@ This project uses `pre-commit` for linting and `pytest` for tests. Run them on c
 When running the tests locally, invoke `pytest` from the repository root:
 
 ```bash
-pytest tests/benchmark-models/test_petab_benchmark.py
-pytest tests/benchmark-models/test_petab_benchmark_jax.py
+pytest tests/benchmark_models/test_petab_benchmark.py
+pytest tests/benchmark_models/test_petab_benchmark_jax.py
 ```
 
 To quickly verify the benchmark tests, you can limit execution to a small model:
 
 ```bash
-pytest tests/benchmark-models/test_petab_benchmark.py -k Boehm_JProteomeRes2014
+pytest tests/benchmark_models/test_petab_benchmark.py -k Boehm_JProteomeRes2014
 ```

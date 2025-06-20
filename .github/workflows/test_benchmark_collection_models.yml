@@ -66,7 +66,7 @@ jobs:
       env:
         AMICI_PARALLEL_COMPILE: ""
       run: |
-        pytest tests/benchmark-models/test_petab_benchmark.py \
+        pytest tests/benchmark_models/test_petab_benchmark.py \
           --durations=10 \
           --cov=amici \
           --cov-report=xml:"coverage_py.xml" \
@@ -85,14 +85,14 @@ jobs:
     # collect & upload results
     - name: Aggregate results
       run: |
-          python3 tests/benchmark-models/evaluate_benchmark.py
+          python3 tests/benchmark_models/evaluate_benchmark.py
 
     - uses: actions/upload-artifact@v4
       with:
         name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
         path: |
-          tests/benchmark-models/computation_times.csv
-          tests/benchmark-models/computation_times.png
+          tests/benchmark_models/computation_times.csv
+          tests/benchmark_models/computation_times.png
 
   jax:
     name: Benchmark Collection JAX
@@ -142,7 +142,7 @@ jobs:
       env:
         AMICI_PARALLEL_COMPILE: ""
       run: |
-        pytest tests/benchmark-models/test_petab_benchmark_jax.py \
+        pytest tests/benchmark_models/test_petab_benchmark_jax.py \
           --durations=10 \
           --cov=amici \
           --cov-report=xml:"coverage_py.xml" \
