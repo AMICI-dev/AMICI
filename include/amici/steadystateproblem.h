@@ -233,8 +233,11 @@ class SteadystateProblem {
      * @param solver The solver instance
      * @param model The model instance
      * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void workSteadyStateProblem(Solver const& solver, Model& model, int it);
+    void workSteadyStateProblem(
+        Solver const& solver, Model& model, int it, realtype t0
+    );
 
     /**
      * @brief Compute the gradient via adjoint steady state sensitivities.
@@ -246,9 +249,11 @@ class SteadystateProblem {
      * @param model The model instance
      * @param xB0 Initial adjoint state vector.
      * @param is_preeq Flag indicating whether this is a preequilibration.
+     * @param t0 Initial time for the steady state simulation.
      */
     void workSteadyStateBackwardProblem(
-        Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq
+        Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
+        realtype t0
     );
 
     /**
@@ -375,8 +380,10 @@ class SteadystateProblem {
      * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void findSteadyState(Solver const& solver, Model& model, int it);
+    void
+    findSteadyState(Solver const& solver, Model& model, int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
@@ -391,18 +398,23 @@ class SteadystateProblem {
      * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
      * successfully, or if it failed.
      */
-    SteadyStateStatus
-    findSteadyStateBySimulation(Solver const& solver, Model& model, int it);
+    SteadyStateStatus findSteadyStateBySimulation(
+        Solver const& solver, Model& model, int it, realtype t0
+    );
 
     /**
      * @brief Compute quadratures in adjoint mode
      * @param solver Solver instance.
      * @param model Model instance.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void computeSteadyStateQuadrature(Solver const& solver, Model& model);
+    void computeSteadyStateQuadrature(
+        Solver const& solver, Model& model, realtype t0
+    );
 
     /**
      * @brief Compute the quadrature in steady state backward mode by
@@ -416,8 +428,10 @@ class SteadystateProblem {
      * numerical integration of xB forward in time.
      * @param solver Solver instance.
      * @param model Model instance.
+     * @param t0 Initial time for the steady state simulation.
      */
-    void getQuadratureBySimulation(Solver const& solver, Model& model);
+    void
+    getQuadratureBySimulation(Solver const& solver, Model& model, realtype t0);
 
     /**
      * @brief Store state and throw an exception if equilibration failed
@@ -443,7 +457,7 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return Whether sensitivities have to be computed.
      */
-    bool requires_state_sensitivities(
+    [[nodiscard]] bool requires_state_sensitivities(
         Model const& model, Solver const& solver, int it,
         SteadyStateContext context
     ) const;
@@ -458,9 +472,10 @@ class SteadystateProblem {
     /**
      * @brief Checks convergence for state sensitivities
      * @param model Model instance
+     * @param wrms_computer_sx WRMSComputer instance for state sensitivities
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrmsFSA(Model& model);
+    realtype getWrmsFSA(Model& model, WRMSComputer& wrms_computer_sx);
 
     /**
      * @brief Launch simulation if Newton solver or linear system solve
@@ -480,25 +495,15 @@ class SteadystateProblem {
     void runSteadystateSimulationBwd(Solver const& solver, Model& model);
 
     /**
-     * @brief Create and initialize a CVodeSolver instance for
-     * preequilibration simulation.
-     * @param solver Solver instance
-     * @param model Model instance.
-     * @param forwardSensis flag switching on integration with FSA
-     * @param backward flag switching on quadrature computation
-     * @return A unique pointer to the created Solver instance.
-     */
-    std::unique_ptr<Solver> createSteadystateSimSolver(
-        Solver const& solver, Model& model, bool forwardSensis, bool backward
-    ) const;
-
-    /**
      * @brief Initialize forward computation
      * @param it Index of the current output time point.
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param t0 Initial time for the steady state simulation.
      */
-    void initializeForwardProblem(int it, Solver const& solver, Model& model);
+    void initializeForwardProblem(
+        int it, Solver const& solver, Model& model, realtype t0
+    );
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -522,12 +527,6 @@ class SteadystateProblem {
 
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
-    /** WRMS computer for xQB */
-    WRMSComputer wrms_computer_xQB_;
-    /** WRMS computer for sx */
-    WRMSComputer wrms_computer_sx_;
-    /** old state vector */
-    AmiVector x_old_;
     /** time derivative state vector */
     AmiVector xdot_;
     /** state differential sensitivities */
@@ -538,9 +537,6 @@ class SteadystateProblem {
     AmiVector xQ_;
     /** quadrature state vector */
     AmiVector xQB_;
-    /** time-derivative of quadrature state vector */
-    AmiVector xQBdot_;
-
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
@@ -578,10 +574,6 @@ class SteadystateProblem {
      * checks during simulation and Newton's method.
      */
     bool newton_step_conv_{false};
-    /**
-     * whether sensitivities should be checked for convergence to steady state
-     */
-    bool check_sensi_conv_{true};
 
     /** flag indicating whether xdot_ has been computed for the current state */
     bool xdot_updated_{false};

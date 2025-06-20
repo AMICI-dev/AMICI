@@ -190,6 +190,13 @@ class SimulationParameters {
     std::vector<int> plist;
 
     /**
+     * @brief The initial time for pre-equilibration..
+     *
+     * NAN indicates that `tstart_` should be used.
+     */
+    realtype tstart_preeq_{NAN};
+
+    /**
      * @brief Starting time of the simulation.
      *
      * Output timepoints are absolute timepoints, independent of

@@ -1,0 +1,4 @@
+---
+CheckOptions:
+  performance-unnecessary-value-param.AllowedTypes: "gsl::not_null"
+  modernize-pass-by-value.AllowedTypes: "gsl::not_null"

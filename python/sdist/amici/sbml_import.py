@@ -1036,7 +1036,8 @@ class SbmlImporter:
             if not x_ref.isSetId():
                 continue
             if (
-                x_ref.isSetStoichiometry()
+                hasattr(x_ref, "isSetStoichiometry")
+                and x_ref.isSetStoichiometry()
                 and not self.is_assignment_rule_target(x_ref)
             ):
                 value = sp.Float(x_ref.getStoichiometry())
@@ -2993,7 +2994,7 @@ class SbmlImporter:
             if self.is_assignment_rule_target(ele):
                 return _get_identifier_symbol(ele)
 
-        if ele.isSetStoichiometry():
+        if hasattr(ele, "isSetStoichiometry") and ele.isSetStoichiometry():
             stoichiometry: float = ele.getStoichiometry()
             return (
                 sp.Integer(stoichiometry)

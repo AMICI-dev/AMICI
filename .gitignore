@@ -71,7 +71,6 @@ python/.idea/*
 *.mexmaci32
 *.mexa32
 *.mexw32
-*.eps
 *.md5
 *.json
 *.mat
@@ -100,7 +99,6 @@ __pycache__
 
 /misc.xml
 
-python/testSpeedy.py
 python/test.txt
 
 tests/test/*
@@ -135,12 +133,11 @@ tests/test/*
 */tests/dimerization/*
 tests/cpp/writeResults.h5
 tests/cpp/writeResults.h5.bak
-tests/sbml-test-suite/*
-tests/sbml-test-suite/
-tests/sedml-test-suite/
+tests/sbml/sbml-test-suite/*
+tests/sbml/sbml-test-suite/
 */sbml-semantic-test-cases/*
-tests/SBMLTestModels/
-tests/benchmark-models/test_bmc
+tests/sbml/SBMLTestModels/
+tests/benchmark_models/test_bmc
 tests/petab_test_suite
 petab_test_suite
 */tests/BIOMD0000000529/*
@@ -196,7 +193,7 @@ Benchmark-Models-PEtab/
 CS_Signalling_ERBB_RAS_AKT/
 cache_fiddy/*
 debug/*
-tests/benchmark-models/cache_fiddy/*
+tests/benchmark_models/cache_fiddy/*
 venv/*
 .coverage
 tests/sciml/models/*

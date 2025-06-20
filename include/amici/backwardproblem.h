@@ -31,11 +31,11 @@ struct BwdSimWorkspace {
     /** The model. */
     Model* model_;
 
-    /** adjoint state vector */
+    /** adjoint state vector (size: nx_solver)  */
     AmiVector xB_;
-    /** differential adjoint state vector */
+    /** differential adjoint state vector (size: nx_solver) */
     AmiVector dxB_;
-    /** quadrature state vector */
+    /** quadrature state vector (size: nJ x nplist, col-major) */
     AmiVector xQB_;
 
     /** array of number of found roots for a certain event type */
@@ -186,9 +186,15 @@ class BackwardProblem {
     /** array containing the time-points of discontinuities*/
     std::vector<Discontinuity> discs_;
 
-    /** state derivative of data likelihood */
+    /**
+     * state derivative of data likelihood
+     * dimensions: nt * nJ * nx_solver
+     */
     std::vector<realtype> dJydx_;
-    /** state derivative of event likelihood */
+    /**
+     * state derivative of event likelihood
+     * dimensions: nJ * nx_solver * nmaxevent
+     */
     std::vector<realtype> const dJzdx_;
 
     /** The preequilibration steadystate problem from the forward problem. */
@@ -196,6 +202,9 @@ class BackwardProblem {
 
     /** The postequilibration steadystate problem from the forward problem. */
     SteadystateProblem* posteq_problem_;
+
+    /** Presimulation results */
+    PeriodResult presim_result;
 
     BwdSimWorkspace ws_;
 

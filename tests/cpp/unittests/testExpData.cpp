@@ -3,6 +3,7 @@
 #include <amici/amici.h>
 #include <amici/model_ode.h>
 #include <amici/symbolic_functions.h>
+#include <amici/solver_cvodes.h>
 
 #include <exception>
 #include <vector>
@@ -337,6 +338,27 @@ TEST_F(ExpDataTest, SettersGetters)
                     TEST_ATOL,
                     TEST_RTOL,
                     "ObservedEventsStdDev");
+}
+
+TEST_F(ExpDataTest, RngSeed)
+{
+    ReturnData rdata(CVodeSolver(), testModel);
+    rdata.y.assign(testModel.ny * testModel.nt(), 1.0);
+    rdata.z.assign(testModel.nz * testModel.nMaxEvent(), 1.0);
+
+    // random RNG seed
+    ExpData edata1(rdata, 1, 1, -1);
+
+    ASSERT_TRUE(edata1.getObservedData() != rdata.y);
+
+    // fixed RNG seed
+    ExpData edata2(rdata, 1, 1, 1);
+
+    ASSERT_TRUE(edata2.getObservedData() != rdata.y);
+    ASSERT_TRUE(edata2.getObservedData() != edata1.getObservedData());
+
+    ExpData edata3(rdata, 1, 1, 1);
+    ASSERT_TRUE(edata3.getObservedData() == edata2.getObservedData());
 }
 
 } // namespace

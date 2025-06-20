@@ -95,28 +95,35 @@ class ExpData : public SimulationParameters {
     explicit ExpData(Model const& model);
 
     /**
-     * @brief constructor that initializes with returnData, adds noise according
-     * to specified sigmas
+     * @brief Constructor that initializes with ReturnData, adds normally
+     * distributed noise according to specified sigmas.
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y scalar standard deviations for all observables
      * @param sigma_z scalar standard deviations for all event observables
+     * @param seed Seed for the random number generator. If a negative number
+     * is passed, a random seed is used.
      */
-    ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z);
+    ExpData(
+        ReturnData const& rdata, realtype sigma_y, realtype sigma_z,
+        int seed = -1
+    );
 
     /**
-     * @brief constructor that initializes with returnData, adds noise according
-     * to specified sigmas
+     * @brief Constructor that initializes with ReturnData, adds normally
+     * distributed noise according to specified sigmas.
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y vector of standard deviations for observables
      * (dimension: nytrue or nt x nytrue, row-major)
      * @param sigma_z vector of standard deviations for event observables
      * (dimension: nztrue or nmaxevent x nztrue, row-major)
+     * @param seed Seed for the random number generator. If a negative number
+     * is passed, a random seed is used.
      */
     ExpData(
         ReturnData const& rdata, std::vector<realtype> sigma_y,
-        std::vector<realtype> sigma_z
+        std::vector<realtype> sigma_z, int seed = -1
     );
 
     ~ExpData() = default;
@@ -554,9 +561,10 @@ class ConditionContext : public ContextManager {
     std::vector<realtype> original_parameters_;
     std::vector<realtype> original_fixed_parameters_;
     realtype original_tstart_;
+    realtype original_tstart_preeq_;
     std::vector<realtype> original_timepoints_;
     std::vector<int> original_parameter_list_;
-    std::vector<amici::ParameterScaling> original_scaling_;
+    std::vector<ParameterScaling> original_scaling_;
     bool original_reinitialize_fixed_parameter_initial_states_;
     std::vector<int> original_reinitialization_state_idxs;
 };

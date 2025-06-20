@@ -20,6 +20,7 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , dJzdx_(fwd.getDJzdx())
     , preeq_problem_(fwd.getPreequilibrationProblem())
     , posteq_problem_(fwd.getPostequilibrationProblem())
+    , presim_result(fwd.get_presimulation_result())
     , ws_(model_, solver_)
     , simulator_(model_, solver_, &ws_) {}
 
@@ -34,9 +35,11 @@ void BackwardProblem::workBackwardProblem() {
 
     handlePostequilibration();
 
+    // handle main simulation
+
     // If we have posteq, infinity timepoints were already treated
     int it = model_->nt() - 1;
-    while(it >= 0 && std::isinf(model_->getTimepoint(it))) {
+    while (it >= 0 && std::isinf(model_->getTimepoint(it))) {
         --it;
     }
 
@@ -53,8 +56,13 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc(
             model_, edata_, FixedParameterContext::presimulation
         );
-        solver_->runB(model_->t0() - edata_->t_presim);
-        solver_->writeSolutionB(&t_, ws_.xB_, ws_.dxB_, ws_.xQB_, ws_.which);
+        ws_.discs_ = presim_result.discs;
+        ws_.nroots_
+            = compute_nroots(ws_.discs_, model_->ne, model_->nMaxEvent());
+        simulator_.run(
+            model_->t0(), model_->t0() - edata_->t_presim, -1, {}, &dJydx_,
+            &dJzdx_
+        );
     }
 
     // handle pre-equilibration
@@ -62,8 +70,10 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
+        auto t0
+            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
         preeq_problem_->workSteadyStateBackwardProblem(
-            *solver_, *model_, ws_.xB_, true
+            *solver_, *model_, ws_.xB_, true, t0
         );
     }
 }
@@ -82,7 +92,7 @@ void BackwardProblem::handlePostequilibration() {
     }
 
     posteq_problem_->workSteadyStateBackwardProblem(
-        *solver_, *model_, ws_.xB_, false
+        *solver_, *model_, ws_.xB_, false, model_->t0()
     );
     ws_.xQB_ = posteq_problem_->getEquilibrationQuadratures();
 }
@@ -92,7 +102,7 @@ void EventHandlingBwdSimulator::handleEventB(
 ) {
     for (int ie = 0; ie < model_->ne; ie++) {
 
-        if (disc.root_info[ie] == 0) {
+        if (disc.root_info[ie] != 1) {
             continue;
         }
 
@@ -105,6 +115,7 @@ void EventHandlingBwdSimulator::handleEventB(
         );
 
         if (model_->nz > 0) {
+            Expects(ws_->nroots_[ie] >= 0);
             for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
                 for (int iJ = 0; iJ < model_->nJ; ++iJ) {
                     ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx
@@ -118,7 +129,11 @@ void EventHandlingBwdSimulator::handleEventB(
         ws_->nroots_[ie]--;
     }
 
-    model_->updateHeavisideB(disc.root_info.data());
+    // apply pre-event state
+    auto state = model_->getModelState();
+    state.h = disc.h_pre;
+    state.total_cl = disc.total_cl_pre;
+    model_->setModelState(state);
 }
 
 void EventHandlingBwdSimulator::handleDataPointB(
@@ -178,7 +193,8 @@ void EventHandlingBwdSimulator::run(
 
     t_ = t_start;
 
-    if ((it >= 0 || !ws_->discs_.empty()) && timepoints[it] > t_end) {
+    // datapoint at t_start?
+    if (it >= 0 && timepoints[it] == t_start) {
         handleDataPointB(it, dJydx);
         solver_->setupB(
             &ws_->which, timepoints[it], model_, ws_->xB_, ws_->dxB_, ws_->xQB_
@@ -187,34 +203,40 @@ void EventHandlingBwdSimulator::run(
         // as it is not called in handleDataPointB
         solver_->storeDiagnosisB(ws_->which);
         --it;
+    } else {
+        // no data points, only discontinuities, just set up the solver
+        // (e.g., during presimulation)
+        solver_->setupB(
+            &ws_->which, t_start, model_, ws_->xB_, ws_->dxB_, ws_->xQB_
+        );
+    }
 
-        while (it >= 0 || !ws_->discs_.empty()) {
-            // check if next timepoint is a discontinuity or a data-point
-            double tnext = getTnext(it);
+    while (it >= 0 || !ws_->discs_.empty()) {
+        // check if next timepoint is a discontinuity or a data-point
+        double tnext = getTnext(it);
 
-            if (tnext < t_) {
-                solver_->runB(tnext);
-                solver_->writeSolutionB(
-                    &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
-                );
-            }
-
-            // handle discontinuity
-            if (!ws_->discs_.empty() && tnext == ws_->discs_.back().time) {
-                handleEventB(ws_->discs_.back(), dJzdx);
-                ws_->discs_.pop_back();
-            }
-
-            // handle data-point
-            if (it >= 0 && tnext == timepoints[it]) {
-                handleDataPointB(it, dJydx);
-                it--;
-            }
-
-            // reinitialize state
-            solver_->reInitB(ws_->which, t_, ws_->xB_, ws_->dxB_);
-            solver_->quadReInitB(ws_->which, ws_->xQB_);
+        if (tnext < t_) {
+            solver_->runB(tnext);
+            solver_->writeSolutionB(
+                &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
+            );
         }
+
+        // handle data-point
+        if (it >= 0 && tnext == timepoints[it]) {
+            handleDataPointB(it, dJydx);
+            it--;
+        }
+
+        // handle discontinuity
+        if (!ws_->discs_.empty() && tnext == ws_->discs_.back().time) {
+            handleEventB(ws_->discs_.back(), dJzdx);
+            ws_->discs_.pop_back();
+        }
+
+        // reinitialize state
+        solver_->reInitB(ws_->which, t_, ws_->xB_, ws_->dxB_);
+        solver_->quadReInitB(ws_->which, ws_->xQB_);
     }
 
     // we still need to integrate from first datapoint to t_start

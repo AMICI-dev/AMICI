@@ -5,10 +5,16 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+
 import pytest
 
 if TYPE_CHECKING:
     from _pytest.reports import TestReport
+
+# ensure that the script directory is in the Python path
+script_dir = Path(__file__).parent.resolve()
+if str(script_dir) not in sys.path:
+    sys.path.insert(0, str(script_dir))
 
 # stores passed SBML semantic test suite IDs
 passed_ids = []
@@ -66,18 +72,18 @@ def pytest_generate_tests(metafunc):
     """Parameterize tests"""
 
     # Run for all SBML semantic test suite cases
-    if "test_number" in metafunc.fixturenames:
+    if "test_id" in metafunc.fixturenames:
         # Get CLI option
         cases = metafunc.config.getoption("cases")
         if cases:
             # Run selected tests
             last_id = int(list(get_all_semantic_case_ids())[-1])
             test_numbers = sorted(set(parse_selection(cases, last_id)))
+            test_ids = map(format_test_id, test_numbers)
         else:
             # Run all tests
-            test_numbers = get_all_semantic_case_ids()
-        test_numbers = map(format_test_id, test_numbers)
-        metafunc.parametrize("test_number", test_numbers)
+            test_ids = get_all_semantic_case_ids()
+        metafunc.parametrize("test_id", test_ids)
 
 
 def pytest_sessionfinish(session, exitstatus):

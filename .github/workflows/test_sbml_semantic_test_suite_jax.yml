@@ -1,4 +1,4 @@
-name: SBML
+name: SBML JAX
 on:
   push:
     branches:
@@ -7,14 +7,10 @@ on:
       - release**
   pull_request:
     paths:
-      - .github/workflows/test_sbml_semantic_test_suite.yml
-      - python/sdist/amici/de_export.py
-      - python/sdist/amici/de_model_components.py
-      - python/sdist/amici/de_model.py
-      - python/sdist/amici/sbml_import.py
-      - python/sdist/amici/import_utils.py
+      - .github/workflows/test_sbml_semantic_test_suite_jax.yml
+      - python/sdist/amici/jax/**
       - scripts/run-SBMLTestsuite.sh
-      - tests/sbml/testSBMLSuite.py
+      - tests/sbml/testSBMLSuiteJax.py
       - tests/sbml/conftest.py
   check_suite:
    types: [requested]
@@ -22,14 +18,13 @@ on:
 
 jobs:
   build:
-    name: SBML Semantic Test Suite
+    name: SBML Semantic Test Suite JAX
     runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        cases: ["1-250", "251-500", "501-750", "751-1000",
-                "1000-1250", "1251-"]
+        cases: ["1-600", "601-1200", "1200-"]
         python-version: [ "3.13" ]
 
     steps:
@@ -37,6 +32,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
 
     - uses: actions/checkout@v4
       with:
@@ -46,19 +42,19 @@ jobs:
       uses: ./.github/actions/install-apt-dependencies
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
-    - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
+    - run: ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v4
       with:
-        name: amici-semantic-results-${{ matrix.cases }}
-        path: tests/sbml/amici-semantic-results
+        name: amici-semantic-results-jax-${{ matrix.cases }}
+        path: tests/sbml/amici-semantic-results-jax
 
-    - name: Codecov SBMLSuite
+    - name: Codecov SBMLSuiteJax
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: coverage_SBMLSuite.xml
-        flags: sbmlsuite
+        files: coverage_SBMLSuite_jax.xml
+        flags: sbmlsuite-jax
         fail_ci_if_error: true

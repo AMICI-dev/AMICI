@@ -68,15 +68,17 @@ ExpData::ExpData(Model const& model)
     reinitialization_state_idxs_sim = model.getReinitializationStateIdxs();
 }
 
-ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
+ExpData::ExpData(
+    ReturnData const& rdata, realtype sigma_y, realtype sigma_z, int seed
+)
     : ExpData(
           rdata, std::vector<realtype>(rdata.nytrue * rdata.nt, sigma_y),
-          std::vector<realtype>(rdata.nztrue * rdata.nmaxevent, sigma_z)
+          std::vector<realtype>(rdata.nztrue * rdata.nmaxevent, sigma_z), seed
       ) {}
 
 ExpData::ExpData(
     ReturnData const& rdata, std::vector<realtype> sigma_y,
-    std::vector<realtype> sigma_z
+    std::vector<realtype> sigma_z, int seed
 )
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts) {
     if (sigma_y.size() != (unsigned)nytrue_
@@ -93,8 +95,7 @@ ExpData::ExpData(
             nztrue_ * nmaxevent_, sigma_z.size()
         );
 
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
+    std::mt19937 gen{seed < 0 ? std::random_device()() : seed};
 
     realtype sigma;
 
@@ -121,7 +122,7 @@ ExpData::ExpData(
             std::normal_distribution<> e{0, sigma};
             observed_events_.at(iz + rdata.nztrue * ie)
                 = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            observed_data_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
+            observed_events_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
         }
     }
 
@@ -403,6 +404,7 @@ ConditionContext::ConditionContext(
     , original_parameters_(model->getParameters())
     , original_fixed_parameters_(model->getFixedParameters())
     , original_tstart_(model->t0())
+    , original_tstart_preeq_(model->t0Preeq())
     , original_timepoints_(model->getTimepoints())
     , original_parameter_list_(model->getParameterList())
     , original_scaling_(model->getParameterScale())
@@ -555,6 +557,7 @@ void ConditionContext::restore() {
     model_->setParameters(original_parameters_);
     model_->setFixedParameters(original_fixed_parameters_);
     model_->setT0(original_tstart_);
+    model_->setT0Preeq(original_tstart_preeq_);
     model_->setTimepoints(original_timepoints_);
     model_->setReinitializeFixedParameterInitialStates(
         original_reinitialize_fixed_parameter_initial_states_

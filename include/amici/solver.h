@@ -657,6 +657,17 @@ class Solver {
     ) const;
 
     /**
+     * @brief write solution from forward simulation
+     * @param t time
+     * @param x state
+     * @param dx derivative state
+     * @param sx state sensitivity
+     */
+    void writeSolution(
+        realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
+    ) const;
+
+    /**
      * @brief write solution from backward simulation
      * @param t time
      * @param xB adjoint state
@@ -1746,11 +1757,6 @@ class Solver {
      * @brief sets that memory for forward sensitivities has been allocated
      */
     void setSensInitDone() const;
-
-    /**
-     * @brief sets that memory for forward sensitivities has not been allocated
-     */
-    void setSensInitOff() const;
 
     /**
      * @brief sets that memory for forward interpolation has been allocated

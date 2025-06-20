@@ -119,9 +119,9 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     Model(
         ModelDimensions const& model_dimensions,
-        SimulationParameters simulation_parameters,
-        amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
-        std::vector<int> z2event, std::vector<Event> events = {},
+        SimulationParameters simulation_parameters, SecondOrderMode o2mode,
+        std::vector<realtype> idlist, std::vector<int> z2event,
+        std::vector<Event> events = {},
         std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
@@ -221,6 +221,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize model properties.
+     * @param t Timepoint
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
      * @param sx Reference to state variable sensitivities
@@ -231,8 +232,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * at t0 by this fun
      */
     void initialize(
-        AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVectorArray& sdx,
-        bool computeSensitivities, std::vector<int>& roots_found
+        realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
+        AmiVectorArray& sdx, bool computeSensitivities,
+        std::vector<int>& roots_found
     );
 
     /**
@@ -259,17 +261,21 @@ class Model : public AbstractModel, public ModelDimensions {
     ) const;
 
     /**
-     * @brief Initialize initial states.
-     * @param x State vector to be initialized
+     * @brief Initialize model state.
+     * @param t Initial timepoint
+     * @param x State vector to be initialized (size: nx_solver).
      */
-    void initializeStates(AmiVector& x);
+    void initializeStates(realtype t, AmiVector& x);
 
     /**
      * @brief Initialize initial state sensitivities.
+     * @param t Initial timepoint.
      * @param sx Reference to state variable sensitivities
      * @param x Reference to state variables
      */
-    void initializeStateSensitivities(AmiVectorArray& sx, AmiVector const& x);
+    void initializeStateSensitivities(
+        realtype t, AmiVectorArray& sx, AmiVector const& x
+    );
 
     /**
      * @brief Initialization of spline functions
@@ -286,13 +292,15 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Heaviside variables activate/deactivate on event occurrences.
      *
+     * @param t Timepoint
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
      * @param roots_found boolean indicators indicating whether roots were found
      * at t0 by this fun
      */
     void initEvents(
-        AmiVector const& x, AmiVector const& dx, std::vector<int>& roots_found
+        realtype t, AmiVector const& x, AmiVector const& dx,
+        std::vector<int>& roots_found
     );
 
     /**
@@ -724,6 +732,20 @@ class Model : public AbstractModel, public ModelDimensions {
     void setT0(double t0);
 
     /**
+     * @brief Get the initial time to use for pre-equilibration.
+     * @return Initial time, or NAN to use the model's t0.
+     */
+    double t0Preeq() const;
+
+    /**
+     * @brief Set the initial time to use for pre-equilibration.
+     *
+     * @param t0_preeq The initial time for pre-equilibration or NAN to use the
+     * model's t0.
+     */
+    void setT0Preeq(double t0_preeq);
+
+    /**
      * @brief Get flags indicating whether states should be treated as
      * non-negative.
      * @return Vector of flags
@@ -826,28 +848,44 @@ class Model : public AbstractModel, public ModelDimensions {
     void setParameterList(std::vector<int> const& plist);
 
     /**
-     * @brief Get the initial states.
-     * @return Initial state vector
+     * @brief Get the initial state.
+     * @param t0 Custom t0 for which to get initial states.
+     * @return Initial state vector, before any events are executed.
      */
-    std::vector<realtype> getInitialStates();
+    std::vector<realtype> getInitialStates(realtype t0);
 
     /**
-     * @brief Set the initial states.
+     * @brief Get the initial state for Model::t0()`.
+     * @return Initial state vector, before any events are executed.
+     */
+    std::vector<realtype> getInitialStates() { return getInitialStates(t0()); };
+
+    /**
+     * @brief Set the pre-event initial state.
      * @param x0 Initial state vector
      */
     void setInitialStates(std::vector<realtype> const& x0);
 
     /**
-     * @brief Return whether custom initial states have been set.
-     * @return `true` if has custom initial states, otherwise `false`
+     * @brief Return whether custom initial state have been set.
+     * @return `true` if has custom initial state, otherwise `false`
      */
     bool hasCustomInitialStates() const;
 
     /**
-     * @brief Get the initial states sensitivities.
+     * @brief Get the initial state sensitivities.
      * @return vector of initial state sensitivities
      */
-    std::vector<realtype> getInitialStateSensitivities();
+    std::vector<realtype> getInitialStateSensitivities() {
+        return getInitialStateSensitivities(t0());
+    };
+
+    /**
+     * @brief Get the initial states sensitivities.
+     * @param t0 Custom t0 for which to get initial states.
+     * @return vector of initial state sensitivities
+     */
+    std::vector<realtype> getInitialStateSensitivities(realtype t0);
 
     /**
      * @brief Set the initial state sensitivities.
@@ -1308,7 +1346,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_old Value of residual function before event
      */
     void addAdjointQuadratureEventUpdate(
-        AmiVector xQB, int const ie, realtype const t, AmiVector const& x,
+        AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
         AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
     );
 
@@ -1320,15 +1358,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * was found)
      */
     void updateHeaviside(std::vector<int> const& rootsfound);
-
-    /**
-     * @brief Updates the Heaviside variables `h` on event occurrences in the
-     * backward problem.
-     * @param rootsfound Provides the direction of the zero-crossing, so adding
-     * it will give the right update to the Heaviside variables (zero if no root
-     * was found)
-     */
-    void updateHeavisideB(int const* rootsfound);
 
     /**
      * @brief Check if the given array has only finite elements.
@@ -1388,32 +1417,37 @@ class Model : public AbstractModel, public ModelDimensions {
     bool getAlwaysCheckFinite() const;
 
     /**
-     * @brief Compute/get initial states.
-     * @param x Output buffer.
+     * @brief Compute/get pre-event initial state.
+     * @param t Timepoint.
+     * @param x Output buffer (size: nx_solver).
      */
-    void fx0(AmiVector& x);
+    void fx0(realtype t, AmiVector& x);
 
     /**
      * @brief Set only those initial states that are specified via
      * fixed parameters.
+     * @param t Timepoint.
      * @param x Output buffer.
      */
-    void fx0_fixedParameters(AmiVector& x);
+    void fx0_fixedParameters(realtype t, AmiVector& x);
 
     /**
      * @brief Compute/get initial value for initial state sensitivities.
+     * @param t Timepoint.
      * @param sx Output buffer for state sensitivities
      * @param x State variables
      */
-    void fsx0(AmiVectorArray& sx, AmiVector const& x);
+    void fsx0(realtype t, AmiVectorArray& sx, AmiVector const& x);
 
     /**
      * @brief Get only those initial states sensitivities that are affected
      * from `amici::Model::fx0_fixedParameters`.
+     * @param t Timepoint
      * @param sx Output buffer for state sensitivities
      * @param x State variables
      */
-    void fsx0_fixedParameters(AmiVectorArray& sx, AmiVector const& x);
+    void
+    fsx0_fixedParameters(realtype t, AmiVectorArray& sx, AmiVector const& x);
 
     /**
      * @brief Compute sensitivity of derivative initial states sensitivities
