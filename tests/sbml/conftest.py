@@ -5,10 +5,16 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+
 import pytest
 
 if TYPE_CHECKING:
     from _pytest.reports import TestReport
+
+# ensure that the script directory is in the Python path
+script_dir = Path(__file__).parent.resolve()
+if str(script_dir) not in sys.path:
+    sys.path.insert(0, str(script_dir))
 
 # stores passed SBML semantic test suite IDs
 passed_ids = []

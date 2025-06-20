@@ -9,16 +9,19 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from pathlib import Path
 
 # read benchmark results for different models
+
+benchmark_dir = Path(__file__).parent.resolve()
 
 outfile = "computation_times.csv"
 df = pd.concat(
     [
-        pd.read_csv(f, header=[0], index_col=[0])
+        pd.read_csv(benchmark_dir / f, header=[0], index_col=[0])
         .rename(columns={"0": "_".join(f.split("_")[:2])})
         .T
-        for f in os.listdir()
+        for f in os.listdir(benchmark_dir)
         if f.endswith(".csv")
         if f != outfile
     ]

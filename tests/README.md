@@ -7,4 +7,4 @@ This directory contains:
   interface (`sbml/`)
 - Scripts for running the PEtab test suite, exercising the Python interface (`petab_test_suite/`)
 - Scripts for testing AMICI performance for importing a somewhat larger model (`performance/`)
-- Scripts for running the PEtab benchmark suite, exercising the Python interface (`benchmark-models/`)
+- Scripts for running the PEtab benchmark suite, exercising the Python interface (`benchmark_models/`)

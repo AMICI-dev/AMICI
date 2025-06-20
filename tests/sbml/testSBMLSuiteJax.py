@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """Run SBML Test Suite with JAX and verify simulation results."""
 
-import copy
-import os
 import shutil
-import sys
 from pathlib import Path
 
 import amici
@@ -16,8 +13,7 @@ import pandas as pd
 import pytest
 from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
-
-from tests.sbml.testSBMLSuite import (
+from utils import (
     verify_results,
     write_result_file,
     find_model_file,
@@ -30,15 +26,6 @@ jax.config.update("jax_enable_x64", True)
 @pytest.fixture(scope="session")
 def result_path_jax() -> Path:
     return Path(__file__).parent / "amici-semantic-results-jax"
-
-
-@pytest.fixture(scope="function", autouse=True)
-def sbml_test_dir():
-    old_cwd = os.getcwd()
-    old_path = copy.copy(sys.path)
-    yield
-    os.chdir(old_cwd)
-    sys.path = old_path
 
 
 class DummyModel:

@@ -12,11 +12,11 @@ import amici
 from amici.jax.petab import run_simulations, JAXProblem
 from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import simulate_petab, LLH, SLLH
-import test_petab_benchmark as common
-
-settings = common.settings
-problems_for_gradient_check = common.problems_for_gradient_check
-benchmark_outdir = common.benchmark_outdir
+from test_petab_benchmark import (
+    benchmark_outdir,
+    problems_for_gradient_check,
+    settings,
+)
 
 jax.config.update("jax_enable_x64", True)
 
