@@ -349,7 +349,7 @@ exhale_projects_args = {
             [
                 "INPUT = ../matlab",
                 "EXTENSION_MAPPING = .m=C++",
-                "FILTER_PATTERNS = " f"*.m={mtocpp_filter}",
+                f"FILTER_PATTERNS = *.m={mtocpp_filter}",
                 "EXCLUDE += ../matlab/examples",
                 "EXCLUDE += ../matlab/mtoc",
                 "EXCLUDE += ../matlab/SBMLimporter",
@@ -509,7 +509,7 @@ def process_docstring(app, what, name, obj, options, lines):
         cname = name.split(".")[2]
         lines.append(
             f"Swig-Generated class that implements smart pointers to "
-            f'{cname.replace("Ptr", "")} as objects.'
+            f"{cname.replace('Ptr', '')} as objects."
         )
         return
 

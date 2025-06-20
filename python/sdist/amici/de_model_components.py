@@ -63,15 +63,14 @@ class ModelQuantity:
 
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(
-                f"identifier must be sympy.Symbol, was " f"{type(identifier)}"
+                f"identifier must be sympy.Symbol, was {type(identifier)}"
             )
 
         if str(identifier) in RESERVED_SYMBOLS or (
             hasattr(identifier, "name") and identifier.name in RESERVED_SYMBOLS
         ):
             raise ValueError(
-                f'Cannot add model quantity with name "{name}", '
-                f"please rename."
+                f'Cannot add model quantity with name "{name}", please rename.'
             )
         self._identifier: sp.Symbol = identifier
 

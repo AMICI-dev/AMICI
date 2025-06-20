@@ -444,8 +444,7 @@ def create_parameter_mapping_for_condition(
         condition_map_sim
     ) != len(condition_scale_map_sim):
         raise AssertionError(
-            "Number of parameters and number of parameter "
-            "scales do not match."
+            "Number of parameters and number of parameter scales do not match."
         )
     if len(condition_map_preeq) and len(condition_map_preeq) != len(
         condition_map_sim
@@ -565,13 +564,13 @@ def create_parameter_mapping_for_condition(
         condition_scale_map_sim_fix = {}
 
     logger.debug(
-        "Fixed parameters pre-equilibration: " f"{condition_map_preeq_fix}"
+        f"Fixed parameters pre-equilibration: {condition_map_preeq_fix}"
     )
-    logger.debug("Fixed parameters simulation: " f"{condition_map_sim_fix}")
+    logger.debug(f"Fixed parameters simulation: {condition_map_sim_fix}")
     logger.debug(
-        "Variable parameters pre-equilibration: " f"{condition_map_preeq_var}"
+        f"Variable parameters pre-equilibration: {condition_map_preeq_var}"
     )
-    logger.debug("Variable parameters simulation: " f"{condition_map_sim_var}")
+    logger.debug(f"Variable parameters simulation: {condition_map_sim_var}")
 
     petab.merge_preeq_and_sim_pars_condition(
         condition_map_preeq_var,
@@ -736,8 +735,7 @@ def _get_initial_state_sbml(
         )
     else:
         raise NotImplementedError(
-            f"Don't know what how to handle {element_id} in "
-            "condition table."
+            f"Don't know what how to handle {element_id} in condition table."
         )
     return value
 

@@ -49,7 +49,7 @@ def build_model_extension(
             # length of intermediate build files, that may easily become
             # problematic on Windows, due to its ridiculous 255-character path
             # length limit.
-            f'--build-temp={package_dir / "build"}',
+            f"--build-temp={package_dir / 'build'}",
         ]
     )
 

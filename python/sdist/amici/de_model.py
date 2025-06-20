@@ -634,8 +634,7 @@ class DEModel:
             )[0]
         except StopIteration:
             raise ValueError(
-                f"Specified state {state} was not found in the "
-                f"model states."
+                f"Specified state {state} was not found in the model states."
             )
 
         state_id = self._differential_states[ix].get_id()
@@ -1236,7 +1235,7 @@ class DEModel:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix(
             [
-                sp.Symbol(f'{name}{0 if name == "stau" else i}', real=True)
+                sp.Symbol(f"{name}{0 if name == 'stau' else i}", real=True)
                 for i in range(length)
             ]
         )

@@ -303,9 +303,9 @@ def test_nominal_parameters_llh(benchmark_problem):
 
     pd.Series(times).to_csv(script_dir / f"{problem_id}_benchmark.csv")
     for rdata in rdatas:
-        assert (
-            rdata.status == amici.AMICI_SUCCESS
-        ), f"Simulation failed for {rdata.id}"
+        assert rdata.status == amici.AMICI_SUCCESS, (
+            f"Simulation failed for {rdata.id}"
+        )
 
     if debug:
         # create simulation PEtab table

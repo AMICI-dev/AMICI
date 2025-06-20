@@ -298,8 +298,7 @@ def aggregate_sllh(
 
     if petab_scale and petab_problem is None:
         raise ValueError(
-            "Please provide the PEtab problem, when using "
-            "`petab_scale=True`."
+            "Please provide the PEtab problem, when using `petab_scale=True`."
         )
 
     # Check for issues in all condition simulation results.
