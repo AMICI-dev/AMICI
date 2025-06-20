@@ -23,7 +23,6 @@ from tests.sbml.testSBMLSuite import (
     find_model_file,
     read_settings_file,
 )
-from tests.sbml.conftest import format_test_id
 
 jax.config.update("jax_enable_x64", True)
 
@@ -127,9 +126,8 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
 
 
 def test_sbml_testsuite_case_jax(
-    test_number, result_path_jax, sbml_semantic_cases_dir
+    test_id, result_path_jax, sbml_semantic_cases_dir
 ):
-    test_id = format_test_id(test_number)
     model_dir = Path(__file__).parent / "SBMLTestModelsJax" / test_id
     try:
         current_test_path = sbml_semantic_cases_dir / test_id

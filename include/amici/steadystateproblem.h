@@ -494,21 +494,6 @@ class SteadystateProblem {
     void runSteadystateSimulationBwd(Solver const& solver, Model& model);
 
     /**
-     * @brief Create and initialize a CVodeSolver instance for
-     * preequilibration simulation.
-     * @param solver Solver instance
-     * @param model Model instance.
-     * @param forwardSensis flag switching on integration with FSA
-     * @param backward flag switching on quadrature computation
-     * @param t0 Initial time for the steady state simulation.
-     * @return A unique pointer to the created Solver instance.
-     */
-    std::unique_ptr<Solver> createSteadystateSimSolver(
-        Solver const& solver, Model& model, bool forwardSensis, bool backward,
-        realtype t0
-    ) const;
-
-    /**
      * @brief Initialize forward computation
      * @param it Index of the current output time point.
      * @param solver pointer to the solver object
