@@ -304,10 +304,6 @@ void EventHandlingSimulator::handle_event(
                   store_event(edata);
 
               store_pre_event_state(seflag, initial_event);
-
-              if (!initial_event) {
-                  model_->updateHeaviside(ws_->roots_found);
-              }
           };
 
     // store post-event information that is to be saved
@@ -324,6 +320,10 @@ void EventHandlingSimulator::handle_event(
     };
 
     store_pre_event_info(false);
+
+    if (!initial_event) {
+        model_->updateHeaviside(ws_->roots_found);
+    }
 
     // Collect all triggered events waiting for execution
     for (int ie = 0; ie < model_->ne; ie++) {
@@ -379,7 +379,12 @@ void EventHandlingSimulator::handle_event(
         // and add it to the list of pending events if necessary
         if (detect_secondary_events()) {
             store_post_event_info();
+
             store_pre_event_info(true);
+
+            if (!initial_event) {
+                model_->updateHeaviside(ws_->roots_found);
+            }
         }
     }
     store_post_event_info();
@@ -474,6 +479,9 @@ void EventHandlingSimulator::store_pre_event_state(
         }
     } else if (solver_->computingASA()) {
         result.discs.back().xdot_pre = ws_->xdot_old;
+        result.discs.back().x_pre = ws_->x_old;
+        result.discs.back().h_pre = model_->getModelState().h;
+        result.discs.back().total_cl_pre = model_->getModelState().total_cl;
     }
 }
 

@@ -129,7 +129,11 @@ void EventHandlingBwdSimulator::handleEventB(
         ws_->nroots_[ie]--;
     }
 
-    model_->updateHeavisideB(disc.root_info.data());
+    // apply pre-event state
+    auto state = model_->getModelState();
+    state.h = disc.h_pre;
+    state.total_cl = disc.total_cl_pre;
+    model_->setModelState(state);
 }
 
 void EventHandlingBwdSimulator::handleDataPointB(
@@ -218,16 +222,16 @@ void EventHandlingBwdSimulator::run(
             );
         }
 
-        // handle discontinuity
-        if (!ws_->discs_.empty() && tnext == ws_->discs_.back().time) {
-            handleEventB(ws_->discs_.back(), dJzdx);
-            ws_->discs_.pop_back();
-        }
-
         // handle data-point
         if (it >= 0 && tnext == timepoints[it]) {
             handleDataPointB(it, dJydx);
             it--;
+        }
+
+        // handle discontinuity
+        if (!ws_->discs_.empty() && tnext == ws_->discs_.back().time) {
+            handleEventB(ws_->discs_.back(), dJzdx);
+            ws_->discs_.pop_back();
         }
 
         // reinitialize state
