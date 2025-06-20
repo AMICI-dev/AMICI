@@ -24,7 +24,6 @@ import pytest
 from amici.constants import SymbolId
 from amici.gradient_check import check_derivatives
 from numpy.testing import assert_allclose
-from tests.sbml.conftest import format_test_id
 
 
 @pytest.fixture(scope="session")
@@ -45,10 +44,7 @@ def sbml_test_dir():
     sys.path = old_path
 
 
-def test_sbml_testsuite_case(
-    test_number, result_path, sbml_semantic_cases_dir
-):
-    test_id = format_test_id(test_number)
+def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
     model_dir = None
 
     # test cases for which sensitivities are to be checked
