@@ -66,7 +66,7 @@ jobs:
       env:
         AMICI_PARALLEL_COMPILE: ""
       run: |
-        cd tests/benchmark-models && pytest test_petab_benchmark.py \
+        pytest tests/benchmark-models/test_petab_benchmark.py \
           --durations=10 \
           --cov=amici \
           --cov-report=xml:"coverage_py.xml" \
@@ -85,7 +85,7 @@ jobs:
     # collect & upload results
     - name: Aggregate results
       run: |
-          cd tests/benchmark-models && python3 evaluate_benchmark.py
+          python3 tests/benchmark-models/evaluate_benchmark.py
 
     - uses: actions/upload-artifact@v4
       with:
@@ -142,7 +142,7 @@ jobs:
       env:
         AMICI_PARALLEL_COMPILE: ""
       run: |
-        cd tests/benchmark-models && pytest test_petab_benchmark_jax.py \
+        pytest tests/benchmark-models/test_petab_benchmark_jax.py \
           --durations=10 \
           --cov=amici \
           --cov-report=xml:"coverage_py.xml" \
