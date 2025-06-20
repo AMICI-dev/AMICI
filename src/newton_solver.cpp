@@ -30,7 +30,8 @@ NewtonSolver::NewtonSolver(
             break;
         default:
             throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED, "Unknown linear solver type"
+                AMICI_NOT_IMPLEMENTED,
+                "Invalid solver for steady state simulation"
             );
         }
     } catch (NewtonFailure const&) {
