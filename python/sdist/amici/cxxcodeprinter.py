@@ -3,6 +3,7 @@
 import itertools
 import os
 import re
+import warnings
 from collections.abc import Sequence
 from collections.abc import Iterable
 
@@ -94,6 +95,19 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         return "-std::numeric_limits<double>::infinity()"
 
     def _print_ComplexInfinity(self, expr):
+        # Since -zoo==+zoo, expressions containing ComplexInfinity may yield
+        # unexpected results as compared to IEEE 754.
+
+        warnings.warn(
+            "Expression contains ComplexInfinity. "
+            "This may point to a bug in the model and may result in "
+            "incorrect simulation results. "
+            "A possible cause is a division by zero in the model equations, "
+            "which is supported by IEEE 754, but not by sympy."
+            "Please check your model equations for potential issues.",
+            stacklevel=1,
+        )
+
         return "std::numeric_limits<double>::infinity()"
 
     def _get_sym_lines_array(

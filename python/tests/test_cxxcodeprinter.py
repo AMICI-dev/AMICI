@@ -2,6 +2,7 @@ import sympy as sp
 from amici.cxxcodeprinter import AmiciCxxCodePrinter
 from sympy.codegen.rewriting import optims_c99
 from amici.testing import skip_on_valgrind
+import pytest
 
 
 @skip_on_valgrind
@@ -36,13 +37,15 @@ def test_print_infinity():
     )
     assert cp.doprint(sp.oo) == "std::numeric_limits<double>::infinity()"
     assert cp.doprint(-sp.oo) == "-std::numeric_limits<double>::infinity()"
-    assert (
-        cp.doprint(ComplexInfinity())
-        == "std::numeric_limits<double>::infinity()"
-    )
-    assert (
-        cp.doprint(-ComplexInfinity())
-        == "std::numeric_limits<double>::infinity()"
-    )
-    assert cp.doprint(sp.zoo) == "std::numeric_limits<double>::infinity()"
-    assert cp.doprint(-sp.zoo) == "std::numeric_limits<double>::infinity()"
+
+    with pytest.warns(UserWarning, match="contains ComplexInfinity"):
+        assert (
+            cp.doprint(ComplexInfinity())
+            == "std::numeric_limits<double>::infinity()"
+        )
+        assert (
+            cp.doprint(-ComplexInfinity())
+            == "std::numeric_limits<double>::infinity()"
+        )
+        assert cp.doprint(sp.zoo) == "std::numeric_limits<double>::infinity()"
+        assert cp.doprint(-sp.zoo) == "std::numeric_limits<double>::infinity()"
