@@ -10,7 +10,6 @@ if [[ ! -d "tests/sbml/sbml-test-suite" ]]; then
 fi
 
 source venv/bin/activate
-export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}."
 pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
 pip install coverage pytest-cov
 
