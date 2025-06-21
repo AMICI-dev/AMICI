@@ -143,14 +143,18 @@ class ODEExporter:
         """
         set_log_level(logger, verbose)
 
-        if any(event.updates_state for event in ode_model._events):
+        if ode_model.has_event_assignments():
             raise NotImplementedError(
                 "The JAX backend does not support models with event assignments."
             )
 
-        if ode_model._algebraic_equations:
+        if ode_model.has_algebraic_states():
             raise NotImplementedError(
-                "The JAX backend does not support models with algebraic equations."
+                "The JAX backend does not support models with algebraic states."
+            )
+        if ode_model.has_parameter_dependent_implicit_roots():
+            raise NotImplementedError(
+                "The JAX backend does not support models with parameter dependent implicit event triggers."
             )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
