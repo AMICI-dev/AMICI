@@ -657,6 +657,17 @@ class Solver {
     ) const;
 
     /**
+     * @brief write solution from forward simulation
+     * @param t time
+     * @param x state
+     * @param dx derivative state
+     * @param sx state sensitivity
+     */
+    void writeSolution(
+        realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
+    ) const;
+
+    /**
      * @brief write solution from backward simulation
      * @param t time
      * @param xB adjoint state

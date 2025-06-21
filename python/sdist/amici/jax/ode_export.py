@@ -22,7 +22,7 @@ from amici import (
 )
 
 from amici._codegen.template import apply_template
-from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter
+from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
 from amici.de_model import DEModel
 from amici.de_export import is_valid_identifier
@@ -96,12 +96,6 @@ def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
     }
 
 
-def _jnp_array_str(array) -> str:
-    elems = ", ".join(str(s) for s in array)
-
-    return f"jnp.array([{elems}])"
-
-
 class ODEExporter:
     """
     The ODEExporter class generates AMICI jax files for a model as
@@ -147,6 +141,16 @@ class ODEExporter:
             name of the model to be used during code generation
         """
         set_log_level(logger, verbose)
+
+        if any(event.updates_state for event in ode_model._events):
+            raise NotImplementedError(
+                "The JAX backend does not support models with event assignments."
+            )
+
+        if ode_model._algebraic_equations:
+            raise NotImplementedError(
+                "The JAX backend does not support models with algebraic equations."
+            )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
@@ -237,7 +241,8 @@ class ODEExporter:
             # assign named variables from a jax array
             **_jax_variable_assignments(self.model, sym_names),
             # tuple of variable names (ids as they are unique)
-            **_jax_variable_ids(self.model, ("p", "k", "y", "x_rdata")),
+            **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
+            "P_VALUES": _jnp_array_str(self.model.val("p")),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we

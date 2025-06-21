@@ -40,7 +40,7 @@ class AmiVector {
     AmiVector() = default;
 
     /**
-     * @brief Construct empty vector of given size
+     * @brief Construct zero-initialized vector of the given size.
      *
      * Creates an std::vector<realtype> and attaches the
      * data pointer to a newly created N_Vector_Serial.

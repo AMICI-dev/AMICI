@@ -1364,15 +1364,6 @@ class Model : public AbstractModel, public ModelDimensions {
     void updateHeaviside(std::vector<int> const& rootsfound);
 
     /**
-     * @brief Updates the Heaviside variables `h` on event occurrences in the
-     * backward problem.
-     * @param rootsfound Provides the direction of the zero-crossing, so adding
-     * it will give the right update to the Heaviside variables (zero if no root
-     * was found)
-     */
-    void updateHeavisideB(int const* rootsfound);
-
-    /**
      * @brief Check if the given array has only finite elements.
      *
      * For (1D) spans.

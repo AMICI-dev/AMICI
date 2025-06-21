@@ -1,118 +1,10 @@
-#!/usr/bin/env python3
-"""
-Run SBML Test Suite and verify simulation results
-[https://github.com/sbmlteam/sbml-test-suite/releases]
-
-Usage:
-    pytest tests.testSBMLSuite -n CORES --cases=SELECTION
-        CORES can be an integer or `auto` for all available cores.
-        SELECTION can be e.g.: `1`, `1,3`, `-3,4,6-7`, or `100-` to select
-        specific test cases. If `--cases` is omitted, all cases are run.
-"""
-
-import copy
-import os
-import shutil
-import sys
 from pathlib import Path
 
-import amici
 import libsbml as sbml
 import numpy as np
 import pandas as pd
-import pytest
 from amici.constants import SymbolId
-from amici.gradient_check import check_derivatives
 from numpy.testing import assert_allclose
-from conftest import format_test_id
-
-
-@pytest.fixture(scope="session")
-def result_path() -> Path:
-    return Path(__file__).parent / "amici-semantic-results"
-
-
-@pytest.fixture(scope="function", autouse=True)
-def sbml_test_dir():
-    # setup
-    old_cwd = os.getcwd()
-    old_path = copy.copy(sys.path)
-
-    yield
-
-    # teardown
-    os.chdir(old_cwd)
-    sys.path = old_path
-
-
-def test_sbml_testsuite_case(
-    test_number, result_path, sbml_semantic_cases_dir
-):
-    test_id = format_test_id(test_number)
-    model_dir = None
-
-    if test_id == "01395":
-        pytest.skip("NaNs in the Jacobian")
-
-    # test cases for which sensitivities are to be checked
-    #  key: case ID; value: epsilon for finite differences
-    sensitivity_check_cases = {
-        # parameter-dependent conservation laws
-        "00783": 1.5e-2,
-        # initial events
-        "00995": 1e-3,
-    }
-
-    try:
-        current_test_path = sbml_semantic_cases_dir / test_id
-
-        # parse expected results
-        results_file = current_test_path / f"{test_id}-results.csv"
-        results = pd.read_csv(results_file, delimiter=",")
-        results.rename(
-            columns={c: c.replace(" ", "") for c in results.columns},
-            inplace=True,
-        )
-
-        # setup model
-        model_dir = Path(__file__).parent / "SBMLTestModels" / test_id
-        model, solver, wrapper = compile_model(
-            current_test_path,
-            test_id,
-            model_dir,
-            generate_sensitivity_code=test_id in sensitivity_check_cases,
-        )
-        settings = read_settings_file(current_test_path, test_id)
-
-        atol, rtol = apply_settings(settings, solver, model, test_id)
-
-        # simulate model
-        rdata = amici.runAmiciSimulation(model, solver)
-        if rdata["status"] != amici.AMICI_SUCCESS:
-            if test_id in ("00748", "00374", "00369"):
-                pytest.skip("Simulation Failed expectedly")
-            else:
-                raise RuntimeError("Simulation failed unexpectedly")
-
-        # verify
-        simulated = verify_results(
-            settings, rdata, results, wrapper, model, atol, rtol
-        )
-
-        # record results
-        write_result_file(simulated, test_id, result_path)
-
-        # check sensitivities for selected models
-        if epsilon := sensitivity_check_cases.get(test_id):
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-            check_derivatives(model, solver, epsilon=epsilon)
-
-    except amici.sbml_import.SBMLException as err:
-        pytest.skip(str(err))
-    finally:
-        if model_dir:
-            shutil.rmtree(model_dir, ignore_errors=True)
 
 
 def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
@@ -128,15 +20,34 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
         ],
     )
     simulated["time"] = rdata["ts"]
+
+    parameter_data = {}
+
     # collect parameters
     for par in model.getParameterIds():
-        simulated[par] = rdata["ts"] * 0 + model.getParameterById(par)
-    # collect fluxes and other expressions
+        parameter_data[par] = rdata["ts"] * 0 + model.getParameterById(par)
+
+    expression_data = {}
+
     for expr_idx, expr_id in enumerate(model.getExpressionIds()):
         if expr_id.startswith("flux_"):
-            simulated[expr_id.removeprefix("flux_")] = rdata.w[:, expr_idx]
-        elif expr_id.removeprefix("amici_") not in simulated.columns:
-            simulated[expr_id] = rdata.w[:, expr_idx]
+            new_key = expr_id.removeprefix("flux_")
+        else:
+            new_key = expr_id
+            if expr_id.removeprefix("amici_") in simulated.columns:
+                continue  # skip if already present
+        expression_data[new_key] = rdata.w[:, expr_idx]
+
+    # consolidated concatenation instead of columnwise insert to avoid data fragmentation in test 01395
+    simulated = pd.concat(
+        [
+            simulated,
+            pd.DataFrame(expression_data),
+            pd.DataFrame(parameter_data),
+        ],
+        axis=1,
+    )
+
     # handle renamed reserved symbols
     simulated.rename(
         columns={c: c.replace("amici_", "") for c in simulated.columns},
@@ -255,6 +166,7 @@ def write_result_file(
     """
     # TODO: only states are reported here, not compartments or parameters
 
+    result_path.mkdir(parents=True, exist_ok=True)
     filename = result_path / f"{test_id}.csv"
     simulated.to_csv(filename, index=False)
 
@@ -296,34 +208,6 @@ def apply_settings(settings, solver, model, test_id: str):
         solver.setAbsoluteTolerance(atol / 1e4)
 
     return atol, rtol
-
-
-def compile_model(
-    sbml_dir: Path,
-    test_id: str,
-    model_dir: Path,
-    generate_sensitivity_code: bool = False,
-):
-    """Import the given test model to AMICI"""
-    model_dir.mkdir(parents=True, exist_ok=True)
-
-    sbml_file = find_model_file(sbml_dir, test_id)
-    sbml_importer = amici.SbmlImporter(sbml_file)
-
-    model_name = f"SBMLTest{test_id}"
-    sbml_importer.sbml2amici(
-        model_name,
-        output_dir=model_dir,
-        generate_sensitivity_code=generate_sensitivity_code,
-    )
-
-    # settings
-    model_module = amici.import_model_module(model_name, model_dir)
-
-    model = model_module.getModel()
-    solver = model.getSolver()
-
-    return model, solver, sbml_importer
 
 
 def find_model_file(current_test_path: Path, test_id: str) -> Path:

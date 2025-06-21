@@ -112,7 +112,7 @@ void EventHandlingSimulator::run(
                 int const status = solver_->run(next_t_stop);
                 // sx will be copied from solver on demand if sensitivities
                 // are computed
-                solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx, ws_->dx);
+                solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx);
 
                 if (status == AMICI_ILL_INPUT) {
                     // clustering of roots => turn off root-finding
@@ -210,7 +210,7 @@ void ForwardProblem::handlePresimulation() {
 
     std::vector<realtype> const timepoints{model->t0()};
     pre_simulator_.run(t_, edata, timepoints);
-    solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx, ws_.dx);
+    solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx);
 }
 
 void ForwardProblem::handleMainSimulation() {
@@ -304,10 +304,6 @@ void EventHandlingSimulator::handle_event(
                   store_event(edata);
 
               store_pre_event_state(seflag, initial_event);
-
-              if (!initial_event) {
-                  model_->updateHeaviside(ws_->roots_found);
-              }
           };
 
     // store post-event information that is to be saved
@@ -324,6 +320,10 @@ void EventHandlingSimulator::handle_event(
     };
 
     store_pre_event_info(false);
+
+    if (!initial_event) {
+        model_->updateHeaviside(ws_->roots_found);
+    }
 
     // Collect all triggered events waiting for execution
     for (int ie = 0; ie < model_->ne; ie++) {
@@ -379,7 +379,12 @@ void EventHandlingSimulator::handle_event(
         // and add it to the list of pending events if necessary
         if (detect_secondary_events()) {
             store_post_event_info();
+
             store_pre_event_info(true);
+
+            if (!initial_event) {
+                model_->updateHeaviside(ws_->roots_found);
+            }
         }
     }
     store_post_event_info();
@@ -475,6 +480,8 @@ void EventHandlingSimulator::store_pre_event_state(
     } else if (solver_->computingASA()) {
         result.discs.back().xdot_pre = ws_->xdot_old;
         result.discs.back().x_pre = ws_->x_old;
+        result.discs.back().h_pre = model_->getModelState().h;
+        result.discs.back().total_cl_pre = model_->getModelState().total_cl;
     }
 }
 
@@ -563,7 +570,7 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
 
 SimulationState EventHandlingSimulator::get_simulation_state() {
     if (std::isfinite(solver_->gett())) {
-        solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx, ws_->dx);
+        solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx);
     }
     auto state = SimulationState();
     state.t = t_;

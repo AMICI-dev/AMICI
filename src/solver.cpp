@@ -1318,6 +1318,16 @@ void Solver::writeSolution(
     dx.copy(getDerivativeState(*t));
 }
 
+void Solver::writeSolution(
+    realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
+) const {
+    *t = gett();
+    if (sens_initialized_)
+        sx.copy(getStateSensitivity(*t));
+    x.copy(getState(*t));
+    dx.copy(getDerivativeState(*t));
+}
+
 void Solver::writeSolutionB(
     realtype* t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int const which
 ) const {

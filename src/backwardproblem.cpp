@@ -100,8 +100,6 @@ void BackwardProblem::handlePostequilibration() {
 void EventHandlingBwdSimulator::handleEventB(
     Discontinuity const& disc, std::vector<realtype> const* dJzdx
 ) {
-    model_->updateHeavisideB(disc.root_info.data());
-
     for (int ie = 0; ie < model_->ne; ie++) {
 
         if (disc.root_info[ie] != 1) {
@@ -131,6 +129,12 @@ void EventHandlingBwdSimulator::handleEventB(
 
         ws_->nroots_[ie]--;
     }
+
+    // apply pre-event state
+    auto state = model_->getModelState();
+    state.h = disc.h_pre;
+    state.total_cl = disc.total_cl_pre;
+    model_->setModelState(state);
 }
 
 void EventHandlingBwdSimulator::handleDataPointB(

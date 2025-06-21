@@ -29,20 +29,26 @@ struct Discontinuity {
      * @param xdot_pre
      * @param x_post
      * @param xdot_post
+     * @param h_pre
+     * @param total_cl_pre
      */
     explicit Discontinuity(
         realtype time, std::vector<int> const& root_info = std::vector<int>(),
         AmiVector const& x_pre = AmiVector(),
         AmiVector const& xdot_pre = AmiVector(),
         AmiVector const& x_post = AmiVector(),
-        AmiVector const& xdot_post = AmiVector()
+        AmiVector const& xdot_post = AmiVector(),
+        std::vector<realtype> const& h_pre = std::vector<realtype>(),
+        std::vector<realtype> const& total_cl_pre = std::vector<realtype>(0)
     )
         : time(time)
         , x_post(x_post)
         , x_pre(x_pre)
         , xdot_post(xdot_post)
         , xdot_pre(xdot_pre)
-        , root_info(root_info) {}
+        , root_info(root_info)
+        , h_pre(h_pre)
+        , total_cl_pre(total_cl_pre) {}
 
     /** Time of discontinuity. */
     realtype time;
@@ -67,6 +73,16 @@ struct Discontinuity {
      * if not. See CVodeGetRootInfo for details.
      */
     std::vector<int> root_info;
+
+    /**
+     * Flag indicating whether a certain Heaviside function should be active or
+     * not, pre-event value (dimension: `ne`)
+     */
+    std::vector<realtype> h_pre;
+
+    /** Total abundances for conservation laws
+     (dimension: `nx_rdata - nx_solver`) */
+    std::vector<realtype> total_cl_pre;
 };
 
 /**

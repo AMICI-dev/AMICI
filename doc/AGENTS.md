@@ -48,16 +48,15 @@ source ./venv/bin/activate
 
 This project uses `pre-commit` for linting and `pytest` for tests. Run them on changed files whenever you make modifications.
 
-When running the tests locally, change into the test directory first:
+When running the tests locally, invoke `pytest` from the repository root:
 
 ```bash
-cd tests/benchmark-models
-pytest test_petab_benchmark.py
-pytest test_petab_benchmark_jax.py
+pytest tests/benchmark_models/test_petab_benchmark.py
+pytest tests/benchmark_models/test_petab_benchmark_jax.py
 ```
 
 To quickly verify the benchmark tests, you can limit execution to a small model:
 
 ```bash
-pytest -k Boehm_JProteomeRes2014 test_petab_benchmark.py
+pytest tests/benchmark_models/test_petab_benchmark.py -k Boehm_JProteomeRes2014
 ```

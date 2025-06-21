@@ -1560,12 +1560,6 @@ void Model::updateHeaviside(std::vector<int> const& rootsfound) {
     }
 }
 
-void Model::updateHeavisideB(int const* rootsfound) {
-    for (int ie = 0; ie < ne; ie++) {
-        state_.h.at(ie) -= rootsfound[ie];
-    }
-}
-
 int Model::checkFinite(
     gsl::span<realtype const> array, ModelQuantity model_quantity, realtype t
 ) const {
