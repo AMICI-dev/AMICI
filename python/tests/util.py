@@ -247,21 +247,21 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     assert_allclose(
         rdata_fsa["sllh"],
         rdata_asa["sllh"],
-        rtol=1e-5,
-        atol=1e-3,
+        rtol=1e-8,
+        atol=1e-12,
         err_msg="Adjoint and forward sensitivities do not match.",
     )
     assert_allclose(
         sllh_fd,
         rdata_fsa["sllh"],
-        rtol=1e-5,
-        atol=1e-3,
+        rtol=1e-6,
+        atol=1e-6,
         err_msg="Finite differences and forward sensitivities do not match.",
     )
     assert_allclose(
         sllh_fd,
         rdata_asa["sllh"],
-        rtol=1e-5,
-        atol=1e-3,
+        rtol=1e-6,
+        atol=1e-6,
         err_msg="Finite differences and adjoint sensitivities do not match.",
     )
