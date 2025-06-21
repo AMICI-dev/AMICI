@@ -1727,11 +1727,8 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-
-                if (
-                    not smart_is_zero_matrix(self.eq("stau")[ie])
-                    and not xdot_is_zero
-                ):
+                stau_is_zero = smart_is_zero_matrix(self.eq("stau")[ie])
+                if not stau_is_zero and not xdot_is_zero:
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
@@ -1747,7 +1744,7 @@ class DEModel:
 
                     # need to check if equations are zero since we are using
                     # symbols
-                    if not smart_is_zero_matrix(self.eq("stau")[ie]):
+                    if not stau_is_zero:
                         # chain rule for the time point
                         tmp_eq += smart_multiply(
                             self.eq("ddeltaxdt")[ie],
@@ -1765,12 +1762,6 @@ class DEModel:
                         self.eq("ddeltaxdx")[ie]
                         + self.eq("ddeltaxdx_old")[ie],
                         tmp_dxdp,
-                    )
-
-                elif not xdot_is_zero:
-                    tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
-                        self.eq("stau")[ie],
                     )
                 event_eqs.append(tmp_eq)
 
