@@ -178,7 +178,7 @@ class GradientCheckSettings:
 settings = defaultdict(GradientCheckSettings)
 # NOTE: Newton method fails badly with ASA for Blasi_CellSystems2016
 settings["Blasi_CellSystems2016"] = GradientCheckSettings(
-    atol_check=1e-3,
+    atol_check=1e-12,
     rtol_check=1e-4,
     ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
 )
@@ -189,8 +189,6 @@ settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
 )
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
     ss_sensitivity_mode=amici.SteadyStateSensitivityMode.integrationOnly,
-    atol_check=1e-6,
-    rtol_check=1e-3,
 )
 settings["Fujita_SciSignal2010"] = GradientCheckSettings(
     atol_check=1e-7,
@@ -209,8 +207,6 @@ settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
     # Avoid "root after reinitialization"
     atol_sim=1e-12,
     rtol_sim=1e-12,
-    rtol_check=1e-3,
-    atol_check=1e-12,
 )
 settings["Raia_CancerResearch2011"] = GradientCheckSettings(
     atol_check=1e-10,
