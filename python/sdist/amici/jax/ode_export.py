@@ -25,6 +25,7 @@ from amici._codegen.template import apply_template
 from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
 from amici.de_model import DEModel
+
 from amici.de_export import is_valid_identifier
 from amici.import_utils import (
     strip_pysb,
@@ -243,6 +244,9 @@ class ODEExporter:
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
             "P_VALUES": _jnp_array_str(self.model.val("p")),
+            "ROOTS": _jnp_array_str(
+                {root for e in self.model._events for root in e._t_root}
+            ),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we

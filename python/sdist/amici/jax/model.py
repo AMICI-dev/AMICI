@@ -238,6 +238,20 @@ class JAXModel(eqx.Module):
         """
         ...
 
+    @abstractmethod
+    def _known_discs(
+        self, p: jt.Float[jt.Array, "np"]
+    ) -> jt.Float[jt.Array, "ndiscs"]:
+        """
+        Compute the known discontinuity points of the ODE system.
+
+        :param p:
+            parameters
+        :return:
+            known discontinuity points in the ODE system
+        """
+        ...
+
     @property
     @abstractmethod
     def state_ids(self) -> list[str]:
@@ -319,7 +333,10 @@ class JAXModel(eqx.Module):
             t1=jnp.inf,
             dt0=None,
             y0=x0,
-            stepsize_controller=controller,
+            stepsize_controller=diffrax.ClipStepSizeController(
+                controller,
+                jump_ts=self._known_discs(p),
+            ),
             max_steps=max_steps,
             adjoint=diffrax.DirectAdjoint(),
             event=diffrax.Event(
@@ -378,7 +395,10 @@ class JAXModel(eqx.Module):
             t1=ts[-1],
             dt0=None,
             y0=x0,
-            stepsize_controller=controller,
+            stepsize_controller=diffrax.ClipStepSizeController(
+                controller,
+                jump_ts=self._known_discs(p),
+            ),
             max_steps=max_steps,
             adjoint=adjoint,
             saveat=diffrax.SaveAt(ts=ts),
