@@ -185,18 +185,14 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     assert rdata.status == amici.AMICI_SUCCESS
     edata = ExpData(rdata, 1.0, 1.0)
 
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = amici_model.getSolver()
+    # FSA
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-13)
     rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
     assert rdata_fsa.status == amici.AMICI_SUCCESS
 
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = amici_model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
+    # ASA
     solver.setSensitivityMethod(SensitivityMethod.adjoint)
     solver.setAbsoluteTolerance(1e-16)
     solver.setRelativeTolerance(1e-14)
@@ -222,14 +218,10 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
 
     # Also test against finite differences
     parameters = amici_model.getUnscaledParameters()
+    solver.setSensitivityOrder(SensitivityOrder.none)
     sllh_fd = []
     eps = 1e-5
     for i_par, par in enumerate(parameters):
-        solver = amici_model.getSolver()
-        solver.setSensitivityOrder(SensitivityOrder.first)
-        solver.setSensitivityMethod(SensitivityMethod.adjoint)
-        solver.setAbsoluteTolerance(1e-15)
-        solver.setRelativeTolerance(1e-13)
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] += eps
         amici_model.setParameters(tmp_par)
@@ -240,10 +232,12 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
         rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
         sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
     df["fd"] = sllh_fd
+    df["asa_matches_fsa"] = np.isclose(
+        df["asa"], df["fsa"], rtol=1e-8, atol=1e-12
+    )
+    print()
     print(df)
 
-    # test less strict in terms of absolute error, as the gradient are
-    # typically in the order of 1e3
     assert_allclose(
         rdata_fsa["sllh"],
         rdata_asa["sllh"],
