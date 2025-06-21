@@ -740,7 +740,6 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
         ant_model,
         model_name=module_name,
         output_dir=tempdir,
-        verbose=True,
     )
     model_module = import_model_module(
         module_name=module_name, module_path=tempdir
@@ -781,7 +780,6 @@ def test_multiple_event_assignment_with_compartment(tempdir):
         ant_model,
         model_name=module_name,
         output_dir=tempdir,
-        verbose=True,
     )
     model_module = import_model_module(
         module_name=module_name, module_path=tempdir
