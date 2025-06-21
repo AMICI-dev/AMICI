@@ -1793,12 +1793,16 @@ class DEModel:
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         smart_multiply(
-                            self.eq("ddeltaxdx")[ie], self.sym("xdot_old")
+                            self.eq("ddeltaxdx")[ie]
+                            + self.eq("ddeltaxdx_old")[ie],
+                            self.sym("xdot_old"),
                         ),
                         self.eq("dtaudx")[ie],
                     )
                     # ==== 3rd group of terms: Dirac deltas ==================
-                    tmp_eq += self.eq("ddeltaxdx")[ie]
+                    tmp_eq += (
+                        self.eq("ddeltaxdx")[ie] + self.eq("ddeltaxdx_old")[ie]
+                    )
                 tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
                 event_eqs.append(tmp_eq)
             self._eqs[name] = event_eqs
@@ -1820,7 +1824,9 @@ class DEModel:
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         smart_multiply(
-                            self.eq("ddeltaxdx")[ie], self.sym("xdot_old")
+                            self.eq("ddeltaxdx")[ie]
+                            + self.eq("ddeltaxdx_old")[ie],
+                            self.sym("xdot_old"),
                         ),
                         self.eq("dtaudp")[ie],
                     )
