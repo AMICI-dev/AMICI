@@ -249,7 +249,7 @@ class ODEExporter:
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
             "P_VALUES": _jnp_array_str(self.model.val("p")),
             "ROOTS": _jnp_array_str(
-                {root for e in self.model._events for root in e._t_root}
+                {root for e in self.model._events for root in e.get_trigger_times()}
             ),
             **{
                 "MODEL_NAME": self.model_name,
