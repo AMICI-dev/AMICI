@@ -399,7 +399,7 @@ class ExpDataView(SwigPtrView):
         """
         if not isinstance(edata, (ExpDataPtr | ExpData)):
             raise TypeError(
-                f"Unsupported pointer {type(edata)}, must beamici.ExpDataPtr!"
+                f"Unsupported pointer {type(edata)}, must be amici.ExpDataPtr!"
             )
         self._field_dimensions = {
             "ts": [edata.nt()],
