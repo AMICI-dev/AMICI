@@ -42,10 +42,7 @@ def get_sub_bibliography(year, by_year, bibfile):
 
     entries = ",".join(["@" + x for x in by_year[year]])
     stdin_input = (
-        "---\n"
-        f"bibliography: {bibfile}\n"
-        f'nocite: "{entries}"\n...\n'
-        f"# {year}"
+        f'---\nbibliography: {bibfile}\nnocite: "{entries}"\n...\n# {year}'
     )
 
     out = subprocess.run(

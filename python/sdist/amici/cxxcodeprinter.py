@@ -130,8 +130,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
             C++ code as list of lines
         """
         return [
-            " " * indent_level + f"{variable}[{index}] = "
-            f"{self.doprint(math)};"
+            " " * indent_level + f"{variable}[{index}] = {self.doprint(math)};"
             for index, math in enumerate(equations)
             if math not in [0, 0.0]
         ]
@@ -366,7 +365,7 @@ def csc_matrix(
 
             symbol_row_vals.append(row)
             idx += 1
-            symbol_name = f"d{rownames[row].name}" f"_d{colnames[col].name}"
+            symbol_name = f"d{rownames[row].name}_d{colnames[col].name}"
             if identifier:
                 symbol_name += f"_{identifier}"
             symbol_list.append(symbol_name)

@@ -125,8 +125,7 @@ def _add_initialization_variables(
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug(
-            "Adding preequilibration indicator constant "
-            f"{PREEQ_INDICATOR_ID}"
+            f"Adding preequilibration indicator constant {PREEQ_INDICATOR_ID}"
         )
     logger.debug(f"Adding initial assignments for {initial_states.keys()}")
 

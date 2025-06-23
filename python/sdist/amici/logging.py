@@ -75,7 +75,7 @@ def _setup_logger(
                     f"Environment variable {LOG_LEVEL_ENV_VAR} "
                     f'contains an invalid value "{level_name}".'
                     f" If set, its value must be one of "
-                    f'{", ".join(NAMED_LOG_LEVELS.keys())}'
+                    f"{', '.join(NAMED_LOG_LEVELS.keys())}"
                     f" (case-sensitive) or an integer log level."
                 )
 
@@ -90,7 +90,7 @@ def _setup_logger(
     log.handlers = []
 
     log_fmt = logging.Formatter(
-        "%(asctime)s.%(msecs).3d - %(name)s - " "%(levelname)s - %(message)s",
+        "%(asctime)s.%(msecs).3d - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
