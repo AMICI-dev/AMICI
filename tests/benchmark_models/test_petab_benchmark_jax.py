@@ -57,7 +57,7 @@ def test_jax_llh(benchmark_problem):
     if problem_id in problems_for_gradient_check:
         point = flat_petab_problem.x_nominal_free_scaled
         for _ in range(20):
-            amici_solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+            amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
             amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
             amici_model.setSteadyStateSensitivityMode(
                 cur_settings.ss_sensitivity_mode

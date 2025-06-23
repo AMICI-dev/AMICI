@@ -829,6 +829,22 @@ class Event(ModelQuantity):
             )
         return self._t_root[0]
 
+    def has_explicit_trigger_times(self) -> bool:
+        """Check whether the event has explicit trigger times.
+
+        Explicit trigger times do not require root finding to determine
+        the time points at which the event triggers.
+        """
+        return len(self._t_root) > 0
+
+    def get_trigger_times(self) -> set[sp.Expr]:
+        """Get the time points at which the event triggers.
+
+        Returns a set of expressions, which may contain multiple time points
+        for events that trigger at multiple time points.
+        """
+        return set(self._t_root)
+
     @property
     def uses_values_from_trigger_time(self) -> bool:
         """Whether the event assignment is evaluated using the state from
