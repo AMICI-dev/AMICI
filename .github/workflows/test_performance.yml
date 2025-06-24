@@ -1,15 +1,6 @@
 name: Performance Test
 on:
-  push:
-    branches:
-      - develop
-      - master
-      - fix_perftest
-
-  pull_request:
-    branches:
-      - master
-
+  merge_group:
   workflow_dispatch:
 
   schedule:

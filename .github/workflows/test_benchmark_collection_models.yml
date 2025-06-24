@@ -2,12 +2,10 @@ name: Benchmark Collection
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
   pull_request:
     branches:
-      - master
-      - develop
+      - main
   merge_group:
   workflow_dispatch:
   schedule:
