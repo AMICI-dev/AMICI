@@ -5,8 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - master
-      - develop
+      - main
 
 jobs:
   ubuntu-cpp-python-tests:

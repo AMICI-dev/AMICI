@@ -2,13 +2,11 @@ name: Performance Test
 on:
   push:
     branches:
-      - develop
-      - master
-      - fix_perftest
+      - main
 
   pull_request:
     branches:
-      - master
+      - main
 
   workflow_dispatch:
 

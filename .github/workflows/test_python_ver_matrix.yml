@@ -2,12 +2,11 @@ name: Python Tests
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
 
   pull_request:
     branches:
-      - master
+      - main
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'

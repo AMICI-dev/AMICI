@@ -7,8 +7,7 @@ on:
     - cron:  '48 4 * * *'
   pull_request:
     branches:
-      - develop
-      - master
+      - main
 
 jobs:
   build:
