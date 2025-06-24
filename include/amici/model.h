@@ -1333,8 +1333,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void addAdjointStateEventUpdate(
         AmiVector& xB, int const ie, realtype const t, AmiVector const& x,
-        AmiVector const& xdot, AmiVector const& xdot_old,
-        AmiVector const& x_old
+        AmiVector const& xdot, AmiVector const& xdot_old, AmiVector const& x_old
     );
 
     /**

@@ -614,6 +614,25 @@ class AbstractModel {
     );
 
     /**
+     * @brief Model-specific implementation of fdeltaxB (MATLAB-only!!)
+     * @param deltaxB adjoint state update
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param ie event index
+     * @param xdot new model right hand side
+     * @param x_old pre-event state
+     * @param xB current adjoint state
+     */
+    virtual void fdeltaxB(
+        realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, int ie, realtype const* xdot,
+        realtype const* xdot_old, realtype const* xB
+    );
+
+    /**
      * @brief Model-specific implementation of fdeltaqB
      * @param deltaqB sensitivity update
      * @param t current time
@@ -633,6 +652,26 @@ class AbstractModel {
         realtype const* k, realtype const* h, int ip, int ie,
         realtype const* xdot, realtype const* xdot_old, realtype const* x_old,
         realtype const* xB
+    );
+
+    /**
+     * @brief Model-specific implementation of fdeltaqB (MATLAB-only!!)
+     * @param deltaqB sensitivity update
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param ip sensitivity index
+     * @param ie event index
+     * @param xdot new model right hand side
+     * @param xdot_old previous model right hand side
+     * @param xB adjoint state
+     */
+    virtual void fdeltaqB(
+        realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, int ip, int ie,
+        realtype const* xdot, realtype const* xdot_old, realtype const* xB
     );
 
     /**
