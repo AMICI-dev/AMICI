@@ -48,9 +48,9 @@ rm "${DOXYFILE}"
 rm "${MTOC_CONFIG_PATH}/mtocpp_filter.sh"
 
 # Build pdf
-cd "${OUTDIR}/latex"
-make
-cp ./refman.pdf "${AMICI_PATH}/AMICI_guide.pdf"
+#cd "${OUTDIR}/latex"
+#make
+#cp ./refman.pdf "${AMICI_PATH}/AMICI_guide.pdf"
 
 # suppress doxygen warnings about status badges
 grep -v "warning: Unexpected html tag <img> found within <a href=...> context" "${DOXY_WARNING_FILE}" > "${DOXY_WARNING_FILE}_tmp" || [[ $? == 1 ]]
