@@ -154,7 +154,7 @@ version = amici.__version__
 release = version
 
 project = "AMICI"
-copyright = "2020, The AMICI developers"
+copyright = "2015-2025, The AMICI developers"
 author = "The AMICI developers"
 title = "AMICI Documentation"
 
