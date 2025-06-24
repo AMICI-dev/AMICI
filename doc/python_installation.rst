@@ -300,9 +300,9 @@ you can install AMICI with ``pip`` directly from GitHub using:
 
 .. code-block:: bash
 
-    pip3 install -e git+https://github.com/AMICI-dev/amici.git@develop#egg=amici\&subdirectory=python/sdist
+    pip3 install -e git+https://github.com/AMICI-dev/amici.git@main#egg=amici\&subdirectory=python/sdist
 
-Replace ``develop`` by the branch or commit you want to install.
+Replace ``main`` by the branch or commit you want to install.
 
 Note that this will only work on Windows if you have enabled developer mode,
 because symlinks are not supported by default

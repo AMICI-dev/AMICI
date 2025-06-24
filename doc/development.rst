@@ -7,11 +7,9 @@ relevant to regular users.
 Branches / releases
 -------------------
 
-AMICI roughly follows the
-`GitFlow <https://nvie.com/posts/a-successful-git-branching-model/>`__.
-All new contributions are merged into ``develop``. These changes are
-regularly merged into ``master`` as new releases. For release versioning
-we are trying to follow `semantic versioning <https://semver.org/>`__.
+For AMICI, we mostly do `trunk-based development <https://trunkbaseddevelopment.com/>`__.
+All new contributions are merged into ``main`` after passing the test suite
+and code review. Releases are usually created directly from ``main``.
 New releases are created on GitHub and are automatically deployed to
 `Zenodo <https://doi.org/10.5281/zenodo.597928>`__ for
 archiving and to obtain a digital object identifier (DOI) to make them
@@ -20,8 +18,7 @@ automatically create and deploy a new release on
 `PyPI <https://pypi.org/project/amici/>`__.
 
 We try to keep a clean git history. Therefore, feature pull requests are
-squash-merged to ``develop``. Merging of release branches to master is
-done via merge commits.
+squash-merged to ``main``.
 
 When starting to work on some issue
 -----------------------------------
@@ -44,12 +41,17 @@ process described below:
    `AMICI's license conditions <https://github.com/AMICI-dev/AMICI/blob/master/LICENSE.md>`__.
    By opening a pull requests you confirm us that you do agree.
 
--  Start a new branch from ``develop`` (on your fork, or at the main
+-  Start a new branch from ``main`` (on your fork, or at the main
    repository if you have access)
 
 -  Implement your changes
 
--  Submit a pull request to the ``develop`` branch
+-  Update ``CHANGELOG.md`` with a short description of your changes.
+   This can be omitted for small changes that do not affect the
+   functionality of AMICI, e.g. fixing typos or formatting issues,
+   private refactoring, ...
+
+-  Submit a pull request to the ``main`` branch
 
 -  Ensure all tests pass
 
@@ -117,7 +119,7 @@ Python
 C++
 ^^^
 
--  We use C++17
+-  We use C++20
 
 -  We want to maintain compatibility with g++, clang, and the Intel C++
    compiler
@@ -126,10 +128,14 @@ C++
    be invoked by ``make clang-format cmake-format`` from the CMake build
    directory.
 
+-  For new code, we use `Google's C++ style guide <https://google.github.io/styleguide/cppguide.html>`__ as a reference.
+
+
 Matlab
 ^^^^^^
 
-*To be defined*
+No new Matlab code should be added to AMICI
+(see `#2727 <https://github.com/AMICI-dev/AMICI/issues/2727>`__).
 
 Further topics
 --------------
