@@ -2,12 +2,10 @@ name: Documentation Tests
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
   pull_request:
     branches:
-      - develop
-      - master
+      - main
   merge_group:
   workflow_dispatch:
   schedule:
@@ -16,7 +14,7 @@ on:
 jobs:
   doxygen:
     name: Test Doxygen
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:

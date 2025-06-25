@@ -1070,7 +1070,7 @@ def _compute_target_index(
         # select target index as possible index with minimal appearance count
         if len(prototype["appearance_counts"]) == 0:
             raise RuntimeError(
-                f"Failed to compute conservation law for " f"monomer {monomer}"
+                f"Failed to compute conservation law for monomer {monomer}"
             )
 
         idx = np.argmin(prototype["appearance_counts"])

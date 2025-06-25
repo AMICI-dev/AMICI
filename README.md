@@ -80,14 +80,14 @@ is then used for model simulation.
 The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
 To install AMICI, first read the installation instructions for
 [Python](https://amici.readthedocs.io/en/latest/python_installation.html),
-[C++](https://amici.readthedocs.io/en/develop/cpp_installation.html) or
-[Matlab](https://amici.readthedocs.io/en/develop/matlab_installation.html).
+[C++](https://amici.readthedocs.io/en/main/cpp_installation.html) or
+[Matlab](https://amici.readthedocs.io/en/main/matlab_installation.html).
 There are also instructions for using AMICI inside
 [containers](https://github.com/AMICI-dev/AMICI/tree/master/container).
 
 To get you started with Python-AMICI, the best way might be checking out this
 [Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/doc/examples/getting_started/GettingStarted.ipynb)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=doc%2Fexamples%2Fgetting_started%2FGettingStarted.ipynb).
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AMICI-dev/AMICI/main?labpath=doc%2Fexamples%2Fgetting_started%2FGettingStarted.ipynb).
 
 To get started with Matlab-AMICI, various examples are available
 in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/examples).
@@ -95,7 +95,7 @@ in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/exam
 Comprehensive documentation is available at
 [https://amici.readthedocs.io/en/latest/](https://amici.readthedocs.io/en/latest/).
 
-Any [contributions](https://amici.readthedocs.io/en/develop/CONTRIBUTING.html)
+Any [contributions](https://amici.readthedocs.io/en/main/CONTRIBUTING.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 

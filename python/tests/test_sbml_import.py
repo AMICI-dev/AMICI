@@ -323,12 +323,12 @@ def test_presimulation_events(tempdir):
         assert np.all(
             rdata.by_id("presim_target_initial") == np.array([-2, -2, -2])
         ), rdata.by_id("presim_target_initial")
-        assert np.all(
-            rdata.by_id("presim_target_1") == np.array([1, 1, 1])
-        ), rdata.by_id("presim_target_1")
-        assert np.all(
-            rdata.by_id("mainsim_target") == np.array([0, 1, 1])
-        ), rdata.by_id("mainsim_target")
+        assert np.all(rdata.by_id("presim_target_1") == np.array([1, 1, 1])), (
+            rdata.by_id("presim_target_1")
+        )
+        assert np.all(rdata.by_id("mainsim_target") == np.array([0, 1, 1])), (
+            rdata.by_id("mainsim_target")
+        )
 
         check_derivatives(
             model,

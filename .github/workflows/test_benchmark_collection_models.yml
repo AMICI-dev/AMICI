@@ -2,12 +2,10 @@ name: Benchmark Collection
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
   pull_request:
     branches:
-      - master
-      - develop
+      - main
   merge_group:
   workflow_dispatch:
   schedule:
@@ -133,6 +131,8 @@ jobs:
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
         &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
+
+    - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654
 
     - name: Download benchmark collection
       run: |

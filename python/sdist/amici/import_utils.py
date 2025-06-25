@@ -702,7 +702,7 @@ def cast_to_sym(
 
     if not isinstance(value, sp.Expr):
         raise TypeError(
-            f"Couldn't cast {input_name} to sympy.Expr, was " f"{type(value)}"
+            f"Couldn't cast {input_name} to sympy.Expr, was {type(value)}"
         )
 
     return value

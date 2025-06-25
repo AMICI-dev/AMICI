@@ -634,8 +634,7 @@ class DEModel:
             )[0]
         except StopIteration:
             raise ValueError(
-                f"Specified state {state} was not found in the "
-                f"model states."
+                f"Specified state {state} was not found in the model states."
             )
 
         state_id = self._differential_states[ix].get_id()
@@ -1236,7 +1235,7 @@ class DEModel:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix(
             [
-                sp.Symbol(f'{name}{0 if name == "stau" else i}', real=True)
+                sp.Symbol(f"{name}{0 if name == 'stau' else i}", real=True)
                 for i in range(length)
             ]
         )
@@ -2425,3 +2424,57 @@ class DEModel:
                 dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
 
         return dxdt
+
+    def get_explicit_roots(self) -> set[sp.Expr]:
+        """
+        Returns explicit formulas for all discontinuities (events)
+        that can be precomputed
+
+        :return:
+            set of symbolic roots
+        """
+        return {root for e in self._events for root in e.get_trigger_times()}
+
+    def get_implicit_roots(self) -> set[sp.Expr]:
+        """
+        Returns implicit equations for all discontinuities (events)
+        that have to be located via rootfinding
+
+        :return:
+            set of symbolic roots
+        """
+        return {
+            e.get_val()
+            for e in self._events
+            if not e.has_explicit_trigger_times()
+        }
+
+    def has_algebraic_states(self) -> bool:
+        """
+        Checks whether the model has algebraic states
+
+        :return:
+            boolean indicating if algebraic states are present
+        """
+        return len(self._algebraic_states) > 0
+
+    def has_event_assignments(self) -> bool:
+        """
+        Checks whether the model has event assignments
+
+        :return:
+            boolean indicating if event assignments are present
+        """
+        return any(event.updates_state for event in self._events)
+
+    def has_parameter_dependent_implicit_roots(self) -> bool:
+        """
+        Checks whether the model has events with parameter-dependent implicit roots
+
+        :return:
+            boolean indicating if parameter-dependent implicit roots are present
+        """
+        return any(
+            self.sym("p").has(root.free_symbols)
+            for root in self.get_implicit_roots()
+        )

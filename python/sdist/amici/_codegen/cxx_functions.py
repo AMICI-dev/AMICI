@@ -306,8 +306,7 @@ functions = {
         assume_pow_positivity=True,
     ),
     "x0": _FunctionInfo(
-        "realtype *x0, const realtype t, const realtype *p, "
-        "const realtype *k"
+        "realtype *x0, const realtype t, const realtype *p, const realtype *k"
     ),
     "x0_fixedParameters": _FunctionInfo(
         "realtype *x0_fixedParameters, const realtype t, "

@@ -536,7 +536,7 @@ def _parse_logical_operators(
 
     if " xor(" in math_str or " Xor(" in math_str:
         raise SBMLException(
-            "Xor is currently not supported as logical " "operation."
+            "Xor is currently not supported as logical operation."
         )
 
     return (math_str.replace("&&", "&")).replace("||", "|")

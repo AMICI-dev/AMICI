@@ -4,7 +4,7 @@ Examples
 Various example notebooks.
 
 .. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=binder%2Foverview.ipynb
+ :target: https://mybinder.org/v2/gh/AMICI-dev/AMICI/main?labpath=binder%2Foverview.ipynb
 
 .. toctree::
    :maxdepth: 1

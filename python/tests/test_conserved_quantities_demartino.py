@@ -192,9 +192,9 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
     stoichiometric_list, row_names = data_demartino2014
     num_species = 1668
     num_reactions = 2381
-    assert (
-        len(stoichiometric_list) == num_species * num_reactions
-    ), "Unexpected dimension of stoichiometric matrix"
+    assert len(stoichiometric_list) == num_species * num_reactions, (
+        "Unexpected dimension of stoichiometric matrix"
+    )
 
     # Expected number of metabolites per conservation law found after kernel()
     expected_num_species = (
@@ -224,18 +224,18 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
     # 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
     assert kernel_dim == 38, "Not all conservation laws found"
     assert int_kernel_dim == 36, "Not all conserved moiety laws found"
-    assert (
-        engaged_species == demartino2014_kernel_engaged_species
-    ), "Wrong engaged metabolites reported"
-    assert (
-        len(conserved_moieties) == 128
-    ), "Wrong number of conserved moieties reported"
+    assert engaged_species == demartino2014_kernel_engaged_species, (
+        "Wrong engaged metabolites reported"
+    )
+    assert len(conserved_moieties) == 128, (
+        "Wrong number of conserved moieties reported"
+    )
 
     # Assert that each conserved moiety has the correct number of metabolites
     for i in range(int_kernel_dim - 2):
-        assert (
-            len(cls_species_idxs[i]) == expected_num_species[i]
-        ), f"Moiety #{i + 1} failed for test case (De Martino et al.)"
+        assert len(cls_species_idxs[i]) == expected_num_species[i], (
+            f"Moiety #{i + 1} failed for test case (De Martino et al.)"
+        )
 
 
 @skip_on_valgrind
@@ -757,23 +757,23 @@ def test_fill_demartino2014(data_demartino2014):
     ]
     # compare J from Python with reference from C++
     for i in range(len(ref_for_J)):
-        assert (
-            J[i] == ref_for_J[i]
-        ), f"J_{i} ({J[i]}) does not match J_{i}_ref ({ref_for_J[i]})"
+        assert J[i] == ref_for_J[i], (
+            f"J_{i} ({J[i]}) does not match J_{i}_ref ({ref_for_J[i]})"
+        )
     assert not any(J[len(ref_for_J) :])
 
     # compare J2 from Python with reference from C++
     for i in range(len(ref_for_J2)):
-        assert (
-            J2[i] == ref_for_J2[i]
-        ), f"J_{i} ({J2[i]}) does not match J_{i}_ref ({ref_for_J2[i]})"
+        assert J2[i] == ref_for_J2[i], (
+            f"J_{i} ({J2[i]}) does not match J_{i}_ref ({ref_for_J2[i]})"
+        )
     assert not any(J2[len(ref_for_J2) :])
 
     # compare fields from Python with reference from C++
     for i in range(len(ref_for_fields)):
-        assert (
-            fields[i] == ref_for_fields[i]
-        ), f"J_{i} ({fields[i]}) does not match J_{i}_ref ({ref_for_fields[i]})"
+        assert fields[i] == ref_for_fields[i], (
+            f"J_{i} ({fields[i]}) does not match J_{i}_ref ({ref_for_fields[i]})"
+        )
     assert not any(fields[len(ref_for_fields) :])
 
 
@@ -786,9 +786,9 @@ def compute_moiety_conservation_laws_demartino2014(
 
     num_species = 1668
     num_reactions = 2381
-    assert (
-        len(stoichiometric_list) == num_species * num_reactions
-    ), "Unexpected dimension of stoichiometric matrix"
+    assert len(stoichiometric_list) == num_species * num_reactions, (
+        "Unexpected dimension of stoichiometric matrix"
+    )
 
     start = perf_counter()
     cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(

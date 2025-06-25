@@ -2,9 +2,7 @@ name: SBML
 on:
   push:
     branches:
-      - develop
-      - master
-      - release**
+      - main
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml

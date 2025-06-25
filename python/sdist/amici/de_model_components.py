@@ -63,15 +63,14 @@ class ModelQuantity:
 
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(
-                f"identifier must be sympy.Symbol, was " f"{type(identifier)}"
+                f"identifier must be sympy.Symbol, was {type(identifier)}"
             )
 
         if str(identifier) in RESERVED_SYMBOLS or (
             hasattr(identifier, "name") and identifier.name in RESERVED_SYMBOLS
         ):
             raise ValueError(
-                f'Cannot add model quantity with name "{name}", '
-                f"please rename."
+                f'Cannot add model quantity with name "{name}", please rename.'
             )
         self._identifier: sp.Symbol = identifier
 
@@ -828,6 +827,22 @@ class Event(ModelQuantity):
                 "This event does not trigger at a fixed timepoint."
             )
         return self._t_root[0]
+
+    def has_explicit_trigger_times(self) -> bool:
+        """Check whether the event has explicit trigger times.
+
+        Explicit trigger times do not require root finding to determine
+        the time points at which the event triggers.
+        """
+        return len(self._t_root) > 0
+
+    def get_trigger_times(self) -> set[sp.Expr]:
+        """Get the time points at which the event triggers.
+
+        Returns a set of expressions, which may contain multiple time points
+        for events that trigger at multiple time points.
+        """
+        return set(self._t_root)
 
     @property
     def uses_values_from_trigger_time(self) -> bool:

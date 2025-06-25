@@ -57,7 +57,7 @@ def _test_case(case, model_type, version, jax):
     if case.startswith("0006") and not jax:
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_name = (
-        f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
+        f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
     model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
     model = import_petab_problem(
@@ -155,12 +155,11 @@ def _test_case(case, model_type, version, jax):
             logger.log(logging.ERROR, f"Actual simulations:\n{simulation_df}")
     logger.log(
         logging.DEBUG if chi2s_match else logging.ERROR,
-        f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
-        f" match = {chi2s_match}",
+        f"CHI2: simulated: {chi2}, expected: {gt_chi2}, match = {chi2s_match}",
     )
     logger.log(
         logging.DEBUG if simulations_match else logging.ERROR,
-        f"LLH: simulated: {llh}, expected: {gt_llh}, " f"match = {llhs_match}",
+        f"LLH: simulated: {llh}, expected: {gt_llh}, match = {llhs_match}",
     )
 
     if jax:
@@ -171,7 +170,7 @@ def _test_case(case, model_type, version, jax):
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
         raise AssertionError(
-            f"Case {case}: Test results do not match " "expectations"
+            f"Case {case}: Test results do not match expectations"
         )
 
     logger.info(f"Case {case} passed.")
@@ -234,7 +233,7 @@ def run():
                     logger.error(f"Case {case} failed.")
                     logger.error(e)
 
-    logger.info(f"{n_success} / {n_total} successful, " f"{n_skipped} skipped")
+    logger.info(f"{n_success} / {n_total} successful, {n_skipped} skipped")
     if n_success != len(cases):
         sys.exit(1)
 
