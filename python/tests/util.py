@@ -6,8 +6,12 @@ from pathlib import Path
 
 import libsbml
 import numpy as np
+import pandas as pd
+
+import amici
 from amici import (
     AmiciModel,
+    ExpData,
     SbmlImporter,
     SensitivityMethod,
     SensitivityOrder,
@@ -15,6 +19,7 @@ from amici import (
     runAmiciSimulation,
 )
 from amici.gradient_check import _check_close
+from numpy.testing import assert_allclose
 
 
 def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
@@ -165,4 +170,117 @@ def check_trajectories_with_forward_sensitivities(
     )
     _check_close(
         rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9
+    )
+
+
+def check_trajectories_with_adjoint_sensitivities(
+    amici_model: AmiciModel, asa_xfail: bool = False
+):
+    """
+    Check whether adjoint sensitivities match forward sensitivities and finite
+    differences.
+
+    :param amici_model: AMICI model to test
+    :param asa_xfail: If True, deviations between adjoint and forward
+        sensitivities will not raise an AssertionError.
+    """
+    # First compute dummy experimental data to use adjoints
+    solver = amici_model.getSolver()
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    rng_seed = 42
+    edata = ExpData(rdata, 1.0, 1.0, rng_seed)
+
+    # FSA
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    assert rdata_fsa.status == amici.AMICI_SUCCESS
+
+    # ASA
+    solver.setSensitivityMethod(SensitivityMethod.adjoint)
+    solver.setAbsoluteTolerance(1e-16)
+    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteToleranceB(1e-16)
+    solver.setRelativeToleranceB(1e-15)
+    solver.setAbsoluteToleranceQuadratures(1e-14)
+    solver.setRelativeToleranceQuadratures(1e-8)
+    rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    assert rdata_asa.status == amici.AMICI_SUCCESS
+
+    assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
+    assert_allclose(rdata_fsa.llh, rdata_asa.llh, atol=1e-14, rtol=1e-10)
+    df = pd.DataFrame(
+        {
+            "fsa": rdata_fsa["sllh"],
+            "asa": rdata_asa["sllh"],
+            "fd": np.nan,
+        },
+        index=list(amici_model.getParameterIds()),
+    )
+    df["abs_diff"] = df["fsa"] - df["asa"]
+    df["rel_diff"] = df["abs_diff"] / df["fsa"]
+
+    # Also test against finite differences
+    parameters = amici_model.getUnscaledParameters()
+    solver.setSensitivityOrder(SensitivityOrder.none)
+    sllh_fd = []
+    eps = 1e-5
+    for i_par, par in enumerate(parameters):
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] += eps
+        amici_model.setParameters(tmp_par)
+        rdata_p = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] -= eps
+        amici_model.setParameters(tmp_par)
+        rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
+    df["fd"] = sllh_fd
+    df["asa_matches_fsa"] = np.isclose(
+        df["asa"], df["fsa"], rtol=1e-8, atol=1e-12
+    )
+    print()
+    with pd.option_context(
+        "display.max_rows",
+        None,
+        "display.max_columns",
+        None,
+        "display.width",
+        None,
+    ):
+        print(df)
+
+    if asa_xfail:
+        if df["asa_matches_fsa"].all():
+            # Note that this is machine-dependent...
+            print("Incorrectly marked as xfail?")
+        print(
+            "FIXME: Ignoring differences between adjoint and forward sensitivities."
+        )
+        return
+
+    assert_allclose(
+        sllh_fd,
+        rdata_fsa["sllh"],
+        rtol=1e-5,
+        atol=1e-8,
+        err_msg="Finite differences and forward sensitivities do not match.",
+    )
+
+    assert_allclose(
+        rdata_fsa["sllh"],
+        rdata_asa["sllh"],
+        rtol=1e-8,
+        atol=1e-12,
+        err_msg="Adjoint and forward sensitivities do not match.",
+    )
+    assert_allclose(
+        sllh_fd,
+        rdata_asa["sllh"],
+        rtol=1e-5,
+        atol=1e-6,
+        err_msg="Finite differences and adjoint sensitivities do not match.",
     )

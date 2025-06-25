@@ -108,10 +108,11 @@ void EventHandlingBwdSimulator::handleEventB(
 
         model_->addAdjointQuadratureEventUpdate(
             ws_->xQB_, ie, t_, disc.x_post, ws_->xB_, disc.xdot_post,
-            disc.xdot_pre
+            disc.xdot_pre, disc.x_pre, disc.dx_post
         );
         model_->addAdjointStateEventUpdate(
-            ws_->xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre
+            ws_->xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre,
+            disc.x_pre, disc.dx_post
         );
 
         if (model_->nz > 0) {

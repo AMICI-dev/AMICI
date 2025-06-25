@@ -48,7 +48,8 @@ fi
 
 # set python executable for cmake
 export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
-python3 -m pip install numpy
+python3 -m pip install numpy swig
+export SWIG=$(which swig)
 
 suitesparse_root="${amici_path}/ThirdParty/SuiteSparse"
 
