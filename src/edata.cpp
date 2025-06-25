@@ -5,7 +5,6 @@
 #include "amici/symbolic_functions.h" // getNaN
 
 #include <algorithm>
-#include <cstring>
 #include <random>
 #include <utility>
 
@@ -60,24 +59,26 @@ ExpData::ExpData(
 
 ExpData::ExpData(Model const& model)
     : ExpData(
-        model.nytrue, model.nztrue, model.nMaxEvent(), model.getTimepoints(),
-        model.getFixedParameters()
-    ) {
+          model.nytrue, model.nztrue, model.nMaxEvent(), model.getTimepoints(),
+          model.getFixedParameters()
+      ) {
     reinitializeFixedParameterInitialStates
         = model.getReinitializeFixedParameterInitialStates()
           && model.getReinitializationStateIdxs().empty();
     reinitialization_state_idxs_sim = model.getReinitializationStateIdxs();
 }
 
-ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
+ExpData::ExpData(
+    ReturnData const& rdata, realtype sigma_y, realtype sigma_z, int seed
+)
     : ExpData(
-        rdata, std::vector<realtype>(rdata.nytrue * rdata.nt, sigma_y),
-        std::vector<realtype>(rdata.nztrue * rdata.nmaxevent, sigma_z)
-    ) {}
+          rdata, std::vector<realtype>(rdata.nytrue * rdata.nt, sigma_y),
+          std::vector<realtype>(rdata.nztrue * rdata.nmaxevent, sigma_z), seed
+      ) {}
 
 ExpData::ExpData(
     ReturnData const& rdata, std::vector<realtype> sigma_y,
-    std::vector<realtype> sigma_z
+    std::vector<realtype> sigma_z, int seed
 )
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts) {
     if (sigma_y.size() != (unsigned)nytrue_
@@ -94,8 +95,7 @@ ExpData::ExpData(
             nztrue_ * nmaxevent_, sigma_z.size()
         );
 
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
+    std::mt19937 gen{seed < 0 ? std::random_device()() : seed};
 
     realtype sigma;
 
@@ -122,7 +122,7 @@ ExpData::ExpData(
             std::normal_distribution<> e{0, sigma};
             observed_events_.at(iz + rdata.nztrue * ie)
                 = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            observed_data_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
+            observed_events_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
         }
     }
 
@@ -130,7 +130,7 @@ ExpData::ExpData(
 }
 
 void ExpData::setTimepoints(std::vector<realtype> const& ts) {
-    if (!std::is_sorted(ts.begin(), ts.end()))
+    if (!std::ranges::is_sorted(ts))
         throw AmiException(
             "Encountered non-monotonic timepoints, please order timepoints "
             "such that they are monotonically increasing!"
@@ -195,11 +195,9 @@ void ExpData::setObservedDataStdDev(
         observed_data_std_dev_.clear();
 }
 
-void ExpData::setObservedDataStdDev(const realtype stdDev) {
+void ExpData::setObservedDataStdDev(realtype const stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
-    std::fill(
-        observed_data_std_dev_.begin(), observed_data_std_dev_.end(), stdDev
-    );
+    std::ranges::fill(observed_data_std_dev_, stdDev);
 }
 
 void ExpData::setObservedDataStdDev(
@@ -217,7 +215,7 @@ void ExpData::setObservedDataStdDev(
             = observedDataStdDev.at(it);
 }
 
-void ExpData::setObservedDataStdDev(const realtype stdDev, int iy) {
+void ExpData::setObservedDataStdDev(realtype const stdDev, int iy) {
     checkSigmaPositivity(stdDev, "stdDev");
     for (int it = 0; it < nt(); ++it)
         observed_data_std_dev_.at(iy + it * nytrue_) = stdDev;
@@ -291,11 +289,9 @@ void ExpData::setObservedEventsStdDev(
         observed_events_std_dev_.clear();
 }
 
-void ExpData::setObservedEventsStdDev(const realtype stdDev) {
+void ExpData::setObservedEventsStdDev(realtype const stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
-    std::fill(
-        observed_events_std_dev_.begin(), observed_events_std_dev_.end(), stdDev
-    );
+    std::ranges::fill(observed_events_std_dev_, stdDev);
 }
 
 void ExpData::setObservedEventsStdDev(
@@ -314,7 +310,7 @@ void ExpData::setObservedEventsStdDev(
             = observedEventsStdDev.at(ie);
 }
 
-void ExpData::setObservedEventsStdDev(const realtype stdDev, int iz) {
+void ExpData::setObservedEventsStdDev(realtype const stdDev, int iz) {
     checkSigmaPositivity(stdDev, "stdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
@@ -337,6 +333,13 @@ realtype const* ExpData::getObservedEventsStdDevPtr(int ie) const {
         return &observed_events_std_dev_.at(ie * nztrue_);
 
     return nullptr;
+}
+
+void ExpData::clear_observations() {
+    std::ranges::fill(observed_data_, getNaN());
+    std::ranges::fill(observed_data_std_dev_, getNaN());
+    std::ranges::fill(observed_events_, getNaN());
+    std::ranges::fill(observed_events_std_dev_, getNaN());
 }
 
 void ExpData::applyDimensions() {
@@ -381,7 +384,7 @@ void checkSigmaPositivity(
         checkSigmaPositivity(sigma, vectorName);
 }
 
-void checkSigmaPositivity(const realtype sigma, char const* sigmaName) {
+void checkSigmaPositivity(realtype const sigma, char const* sigmaName) {
     if (sigma <= 0.0)
         throw AmiException(
             "Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma
@@ -401,6 +404,7 @@ ConditionContext::ConditionContext(
     , original_parameters_(model->getParameters())
     , original_fixed_parameters_(model->getFixedParameters())
     , original_tstart_(model->t0())
+    , original_tstart_preeq_(model->t0Preeq())
     , original_timepoints_(model->getTimepoints())
     , original_parameter_list_(model->getParameterList())
     , original_scaling_(model->getParameterScale())
@@ -553,6 +557,7 @@ void ConditionContext::restore() {
     model_->setParameters(original_parameters_);
     model_->setFixedParameters(original_fixed_parameters_);
     model_->setT0(original_tstart_);
+    model_->setT0Preeq(original_tstart_preeq_);
     model_->setTimepoints(original_timepoints_);
     model_->setReinitializeFixedParameterInitialStates(
         original_reinitialize_fixed_parameter_initial_states_

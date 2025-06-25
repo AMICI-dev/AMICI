@@ -32,25 +32,31 @@ class SUNMatrixWrapper {
      * @param N Number of columns
      * @param NNZ Number of nonzeros
      * @param sparsetype Sparse type
+     * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(
-        sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype
+    explicit SUNMatrixWrapper(
+        sunindextype M, sunindextype N, sunindextype NNZ, int sparsetype,
+        SUNContext sunctx
     );
 
     /**
      * @brief Create dense matrix. See SUNDenseMatrix in sunmatrix_dense.h
      * @param M Number of rows
      * @param N Number of columns
+     * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(sunindextype M, sunindextype N);
+    SUNMatrixWrapper(sunindextype M, sunindextype N, SUNContext sunctx);
 
     /**
      * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
      * @param M Number of rows and columns
      * @param ubw Upper bandwidth
      * @param lbw Lower bandwidth
+     * @param sunctx SUNDIALS context
      */
-    SUNMatrixWrapper(sunindextype M, sunindextype ubw, sunindextype lbw);
+    SUNMatrixWrapper(
+        sunindextype M, sunindextype ubw, sunindextype lbw, SUNContext sunctx
+    );
 
     /**
      * @brief Create sparse matrix from dense or banded matrix. See
@@ -71,6 +77,11 @@ class SUNMatrixWrapper {
     explicit SUNMatrixWrapper(SUNMatrix mat);
 
     ~SUNMatrixWrapper();
+
+    /**
+     * @brief Conversion function.
+     */
+    operator SUNMatrix() { return get(); };
 
     /**
      * @brief Copy constructor
@@ -266,7 +277,7 @@ class SUNMatrixWrapper {
      * @brief Set the index values of a sparse matrix
      * @param vals rows (CSC) or columns (CSR) for data entries
      */
-    void set_indexvals(const gsl::span<sunindextype const> vals) {
+    void set_indexvals(gsl::span<sunindextype const> const vals) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(gsl::narrow<sunindextype>(vals.size()) == capacity());
@@ -309,7 +320,7 @@ class SUNMatrixWrapper {
      * @param ptrs starting data-indices where the columns (CSC) or rows (CSR)
      * start
      */
-    void set_indexptrs(const gsl::span<sunindextype const> ptrs) {
+    void set_indexptrs(gsl::span<sunindextype const> const ptrs) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(gsl::narrow<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
@@ -357,7 +368,7 @@ class SUNMatrixWrapper {
      */
     void multiply(
         gsl::span<realtype> c, gsl::span<realtype const> b,
-        const realtype alpha = 1.0
+        realtype const alpha = 1.0
     ) const;
 
     /**
@@ -440,8 +451,8 @@ class SUNMatrixWrapper {
      * @return updated number of nonzeros in C
      */
     sunindextype scatter(
-        const sunindextype k, const realtype beta, sunindextype* w,
-        gsl::span<realtype> x, const sunindextype mark, SUNMatrixWrapper* C,
+        sunindextype const k, realtype const beta, sunindextype* w,
+        gsl::span<realtype> x, sunindextype const mark, SUNMatrixWrapper* C,
         sunindextype nnz
     ) const;
 
@@ -455,7 +466,7 @@ class SUNMatrixWrapper {
      * set to ncols/nrows
      */
     void transpose(
-        SUNMatrixWrapper& C, const realtype alpha, sunindextype blocksize
+        SUNMatrixWrapper& C, realtype const alpha, sunindextype blocksize
     ) const;
 
     /**
@@ -488,6 +499,25 @@ class SUNMatrixWrapper {
      * manipulation of matrix_->content
      */
     void refresh();
+
+    /**
+     * @brief Get SUNDIALS context
+     * @return SUNDIALS context or nullptr if the matrix is empty
+     */
+    SUNContext get_ctx() const;
+
+    /**
+     * @brief Set SUNContext
+     *
+     * Update the SUNContext of the wrapped SUNMatrix.
+     *
+     * @param ctx SUNDIALS context to set
+     */
+    void set_ctx(SUNContext ctx) {
+        if (matrix_) {
+            matrix_->sunctx = ctx;
+        }
+    }
 
   private:
     /**
@@ -576,12 +606,12 @@ namespace gsl {
  * @param m SUNMatrix
  * @return Created span
  */
-inline span<realtype> make_span(SUNMatrix m) {
+inline span<amici::realtype> make_span(SUNMatrix m) {
     switch (SUNMatGetID(m)) {
     case SUNMATRIX_DENSE:
-        return span<realtype>(SM_DATA_D(m), SM_LDATA_D(m));
+        return span<amici::realtype>(SM_DATA_D(m), SM_LDATA_D(m));
     case SUNMATRIX_SPARSE:
-        return span<realtype>(SM_DATA_S(m), SM_NNZ_S(m));
+        return span<amici::realtype>(SM_DATA_S(m), SM_NNZ_S(m));
     default:
         throw amici::AmiException("Unimplemented SUNMatrix type for make_span");
     }

@@ -4,12 +4,10 @@
 #include "amici/defines.h"
 #include "amici/exception.h"
 #include "amici/vector.h"
-#include <sunmatrix/sunmatrix_sparse.h> // SUNMatrixContent_Sparse
 
 #include <algorithm>
 #include <ctime>
 #include <functional>
-#include <memory>
 #include <regex>
 #include <vector>
 
@@ -86,7 +84,7 @@ void checkBufferSize(
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 };
@@ -98,7 +96,7 @@ void writeSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
  * @param buffer buffer to which values are to be added
  */
 template <class T>
-void addSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::transform(
         slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
@@ -195,7 +193,7 @@ void scaleParameters(
  * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames, int const first_frame = 0);
+std::string backtraceString(int maxFrames, int first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
@@ -278,7 +276,7 @@ class CpuTimer {
      * @brief Get elapsed CPU time in seconds since initialization or last reset
      * @return CPU time in seconds
      */
-    double elapsed_seconds() const {
+    [[nodiscard]] double elapsed_seconds() const {
         return d_seconds(clock::now() - start_).count();
     }
 
@@ -287,11 +285,15 @@ class CpuTimer {
      * reset
      * @return CPU time in milliseconds
      */
-    double elapsed_milliseconds() const {
+    [[nodiscard]] double elapsed_milliseconds() const {
         return d_milliseconds(clock::now() - start_).count();
     }
 
-    static const bool uses_thread_clock = true;
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
+    static bool const uses_thread_clock = true;
 
   private:
     /** Start time */
@@ -330,7 +332,11 @@ class CpuTimer {
                / CLOCKS_PER_SEC;
     }
 
-    static const bool uses_thread_clock = false;
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
+    static bool const uses_thread_clock = false;
 
   private:
     /** Start time */

@@ -4,15 +4,18 @@ In particular, some of the functions tested here require an installation of
 boost.
 """
 
-import os
-
 import amici
 import numpy as np
 import pytest
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
-from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
-from numpy.testing import assert_approx_equal, assert_array_almost_equal_nulp
+from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
+from numpy.testing import (
+    assert_approx_equal,
+    assert_array_almost_equal_nulp,
+    assert_allclose,
+)
+from conftest import MODEL_STEADYSTATE_SCALED_XML
 from scipy.special import loggamma
 
 
@@ -20,14 +23,7 @@ from scipy.special import loggamma
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
     # load sbml model
-    sbml_file = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "examples",
-        "example_steadystate",
-        "model_steadystate_scaled.xml",
-    )
-    sbml_importer = amici.SbmlImporter(sbml_file)
+    sbml_importer = amici.SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
 
     # define observables
     observables = {
@@ -165,7 +161,7 @@ def negative_binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
 
 
 @skip_on_valgrind
-def test_rateof():
+def test_rateof(tempdir):
     """Test chained rateOf to verify that model expressions are evaluated in the correct order."""
     ant_model = """
     model test_chained_rateof
@@ -184,41 +180,83 @@ def test_rateof():
     end
     """
     module_name = "test_chained_rateof"
-    with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
-        antimony2amici(
-            ant_model,
-            model_name=module_name,
-            output_dir=outdir,
-        )
-        model_module = amici.import_model_module(
-            module_name=module_name, module_path=outdir
-        )
-        amici_model = model_module.getModel()
-        t = np.linspace(0, 10, 11)
-        amici_model.setTimepoints(t)
-        amici_solver = amici_model.getSolver()
-        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    t = np.linspace(0, 10, 11)
+    amici_model.setTimepoints(t)
+    amici_solver = amici_model.getSolver()
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
 
-        state_ids_solver = amici_model.getStateIdsSolver()
-        i_S1 = state_ids_solver.index("S1")
-        i_S2 = state_ids_solver.index("S2")
-        i_S3 = state_ids_solver.index("S3")
-        i_p2 = state_ids_solver.index("p2")
-        assert_approx_equal(rdata["xdot"][i_S3], 1)
-        assert_approx_equal(rdata["xdot"][i_S2], 2)
-        assert_approx_equal(
-            rdata["xdot"][i_S1], rdata.by_id("S2")[-1] + rdata["xdot"][i_S2]
-        )
-        assert_approx_equal(rdata["xdot"][i_S1], rdata["xdot"][i_p2])
+    state_ids_solver = amici_model.getStateIdsSolver()
+    i_S1 = state_ids_solver.index("S1")
+    i_S2 = state_ids_solver.index("S2")
+    i_S3 = state_ids_solver.index("S3")
+    i_p2 = state_ids_solver.index("p2")
+    assert_approx_equal(rdata["xdot"][i_S3], 1)
+    assert_approx_equal(rdata["xdot"][i_S2], 2)
+    assert_approx_equal(
+        rdata["xdot"][i_S1], rdata.by_id("S2")[-1] + rdata["xdot"][i_S2]
+    )
+    assert_approx_equal(rdata["xdot"][i_S1], rdata["xdot"][i_p2])
 
-        assert_array_almost_equal_nulp(rdata.by_id("S3"), t, 10)
-        assert_array_almost_equal_nulp(
-            rdata.by_id("S2"), 2 * rdata.by_id("S3")
-        )
-        assert_array_almost_equal_nulp(
-            rdata.by_id("S4")[1:], 0.5 * np.diff(rdata.by_id("S3")), 10
-        )
-        assert_array_almost_equal_nulp(rdata.by_id("p3"), 0)
-        assert_array_almost_equal_nulp(
-            rdata.by_id("p2"), 1 + rdata.by_id("S1")
-        )
+    assert_array_almost_equal_nulp(rdata.by_id("S3"), t, 10)
+    assert_array_almost_equal_nulp(rdata.by_id("S2"), 2 * rdata.by_id("S3"))
+    assert_array_almost_equal_nulp(
+        rdata.by_id("S4")[1:], 0.5 * np.diff(rdata.by_id("S3")), 10
+    )
+    assert_array_almost_equal_nulp(rdata.by_id("p3"), 0)
+    assert_array_almost_equal_nulp(rdata.by_id("p2"), 1 + rdata.by_id("S1"))
+
+
+@skip_on_valgrind
+def test_rateof_with_expression_dependent_rate(tempdir):
+    """Test rateOf, where the rateOf argument depends on `w` and requires
+    toposorting."""
+    ant_model = """
+    model test_rateof_with_expression_dependent_rate
+        S1 = 0;
+        S2 = 0;
+        S1' = rate;
+        S2' = 2 * rateOf(S1);
+        # the id of the following expression must be alphabetically before
+        #  `rate`, so that toposort is required to evaluate the expressions
+        #  in the correct order
+        e1 := 2 * rateOf(S1);
+        rate := time
+    end
+    """
+    module_name = "test_rateof_with_expression_dependent_rate"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    t = np.linspace(0, 10, 11)
+    amici_model.setTimepoints(t)
+    amici_solver = amici_model.getSolver()
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+
+    state_ids_solver = amici_model.getStateIdsSolver()
+
+    assert_array_almost_equal_nulp(rdata.by_id("e1"), 2 * t, 1)
+
+    i_S1 = state_ids_solver.index("S1")
+    i_S2 = state_ids_solver.index("S2")
+    assert_approx_equal(rdata["xdot"][i_S1], t[-1])
+    assert_approx_equal(rdata["xdot"][i_S2], 2 * t[-1])
+
+    assert_allclose(np.diff(rdata.by_id("S1")), t[:-1] + 0.5, atol=1e-9)
+    assert_array_almost_equal_nulp(
+        rdata.by_id("S2"), 2 * rdata.by_id("S1"), 10
+    )

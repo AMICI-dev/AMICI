@@ -24,7 +24,9 @@ void writeSlice(AmiVector const& s, gsl::span<realtype> b) {
     writeSlice(s.getVector(), b);
 };
 
-double getUnscaledParameter(double scaledParameter, ParameterScaling scaling) {
+double getUnscaledParameter(
+    double const scaledParameter, ParameterScaling const scaling
+) {
     switch (scaling) {
     case ParameterScaling::log10:
         return pow(10, scaledParameter);
@@ -83,10 +85,10 @@ std::string backtraceString(int const maxFrames, int const first_frame) {
     trace_buf << "stacktrace not available on windows platforms\n";
 #else
     int const last_frame = first_frame + maxFrames;
-    void* callstack[last_frame];
+    std::vector<void*> callstack(last_frame);
     char buf[1024];
-    int nFrames = backtrace(callstack, last_frame);
-    char** symbols = backtrace_symbols(callstack, nFrames);
+    int nFrames = backtrace(callstack.data(), last_frame);
+    char** symbols = backtrace_symbols(callstack.data(), nFrames);
 
     for (int i = first_frame; i < nFrames; i++) {
         // call

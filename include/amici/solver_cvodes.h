@@ -5,8 +5,6 @@
 #include "amici/solver.h"
 #include "amici/vector.h"
 
-#include <sundials/sundials_matrix.h>
-
 namespace amici {
 class ExpData;
 class ReturnData;
@@ -40,11 +38,13 @@ class CVodeSolver : public Solver {
      */
     Solver* clone() const override;
 
-    void reInit(realtype t0, AmiVector const& yy0, AmiVector const& yp0)
-        const override;
+    void reInit(
+        realtype t0, AmiVector const& yy0, AmiVector const& yp0
+    ) const override;
 
-    void sensReInit(AmiVectorArray const& yyS0, AmiVectorArray const& ypS0)
-        const override;
+    void sensReInit(
+        AmiVectorArray const& yyS0, AmiVectorArray const& ypS0
+    ) const override;
 
     void sensToggleOff() const override;
 
@@ -133,8 +133,6 @@ class CVodeSolver : public Solver {
 
     void setQuadErrCon(bool flag) const override;
 
-    void setErrHandlerFn() const override;
-
     void setUserData() const override;
 
     void setUserDataB(int which) const override;
@@ -167,11 +165,13 @@ class CVodeSolver : public Solver {
 
     void allocateSolverB(int* which) const override;
 
-    void setSStolerancesB(int which, realtype relTolB, realtype absTolB)
-        const override;
+    void setSStolerancesB(
+        int which, realtype relTolB, realtype absTolB
+    ) const override;
 
-    void quadSStolerancesB(int which, realtype reltolQB, realtype abstolQB)
-        const override;
+    void quadSStolerancesB(
+        int which, realtype reltolQB, realtype abstolQB
+    ) const override;
 
     void quadSStolerances(realtype reltolQ, realtype abstolQ) const override;
 
@@ -186,8 +186,9 @@ class CVodeSolver : public Solver {
     void
     getNumRhsEvals(void const* ami_mem, long int* numrhsevals) const override;
 
-    void getNumErrTestFails(void const* ami_mem, long int* numerrtestfails)
-        const override;
+    void getNumErrTestFails(
+        void const* ami_mem, long int* numerrtestfails
+    ) const override;
 
     void getNumNonlinSolvConvFails(
         void const* ami_mem, long int* numnonlinsolvconvfails
@@ -218,11 +219,12 @@ class CVodeSolver : public Solver {
     init(realtype t0, AmiVector const& x0, AmiVector const& dx0) const override;
 
     void initSteadystate(
-        const realtype t0, AmiVector const& x0, AmiVector const& dx0
+        realtype t0, AmiVector const& x0, AmiVector const& dx0
     ) const override;
 
-    void sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& sdx0)
-        const override;
+    void sensInit1(
+        AmiVectorArray const& sx0, AmiVectorArray const& sdx0
+    ) const override;
 
     void binit(
         int which, realtype tf, AmiVector const& xB0, AmiVector const& dxB0
@@ -249,6 +251,14 @@ class CVodeSolver : public Solver {
     void setJacTimesVecFnB(int which) const override;
 
     void setSparseJacFn_ss() const override;
+
+    void apply_max_nonlin_iters() const override;
+
+    void apply_max_conv_fails() const override;
+
+    void apply_constraints() const override;
+
+    void apply_max_step_size() const override;
 };
 
 } // namespace amici

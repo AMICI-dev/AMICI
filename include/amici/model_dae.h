@@ -1,16 +1,12 @@
 #ifndef AMICI_MODEL_DAE_H
 #define AMICI_MODEL_DAE_H
 
+#include "amici/event.h"
 #include "amici/model.h"
 
-#include <nvector/nvector_serial.h>
-
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
 #include <numeric>
-#include <utility>
+#include <sundials/sundials_matrix.h>
+#include <sundials/sundials_nvector.h>
 #include <vector>
 
 namespace amici {
@@ -37,32 +33,30 @@ class Model_DAE : public Model {
      * @param o2mode second order sensitivity mode
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
-     * @param pythonGenerated flag indicating matlab or python wrapping
-     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
-     * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
-     * @param w_recursion_depth Recursion depth of fw
+     * @param events Vector of events
+     * @param state_independent_events Map of events with state-independent
+     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model_DAE(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
-        const SecondOrderMode o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event, bool const pythonGenerated = false,
-        int const ndxdotdp_explicit = 0, int const ndxdotdx_explicit = 0,
-        int const w_recursion_depth = 0
+        SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
+        std::vector<int> const& z2event, std::vector<Event> events = {},
+        std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
-            model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-            pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
-            w_recursion_depth
-        ) {
-        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+              model_dimensions, simulation_parameters, o2mode, idlist, z2event,
+              events, state_independent_events
+          ) {
+        SUNContext sunctx = derived_state_.sunctx_;
+        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );
         derived_state_.MSparse_
-            = SUNMatrixWrapper(nx_solver, nx_solver, M_nnz, CSC_MAT);
+            = SUNMatrixWrapper(nx_solver, nx_solver, M_nnz, CSC_MAT, sunctx);
         derived_state_.dfdx_
-            = SUNMatrixWrapper(nx_solver, nx_solver, 0, CSC_MAT);
+            = SUNMatrixWrapper(nx_solver, nx_solver, 0, CSC_MAT, sunctx);
     }
 
     void
@@ -83,7 +77,7 @@ class Model_DAE : public Model {
        const_N_Vector xdot, SUNMatrix J);
 
     void
-    fJB(const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    fJB(realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB) override;
 
@@ -120,7 +114,7 @@ class Model_DAE : public Model {
     );
 
     void fJSparseB(
-        const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB
     ) override;
@@ -251,8 +245,7 @@ class Model_DAE : public Model {
     );
 
     void fxBdot_ss(
-        const realtype t, AmiVector const& xB, AmiVector const& dxB,
-        AmiVector& xBdot
+        realtype t, AmiVector const& xB, AmiVector const& dxB, AmiVector& xBdot
     ) override;
 
     /**
@@ -296,7 +289,7 @@ class Model_DAE : public Model {
      * @param xBdot Vector with the adjoint state right hand side
      */
     void writeSteadystateJB(
-        const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;
 
@@ -306,9 +299,10 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param dx Vector with the derivative states
      */
-    void fdxdotdp(realtype t, const const_N_Vector x, const const_N_Vector dx);
-    void fdxdotdp(const realtype t, AmiVector const& x, AmiVector const& dx)
-        override {
+    void fdxdotdp(realtype t, const_N_Vector x, const_N_Vector dx);
+    void fdxdotdp(
+        realtype const t, AmiVector const& x, AmiVector const& dx
+    ) override {
         fdxdotdp(t, x.getNVector(), dx.getNVector());
     };
 
@@ -524,7 +518,7 @@ class Model_DAE : public Model {
      * @param k constants vector
      */
     virtual void
-    fM(realtype* M, const realtype t, realtype const* x, realtype const* p,
+    fM(realtype* M, realtype t, realtype const* x, realtype const* p,
        realtype const* k);
 };
 } // namespace amici

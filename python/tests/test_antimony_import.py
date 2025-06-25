@@ -1,10 +1,11 @@
 import amici
 import numpy as np
 from amici.antimony_import import antimony2amici
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import skip_on_valgrind
 
 
-def test_antimony_example():
+@skip_on_valgrind
+def test_antimony_example(tempdir):
     """If this example requires changes, please also update documentation/python_interface.rst."""
     ant_model = """
     model lotka_volterra
@@ -26,17 +27,16 @@ def test_antimony_example():
     end
     """
     module_name = "test_antimony_example_lv"
-    with TemporaryDirectory(prefix=module_name) as outdir:
-        antimony2amici(
-            ant_model,
-            model_name=module_name,
-            output_dir=outdir,
-        )
-        model_module = amici.import_model_module(
-            module_name=module_name, module_path=outdir
-        )
-        amici_model = model_module.getModel()
-        amici_model.setTimepoints(np.linspace(0, 100, 200))
-        amici_solver = amici_model.getSolver()
-        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
-        assert rdata.status == amici.AMICI_SUCCESS
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    amici_model.setTimepoints(np.linspace(0, 100, 200))
+    amici_solver = amici_model.getSolver()
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    assert rdata.status == amici.AMICI_SUCCESS

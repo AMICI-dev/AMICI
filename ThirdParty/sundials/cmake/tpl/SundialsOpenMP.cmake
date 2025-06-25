@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -69,7 +69,7 @@ if(OPENMP_FOUND AND (ENABLE_OPENMP_DEVICE OR SUPERLUDIST_OpenMP))
     # The user has asked for checks to be skipped, assume offloading is supported
     set(OPENMP45_FOUND TRUE)
     set(OPENMP_SUPPORTS_DEVICE_OFFLOADING TRUE)
-    print_warning("Skipping OpenMP device/version check." "SUNDIALS OpenMP functionality dependent on OpenMP 4.5+ is not guaranteed.")
+    message(WARNING "Skipping OpenMP device/version check." "SUNDIALS OpenMP functionality dependent on OpenMP 4.5+ is not guaranteed.")
 
   else()
 
@@ -84,7 +84,7 @@ if(OPENMP_FOUND AND (ENABLE_OPENMP_DEVICE OR SUPERLUDIST_OpenMP))
       message(STATUS "Checking whether OpenMP supports device offloading -- no")
       set(OPENMP45_FOUND FALSE)
       set(OPENMP_SUPPORTS_DEVICE_OFFLOADING FALSE)
-      print_error("The found OpenMP version does not support device offloading.")
+      message(FATAL_ERROR "The found OpenMP version does not support device offloading.")
     endif()
 
   endif()

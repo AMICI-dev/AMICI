@@ -54,6 +54,7 @@ using namespace amici;
 %ignore startTimer;
 %ignore switchForwardSensisOff;
 %ignore timeExceeded;
+%ignore getSunContext;
 
 // Solver.__repr__
 %pythoncode %{
@@ -113,9 +114,18 @@ def __repr__(self):
 %pythoncode %{
 def __repr__(self):
     return _solver_repr(self)
+
+def __deepcopy__(self, memo):
+    return self.clone()
 %}
 };
 
+%extend amici::Solver {
+%pythoncode %{
+def __deepcopy__(self, memo):
+    return self.clone()
+%}
+};
 
 %newobject amici::Solver::clone;
 // Process symbols in header

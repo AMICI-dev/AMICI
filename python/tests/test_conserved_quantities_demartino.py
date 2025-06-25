@@ -1,4 +1,5 @@
 """Tests for conservation laws / conserved moieties"""
+
 import os
 from time import perf_counter
 
@@ -155,15 +156,15 @@ demartino2014_kernel_engaged_species = [
 def data_demartino2014():
     """Get tests from DeMartino2014 Suppl. Material"""
     import gzip
-    import io
-    import urllib.request
+    import pooch
 
     # stoichiometric matrix
-    response = urllib.request.urlopen(
-        r"https://github.com/AMICI-dev/AMICI/files/11430971/DeMartinoDe2014_test-ecoli.dat.gz",
-        timeout=10,
+    data = gzip.GzipFile(
+        pooch.retrieve(
+            "https://github.com/AMICI-dev/AMICI/files/11430971/DeMartinoDe2014_test-ecoli.dat.gz",
+            known_hash="md5:899873f8f1c413d13c3f8e94c1496b7e",
+        )
     )
-    data = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
     S = [
         int(item)
         for sl in [
@@ -174,14 +175,13 @@ def data_demartino2014():
     ]
 
     # metabolite / row names
-    response = urllib.request.urlopen(
-        r"https://github.com/AMICI-dev/AMICI/files/11430970/test-ecoli-met.txt",
-        timeout=10,
-    )
-    row_names = [
-        entry.decode("ascii").strip() for entry in io.BytesIO(response.read())
-    ]
-
+    with open(
+        pooch.retrieve(
+            "https://github.com/AMICI-dev/AMICI/files/11430970/test-ecoli-met.txt",
+            known_hash="md5:d71e711a3655311390b38d00dcd6aa7f",
+        )
+    ) as f:
+        row_names = [entry.strip() for entry in f.readlines()]
     return S, row_names
 
 
@@ -192,9 +192,9 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
     stoichiometric_list, row_names = data_demartino2014
     num_species = 1668
     num_reactions = 2381
-    assert (
-        len(stoichiometric_list) == num_species * num_reactions
-    ), "Unexpected dimension of stoichiometric matrix"
+    assert len(stoichiometric_list) == num_species * num_reactions, (
+        "Unexpected dimension of stoichiometric matrix"
+    )
 
     # Expected number of metabolites per conservation law found after kernel()
     expected_num_species = (
@@ -224,18 +224,18 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
     # 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
     assert kernel_dim == 38, "Not all conservation laws found"
     assert int_kernel_dim == 36, "Not all conserved moiety laws found"
-    assert (
-        engaged_species == demartino2014_kernel_engaged_species
-    ), "Wrong engaged metabolites reported"
-    assert (
-        len(conserved_moieties) == 128
-    ), "Wrong number of conserved moieties reported"
+    assert engaged_species == demartino2014_kernel_engaged_species, (
+        "Wrong engaged metabolites reported"
+    )
+    assert len(conserved_moieties) == 128, (
+        "Wrong number of conserved moieties reported"
+    )
 
     # Assert that each conserved moiety has the correct number of metabolites
     for i in range(int_kernel_dim - 2):
-        assert (
-            len(cls_species_idxs[i]) == expected_num_species[i]
-        ), f"Moiety #{i + 1} failed for test case (De Martino et al.)"
+        assert len(cls_species_idxs[i]) == expected_num_species[i], (
+            f"Moiety #{i + 1} failed for test case (De Martino et al.)"
+        )
 
 
 @skip_on_valgrind
@@ -757,23 +757,23 @@ def test_fill_demartino2014(data_demartino2014):
     ]
     # compare J from Python with reference from C++
     for i in range(len(ref_for_J)):
-        assert (
-            J[i] == ref_for_J[i]
-        ), f"J_{i} ({J[i]}) does not match J_{i}_ref ({ref_for_J[i]})"
+        assert J[i] == ref_for_J[i], (
+            f"J_{i} ({J[i]}) does not match J_{i}_ref ({ref_for_J[i]})"
+        )
     assert not any(J[len(ref_for_J) :])
 
     # compare J2 from Python with reference from C++
     for i in range(len(ref_for_J2)):
-        assert (
-            J2[i] == ref_for_J2[i]
-        ), f"J_{i} ({J2[i]}) does not match J_{i}_ref ({ref_for_J2[i]})"
+        assert J2[i] == ref_for_J2[i], (
+            f"J_{i} ({J2[i]}) does not match J_{i}_ref ({ref_for_J2[i]})"
+        )
     assert not any(J2[len(ref_for_J2) :])
 
     # compare fields from Python with reference from C++
     for i in range(len(ref_for_fields)):
-        assert (
-            fields[i] == ref_for_fields[i]
-        ), f"J_{i} ({fields[i]}) does not match J_{i}_ref ({ref_for_fields[i]})"
+        assert fields[i] == ref_for_fields[i], (
+            f"J_{i} ({fields[i]}) does not match J_{i}_ref ({ref_for_fields[i]})"
+        )
     assert not any(fields[len(ref_for_fields) :])
 
 
@@ -786,9 +786,9 @@ def compute_moiety_conservation_laws_demartino2014(
 
     num_species = 1668
     num_reactions = 2381
-    assert (
-        len(stoichiometric_list) == num_species * num_reactions
-    ), "Unexpected dimension of stoichiometric matrix"
+    assert len(stoichiometric_list) == num_species * num_reactions, (
+        "Unexpected dimension of stoichiometric matrix"
+    )
 
     start = perf_counter()
     cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
@@ -823,7 +823,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     # <5s on modern hardware, but leave some slack
     max_time_seconds = 40 if "GITHUB_ACTIONS" in os.environ else 10
 
-    runtime = np.Inf
+    runtime = np.inf
 
     for _ in range(max_tries):
         runtime = compute_moiety_conservation_laws_demartino2014(

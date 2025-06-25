@@ -8,44 +8,46 @@ jobs:
   pypi:
     name: Deploy PyPI
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: ["3.13"]
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/amici
+
+    permissions:
+      id-token: write
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 20
 
-    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig" >> $GITHUB_ENV
+    - name: Set up SWIG
+      uses: ./.github/actions/setup-swig
 
-    - name: Build swig4
-      run: |
-        sudo scripts/downloadAndBuildSwig.sh
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     - name: sdist
-      run: |
-        scripts/buildSdist.sh
+      run: scripts/buildSdist.sh
 
     - name: Publish a Python distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.pypi_password }}
         packages-dir: python/sdist/dist
 
   bioSimulatorsUpdateCliAndDockerImage:
     name: Release to BioSimulators
     needs: pypi
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       # Owner/repository-id for the GitHub repository for the downstream command-line interface and Docker image
       DOWNSTREAM_REPOSITORY: biosimulators/Biosimulators_AMICI
@@ -67,3 +69,29 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
               https://api.github.com/repos/${DOWNSTREAM_REPOSITORY}/actions/workflows/${WORKFLOW_FILE}/dispatches \
             -d "{\"ref\": \"dev\", \"inputs\": {\"simulatorVersion\": \"${PACKAGE_VERSION}\", \"simulatorVersionLatest\": \"true\"}}"
+
+  dockerhub:
+    name: Release to Docker Hub
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - uses: actions/checkout@v4
+    - run: git archive -o container/amici.tar.gz --format=tar.gz HEAD
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@v5
+      with:
+        name: dweindl/amici
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: container/
+        dockerfile: Dockerfile
+        tag_semver: true
+        platforms: linux/amd64,linux/arm64

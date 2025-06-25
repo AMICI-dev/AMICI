@@ -1,4 +1,5 @@
 """Tests for SBML events, including piecewise expressions."""
+
 import sys
 import tempfile
 from pathlib import Path
@@ -95,7 +96,7 @@ def create_sbml_model(
         event = model.createEvent()
         event.setId(event_id)
         event.setName(event_id)
-        event.setUseValuesFromTriggerTime(True)
+        event.setUseValuesFromTriggerTime(False)
         trigger = event.createTrigger()
         trigger.setMath(libsbml.parseL3Formula(event_def["trigger"]))
         trigger.setPersistent(True)
@@ -108,7 +109,7 @@ def create_sbml_model(
 
         if isinstance(event_def["target"], list):
             for event_target, event_assignment in zip(
-                event_def["target"], event_def["assignment"]
+                event_def["target"], event_def["assignment"], strict=True
             ):
                 create_event_assignment(event_target, event_assignment)
 

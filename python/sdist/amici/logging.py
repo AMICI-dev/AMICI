@@ -27,31 +27,31 @@ NAMED_LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
 }
 
-from typing import Callable, Optional, Union
+from collections.abc import Callable
 
 
 def _setup_logger(
-    level: Optional[int] = logging.WARNING,
-    console_output: Optional[bool] = True,
-    file_output: Optional[bool] = False,
-    capture_warnings: Optional[bool] = True,
+    level: int | None = logging.WARNING,
+    console_output: bool | None = True,
+    file_output: bool | None = False,
+    capture_warnings: bool | None = False,
 ) -> logging.Logger:
     """
-    Set up a new logging.Logger for AMICI logging
+    Set up a new :class:`logging.Logger` for AMICI logging.
 
     :param level:
-        Logging level, typically using a constant like logging.INFO or
-        logging.DEBUG
+        Logging level, typically using a constant like :obj:`logging.INFO` or
+        :obj:`logging.DEBUG`
 
     :param console_output:
-        Set up a default console log handler if True (default)
+        Set up a default console log handler if ``True`` (default)
 
     :param file_output:
         Supply a filename to copy all log output to that file, or
-        set to False to disable (default)
+        set to ``False`` to disable (default)
 
     :param capture_warnings:
-        Capture warnings from Python's warnings module if True (default)
+        Capture warnings from Python's warnings module if ``True``
 
     :return:
         A :class:`logging.Logger` object for AMICI logging. Note that other
@@ -75,17 +75,22 @@ def _setup_logger(
                     f"Environment variable {LOG_LEVEL_ENV_VAR} "
                     f'contains an invalid value "{level_name}".'
                     f" If set, its value must be one of "
-                    f'{", ".join(NAMED_LOG_LEVELS.keys())}'
+                    f"{', '.join(NAMED_LOG_LEVELS.keys())}"
                     f" (case-sensitive) or an integer log level."
                 )
 
     log.setLevel(level)
 
+    py_warn_logger = logging.getLogger("py.warnings")
+
     # Remove default logging handler
+    for handler in log.handlers:
+        if handler in py_warn_logger.handlers:
+            py_warn_logger.removeHandler(handler)
     log.handlers = []
 
     log_fmt = logging.Formatter(
-        "%(asctime)s.%(msecs).3d - %(name)s - " "%(levelname)s - %(message)s",
+        "%(asctime)s.%(msecs).3d - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
@@ -105,12 +110,15 @@ def _setup_logger(
     log.debug("Python version: %s", platform.python_version())
     log.debug("Hostname: %s", socket.getfqdn())
 
-    logging.captureWarnings(capture_warnings)
+    if capture_warnings:
+        logging.captureWarnings(capture_warnings)
+        for handler in log.handlers:
+            py_warn_logger.addHandler(handler)
 
     return log
 
 
-def set_log_level(logger: logging.Logger, log_level: Union[int, bool]) -> None:
+def set_log_level(logger: logging.Logger, log_level: int | bool) -> None:
     if log_level is not None and log_level is not False:
         if isinstance(log_level, bool):
             log_level = logging.DEBUG
@@ -119,15 +127,15 @@ def set_log_level(logger: logging.Logger, log_level: Union[int, bool]) -> None:
 
         if logger.getEffectiveLevel() != log_level:
             logger.debug(
-                "Changing log_level from %d to %d"
-                % (logger.getEffectiveLevel(), log_level)
+                f"Changing log_level from {logger.getEffectiveLevel()} "
+                f"to {log_level}"
             )
             logger.setLevel(log_level)
 
 
 def get_logger(
-    logger_name: Optional[str] = BASE_LOGGER_NAME,
-    log_level: Optional[int] = None,
+    logger_name: str | None = BASE_LOGGER_NAME,
+    log_level: int | None = None,
     **kwargs,
 ) -> logging.Logger:
     """
@@ -167,7 +175,8 @@ def get_logger(
     elif kwargs:
         warnings.warn(
             "AMICI logger already exists, ignoring keyword "
-            "arguments to setup_logger"
+            "arguments to setup_logger",
+            stacklevel=2,
         )
 
     logger = logging.getLogger(logger_name)

@@ -6,7 +6,7 @@
 #endif
 
 #include <cmath>
-#include <functional>
+#include <limits>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
 #if defined(_USE_MATH_DEFINES)
@@ -52,30 +52,43 @@
 #endif
 
 namespace amici {
+// verify that we have infinity, NaN, and that negative infinity is -inf
+static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required");
 
 constexpr double pi = M_PI;
 
 // clang-format off
 
-constexpr int AMICI_ONEOUTPUT=                 5;
-
 // Return codes
 //
 // NOTE: When adding / removing / renaming return codes,
 //       please update simulation_status_to_str_map in amici.h
+constexpr int AMICI_WARNING=                  99;
 constexpr int AMICI_RECOVERABLE_ERROR=         1;
 constexpr int AMICI_UNRECOVERABLE_ERROR=     -10;
 constexpr int AMICI_TOO_MUCH_WORK=            -1;
 constexpr int AMICI_TOO_MUCH_ACC=             -2;
 constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
+constexpr int AMICI_LSETUP_FAIL=              -6;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
 constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
+constexpr int AMICI_RTFUNC_FAIL=             -12;
+constexpr int AMICI_CONSTR_FAIL=             -15;
+constexpr int AMICI_CVODES_CONSTR_FAIL=      -15;
+constexpr int AMICI_IDAS_CONSTR_FAIL=        -11;
 constexpr int AMICI_ILL_INPUT=               -22;
+constexpr int AMICI_BAD_T=                   -25;
+constexpr int AMICI_BAD_DKY=                 -26;
+constexpr int AMICI_FIRST_QRHSFUNC_ERR=      -32;
+constexpr int AMICI_SRHSFUNC_FAIL=           -41;
+constexpr int AMICI_FIRST_SRHSFUNC_ERR=      -42;
+constexpr int AMICI_REPTD_SRHSFUNC_ERR=      -43;
+constexpr int AMICI_UNREC_SRHSFUNC_ERR=      -44;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
 constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
-constexpr int AMICI_SINGULAR_JACOBIAN=      -809;
+constexpr int AMICI_SINGULAR_JACOBIAN=     -9987;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
 constexpr int AMICI_NOT_RUN=               -1001;
@@ -235,6 +248,7 @@ enum class RDataReporting {
     full,
     residuals,
     likelihood,
+    observables_likelihood,
 };
 
 /** boundary conditions for splines */
@@ -253,6 +267,15 @@ enum class SplineExtrapolation {
     linear          =  1,
     polynomial      =  2,
     periodic        =  3,
+};
+
+/** Constraints on state variables */
+enum class Constraint {
+    none = 0,
+    non_negative = 1,
+    non_positive = -1,
+    positive = 2,
+    negative = -2,
 };
 
 // clang-format on

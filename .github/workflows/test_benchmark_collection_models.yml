@@ -2,76 +2,158 @@ name: Benchmark Collection
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
   pull_request:
     branches:
-      - master
-      - develop
+      - main
   merge_group:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
 
 jobs:
-  build:
-    name: Benchmark Collection
+  cpp:
+    name: Benchmark Collection CPP
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.12" ]
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 20
 
-    # install dependencies
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y swig libatlas-base-dev
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
 
     # install AMICI
     - name: Create AMICI sdist
-      run: |
-        pip3 install build && cd python/sdist && python3 -m build --sdist
+      run: pip3 install build && cd python/sdist && python3 -m build --sdist
+
     - name: Install AMICI sdist
       run: |
         pip3 install --user petab[vis] && \
-        AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis]
+        AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
-    # retrieve test models
-    - name: Download and test benchmark collection
+    - name: Install test dependencies
       run: |
-        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
-          && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        &&  python3 -m pip install -U sympy \
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
 
-    # run gradient checks
-    - name: Run Gradient Checks
+    - name: Download benchmark collection
       run: |
-        pip install git+https://github.com/ICB-DCM/fiddy.git \
-          && cd tests/benchmark-models && pytest ./test_petab_benchmark.py
+        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
 
-    # upload results
-    - uses: actions/upload-artifact@v3
+    - name: Run tests
+      env:
+        AMICI_PARALLEL_COMPILE: ""
+      run: |
+        pytest tests/benchmark_models/test_petab_benchmark.py \
+          --durations=10 \
+          --cov=amici \
+          --cov-report=xml:"coverage_py.xml" \
+          --cov-append \
+
+    - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      uses: codecov/codecov-action@v5
       with:
-        name: computation times
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
+
+    # collect & upload results
+    - name: Aggregate results
+      run: |
+          python3 tests/benchmark_models/evaluate_benchmark.py
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
         path: |
-          tests/benchmark-models/computation_times.csv
-          tests/benchmark-models/computation_times.png
+          tests/benchmark_models/computation_times.csv
+          tests/benchmark_models/computation_times.png
+
+  jax:
+    name: Benchmark Collection JAX
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12" ]
+        extract_subexpressions: ["true", "false"]
+    env:
+      AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 20
+
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
+    - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+
+    - name: Create AMICI sdist
+      run: pip3 install build && cd python/sdist && python3 -m build --sdist
+
+    - name: Install AMICI sdist
+      run: |
+        pip3 install --user petab[vis] && \
+        pip3 install -v --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
+
+    - name: Install test dependencies
+      run: |
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        &&  python3 -m pip install -U sympy \
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
+
+    - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654
+
+    - name: Download benchmark collection
+      run: |
+        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
+
+    - name: Run JAX tests
+      env:
+        AMICI_PARALLEL_COMPILE: ""
+      run: |
+        pytest tests/benchmark_models/test_petab_benchmark_jax.py \
+          --durations=10 \
+          --cov=amici \
+          --cov-report=xml:"coverage_py.xml" \
+          --cov-append
+
+    - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true

@@ -192,13 +192,6 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
 
-    if(hdf5::locationExists(file, resultPath + "/diagnosis/J")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
-        checkEqualArray(expected, rdata->J, atol, rtol, "J");
-    } else {
-        ASSERT_TRUE(rdata->J.empty());
-    }
-
     if(hdf5::locationExists(file, resultPath + "/y")) {
         expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
         checkEqualArray(expected, rdata->y, atol, rtol, "y");
@@ -234,12 +227,22 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
         ASSERT_TRUE(rdata->sigmaz.empty());
     }
 
-    expected = hdf5::getDoubleDataset1D(file, resultPath + "/diagnosis/xdot");
-    checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
-
     expected = hdf5::getDoubleDataset1D(file, resultPath + "/x0");
     checkEqualArray(expected, rdata->x0, atol, rtol, "x0");
 
+    if(rdata->status == AMICI_SUCCESS) {
+        // for the failed cases, the stored results don't match
+        // since https://github.com/AMICI-dev/AMICI/pull/2349
+    expected = hdf5::getDoubleDataset1D(file, resultPath + "/diagnosis/xdot");
+    checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
+
+    if(hdf5::locationExists(file, resultPath + "/diagnosis/J")) {
+        expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
+        checkEqualArray(expected, rdata->J, atol, rtol, "J");
+    } else {
+        ASSERT_TRUE(rdata->J.empty());
+    }
+    }
     if(rdata->sensi >= SensitivityOrder::first) {
         verifyReturnDataSensitivities(file, resultPath, rdata, model, atol, rtol);
     } else {

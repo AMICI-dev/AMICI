@@ -17,12 +17,16 @@ from setuptools.command.sdist import sdist
 class AmiciInstall(install):
     """Custom `install` command to handle extra arguments"""
 
-    print("running AmiciInstall")
-
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
         ("no-clibs", None, "Don't build AMICI C++ extension"),
     ]
+
+    def run(self):
+        """Setuptools entry-point"""
+        print(f"running {self.__class__.__name__}")
+
+        super().run()
 
     def initialize_options(self):
         super().initialize_options()
@@ -126,6 +130,16 @@ class AmiciBuildPy(build_py):
 
 
 class AmiciBuildCMakeExtension(BuildExtension):
+    def finalize_options(self):
+        # Allow overriding the - since setuptools version 64 randomly named -
+        #  setuptools/distutils temporary build directory via environment variable.
+        # This is useful for CI builds where we need the files in this directory
+        #  for code coverage analysis.
+        if os.getenv("AMICI_BUILD_TEMP"):
+            self.build_temp = os.getenv("AMICI_BUILD_TEMP")
+
+        super().finalize_options()
+
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in
         the wheel

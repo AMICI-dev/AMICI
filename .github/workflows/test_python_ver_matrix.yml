@@ -2,13 +2,12 @@ name: Python Tests
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
 
   pull_request:
     branches:
-      - master
   workflow_dispatch:
+  merge_group:
   schedule:
     - cron:  '48 4 * * *'
 
@@ -16,7 +15,7 @@ jobs:
   build:
     name: Python Version Matrix
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     continue-on-error: ${{ matrix.experimental }}
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
@@ -25,43 +24,61 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
-        experimental: [false]
+        include:
+          - python-version: '3.11'
+            experimental: false
+          - python-version: '3.12'
+            experimental: false
+          - python-version: '3.13'
+            experimental: false
 
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 20
 
-    # install dependencies
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-          swig \
-          libatlas-base-dev \
-          libhdf5-serial-dev \
-          libboost-math-dev
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
 
-    # install AMICI
     - name: Build BNGL
-      run: |
-        scripts/buildBNGL.sh
+      run: scripts/buildBNGL.sh
+
     - name: Install python package
+      run: scripts/installAmiciSource.sh
+
+    # install pysb before sympy to allow for sympy>=1.12 (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
+    - run: source venv/bin/activate && pip3 install git+https://github.com/pysb/pysb
+
+    - run: source venv/bin/activate && pip3 install "sympy>1.12"
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
       run: |
-        scripts/installAmiciSource.sh
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    # https://github.com/sbmlteam/python-libsbml/issues/40
+    - name: No -Werror
+      if: matrix.python-version == '3.11'
+      run: sed -ri "s/    error//" pytest.ini
 
     - name: Python tests
       run: |
-        source build/venv/bin/activate \
-          && pip3 install git+https://github.com/pysb/pysb \
-          && python3 -m pytest --ignore-glob=*petab* \
+        source venv/bin/activate \
+          && python3 -m pytest \
+            --durations=10 \
+            --ignore-glob=*petab* \
             --ignore-glob=*test_splines.py ${AMICI_DIR}/python/tests

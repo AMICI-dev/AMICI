@@ -1,0 +1,34 @@
+name: Install AMICI dependencies for MacOS
+description: Install AMICI dependencies for MacOS
+
+runs:
+  using: "composite"
+  steps:
+    # use all available cores
+    - run: echo "AMICI_PARALLEL_COMPILE=" >> $GITHUB_ENV
+      shell: bash
+
+    # AMICI repository root
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+      shell: bash
+
+    # BioNetGen path
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+      shell: bash
+
+    # CMake hints
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "OpenMP_ROOT=$(brew --prefix)/opt/libomp" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "BOOST_ROOT=$(brew --prefix)/opt/boost" >> $GITHUB_ENV
+      shell: bash
+
+    # install amici dependencies
+    - name: homebrew
+      # install hdf5 without dependencies, because pkgconf installation fails,
+      # because it's already installed on the runners. install the other
+      # hdf5 dependencies (libaec) manually
+      run: brew install libaec && brew install --ignore-dependencies hdf5 && brew install libomp boost
+      shell: bash

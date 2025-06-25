@@ -1,20 +1,16 @@
 """Miscellaneous functions related to model import, independent of any specific
- model format"""
+model format"""
+
 import enum
 import itertools as itt
 import numbers
 import sys
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    Optional,
-    Sequence,
     SupportsFloat,
-    Tuple,
-    Union,
 )
+from collections.abc import Callable
+from collections.abc import Iterable, Sequence
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
@@ -33,7 +29,7 @@ class SBMLException(Exception):
     pass
 
 
-SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
+SymbolDef = dict[sp.Symbol, dict[str, sp.Expr] | sp.Expr]
 
 
 # Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
@@ -44,13 +40,13 @@ class CircularDependencyError(ValueError):
         #  error messages.  That's convenient for doctests.
         s = "Circular dependencies exist among these items: {{{}}}".format(
             ", ".join(
-                "{!r}:{!r}".format(key, value)
+                f"{key!r}:{value!r}"
                 for key, value in sorted(
                     {str(k): v for k, v in data.items()}.items()
                 )
             )
         )
-        super(CircularDependencyError, self).__init__(s)
+        super().__init__(s)
         self.data = data
 
 
@@ -72,7 +68,7 @@ class ObservableTransformation(str, enum.Enum):
 
 
 def noise_distribution_to_observable_transformation(
-    noise_distribution: Union[str, Callable]
+    noise_distribution: str | Callable,
 ) -> ObservableTransformation:
     """
     Parse noise distribution string and extract observable transformation
@@ -93,7 +89,7 @@ def noise_distribution_to_observable_transformation(
 
 
 def noise_distribution_to_cost_function(
-    noise_distribution: Union[str, Callable]
+    noise_distribution: str | Callable,
 ) -> Callable[[str], str]:
     """
     Parse noise distribution string to a cost function definition amici can
@@ -261,7 +257,7 @@ def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
 def smart_subs_dict(
     sym: sp.Expr,
     subs: SymbolDef,
-    field: Optional[str] = None,
+    field: str | None = None,
     reverse: bool = True,
 ) -> sp.Expr:
     """
@@ -318,7 +314,7 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
 
 
 def toposort_symbols(
-    symbols: SymbolDef, field: Optional[str] = None
+    symbols: SymbolDef, field: str | None = None
 ) -> SymbolDef:
     """
     Topologically sort symbol definitions according to their interdependency
@@ -391,6 +387,10 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         "arccoth": sp.functions.acoth,
         "arcsech": sp.functions.asech,
         "arccsch": sp.functions.acsch,
+        "lt": sp.StrictLessThan,
+        "gt": sp.StrictGreaterThan,
+        "geq": sp.GreaterThan,
+        "leq": sp.LessThan,
     }
 
     if sym.__class__.__name__ in fun_mappings:
@@ -410,7 +410,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
 
-    if isinstance(sym, (sp.Function, sp.Mul, sp.Add, sp.Pow)):
+    if isinstance(sym, (sp.Function | sp.Mul | sp.Add | sp.Pow)):
         sym._args = args
 
     elif toplevel and isinstance(sym, BooleanAtom):
@@ -423,8 +423,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 
 def _denest_piecewise(
-    args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
-) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
+    args: Sequence[sp.Expr | sp.logic.boolalg.Boolean | bool],
+) -> tuple[sp.Expr | sp.logic.boolalg.Boolean | bool]:
     """
     Denest piecewise functions that contain piecewise as condition
 
@@ -474,8 +474,8 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         symbolic expressions for arguments of the piecewise function
     """
     # how many condition-expression pairs will we have?
-    formula = sp.Float(0.0)
-    not_condition = sp.Float(1.0)
+    formula = sp.Integer(0)
+    not_condition = sp.Integer(1)
 
     if all(isinstance(arg, ExprCondPair) for arg in args):
         # sympy piecewise
@@ -486,7 +486,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
 
     for coeff, trigger in grouped_args:
         if isinstance(coeff, BooleanAtom):
-            coeff = sp.Float(int(bool(coeff)))
+            coeff = sp.Integer(int(bool(coeff)))
 
         if trigger == sp.true:
             return formula + coeff * not_condition
@@ -496,7 +496,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
 
         tmp = _parse_heaviside_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
-        not_condition *= 1 - tmp
+        not_condition *= sp.Integer(1) - tmp
 
     return formula
 
@@ -520,21 +520,30 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
         # step with H(0) = 1
         if isinstance(trigger, sp.core.relational.StrictLessThan):
             # x < y => x - y < 0 => r < 0
-            return 1 - sp.Heaviside(root)
+            return sp.Integer(1) - sp.Heaviside(root, 1)
         if isinstance(trigger, sp.core.relational.LessThan):
             # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
-            return sp.Heaviside(-root)
+            return sp.Heaviside(-root, 1)
         if isinstance(trigger, sp.core.relational.StrictGreaterThan):
             # y > x => y - x < 0 => -r < 0
-            return 1 - sp.Heaviside(-root)
+            return sp.Integer(1) - sp.Heaviside(-root, 1)
         if isinstance(trigger, sp.core.relational.GreaterThan):
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
-            return sp.Heaviside(root)
+            return sp.Heaviside(root, 1)
+
+    # rewrite n-ary XOR to OR to be handled below:
+    trigger = trigger.replace(sp.Xor, _xor_to_or)
+    # rewrite ==, !==
+    trigger = trigger.replace(sp.Eq, _eq_to_and)
+    trigger = trigger.replace(sp.Ne, _ne_to_or)
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return 1 - sp.Mul(
-            *[1 - _parse_heaviside_trigger(arg) for arg in trigger.args]
+        return sp.Integer(1) - sp.Mul(
+            *[
+                sp.Integer(1) - _parse_heaviside_trigger(arg)
+                for arg in trigger.args
+            ]
         )
 
     if isinstance(trigger, sp.And):
@@ -546,9 +555,57 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     )
 
 
+def _xor_to_or(*args):
+    """
+    Replace XOR by OR expression.
+
+    ``xor(x, y, ...) = (x & ~y & ...) | (~x & y & ...) | ...``.
+
+    to be used in ``trigger = trigger.replace(sp.Xor, _xor_to_or)``.
+    """
+    res = sp.false
+    for i in range(len(args)):
+        res = sp.Or(
+            res,
+            sp.And(
+                *(arg if i == j else sp.Not(arg) for j, arg in enumerate(args))
+            ),
+        )
+    return res.simplify()
+
+
+def _eq_to_and(*args):
+    """
+    Replace equality expression with numerical arguments by inequalities.
+
+    ``Eq(x, y) = (x >= y) & (x <= y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Eq, _eq_to_and)``.
+    """
+    x, y = args
+    return (x >= y) & (x <= y)
+
+
+def _ne_to_or(*args):
+    """
+    Replace not-equal expression with numerical arguments by inequalities.
+
+    ``Ne(x, y) = (x > y) | (x < y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Ne, _ne_to_or)``.
+
+    This expects x and y to be not-NaN. No model should rely on NaN semantics
+    anyways: In sympy, NaNs are equal, but they don't support <, >, >=, <=.
+    In SBML, NaNs are equal, but support all comparisons. In IEEE 754, NaNs
+    are not equal, but support all comparisons.
+    """
+    x, y = args
+    return (x > y) | (x < y)
+
+
 def grouper(
     iterable: Iterable, n: int, fillvalue: Any = None
-) -> Iterable[Tuple[Any]]:
+) -> Iterable[tuple[Any]]:
     """
     Collect data into fixed-length chunks or blocks
 
@@ -570,7 +627,7 @@ def grouper(
 
 
 def _check_unsupported_functions(
-    sym: sp.Expr, expression_type: str, full_sym: Optional[sp.Expr] = None
+    sym: sp.Expr, expression_type: str, full_sym: sp.Expr | None = None
 ):
     """
     Recursively checks the symbolic expression for unsupported symbolic
@@ -595,6 +652,7 @@ def _check_unsupported_functions(
         sp.functions.factorial,
         sp.functions.ceiling,
         sp.functions.floor,
+        sp.functions.tan,
         sp.functions.sec,
         sp.functions.csc,
         sp.functions.cot,
@@ -622,7 +680,7 @@ def _check_unsupported_functions(
 
 
 def cast_to_sym(
-    value: Union[SupportsFloat, sp.Expr, BooleanAtom], input_name: str
+    value: SupportsFloat | sp.Expr | BooleanAtom, input_name: str
 ) -> sp.Expr:
     """
     Typecasts the value to :py:class:`sympy.Float` if possible, and ensures the
@@ -637,20 +695,20 @@ def cast_to_sym(
     :return:
         typecast value
     """
-    if isinstance(value, (sp.RealNumber, numbers.Number)):
+    if isinstance(value, (sp.RealNumber | numbers.Number)):
         value = sp.Float(float(value))
     elif isinstance(value, BooleanAtom):
         value = sp.Float(float(bool(value)))
 
     if not isinstance(value, sp.Expr):
         raise TypeError(
-            f"Couldn't cast {input_name} to sympy.Expr, was " f"{type(value)}"
+            f"Couldn't cast {input_name} to sympy.Expr, was {type(value)}"
         )
 
     return value
 
 
-def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
+def generate_measurement_symbol(observable_id: str | sp.Symbol):
     """
     Generates the appropriate measurement symbol for the provided observable
 
@@ -665,7 +723,7 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     return symbol_with_assumptions(f"m{observable_id}")
 
 
-def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
+def generate_regularization_symbol(observable_id: str | sp.Symbol):
     """
     Generates the appropriate regularization symbol for the provided observable
 
@@ -681,7 +739,7 @@ def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
 
 
 def generate_flux_symbol(
-    reaction_index: int, name: Optional[str] = None
+    reaction_index: int, name: str | None = None
 ) -> sp.Symbol:
     """
     Generate identifier symbol for a reaction flux.
@@ -734,5 +792,27 @@ def strip_pysb(symbol: sp.Basic) -> sp.Basic:
         return symbol
 
 
+def unique_preserve_order(seq: Sequence) -> list:
+    """Return a list of unique elements in Sequence, keeping only the first
+    occurrence of each element
+
+    Parameters:
+        seq: Sequence to prune
+
+    Returns:
+        List of unique elements in ``seq``
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+
 sbml_time_symbol = symbol_with_assumptions("time")
 amici_time_symbol = symbol_with_assumptions("t")
+
+
+def _default_simplify(x):
+    """Default simplification applied in DEModel"""
+    # We need this as a free function instead of a lambda to have it picklable
+    #  for parallel simplification
+    return sp.powsimp(x, deep=True)

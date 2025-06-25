@@ -2,8 +2,9 @@
 SBML Import
 -----------
 This module provides all necessary functionality to import a model specified
-in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
+in the `Systems Biology Markup Language (SBML) <https://sbml.org/>`_.
 """
+
 import copy
 import itertools as itt
 import logging
@@ -15,36 +16,28 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
 )
+from collections.abc import Callable
+from collections.abc import Iterable, Sequence
 
-import libsbml as sbml
+import libsbml
+from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
 import numpy as np
 import sympy as sp
-from sympy.logic.boolalg import BooleanFalse, BooleanTrue
+from sympy.logic.boolalg import BooleanFalse, BooleanTrue, Boolean
 
 from . import has_clibs
+from .de_model import DEModel
 from .constants import SymbolId
 from .de_export import (
     DEExporter,
-    DEModel,
-    _default_simplify,
-    smart_is_zero_matrix,
-    symbol_with_assumptions,
 )
+from .de_model_components import symbol_to_type, Expression
+from .sympy_utils import smart_is_zero_matrix, smart_multiply
 from .import_utils import (
     RESERVED_SYMBOLS,
     _check_unsupported_functions,
     _get_str_symbol_identifiers,
-    _parse_special_functions,
     amici_time_symbol,
     annotation_namespace,
     generate_measurement_symbol,
@@ -54,18 +47,26 @@ from .import_utils import (
     sbml_time_symbol,
     smart_subs,
     smart_subs_dict,
+    symbol_with_assumptions,
     toposort_symbols,
+    _default_simplify,
+    generate_flux_symbol,
+    _parse_piecewise_to_heaviside,
+    _xor_to_or,
+    _eq_to_and,
+    _ne_to_or,
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .sbml_utils import SBMLException, _parse_logical_operators
+from .sbml_utils import SBMLException
 from .splines import AbstractSpline
+from sympy.matrices.dense import MutableDenseMatrix
 
-SymbolicFormula = Dict[sp.Symbol, sp.Expr]
+SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
 
 default_symbols = {symbol: {} for symbol in SymbolId}
 
-ConservationLaw = Dict[str, Union[str, sp.Expr]]
+ConservationLaw = dict[str, str | sp.Expr]
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -136,7 +137,7 @@ class SbmlImporter:
 
     def __init__(
         self,
-        sbml_source: Union[str, Path, sbml.Model],
+        sbml_source: str | Path | libsbml.Model,
         show_sbml_warnings: bool = False,
         from_file: bool = True,
         discard_annotations: bool = False,
@@ -159,10 +160,10 @@ class SbmlImporter:
         :param discard_annotations:
             discard information contained in AMICI SBML annotations (debug).
         """
-        if isinstance(sbml_source, sbml.Model):
-            self.sbml_doc: sbml.Document = sbml_source.getSBMLDocument()
+        if isinstance(sbml_source, libsbml.Model):
+            self.sbml_doc: libsbml.Document = sbml_source.getSBMLDocument()
         else:
-            self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
+            self.sbml_reader: libsbml.SBMLReader = libsbml.SBMLReader()
             if from_file:
                 sbml_doc = self.sbml_reader.readSBMLFromFile(str(sbml_source))
             else:
@@ -174,35 +175,35 @@ class SbmlImporter:
         # process document
         self._process_document()
 
-        self.sbml: sbml.Model = self.sbml_doc.getModel()
+        self.sbml: libsbml.Model = self.sbml_doc.getModel()
 
         # Long and short names for model components
-        self.symbols: Dict[SymbolId, Dict[sp.Symbol, Dict[str, Any]]] = {}
+        self.symbols: dict[SymbolId, dict[sp.Symbol, dict[str, Any]]] = {}
 
-        self._local_symbols: Dict[str, Union[sp.Expr, sp.Function]] = {}
+        self._local_symbols: dict[str, sp.Expr | sp.Function] = {}
         self.compartments: SymbolicFormula = {}
         self.compartment_assignment_rules: SymbolicFormula = {}
         self.species_assignment_rules: SymbolicFormula = {}
         self.parameter_assignment_rules: SymbolicFormula = {}
         self.initial_assignments: SymbolicFormula = {}
-        self.splines = []
+        self.splines: list[AbstractSpline] = []
 
         self._reset_symbols()
 
-        # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
+        # https://sbml.org/software/libsbml/5.18.0/docs/formatted/python-api/classlibsbml_1_1_l3_parser_settings.html#ab30d7ed52ca24cbb842d0a7fed7f4bfd
         # all defaults except disable unit parsing
-        self.sbml_parser_settings = sbml.L3ParserSettings(
-            self.sbml,
-            sbml.L3P_PARSE_LOG_AS_LOG10,
-            sbml.L3P_EXPAND_UNARY_MINUS,
-            sbml.L3P_NO_UNITS,
-            sbml.L3P_AVOGADRO_IS_CSYMBOL,
-            sbml.L3P_COMPARE_BUILTINS_CASE_INSENSITIVE,
-            None,
-            sbml.L3P_MODULO_IS_PIECEWISE,
-        )
+        self.sbml_parser_settings = libsbml.L3ParserSettings()
+        self.sbml_parser_settings.setModel(self.sbml)
+        self.sbml_parser_settings.setParseUnits(libsbml.L3P_NO_UNITS)
 
         self._discard_annotations: bool = discard_annotations
+        self._mathml_parser = SBMLMathMLParser(
+            sbml_level=self.sbml.getLevel(),
+            sbml_version=self.sbml.getVersion(),
+            symbol_kwargs={"real": True},
+            ignore_units=True,
+            evaluate=True,
+        )
 
     @log_execution_time("loading SBML", logger)
     def _process_document(self) -> None:
@@ -222,7 +223,7 @@ class SbmlImporter:
             for i_plugin in range(self.sbml_doc.getNumPlugins())
         ):
             # see libsbml CompFlatteningConverter for options
-            conversion_properties = sbml.ConversionProperties()
+            conversion_properties = libsbml.ConversionProperties()
             conversion_properties.addOption("flatten comp", True)
             conversion_properties.addOption("leave_ports", False)
             conversion_properties.addOption("performValidation", False)
@@ -231,7 +232,7 @@ class SbmlImporter:
                 log_execution_time("flattening hierarchical SBML", logger)(
                     self.sbml_doc.convert
                 )(conversion_properties)
-                != sbml.LIBSBML_OPERATION_SUCCESS
+                != libsbml.LIBSBML_OPERATION_SUCCESS
             ):
                 raise SBMLException(
                     "Required SBML comp extension is currently not supported "
@@ -246,15 +247,13 @@ class SbmlImporter:
         # apply several model simplifications that make our life substantially
         # easier
         if self.sbml_doc.getModel().getNumFunctionDefinitions():
-            convert_config = (
-                sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
-            )
+            convert_config = libsbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
             log_execution_time("converting SBML functions", logger)(
                 self.sbml_doc.convert
             )(convert_config)
 
         convert_config = (
-            sbml.SBMLLocalParameterConverter().getDefaultProperties()
+            libsbml.SBMLLocalParameterConverter().getDefaultProperties()
         )
         log_execution_time("converting SBML local parameters", logger)(
             self.sbml_doc.convert
@@ -278,23 +277,23 @@ class SbmlImporter:
     def sbml2amici(
         self,
         model_name: str,
-        output_dir: Union[str, Path] = None,
-        observables: Dict[str, Dict[str, str]] = None,
-        event_observables: Dict[str, Dict[str, str]] = None,
+        output_dir: str | Path = None,
+        observables: dict[str, dict[str, str | sp.Expr]] = None,
+        event_observables: dict[str, dict[str, str | sp.Expr]] = None,
         constant_parameters: Iterable[str] = None,
-        sigmas: Dict[str, Union[str, float]] = None,
-        event_sigmas: Dict[str, Union[str, float]] = None,
-        noise_distributions: Dict[str, Union[str, Callable]] = None,
-        event_noise_distributions: Dict[str, Union[str, Callable]] = None,
-        verbose: Union[int, bool] = logging.ERROR,
+        sigmas: dict[str, str | float | sp.Expr] = None,
+        event_sigmas: dict[str, str | float | sp.Expr] = None,
+        noise_distributions: dict[str, str | Callable] = None,
+        event_noise_distributions: dict[str, str | Callable] = None,
+        verbose: int | bool = logging.ERROR,
         assume_pow_positivity: bool = False,
         compiler: str = None,
         allow_reinit_fixpar_initcond: bool = True,
         compile: bool = True,
         compute_conservation_laws: bool = True,
-        simplify: Optional[Callable] = _default_simplify,
+        simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = True,
+        log_as_log10: bool = None,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
@@ -308,10 +307,27 @@ class SbmlImporter:
 
         Note that this generates model ODEs for changes in concentrations, not
         amounts unless the `hasOnlySubstanceUnits` attribute has been
-        defined for a particular species.
+        defined in the SBML model for a particular species.
 
         Sensitivity analysis for local parameters is enabled by creating
         global parameters ``_{reactionId}_{localParameterName}``.
+
+        .. note::
+
+            When providing expressions for (event) observables and their sigmas
+            as strings (see below), those will be passed to
+            :func:`sympy.sympify`. The supported grammar is not well defined.
+            Note there can be issues with, for example, ``==`` or n-ary (n>2)
+            comparison operators.
+            Also note that operator precedence and function names may differ
+            from SBML L3 formulas or PEtab math expressions.
+            Passing a sympy expression directly will
+            be the safer option for more complex expressions.
+
+        .. note::
+
+            In any math expressions passed to this function, ``time`` will
+            be interpreted as the time symbol.
 
         :param model_name:
             Name of the generated model package.
@@ -325,23 +341,53 @@ class SbmlImporter:
 
         :param observables:
             Observables to be added to the model:
-            ``dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)})``.
+
+            .. code-block::
+
+              dict(
+                observableId: {
+                    'name': observableName, # optional
+                    'formula': formulaString or sympy expression,
+                }
+              )
+
+            If the observation function is passed as a string,
+            it will be passed to :func:`sympy.sympify` (see note above).
 
         :param event_observables:
             Event observables to be added to the model:
-            ``dictionary( eventObservableId:{'name':eventObservableName
-            (optional), 'event':eventId, 'formula':formulaString)})``
+
+            .. code-block::
+
+              dict(
+                eventObservableId: {
+                    'name': eventObservableName, # optional
+                    'event':eventId,
+                    'formula': formulaString or sympy expression,
+                }
+              )
+
+            If the formula is passed as a string, it will be passed to
+            :func:`sympy.sympify` (see note above).
 
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
 
         :param sigmas:
-            dictionary(observableId: sigma value or (existing) parameter name)
+            Expression for the scale parameter of the noise distribution for
+            each observable. This can be a numeric value, a sympy expression,
+            or an expression string that will be passed to
+            :func:`sympy.sympify`.
+
+            ``{observableId: sigma}``
 
         :param event_sigmas:
-            dictionary(eventObservableId: sigma value or (existing) parameter
-            name)
+            Expression for the scale parameter of the noise distribution for
+            each observable. This can be a numeric value, a sympy expression,
+            or an expression string that will be passed to
+            :func:`sympy.sympify`.
+
+            ``{eventObservableId: sigma}``
 
         :param noise_distributions:
             dictionary(observableId: noise type).
@@ -360,8 +406,8 @@ class SbmlImporter:
             :func:`amici.import_utils.noise_distribution_to_cost_function`.
 
         :param verbose:
-            verbosity level for logging, ``True``/``False`` default to
-            ``logging.Error``/``logging.DEBUG``
+            Verbosity level for logging, ``True``/``False`` defaults to
+            ``logging.Error``/``logging.DEBUG``.
 
         :param assume_pow_positivity:
             if set to ``True``, a special pow function is
@@ -373,7 +419,7 @@ class SbmlImporter:
             extension, e.g. ``/usr/bin/clang``.
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.de_export.ODEExporter`
+            See :class:`amici.de_export.DEExporter`.
 
         :param compile:
             If ``True``, compile the generated Python package,
@@ -397,15 +443,14 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`amici.ODEModel._simplify`
+            See :attr:`amici.DEModel._simplify`.
 
         :param cache_simplify:
-                see :meth:`amici.ODEModel.__init__`
+            See :meth:`amici.DEModel.__init__`.
 
         :param log_as_log10:
-            If ``True``, log in the SBML model will be parsed as ``log10``
-            (default), if ``False``, log will be parsed as natural logarithm
-            ``ln``.
+            This option is deprecated and will be removed in a future version.
+            Also, this option never had any effect on model import.
 
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
@@ -414,10 +459,20 @@ class SbmlImporter:
         :param hardcode_symbols:
             List of SBML entity IDs that are to be hardcoded in the generated model.
             Their values cannot be changed anymore after model import.
-            Currently only parameters that are not targets of rules or
+            Currently, only parameters that are not targets of rules or
             initial assignments are supported.
         """
         set_log_level(logger, verbose)
+
+        if log_as_log10 is not None:
+            # deprecated 04/2025
+            warnings.warn(
+                "The `log_as_log10` argument is deprecated and will be "
+                "removed in a future version. This argument can safely be "
+                "dropped without replacement.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
 
         ode_model = self._build_ode_model(
             observables=observables,
@@ -431,7 +486,6 @@ class SbmlImporter:
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
             cache_simplify=cache_simplify,
-            log_as_log10=log_as_log10,
             hardcode_symbols=hardcode_symbols,
         )
 
@@ -451,27 +505,138 @@ class SbmlImporter:
             if not has_clibs:
                 warnings.warn(
                     "AMICI C++ extensions have not been built. "
-                    "Generated model code, but unable to compile."
+                    "Generated model code, but unable to compile.",
+                    stacklevel=2,
                 )
             exporter.compile_model()
 
+    def sbml2jax(
+        self,
+        model_name: str,
+        output_dir: str | Path = None,
+        observables: dict[str, dict[str, str]] = None,
+        sigmas: dict[str, str | float] = None,
+        noise_distributions: dict[str, str | Callable] = None,
+        verbose: int | bool = logging.ERROR,
+        compute_conservation_laws: bool = True,
+        simplify: Callable | None = _default_simplify,
+        cache_simplify: bool = False,
+        log_as_log10: bool = None,
+    ) -> None:
+        """
+        Generate and compile AMICI jax files for the model provided to the
+        constructor.
+
+        The resulting model can be imported as a regular Python module.
+
+        Note that this generates model ODEs for changes in concentrations, not
+        amounts unless the `hasOnlySubstanceUnits` attribute has been
+        defined for a particular species.
+
+        :param model_name:
+            Name of the generated model package.
+            Note that in a given Python session, only one model with a given
+            name can be loaded at a time.
+            The generated Python extensions cannot be unloaded. Therefore,
+            make sure to choose a unique name for each model.
+
+        :param output_dir:
+            Directory where the generated model package will be stored.
+
+        :param observables:
+            Observables to be added to the model:
+            ``dictionary( observableId:{'name':observableName
+            (optional), 'formula':formulaString)})``.
+
+        :param sigmas:
+            dictionary(observableId: sigma value or (existing) parameter name)
+
+        :param noise_distributions:
+            dictionary(observableId: noise type).
+            If nothing is passed for some observable id, a normal model is
+            assumed as default. Either pass a noise type identifier, or a
+            callable generating a custom noise string.
+            For noise identifiers, see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`.
+
+        :param verbose:
+            verbosity level for logging, ``True``/``False`` default to
+            ``logging.Error``/``logging.DEBUG``
+
+        :param compute_conservation_laws:
+            if set to ``True``, conservation laws are automatically computed
+            and applied such that the state-jacobian of the ODE
+            right-hand-side has full rank. This option should be set to
+            ``True`` when using the Newton algorithm to compute steadystate
+            sensitivities.
+            Conservation laws for constant species are enabled by default.
+            Support for conservation laws for non-constant species is
+            experimental and may be enabled by setting an environment variable
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
+            to use the algorithm proposed by De Martino et al. (2014)
+            https://doi.org/10.1371/journal.pone.0100750, or to any other value
+            to use the deterministic algorithm implemented in
+            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            run for a very long time. This has been observed for example in the
+            case of stoichiometric coefficients with many significant digits.
+
+        :param simplify:
+            see :attr:`amici.DEModel._simplify`
+
+        :param cache_simplify:
+                see :meth:`amici.DEModel.__init__`
+
+        :param log_as_log10:
+            This option is deprecated and will be removed in a future version.
+            Also, this option never had any effect on model import.
+        """
+        set_log_level(logger, verbose)
+
+        if log_as_log10 is not None:
+            warnings.warn(
+                "The `log_as_log10` argument is deprecated and will be "
+                "removed in a future version. This argument can safely be "
+                "dropped without replacement.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+
+        ode_model = self._build_ode_model(
+            observables=observables,
+            sigmas=sigmas,
+            noise_distributions=noise_distributions,
+            verbose=verbose,
+            compute_conservation_laws=compute_conservation_laws,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+        )
+
+        from amici.jax.ode_export import ODEExporter
+
+        exporter = ODEExporter(
+            ode_model,
+            model_name=model_name,
+            outdir=output_dir,
+            verbose=verbose,
+        )
+        exporter.generate_model_code()
+
     def _build_ode_model(
         self,
-        observables: Dict[str, Dict[str, str]] = None,
-        event_observables: Dict[str, Dict[str, str]] = None,
+        observables: dict[str, dict[str, str]] = None,
+        event_observables: dict[str, dict[str, str]] = None,
         constant_parameters: Iterable[str] = None,
-        sigmas: Dict[str, Union[str, float]] = None,
-        event_sigmas: Dict[str, Union[str, float]] = None,
-        noise_distributions: Dict[str, Union[str, Callable]] = None,
-        event_noise_distributions: Dict[str, Union[str, Callable]] = None,
-        verbose: Union[int, bool] = logging.ERROR,
+        sigmas: dict[str, str | float] = None,
+        event_sigmas: dict[str, str | float] = None,
+        noise_distributions: dict[str, str | Callable] = None,
+        event_noise_distributions: dict[str, str | Callable] = None,
+        verbose: int | bool = logging.ERROR,
         compute_conservation_laws: bool = True,
-        simplify: Optional[Callable] = _default_simplify,
+        simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = True,
         hardcode_symbols: Sequence[str] = None,
     ) -> DEModel:
-        """Generate an ODEModel from this SBML model.
+        """Generate a DEModel from this SBML model.
 
         See :py:func:`sbml2amici` for parameters.
         """
@@ -499,11 +664,6 @@ class SbmlImporter:
             event_noise_distributions = {}
 
         self._reset_symbols()
-        self.sbml_parser_settings.setParseLog(
-            sbml.L3P_PARSE_LOG_AS_LOG10
-            if log_as_log10
-            else sbml.L3P_PARSE_LOG_AS_LN
-        )
         self._process_sbml(
             constant_parameters=constant_parameters,
             hardcode_symbols=hardcode_symbols,
@@ -539,15 +699,116 @@ class SbmlImporter:
             simplify=simplify,
             cache_simplify=cache_simplify,
         )
-        ode_model.import_from_sbml_importer(
-            self, compute_cls=compute_conservation_laws
+
+        ode_model._has_quadratic_nllh = all(
+            llh["dist"]
+            in ["normal", "lin-normal", "log-normal", "log10-normal"]
+            for llh in self.symbols[SymbolId.LLHY].values()
         )
+
+        # add splines as expressions to the model
+        # saved for later substituting into the fluxes
+        spline_subs = {}
+        for ispl, spl in enumerate(self.splines):
+            spline_expr = spl.ode_model_symbol(self)
+            spline_subs[spl.sbml_id] = spline_expr
+            ode_model.add_spline(spl, spline_expr)
+
+        # assemble fluxes and add them as expressions to the model
+        assert len(self.flux_ids) == len(self.flux_vector)
+        fluxes = [
+            generate_flux_symbol(ir, name=flux_id)
+            for ir, flux_id in enumerate(self.flux_ids)
+        ]
+
+        # create dynamics without respecting conservation laws first
+        dxdt = smart_multiply(
+            self.stoichiometric_matrix, MutableDenseMatrix(fluxes)
+        )
+        # dxdt has algebraic states at the end
+        assert dxdt.shape[0] - len(self.symbols[SymbolId.SPECIES]) == len(
+            self.symbols.get(SymbolId.ALGEBRAIC_STATE, [])
+        ), (
+            self.symbols.get(SymbolId.SPECIES),
+            dxdt,
+            self.symbols.get(SymbolId.ALGEBRAIC_STATE),
+        )
+
+        # correct time derivatives for compartment changes
+        for ix, ((species_id, species), formula) in enumerate(
+            zip(self.symbols[SymbolId.SPECIES].items(), dxdt, strict=False)
+        ):
+            # rate rules and amount species don't need to be updated
+            if "dt" in species:
+                continue
+            if species["amount"]:
+                species["dt"] = formula
+            else:
+                species["dt"] = self._transform_dxdt_to_concentration(
+                    species_id, formula
+                )
+
+        # create all basic components of the DE model and add them.
+        for symbol_name in self.symbols:
+            # transform dict of lists into a list of dicts
+            args = ["name", "identifier"]
+
+            if symbol_name == SymbolId.SPECIES:
+                args += ["dt", "init"]
+            elif symbol_name == SymbolId.ALGEBRAIC_STATE:
+                args += ["init"]
+            else:
+                args += ["value"]
+
+            if symbol_name == SymbolId.EVENT:
+                args += [
+                    "assignments",
+                    "initial_value",
+                    "priority",
+                    "use_values_from_trigger_time",
+                ]
+            elif symbol_name == SymbolId.OBSERVABLE:
+                args += ["transformation"]
+            elif symbol_name == SymbolId.EVENT_OBSERVABLE:
+                args += ["event"]
+
+            comp_kwargs = [
+                {
+                    "identifier": var_id,
+                    **{k: v for k, v in var.items() if k in args},
+                }
+                for var_id, var in self.symbols[symbol_name].items()
+            ]
+
+            for comp_kwarg in comp_kwargs:
+                ode_model.add_component(
+                    symbol_to_type[symbol_name](**comp_kwarg)
+                )
+
+        # add fluxes as expressions, this needs to happen after base
+        # expressions from symbols have been parsed
+        for flux_id, flux in zip(fluxes, self.flux_vector, strict=True):
+            # replace splines inside fluxes
+            flux = flux.subs(spline_subs)
+            ode_model.add_component(
+                Expression(identifier=flux_id, name=str(flux_id), value=flux)
+            )
+
+        if compute_conservation_laws:
+            self._process_conservation_laws(ode_model)
+
+        # fill in 'self._sym' based on prototypes and components in ode_model
+        ode_model.generate_basic_variables()
+
+        # substitute SBML-rateOf constructs
+        ode_model._process_sbml_rate_of()
+
         return ode_model
 
     @log_execution_time("importing SBML", logger)
     def _process_sbml(
         self,
-        constant_parameters: List[str] = None,
+        constant_parameters: list[str] = None,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
@@ -555,7 +816,7 @@ class SbmlImporter:
 
         :param constant_parameters:
             SBML Ids identifying constant parameters
-        :param hardcode_parameters:
+        :param hardcode_symbols:
             Parameter IDs to be replaced by their values in the generated model.
         """
         if not self._discard_annotations:
@@ -631,7 +892,7 @@ class SbmlImporter:
             rule.isRate()
             and not isinstance(
                 self.sbml.getElementBySId(rule.getVariable()),
-                (sbml.Compartment, sbml.Species, sbml.Parameter),
+                libsbml.Compartment | libsbml.Species | libsbml.Parameter,
             )
             for rule in self.sbml.getListOfRules()
         ):
@@ -664,7 +925,7 @@ class SbmlImporter:
             delay = event.getDelay()
             if delay is not None:
                 try:
-                    delay_time = float(self._sympy_from_sbml_math(delay))
+                    delay_time = float(self._sympify(delay))
                     if delay_time != 0:
                         raise ValueError
                 # `TypeError` would be raised in the above `float(...)`
@@ -675,12 +936,17 @@ class SbmlImporter:
                         "currently not supported in AMICI."
                     )
             # Check for priorities
-            if event.getPriority() is not None:
-                raise SBMLException(
-                    f"Event {event_id} has a priority "
-                    "specified. This is currently not "
-                    "supported in AMICI."
-                )
+            if (prio := event.getPriority()) is not None:
+                if (prio := self._sympify(prio)) and not prio.is_Number:
+                    # Computing sensitivities with respect to event priorities
+                    #  is not implemented, so let's import such models at all.
+                    #  We could support expressions that only depend on
+                    #  constant parameters, though. But who needs that anyway?
+                    raise SBMLException(
+                        f"Event {event_id} has a non-numeric priority "
+                        "specified. This is currently not "
+                        "supported in AMICI."
+                    )
 
             # check trigger
             trigger_sbml = event.getTrigger()
@@ -727,11 +993,12 @@ class SbmlImporter:
             "INF": sp.oo,
             "NaN": sp.nan,
             "rem": sp.Mod,
-            "time": symbol_with_assumptions("time"),
+            "time": sbml_time_symbol,
             # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
             "avogadro": sp.Float(6.02214179e23),
             "exponentiale": sp.E,
+            "log10": lambda x: sp.log(x, 10),
         }
         for s, v in special_symbols_and_funs.items():
             self.add_local_symbol(s, v)
@@ -762,7 +1029,8 @@ class SbmlImporter:
             if not x_ref.isSetId():
                 continue
             if (
-                x_ref.isSetStoichiometry()
+                hasattr(x_ref, "isSetStoichiometry")
+                and x_ref.isSetStoichiometry()
                 and not self.is_assignment_rule_target(x_ref)
             ):
                 value = sp.Float(x_ref.getStoichiometry())
@@ -785,7 +1053,7 @@ class SbmlImporter:
                 continue
             self.add_local_symbol(
                 r.getId(),
-                self._sympy_from_sbml_math(r.getKineticLaw() or sp.Float(0)),
+                self._sympify(r.getKineticLaw() or sp.Float(0)),
             )
 
     def add_local_symbol(self, key: str, value: sp.Expr):
@@ -829,7 +1097,7 @@ class SbmlImporter:
             init = sp.Float(1.0)
 
             if comp.isSetVolume():
-                init = self._sympy_from_sbml_math(comp.getVolume())
+                init = self._sympify(comp.getVolume())
 
             ia_sym = self._get_element_initial_assignment(comp.getId())
             if ia_sym is not None:
@@ -866,6 +1134,7 @@ class SbmlImporter:
             }
 
         self._convert_event_assignment_parameter_targets_to_species()
+        self._convert_event_assignment_compartment_targets_to_species()
         self._process_species_initial()
         self._process_rate_rules()
 
@@ -903,7 +1172,9 @@ class SbmlImporter:
             self.symbols[SymbolId.SPECIES], "init"
         )
         for species, rateof_dummies in zip(
-            self.symbols[SymbolId.SPECIES].values(), all_rateof_dummies
+            self.symbols[SymbolId.SPECIES].values(),
+            all_rateof_dummies,
+            strict=True,
         ):
             species["init"] = _dummy_to_rateof(
                 smart_subs_dict(species["init"], sorted_species, "init"),
@@ -923,11 +1194,11 @@ class SbmlImporter:
         # equations during the _replace_in_all_expressions call inside
         # _process_rules
         for rule in rules:
-            if rule.getTypeCode() != sbml.SBML_RATE_RULE:
+            if rule.getTypeCode() != libsbml.SBML_RATE_RULE:
                 continue
 
             variable = symbol_with_assumptions(rule.getVariable())
-            formula = self._sympy_from_sbml_math(rule)
+            formula = self._sympify(rule)
             if formula is None:
                 continue
 
@@ -945,7 +1216,7 @@ class SbmlImporter:
                 del self.compartments[variable]
 
             elif variable in self.symbols[SymbolId.PARAMETER]:
-                init = self._sympy_from_sbml_math(
+                init = self._sympify(
                     self.symbols[SymbolId.PARAMETER][variable]["value"],
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]["name"]
@@ -965,7 +1236,7 @@ class SbmlImporter:
         self,
         d_dt: sp.Expr,
         variable: sp.Symbol,
-        variable0: Union[float, sp.Expr],
+        variable0: float | sp.Expr,
         name: str,
     ) -> None:
         """
@@ -1035,7 +1306,7 @@ class SbmlImporter:
     @log_execution_time("processing SBML parameters", logger)
     def _process_parameters(
         self,
-        constant_parameters: List[str] = None,
+        constant_parameters: list[str] = None,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
@@ -1052,9 +1323,17 @@ class SbmlImporter:
         for parameter in constant_parameters:
             if not self.sbml.getParameter(parameter):
                 raise KeyError(
-                    "Cannot make %s a constant parameter: "
-                    "Parameter does not exist." % parameter
+                    f"Cannot make {parameter} a constant parameter: "
+                    "Parameter does not exist."
                 )
+
+        # parameter ID => initial assignment sympy expression
+        par_id_to_ia = {
+            par.getId(): _try_evalf(ia)
+            for par in self.sbml.getListOfParameters()
+            if (ia := self._get_element_initial_assignment(par.getId()))
+            is not None
+        }
 
         fixed_parameters = [
             parameter
@@ -1062,9 +1341,9 @@ class SbmlImporter:
             if parameter.getId() in constant_parameters
         ]
         for parameter in fixed_parameters:
+            ia_math = par_id_to_ia.get(parameter.getId())
             if (
-                self._get_element_initial_assignment(parameter.getId())
-                is not None
+                (ia_math is not None and not ia_math.is_Number)
                 or self.is_assignment_rule_target(parameter)
                 or self.is_rate_rule_target(parameter)
             ):
@@ -1079,7 +1358,10 @@ class SbmlImporter:
             parameter
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() not in constant_parameters
-            and self._get_element_initial_assignment(parameter.getId()) is None
+            and (
+                (ia_math := par_id_to_ia.get(parameter.getId())) is None
+                or ia_math.is_Number
+            )
             and not self.is_assignment_rule_target(parameter)
             and parameter.getId() not in hardcode_symbols
         ]
@@ -1096,24 +1378,47 @@ class SbmlImporter:
             for par in settings["var"]:
                 self.symbols[partype][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": sp.Float(par.getValue()),
+                    "value": par_id_to_ia.get(
+                        par.getId(), sp.Float(par.getValue())
+                    ),
                 }
 
-        # Parameters that need to be turned into expressions
-        #  so far, this concerns parameters with initial assignments containing rateOf(.)
-        #  (those have been skipped above)
+        # Parameters that need to be turned into expressions or species
+        #  so far, this concerns parameters with symbolic initial assignments
+        #  (those have been skipped above) that are not rate rule targets
         for par in self.sbml.getListOfParameters():
             if (
-                ia := self._get_element_initial_assignment(par.getId())
-            ) is not None and ia.find(
-                sp.core.function.UndefinedFunction("rateOf")
+                (ia := par_id_to_ia.get(par.getId())) is not None
+                and not ia.is_Number
+                and not self.is_rate_rule_target(par)
             ):
-                self.symbols[SymbolId.EXPRESSION][
-                    _get_identifier_symbol(par)
-                ] = {
-                    "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": ia,
-                }
+                if not ia.has(sbml_time_symbol):
+                    self.symbols[SymbolId.EXPRESSION][
+                        _get_identifier_symbol(par)
+                    ] = {
+                        "name": par.getName()
+                        if par.isSetName()
+                        else par.getId(),
+                        "value": ia,
+                    }
+                else:
+                    # Convert parameters with initial assignments that
+                    #  explicitly depend on time to species.
+                    #  We can't represent that as expression, since the
+                    #  initial simulation time is only known at the time of the
+                    #  simulation, so we can't substitute it.
+                    self.symbols[SymbolId.SPECIES][
+                        _get_identifier_symbol(par)
+                    ] = {
+                        "name": par.getName()
+                        if par.isSetName()
+                        else par.getId(),
+                        "init": ia,
+                        "dt": sp.Float(0),
+                        "amount": True,
+                        "constant": True,
+                        "index": len(self.symbols[SymbolId.SPECIES]),
+                    }
 
     @log_execution_time("processing SBML reactions", logger)
     def _process_reactions(self):
@@ -1165,11 +1470,11 @@ class SbmlImporter:
                     # accounts for possibly variable compartments.
                     self.stoichiometric_matrix[
                         species["index"], reaction_index
-                    ] += (sign * stoichiometry * species["conversion_factor"])
+                    ] += sign * stoichiometry * species["conversion_factor"]
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
-                sym_math = self._sympy_from_sbml_math(
+                sym_math = self._sympify(
                     reaction.getKineticLaw() or sp.Float(0)
                 )
 
@@ -1195,10 +1500,10 @@ class SbmlImporter:
         """
         for rule in self.sbml.getListOfRules():
             # rate rules are processed in _process_species
-            if rule.getTypeCode() == sbml.SBML_RATE_RULE:
+            if rule.getTypeCode() == libsbml.SBML_RATE_RULE:
                 continue
 
-            if rule.getTypeCode() == sbml.SBML_ALGEBRAIC_RULE:
+            if rule.getTypeCode() == libsbml.SBML_ALGEBRAIC_RULE:
                 if self.sbml_doc.getLevel() < 3:
                     # not interested in implementing level 2 boundary condition
                     # shenanigans, see test 01787 in the sbml testsuite
@@ -1221,8 +1526,8 @@ class SbmlImporter:
                 )
             )
 
-    def _process_rule_algebraic(self, rule: sbml.AlgebraicRule):
-        formula = self._sympy_from_sbml_math(rule)
+    def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
+        formula = self._sympify(rule)
         if formula is None:
             return
 
@@ -1249,17 +1554,23 @@ class SbmlImporter:
             # must not be determined by reactions, which means that it
             # must either have the attribute boundaryCondition=“false”
             # or else not be involved in any reaction at all.
-            is_species = isinstance(sbml_var, sbml.Species)
+            is_species = isinstance(sbml_var, libsbml.Species)
             is_boundary_condition = (
                 is_species
                 and sbml_var.isSetBoundaryCondition()
                 and sbml_var.getBoundaryCondition()
             )
-            is_involved_in_reaction = is_species and not smart_is_zero_matrix(
-                self.stoichiometric_matrix[
-                    list(self.symbols[SymbolId.SPECIES].keys()).index(symbol),
-                    :,
-                ]
+            is_involved_in_reaction = (
+                is_species
+                and symbol in self.symbols[SymbolId.SPECIES]
+                and not smart_is_zero_matrix(
+                    self.stoichiometric_matrix[
+                        list(self.symbols[SymbolId.SPECIES].keys()).index(
+                            symbol
+                        ),
+                        :,
+                    ]
+                )
             )
             if (
                 is_species
@@ -1349,13 +1660,13 @@ class SbmlImporter:
 
             self.symbols[SymbolId.ALGEBRAIC_STATE][var] = symbol
 
-    def _process_rule_assignment(self, rule: sbml.AssignmentRule):
+    def _process_rule_assignment(self, rule: libsbml.AssignmentRule):
         sbml_var = self.sbml.getElementBySId(rule.getVariable())
         sym_id = symbol_with_assumptions(rule.getVariable())
 
         # Check whether this rule is a spline rule.
         if not self._discard_annotations:
-            if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            if rule.getTypeCode() == libsbml.SBML_ASSIGNMENT_RULE:
                 annotation = AbstractSpline.get_annotation(rule)
                 if annotation is not None:
                     spline = AbstractSpline.from_annotation(
@@ -1374,18 +1685,18 @@ class SbmlImporter:
                     self.splines.append(spline)
                     return
 
-        formula = self._sympy_from_sbml_math(rule)
+        formula = self._sympify(rule)
         if formula is None:
             return
 
-        if isinstance(sbml_var, sbml.Species):
+        if isinstance(sbml_var, libsbml.Species):
             self.species_assignment_rules[sym_id] = formula
 
-        elif isinstance(sbml_var, sbml.Compartment):
+        elif isinstance(sbml_var, libsbml.Compartment):
             self.compartment_assignment_rules[sym_id] = formula
             self.compartments[sym_id] = formula
 
-        elif isinstance(sbml_var, sbml.Parameter):
+        elif isinstance(sbml_var, libsbml.Parameter):
             self.parameter_assignment_rules[sym_id] = formula
 
         self.symbols[SymbolId.EXPRESSION][sym_id] = {
@@ -1456,17 +1767,40 @@ class SbmlImporter:
                 "dt": sp.Float(0),
             }
 
+    def _convert_event_assignment_compartment_targets_to_species(self):
+        """Find compartments that are event assignment targets and convert
+        those compartments to species."""
+        for event in self.sbml.getListOfEvents():
+            for event_assignment in event.getListOfEventAssignments():
+                if event_assignment.getMath() is None:
+                    # Ignore event assignments with no change in value.
+                    continue
+                variable = symbol_with_assumptions(
+                    event_assignment.getVariable()
+                )
+                if variable not in self.compartments:
+                    continue
+                if variable in self.symbols[SymbolId.SPECIES]:
+                    # Compartments with rate rules are already present as
+                    # species
+                    continue
+
+                self.symbols[SymbolId.SPECIES][variable] = {
+                    "name": str(variable),
+                    "init": self.compartments[variable],
+                    # 'compartment': None,  # can ignore for amounts
+                    "constant": False,
+                    "amount": True,
+                    # 'conversion_factor': 1.0,  # can be ignored
+                    "index": len(self.symbols[SymbolId.SPECIES]),
+                    "dt": sp.Float(0),
+                }
+                del self.compartments[variable]
+
     @log_execution_time("processing SBML events", logger)
     def _process_events(self) -> None:
         """Process SBML events."""
         events = self.sbml.getListOfEvents()
-
-        def get_empty_bolus_value() -> sp.Float:
-            """
-            Used in the event update vector for species that are not affected
-            by the event.
-            """
-            return sp.Symbol("AMICI_EMTPY_BOLUS")
 
         # Used to update species concentrations when an event affects a
         # compartment.
@@ -1486,6 +1820,10 @@ class SbmlImporter:
                     species_def["compartment"]
                 ].append(species)
 
+        # Currently, all event assignment targets must exist in
+        # self.symbols[SymbolId.SPECIES]
+        state_vector = list(self.symbols[SymbolId.SPECIES].keys())
+
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
@@ -1495,17 +1833,15 @@ class SbmlImporter:
 
             # get and parse the trigger function
             trigger_sbml = event.getTrigger()
-            trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
+            trigger_sym = self._sympify(trigger_sbml, bool2num=False)
             trigger = _parse_event_trigger(trigger_sym)
 
-            # Currently, all event assignment targets must exist in
-            # self.symbols[SymbolId.SPECIES]
-            state_vector = list(self.symbols[SymbolId.SPECIES].keys())
-
             # parse the boluses / event assignments
-            bolus = [get_empty_bolus_value() for _ in state_vector]
+            assignment_exprs = {}
             event_assignments = event.getListOfEventAssignments()
-            compartment_event_assignments = set()
+            compartment_event_assignments: set[tuple[sp.Symbol, sp.Expr]] = (
+                set()
+            )
             for event_assignment in event_assignments:
                 variable_sym = symbol_with_assumptions(
                     event_assignment.getVariable()
@@ -1513,17 +1849,17 @@ class SbmlImporter:
                 if event_assignment.getMath() is None:
                     # Ignore event assignments with no change in value.
                     continue
-                formula = self._sympy_from_sbml_math(event_assignment)
+                formula = self._sympify(event_assignment)
                 try:
                     # Try to find the species in the state vector.
-                    index = state_vector.index(variable_sym)
-                    bolus[index] = formula
+                    _ = state_vector.index(variable_sym)
+                    assignment_exprs[variable_sym] = formula
                 except ValueError:
                     raise SBMLException(
                         "Could not process event assignment for "
                         f"{str(variable_sym)}. AMICI currently only allows "
                         "event assignments to species; parameters; or, "
-                        "compartments with rate rules, at the moment."
+                        "compartments."
                     )
                 try:
                     # Try working with the formula now to detect errors
@@ -1536,7 +1872,7 @@ class SbmlImporter:
                         "expressions as event assignments."
                     )
                 if variable_sym in concentration_species_by_compartment:
-                    compartment_event_assignments.add(variable_sym)
+                    compartment_event_assignments.add((variable_sym, formula))
 
                 for (
                     comp,
@@ -1544,39 +1880,26 @@ class SbmlImporter:
                 ) in self.compartment_assignment_rules.items():
                     if variable_sym not in assignment.free_symbols:
                         continue
-                    compartment_event_assignments.add(comp)
+                    compartment_event_assignments.add((comp, formula))
 
             # Update the concentration of species with concentration units
             # in compartments that were affected by the event assignments.
-            for compartment_sym in compartment_event_assignments:
+            for compartment_sym, formula in compartment_event_assignments:
                 for species_sym in concentration_species_by_compartment[
                     compartment_sym
                 ]:
-                    # If the species was not affected by an event assignment
+                    # If the species was not affected by an event assignment,
                     # then the old value should be updated.
-                    if (
-                        bolus[state_vector.index(species_sym)]
-                        == get_empty_bolus_value()
-                    ):
+                    if species_sym not in assignment_exprs:
                         species_value = species_sym
                     # else the species was affected by an event assignment,
                     # hence the updated value should be updated further.
                     else:
-                        species_value = bolus[state_vector.index(species_sym)]
+                        species_value = assignment_exprs[species_sym]
                     # New species value is old amount / new volume.
-                    bolus[state_vector.index(species_sym)] = (
+                    assignment_exprs[species_sym] = (
                         species_value * compartment_sym / formula
                     )
-
-            # Subtract the current species value from each species with an
-            # update, as the bolus will be added on to the current species
-            # value during simulation.
-            for index in range(len(bolus)):
-                if bolus[index] != get_empty_bolus_value():
-                    bolus[index] -= state_vector[index]
-                bolus[index] = bolus[index].subs(
-                    get_empty_bolus_value(), sp.Float(0.0)
-                )
 
             initial_value = (
                 trigger_sbml.getInitialValue()
@@ -1595,19 +1918,30 @@ class SbmlImporter:
                     " algebraic rules."
                 )
 
+            # Store `useValuesFromTriggerTime` attribute for checking later
+            # Since we assume valid in SBML models here, this attribute is
+            # either given (mandatory in L3), or defaults to True (L2)
+            use_trig_val = (
+                event.getUseValuesFromTriggerTime()
+                if event.isSetUseValuesFromTriggerTime()
+                else True
+            )
+
             self.symbols[SymbolId.EVENT][event_sym] = {
                 "name": event_id,
                 "value": trigger,
-                "state_update": sp.MutableDenseMatrix(bolus),
+                "assignments": assignment_exprs,
                 "initial_value": initial_value,
+                "use_values_from_trigger_time": use_trig_val,
+                "priority": self._sympify(event.getPriority()),
             }
 
     @log_execution_time("processing SBML observables", logger)
     def _process_observables(
         self,
-        observables: Union[Dict[str, Dict[str, str]], None],
-        sigmas: Dict[str, Union[str, float]],
-        noise_distributions: Dict[str, str],
+        observables: dict[str, dict[str, str | sp.Expr]] | None,
+        sigmas: dict[str, str | float | sp.Expr],
+        noise_distributions: dict[str, str],
     ) -> None:
         """
         Perform symbolic computations required for observable and objective
@@ -1641,7 +1975,7 @@ class SbmlImporter:
             self.symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(obs): {
                     "name": definition.get("name", f"y{iobs}"),
-                    "value": self._sympy_from_sbml_math(definition["formula"]),
+                    "value": self._sympify(definition["formula"]),
                     "transformation": noise_distribution_to_observable_transformation(
                         noise_distributions.get(obs, "normal")
                     ),
@@ -1666,14 +2000,46 @@ class SbmlImporter:
             self.symbols[SymbolId.OBSERVABLE], "eventObservable"
         )
 
+        if sigmas:
+            noise_pars = list(
+                {
+                    name
+                    for sigma in sigmas.values()
+                    for symbol in self._sympify(sigma).free_symbols
+                    if re.match(r"noiseParameter\d+$", (name := str(symbol)))
+                }
+            )
+        else:
+            noise_pars = []
+        self.symbols[SymbolId.NOISE_PARAMETER] = {
+            symbol_with_assumptions(np): {"name": np} for np in noise_pars
+        }
+
+        if observables:
+            observable_pars = list(
+                {
+                    name
+                    for obs in observables.values()
+                    for symbol in self._sympify(obs["formula"]).free_symbols
+                    if re.match(
+                        r"observableParameter\d+$", (name := str(symbol))
+                    )
+                }
+            )
+        else:
+            observable_pars = []
+        self.symbols[SymbolId.OBSERVABLE_PARAMETER] = {
+            symbol_with_assumptions(op): {"name": op} for op in observable_pars
+        }
+
         self._process_log_likelihood(sigmas, noise_distributions)
 
     @log_execution_time("processing SBML event observables", logger)
     def _process_event_observables(
         self,
-        event_observables: Dict[str, Dict[str, str]],
-        event_sigmas: Dict[str, Union[str, float]],
-        event_noise_distributions: Dict[str, str],
+        event_observables: dict[str, dict[str, str | sp.Expr]],
+        event_sigmas: dict[str, str | float | sp.Float],
+        event_noise_distributions: dict[str, str],
     ) -> None:
         """
         Perform symbolic computations required for observable and objective
@@ -1708,14 +2074,14 @@ class SbmlImporter:
             ):
                 raise ValueError(
                     "Could not find an event with the event identifier "
-                    f'{definition["event"]} for the event observable with name'
-                    f'{definition["name"]}.'
+                    f"{definition['event']} for the event observable with name"
+                    f"{definition['name']}."
                 )
 
         self.symbols[SymbolId.EVENT_OBSERVABLE] = {
             symbol_with_assumptions(obs): {
                 "name": definition.get("name", f"z{iobs}"),
-                "value": self._sympy_from_sbml_math(definition["formula"]),
+                "value": self._sympify(definition["formula"]),
                 "event": sp.Symbol(definition.get("event")),
                 "transformation": noise_distribution_to_observable_transformation(
                     event_noise_distributions.get(obs, "normal")
@@ -1728,10 +2094,11 @@ class SbmlImporter:
         for eo in self.symbols[SymbolId.EVENT_OBSERVABLE].values():
             if eo["value"].has(wrong_t):
                 warnings.warn(
-                    f'Event observable {eo["name"]} uses `t` in '
+                    f"Event observable {eo['name']} uses `t` in "
                     "it's formula which is not the time variable. "
                     "For the time variable, please use `time` "
-                    "instead!"
+                    "instead!",
+                    stacklevel=1,
                 )
 
         # check for nesting of observables (unsupported)
@@ -1788,8 +2155,8 @@ class SbmlImporter:
 
     def _process_log_likelihood(
         self,
-        sigmas: Dict[str, Union[str, float]],
-        noise_distributions: Dict[str, str],
+        sigmas: dict[str, str | float],
+        noise_distributions: dict[str, str],
         events: bool = False,
         event_reg: bool = False,
     ):
@@ -1835,12 +2202,26 @@ class SbmlImporter:
                 obs["reg_symbol"] = generate_regularization_symbol(obs_id)
 
         if not event_reg:
+            sigmas = {
+                obs_id: self._sympify(sigma)
+                for obs_id, sigma in sigmas.items()
+            }
+            obs_syms = set(self.symbols[obs_symbol].keys())
+            for obs_id in self.symbols[obs_symbol]:
+                if (sigma := sigmas.get(str(obs_id))) and sigma.has(
+                    *(obs_syms - {obs_id})
+                ):
+                    raise ValueError(
+                        f"Sigma expression for {obs_id} ({sigma}) must not "
+                        f"contain any observable symbols other than {obs_id}."
+                    )
+            # check that only the corresponding observable ID is used in the
+            #  sigma formula, but not any other observable ID
+            #  https://github.com/AMICI-dev/AMICI/issues/2561
             self.symbols[sigma_symbol] = {
                 symbol_with_assumptions(f"sigma_{obs_id}"): {
-                    "name": f'sigma_{obs["name"]}',
-                    "value": self._sympy_from_sbml_math(
-                        sigmas.get(str(obs_id), "1.0")
-                    ),
+                    "name": f"sigma_{obs['name']}",
+                    "value": sigmas.get(str(obs_id), sp.Float(1.0)),
                 }
                 for obs_id, obs in self.symbols[obs_symbol].items()
             }
@@ -1849,16 +2230,20 @@ class SbmlImporter:
         for (obs_id, obs), (sigma_id, sigma) in zip(
             self.symbols[obs_symbol].items(),
             self.symbols[sigma_symbol].items(),
+            strict=True,
         ):
             symbol = symbol_with_assumptions(f"J{obs_id}")
             dist = noise_distributions.get(str(obs_id), "normal")
             cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
+            # TODO: clarify expected grammar for cost_fun
+            #   python vs SBML L3 vs PEtab
             value = sp.sympify(
                 cost_fun,
                 locals=dict(
                     zip(
                         _get_str_symbol_identifiers(obs_id),
                         (obs_id, obs["measurement_symbol"], sigma_id),
+                        strict=True,
                     )
                 ),
             )
@@ -1866,7 +2251,7 @@ class SbmlImporter:
                 value = value.subs(obs["measurement_symbol"], 0.0)
                 value = value.subs(obs_id, obs["reg_symbol"])
             self.symbols[llh_symbol][symbol] = {
-                "name": f'J{obs["name"]}',
+                "name": f"J{obs['name']}",
                 "value": value,
                 "dist": dist,
             }
@@ -1882,7 +2267,11 @@ class SbmlImporter:
         for ia in self.sbml.getListOfInitialAssignments():
             identifier = _get_identifier_symbol(ia)
             if identifier in itt.chain(
-                self.symbols[SymbolId.SPECIES], self.compartments
+                self.symbols[SymbolId.SPECIES],
+                self.compartments,
+                self.symbols[SymbolId.EXPRESSION],
+                self.symbols[SymbolId.PARAMETER],
+                self.symbols[SymbolId.FIXED_PARAMETER],
             ):
                 continue
 
@@ -1932,12 +2321,12 @@ class SbmlImporter:
             stoich = self._get_element_stoichiometry(species_reference)
             self._replace_in_all_expressions(
                 _get_identifier_symbol(species_reference),
-                self._sympy_from_sbml_math(stoich),
+                self._sympify(stoich),
             )
 
     def _make_initial(
-        self, sym_math: Union[sp.Expr, None, float]
-    ) -> Union[sp.Expr, None, float]:
+        self, sym_math: sp.Expr | None | float
+    ) -> sp.Expr | None | float:
         """
         Transforms an expression to its value at the initial time point by
         replacing species by their initial values.
@@ -1952,24 +2341,40 @@ class SbmlImporter:
 
         sym_math, rateof_to_dummy = _rateof_to_dummy(sym_math)
 
-        for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            if "init" in species:
-                sym_math = smart_subs(sym_math, species_id, species["init"])
-
-        sym_math = smart_subs(
-            sym_math, self._local_symbols["time"], sp.Float(0)
-        )
+        # we can't rely on anything else being properly initialized at this point, so we need to
+        # compute all initial values from scratch, recursively
+        for var in sym_math.free_symbols:
+            element_id = str(var)
+            # already recursive since _get_element_initial_assignment calls _make_initial
+            if (
+                ia := self._get_element_initial_assignment(element_id)
+            ) is not None:
+                sym_math = sym_math.subs(var, ia)
+            elif (species := self.sbml.getSpecies(element_id)) is not None:
+                # recursive!
+                init = self._make_initial(get_species_initial(species))
+                sym_math = sym_math.subs(var, init)
+            elif var in self.symbols[SymbolId.SPECIES]:
+                sym_math = sym_math.subs(
+                    var, self.symbols[SymbolId.SPECIES][var]["init"]
+                )
+            elif (
+                element := self.sbml.getElementBySId(element_id)
+            ) and self.is_rate_rule_target(element):
+                # no need to recurse here, as value is numeric
+                init = sp.Float(element.getValue())
+                sym_math = sym_math.subs(var, init)
 
         sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 
         return sym_math
 
-    def process_conservation_laws(self, ode_model) -> None:
+    def _process_conservation_laws(self, ode_model: DEModel) -> None:
         """
         Find conservation laws in reactions and species.
 
         :param ode_model:
-            ODEModel object with basic definitions
+            :class:`DEModel` object with basic definitions
         """
         conservation_laws = []
 
@@ -2017,7 +2422,7 @@ class SbmlImporter:
     def _get_conservation_laws_demartino(
         self,
         ode_model: DEModel,
-    ) -> List[Tuple[int, List[int], List[float]]]:
+    ) -> list[tuple[int, list[int], list[float]]]:
         """Identify conservation laws based on algorithm by DeMartino et al.
         (see conserved_moieties.py).
 
@@ -2046,7 +2451,8 @@ class SbmlImporter:
                 "Conservation laws for non-constant species in "
                 "combination with parameterized stoichiometric "
                 "coefficients are not currently supported "
-                "and will be turned off."
+                "and will be turned off.",
+                stacklevel=1,
             )
             return []
 
@@ -2075,9 +2481,9 @@ class SbmlImporter:
             len(cls_coefficients), len(ode_model._differential_states)
         )
         for i_cl, (cl, coefficients) in enumerate(
-            zip(cls_state_idxs, cls_coefficients)
+            zip(cls_state_idxs, cls_coefficients, strict=True)
         ):
-            for i, c in zip(cl, coefficients):
+            for i, c in zip(cl, coefficients, strict=True):
                 A[i_cl, i] = sp.Rational(c)
         rref, pivots = A.rref()
 
@@ -2093,7 +2499,7 @@ class SbmlImporter:
 
     def _get_conservation_laws_rref(
         self,
-    ) -> List[Tuple[int, List[int], List[float]]]:
+    ) -> list[tuple[int, list[int], list[float]]]:
         """Identify conservation laws based on left nullspace of the
         stoichiometric matrix, computed through (numeric) Gaussian elimination
 
@@ -2123,7 +2529,8 @@ class SbmlImporter:
                 "Conservation laws for non-constant species in "
                 "combination with parameterized stoichiometric "
                 "coefficients are not currently supported "
-                "and will be turned off."
+                "and will be turned off.",
+                stacklevel=1,
             )
             return []
 
@@ -2156,12 +2563,12 @@ class SbmlImporter:
         return raw_cls
 
     def _add_conservation_for_non_constant_species(
-        self, model: DEModel, conservation_laws: List[ConservationLaw]
-    ) -> List[int]:
+        self, model: DEModel, conservation_laws: list[ConservationLaw]
+    ) -> list[int]:
         """Add non-constant species to conservation laws
 
         :param model:
-            ODEModel object with basic definitions
+            DEModel object with basic definitions
         :param conservation_laws:
             List of already known conservation laws
         :returns:
@@ -2221,7 +2628,10 @@ class SbmlImporter:
                     "coefficients": {
                         state_id: coeff * compartment
                         for state_id, coeff, compartment in zip(
-                            state_ids, coefficients, compartment_sizes
+                            state_ids,
+                            coefficients,
+                            compartment_sizes,
+                            strict=True,
                         )
                     },
                 }
@@ -2337,13 +2747,16 @@ class SbmlImporter:
             for element in self.symbols[symbol].values():
                 element["value"] = smart_subs(element["value"], old, new)
 
-        # replace in event state updates (boluses)
+        # replace in event assignments
         if self.symbols.get(SymbolId.EVENT, False):
             for event in self.symbols[SymbolId.EVENT].values():
-                for index in range(len(event["state_update"])):
-                    event["state_update"][index] = smart_subs(
-                        event["state_update"][index], old, new
-                    )
+                if event["assignments"] is not None:
+                    event["assignments"] = {
+                        smart_subs(target, old, new): smart_subs(
+                            expr, old, new
+                        )
+                        for target, expr in event["assignments"].items()
+                    }
 
         for state in {
             **self.symbols[SymbolId.SPECIES],
@@ -2360,9 +2773,9 @@ class SbmlImporter:
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
         self.compartments = {
-            smart_subs(c, old, new)
-            if replace_identifiers
-            else c: smart_subs(v, old, self._make_initial(new))
+            smart_subs(c, old, new) if replace_identifiers else c: smart_subs(
+                v, old, self._make_initial(new)
+            )
             for c, v in self.compartments.items()
         }
 
@@ -2388,62 +2801,158 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(
-        self, var_or_math: [sbml.SBase, str]
-    ) -> Union[sp.Expr, float, None]:
+    def _sympify(
+        self,
+        var_or_math: libsbml.SBase
+        | libsbml.ASTNode
+        | float
+        | int
+        | sp.Basic
+        | str,
+        piecewise_to_heaviside: bool = True,
+        bool2num: bool = True,
+    ) -> sp.Expr | None:
         """
-        Sympify Math of SBML variables with all sanity checks and
-        transformations
+        Sympify math expressions with all sanity checks and transformations.
 
         :param var_or_math:
-            SBML variable that has a getMath() function or math string
-        :return:
-            sympfified symbolic expression
+            A math expression to sympify:
+
+            * a string (see `sympy.sympify`)
+            * a number
+            * a libSBML ASTNode
+            * a libSBML object that has a ``getMath()`` function
+        :param piecewise_to_heaviside:
+            If ``True``, piecewise expressions are transformed to Heaviside
+            expressions. If ``False``, piecewise expressions are returned as
+            is.
+        :param bool2num:
+            If ``True``, boolean expressions are transformed to numeric
+            expressions. If ``False``, boolean expressions are returned as is.
+        :raises SBMLException:
+            In case of unsupported expressions.
+        :returns:
+            The sympy expression or None if the input was None or an empty string.
         """
-        if isinstance(var_or_math, sbml.SBase):
-            math_string = sbml.formulaToL3StringWithSettings(
-                var_or_math.getMath(), self.sbml_parser_settings
-            )
-            ele_name = var_or_math.element_name
-        else:
-            math_string = var_or_math
-            ele_name = "string"
-        math_string = replace_logx(math_string)
-        try:
-            try:
-                formula = sp.sympify(
-                    _parse_logical_operators(math_string),
-                    locals=self._local_symbols,
-                )
-            except TypeError as err:
-                if str(err) == "BooleanAtom not allowed in this context.":
-                    formula = sp.sympify(
-                        _parse_logical_operators(math_string),
-                        locals={
-                            "true": sp.Float(1.0),
-                            "false": sp.Float(0.0),
-                            **self._local_symbols,
-                        },
-                    )
-                else:
-                    raise
-        except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
-            raise SBMLException(
-                f'{ele_name} "{math_string}" '
-                "contains an unsupported expression: "
-                f"{err}."
+        if var_or_math is None:
+            return None
+
+        # numeric values
+        if isinstance(var_or_math, float | int):
+            return (
+                sp.Integer(var_or_math)
+                if var_or_math.is_integer()
+                else sp.Float(var_or_math)
             )
 
-        if isinstance(formula, sp.Expr):
-            formula = _parse_special_functions_sbml(formula)
-            _check_unsupported_functions_sbml(
-                formula, expression_type=ele_name
+        def subs_locals(expr: sp.Basic) -> sp.Basic:
+            """
+            Substitute free symbols to match assumptions of other model
+            entities where necessary, and replace parameters by values in case
+            of hardcoded parameters.
+            """
+            return expr.subs(
+                {
+                    sym: local
+                    for sym in expr.free_symbols
+                    if (local := self._local_symbols.get(str(sym), sym)) != sym
+                }
             )
-        return formula
+
+        # already a sympy object
+        if isinstance(var_or_math, sp.Basic):
+            ele_name = "SymPy expression"
+            expr = subs_locals(var_or_math)
+
+        # an expression string
+        elif isinstance(var_or_math, str):
+            if not var_or_math:
+                return None
+
+            ele_name = "Expression string"
+            try:
+                expr = sp.sympify(
+                    var_or_math,
+                    locals={
+                        "true": sp.Float(1.0),
+                        "false": sp.Float(0.0),
+                        **self._local_symbols,
+                    },
+                )
+            except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
+                raise SBMLException(
+                    f'{ele_name} "{var_or_math}" '
+                    "contains an unsupported expression: "
+                    f"{err}."
+                )
+
+        # actual libSBML objects
+        elif isinstance(var_or_math, libsbml.ASTNode | libsbml.SBase):
+            if isinstance(var_or_math, libsbml.ASTNode):
+                ast_node = var_or_math
+                sbml_obj = ast_node.getParentSBMLObject()
+            elif isinstance(var_or_math, libsbml.SBase):
+                sbml_obj = var_or_math
+                ast_node = var_or_math.getMath()
+                if ast_node is None:
+                    return None
+            ele_name = sbml_obj.getId()
+
+            mathml = libsbml.writeMathMLWithNamespaceToString(
+                ast_node,
+                libsbml.SBMLNamespaces(
+                    self.sbml.getLevel(), self.sbml.getVersion()
+                ),
+            )
+            try:
+                expr = self._mathml_parser.parse_str(mathml)
+            except (ValueError, NotImplementedError) as err:
+                raise SBMLException(
+                    f'{ele_name} "{mathml}" '
+                    "contains an unsupported expression: "
+                    f"{err}."
+                )
+            # replace special time object by `sbml_time_symbol`
+            #  which will later be replaced by `amici_time_symbol`
+            expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
+            expr = expr.subs(avogadro, avogadro.evalf())
+            expr = subs_locals(expr)
+        else:
+            raise ValueError(
+                f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
+            )
+
+        try:
+            _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+        except SBMLException:
+            # try to (partially) evaluate expressions
+            #  that would otherwise be unsupported
+            expr = expr.simplify().evalf()
+            _check_unsupported_functions_sbml(expr, expression_type=ele_name)
+
+        # boolean to numeric piecewise
+        #  (this may introduce piecewise functions and must happen before
+        #   piecewise_to_heaviside)
+        if bool2num and isinstance(expr, Boolean):
+            from sbmlmath.mathml_parser import _bool2num
+
+            expr = _bool2num(expr)
+
+        # piecewise to heavisides
+        if piecewise_to_heaviside:
+            try:
+                expr = expr.replace(
+                    sp.Piecewise,
+                    lambda *args: _parse_piecewise_to_heaviside(args),
+                )
+            except RuntimeError as err:
+                raise SBMLException(str(err)) from err
+
+        return expr
 
     def _get_element_initial_assignment(
         self, element_id: str
-    ) -> Union[sp.Expr, None]:
+    ) -> sp.Expr | None:
         """
         Extract value of sbml variable according to its initial assignment
 
@@ -2455,13 +2964,13 @@ class SbmlImporter:
         assignment = self.sbml.getInitialAssignment(element_id)
         if assignment is None:
             return None
-        sym = self._sympy_from_sbml_math(assignment)
+        sym = self._sympify(assignment, piecewise_to_heaviside=False)
         # this is an initial assignment so we need to use
         # initial conditions
         sym = self._make_initial(sym)
         return sym
 
-    def _get_element_stoichiometry(self, ele: sbml.SBase) -> sp.Expr:
+    def _get_element_stoichiometry(self, ele: libsbml.SBase) -> sp.Expr:
         """
         Computes the stoichiometry of a reactant or product of a reaction
 
@@ -2478,7 +2987,7 @@ class SbmlImporter:
             if self.is_assignment_rule_target(ele):
                 return _get_identifier_symbol(ele)
 
-        if ele.isSetStoichiometry():
+        if hasattr(ele, "isSetStoichiometry") and ele.isSetStoichiometry():
             stoichiometry: float = ele.getStoichiometry()
             return (
                 sp.Integer(stoichiometry)
@@ -2488,7 +2997,7 @@ class SbmlImporter:
 
         return sp.Integer(1)
 
-    def is_assignment_rule_target(self, element: sbml.SBase) -> bool:
+    def is_assignment_rule_target(self, element: libsbml.SBase) -> bool:
         """
         Checks if an element has a valid assignment rule in the specified
         model.
@@ -2500,9 +3009,9 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        return a is not None and self._sympy_from_sbml_math(a) is not None
+        return a is not None and self._sympify(a) is not None
 
-    def is_rate_rule_target(self, element: sbml.SBase) -> bool:
+    def is_rate_rule_target(self, element: libsbml.SBase) -> bool:
         """
         Checks if an element has a valid assignment rule in the specified
         model.
@@ -2514,11 +3023,79 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getRateRuleByVariable(element.getId())
-        return a is not None and self._sympy_from_sbml_math(a) is not None
+        return a is not None and self._sympify(a) is not None
+
+    def _transform_dxdt_to_concentration(
+        self, species_id: sp.Symbol, dxdt: sp.Expr
+    ) -> sp.Expr:
+        """
+        Produces the appropriate expression for the first derivative of a
+        species with respect to time, for species that reside in
+        compartments with a constant volume, or a volume that is defined by
+        an assignment or rate rule.
+
+        :param species_id:
+            The identifier of the species (generated in "sbml_import.py").
+
+        :param dxdt:
+            The element-wise product of the row in the stoichiometric
+            matrix that corresponds to the species (row x_index) and the
+            flux (kinetic laws) vector. Ignored in the case of rate rules.
+        """
+        # The derivation of the below return expressions can be found in
+        # the documentation. They are found by rearranging
+        # $\frac{d}{dt} (vx) = Sw$ for $\frac{dx}{dt}$, where $v$ is the
+        # vector of species compartment volumes, $x$ is the vector of
+        # species concentrations, $S$ is the stoichiometric matrix, and $w$
+        # is the flux vector. The conditional below handles the cases of
+        # species in (i) compartments with a rate rule, (ii) compartments
+        # with an assignment rule, and (iii) compartments with a constant
+        # volume, respectively.
+        species = self.symbols[SymbolId.SPECIES][species_id]
+
+        comp = species["compartment"]
+        if comp in self.symbols[SymbolId.SPECIES]:
+            dv_dt = self.symbols[SymbolId.SPECIES][comp]["dt"]
+            xdot = (dxdt - dv_dt * species_id) / comp
+            return xdot
+        elif comp in self.compartment_assignment_rules:
+            v = self.compartment_assignment_rules[comp]
+
+            # we need to flatten out assignments in the compartment in
+            # order to ensure that we catch all species dependencies
+            v = smart_subs_dict(v, self.symbols[SymbolId.EXPRESSION], "value")
+            dv_dt = v.diff(amici_time_symbol)
+            # we may end up with a time derivative of the compartment
+            # volume due to parameter rate rules
+            comp_rate_vars = [
+                p
+                for p in v.free_symbols
+                if p in self.symbols[SymbolId.SPECIES]
+            ]
+            for var in comp_rate_vars:
+                dv_dt += (
+                    v.diff(var) * self.symbols[SymbolId.SPECIES][var]["dt"]
+                )
+            dv_dx = v.diff(species_id)
+            xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
+            return xdot
+        elif comp in self.symbols[SymbolId.ALGEBRAIC_STATE]:
+            raise SBMLException(
+                f"Species {species_id} is in a compartment {comp} that is"
+                f" defined by an algebraic equation. This is not"
+                f" supported."
+            )
+        else:
+            v = self.compartments[comp]
+
+            if v == 1.0:
+                return dxdt
+
+            return dxdt / v
 
 
 def _check_lib_sbml_errors(
-    sbml_doc: sbml.SBMLDocument, show_warnings: bool = False
+    sbml_doc: libsbml.SBMLDocument, show_warnings: bool = False
 ) -> None:
     """
     Checks the error log in the current self.sbml_doc.
@@ -2529,17 +3106,17 @@ def _check_lib_sbml_errors(
     :param show_warnings:
         display SBML warnings
     """
-    num_warning = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
-    num_error = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
-    num_fatal = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
+    num_warning = sbml_doc.getNumErrors(libsbml.LIBSBML_SEV_WARNING)
+    num_error = sbml_doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR)
+    num_fatal = sbml_doc.getNumErrors(libsbml.LIBSBML_SEV_FATAL)
 
     if num_warning + num_error + num_fatal:
         for i_error in range(sbml_doc.getNumErrors()):
             error = sbml_doc.getError(i_error)
             # we ignore any info messages for now
-            if error.getSeverity() >= sbml.LIBSBML_SEV_ERROR or (
+            if error.getSeverity() >= libsbml.LIBSBML_SEV_ERROR or (
                 show_warnings
-                and error.getSeverity() >= sbml.LIBSBML_SEV_WARNING
+                and error.getSeverity() >= libsbml.LIBSBML_SEV_WARNING
             ):
                 logger.error(
                     f"libSBML {error.getCategoryAsString()} "
@@ -2563,7 +3140,7 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     # Events can be defined without trigger, i.e., the event will never fire.
     # In this case, set a dummy trigger:
-    if trigger is None:
+    if trigger is None or trigger is sp.false:
         return sp.Float(1.0)
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
@@ -2572,19 +3149,23 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         # convert relational expressions into trigger functions
         if isinstance(
             trigger,
-            (sp.core.relational.LessThan, sp.core.relational.StrictLessThan),
+            sp.core.relational.LessThan | sp.core.relational.StrictLessThan,
         ):
             # y < x or y <= x
             return -root
         if isinstance(
             trigger,
-            (
-                sp.core.relational.GreaterThan,
-                sp.core.relational.StrictGreaterThan,
-            ),
+            sp.core.relational.GreaterThan
+            | sp.core.relational.StrictGreaterThan,
         ):
             # y >= x or y > x
             return root
+
+    # rewrite n-ary XOR to OR to be handled below:
+    trigger = trigger.replace(sp.Xor, _xor_to_or)
+    # rewrite ==, !=
+    trigger = trigger.replace(sp.Eq, _eq_to_and)
+    trigger = trigger.replace(sp.Ne, _ne_to_or)
 
     # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
     if isinstance(trigger, sp.Or):
@@ -2600,7 +3181,7 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
 
 
 def assignmentRules2observables(
-    sbml_model: sbml.Model, filter_function: Callable = lambda *_: True
+    sbml_model: libsbml.Model, filter_function: Callable = lambda *_: True
 ):
     """
     Turn assignment rules into observables.
@@ -2621,7 +3202,7 @@ def assignmentRules2observables(
     """
     observables = {}
     for rule in sbml_model.getListOfRules():
-        if rule.getTypeCode() != sbml.SBML_ASSIGNMENT_RULE:
+        if rule.getTypeCode() != libsbml.SBML_ASSIGNMENT_RULE:
             continue
         parameter_id = rule.getVariable()
         if (p := sbml_model.getParameter(parameter_id)) and filter_function(p):
@@ -2640,13 +3221,13 @@ def assignmentRules2observables(
 
 
 def _add_conservation_for_constant_species(
-    ode_model: DEModel, conservation_laws: List[ConservationLaw]
-) -> List[int]:
+    ode_model: DEModel, conservation_laws: list[ConservationLaw]
+) -> list[int]:
     """
     Adds constant species to conservations laws
 
     :param ode_model:
-        ODEModel object with basic definitions
+        DEModel object with basic definitions
 
     :param conservation_laws:
         List of already known conservation laws
@@ -2678,7 +3259,7 @@ def _add_conservation_for_constant_species(
     return species_solver
 
 
-def _get_species_compartment_symbol(species: sbml.Species) -> sp.Symbol:
+def _get_species_compartment_symbol(species: libsbml.Species) -> sp.Symbol:
     """
     Generate compartment symbol for the compartment of a specific species.
     This function will always return the same unique python object for a
@@ -2692,7 +3273,7 @@ def _get_species_compartment_symbol(species: sbml.Species) -> sp.Symbol:
     return symbol_with_assumptions(species.getCompartment())
 
 
-def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
+def _get_identifier_symbol(var: libsbml.SBase) -> sp.Symbol:
     """
     Generate identifier symbol for a sbml variable.
     This function will always return the same unique python object for a
@@ -2706,7 +3287,7 @@ def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
     return symbol_with_assumptions(var.getId())
 
 
-def get_species_initial(species: sbml.Species) -> sp.Expr:
+def get_species_initial(species: libsbml.Species) -> sp.Expr:
     """
     Extract the initial concentration from a given species
 
@@ -2737,8 +3318,8 @@ def get_species_initial(species: sbml.Species) -> sp.Expr:
 
 
 def _get_list_of_species_references(
-    sbml_model: sbml.Model,
-) -> List[sbml.SpeciesReference]:
+    sbml_model: libsbml.Model,
+) -> list[libsbml.SpeciesReference]:
     """
     Extracts list of species references as SBML doesn't provide a native
     function for this.
@@ -2760,31 +3341,17 @@ def _get_list_of_species_references(
     ]
 
 
-def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
-    """
-    Replace logX(.) by log(., X) since sympy cannot parse the former
-
-    :param math_str:
-        string for sympification
-
-    :return:
-        sympifiable string
-    """
-    if not isinstance(math_str, str):
-        return math_str
-
-    return re.sub(r"(^|\W)log(\d+)\(", r"\g<1>1/ln(\2)*ln(", math_str)
-
-
-def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
-    targets = set()
+def _collect_event_assignment_parameter_targets(
+    sbml_model: libsbml.Model,
+) -> list[sp.Symbol]:
+    targets = []
     sbml_parameters = sbml_model.getListOfParameters()
     sbml_parameter_ids = [p.getId() for p in sbml_parameters]
     for event in sbml_model.getListOfEvents():
         for event_assignment in event.getListOfEventAssignments():
             target_id = event_assignment.getVariable()
             if target_id in sbml_parameter_ids:
-                targets.add(
+                targets.append(
                     _get_identifier_symbol(
                         sbml_parameters[sbml_parameter_ids.index(target_id)]
                     )
@@ -2793,7 +3360,7 @@ def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
 
 
 def _check_unsupported_functions_sbml(
-    sym: sp.Expr, expression_type: str, full_sym: Optional[sp.Expr] = None
+    sym: sp.Expr, expression_type: str, full_sym: sp.Expr | None = None
 ):
     try:
         _check_unsupported_functions(sym, expression_type, full_sym)
@@ -2801,19 +3368,10 @@ def _check_unsupported_functions_sbml(
         raise SBMLException(str(err))
 
 
-def _parse_special_functions_sbml(
-    sym: sp.Expr, toplevel: bool = True
-) -> sp.Expr:
-    try:
-        return _parse_special_functions(sym, toplevel)
-    except RuntimeError as err:
-        raise SBMLException(str(err))
-
-
 def _validate_observables(
-    observables: Union[Dict[str, Dict[str, str]], None],
-    sigmas: Dict[str, Union[str, float]],
-    noise_distributions: Dict[str, str],
+    observables: dict[str, dict[str, str | sp.Expr]] | None,
+    sigmas: dict[str, str | float | sp.Expr],
+    noise_distributions: dict[str, str],
     events: bool = False,
 ) -> None:
     if observables is None or not observables:
@@ -2841,7 +3399,7 @@ def _validate_observables(
 
 
 def _check_symbol_nesting(
-    symbols: Dict[sp.Symbol, Dict[str, sp.Expr]], symbol_type: str
+    symbols: dict[sp.Symbol, dict[str, sp.Expr]], symbol_type: str
 ):
     observable_syms = set(symbols.keys())
     for obs in symbols.values():
@@ -2853,37 +3411,41 @@ def _check_symbol_nesting(
             )
 
 
-def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
+def _non_const_conservation_laws_supported(sbml_model: libsbml.Model) -> bool:
     """Check whether non-constant conservation laws can be handled for the
     given model."""
     if any(
-        rule.getTypeCode() == sbml.SBML_RATE_RULE
+        rule.getTypeCode() == libsbml.SBML_RATE_RULE
         for rule in sbml_model.getListOfRules()
     ):
         # see SBML semantic test suite, case 33 for an example
         warnings.warn(
             "Conservation laws for non-constant species in "
             "models with RateRules are currently not supported "
-            "and will be turned off."
+            "and will be turned off.",
+            stacklevel=1,
         )
         return False
 
     if any(
-        rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE
+        rule.getTypeCode() == libsbml.SBML_ASSIGNMENT_RULE
         and sbml_model.getSpecies(rule.getVariable())
         for rule in sbml_model.getListOfRules()
     ):
         warnings.warn(
             "Conservation laws for non-constant species in "
             "models with Species-AssignmentRules are currently not "
-            "supported and will be turned off."
+            "supported and will be turned off.",
+            stacklevel=1,
         )
         return False
 
     return True
 
 
-def _rateof_to_dummy(sym_math):
+def _rateof_to_dummy(
+    sym_math: sp.Expr,
+) -> tuple[sp.Expr, dict[sp.Function, sp.Dummy]]:
     """Replace rateOf(...) by dummy variable
 
     if `rateOf(some_species)` is used in an initial assignment, we don't want to substitute the species argument
@@ -2894,19 +3456,46 @@ def _rateof_to_dummy(sym_math):
             [...substitute...]
             sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
     """
-    if rate_ofs := sym_math.find(sp.core.function.UndefinedFunction("rateOf")):
-        # replace by dummies to avoid species substitution
-        rateof_dummies = {
-            rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}")
-            for rate_of in rate_ofs
-        }
+    from sbmlmath import rate_of
 
-        return sym_math.subs(rateof_dummies), rateof_dummies
-    return sym_math, {}
+    new_expr, rateof_to_dummies = sym_math.replace(
+        # `x` is the rateOf argument
+        rate_of,
+        lambda x: sp.Dummy(f"Dummy_RateOf_{x.name}"),
+        map=True,
+    )
+    return new_expr, rateof_to_dummies
 
 
-def _dummy_to_rateof(sym_math, rateof_dummies):
+def _dummy_to_rateof(
+    sym_math: sp.Expr, rateof_dummies: dict[sp.Function, sp.Dummy]
+) -> sp.Expr:
     """Back-substitution of dummies from `_rateof_to_dummy`"""
     if rateof_dummies:
         return sym_math.subs({v: k for k, v in rateof_dummies.items()})
     return sym_math
+
+
+def _try_evalf(x: sp.Basic) -> sp.Basic:
+    """Try to convert a sympy object to sympy.Float.
+
+    :returns: The value of `x` as sympy.Float if there is a known conversion;
+        `x` otherwise.
+    """
+    if hasattr(x, "evalf") and isinstance((x := x.evalf()), sp.Float):
+        return x
+
+    try:
+        if (
+            x := x.subs(
+                {
+                    BooleanTrue(): sp.Float(1.0),
+                    BooleanFalse(): sp.Float(0.0),
+                }
+            )
+        ) and isinstance(x, sp.Float):
+            return x
+    except TypeError:
+        pass
+
+    return x

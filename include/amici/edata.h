@@ -14,24 +14,24 @@ class ReturnData;
 
 /**
  * @brief ExpData carries all information about experimental or
- * condition-specific data
+ * condition-specific data.
  */
 class ExpData : public SimulationParameters {
 
   public:
     /**
-     * @brief default constructor
+     * @brief Default constructor.
      */
     ExpData() = default;
 
     /**
-     * @brief Copy constructor, needs to be declared to be generated in
-     * swig
+     * @brief Copy constructor.
      */
+    // needs to be declared to be wrapped by SWIG
     ExpData(ExpData const&) = default;
 
     /**
-     * @brief constructor that only initializes dimensions
+     * @brief Constructor that only initializes dimensions.
      *
      * @param nytrue Number of observables
      * @param nztrue Number of event outputs
@@ -95,28 +95,35 @@ class ExpData : public SimulationParameters {
     explicit ExpData(Model const& model);
 
     /**
-     * @brief constructor that initializes with returnData, adds noise according
-     * to specified sigmas
+     * @brief Constructor that initializes with ReturnData, adds normally
+     * distributed noise according to specified sigmas.
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y scalar standard deviations for all observables
      * @param sigma_z scalar standard deviations for all event observables
+     * @param seed Seed for the random number generator. If a negative number
+     * is passed, a random seed is used.
      */
-    ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z);
+    ExpData(
+        ReturnData const& rdata, realtype sigma_y, realtype sigma_z,
+        int seed = -1
+    );
 
     /**
-     * @brief constructor that initializes with returnData, adds noise according
-     * to specified sigmas
+     * @brief Constructor that initializes with ReturnData, adds normally
+     * distributed noise according to specified sigmas.
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y vector of standard deviations for observables
      * (dimension: nytrue or nt x nytrue, row-major)
      * @param sigma_z vector of standard deviations for event observables
      * (dimension: nztrue or nmaxevent x nztrue, row-major)
+     * @param seed Seed for the random number generator. If a negative number
+     * is passed, a random seed is used.
      */
     ExpData(
         ReturnData const& rdata, std::vector<realtype> sigma_y,
-        std::vector<realtype> sigma_z
+        std::vector<realtype> sigma_z, int seed = -1
     );
 
     ~ExpData() = default;
@@ -153,6 +160,16 @@ class ExpData : public SimulationParameters {
 
     /**
      * @brief Set output timepoints.
+     *
+     * If the number of timepoint increases, this will grow the
+     * observation/sigma matrices and fill new entries with NaN.
+     * If the number of timepoints decreases, this will shrink the
+     * observation/sigma matrices.
+     *
+     * Note that the mapping from timepoints to measurements will not be
+     * preserved. E.g., say there are measurements at t = 2, and this
+     * function is called with [1, 2], then the old measurements will belong to
+     * t = 1.
      *
      * @param ts timepoints
      */
@@ -225,7 +242,7 @@ class ExpData : public SimulationParameters {
     void setObservedDataStdDev(std::vector<realtype> const& observedDataStdDev);
 
     /**
-     * @brief Set indentical standard deviation for all measurements.
+     * @brief Set identical standard deviation for all measurements.
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
@@ -278,8 +295,7 @@ class ExpData : public SimulationParameters {
     realtype const* getObservedDataStdDevPtr(int it) const;
 
     /**
-     * @brief set function that copies observed event data from input to
-     * ExpData::observedEvents
+     * @brief Set observed event data.
      *
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
@@ -287,8 +303,7 @@ class ExpData : public SimulationParameters {
     void setObservedEvents(std::vector<realtype> const& observedEvents);
 
     /**
-     * @brief set function that copies observed event data for specific event
-     * observable
+     * @brief Set observed event data for specific event observable.
      *
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
@@ -296,8 +311,7 @@ class ExpData : public SimulationParameters {
     void setObservedEvents(std::vector<realtype> const& observedEvents, int iz);
 
     /**
-     * @brief get function that checks whether event data at specified indices
-     * has been set
+     * @brief Check whether event data at specified indices has been set.
      *
      * @param ie event index
      * @param iz event observable index
@@ -306,25 +320,23 @@ class ExpData : public SimulationParameters {
     bool isSetObservedEvents(int ie, int iz) const;
 
     /**
-     * @brief get function that copies data from ExpData::mz to output
+     * @brief Get observed event data.
      *
      * @return observed event data
      */
     std::vector<realtype> const& getObservedEvents() const;
 
     /**
-     * @brief get function that returns a pointer to observed data at ieth
-     * occurrence
+     * @brief Get pointer to observed data at ie-th occurrence.
      *
      * @param ie event occurrence
      *
-     * @return pointer to observed event data at ieth occurrence
+     * @return pointer to observed event data at ie-th occurrence
      */
     realtype const* getObservedEventsPtr(int ie) const;
 
     /**
-     * @brief set function that copies data from input to
-     * ExpData::observedEventsStdDev
+     * @brief Set standard deviation of observed event data.
      *
      * @param observedEventsStdDev standard deviation of observed event data
      */
@@ -332,16 +344,14 @@ class ExpData : public SimulationParameters {
     setObservedEventsStdDev(std::vector<realtype> const& observedEventsStdDev);
 
     /**
-     * @brief set function that sets all ExpData::observedDataStdDev to the
-     * input value
+     * @brief Set standard deviation of observed event data.
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
     void setObservedEventsStdDev(realtype stdDev);
 
     /**
-     * @brief set function that copies standard deviation of observed data for
-     * specific observable
+     * @brief Set standard deviation of observed data for a specific observable.
      *
      * @param observedEventsStdDev standard deviation of observed data
      * (dimension: nmaxevent)
@@ -352,8 +362,7 @@ class ExpData : public SimulationParameters {
     );
 
     /**
-     * @brief set function that sets all standard deviation of a specific
-     * observable to the input value
+     * @brief Set all standard deviations of a specific event-observable.
      *
      * @param stdDev standard deviation (dimension: scalar)
      * @param iz observed data index
@@ -361,8 +370,8 @@ class ExpData : public SimulationParameters {
     void setObservedEventsStdDev(realtype stdDev, int iz);
 
     /**
-     * @brief get function that checks whether standard deviation of even data
-     * at specified indices has been set
+     * @brief Check whether standard deviation of event data
+     * at specified indices has been set.
      *
      * @param ie event index
      * @param iz event observable index
@@ -371,16 +380,15 @@ class ExpData : public SimulationParameters {
     bool isSetObservedEventsStdDev(int ie, int iz) const;
 
     /**
-     * @brief get function that copies data from ExpData::observedEventsStdDev
-     * to output
+     * @brief Get standard deviation of observed event data.
      *
      * @return standard deviation of observed event data
      */
     std::vector<realtype> const& getObservedEventsStdDev() const;
 
     /**
-     * @brief get function that returns a pointer to standard deviation of
-     * observed event data at ie-th occurrence
+     * @brief Get pointer to standard deviation of
+     * observed event data at ie-th occurrence.
      *
      * @param ie event occurrence
      *
@@ -388,6 +396,13 @@ class ExpData : public SimulationParameters {
      * occurrence
      */
     realtype const* getObservedEventsStdDevPtr(int ie) const;
+
+    /**
+     * @brief Set all observations and their standard deviations to NaN.
+     *
+     * Useful, e.g., after calling ExpData::setTimepoints.
+     */
+    void clear_observations();
 
     /**
      * @brief Arbitrary (not necessarily unique) identifier.
@@ -546,9 +561,10 @@ class ConditionContext : public ContextManager {
     std::vector<realtype> original_parameters_;
     std::vector<realtype> original_fixed_parameters_;
     realtype original_tstart_;
+    realtype original_tstart_preeq_;
     std::vector<realtype> original_timepoints_;
     std::vector<int> original_parameter_list_;
-    std::vector<amici::ParameterScaling> original_scaling_;
+    std::vector<ParameterScaling> original_scaling_;
     bool original_reinitialize_fixed_parameter_initial_states_;
     std::vector<int> original_reinitialization_state_idxs;
 };

@@ -2,21 +2,348 @@
 #define AMICI_FORWARDPROBLEM_H
 
 #include "amici/defines.h"
+#include "amici/edata.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/solver.h"
+#include "amici/steadystateproblem.h"
 #include "amici/vector.h"
-#include <amici/amici.h>
 
-#include <memory>
-#include <sundials/sundials_direct.h>
+#include <optional>
 #include <vector>
-
 namespace amici {
-
 class ExpData;
 class Solver;
 class SteadystateProblem;
 class FinalStateStorer;
+
+/**
+ * @brief Data structure to store some state of a simulation at a discontinuity.
+ */
+struct Discontinuity {
+    /**
+     * @brief Constructor.
+     * @param time
+     * @param root_info
+     * @param x_pre
+     * @param xdot_pre
+     * @param x_post
+     * @param xdot_post
+     * @param h_pre
+     * @param total_cl_pre
+     */
+    explicit Discontinuity(
+        realtype time, std::vector<int> const& root_info = std::vector<int>(),
+        AmiVector const& x_pre = AmiVector(),
+        AmiVector const& xdot_pre = AmiVector(),
+        AmiVector const& x_post = AmiVector(),
+        AmiVector const& xdot_post = AmiVector(),
+        std::vector<realtype> const& h_pre = std::vector<realtype>(),
+        std::vector<realtype> const& total_cl_pre = std::vector<realtype>(0)
+    )
+        : time(time)
+        , x_post(x_post)
+        , x_pre(x_pre)
+        , xdot_post(xdot_post)
+        , xdot_pre(xdot_pre)
+        , root_info(root_info)
+        , h_pre(h_pre)
+        , total_cl_pre(total_cl_pre) {}
+
+    /** Time of discontinuity. */
+    realtype time;
+
+    /** Post-event state vector (dimension nx). */
+    AmiVector x_post;
+
+    /** Pre-event state vector (dimension nx). */
+    AmiVector x_pre;
+
+    /** Post-event differential state vectors (dimension nx). */
+    AmiVector xdot_post;
+
+    /** Pre-event differential state vectors (dimension nx). */
+    AmiVector xdot_pre;
+
+    /**
+     * @brief Array of flags indicating which root has been found.
+     *
+     * Array of length nr (ne) with the indices of the user functions gi found
+     * to have a root. For i = 0, ..., nr: 1 or -1 if gi has a root, and = 0
+     * if not. See CVodeGetRootInfo for details.
+     */
+    std::vector<int> root_info;
+
+    /**
+     * Flag indicating whether a certain Heaviside function should be active or
+     * not, pre-event value (dimension: `ne`)
+     */
+    std::vector<realtype> h_pre;
+
+    /** Total abundances for conservation laws
+     (dimension: `nx_rdata - nx_solver`) */
+    std::vector<realtype> total_cl_pre;
+};
+
+/**
+ * @brief Compute the number of roots for each root function from a vector of
+ * discontinuities.
+ * @param discs Encountered discontinuities.
+ * @param ne Number of root functions (ne).
+ * @param nmaxevents Maximum number of events to track (nmaxevents).
+ * @return The number of roots for each root function.
+ */
+std::vector<int>
+compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
+
+/**
+ * @brief The FwdSimWorkspace class is used to store temporary simulation
+ * state during forward simulations.
+ */
+struct FwdSimWorkspace {
+    /**
+     * @brief Constructor
+     * @param model The model for which to set up the workspace.
+     * @param solver The solver for which to set up this workspace.
+     */
+    FwdSimWorkspace(
+        gsl::not_null<Model*> const& model, gsl::not_null<Solver*> solver
+    )
+        : x(model->nx_solver, solver->getSunContext())
+        , x_old(model->nx_solver, solver->getSunContext())
+        , dx(model->nx_solver, solver->getSunContext())
+        , xdot(model->nx_solver, solver->getSunContext())
+        , xdot_old(model->nx_solver, solver->getSunContext())
+        , sx(model->nx_solver, model->nplist(), solver->getSunContext())
+        , sdx(model->nx_solver, model->nplist(), solver->getSunContext())
+        , stau(model->nplist())
+        , roots_found(model->ne, 0)
+        , rval_tmp(gsl::narrow<decltype(rval_tmp)::size_type>(model->ne), 0.0)
+        , nroots(gsl::narrow<decltype(nroots)::size_type>(model->ne), 0)
+        , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
+
+    {};
+
+    /** state vector (dimension: nx_solver) */
+    AmiVector x;
+
+    /** old state vector (dimension: nx_solver) */
+    AmiVector x_old;
+
+    /** differential state vector (dimension: nx_solver) */
+    AmiVector dx;
+
+    /** time derivative state vector (dimension: nx_solver) */
+    AmiVector xdot;
+
+    /** old time derivative state vector (dimension: nx_solver) */
+    AmiVector xdot_old;
+
+    /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
+    AmiVectorArray sx;
+
+    /** differential sensitivity state vector array
+     * (dimension: nx_cl x nplist, row-major) */
+    AmiVectorArray sdx;
+
+    /** sensitivity of the event timepoint (dimension: nplist) */
+    std::vector<realtype> stau;
+
+    /**
+     * @brief Array of flags indicating which root has been found.
+     *
+     * Array of length nr (ne) with the indices of the user functions gi found
+     * to have a root. For i = 0, . . . ,nr 1 or -1 if gi has a root, and = 0
+     * if not. See CVodeGetRootInfo for details.
+     */
+    std::vector<int> roots_found;
+
+    /** Timepoint, at which the last root was found */
+    realtype tlastroot{0.0};
+
+    /** Events that are waiting to be handled at the current timepoint. */
+    EventQueue pending_events;
+
+    /** temporary rootval storage to check crossing in secondary event
+     * (dimension: ne) */
+    std::vector<realtype> rval_tmp;
+
+    /** array of number of found roots for a certain event type
+     * (dimension: ne) */
+    std::vector<int> nroots;
+
+    /** array of values of the root function (dimension: ne) */
+    std::vector<realtype> rootvals;
+};
+
+/**
+ * @brief The PeriodResult class stores the result of a simulation period.
+ */
+struct PeriodResult {
+
+    /** Discontinuities encountered so far (dimension: dynamic) */
+    std::vector<Discontinuity> discs;
+    /** array of number of found roots for a certain event type
+     * (dimension: ne) */
+    std::vector<int> nroots;
+
+    /** simulation states history at timepoints */
+    std::map<realtype, SimulationState> timepoint_states_;
+
+    /** simulation state history at events */
+    std::vector<SimulationState> event_states_;
+
+    /** simulation state after initialization*/
+    SimulationState initial_state_;
+
+    /** simulation state after simulation */
+    SimulationState final_state_;
+};
+
+/**
+ * @brief The EventHandlingSimulator class runs a forward simulation
+ * and processes events, measurements or output timepoints in general.
+ */
+class EventHandlingSimulator {
+  public:
+    /**
+     * @brief EventHandlingSimulator
+     * @param model The model to simulate.
+     * @param solver The solver to use for the simulation.
+     * @param ws The workspace to use for the simulation.
+     * @param dJzdx State-derivative of event likelihood
+     * (dimension nJ x nx x nMaxEvent, ordering =?)
+     */
+    EventHandlingSimulator(
+        gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
+        gsl::not_null<FwdSimWorkspace*> ws,
+        gsl::not_null<std::vector<realtype>*> dJzdx
+    )
+        : model_(model)
+        , solver_(solver)
+        , ws_(ws)
+        , dJzdx_(dJzdx) {};
+
+    /**
+     * @brief run Run the simulation.
+     *
+     * It will run the simulation from the initial time of this period
+     * to the final timepoint of this period, handling events
+     * and data points as they occur.
+     *
+     * Expects the model and the solver to be set up, and `ws` to be initialized
+     * for this period.
+     *
+     * @param t The initial time of this period.
+     * @param edata Any experimental data associated with this simulation.
+     * `nullptr` if no experimental data is associated with this
+     * period.
+     * @param timepoints The output timepoints or measurement timepoints of
+     * this period. This must contain at least the final timepoint of this
+     * period.
+     */
+    void
+    run(realtype t, ExpData const* edata,
+        std::vector<amici::realtype> const& timepoints);
+
+    /**
+     * @brief Returns maximal event index for which the timepoint is available
+     * @return index
+     */
+    [[nodiscard]] int get_root_counter() const {
+        return gsl::narrow<int>(result.discs.size()) - 1;
+    }
+
+    /**
+     * @brief Returns maximal event index for which simulations are available
+     * @return index
+     */
+    [[nodiscard]] int get_event_counter() const {
+        return gsl::narrow<int>(result.event_states_.size()) - 1;
+    }
+
+    /**
+     * @brief Creates a carbon copy of the current simulation state variables
+     * @return state
+     */
+    SimulationState get_simulation_state();
+
+    /** Results for the current simulation period. */
+    PeriodResult result;
+
+    /** The current time. */
+    realtype t_;
+
+    /** Time index in the current list of timepoints */
+    int it_;
+
+  private:
+    /**
+     * @brief Execute everything necessary for the handling of events
+     *
+     * @param initial_event initial event flag
+     * @param edata experimental data
+     */
+    void handle_event(bool initial_event, ExpData const* edata);
+
+    /**
+     * @brief Store pre-event model state
+     *
+     * @param seflag Secondary event flag
+     * @param initial_event initial event flag
+     */
+    void store_pre_event_state(bool seflag, bool initial_event);
+
+    /**
+     * @brief Check for, and if applicable, handle any secondary events
+     * @return the number of secondary events found
+     */
+    int detect_secondary_events();
+
+    /**
+     * @brief Extract output information for events
+     */
+    void store_event(amici::ExpData const* edata);
+
+    /**
+     * @brief Execute everything necessary for the handling of data points
+     *
+     * @param t measurement timepoint
+     */
+    void handle_datapoint(realtype t);
+
+    /**
+     * @brief fills events at final timepoint if necessary
+     *
+     * @param nmaxevent maximal number of events
+     * @param edata experimental data
+     */
+    void fill_events(int nmaxevent, ExpData const* edata) {
+        if (!std::ranges::any_of(ws_->nroots, [nmaxevent](int curNRoots) {
+                return curNRoots < nmaxevent;
+            }))
+            return;
+
+        result.discs.emplace_back(t_);
+        store_event(edata);
+    }
+
+    /** Initial time of the current period. */
+    realtype t0_;
+
+    /** The model to simulate. */
+    Model* model_;
+
+    /** The solver to use for the simulation. */
+    Solver* solver_;
+
+    /** The workspace to use for the simulation. */
+    gsl::not_null<FwdSimWorkspace*> ws_;
+
+    /** state derivative of event likelihood
+     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+    std::vector<realtype>* dJzdx_ = nullptr;
+};
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
@@ -29,12 +356,11 @@ class ForwardProblem {
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
-     * @param preeq preequilibration with which to initialize the forward
      * problem, pass nullptr for no initialization
      */
     ForwardProblem(
-        ExpData const* edata, Model* model, Solver* solver,
-        SteadystateProblem const* preeq
+        ExpData const* edata, gsl::not_null<Model*> model,
+        gsl::not_null<Solver*> solver
     );
 
     ~ForwardProblem() = default;
@@ -51,142 +377,65 @@ class ForwardProblem {
     void workForwardProblem();
 
     /**
-     * @brief computes adjoint updates dJydx according to provided model and
-     * expdata
+     * @brief Computes adjoint updates dJydx according to the provided model
+     * and ExpData.
      * @param model Model instance
      * @param edata experimental data
+     * @return dJydx
      */
-    void getAdjointUpdates(Model& model, ExpData const& edata);
+    std::vector<realtype> getAdjointUpdates(Model& model, ExpData const& edata);
 
     /**
      * @brief Accessor for t
      * @return t
      */
-    realtype getTime() const { return t_; }
-
-    /**
-     * @brief Accessor for x
-     * @return x
-     */
-    AmiVector const& getState() const { return x_; }
-
-    /**
-     * @brief Accessor for dx
-     * @return dx
-     */
-    AmiVector const& getStateDerivative() const { return dx_; }
+    [[nodiscard]] realtype getTime() const { return t_; }
 
     /**
      * @brief Accessor for sx
      * @return sx
      */
-    AmiVectorArray const& getStateSensitivity() const { return sx_; }
-
-    /**
-     * @brief Accessor for x_disc
-     * @return x_disc
-     */
-    std::vector<AmiVector> const& getStatesAtDiscontinuities() const {
-        return x_disc_;
+    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
+        return ws_.sx;
     }
 
     /**
-     * @brief Accessor for xdot_disc
-     * @return xdot_disc
+     * @brief Get information on the discontinuities encountered so far.
+     * @return The vector of discontinuities.
      */
-    std::vector<AmiVector> const& getRHSAtDiscontinuities() const {
-        return xdot_disc_;
+    [[nodiscard]] std::vector<Discontinuity> const& getDiscontinuities() const {
+        return main_simulator_.result.discs;
     }
-
-    /**
-     * @brief Accessor for xdot_old_disc
-     * @return xdot_old_disc
-     */
-    std::vector<AmiVector> const& getRHSBeforeDiscontinuities() const {
-        return xdot_old_disc_;
-    }
-
-    /**
-     * @brief Accessor for nroots
-     * @return nroots
-     */
-    std::vector<int> const& getNumberOfRoots() const { return nroots_; }
-
-    /**
-     * @brief Accessor for discs
-     * @return discs
-     */
-    std::vector<realtype> const& getDiscontinuities() const { return discs_; }
-
-    /**
-     * @brief Accessor for rootidx
-     * @return rootidx
-     */
-    std::vector<std::vector<int>> const& getRootIndexes() const {
-        return root_idx_;
-    }
-
-    /**
-     * @brief Accessor for dJydx
-     * @return dJydx
-     */
-    std::vector<realtype> const& getDJydx() const { return dJydx_; }
 
     /**
      * @brief Accessor for dJzdx
      * @return dJzdx
      */
-    std::vector<realtype> const& getDJzdx() const { return dJzdx_; }
-
-    /**
-     * @brief Accessor for pointer to x
-     * @return &x
-     */
-    AmiVector* getStatePointer() { return &x_; }
-
-    /**
-     * @brief Accessor for pointer to dx
-     * @return &dx
-     */
-    AmiVector* getStateDerivativePointer() { return &dx_; }
-
-    /**
-     * @brief accessor for pointer to sx
-     * @return &sx
-     */
-    AmiVectorArray* getStateSensitivityPointer() { return &sx_; }
-
-    /**
-     * @brief Accessor for pointer to sdx
-     * @return &sdx
-     */
-    AmiVectorArray* getStateDerivativeSensitivityPointer() { return &sdx_; }
+    [[nodiscard]] std::vector<realtype> const& getDJzdx() const {
+        return dJzdx_;
+    }
 
     /**
      * @brief Accessor for it
      * @return it
      */
-    int getCurrentTimeIteration() const { return it_; }
+    [[nodiscard]] int getCurrentTimeIteration() const { return it_; }
 
     /**
      * @brief Returns final time point for which simulations are available
      * @return time point
      */
-    realtype getFinalTime() const { return final_state_.t; }
+    [[nodiscard]] realtype getFinalTime() const {
+        return main_simulator_.result.final_state_.t;
+    }
 
     /**
      * @brief Returns maximal event index for which simulations are available
      * @return index
      */
-    int getEventCounter() const {
-        return gsl::narrow<int>(event_states_.size()) - 1;
+    [[nodiscard]] int getEventCounter() const {
+        return main_simulator_.get_event_counter();
     }
-
-    /**
-     * @brief Returns maximal event index for which the timepoint is available
-     * @return index
-     */
-    int getRootCounter() const { return gsl::narrow<int>(discs_.size()) - 1; }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
@@ -194,10 +443,15 @@ class ForwardProblem {
      * @param it timepoint index
      * @return state
      */
-    SimulationState const& getSimulationStateTimepoint(int it) const {
-        if (model->getTimepoint(it) == initial_state_.t)
+    [[nodiscard]] SimulationState const&
+    getSimulationStateTimepoint(int it) const {
+        if (model->getTimepoint(it) == main_simulator_.result.initial_state_.t)
             return getInitialSimulationState();
-        return timepoint_states_.find(model->getTimepoint(it))->second;
+        auto map_iter = main_simulator_.result.timepoint_states_.find(
+            model->getTimepoint(it)
+        );
+        Ensures(map_iter != main_simulator_.result.timepoint_states_.end());
+        return map_iter->second;
     };
 
     /**
@@ -206,8 +460,9 @@ class ForwardProblem {
      * @param iroot event index
      * @return SimulationState
      */
-    SimulationState const& getSimulationStateEvent(int iroot) const {
-        return event_states_.at(iroot);
+    [[nodiscard]] SimulationState const&
+    getSimulationStateEvent(int iroot) const {
+        return main_simulator_.result.event_states_.at(iroot);
     };
 
     /**
@@ -215,18 +470,67 @@ class ForwardProblem {
      * initial timepoint
      * @return SimulationState
      */
-    SimulationState const& getInitialSimulationState() const {
-        return initial_state_;
+    [[nodiscard]] SimulationState const& getInitialSimulationState() const {
+        return main_simulator_.result.initial_state_;
     };
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
-     * final timepoint (or when simulation failed)
+     * final timepoint (or when the simulation failed)
      * @return SimulationState
      */
-    SimulationState const& getFinalSimulationState() const {
-        return final_state_;
+    [[nodiscard]] SimulationState const& getFinalSimulationState() const {
+        return main_simulator_.result.final_state_;
     };
+
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    [[nodiscard]] SteadystateProblem* getPreequilibrationProblem() {
+        if (preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the preequilibration SteadystateProblem.
+     * @return The preequilibration SteadystateProblem, if any.
+     */
+    [[nodiscard]] SteadystateProblem const* getPreequilibrationProblem() const {
+        if (preeq_problem_.has_value())
+            return &*preeq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    [[nodiscard]] SteadystateProblem* getPostequilibrationProblem() {
+        if (posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadystateProblem.
+     * @return The postequilibration SteadystateProblem, if any.
+     */
+    [[nodiscard]] SteadystateProblem const*
+    getPostequilibrationProblem() const {
+        if (posteq_problem_.has_value())
+            return &*posteq_problem_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Get the presimulation results.
+     * @return Presimulation results.
+     */
+    PeriodResult const& get_presimulation_result() const {
+        return pre_simulator_.result;
+    }
 
     /** pointer to model instance */
     Model* model;
@@ -238,109 +542,43 @@ class ForwardProblem {
     ExpData const* edata;
 
   private:
+    /**
+     * @brief Handle preequilibration if necessary.
+     *
+     * Preequilibration starts at `Model::t0()`.
+     *
+     * So far, no event handling takes place during preequilibration.
+     */
+    void handlePreequilibration();
+
+    /**
+     * @brief Handle pre-simulation if required.
+     *
+     * Pre-simulation starts at `Model::t0() - ExpData::t_presim`.
+     *
+     * So far, no event handling takes place during presimulation.
+     */
     void handlePresimulation();
 
     /**
-     * @brief Execute everything necessary for the handling of events
+     * @brief Handle the main simulation.
      *
-     * @param tlastroot pointer to the timepoint of the last event
-     * @param seflag Secondary event flag
-     * @param initial_event initial event flag
+     * Simulation starts at `Model::t0()`.
+     * During this period, events are processed and data points are
+     * handled.
      */
-
-    void handleEvent(realtype* tlastroot, bool seflag, bool initial_event);
+    void handleMainSimulation();
 
     /**
-     * @brief Extract output information for events
-     */
-    void storeEvent();
-
-    /**
-     * @brief Execute everything necessary for the handling of data points
+     * @brief Handle postequilibration if necessary.
      *
-     * @param it index of data point
-     */
-    void handleDataPoint(int it);
-
-    /**
-     * @brief Applies the event bolus to the current state
-     */
-    void applyEventBolus();
-
-    /**
-     * @brief Applies the event bolus to the current sensitivities
-     */
-    void applyEventSensiBolusFSA();
-
-    /**
-     * @brief checks whether there are any events to fill
+     * Postequilibration starts after the last finite output timepoint
+     * or the last event timepoint that is known a priori, whichever is later.
      *
-     * @param nmaxevent maximal number of events
+     * So far, no event handling takes place during postequilibration.
+     * This also includes the processing of event observables.
      */
-    bool checkEventsToFill(int nmaxevent) const {
-        return std::any_of(
-            nroots_.cbegin(), nroots_.cend(),
-            [nmaxevent](int curNRoots) { return curNRoots < nmaxevent; }
-        );
-    };
-
-    /**
-     * @brief fills events at final timepoint if necessary
-     *
-     * @param nmaxevent maximal number of events
-     */
-    void fillEvents(int nmaxevent) {
-        if (checkEventsToFill(nmaxevent)) {
-            discs_.push_back(t_);
-            storeEvent();
-        }
-    }
-
-    /**
-     * @brief Creates a carbon copy of the current simulation state variables
-     * @return state
-     */
-    SimulationState getSimulationState() const;
-
-    /** array of index vectors (dimension ne) indicating whether the respective
-     * root has been detected for all so far encountered discontinuities,
-     * extended as needed (dimension: dynamic) */
-    std::vector<std::vector<int>> root_idx_;
-
-    /** array of number of found roots for a certain event type
-     * (dimension: ne) */
-    std::vector<int> nroots_;
-
-    /** array of values of the root function (dimension: ne) */
-    std::vector<realtype> rootvals_;
-
-    /** temporary rootval storage to check crossing in secondary event
-     * (dimension: ne) */
-    std::vector<realtype> rval_tmp_;
-
-    /** array containing the time-points of discontinuities
-     * (dimension: nmaxevent x ne, ordering = ?) */
-    std::vector<realtype> discs_;
-
-    /** array containing the index of discontinuities
-     * (dimension: nmaxevent x ne, ordering = ?) */
-    std::vector<realtype> irdiscs_;
-
-    /** array of state vectors (dimension nx) for all so far encountered
-     * discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> x_disc_;
-
-    /** array of differential state vectors (dimension nx) for all so far
-     * encountered discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> xdot_disc_;
-
-    /** array of old differential state vectors (dimension nx) for all so far
-     * encountered discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> xdot_old_disc_;
-
-    /** state derivative of data likelihood
-     * (dimension nJ x nx x nt, ordering =?) */
-    std::vector<realtype> dJydx_;
+    void handlePostequilibration();
 
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
@@ -349,63 +587,25 @@ class ForwardProblem {
     /** current time */
     realtype t_;
 
-    /**
-     * @brief Array of flags indicating which root has been found.
-     *
-     * Array of length nr (ne) with the indices of the user functions gi found
-     * to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
-     */
-    std::vector<int> roots_found_;
-
-    /** simulation states history at timepoints  */
-    std::map<realtype, SimulationState> timepoint_states_;
-
-    /** simulation state history at events*/
-    std::vector<SimulationState> event_states_;
-
-    /** simulation state after initialization*/
-    SimulationState initial_state_;
-
-    /** simulation state after simulation*/
-    SimulationState final_state_;
-
-    /** state vector (dimension: nx_solver) */
-    AmiVector x_;
-
-    /** old state vector (dimension: nx_solver) */
-    AmiVector x_old_;
-
-    /** differential state vector (dimension: nx_solver) */
-    AmiVector dx_;
-
-    /** old differential state vector (dimension: nx_solver) */
-    AmiVector dx_old_;
-
-    /** time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_;
-
-    /** old time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_old_;
-
-    /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sx_;
-
-    /** differential sensitivity state vector array
-     * (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sdx_;
-
-    /** sensitivity of the event timepoint (dimension: nplist) */
-    std::vector<realtype> stau_;
-
-    /** storage for last found root */
-    realtype tlastroot_{0.0};
-
     /** flag to indicate whether solver was preeinitialized via preequilibration
      */
     bool preequilibrated_{false};
 
     /** current iteration number for time index */
-    int it_;
+    int it_ = 0;
+
+    /** Whether the current model/data requires presimulation. */
+    bool uses_presimulation_{false};
+
+    /** The preequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> preeq_problem_;
+
+    /** The postequilibration steady-state problem, if any. */
+    std::optional<SteadystateProblem> posteq_problem_;
+
+    FwdSimWorkspace ws_;
+    EventHandlingSimulator main_simulator_;
+    EventHandlingSimulator pre_simulator_;
 };
 
 /**
@@ -425,9 +625,43 @@ class FinalStateStorer : public ContextManager {
     /**
      * @brief destructor, stores simulation state
      */
-    ~FinalStateStorer() {
-        if (fwd_)
-            fwd_->final_state_ = fwd_->getSimulationState();
+    ~FinalStateStorer() noexcept(false) {
+        if (fwd_) {
+            try {
+                // This may throw in `CVodeSolver::getSens`
+                // due to https://github.com/LLNL/sundials/issues/82.
+                // Therefore, this dtor must be `noexcept(false)` to avoid
+                // program termination.
+                fwd_->main_simulator_.result.final_state_
+                    = fwd_->main_simulator_.get_simulation_state();
+                // if there is an associated output timepoint, also store it in
+                // timepoint_states if it's not present there.
+                // this may happen if there is an error just at
+                // (or indistinguishably before) an output timepoint
+                auto final_time = fwd_->getFinalTime();
+                auto const timepoints = fwd_->model->getTimepoints();
+                if (!fwd_->main_simulator_.result.timepoint_states_.contains(
+                        final_time
+                    )
+                    && std::ranges::find(timepoints, final_time)
+                           != timepoints.cend()) {
+                    fwd_->main_simulator_.result.timepoint_states_[final_time]
+                        = fwd_->main_simulator_.result.final_state_;
+                }
+            } catch (std::exception const&) {
+                // We must not throw in case we are already in the stack
+                // unwinding phase due to some other active exception, otherwise
+                // this will also lead to termination.
+                //
+                // In case there is another active exception,
+                // `fwd_->{final_state_,timepoint_states_}` won't be set,
+                // and we assume that they are either not accessed anymore, or
+                // that there is appropriate error handling in place.
+                if (!std::uncaught_exceptions()) {
+                    throw;
+                }
+            }
+        }
     }
 
   private:
@@ -436,4 +670,4 @@ class FinalStateStorer : public ContextManager {
 
 } // namespace amici
 
-#endif // FORWARDPROBLEM_H
+#endif // AMICI_FORWARDPROBLEM_H

@@ -1,12 +1,14 @@
 """Tests related to amici.ExpData via Python"""
+
 import amici
 import numpy as np
+import pytest
 from amici.testing import skip_on_valgrind
-from test_sbml_import import model_units_module
 
 
 @skip_on_valgrind
-def test_edata_sensi_unscaling(model_units_module):
+@pytest.mark.usefixtures("model_units_module")
+def test_edata_sensi_unscaling(model_units_module):  # noqa: F811
     """
     ExpData parameters should be used for unscaling initial state
     sensitivities.

@@ -3,11 +3,11 @@
 https://antimony.sourceforge.net/
 https://tellurium.readthedocs.io/en/latest/antimony.html
 """
+
 from pathlib import Path
-from typing import Union
 
 
-def antimony2sbml(ant_model: Union[str, Path]) -> str:
+def antimony2sbml(ant_model: str | Path) -> str:
     """Convert Antimony model to SBML.
 
     :param ant_model: Antimony model as string or path to file
@@ -28,11 +28,13 @@ def antimony2sbml(ant_model: Union[str, Path]) -> str:
         is_file = False
 
     if is_file:
-        status = ant.loadAntimonyFile(ant_model)
+        status = ant.loadAntimonyFile(str(ant_model))
     else:
         status = ant.loadAntimonyString(ant_model)
     if status < 0:
-        raise RuntimeError("Antimony model could not be loaded.")
+        raise RuntimeError(
+            f"Antimony model could not be loaded: {ant.getLastError()}"
+        )
 
     if (main_module_name := ant.getMainModuleName()) is None:
         raise AssertionError("There is no Antimony module.")
@@ -44,7 +46,7 @@ def antimony2sbml(ant_model: Union[str, Path]) -> str:
     return sbml_str
 
 
-def antimony2amici(ant_model: Union[str, Path], *args, **kwargs):
+def antimony2amici(ant_model: str | Path, *args, **kwargs):
     """Convert Antimony model to AMICI model.
 
     Converts the Antimony model provided as string of file to SBML and then imports it into AMICI.

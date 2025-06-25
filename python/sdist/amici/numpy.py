@@ -6,12 +6,17 @@ This module provides views on C++ objects for efficient access.
 
 import collections
 import copy
-from typing import Dict, Iterator, List, Literal, Union
-
+import itertools
+from typing import Literal, Union
+from collections.abc import Iterator
+from numbers import Number
 import amici
 import numpy as np
-
+import sympy as sp
+from sympy.abc import _clash
 from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
+
+StrOrExpr = str | sp.Expr
 
 
 class SwigPtrView(collections.abc.Mapping):
@@ -29,10 +34,10 @@ class SwigPtrView(collections.abc.Mapping):
     """
 
     _swigptr = None
-    _field_names: List[str] = []
-    _field_dimensions: Dict[str, List[int]] = dict()
+    _field_names: list[str] = []
+    _field_dimensions: dict[str, list[int]] = dict()
 
-    def __getitem__(self, item: str) -> Union[np.ndarray, float]:
+    def __getitem__(self, item: str) -> np.ndarray | float:
         """
         Access to field names, copies data from C++ object into numpy
         array, reshapes according to field dimensions and stores values in
@@ -50,15 +55,18 @@ class SwigPtrView(collections.abc.Mapping):
         if item in self._cache:
             return self._cache[item]
 
-        if item == "id":
+        if item in self._field_names:
+            value = _field_as_numpy(
+                self._field_dimensions, item, self._swigptr
+            )
+            self._cache[item] = value
+
+            return value
+
+        if not item.startswith("_") and hasattr(self._swigptr, item):
             return getattr(self._swigptr, item)
 
-        if item not in self._field_names:
-            self.__missing__(item)
-
-        value = _field_as_numpy(self._field_dimensions, item, self._swigptr)
-        self._cache[item] = value
-        return value
+        self.__missing__(item)
 
     def __missing__(self, key: str) -> None:
         """
@@ -68,7 +76,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         raise KeyError(f"Unknown field name {key}.")
 
-    def __getattr__(self, item) -> Union[np.ndarray, float]:
+    def __getattr__(self, item) -> np.ndarray | float:
         """
         Attribute accessor for field names
 
@@ -76,7 +84,10 @@ class SwigPtrView(collections.abc.Mapping):
 
         :returns: value
         """
-        return self.__getitem__(item)
+        try:
+            return self.__getitem__(item)
+        except KeyError as e:
+            raise AttributeError(item) from e
 
     def __init__(self, swigptr):
         """
@@ -86,7 +97,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         self._swigptr = swigptr
         self._cache = {}
-        super(SwigPtrView, self).__init__()
+        super().__init__()
 
     def __len__(self) -> int:
         """
@@ -134,7 +145,8 @@ class SwigPtrView(collections.abc.Mapping):
 
         :returns: SwigPtrView deep copy
         """
-        other = SwigPtrView(self._swigptr)
+        # We assume we have a copy-ctor for the swigptr object
+        other = self.__class__(copy.deepcopy(self._swigptr))
         other._field_names = copy.deepcopy(self._field_names)
         other._field_dimensions = copy.deepcopy(self._field_dimensions)
         other._cache = copy.deepcopy(self._cache)
@@ -147,6 +159,25 @@ class SwigPtrView(collections.abc.Mapping):
         :returns: string representation
         """
         return f"<{self.__class__.__name__}({self._swigptr})>"
+
+    def __eq__(self, other):
+        """
+        Equality check
+
+        :param other: other object
+
+        :returns: whether other object is equal to this object
+        """
+        if not isinstance(other, self.__class__):
+            return False
+        return self._swigptr == other._swigptr
+
+    def __dir__(self):
+        return sorted(
+            set(
+                itertools.chain(dir(super()), self.__dict__, self._field_names)
+            )
+        )
 
 
 class ReturnDataView(SwigPtrView):
@@ -210,18 +241,20 @@ class ReturnDataView(SwigPtrView):
         "numnonlinsolvconvfailsB",
         "cpu_timeB",
         "cpu_time_total",
+        "messages",
+        "t_last",
     ]
 
-    def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
+    def __init__(self, rdata: ReturnDataPtr | ReturnData):
         """
         Constructor
 
         :param rdata: pointer to the ``ReturnData`` instance
         """
-        if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
+        if not isinstance(rdata, (ReturnDataPtr | ReturnData)):
             raise TypeError(
                 f"Unsupported pointer {type(rdata)}, must be"
-                f"amici.ExpDataPtr!"
+                f"amici.ReturnDataPtr or amici.ReturnData!"
             )
         self._field_dimensions = {
             "ts": [rdata.nt],
@@ -272,13 +305,13 @@ class ReturnDataView(SwigPtrView):
             "numerrtestfailsB": [rdata.nt],
             "numnonlinsolvconvfailsB": [rdata.nt],
         }
-        super(ReturnDataView, self).__init__(rdata)
+        super().__init__(rdata)
 
     def __getitem__(
         self, item: str
-    ) -> Union[np.ndarray, ReturnDataPtr, ReturnData, float]:
+    ) -> np.ndarray | ReturnDataPtr | ReturnData | float:
         """
-        Access fields by name.s
+        Access fields by name.
 
         Custom ``__getitem__`` implementation shim to map ``t`` to ``ts``.
 
@@ -293,6 +326,10 @@ class ReturnDataView(SwigPtrView):
             item = "ts"
 
         return super().__getitem__(item)
+
+    def __repr__(self):
+        status = amici.simulation_status_to_str(self._swigptr.status)
+        return f"<{self.__class__.__name__}(id={self._swigptr.id!r}, status={status})>"
 
     def by_id(
         self, entity_id: str, field: str = None, model: Model = None
@@ -327,7 +364,8 @@ class ReturnDataView(SwigPtrView):
             ) or self._swigptr.parameter_ids
         else:
             raise NotImplementedError(
-                f"Subsetting {field} by ID is not implemented or not possible."
+                f"Subsetting `{field}` by ID (`{entity_id}`) "
+                "is not implemented or not possible."
             )
         col_index = ids.index(entity_id)
         return getattr(self, field)[:, ..., col_index]
@@ -337,9 +375,13 @@ class ExpDataView(SwigPtrView):
     """
     Interface class for C++ Exp Data objects that avoids possibly costly
     copies of member data.
+
+    NOTE: This currently assumes that the underlying :class:`ExpData`
+    does not change after instantiating an :class:`ExpDataView`.
     """
 
     _field_names = [
+        "ts",
         "observedData",
         "observedDataStdDev",
         "observedEvents",
@@ -349,18 +391,19 @@ class ExpDataView(SwigPtrView):
         "fixedParametersPresimulation",
     ]
 
-    def __init__(self, edata: Union[ExpDataPtr, ExpData]):
+    def __init__(self, edata: ExpDataPtr | ExpData):
         """
         Constructor
 
         :param edata: pointer to the ExpData instance
         """
-        if not isinstance(edata, (ExpDataPtr, ExpData)):
+        if not isinstance(edata, (ExpDataPtr | ExpData)):
             raise TypeError(
-                f"Unsupported pointer {type(edata)}, must be"
-                f"amici.ExpDataPtr!"
+                f"Unsupported pointer {type(edata)}, must be amici.ExpDataPtr!"
             )
-        self._field_dimensions = {  # observables
+        self._field_dimensions = {
+            "ts": [edata.nt()],
+            # observables
             "observedData": [edata.nt(), edata.nytrue()],
             "observedDataStdDev": [edata.nt(), edata.nytrue()],
             # event observables
@@ -372,19 +415,20 @@ class ExpDataView(SwigPtrView):
                 len(edata.fixedParametersPreequilibration)
             ],
             "fixedParametersPresimulation": [
-                len(edata.fixedParametersPreequilibration)
+                len(edata.fixedParametersPresimulation)
             ],
         }
+        edata.ts = edata.ts_
         edata.observedData = edata.getObservedData()
         edata.observedDataStdDev = edata.getObservedDataStdDev()
         edata.observedEvents = edata.getObservedEvents()
         edata.observedEventsStdDev = edata.getObservedEventsStdDev()
-        super(ExpDataView, self).__init__(edata)
+        super().__init__(edata)
 
 
 def _field_as_numpy(
-    field_dimensions: Dict[str, List[int]], field: str, data: SwigPtrView
-) -> Union[np.ndarray, float, None]:
+    field_dimensions: dict[str, list[int]], field: str, data: SwigPtrView
+) -> np.ndarray | float | None:
     """
     Convert data object field to numpy array with dimensions according to
     specified field dimensions
@@ -400,7 +444,11 @@ def _field_as_numpy(
     attr = getattr(data, field)
     if field_dim := field_dimensions.get(field, None):
         return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
-    return float(attr)
+
+    if isinstance(attr, Number):
+        return float(attr)
+
+    return attr
 
 
 def _entity_type_from_id(
@@ -429,3 +477,28 @@ def _entity_type_from_id(
                 return symbol
 
     raise KeyError(f"Unknown symbol {entity_id}.")
+
+
+def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
+    """Evaluate a symbolic expression based on the given simulation outputs.
+
+    :param expr:
+        A symbolic expression, e.g. a sympy expression or a string that can be sympified.
+        Can include state variable, expression, and observable IDs, depending on whether
+        the respective data is available in the simulation results.
+        Parameters are not yet supported.
+    :param rdata:
+        The simulation results.
+
+    :return:
+        The evaluated expression for the simulation output timepoints.
+    """
+    from sympy.utilities.lambdify import lambdify
+
+    if isinstance(expr, str):
+        expr = sp.sympify(expr, locals=_clash)
+
+    arg_names = list(sorted(expr.free_symbols, key=lambda x: x.name))
+    func = lambdify(arg_names, expr, "numpy")
+    args = [rdata.by_id(arg.name) for arg in arg_names]
+    return func(*args)

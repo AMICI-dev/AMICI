@@ -6,7 +6,7 @@ computed sensitivities using finite difference approximations
 """
 
 import copy
-from typing import Callable, List, Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -29,10 +29,10 @@ def check_finite_difference(
     solver: Solver,
     edata: ExpData,
     ip: int,
-    fields: List[str],
-    atol: Optional[float] = 1e-4,
-    rtol: Optional[float] = 1e-4,
-    epsilon: Optional[float] = 1e-3,
+    fields: list[str],
+    atol: float | None = 1e-4,
+    rtol: float | None = 1e-4,
+    epsilon: float | None = 1e-3,
 ) -> None:
     """
     Checks the computed sensitivity based derivatives against a finite
@@ -125,7 +125,17 @@ def check_finite_difference(
         else:
             raise NotImplementedError()
 
-        _check_close(sensi, fd, atol=atol, rtol=rtol, field=field, ip=ip)
+        _check_close(
+            sensi,
+            fd,
+            atol=atol,
+            rtol=rtol,
+            field=field,
+            ip=ip,
+            parameter_id=model.getParameterIds()[ip]
+            if model.hasParameterIds()
+            else None,
+        )
 
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
@@ -137,10 +147,10 @@ def check_finite_difference(
 def check_derivatives(
     model: Model,
     solver: Solver,
-    edata: Optional[ExpData] = None,
-    atol: Optional[float] = 1e-4,
-    rtol: Optional[float] = 1e-4,
-    epsilon: Optional[float] = 1e-3,
+    edata: ExpData | None = None,
+    atol: float | None = 1e-4,
+    rtol: float | None = 1e-4,
+    epsilon: float | None = 1e-3,
     check_least_squares: bool = True,
     skip_zero_pars: bool = False,
 ) -> None:
@@ -226,7 +236,14 @@ def check_derivatives(
     if edata is not None:
         fields.append("llh")
 
+    # only check the sensitivities w.r.t. the selected parameters
+    plist = model.getParameterList()
+    if edata and edata.plist:
+        plist = edata.plist
+
     for ip, pval in enumerate(p):
+        if plist and ip not in plist:
+            continue
         if pval == 0.0 and skip_zero_pars:
             continue
         check_finite_difference(
@@ -248,8 +265,9 @@ def _check_close(
     atol: float,
     rtol: float,
     field: str,
-    ip: Optional[int] = None,
-    verbose: Optional[bool] = True,
+    ip: int | None = None,
+    parameter_id: str | None = None,
+    verbose: bool | None = True,
 ) -> None:
     """
     Compares computed values against expected values and provides rich
@@ -273,6 +291,9 @@ def _check_close(
     :param ip:
         parameter index, for more informative output
 
+    :param parameter_id:
+        parameter ID, for more informative output
+
     :param verbose:
         produce a more verbose error message in case of unmatched expectations
     """
@@ -285,6 +306,8 @@ def _check_close(
         check_type = "Regression check"
     else:
         index_str = f"at index ip={ip} "
+        if parameter_id:
+            index_str += f"({parameter_id}) "
         check_type = "FD check"
 
     lines = [
@@ -331,7 +354,7 @@ def _check_results(
     """
 
     result = rdata[field]
-    if type(result) is float:
+    if type(result) is float:  # noqa E721
         result = np.array(result)
 
     _check_close(
