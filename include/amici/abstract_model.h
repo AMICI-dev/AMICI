@@ -623,7 +623,7 @@ class AbstractModel {
      * @param h Heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
-     * @param x_old pre-event state
+     * @param xdot_old previous model right hand side
      * @param xB current adjoint state
      */
     virtual void fdeltaxB(
