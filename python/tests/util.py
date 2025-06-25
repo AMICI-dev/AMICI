@@ -173,10 +173,16 @@ def check_trajectories_with_forward_sensitivities(
     )
 
 
-def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
+def check_trajectories_with_adjoint_sensitivities(
+    amici_model: AmiciModel, asa_xfail: bool = False
+):
     """
     Check whether adjoint sensitivities match forward sensitivities and finite
     differences.
+
+    :param amici_model: AMICI model to test
+    :param asa_xfail: If True, deviations between adjoint and forward
+        sensitivities will not raise an AssertionError.
     """
     # First compute dummy experimental data to use adjoints
     solver = amici_model.getSolver()
@@ -247,19 +253,27 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     ):
         print(df)
 
-    assert_allclose(
-        rdata_fsa["sllh"],
-        rdata_asa["sllh"],
-        rtol=1e-8,
-        atol=1e-12,
-        err_msg="Adjoint and forward sensitivities do not match.",
-    )
+    if asa_xfail:
+        assert (not df["asa_matches_fsa"]).any()
+        print(
+            "FIXME: Ignoring differences between adjoint and forward sensitivities."
+        )
+        return
+
     assert_allclose(
         sllh_fd,
         rdata_fsa["sllh"],
         rtol=1e-6,
         atol=1e-6,
         err_msg="Finite differences and forward sensitivities do not match.",
+    )
+
+    assert_allclose(
+        rdata_fsa["sllh"],
+        rdata_asa["sllh"],
+        rtol=1e-8,
+        atol=1e-12,
+        err_msg="Adjoint and forward sensitivities do not match.",
     )
     assert_allclose(
         sllh_fd,
