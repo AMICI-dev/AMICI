@@ -180,14 +180,15 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     """
     # First compute dummy experimental data to use adjoints
     solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
     assert rdata.status == amici.AMICI_SUCCESS
-    edata = ExpData(rdata, 1.0, 1.0)
+    rng_seed = 42
+    edata = ExpData(rdata, 1.0, 1.0, rng_seed)
 
     # FSA
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-13)
     rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
     assert rdata_fsa.status == amici.AMICI_SUCCESS
@@ -236,7 +237,15 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
         df["asa"], df["fsa"], rtol=1e-8, atol=1e-12
     )
     print()
-    print(df)
+    with pd.option_context(
+        "display.max_rows",
+        None,
+        "display.max_columns",
+        None,
+        "display.width",
+        None,
+    ):
+        print(df)
 
     assert_allclose(
         rdata_fsa["sllh"],
