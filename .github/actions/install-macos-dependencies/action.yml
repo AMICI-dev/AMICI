@@ -30,5 +30,5 @@ runs:
       # install hdf5 without dependencies, because pkgconf installation fails,
       # because it's already installed on the runners. install the other
       # hdf5 dependencies (libaec) manually
-      run: brew install libaec && brew install --ignore-dependencies hdf5 && brew install swig libomp boost
+      run: brew install libaec && brew install --ignore-dependencies hdf5 && brew install libomp boost
       shell: bash
