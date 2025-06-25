@@ -6,8 +6,6 @@
 #include <amici/newton_solver.h>
 #include <amici/vector.h>
 
-#include <memory>
-
 namespace amici {
 
 class ExpData;
@@ -33,7 +31,8 @@ class WRMSComputer {
      * Positive value: include; non-positive value: exclude; empty: include all.
      */
     WRMSComputer(
-        int n, SUNContext sunctx, realtype atol, realtype rtol, AmiVector mask
+        int const n, SUNContext const sunctx, realtype const atol,
+        realtype const rtol, AmiVector mask
     )
         : ewt_(n, sunctx)
         , rtol_(rtol)
@@ -262,7 +261,7 @@ class SteadystateProblem {
      */
     [[nodiscard]] SimulationState const& getFinalSimulationState() const {
         return state_;
-    };
+    }
 
     /**
      * @brief Return the quadratures from pre- or postequilibration
@@ -275,7 +274,7 @@ class SteadystateProblem {
      * @brief Return state at steady state
      * @return x
      */
-    [[nodiscard]] AmiVector const& getState() const { return state_.x; };
+    [[nodiscard]] AmiVector const& getState() const { return state_.x; }
 
     /**
      * @brief Return state sensitivity at steady state
@@ -283,7 +282,7 @@ class SteadystateProblem {
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
         return state_.sx;
-    };
+    }
 
     /**
      * @brief Get the CPU time taken to solve the forward problem.

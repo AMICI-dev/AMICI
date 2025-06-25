@@ -130,7 +130,7 @@ void NewtonSolver::reinitialize() {
     if (dynamic_cast<SUNLinSolDense*>(linsol_.get())) {
         return;
     }
-    if (auto s = dynamic_cast<SUNLinSolKLU*>(linsol_.get())) {
+    if (auto const s = dynamic_cast<SUNLinSolKLU*>(linsol_.get())) {
         try {
             s->reInit(s->getMatrix().capacity(), SUNKLU_REINIT_PARTIAL);
             return;
@@ -143,7 +143,7 @@ void NewtonSolver::reinitialize() {
     throw AmiException(
         "Unhandled linear solver type in NewtonSolver::reinitialize."
     );
-};
+}
 
 bool NewtonSolver::is_singular(
     Model& model, SimulationState const& state

@@ -225,11 +225,11 @@ void Solver::setup(
 
     if (sensi_ >= SensitivityOrder::first
         && sensi_meth_ > SensitivityMethod::none && model->nx_solver > 0) {
-        auto plist = model->getParameterList();
+        auto const plist = model->getParameterList();
         sensInit1(sx0, sdx0);
         if (sensi_meth_ == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
-            auto par = model->getUnscaledParameters();
+            auto const par = model->getUnscaledParameters();
 
             /* Activate sensitivity calculations  and apply tolerances */
             initializeNonLinearSolverSens(model);
@@ -1043,7 +1043,7 @@ void Solver::setMaxTime(double maxtime) {
 void Solver::startTimer() const { simulation_timer_.reset(); }
 
 bool Solver::timeExceeded(int interval) const {
-    thread_local static int eval_counter = 0;
+    thread_local int eval_counter = 0;
 
     // 0 means infinite time
     if (maxtime_.count() == 0)
@@ -1157,9 +1157,9 @@ void Solver::setInternalSensitivityMethod(InternalSensitivityMethod const ism) {
 
 RDataReporting Solver::getReturnDataReportingMode() const {
     return rdata_mode_;
-};
+}
 
-void Solver::setReturnDataReportingMode(RDataReporting rdrm) {
+void Solver::setReturnDataReportingMode(RDataReporting const rdrm) {
     if (rdrm == RDataReporting::residuals
         && sensi_meth_ == SensitivityMethod::adjoint)
         throw AmiException(

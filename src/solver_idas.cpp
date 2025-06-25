@@ -17,13 +17,11 @@ namespace amici {
 constexpr auto ONE = SUN_RCONST(1.0);
 
 // Ensure AMICI options and return codes are in sync with SUNDIALS
-static_assert(
-    (int)InternalSensitivityMethod::simultaneous == IDA_SIMULTANEOUS, ""
-);
-static_assert((int)InternalSensitivityMethod::staggered == IDA_STAGGERED, "");
+static_assert((int)InternalSensitivityMethod::simultaneous == IDA_SIMULTANEOUS);
+static_assert((int)InternalSensitivityMethod::staggered == IDA_STAGGERED);
 
-static_assert((int)InterpolationType::hermite == IDA_HERMITE, "");
-static_assert((int)InterpolationType::polynomial == IDA_POLYNOMIAL, "");
+static_assert((int)InterpolationType::hermite == IDA_HERMITE);
+static_assert((int)InterpolationType::polynomial == IDA_POLYNOMIAL);
 
 #define STATIC_ASSERT_EQUAL(amici_constant, ida_constant)                      \
     static_assert(                                                             \
@@ -1181,11 +1179,11 @@ int froot(
  * @return status flag indicating successful execution
  */
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void* user_data) {
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
-    auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
+    auto const solver = dynamic_cast<IDASolver const*>(typed_udata->second);
     Expects(model);
 
     if (solver->timeExceeded(500)) {
@@ -1220,11 +1218,11 @@ int fxBdot(
     realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
     N_Vector xBdot, void* user_data
 ) {
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
-    auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
+    auto const solver = dynamic_cast<IDASolver const*>(typed_udata->second);
     Expects(model);
 
     if (solver->timeExceeded(500)) {
@@ -1251,9 +1249,9 @@ int fqBdot(
     N_Vector qBdot, void* user_data
 ) {
 
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
 
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
@@ -1273,9 +1271,9 @@ int fqBdot(
 static int fxBdot_ss(
     realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot, void* user_data
 ) {
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
 
     model->fxBdot_ss(t, xB, dxB, xBdot);
@@ -1297,9 +1295,9 @@ static int fxBdot_ss(
 static int fqBdot_ss(
     realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot, void* user_data
 ) {
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
 
     model->fqBdot_ss(t, xB, dxB, qBdot);
@@ -1327,9 +1325,9 @@ static int fJSparseB_ss(
     N_Vector xBdot, SUNMatrix JB, void* user_data, N_Vector /*tmp1*/,
     N_Vector /*tmp2*/, N_Vector /*tmp3*/
 ) {
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
 
     model->fJSparseB_ss(JB);
@@ -1360,9 +1358,9 @@ int fsxdot(
     N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/
 ) {
 
-    auto typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
+    auto const typed_udata = static_cast<IDASolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
+    auto const model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
 
     for (int ip = 0; ip < model->nplist(); ip++) {

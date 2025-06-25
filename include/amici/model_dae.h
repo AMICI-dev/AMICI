@@ -50,7 +50,7 @@ class Model_DAE : public Model {
           ) {
         SUNContext sunctx = derived_state_.sunctx_;
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
-        auto M_nnz = static_cast<sunindextype>(
+        auto const M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );
         derived_state_.MSparse_
@@ -304,7 +304,7 @@ class Model_DAE : public Model {
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {
         fdxdotdp(t, x.getNVector(), dx.getNVector());
-    };
+    }
 
     void fsxdot(
         realtype t, AmiVector const& x, AmiVector const& dx, int ip,
