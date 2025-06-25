@@ -52,9 +52,7 @@ jobs:
     - name: Install deps
       shell: bash
       run: |
-        python -m pip install --upgrade pip \
-          && choco install -y ninja \
-          && choco install -y swig
+        python -m pip install --upgrade pip
 
     - name: Install OpenBLAS
       shell: powershell
