@@ -244,10 +244,12 @@ class EventHandlingSimulator {
      * @param timepoints The output timepoints or measurement timepoints of
      * this period. This must contain at least the final timepoint of this
      * period.
+     * @param store_diagnosis Whether to store diagnosis in the solver at each
+     * timepoint in `timepoints`.
      */
     void
     run(realtype t, ExpData const* edata,
-        std::vector<amici::realtype> const& timepoints);
+        std::vector<amici::realtype> const& timepoints, bool store_diagnosis);
 
     /**
      * @brief Returns maximal event index for which the timepoint is available

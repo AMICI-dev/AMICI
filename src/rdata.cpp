@@ -569,12 +569,13 @@ void ReturnData::processSolver(Solver const& solver) {
     cpu_time = solver.getCpuTime();
 
     if (!numsteps.empty()) {
+        Expects(numsteps.size() >= solver.getNumSteps().size());
         // copy instead of assignment to ensure length `nt`
         // (vector from solver may be shorter in case of integration errors)
         copy(solver.getNumSteps(), numsteps.begin());
     }
 
-    if (!numsteps.empty()) {
+    if (!numrhsevals.empty()) {
         copy(solver.getNumRhsEvals(), numrhsevals.begin());
     }
 
