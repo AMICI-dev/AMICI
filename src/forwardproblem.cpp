@@ -313,6 +313,7 @@ void EventHandlingSimulator::handle_event(
         if (solver_->computingASA()) {
             // store updated x to compute jump in discontinuity
             result.discs.back().x_post = ws_->x;
+            result.discs.back().dx_post = ws_->dx;
             // Update xdot after the state update
             model_->fxdot(t_, ws_->x, ws_->dx, ws_->xdot);
             result.discs.back().xdot_post = ws_->xdot;

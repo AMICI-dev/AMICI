@@ -10,12 +10,19 @@ from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
 from util import (
+    check_trajectories_with_adjoint_sensitivities,
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,
     create_amici_model,
     create_sbml_model,
 )
 from numpy.testing import assert_allclose
+
+pytestmark = pytest.mark.filterwarnings(
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
+)
 
 
 @pytest.fixture(
@@ -132,9 +139,12 @@ def model_definition_events_plus_heavisides():
         "k2": 0.01,
         "k3": 5,
         "alpha": 2,
+        # FIXME: adjoint sensitivities w.r.t. beta are slightly off
         "beta": 3,
         "gamma": 2,
         "delta": 3,
+        # FIXME: adjoint sensitivities w.r.t. eta are slightly off
+        #  changing eta to e.g. 2.5 "fixes" python/tests/test_events.py::test_models[events_plus_heavisides]
         "eta": 1,
         "zeta": 5,
     }
@@ -274,6 +284,7 @@ def model_definition_nested_events():
         "k2": 0,
         "inflow_1": 4,
         "decay_1": 2,
+        # FIXME adjoint sensitivities w.r.t. decay_2 are slightly off
         "decay_2": 5,
         "bolus": 0,  # for bolus != 0, nested event sensitivities are off!
     }
@@ -701,6 +712,15 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
+    # FIXME: For a few parameters of these models, adjoint sensitivities
+    # are somewhat off. This needs to be investigated further.
+    asa_xfail = amici_model.getName() in (
+        "events_plus_heavisides",
+        "piecewise_plus_event_semi_complicated",
+        "nested_events",
+    )
+    check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
+
 
 def expm(x):
     """``expm`` wrapper
@@ -728,7 +748,6 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
         ant_model,
         model_name=module_name,
         output_dir=tempdir,
-        verbose=True,
     )
     model_module = import_model_module(
         module_name=module_name, module_path=tempdir
@@ -769,7 +788,6 @@ def test_multiple_event_assignment_with_compartment(tempdir):
         ant_model,
         model_name=module_name,
         output_dir=tempdir,
-        verbose=True,
     )
     model_module = import_model_module(
         module_name=module_name, module_path=tempdir
@@ -906,6 +924,19 @@ def test_event_priorities(tempdir):
     )
 
     # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+    # FIXME: sensitivities w.r.t. the bolus and trigger parameter are totally off
+    # solver.setSensitivityMethod(SensitivityMethod.adjoint)
+    # edata.plist = []
+    # model.requireSensitivitiesForAllParameters()
+    # check_derivatives(
+    #     model,
+    #     solver,
+    #     edata=edata,
+    #     atol=1e-6,
+    #     rtol=1e-6,
+    #     # smaller than the offset from the trigger time
+    #     epsilon=1e-8,
+    # )
 
 
 @skip_on_valgrind
