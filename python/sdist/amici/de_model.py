@@ -1702,12 +1702,16 @@ class DEModel:
         elif name == "dtaudx":
             self._eqs[name] = [
                 self.eq("drootdx")[ie, :] / self.eq("drootdt_total")[ie]
+                if not self.eq("drootdt_total")[ie].is_zero
+                else sp.zeros(*self.eq("drootdx")[ie, :].shape)
                 for ie in range(self.num_events())
             ]
 
         elif name == "dtaudp":
             self._eqs[name] = [
                 self.eq("drootdp")[ie, :] / self.eq("drootdt_total")[ie]
+                if not self.eq("drootdt_total")[ie].is_zero
+                else sp.zeros(*self.eq("drootdp")[ie, :].shape)
                 for ie in range(self.num_events())
             ]
 

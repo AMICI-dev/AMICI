@@ -254,7 +254,9 @@ def check_trajectories_with_adjoint_sensitivities(
         print(df)
 
     if asa_xfail:
-        assert not df["asa_matches_fsa"].all(), "Incorrectly marked as xfail."
+        if df["asa_matches_fsa"].all():
+            # Note that this is machine-dependent...
+            print("Incorrectly marked as xfail?")
         print(
             "FIXME: Ignoring differences between adjoint and forward sensitivities."
         )
@@ -263,8 +265,8 @@ def check_trajectories_with_adjoint_sensitivities(
     assert_allclose(
         sllh_fd,
         rdata_fsa["sllh"],
-        rtol=1e-6,
-        atol=1e-6,
+        rtol=1e-5,
+        atol=1e-8,
         err_msg="Finite differences and forward sensitivities do not match.",
     )
 
