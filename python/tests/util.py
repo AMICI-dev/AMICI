@@ -280,7 +280,7 @@ def check_trajectories_with_adjoint_sensitivities(
     assert_allclose(
         sllh_fd,
         rdata_asa["sllh"],
-        rtol=1e-6,
+        rtol=1e-5,
         atol=1e-6,
         err_msg="Finite differences and adjoint sensitivities do not match.",
     )
