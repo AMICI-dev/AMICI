@@ -52,9 +52,9 @@ def test_copy_constructors(pysb_example_presimulation_module):
 
             obj_clone = obj.clone()
 
-            assert get_val(obj, attr) == get_val(
-                obj_clone, attr
-            ), f"{obj} - {attr}"
+            assert get_val(obj, attr) == get_val(obj_clone, attr), (
+                f"{obj} - {attr}"
+            )
 
 
 # `None` values are skipped in `test_model_instance_settings`.

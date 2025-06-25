@@ -239,6 +239,20 @@ class JAXModel(eqx.Module):
         """
         ...
 
+    @abstractmethod
+    def _known_discs(
+        self, p: jt.Float[jt.Array, "np"]
+    ) -> jt.Float[jt.Array, "ndiscs"]:
+        """
+        Compute the known discontinuity points of the ODE system.
+
+        :param p:
+            parameters
+        :return:
+            known discontinuity points in the ODE system
+        """
+        ...
+
     @property
     @abstractmethod
     def state_ids(self) -> list[str]:
@@ -320,7 +334,9 @@ class JAXModel(eqx.Module):
             t1=jnp.inf,
             dt0=None,
             y0=x0,
-            stepsize_controller=controller,
+            stepsize_controller=self._get_clipped_stepsize_controller(
+                p, controller
+            ),
             max_steps=max_steps,
             adjoint=diffrax.DirectAdjoint(),
             event=diffrax.Event(
@@ -379,7 +395,9 @@ class JAXModel(eqx.Module):
             t1=ts[-1],
             dt0=None,
             y0=x0,
-            stepsize_controller=controller,
+            stepsize_controller=self._get_clipped_stepsize_controller(
+                p, controller
+            ),
             max_steps=max_steps,
             adjoint=adjoint,
             saveat=diffrax.SaveAt(ts=ts),
@@ -747,6 +765,19 @@ class JAXModel(eqx.Module):
         )
 
         return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
+
+    def _get_clipped_stepsize_controller(
+        self,
+        p: jt.Float[jt.Array, "np"],
+        controller: diffrax.AbstractStepSizeController,
+    ) -> diffrax.AbstractStepSizeController:
+        if not self._known_discs(p).size:
+            return controller
+
+        return diffrax.ClipStepSizeController(
+            controller,
+            jump_ts=self._known_discs(p),
+        )
 
 
 def safe_log(x: jnp.float_) -> jnp.float_:

@@ -1,6 +1,7 @@
 # ruff: noqa: F401, F821, F841
 import jax.numpy as jnp
 import jax.random as jr
+import jaxtyping as jt
 from interpax import interp1d
 from pathlib import Path
 from jax.numpy import inf as oo
@@ -103,6 +104,11 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_JY_EQ
 
         return TPL_JY_RET.at[iy].get()
+
+    def _known_discs(self, p):
+        TPL_P_SYMS = p
+
+        return TPL_ROOTS
 
     @property
     def observable_ids(self):

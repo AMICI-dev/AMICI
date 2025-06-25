@@ -650,7 +650,7 @@ class DEExporter:
 
         lines.extend(
             [
-                "}" "",
+                "}",
                 f"}} // namespace model_{self.model_name}",
                 "} // namespace amici\n",
             ]

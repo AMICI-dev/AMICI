@@ -637,8 +637,7 @@ class DEModel:
             )[0]
         except StopIteration:
             raise ValueError(
-                f"Specified state {state} was not found in the "
-                f"model states."
+                f"Specified state {state} was not found in the model states."
             )
 
         state_id = self._differential_states[ix].get_id()
@@ -1239,7 +1238,7 @@ class DEModel:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix(
             [
-                sp.Symbol(f'{name}{0 if name == "stau" else i}', real=True)
+                sp.Symbol(f"{name}{0 if name == 'stau' else i}", real=True)
                 for i in range(length)
             ]
         )
@@ -1730,11 +1729,8 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-
-                if (
-                    not smart_is_zero_matrix(self.eq("stau")[ie])
-                    and not xdot_is_zero
-                ):
+                stau_is_zero = smart_is_zero_matrix(self.eq("stau")[ie])
+                if not stau_is_zero and not xdot_is_zero:
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
@@ -1750,7 +1746,7 @@ class DEModel:
 
                     # need to check if equations are zero since we are using
                     # symbols
-                    if not smart_is_zero_matrix(self.eq("stau")[ie]):
+                    if not stau_is_zero:
                         # chain rule for the time point
                         tmp_eq += smart_multiply(
                             self.eq("ddeltaxdt")[ie],
@@ -1768,12 +1764,6 @@ class DEModel:
                         self.eq("ddeltaxdx")[ie]
                         + self.eq("ddeltaxdx_old")[ie],
                         tmp_dxdp,
-                    )
-
-                elif not xdot_is_zero:
-                    tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
-                        self.eq("stau")[ie],
                     )
                 event_eqs.append(tmp_eq)
 
@@ -2505,3 +2495,57 @@ class DEModel:
             self._expressions = [self._expressions[i] for i in new_order]
             self._syms["w"] = sp.Matrix(topo_expr_syms)
             self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
+
+    def get_explicit_roots(self) -> set[sp.Expr]:
+        """
+        Returns explicit formulas for all discontinuities (events)
+        that can be precomputed
+
+        :return:
+            set of symbolic roots
+        """
+        return {root for e in self._events for root in e.get_trigger_times()}
+
+    def get_implicit_roots(self) -> set[sp.Expr]:
+        """
+        Returns implicit equations for all discontinuities (events)
+        that have to be located via rootfinding
+
+        :return:
+            set of symbolic roots
+        """
+        return {
+            e.get_val()
+            for e in self._events
+            if not e.has_explicit_trigger_times()
+        }
+
+    def has_algebraic_states(self) -> bool:
+        """
+        Checks whether the model has algebraic states
+
+        :return:
+            boolean indicating if algebraic states are present
+        """
+        return len(self._algebraic_states) > 0
+
+    def has_event_assignments(self) -> bool:
+        """
+        Checks whether the model has event assignments
+
+        :return:
+            boolean indicating if event assignments are present
+        """
+        return any(event.updates_state for event in self._events)
+
+    def has_parameter_dependent_implicit_roots(self) -> bool:
+        """
+        Checks whether the model has events with parameter-dependent implicit roots
+
+        :return:
+            boolean indicating if parameter-dependent implicit roots are present
+        """
+        return any(
+            self.sym("p").has(root.free_symbols)
+            for root in self.get_implicit_roots()
+        )

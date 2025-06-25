@@ -2,9 +2,7 @@ name: SBML JAX
 on:
   push:
     branches:
-      - develop
-      - master
-      - release**
+      - main
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
@@ -42,6 +40,7 @@ jobs:
       uses: ./.github/actions/install-apt-dependencies
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
+    - run: source ./venv/bin/activate && pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654
     - run: ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"

@@ -68,7 +68,7 @@ def _parse_cli_args():
         "-n",
         "--model-name",
         dest="model_name",
-        help="Name of the python module generated for the " "model",
+        help="Name of the python module generated for the model",
     )
 
     args = parser.parse_args()

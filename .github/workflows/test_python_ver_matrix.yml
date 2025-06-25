@@ -2,13 +2,12 @@ name: Python Tests
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
 
   pull_request:
     branches:
-      - master
   workflow_dispatch:
+  merge_group:
   schedule:
     - cron:  '48 4 * * *'
 
@@ -70,6 +69,11 @@ jobs:
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    # https://github.com/sbmlteam/python-libsbml/issues/40
+    - name: No -Werror
+      if: matrix.python-version == '3.11'
+      run: sed -ri "s/    error//" pytest.ini
 
     - name: Python tests
       run: |

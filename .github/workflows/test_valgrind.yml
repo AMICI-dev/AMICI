@@ -2,11 +2,10 @@ name: Valgrind tests
 on:
   push:
     branches:
-      - master
       - update_valgrind_supp
   pull_request:
     branches:
-      - master
+      - update_valgrind_supp
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
@@ -37,7 +36,7 @@ jobs:
       if: github.event_name == 'schedule'
       uses: actions/checkout@v4
       with:
-        ref: develop
+        ref: main
 
     - name: Checkout code (manual, push, pull request)
       if: github.event_name != 'schedule'

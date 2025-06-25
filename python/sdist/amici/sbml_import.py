@@ -2081,8 +2081,8 @@ class SbmlImporter:
             ):
                 raise ValueError(
                     "Could not find an event with the event identifier "
-                    f'{definition["event"]} for the event observable with name'
-                    f'{definition["name"]}.'
+                    f"{definition['event']} for the event observable with name"
+                    f"{definition['name']}."
                 )
 
         self.symbols[SymbolId.EVENT_OBSERVABLE] = {
@@ -2101,7 +2101,7 @@ class SbmlImporter:
         for eo in self.symbols[SymbolId.EVENT_OBSERVABLE].values():
             if eo["value"].has(wrong_t):
                 warnings.warn(
-                    f'Event observable {eo["name"]} uses `t` in '
+                    f"Event observable {eo['name']} uses `t` in "
                     "it's formula which is not the time variable. "
                     "For the time variable, please use `time` "
                     "instead!",
@@ -2227,7 +2227,7 @@ class SbmlImporter:
             #  https://github.com/AMICI-dev/AMICI/issues/2561
             self.symbols[sigma_symbol] = {
                 symbol_with_assumptions(f"sigma_{obs_id}"): {
-                    "name": f'sigma_{obs["name"]}',
+                    "name": f"sigma_{obs['name']}",
                     "value": sigmas.get(str(obs_id), sp.Float(1.0)),
                 }
                 for obs_id, obs in self.symbols[obs_symbol].items()
@@ -2258,7 +2258,7 @@ class SbmlImporter:
                 value = value.subs(obs["measurement_symbol"], 0.0)
                 value = value.subs(obs_id, obs["reg_symbol"])
             self.symbols[llh_symbol][symbol] = {
-                "name": f'J{obs["name"]}',
+                "name": f"J{obs['name']}",
                 "value": value,
                 "dist": dist,
             }

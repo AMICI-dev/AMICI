@@ -99,8 +99,7 @@ def _workaround_initial_states(
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug(
-            "Adding preequilibration indicator "
-            f"constant {PREEQ_INDICATOR_ID}"
+            f"Adding preequilibration indicator constant {PREEQ_INDICATOR_ID}"
         )
     logger.debug(
         f"Adding initial assignments for {list(initial_states.keys())}"
@@ -203,8 +202,7 @@ def _workaround_observable_parameters(
             ):
                 output_parameters[sym] = None
     logger.debug(
-        "Adding output parameters to model: "
-        f"{list(output_parameters.keys())}"
+        f"Adding output parameters to model: {list(output_parameters.keys())}"
     )
     output_parameter_defaults = output_parameter_defaults or {}
     if extra_pars := (

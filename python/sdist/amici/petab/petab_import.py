@@ -247,7 +247,7 @@ def import_petab_problem(
     check_model(amici_model=model, petab_problem=petab_problem)
 
     logger.info(
-        f"Successfully loaded model {model_name} " f"from {model_output_dir}."
+        f"Successfully loaded model {model_name} from {model_output_dir}."
     )
 
     return model

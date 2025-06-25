@@ -112,12 +112,11 @@ def write_passed_tags(passed_ids, out=sys.stdout):
         passed_test_tags |= cur_test_tags
 
     out.write(
-        "\nAt least one test with the following component tags has "
-        "passed:\n"
+        "\nAt least one test with the following component tags has passed:\n"
     )
     out.write("  " + "\n  ".join(sorted(passed_component_tags)))
     out.write(
-        "\n\nAt least one test with the following test tags has " "passed:\n"
+        "\n\nAt least one test with the following test tags has passed:\n"
     )
     out.write("  " + "\n  ".join(sorted(passed_test_tags)))
 

@@ -9,7 +9,6 @@ Short guide
 Installation of the AMICI Python package has the following prerequisites:
 
 * Python>=3.11
-* :term:`SWIG`>=4.1
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
 * a C++20 compatible C++ compiler and a C compiler
@@ -50,7 +49,7 @@ Install the AMICI dependencies via ``apt``
 
 .. code-block:: bash
 
-   sudo apt install libatlas-base-dev swig python3-dev
+   sudo apt install libatlas-base-dev python3-dev
 
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
@@ -72,7 +71,7 @@ Install the AMICI dependencies via ``apt``
 
 .. code-block:: bash
 
-   sudo dnf install openblas-devel swig
+   sudo dnf install openblas-devel
 
 Install AMICI:
 
@@ -88,7 +87,7 @@ Install the AMICI dependencies via ``pacman``
 
 .. code-block:: bash
 
-   sudo pacman -S python swig openblas gcc hdf5 boost-libs
+   sudo pacman -S python openblas gcc hdf5 boost-libs
 
 Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
 
@@ -109,13 +108,13 @@ Alternatively:
 
 .. code-block:: bash
 
-   sudo pacman -Si python swig openblas gcc hdf5 boost-libs
+   sudo pacman -Si python openblas gcc hdf5 boost-libs
 
 2. Upgrade installed packages if required mininum versions are not satisfied for AMICI installation.
 
 .. code-block:: bash
 
-   sudo pacman -Su python swig openblas gcc hdf5 boost-libs
+   sudo pacman -Su python openblas gcc hdf5 boost-libs
 
 3. Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
 
@@ -137,8 +136,6 @@ Installation on OSX
 Install the AMICI dependencies using homebrew:
 
 .. code-block:: bash
-
-    brew install swig
 
     # optionally for HDF5 support:
     brew install hdf5
@@ -300,9 +297,9 @@ you can install AMICI with ``pip`` directly from GitHub using:
 
 .. code-block:: bash
 
-    pip3 install -e git+https://github.com/AMICI-dev/amici.git@develop#egg=amici\&subdirectory=python/sdist
+    pip3 install -e git+https://github.com/AMICI-dev/amici.git@main#egg=amici\&subdirectory=python/sdist
 
-Replace ``develop`` by the branch or commit you want to install.
+Replace ``main`` by the branch or commit you want to install.
 
 Note that this will only work on Windows if you have enabled developer mode,
 because symlinks are not supported by default
@@ -399,8 +396,7 @@ To activate the environment, run:
 
 (and ``conda deactivate`` later to deactivate it again).
 
-:term:`SWIG` must be installed and available in your ``PATH``, and a
-CBLAS-compatible BLAS must be available. You can also use conda to
+A CBLAS-compatible BLAS must be available. You can also use conda to
 install the latter locally, using:
 
 .. code-block:: bash
