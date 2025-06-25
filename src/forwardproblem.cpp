@@ -51,7 +51,7 @@ ForwardProblem::ForwardProblem(
 
 void EventHandlingSimulator::run(
     realtype const t0, ExpData const* edata,
-    std::vector<realtype> const& timepoints
+    std::vector<realtype> const& timepoints, bool store_diagnosis
 ) {
     std::ranges::fill(ws_->nroots, 0);
 
@@ -139,6 +139,10 @@ void EventHandlingSimulator::run(
             }
         }
         handle_datapoint(next_t_out);
+        if (store_diagnosis) {
+            // store diagnosis information for debugging
+            solver_->storeDiagnosis();
+        }
     }
 
     // fill events
@@ -209,7 +213,7 @@ void ForwardProblem::handlePresimulation() {
     solver->updateAndReinitStatesAndSensitivities(model);
 
     std::vector<realtype> const timepoints{model->t0()};
-    pre_simulator_.run(t_, edata, timepoints);
+    pre_simulator_.run(t_, edata, timepoints, false);
     solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx);
 }
 
@@ -256,7 +260,7 @@ void ForwardProblem::handleMainSimulation() {
         || (solver->computingASA() && !uses_presimulation_))
         ws_.sx = solver->getStateSensitivity(model->t0());
 
-    main_simulator_.run(t_, edata, model->getTimepoints());
+    main_simulator_.run(t_, edata, model->getTimepoints(), true);
     t_ = main_simulator_.t_;
     it_ = main_simulator_.it_;
 }
@@ -543,8 +547,6 @@ void EventHandlingSimulator::handle_datapoint(realtype t) {
     // initial state is stored anyway, and we want to avoid storing it twice
     if (t != t0_ && !result.timepoint_states_.contains(t))
         result.timepoint_states_[t] = get_simulation_state();
-    // store diagnosis information for debugging
-    solver_->storeDiagnosis();
 }
 
 std::vector<realtype>
