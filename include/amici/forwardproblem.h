@@ -80,6 +80,9 @@ struct Discontinuity {
      */
     std::vector<realtype> h_pre;
 
+    /** time derivative of state (DAE only) post-event */
+    AmiVector dx_post;
+
     /** Total abundances for conservation laws
      (dimension: `nx_rdata - nx_solver`) */
     std::vector<realtype> total_cl_pre;

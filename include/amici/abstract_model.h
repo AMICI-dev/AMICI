@@ -599,6 +599,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param dx time derivative of state (DAE only)
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
@@ -608,9 +609,9 @@ class AbstractModel {
      */
     virtual void fdeltaxB(
         realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ie, realtype const* xdot,
-        realtype const* xdot_old, realtype const* x_old, realtype const* xB,
-        realtype const* tcl
+        realtype const* k, realtype const* h, realtype const* dx, int ie,
+        realtype const* xdot, realtype const* xdot_old, realtype const* x_old,
+        realtype const* xB, realtype const* tcl
     );
 
     /**
@@ -640,6 +641,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param dx time derivative of state (DAE only)
      * @param ip sensitivity index
      * @param ie event index
      * @param xdot new model right hand side
@@ -649,9 +651,9 @@ class AbstractModel {
      */
     virtual void fdeltaqB(
         realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, int ie,
-        realtype const* xdot, realtype const* xdot_old, realtype const* x_old,
-        realtype const* xB
+        realtype const* k, realtype const* h, realtype const* dx, int ip,
+        int ie, realtype const* xdot, realtype const* xdot_old,
+        realtype const* x_old, realtype const* xB
     );
 
     /**
