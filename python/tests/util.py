@@ -254,7 +254,7 @@ def check_trajectories_with_adjoint_sensitivities(
         print(df)
 
     if asa_xfail:
-        assert (not df["asa_matches_fsa"]).any()
+        assert not df["asa_matches_fsa"].all(), "Incorrectly marked as xfail."
         print(
             "FIXME: Ignoring differences between adjoint and forward sensitivities."
         )
