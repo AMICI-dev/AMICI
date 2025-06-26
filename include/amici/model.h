@@ -24,12 +24,10 @@ class Solver;
 } // namespace amici
 
 // for serialization friend in amici::Model
-namespace boost {
-namespace serialization {
+namespace boost::serialization {
 template <class Archive>
 void serialize(Archive& ar, amici::Model& m, unsigned int version);
-}
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 
@@ -139,7 +137,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Clone this instance.
      * @return The clone
      */
-    virtual Model* clone() const = 0;
+    [[nodiscard]] virtual Model* clone() const = 0;
 
     /**
      * @brief Serialize Model (see `boost::serialization::serialize`).
@@ -769,7 +767,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Get the current model state.
      * @return Current model state
      */
-    ModelState const& getModelState() const { return state_; };
+    ModelState const& getModelState() const { return state_; }
 
     /**
      * @brief Set the current model state.
@@ -787,7 +785,7 @@ class Model : public AbstractModel, public ModelDimensions {
         if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np())
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
-    };
+    }
 
     /**
      * @brief Sets the estimated lower boundary for sigma_y. When
@@ -795,13 +793,17 @@ class Model : public AbstractModel, public ModelDimensions {
      * ensure that log(sigma) + min_sigma > 0.
      * @param min_sigma lower boundary
      */
-    void setMinimumSigmaResiduals(double min_sigma) { min_sigma_ = min_sigma; }
+    void setMinimumSigmaResiduals(double const min_sigma) {
+        min_sigma_ = min_sigma;
+    }
 
     /**
      * @brief Gets the specified estimated lower boundary for sigma_y.
      * @return lower boundary
      */
-    realtype getMinimumSigmaResiduals() const { return min_sigma_; }
+    [[nodiscard]] realtype getMinimumSigmaResiduals() const {
+        return min_sigma_;
+    }
 
     /**
      * @brief Specifies whether residuals should be added to account for
@@ -815,7 +817,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param sigma_res if true, additional residuals are added
      */
-    void setAddSigmaResiduals(bool sigma_res) { sigma_res_ = sigma_res; }
+    void setAddSigmaResiduals(bool const sigma_res) { sigma_res_ = sigma_res; }
 
     /**
      * @brief Checks whether residuals should be added to account for parameter
@@ -858,7 +860,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Get the initial state for Model::t0()`.
      * @return Initial state vector, before any events are executed.
      */
-    std::vector<realtype> getInitialStates() { return getInitialStates(t0()); };
+    std::vector<realtype> getInitialStates() { return getInitialStates(t0()); }
 
     /**
      * @brief Set the pre-event initial state.
@@ -870,7 +872,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Return whether custom initial state have been set.
      * @return `true` if has custom initial state, otherwise `false`
      */
-    bool hasCustomInitialStates() const;
+    [[nodiscard]] bool hasCustomInitialStates() const;
 
     /**
      * @brief Get the initial state sensitivities.
@@ -878,7 +880,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     std::vector<realtype> getInitialStateSensitivities() {
         return getInitialStateSensitivities(t0());
-    };
+    }
 
     /**
      * @brief Get the initial states sensitivities.
@@ -934,7 +936,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * simulation.
      * @return Mode
      */
-    SteadyStateSensitivityMode getSteadyStateSensitivityMode() const;
+    [[nodiscard]] SteadyStateSensitivityMode
+    getSteadyStateSensitivityMode() const;
 
     /**
      * @brief Set whether initial states depending on fixed parameters are to be
@@ -948,7 +951,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * reinitialized after preequilibration and presimulation.
      * @return flag `true` / `false`
      */
-    bool getReinitializeFixedParameterInitialStates() const;
+    [[nodiscard]] bool getReinitializeFixedParameterInitialStates() const;
 
     /**
      * @brief Require computation of sensitivities for all parameters p [0..np[
@@ -964,8 +967,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param x Current state
      */
-    void
-    getExpression(gsl::span<realtype> w, realtype const t, AmiVector const& x);
+    void getExpression(gsl::span<realtype> w, realtype t, AmiVector const& x);
 
     /**
      * @brief Get time-resolved observables.
@@ -973,15 +975,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param x Current state
      */
-    void
-    getObservable(gsl::span<realtype> y, realtype const t, AmiVector const& x);
+    void getObservable(gsl::span<realtype> y, realtype t, AmiVector const& x);
 
     /**
      * @brief Get scaling type for observable
      * @param iy observable index
      * @return scaling type
      */
-    virtual ObservableScaling getObservableScaling(int iy) const;
+    [[nodiscard]] virtual ObservableScaling getObservableScaling(int iy) const;
 
     /**
      * @brief Get sensitivity of time-resolved observables.
@@ -994,7 +995,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getObservableSensitivity(
-        gsl::span<realtype> sy, realtype const t, AmiVector const& x,
+        gsl::span<realtype> sy, realtype t, AmiVector const& x,
         AmiVectorArray const& sx
     );
 
@@ -1006,7 +1007,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * `nullptr` to ignore)
      */
     void getObservableSigma(
-        gsl::span<realtype> sigmay, int const it, ExpData const* edata
+        gsl::span<realtype> sigmay, int it, ExpData const* edata
     );
 
     /**
@@ -1021,7 +1022,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * `nullptr` to ignore)
      */
     void getObservableSigmaSensitivity(
-        gsl::span<realtype> ssigmay, gsl::span<realtype const> sy, int const it,
+        gsl::span<realtype> ssigmay, gsl::span<realtype const> sy, int it,
         ExpData const* edata
     );
 
@@ -1033,7 +1034,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addObservableObjective(
-        realtype& Jy, int const it, AmiVector const& x, ExpData const& edata
+        realtype& Jy, int it, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1048,7 +1049,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addObservableObjectiveSensitivity(
-        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const it,
+        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int it,
         AmiVector const& x, AmiVectorArray const& sx, ExpData const& edata
     );
 
@@ -1066,7 +1067,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addPartialObservableObjectiveSensitivity(
-        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const it,
+        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int it,
         AmiVector const& x, ExpData const& edata
     );
 
@@ -1080,7 +1081,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data instance
      */
     void getAdjointStateObservableUpdate(
-        gsl::span<realtype> dJydx, int const it, AmiVector const& x,
+        gsl::span<realtype> dJydx, int it, AmiVector const& x,
         ExpData const& edata
     );
 
@@ -1091,10 +1092,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Timepoint
      * @param x State variables
      */
-    void getEvent(
-        gsl::span<realtype> z, int const ie, realtype const t,
-        AmiVector const& x
-    );
+    void
+    getEvent(gsl::span<realtype> z, int ie, realtype t, AmiVector const& x);
     /**
      * @brief Get sensitivities of event-resolved observables.
      *
@@ -1107,8 +1106,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getEventSensitivity(
-        gsl::span<realtype> sz, int const ie, realtype const t,
-        AmiVector const& x, AmiVectorArray const& sx
+        gsl::span<realtype> sz, int ie, realtype t, AmiVector const& x,
+        AmiVectorArray const& sx
     );
 
     /**
@@ -1119,7 +1118,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      */
-    void getUnobservedEventSensitivity(gsl::span<realtype> sz, int const ie);
+    void getUnobservedEventSensitivity(gsl::span<realtype> sz, int ie);
 
     /**
      * @brief Get regularization for event-resolved observables.
@@ -1129,8 +1128,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x State variables
      */
     void getEventRegularization(
-        gsl::span<realtype> rz, int const ie, realtype const t,
-        AmiVector const& x
+        gsl::span<realtype> rz, int ie, realtype t, AmiVector const& x
     );
 
     /**
@@ -1146,8 +1144,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getEventRegularizationSensitivity(
-        gsl::span<realtype> srz, int const ie, realtype const t,
-        AmiVector const& x, AmiVectorArray const& sx
+        gsl::span<realtype> srz, int ie, realtype t, AmiVector const& x,
+        AmiVectorArray const& sx
     );
     /**
      * @brief Get event-resolved observable standard deviations.
@@ -1159,8 +1157,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * `nullptr` to ignore)
      */
     void getEventSigma(
-        gsl::span<realtype> sigmaz, int const ie, int const nroots,
-        realtype const t, ExpData const* edata
+        gsl::span<realtype> sigmaz, int ie, int nroots, realtype t,
+        ExpData const* edata
     );
 
     /**
@@ -1177,8 +1175,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * `nullptr` to ignore)
      */
     void getEventSigmaSensitivity(
-        gsl::span<realtype> ssigmaz, int const ie, int const nroots,
-        realtype const t, ExpData const* edata
+        gsl::span<realtype> ssigmaz, int ie, int nroots, realtype t,
+        ExpData const* edata
     );
 
     /**
@@ -1191,8 +1189,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addEventObjective(
-        realtype& Jz, int const ie, int const nroots, realtype const t,
-        AmiVector const& x, ExpData const& edata
+        realtype& Jz, int ie, int nroots, realtype t, AmiVector const& x,
+        ExpData const& edata
     );
 
     /**
@@ -1205,8 +1203,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addEventObjectiveRegularization(
-        realtype& Jrz, int const ie, int const nroots, realtype const t,
-        AmiVector const& x, ExpData const& edata
+        realtype& Jrz, int ie, int nroots, realtype t, AmiVector const& x,
+        ExpData const& edata
     );
 
     /**
@@ -1226,9 +1224,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addEventObjectiveSensitivity(
-        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const ie,
-        int const nroots, realtype const t, AmiVector const& x,
-        AmiVectorArray const& sx, ExpData const& edata
+        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int ie,
+        int nroots, realtype t, AmiVector const& x, AmiVectorArray const& sx,
+        ExpData const& edata
     );
 
     /**
@@ -1247,9 +1245,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void addPartialEventObjectiveSensitivity(
-        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const ie,
-        int const nroots, realtype const t, AmiVector const& x,
-        ExpData const& edata
+        std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int ie,
+        int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1265,8 +1262,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void getAdjointStateEventUpdate(
-        gsl::span<realtype> dJzdx, int const ie, int const nroots,
-        realtype const t, AmiVector const& x, ExpData const& edata
+        gsl::span<realtype> dJzdx, int ie, int nroots, realtype t,
+        AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1281,8 +1278,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx State sensitivities
      */
     void getEventTimeSensitivity(
-        std::vector<realtype>& stau, realtype const t, int const ie,
-        AmiVector const& x, AmiVectorArray const& sx
+        std::vector<realtype>& stau, realtype t, int ie, AmiVector const& x,
+        AmiVectorArray const& sx
     );
 
     /**
@@ -1296,7 +1293,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param state The model state based on which to compute the update.
      */
     void addStateEventUpdate(
-        AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
+        AmiVector& x, int ie, realtype t, AmiVector const& xdot,
         AmiVector const& xdot_old, AmiVector const& x_old,
         ModelState const& state
     );
@@ -1315,7 +1312,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * `Model::getEventTimeSensitivity`
      */
     void addStateSensitivityEventUpdate(
-        AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
+        AmiVectorArray& sx, int ie, realtype t, AmiVector const& x,
         AmiVector const& x_old, AmiVector const& xdot,
         AmiVector const& xdot_old, AmiVectorArray const& sx_old,
         std::vector<realtype> const& stau
@@ -1333,7 +1330,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param dx Current derivative of state (DAE only)
      */
     void addAdjointStateEventUpdate(
-        AmiVector& xB, int const ie, realtype const t, AmiVector const& x,
+        AmiVector& xB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_old,
         AmiVector const& x_old, AmiVector const& dx
     );
@@ -1351,7 +1348,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param dx Current derivative of state (DAE only)
      */
     void addAdjointQuadratureEventUpdate(
-        AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
+        AmiVector& xQB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
         AmiVector const& x_old, AmiVector const& dx
     );
@@ -1420,7 +1417,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * should be checked for finiteness.
      * @return that
      */
-    bool getAlwaysCheckFinite() const;
+    [[nodiscard]] bool getAlwaysCheckFinite() const;
 
     /**
      * @brief Compute/get pre-event initial state.
@@ -1531,7 +1528,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     [[nodiscard]] std::vector<realtype> get_steadystate_mask() const {
         return steadystate_mask_;
-    };
+    }
 
     /**
      * @brief Set steady-state mask.
@@ -1551,7 +1548,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie event index
      * @return The corresponding Event object.
      */
-    [[nodiscard]] Event const& get_event(int ie) const {
+    [[nodiscard]] Event const& get_event(int const ie) const {
         return events_.at(ie);
     }
 
@@ -1592,8 +1589,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie Event index
      */
     void writeSliceEvent(
-        gsl::span<realtype const> slice, gsl::span<realtype> buffer,
-        int const ie
+        gsl::span<realtype const> slice, gsl::span<realtype> buffer, int ie
     );
 
     /**
@@ -1604,8 +1600,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie event index
      */
     void writeSensitivitySliceEvent(
-        gsl::span<realtype const> slice, gsl::span<realtype> buffer,
-        int const ie
+        gsl::span<realtype const> slice, gsl::span<realtype> buffer, int ie
     );
 
     /**
@@ -1683,16 +1678,6 @@ class Model : public AbstractModel, public ModelDimensions {
     void fdsigmaydy(int it, ExpData const* edata);
 
     /**
-     * @brief Compute negative log-likelihood of measurements \f$ y \f$.
-     *
-     * @param Jy Variable to which llh will be added
-     * @param it Timepoint index
-     * @param y Simulated observable
-     * @param edata Pointer to experimental data instance
-     */
-    void fJy(realtype& Jy, int it, AmiVector const& y, ExpData const& edata);
-
-    /**
      * @brief Compute partial derivative of time-resolved measurement negative
      * log-likelihood \f$ Jy \f$.
      * @param it timepoint index
@@ -1717,7 +1702,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJydp(int const it, AmiVector const& x, ExpData const& edata);
+    void fdJydp(int it, AmiVector const& x, ExpData const& edata);
 
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
@@ -1726,7 +1711,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x State variables
      * @param edata Pointer to experimental data instance
      */
-    void fdJydx(int const it, AmiVector const& x, ExpData const& edata);
+    void fdJydx(int it, AmiVector const& x, ExpData const& edata);
 
     /**
      * @brief Compute event-resolved output.
@@ -1790,9 +1775,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param edata Experimental data
      */
-    void fsigmaz(
-        int const ie, int const nroots, realtype const t, ExpData const* edata
-    );
+    void fsigmaz(int ie, int nroots, realtype t, ExpData const* edata);
 
     /**
      * @brief Compute sensitivity of standard deviation of events measurements
@@ -1805,17 +1788,6 @@ class Model : public AbstractModel, public ModelDimensions {
     void fdsigmazdp(int ie, int nroots, realtype t, ExpData const* edata);
 
     /**
-     * @brief Compute negative log-likelihood of event-resolved measurements
-     * `z`.
-     * @param Jz Variable to which llh will be added
-     * @param nroots Event index
-     * @param z Simulated event
-     * @param edata Experimental data
-     */
-    void
-    fJz(realtype& Jz, int nroots, AmiVector const& z, ExpData const& edata);
-
-    /**
      * @brief Compute partial derivative of event measurement negative
      * log-likelihood \f$ Jz \f$.
      * @param ie Event index
@@ -1825,8 +1797,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void fdJzdz(
-        int const ie, int const nroots, realtype const t, AmiVector const& x,
-        ExpData const& edata
+        int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1839,8 +1810,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Pointer to experimental data instance
      */
     void fdJzdsigma(
-        int const ie, int const nroots, realtype const t, AmiVector const& x,
-        ExpData const& edata
+        int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1853,8 +1823,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Pointer to experimental data instance
      */
     void fdJzdp(
-        int const ie, int const nroots, realtype t, AmiVector const& x,
-        ExpData const& edata
+        int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1867,20 +1836,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void fdJzdx(
-        int const ie, int const nroots, realtype t, AmiVector const& x,
-        ExpData const& edata
+        int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
-
-    /**
-     * @brief Compute regularization of negative log-likelihood with roots of
-     * event-resolved measurements rz.
-     * @param Jrz Variable to which regularization will be added
-     * @param nroots Event index
-     * @param rz Regularization variable
-     * @param edata Experimental data
-     */
-    void
-    fJrz(realtype& Jrz, int nroots, AmiVector const& rz, ExpData const& edata);
 
     /**
      * @brief Compute partial derivative of event measurement negative
@@ -1892,8 +1849,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Experimental data
      */
     void fdJrzdz(
-        int const ie, int const nroots, realtype const t, AmiVector const& x,
-        ExpData const& edata
+        int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -1906,8 +1862,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata pointer to experimental data instance
      */
     void fdJrzdsigma(
-        int const ie, int const nroots, realtype const t, AmiVector const& x,
-        ExpData const& edata
+        int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
     /**
@@ -2001,7 +1956,7 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual void fsx_rdata(
         realtype* sx_rdata, realtype const* sx_solver, realtype const* stcl,
         realtype const* p, realtype const* k, realtype const* x_solver,
-        realtype const* tcl, int const ip
+        realtype const* tcl, int ip
     );
 
     /**
@@ -2057,7 +2012,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param tcl Total abundances for conservation laws
      */
     virtual void fstotal_cl(
-        realtype* stotal_cl, realtype const* sx_rdata, int const ip,
+        realtype* stotal_cl, realtype const* sx_rdata, int ip,
         realtype const* x_rdata, realtype const* p, realtype const* k,
         realtype const* tcl
     );

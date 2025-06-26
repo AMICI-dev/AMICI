@@ -194,7 +194,7 @@ class CVodeSolver : public Solver {
         void const* ami_mem, long int* numnonlinsolvconvfails
     ) const override;
 
-    void getLastOrder(void const* ami_ami_mem, int* order) const override;
+    void getLastOrder(void const* ami_mem, int* order) const override;
 
     void* getAdjBmem(void* ami_mem, int which) const override;
 

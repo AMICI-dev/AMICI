@@ -70,7 +70,7 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-        auto t0
+        auto const t0
             = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
         preeq_problem_->workSteadyStateBackwardProblem(
             *solver_, *model_, ws_.xB_, true, t0
@@ -167,7 +167,7 @@ realtype EventHandlingBwdSimulator::getTnext(int const it) {
 
     if (!ws_->discs_.empty()
         && (it < 0 || ws_->discs_.back().time > model_->getTimepoint(it))) {
-        double tdisc = ws_->discs_.back().time;
+        double const tdisc = ws_->discs_.back().time;
         return tdisc;
     }
 
@@ -214,7 +214,7 @@ void EventHandlingBwdSimulator::run(
 
     while (it >= 0 || !ws_->discs_.empty()) {
         // check if next timepoint is a discontinuity or a data-point
-        double tnext = getTnext(it);
+        double const tnext = getTnext(it);
 
         if (tnext < t_) {
             solver_->runB(tnext);
