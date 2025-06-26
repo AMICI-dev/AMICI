@@ -880,6 +880,28 @@
 }
 
 {
+   libsbml (https://github.com/sbmlteam/libsbml/issues/438)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:safe_strdup
+   fun:writeMathMLWithNamespaceToString
+   ...
+}
+
+{
+   Python fun:tuple_alloc
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_MallocWithType
+   fun:gc_alloc
+   fun:_PyObject_GC_NewVar
+   fun:tuple_alloc
+   ...
+ }
+
+{
    Python
    Memcheck:Cond
    fun:maybe_small_long

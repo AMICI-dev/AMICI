@@ -277,10 +277,10 @@ class EventHandlingSimulator {
     PeriodResult result;
 
     /** The current time. */
-    realtype t_;
+    realtype t_ {NAN};
 
     /** Time index in the current list of timepoints */
-    int it_;
+    int it_ = -1;
 
   private:
     /**
@@ -334,13 +334,13 @@ class EventHandlingSimulator {
     }
 
     /** Initial time of the current period. */
-    realtype t0_;
+    realtype t0_ {NAN};
 
     /** The model to simulate. */
-    Model* model_;
+    Model* model_ {nullptr};
 
     /** The solver to use for the simulation. */
-    Solver* solver_;
+    Solver* solver_ {nullptr};
 
     /** The workspace to use for the simulation. */
     gsl::not_null<FwdSimWorkspace*> ws_;
