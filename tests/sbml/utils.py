@@ -4,6 +4,7 @@ import libsbml as sbml
 import numpy as np
 import pandas as pd
 from amici.constants import SymbolId
+
 from numpy.testing import assert_allclose
 
 

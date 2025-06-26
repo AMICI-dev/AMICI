@@ -37,6 +37,7 @@ python -m pip install --upgrade pip wheel
 #  --no-build-isolation below.
 #  The latter is necessary for code coverage to work.
 python -m pip install --upgrade pip setuptools cmake_build_extension==0.6.0 numpy petab swig
+pip install --upgrade git+https://github.com/ICB-DCM/fiddy.git
 python -m pip install git+https://github.com/pysb/pysb@master # for SPM with compartments
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
   python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis,jax]" --no-build-isolation
