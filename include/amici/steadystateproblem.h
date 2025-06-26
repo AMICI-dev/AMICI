@@ -12,6 +12,7 @@ class ExpData;
 class Solver;
 class Model;
 class BackwardProblem;
+struct FwdSimWorkspace;
 
 /**
  * @brief Computes the weighted root-mean-square norm.
@@ -218,10 +219,13 @@ class SteadystateProblem {
     /**
      * @brief Constructor
      *
+     * @param ws Workspace for forward simulation
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(Solver const& solver, Model& model);
+    explicit SteadystateProblem(
+        FwdSimWorkspace* ws, Solver const& solver, Model& model
+    );
 
     /**
      * @brief Compute the steady state in the forward case.
@@ -260,7 +264,7 @@ class SteadystateProblem {
      * @return stored SimulationState
      */
     [[nodiscard]] SimulationState const& getFinalSimulationState() const {
-        return state_;
+        return final_state_;
     }
 
     /**
@@ -274,14 +278,14 @@ class SteadystateProblem {
      * @brief Return state at steady state
      * @return x
      */
-    [[nodiscard]] AmiVector const& getState() const { return state_.x; }
+    [[nodiscard]] AmiVector const& getState() const { return final_state_.x; }
 
     /**
      * @brief Return state sensitivity at steady state
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
-        return state_.sx;
+        return final_state_.sx;
     }
 
     /**
@@ -310,7 +314,7 @@ class SteadystateProblem {
      * @brief Get model time at which steady state was found through simulation.
      * @return Time at which steady state was found (model time units).
      */
-    [[nodiscard]] realtype getSteadyStateTime() const { return state_.t; }
+    [[nodiscard]] realtype getSteadyStateTime() const { return final_state_.t; }
 
     /**
      * @brief Get the weighted root mean square of the residuals.
@@ -496,12 +500,10 @@ class SteadystateProblem {
      */
     void updateRightHandSide(Model& model);
 
+    /** Workspace for forward simulation */
+    FwdSimWorkspace* ws_;
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
-    /** time derivative state vector */
-    AmiVector xdot_;
-    /** state differential sensitivities */
-    AmiVectorArray sdx_;
     /** adjoint state vector */
     AmiVector xB_;
     /** integral over adjoint state vector */
@@ -511,7 +513,8 @@ class SteadystateProblem {
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
-    SimulationState state_;
+    /** The simulation state at the end of the forward problem. */
+    SimulationState final_state_;
 
     /** stores diagnostic information about employed number of steps */
     std::vector<int> numsteps_{std::vector<int>(3, 0)};

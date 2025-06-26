@@ -173,7 +173,7 @@ void ForwardProblem::handlePreequilibration() {
 
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
-    preeq_problem_.emplace(*solver, *model);
+    preeq_problem_.emplace(&ws_, *solver, *model);
     auto t0 = std::isnan(model->t0Preeq()) ? model->t0() : model->t0Preeq();
     preeq_problem_->workSteadyStateProblem(*solver, *model, -1, t0);
 
@@ -267,7 +267,7 @@ void ForwardProblem::handleMainSimulation() {
 
 void ForwardProblem::handlePostequilibration() {
     if (getCurrentTimeIteration() < model->nt()) {
-        posteq_problem_.emplace(*solver, *model);
+        posteq_problem_.emplace(&ws_, *solver, *model);
         auto it = getCurrentTimeIteration();
         auto t0 = it < 1 ? model->t0() : model->getTimepoint(it - 1);
         posteq_problem_->workSteadyStateProblem(*solver, *model, it, t0);

@@ -127,6 +127,8 @@ struct FwdSimWorkspace {
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
 
     {}
+    /** current simulation time */
+    realtype t{NAN};
 
     /** state vector (dimension: nx_solver) */
     AmiVector x;
