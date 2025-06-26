@@ -445,23 +445,6 @@ class SteadystateProblem {
     ) const;
 
     /**
-     * @brief Get whether state sensitivities need to be computed.
-     *
-     * Checks depending on the status of the Newton solver,
-     * solver settings, and the model, whether state sensitivities
-     * still need to be computed (via a linear system solve or integration).
-     * @param model Model instance.
-     * @param solver Solver instance.
-     * @param it Index of the current output time point.
-     * @param context SteadyStateContext giving the situation for the flag
-     * @return Whether sensitivities have to be computed.
-     */
-    [[nodiscard]] bool requires_state_sensitivities(
-        Model const& model, Solver const& solver, int it,
-        SteadyStateContext context
-    ) const;
-
-    /**
      * @brief Checks steady-state convergence for state variables
      * @param model Model instance
      * @return weighted root mean squared residuals of the RHS

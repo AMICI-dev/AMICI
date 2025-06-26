@@ -191,9 +191,34 @@ void SteadystateProblem::workSteadyStateProblem(
     findSteadyState(solver, model, it, t0);
 
     // Check whether state sensitivities still need to be computed.
-    if (requires_state_sensitivities(
-            model, solver, it, SteadyStateContext::newtonSensi
-        )) {
+    // Did we already compute forward sensitivities?
+    bool const forwardSensisAlreadyComputed
+        = solver.getSensitivityOrder() >= SensitivityOrder::first
+          && steady_state_status_[1] == SteadyStateStatus::success
+          && (model.getSteadyStateSensitivityMode()
+                  == SteadyStateSensitivityMode::integrationOnly
+              || model.getSteadyStateSensitivityMode()
+                     == SteadyStateSensitivityMode::integrateIfNewtonFails);
+    bool const simulationStartedInSteadystate
+        = steady_state_status_[0] == SteadyStateStatus::success
+          && numsteps_[0] == 0;
+    // Do we need forward sensis for postequilibration?
+    // Are we running in preequilibration (and hence create)?
+    bool const is_preequilibration = (it == -1);
+    // Do we need forward sensitivities for pre- or post-equilibration?
+    bool const needForwardSensisPosteq
+        = !is_preequilibration && !forwardSensisAlreadyComputed
+          && solver.getSensitivityOrder() >= SensitivityOrder::first
+          && solver.getSensitivityMethod() == SensitivityMethod::forward;
+    bool const needForwardSensisPreeq
+        = is_preequilibration && !forwardSensisAlreadyComputed
+          && solver.getSensitivityMethodPreequilibration()
+                 == SensitivityMethod::forward
+          && solver.getSensitivityOrder() >= SensitivityOrder::first;
+
+    // Do we need to do the linear system solve to get forward sensitivities?
+    if ((needForwardSensisPreeq || needForwardSensisPosteq)
+        && !simulationStartedInSteadystate) {
         try {
             // This might still fail, if the Jacobian is singular and
             // simulation did not find a steady state.
@@ -339,10 +364,15 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
             sim_solver->logger = solver.logger;
 
             // do we need sensitivities?
-            if (requires_state_sensitivities(
-                    model, solver, it, SteadyStateContext::solverCreation
+            if (solver.getSensitivityMethodPreequilibration()
+                    == SensitivityMethod::forward
+                && solver.getSensitivityOrder() >= SensitivityOrder::first
+                && (model.getSteadyStateSensitivityMode()
+                        == SteadyStateSensitivityMode::integrationOnly
+                    || model.getSteadyStateSensitivityMode()
+                           == SteadyStateSensitivityMode::integrateIfNewtonFails
                 )) {
-                // need forward to compute sx0
+                // need forward to compute sx0 for the pre/main simulation
                 sim_solver->setSensitivityMethod(SensitivityMethod::forward);
             } else {
                 sim_solver->setSensitivityMethod(SensitivityMethod::none);
@@ -529,77 +559,6 @@ void SteadystateProblem::getQuadratureBySimulation(
         writeErrorString(errorString, steady_state_status_[2]);
     }
     throw AmiException(errorString.c_str());
-}
-
-bool SteadystateProblem::requires_state_sensitivities(
-    Model const& model, Solver const& solver, int it, SteadyStateContext context
-) const {
-    // We need to check whether we need to compute forward sensitivities.
-    // Depending on the situation (pre-/postequilibration) and the solver
-    // settings, the logic may be involved and is handled here.
-    // Most of these boolean operation could be simplified. However,
-    // clarity is more important than brevity.
-
-    // Are we running in preequilibration (and hence create)?
-    bool preequilibration = (it == -1);
-
-    // Did we already compute forward sensitivities?
-    bool const forwardSensisAlreadyComputed
-        = solver.getSensitivityOrder() >= SensitivityOrder::first
-          && steady_state_status_[1] == SteadyStateStatus::success
-          && (model.getSteadyStateSensitivityMode()
-                  == SteadyStateSensitivityMode::integrationOnly
-              || model.getSteadyStateSensitivityMode()
-                     == SteadyStateSensitivityMode::integrateIfNewtonFails);
-
-    bool const simulationStartedInSteadystate
-        = steady_state_status_[0] == SteadyStateStatus::success
-          && numsteps_[0] == 0;
-
-    // Do we need forward sensis for postequilibration?
-    bool const needForwardSensisPosteq
-        = !preequilibration && !forwardSensisAlreadyComputed
-          && solver.getSensitivityOrder() >= SensitivityOrder::first
-          && solver.getSensitivityMethod() == SensitivityMethod::forward;
-
-    // Do we need forward sensis for preequilibration?
-    bool needForwardSensisPreeq
-        = preequilibration && !forwardSensisAlreadyComputed
-          && solver.getSensitivityMethodPreequilibration()
-                 == SensitivityMethod::forward
-          && solver.getSensitivityOrder() >= SensitivityOrder::first;
-
-    // Do we need to do the linear system solve to get forward sensitivities?
-    bool needForwardSensisNewton
-        = (needForwardSensisPreeq || needForwardSensisPosteq)
-          && !simulationStartedInSteadystate;
-
-    // When we're creating a new solver object
-    bool needForwardSensiAtCreation
-        = needForwardSensisPreeq
-          && (model.getSteadyStateSensitivityMode()
-                  == SteadyStateSensitivityMode::integrationOnly
-              || model.getSteadyStateSensitivityMode()
-                     == SteadyStateSensitivityMode::integrateIfNewtonFails);
-
-    // Check if we need to store sensitivities
-    switch (context) {
-    case SteadyStateContext::newtonSensi:
-        return needForwardSensisNewton;
-
-    case SteadyStateContext::sensiStorage:
-        return needForwardSensisNewton || forwardSensisAlreadyComputed
-               || simulationStartedInSteadystate;
-
-    case SteadyStateContext::solverCreation:
-        return needForwardSensiAtCreation;
-
-    default:
-        throw AmiException(
-            "Requested invalid context in sensitivity "
-            "processing during steady state computation"
-        );
-    }
 }
 
 realtype SteadystateProblem::getWrmsState(Model& model) {
