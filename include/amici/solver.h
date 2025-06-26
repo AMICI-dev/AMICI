@@ -663,7 +663,7 @@ class Solver {
      * @param sx state sensitivity
      */
     void writeSolution(
-        realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
+        realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
     ) const;
 
     /**
@@ -675,7 +675,7 @@ class Solver {
      * @param which index of adjoint problem
      */
     void writeSolutionB(
-        realtype* t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int which
+        realtype& t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int which
     ) const;
 
     /**

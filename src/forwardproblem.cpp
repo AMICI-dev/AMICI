@@ -112,7 +112,7 @@ void EventHandlingSimulator::run(
                 int const status = solver_->run(next_t_stop);
                 // sx will be copied from solver on demand if sensitivities
                 // are computed
-                solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx);
+                solver_->writeSolution(t_, ws_->x, ws_->dx, ws_->sx);
 
                 if (status == AMICI_ILL_INPUT) {
                     // clustering of roots => turn off root-finding
@@ -214,7 +214,7 @@ void ForwardProblem::handlePresimulation() {
 
     std::vector<realtype> const timepoints{model->t0()};
     pre_simulator_.run(t_, edata, timepoints, false);
-    solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx);
+    solver->writeSolution(t_, ws_.x, ws_.dx, ws_.sx);
 }
 
 void ForwardProblem::handleMainSimulation() {
@@ -580,7 +580,7 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
 
 SimulationState EventHandlingSimulator::get_simulation_state() {
     if (std::isfinite(solver_->gett())) {
-        solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx);
+        solver_->writeSolution(t_, ws_->x, ws_->dx, ws_->sx);
     }
     auto state = SimulationState();
     state.t = t_;
