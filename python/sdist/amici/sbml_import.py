@@ -691,7 +691,6 @@ class SbmlImporter:
         )
         self._replace_compartments_with_volumes()
 
-        self._clean_reserved_symbols()
         self._process_time()
 
         ode_model = DEModel(
