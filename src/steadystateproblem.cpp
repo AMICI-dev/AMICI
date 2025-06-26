@@ -413,7 +413,7 @@ void SteadystateProblem::initializeForwardProblem(
         solver.setup(t0, &model, state_.x, state_.dx, state_.sx, sdx_);
     } else {
         // The solver was run before, extract current state from solver.
-        solver.writeSolution(&state_.t, state_.x, state_.dx, state_.sx);
+        solver.writeSolution(state_.t, state_.x, state_.dx, state_.sx);
     }
 
     state_.t = t0;
@@ -730,7 +730,7 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         // direction w.r.t. current t.
         solver.step(std::max(state_.t, 1.0) * 10);
 
-        solver.writeSolution(&state_.t, state_.x, state_.dx, state_.sx);
+        solver.writeSolution(state_.t, state_.x, state_.dx, state_.sx);
         flagUpdatedState();
     }
 

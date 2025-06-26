@@ -1319,22 +1319,22 @@ void Solver::writeSolution(
 }
 
 void Solver::writeSolution(
-    realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
+    realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
 ) const {
-    *t = gett();
+    t = gett();
     if (sens_initialized_)
-        sx.copy(getStateSensitivity(*t));
-    x.copy(getState(*t));
-    dx.copy(getDerivativeState(*t));
+        sx.copy(getStateSensitivity(t));
+    x.copy(getState(t));
+    dx.copy(getDerivativeState(t));
 }
 
 void Solver::writeSolutionB(
-    realtype* t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int const which
+    realtype& t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int const which
 ) const {
-    *t = gett();
-    xB.copy(getAdjointState(which, *t));
-    dxB.copy(getAdjointDerivativeState(which, *t));
-    xQB.copy(getAdjointQuadrature(which, *t));
+    t = gett();
+    xB.copy(getAdjointState(which, t));
+    dxB.copy(getAdjointDerivativeState(which, t));
+    xQB.copy(getAdjointQuadrature(which, t));
 }
 
 AmiVector const& Solver::getState(realtype const t) const {

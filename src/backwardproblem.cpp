@@ -219,7 +219,7 @@ void EventHandlingBwdSimulator::run(
         if (tnext < t_) {
             solver_->runB(tnext);
             solver_->writeSolutionB(
-                &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
+                t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
             );
         }
 
@@ -243,9 +243,7 @@ void EventHandlingBwdSimulator::run(
     // we still need to integrate from first datapoint to t_start
     if (t_ > t_end) {
         solver_->runB(t_end);
-        solver_->writeSolutionB(
-            &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
-        );
+        solver_->writeSolutionB(t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which);
     }
 }
 
