@@ -175,6 +175,18 @@ void ForwardProblem::handlePreequilibration() {
 
     preeq_problem_.emplace(&ws_, *solver, *model);
     auto t0 = std::isnan(model->t0Preeq()) ? model->t0() : model->t0Preeq();
+
+    // The solver was not run before, set up everything.
+    // TODO: For pre-equilibration in combination with adjoint sensitivities,
+    // we will need to use a separate solver instance because we still need the
+    // forward solver for each period for backward integration.
+    auto roots_found = std::vector<int>(model->ne, 0);
+    model->initialize(
+        t0, ws_.x, ws_.dx, ws_.sx, ws_.sdx,
+        solver->getSensitivityOrder() >= SensitivityOrder::first, roots_found
+    );
+    solver->setup(t0, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
+
     preeq_problem_->workSteadyStateProblem(*solver, *model, -1, t0);
 
     ws_.x = preeq_problem_->getState();
@@ -270,6 +282,10 @@ void ForwardProblem::handlePostequilibration() {
         posteq_problem_.emplace(&ws_, *solver, *model);
         auto it = getCurrentTimeIteration();
         auto t0 = it < 1 ? model->t0() : model->getTimepoint(it - 1);
+
+        // The solver was run before, extract current state from solver.
+        solver->writeSolution(ws_.t, ws_.x, ws_.dx, ws_.sx);
+        Expects(t0 == ws_.t);
         posteq_problem_->workSteadyStateProblem(*solver, *model, it, t0);
     }
 }

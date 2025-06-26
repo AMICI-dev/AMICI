@@ -232,6 +232,7 @@ class SteadystateProblem {
      *
      * Tries to determine the steady state of the ODE system and computes
      * steady state sensitivities if requested.
+     * Expects that solver, model, and ws_ are already initialized.
      *
      * @param solver The solver instance
      * @param model The model instance
@@ -468,17 +469,6 @@ class SteadystateProblem {
      * @param model Model instance.
      */
     void runSteadystateSimulationBwd(Solver const& solver, Model& model);
-
-    /**
-     * @brief Initialize forward computation
-     * @param it Index of the current output time point.
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     * @param t0 Initial time for the steady state simulation.
-     */
-    void initializeForwardProblem(
-        int it, Solver const& solver, Model& model, realtype t0
-    );
 
     /**
      * @brief Update member variables to indicate that state_.x has been

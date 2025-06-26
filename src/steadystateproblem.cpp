@@ -184,10 +184,11 @@ void SteadystateProblem::workSteadyStateProblem(
         );
     }
 
-    initializeForwardProblem(it, solver, model, t0);
-
     // Compute steady state, track computation time
     CpuTimer cpu_timer;
+    ws_->t = t0;
+    flagUpdatedState();
+    newton_solver_.reinitialize();
     findSteadyState(solver, model, it, t0);
 
     // Check whether state sensitivities still need to be computed.
@@ -431,29 +432,6 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
             );
         return SteadyStateStatus::failed;
     }
-}
-
-void SteadystateProblem::initializeForwardProblem(
-    int const it, Solver const& solver, Model& model, realtype const t0
-) {
-    newton_solver_.reinitialize();
-
-    // Process solver handling for pre- or postequilibration.
-    if (it == -1) {
-        // The solver was not run before, set up everything.
-        auto roots_found = std::vector<int>(model.ne, 0);
-        model.initialize(
-            t0, ws_->x, ws_->dx, ws_->sx, ws_->sdx,
-            solver.getSensitivityOrder() >= SensitivityOrder::first, roots_found
-        );
-        solver.setup(t0, &model, ws_->x, ws_->dx, ws_->sx, ws_->sdx);
-    } else {
-        // The solver was run before, extract current state from solver.
-        solver.writeSolution(ws_->t, ws_->x, ws_->dx, ws_->sx);
-    }
-
-    ws_->t = t0;
-    flagUpdatedState();
 }
 
 void SteadystateProblem::computeSteadyStateQuadrature(
