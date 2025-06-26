@@ -605,9 +605,9 @@ void Model::setParameterByName(
 void Model::setParameterByName(
     std::map<std::string, realtype> const& p, bool ignoreErrors
 ) {
-    for (auto& kv : p) {
+    for (auto const& [name, value] : p) {
         try {
-            setParameterByName(kv.first, kv.second);
+            setParameterByName(name, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -1807,8 +1807,7 @@ int Model::checkFinite(
 
     // there is some issue - produce a meaningful message
     auto flat_index = it - m_flat.begin();
-    sunindextype row, col;
-    std::tie(row, col) = unravel_index(flat_index, m);
+    auto [row, col] = unravel_index(flat_index, m);
     std::string msg_id;
     std::string non_finite_type;
     if (std::isnan(m_flat[flat_index])) {

@@ -75,12 +75,12 @@ struct LogItem {
      * @param message
      */
     LogItem(
-        LogSeverity severity, std::string const& identifier,
+        LogSeverity const severity, std::string const& identifier,
         std::string const& message
     )
         : severity(severity)
         , identifier(identifier)
-        , message(message) {};
+        , message(message) {}
 
     /** Severity level */
     LogSeverity severity = LogSeverity::error;

@@ -275,7 +275,7 @@ void ForwardProblem::handlePostequilibration() {
 }
 
 void EventHandlingSimulator::handle_event(
-    bool const initial_event, amici::ExpData const* edata
+    bool const initial_event, ExpData const* edata
 ) {
     // Some event triggered. This may be due to some discontinuity, a bolus to
     // be applied, or an event observable to process.

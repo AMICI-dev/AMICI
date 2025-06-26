@@ -258,7 +258,7 @@ void SteadystateProblem::findSteadyState(
     // forward sensitivities ODEs is coupled. If 'integrationOnly' approach is
     // chosen for sensitivity computation it is enforced that steady state is
     // computed only by numerical integration as well.
-    bool turnOffNewton
+    bool const turnOffNewton
         = model.getSteadyStateComputationMode()
               == SteadyStateComputationMode::integrationOnly
           || solver.getNewtonMaxSteps() == 0
@@ -271,8 +271,8 @@ void SteadystateProblem::findSteadyState(
                   || solver.getSensitivityMethod() == SensitivityMethod::forward
               ));
 
-    bool turnOffSimulation = model.getSteadyStateComputationMode()
-                             == SteadyStateComputationMode::newtonOnly;
+    bool const turnOffSimulation = model.getSteadyStateComputationMode()
+                                   == SteadyStateComputationMode::newtonOnly;
 
     // First, try to run the Newton solver.
     if (!turnOffNewton)
@@ -298,7 +298,7 @@ void SteadystateProblem::findSteadyState(
 void SteadystateProblem::findSteadyStateByNewtonsMethod(
     Model& model, bool newton_retry
 ) {
-    int stage = newton_retry ? 2 : 0;
+    int const stage = newton_retry ? 2 : 0;
     try {
         updateRightHandSide(model);
         newtons_method_.run(xdot_, state_, wrms_computer_x_);
@@ -330,7 +330,7 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(
 }
 
 SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
-    Solver const& solver, Model& model, int it, realtype t0
+    Solver const& solver, Model& model, int const it, realtype const t0
 ) {
     try {
         if (it < 0) {
@@ -395,7 +395,7 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
 }
 
 void SteadystateProblem::initializeForwardProblem(
-    int it, Solver const& solver, Model& model, realtype t0
+    int const it, Solver const& solver, Model& model, realtype const t0
 ) {
     newton_solver_.reinitialize();
 
@@ -428,7 +428,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(
     // We therefore compute the integral over xB first and then do a
     // matrix-vector multiplication.
 
-    auto sensitivityMode = model.getSteadyStateSensitivityMode();
+    auto const sensitivityMode = model.getSteadyStateSensitivityMode();
 
     // Try to compute the analytical solution for quadrature algebraically
     if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly
@@ -544,7 +544,7 @@ bool SteadystateProblem::requires_state_sensitivities(
     bool preequilibration = (it == -1);
 
     // Did we already compute forward sensitivities?
-    bool forwardSensisAlreadyComputed
+    bool const forwardSensisAlreadyComputed
         = solver.getSensitivityOrder() >= SensitivityOrder::first
           && steady_state_status_[1] == SteadyStateStatus::success
           && (model.getSteadyStateSensitivityMode()
@@ -552,12 +552,12 @@ bool SteadystateProblem::requires_state_sensitivities(
               || model.getSteadyStateSensitivityMode()
                      == SteadyStateSensitivityMode::integrateIfNewtonFails);
 
-    bool simulationStartedInSteadystate
+    bool const simulationStartedInSteadystate
         = steady_state_status_[0] == SteadyStateStatus::success
           && numsteps_[0] == 0;
 
     // Do we need forward sensis for postequilibration?
-    bool needForwardSensisPosteq
+    bool const needForwardSensisPosteq
         = !preequilibration && !forwardSensisAlreadyComputed
           && solver.getSensitivityOrder() >= SensitivityOrder::first
           && solver.getSensitivityMethod() == SensitivityMethod::forward;
@@ -760,7 +760,7 @@ void SteadystateProblem::runSteadystateSimulationBwd(
     // time-derivative of quadrature state vector
     AmiVector xQBdot(model.nplist(), solver.getSunContext());
 
-    int convergence_check_frequency = newton_step_conv_ ? 25 : 1;
+    int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
     auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
                          ? solver.getMaxStepsBackwardProblem()
                          : solver.getMaxSteps() * 100;

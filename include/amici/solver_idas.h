@@ -199,7 +199,7 @@ class IDASolver : public Solver {
     init(realtype t0, AmiVector const& x0, AmiVector const& dx0) const override;
 
     void initSteadystate(
-        realtype const t0, AmiVector const& x0, AmiVector const& dx0
+        realtype t0, AmiVector const& x0, AmiVector const& dx0
     ) const override;
 
     void sensInit1(
