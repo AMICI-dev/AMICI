@@ -1,8 +1,10 @@
 name: Valgrind tests
 on:
   push:
-    branches:
-      - update_valgrind_supp
+    paths:
+      - python/tests/valgrind-python.supp
+      - scripts/run-valgrind-cpp.sh
+      - scripts/run-valgrind-py.sh
   pull_request:
     branches:
       - update_valgrind_supp
