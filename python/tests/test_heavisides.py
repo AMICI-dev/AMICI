@@ -356,3 +356,77 @@ def model_definition_piecewise_many_conditions():
         x_expected,
         sx_expected,
     )
+
+
+def test_parse_piecewise_c1_no_heaviside():
+    """_parse_piecewise_to_heaviside should keep C1 piecewise expressions."""
+
+    import sympy as sp
+    from amici.import_utils import (
+        _parse_piecewise_to_heaviside,
+        amici_time_symbol,
+        symbol_with_assumptions,
+    )
+
+    t = amici_time_symbol
+    x = symbol_with_assumptions("x_1")
+    pw = sp.Piecewise((t * x, t < 1), (x + (t - 1) * x, True))
+
+    res = _parse_piecewise_to_heaviside(pw.args, [])
+    assert isinstance(res, sp.Piecewise)
+    assert sp.simplify(res - pw) == 0
+
+    p = symbol_with_assumptions("p1")
+    pw_param = sp.Piecewise(
+        (p**2, p < 1),
+        ((p - 1) ** 2 + 2 * p - 1, True),
+    )
+
+    res_param = _parse_piecewise_to_heaviside(pw_param.args, [p])
+    assert isinstance(res_param, sp.Piecewise)
+    assert sp.simplify(res_param - pw_param) == 0
+
+
+def test_parse_piecewise_discontinuous_to_heaviside():
+    """_parse_piecewise_to_heaviside should convert discontinuous piecewise."""
+
+    import sympy as sp
+    from amici.import_utils import (
+        _parse_piecewise_to_heaviside,
+        amici_time_symbol,
+        symbol_with_assumptions,
+    )
+
+    t = amici_time_symbol
+    x = symbol_with_assumptions("x_1")
+
+    pw_state = sp.Piecewise((t * x, x < 1), (2 * t * x, True))
+    res_state = _parse_piecewise_to_heaviside(pw_state.args, [])
+    assert not isinstance(res_state, sp.Piecewise)
+    expected_state = t * x * (
+        1 - sp.Heaviside(x - 1, 1)
+    ) + 2 * t * x * sp.Heaviside(x - 1, 1)
+    assert sp.simplify(res_state - expected_state) == 0
+
+    p = symbol_with_assumptions("p1")
+    pw_param = sp.Piecewise((0, p < 1), (1, True))
+    res_param = _parse_piecewise_to_heaviside(pw_param.args, [p])
+    assert not isinstance(res_param, sp.Piecewise)
+    expected_param = sp.Heaviside(p - 1, 1)
+    assert sp.simplify(res_param - expected_param) == 0
+
+
+def test_parse_piecewise_c1_constant_zero():
+    """Piecewise expressions evaluating to zero should simplify to zero."""
+
+    import sympy as sp
+    from amici.import_utils import (
+        _parse_piecewise_to_heaviside,
+        symbol_with_assumptions,
+    )
+
+    p = symbol_with_assumptions("p1")
+    pw_zero = sp.Piecewise((p - p, p < 1), (0, True), evaluate=False)
+
+    res_zero = _parse_piecewise_to_heaviside(pw_zero.args, [p])
+    assert sp.simplify(res_zero) == 0

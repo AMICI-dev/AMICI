@@ -15,6 +15,7 @@ from collections.abc import Iterable, Sequence
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanAtom
+from sympy.core.relational import Relational
 from toposort import toposort
 
 RESERVED_SYMBOLS = ["x", "k", "p", "y", "w", "h", "t", "AMICI_EMPTY_BOLUS"]
@@ -347,7 +348,11 @@ def toposort_symbols(
     }
 
 
-def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
+def _parse_special_functions(
+    sym: sp.Expr,
+    toplevel: bool = True,
+    parameters: Sequence[sp.Symbol] | None = None,
+) -> sp.Expr:
     """
     Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
@@ -358,11 +363,14 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
+    if parameters is None:
+        parameters = []
+
     args = tuple(
         arg
         if arg.__class__.__name__ == "piecewise"
         and sym.__class__.__name__ == "piecewise"
-        else _parse_special_functions(arg, False)
+        else _parse_special_functions(arg, False, parameters)
         for arg in sym.args
     )
 
@@ -404,8 +412,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
             denested_args = args
         else:
             # this is sbml piecewise, can be nested
-            denested_args = _denest_piecewise(args)
-        return _parse_piecewise_to_heaviside(denested_args)
+            denested_args = _denest_piecewise(args, parameters)
+        return _parse_piecewise_to_heaviside(denested_args, parameters)
 
     if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
@@ -424,6 +432,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 def _denest_piecewise(
     args: Sequence[sp.Expr | sp.logic.boolalg.Boolean | bool],
+    parameters: Sequence[sp.Symbol] | None = None,
 ) -> tuple[sp.Expr | sp.logic.boolalg.Boolean | bool]:
     """
     Denest piecewise functions that contain piecewise as condition
@@ -435,13 +444,16 @@ def _denest_piecewise(
         Arguments where conditions no longer contain piecewise functions and
         the conditional dependency is flattened out
     """
+    if parameters is None:
+        parameters = []
+
     args_out = []
     for coeff, cond in grouper(args, 2, True):
         # handling of this case is explicitely disabled in
         # _parse_special_functions as keeping track of coeff/cond
         # arguments is tricky. Simpler to just parse them out here
         if coeff.__class__.__name__ == "piecewise":
-            coeff = _parse_special_functions(coeff, False)
+            coeff = _parse_special_functions(coeff, False, parameters)
 
         # we can have conditions that are piecewise function
         # returning True or False
@@ -451,7 +463,7 @@ def _denest_piecewise(
             previous_was_picked = sp.false
             # recursively denest those first
             for sub_coeff, sub_cond in grouper(
-                _denest_piecewise(cond.args), 2, True
+                _denest_piecewise(cond.args, parameters), 2, True
             ):
                 # flatten the individual pieces
                 pick_this = sp.And(sp.Not(previous_was_picked), sub_cond)
@@ -465,7 +477,70 @@ def _denest_piecewise(
     return tuple(args_out[:-1])
 
 
-def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
+def _is_c1_piecewise(
+    pw: sp.Piecewise, parameters: Sequence[sp.Symbol]
+) -> bool:
+    """Return ``True`` if ``pw`` is continuously differentiable with respect to
+    ``parameters``.
+
+    This check ensures that piecewise expressions which are already smooth are
+    not transformed into events.
+    """
+
+    from sympy.calculus.util import continuous_domain
+
+    pieces = pw.args
+
+    # collect boundaries appearing in the conditions
+    boundaries: list[tuple[sp.Symbol, sp.Expr]] = []
+    for _, cond in pieces:
+        if cond in (True, False, sp.true, sp.false):
+            continue
+        if not isinstance(cond, Relational):
+            return False
+        if isinstance(cond.lhs, sp.Symbol) and not cond.rhs.has(cond.lhs):
+            boundaries.append((cond.lhs, cond.rhs))
+        elif isinstance(cond.rhs, sp.Symbol) and not cond.lhs.has(cond.rhs):
+            boundaries.append((cond.rhs, cond.lhs))
+        else:
+            return False
+
+    # check that each piece and its derivatives are continuous on R
+    for expr, _ in pieces:
+        for var in parameters:
+            try:
+                if continuous_domain(expr, var, sp.S.Reals) != sp.S.Reals:
+                    return False
+            except NotImplementedError:
+                return False
+            try:
+                dexpr = sp.diff(expr, var)
+                if continuous_domain(dexpr, var, sp.S.Reals) != sp.S.Reals:
+                    return False
+            except NotImplementedError:
+                return False
+
+    # check continuity and derivative continuity at boundaries
+    for (sym, boundary), (expr_left, _), (expr_right, _) in zip(
+        boundaries, pieces[:-1], pieces[1:]
+    ):
+        if not sp.simplify(
+            expr_left.subs(sym, boundary) - expr_right.subs(sym, boundary)
+        ).is_zero:
+            return False
+        for var in parameters:
+            if not sp.simplify(
+                sp.diff(expr_left, var).subs(sym, boundary)
+                - sp.diff(expr_right, var).subs(sym, boundary)
+            ).is_zero:
+                return False
+
+    return True
+
+
+def _parse_piecewise_to_heaviside(
+    args: Iterable[sp.Expr], parameters: Sequence[sp.Symbol] | None = None
+) -> sp.Expr:
     """
     Piecewise functions cannot be transformed into C++ right away, but AMICI
     has a special interface for Heaviside functions, so we transform them.
@@ -483,6 +558,14 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     else:
         # smbl piecewise
         grouped_args = grouper(args, 2, True)
+
+    pw = sp.Piecewise(*grouped_args)
+
+    if parameters is None:
+        parameters = []
+
+    if _is_c1_piecewise(pw, parameters):
+        return pw
 
     for coeff, trigger in grouped_args:
         if isinstance(coeff, BooleanAtom):
