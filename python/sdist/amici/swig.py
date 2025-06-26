@@ -164,8 +164,7 @@ class TypeHintFixer(ast.NodeTransformer):
 
     @staticmethod
     def extract_type(line: str) -> tuple[str, str] | tuple[None, None]:
-        """Extract argument name and type string from ``:type:`` docstring
-        line."""
+        """Extract argument name and type string from ``:type:`` docstring line."""
         match = re.match(r"\s*:type\s+(\w+):\s+(.+?)(?:, optional)?\s*$", line)
         if not match:
             return None, None
@@ -196,6 +195,51 @@ class TypeHintFixer(ast.NodeTransformer):
         return match.group(1)
 
 
+class DocstringAdder(ast.NodeTransformer):
+    """Add docstrings for SWIG-generated helper classes."""
+
+    vector_types = {
+        "IntVector": ":class:`int`",
+        "BoolVector": ":class:`bool`",
+        "DoubleVector": ":class:`float`",
+        "StringVector": ":class:`str`",
+        "ExpDataPtrVector": ":class:`amici.amici.ExpData`",
+    }
+
+    ptr_types = ["ExpDataPtr", "ReturnDataPtr", "ModelPtr", "SolverPtr"]
+
+    @staticmethod
+    def _set_docstring(node: ast.ClassDef, doc: str) -> None:
+        doc_node = ast.Expr(value=ast.Constant(doc))
+        if (
+            node.body
+            and isinstance(node.body[0], ast.Expr)
+            and isinstance(node.body[0].value, ast.Constant)
+            and isinstance(node.body[0].value.value, str)
+        ):
+            node.body[0] = doc_node
+        else:
+            node.body.insert(0, doc_node)
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        if node.name in self.vector_types:
+            dtype = self.vector_types[node.name]
+            self._set_docstring(
+                node,
+                "Swig-Generated class templating common python types "
+                "including :class:`Iterable` ["
+                f"{dtype}] and :class:`numpy.array` [{dtype}] "
+                "to facilitate interfacing with C++ bindings.",
+            )
+        elif node.name in self.ptr_types:
+            self._set_docstring(
+                node,
+                "Swig-Generated class that implements smart pointers to "
+                f"{node.name.replace('Ptr', '')} as objects.",
+            )
+        return node
+
+
 def fix_typehints(infilename, outfilename):
     """Change SWIG-generated C++ typehints to Python typehints"""
     # file -> AST
@@ -204,8 +248,8 @@ def fix_typehints(infilename, outfilename):
     parsed_source = ast.parse(source)
 
     # Change AST
-    fixer = TypeHintFixer()
-    parsed_source = fixer.visit(parsed_source)
+    parsed_source = TypeHintFixer().visit(parsed_source)
+    parsed_source = DocstringAdder().visit(parsed_source)
 
     # AST -> file
     with open(outfilename, "w") as f:
