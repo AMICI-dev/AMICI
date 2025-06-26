@@ -566,7 +566,14 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
         // Complement dJydx from postequilibration. This shouldn't overwrite
         // anything but only fill in previously 0 values, as only non-inf
         // timepoints were filled above.
-        posteq_problem_->getAdjointUpdates(model, edata, dJydx);
+        auto const& x = posteq_problem_->getState();
+        for (int it = 0; it < model.nt(); it++) {
+            if (std::isinf(model.getTimepoint(it))) {
+                model.getAdjointStateObservableUpdate(
+                    slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata
+                );
+            }
+        }
     }
     return dJydx;
 }
