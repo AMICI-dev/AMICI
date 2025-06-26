@@ -97,7 +97,7 @@ class NewtonsMethod {
      * @param wrms_computer WRMSComputer instance to compute the WRMS norm.
      */
     void
-    run(AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer);
+    run(AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer);
 
     /**
      * @brief Compute the Newton step for the current state_.x and xdot and
@@ -105,7 +105,7 @@ class NewtonsMethod {
      * @param xdot Time derivative of the state vector `state.x`.
      * @param state SimulationState instance containing the current state.
      */
-    void compute_step(AmiVector const& xdot, SimulationState const& state);
+    void compute_step(AmiVector const& xdot, DEStateView const& state);
 
     /**
      * @brief Get the last Newton step.
@@ -147,7 +147,7 @@ class NewtonsMethod {
      * @return WRMS norm.
      */
     realtype compute_wrms(
-        AmiVector const& xdot, SimulationState const& state,
+        AmiVector const& xdot, DEStateView const& state,
         WRMSComputer& wrms_computer
     );
 
@@ -164,7 +164,7 @@ class NewtonsMethod {
      * @return Whether convergence has been reached.
      */
     bool has_converged(
-        AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer
+        AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer
     );
 
     static constexpr realtype conv_thresh = 1.0;

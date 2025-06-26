@@ -95,8 +95,7 @@ realtype WRMSComputer::wrms(AmiVector const& x, AmiVector const& x_ref) {
  * @param state Simulation state for which to compute dxdot/dp
  */
 void computeQBfromQ(
-    Model& model, AmiVector const& yQ, AmiVector& yQB,
-    SimulationState const& state
+    Model& model, AmiVector const& yQ, AmiVector& yQB, DEStateView const& state
 ) {
     // Compute the quadrature as the inner product: `yQB = dxdotdp * yQ`.
 
@@ -197,7 +196,9 @@ void SteadystateProblem::workSteadyStateProblem(
         try {
             // This might still fail, if the Jacobian is singular and
             // simulation did not find a steady state.
-            newton_solver_.computeNewtonSensis(state_.sx, model, state_);
+            newton_solver_.computeNewtonSensis(
+                state_.sx, model, {state_.t, state_.x, state_.dx}
+            );
         } catch (NewtonFailure const&) {
             throw AmiException(
                 "Steady state sensitivity computation failed due "
@@ -301,7 +302,9 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(
     int const stage = newton_retry ? 2 : 0;
     try {
         updateRightHandSide(model);
-        newtons_method_.run(xdot_, state_, wrms_computer_x_);
+        newtons_method_.run(
+            xdot_, {state_.t, state_.x, state_.dx}, wrms_computer_x_
+        );
         steady_state_status_[stage] = SteadyStateStatus::success;
     } catch (NewtonFailure const& ex) {
         switch (ex.error_code) {
@@ -468,10 +471,12 @@ void SteadystateProblem::getQuadratureByLinSolve(Model& model) {
     // try to solve the linear system
     try {
         // compute integral over xB and write to xQ
-        newton_solver_.prepareLinearSystemB(model, state_);
+        newton_solver_.prepareLinearSystemB(
+            model, {state_.t, state_.x, state_.dx}
+        );
         newton_solver_.solveLinearSystem(xQ_);
         // Compute the quadrature as the inner product xQ * dxdotdp
-        computeQBfromQ(model, xQ_, xQB_, state_);
+        computeQBfromQ(model, xQ_, xQB_, {state_.t, state_.x, state_.dx});
         hasQuadrature_ = true;
 
         // Finalize by setting adjoint state to zero (its steady state)
@@ -606,7 +611,7 @@ realtype SteadystateProblem::getWrmsState(Model& model) {
     updateRightHandSide(model);
 
     if (newton_step_conv_) {
-        newtons_method_.compute_step(xdot_, state_);
+        newtons_method_.compute_step(xdot_, {state_.t, state_.x, state_.dx});
         return wrms_computer_x_.wrms(newtons_method_.get_delta(), state_.x);
     }
 
@@ -774,8 +779,8 @@ void SteadystateProblem::runSteadystateSimulationBwd(
             // exact steadystate is less important, as xB = xQdot may even not
             // converge to zero at all. So we need xQBdot, hence compute xQB
             // first.
-            computeQBfromQ(model, xQ_, xQB_, state_);
-            computeQBfromQ(model, xB_, xQBdot, state_);
+            computeQBfromQ(model, xQ_, xQB_, {state_.t, state_.x, state_.dx});
+            computeQBfromQ(model, xB_, xQBdot, {state_.t, state_.x, state_.dx});
             wrms_ = wrms_computer_xQB_.wrms(xQBdot, xQB_);
             if (wrms_ < conv_thresh) {
                 break; // converged
@@ -853,7 +858,7 @@ NewtonsMethod::NewtonsMethod(
     , x_old_(model->nx_solver, sunctx) {}
 
 void NewtonsMethod::run(
-    AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer
+    AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer
 ) {
     i_step = 0;
 
@@ -918,7 +923,7 @@ void NewtonsMethod::run(
 }
 
 void NewtonsMethod::compute_step(
-    AmiVector const& xdot, SimulationState const& state
+    AmiVector const& xdot, DEStateView const& state
 ) {
     delta_.copy(xdot);
     solver_->getStep(delta_, *model_, state);
@@ -945,8 +950,7 @@ bool NewtonsMethod::update_damping_factor(bool step_successful, double& gamma) {
 }
 
 realtype NewtonsMethod::compute_wrms(
-    AmiVector const& xdot, SimulationState const& state,
-    WRMSComputer& wrms_computer
+    AmiVector const& xdot, DEStateView const& state, WRMSComputer& wrms_computer
 ) {
     if (check_delta_) {
         compute_step(xdot, state);
@@ -957,7 +961,7 @@ realtype NewtonsMethod::compute_wrms(
 }
 
 bool NewtonsMethod::has_converged(
-    AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer
+    AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer
 ) {
     // pre-check convergence
     if (wrms_ >= conv_thresh)
