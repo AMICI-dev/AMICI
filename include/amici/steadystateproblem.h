@@ -335,17 +335,6 @@ class SteadystateProblem {
     [[nodiscard]] int getNumStepsB() const { return numstepsB_; }
 
     /**
-     * @brief Compute adjoint updates dJydx according to the provided model and
-     * data.
-     * @param model Model instance
-     * @param edata Experimental data
-     * @param dJydx output argument for dJydx
-     */
-    void getAdjointUpdates(
-        Model& model, ExpData const& edata, std::vector<realtype>& dJydx
-    );
-
-    /**
      * @brief Return the adjoint state
      * @return xB adjoint state
      */

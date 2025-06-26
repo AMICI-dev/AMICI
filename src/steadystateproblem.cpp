@@ -809,19 +809,6 @@ void SteadystateProblem::runSteadystateSimulationBwd(
     }
 }
 
-void SteadystateProblem::getAdjointUpdates(
-    Model& model, ExpData const& edata, std::vector<realtype>& dJydx
-) {
-    for (int it = 0; it < model.nt(); it++) {
-        if (std::isinf(model.getTimepoint(it))) {
-            model.getAdjointStateObservableUpdate(
-                slice(dJydx, it, model.nx_solver * model.nJ), it, state_.x,
-                edata
-            );
-        }
-    }
-}
-
 void SteadystateProblem::flagUpdatedState() {
     xdot_updated_ = false;
     sensis_updated_ = false;
