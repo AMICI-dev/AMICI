@@ -105,6 +105,12 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_ROOTS
 
+    def _root_cond_fns(self, p):
+        """Return root condition functions for discontinuities."""
+        TPL_P_SYMS = p
+
+        return TPL_ROOT_FUNS
+
     @property
     def observable_ids(self):
         return TPL_Y_IDS

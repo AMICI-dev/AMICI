@@ -255,6 +255,15 @@ class ODEExporter:
                     for root in e.get_trigger_times()
                 }
             ),
+            "ROOT_FUNS": (
+                "("
+                + ", ".join(
+                    f"lambda t, y, args, **_: {self._code_printer.doprint(root)}"
+                    for root in self._implicit_roots()
+                )
+                + ("," if self._implicit_roots() else "")
+                + ")"
+            ),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we
@@ -268,6 +277,18 @@ class ODEExporter:
             self.model_path / "__init__.py",
             tpl_data,
         )
+
+    def _implicit_roots(self) -> list[sp.Expr]:
+        """Return root functions that require rootfinding."""
+        roots = []
+        for root in self.model.get_implicit_roots():
+            if any(
+                sp.simplify(root + r) == 0 or sp.simplify(root - r) == 0
+                for r in roots
+            ):
+                continue
+            roots.append(root)
+        return roots
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:
         """

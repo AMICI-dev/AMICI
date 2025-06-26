@@ -11,6 +11,7 @@ import diffrax
 import equinox as eqx
 import jax.numpy as jnp
 import jax
+import jax.tree_util as jtu
 import jaxtyping as jt
 
 from collections.abc import Callable
@@ -252,6 +253,24 @@ class JAXModel(eqx.Module):
         """
         ...
 
+    @abstractmethod
+    def _root_cond_fns(
+        self, p: jt.Float[jt.Array, "np"]
+    ) -> tuple[
+        Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float], ...
+    ]:
+        """Return condition functions for implicit discontinuities.
+
+        These functions are passed to :class:`diffrax.Event` and must evaluate
+        to zero when a discontinuity is triggered.
+
+        :param p:
+            model parameters
+        :return:
+            tuple of callable root functions
+        """
+        ...
+
     @property
     @abstractmethod
     def state_ids(self) -> list[str]:
@@ -325,33 +344,48 @@ class JAXModel(eqx.Module):
             maximum number of steps
         :return:
         """
-        sol = diffrax.diffeqsolve(
-            diffrax.ODETerm(self._xdot),
-            solver,
-            args=(p, tcl),
-            t0=0.0,
-            t1=jnp.inf,
-            dt0=None,
-            y0=x0,
-            stepsize_controller=self._get_clipped_stepsize_controller(
-                p, controller
-            ),
-            max_steps=max_steps,
-            adjoint=diffrax.DirectAdjoint(),
-            event=diffrax.Event(
-                cond_fn=steady_state_event,
-            ),
-            throw=False,
-        )
-        # If the event was triggered, the event mask is True and the solution is the steady state. Otherwise, the
-        # solution is the last state and the event mask is False. In the latter case, we return inf for the steady
-        # state.
-        ys = jnp.where(
-            sol.event_mask,
-            sol.ys[-1, :],
-            jnp.inf * jnp.ones_like(sol.ys[-1, :]),
-        )
-        return ys, sol.stats
+        # first event corresponds to steady state, followed by discontinuity roots
+        cond_fns = [steady_state_event] + list(self._root_cond_fns(p))
+        root_finder = None
+
+        start = 0.0
+        y0_current = x0
+        stats = None
+
+        # solve iteratively until either the steady-state event or one of the
+        # discontinuity roots is triggered. After an event is hit integration is
+        # restarted slightly after the event time so it won't be triggered again
+        # at the same point. The loop repeats until no discontinuity is crossed.
+        while True:
+            sol, idx = self._run_segment(
+                start,
+                jnp.inf,
+                y0_current,
+                p,
+                tcl,
+                solver,
+                controller,
+                max_steps,
+                diffrax.DirectAdjoint(),
+                cond_fns,
+                root_finder,
+                saveat=None,
+            )
+            stats = sol.stats
+
+            if idx is None:
+                ys = jnp.inf * jnp.ones_like(sol.ys[-1, :])
+                break
+
+            if idx == 0:
+                ys = sol.ys[-1, :]
+                break
+
+            # continue integration from just after the event time
+            start = jnp.nextafter(sol.ts[-1], jnp.inf)
+            y0_current = sol.ys[-1]
+
+        return ys, stats
 
     def _solve(
         self,
@@ -386,23 +420,100 @@ class JAXModel(eqx.Module):
         :return:
             solution at time points ts and statistics
         """
+        # event functions for time-based discontinuities
+        cond_fns = list(self._root_cond_fns(p))
+        root_finder = None
+
+        ys_all = []
+        ts_all = []
+        start = 0.0
+        y0_current = x0
+        remaining_ts = ts
+        stats = None
+
+        while True:
+            sol, idx = self._run_segment(
+                start,
+                ts[-1],
+                y0_current,
+                p,
+                tcl,
+                solver,
+                controller,
+                max_steps,
+                adjoint,
+                cond_fns,
+                root_finder,
+                diffrax.SaveAt(ts=remaining_ts[remaining_ts >= start]),
+            )
+            ys_all.append(sol.ys)
+            ts_all.append(remaining_ts[remaining_ts >= start])
+            stats = sol.stats
+
+            if idx is None:
+                break
+
+            # restart from just after the event time
+            start = jnp.nextafter(sol.ts[-1], jnp.inf)
+            y0_current = sol.ys[-1]
+            if start >= ts[-1]:
+                break
+
+        ys = jnp.concatenate(ys_all, axis=0)
+        return ys, stats
+
+    def _run_segment(
+        self,
+        start: float,
+        t_end: float,
+        y0: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        max_steps: jnp.int_,
+        adjoint: diffrax.AbstractAdjoint,
+        cond_fns: list[Callable],
+        root_finder,
+        saveat: diffrax.SaveAt | None,
+    ) -> tuple[diffrax.Solution, int | None]:
+        """Solve a single integration segment and return triggered event index.
+
+        The returned index corresponds to the event in ``cond_fns`` that was
+        triggered during the integration. ``None`` indicates that the solver
+        reached ``t_end`` without any event firing.
+        """
+
+        # combine all discontinuity conditions into a single diffrax.Event
+        event = diffrax.Event(cond_fns, root_finder) if cond_fns else None
+
+        if saveat is None:
+            saveat = diffrax.SaveAt(t1=True)
+
         sol = diffrax.diffeqsolve(
             diffrax.ODETerm(self._xdot),
             solver,
             args=(p, tcl),
-            t0=0.0,
-            t1=ts[-1],
+            t0=start,
+            t1=t_end,
             dt0=None,
-            y0=x0,
+            y0=y0,
             stepsize_controller=self._get_clipped_stepsize_controller(
                 p, controller
             ),
             max_steps=max_steps,
             adjoint=adjoint,
-            saveat=diffrax.SaveAt(ts=ts),
+            saveat=saveat,
+            event=event,
             throw=False,
         )
-        return sol.ys, sol.stats
+
+        idx = None
+        if event is not None and diffrax.is_event(sol.result):
+            mask = jtu.tree_leaves(sol.event_mask)
+            idx = int(jnp.argmax(jnp.array(mask)))
+
+        return sol, idx
 
     def _x_rdatas(
         self, x: jt.Float[jt.Array, "nt nxs"], tcl: jt.Float[jt.Array, "ncl"]
