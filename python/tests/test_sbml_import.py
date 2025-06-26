@@ -236,15 +236,18 @@ def test_presimulation(sbml_example_presimulation_module):
     )
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     model.setReinitializeFixedParameterInitialStates(True)
+    model.requireSensitivitiesForAllParameters()
 
-    rdata = amici.runAmiciSimulation(model, solver)
-    edata = amici.ExpData(rdata, 0.1, 0.0)
+    rdata_ref = amici.runAmiciSimulation(model, solver)
+    edata = amici.ExpData(rdata_ref, 0.1, 0.0)
+    edata.t_presim = 10
     edata.fixedParameters = [10, 2]
-    edata.fixedParametersPresimulation = [10, 2]
+    edata.fixedParametersPresimulation = [10, 0]
     edata.fixedParametersPreequilibration = [3, 0]
-    assert isinstance(
-        amici.runAmiciSimulation(model, solver, edata), amici.ReturnDataView
-    )
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    assert isinstance(rdata, amici.ReturnDataView)
+    assert not np.allclose(rdata_ref["x0"], rdata["x0"])
+    assert np.any(rdata["sx"])
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
