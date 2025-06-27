@@ -263,25 +263,27 @@ class DocstringProcessor(ast.NodeTransformer):
     def _process_lines(lines: list[str]) -> list[str]:
         processed: list[str] = []
         for line in lines:
+            indent = len(line) - len(line.lstrip())
+            line_clean = line.lstrip()
             if (
-                re.match(r":(type|rtype|param|return)", line)
+                re.match(r":(type|rtype|param|return)", line_clean)
                 and processed
                 and processed[-1] != ""
             ):
                 processed.append("")
             for old, new in DocstringProcessor.typemaps.items():
-                line = line.replace(old, new)
-            line = re.sub(
+                line_clean = line_clean.replace(old, new)
+            line_clean = re.sub(
                 r"amici::(Model|Solver|ExpData) ",
                 r":class:`amici.amici.\1` ",
-                line,
+                line_clean,
             )
-            line = re.sub(
+            line_clean = re.sub(
                 r"amici::(runAmiciSimulation[s]?)",
                 r":func:`amici.amici.\1`",
-                line,
+                line_clean,
             )
-            processed.append(line)
+            processed.append(" " * indent + line_clean)
         return processed
 
     def _update_docstring(self, node: ast.AST) -> None:
