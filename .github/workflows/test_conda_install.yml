@@ -26,7 +26,10 @@ jobs:
           activate-environment: amici
       - name: Install AMICI
         shell: bash -l {0}
-        run: conda install -y -c conda-forge amici
+        run: |
+          conda install -y -c conda-forge openblas
+          export BLAS_LIBS=-lopenblas
+          pip install amici
       - name: Test import
         shell: bash -l {0}
         run: |
