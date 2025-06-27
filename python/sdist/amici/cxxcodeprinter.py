@@ -54,7 +54,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
     def _print_Symbol(self, expr: sp.Symbol) -> str:
         name = super()._print_Symbol(expr)
-        if name in RESERVED_SYMBOLS:
+        if name in RESERVED_SYMBOLS and name != "t":
             return f"amici_{name}"
         return name
 
