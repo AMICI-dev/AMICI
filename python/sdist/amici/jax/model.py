@@ -34,9 +34,9 @@ class ReturnValue(enum.Enum):
 
 STARTING_STATS = {
     "max_steps": 0,
-    "num_accepted_steps": jnp.int_(0),
-    "num_rejected_steps": jnp.int_(0),
-    "num_steps": jnp.int_(0),
+    "num_accepted_steps": 0,
+    "num_rejected_steps": 0,
+    "num_steps": 0,
 }
 
 
