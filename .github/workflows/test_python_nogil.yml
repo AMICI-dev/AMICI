@@ -15,16 +15,16 @@ jobs:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       AMICI_PARALLEL_COMPILE: ""
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 20
-    - run: git fetch --prune --unshallow
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
     - name: Set up Python 3.13 free-threaded
       uses: actions/setup-python@v5
       with:
         python-version: '3.13'
         freethreaded: true
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 20
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies
     - name: Install python package
