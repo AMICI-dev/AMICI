@@ -24,13 +24,12 @@ SBML_EXAMPLE = (
 )
 
 
-def _simulate(_: int, model_dir: str) -> int:
+def _simulate(_: int, model_dir: str) -> amici.ReturnData:
     model_module = amici.import_model_module("nogil_model", model_dir)
     model = model_module.getModel()
     model.setTimepoints(np.linspace(0, 2e5, 200001))
     solver = model.getSolver()
-    rdata = amici.runAmiciSimulation(model, solver)
-    return int(rdata.status)
+    return amici.runAmiciSimulation(model, solver)
 
 
 def test_parallel_simulation_threading():
@@ -42,6 +41,11 @@ def test_parallel_simulation_threading():
 
         with ThreadPoolExecutor(max_workers=2) as pool:
             simulate = functools.partial(_simulate, model_dir=outdir)
-            statuses = list(pool.map(simulate, range(100)))
+            rdatas = list(pool.map(simulate, range(100)))
 
+    statuses = [int(r.status) for r in rdatas]
     assert statuses == [amici.AMICI_SUCCESS] * 100
+
+    first = rdatas[0]
+    for rdata in rdatas[1:]:
+        assert np.array_equal(rdata.x, first.x)
