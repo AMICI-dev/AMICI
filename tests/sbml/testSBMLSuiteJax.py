@@ -53,7 +53,7 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
     sbml_importer = amici.SbmlImporter(sbml_file)
     model_name = f"SBMLTest{test_id}_jax"
     sbml_importer.sbml2jax(model_name, output_dir=model_dir)
-    model_module = amici.import_model_module(model_name, model_dir)
+    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
     jax_model = model_module.Model()
     return jax_model, sbml_importer
 
