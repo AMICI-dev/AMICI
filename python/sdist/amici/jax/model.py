@@ -424,16 +424,13 @@ class JAXModel(eqx.Module):
         cond_fns = list(self._root_cond_fns(p))
         root_finder = None
 
-        ys_all = []
-        ts_all = []
-        start = 0.0
+        t_start = 0.0
         y0_current = x0
-        remaining_ts = ts
-        stats = None
+        ys = jnp.zeros((ts.shape[0], x0.shape[0]), dtype=x0.dtype) + x0
 
         while True:
             sol, idx = self._run_segment(
-                start,
+                t_start,
                 ts[-1],
                 y0_current,
                 p,
@@ -444,22 +441,23 @@ class JAXModel(eqx.Module):
                 adjoint,
                 cond_fns,
                 root_finder,
-                diffrax.SaveAt(ts=remaining_ts[remaining_ts >= start]),
+                diffrax.SaveAt(ts=jnp.where(ts, ts >= t_start, t_start)),
             )
-            ys_all.append(sol.ys)
-            ts_all.append(remaining_ts[remaining_ts >= start])
+            # update the solution for all timepoints in the simulated segment
+            was_simulated = jnp.logical_and(t_start < ts, ts <= sol.ts[-1])
+            ys = jnp.where(was_simulated[:, None], sol.ys, ys)
             stats = sol.stats
 
+            # if there was no event, we are done
             if idx is None:
                 break
 
             # restart from just after the event time
-            start = jnp.nextafter(sol.ts[-1], jnp.inf)
+            t_start = jnp.nextafter(sol.ts[-1], jnp.inf)
             y0_current = sol.ys[-1]
-            if start >= ts[-1]:
+            if t_start >= ts[-1]:
                 break
 
-        ys = jnp.concatenate(ys_all, axis=0)
         return ys, stats
 
     def _run_segment(
@@ -557,7 +555,7 @@ class JAXModel(eqx.Module):
         :param iys:
             observable indices
         :param ops:
-            observables parameters
+            observable parameters
         :param nps:
             noise parameters
         :return:
