@@ -1,18 +1,8 @@
 import pytest
-import warnings
-from pathlib import Path
 import amici
+from pathlib import Path
 
 pytest.importorskip("jax")
-# ignore deprecation warnings in bionetgen used by pysb and amici import
-warnings.filterwarnings("ignore", "pkg_resources is deprecated", UserWarning)
-warnings.filterwarnings(
-    "ignore", "App.Meta.framework_logging", DeprecationWarning
-)
-warnings.filterwarnings(
-    "ignore", category=pytest.PytestUnraisableExceptionWarning
-)
-warnings.filterwarnings("ignore", category=ResourceWarning)
 import amici.jax
 
 import jax.numpy as jnp
@@ -30,10 +20,7 @@ from amici.jax import JAXProblem, ReturnValue, run_simulations
 from numpy.testing import assert_allclose
 from test_petab_objective import lotka_volterra  # noqa: F401
 
-# ignore deprecation warnings in bionetgen used by pysb
-warnings.filterwarnings("ignore", "pkg_resources is deprecated", UserWarning)
 pysb = pytest.importorskip("pysb")
-_bng_available = False
 
 jax.config.update("jax_enable_x64", True)
 
@@ -43,7 +30,6 @@ RTOL_SIM = 1e-12
 
 
 @skip_on_valgrind
-@pytest.mark.skipif(not _bng_available, reason="BioNetGen not available")
 def test_conversion():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
@@ -72,7 +58,6 @@ def test_conversion():
 
 
 @skip_on_valgrind
-@pytest.mark.skipif(not _bng_available, reason="BioNetGen not available")
 @pytest.mark.filterwarnings(
     "ignore:Model does not contain any initial conditions"
 )
@@ -285,7 +270,6 @@ def check_fields_jax(
             )
 
 
-@pytest.mark.skipif(not _bng_available, reason="BioNetGen not available")
 def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
