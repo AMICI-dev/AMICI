@@ -9,6 +9,7 @@ from dataclasses import field
 
 import diffrax
 import equinox as eqx
+import equinox.internal as eqxi
 import jax.numpy as jnp
 import jax
 import jax.tree_util as jtu
@@ -354,6 +355,7 @@ class JAXModel(eqx.Module):
             maximum number of steps
         :return:
         """
+        ## TODO: if there are no events, we can avoid looping and just run a single segment
 
         def body_fn(carry):
             start, y0, event_index, stats = carry
@@ -392,10 +394,12 @@ class JAXModel(eqx.Module):
             )
 
         # run the loop until no event is triggered (which will also be the case if we run out of steps)
-        _, ys, _, stats = jax.lax.while_loop(
+        _, ys, _, stats = eqxi.while_loop(
             cond_fn,
             body_fn,
             (0.0, x0, -1, dict(**STARTING_STATS)),
+            kind="bounded",
+            max_steps=2**6,
         )
 
         return ys, stats
@@ -434,6 +438,7 @@ class JAXModel(eqx.Module):
         :return:
             solution at time points ts and statistics
         """
+        ## TODO: if there are no events, we can avoid looping and just run a single segment
 
         def cond_fn(carry):
             _, t_start, y0, stats = carry
@@ -447,7 +452,7 @@ class JAXModel(eqx.Module):
 
         def body_fn(carry):
             ys, t_start, y0, stats = carry
-            sol, idx, t_start, stats = self._run_segment(
+            sol, idx, t_start_next, stats = self._run_segment(
                 t_start,
                 ts[-1],
                 y0,
@@ -473,10 +478,10 @@ class JAXModel(eqx.Module):
                 sol.ys[-1],
                 jnp.inf * jnp.ones_like(sol.ys[-1]),
             )
-            return ys, t_start, y0_next, stats
+            return ys, t_start_next, y0_next, stats
 
         # run the loop until we have reached the end of the time points
-        ys, _, _, stats = jax.lax.while_loop(
+        ys, _, _, stats = eqxi.while_loop(
             cond_fn,
             body_fn,
             (
@@ -485,6 +490,8 @@ class JAXModel(eqx.Module):
                 x0,
                 dict(**STARTING_STATS),
             ),
+            kind="bounded",
+            max_steps=2**6,
         )
 
         return ys, stats
@@ -557,7 +564,9 @@ class JAXModel(eqx.Module):
         jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
 
         t_start = jnp.where(
-            event_index >= 0, jnp.nextafter(sol.ts[-1], jnp.inf), sol.ts[-1]
+            event_index >= 0,
+            jax.lax.stop_gradient(jnp.nextafter(sol.ts[-1], jnp.inf)),
+            sol.ts[-1],
         )
         return sol, event_index, t_start, stats
 

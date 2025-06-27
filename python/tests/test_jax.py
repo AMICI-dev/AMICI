@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import jax.random as jr
 import jax
 import diffrax
+import optimistix
 import numpy as np
 from beartype import beartype
 from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
@@ -200,6 +201,7 @@ def check_fields_jax(
         "x_preeq": jnp.array([]),
         "solver": diffrax.Kvaerno5(),
         "controller": diffrax.PIDController(atol=ATOL_SIM, rtol=RTOL_SIM),
+        "root_finder": optimistix.Newton(atol=ATOL_SIM, rtol=RTOL_SIM),
         "adjoint": diffrax.RecursiveCheckpointAdjoint(),
         "steady_state_event": diffrax.steady_state_event(),
         "max_steps": 2**8,  # max_steps
@@ -355,6 +357,7 @@ def test_time_dependent_discontinuity(tmp_path):
         x0,
         diffrax.Tsit5(),
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
         1000,
         diffrax.DirectAdjoint(),
     )
@@ -398,9 +401,8 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
         x0,
         diffrax.Tsit5(),
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-        diffrax.steady_state_event(
-            rtol=1e-8, atol=1e-8, norm=lambda y: jnp.linalg.norm(y)
-        ),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
         1000,
     )
 
