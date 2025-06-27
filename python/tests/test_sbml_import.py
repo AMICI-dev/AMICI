@@ -251,8 +251,8 @@ def test_presimulation(sbml_example_presimulation_module):
     assert np.any(rdata["sy"])
     assert np.any(rdata["sllh"])
 
-    solver.setRelativeTolerance(1e-12)
-    solver.setAbsoluteTolerance(1e-12)
+    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteTolerance(1e-14)
     check_derivatives(model, solver, edata, epsilon=1e-4)
 
 
