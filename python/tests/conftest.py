@@ -35,8 +35,7 @@ def sbml_example_presimulation_module():
 
     observables = amici.assignmentRules2observables(
         sbml_importer.sbml,  # the libsbml model object
-        filter_function=lambda variable: variable.getName()
-        in {"pPROT_obs", "pPROT", "tPROT"},
+        filter_function=lambda variable: variable.getName() == "pPROT_obs",
     )
     module_name = "test_model_presimulation"
 
