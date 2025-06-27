@@ -77,12 +77,7 @@ def test_compare_to_pysb_simulation(example):
             with pytest.raises(ValueError, match="Conservation laws"):
                 bngl2amici(model_file, outdir, compute_conservation_laws=True)
 
-        if example in ["empty_compartments_block", "motor"]:
-            with pytest.raises(ValueError, match="Cannot add"):
-                bngl2amici(model_file, outdir, **kwargs)
-            return
-        else:
-            bngl2amici(model_file, outdir, **kwargs)
+        bngl2amici(model_file, outdir, **kwargs)
 
         amici_model_module = amici.import_model_module(pysb_model.name, outdir)
 
