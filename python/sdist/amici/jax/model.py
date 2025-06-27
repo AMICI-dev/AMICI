@@ -441,10 +441,10 @@ class JAXModel(eqx.Module):
                 adjoint,
                 cond_fns,
                 root_finder,
-                diffrax.SaveAt(ts=jnp.where(ts, ts >= t_start, t_start)),
+                diffrax.SaveAt(ts=jnp.where(ts > t_start, ts, t_start)),
             )
             # update the solution for all timepoints in the simulated segment
-            was_simulated = jnp.logical_and(t_start < ts, ts <= sol.ts[-1])
+            was_simulated = jnp.logical_and(ts > t_start, ts <= sol.ts[-1])
             ys = jnp.where(was_simulated[:, None], sol.ys, ys)
             stats = sol.stats
 
