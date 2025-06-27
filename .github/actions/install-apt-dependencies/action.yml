@@ -11,5 +11,7 @@ runs:
               libboost-chrono-dev \
               libboost-math-dev \
               libboost-serialization-dev \
-              libhdf5-serial-dev
+              libhdf5-serial-dev \
+              libxml2-dev \
+              libxslt1-dev
       shell: bash

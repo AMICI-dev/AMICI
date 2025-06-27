@@ -16,7 +16,6 @@ jobs:
       AMICI_PARALLEL_COMPILE: ""
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
     - name: Set up Python 3.13 free-threaded
       uses: actions/setup-python@v5
       with:
@@ -32,7 +31,7 @@ jobs:
         python3 -m venv venv --clear
         source venv/bin/activate
         pip install --upgrade pip wheel
-        pip install numpy sympy cmake-build-extension==0.6.0 swig
+        pip install numpy sympy cmake-build-extension==0.6.0 swig cython
         AMICI_BUILD_TEMP="python/sdist/build/temp" \
           pip install --verbose -e python/sdist[test] --no-build-isolation
     - run: source venv/bin/activate && pip3 install "sympy>1.12"
