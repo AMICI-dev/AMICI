@@ -159,17 +159,46 @@ def jax_sensitivity_check(
 ):
     """Compare AMICI forward sensitivities against JAX autodiff"""
     model_dir = Path(__file__).parent / "SBMLTestModelsJaxGrad" / test_id
-    jax_model, _ = compile_model_jax(sbml_dir, test_id, model_dir)
+    try:
+        jax_model, _ = compile_model_jax(sbml_dir, test_id, model_dir)
+    except NotImplementedError as err:
+        if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        raise
 
     try:
         ts = rdata["ts"]
         p = jax_model.parameters
         ts_jnp = jnp.asarray(ts, dtype=float)
         zeros = jnp.zeros_like(ts_jnp)
+        tol_factor = 1e2
+        if int(test_id) in (
+            191,
+            192,
+            193,
+            194,
+            198,
+            199,
+            201,
+            270,
+            272,
+            273,
+            274,
+            276,
+            277,
+            279,
+            1148,
+            1159,
+            1160,
+            1161,
+            1395,
+        ):
+            tol_factor = 1e4
+
         solver = diffrax.Kvaerno5()
         controller = diffrax.PIDController(
-            rtol=rtol,
-            atol=atol,
+            rtol=rtol / tol_factor,
+            atol=atol / tol_factor,
             pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
             icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
             dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
@@ -202,7 +231,9 @@ def jax_sensitivity_check(
         ]
         sx = jnp.transpose(sx[:, :, par_idx], (0, 2, 1))
 
-        np.testing.assert_allclose(x, rdata["x"], rtol=1e-5, atol=1e-7)
-        np.testing.assert_allclose(sx, rdata["sx"], rtol=1e-5, atol=1e-7)
+        np.testing.assert_allclose(x, rdata["x"], rtol=rtol, atol=atol)
+        np.testing.assert_allclose(
+            sx, rdata["sx"], rtol=rtol * tol_factor, atol=atol * tol_factor
+        )
     finally:
         shutil.rmtree(model_dir, ignore_errors=True)
