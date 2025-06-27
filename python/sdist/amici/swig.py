@@ -240,6 +240,69 @@ class DocstringAdder(ast.NodeTransformer):
         return node
 
 
+class DocstringProcessor(ast.NodeTransformer):
+    """Fix docstrings for improved Sphinx parsing."""
+
+    typemaps = {
+        "std::vector< amici::realtype,std::allocator< amici::realtype > >": "DoubleVector",
+        "std::vector< double,std::allocator< double > >": "DoubleVector",
+        "std::vector< int,std::allocator< int > >": "IntVector",
+        "std::vector< amici::ParameterScaling,std::allocator< amici::ParameterScaling > >": "ParameterScalingVector",
+        "std::vector< std::string,std::allocator< std::string > >": "StringVector",
+        "std::vector< bool,std::allocator< bool > >": "BoolVector",
+        "std::map< std::string,amici::realtype,std::less< std::string >,std::allocator< std::pair< std::string const,amici::realtype > > >": "StringDoubleMap",
+        "std::vector< amici::ExpData *,std::allocator< amici::ExpData * > >": "ExpDataPtrVector",
+        "std::vector< std::unique_ptr< amici::ReturnData >,std::allocator< std::unique_ptr< amici::ReturnData > > >": "Iterable[ReturnData]",
+        "std::unique_ptr< amici::ExpData >": "ExpData",
+        "std::unique_ptr< amici::ReturnData >": "ReturnData",
+        "std::unique_ptr< amici::Solver >": "Solver",
+        "amici::realtype": "float",
+    }
+
+    @staticmethod
+    def _process_lines(lines: list[str]) -> list[str]:
+        processed: list[str] = []
+        for line in lines:
+            if (
+                re.match(r":(type|rtype|param|return)", line)
+                and processed
+                and processed[-1] != ""
+            ):
+                processed.append("")
+            for old, new in DocstringProcessor.typemaps.items():
+                line = line.replace(old, new)
+            line = re.sub(
+                r"amici::(Model|Solver|ExpData) ",
+                r":class:`amici.amici.\1` ",
+                line,
+            )
+            line = re.sub(
+                r"amici::(runAmiciSimulation[s]?)",
+                r":func:`amici.amici.\1`",
+                line,
+            )
+            processed.append(line)
+        return processed
+
+    def _update_docstring(self, node: ast.AST) -> None:
+        doc = ast.get_docstring(node, clean=False)
+        if not doc:
+            return
+        lines = self._process_lines(doc.split("\n"))
+        if isinstance(node.body[0], ast.Expr) and isinstance(
+            node.body[0].value, ast.Constant
+        ):
+            node.body[0] = ast.Expr(value=ast.Constant("\n".join(lines)))
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        self._update_docstring(node)
+        return node
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        self._update_docstring(node)
+        return node
+
+
 def fix_typehints(infilename, outfilename):
     """Change SWIG-generated C++ typehints to Python typehints"""
     # file -> AST
@@ -250,6 +313,7 @@ def fix_typehints(infilename, outfilename):
     # Change AST
     parsed_source = TypeHintFixer().visit(parsed_source)
     parsed_source = DocstringAdder().visit(parsed_source)
+    parsed_source = DocstringProcessor().visit(parsed_source)
 
     # AST -> file
     with open(outfilename, "w") as f:

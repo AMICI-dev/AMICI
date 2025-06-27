@@ -60,9 +60,3 @@ To quickly verify the benchmark tests, you can limit execution to a small model:
 ```bash
 pytest tests/benchmark_models/test_petab_benchmark.py -k Boehm_JProteomeRes2014
 ```
-
-To verify that the documentation builds correctly, run
-
-```bash
-tox -e doc
-```
