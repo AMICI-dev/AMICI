@@ -39,8 +39,6 @@ jobs:
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies
 
-    - name: Install Cython
-      run: pip install Cython
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
     - run: source ./venv/bin/activate && pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654

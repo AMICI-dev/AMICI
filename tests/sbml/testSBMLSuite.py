@@ -235,6 +235,12 @@ def jax_sensitivity_check(
         ]
         sx = jnp.transpose(sx[:, :, par_idx], (0, 2, 1))
 
+        if rdata["sx"] is None:
+            solver_amici = amici_model.getSolver()
+            solver_amici.setSensitivityOrder(amici.SensitivityOrder.first)
+            solver_amici.setSensitivityMethod(amici.SensitivityMethod.forward)
+            rdata = amici.runAmiciSimulation(amici_model, solver_amici)
+
         np.testing.assert_allclose(x, rdata["x"], rtol=rtol, atol=atol)
         np.testing.assert_allclose(
             sx, rdata["sx"], rtol=rtol * tol_factor, atol=atol * tol_factor
