@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 #include <cmath>
 #include <cstring>
 #include <numeric>
@@ -604,9 +605,9 @@ void Model::setParameterByName(
 void Model::setParameterByName(
     std::map<std::string, realtype> const& p, bool ignoreErrors
 ) {
-    for (auto& kv : p) {
+    for (auto const& [name, value] : p) {
         try {
-            setParameterByName(kv.first, kv.second);
+            setParameterByName(name, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -1806,8 +1807,7 @@ int Model::checkFinite(
 
     // there is some issue - produce a meaningful message
     auto flat_index = it - m_flat.begin();
-    sunindextype row, col;
-    std::tie(row, col) = unravel_index(flat_index, m);
+    auto [row, col] = unravel_index(flat_index, m);
     std::string msg_id;
     std::string non_finite_type;
     if (std::isnan(m_flat[flat_index])) {
@@ -2164,10 +2164,17 @@ void Model::fsigmay(int const it, ExpData const* edata) {
             for (int iJ = 1; iJ < nJ; iJ++)
                 derived_state_.sigmay_.at(iytrue + iJ * nytrue) = 0;
 
-            if (edata->isSetObservedData(it, iytrue))
+            if (edata->isSetObservedData(it, iytrue)) {
+                std::string obs_id = hasObservableIds()
+                                         ? getObservableIds().at(iytrue)
+                                         : std::to_string(iytrue);
+                std::stringstream ss;
+                ss << "sigmay (" << obs_id << ", ExpData::id=" << edata->id
+                   << ", t=" << getTimepoint(it) << ")";
                 checkSigmaPositivity(
-                    derived_state_.sigmay_.at(iytrue), "sigmay"
+                    derived_state_.sigmay_.at(iytrue), ss.str().c_str()
                 );
+            }
         }
     }
 }

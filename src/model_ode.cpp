@@ -28,7 +28,7 @@ void Model_ODE::fJSparse(
 }
 
 void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
-    auto x_pos = computeX_pos(x);
+    auto const x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);

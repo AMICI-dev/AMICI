@@ -218,7 +218,7 @@ void ReturnData::processSimulationObjects(
 void ReturnData::processPreEquilibration(
     SteadystateProblem const& preeq, Model& model
 ) {
-    auto simulation_state = preeq.getFinalSimulationState();
+    auto const simulation_state = preeq.getFinalSimulationState();
     model.setModelState(simulation_state.state);
 
     if (!x_ss.empty()) {
@@ -245,7 +245,7 @@ void ReturnData::processPostEquilibration(
     for (int it = 0; it < nt; it++) {
         auto t = model.getTimepoint(it);
         if (std::isinf(t)) {
-            auto simulation_state = posteq.getFinalSimulationState();
+            auto const simulation_state = posteq.getFinalSimulationState();
             model.setModelState(simulation_state.state);
             getDataOutput(it, model, simulation_state, edata);
         }

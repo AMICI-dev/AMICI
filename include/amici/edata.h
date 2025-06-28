@@ -494,7 +494,7 @@ inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
            && is_equal(
                lhs.observed_events_std_dev_, rhs.observed_events_std_dev_
            );
-};
+}
 
 /**
  * @brief checks input vector of sigmas for not strictly positive values
