@@ -58,7 +58,7 @@ def _jax_variable_equations(
     code_printer: AmiciJaxCodePrinter,
     eq_names: tuple[str, ...],
     subs: dict,
-    indent: int = 8,
+    indent: int,
 ) -> dict:
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
@@ -152,10 +152,6 @@ class ODEExporter:
             raise NotImplementedError(
                 "The JAX backend does not support models with algebraic states."
             )
-        if ode_model.has_parameter_dependent_implicit_roots():
-            raise NotImplementedError(
-                "The JAX backend does not support models with parameter dependent implicit event triggers."
-            )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
@@ -202,6 +198,7 @@ class ODEExporter:
             "x_solver",
             "x_rdata",
             "total_cl",
+            "iroot",
         )
         sym_names = (
             "p",
@@ -214,6 +211,7 @@ class ODEExporter:
             "y",
             "sigmay",
             "x_rdata",
+            "iroot",
         )
 
         indent = 8
@@ -255,15 +253,7 @@ class ODEExporter:
                     for root in e.get_trigger_times()
                 }
             ),
-            "ROOT_FUNS": (
-                "("
-                + ", ".join(
-                    f"lambda t, y, args, **_: {self._code_printer.doprint(root)}"
-                    for root in self._implicit_roots()
-                )
-                + ("," if self._implicit_roots() else "")
-                + ")"
-            ),
+            "N_IEVENTS": str(len(self.model.get_implicit_roots())),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we

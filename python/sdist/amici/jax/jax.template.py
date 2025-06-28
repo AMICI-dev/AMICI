@@ -1,6 +1,7 @@
 # ruff: noqa: F401, F821, F841
 import jax.numpy as jnp
 import jaxtyping as jt
+import equinox as eqx
 from interpax import interp1d
 from pathlib import Path
 from jax.numpy import inf as oo
@@ -105,11 +106,27 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_ROOTS
 
-    def _root_cond_fns(self, p):
-        """Return root condition functions for discontinuities."""
-        TPL_P_SYMS = p
+    def _root_cond_fn(self, ie, t, y, args, **_):
+        p, tcl = args
 
-        return TPL_ROOT_FUNS
+        TPL_X_SYMS = y
+        TPL_P_SYMS = p
+        TPL_TCL_SYMS = tcl
+        TPL_W_SYMS = self._w(t, y, p, tcl)
+
+        TPL_IROOT_EQ
+
+        return TPL_IROOT_RET.at[ie].get()
+
+    def _root_cond_fn_event(self, ie):
+        """
+        Root condition function for a specific event index.
+        """
+        return eqx.Partial(self._root_cond_fn, ie)
+
+    def _root_cond_fns(self):
+        """Return root condition functions for discontinuities."""
+        return [self._root_cond_fn_event(ie) for ie in range(TPL_N_IEVENTS)]
 
     @property
     def observable_ids(self):
