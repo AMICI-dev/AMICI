@@ -1249,7 +1249,7 @@ class DEExporter:
             Template initializer list of ids
         """
         return "\n".join(
-            f'"{self._code_printer.doprint(symbol)}", // {name}[{idx}]'
+            f'"{symbol}", // {name}[{idx}]'
             for idx, symbol in enumerate(self.model.sym(name))
         )
 
