@@ -552,12 +552,12 @@ class JAXModel(eqx.Module):
         # extract the event index
         if sol.event_mask is None:
             # no events were triggered
-            event_index = jnp.int_(-1)
+            event_index = -1
         else:
             event_index = jnp.where(
                 diffrax.is_event(sol.result),
                 jnp.argmax(jnp.array(sol.event_mask)),
-                jnp.int_(-1),
+                -1,
             )
 
         # aggregate statistics
