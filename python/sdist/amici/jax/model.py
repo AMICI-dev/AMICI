@@ -565,7 +565,7 @@ class JAXModel(eqx.Module):
 
         t_start = jnp.where(
             event_index >= 0,
-            jax.lax.stop_gradient(jnp.nextafter(sol.ts[-1], jnp.inf)),
+            sol.ts[-1] + jnp.finfo(jnp.float_).eps,
             sol.ts[-1],
         )
         return sol, event_index, t_start, stats
