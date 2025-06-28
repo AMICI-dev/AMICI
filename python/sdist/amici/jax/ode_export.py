@@ -28,6 +28,7 @@ from amici.de_model import DEModel
 
 from amici.de_export import is_valid_identifier
 from amici.import_utils import (
+    RESERVED_SYMBOLS,
     strip_pysb,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
@@ -40,13 +41,20 @@ from amici.sympy_utils import (
 logger = get_logger(__name__, logging.ERROR)
 
 
+def _sanitize(name: str) -> str:
+    return (
+        f"amici_{name}" if name in RESERVED_SYMBOLS and name != "t" else name
+    )
+
+
 def _jax_variable_assignments(
     model: DEModel, sym_names: tuple[str, ...]
 ) -> dict:
     return {
-        f"{sym_name.upper()}_SYMS": "".join(
-            str(strip_pysb(s)) + ", " for s in model.sym(sym_name)
+        f"{sym_name.upper()}_SYMS": ", ".join(
+            _sanitize(str(strip_pysb(s))) for s in model.sym(sym_name)
         )
+        + ", "
         if model.sym(sym_name)
         else "_"
         for sym_name in sym_names
@@ -63,11 +71,11 @@ def _jax_variable_equations(
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
-                (str(strip_pysb(s)) for s in model.sym(eq_name)),
+                (_sanitize(str(strip_pysb(s))) for s in model.sym(eq_name)),
                 model.eq(eq_name).subs(subs),
                 indent,
             )
-        )[indent:]  # remove indent for first line
+        )[indent:]
         for eq_name in eq_names
     }
 
@@ -78,7 +86,7 @@ def _jax_return_variables(
 ) -> dict:
     return {
         f"{eq_name.upper()}_RET": _jnp_array_str(
-            strip_pysb(s) for s in model.sym(eq_name)
+            _sanitize(str(strip_pysb(s))) for s in model.sym(eq_name)
         )
         if model.sym(eq_name)
         else "jnp.array([])"

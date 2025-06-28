@@ -25,7 +25,7 @@ jax.config.update("jax_enable_x64", True)
 
 @pytest.fixture(scope="session")
 def result_path_jax() -> Path:
-    return Path(__file__).parent / "amici-semantic-results-jax"
+    return Path(__file__).parent / "semantic-results-jax"
 
 
 class DummyModel:
