@@ -355,7 +355,24 @@ class JAXModel(eqx.Module):
             maximum number of steps
         :return:
         """
-        ## TODO: if there are no events, we can avoid looping and just run a single segment
+        # if there are no events, we can avoid expensive looping and just run a single segment
+        if not self._root_cond_fns(p):
+            sol, _, _, stats = self._run_segment(
+                0.0,
+                jnp.inf,
+                x0,
+                p,
+                tcl,
+                solver,
+                controller,
+                root_finder,
+                max_steps,
+                diffrax.DirectAdjoint(),
+                [steady_state_event],
+                diffrax.SaveAt(t1=True),
+                dict(**STARTING_STATS),
+            )
+            return sol.ys[-1][None, :], stats
 
         def body_fn(carry):
             start, y0, event_index, stats = carry
@@ -438,7 +455,25 @@ class JAXModel(eqx.Module):
         :return:
             solution at time points ts and statistics
         """
-        ## TODO: if there are no events, we can avoid looping and just run a single segment
+        # if there are no events, we can avoid expensive looping and just run a single segment
+        if not self._root_cond_fns(p):
+            # no events, we can just run a single segment
+            sol, _, _, stats = self._run_segment(
+                0.0,
+                ts[-1],
+                x0,
+                p,
+                tcl,
+                solver,
+                controller,
+                root_finder,
+                max_steps,
+                adjoint,
+                [],
+                diffrax.SaveAt(ts=ts),
+                dict(**STARTING_STATS),
+            )
+            return sol.ys, stats
 
         def cond_fn(carry):
             _, t_start, y0, stats = carry
