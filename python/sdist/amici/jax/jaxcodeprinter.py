@@ -4,6 +4,8 @@ import re
 from collections.abc import Iterable
 from logging import warning
 
+from ..import_utils import RESERVED_SYMBOLS
+
 import sympy as sp
 from sympy.printing.numpy import NumPyPrinter
 
@@ -16,6 +18,12 @@ def _jnp_array_str(array) -> str:
 
 class AmiciJaxCodePrinter(NumPyPrinter):
     """JAX code printer"""
+
+    def _print_Symbol(self, expr: sp.Symbol) -> str:
+        name = super()._print_Symbol(expr)
+        if name in RESERVED_SYMBOLS and name != "t":
+            return f"amici_{name}"
+        return name
 
     def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         try:

@@ -26,7 +26,7 @@ else
 fi
 
 if [[ "$BACKEND" == "jax" ]]; then
-  RESULT_DIR=tests/sbml/amici-semantic-results-jax
+  RESULT_DIR=tests/sbml/semantic-results-jax
   TEST_SCRIPT=./tests/sbml/testSBMLSuiteJax.py
   COVERAGE_FILE=coverage_SBMLSuite_jax.xml
 else
