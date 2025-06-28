@@ -39,6 +39,7 @@ jobs:
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies
 
+
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
     - run: source ./venv/bin/activate && pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654
     - run: ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}

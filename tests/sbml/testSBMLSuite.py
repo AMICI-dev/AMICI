@@ -17,6 +17,11 @@ import amici
 import pandas as pd
 import pytest
 from amici.gradient_check import check_derivatives
+import jax
+import jax.numpy as jnp
+import numpy as np
+import diffrax
+from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
 from utils import (
     verify_results,
@@ -67,6 +72,11 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
 
         atol, rtol = apply_settings(settings, solver, model, test_id)
 
+        if test_id in sensitivity_check_cases:
+            model.requireSensitivitiesForAllParameters()
+            solver.setSensitivityOrder(amici.SensitivityOrder.first)
+            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
         if rdata["status"] != amici.AMICI_SUCCESS:
@@ -88,6 +98,14 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
             solver.setSensitivityOrder(amici.SensitivityOrder.first)
             solver.setSensitivityMethod(amici.SensitivityMethod.forward)
             check_derivatives(model, solver, epsilon=epsilon)
+            jax_sensitivity_check(
+                current_test_path,
+                test_id,
+                model,
+                rdata,
+                atol,
+                rtol,
+            )
 
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
@@ -122,3 +140,111 @@ def compile_model(
     solver = model.getSolver()
 
     return model, solver, sbml_importer
+
+
+def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
+    """Import the given test model as JAX model"""
+    model_dir.mkdir(parents=True, exist_ok=True)
+    sbml_file = find_model_file(sbml_dir, test_id)
+    sbml_importer = amici.SbmlImporter(sbml_file)
+    model_name = f"SBMLTest{test_id}_jax"
+    sbml_importer.sbml2jax(model_name, output_dir=model_dir)
+    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
+    jax_model = model_module.Model()
+    return jax_model, sbml_importer
+
+
+def jax_sensitivity_check(
+    sbml_dir: Path,
+    test_id: str,
+    amici_model: "amici.Model",
+    rdata: dict,
+    atol: float,
+    rtol: float,
+):
+    """Compare AMICI forward sensitivities against JAX autodiff"""
+    model_dir = Path(__file__).parent / "SBMLTestModelsJaxGrad" / test_id
+    try:
+        jax_model, _ = compile_model_jax(sbml_dir, test_id, model_dir)
+    except NotImplementedError as err:
+        if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        raise
+
+    try:
+        ts = rdata["ts"]
+        p = jax_model.parameters
+        ts_jnp = jnp.asarray(ts, dtype=float)
+        zeros = jnp.zeros_like(ts_jnp)
+        tol_factor = 1e2
+        if int(test_id) in (
+            191,
+            192,
+            193,
+            194,
+            198,
+            199,
+            201,
+            270,
+            272,
+            273,
+            274,
+            276,
+            277,
+            279,
+            1148,
+            1159,
+            1160,
+            1161,
+            1395,
+        ):
+            tol_factor = 1e4
+
+        solver = diffrax.Kvaerno5()
+        controller = diffrax.PIDController(
+            rtol=rtol / tol_factor,
+            atol=atol / tol_factor,
+            pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
+            icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
+            dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
+        )
+
+        def simulate(pars):
+            x, _ = jax_model.simulate_condition(
+                pars,
+                ts_jnp,
+                jnp.array([]),
+                zeros,
+                jnp.zeros_like(ts_jnp, dtype=int),
+                jnp.zeros_like(ts_jnp, dtype=int),
+                jnp.zeros((ts_jnp.shape[0], 0)),
+                jnp.zeros((ts_jnp.shape[0], 0)),
+                solver,
+                controller,
+                diffrax.DirectAdjoint(),
+                diffrax.SteadyStateEvent(),
+                2**10,
+                ret=amici.jax.ReturnValue.x,
+            )
+            return x
+
+        x = simulate(p)
+        sx = jax.jacfwd(simulate)(p)
+        par_idx = [
+            jax_model.parameter_ids.index(pid)
+            for pid in amici_model.getParameterIds()
+        ]
+        sx = jnp.transpose(sx[:, :, par_idx], (0, 2, 1))
+
+        if rdata["sx"] is None:
+            solver_amici = amici_model.getSolver()
+            solver_amici.setSensitivityOrder(amici.SensitivityOrder.first)
+            solver_amici.setSensitivityMethod(amici.SensitivityMethod.forward)
+            rdata = amici.runAmiciSimulation(amici_model, solver_amici)
+
+        np.testing.assert_allclose(x, rdata["x"], rtol=rtol, atol=atol)
+        np.testing.assert_allclose(
+            sx, rdata["sx"], rtol=rtol * tol_factor, atol=atol * tol_factor
+        )
+    finally:
+        shutil.rmtree(model_dir, ignore_errors=True)
