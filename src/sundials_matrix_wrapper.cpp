@@ -825,7 +825,7 @@ unravel_index(sunindextype i, SUNMatrix m) {
         return {row, col};
     }
 
-    throw amici::AmiException("Unimplemented SUNMatrix type for unravel_index");
+    throw AmiException("Unimplemented SUNMatrix type for unravel_index");
 }
 
 } // namespace amici
