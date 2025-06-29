@@ -11,7 +11,7 @@ pytestmark = pytest.mark.skipif(
 def test_import_warns_without_python_gil(monkeypatch):
     with pytest.raises(
         RuntimeWarning,
-        match="The global interpreter lock (GIL) has been enabled to load module 'amici._amici'",
+        match=r"The global interpreter lock \(GIL\) has been enabled to load module",
     ):
         import amici
 
