@@ -504,8 +504,8 @@ class JAXModel(eqx.Module):
             standard deviations of the observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, iy, op, np: self._sigmay(
-                self._y(t, x, p, tcl, hs, op), p, np
+            lambda t, x, p, tcl, h, iy, op, np: self._sigmay(
+                self._y(t, x, p, tcl, h, op), p, np
             )
             .at[iy]
             .get(),
