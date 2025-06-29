@@ -1231,6 +1231,24 @@ class DEModel:
                 ]
             )
             return
+        elif name == "ih":
+            self._syms[name] = sp.Matrix(
+                [
+                    sym
+                    for sym, event in zip(self.sym("h"), self._events)
+                    if not event.has_explicit_trigger_times()
+                ]
+            )
+            return
+        elif name == "eh":
+            self._syms[name] = sp.Matrix(
+                [
+                    sym
+                    for sym, event in zip(self.sym("h"), self._events)
+                    if event.has_explicit_trigger_times()
+                ]
+            )
+            return
         else:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix(
@@ -1866,6 +1884,17 @@ class DEModel:
                         self.eq("root"), self._events, strict=True
                     )
                     if not event.has_explicit_trigger_times()
+                ]
+            )
+
+        elif name == "eroot":
+            self._eqs[name] = sp.Matrix(
+                [
+                    eq
+                    for eq, event in zip(
+                        self.eq("root"), self._events, strict=True
+                    )
+                    if event.has_explicit_trigger_times()
                 ]
             )
 

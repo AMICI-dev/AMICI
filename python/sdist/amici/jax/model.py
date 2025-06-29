@@ -376,7 +376,7 @@ class JAXModel(eqx.Module):
             ..., diffrax._custom_types.BoolScalarLike
         ],
         max_steps: jnp.int_,
-    ) -> tuple[jt.Float[jt.Array, "1 nxs"], dict]:
+    ) -> tuple[jt.Float[jt.Array, "nxs"], dict]:
         """
         Solve the steady state equation.
 
@@ -414,7 +414,7 @@ class JAXModel(eqx.Module):
                 diffrax.SaveAt(t1=True),
                 dict(**STARTING_STATS),
             )
-            return sol.ys[-1][None, :], stats
+            return sol.ys[-1], stats
 
         def body_fn(carry):
             t_start, y0, event_index, stats = carry
@@ -457,7 +457,7 @@ class JAXModel(eqx.Module):
             )
 
         # run the loop until no event is triggered (which will also be the case if we run out of steps)
-        _, ys, _, stats = eqxi.while_loop(
+        _, y1, _, stats = eqxi.while_loop(
             cond_fn,
             body_fn,
             (0.0, x0, -1, dict(**STARTING_STATS)),
@@ -465,7 +465,7 @@ class JAXModel(eqx.Module):
             max_steps=2**6,
         )
 
-        return ys, stats
+        return y1, stats
 
     def _solve(
         self,
@@ -1178,9 +1178,11 @@ class JAXModel(eqx.Module):
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
-        h = self.initialise_heaviside_variables(t0, self._x_solver(x0), p, tcl)
+        h = self._initialise_heaviside_variables(
+            t0, self._x_solver(x0), p, tcl
+        )
         current_x = self._x_solver(x0)
-        current_x, _, stats_preeq = self._eq(
+        current_x, stats_preeq = self._eq(
             p,
             tcl,
             h,

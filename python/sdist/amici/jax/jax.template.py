@@ -24,7 +24,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_X_SYMS = x
         TPL_P_SYMS = p
         TPL_TCL_SYMS = tcl
-        TPL_H_SYMS = h
+        TPL_IH_SYMS = h
         TPL_W_SYMS = self._w(t, x, p, tcl, h)
 
         TPL_XDOT_EQ
@@ -35,7 +35,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_X_SYMS = x
         TPL_P_SYMS = p
         TPL_TCL_SYMS = tcl
-        TPL_H_SYMS = h
+        TPL_IH_SYMS = h
 
         TPL_W_EQ
 
@@ -114,7 +114,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_X_SYMS = y
         TPL_P_SYMS = p
         TPL_TCL_SYMS = tcl
-        TPL_H_SYMS = h
+        TPL_IH_SYMS = h
         TPL_W_SYMS = self._w(t, y, p, tcl, h)
 
         TPL_IROOT_EQ
