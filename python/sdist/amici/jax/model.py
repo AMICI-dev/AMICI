@@ -5,6 +5,7 @@
 from abc import abstractmethod
 from pathlib import Path
 import enum
+import os
 from dataclasses import field
 
 import diffrax
@@ -601,13 +602,14 @@ class JAXModel(eqx.Module):
             )  # update heaviside variables based on the root condition function
             was_event = jnp.isin(ts, sol.ts[1])
             hs = jnp.where(was_event[:, None], h_next[None, :], hs)
-            jax.debug.print(
-                "roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
-                roots_found,
-                roots_dir,
-                h,
-                h_next,
-            )
+            if os.getenv("JAX_DEBUG") == "1":
+                jax.debug.print(
+                    "roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                    roots_found,
+                    roots_dir,
+                    h,
+                    h_next,
+                )
 
             ts_next = jnp.where(
                 ts > t0_next, ts, ts[-1]
@@ -698,16 +700,17 @@ class JAXModel(eqx.Module):
             event=event,
             throw=False,
         )
-        jax.debug.print(
-            "Segment: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, numrejected = {}, result = {}",
-            t_start,
-            t_end,
-            y0,
-            sol.ys[-1],
-            sol.stats["num_steps"],
-            sol.stats["num_rejected_steps"],
-            sol.result,
-        )
+        if os.getenv("JAX_DEBUG") == "1":
+            jax.debug.print(
+                "Segment: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, numrejected = {}, result = {}",
+                t_start,
+                t_end,
+                y0,
+                sol.ys[-1],
+                sol.stats["num_steps"],
+                sol.stats["num_rejected_steps"],
+                sol.result,
+            )
 
         # extract the event index
         if sol.event_mask is None:
@@ -749,7 +752,7 @@ class JAXModel(eqx.Module):
             dt0=None,
             y0=y0,
             stepsize_controller=controller,
-            max_steps=10,
+            max_steps=1,
             adjoint=adjoint,
             saveat=diffrax.SaveAt(
                 subs=[
@@ -761,17 +764,17 @@ class JAXModel(eqx.Module):
             ),
             throw=False,
         )
-        jax.debug.print(
-            "StepOutOfEvent: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, num_rejected = {}, result = {}",
-            t_start,
-            t_end,
-            y0,
-            sol.ys[0][-1],
-            sol.stats["num_steps"],
-            sol.stats["num_rejected_steps"],
-            sol.result,
-        )
-        jax.debug.print("ys: {}", sol.ys)
+        if os.getenv("JAX_DEBUG") == "1":
+            jax.debug.print(
+                "StepOutOfEvent: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, num_rejected = {}, result = {}",
+                t_start,
+                t_end,
+                y0,
+                sol.ys[0][-1],
+                sol.stats["num_steps"],
+                sol.stats["num_rejected_steps"],
+                sol.result,
+            )
         # aggregate stats
         stats = jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
         return sol.ys[0][-1], sol.ts[0][-1], stats
