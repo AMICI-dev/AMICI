@@ -694,7 +694,9 @@ def _add_expression(
         else:
             component = Expression
         ode_model.add_component(
-            component(sym, name, _parse_special_functions(expr))
+            component(
+                sym, name, _parse_special_functions(expr, ode_model.sym("p"))
+            )
         )
 
     if name in observables:
@@ -711,7 +713,10 @@ def _add_expression(
         # changes, I would expect symbol redefinition warnings in CPP models and overwriting in JAX models, but as both
         # symbols refer to the same symbolic entity, this should not be a problem (untested)
         obs = Observable(
-            y, name, _parse_special_functions(expr), transformation=trafo
+            y,
+            name,
+            _parse_special_functions(expr, ode_model.sym("p")),
+            transformation=trafo,
         )
         ode_model.add_component(obs)
 

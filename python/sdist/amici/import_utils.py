@@ -350,8 +350,8 @@ def toposort_symbols(
 
 def _parse_special_functions(
     sym: sp.Expr,
+    parameters: Iterable[sp.Symbol],
     toplevel: bool = True,
-    parameters: Sequence[sp.Symbol] | None = None,
 ) -> sp.Expr:
     """
     Recursively checks the symbolic expression for functions which have be
@@ -363,14 +363,12 @@ def _parse_special_functions(
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
-    if parameters is None:
-        parameters = []
 
     args = tuple(
         arg
         if arg.__class__.__name__ == "piecewise"
         and sym.__class__.__name__ == "piecewise"
-        else _parse_special_functions(arg, False, parameters)
+        else _parse_special_functions(arg, parameters, False)
         for arg in sym.args
     )
 
@@ -453,7 +451,7 @@ def _denest_piecewise(
         # _parse_special_functions as keeping track of coeff/cond
         # arguments is tricky. Simpler to just parse them out here
         if coeff.__class__.__name__ == "piecewise":
-            coeff = _parse_special_functions(coeff, False, parameters)
+            coeff = _parse_special_functions(coeff, parameters, False)
 
         # we can have conditions that are piecewise function
         # returning True or False
