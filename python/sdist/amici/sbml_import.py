@@ -822,11 +822,11 @@ class SbmlImporter:
         if not self._discard_annotations:
             self._process_annotations()
         self.check_support()
-        self._gather_locals(hardcode_symbols=hardcode_symbols)
         self._process_parameters(
             constant_parameters=constant_parameters,
             hardcode_symbols=hardcode_symbols,
-        )
+        )  # needs to be processed first such that we can use parameters to filter Piecewise functions
+        self._gather_locals(hardcode_symbols=hardcode_symbols)
         self._process_compartments()
         self._process_species()
         self._process_reactions()
@@ -2943,7 +2943,9 @@ class SbmlImporter:
             try:
                 expr = expr.replace(
                     sp.Piecewise,
-                    lambda *args: _parse_piecewise_to_heaviside(args),
+                    lambda *args: _parse_piecewise_to_heaviside(
+                        args, list(self.symbols[SymbolId.PARAMETER].keys())
+                    ),
                 )
             except RuntimeError as err:
                 raise SBMLException(str(err)) from err
