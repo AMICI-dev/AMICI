@@ -11,9 +11,11 @@ import diffrax
 import equinox as eqx
 import jax.numpy as jnp
 import jax
+from optimistix import AbstractRootFinder
 import jaxtyping as jt
 
 from collections.abc import Callable
+from ._simulation import solve, eq
 
 
 class ReturnValue(enum.Enum):
@@ -61,14 +63,18 @@ class JAXModel(eqx.Module):
         self,
         t: jnp.float_,
         x: jt.Float[jt.Array, "nxs"],
-        args: tuple[jt.Float[jt.Array, "np"], jt.Float[jt.Array, "ncl"]],
+        args: tuple[
+            jt.Float[jt.Array, "np"],
+            jt.Float[jt.Array, "ncl"],
+            jt.Float[jt.Array, "ne"],
+        ],
     ) -> jt.Float[jt.Array, "nxs"]:
         """
         Right-hand side of the ODE system.
 
         :param t: time point
         :param x: state vector
-        :param args: tuple of parameters and total values for conservation laws
+        :param args: tuple of parameters, total values for conservation laws and heaviside variables
         :return:
             Temporal derivative of the state vector x at time point t.
         """
@@ -81,6 +87,7 @@ class JAXModel(eqx.Module):
         x: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
     ) -> jt.Float[jt.Array, "nw"]:
         """
         Compute the expressions, i.e. derived quantities that are used in other parts of the model.
@@ -89,6 +96,7 @@ class JAXModel(eqx.Module):
         :param x: state vector
         :param p: parameters
         :param tcl: total values for conservation laws
+        :param h: heaviside variables
         :return:
             Expression values.
         """
@@ -161,6 +169,7 @@ class JAXModel(eqx.Module):
         x: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         op: jt.Float[jt.Array, "ny"],
     ) -> jt.Float[jt.Array, "ny"]:
         """
@@ -174,8 +183,10 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param op:
-            observables parameters
+            observable parameters
         :return:
             observables
         """
@@ -209,6 +220,7 @@ class JAXModel(eqx.Module):
         x: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         my: jt.Float[jt.Array, ""],
         iy: jt.Int[jt.Array, ""],
         op: jt.Float[jt.Array, "ny"],
@@ -225,12 +237,14 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param my:
             observed data
         :param iy:
             observable index
         :param op:
-            observables parameters
+            observable parameters
         :param np:
             noise parameters
         :return:
@@ -249,6 +263,47 @@ class JAXModel(eqx.Module):
             parameters
         :return:
             known discontinuity points in the ODE system
+        """
+        ...
+
+    @abstractmethod
+    def _root_cond_fns(
+        self,
+    ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
+        """Return condition functions for implicit discontinuities.
+
+        These functions are passed to :class:`diffrax.Event` and must evaluate
+        to zero when a discontinuity is triggered.
+
+        :param p:
+            model parameters
+        :return:
+            tuple of callable root functions
+        """
+        ...
+
+    @abstractmethod
+    def _root_cond_fn(
+        self,
+        t: jt.Float[jt.Scalar, ""],
+        y: jt.Float[jt.Array, "nxs"],
+        args: tuple[
+            jt.Float[jt.Array, "np"],
+            jt.Float[jt.Array, "ncl"],
+            jt.Float[jt.Array, "ne"],
+        ],
+    ) -> jt.Float[jt.Array, "ne"]:
+        """
+        Root condition function for implicit discontinuities.
+
+        :param t:
+            time point
+        :param y:
+            state vector
+        :param args:
+            tuple of parameters, total values for conservation laws and heaviside variables
+        :return:
+            root condition values
         """
         ...
 
@@ -296,113 +351,32 @@ class JAXModel(eqx.Module):
         """
         ...
 
-    def _eq(
+    def _initialise_heaviside_variables(
         self,
+        t0: jt.Float[jt.Scalar, ""],
+        x_solver: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        x0: jt.Float[jt.Array, "nxs"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        steady_state_event: Callable[
-            ..., diffrax._custom_types.BoolScalarLike
-        ],
-        max_steps: jnp.int_,
-    ) -> tuple[jt.Float[jt.Array, "1 nxs"], dict]:
+    ) -> jt.Float[jt.Array, "ne"]:
         """
-        Solve the steady state equation.
+        Initialise the heaviside variables.
 
+        :param t0:
+            initial time point
+        :param x_solver:
+            reduced initial state vector
         :param p:
             parameters
         :param tcl:
             total values for conservation laws
-        :param x0:
-            initial state vector
-        :param solver:
-            ODE solver
-        :param controller:
-            step size controller
-        :param max_steps:
-            maximum number of steps
         :return:
+            heaviside variables
         """
-        sol = diffrax.diffeqsolve(
-            diffrax.ODETerm(self._xdot),
-            solver,
-            args=(p, tcl),
-            t0=0.0,
-            t1=jnp.inf,
-            dt0=None,
-            y0=x0,
-            stepsize_controller=self._get_clipped_stepsize_controller(
-                p, controller
-            ),
-            max_steps=max_steps,
-            adjoint=diffrax.DirectAdjoint(),
-            event=diffrax.Event(
-                cond_fn=steady_state_event,
-            ),
-            throw=False,
+        h0 = jnp.zeros((len(self._root_cond_fns()),))  # dummy values
+        roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
+        return jnp.where(
+            roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
         )
-        # If the event was triggered, the event mask is True and the solution is the steady state. Otherwise, the
-        # solution is the last state and the event mask is False. In the latter case, we return inf for the steady
-        # state.
-        ys = jnp.where(
-            sol.event_mask,
-            sol.ys[-1, :],
-            jnp.inf * jnp.ones_like(sol.ys[-1, :]),
-        )
-        return ys, sol.stats
-
-    def _solve(
-        self,
-        p: jt.Float[jt.Array, "np"],
-        ts: jt.Float[jt.Array, "nt_dyn"],
-        tcl: jt.Float[jt.Array, "ncl"],
-        x0: jt.Float[jt.Array, "nxs"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        max_steps: jnp.int_,
-        adjoint: diffrax.AbstractAdjoint,
-    ) -> tuple[jt.Float[jt.Array, "nt nxs"], dict]:
-        """
-        Solve the ODE system.
-
-        :param p:
-            parameters
-        :param ts:
-            time points at which solutions are evaluated
-        :param tcl:
-            total values for conservation laws
-        :param x0:
-            initial state vector
-        :param solver:
-            ODE solver
-        :param controller:
-            step size controller
-        :param max_steps:
-            maximum number of steps
-        :param adjoint:
-            adjoint method
-        :return:
-            solution at time points ts and statistics
-        """
-        sol = diffrax.diffeqsolve(
-            diffrax.ODETerm(self._xdot),
-            solver,
-            args=(p, tcl),
-            t0=0.0,
-            t1=ts[-1],
-            dt0=None,
-            y0=x0,
-            stepsize_controller=self._get_clipped_stepsize_controller(
-                p, controller
-            ),
-            max_steps=max_steps,
-            adjoint=adjoint,
-            saveat=diffrax.SaveAt(ts=ts),
-            throw=False,
-        )
-        return sol.ys, sol.stats
 
     def _x_rdatas(
         self, x: jt.Float[jt.Array, "nt nxs"], tcl: jt.Float[jt.Array, "ncl"]
@@ -425,6 +399,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        hs: jt.Float[jt.Array, "nt ne"],
         mys: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
@@ -441,19 +416,21 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param mys:
             observed data
         :param iys:
             observable indices
         :param ops:
-            observables parameters
+            observable parameters
         :param nps:
             noise parameters
         :return:
             negative log-likelihoods of the observables
         """
-        return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0, 0, 0))(
-            ts, xs, p, tcl, mys, iys, ops, nps
+        return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0, 0, 0, 0))(
+            ts, xs, p, tcl, hs, mys, iys, ops, nps
         )
 
     def _ys(
@@ -462,6 +439,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        hs: jt.Float[jt.Array, "nt ne"],
         iys: jt.Float[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
     ) -> jt.Int[jt.Array, "nt"]:
@@ -476,6 +454,8 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param iys:
             observable indices
         :param ops:
@@ -484,11 +464,11 @@ class JAXModel(eqx.Module):
             observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, iy, op: self._y(t, x, p, tcl, op)
+            lambda t, x, p, tcl, h, iy, op: self._y(t, x, p, tcl, h, op)
             .at[iy]
             .get(),
-            in_axes=(0, 0, None, None, 0, 0),
-        )(ts, xs, p, tcl, iys, ops)
+            in_axes=(0, 0, None, None, 0, 0, 0),
+        )(ts, xs, p, tcl, hs, iys, ops)
 
     def _sigmays(
         self,
@@ -496,6 +476,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        hs: jt.Float[jt.Array, "nt ne"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
         nps: jt.Float[jt.Array, "nt *nnp"],
@@ -511,23 +492,25 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param iys:
             observable indices
         :param ops:
-            observables parameters
+            observable parameters
         :param nps:
             noise parameters
         :return:
             standard deviations of the observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, iy, op, np: self._sigmay(
-                self._y(t, x, p, tcl, op), p, np
+            lambda t, x, p, tcl, h, iy, op, np: self._sigmay(
+                self._y(t, x, p, tcl, h, op), p, np
             )
             .at[iy]
             .get(),
-            in_axes=(0, 0, None, None, 0, 0, 0),
-        )(ts, xs, p, tcl, iys, ops, nps)
+            in_axes=(0, 0, None, None, 0, 0, 0, 0),
+        )(ts, xs, p, tcl, hs, iys, ops, nps)
 
     @eqx.filter_jit
     def simulate_condition(
@@ -542,6 +525,7 @@ class JAXModel(eqx.Module):
         nps: jt.Float[jt.Array, "nt *nnp"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
         adjoint: diffrax.AbstractAdjoint,
         steady_state_event: Callable[
             ..., diffrax._custom_types.BoolScalarLike
@@ -572,7 +556,7 @@ class JAXModel(eqx.Module):
         :param iy_trafos:
             indices of transformations for observables
         :param ops:
-            observables parameters
+            observable parameters
         :param nps:
             noise parameters
         :param solver:
@@ -601,13 +585,14 @@ class JAXModel(eqx.Module):
         :return:
             output according to `ret` and general results/statistics
         """
+        t0 = 0.0
         if p is None:
             p = self.parameters
 
         if x_preeq.shape[0]:
             x = x_preeq
         else:
-            x = self._x0(0.0, p)
+            x = self._x0(t0, p)
 
         if not ts_mask.shape[0]:
             ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
@@ -617,55 +602,70 @@ class JAXModel(eqx.Module):
             x = jnp.where(mask_reinit, x_reinit, x)
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
+        h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
 
         # Dynamic simulation
         if ts_dyn.shape[0]:
-            x_dyn, stats_dyn = self._solve(
+            x_dyn, h_dyn, stats_dyn = solve(
                 p,
                 ts_dyn,
                 tcl,
+                h,
                 x_solver,
                 solver,
                 controller,
+                root_finder,
                 max_steps,
                 adjoint,
+                diffrax.ODETerm(self._xdot),
+                self._root_cond_fns(),
+                self._root_cond_fn,
+                self._known_discs(p),
             )
             x_solver = x_dyn[-1, :]
         else:
-            x_dyn = jnp.repeat(
-                x_solver.reshape(1, -1), ts_dyn.shape[0], axis=0
-            )
+            x_dyn = jnp.repeat(x_solver[None, :], ts_dyn.shape[0], axis=0)
+            h_dyn = jnp.repeat(h[None, :], ts_dyn.shape[0], axis=0)
             stats_dyn = None
 
         # Post-equilibration
         if ts_posteq.shape[0]:
-            x_solver, stats_posteq = self._eq(
+            x_solver, h, stats_posteq = eq(
                 p,
                 tcl,
+                h,
                 x_solver,
                 solver,
                 controller,
+                root_finder,
                 steady_state_event,
+                diffrax.ODETerm(self._xdot),
+                self._root_cond_fns(),
+                self._root_cond_fn,
+                self._known_discs(p),
                 max_steps,
             )
         else:
             stats_posteq = None
 
-        x_posteq = jnp.repeat(
-            x_solver.reshape(1, -1), ts_posteq.shape[0], axis=0
-        )
+        x_posteq = jnp.repeat(x_solver[None, :], ts_posteq.shape[0], axis=0)
+        h_posteq = jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-
+        if len(self._root_cond_fns()):
+            hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
+        else:
+            hs = jnp.zeros((ts.shape[0], h.shape[0]))
         x = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
-        nllhs = self._nllhs(ts, x, p, tcl, my, iys, ops, nps)
+        nllhs = self._nllhs(ts, x, p, tcl, hs, my, iys, ops, nps)
         nllhs = jnp.where(ts_mask, nllhs, 0.0)
         llh = -jnp.sum(nllhs)
 
         stats = dict(
             ts=ts,
             x=x,
+            hs=hs,
             llh=llh,
             stats_dyn=stats_dyn,
             stats_posteq=stats_posteq,
@@ -679,9 +679,9 @@ class JAXModel(eqx.Module):
         elif ret == ReturnValue.x_solver:
             output = x
         elif ret == ReturnValue.y:
-            output = self._ys(ts, x, p, tcl, iys, ops)
+            output = self._ys(ts, x, p, tcl, hs, iys, ops)
         elif ret == ReturnValue.sigmay:
-            output = self._sigmays(ts, x, p, tcl, iys, ops, nps)
+            output = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
         elif ret == ReturnValue.x0:
             output = self._x_rdata(x[0, :], tcl)
         elif ret == ReturnValue.x0_solver:
@@ -697,10 +697,12 @@ class JAXModel(eqx.Module):
                 .at[iy_trafo]
                 .get(),
             )
-            ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys, ops), iy_trafos)
+            ys_obj = obs_trafo(
+                self._ys(ts, x, p, tcl, hs, iys, ops), iy_trafos
+            )
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
-                sigma_obj = self._sigmays(ts, x, p, tcl, iys, ops, nps)
+                sigma_obj = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
                 chi2 = jnp.square((ys_obj - m_obj) / sigma_obj)
                 chi2 = jnp.where(ts_mask, chi2, 0.0)
                 output = jnp.sum(chi2)
@@ -720,6 +722,7 @@ class JAXModel(eqx.Module):
         mask_reinit: jt.Bool[jt.Array, "*nx"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
         steady_state_event: Callable[
             ..., diffrax._custom_types.BoolScalarLike
         ],
@@ -745,38 +748,35 @@ class JAXModel(eqx.Module):
             pre-equilibrated state variables and statistics
         """
         # Pre-equilibration
+        t0 = 0.0
         if p is None:
             p = self.parameters
 
-        x0 = self._x0(0.0, p)
+        x0 = self._x0(t0, p)
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
+        h = self._initialise_heaviside_variables(
+            t0, self._x_solver(x0), p, tcl
+        )
         current_x = self._x_solver(x0)
-        current_x, stats_preeq = self._eq(
+        current_x, _, stats_preeq = eq(
             p,
             tcl,
+            h,
             current_x,
             solver,
             controller,
+            root_finder,
             steady_state_event,
+            diffrax.ODETerm(self._xdot),
+            self._root_cond_fns(),
+            self._root_cond_fn,
+            self._known_discs(p),
             max_steps,
         )
 
         return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
-
-    def _get_clipped_stepsize_controller(
-        self,
-        p: jt.Float[jt.Array, "np"],
-        controller: diffrax.AbstractStepSizeController,
-    ) -> diffrax.AbstractStepSizeController:
-        if not self._known_discs(p).size:
-            return controller
-
-        return diffrax.ClipStepSizeController(
-            controller,
-            jump_ts=self._known_discs(p),
-        )
 
 
 def safe_log(x: jnp.float_) -> jnp.float_:

@@ -1231,6 +1231,24 @@ class DEModel:
                 ]
             )
             return
+        elif name == "ih":
+            self._syms[name] = sp.Matrix(
+                [
+                    sym
+                    for sym, event in zip(self.sym("h"), self._events)
+                    if not event.has_explicit_trigger_times()
+                ]
+            )
+            return
+        elif name == "eh":
+            self._syms[name] = sp.Matrix(
+                [
+                    sym
+                    for sym, event in zip(self.sym("h"), self._events)
+                    if event.has_explicit_trigger_times()
+                ]
+            )
+            return
         else:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix(
@@ -1858,6 +1876,28 @@ class DEModel:
                 smart_jacobian(self.eq("w")[self.num_cons_law() :, :], x)
             )
 
+        elif name == "iroot":
+            self._eqs[name] = sp.Matrix(
+                [
+                    eq
+                    for eq, event in zip(
+                        self.eq("root"), self._events, strict=True
+                    )
+                    if not event.has_explicit_trigger_times()
+                ]
+            )
+
+        elif name == "eroot":
+            self._eqs[name] = sp.Matrix(
+                [
+                    eq
+                    for eq, event in zip(
+                        self.eq("root"), self._events, strict=True
+                    )
+                    if event.has_explicit_trigger_times()
+                ]
+            )
+
         elif match_deriv:
             self._derivative(match_deriv[1], match_deriv[2], name)
 
@@ -2466,15 +2506,3 @@ class DEModel:
             boolean indicating if event assignments are present
         """
         return any(event.updates_state for event in self._events)
-
-    def has_parameter_dependent_implicit_roots(self) -> bool:
-        """
-        Checks whether the model has events with parameter-dependent implicit roots
-
-        :return:
-            boolean indicating if parameter-dependent implicit roots are present
-        """
-        return any(
-            self.sym("p").has(root.free_symbols)
-            for root in self.get_implicit_roots()
-        )
