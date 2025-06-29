@@ -72,14 +72,18 @@ class JAXModel(eqx.Module):
         self,
         t: jnp.float_,
         x: jt.Float[jt.Array, "nxs"],
-        args: tuple[jt.Float[jt.Array, "np"], jt.Float[jt.Array, "ncl"]],
+        args: tuple[
+            jt.Float[jt.Array, "np"],
+            jt.Float[jt.Array, "ncl"],
+            jt.Float[jt.Array, "ne"],
+        ],
     ) -> jt.Float[jt.Array, "nxs"]:
         """
         Right-hand side of the ODE system.
 
         :param t: time point
         :param x: state vector
-        :param args: tuple of parameters and total values for conservation laws
+        :param args: tuple of parameters, total values for conservation laws and heaviside variables
         :return:
             Temporal derivative of the state vector x at time point t.
         """
@@ -92,6 +96,7 @@ class JAXModel(eqx.Module):
         x: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
     ) -> jt.Float[jt.Array, "nw"]:
         """
         Compute the expressions, i.e. derived quantities that are used in other parts of the model.
@@ -100,6 +105,7 @@ class JAXModel(eqx.Module):
         :param x: state vector
         :param p: parameters
         :param tcl: total values for conservation laws
+        :param h: heaviside variables
         :return:
             Expression values.
         """
@@ -172,6 +178,7 @@ class JAXModel(eqx.Module):
         x: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         op: jt.Float[jt.Array, "ny"],
     ) -> jt.Float[jt.Array, "ny"]:
         """
@@ -185,8 +192,10 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param op:
-            observables parameters
+            observable parameters
         :return:
             observables
         """
@@ -220,6 +229,7 @@ class JAXModel(eqx.Module):
         x: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         my: jt.Float[jt.Array, ""],
         iy: jt.Int[jt.Array, ""],
         op: jt.Float[jt.Array, "ny"],
@@ -236,12 +246,14 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param my:
             observed data
         :param iy:
             observable index
         :param op:
-            observables parameters
+            observable parameters
         :param np:
             noise parameters
         :return:
@@ -278,6 +290,31 @@ class JAXModel(eqx.Module):
             model parameters
         :return:
             tuple of callable root functions
+        """
+        ...
+
+    @abstractmethod
+    def _root_cond_fn(
+        self,
+        t: jt.Float[jt.Scalar, ""],
+        y: jt.Float[jt.Array, "nxs"],
+        args: tuple[
+            jt.Float[jt.Array, "np"],
+            jt.Float[jt.Array, "ncl"],
+            jt.Float[jt.Array, "ne"],
+        ],
+    ) -> jt.Float[jt.Array, "ne"]:
+        """
+        Root condition function for implicit discontinuities.
+
+        :param t:
+            time point
+        :param y:
+            state vector
+        :param args:
+            tuple of parameters, total values for conservation laws and heaviside variables
+        :return:
+            root condition values
         """
         ...
 
@@ -329,6 +366,7 @@ class JAXModel(eqx.Module):
         self,
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         x0: jt.Float[jt.Array, "nxs"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
@@ -345,6 +383,8 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param x0:
             initial state vector
         :param solver:
@@ -357,12 +397,13 @@ class JAXModel(eqx.Module):
         """
         # if there are no events, we can avoid expensive looping and just run a single segment
         if not self._root_cond_fns():
-            sol, _, _, stats = self._run_segment(
+            sol, _, stats = self._run_segment(
                 0.0,
                 jnp.inf,
                 x0,
                 p,
                 tcl,
+                h,
                 solver,
                 controller,
                 root_finder,
@@ -382,6 +423,7 @@ class JAXModel(eqx.Module):
                 y0,
                 p,
                 tcl,
+                h,
                 solver,
                 controller,
                 root_finder,
@@ -429,13 +471,16 @@ class JAXModel(eqx.Module):
         p: jt.Float[jt.Array, "np"],
         ts: jt.Float[jt.Array, "nt_dyn"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         x0: jt.Float[jt.Array, "nxs"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
         max_steps: jnp.int_,
         adjoint: diffrax.AbstractAdjoint,
-    ) -> tuple[jt.Float[jt.Array, "nt nxs"], dict]:
+    ) -> tuple[
+        jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict
+    ]:
         """
         Solve the ODE system.
 
@@ -456,17 +501,18 @@ class JAXModel(eqx.Module):
         :param adjoint:
             adjoint method
         :return:
-            solution at time points ts and statistics
+            solution+heaviside variables at time points ts and statistics
         """
         # if there are no events, we can avoid expensive looping and just run a single segment
         if not self._root_cond_fns():
             # no events, we can just run a single segment
-            sol, _, _, stats = self._run_segment(
+            sol, _, stats = self._run_segment(
                 0.0,
                 ts[-1],
                 x0,
                 p,
                 tcl,
+                h,
                 solver,
                 controller,
                 root_finder,
@@ -476,10 +522,10 @@ class JAXModel(eqx.Module):
                 diffrax.SaveAt(ts=ts),
                 dict(**STARTING_STATS),
             )
-            return sol.ys, stats
+            return sol.ys, jnp.repeat(h.resize(-1, 1), sol.ys.shape[0]), stats
 
         def cond_fn(carry):
-            _, t_start, y0, stats = carry
+            _, t_start, y0, _, _, stats = carry
             # check if we have reached the end of the time points
             return jnp.logical_and(
                 t_start < ts[-1],  # final time point not reached
@@ -489,13 +535,14 @@ class JAXModel(eqx.Module):
             )
 
         def body_fn(carry):
-            ys, t_start, y0, stats = carry
+            ys, t_start, y0, hs, h, stats = carry
             sol, idx, stats = self._run_segment(
                 t_start,
                 ts[-1],
                 y0,
                 p,
                 tcl,
+                h,
                 solver,
                 controller,
                 root_finder,
@@ -515,45 +562,88 @@ class JAXModel(eqx.Module):
             # update the solution for all timepoints in the simulated segment
             was_simulated = jnp.isin(ts, sol.ts[0])
             ys = jnp.where(was_simulated[:, None], sol.ys[0], ys)
+            hs = jnp.where(was_simulated[:, None], h[None, :], hs)
+
             t0_next = sol.ts[1][
                 -1
             ]  # next start time is the end of the current segment
             y0_next = sol.ys[1][
                 -1
             ]  # next initial state is the last state of the current segment
+
+            args = (p, tcl, h)
+            roots_found = jnp.isclose(
+                self._root_cond_fn(t0_next, y0_next, args), 0.0
+            )
+            droot_dt = (
+                # ∂root_cond_fn/∂t
+                jax.jacfwd(self._root_cond_fn, argnums=0)(
+                    t0_next, y0_next, args
+                )
+                +
+                # ∂root_cond_fn/∂y * ∂y/∂t
+                jax.jacfwd(self._root_cond_fn, argnums=1)(
+                    t0_next, y0_next, args
+                )
+                @ self._xdot(t0_next, y0_next, args)
+            )
+            roots_dir = jnp.sign(
+                droot_dt
+            )  # direction of the root condition function
+
+            h_next = (
+                h
+                + jnp.where(
+                    roots_found,
+                    roots_dir,
+                    jnp.zeros_like(h),
+                )
+            )  # update heaviside variables based on the root condition function
+            was_event = jnp.isin(ts, sol.ts[1])
+            hs = jnp.where(was_event[:, None], h_next[None, :], hs)
+            jax.debug.print(
+                "roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                roots_found,
+                roots_dir,
+                h,
+                h_next,
+            )
+
             ts_next = jnp.where(
                 ts > t0_next, ts, ts[-1]
             ).min()  # timepoint of next datapoint, don't step over that
-            # while are trying to step out of the event
+            # while we are trying to step out of the event
             y0_next, t0_next, stats = self._step_out_of_event(
                 t0_next,
                 ts_next,
                 y0_next,
                 p,
                 tcl,
+                h_next,
                 solver,
                 controller,
                 adjoint,
                 stats,
             )
-
-            return ys, t0_next, y0_next, stats
+            return ys, t0_next, y0_next, hs, h_next, stats
 
         # run the loop until we have reached the end of the time points
-        ys, _, _, stats = eqxi.while_loop(
+        ys, _, _, hs, _, stats = eqxi.while_loop(
             cond_fn,
             body_fn,
             (
                 jnp.zeros((ts.shape[0], x0.shape[0]), dtype=x0.dtype) + x0,
                 0.0,
                 x0,
+                jnp.zeros((ts.shape[0], h.shape[0]), dtype=h.dtype),
+                h,
                 dict(**STARTING_STATS),
             ),
             kind="bounded",
             max_steps=2**6,
         )
 
-        return ys, stats
+        return ys, hs, stats
 
     def _run_segment(
         self,
@@ -562,6 +652,7 @@ class JAXModel(eqx.Module):
         y0: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -595,7 +686,7 @@ class JAXModel(eqx.Module):
         sol = diffrax.diffeqsolve(
             diffrax.ODETerm(self._xdot),
             solver,
-            args=(p, tcl),
+            args=(p, tcl, h),
             t0=t_start,
             t1=t_end,
             dt0=None,
@@ -606,6 +697,16 @@ class JAXModel(eqx.Module):
             saveat=saveat,
             event=event,
             throw=False,
+        )
+        jax.debug.print(
+            "Segment: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, numrejected = {}, result = {}",
+            t_start,
+            t_end,
+            y0,
+            sol.ys[-1],
+            sol.stats["num_steps"],
+            sol.stats["num_rejected_steps"],
+            sol.result,
         )
 
         # extract the event index
@@ -620,7 +721,7 @@ class JAXModel(eqx.Module):
             )
 
         # aggregate statistics
-        jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
+        stats = jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
 
         return sol, event_index, stats
 
@@ -631,29 +732,76 @@ class JAXModel(eqx.Module):
         y0: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         adjoint: diffrax.AbstractAdjoint,
         stats: dict,
     ):
-        # take up to 3 steps, without event, to step out of the event
+        # take a single step, without event, to step out of the event
+        # TODO: loop until we are out of the event
         sol = diffrax.diffeqsolve(
             diffrax.ODETerm(self._xdot),
             solver,
-            args=(p, tcl),
+            args=(p, tcl, h),
             t0=t_start,
             t1=t_end,
             dt0=None,
             y0=y0,
             stepsize_controller=controller,
-            max_steps=1,
+            max_steps=10,
             adjoint=adjoint,
-            saveat=diffrax.SaveAt(t1=True),
+            saveat=diffrax.SaveAt(
+                subs=[
+                    diffrax.SubSaveAt(t1=True),  # we manage to reach t_end
+                    diffrax.SubSaveAt(
+                        steps=True
+                    ),  # we want to save the state at t_end
+                ]
+            ),
             throw=False,
         )
+        jax.debug.print(
+            "StepOutOfEvent: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, num_rejected = {}, result = {}",
+            t_start,
+            t_end,
+            y0,
+            sol.ys[0][-1],
+            sol.stats["num_steps"],
+            sol.stats["num_rejected_steps"],
+            sol.result,
+        )
+        jax.debug.print("ys: {}", sol.ys)
         # aggregate stats
-        jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
-        return sol.ys[-1], sol.ts[-1], stats
+        stats = jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
+        return sol.ys[0][-1], sol.ts[0][-1], stats
+
+    def _initialise_heaviside_variables(
+        self,
+        t0: jt.Float[jt.Scalar, ""],
+        x_solver: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+    ) -> jt.Float[jt.Array, "ne"]:
+        """
+        Initialise the heaviside variables.
+
+        :param t0:
+            initial time point
+        :param x_solver:
+            reduced initial state vector
+        :param p:
+            parameters
+        :param tcl:
+            total values for conservation laws
+        :return:
+            heaviside variables
+        """
+        h0 = jnp.zeros((len(self._root_cond_fns()),))  # dummy values
+        roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
+        return jnp.where(
+            roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
+        )
 
     def _x_rdatas(
         self, x: jt.Float[jt.Array, "nt nxs"], tcl: jt.Float[jt.Array, "ncl"]
@@ -676,6 +824,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "nt ne"],
         mys: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
@@ -692,6 +841,8 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param mys:
             observed data
         :param iys:
@@ -703,8 +854,8 @@ class JAXModel(eqx.Module):
         :return:
             negative log-likelihoods of the observables
         """
-        return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0, 0, 0))(
-            ts, xs, p, tcl, mys, iys, ops, nps
+        return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0, 0, 0, 0))(
+            ts, xs, p, tcl, h, mys, iys, ops, nps
         )
 
     def _ys(
@@ -713,6 +864,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "nt ne"],
         iys: jt.Float[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
     ) -> jt.Int[jt.Array, "nt"]:
@@ -727,6 +879,8 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param iys:
             observable indices
         :param ops:
@@ -735,11 +889,11 @@ class JAXModel(eqx.Module):
             observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, iy, op: self._y(t, x, p, tcl, op)
+            lambda t, x, p, tcl, iy, op: self._y(t, x, p, tcl, h, op)
             .at[iy]
             .get(),
-            in_axes=(0, 0, None, None, 0, 0),
-        )(ts, xs, p, tcl, iys, ops)
+            in_axes=(0, 0, None, None, 0, 0, 0),
+        )(ts, xs, p, tcl, h, iys, ops)
 
     def _sigmays(
         self,
@@ -747,6 +901,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "nt ne"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
         nps: jt.Float[jt.Array, "nt *nnp"],
@@ -762,10 +917,12 @@ class JAXModel(eqx.Module):
             parameters
         :param tcl:
             total values for conservation laws
+        :param h:
+            heaviside variables
         :param iys:
             observable indices
         :param ops:
-            observables parameters
+            observable parameters
         :param nps:
             noise parameters
         :return:
@@ -773,12 +930,12 @@ class JAXModel(eqx.Module):
         """
         return jax.vmap(
             lambda t, x, p, tcl, iy, op, np: self._sigmay(
-                self._y(t, x, p, tcl, op), p, np
+                self._y(t, x, p, tcl, h, op), p, np
             )
             .at[iy]
             .get(),
-            in_axes=(0, 0, None, None, 0, 0, 0),
-        )(ts, xs, p, tcl, iys, ops, nps)
+            in_axes=(0, 0, None, None, 0, 0, 0, 0),
+        )(ts, xs, p, tcl, h, iys, ops, nps)
 
     @eqx.filter_jit
     def simulate_condition(
@@ -853,13 +1010,14 @@ class JAXModel(eqx.Module):
         :return:
             output according to `ret` and general results/statistics
         """
+        t0 = 0.0
         if p is None:
             p = self.parameters
 
         if x_preeq.shape[0]:
             x = x_preeq
         else:
-            x = self._x0(0.0, p)
+            x = self._x0(t0, p)
 
         if not ts_mask.shape[0]:
             ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
@@ -869,13 +1027,15 @@ class JAXModel(eqx.Module):
             x = jnp.where(mask_reinit, x_reinit, x)
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
+        h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
 
         # Dynamic simulation
         if ts_dyn.shape[0]:
-            x_dyn, stats_dyn = self._solve(
+            x_dyn, h_dyn, stats_dyn = self._solve(
                 p,
                 ts_dyn,
                 tcl,
+                h,
                 x_solver,
                 solver,
                 controller,
@@ -888,13 +1048,15 @@ class JAXModel(eqx.Module):
             x_dyn = jnp.repeat(
                 x_solver.reshape(1, -1), ts_dyn.shape[0], axis=0
             )
+            h_dyn = jnp.repeat(h, ts_dyn.shape[0], axis=0)
             stats_dyn = None
 
         # Post-equilibration
         if ts_posteq.shape[0]:
-            x_solver, stats_posteq = self._eq(
+            x_solver, h, stats_posteq = self._eq(
                 p,
                 tcl,
+                h,
                 x_solver,
                 solver,
                 controller,
@@ -908,18 +1070,20 @@ class JAXModel(eqx.Module):
         x_posteq = jnp.repeat(
             x_solver.reshape(1, -1), ts_posteq.shape[0], axis=0
         )
+        h_posteq = jnp.repeat(h.reshape(1, -1), ts_posteq.shape[0], axis=0)
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-
+        hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
         x = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
-        nllhs = self._nllhs(ts, x, p, tcl, my, iys, ops, nps)
+        nllhs = self._nllhs(ts, x, p, tcl, hs, my, iys, ops, nps)
         nllhs = jnp.where(ts_mask, nllhs, 0.0)
         llh = -jnp.sum(nllhs)
 
         stats = dict(
             ts=ts,
             x=x,
+            hs=hs,
             llh=llh,
             stats_dyn=stats_dyn,
             stats_posteq=stats_posteq,
@@ -933,9 +1097,9 @@ class JAXModel(eqx.Module):
         elif ret == ReturnValue.x_solver:
             output = x
         elif ret == ReturnValue.y:
-            output = self._ys(ts, x, p, tcl, iys, ops)
+            output = self._ys(ts, x, p, tcl, hs, iys, ops)
         elif ret == ReturnValue.sigmay:
-            output = self._sigmays(ts, x, p, tcl, iys, ops, nps)
+            output = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
         elif ret == ReturnValue.x0:
             output = self._x_rdata(x[0, :], tcl)
         elif ret == ReturnValue.x0_solver:
@@ -951,10 +1115,12 @@ class JAXModel(eqx.Module):
                 .at[iy_trafo]
                 .get(),
             )
-            ys_obj = obs_trafo(self._ys(ts, x, p, tcl, iys, ops), iy_trafos)
+            ys_obj = obs_trafo(
+                self._ys(ts, x, p, tcl, hs, iys, ops), iy_trafos
+            )
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
-                sigma_obj = self._sigmays(ts, x, p, tcl, iys, ops, nps)
+                sigma_obj = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
                 chi2 = jnp.square((ys_obj - m_obj) / sigma_obj)
                 chi2 = jnp.where(ts_mask, chi2, 0.0)
                 output = jnp.sum(chi2)
@@ -1000,17 +1166,20 @@ class JAXModel(eqx.Module):
             pre-equilibrated state variables and statistics
         """
         # Pre-equilibration
+        t0 = 0.0
         if p is None:
             p = self.parameters
 
-        x0 = self._x0(0.0, p)
+        x0 = self._x0(t0, p)
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
+        h = self.initialise_heaviside_variables(t0, self._x_solver(x0), p, tcl)
         current_x = self._x_solver(x0)
-        current_x, stats_preeq = self._eq(
+        current_x, _, stats_preeq = self._eq(
             p,
             tcl,
+            h,
             current_x,
             solver,
             controller,

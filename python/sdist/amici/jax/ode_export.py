@@ -206,6 +206,7 @@ class ODEExporter:
             "op",
             "x",
             "tcl",
+            "h",
             "w",
             "my",
             "y",
@@ -216,14 +217,6 @@ class ODEExporter:
 
         indent = 8
 
-        # replaces Heaviside variables with corresponding functions
-        subs_heaviside = dict(
-            zip(
-                self.model.sym("h"),
-                [sp.Heaviside(x) for x in self.model.eq("root")],
-                strict=True,
-            )
-        )
         # replaces observables with a generic my variable
         subs_observables = dict(
             zip(
@@ -232,7 +225,7 @@ class ODEExporter:
                 strict=True,
             )
         )
-        subs = subs_heaviside | subs_observables
+        subs = subs_observables
 
         tpl_data = {
             # assign named variable using corresponding algebraic formula (function body)

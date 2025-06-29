@@ -90,19 +90,20 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         ret=amici.jax.ReturnValue.x,
     )
     y = jax.vmap(
-        lambda t, x_solver, x_rdata: model._y(
+        lambda t, x_solver, x_rdata, hs: model._y(
             t,
             x_solver,
             p,
             model._tcl(x_rdata, p),
+            hs,
             jnp.zeros(len(model.observable_ids)),
         )
-    )(ts_jnp, stats["x"], x)
+    )(ts_jnp, stats["x"], x, stats["hs"])
     w = jax.vmap(
-        lambda t, x_solver, x_rdata: model._w(
-            t, x_solver, p, model._tcl(x_rdata, p)
+        lambda t, x_solver, x_rdata, hs: model._w(
+            t, x_solver, p, model._tcl(x_rdata, p), hs
         )
-    )(ts_jnp, stats["x"], x)
+    )(ts_jnp, stats["x"], x, stats["hs"])
 
     class RData(dict):
         __getattr__ = dict.__getitem__
