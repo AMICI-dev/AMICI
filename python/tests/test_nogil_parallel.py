@@ -4,10 +4,11 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
-import amici
 from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 import pytest
+import subprocess
+import sys
 
 pytestmark = pytest.mark.skipif(
     not os.environ.get("AMICI_NOGIL"),
@@ -24,7 +25,9 @@ SBML_EXAMPLE = (
 )
 
 
-def _simulate(_: int, model_dir: str) -> amici.ReturnData:
+def _simulate(_: int, model_dir: str):
+    import amici
+
     model_module = amici.import_model_module("nogil_model", model_dir)
     model = model_module.getModel()
     model.setTimepoints(np.linspace(0, 2e5, 200001))
@@ -32,7 +35,25 @@ def _simulate(_: int, model_dir: str) -> amici.ReturnData:
     return amici.runAmiciSimulation(model, solver)
 
 
-def test_parallel_simulation_threading():
+def test_import_warns_without_python_gil(monkeypatch):
+    monkeypatch.delenv("PYTHON_GIL", raising=False)
+
+    proc = subprocess.run(
+        [sys.executable, "-W", "default", "-c", "import amici"],
+        capture_output=True,
+        text=True,
+        env=os.environ,
+        check=True,
+    )
+
+    assert "RuntimeWarning: The global interpreter lock" in proc.stderr
+
+
+def test_parallel_simulation_threading(monkeypatch):
+    monkeypatch.setenv("PYTHON_GIL", "0")
+
+    import amici
+
     assert os.cpu_count() >= 2, "requires at least two CPU cores"
 
     with TemporaryDirectory() as outdir:

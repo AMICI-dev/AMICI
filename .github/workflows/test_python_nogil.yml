@@ -47,6 +47,7 @@ jobs:
     - name: Python tests
       env:
         AMICI_NOGIL: "1"
+        PYTHON_GIL: "0"
       run: |
         source venv/bin/activate && \
         pytest python/tests/test_nogil_parallel.py -vv
