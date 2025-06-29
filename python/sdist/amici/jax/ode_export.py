@@ -75,7 +75,7 @@ def _jax_variable_equations(
                 model.eq(eq_name).subs(subs),
                 indent,
             )
-        )[indent:]
+        )[indent:]  # remove indent for first line
         for eq_name in eq_names
     }
 
