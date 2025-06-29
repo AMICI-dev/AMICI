@@ -1088,7 +1088,7 @@ class AbstractModel {
      */
     virtual void fdtotal_cldp(
         realtype* dtotal_cldp, realtype const* x_rdata, realtype const* p,
-        realtype const* k, int const ip
+        realtype const* k, int ip
     );
 
     /**

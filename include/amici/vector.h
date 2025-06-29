@@ -18,7 +18,7 @@ class AmiVector;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive& ar, amici::AmiVector& s, unsigned int version);
+void serialize(Archive& ar, amici::AmiVector& v, unsigned int version);
 }
 } // namespace boost
 
@@ -74,7 +74,7 @@ class AmiVector {
      * @param sunctx SUNDIALS context
      */
     explicit AmiVector(gsl::span<realtype const> rvec, SUNContext sunctx)
-        : AmiVector(std::vector<realtype>(rvec.begin(), rvec.end()), sunctx) {}
+        : AmiVector(std::vector(rvec.begin(), rvec.end()), sunctx) {}
 
     /**
      * @brief copy constructor
@@ -233,7 +233,7 @@ class AmiVector {
     /**
      * @brief Take absolute value (in-place)
      */
-    void abs() { N_VAbs(getNVector(), getNVector()); };
+    void abs() { N_VAbs(getNVector(), getNVector()); }
 
     /**
      * @brief Serialize AmiVector (see boost::serialization::serialize)
@@ -243,7 +243,7 @@ class AmiVector {
      */
     template <class Archive>
     friend void boost::serialization::serialize(
-        Archive& ar, AmiVector& s, unsigned int version
+        Archive& ar, AmiVector& v, unsigned int version
     );
 
     /**
@@ -445,7 +445,8 @@ class AmiVectorArray {
  * @param z result vector of same size as x and y
  */
 inline void linearSum(
-    realtype a, AmiVector const& x, realtype b, AmiVector const& y, AmiVector& z
+    realtype const a, AmiVector const& x, realtype const b, AmiVector const& y,
+    AmiVector& z
 ) {
     N_VLinearSum(
         a, const_cast<N_Vector>(x.getNVector()), b,
@@ -475,9 +476,7 @@ namespace gsl {
  * @return
  */
 inline span<amici::realtype> make_span(N_Vector nv) {
-    return span<amici::realtype>(
-        N_VGetArrayPointer(nv), N_VGetLength_Serial(nv)
-    );
+    return span(N_VGetArrayPointer(nv), N_VGetLength_Serial(nv));
 }
 
 /**

@@ -35,13 +35,13 @@ ModelStateDerived::ModelStateDerived(ModelDimensions const& dim)
         for (int irec = 0; irec <= dim.w_recursion_depth; ++irec) {
             /* for the first element we know the exact size, while for all
                others we guess the size*/
-            dwdp_hierarchical_.emplace_back(SUNMatrixWrapper(
+            dwdp_hierarchical_.emplace_back(
                 dim.nw, dim.np, irec * dim.ndwdw + dim.ndwdp, CSC_MAT, sunctx_
-            ));
-            dwdx_hierarchical_.emplace_back(SUNMatrixWrapper(
+            );
+            dwdx_hierarchical_.emplace_back(
                 dim.nw, dim.nx_solver, irec * dim.ndwdw + dim.ndwdx, CSC_MAT,
                 sunctx_
-            ));
+            );
         }
         assert(
             gsl::narrow<int>(dwdp_hierarchical_.size())
@@ -73,9 +73,9 @@ ModelStateDerived::ModelStateDerived(ModelDimensions const& dim)
             = SUNMatrixWrapper(dim.nx_solver, dim.np, 0, CSC_MAT, sunctx_);
 
         for (int iytrue = 0; iytrue < dim.nytrue; ++iytrue)
-            dJydy_.emplace_back(SUNMatrixWrapper(
+            dJydy_.emplace_back(
                 dim.nJ, dim.ny, dim.ndJydy.at(iytrue), CSC_MAT, sunctx_
-            ));
+            );
 
         dJydy_dense_ = SUNMatrixWrapper(dim.nJ, dim.ny, sunctx_);
     } else {
