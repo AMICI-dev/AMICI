@@ -376,7 +376,8 @@ template <typename T> char* serializeToChar(T const& data, int* size) {
  * @return The deserialized object
  */
 
-template <typename T> T deserializeFromChar(char const* buffer, int size) {
+template <typename T>
+T deserializeFromChar(char const* buffer, int const size) {
     namespace ba = ::boost::archive;
     namespace bio = ::boost::iostreams;
 

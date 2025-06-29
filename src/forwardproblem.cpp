@@ -51,7 +51,7 @@ ForwardProblem::ForwardProblem(
 
 void EventHandlingSimulator::run(
     realtype const t0, ExpData const* edata,
-    std::vector<realtype> const& timepoints
+    std::vector<realtype> const& timepoints, bool store_diagnosis
 ) {
     std::ranges::fill(ws_->nroots, 0);
 
@@ -112,7 +112,7 @@ void EventHandlingSimulator::run(
                 int const status = solver_->run(next_t_stop);
                 // sx will be copied from solver on demand if sensitivities
                 // are computed
-                solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx);
+                solver_->writeSolution(t_, ws_->x, ws_->dx, ws_->sx);
 
                 if (status == AMICI_ILL_INPUT) {
                     // clustering of roots => turn off root-finding
@@ -139,6 +139,10 @@ void EventHandlingSimulator::run(
             }
         }
         handle_datapoint(next_t_out);
+        if (store_diagnosis) {
+            // store diagnosis information for debugging
+            solver_->storeDiagnosis();
+        }
     }
 
     // fill events
@@ -169,8 +173,20 @@ void ForwardProblem::handlePreequilibration() {
 
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
-    preeq_problem_.emplace(*solver, *model);
+    preeq_problem_.emplace(&ws_, *solver, *model);
     auto t0 = std::isnan(model->t0Preeq()) ? model->t0() : model->t0Preeq();
+
+    // The solver was not run before, set up everything.
+    // TODO: For pre-equilibration in combination with adjoint sensitivities,
+    // we will need to use a separate solver instance because we still need the
+    // forward solver for each period for backward integration.
+    auto roots_found = std::vector<int>(model->ne, 0);
+    model->initialize(
+        t0, ws_.x, ws_.dx, ws_.sx, ws_.sdx,
+        solver->getSensitivityOrder() >= SensitivityOrder::first, roots_found
+    );
+    solver->setup(t0, model, ws_.x, ws_.dx, ws_.sx, ws_.sdx);
+
     preeq_problem_->workSteadyStateProblem(*solver, *model, -1, t0);
 
     ws_.x = preeq_problem_->getState();
@@ -209,8 +225,8 @@ void ForwardProblem::handlePresimulation() {
     solver->updateAndReinitStatesAndSensitivities(model);
 
     std::vector<realtype> const timepoints{model->t0()};
-    pre_simulator_.run(t_, edata, timepoints);
-    solver->writeSolution(&t_, ws_.x, ws_.dx, ws_.sx);
+    pre_simulator_.run(t_, edata, timepoints, false);
+    solver->writeSolution(t_, ws_.x, ws_.dx, ws_.sx);
 }
 
 void ForwardProblem::handleMainSimulation() {
@@ -256,22 +272,26 @@ void ForwardProblem::handleMainSimulation() {
         || (solver->computingASA() && !uses_presimulation_))
         ws_.sx = solver->getStateSensitivity(model->t0());
 
-    main_simulator_.run(t_, edata, model->getTimepoints());
+    main_simulator_.run(t_, edata, model->getTimepoints(), true);
     t_ = main_simulator_.t_;
     it_ = main_simulator_.it_;
 }
 
 void ForwardProblem::handlePostequilibration() {
     if (getCurrentTimeIteration() < model->nt()) {
-        posteq_problem_.emplace(*solver, *model);
+        posteq_problem_.emplace(&ws_, *solver, *model);
         auto it = getCurrentTimeIteration();
         auto t0 = it < 1 ? model->t0() : model->getTimepoint(it - 1);
+
+        // The solver was run before, extract current state from solver.
+        solver->writeSolution(ws_.t, ws_.x, ws_.dx, ws_.sx);
+        Expects(t0 == ws_.t);
         posteq_problem_->workSteadyStateProblem(*solver, *model, it, t0);
     }
 }
 
 void EventHandlingSimulator::handle_event(
-    bool const initial_event, amici::ExpData const* edata
+    bool const initial_event, ExpData const* edata
 ) {
     // Some event triggered. This may be due to some discontinuity, a bolus to
     // be applied, or an event observable to process.
@@ -313,6 +333,7 @@ void EventHandlingSimulator::handle_event(
         if (solver_->computingASA()) {
             // store updated x to compute jump in discontinuity
             result.discs.back().x_post = ws_->x;
+            result.discs.back().dx_post = ws_->dx;
             // Update xdot after the state update
             model_->fxdot(t_, ws_->x, ws_->dx, ws_->xdot);
             result.discs.back().xdot_post = ws_->xdot;
@@ -542,8 +563,6 @@ void EventHandlingSimulator::handle_datapoint(realtype t) {
     // initial state is stored anyway, and we want to avoid storing it twice
     if (t != t0_ && !result.timepoint_states_.contains(t))
         result.timepoint_states_[t] = get_simulation_state();
-    // store diagnosis information for debugging
-    solver_->storeDiagnosis();
 }
 
 std::vector<realtype>
@@ -563,14 +582,21 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
         // Complement dJydx from postequilibration. This shouldn't overwrite
         // anything but only fill in previously 0 values, as only non-inf
         // timepoints were filled above.
-        posteq_problem_->getAdjointUpdates(model, edata, dJydx);
+        auto const& x = posteq_problem_->getState();
+        for (int it = 0; it < model.nt(); it++) {
+            if (std::isinf(model.getTimepoint(it))) {
+                model.getAdjointStateObservableUpdate(
+                    slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata
+                );
+            }
+        }
     }
     return dJydx;
 }
 
 SimulationState EventHandlingSimulator::get_simulation_state() {
     if (std::isfinite(solver_->gett())) {
-        solver_->writeSolution(&t_, ws_->x, ws_->dx, ws_->sx);
+        solver_->writeSolution(t_, ws_->x, ws_->dx, ws_->sx);
     }
     auto state = SimulationState();
     state.t = t_;

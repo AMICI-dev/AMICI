@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 #include <cmath>
 #include <cstring>
 #include <numeric>
@@ -604,9 +605,9 @@ void Model::setParameterByName(
 void Model::setParameterByName(
     std::map<std::string, realtype> const& p, bool ignoreErrors
 ) {
-    for (auto& kv : p) {
+    for (auto const& [name, value] : p) {
         try {
-            setParameterByName(kv.first, kv.second);
+            setParameterByName(name, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -1507,17 +1508,27 @@ void Model::addStateSensitivityEventUpdate(
 
 void Model::addAdjointStateEventUpdate(
     AmiVector& xB, int const ie, realtype const t, AmiVector const& x,
-    AmiVector const& xdot, AmiVector const& xdot_old
+    AmiVector const& xdot, AmiVector const& xdot_old, AmiVector const& x_old,
+    AmiVector const& dx
 ) {
 
     derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
 
     // compute update
-    fdeltaxB(
-        derived_state_.deltaxB_.data(), t, computeX_pos(x),
-        state_.unscaledParameters.data(), state_.fixedParameters.data(),
-        state_.h.data(), ie, xdot.data(), xdot_old.data(), xB.data()
-    );
+    if (pythonGenerated) {
+        fdeltaxB(
+            derived_state_.deltaxB_.data(), t, computeX_pos(x),
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            state_.h.data(), dx.data(), ie, xdot.data(), xdot_old.data(),
+            x_old.data(), xB.data(), state_.total_cl.data()
+        );
+    } else {
+        fdeltaxB(
+            derived_state_.deltaxB_.data(), t, computeX_pos(x),
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            state_.h.data(), ie, xdot.data(), xdot_old.data(), xB.data()
+        );
+    }
 
     if (always_check_finite_) {
         checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
@@ -1532,17 +1543,27 @@ void Model::addAdjointStateEventUpdate(
 
 void Model::addAdjointQuadratureEventUpdate(
     AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
-    AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
+    AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
+    AmiVector const& x_old, AmiVector const& dx
 ) {
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
 
-        fdeltaqB(
-            derived_state_.deltaqB_.data(), t, computeX_pos(x),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), plist(ip), ie, xdot.data(), xdot_old.data(),
-            xB.data()
-        );
+        if (pythonGenerated) {
+            fdeltaqB(
+                derived_state_.deltaqB_.data(), t, computeX_pos(x),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), dx.data(), plist(ip), ie, xdot.data(),
+                xdot_old.data(), x_old.data(), xB.data()
+            );
+        } else {
+            fdeltaqB(
+                derived_state_.deltaqB_.data(), t, computeX_pos(x),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), plist(ip), ie, xdot.data(), xdot_old.data(),
+                xB.data()
+            );
+        }
 
         for (int iJ = 0; iJ < nJ; ++iJ)
             xQB.at(ip * nJ + iJ) += derived_state_.deltaqB_.at(iJ);
@@ -1786,8 +1807,7 @@ int Model::checkFinite(
 
     // there is some issue - produce a meaningful message
     auto flat_index = it - m_flat.begin();
-    sunindextype row, col;
-    std::tie(row, col) = unravel_index(flat_index, m);
+    auto [row, col] = unravel_index(flat_index, m);
     std::string msg_id;
     std::string non_finite_type;
     if (std::isnan(m_flat[flat_index])) {
@@ -2144,10 +2164,17 @@ void Model::fsigmay(int const it, ExpData const* edata) {
             for (int iJ = 1; iJ < nJ; iJ++)
                 derived_state_.sigmay_.at(iytrue + iJ * nytrue) = 0;
 
-            if (edata->isSetObservedData(it, iytrue))
+            if (edata->isSetObservedData(it, iytrue)) {
+                std::string obs_id = hasObservableIds()
+                                         ? getObservableIds().at(iytrue)
+                                         : std::to_string(iytrue);
+                std::stringstream ss;
+                ss << "sigmay (" << obs_id << ", ExpData::id=" << edata->id
+                   << ", t=" << getTimepoint(it) << ")";
                 checkSigmaPositivity(
-                    derived_state_.sigmay_.at(iytrue), "sigmay"
+                    derived_state_.sigmay_.at(iytrue), ss.str().c_str()
                 );
+            }
         }
     }
 }

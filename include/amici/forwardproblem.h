@@ -33,7 +33,8 @@ struct Discontinuity {
      * @param total_cl_pre
      */
     explicit Discontinuity(
-        realtype time, std::vector<int> const& root_info = std::vector<int>(),
+        realtype const time,
+        std::vector<int> const& root_info = std::vector<int>(),
         AmiVector const& x_pre = AmiVector(),
         AmiVector const& xdot_pre = AmiVector(),
         AmiVector const& x_post = AmiVector(),
@@ -80,6 +81,9 @@ struct Discontinuity {
      */
     std::vector<realtype> h_pre;
 
+    /** time derivative of state (DAE only) post-event */
+    AmiVector dx_post;
+
     /** Total abundances for conservation laws
      (dimension: `nx_rdata - nx_solver`) */
     std::vector<realtype> total_cl_pre;
@@ -122,7 +126,9 @@ struct FwdSimWorkspace {
         , nroots(gsl::narrow<decltype(nroots)::size_type>(model->ne), 0)
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
 
-    {};
+    {}
+    /** current simulation time */
+    realtype t{NAN};
 
     /** state vector (dimension: nx_solver) */
     AmiVector x;
@@ -222,7 +228,7 @@ class EventHandlingSimulator {
         : model_(model)
         , solver_(solver)
         , ws_(ws)
-        , dJzdx_(dJzdx) {};
+        , dJzdx_(dJzdx) {}
 
     /**
      * @brief run Run the simulation.
@@ -241,10 +247,12 @@ class EventHandlingSimulator {
      * @param timepoints The output timepoints or measurement timepoints of
      * this period. This must contain at least the final timepoint of this
      * period.
+     * @param store_diagnosis Whether to store diagnosis in the solver at each
+     * timepoint in `timepoints`.
      */
     void
     run(realtype t, ExpData const* edata,
-        std::vector<amici::realtype> const& timepoints);
+        std::vector<realtype> const& timepoints, bool store_diagnosis);
 
     /**
      * @brief Returns maximal event index for which the timepoint is available
@@ -272,10 +280,10 @@ class EventHandlingSimulator {
     PeriodResult result;
 
     /** The current time. */
-    realtype t_;
+    realtype t_{NAN};
 
     /** Time index in the current list of timepoints */
-    int it_;
+    int it_ = -1;
 
   private:
     /**
@@ -303,7 +311,7 @@ class EventHandlingSimulator {
     /**
      * @brief Extract output information for events
      */
-    void store_event(amici::ExpData const* edata);
+    void store_event(ExpData const* edata);
 
     /**
      * @brief Execute everything necessary for the handling of data points
@@ -319,7 +327,7 @@ class EventHandlingSimulator {
      * @param edata experimental data
      */
     void fill_events(int nmaxevent, ExpData const* edata) {
-        if (!std::ranges::any_of(ws_->nroots, [nmaxevent](int curNRoots) {
+        if (!std::ranges::any_of(ws_->nroots, [nmaxevent](int const curNRoots) {
                 return curNRoots < nmaxevent;
             }))
             return;
@@ -329,13 +337,13 @@ class EventHandlingSimulator {
     }
 
     /** Initial time of the current period. */
-    realtype t0_;
+    realtype t0_{NAN};
 
     /** The model to simulate. */
-    Model* model_;
+    Model* model_{nullptr};
 
     /** The solver to use for the simulation. */
-    Solver* solver_;
+    Solver* solver_{nullptr};
 
     /** The workspace to use for the simulation. */
     gsl::not_null<FwdSimWorkspace*> ws_;
@@ -444,15 +452,15 @@ class ForwardProblem {
      * @return state
      */
     [[nodiscard]] SimulationState const&
-    getSimulationStateTimepoint(int it) const {
+    getSimulationStateTimepoint(int const it) const {
         if (model->getTimepoint(it) == main_simulator_.result.initial_state_.t)
             return getInitialSimulationState();
-        auto map_iter = main_simulator_.result.timepoint_states_.find(
+        auto const map_iter = main_simulator_.result.timepoint_states_.find(
             model->getTimepoint(it)
         );
         Ensures(map_iter != main_simulator_.result.timepoint_states_.end());
         return map_iter->second;
-    };
+    }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
@@ -461,9 +469,9 @@ class ForwardProblem {
      * @return SimulationState
      */
     [[nodiscard]] SimulationState const&
-    getSimulationStateEvent(int iroot) const {
+    getSimulationStateEvent(int const iroot) const {
         return main_simulator_.result.event_states_.at(iroot);
-    };
+    }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
@@ -472,7 +480,7 @@ class ForwardProblem {
      */
     [[nodiscard]] SimulationState const& getInitialSimulationState() const {
         return main_simulator_.result.initial_state_;
-    };
+    }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
@@ -481,7 +489,7 @@ class ForwardProblem {
      */
     [[nodiscard]] SimulationState const& getFinalSimulationState() const {
         return main_simulator_.result.final_state_;
-    };
+    }
 
     /**
      * @brief Return the preequilibration SteadystateProblem.
@@ -638,7 +646,7 @@ class FinalStateStorer : public ContextManager {
                 // timepoint_states if it's not present there.
                 // this may happen if there is an error just at
                 // (or indistinguishably before) an output timepoint
-                auto final_time = fwd_->getFinalTime();
+                auto const final_time = fwd_->getFinalTime();
                 auto const timepoints = fwd_->model->getTimepoints();
                 if (!fwd_->main_simulator_.result.timepoint_states_.contains(
                         final_time

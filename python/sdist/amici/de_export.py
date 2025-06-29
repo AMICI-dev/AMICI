@@ -489,15 +489,21 @@ class DEExporter:
                 iszero = smart_is_zero_matrix(self.model.sparseeq(sym))
             elif sym in self.functions:
                 iszero = smart_is_zero_matrix(self.model.eq(sym))
+            elif len(self.model.sym(sym)) == 0:
+                continue
             else:
-                iszero = len(self.model.sym(sym)) == 0
+                iszero = False
 
-            if iszero and not (
-                (sym == "y" and "Jy" in function)
-                or (
-                    sym == "w"
-                    and "xdot" in function
-                    and len(self.model.sym(sym))
+            if (
+                iszero
+                and function not in ("deltaxB", "deltaqB")
+                and not (
+                    (sym == "y" and "Jy" in function)
+                    or (
+                        sym in "w"
+                        and "xdot" in function
+                        and len(self.model.sym(sym))
+                    )
                 )
             ):
                 continue

@@ -70,7 +70,7 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-        auto t0
+        auto const t0
             = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
         preeq_problem_->workSteadyStateBackwardProblem(
             *solver_, *model_, ws_.xB_, true, t0
@@ -108,10 +108,11 @@ void EventHandlingBwdSimulator::handleEventB(
 
         model_->addAdjointQuadratureEventUpdate(
             ws_->xQB_, ie, t_, disc.x_post, ws_->xB_, disc.xdot_post,
-            disc.xdot_pre
+            disc.xdot_pre, disc.x_pre, disc.dx_post
         );
         model_->addAdjointStateEventUpdate(
-            ws_->xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre
+            ws_->xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre,
+            disc.x_pre, disc.dx_post
         );
 
         if (model_->nz > 0) {
@@ -166,7 +167,7 @@ realtype EventHandlingBwdSimulator::getTnext(int const it) {
 
     if (!ws_->discs_.empty()
         && (it < 0 || ws_->discs_.back().time > model_->getTimepoint(it))) {
-        double tdisc = ws_->discs_.back().time;
+        double const tdisc = ws_->discs_.back().time;
         return tdisc;
     }
 
@@ -213,12 +214,12 @@ void EventHandlingBwdSimulator::run(
 
     while (it >= 0 || !ws_->discs_.empty()) {
         // check if next timepoint is a discontinuity or a data-point
-        double tnext = getTnext(it);
+        double const tnext = getTnext(it);
 
         if (tnext < t_) {
             solver_->runB(tnext);
             solver_->writeSolutionB(
-                &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
+                t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
             );
         }
 
@@ -242,9 +243,7 @@ void EventHandlingBwdSimulator::run(
     // we still need to integrate from first datapoint to t_start
     if (t_ > t_end) {
         solver_->runB(t_end);
-        solver_->writeSolutionB(
-            &t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which
-        );
+        solver_->writeSolutionB(t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which);
     }
 }
 

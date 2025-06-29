@@ -141,9 +141,8 @@ class Solver {
      */
 
     void setupSteadystate(
-        realtype const t0, Model* model, AmiVector const& x0,
-        AmiVector const& dx0, AmiVector const& xB0, AmiVector const& dxB0,
-        AmiVector const& xQ0
+        realtype t0, Model* model, AmiVector const& x0, AmiVector const& dx0,
+        AmiVector const& xB0, AmiVector const& dxB0, AmiVector const& xQ0
     ) const;
 
     /**
@@ -664,7 +663,7 @@ class Solver {
      * @param sx state sensitivity
      */
     void writeSolution(
-        realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
+        realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
     ) const;
 
     /**
@@ -676,7 +675,7 @@ class Solver {
      * @param which index of adjoint problem
      */
     void writeSolutionB(
-        realtype* t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int which
+        realtype& t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int which
     ) const;
 
     /**
@@ -940,7 +939,7 @@ class Solver {
      * @param flag boolean flag to pick newton step (true) or the right hand
      * side (false, default)
      */
-    void setNewtonStepSteadyStateCheck(bool flag) {
+    void setNewtonStepSteadyStateCheck(bool const flag) {
         newton_step_steadystate_conv_ = flag;
     }
 
@@ -950,7 +949,7 @@ class Solver {
      * @param flag boolean flag to pick state and sensitivity equations (true,
      * default) or only state variables (false).
      */
-    void setSensiSteadyStateCheck(bool flag) {
+    void setSensiSteadyStateCheck(bool const flag) {
         check_sensi_steadystate_conv_ = flag;
     }
 
@@ -1786,7 +1785,7 @@ class Solver {
      * @param preequilibration flag indicating preequilibration or simulation
      */
     void checkSensitivityMethod(
-        SensitivityMethod const sensi_meth, bool preequilibration
+        SensitivityMethod sensi_meth, bool preequilibration
     ) const;
 
     /**

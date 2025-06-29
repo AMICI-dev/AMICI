@@ -81,7 +81,7 @@ class SUNMatrixWrapper {
     /**
      * @brief Conversion function.
      */
-    operator SUNMatrix() { return get(); };
+    operator SUNMatrix() { return get(); }
 
     /**
      * @brief Copy constructor
@@ -198,7 +198,7 @@ class SUNMatrixWrapper {
      * @param idx data index
      * @return idx-th data entry
      */
-    realtype get_data(sunindextype idx) const {
+    realtype get_data(sunindextype const idx) const {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(idx < capacity());
@@ -212,7 +212,7 @@ class SUNMatrixWrapper {
      * @param icol col
      * @return A(irow,icol)
      */
-    realtype get_data(sunindextype irow, sunindextype icol) const {
+    realtype get_data(sunindextype const irow, sunindextype const icol) const {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_DENSE);
         assert(irow < rows());
@@ -225,7 +225,7 @@ class SUNMatrixWrapper {
      * @param idx data index
      * @param data data for idx-th entry
      */
-    void set_data(sunindextype idx, realtype data) {
+    void set_data(sunindextype const idx, realtype const data) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(idx < capacity());
@@ -239,7 +239,9 @@ class SUNMatrixWrapper {
      * @param icol col
      * @param data data for idx-th entry
      */
-    void set_data(sunindextype irow, sunindextype icol, realtype data) {
+    void set_data(
+        sunindextype const irow, sunindextype const icol, realtype const data
+    ) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_DENSE);
         assert(irow < rows());
@@ -252,7 +254,7 @@ class SUNMatrixWrapper {
      * @param idx data index
      * @return row (CSC) or column (CSR) for idx-th data entry
      */
-    sunindextype get_indexval(sunindextype idx) const {
+    sunindextype get_indexval(sunindextype const idx) const {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(idx < capacity());
@@ -265,7 +267,7 @@ class SUNMatrixWrapper {
      * @param idx data index
      * @param val row (CSC) or column (CSR) for idx-th data entry
      */
-    void set_indexval(sunindextype idx, sunindextype val) {
+    void set_indexval(sunindextype const idx, sunindextype const val) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(idx < capacity());
@@ -290,7 +292,7 @@ class SUNMatrixWrapper {
      * @param ptr_idx pointer index
      * @return index where the ptr_idx-th column (CSC) or row (CSR) starts
      */
-    sunindextype get_indexptr(sunindextype ptr_idx) const {
+    sunindextype get_indexptr(sunindextype const ptr_idx) const {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(ptr_idx <= num_indexptrs());
@@ -304,7 +306,7 @@ class SUNMatrixWrapper {
      * @param ptr data-index where the ptr_idx-th column (CSC) or row (CSR)
      * starts
      */
-    void set_indexptr(sunindextype ptr_idx, sunindextype ptr) {
+    void set_indexptr(sunindextype const ptr_idx, sunindextype const ptr) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(ptr_idx <= num_indexptrs());
@@ -355,8 +357,9 @@ class SUNMatrixWrapper {
      * @param b multiplication vector
      * @param alpha scalar coefficient for matrix
      */
-    void
-    multiply(AmiVector& c, AmiVector const& b, realtype alpha = 1.0) const {
+    void multiply(
+        AmiVector& c, AmiVector const& b, realtype const alpha = 1.0
+    ) const {
         multiply(c.getNVector(), b.getNVector(), alpha);
     }
 
@@ -367,8 +370,7 @@ class SUNMatrixWrapper {
      * @param alpha scalar coefficient
      */
     void multiply(
-        gsl::span<realtype> c, gsl::span<realtype const> b,
-        realtype const alpha = 1.0
+        gsl::span<realtype> c, gsl::span<realtype const> b, realtype alpha = 1.0
     ) const;
 
     /**
@@ -451,9 +453,8 @@ class SUNMatrixWrapper {
      * @return updated number of nonzeros in C
      */
     sunindextype scatter(
-        sunindextype const k, realtype const beta, sunindextype* w,
-        gsl::span<realtype> x, sunindextype const mark, SUNMatrixWrapper* C,
-        sunindextype nnz
+        sunindextype k, realtype beta, sunindextype* w, gsl::span<realtype> x,
+        sunindextype mark, SUNMatrixWrapper* C, sunindextype nnz
     ) const;
 
     /**
@@ -466,7 +467,7 @@ class SUNMatrixWrapper {
      * set to ncols/nrows
      */
     void transpose(
-        SUNMatrixWrapper& C, realtype const alpha, sunindextype blocksize
+        SUNMatrixWrapper& C, realtype alpha, sunindextype blocksize
     ) const;
 
     /**
@@ -492,7 +493,7 @@ class SUNMatrixWrapper {
      * @brief Get matrix id
      * @return SUNMatrix_ID
      */
-    SUNMatrix_ID matrix_id() const { return id_; };
+    [[nodiscard]] SUNMatrix_ID matrix_id() const { return id_; }
 
     /**
      * @brief Update internal cache, needs to be called after external
@@ -504,7 +505,7 @@ class SUNMatrixWrapper {
      * @brief Get SUNDIALS context
      * @return SUNDIALS context or nullptr if the matrix is empty
      */
-    SUNContext get_ctx() const;
+    [[nodiscard]] SUNContext get_ctx() const;
 
     /**
      * @brief Set SUNContext
@@ -606,12 +607,12 @@ namespace gsl {
  * @param m SUNMatrix
  * @return Created span
  */
-inline span<amici::realtype> make_span(SUNMatrix m) {
+inline span<amici::realtype> make_span(SUNMatrix const m) {
     switch (SUNMatGetID(m)) {
     case SUNMATRIX_DENSE:
-        return span<amici::realtype>(SM_DATA_D(m), SM_LDATA_D(m));
+        return span(SM_DATA_D(m), SM_LDATA_D(m));
     case SUNMATRIX_SPARSE:
-        return span<amici::realtype>(SM_DATA_S(m), SM_NNZ_S(m));
+        return span(SM_DATA_S(m), SM_NNZ_S(m));
     default:
         throw amici::AmiException("Unimplemented SUNMatrix type for make_span");
     }

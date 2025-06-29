@@ -17,8 +17,7 @@
 
 #include <hdf5_hl.h>
 
-namespace amici {
-namespace hdf5 {
+namespace amici::hdf5 {
 
 /**
  * @brief assertMeasurementDimensionsCompatible
@@ -1652,13 +1651,12 @@ std::vector<double> getDoubleDataset3D(
 }
 
 void writeSimulationExpData(
-    ExpData const& edata, std::string const& hdf5Filename,
+    ExpData const& edata, std::string const& filepath,
     std::string const& hdf5Location
 ) {
-    auto file = createOrOpenForWriting(hdf5Filename);
+    auto const file = createOrOpenForWriting(filepath);
 
     writeSimulationExpData(edata, file, hdf5Location);
 }
 
-} // namespace hdf5
-} // namespace amici
+} // namespace amici::hdf5

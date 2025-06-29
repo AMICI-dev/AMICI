@@ -64,7 +64,7 @@ class EventHandlingBwdSimulator {
     )
         : model_(model)
         , solver_(solver)
-        , ws_(ws) {};
+        , ws_(ws) {}
 
     /**
      * @brief Run the simulation.
