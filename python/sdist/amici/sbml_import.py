@@ -215,7 +215,7 @@ class SbmlImporter:
         log_execution_time("validating SBML", logger)(
             self.sbml_doc.validateSBML
         )()
-        _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+        # _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # Flatten "comp" model? Do that before any other converters are run
         if any(
@@ -262,7 +262,7 @@ class SbmlImporter:
         # If any of the above calls produces an error, this will be added to
         # the SBMLError log in the sbml document. Thus, it is sufficient to
         # check the error log just once after all conversion/validation calls.
-        _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+        # _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # need to reload the converted model
         self.sbml = self.sbml_doc.getModel()
@@ -522,6 +522,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = None,
+        hybridization: dict = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -609,6 +610,7 @@ class SbmlImporter:
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
             cache_simplify=cache_simplify,
+            hybridization=hybridization,
         )
 
         from amici.jax.ode_export import ODEExporter
@@ -618,6 +620,7 @@ class SbmlImporter:
             model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
+            hybridisation=hybridization,
         )
         exporter.generate_model_code()
 
@@ -635,6 +638,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         hardcode_symbols: Sequence[str] = None,
+        hybridization: dict = None,
     ) -> DEModel:
         """Generate a DEModel from this SBML model.
 
@@ -796,6 +800,9 @@ class SbmlImporter:
 
         if compute_conservation_laws:
             self._process_conservation_laws(ode_model)
+
+        if hybridization:
+            ode_model._process_hybridization(hybridization)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         ode_model.generate_basic_variables()

@@ -24,6 +24,7 @@ from amici import (
 from amici._codegen.template import apply_template
 from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
+from amici.jax.nn import generate_equinox
 from amici.de_model import DEModel
 
 from amici.de_export import is_valid_identifier
@@ -124,6 +125,7 @@ class ODEExporter:
         outdir: Path | str | None = None,
         verbose: bool | int | None = False,
         model_name: str | None = "model",
+        hybridisation: dict[str, dict] = None,
     ):
         """
         Generate AMICI jax files for the ODE provided to the constructor.
@@ -166,6 +168,8 @@ class ODEExporter:
 
         self.model: DEModel = ode_model
 
+        self.hybridisation = hybridisation if hybridisation is not None else {}
+
         self._code_printer = AmiciJaxCodePrinter()
 
     @log_execution_time("generating jax code", logger)
@@ -178,6 +182,7 @@ class ODEExporter:
         ):
             self._prepare_model_folder()
             self._generate_jax_code()
+            self._generate_nn_code()
 
     def _prepare_model_folder(self) -> None:
         """
@@ -261,6 +266,14 @@ class ODEExporter:
                 # can flag conflicts in the future
                 "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
             },
+            "NET_IMPORTS": "\n".join(
+                f"{net} = _module_from_path('{net}', Path(__file__).parent / '{net}.py')"
+                for net in self.hybridisation.keys()
+            ),
+            "NETS": ",\n".join(
+                f'"{net}": {net}.net(jr.PRNGKey(0))'
+                for net in self.hybridisation.keys()
+            ),
         }
 
         apply_template(
@@ -268,6 +281,13 @@ class ODEExporter:
             self.model_path / "__init__.py",
             tpl_data,
         )
+
+    def _generate_nn_code(self) -> None:
+        for net_name, net in self.hybridisation.items():
+            generate_equinox(
+                net["model"],
+                self.model_path / f"{net_name}.py",
+            )
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:
         """
