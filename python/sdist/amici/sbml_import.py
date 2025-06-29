@@ -35,7 +35,6 @@ from .de_export import (
 from .de_model_components import symbol_to_type, Expression
 from .sympy_utils import smart_is_zero_matrix, smart_multiply
 from .import_utils import (
-    RESERVED_SYMBOLS,
     _check_unsupported_functions,
     _get_str_symbol_identifiers,
     amici_time_symbol,
@@ -2781,24 +2780,6 @@ class SbmlImporter:
         # Substitute inside spline definitions
         for spline in self.splines:
             spline._replace_in_all_expressions(old, new)
-
-    def _clean_reserved_symbols(self) -> None:
-        """
-        Remove all reserved symbols from self.symbols
-        """
-        for sym in RESERVED_SYMBOLS:
-            old_symbol = symbol_with_assumptions(sym)
-            new_symbol = symbol_with_assumptions(f"amici_{sym}")
-            self._replace_in_all_expressions(
-                old_symbol, new_symbol, replace_identifiers=True
-            )
-            for symbols_ids, symbols in self.symbols.items():
-                if old_symbol in symbols:
-                    # reconstitute the whole dict in order to keep the ordering
-                    self.symbols[symbols_ids] = {
-                        new_symbol if k is old_symbol else k: v
-                        for k, v in symbols.items()
-                    }
 
     def _sympify(
         self,
