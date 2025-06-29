@@ -367,7 +367,7 @@ class JAXModel(eqx.Module):
         self,
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "ne"],
+        h0: jt.Float[jt.Array, "ne"],
         x0: jt.Float[jt.Array, "nxs"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
@@ -404,7 +404,7 @@ class JAXModel(eqx.Module):
                 x0,
                 p,
                 tcl,
-                h,
+                h0,
                 solver,
                 controller,
                 root_finder,
@@ -414,10 +414,15 @@ class JAXModel(eqx.Module):
                 diffrax.SaveAt(t1=True),
                 dict(**STARTING_STATS),
             )
-            return sol.ys[-1], stats
+            y1 = jnp.where(
+                diffrax.is_event(sol.result),
+                sol.ys[-1],
+                jnp.inf * jnp.ones_like(sol.ys[-1]),
+            )
+            return y1, stats
 
         def body_fn(carry):
-            t_start, y0, event_index, stats = carry
+            t_start, y0, h, event_index, stats = carry
             sol, event_index, stats = self._run_segment(
                 t_start,
                 jnp.inf,
@@ -442,13 +447,32 @@ class JAXModel(eqx.Module):
                 sol.ys[-1],
                 jnp.inf * jnp.ones_like(sol.ys[-1]),
             )
-            t_start_next = jnp.where(
-                jnp.isfinite(sol.ts), sol.ts, -jnp.inf
-            ).max()
-            return t_start_next, y0_next, event_index, dict(**STARTING_STATS)
+            t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
+
+            y0_next, t0_next, h_next, stats = self._handle_event(
+                t0_next,
+                jnp.inf,
+                y0_next,
+                p,
+                tcl,
+                h,
+                solver,
+                controller,
+                root_finder,
+                diffrax.DirectAdjoint(),
+                stats,
+            )
+
+            return (
+                t0_next,
+                y0_next,
+                h_next,
+                event_index,
+                dict(**STARTING_STATS),
+            )
 
         def cond_fn(carry):
-            _, y0, event_index, _ = carry
+            _, y0, _, event_index, _ = carry
             return jnp.logical_and(
                 event_index != 0,  # has not reached steady state yet
                 jnp.isfinite(
@@ -457,10 +481,10 @@ class JAXModel(eqx.Module):
             )
 
         # run the loop until no event is triggered (which will also be the case if we run out of steps)
-        _, y1, _, stats = eqxi.while_loop(
+        _, y1, _, _, stats = eqxi.while_loop(
             cond_fn,
             body_fn,
-            (0.0, x0, -1, dict(**STARTING_STATS)),
+            (0.0, x0, h0, -1, dict(**STARTING_STATS)),
             kind="bounded",
             max_steps=2**6,
         )
@@ -571,64 +595,27 @@ class JAXModel(eqx.Module):
             y0_next = sol.ys[1][
                 -1
             ]  # next initial state is the last state of the current segment
-
-            args = (p, tcl, h)
-            rootvals = self._root_cond_fn(t0_next, y0_next, args)
-            roots_found = jnp.isclose(
-                rootvals, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
-            )
-            droot_dt = (
-                # ∂root_cond_fn/∂t
-                jax.jacfwd(self._root_cond_fn, argnums=0)(
-                    t0_next, y0_next, args
-                )
-                +
-                # ∂root_cond_fn/∂y * ∂y/∂t
-                jax.jacfwd(self._root_cond_fn, argnums=1)(
-                    t0_next, y0_next, args
-                )
-                @ self._xdot(t0_next, y0_next, args)
-            )
-            roots_dir = jnp.sign(
-                droot_dt
-            )  # direction of the root condition function
-
-            h_next = (
-                h
-                + jnp.where(
-                    roots_found,
-                    roots_dir,
-                    jnp.zeros_like(h),
-                )
-            )  # update heaviside variables based on the root condition function
-            was_event = jnp.isin(ts, sol.ts[1])
-            hs = jnp.where(was_event[:, None], h_next[None, :], hs)
-            if os.getenv("JAX_DEBUG") == "1":
-                jax.debug.print(
-                    "rootvals: {}, roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
-                    rootvals,
-                    roots_found,
-                    roots_dir,
-                    h,
-                    h_next,
-                )
-
             ts_next = jnp.where(
                 ts > t0_next, ts, ts[-1]
             ).min()  # timepoint of next datapoint, don't step over that
-            # while we are trying to step out of the event
-            y0_next, t0_next, stats = self._step_out_of_event(
+
+            y0_next, t0_next, h_next, stats = self._handle_event(
                 t0_next,
                 ts_next,
                 y0_next,
                 p,
                 tcl,
-                h_next,
+                h,
                 solver,
                 controller,
+                root_finder,
                 adjoint,
                 stats,
             )
+
+            was_event = jnp.isin(ts, sol.ts[1])
+            hs = jnp.where(was_event[:, None], h_next[None, :], hs)
+
             return ys, t0_next, y0_next, hs, h_next, stats
 
         # run the loop until we have reached the end of the time points
@@ -730,6 +717,68 @@ class JAXModel(eqx.Module):
 
         return sol, event_index, stats
 
+    def _handle_event(
+        self,
+        t0_next: float,
+        t_max: float,
+        y0_next: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
+        adjoint: diffrax.AbstractAdjoint,
+        stats: dict,
+    ):
+        args = (p, tcl, h)
+        rootvals = self._root_cond_fn(t0_next, y0_next, args)
+        roots_found = jnp.isclose(
+            rootvals, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
+        )
+        droot_dt = (
+            # ∂root_cond_fn/∂t
+            jax.jacfwd(self._root_cond_fn, argnums=0)(t0_next, y0_next, args)
+            +
+            # ∂root_cond_fn/∂y * ∂y/∂t
+            jax.jacfwd(self._root_cond_fn, argnums=1)(t0_next, y0_next, args)
+            @ self._xdot(t0_next, y0_next, args)
+        )
+        roots_dir = jnp.sign(
+            droot_dt
+        )  # direction of the root condition function
+
+        h_next = h + jnp.where(
+            roots_found,
+            roots_dir,
+            jnp.zeros_like(h),
+        )  # update heaviside variables based on the root condition function
+
+        if os.getenv("JAX_DEBUG") == "1":
+            jax.debug.print(
+                "rootvals: {}, roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                rootvals,
+                roots_found,
+                roots_dir,
+                h,
+                h_next,
+            )
+
+        # while we are trying to step out of the event
+        y0_next, t0_next, stats = self._step_out_of_event(
+            t0_next,
+            t_max,
+            y0_next,
+            p,
+            tcl,
+            h_next,
+            solver,
+            controller,
+            adjoint,
+            stats,
+        )
+        return y0_next, t0_next, h_next, stats
+
     def _step_out_of_event(
         self,
         t_start: float,
@@ -829,7 +878,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "nt ne"],
+        hs: jt.Float[jt.Array, "nt ne"],
         mys: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
@@ -860,7 +909,7 @@ class JAXModel(eqx.Module):
             negative log-likelihoods of the observables
         """
         return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0, 0, 0, 0))(
-            ts, xs, p, tcl, h, mys, iys, ops, nps
+            ts, xs, p, tcl, hs, mys, iys, ops, nps
         )
 
     def _ys(
@@ -869,7 +918,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "nt ne"],
+        hs: jt.Float[jt.Array, "nt ne"],
         iys: jt.Float[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
     ) -> jt.Int[jt.Array, "nt"]:
@@ -894,11 +943,11 @@ class JAXModel(eqx.Module):
             observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, iy, op: self._y(t, x, p, tcl, h, op)
+            lambda t, x, p, tcl, h, iy, op: self._y(t, x, p, tcl, h, op)
             .at[iy]
             .get(),
             in_axes=(0, 0, None, None, 0, 0, 0),
-        )(ts, xs, p, tcl, h, iys, ops)
+        )(ts, xs, p, tcl, hs, iys, ops)
 
     def _sigmays(
         self,
@@ -906,7 +955,7 @@ class JAXModel(eqx.Module):
         xs: jt.Float[jt.Array, "nt nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "nt ne"],
+        hs: jt.Float[jt.Array, "nt ne"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
         nps: jt.Float[jt.Array, "nt *nnp"],
@@ -940,7 +989,7 @@ class JAXModel(eqx.Module):
             .at[iy]
             .get(),
             in_axes=(0, 0, None, None, 0, 0, 0, 0),
-        )(ts, xs, p, tcl, h, iys, ops, nps)
+        )(ts, xs, p, tcl, hs, iys, ops, nps)
 
     @eqx.filter_jit
     def simulate_condition(

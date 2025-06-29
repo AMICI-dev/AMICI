@@ -346,14 +346,16 @@ def test_time_dependent_discontinuity(tmp_path):
     tcl = model._tcl(x0_full, p)
     x0 = model._x_solver(x0_full)
     ts = jnp.array([0.0, 1.0, 2.0])
+    h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
 
-    assert len(model._root_cond_fns(p)) > 0
+    assert len(model._root_cond_fns()) > 0
     assert model._known_discs(p).size == 0
 
-    ys, _ = model._solve(
+    ys, _, _ = model._solve(
         p,
         ts,
         tcl,
+        h,
         x0,
         diffrax.Tsit5(),
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
@@ -391,13 +393,15 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     x0_full = model._x0(0.0, p)
     tcl = model._tcl(x0_full, p)
     x0 = model._x_solver(x0_full)
+    h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
 
-    assert len(model._root_cond_fns(p)) > 0
+    assert len(model._root_cond_fns()) > 0
     assert model._known_discs(p).size == 0
 
     xs, _ = model._eq(
         p,
         tcl,
+        h,
         x0,
         diffrax.Tsit5(),
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
