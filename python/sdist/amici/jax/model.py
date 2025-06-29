@@ -522,7 +522,7 @@ class JAXModel(eqx.Module):
                 diffrax.SaveAt(ts=ts),
                 dict(**STARTING_STATS),
             )
-            return sol.ys, jnp.repeat(h.resize(-1, 1), sol.ys.shape[0]), stats
+            return sol.ys, jnp.repeat(h[None, :], sol.ys.shape[0]), stats
 
         def cond_fn(carry):
             _, t_start, y0, _, _, stats = carry
@@ -1045,10 +1045,8 @@ class JAXModel(eqx.Module):
             )
             x_solver = x_dyn[-1, :]
         else:
-            x_dyn = jnp.repeat(
-                x_solver.reshape(1, -1), ts_dyn.shape[0], axis=0
-            )
-            h_dyn = jnp.repeat(h, ts_dyn.shape[0], axis=0)
+            x_dyn = jnp.repeat(x_solver[None, :], ts_dyn.shape[0], axis=0)
+            h_dyn = jnp.repeat(h[None, :], ts_dyn.shape[0], axis=0)
             stats_dyn = None
 
         # Post-equilibration
@@ -1067,13 +1065,14 @@ class JAXModel(eqx.Module):
         else:
             stats_posteq = None
 
-        x_posteq = jnp.repeat(
-            x_solver.reshape(1, -1), ts_posteq.shape[0], axis=0
-        )
-        h_posteq = jnp.repeat(h.reshape(1, -1), ts_posteq.shape[0], axis=0)
+        x_posteq = jnp.repeat(x_solver[None, :], ts_posteq.shape[0], axis=0)
+        h_posteq = jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-        hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
+        if len(self._root_cond_fns()):
+            hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
+        else:
+            hs = jnp.zeros((ts.shape[0], h.shape[0]))
         x = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
         nllhs = self._nllhs(ts, x, p, tcl, hs, my, iys, ops, nps)
