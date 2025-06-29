@@ -188,11 +188,11 @@ void writeSimulationExpData(
 /**
  * @brief Write AMICI experimental data to HDF5 file.
  * @param edata The experimental data which is to be written
- * @param file Name of HDF5 file
+ * @param filepath Name of HDF5 file
  * @param hdf5Location Path inside the HDF5 file
  */
 void writeSimulationExpData(
-    ExpData const& edata, std::string const& file,
+    ExpData const& edata, std::string const& filepath,
     std::string const& hdf5Location
 );
 

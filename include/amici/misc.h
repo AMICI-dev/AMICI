@@ -29,7 +29,7 @@ namespace amici {
  */
 
 template <class T>
-gsl::span<T> slice(std::vector<T>& data, int index, unsigned size) {
+gsl::span<T> slice(std::vector<T>& data, int const index, unsigned const size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
@@ -87,7 +87,7 @@ template <class T>
 void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
-};
+}
 
 /**
  * @brief local helper function to add the computed slice to provided buffer
@@ -102,7 +102,7 @@ void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
         slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
         std::plus<T>()
     );
-};
+}
 
 /**
  * @brief local helper function to write computed slice to provided buffer
@@ -114,7 +114,7 @@ template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
     writeSlice(
         gsl::make_span(s.data(), s.size()), gsl::make_span(b.data(), b.size())
     );
-};
+}
 
 /**
  * @brief local helper function to write computed slice to provided buffer
@@ -124,7 +124,7 @@ template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
  */
 template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
     writeSlice(gsl::make_span(s.data(), s.size()), b);
-};
+}
 
 /**
  * @brief local helper function to add the computed slice to provided buffer
@@ -134,7 +134,7 @@ template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
  */
 template <class T> void addSlice(std::vector<T> const& s, gsl::span<T> b) {
     addSlice(gsl::make_span(s.data(), s.size()), b);
-};
+}
 
 /**
  * @brief local helper function to write computed slice to provided buffer
@@ -293,7 +293,7 @@ class CpuTimer {
      * @brief Whether the timer uses a thread clock (i.e. provides proper,
      * thread-specific CPU time).
      */
-    static bool const uses_thread_clock = true;
+    static bool constexpr uses_thread_clock = true;
 
   private:
     /** Start time */

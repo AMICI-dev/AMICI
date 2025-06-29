@@ -311,7 +311,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     std::vector<std::string> getStateNamesSolver() const override {
         std::vector<std::string> result;
         result.reserve(stateIdxsSolver.size());
-        for(auto idx: stateIdxsSolver) {
+        for(auto const idx: stateIdxsSolver) {
             result.push_back(stateNames[idx]);
         }
         return result;

@@ -698,7 +698,7 @@ void AbstractModel::
 
 std::vector<HermiteSpline>
 AbstractModel::fcreate_splines(realtype const* /*p*/, realtype const* /*k*/) {
-    return std::vector<HermiteSpline>();
+    return {};
 }
 
 void AbstractModel::fdspline_valuesdp(

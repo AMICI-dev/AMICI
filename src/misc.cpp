@@ -22,7 +22,7 @@ namespace amici {
 
 void writeSlice(AmiVector const& s, gsl::span<realtype> b) {
     writeSlice(s.getVector(), b);
-};
+}
 
 double getUnscaledParameter(
     double const scaledParameter, ParameterScaling const scaling
@@ -87,7 +87,7 @@ std::string backtraceString(int const maxFrames, int const first_frame) {
     int const last_frame = first_frame + maxFrames;
     std::vector<void*> callstack(last_frame);
     char buf[1024];
-    int nFrames = backtrace(callstack.data(), last_frame);
+    int const nFrames = backtrace(callstack.data(), last_frame);
     char** symbols = backtrace_symbols(callstack.data(), nFrames);
 
     for (int i = first_frame; i < nFrames; i++) {
@@ -169,7 +169,7 @@ std::string printfToString(char const* fmt, va_list ap) {
     ++size;
 
     // actual formatting
-    auto buf = new char[size];
+    auto const buf = new char[size];
     size = vsnprintf(buf, size, fmt, ap);
     std::string str(buf, size);
     delete[] buf;

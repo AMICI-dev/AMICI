@@ -19,12 +19,10 @@ class BackwardProblem;
 class SteadystateProblem;
 } // namespace amici
 
-namespace boost {
-namespace serialization {
+namespace boost::serialization {
 template <class Archive>
 void serialize(Archive& ar, amici::ReturnData& r, unsigned int version);
-}
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 
@@ -652,7 +650,7 @@ class ReturnData : public ModelDimensions {
      * @brief Checks whether forward sensitivity analysis is performed
      * @return boolean indicator
      */
-    bool computingFSA() const {
+    [[nodiscard]] bool computingFSA() const {
         return (
             sensi_meth == SensitivityMethod::forward
             && sensi >= SensitivityOrder::first
@@ -775,4 +773,4 @@ class ModelContext : public ContextManager {
 
 } // namespace amici
 
-#endif /* _MY_RDATA */
+#endif // AMICI_RDATA_H

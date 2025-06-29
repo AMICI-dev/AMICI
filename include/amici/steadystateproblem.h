@@ -6,14 +6,13 @@
 #include <amici/newton_solver.h>
 #include <amici/vector.h>
 
-#include <memory>
-
 namespace amici {
 
 class ExpData;
 class Solver;
 class Model;
 class BackwardProblem;
+struct FwdSimWorkspace;
 
 /**
  * @brief Computes the weighted root-mean-square norm.
@@ -33,7 +32,8 @@ class WRMSComputer {
      * Positive value: include; non-positive value: exclude; empty: include all.
      */
     WRMSComputer(
-        int n, SUNContext sunctx, realtype atol, realtype rtol, AmiVector mask
+        int const n, SUNContext const sunctx, realtype const atol,
+        realtype const rtol, AmiVector mask
     )
         : ewt_(n, sunctx)
         , rtol_(rtol)
@@ -98,7 +98,7 @@ class NewtonsMethod {
      * @param wrms_computer WRMSComputer instance to compute the WRMS norm.
      */
     void
-    run(AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer);
+    run(AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer);
 
     /**
      * @brief Compute the Newton step for the current state_.x and xdot and
@@ -106,7 +106,7 @@ class NewtonsMethod {
      * @param xdot Time derivative of the state vector `state.x`.
      * @param state SimulationState instance containing the current state.
      */
-    void compute_step(AmiVector const& xdot, SimulationState const& state);
+    void compute_step(AmiVector const& xdot, DEStateView const& state);
 
     /**
      * @brief Get the last Newton step.
@@ -148,7 +148,7 @@ class NewtonsMethod {
      * @return WRMS norm.
      */
     realtype compute_wrms(
-        AmiVector const& xdot, SimulationState const& state,
+        AmiVector const& xdot, DEStateView const& state,
         WRMSComputer& wrms_computer
     );
 
@@ -165,7 +165,7 @@ class NewtonsMethod {
      * @return Whether convergence has been reached.
      */
     bool has_converged(
-        AmiVector& xdot, SimulationState& state, WRMSComputer& wrms_computer
+        AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer
     );
 
     static constexpr realtype conv_thresh = 1.0;
@@ -219,16 +219,20 @@ class SteadystateProblem {
     /**
      * @brief Constructor
      *
+     * @param ws Workspace for forward simulation
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(Solver const& solver, Model& model);
+    explicit SteadystateProblem(
+        FwdSimWorkspace* ws, Solver const& solver, Model& model
+    );
 
     /**
      * @brief Compute the steady state in the forward case.
      *
      * Tries to determine the steady state of the ODE system and computes
      * steady state sensitivities if requested.
+     * Expects that solver, model, and ws_ are already initialized.
      *
      * @param solver The solver instance
      * @param model The model instance
@@ -261,8 +265,8 @@ class SteadystateProblem {
      * @return stored SimulationState
      */
     [[nodiscard]] SimulationState const& getFinalSimulationState() const {
-        return state_;
-    };
+        return final_state_;
+    }
 
     /**
      * @brief Return the quadratures from pre- or postequilibration
@@ -275,15 +279,15 @@ class SteadystateProblem {
      * @brief Return state at steady state
      * @return x
      */
-    [[nodiscard]] AmiVector const& getState() const { return state_.x; };
+    [[nodiscard]] AmiVector const& getState() const { return final_state_.x; }
 
     /**
      * @brief Return state sensitivity at steady state
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
-        return state_.sx;
-    };
+        return final_state_.sx;
+    }
 
     /**
      * @brief Get the CPU time taken to solve the forward problem.
@@ -311,7 +315,7 @@ class SteadystateProblem {
      * @brief Get model time at which steady state was found through simulation.
      * @return Time at which steady state was found (model time units).
      */
-    [[nodiscard]] realtype getSteadyStateTime() const { return state_.t; }
+    [[nodiscard]] realtype getSteadyStateTime() const { return final_state_.t; }
 
     /**
      * @brief Get the weighted root mean square of the residuals.
@@ -334,17 +338,6 @@ class SteadystateProblem {
      * @return Number of steps.
      */
     [[nodiscard]] int getNumStepsB() const { return numstepsB_; }
-
-    /**
-     * @brief Compute adjoint updates dJydx according to the provided model and
-     * data.
-     * @param model Model instance
-     * @param edata Experimental data
-     * @param dJydx output argument for dJydx
-     */
-    void getAdjointUpdates(
-        Model& model, ExpData const& edata, std::vector<realtype>& dJydx
-    );
 
     /**
      * @brief Return the adjoint state
@@ -446,23 +439,6 @@ class SteadystateProblem {
     ) const;
 
     /**
-     * @brief Get whether state sensitivities need to be computed.
-     *
-     * Checks depending on the status of the Newton solver,
-     * solver settings, and the model, whether state sensitivities
-     * still need to be computed (via a linear system solve or integration).
-     * @param model Model instance.
-     * @param solver Solver instance.
-     * @param it Index of the current output time point.
-     * @param context SteadyStateContext giving the situation for the flag
-     * @return Whether sensitivities have to be computed.
-     */
-    [[nodiscard]] bool requires_state_sensitivities(
-        Model const& model, Solver const& solver, int it,
-        SteadyStateContext context
-    ) const;
-
-    /**
      * @brief Checks steady-state convergence for state variables
      * @param model Model instance
      * @return weighted root mean squared residuals of the RHS
@@ -495,17 +471,6 @@ class SteadystateProblem {
     void runSteadystateSimulationBwd(Solver const& solver, Model& model);
 
     /**
-     * @brief Initialize forward computation
-     * @param it Index of the current output time point.
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     * @param t0 Initial time for the steady state simulation.
-     */
-    void initializeForwardProblem(
-        int it, Solver const& solver, Model& model, realtype t0
-    );
-
-    /**
      * @brief Update member variables to indicate that state_.x has been
      * updated and xdot_, delta_, etc. need to be recomputed.
      */
@@ -525,12 +490,10 @@ class SteadystateProblem {
      */
     void updateRightHandSide(Model& model);
 
+    /** Workspace for forward simulation */
+    FwdSimWorkspace* ws_;
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
-    /** time derivative state vector */
-    AmiVector xdot_;
-    /** state differential sensitivities */
-    AmiVectorArray sdx_;
     /** adjoint state vector */
     AmiVector xB_;
     /** integral over adjoint state vector */
@@ -540,7 +503,8 @@ class SteadystateProblem {
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
-    SimulationState state_;
+    /** The simulation state at the end of the forward problem. */
+    SimulationState final_state_;
 
     /** stores diagnostic information about employed number of steps */
     std::vector<int> numsteps_{std::vector<int>(3, 0)};

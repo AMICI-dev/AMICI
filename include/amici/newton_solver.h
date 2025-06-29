@@ -10,7 +10,43 @@ namespace amici {
 class Model;
 class Solver;
 class AmiVector;
-struct SimulationState;
+
+/**
+ * @brief A non-owning container that groups references to the dynamical state
+ * of differential equation system.
+ *
+ * It's intended to passing around the current state of a system while
+ * avoiding repetetive argument passing in function signatures.
+ */
+struct DEStateView {
+    /**
+     * @brief Reference to the current simulation time \( t \).
+     */
+    realtype& t;
+
+    /**
+     * @brief Reference to the state vector \( x(t) \).
+     */
+    AmiVector& x;
+
+    /**
+     * @brief Reference to the time derivative of the state vector (DAE)
+     */
+    AmiVector& dx;
+
+    /**
+     * @brief Construct a DEStateView from references to state, derivative, and
+     * time.
+     *
+     * @param t_ Reference to the simulation time.
+     * @param x_ Reference to the state vector.
+     * @param dx_ Reference to the state derivative.
+     */
+    DEStateView(realtype& t_, AmiVector& x_, AmiVector& dx_)
+        : t(t_)
+        , x(x_)
+        , dx(dx_) {}
+};
 
 /**
  * @brief The NewtonSolver class sets up the linear solver for the Newton
@@ -44,7 +80,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void getStep(AmiVector& delta, Model& model, SimulationState const& state);
+    void getStep(AmiVector& delta, Model& model, DEStateView const& state);
 
     /**
      * @brief Computes steady state sensitivities
@@ -54,7 +90,7 @@ class NewtonSolver {
      * @param state current simulation state
      */
     void computeNewtonSensis(
-        AmiVectorArray& sx, Model& model, SimulationState const& state
+        AmiVectorArray& sx, Model& model, DEStateView const& state
     );
 
     /**
@@ -64,7 +100,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void prepareLinearSystem(Model& model, SimulationState const& state);
+    void prepareLinearSystem(Model& model, DEStateView const& state);
 
     /**
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the
@@ -73,7 +109,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void prepareLinearSystemB(Model& model, SimulationState const& state);
+    void prepareLinearSystemB(Model& model, DEStateView const& state);
 
     /**
      * @brief Solves the linear system for the Newton step
@@ -97,7 +133,7 @@ class NewtonSolver {
      * @return boolean indicating whether the linear system is singular
      * (condition number < 1/machine precision)
      */
-    bool is_singular(Model& model, SimulationState const& state) const;
+    bool is_singular(Model& model, DEStateView const& state) const;
 
   private:
     /** dummy rhs, used as dummy argument when computing J and JB */
