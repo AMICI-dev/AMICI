@@ -984,7 +984,7 @@ class JAXModel(eqx.Module):
         """
         return jax.vmap(
             lambda t, x, p, tcl, iy, op, np: self._sigmay(
-                self._y(t, x, p, tcl, h, op), p, np
+                self._y(t, x, p, tcl, hs, op), p, np
             )
             .at[iy]
             .get(),
