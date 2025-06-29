@@ -5,19 +5,17 @@
 from abc import abstractmethod
 from pathlib import Path
 import enum
-import os
 from dataclasses import field
 
 import diffrax
 import equinox as eqx
-import equinox.internal as eqxi
 import jax.numpy as jnp
 import jax
-import jax.tree_util as jtu
 from optimistix import AbstractRootFinder
 import jaxtyping as jt
 
 from collections.abc import Callable
+from ._simulation import solve, eq
 
 
 class ReturnValue(enum.Enum):
@@ -32,14 +30,6 @@ class ReturnValue(enum.Enum):
     tcl = "total values for conservation laws"
     res = "residuals"
     chi2 = "sum(((observed - simulated) / sigma ) ** 2)"
-
-
-STARTING_STATS = {
-    "max_steps": 0,
-    "num_accepted_steps": 0,
-    "num_rejected_steps": 0,
-    "num_steps": 0,
-}
 
 
 class JAXModel(eqx.Module):
@@ -279,9 +269,7 @@ class JAXModel(eqx.Module):
     @abstractmethod
     def _root_cond_fns(
         self,
-    ) -> tuple[
-        Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float], ...
-    ]:
+    ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
         """Return condition functions for implicit discontinuities.
 
         These functions are passed to :class:`diffrax.Event` and must evaluate
@@ -362,473 +350,6 @@ class JAXModel(eqx.Module):
             Expression ids
         """
         ...
-
-    def _eq(
-        self,
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
-        h0: jt.Float[jt.Array, "ne"],
-        x0: jt.Float[jt.Array, "nxs"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        root_finder: AbstractRootFinder,
-        steady_state_event: Callable[
-            ..., diffrax._custom_types.BoolScalarLike
-        ],
-        max_steps: jnp.int_,
-    ) -> tuple[jt.Float[jt.Array, "nxs"], dict]:
-        """
-        Solve the steady state equation.
-
-        :param p:
-            parameters
-        :param tcl:
-            total values for conservation laws
-        :param h:
-            heaviside variables
-        :param x0:
-            initial state vector
-        :param solver:
-            ODE solver
-        :param controller:
-            step size controller
-        :param max_steps:
-            maximum number of steps
-        :return:
-        """
-        # if there are no events, we can avoid expensive looping and just run a single segment
-        if not self._root_cond_fns():
-            sol, _, stats = self._run_segment(
-                0.0,
-                jnp.inf,
-                x0,
-                p,
-                tcl,
-                h0,
-                solver,
-                controller,
-                root_finder,
-                max_steps,
-                diffrax.DirectAdjoint(),
-                [steady_state_event],
-                diffrax.SaveAt(t1=True),
-                dict(**STARTING_STATS),
-            )
-            y1 = jnp.where(
-                diffrax.is_event(sol.result),
-                sol.ys[-1],
-                jnp.inf * jnp.ones_like(sol.ys[-1]),
-            )
-            return y1, stats
-
-        def body_fn(carry):
-            t_start, y0, h, event_index, stats = carry
-            sol, event_index, stats = self._run_segment(
-                t_start,
-                jnp.inf,
-                y0,
-                p,
-                tcl,
-                h,
-                solver,
-                controller,
-                root_finder,
-                max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
-                diffrax.DirectAdjoint(),
-                [steady_state_event] + list(self._root_cond_fns()),
-                diffrax.SaveAt(t1=True),
-                stats,
-            )
-            y0_next = jnp.where(
-                jnp.logical_or(
-                    diffrax.is_successful(sol.result),
-                    diffrax.is_event(sol.result),
-                ),
-                sol.ys[-1],
-                jnp.inf * jnp.ones_like(sol.ys[-1]),
-            )
-            t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
-
-            y0_next, t0_next, h_next, stats = self._handle_event(
-                t0_next,
-                jnp.inf,
-                y0_next,
-                p,
-                tcl,
-                h,
-                solver,
-                controller,
-                root_finder,
-                diffrax.DirectAdjoint(),
-                stats,
-            )
-
-            return (
-                t0_next,
-                y0_next,
-                h_next,
-                event_index,
-                dict(**STARTING_STATS),
-            )
-
-        def cond_fn(carry):
-            _, y0, _, event_index, _ = carry
-            return jnp.logical_and(
-                event_index != 0,  # has not reached steady state yet
-                jnp.isfinite(
-                    y0
-                ).all(),  # y0 is finite, used to indicate integration failure
-            )
-
-        # run the loop until no event is triggered (which will also be the case if we run out of steps)
-        _, y1, _, _, stats = eqxi.while_loop(
-            cond_fn,
-            body_fn,
-            (0.0, x0, h0, -1, dict(**STARTING_STATS)),
-            kind="bounded",
-            max_steps=2**6,
-        )
-
-        return y1, stats
-
-    def _solve(
-        self,
-        p: jt.Float[jt.Array, "np"],
-        ts: jt.Float[jt.Array, "nt_dyn"],
-        tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "ne"],
-        x0: jt.Float[jt.Array, "nxs"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        root_finder: AbstractRootFinder,
-        max_steps: jnp.int_,
-        adjoint: diffrax.AbstractAdjoint,
-    ) -> tuple[
-        jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict
-    ]:
-        """
-        Solve the ODE system.
-
-        :param p:
-            parameters
-        :param ts:
-            time points at which solutions are evaluated
-        :param tcl:
-            total values for conservation laws
-        :param x0:
-            initial state vector
-        :param solver:
-            ODE solver
-        :param controller:
-            step size controller
-        :param max_steps:
-            maximum number of steps
-        :param adjoint:
-            adjoint method
-        :return:
-            solution+heaviside variables at time points ts and statistics
-        """
-        # if there are no events, we can avoid expensive looping and just run a single segment
-        if not self._root_cond_fns():
-            # no events, we can just run a single segment
-            sol, _, stats = self._run_segment(
-                0.0,
-                ts[-1],
-                x0,
-                p,
-                tcl,
-                h,
-                solver,
-                controller,
-                root_finder,
-                max_steps,
-                adjoint,
-                [],
-                diffrax.SaveAt(ts=ts),
-                dict(**STARTING_STATS),
-            )
-            return sol.ys, jnp.repeat(h[None, :], sol.ys.shape[0]), stats
-
-        def cond_fn(carry):
-            _, t_start, y0, _, _, stats = carry
-            # check if we have reached the end of the time points
-            return jnp.logical_and(
-                t_start < ts[-1],  # final time point not reached
-                jnp.isfinite(
-                    y0
-                ).all(),  # y0 is finite, used to indicate integration failure
-            )
-
-        def body_fn(carry):
-            ys, t_start, y0, hs, h, stats = carry
-            sol, idx, stats = self._run_segment(
-                t_start,
-                ts[-1],
-                y0,
-                p,
-                tcl,
-                h,
-                solver,
-                controller,
-                root_finder,
-                max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
-                adjoint,
-                list(self._root_cond_fns()),
-                diffrax.SaveAt(
-                    subs=[
-                        diffrax.SubSaveAt(
-                            ts=jnp.where(ts >= t_start, ts, t_start)
-                        ),  # datapoints
-                        diffrax.SubSaveAt(t1=True),  # events
-                    ]
-                ),
-                stats,
-            )
-            # update the solution for all timepoints in the simulated segment
-            was_simulated = jnp.isin(ts, sol.ts[0])
-            ys = jnp.where(was_simulated[:, None], sol.ys[0], ys)
-            hs = jnp.where(was_simulated[:, None], h[None, :], hs)
-
-            t0_next = sol.ts[1][
-                -1
-            ]  # next start time is the end of the current segment
-            y0_next = sol.ys[1][
-                -1
-            ]  # next initial state is the last state of the current segment
-            ts_next = jnp.where(
-                ts > t0_next, ts, ts[-1]
-            ).min()  # timepoint of next datapoint, don't step over that
-
-            y0_next, t0_next, h_next, stats = self._handle_event(
-                t0_next,
-                ts_next,
-                y0_next,
-                p,
-                tcl,
-                h,
-                solver,
-                controller,
-                root_finder,
-                adjoint,
-                stats,
-            )
-
-            was_event = jnp.isin(ts, sol.ts[1])
-            hs = jnp.where(was_event[:, None], h_next[None, :], hs)
-
-            return ys, t0_next, y0_next, hs, h_next, stats
-
-        # run the loop until we have reached the end of the time points
-        ys, _, _, hs, _, stats = eqxi.while_loop(
-            cond_fn,
-            body_fn,
-            (
-                jnp.zeros((ts.shape[0], x0.shape[0]), dtype=x0.dtype) + x0,
-                0.0,
-                x0,
-                jnp.zeros((ts.shape[0], h.shape[0]), dtype=h.dtype),
-                h,
-                dict(**STARTING_STATS),
-            ),
-            kind="bounded",
-            max_steps=2**6,
-        )
-
-        return ys, hs, stats
-
-    def _run_segment(
-        self,
-        t_start: float,
-        t_end: float,
-        y0: jt.Float[jt.Array, "nxs"],
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "ne"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        root_finder: AbstractRootFinder,
-        max_steps: jnp.int_,
-        adjoint: diffrax.AbstractAdjoint,
-        cond_fns: list[Callable],
-        saveat: diffrax.SaveAt,
-        stats: dict,
-    ) -> tuple[diffrax.Solution, int, dict]:
-        """Solve a single integration segment and return triggered event index, start time for the next segment,
-        aggregated statistics
-
-        The returned index corresponds to the event in ``cond_fns`` that was
-        triggered during the integration. ``None`` indicates that the solver
-        reached ``t_end`` without any event firing.
-        """
-
-        # combine all discontinuity conditions into a single diffrax.Event
-        event = diffrax.Event(cond_fns, root_finder) if cond_fns else None
-
-        # manage events with explicit discontinuities
-        controller = (
-            diffrax.ClipStepSizeController(
-                controller,
-                jump_ts=self._known_discs(p),
-            )
-            if self._known_discs(p).size
-            else controller
-        )
-
-        sol = diffrax.diffeqsolve(
-            diffrax.ODETerm(self._xdot),
-            solver,
-            args=(p, tcl, h),
-            t0=t_start,
-            t1=t_end,
-            dt0=None,
-            y0=y0,
-            stepsize_controller=controller,
-            max_steps=max_steps,
-            adjoint=adjoint,
-            saveat=saveat,
-            event=event,
-            throw=False,
-        )
-        if os.getenv("JAX_DEBUG") == "1":
-            jax.debug.print(
-                "Segment: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, numrejected = {}, result = {}",
-                t_start,
-                t_end,
-                y0,
-                sol.ys[-1],
-                sol.stats["num_steps"],
-                sol.stats["num_rejected_steps"],
-                sol.result,
-            )
-
-        # extract the event index
-        if sol.event_mask is None:
-            # no events were triggered
-            event_index = -1
-        else:
-            event_index = jnp.where(
-                diffrax.is_event(sol.result),
-                jnp.argmax(jnp.array(sol.event_mask)),
-                -1,
-            )
-
-        # aggregate statistics
-        stats = jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
-
-        return sol, event_index, stats
-
-    def _handle_event(
-        self,
-        t0_next: float,
-        t_max: float,
-        y0_next: jt.Float[jt.Array, "nxs"],
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "ne"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        root_finder: AbstractRootFinder,
-        adjoint: diffrax.AbstractAdjoint,
-        stats: dict,
-    ):
-        args = (p, tcl, h)
-        rootvals = self._root_cond_fn(t0_next, y0_next, args)
-        roots_found = jnp.isclose(
-            rootvals, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
-        )
-        droot_dt = (
-            # ∂root_cond_fn/∂t
-            jax.jacfwd(self._root_cond_fn, argnums=0)(t0_next, y0_next, args)
-            +
-            # ∂root_cond_fn/∂y * ∂y/∂t
-            jax.jacfwd(self._root_cond_fn, argnums=1)(t0_next, y0_next, args)
-            @ self._xdot(t0_next, y0_next, args)
-        )
-        roots_dir = jnp.sign(
-            droot_dt
-        )  # direction of the root condition function
-
-        h_next = h + jnp.where(
-            roots_found,
-            roots_dir,
-            jnp.zeros_like(h),
-        )  # update heaviside variables based on the root condition function
-
-        if os.getenv("JAX_DEBUG") == "1":
-            jax.debug.print(
-                "rootvals: {}, roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
-                rootvals,
-                roots_found,
-                roots_dir,
-                h,
-                h_next,
-            )
-
-        # while we are trying to step out of the event
-        y0_next, t0_next, stats = self._step_out_of_event(
-            t0_next,
-            t_max,
-            y0_next,
-            p,
-            tcl,
-            h_next,
-            solver,
-            controller,
-            adjoint,
-            stats,
-        )
-        return y0_next, t0_next, h_next, stats
-
-    def _step_out_of_event(
-        self,
-        t_start: float,
-        t_end: float,
-        y0: jt.Float[jt.Array, "nxs"],
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
-        h: jt.Float[jt.Array, "ne"],
-        solver: diffrax.AbstractSolver,
-        controller: diffrax.AbstractStepSizeController,
-        adjoint: diffrax.AbstractAdjoint,
-        stats: dict,
-    ):
-        # take a single step, without event, to step out of the event
-        # TODO: loop until we are out of the event
-        sol = diffrax.diffeqsolve(
-            diffrax.ODETerm(self._xdot),
-            solver,
-            args=(p, tcl, h),
-            t0=t_start,
-            t1=t_end,
-            dt0=None,
-            y0=y0,
-            stepsize_controller=controller,
-            max_steps=1,
-            adjoint=adjoint,
-            saveat=diffrax.SaveAt(
-                subs=[
-                    diffrax.SubSaveAt(t1=True),  # we manage to reach t_end
-                    diffrax.SubSaveAt(
-                        steps=True
-                    ),  # we want to save the state at t_end
-                ]
-            ),
-            throw=False,
-        )
-        if os.getenv("JAX_DEBUG") == "1":
-            jax.debug.print(
-                "StepOutOfEvent: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, num_rejected = {}, result = {}",
-                t_start,
-                t_end,
-                y0,
-                sol.ys[0][-1],
-                sol.stats["num_steps"],
-                sol.stats["num_rejected_steps"],
-                sol.result,
-            )
-        # aggregate stats
-        stats = jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
-        return sol.ys[0][-1], sol.ts[0][-1], stats
 
     def _initialise_heaviside_variables(
         self,
@@ -1085,7 +606,7 @@ class JAXModel(eqx.Module):
 
         # Dynamic simulation
         if ts_dyn.shape[0]:
-            x_dyn, h_dyn, stats_dyn = self._solve(
+            x_dyn, h_dyn, stats_dyn = solve(
                 p,
                 ts_dyn,
                 tcl,
@@ -1096,6 +617,10 @@ class JAXModel(eqx.Module):
                 root_finder,
                 max_steps,
                 adjoint,
+                diffrax.ODETerm(self._xdot),
+                self._root_cond_fns(),
+                self._root_cond_fn,
+                self._known_discs(p),
             )
             x_solver = x_dyn[-1, :]
         else:
@@ -1105,7 +630,7 @@ class JAXModel(eqx.Module):
 
         # Post-equilibration
         if ts_posteq.shape[0]:
-            x_solver, h, stats_posteq = self._eq(
+            x_solver, h, stats_posteq = eq(
                 p,
                 tcl,
                 h,
@@ -1114,6 +639,10 @@ class JAXModel(eqx.Module):
                 controller,
                 root_finder,
                 steady_state_event,
+                diffrax.ODETerm(self._xdot),
+                self._root_cond_fns(),
+                self._root_cond_fn,
+                self._known_discs(p),
                 max_steps,
             )
         else:
@@ -1231,7 +760,7 @@ class JAXModel(eqx.Module):
             t0, self._x_solver(x0), p, tcl
         )
         current_x = self._x_solver(x0)
-        current_x, stats_preeq = self._eq(
+        current_x, _, stats_preeq = eq(
             p,
             tcl,
             h,
@@ -1240,6 +769,10 @@ class JAXModel(eqx.Module):
             controller,
             root_finder,
             steady_state_event,
+            diffrax.ODETerm(self._xdot),
+            self._root_cond_fns(),
+            self._root_cond_fn,
+            self._known_discs(p),
             max_steps,
         )
 

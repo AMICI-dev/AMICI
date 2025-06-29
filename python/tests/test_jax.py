@@ -326,6 +326,7 @@ def test_time_dependent_discontinuity(tmp_path):
     from amici.antimony_import import antimony2sbml
     from amici.sbml_import import SbmlImporter
     from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+    from amici.jax._simulation import solve
 
     ant_model = """
     model time_disc
@@ -351,7 +352,7 @@ def test_time_dependent_discontinuity(tmp_path):
     assert len(model._root_cond_fns()) > 0
     assert model._known_discs(p).size == 0
 
-    ys, _, _ = model._solve(
+    ys, _, _ = solve(
         p,
         ts,
         tcl,
@@ -362,6 +363,10 @@ def test_time_dependent_discontinuity(tmp_path):
         optimistix.Newton(atol=1e-8, rtol=1e-8),
         1000,
         diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._known_discs(p),
     )
 
     assert ys.shape[0] == ts.shape[0]
@@ -374,6 +379,7 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     from amici.antimony_import import antimony2sbml
     from amici.sbml_import import SbmlImporter
     from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+    from amici.jax._simulation import eq
 
     ant_model = """
     model time_disc_eq
@@ -398,7 +404,7 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     assert len(model._root_cond_fns()) > 0
     assert model._known_discs(p).size == 0
 
-    xs, _ = model._eq(
+    xs, _, _ = eq(
         p,
         tcl,
         h,
@@ -407,6 +413,10 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
         optimistix.Newton(atol=1e-8, rtol=1e-8),
         diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._known_discs(p),
         1000,
     )
 
