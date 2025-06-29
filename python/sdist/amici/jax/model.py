@@ -573,8 +573,9 @@ class JAXModel(eqx.Module):
             ]  # next initial state is the last state of the current segment
 
             args = (p, tcl, h)
+            rootvals = self._root_cond_fn(t0_next, y0_next, args)
             roots_found = jnp.isclose(
-                self._root_cond_fn(t0_next, y0_next, args), 0.0
+                rootvals, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
             )
             droot_dt = (
                 # ∂root_cond_fn/∂t
@@ -604,7 +605,8 @@ class JAXModel(eqx.Module):
             hs = jnp.where(was_event[:, None], h_next[None, :], hs)
             if os.getenv("JAX_DEBUG") == "1":
                 jax.debug.print(
-                    "roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                    "rootvals: {}, roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                    rootvals,
                     roots_found,
                     roots_dir,
                     h,
