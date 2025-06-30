@@ -29,6 +29,8 @@ struct ModelState {
         stotal_cl.resize((dim.nx_rdata - dim.nx_solver) * dim.np, 0.0);
         unscaledParameters.resize(dim.np);
         fixedParameters.resize(dim.nk);
+        root_enabled.resize(dim.ne, true);
+        root_last_sign.resize(dim.ne, 0);
     }
 
     /**
@@ -56,6 +58,18 @@ struct ModelState {
      * (dimension: nplist)
      */
     std::vector<int> plist;
+
+    /**
+     * Flags indicating whether a root function element is enabled
+     * (dimension: `ne`)
+     */
+    std::vector<bool> root_enabled;
+
+    /**
+     * The sign of the root function elements at the last root function call
+     * (dimension: `ne`).
+     */
+    std::vector<int> root_last_sign;
 };
 
 inline bool operator==(ModelState const& a, ModelState const& b) {
@@ -63,7 +77,7 @@ inline bool operator==(ModelState const& a, ModelState const& b) {
            && is_equal(a.stotal_cl, b.stotal_cl)
            && is_equal(a.unscaledParameters, b.unscaledParameters)
            && is_equal(a.fixedParameters, b.fixedParameters)
-           && a.plist == b.plist;
+           && a.plist == b.plist && a.root_enabled == b.root_enabled && a.root_last_sign == b.root_last_sign;
 }
 
 /**

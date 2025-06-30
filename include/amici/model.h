@@ -1363,6 +1363,17 @@ class Model : public AbstractModel, public ModelDimensions {
     void updateHeaviside(std::vector<int> const& rootsfound);
 
     /**
+     * @brief Disable the event with index `ie` because it just triggered.
+     *
+     * Not to be called by user code.
+     *
+     * @param ie Event index.
+     */
+    void register_root(int const ie, int direction) {
+        state_.root_enabled.at(ie) = false;
+        state_.root_last_sign.at(ie) = direction;
+    }
+    /**
      * @brief Check if the given array has only finite elements.
      *
      * For (1D) spans.
