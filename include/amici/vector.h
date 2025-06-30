@@ -238,7 +238,7 @@ class AmiVector {
     /**
      * @brief Serialize AmiVector (see boost::serialization::serialize)
      * @param ar Archive to serialize to
-     * @param s Data to serialize
+     * @param v Data to serialize
      * @param version Version number
      */
     template <class Archive>
