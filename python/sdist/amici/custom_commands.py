@@ -189,6 +189,13 @@ class AmiciBuildCMakeExtension(BuildExtension):
             for x in ext.cmake_configure_options
         ]
 
+        # We allow monkey-patching the CMakeExtension so some custom actions
+        #  can be performed after the build directory is known,
+        #  but before the actual CMake build is run.
+        if hasattr(ext, "amici_pre_cmake"):
+            # Run custom pre-cmake command
+            ext.amici_pre_cmake(ext, build_dir)
+
         super().build_extension(ext)
 
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)

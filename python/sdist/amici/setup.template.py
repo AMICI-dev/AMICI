@@ -8,6 +8,7 @@ from amici import _get_amici_path
 from amici.custom_commands import AmiciBuildCMakeExtension
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
+import importlib.metadata
 
 
 def get_extension() -> CMakeExtension:
@@ -32,16 +33,14 @@ def get_extension() -> CMakeExtension:
     cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "").split(os.pathsep)
     cmake_prefix_path.append(prefix_path.as_posix())
 
-    # If scipy_openblas64 is installed, we make it cmake configuration
+    # If scipy_openblas64 is installed, we make its cmake configuration
     # available
-    try:
-        import scipy_openblas64
-
-        cmake_prefix_path.append(
-            f"{scipy_openblas64.get_lib_dir()}/cmake/openblas"
-        )
-    except ImportError:
-        pass
+    amici_distribution = importlib.metadata.distribution("amici")
+    amici_dir = Path(amici_distribution.locate_file(""))
+    # this path is created during the amici build if scipy_openblas64 is used
+    openblas_cmake_dir = amici_dir / "lib" / "cmake" / "openblas"
+    if openblas_cmake_dir.exists():
+        cmake_prefix_path.append(str(openblas_cmake_dir))
 
     return CMakeExtension(
         name="model_ext",

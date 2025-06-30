@@ -16,6 +16,7 @@ from pathlib import Path
 
 from cmake_build_extension import CMakeExtension
 from setuptools import setup
+import shutil
 
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation
@@ -35,8 +36,8 @@ def get_extensions():
     """Get required C(++) extensions for build_ext"""
     # CMake prefix path for finding FindXXX.cmake to find SuiteSparse
     #  components
-    install_dir = (Path(__file__).parent / "amici").absolute()
-    prefix_path = install_dir
+    install_dir = Path(__file__).parent / "amici"
+    prefix_path = install_dir.absolute()
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
 
     # Used by all extensions
@@ -107,14 +108,12 @@ def get_extensions():
         ],
     )
 
-    # If scipy_openblas64 is installed, we make it cmake configuration
+    # If scipy_openblas64 is installed, we make its cmake configuration
     # available
     try:
-        import scipy_openblas64
+        import scipy_openblas64  # noqa: F401
 
-        cmake_prefix_path.append(
-            f"{scipy_openblas64.get_lib_dir()}/cmake/openblas"
-        )
+        cmake_prefix_path.append("${build_dir}/amici/lib/cmake/openblas")
     except ImportError:
         pass
 
@@ -136,6 +135,36 @@ def get_extensions():
             f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
         ],
     )
+
+    # monkey patch a pre-cmake hook into the extension
+    # see `amici.custom_commands.AmiciBuildCMakeExtension.build_extension`
+    def amici_pre_cmake(ext, binary_dir):
+        """Pre-cmake hook for AMICI extension"""
+        # If scipy_openblas64 is installed, we make its cmake configuration
+        # available
+        try:
+            import scipy_openblas64
+
+            # we are not supposed to have a run-time dependency on the
+            # scipy_openblas64 package, so we copy the relevant files
+            # to the installation directory
+            # (see warnings at https://github.com/MacPython/openblas-libs)
+            binary_dir = Path(binary_dir)
+            shutil.copytree(
+                scipy_openblas64.get_lib_dir(),
+                binary_dir / "amici" / "lib",
+                dirs_exist_ok=True,
+            )
+            shutil.copytree(
+                scipy_openblas64.get_include_dir(),
+                binary_dir / "amici" / "include",
+                dirs_exist_ok=True,
+            )
+        except ImportError:
+            pass
+
+    amici_ext.amici_pre_cmake = amici_pre_cmake
+
     # Order matters!
     return [suitesparse, sundials, amici_ext]
 

@@ -29,7 +29,6 @@ dependencies = [
     "toposort",
     "setuptools>=48",
     "mpmath",
-    "scipy-openblas64; platform_system!='Darwin'",
     "swig"
 ]
 license = "BSD-3-Clause"
