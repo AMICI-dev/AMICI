@@ -245,8 +245,6 @@ def jax_sensitivity_check(
             rdata = amici.runAmiciSimulation(amici_model, solver_amici)
 
         np.testing.assert_allclose(x, rdata["x"], rtol=rtol, atol=atol)
-        np.testing.assert_allclose(
-            sx, rdata["sx"], rtol=rtol * tol_factor, atol=atol * tol_factor
-        )
+        np.testing.assert_allclose(sx, rdata["sx"], rtol=rtol, atol=atol)
     finally:
         shutil.rmtree(model_dir, ignore_errors=True)
