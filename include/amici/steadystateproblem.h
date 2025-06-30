@@ -243,23 +243,6 @@ class SteadystateProblem {
     workSteadyStateProblem(Solver& solver, Model& model, int it, realtype t0);
 
     /**
-     * @brief Compute the gradient via adjoint steady state sensitivities.
-     *
-     * Integrates over the adjoint state backward in time by solving a linear
-     * system of equations, which gives the analytical solution.
-     *
-     * @param solver The solver instance
-     * @param model The model instance
-     * @param xB0 Initial adjoint state vector.
-     * @param is_preeq Flag indicating whether this is a preequilibration.
-     * @param t0 Initial time for the steady state simulation.
-     */
-    void workSteadyStateBackwardProblem(
-        Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
-        realtype t0
-    );
-
-    /**
      * @brief Return the stored SimulationState.
      * @return stored SimulationState
      */
@@ -267,13 +250,6 @@ class SteadystateProblem {
         return final_state_;
     }
 
-    /**
-     * @brief Return the quadratures from pre- or postequilibration
-     * @return xQB Vector with quadratures
-     */
-    [[nodiscard]] AmiVector const& getEquilibrationQuadratures() const {
-        return xQB_;
-    }
     /**
      * @brief Return state at steady state
      * @return x
@@ -293,12 +269,6 @@ class SteadystateProblem {
      * @return The CPU time in milliseconds.
      */
     [[nodiscard]] double getCPUTime() const { return cpu_time_; }
-
-    /**
-     * @brief Get the CPU time taken to solve the backward problem.
-     * @return The CPU time in milliseconds.
-     */
-    [[nodiscard]] double getCPUTimeB() const { return cpu_timeB_; }
 
     /**
      * @brief Get the steady state computation status.
@@ -330,31 +300,6 @@ class SteadystateProblem {
     [[nodiscard]] std::vector<int> const& getNumSteps() const {
         return numsteps_;
     }
-
-    /**
-     * @brief Get the number of steps taken to find the steady state in the
-     * adjoint case.
-     * @return Number of steps.
-     */
-    [[nodiscard]] int getNumStepsB() const { return numstepsB_; }
-
-    /**
-     * @brief Return the adjoint state
-     * @return xB adjoint state
-     */
-    [[nodiscard]] AmiVector const& getAdjointState() const { return xB_; }
-
-    /**
-     * @brief Get the adjoint quadratures (xQB).
-     * @return xQB
-     */
-    [[nodiscard]] AmiVector const& getAdjointQuadrature() const { return xQB_; }
-
-    /**
-     * @brief Accessor for hasQuadrature_
-     * @return hasQuadrature_
-     */
-    [[nodiscard]] bool hasQuadrature() const { return hasQuadrature_; }
 
     /**
      * @brief Check, whether any approach to find the steady state was
@@ -398,33 +343,6 @@ class SteadystateProblem {
     );
 
     /**
-     * @brief Compute quadratures in adjoint mode
-     * @param solver Solver instance.
-     * @param model Model instance.
-     * @param t0 Initial time for the steady state simulation.
-     */
-    void computeSteadyStateQuadrature(
-        Solver const& solver, Model& model, realtype t0
-    );
-
-    /**
-     * @brief Compute the quadrature in steady state backward mode by
-     * solving the linear system defined by the backward Jacobian.
-     * @param model Model instance.
-     */
-    void getQuadratureByLinSolve(Model& model);
-
-    /**
-     * @brief Computes the quadrature in steady state backward mode by
-     * numerical integration of xB forward in time.
-     * @param solver Solver instance.
-     * @param model Model instance.
-     * @param t0 Initial time for the steady state simulation.
-     */
-    void
-    getQuadratureBySimulation(Solver const& solver, Model& model, realtype t0);
-
-    /**
      * @brief Store state and throw an exception if equilibration failed
      * @param tried_newton_1 Whether any Newton step was attempted before
      * simulation
@@ -454,14 +372,6 @@ class SteadystateProblem {
     void runSteadystateSimulationFwd(Solver& solver, Model& model);
 
     /**
-     * @brief Launch backward simulation if Newton solver or linear system solve
-     * fail or are disabled.
-     * @param solver Solver instance.
-     * @param model Model instance.
-     */
-    void runSteadystateSimulationBwd(Solver const& solver, Model& model);
-
-    /**
      * @brief Update member variables to indicate that state_.x has been
      * updated and xdot_, delta_, etc. need to be recomputed.
      */
@@ -485,12 +395,6 @@ class SteadystateProblem {
     FwdSimWorkspace* ws_;
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
-    /** adjoint state vector */
-    AmiVector xB_;
-    /** integral over adjoint state vector */
-    AmiVector xQ_;
-    /** quadrature state vector */
-    AmiVector xQB_;
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
@@ -500,17 +404,8 @@ class SteadystateProblem {
     /** stores diagnostic information about employed number of steps */
     std::vector<int> numsteps_{std::vector<int>(3, 0)};
 
-    /** The employed number of backward steps */
-    int numstepsB_{0};
-
     /** CPU time for solving the forward problem (milliseconds) */
     double cpu_time_{0.0};
-
-    /** CPU time for solving the backward problem (milliseconds) */
-    double cpu_timeB_{0.0};
-
-    /** flag indicating whether backward mode was run */
-    bool hasQuadrature_{false};
 
     /**
      * Execution status of the different approaches
@@ -537,6 +432,146 @@ class SteadystateProblem {
      * the current state
      */
     bool sensis_updated_{false};
+};
+
+/**
+ * @brief The SteadyStateBackwardProblem class computes the adjoint state and
+ * quadratures for pre- or post-equilibration.
+ */
+class SteadyStateBackwardProblem {
+  public:
+    /**
+     * @brief SteadyStateBackwardProblem ctor
+     * @param solver
+     * @param model
+     * @param final_state Final state from pre/post-equilibration forward
+     * problem
+     */
+    SteadyStateBackwardProblem(
+        Solver const& solver, Model& model, SimulationState& final_state
+    );
+
+    /**
+     * @brief Compute the gradient via adjoint steady-state sensitivities.
+     *
+     * Integrates over the adjoint state backward in time by solving a linear
+     * system of equations, which gives the analytical solution.
+     *
+     * @param solver The solver instance
+     * @param model The model instance
+     * @param xB0 Initial adjoint state vector.
+     * @param is_preeq Flag indicating whether this is a preequilibration.
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void
+    run(Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
+        realtype t0);
+
+    /**
+     * @brief Return the quadratures from pre- or postequilibration
+     * @return xQB Vector with quadratures
+     */
+    [[nodiscard]] AmiVector const& getEquilibrationQuadratures() const {
+        return xQB_;
+    }
+
+    /**
+     * @brief Get the CPU time taken to solve the backward problem.
+     * @return The CPU time in milliseconds.
+     */
+    [[nodiscard]] double getCPUTimeB() const { return cpu_timeB_; }
+
+    /**
+     * @brief Get the number of steps taken to find the steady state in the
+     * adjoint case.
+     * @return Number of steps.
+     */
+    [[nodiscard]] int getNumStepsB() const { return numstepsB_; }
+
+    /**
+     * @brief Return the adjoint state
+     * @return xB adjoint state
+     */
+    [[nodiscard]] AmiVector const& getAdjointState() const { return xB_; }
+
+    /**
+     * @brief Get the adjoint quadratures (xQB).
+     * @return xQB
+     */
+    [[nodiscard]] AmiVector const& getAdjointQuadrature() const { return xQB_; }
+
+    /**
+     * @brief Accessor for has_quadrature_
+     * @return has_quadrature_
+     */
+    [[nodiscard]] bool hasQuadrature() const { return has_quadrature_; }
+
+  private:
+    /**
+     * @brief Launch backward simulation if Newton solver or linear system solve
+     * fail or are disabled.
+     * @param solver Solver instance.
+     * @param model Model instance.
+     */
+    void run_simulation(Solver const& solver, Model& model);
+
+    /**
+     * @brief Compute quadratures in adjoint mode
+     * @param solver Solver instance.
+     * @param model Model instance.
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void compute_steady_state_quadrature(
+        Solver const& solver, Model& model, realtype t0
+    );
+
+    /**
+     * @brief Compute the quadrature in steady state backward mode by
+     * solving the linear system defined by the backward Jacobian.
+     * @param model Model instance.
+     */
+    void compute_quadrature_by_lin_solve(Model& model);
+
+    /**
+     * @brief Computes the quadrature in steady state backward mode by
+     * numerical integration of xB forward in time.
+     * @param solver Solver instance.
+     * @param model Model instance.
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void compute_quadrature_by_simulation(
+        Solver const& solver, Model& model, realtype t0
+    );
+
+    /** CPU time for solving the backward problem (milliseconds) */
+    double cpu_timeB_{0.0};
+
+    /** flag indicating whether backward mode was run */
+    bool has_quadrature_{false};
+
+    /** The employed number of backward steps */
+    int numstepsB_{0};
+
+    /** adjoint state vector */
+    AmiVector xB_;
+
+    /** integral over adjoint state vector */
+    AmiVector xQ_;
+
+    /** quadrature state vector */
+    AmiVector xQB_;
+
+    /** Final state from pre/post-equilibration forward problem */
+    SimulationState& final_state_;
+
+    /** Newton solver */
+    NewtonSolver newton_solver_;
+
+    /**
+     * Whether the Newton step should be used instead of xdot for convergence
+     * checks during simulation.
+     */
+    bool newton_step_conv_{false};
 };
 
 } // namespace amici

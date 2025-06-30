@@ -72,9 +72,9 @@ void BackwardProblem::workBackwardProblem() {
         );
         auto const t0
             = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
-        preeq_problem_->workSteadyStateBackwardProblem(
-            *solver_, *model_, ws_.xB_, true, t0
-        );
+        auto final_state = preeq_problem_->getFinalSimulationState();
+        preeq_problem_bwd_.emplace(*solver_, *model_, final_state);
+        preeq_problem_bwd_->run(*solver_, *model_, ws_.xB_, true, t0);
     }
 }
 
@@ -91,10 +91,10 @@ void BackwardProblem::handlePostequilibration() {
         }
     }
 
-    posteq_problem_->workSteadyStateBackwardProblem(
-        *solver_, *model_, ws_.xB_, false, model_->t0()
-    );
-    ws_.xQB_ = posteq_problem_->getEquilibrationQuadratures();
+    auto final_state = posteq_problem_->getFinalSimulationState();
+    posteq_problem_bwd_.emplace(*solver_, *model_, final_state);
+    posteq_problem_bwd_->run(*solver_, *model_, ws_.xB_, false, model_->t0());
+    ws_.xQB_ = posteq_problem_bwd_->getEquilibrationQuadratures();
 }
 
 void EventHandlingBwdSimulator::handleEventB(

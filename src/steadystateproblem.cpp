@@ -125,9 +125,6 @@ SteadystateProblem::SteadystateProblem(
           solver.getRelativeToleranceSteadyState(),
           AmiVector(model.get_steadystate_mask(), solver.getSunContext())
       )
-    , xB_(model.nJ * model.nx_solver, solver.getSunContext())
-    , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
-    , xQB_(model.nplist(), solver.getSunContext())
     , final_state_(
           {.t = INFINITY,
            .x = AmiVector(model.nx_solver, solver.getSunContext()),
@@ -241,11 +238,22 @@ void SteadystateProblem::workSteadyStateProblem(
     final_state_.sx = ws_->sx;
 }
 
-void SteadystateProblem::workSteadyStateBackwardProblem(
+SteadyStateBackwardProblem::SteadyStateBackwardProblem(
+    Solver const& solver, Model& model, SimulationState& final_state
+)
+    : xB_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
+    , xQB_(model.nplist(), solver.getSunContext())
+    , final_state_(final_state)
+    , newton_solver_(
+          NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
+      )
+    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck()) {}
+
+void SteadyStateBackwardProblem::run(
     Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
     realtype t0
 ) {
-    // note that state_ is still set from forward run
     if (is_preeq) {
         if (solver.getSensitivityMethodPreequilibration()
             != SensitivityMethod::adjoint) {
@@ -275,7 +283,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 
     // Compute quadratures, track computation time
     CpuTimer cpu_timer;
-    computeSteadyStateQuadrature(solver, model, t0);
+    compute_steady_state_quadrature(solver, model, t0);
     cpu_timeB_ = cpu_timer.elapsed_milliseconds();
 }
 
@@ -434,7 +442,7 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
     }
 }
 
-void SteadystateProblem::computeSteadyStateQuadrature(
+void SteadyStateBackwardProblem::compute_steady_state_quadrature(
     Solver const& solver, Model& model, realtype t0
 ) {
     // This routine computes the quadratures:
@@ -450,14 +458,14 @@ void SteadystateProblem::computeSteadyStateQuadrature(
     if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly
         || sensitivityMode
                == SteadyStateSensitivityMode::integrateIfNewtonFails)
-        getQuadratureByLinSolve(model);
+        compute_quadrature_by_lin_solve(model);
 
     // Perform simulation if necessary
     if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly
         || (sensitivityMode
                 == SteadyStateSensitivityMode::integrateIfNewtonFails
             && !hasQuadrature()))
-        getQuadratureBySimulation(solver, model, t0);
+        compute_quadrature_by_simulation(solver, model, t0);
 
     // If the analytic solution and integration did not work, throw
     if (!hasQuadrature())
@@ -468,7 +476,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(
         );
 }
 
-void SteadystateProblem::getQuadratureByLinSolve(Model& model) {
+void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
     // Computes the integral over the adjoint state xB:
     // If the Jacobian has full rank, this has an analytical solution, since
     //   d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
@@ -492,16 +500,16 @@ void SteadystateProblem::getQuadratureByLinSolve(Model& model) {
         computeQBfromQ(
             model, xQ_, xQB_, {final_state_.t, final_state_.x, final_state_.dx}
         );
-        hasQuadrature_ = true;
+        has_quadrature_ = true;
 
         // Finalize by setting adjoint state to zero (its steady state)
         xB_.zero();
     } catch (NewtonFailure const&) {
-        hasQuadrature_ = false;
+        has_quadrature_ = false;
     }
 }
 
-void SteadystateProblem::getQuadratureBySimulation(
+void SteadyStateBackwardProblem::compute_quadrature_by_simulation(
     Solver const& solver, Model& model, realtype t0
 ) {
     // If the Jacobian is singular, the integral over xB must be computed
@@ -517,17 +525,17 @@ void SteadystateProblem::getQuadratureBySimulation(
     sim_solver->logger = solver.logger;
     sim_solver->setSensitivityMethod(SensitivityMethod::none);
     sim_solver->setSensitivityOrder(SensitivityOrder::none);
-    sim_solver->setup(t0, &model, xB_, xB_, final_state_.sx, ws_->sdx);
+    sim_solver->setup(t0, &model, xB_, xB_, final_state_.sx, final_state_.sx);
     sim_solver->setupSteadystate(
         t0, &model, final_state_.x, final_state_.dx, xB_, xB_, xQ_
     );
 
     // perform integration and quadrature
     try {
-        runSteadystateSimulationBwd(*sim_solver, model);
-        hasQuadrature_ = true;
+        run_simulation(*sim_solver, model);
+        has_quadrature_ = true;
     } catch (NewtonFailure const&) {
-        hasQuadrature_ = false;
+        has_quadrature_ = false;
     }
 }
 
@@ -644,7 +652,7 @@ void SteadystateProblem::runSteadystateSimulationFwd(
     };
 
     int& sim_steps = numsteps_.at(1);
-    int convergence_check_frequency = newton_step_conv_ ? 25 : 1;
+    int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
     while (true) {
         if (sim_steps % convergence_check_frequency == 0) {
@@ -683,7 +691,7 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         updateSensiSimulation(solver);
 }
 
-void SteadystateProblem::runSteadystateSimulationBwd(
+void SteadyStateBackwardProblem::run_simulation(
     Solver const& solver, Model& model
 ) {
     if (model.nx_solver == 0)
@@ -731,8 +739,8 @@ void SteadystateProblem::runSteadystateSimulationBwd(
                 model, xB_, xQBdot,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
-            wrms_ = wrms_computer_xQB_.wrms(xQBdot, xQB_);
-            if (wrms_ < conv_thresh) {
+            auto wrms = wrms_computer_xQB_.wrms(xQBdot, xQB_);
+            if (wrms < conv_thresh) {
                 break; // converged
             }
         }
@@ -825,8 +833,7 @@ void NewtonsMethod::run(
             x_old_.copy(state.x);
         }
 
-        // If Newton steps are necessary, compute the initial search
-        // direction
+        // If Newton steps are necessary, compute the initial search direction
         if (update_direction) {
             // compute the next step if not already done during the previous
             // delta-convergence check
@@ -834,8 +841,7 @@ void NewtonsMethod::run(
                 compute_step(xdot, state);
             }
 
-            // we store delta_ here as later convergence checks may update
-            // it
+            // we store delta_ here as later convergence checks may update it
             delta_old_.copy(delta_);
         }
 
