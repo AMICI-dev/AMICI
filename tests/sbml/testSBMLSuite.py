@@ -13,6 +13,8 @@ Usage:
 import shutil
 from pathlib import Path
 
+import optimistix
+
 import amici
 import pandas as pd
 import pytest
@@ -21,7 +23,10 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import diffrax
-from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+from amici.jax.petab import (
+    DEFAULT_CONTROLLER_SETTINGS,
+    DEFAULT_ROOT_FINDER_SETTINGS,
+)
 
 from utils import (
     verify_results,
@@ -71,11 +76,6 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
         settings = read_settings_file(current_test_path, test_id)
 
         atol, rtol = apply_settings(settings, solver, model, test_id)
-
-        if test_id in sensitivity_check_cases:
-            model.requireSensitivitiesForAllParameters()
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
@@ -208,6 +208,7 @@ def jax_sensitivity_check(
             icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
             dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
         )
+        root_finder = optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS)
 
         def simulate(pars):
             x, _ = jax_model.simulate_condition(
@@ -221,6 +222,7 @@ def jax_sensitivity_check(
                 jnp.zeros((ts_jnp.shape[0], 0)),
                 solver,
                 controller,
+                root_finder,
                 diffrax.DirectAdjoint(),
                 diffrax.SteadyStateEvent(),
                 2**10,
