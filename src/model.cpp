@@ -7,11 +7,11 @@
 
 #include <algorithm>
 #include <cassert>
-#include <sstream>
 #include <cmath>
 #include <cstring>
 #include <numeric>
 #include <regex>
+#include <sstream>
 #include <utility>
 
 namespace amici {

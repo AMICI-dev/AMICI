@@ -173,7 +173,7 @@ SteadystateProblem::SteadystateProblem(
 }
 
 void SteadystateProblem::workSteadyStateProblem(
-    Solver const& solver, Model& model, int it, realtype t0
+    Solver& solver, Model& model, int it, realtype t0
 ) {
     if (model.ne > 0) {
         solver.logger->log(
@@ -280,7 +280,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 }
 
 void SteadystateProblem::findSteadyState(
-    Solver const& solver, Model& model, int it, realtype t0
+    Solver& solver, Model& model, int it, realtype t0
 ) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
     // Turn off Newton's method if 'integrationOnly' approach is chosen for
@@ -365,7 +365,7 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(
 }
 
 SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
-    Solver const& solver, Model& model, int const it, realtype const t0
+    Solver& solver, Model& model, int const it, realtype const t0
 ) {
     try {
         if (it < 0) {
@@ -551,17 +551,6 @@ void SteadystateProblem::getQuadratureBySimulation(
     throw AmiException(errorString.c_str());
 }
 
-realtype SteadystateProblem::getWrmsState(Model& model) {
-    updateRightHandSide(model);
-
-    if (newton_step_conv_) {
-        newtons_method_.compute_step(ws_->xdot, {ws_->t, ws_->x, ws_->dx});
-        return wrms_computer_x_.wrms(newtons_method_.get_delta(), ws_->x);
-    }
-
-    return wrms_computer_x_.wrms(ws_->xdot, ws_->x);
-}
-
 realtype
 SteadystateProblem::getWrmsFSA(Model& model, WRMSComputer& wrms_computer_sx) {
     // Forward sensitivities: Compute weighted error norm for their RHS
@@ -601,7 +590,7 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 }
 
 void SteadystateProblem::runSteadystateSimulationFwd(
-    Solver const& solver, Model& model
+    Solver& solver, Model& model
 ) {
     if (model.nx_solver == 0)
         return;
@@ -643,6 +632,17 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         sensi_converged = []() { return true; };
     }
 
+    // Returns the WRMS for the current state
+    auto get_wrms_state = [&]() {
+        updateRightHandSide(model);
+        if (newton_step_conv_) {
+            newtons_method_.compute_step(ws_->xdot, {ws_->t, ws_->x, ws_->dx});
+            return wrms_computer_x_.wrms(newtons_method_.get_delta(), ws_->x);
+        }
+
+        return wrms_computer_x_.wrms(ws_->xdot, ws_->x);
+    };
+
     int& sim_steps = numsteps_.at(1);
     int convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
@@ -650,7 +650,7 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         if (sim_steps % convergence_check_frequency == 0) {
             // Check for convergence (already before simulation, since we might
             // start in steady state)
-            wrms_ = getWrmsState(model);
+            wrms_ = get_wrms_state();
             if (wrms_ < conv_thresh && sensi_converged()) {
                 break;
             }
@@ -756,7 +756,7 @@ void SteadystateProblem::runSteadystateSimulationBwd(
         solver.step(std::max(final_state_.t, 1.0) * 10);
 
         solver.writeSolution(
-            &final_state_.t, xB_, final_state_.dx, final_state_.sx, xQ_
+            final_state_.t, xB_, final_state_.dx, final_state_.sx, xQ_
         );
     }
 }
