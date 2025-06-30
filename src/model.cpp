@@ -985,6 +985,13 @@ void Model::setUnscaledInitialStateSensitivities(
 void Model::setSteadyStateComputationMode(
     SteadyStateComputationMode const mode
 ) {
+    if (mode != SteadyStateComputationMode::integrationOnly && ne && logger) {
+        logger->log(
+            LogSeverity::warning, "WARNING",
+            "Non-initial events will not be handled if Newton's method is used "
+            "for steady state computation."
+        );
+    }
     steadystate_computation_mode_ = mode;
 }
 
