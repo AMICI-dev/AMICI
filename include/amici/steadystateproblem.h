@@ -239,9 +239,8 @@ class SteadystateProblem {
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void workSteadyStateProblem(
-        Solver const& solver, Model& model, int it, realtype t0
-    );
+    void
+    workSteadyStateProblem(Solver& solver, Model& model, int it, realtype t0);
 
     /**
      * @brief Compute the gradient via adjoint steady state sensitivities.
@@ -375,8 +374,7 @@ class SteadystateProblem {
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void
-    findSteadyState(Solver const& solver, Model& model, int it, realtype t0);
+    void findSteadyState(Solver& solver, Model& model, int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
@@ -396,7 +394,7 @@ class SteadystateProblem {
      * successfully, or if it failed.
      */
     SteadyStateStatus findSteadyStateBySimulation(
-        Solver const& solver, Model& model, int it, realtype t0
+        Solver& solver, Model& model, int it, realtype t0
     );
 
     /**
@@ -439,13 +437,6 @@ class SteadystateProblem {
     ) const;
 
     /**
-     * @brief Checks steady-state convergence for state variables
-     * @param model Model instance
-     * @return weighted root mean squared residuals of the RHS
-     */
-    realtype getWrmsState(Model& model);
-
-    /**
      * @brief Checks convergence for state sensitivities
      * @param model Model instance
      * @param wrms_computer_sx WRMSComputer instance for state sensitivities
@@ -460,7 +451,7 @@ class SteadystateProblem {
      * @param model Model instance.
      * simulation.
      */
-    void runSteadystateSimulationFwd(Solver const& solver, Model& model);
+    void runSteadystateSimulationFwd(Solver& solver, Model& model);
 
     /**
      * @brief Launch backward simulation if Newton solver or linear system solve

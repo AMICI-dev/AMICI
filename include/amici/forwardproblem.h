@@ -222,8 +222,7 @@ class EventHandlingSimulator {
      */
     EventHandlingSimulator(
         gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
-        gsl::not_null<FwdSimWorkspace*> ws,
-        gsl::not_null<std::vector<realtype>*> dJzdx
+        gsl::not_null<FwdSimWorkspace*> ws, std::vector<realtype>* dJzdx
     )
         : model_(model)
         , solver_(solver)

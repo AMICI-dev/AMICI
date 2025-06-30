@@ -1307,15 +1307,15 @@ void Solver::resetMutableMemory(
 }
 
 void Solver::writeSolution(
-    realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVector& xQ
+    realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx, AmiVector& xQ
 ) const {
-    *t = gett();
+    t = gett();
     if (quad_initialized_)
-        xQ.copy(getQuadrature(*t));
+        xQ.copy(getQuadrature(t));
     if (sens_initialized_)
-        sx.copy(getStateSensitivity(*t));
-    x.copy(getState(*t));
-    dx.copy(getDerivativeState(*t));
+        sx.copy(getStateSensitivity(t));
+    x.copy(getState(t));
+    dx.copy(getDerivativeState(t));
 }
 
 void Solver::writeSolution(

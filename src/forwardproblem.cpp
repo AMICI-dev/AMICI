@@ -450,14 +450,15 @@ void EventHandlingSimulator::store_event(ExpData const* edata) {
             continue;
         }
 
-        if (edata && solver_->computingASA())
+        if (edata && solver_->computingASA()) {
+            Expects(dJzdx_ != nullptr);
             model_->getAdjointStateEventUpdate(
                 slice(
                     *dJzdx_, ws_->nroots.at(ie), model_->nx_solver * model_->nJ
                 ),
                 ie, ws_->nroots.at(ie), t_, ws_->x, *edata
             );
-
+        }
         ws_->nroots.at(ie)++;
     }
 
