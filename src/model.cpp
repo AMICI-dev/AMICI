@@ -11,6 +11,7 @@
 #include <cstring>
 #include <numeric>
 #include <regex>
+#include <sstream>
 #include <utility>
 
 namespace amici {
@@ -2163,10 +2164,17 @@ void Model::fsigmay(int const it, ExpData const* edata) {
             for (int iJ = 1; iJ < nJ; iJ++)
                 derived_state_.sigmay_.at(iytrue + iJ * nytrue) = 0;
 
-            if (edata->isSetObservedData(it, iytrue))
+            if (edata->isSetObservedData(it, iytrue)) {
+                std::string obs_id = hasObservableIds()
+                                         ? getObservableIds().at(iytrue)
+                                         : std::to_string(iytrue);
+                std::stringstream ss;
+                ss << "sigmay (" << obs_id << ", ExpData::id=" << edata->id
+                   << ", t=" << getTimepoint(it) << ")";
                 checkSigmaPositivity(
-                    derived_state_.sigmay_.at(iytrue), "sigmay"
+                    derived_state_.sigmay_.at(iytrue), ss.str().c_str()
                 );
+            }
         }
     }
 }

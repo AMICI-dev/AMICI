@@ -42,7 +42,7 @@ NewtonSolver::NewtonSolver(
 }
 
 void NewtonSolver::getStep(
-    AmiVector& delta, Model& model, SimulationState const& state
+    AmiVector& delta, Model& model, DEStateView const& state
 ) {
     prepareLinearSystem(model, state);
 
@@ -51,7 +51,7 @@ void NewtonSolver::getStep(
 }
 
 void NewtonSolver::computeNewtonSensis(
-    AmiVectorArray& sx, Model& model, SimulationState const& state
+    AmiVectorArray& sx, Model& model, DEStateView const& state
 ) {
     prepareLinearSystem(model, state);
     model.fdxdotdp(state.t, state.x, state.dx);
@@ -84,9 +84,7 @@ void NewtonSolver::computeNewtonSensis(
     }
 }
 
-void NewtonSolver::prepareLinearSystem(
-    Model& model, SimulationState const& state
-) {
+void NewtonSolver::prepareLinearSystem(Model& model, DEStateView const& state) {
     auto& J = linsol_->getMatrix();
     if (J.matrix_id() == SUNMATRIX_SPARSE) {
         model.fJSparse(state.t, 0.0, state.x, state.dx, xdot_, J);
@@ -102,7 +100,7 @@ void NewtonSolver::prepareLinearSystem(
 }
 
 void NewtonSolver::prepareLinearSystemB(
-    Model& model, SimulationState const& state
+    Model& model, DEStateView const& state
 ) {
     auto& J = linsol_->getMatrix();
     if (J.matrix_id() == SUNMATRIX_SPARSE) {
@@ -145,9 +143,7 @@ void NewtonSolver::reinitialize() {
     );
 }
 
-bool NewtonSolver::is_singular(
-    Model& model, SimulationState const& state
-) const {
+bool NewtonSolver::is_singular(Model& model, DEStateView const& state) const {
     if (auto s = dynamic_cast<SUNLinSolKLU const*>(linsol_.get())) {
         return s->is_singular();
     }
