@@ -14,7 +14,6 @@
 #include <klu.h>
 
 #include <sstream>
-#include <format>
 
 #define ZERO SUN_RCONST(0.0)
 #define ONE SUN_RCONST(1.0)
@@ -538,13 +537,12 @@ void CVodeSolver::reInitPostProcess(
     status = CVode(ami_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
 
     if (status == CV_ROOT_RETURN) {
-        auto message = std::format(
-            "CVode returned a root after reinitialization at t={}. "
-            "The initial step-size after the event or "
-            "Heaviside function is too small. To fix this, increase absolute "
-            "and relative tolerances!",
-            *t
-        );
+        auto message
+            = std::string("CVode returned a root after reinitialization at t=")
+              + std::to_string(*t)
+              + ". The initial step-size after the event or "
+                "Heaviside function is too small. To fix this, increase "
+                "absolute and relative tolerances!";
         throw CvodeException(status, message.c_str());
     }
     if (status != CV_SUCCESS) {
