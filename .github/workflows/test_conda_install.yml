@@ -27,7 +27,6 @@ jobs:
       - name: Install AMICI
         shell: bash -l {0}
         run: |
-          conda install -y -c conda-forge openblas
           pip install amici
       - name: Test import
         shell: bash -l {0}
