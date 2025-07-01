@@ -352,6 +352,20 @@ if sys.platform == 'win32' and (dll_dirs := os.environ.get('AMICI_DLL_DIRS')):
 
 %}
 
+
+%pythonbegin %{
+# If AMICI was linked against `scipy_openblas64`, we need to tell the runtime
+# loader where to find the OpenBLAS library.
+from pathlib import Path
+
+_amici_dir = Path(__file__).parent.absolute()
+_lib_dir = str(_amici_dir / "lib")
+
+if sys.platform == 'win32':
+    os.add_dll_directory(_lib_dir)
+
+%}
+
 // import additional types for typehints
 // also import np for use in __repr__ functions
 %pythonbegin %{
@@ -400,7 +414,7 @@ __all__ = [
     x
     for x in dir(sys.modules[__name__])
     if not x.startswith('_')
-    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence"}
+    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence", "Path"}
 ]
 
 %}
