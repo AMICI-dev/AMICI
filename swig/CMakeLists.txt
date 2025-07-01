@@ -103,6 +103,12 @@ set_property(
   APPEND
   PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
 
+set_target_properties(
+  _amici
+  PROPERTIES BUILD_RPATH_USE_ORIGIN ON
+             BUILD_RPATH "$ORIGIN/lib"
+             INSTALL_RPATH "$ORIGIN/lib")
+
 # NOTE: No public definitions of any dependency are forwarded to swig, they are
 # only used for compiling the swig-generated source file. Any definition that
 # are relevant for swig-code generation, need to be forwarded manually.

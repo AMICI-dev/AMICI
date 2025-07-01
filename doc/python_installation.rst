@@ -9,8 +9,6 @@ Short guide
 Installation of the AMICI Python package has the following prerequisites:
 
 * Python>=3.11
-* CBLAS compatible BLAS library
-  (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
 * a C++20 compatible C++ compiler and a C compiler
   (e.g., g++>=10.1, clang>=13, Intel C++ compiler, mingw)
 
@@ -49,7 +47,7 @@ Install the AMICI dependencies via ``apt``
 
 .. code-block:: bash
 
-   sudo apt install libatlas-base-dev python3-dev
+   sudo apt install python3-dev
 
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
@@ -63,21 +61,6 @@ Install AMICI:
 
    pip3 install amici
 
-Fedora 42
----------
-
-Install the AMICI dependencies via ``apt``
-(this requires superuser privileges):
-
-.. code-block:: bash
-
-   sudo dnf install openblas-devel
-
-Install AMICI:
-
-.. code-block:: bash
-
-   pip3 install amici
 
 Arch Linux
 ----------
@@ -87,14 +70,7 @@ Install the AMICI dependencies via ``pacman``
 
 .. code-block:: bash
 
-   sudo pacman -S python openblas gcc hdf5 boost-libs
-
-Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
-
-.. code-block:: bash
-
-  export BLAS_CFLAGS="-I/usr/include/openblas/"
-  export BLAS_LIBS="-lopenblas"
+   sudo pacman -S python gcc hdf5 boost-libs
 
 Install AMICI:
 
@@ -108,20 +84,13 @@ Alternatively:
 
 .. code-block:: bash
 
-   sudo pacman -Si python openblas gcc hdf5 boost-libs
+   sudo pacman -Si python gcc hdf5 boost-libs
 
-2. Upgrade installed packages if required mininum versions are not satisfied for AMICI installation.
-
-.. code-block:: bash
-
-   sudo pacman -Su python openblas gcc hdf5 boost-libs
-
-3. Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
+2. Upgrade installed packages if required minimum versions are not satisfied for AMICI installation.
 
 .. code-block:: bash
 
-  export BLAS_CFLAGS="-I/usr/include/openblas/"
-  export BLAS_LIBS="-lopenblas"
+   sudo pacman -Su python gcc hdf5 boost-libs
 
 4. Install AMICI:
 
@@ -184,108 +153,6 @@ need to be included:
 * Windows Universal C Runtime.
   This is an individual component and installs some DLLs that we need.
 
-OpenBLAS
-^^^^^^^^
-
-There are prebuilt OpenBLAS binaries available, but they did not seem to work
-well here. Therefore, we recommend building OpenBLAS from scratch. This
-requires an installation of CMake. CMake can be installed from
-https://cmake.org/download/ (system-wide), or via ``pip install cmake``
-(in the current Python environment).
-
-
-To build OpenBLAS, download the following scripts from the AMICI repository:
-
-* https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1
-* https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd
-
-The first script needs to be called in Powershell, and it needs to call
-``compileBLAS.cmd``, so you will need to modify line 11:
-
-    cmd /c "scripts\compileBLAS.cmd $version"
-
-Additionally, in ``compileBLAS.cmd`` make sure that you point to your
-Visual Studio installation on line 3.
-Newer installations could be located under
-``C:\Program Files\Microsoft Visual Studio\...\VC\Auxiliary\Build\vcvars64.bat``.
-
-so that it matches your directory structure.
-This will download OpenBLAS and compile it, creating
-``C:\\BLAS\\OpenBLAS\\lib\\openblas.lib`` and
-``C:\\BLAS\\OpenBLAS\\bin\\openblas.dll``.
-
-You will also need to define two environment variables:
-
-.. code-block:: text
-
-   BLAS_LIBS="-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
-   BLAS_CFLAGS="-IC:/BLAS/OpenBLAS"
-
-One way to do that is to run a PowerShell script with the following commands:
-
-.. code-block:: text
-
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
-   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::Process)
-
-The call ending in ``Process`` sets the environment variable in the current
-process, and it is no longer in effect in the next process. The call ending in
-``User`` is permanent, and takes effect the next time the user logs on.
-
-Now you need to make sure that all required DLLs are within the scope of the
-``PATH`` variable. In particular, the following directories need to be included
-in ``PATH``:
-
-* ``C:\BLAS\OpenBLAS\bin``
-* ``C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64``
-
-The first one is needed for ``openblas.dll`` and the second is needed for the
-Windows Universal C Runtime.
-
-If any DLLs are missing in the ``PATH`` variable, Python will return the
-following error upon ``import amici``:
-
-``ImportError: DLL load failed: The specified module could not be found.``
-
-Almost all of the DLLs are standard Windows DLLs and should be included in
-either Windows or Visual Studio. But, in case it is necessary to test this,
-here is a list of some DLLs required by AMICI (when compiled with MSVC):
-
-* ``openblas.dll``
-* ``python37.dll``
-* ``MSVCP140.dll``
-* ``KERNEL32.dll``
-* ``VCRUNTIME140_1.dll``
-* ``VCRUNTIME140.dll``
-* ``api-ms-win-crt-convert-l1-1-0.dll``
-* ``api-ms-win-crt-heap-l1-1-0.dll``
-* ``api-ms-win-crt-stdio-l1-1-0.dll``
-* ``api-ms-win-crt-string-l1-1-0.dll``
-* ``api-ms-win-crt-runtime-l1-1-0.dll``
-* ``api-ms-win-crt-time-l1-1-0.dll``
-* ``api-ms-win-crt-math-l1-1-0.dll``
-
-``MSVCP140.dll``, ``VCRUNTIME140.dll``, and ``VCRUNTIME140_1.dll`` are needed
-by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
-``C:\Windows\System32``. The ``api-ms-win-crt-XXX-l1-1-0.dll`` are needed by
-``openblas.dll`` and are part of the Windows Universal C Runtime.
-
-.. note::
-
-    Since Python 3.8, the library directory needs to be set either from Python:
-
-    .. code-block:: python
-
-        import os
-        # directory containing `openblas.dll`
-        os.add_dll_directory("C:\\BLAS\\OpenBLAS\\bin")
-        import amici
-
-    or via the environment variable ``AMICI_DLL_DIRS="C:\BLAS\OpenBLAS\bin"``.
-
-
 Further topics
 ++++++++++++++
 
@@ -337,36 +204,44 @@ Custom installation
 Installation of the AMICI Python package can be customized using a number of
 environment variables:
 
-+----------------------------+----------------------------------+---------------------------------+
-| Variable                   | Purpose                          | Example                         |
-+============================+==================================+=================================+
-| ``SWIG``                   | Path to the :term:`SWIG`         | ``SWIG=$HOME/bin/swig4.0``      |
-|                            | executable                       |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``CC``                     | Setting the C(++) compiler       | ``CC=/usr/bin/g++``             |
-+----------------------------+----------------------------------+---------------------------------+
-| ``CFLAGS``                 | Extra compiler flags used in     |                                 |
-|                            | every compiler invocation        |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``BLAS_CFLAGS``            | Compiler flags for, e.g. BLAS    |                                 |
-|                            |  include directories             |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``BLAS_LIBS``              | Flags for linking BLAS           |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``ENABLE_GCOV_COVERAGE``   | Set to build AMICI to generate   | ``ENABLE_GCOV_COVERAGE=TRUE``   |
-|                            | code coverage information        |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``ENABLE_AMICI_DEBUGGING`` | Set to build AMICI with          | ``ENABLE_AMICI_DEBUGGING=TRUE`` |
-|                            | debugging symbols                |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``AMICI_PARALLEL_COMPILE`` | Set to the number of parallel    | ``AMICI_PARALLEL_COMPILE=4``    |
-|                            | processes to be used for C(++)   |                                 |
-|                            | compilation (defaults to 1)      |                                 |
-+----------------------------+----------------------------------+---------------------------------+
-| ``AMICI_TRY_ENABLE_HDF5``  | Whether to build AMICI with      | ``AMICI_TRY_ENABLE_HDF5=OFF``   |
-|                            | HDF5-support if possible.        |                                 |
-|                            | Default: ``ON``                  |                                 |
-+----------------------------+----------------------------------+---------------------------------+
+.. list-table:: Environment Variables for Custom Installation
+   :header-rows: 1
+
+   * - Variable
+     - Purpose
+     - Example
+   * - ``SWIG``
+     - Path to the :term:`SWIG` executable
+     - ``SWIG=$HOME/bin/swig4.0``
+   * - ``CC``
+     - Setting the C(++) compiler
+     - ``CC=/usr/bin/g++``
+   * - ``CFLAGS``
+     - Extra compiler flags used in every compiler invocation
+     -
+   * - ``AMICI_BLAS_USE_SCIPY_OPENBLAS``
+     - Toggle using the OpenBLAS library provided by `scipy-openblas64`, on by default
+       (if installed).
+     - ``AMICI_BLAS_USE_SCIPY_OPENBLAS=FALSE``
+   * - ``BLAS_CFLAGS``
+     - Compiler flags for, e.g., BLAS include directories when using a non-default BLAS
+     -
+   * - ``BLAS_LIBS``
+     - Flags for linking a non-default BLAS
+     -
+   * - ``ENABLE_GCOV_COVERAGE``
+     - Set to build AMICI to generate code coverage information
+     - ``ENABLE_GCOV_COVERAGE=TRUE``
+   * - ``ENABLE_AMICI_DEBUGGING``
+     - Set to build AMICI with debugging symbols
+     - ``ENABLE_AMICI_DEBUGGING=TRUE``
+   * - ``AMICI_PARALLEL_COMPILE``
+     - Set to the number of parallel processes to be used for C(++) compilation (defaults to 1)
+     - ``AMICI_PARALLEL_COMPILE=4``
+   * - ``AMICI_TRY_ENABLE_HDF5``
+     - Whether to build AMICI with HDF5-support if possible (Default: ``ON``)
+     - ``AMICI_TRY_ENABLE_HDF5=OFF``
+
 
 Installation under conda
 ------------------------
@@ -395,22 +270,6 @@ To activate the environment, run:
    source activate ENV_NAME
 
 (and ``conda deactivate`` later to deactivate it again).
-
-A CBLAS-compatible BLAS must be available. You can also use conda to
-install the latter locally, using:
-
-.. code-block:: bash
-
-   conda install -c conda-forge openblas
-
-To make AMICI use openblas, set the following environment variable:
-
-.. code-block:: bash
-
-   export BLAS_LIBS=-lopenblas
-
-``BLAS_LIBS`` needs to be set during installation of the AMICI package, as
-well as during any future model import.
 
 To install AMICI, now run:
 

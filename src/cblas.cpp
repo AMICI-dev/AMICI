@@ -16,6 +16,18 @@ extern "C" {
 }
 #endif
 
+#ifndef BLAS_PREFIX
+#define BLAS_PREFIX cblas_
+#endif
+
+#ifndef BLAS_SUFFIX
+#define BLAS_SUFFIX
+#endif
+
+#define BLAS_CONCAT2(a, b, c) a##b##c
+#define BLAS_CONCAT(a, b, c) BLAS_CONCAT2(a, b, c)
+#define BLAS_FUNC(name) BLAS_CONCAT(BLAS_PREFIX, name, BLAS_SUFFIX)
+
 namespace amici {
 
 void amici_dgemm(
@@ -24,7 +36,8 @@ void amici_dgemm(
     int const lda, double const* B, int const ldb, double const beta, double* C,
     int const ldc
 ) {
-    cblas_dgemm(
+
+    BLAS_FUNC(dgemm)(
         (CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
         M, N, K, alpha, A, lda, B, ldb, beta, C, ldc
     );
@@ -35,7 +48,7 @@ void amici_dgemv(
     double const alpha, double const* A, int const lda, double const* X,
     int const incX, double const beta, double* Y, int const incY
 ) {
-    cblas_dgemv(
+    BLAS_FUNC(dgemv)(
         (CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A, lda, X,
         incX, beta, Y, incY
     );
@@ -44,7 +57,7 @@ void amici_dgemv(
 void amici_daxpy(
     int n, double alpha, double const* x, int const incx, double* y, int incy
 ) {
-    cblas_daxpy(n, alpha, x, incx, y, incy);
+    BLAS_FUNC(daxpy)(n, alpha, x, incx, y, incy);
 }
 
 } // namespace amici

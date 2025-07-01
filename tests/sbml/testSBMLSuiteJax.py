@@ -8,6 +8,7 @@ import amici
 import jax
 import jax.numpy as jnp
 import diffrax
+import optimistix
 import numpy as np
 import pandas as pd
 import pytest
@@ -70,6 +71,7 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
         dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
     )
+    root_finder = optimistix.Newton(atol=atol, rtol=rtol)
     x, stats = model.simulate_condition(
         p,
         ts_jnp,
@@ -81,25 +83,27 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         jnp.zeros((ts_jnp.shape[0], 0)),
         solver,
         controller,
+        root_finder,
         diffrax.DirectAdjoint(),
         diffrax.SteadyStateEvent(),
         2**10,
         ret=amici.jax.ReturnValue.x,
     )
     y = jax.vmap(
-        lambda t, x_solver, x_rdata: model._y(
+        lambda t, x_solver, x_rdata, hs: model._y(
             t,
             x_solver,
             p,
             model._tcl(x_rdata, p),
+            hs,
             jnp.zeros(len(model.observable_ids)),
         )
-    )(ts_jnp, stats["x"], x)
+    )(ts_jnp, stats["x"], x, stats["hs"])
     w = jax.vmap(
-        lambda t, x_solver, x_rdata: model._w(
-            t, x_solver, p, model._tcl(x_rdata, p)
+        lambda t, x_solver, x_rdata, hs: model._w(
+            t, x_solver, p, model._tcl(x_rdata, p), hs
         )
-    )(ts_jnp, stats["x"], x)
+    )(ts_jnp, stats["x"], x, stats["hs"])
 
     class RData(dict):
         __getattr__ = dict.__getitem__

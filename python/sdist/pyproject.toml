@@ -6,6 +6,7 @@ requires = [
     "wheel",
     "numpy>=2.0",
     "cmake-build-extension==0.6.0",
+    "scipy-openblas64; platform_system!='Darwin'",
     "swig",
 ]
 build-backend = "setuptools.build_meta"

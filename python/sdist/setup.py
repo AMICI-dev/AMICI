@@ -16,6 +16,7 @@ from pathlib import Path
 
 from cmake_build_extension import CMakeExtension
 from setuptools import setup
+import shutil
 
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation
@@ -35,8 +36,8 @@ def get_extensions():
     """Get required C(++) extensions for build_ext"""
     # CMake prefix path for finding FindXXX.cmake to find SuiteSparse
     #  components
-    install_dir = (Path(__file__).parent / "amici").absolute()
-    prefix_path = install_dir
+    install_dir = Path(__file__).parent / "amici"
+    prefix_path = install_dir.absolute()
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
 
     # Used by all extensions
@@ -78,14 +79,13 @@ def get_extensions():
             "-DKLU_USE_CHOLMOD=OFF",
         ],
     )
-    cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "")
-    if cmake_prefix_path:
-        cmake_prefix_path += ";"
+    cmake_prefix_path = os.getenv("CMAKE_PREFIX_PATH", "").split(os.pathsep)
     # We need the potentially temporary and unpredictable build path
     #  to use artifacts from other extensions here. `${build_dir}` will
     #  be replaced by the actual path by `AmiciBuildCMakeExtension`
     #  before being passed to CMake.
-    cmake_prefix_path += "${build_dir}/amici"
+    cmake_prefix_path.append("${build_dir}/amici")
+
     # SUNDIALS
     sundials = CMakeExtension(
         name="sundials",
@@ -104,9 +104,19 @@ def get_extensions():
             "-DEXAMPLES_ENABLE_C=OFF",
             "-DEXAMPLES_INSTALL=OFF",
             "-DENABLE_KLU=ON",
-            f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
+            f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
         ],
     )
+
+    # If scipy_openblas64 is installed, we make its cmake configuration
+    # available
+    try:
+        import scipy_openblas64  # noqa: F401
+
+        cmake_prefix_path.append("${build_dir}/amici/lib/cmake/openblas")
+    except ImportError:
+        pass
+
     # AMICI
     amici_ext = CMakeExtension(
         name="amici",
@@ -122,9 +132,39 @@ def get_extensions():
             else "-Wno-error=dev",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
-            f"-DCMAKE_PREFIX_PATH='{cmake_prefix_path}'",
+            f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
         ],
     )
+
+    # monkey patch a pre-cmake hook into the extension
+    # see `amici.custom_commands.AmiciBuildCMakeExtension.build_extension`
+    def amici_pre_cmake(ext, binary_dir):
+        """Pre-cmake hook for AMICI extension"""
+        # If scipy_openblas64 is installed, we make its cmake configuration
+        # available
+        try:
+            import scipy_openblas64
+
+            # we are not supposed to have a run-time dependency on the
+            # scipy_openblas64 package, so we copy the relevant files
+            # to the installation directory
+            # (see warnings at https://github.com/MacPython/openblas-libs)
+            binary_dir = Path(binary_dir)
+            shutil.copytree(
+                scipy_openblas64.get_lib_dir(),
+                binary_dir / "amici" / "lib",
+                dirs_exist_ok=True,
+            )
+            shutil.copytree(
+                scipy_openblas64.get_include_dir(),
+                binary_dir / "amici" / "include",
+                dirs_exist_ok=True,
+            )
+        except ImportError:
+            pass
+
+    amici_ext.amici_pre_cmake = amici_pre_cmake
+
     # Order matters!
     return [suitesparse, sundials, amici_ext]
 
