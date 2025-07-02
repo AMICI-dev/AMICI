@@ -269,7 +269,6 @@ class JAXModel(eqx.Module):
     @abstractmethod
     def _root_cond_fns(
         self,
-        h: jt.Float[jt.Array, "ne"],
     ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
         """Return condition functions for implicit discontinuities.
 
@@ -629,7 +628,7 @@ class JAXModel(eqx.Module):
                 max_steps,
                 adjoint,
                 diffrax.ODETerm(self._xdot),
-                self._root_cond_fns(h),
+                self._root_cond_fns(),
                 self._root_cond_fn,
                 self._known_discs(p),
             )
@@ -781,7 +780,7 @@ class JAXModel(eqx.Module):
             root_finder,
             steady_state_event,
             diffrax.ODETerm(self._xdot),
-            self._root_cond_fns(h),
+            self._root_cond_fns(),
             self._root_cond_fn,
             self._known_discs(p),
             max_steps,
