@@ -127,12 +127,17 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         """
         return self._root_cond_fn(t, y, args, **_).at[ie].get()
 
-    def _root_cond_fns(self):
-        """Return root condition functions for discontinuities."""
+    def _root_cond_fns(self, h):
+        """Return root condition functions for discontinuities, only track roots that have negative triggers"""
         return [
             eqx.Partial(self._root_cond_fn_event, ie)
-            for ie in range(TPL_N_IEVENTS)
+            for ie, h in enumerate(h)
+            if h == 0.0
         ]
+
+    @property
+    def n_events(self):
+        return TPL_N_IEVENTS
 
     @property
     def observable_ids(self):

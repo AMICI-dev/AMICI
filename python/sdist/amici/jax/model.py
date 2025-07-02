@@ -269,6 +269,7 @@ class JAXModel(eqx.Module):
     @abstractmethod
     def _root_cond_fns(
         self,
+        h: jt.Float[jt.Array, "ne"],
     ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
         """Return condition functions for implicit discontinuities.
 
@@ -306,6 +307,16 @@ class JAXModel(eqx.Module):
             root condition values
         """
         ...
+
+    @property
+    @abstractmethod
+    def n_events(self) -> int:
+        """
+        Get the number of events (that require implicit tracking)
+
+        :return:
+            number
+        """
 
     @property
     @abstractmethod
@@ -372,7 +383,7 @@ class JAXModel(eqx.Module):
         :return:
             heaviside variables
         """
-        h0 = jnp.zeros((len(self._root_cond_fns()),))  # dummy values
+        h0 = jnp.zeros((self.n_events,))  # dummy values
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
             roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
@@ -618,7 +629,7 @@ class JAXModel(eqx.Module):
                 max_steps,
                 adjoint,
                 diffrax.ODETerm(self._xdot),
-                self._root_cond_fns(),
+                self._root_cond_fns(h),
                 self._root_cond_fn,
                 self._known_discs(p),
             )
@@ -652,7 +663,7 @@ class JAXModel(eqx.Module):
         h_posteq = jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-        if len(self._root_cond_fns()):
+        if h.shape[0]:
             hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
         else:
             hs = jnp.zeros((ts.shape[0], h.shape[0]))
@@ -770,7 +781,7 @@ class JAXModel(eqx.Module):
             root_finder,
             steady_state_event,
             diffrax.ODETerm(self._xdot),
-            self._root_cond_fns(),
+            self._root_cond_fns(h),
             self._root_cond_fn,
             self._known_discs(p),
             max_steps,
