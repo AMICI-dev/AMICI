@@ -27,7 +27,7 @@ jobs:
       - name: Install AMICI
         shell: bash -l {0}
         run: |
-          pip install git+https://github.com/AMICI-dev/amici.git@main#egg=amici\&subdirectory=python/sdist
+          pip install -v git+https://github.com/AMICI-dev/amici.git@main#egg=amici\&subdirectory=python/sdist
       - name: Test import
         shell: bash -l {0}
         run: |
