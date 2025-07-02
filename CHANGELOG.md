@@ -6,7 +6,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ### v1.0.0 (unreleased)
 
-BREAKING CHANGES
+**BREAKING CHANGES**
 
 * `ReturnDataView.posteq_numsteps` and `ReturnDataView.posteq_numsteps` now
   return a one-dimensional array of shape `(num_timepoints,)` instead of a
@@ -26,6 +26,15 @@ BREAKING CHANGES
     modules.
   * The `force_compile` argument to `import_petab_problem` has been removed.
     See the `compile_` argument.
+
+**Features**
+
+* Many relevant `ReturnData` fields are now available as `xarray.DataArray`
+  via `ReturnData.xr.{x,y,w,x0,sx,...}`.
+  `DataArray`s include the identifiers and are often more convenient than the
+  plain numpy arrays. This allows for easy subselection and plotting of the
+  results, and conversion to DataFrames.
+
 
 ## v0.X Series
 

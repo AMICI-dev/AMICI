@@ -7,6 +7,7 @@ import copy
 import numbers
 from math import nan
 import pytest
+import xarray
 
 import amici
 import numpy as np
@@ -531,6 +532,7 @@ def test_rdataview(sbml_example_presimulation_module):
     """Test some SwigPtrView functionality via ReturnDataView."""
     model_module = sbml_example_presimulation_module
     model = model_module.getModel()
+    model.setTimepoints([1, 2, 3])
     rdata = amici.runAmiciSimulation(model, model.getSolver())
     assert isinstance(rdata, amici.ReturnDataView)
 
@@ -547,10 +549,18 @@ def test_rdataview(sbml_example_presimulation_module):
 
     assert not hasattr(rdata, "nonexisting_attribute")
     assert "x" in rdata
-    assert rdata.x == rdata["x"]
+    assert (rdata.x == rdata["x"]).all()
 
     # field names are included by dir()
     assert "x" in dir(rdata)
+
+    # Test xarray conversion
+    xr_x = rdata.xr.x
+    assert isinstance(xr_x, xarray.DataArray)
+    assert (rdata.x == xr_x).all()
+    assert xr_x.dims == ("time", "state")
+    assert (xr_x.coords["time"].data == rdata.ts).all()
+    assert (xr_x.coords["state"].data == model.getStateIds()).all()
 
 
 def test_python_exceptions(sbml_example_presimulation_module):

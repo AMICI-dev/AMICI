@@ -4,10 +4,11 @@ C++ object views
 This module provides views on C++ objects for efficient access.
 """
 
+from __future__ import annotations
 import collections
 import copy
 import itertools
-from typing import Literal, Union
+from typing import Literal
 from collections.abc import Iterator
 from numbers import Number
 import amici
@@ -22,8 +23,129 @@ from . import (
     ReturnDataPtr,
     SteadyStateStatus,
 )
+import xarray as xr
+
+
+__all__ = [
+    "ReturnDataView",
+    "ExpDataView",
+    "evaluate",
+]
 
 StrOrExpr = str | sp.Expr
+
+
+class XArrayFactory:
+    """
+    Factory class to create xarray DataArrays for fields of a
+    SwigPtrView instance.
+
+    Currently, only ReturnDataView is supported.
+    """
+
+    def __init__(self, svp: SwigPtrView):
+        """
+        Constructor
+
+        :param svp: SwigPtrView instance to create DataArrays from.
+        """
+        self._svp = svp
+
+    def __getattr__(self, name: str) -> xr.DataArray:
+        """
+        Create xarray DataArray for field name
+
+        :param name: field name
+
+        :returns: xarray DataArray
+        """
+        data = getattr(self._svp, name)
+        if data is None:
+            return xr.DataArray(name=name)
+
+        dims = None
+
+        match name:
+            case "x":
+                coords = {
+                    "time": self._svp.ts,
+                    "state": list(self._svp.state_ids),
+                }
+            case "x0" | "x_ss":
+                coords = {
+                    "state": list(self._svp.state_ids),
+                }
+            case "xdot":
+                coords = {
+                    "state": list(self._svp.state_ids_solver),
+                }
+            case "y" | "sigmay":
+                coords = {
+                    "time": self._svp.ts,
+                    "observable": list(self._svp.observable_ids),
+                }
+            case "sy" | "ssigmay":
+                coords = {
+                    "time": self._svp.ts,
+                    "parameter": [
+                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    ],
+                    "observable": list(self._svp.observable_ids),
+                }
+            case "w":
+                coords = {
+                    "time": self._svp.ts,
+                    "expression": list(self._svp.expression_ids),
+                }
+            case "sx0":
+                coords = {
+                    "parameter": [
+                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    ],
+                    "state": list(self._svp.state_ids),
+                }
+            case "sx":
+                coords = {
+                    "time": self._svp.ts,
+                    "parameter": [
+                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    ],
+                    "state": list(self._svp.state_ids),
+                }
+                dims = ("time", "parameter", "state")
+            case "sllh":
+                coords = {
+                    "parameter": [
+                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    ]
+                }
+            case "FIM":
+                coords = {
+                    "parameter1": [
+                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    ],
+                    "parameter2": [
+                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    ],
+                }
+            case "J":
+                coords = {
+                    "state1": list(self._svp.state_ids_solver),
+                    "state2": list(self._svp.state_ids_solver),
+                }
+            case _:
+                dims = tuple(f"dim_{i}" for i in range(data.ndim))
+                coords = {
+                    f"dim_{i}": np.arange(dim)
+                    for i, dim in enumerate(data.shape)
+                }
+        arr = xr.DataArray(
+            data,
+            dims=dims,
+            coords=coords,
+            name=name,
+        )
+        return arr
 
 
 class SwigPtrView(collections.abc.Mapping):
@@ -104,6 +226,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         self._swigptr = swigptr
         self._cache = {}
+
         super().__init__()
 
     def __len__(self) -> int:
@@ -310,6 +433,7 @@ class ReturnDataView(SwigPtrView):
             "numerrtestfailsB": [rdata.nt],
             "numnonlinsolvconvfailsB": [rdata.nt],
         }
+        self.xr = XArrayFactory(self)
         super().__init__(rdata)
 
     def __getitem__(
@@ -461,7 +585,7 @@ def _field_as_numpy(
 
 def _entity_type_from_id(
     entity_id: str,
-    rdata: Union[amici.ReturnData, "amici.ReturnDataView"] = None,
+    rdata: amici.ReturnData | amici.ReturnDataView = None,
     model: amici.Model = None,
 ) -> Literal["x", "y", "w", "p", "k"]:
     """Guess the type of some entity by its ID."""
