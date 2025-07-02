@@ -827,6 +827,7 @@ class SbmlImporter:
             hardcode_symbols=hardcode_symbols,
         )  # needs to be processed first such that we can use parameters to filter Piecewise functions
         self._gather_locals(hardcode_symbols=hardcode_symbols)
+        self._convert_parameters()
         self._process_compartments()
         self._process_species()
         self._process_reactions()
@@ -1382,6 +1383,16 @@ class SbmlImporter:
                         par.getId(), sp.Float(par.getValue())
                     ),
                 }
+
+    @log_execution_time("converting SBML parameters", logger)
+    def _convert_parameters(self):
+        # parameter ID => initial assignment sympy expression
+        par_id_to_ia = {
+            par.getId(): _try_evalf(ia)
+            for par in self.sbml.getListOfParameters()
+            if (ia := self._get_element_initial_assignment(par.getId()))
+            is not None
+        }
 
         # Parameters that need to be turned into expressions or species
         #  so far, this concerns parameters with symbolic initial assignments
