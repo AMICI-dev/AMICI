@@ -116,7 +116,7 @@ def check_finite_difference(
     for field in fields:
         sensi_raw = rdata[f"s{field}"]
         fd = (rdataf[field] - rdatab[field]) / (pf[ip] - pb[ip])
-        if len(sensi_raw.shape) == 1:
+        if len(sensi_raw.shape) == 1 or field == "x_ss":
             sensi = sensi_raw[0]
         elif len(sensi_raw.shape) == 2:
             sensi = sensi_raw[:, 0]
@@ -200,6 +200,9 @@ def check_derivatives(
         solver.getSensitivityMethod() == SensitivityMethod.forward
         and solver.getSensitivityOrder() <= SensitivityOrder.first
     ):
+        if rdata.sx_ss is not None:
+            fields.append("x_ss")
+
         fields.append("x")
 
     leastsquares_applicable = (
