@@ -186,13 +186,19 @@ void ReturnData::processSimulationObjects(
 
     SteadystateProblem const* preeq = nullptr;
     SteadystateProblem const* posteq = nullptr;
+    SteadyStateBackwardProblem const* preeq_bwd = nullptr;
+    SteadyStateBackwardProblem const* posteq_bwd = nullptr;
     if (fwd) {
         preeq = fwd->getPreequilibrationProblem();
         posteq = fwd->getPostequilibrationProblem();
+        if (bwd) {
+            preeq_bwd = bwd->getPreequilibrationBwdProblem();
+            posteq_bwd = bwd->getPostequilibrationBwdProblem();
+        }
     }
 
     if (preeq)
-        processPreEquilibration(*preeq, model);
+        processPreEquilibration(*preeq, preeq_bwd, model);
 
     if (fwd)
         processForwardProblem(*fwd, model, edata);
@@ -200,7 +206,7 @@ void ReturnData::processSimulationObjects(
         invalidate(0);
 
     if (posteq)
-        processPostEquilibration(*posteq, model, edata);
+        processPostEquilibration(*posteq, posteq_bwd, model, edata);
 
     if (fwd && !posteq)
         storeJacobianAndDerivativeInReturnData(*fwd, model);
@@ -208,7 +214,7 @@ void ReturnData::processSimulationObjects(
         storeJacobianAndDerivativeInReturnData(*posteq, model);
 
     if (fwd && bwd)
-        processBackwardProblem(*fwd, *bwd, preeq, model);
+        processBackwardProblem(*fwd, *bwd, preeq, preeq_bwd, model);
     else if (solver.computingASA())
         invalidateSLLH();
 
@@ -216,7 +222,8 @@ void ReturnData::processSimulationObjects(
 }
 
 void ReturnData::processPreEquilibration(
-    SteadystateProblem const& preeq, Model& model
+    SteadystateProblem const& preeq,
+    SteadyStateBackwardProblem const* preeq_bwd, Model& model
 ) {
     auto const simulation_state = preeq.getFinalSimulationState();
     model.setModelState(simulation_state.state);
@@ -229,8 +236,10 @@ void ReturnData::processPreEquilibration(
     }
     /* Get cpu time for pre-equilibration in milliseconds */
     preeq_cpu_time = preeq.getCPUTime();
-    preeq_cpu_timeB = preeq.getCPUTimeB();
-    preeq_numstepsB = preeq.getNumStepsB();
+    if (preeq_bwd) {
+        preeq_cpu_timeB = preeq_bwd->getCPUTimeB();
+        preeq_numstepsB = preeq_bwd->getNumStepsB();
+    }
     preeq_wrms = preeq.getResidualNorm();
     preeq_status = preeq.getSteadyStateStatus();
     if (preeq_status[1] == SteadyStateStatus::success)
@@ -240,7 +249,9 @@ void ReturnData::processPreEquilibration(
 }
 
 void ReturnData::processPostEquilibration(
-    SteadystateProblem const& posteq, Model& model, ExpData const* edata
+    SteadystateProblem const& posteq,
+    SteadyStateBackwardProblem const* posteq_bwd, Model& model,
+    ExpData const* edata
 ) {
     for (int it = 0; it < nt; it++) {
         auto t = model.getTimepoint(it);
@@ -252,8 +263,10 @@ void ReturnData::processPostEquilibration(
     }
     /* Get cpu time for Newton solve in milliseconds */
     posteq_cpu_time = posteq.getCPUTime();
-    posteq_cpu_timeB = posteq.getCPUTimeB();
-    posteq_numstepsB = posteq.getNumStepsB();
+    if (posteq_bwd) {
+        posteq_cpu_timeB = posteq_bwd->getCPUTimeB();
+        posteq_numstepsB = posteq_bwd->getNumStepsB();
+    }
     posteq_wrms = posteq.getResidualNorm();
     posteq_status = posteq.getSteadyStateStatus();
     if (posteq_status[1] == SteadyStateStatus::success)
@@ -469,7 +482,8 @@ void ReturnData::getEventSensisFSA(
 
 void ReturnData::processBackwardProblem(
     ForwardProblem const& fwd, BackwardProblem const& bwd,
-    SteadystateProblem const* preeq, Model& model
+    SteadystateProblem const* preeq,
+    SteadyStateBackwardProblem const* preeq_bwd, Model& model
 ) {
     if (sllh.empty())
         return;
@@ -481,8 +495,8 @@ void ReturnData::processBackwardProblem(
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
-    if (preeq && preeq->hasQuadrature()) {
-        handleSx0Backward(model, *preeq, llhS0, xQB);
+    if (preeq_bwd && preeq_bwd->hasQuadrature()) {
+        handleSx0Backward(model, *preeq, preeq_bwd, llhS0, xQB);
     } else {
         handleSx0Forward(model, simulation_state, llhS0, xB);
     }
@@ -502,7 +516,8 @@ void ReturnData::processBackwardProblem(
 
 void ReturnData::handleSx0Backward(
     Model const& model, SteadystateProblem const& preeq,
-    std::vector<realtype>& llhS0, AmiVector& xQB
+    SteadyStateBackwardProblem const* preeq_bwd, std::vector<realtype>& llhS0,
+    AmiVector& xQB
 ) const {
     /* If preequilibration is run in adjoint mode, the scalar product of sx0
        with its adjoint counterpart (see handleSx0Forward()) is not necessary:
@@ -511,13 +526,13 @@ void ReturnData::handleSx0Backward(
        and so is the scalar product. Instead of the scalar product, the
        quadratures xQB from preequilibration contribute to the gradient
        (see example notebook on equilibration for further documentation). */
-    auto const& xQBpreeq = preeq.getAdjointQuadrature();
+    auto const& xQBpreeq = preeq_bwd->getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
         xQB[ip] += xQBpreeq.at(ip);
 
     /* We really need references here, as sx0 can be large... */
     auto const& sx0preeq = preeq.getStateSensitivity();
-    auto const& xBpreeq = preeq.getAdjointState();
+    auto const& xBpreeq = preeq_bwd->getAdjointState();
 
     /* Add the contribution for sx0 from preequilibration. If backward
      * preequilibration was done by simulation due to a singular Jacobian,

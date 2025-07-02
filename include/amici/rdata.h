@@ -17,6 +17,7 @@ class ExpData;
 class ForwardProblem;
 class BackwardProblem;
 class SteadystateProblem;
+class SteadyStateBackwardProblem;
 } // namespace amici
 
 namespace boost::serialization {
@@ -498,18 +499,25 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief extracts data from a preequilibration SteadystateProblem
      * @param preeq SteadystateProblem for preequilibration
+     * @param preeq_bwd SteadyStateBackwardProblem from preequilibration
      * @param model Model instance to compute return values
      */
-    void processPreEquilibration(SteadystateProblem const& preeq, Model& model);
+    void processPreEquilibration(
+        SteadystateProblem const& preeq,
+        SteadyStateBackwardProblem const* preeq_bwd, Model& model
+    );
 
     /**
      * @brief extracts data from a preequilibration SteadystateProblem
      * @param posteq SteadystateProblem for postequilibration
+     * @param posteq_bwd SteadyStateBackwardProblem from postequilibration
      * @param model Model instance to compute return values
      * @param edata ExpData instance containing observable data
      */
     void processPostEquilibration(
-        SteadystateProblem const& posteq, Model& model, ExpData const* edata
+        SteadystateProblem const& posteq,
+        SteadyStateBackwardProblem const* posteq_bwd, Model& model,
+        ExpData const* edata
     );
 
     /**
@@ -526,12 +534,14 @@ class ReturnData : public ModelDimensions {
      * @brief extracts results from backward problem
      * @param fwd forward problem
      * @param bwd backward problem
-     * @param preeq SteadystateProblem for preequilibration
+     * @param preeq SteadyStateProblem for preequilibration
+     * @param preeq_bwd SteadyStateBackwardProblem for preequilibration
      * @param model model that was used for forward/backward simulation
      */
     void processBackwardProblem(
         ForwardProblem const& fwd, BackwardProblem const& bwd,
-        SteadystateProblem const* preeq, Model& model
+        SteadystateProblem const* preeq,
+        SteadyStateBackwardProblem const* preeq_bwd, Model& model
     );
 
     /**
@@ -716,13 +726,15 @@ class ReturnData : public ModelDimensions {
      * @brief Updates contribution to likelihood from quadratures (xQB),
      * if preequilibration was run in adjoint mode
      * @param model model that was used for forward/backward simulation
-     * @param preeq SteadystateProblem for preequilibration
+     * @param preeq SteadyStateProblem for preequilibration
+     * @param preeq_bwd SteadyStateBackwardProblem for preequilibration
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * of preequilibration
      * @param xQB vector with quadratures from adjoint computation
      */
     void handleSx0Backward(
         Model const& model, SteadystateProblem const& preeq,
+        SteadyStateBackwardProblem const* preeq_bwd,
         std::vector<realtype>& llhS0, AmiVector& xQB
     ) const;
 

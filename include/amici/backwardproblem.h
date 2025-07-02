@@ -5,6 +5,7 @@
 #include "amici/forwardproblem.h"
 #include "amici/vector.h"
 
+#include <optional>
 #include <vector>
 
 namespace amici {
@@ -172,6 +173,28 @@ class BackwardProblem {
         return ws_.xQB_;
     }
 
+    /**
+     * @brief Return the postequilibration SteadyStateBwdProblem.
+     * @return The postequilibration SteadyStateBackwardProblem, if any.
+     */
+    [[nodiscard]] SteadyStateBackwardProblem const*
+    getPostequilibrationBwdProblem() const {
+        if (posteq_problem_bwd_.has_value())
+            return &*posteq_problem_bwd_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the preequilibration SteadyStateBackwardProblem.
+     * @return The preequilibration SteadyStateBackwardProblem, if any.
+     */
+    [[nodiscard]] SteadyStateBackwardProblem const*
+    getPreequilibrationBwdProblem() const {
+        if (preeq_problem_bwd_.has_value())
+            return &*preeq_problem_bwd_;
+        return nullptr;
+    }
+
   private:
     void handlePostequilibration();
 
@@ -209,6 +232,12 @@ class BackwardProblem {
     BwdSimWorkspace ws_;
 
     EventHandlingBwdSimulator simulator_;
+
+    /** The preequilibration steady-state backward problem, if any. */
+    std::optional<SteadyStateBackwardProblem> preeq_problem_bwd_;
+
+    /** The postequilibration steady-state backward problem, if any. */
+    std::optional<SteadyStateBackwardProblem> posteq_problem_bwd_;
 };
 
 } // namespace amici
