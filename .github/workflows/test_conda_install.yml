@@ -27,7 +27,7 @@ jobs:
       - name: Install requirements
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge compilers
+          conda install -c conda-forge compilers clang-tools
       - name: Install AMICI
         shell: bash -l {0}
         run: |
