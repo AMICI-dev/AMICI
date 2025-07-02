@@ -48,14 +48,8 @@ sensitivities. However, there are some limitations to be aware of:
   In this case, specify some large last output time instead of infinity to
   ensure that simulation does not stop prematurely.
 
-* Currently, events are not processed at all during pre-equilibration.
-  *This is subject to change in the future (See `here <https://github.com/AMICI-dev/AMICI/issues/2386>`__).*
-  If events influence the steady state, the steady state computation may not
-  yield the correct result.
-  If skipping events is indeed desired, make sure to future-proof your model
-  and include a switch in the event trigger to disable the event during
-  pre-equilibration.
-
+* When computing steady states using Newton's method, only initial events
+  will be handled. Subsequent events will be ignored.
 
 Discontinuities
 ===============

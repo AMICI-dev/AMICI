@@ -536,14 +536,15 @@ void CVodeSolver::reInitPostProcess(
 
     status = CVode(ami_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
 
-    if (status == CV_ROOT_RETURN)
-        throw CvodeException(
-            status,
-            "CVode returned a root after reinitialization. "
-            "The initial step-size after the event or "
-            "Heaviside function is too small. To fix this, increase absolute "
-            "and relative tolerances!"
-        );
+    if (status == CV_ROOT_RETURN) {
+        auto message
+            = std::string("CVode returned a root after reinitialization at t=")
+              + std::to_string(*t)
+              + ". The initial step-size after the event or "
+                "Heaviside function is too small. To fix this, increase "
+                "absolute and relative tolerances!";
+        throw CvodeException(status, message.c_str());
+    }
     if (status != CV_SUCCESS) {
         std::stringstream msg;
         msg << "tout: " << tout << ", t: " << *t << ".";

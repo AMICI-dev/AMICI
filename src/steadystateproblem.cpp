@@ -172,18 +172,14 @@ SteadystateProblem::SteadystateProblem(
 void SteadystateProblem::workSteadyStateProblem(
     Solver& solver, Model& model, int it, realtype t0
 ) {
-    if (model.ne > 0) {
-        solver.logger->log(
-            LogSeverity::warning, "STEADY_STATE_SIMULATION",
-            "Steady-state simulation with events is not supported. "
-            "Events will be ignored during pre- and post-equilibration. "
-            "This is subject to change."
-        );
-    }
-
     // Compute steady state, track computation time
     CpuTimer cpu_timer;
     ws_->t = t0;
+
+    // handle initial events
+    EventHandlingSimulator sim(&model, &solver, ws_, nullptr);
+    sim.handle_event(true, nullptr);
+
     flagUpdatedState();
     newton_solver_.reinitialize();
     findSteadyState(solver, model, it, t0);
@@ -642,7 +638,6 @@ void SteadystateProblem::runSteadystateSimulationFwd(
 
     // Returns the WRMS for the current state
     auto get_wrms_state = [&]() {
-        updateRightHandSide(model);
         if (newton_step_conv_) {
             newtons_method_.compute_step(ws_->xdot, {ws_->t, ws_->x, ws_->dx});
             return wrms_computer_x_.wrms(newtons_method_.get_delta(), ws_->x);
@@ -651,38 +646,32 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         return wrms_computer_x_.wrms(ws_->xdot, ws_->x);
     };
 
-    int& sim_steps = numsteps_.at(1);
+    // Checks for convergence of the steady state solution.
+    // Checks state and delta/xdot depending on the options.
+    auto check_convergence = [&](bool state_changed) {
+        if (state_changed) {
+            // update current solution
+            flagUpdatedState();
+            updateRightHandSide(model);
+        }
+        wrms_ = get_wrms_state();
+        if (wrms_ < conv_thresh && sensi_converged()) {
+            return true;
+        }
+        return false;
+    };
+
+    updateRightHandSide(model);
+
+    EventHandlingSimulator sim(&model, &solver, ws_, nullptr);
+
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
-    while (true) {
-        if (sim_steps % convergence_check_frequency == 0) {
-            // Check for convergence (already before simulation, since we might
-            // start in steady state)
-            wrms_ = get_wrms_state();
-            if (wrms_ < conv_thresh && sensi_converged()) {
-                break;
-            }
-        }
+    sim.run_steady_state(
+        check_convergence, convergence_check_frequency, numsteps_.at(1)
+    );
 
-        // check for maxsteps
-        if (sim_steps >= solver.getMaxSteps()) {
-            throw IntegrationFailure(AMICI_TOO_MUCH_WORK, ws_->t);
-        }
-
-        // increase counter
-        sim_steps++;
-
-        // One step of ODE integration
-        // Reason for tout specification:
-        // * max with 1 ensures the correct direction
-        //  (any positive value would do)
-        // * multiplication with 10 ensures nonzero difference and should
-        //   ensure stable computation.
-        // The value is not important for AMICI_ONE_STEP mode, only the
-        // direction w.r.t. current t.
-        solver.step(std::max(ws_->t, 1.0) * 10);
-
-        solver.writeSolution(ws_->t, ws_->x, ws_->dx, ws_->sx);
+    if (numsteps_.at(1)) {
         flagUpdatedState();
     }
 
