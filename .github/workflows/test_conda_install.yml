@@ -24,6 +24,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           auto-update-conda: true
           activate-environment: amici
+      - name: Install requirements
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge compilers
       - name: Install AMICI
         shell: bash -l {0}
         run: |
