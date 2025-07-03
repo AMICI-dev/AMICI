@@ -143,7 +143,8 @@ SteadystateProblem::SteadystateProblem(
           solver.getNewtonDampingFactorLowerBound(), solver.getNewtonMaxSteps(),
           solver.getNewtonStepSteadyStateCheck()
       )
-    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck()) {
+    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
+    , solver_(&solver) {
     // Check for compatibility of options
     if (solver.getSensitivityMethod() == SensitivityMethod::forward
         && solver.getSensitivityMethodPreequilibration()
@@ -172,21 +173,17 @@ SteadystateProblem::SteadystateProblem(
 void SteadystateProblem::workSteadyStateProblem(
     Solver& solver, Model& model, int it, realtype t0
 ) {
-    if (model.ne > 0) {
-        solver.logger->log(
-            LogSeverity::warning, "STEADY_STATE_SIMULATION",
-            "Steady-state simulation with events is not supported. "
-            "Events will be ignored during pre- and post-equilibration. "
-            "This is subject to change."
-        );
-    }
-
     // Compute steady state, track computation time
     CpuTimer cpu_timer;
     ws_->t = t0;
+
+    // handle initial events
+    EventHandlingSimulator sim(&model, &solver, ws_, nullptr);
+    sim.handle_event(true, nullptr);
+
     flagUpdatedState();
     newton_solver_.reinitialize();
-    findSteadyState(solver, model, it, t0);
+    findSteadyState(model, it, t0);
 
     // Check whether state sensitivities still need to be computed.
     // Did we already compute forward sensitivities?
@@ -248,32 +245,11 @@ SteadyStateBackwardProblem::SteadyStateBackwardProblem(
     , newton_solver_(
           NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
       )
-    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck()) {}
+    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
+    , model_(&model)
+    , solver_(&solver) {}
 
-void SteadyStateBackwardProblem::run(
-    Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
-    realtype t0
-) {
-    if (is_preeq) {
-        if (solver.getSensitivityMethodPreequilibration()
-            != SensitivityMethod::adjoint) {
-            // if not adjoint mode, there's nothing to do
-            return;
-        }
-
-        // If we need to reinitialize solver states, this won't work yet.
-        if (model.nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
-            );
-
-        // only preequilibrations needs a reInit,
-        // postequilibration does not
-        solver.updateAndReinitStatesAndSensitivities(&model);
-    }
-
+void SteadyStateBackwardProblem::run(AmiVector const& xB0, realtype t0) {
     newton_solver_.reinitialize();
     xB_.copy(xB0);
 
@@ -283,13 +259,11 @@ void SteadyStateBackwardProblem::run(
 
     // Compute quadratures, track computation time
     CpuTimer cpu_timer;
-    compute_steady_state_quadrature(solver, model, t0);
+    compute_steady_state_quadrature(t0);
     cpu_timeB_ = cpu_timer.elapsed_milliseconds();
 }
 
-void SteadystateProblem::findSteadyState(
-    Solver& solver, Model& model, int it, realtype t0
-) {
+void SteadystateProblem::findSteadyState(Model& model, int it, realtype t0) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
     // Turn off Newton's method if 'integrationOnly' approach is chosen for
     // steady-state computation or newton_maxsteps is set to 0 or
@@ -302,15 +276,15 @@ void SteadystateProblem::findSteadyState(
     bool const turnOffNewton
         = model.getSteadyStateComputationMode()
               == SteadyStateComputationMode::integrationOnly
-          || solver.getNewtonMaxSteps() == 0
-          || (solver.getSensitivityOrder() >= SensitivityOrder::first
+          || solver_->getNewtonMaxSteps() == 0
+          || (solver_->getSensitivityOrder() >= SensitivityOrder::first
               && model.getSteadyStateSensitivityMode()
                      == SteadyStateSensitivityMode::integrationOnly
               && ((it == -1
-                   && solver.getSensitivityMethodPreequilibration()
+                   && solver_->getSensitivityMethodPreequilibration()
                           == SensitivityMethod::forward)
-                  || solver.getSensitivityMethod() == SensitivityMethod::forward
-              ));
+                  || solver_->getSensitivityMethod()
+                         == SensitivityMethod::forward));
 
     bool const turnOffSimulation = model.getSteadyStateComputationMode()
                                    == SteadyStateComputationMode::newtonOnly;
@@ -321,8 +295,7 @@ void SteadystateProblem::findSteadyState(
 
     // Newton solver didn't work, so try to simulate to steady state.
     if (!turnOffSimulation && !checkSteadyStateSuccess())
-        steady_state_status_[1]
-            = findSteadyStateBySimulation(solver, model, it, t0);
+        steady_state_status_[1] = findSteadyStateBySimulation(model, it, t0);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
     if (!turnOffNewton && !turnOffSimulation && !checkSteadyStateSuccess())
@@ -373,35 +346,39 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(
 }
 
 SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
-    Solver& solver, Model& model, int const it, realtype const t0
+    Model& model, int const it, realtype const t0
 ) {
     try {
+        // Preequilibration -> Create a new solver instance for simulation
+        // Postequilibration -> Solver was already created, use that one
         if (it < 0) {
-            // Preequilibration -> Create a new solver instance for simulation
-            auto sim_solver = std::unique_ptr<Solver>(solver.clone());
-            sim_solver->logger = solver.logger;
+            // TODO(performance): We should be able to avoid this clone
+            //   if we aren't using ASA in combination with events.
+            auto main_solver = solver_;
+            auto new_solver = std::unique_ptr<Solver>(main_solver->clone());
+            new_solver->logger = main_solver->logger;
 
             // do we need sensitivities?
-            if (solver.getSensitivityMethodPreequilibration()
+            if (new_solver->getSensitivityMethodPreequilibration()
                     == SensitivityMethod::forward
-                && solver.getSensitivityOrder() >= SensitivityOrder::first
+                && new_solver->getSensitivityOrder() >= SensitivityOrder::first
                 && (model.getSteadyStateSensitivityMode()
                         == SteadyStateSensitivityMode::integrationOnly
                     || model.getSteadyStateSensitivityMode()
                            == SteadyStateSensitivityMode::integrateIfNewtonFails
                 )) {
                 // need forward to compute sx0 for the pre/main simulation
-                sim_solver->setSensitivityMethod(SensitivityMethod::forward);
+                new_solver->setSensitivityMethod(SensitivityMethod::forward);
             } else {
-                sim_solver->setSensitivityMethod(SensitivityMethod::none);
-                sim_solver->setSensitivityOrder(SensitivityOrder::none);
+                new_solver->setSensitivityMethod(SensitivityMethod::none);
+                new_solver->setSensitivityOrder(SensitivityOrder::none);
             }
-            sim_solver->setup(t0, &model, ws_->x, ws_->dx, ws_->sx, ws_->sdx);
-            runSteadystateSimulationFwd(*sim_solver, model);
-        } else {
-            // Postequilibration -> Solver was already created, use that one
-            runSteadystateSimulationFwd(solver, model);
+            new_solver->setup(t0, &model, ws_->x, ws_->dx, ws_->sx, ws_->sdx);
+            preeq_solver_unique_ptr_ = std::move(new_solver);
+            solver_ = preeq_solver_unique_ptr_.get();
         }
+
+        runSteadystateSimulationFwd(model);
 
         return SteadyStateStatus::success;
     } catch (IntegrationFailure const& ex) {
@@ -442,9 +419,7 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
     }
 }
 
-void SteadyStateBackwardProblem::compute_steady_state_quadrature(
-    Solver const& solver, Model& model, realtype t0
-) {
+void SteadyStateBackwardProblem::compute_steady_state_quadrature(realtype t0) {
     // This routine computes the quadratures:
     //     xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
     // As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
@@ -452,20 +427,20 @@ void SteadyStateBackwardProblem::compute_steady_state_quadrature(
     // We therefore compute the integral over xB first and then do a
     // matrix-vector multiplication.
 
-    auto const sensitivityMode = model.getSteadyStateSensitivityMode();
+    auto const sensitivityMode = model_->getSteadyStateSensitivityMode();
 
     // Try to compute the analytical solution for quadrature algebraically
     if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly
         || sensitivityMode
                == SteadyStateSensitivityMode::integrateIfNewtonFails)
-        compute_quadrature_by_lin_solve(model);
+        compute_quadrature_by_lin_solve();
 
     // Perform simulation if necessary
     if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly
         || (sensitivityMode
                 == SteadyStateSensitivityMode::integrateIfNewtonFails
             && !hasQuadrature()))
-        compute_quadrature_by_simulation(solver, model, t0);
+        compute_quadrature_by_simulation(t0);
 
     // If the analytic solution and integration did not work, throw
     if (!hasQuadrature())
@@ -476,7 +451,7 @@ void SteadyStateBackwardProblem::compute_steady_state_quadrature(
         );
 }
 
-void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
+void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
     // Computes the integral over the adjoint state xB:
     // If the Jacobian has full rank, this has an analytical solution, since
     //   d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
@@ -493,12 +468,13 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
     try {
         // compute integral over xB and write to xQ
         newton_solver_.prepareLinearSystemB(
-            model, {final_state_.t, final_state_.x, final_state_.dx}
+            *model_, {final_state_.t, final_state_.x, final_state_.dx}
         );
         newton_solver_.solveLinearSystem(xQ_);
         // Compute the quadrature as the inner product xQ * dxdotdp
         computeQBfromQ(
-            model, xQ_, xQB_, {final_state_.t, final_state_.x, final_state_.dx}
+            *model_, xQ_, xQB_,
+            {final_state_.t, final_state_.x, final_state_.dx}
         );
         has_quadrature_ = true;
 
@@ -509,9 +485,7 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
     }
 }
 
-void SteadyStateBackwardProblem::compute_quadrature_by_simulation(
-    Solver const& solver, Model& model, realtype t0
-) {
+void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
     // If the Jacobian is singular, the integral over xB must be computed
     // by usual integration over time, but simplifications can be applied:
     // x is not time-dependent, no forward trajectory is needed.
@@ -521,18 +495,18 @@ void SteadyStateBackwardProblem::compute_quadrature_by_simulation(
     // xQ was written in getQuadratureByLinSolve() -> set to zero
     xQ_.zero();
 
-    auto sim_solver = std::unique_ptr<Solver>(solver.clone());
-    sim_solver->logger = solver.logger;
+    auto sim_solver = std::unique_ptr<Solver>(solver_->clone());
+    sim_solver->logger = solver_->logger;
     sim_solver->setSensitivityMethod(SensitivityMethod::none);
     sim_solver->setSensitivityOrder(SensitivityOrder::none);
-    sim_solver->setup(t0, &model, xB_, xB_, final_state_.sx, final_state_.sx);
+    sim_solver->setup(t0, model_, xB_, xB_, final_state_.sx, final_state_.sx);
     sim_solver->setupSteadystate(
-        t0, &model, final_state_.x, final_state_.dx, xB_, xB_, xQ_
+        t0, model_, final_state_.x, final_state_.dx, xB_, xB_, xQ_
     );
 
     // perform integration and quadrature
     try {
-        run_simulation(*sim_solver, model);
+        run_simulation(*sim_solver);
         has_quadrature_ = true;
     } catch (NewtonFailure const&) {
         has_quadrature_ = false;
@@ -597,16 +571,14 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
     );
 }
 
-void SteadystateProblem::runSteadystateSimulationFwd(
-    Solver& solver, Model& model
-) {
+void SteadystateProblem::runSteadystateSimulationFwd(Model& model) {
     if (model.nx_solver == 0)
         return;
 
     // Do we also have to check for convergence of sensitivities?
     auto sensitivity_method = SensitivityMethod::none;
-    if (solver.getSensitivityOrder() > SensitivityOrder::none
-        && solver.getSensitivityMethod() == SensitivityMethod::forward) {
+    if (solver_->getSensitivityOrder() > SensitivityOrder::none
+        && solver_->getSensitivityMethod() == SensitivityMethod::forward) {
         sensitivity_method = SensitivityMethod::forward;
     }
     // If forward sensitivity computation by simulation is disabled,
@@ -614,23 +586,24 @@ void SteadystateProblem::runSteadystateSimulationFwd(
     // Sensitivities will be computed by newtonsolver.computeNewtonSensis then.
     if (model.getSteadyStateSensitivityMode()
         == SteadyStateSensitivityMode::newtonOnly) {
-        solver.switchForwardSensisOff();
+        solver_->switchForwardSensisOff();
         sensitivity_method = SensitivityMethod::none;
     }
 
     // function for sensitivity convergence check or dummy
     std::function<bool()> sensi_converged;
-    if (solver.getSensiSteadyStateCheck()
+    if (solver_->getSensiSteadyStateCheck()
         && sensitivity_method == SensitivityMethod::forward) {
-        sensi_converged =
-            [&,
-             wrms_computer_sx = WRMSComputer(
-                 model.nx_solver, solver.getSunContext(),
-                 solver.getAbsoluteToleranceSteadyStateSensi(),
-                 solver.getRelativeToleranceSteadyStateSensi(),
-                 AmiVector(model.get_steadystate_mask(), solver.getSunContext())
-             )]() mutable -> bool {
-            updateSensiSimulation(solver);
+        sensi_converged
+            = [&, wrms_computer_sx = WRMSComputer(
+                      model.nx_solver, solver_->getSunContext(),
+                      solver_->getAbsoluteToleranceSteadyStateSensi(),
+                      solver_->getRelativeToleranceSteadyStateSensi(),
+                      AmiVector(
+                          model.get_steadystate_mask(), solver_->getSunContext()
+                      )
+                  )]() mutable -> bool {
+            updateSensiSimulation();
             // getWrms needs to be called before getWrmsFSA
             // such that the linear system is prepared for newton-type
             // convergence check
@@ -642,7 +615,6 @@ void SteadystateProblem::runSteadystateSimulationFwd(
 
     // Returns the WRMS for the current state
     auto get_wrms_state = [&]() {
-        updateRightHandSide(model);
         if (newton_step_conv_) {
             newtons_method_.compute_step(ws_->xdot, {ws_->t, ws_->x, ws_->dx});
             return wrms_computer_x_.wrms(newtons_method_.get_delta(), ws_->x);
@@ -651,50 +623,42 @@ void SteadystateProblem::runSteadystateSimulationFwd(
         return wrms_computer_x_.wrms(ws_->xdot, ws_->x);
     };
 
-    int& sim_steps = numsteps_.at(1);
+    // Checks for convergence of the steady state solution.
+    // Checks state and delta/xdot depending on the options.
+    auto check_convergence = [&](bool state_changed) {
+        if (state_changed) {
+            // update current solution
+            flagUpdatedState();
+            updateRightHandSide(model);
+        }
+        wrms_ = get_wrms_state();
+        if (wrms_ < conv_thresh && sensi_converged()) {
+            return true;
+        }
+        return false;
+    };
+
+    updateRightHandSide(model);
+
+    EventHandlingSimulator sim(&model, solver_, ws_, nullptr);
+
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
-    while (true) {
-        if (sim_steps % convergence_check_frequency == 0) {
-            // Check for convergence (already before simulation, since we might
-            // start in steady state)
-            wrms_ = get_wrms_state();
-            if (wrms_ < conv_thresh && sensi_converged()) {
-                break;
-            }
-        }
+    sim.run_steady_state(
+        check_convergence, convergence_check_frequency, numsteps_.at(1)
+    );
 
-        // check for maxsteps
-        if (sim_steps >= solver.getMaxSteps()) {
-            throw IntegrationFailure(AMICI_TOO_MUCH_WORK, ws_->t);
-        }
-
-        // increase counter
-        sim_steps++;
-
-        // One step of ODE integration
-        // Reason for tout specification:
-        // * max with 1 ensures the correct direction
-        //  (any positive value would do)
-        // * multiplication with 10 ensures nonzero difference and should
-        //   ensure stable computation.
-        // The value is not important for AMICI_ONE_STEP mode, only the
-        // direction w.r.t. current t.
-        solver.step(std::max(ws_->t, 1.0) * 10);
-
-        solver.writeSolution(ws_->t, ws_->x, ws_->dx, ws_->sx);
+    if (numsteps_.at(1)) {
         flagUpdatedState();
     }
 
     // if check_sensi_conv_ is deactivated, we still have to update sensis
     if (sensitivity_method == SensitivityMethod::forward)
-        updateSensiSimulation(solver);
+        updateSensiSimulation();
 }
 
-void SteadyStateBackwardProblem::run_simulation(
-    Solver const& solver, Model& model
-) {
-    if (model.nx_solver == 0)
+void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
+    if (model_->nx_solver == 0)
         return;
 
     if (newton_step_conv_) {
@@ -709,13 +673,13 @@ void SteadyStateBackwardProblem::run_simulation(
 
     // WRMS computer for xQB
     WRMSComputer wrms_computer_xQB_(
-        model.nplist(), solver.getSunContext(),
+        model_->nplist(), solver.getSunContext(),
         solver.getAbsoluteToleranceQuadratures(),
         solver.getRelativeToleranceQuadratures(), AmiVector()
     );
 
     // time-derivative of quadrature state vector
-    AmiVector xQBdot(model.nplist(), solver.getSunContext());
+    AmiVector xQBdot(model_->nplist(), solver.getSunContext());
 
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
     auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
@@ -732,11 +696,11 @@ void SteadyStateBackwardProblem::run_simulation(
             // converge to zero at all. So we need xQBdot, hence compute xQB
             // first.
             computeQBfromQ(
-                model, xQ_, xQB_,
+                *model_, xQ_, xQB_,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
             computeQBfromQ(
-                model, xB_, xQBdot,
+                *model_, xB_, xQBdot,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
             auto wrms = wrms_computer_xQB_.wrms(xQBdot, xQB_);
@@ -774,10 +738,10 @@ void SteadystateProblem::flagUpdatedState() {
     sensis_updated_ = false;
 }
 
-void SteadystateProblem::updateSensiSimulation(Solver const& solver) {
+void SteadystateProblem::updateSensiSimulation() {
     if (sensis_updated_)
         return;
-    ws_->sx = solver.getStateSensitivity(ws_->t);
+    ws_->sx = solver_->getStateSensitivity(ws_->t);
     sensis_updated_ = true;
 }
 

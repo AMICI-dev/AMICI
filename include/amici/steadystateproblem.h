@@ -308,18 +308,23 @@ class SteadystateProblem {
      */
     [[nodiscard]] bool checkSteadyStateSuccess() const;
 
+    /**
+     * @brief Get the preequilibration solver.
+     * @return The preequilibration solver.
+     */
+    [[nodiscard]] Solver const* get_solver() const { return solver_; }
+
   private:
     /**
      * @brief Handle the computation of the steady state.
      *
      * Throws an AmiException if no steady state was found.
      *
-     * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void findSteadyState(Solver& solver, Model& model, int it, realtype t0);
+    void findSteadyState(Model& model, int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
@@ -331,16 +336,14 @@ class SteadystateProblem {
 
     /**
      * @brief Try to determine the steady state by using forward simulation.
-     * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
      * successfully, or if it failed.
      */
-    SteadyStateStatus findSteadyStateBySimulation(
-        Solver& solver, Model& model, int it, realtype t0
-    );
+    SteadyStateStatus
+    findSteadyStateBySimulation(Model& model, int it, realtype t0);
 
     /**
      * @brief Store state and throw an exception if equilibration failed
@@ -365,11 +368,10 @@ class SteadystateProblem {
     /**
      * @brief Launch simulation if Newton solver or linear system solve
      * fail or are disabled.
-     * @param solver Solver instance.
      * @param model Model instance.
      * simulation.
      */
-    void runSteadystateSimulationFwd(Solver& solver, Model& model);
+    void runSteadystateSimulationFwd(Model& model);
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -380,9 +382,8 @@ class SteadystateProblem {
     /**
      * @brief Retrieve simulation sensitivities from the provided solver and
      * set the corresponding flag to indicate they are up to date
-     * @param solver simulation solver instance
      */
-    void updateSensiSimulation(Solver const& solver);
+    void updateSensiSimulation();
 
     /**
      * @brief Compute the right-hand side for the current state_.x and set the
@@ -432,6 +433,21 @@ class SteadystateProblem {
      * the current state
      */
     bool sensis_updated_{false};
+
+    /**
+     * A dedicated solver for pre-equilibration is required if we need to
+     * perform a backward simulation for adjoint sensitivities for models with
+     * events.
+     *
+     * This unique_ptr is used to manage the lifetime of that solver and may
+     * be null. Always use the `solver_` pointer to access the solver,
+     * which will point to a dedicated pre-equilibration solver if it exists,
+     * or to the main solver otherwise.
+     */
+    std::unique_ptr<Solver> preeq_solver_unique_ptr_;
+
+    /** Pointer to the pre-equilibration solver */
+    Solver const* solver_{nullptr};
 };
 
 /**
@@ -457,15 +473,10 @@ class SteadyStateBackwardProblem {
      * Integrates over the adjoint state backward in time by solving a linear
      * system of equations, which gives the analytical solution.
      *
-     * @param solver The solver instance
-     * @param model The model instance
      * @param xB0 Initial adjoint state vector.
-     * @param is_preeq Flag indicating whether this is a preequilibration.
      * @param t0 Initial time for the steady state simulation.
      */
-    void
-    run(Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
-        realtype t0);
+    void run(AmiVector const& xB0, realtype t0);
 
     /**
      * @brief Return the quadratures from pre- or postequilibration
@@ -511,37 +522,27 @@ class SteadyStateBackwardProblem {
      * @brief Launch backward simulation if Newton solver or linear system solve
      * fail or are disabled.
      * @param solver Solver instance.
-     * @param model Model instance.
      */
-    void run_simulation(Solver const& solver, Model& model);
+    void run_simulation(Solver const& solver);
 
     /**
      * @brief Compute quadratures in adjoint mode
-     * @param solver Solver instance.
-     * @param model Model instance.
      * @param t0 Initial time for the steady state simulation.
      */
-    void compute_steady_state_quadrature(
-        Solver const& solver, Model& model, realtype t0
-    );
+    void compute_steady_state_quadrature(realtype t0);
 
     /**
      * @brief Compute the quadrature in steady state backward mode by
      * solving the linear system defined by the backward Jacobian.
-     * @param model Model instance.
      */
-    void compute_quadrature_by_lin_solve(Model& model);
+    void compute_quadrature_by_lin_solve();
 
     /**
      * @brief Computes the quadrature in steady state backward mode by
      * numerical integration of xB forward in time.
-     * @param solver Solver instance.
-     * @param model Model instance.
      * @param t0 Initial time for the steady state simulation.
      */
-    void compute_quadrature_by_simulation(
-        Solver const& solver, Model& model, realtype t0
-    );
+    void compute_quadrature_by_simulation(realtype t0);
 
     /** CPU time for solving the backward problem (milliseconds) */
     double cpu_timeB_{0.0};
@@ -572,6 +573,9 @@ class SteadyStateBackwardProblem {
      * checks during simulation.
      */
     bool newton_step_conv_{false};
+
+    Model* model_{nullptr};
+    Solver const* solver_{nullptr};
 };
 
 } // namespace amici

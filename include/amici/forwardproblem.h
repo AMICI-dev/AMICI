@@ -221,7 +221,7 @@ class EventHandlingSimulator {
      * (dimension nJ x nx x nMaxEvent, ordering =?)
      */
     EventHandlingSimulator(
-        gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
+        gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
         gsl::not_null<FwdSimWorkspace*> ws, std::vector<realtype>* dJzdx
     )
         : model_(model)
@@ -254,6 +254,27 @@ class EventHandlingSimulator {
         std::vector<realtype> const& timepoints, bool store_diagnosis);
 
     /**
+     * @brief Simulate until steady state and handle events along the way.
+     *
+     * This will run the simulation until the steady state is reached.
+     * Events will be handled as they occur.
+     * No data points will be handled during this simulation
+     * (not for event-resolved nor for time-resolved observables).
+     *
+     * @param check_convergence Function to check convergence based on the
+     * current values in `ws_`.
+     * Input: whether `xdot` has to be recomputed. Output: whether convergence
+     * has been reached.
+     * @param convergence_check_frequency Frequency of convergence checks.
+     * @param sim_steps Number of simulation steps taken until convergence or
+     * error.
+     */
+    void run_steady_state(
+        std::function<bool(bool)> check_convergence,
+        int convergence_check_frequency, int& sim_steps
+    );
+
+    /**
      * @brief Returns maximal event index for which the timepoint is available
      * @return index
      */
@@ -278,13 +299,9 @@ class EventHandlingSimulator {
     /** Results for the current simulation period. */
     PeriodResult result;
 
-    /** The current time. */
-    realtype t_{NAN};
-
     /** Time index in the current list of timepoints */
     int it_ = -1;
 
-  private:
     /**
      * @brief Execute everything necessary for the handling of events
      *
@@ -293,6 +310,7 @@ class EventHandlingSimulator {
      */
     void handle_event(bool initial_event, ExpData const* edata);
 
+  private:
     /**
      * @brief Store pre-event model state
      *
@@ -331,7 +349,7 @@ class EventHandlingSimulator {
             }))
             return;
 
-        result.discs.emplace_back(t_);
+        result.discs.emplace_back(ws_->t);
         store_event(edata);
     }
 
@@ -342,7 +360,7 @@ class EventHandlingSimulator {
     Model* model_{nullptr};
 
     /** The solver to use for the simulation. */
-    Solver* solver_{nullptr};
+    Solver const* solver_{nullptr};
 
     /** The workspace to use for the simulation. */
     gsl::not_null<FwdSimWorkspace*> ws_;
