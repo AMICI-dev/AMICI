@@ -18,11 +18,19 @@ Glossary
     DAE
         Differential-Algebraic Equation
 
+    equilibration
+        In AMICI, equilibration refers to the process of simulating or
+        solving a dynamical system for :term:`steady state`.
+        "Equilibration" refers to approaching an
+        `equilibrium point <https://en.wikipedia.org/wiki/Equilibrium_point_(mathematics)>`__
+        of a dynamical system and does not imply thermodynamic equilibrium.
+
     fixed parameters
         In AMICI, *fixed parameters* are parameters with respect to which no
         sensitivities are computed. They usually correspond to experimental
         conditions. For fixed parameters, different values can be set for
-        :term:`preequilibration`, :term:`presimulation` and simulation.
+        :term:`pre-equilibration`, :term:`pre-simulation` and the main
+        simulation. See also :term:`simulation periods`.
 
     IDAS
         `IDAS <https://computing.llnl.gov/projects/sundials/idas>`_ is a
@@ -32,18 +40,30 @@ Glossary
     ODE
         Ordinary Differential Equation
 
-    preequilibration
-        Simulating or solving the dynamical system for the steadystate.
-
-    presimulation
-        Simulation for a fixed time before the regular simulation. Can be used
-        to specify pretreatments.
-
     PEtab
         `PEtab <https://github.com/PEtab-dev/PEtab>`_ is a format for
         specifying parameter estimation problems. It is based on an
         :term:`SBML` model and tab-separated value files specifying the
         observation model and experimental conditions.
+
+    post-equilibration
+        :term:`equilibration` after the main simulation.
+        See also :term:`simulation periods`.
+
+    pre-equilibration
+        :term:`Equilibration <equilibration>` before the :term:`pre-simulation`
+        or main simulation. Pre-equilibration is useful if the system is
+        assumed to be at steady state at the start of some experiment, but the
+        initial state is not known.
+        The model time is reset to its initial time after pre-equilibration.
+        See also :term:`simulation periods`.
+
+    pre-simulation
+        Simulation for a fixed time before the regular simulation. Can be used
+        to specify pretreatments. Pre-simulation starts at
+        :math:`t_0 - t_{presim}`. Dedicated fixed parameters can be
+        specified for pre-simulation.
+        See also :term:`simulation periods`.
 
     PySB
         `PySB <http://pysb.org/>`_ is a tool for specifying rule-based systems
@@ -52,6 +72,33 @@ Glossary
     SBML
         The `Systems Biology Markup Language <http://sbml.org/>`_ is a
         commonly used format for specifying systems biology models.
+
+    simulation periods
+        In AMICI a model simulation may consist of multiple periods:
+
+        * A :term:`pre-equilibration` period, which is used to simulate the
+          system until it reaches :term:`steady state`.
+        * A :term:`pre-simulation` period, which is used to simulate the system
+          for a fixed time before the main simulation.
+        * The main simulation period.
+        * A :term:`post-equilibration` period, to simulate the system until it
+          reaches :term:`steady state`.
+
+        The main simulation and post-equilibration periods are the only
+        periods for which output timepoints can be specified and during which
+        measurements are assumed to be taken.
+
+        (Non-fixed) model parameters (:math:`p`) are the same throughout those
+        periods, but different sets of :term:`fixed parameters` (:math:`k`) can
+        be specified for each period, except for post-equilibration, which
+        always uses the fixed parameters of the main simulation period.
+
+    steady state
+        In AMICI, a model is considered to be at steady state if the time
+        derivative of the state variables is zero, up to the specified
+        tolerances, even if there are discontinuities in the model
+        (e.g., due to events) that may change the model state at a later time
+        point.
 
     SUNDIALS
         `SUNDIALS <https://computing.llnl.gov/projects/sundials/>`_:

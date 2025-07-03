@@ -39,7 +39,8 @@ Features
   * adjoint
   * first- and second-order (second-order Matlab-only)
 
-* Pre-equilibration and pre-simulation conditions
+* :term:`Pre-equilibration <pre-equilibration>` and :term:`pre-simulation`
+  conditions
 * Support for
   `discrete events and logical operations <https://academic.oup.com/bioinformatics/article/33/7/1049/2769435>`_
 
@@ -99,11 +100,11 @@ as shown in the following table:
      - yes
      - yes
      - yes
-   * - :term:`preequilibration`
+   * - :term:`pre-equilibration`
      - yes
      - yes
      - yes
-   * - :term:`presimulation`
+   * - :term:`pre-simulation`
      - yes
      - yes
      - no
