@@ -1,7 +1,8 @@
 # ruff: noqa: F401, F821, F841
+import os
 import jax.numpy as jnp
-import jaxtyping as jt
 import equinox as eqx
+import jax
 from interpax import interp1d
 from pathlib import Path
 from jax.numpy import inf as oo

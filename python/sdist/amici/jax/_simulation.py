@@ -84,6 +84,7 @@ def eq(
             max_steps,
             diffrax.DirectAdjoint(),
             [steady_state_event],
+            [None],
             diffrax.SaveAt(t1=True),
             term,
             known_discs,
@@ -120,6 +121,7 @@ def eq(
             max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
             diffrax.DirectAdjoint(),
             [steady_state_event] + root_cond_fns,
+            [None] + [True] * len(root_cond_fns),
             diffrax.SaveAt(t1=True),
             term,
             known_discs,
@@ -233,6 +235,7 @@ def solve(
             max_steps,
             adjoint,
             [],
+            [],
             diffrax.SaveAt(ts=ts),
             term,
             known_discs,
@@ -264,7 +267,8 @@ def solve(
             root_finder,
             max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
             adjoint,
-            list(root_cond_fns),
+            root_cond_fns,
+            [True] * len(root_cond_fns),
             diffrax.SaveAt(
                 subs=[
                     diffrax.SubSaveAt(
@@ -345,6 +349,7 @@ def _run_segment(
     max_steps: jnp.int_,
     adjoint: diffrax.AbstractAdjoint,
     cond_fns: list[Callable],
+    cond_dirs: list[None | bool],
     saveat: diffrax.SaveAt,
     term: diffrax.ODETerm,
     known_discs: jt.Float[jt.Array, "*nediscs"],
@@ -359,7 +364,15 @@ def _run_segment(
     """
 
     # combine all discontinuity conditions into a single diffrax.Event
-    event = diffrax.Event(cond_fns, root_finder) if cond_fns else None
+    event = (
+        diffrax.Event(
+            cond_fn=cond_fns,
+            root_finder=root_finder,
+            direction=cond_dirs,
+        )
+        if cond_fns
+        else None
+    )
 
     # manage events with explicit discontinuities
     controller = (
