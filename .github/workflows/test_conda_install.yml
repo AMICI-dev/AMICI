@@ -1,0 +1,40 @@
+name: Conda installation
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '48 4 * * *'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  conda:
+    name: Conda installation
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+        python-version: ['3.11']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          auto-update-conda: true
+          activate-environment: amici
+      - name: Install requirements
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge compilers clang-tools
+      - name: Install AMICI
+        shell: bash -l {0}
+        run: |
+          pip install -v git+https://github.com/AMICI-dev/amici.git@main#egg=amici\&subdirectory=python/sdist
+      - name: Test import
+        shell: bash -l {0}
+        run: |
+          python -c "import os; import pprint; pprint.pprint(dict(os.environ))"
+          python -c "from amici import _amici; print(_amici)"
+          python -m amici
