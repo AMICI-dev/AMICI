@@ -8,6 +8,7 @@ requires = [
     "cmake-build-extension==0.6.0",
     "scipy-openblas64; platform_system!='Darwin'",
     "swig",
+    "hatchling",
 ]
 build-backend = "setuptools.build_meta"
 
