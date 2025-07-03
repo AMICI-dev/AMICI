@@ -1,8 +1,6 @@
 # ruff: noqa: F401, F821, F841
-import os
 import jax.numpy as jnp
 import equinox as eqx
-import jax
 from interpax import interp1d
 from pathlib import Path
 from jax.numpy import inf as oo
@@ -133,7 +131,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return masked_rval.at[ie].get()
 
     def _root_cond_fns(self):
-        """Return root condition functions for discontinuities"""
+        """Return root condition functions for discontinuities."""
         return [
             eqx.Partial(self._root_cond_fn_event, ie)
             for ie in range(self.n_events)
