@@ -371,6 +371,246 @@ class EventHandlingSimulator {
 };
 
 /**
+ * @brief The SteadystateProblem class solves a steady-state problem using
+ * Newton's method and falls back to integration on failure.
+ */
+class SteadystateProblem {
+  public:
+    /**
+     * @brief Constructor
+     *
+     * @param ws Workspace for forward simulation
+     * @param solver Solver instance
+     * @param model Model instance
+     */
+    explicit SteadystateProblem(
+        FwdSimWorkspace* ws, Solver const& solver, Model& model
+    );
+
+    /**
+     * @brief Compute the steady state in the forward case.
+     *
+     * Tries to determine the steady state of the ODE system and computes
+     * steady state sensitivities if requested.
+     * Expects that solver, model, and ws_ are already initialized.
+     *
+     * @param solver The solver instance
+     * @param model The model instance
+     * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void
+    workSteadyStateProblem(Solver& solver, Model& model, int it, realtype t0);
+
+    /**
+     * @brief Return the stored SimulationState.
+     * @return stored SimulationState
+     */
+    [[nodiscard]] SimulationState const& getFinalSimulationState() const {
+        return final_state_;
+    }
+
+    /**
+     * @brief Return state at steady state
+     * @return x
+     */
+    [[nodiscard]] AmiVector const& getState() const { return final_state_.x; }
+
+    /**
+     * @brief Return state sensitivity at steady state
+     * @return sx
+     */
+    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
+        return final_state_.sx;
+    }
+
+    /**
+     * @brief Get the CPU time taken to solve the forward problem.
+     * @return The CPU time in milliseconds.
+     */
+    [[nodiscard]] double getCPUTime() const { return cpu_time_; }
+
+    /**
+     * @brief Get the steady state computation status.
+     * @return Execution status of the different approaches
+     * [newton, simulation, newton].
+     */
+    [[nodiscard]] std::vector<SteadyStateStatus> const&
+    getSteadyStateStatus() const {
+        return steady_state_status_;
+    }
+
+    /**
+     * @brief Get model time at which steady state was found through simulation.
+     * @return Time at which steady state was found (model time units).
+     */
+    [[nodiscard]] realtype getSteadyStateTime() const { return final_state_.t; }
+
+    /**
+     * @brief Get the weighted root mean square of the residuals.
+     * @return The weighted root-mean-square of the residuals.
+     */
+    [[nodiscard]] realtype getResidualNorm() const { return wrms_; }
+
+    /**
+     * @brief Get the number of steps taken to find the steady state.
+     * @return Number of steps taken to find the steady state as
+     * [newton, simulation, newton].
+     */
+    [[nodiscard]] std::vector<int> const& getNumSteps() const {
+        return numsteps_;
+    }
+
+    /**
+     * @brief Check, whether any approach to find the steady state was
+     * successful.
+     * @return Whether any approach to find the steady state was successful.
+     */
+    [[nodiscard]] bool checkSteadyStateSuccess() const;
+
+    /**
+     * @brief Get the preequilibration solver.
+     * @return The preequilibration solver.
+     */
+    [[nodiscard]] Solver const* get_solver() const { return solver_; }
+
+  private:
+    /**
+     * @brief Handle the computation of the steady state.
+     *
+     * Throws an AmiException if no steady state was found.
+     *
+     * @param model Model instance.
+     * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void findSteadyState(Model& model, int it, realtype t0);
+
+    /**
+     * @brief Try to determine the steady state by using Newton's method.
+     * @param model Model instance.
+     * @param newton_retry Flag indicating whether Newton's method is being
+     * relaunched.
+     */
+    void findSteadyStateByNewtonsMethod(Model& model, bool newton_retry);
+
+    /**
+     * @brief Try to determine the steady state by using forward simulation.
+     * @param model Model instance.
+     * @param it Index of the current output time point.
+     * @param t0 Initial time for the steady state simulation.
+     * @return SteadyStateStatus indicating whether the steady state was found
+     * successfully, or if it failed.
+     */
+    SteadyStateStatus
+    findSteadyStateBySimulation(Model& model, int it, realtype t0);
+
+    /**
+     * @brief Store state and throw an exception if equilibration failed
+     * @param tried_newton_1 Whether any Newton step was attempted before
+     * simulation
+     * @param tried_simulation Whether simulation was attempted
+     * @param tried_newton_2 Whether any Newton step was attempted after
+     * simulation
+     */
+    [[noreturn]] void handleSteadyStateFailure(
+        bool tried_newton_1, bool tried_simulation, bool tried_newton_2
+    ) const;
+
+    /**
+     * @brief Checks convergence for state sensitivities
+     * @param model Model instance
+     * @param wrms_computer_sx WRMSComputer instance for state sensitivities
+     * @return weighted root mean squared residuals of the RHS
+     */
+    realtype getWrmsFSA(Model& model, WRMSComputer& wrms_computer_sx);
+
+    /**
+     * @brief Launch simulation if Newton solver or linear system solve
+     * fail or are disabled.
+     * @param model Model instance.
+     * simulation.
+     */
+    void runSteadystateSimulationFwd(Model& model);
+
+    /**
+     * @brief Update member variables to indicate that state_.x has been
+     * updated and xdot_, delta_, etc. need to be recomputed.
+     */
+    void flagUpdatedState();
+
+    /**
+     * @brief Retrieve simulation sensitivities from the provided solver and
+     * set the corresponding flag to indicate they are up to date
+     */
+    void updateSensiSimulation();
+
+    /**
+     * @brief Compute the right-hand side for the current state_.x and set the
+     * corresponding flag to indicate xdot_ is up to date.
+     * @param model model instance
+     */
+    void updateRightHandSide(Model& model);
+
+    /** Workspace for forward simulation */
+    FwdSimWorkspace* ws_;
+    /** WRMS computer for x */
+    WRMSComputer wrms_computer_x_;
+    /** weighted root-mean-square error */
+    realtype wrms_{NAN};
+
+    /** The simulation state at the end of the forward problem. */
+    SimulationState final_state_;
+
+    /** stores diagnostic information about employed number of steps */
+    std::vector<int> numsteps_{std::vector<int>(3, 0)};
+
+    /** CPU time for solving the forward problem (milliseconds) */
+    double cpu_time_{0.0};
+
+    /**
+     * Execution status of the different approaches
+     * [newton, simulation, newton] (length = 3)
+     */
+    std::vector<SteadyStateStatus> steady_state_status_;
+
+    /** Newton solver */
+    NewtonSolver newton_solver_;
+
+    /** Newton's method for finding steady states */
+    NewtonsMethod newtons_method_;
+
+    /**
+     * Whether the Newton step should be used instead of xdot for convergence
+     * checks during simulation and Newton's method.
+     */
+    bool newton_step_conv_{false};
+
+    /** flag indicating whether xdot_ has been computed for the current state */
+    bool xdot_updated_{false};
+    /**
+     * flag indicating whether simulation sensitivities have been retrieved for
+     * the current state
+     */
+    bool sensis_updated_{false};
+
+    /**
+     * A dedicated solver for pre-equilibration is required if we need to
+     * perform a backward simulation for adjoint sensitivities for models with
+     * events.
+     *
+     * This unique_ptr is used to manage the lifetime of that solver and may
+     * be null. Always use the `solver_` pointer to access the solver,
+     * which will point to a dedicated pre-equilibration solver if it exists,
+     * or to the main solver otherwise.
+     */
+    std::unique_ptr<Solver> preeq_solver_unique_ptr_;
+
+    /** Pointer to the pre-equilibration solver */
+    Solver const* solver_{nullptr};
+};
+
+/**
  * @brief The ForwardProblem class groups all functions for solving the
  * forward problem.
  */
