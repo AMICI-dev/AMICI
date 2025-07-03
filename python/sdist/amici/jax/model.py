@@ -309,6 +309,16 @@ class JAXModel(eqx.Module):
 
     @property
     @abstractmethod
+    def n_events(self) -> int:
+        """
+        Get the number of events (that require implicit tracking)
+
+        :return:
+            number
+        """
+
+    @property
+    @abstractmethod
     def state_ids(self) -> list[str]:
         """
         Get the state ids of the model.
@@ -372,7 +382,7 @@ class JAXModel(eqx.Module):
         :return:
             heaviside variables
         """
-        h0 = jnp.zeros((len(self._root_cond_fns()),))  # dummy values
+        h0 = jnp.zeros((self.n_events,))  # dummy values
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
             roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
@@ -652,7 +662,7 @@ class JAXModel(eqx.Module):
         h_posteq = jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-        if len(self._root_cond_fns()):
+        if h.shape[0]:
             hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
         else:
             hs = jnp.zeros((ts.shape[0], h.shape[0]))
