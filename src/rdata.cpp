@@ -492,8 +492,8 @@ void ReturnData::processBackwardProblem(
     model.setModelState(simulation_state.state);
 
     std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
-    auto xB = bwd.getAdjointState();
-    auto xQB = bwd.getAdjointQuadrature();
+    auto xB = bwd.getAdjointStatePrePreeq();
+    auto xQB = bwd.getAdjointQuadraturePrePreeq();
 
     if (preeq_bwd && preeq_bwd->hasQuadrature()) {
         handleSx0Backward(model, *preeq, preeq_bwd, llhS0, xQB);

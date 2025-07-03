@@ -160,17 +160,19 @@ class BackwardProblem {
     void workBackwardProblem();
 
     /**
-     * @brief Accessor for xB
+     * @brief The adjoint state vector from before pre-equilibration.
      * @return xB
      */
-    [[nodiscard]] AmiVector const& getAdjointState() const { return ws_.xB_; }
+    [[nodiscard]] AmiVector const& getAdjointStatePrePreeq() const {
+        return xB_pre_preeq_;
+    }
 
     /**
-     * @brief Accessor for xQB
+     * @brief The quadrature state vector from before pre-equilibration.
      * @return xQB
      */
-    [[nodiscard]] AmiVector const& getAdjointQuadrature() const {
-        return ws_.xQB_;
+    [[nodiscard]] AmiVector const& getAdjointQuadraturePrePreeq() const {
+        return xQB_pre_preeq_;
     }
 
     /**
@@ -237,6 +239,16 @@ class BackwardProblem {
 
     /** The postequilibration steady-state backward problem, if any. */
     std::optional<SteadyStateBackwardProblem> posteq_problem_bwd_;
+
+    /**
+     * The adjoint state vector before pre-equilibration.
+     */
+    AmiVector xB_pre_preeq_;
+
+    /**
+     * The quadrature state vector before pre-equilibration.
+     */
+    AmiVector xQB_pre_preeq_;
 };
 
 } // namespace amici

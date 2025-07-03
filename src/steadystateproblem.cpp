@@ -236,31 +236,39 @@ void SteadystateProblem::workSteadyStateProblem(
 }
 
 SteadyStateBackwardProblem::SteadyStateBackwardProblem(
-    Solver const& solver, Model& model, SimulationState& final_state
+    Solver const& solver, Model& model, SimulationState& final_state,
+    gsl::not_null<BwdSimWorkspace*> ws
 )
-    : xB_(model.nJ * model.nx_solver, solver.getSunContext())
-    , xQ_(model.nJ * model.nx_solver, solver.getSunContext())
-    , xQB_(model.nplist(), solver.getSunContext())
+    : xQ_(model.nJ * model.nx_solver, solver.getSunContext())
     , final_state_(final_state)
     , newton_solver_(
           NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
       )
     , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
     , model_(&model)
-    , solver_(&solver) {}
+    , solver_(&solver)
+    , ws_(ws) {}
 
-void SteadyStateBackwardProblem::run(AmiVector const& xB0, realtype t0) {
+void SteadyStateBackwardProblem::run(realtype t0) {
     newton_solver_.reinitialize();
-    xB_.copy(xB0);
 
     // initialize quadratures
     xQ_.zero();
-    xQB_.zero();
+    ws_->xQB_.zero();
 
     // Compute quadratures, track computation time
     CpuTimer cpu_timer;
+
     compute_steady_state_quadrature(t0);
     cpu_timeB_ = cpu_timer.elapsed_milliseconds();
+}
+
+AmiVector const& SteadyStateBackwardProblem::getAdjointState() const {
+    return ws_->xB_;
+}
+
+AmiVector const& SteadyStateBackwardProblem::getAdjointQuadrature() const {
+    return ws_->xQB_;
 }
 
 void SteadystateProblem::findSteadyState(Model& model, int it, realtype t0) {
@@ -462,7 +470,7 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
     // So we first try to solve the linear system, if possible.
 
     // copy content of xB into vector with integral
-    xQ_.copy(xB_);
+    xQ_.copy(ws_->xB_);
 
     // try to solve the linear system
     try {
@@ -473,13 +481,13 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
         newton_solver_.solveLinearSystem(xQ_);
         // Compute the quadrature as the inner product xQ * dxdotdp
         computeQBfromQ(
-            *model_, xQ_, xQB_,
+            *model_, xQ_, ws_->xQB_,
             {final_state_.t, final_state_.x, final_state_.dx}
         );
         has_quadrature_ = true;
 
         // Finalize by setting adjoint state to zero (its steady state)
-        xB_.zero();
+        ws_->xB_.zero();
     } catch (NewtonFailure const&) {
         has_quadrature_ = false;
     }
@@ -499,9 +507,11 @@ void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
     sim_solver->logger = solver_->logger;
     sim_solver->setSensitivityMethod(SensitivityMethod::none);
     sim_solver->setSensitivityOrder(SensitivityOrder::none);
-    sim_solver->setup(t0, model_, xB_, xB_, final_state_.sx, final_state_.sx);
+    sim_solver->setup(
+        t0, model_, ws_->xB_, ws_->dxB_, final_state_.sx, final_state_.sx
+    );
     sim_solver->setupSteadystate(
-        t0, model_, final_state_.x, final_state_.dx, xB_, xB_, xQ_
+        t0, model_, final_state_.x, final_state_.dx, ws_->xB_, ws_->dxB_, xQ_
     );
 
     // perform integration and quadrature
@@ -696,14 +706,14 @@ void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
             // converge to zero at all. So we need xQBdot, hence compute xQB
             // first.
             computeQBfromQ(
-                *model_, xQ_, xQB_,
+                *model_, xQ_, ws_->xQB_,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
             computeQBfromQ(
-                *model_, xB_, xQBdot,
+                *model_, ws_->xB_, xQBdot,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
-            auto wrms = wrms_computer_xQB_.wrms(xQBdot, xQB_);
+            auto wrms = wrms_computer_xQB_.wrms(xQBdot, ws_->xQB_);
             if (wrms < conv_thresh) {
                 break; // converged
             }
@@ -728,7 +738,7 @@ void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
         solver.step(std::max(final_state_.t, 1.0) * 10);
 
         solver.writeSolution(
-            final_state_.t, xB_, final_state_.dx, final_state_.sx, xQ_
+            final_state_.t, ws_->xB_, final_state_.dx, final_state_.sx, xQ_
         );
     }
 }
