@@ -221,7 +221,7 @@ class EventHandlingSimulator {
      * (dimension nJ x nx x nMaxEvent, ordering =?)
      */
     EventHandlingSimulator(
-        gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
+        gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
         gsl::not_null<FwdSimWorkspace*> ws, std::vector<realtype>* dJzdx
     )
         : model_(model)
@@ -360,7 +360,7 @@ class EventHandlingSimulator {
     Model* model_{nullptr};
 
     /** The solver to use for the simulation. */
-    Solver* solver_{nullptr};
+    Solver const* solver_{nullptr};
 
     /** The workspace to use for the simulation. */
     gsl::not_null<FwdSimWorkspace*> ws_;
