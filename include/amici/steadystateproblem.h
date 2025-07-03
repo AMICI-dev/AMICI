@@ -314,12 +314,11 @@ class SteadystateProblem {
      *
      * Throws an AmiException if no steady state was found.
      *
-     * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void findSteadyState(Solver& solver, Model& model, int it, realtype t0);
+    void findSteadyState(Model& model, int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
@@ -331,16 +330,14 @@ class SteadystateProblem {
 
     /**
      * @brief Try to determine the steady state by using forward simulation.
-     * @param solver Solver instance.
      * @param model Model instance.
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
      * successfully, or if it failed.
      */
-    SteadyStateStatus findSteadyStateBySimulation(
-        Solver& solver, Model& model, int it, realtype t0
-    );
+    SteadyStateStatus
+    findSteadyStateBySimulation(Model& model, int it, realtype t0);
 
     /**
      * @brief Store state and throw an exception if equilibration failed
@@ -365,11 +362,10 @@ class SteadystateProblem {
     /**
      * @brief Launch simulation if Newton solver or linear system solve
      * fail or are disabled.
-     * @param solver Solver instance.
      * @param model Model instance.
      * simulation.
      */
-    void runSteadystateSimulationFwd(Solver& solver, Model& model);
+    void runSteadystateSimulationFwd(Model& model);
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -380,9 +376,8 @@ class SteadystateProblem {
     /**
      * @brief Retrieve simulation sensitivities from the provided solver and
      * set the corresponding flag to indicate they are up to date
-     * @param solver simulation solver instance
      */
-    void updateSensiSimulation(Solver const& solver);
+    void updateSensiSimulation();
 
     /**
      * @brief Compute the right-hand side for the current state_.x and set the
@@ -432,6 +427,21 @@ class SteadystateProblem {
      * the current state
      */
     bool sensis_updated_{false};
+
+    /**
+     * A dedicated solver for pre-equilibration is required if we need to
+     * perform a backward simulation for adjoint sensitivities for models with
+     * events.
+     *
+     * This unique_ptr is used to manage the lifetime of that solver and may
+     * be null. Always use the `solver_` pointer to access the solver,
+     * which will point to a dedicated pre-equilibration solver if it exists,
+     * or to the main solver otherwise.
+     */
+    std::unique_ptr<Solver> preeq_solver_unique_ptr_;
+
+    /** Pointer to the pre-equilibration solver */
+    Solver const* solver_{nullptr};
 };
 
 /**
