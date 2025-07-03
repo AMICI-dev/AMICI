@@ -8,7 +8,6 @@ requires = [
     "cmake-build-extension==0.6.0",
     "scipy-openblas64; platform_system!='Darwin'",
     "swig",
-    "hatchling",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -88,7 +87,7 @@ examples = [
 jax = [
     "jax>=0.4.36",
     "jaxlib>=0.4.36",
-    "diffrax @ git+https://github.com/patrick-kidger/diffrax@dev",
+    "diffrax>=0.7.0",
     "jaxtyping>=0.2.34",
     "equinox>=0.11.10",
     "optimistix>=0.0.9",
