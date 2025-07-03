@@ -96,7 +96,7 @@ class ReturnData : public ModelDimensions {
     std::string id;
 
     /**
-     * timepoints (shape `nt`)
+     * Output or measurement timepoints (shape `nt`)
      */
     std::vector<realtype> ts;
 
@@ -104,126 +104,176 @@ class ReturnData : public ModelDimensions {
     std::vector<realtype> xdot;
 
     /**
-     * Jacobian of differential equation right hand side (shape `nx_solver` x
-     * `nx_solver`, row-major) evaluated at `t_last`.
+     * @brief Jacobian of differential equation right hand side.
+     *
+     * The Jacobian of differential equation right hand side
+     * (shape `nx_solver` x `nx_solver`, row-major) evaluated at `t_last`.
+     *
+     * The corresponding state variable IDs can be obtained from
+     * `Model::getStateIdsSolver()`.
      */
     std::vector<realtype> J;
 
     /**
-     * w data from the model (recurring terms in xdot, for imported SBML models
-     * from python, this contains the flux vector) (shape `nt` x `nw`, row
-     * major)
+     * @brief Model expression values.
+     *
+     * Values of model expressions (recurring terms in xdot, for imported SBML
+     * models from Python, this contains, e.g., the flux vector)
+     * at timepoints `ReturnData::ts` (shape `nt` x `nw`, row major).
+     *
+     * The corresponding expression IDs can be obtained from
+     * `Model::getExpressionIds()`.
      */
     std::vector<realtype> w;
 
-    /** event output (shape `nmaxevent` x `nz`, row-major) */
+    /** Event output (shape `nmaxevent` x `nz`, row-major) */
     std::vector<realtype> z;
 
     /**
-     * event output sigma standard deviation (shape `nmaxevent` x `nz`,
+     * Event output sigma standard deviation (shape `nmaxevent` x `nz`,
      * row-major)
      */
     std::vector<realtype> sigmaz;
 
     /**
-     * parameter derivative of event output
+     * Parameter derivative of event output
      * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> sz;
 
     /**
-     * parameter derivative of event output standard deviation
+     * Parameter derivative of event output standard deviation
      * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> ssigmaz;
 
-    /** event trigger output (shape `nmaxevent` x `nz`, row-major)*/
+    /** Event trigger output (shape `nmaxevent` x `nz`, row-major)*/
     std::vector<realtype> rz;
 
     /**
-     * parameter derivative of event trigger output
+     * Parameter derivative of event trigger output
      * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> srz;
 
     /**
-     * second-order parameter derivative of event trigger output (shape
+     * Second-order parameter derivative of event trigger output (shape
      * `nmaxevent` x `nztrue` x `nplist` x `nplist`, row-major)
      */
     std::vector<realtype> s2rz;
 
-    /** state (shape `nt` x `nx_rdata`, row-major) */
+    /**
+     * @brief Model state.
+     *
+     * The model state at timepoints `ReturnData::ts`
+     * (shape `nt` x `nx_rdata`, row-major).
+     *
+     * The corresponding state variable IDs can be obtained from
+     * `Model::getStateIds()`.
+     */
     std::vector<realtype> x;
 
     /**
-     * parameter derivative of state (shape `nt` x `nplist` x `nx_rdata`,
-     * row-major)
+     * @brief State sensitivities.
+     *
+     * The derivative of the model state with respect to the chosen parameters
+     * (see `Model::getParameterList()` or `ExpData::plist`)
+     * at timepoints `ReturnData::ts`
+     * (shape `nt` x `nplist` x `nx_rdata`, row-major).
+     *
+     * The corresponding state variable IDs can be obtained from
+     * `Model::getStateIds()`.
      */
     std::vector<realtype> sx;
 
-    /** observable (shape `nt` x `ny`, row-major) */
+    /**
+     * @brief Observables.
+     *
+     * The values of the observables at timepoints `ReturnData::ts`
+     * (shape `nt` x `ny`, row-major).
+     *
+     * The corresponding observable IDs can be obtained from
+     * `Model::getObservableIds()`.
+     */
     std::vector<realtype> y;
 
-    /** observable standard deviation (shape `nt` x `ny`, row-major) */
+    /** Observable standard deviation (shape `nt` x `ny`, row-major) */
     std::vector<realtype> sigmay;
 
     /**
-     * parameter derivative of observable (shape `nt` x `nplist` x `ny`,
-     * row-major)
+     * @brief Observable sensitivities.
+     *
+     * The derivative of the observables with respect to the chosen parameters
+     * (see `Model::getParameterList()` or `ExpData::plist`)
+     * at timepoints `ReturnData::ts`
+     * (shape `nt` x `nplist` x `ny`, row-major).
+     *
+     * The corresponding observable IDs can be obtained from
+     * `Model::getObservableIds()`.
      */
     std::vector<realtype> sy;
 
     /**
-     * parameter derivative of observable standard deviation
+     * Parameter derivative of observable standard deviation
      * (shape `nt` x `nplist` x `ny`, row-major)
      */
     std::vector<realtype> ssigmay;
 
-    /** observable (shape `nt*ny`, row-major) */
+    /** Residuals (shape `nt*ny`, row-major) */
     std::vector<realtype> res;
 
     /**
-     * parameter derivative of residual (shape `nt*ny` x `nplist`, row-major)
+     * Parameter derivative of residual (shape `nt*ny` x `nplist`, row-major)
      */
     std::vector<realtype> sres;
 
-    /** fisher information matrix (shape `nplist` x `nplist`, row-major) */
+    /** Fisher information matrix (shape `nplist` x `nplist`, row-major) */
     std::vector<realtype> FIM;
 
-    /** number of integration steps forward problem (shape `nt`) */
+    /**
+     * @brief Number of solver steps for the forward problem.
+     *
+     * Cumulative number of integration steps for the forward problem for each
+     * output timepoint in `ReturnData::ts` (shape `nt`).
+     */
     std::vector<int> numsteps;
 
-    /** number of integration steps backward problem (shape `nt`) */
+    /**
+     * @brief Number of solver steps for the backward problem.
+     *
+     * Cumulative number of integration steps for the backward problem for each
+     * output timepoint in `ReturnData::ts` (shape `nt`).
+     */
     std::vector<int> numstepsB;
 
-    /** number of right hand side evaluations forward problem (shape `nt`) */
+    /** Number of right hand side evaluations forward problem (shape `nt`) */
     std::vector<int> numrhsevals;
 
-    /** number of right hand side evaluations backward problem (shape `nt`) */
+    /** Number of right hand side evaluations backward problem (shape `nt`) */
     std::vector<int> numrhsevalsB;
 
-    /** number of error test failures forward problem (shape `nt`) */
+    /** Number of error test failures forward problem (shape `nt`) */
     std::vector<int> numerrtestfails;
 
-    /** number of error test failures backward problem (shape `nt`) */
+    /** Number of error test failures backward problem (shape `nt`) */
     std::vector<int> numerrtestfailsB;
 
     /**
-     * number of linear solver convergence failures forward problem (shape `nt`)
+     * Number of linear solver convergence failures forward problem (shape `nt`)
      */
     std::vector<int> numnonlinsolvconvfails;
 
     /**
-     * number of linear solver convergence failures backward problem (shape
+     * Number of linear solver convergence failures backward problem (shape
      * `nt`)
      */
     std::vector<int> numnonlinsolvconvfailsB;
 
-    /** employed order forward problem (shape `nt`) */
+    /** Employed order forward problem (shape `nt`) */
     std::vector<int> order;
 
     /**
-     * @brief computation time of forward solve [ms]
+     * @brief Computation time of forward solve [ms]
      *
      * .. warning::
      *      If AMICI was built without boost, this tracks the CPU-time of the
@@ -234,7 +284,7 @@ class ReturnData : public ModelDimensions {
     double cpu_time = 0.0;
 
     /**
-     * @brief computation time of backward solve [ms]
+     * @brief Computation time of backward solve [ms]
      *
      * .. warning::
      *      If AMICI was built without boost, this tracks the CPU-time of the
@@ -245,7 +295,7 @@ class ReturnData : public ModelDimensions {
     double cpu_timeB = 0.0;
 
     /**
-     * @brief total CPU time from entering runAmiciSimulation until exiting [ms]
+     * @brief Total CPU time from entering runAmiciSimulation until exiting [ms]
      *
      * .. warning::
      *      If AMICI was built without boost, this tracks the CPU-time of the
@@ -255,12 +305,12 @@ class ReturnData : public ModelDimensions {
      */
     double cpu_time_total = 0.0;
 
-    /** flags indicating success of steady state solver (preequilibration) */
+    /** Flags indicating success of steady-state solver (preequilibration) */
     std::vector<SteadyStateStatus> preeq_status;
 
     /**
-     * @brief computation time of the steady state solver [ms]
-     * (preequilibration)
+     * @brief Computation time of the steady state solver [ms]
+     * (pre-equilibration)
      *
      * .. warning::
      *      If AMICI was built without boost, this tracks the CPU-time of the
@@ -271,8 +321,8 @@ class ReturnData : public ModelDimensions {
     double preeq_cpu_time = 0.0;
 
     /**
-     * @brief computation time of the steady state solver of the backward
-     * problem [ms] (preequilibration)
+     * @brief Computation time of the steady state solver of the backward
+     * problem [ms] (pre-equilibration)
      *
      * .. warning::
      *      If AMICI was built without boost, this tracks the CPU-time of the
@@ -282,11 +332,11 @@ class ReturnData : public ModelDimensions {
      */
     double preeq_cpu_timeB = 0.0;
 
-    /** flags indicating success of steady state solver  (postequilibration) */
+    /** Flags indicating success of steady-state solver  (postequilibration) */
     std::vector<SteadyStateStatus> posteq_status;
 
     /**
-     * @brief computation time of the steady state solver [ms]
+     * @brief Computation time of the steady-state solver [ms]
      * (postequilibration)
      *
      * .. warning::
@@ -298,7 +348,7 @@ class ReturnData : public ModelDimensions {
     double posteq_cpu_time = 0.0;
 
     /**
-     * @brief computation time of the steady state solver of the backward
+     * @brief Computation time of the steady-state solver of the backward
      * problem [ms] (postequilibration)
      *
      * .. warning::
@@ -310,77 +360,97 @@ class ReturnData : public ModelDimensions {
     double posteq_cpu_timeB = 0.0;
 
     /**
-     * number of Newton steps for steady state problem (preequilibration)
+     * @brief Number of Newton steps for pre-equilibration.
+     *
      * [newton, simulation, newton] (length = 3)
      */
     std::vector<int> preeq_numsteps;
 
     /**
-     * number of simulation steps for adjoint steady state problem
-     * (preequilibration) [== 0 if analytical solution worked, > 0 otherwise]
+     * Number of simulation steps for adjoint pre-equilibration problem
+     * [== 0 if analytical solution worked, > 0 otherwise]
      */
     int preeq_numstepsB = 0;
 
     /**
-     * number of Newton steps for steady state problem (preequilibration)
-     * [newton, simulation, newton] (shape `3`) (postequilibration)
+     * Number of Newton steps for post-equilibration
+     * [newton, simulation, newton].
      */
     std::vector<int> posteq_numsteps;
 
     /**
-     * number of simulation steps for adjoint steady state problem
-     * (postequilibration) [== 0 if analytical solution worked, > 0 otherwise]
+     * Number of simulation steps for the post-equilibration backward simulation
+     * [== 0 if analytical solution worked, > 0 otherwise]
      */
     int posteq_numstepsB = 0;
 
     /**
-     * time when steadystate was reached via simulation (preequilibration)
+     * Model time at which the pre-equilibration steady state was reached via
+     * simulation.
      */
     realtype preeq_t = NAN;
 
     /**
-     * weighted root-mean-square of the rhs when steadystate
-     * was reached (preequilibration)
+     * Weighted root-mean-square of the rhs at pre-equilibration steady state.
      */
     realtype preeq_wrms = NAN;
 
     /**
-     * time when steadystate was reached via simulation (postequilibration)
+     * Model time at which the post-equilibration steady state was reached via
+     * simulation.
      */
     realtype posteq_t = NAN;
 
     /**
-     * weighted root-mean-square of the rhs when steadystate
-     * was reached (postequilibration)
+     * Weighted root-mean-square of the rhs at post-equilibration steady state.
      */
     realtype posteq_wrms = NAN;
 
-    /** initial state (shape `nx_rdata`) */
+    /**
+     * @brief Initial state of the main simulation (shape `nx_rdata`).
+     *
+     * The corresponding state variable IDs can be obtained from
+     * `Model::getStateIds()`.
+     */
     std::vector<realtype> x0;
 
-    /** preequilibration steady state (shape `nx_rdata`) */
+    /**
+     * @brief Pre-equilibration steady state.
+     *
+     * The values of the state variables at the pre-equilibration steady state
+     * (shape `nx_rdata`).
+     * The corresponding state variable IDs can be obtained from
+     * `Model::getStateIds()`.
+     */
     std::vector<realtype> x_ss;
 
-    /** initial sensitivities (shape `nplist` x `nx_rdata`, row-major) */
+    /**
+     * @brief Initial state sensitivities for the main simulation.
+     *
+     * (shape `nplist` x `nx_rdata`, row-major).
+     */
     std::vector<realtype> sx0;
 
     /**
-     * preequilibration sensitivities
+     * @brief Pre-equilibration steady state sensitivities.
+
+     * Sensitivities of the pre-equilibration steady state with respect to the
+     * selected parameters.
      * (shape `nplist` x `nx_rdata`, row-major)
      */
     std::vector<realtype> sx_ss;
 
-    /** log-likelihood value */
+    /** Log-likelihood value */
     realtype llh = 0.0;
 
     /** \f$\chi^2\f$ value */
     realtype chi2 = 0.0;
 
-    /** parameter derivative of log-likelihood (shape `nplist`) */
+    /** Parameter derivative of log-likelihood (shape `nplist`) */
     std::vector<realtype> sllh;
 
     /**
-     * second-order parameter derivative of log-likelihood
+     * Second-order parameter derivative of log-likelihood
      * (shape `nJ-1` x `nplist`, row-major)
      */
     std::vector<realtype> s2llh;
@@ -399,40 +469,44 @@ class ReturnData : public ModelDimensions {
      */
     int status = AMICI_NOT_RUN;
 
-    /** number of states (alias `nx_rdata`, kept for backward compatibility) */
+    /**
+     * @brief Number of state variables.
+     *
+     * (alias `nx_rdata`, kept for backward compatibility)
+     */
     int nx{0};
 
     /**
-     * number of states in the unaugmented system
+     * Number of state variables in the unaugmented system
      * (alias nxtrue_rdata, kept for backward compatibility)
      */
     int nxtrue{0};
 
-    /** number of parameter for which sensitivities were requested */
+    /** Number of parameters w.r.t. which sensitivities were requested */
     int nplist{0};
 
-    /** maximal number of occurring events (for every event type) */
+    /** Maximal number of occurring events (for every event type) */
     int nmaxevent{0};
 
-    /** number of considered timepoints */
+    /** Number of output timepoints (length of `ReturnData::ts`). */
     int nt{0};
 
     /** maximal number of newton iterations for steady state calculation */
     int newton_maxsteps{0};
 
-    /** scaling of parameterization */
+    /** Scaling of model parameters. */
     std::vector<ParameterScaling> pscale;
 
-    /** flag indicating whether second-order sensitivities were requested */
+    /** Flag indicating whether second-order sensitivities were requested. */
     SecondOrderMode o2mode{SecondOrderMode::none};
 
-    /** sensitivity order */
+    /** Sensitivity order. */
     SensitivityOrder sensi{SensitivityOrder::none};
 
-    /** sensitivity method */
+    /** Sensitivity method. */
     SensitivityMethod sensi_meth{SensitivityMethod::none};
 
-    /** reporting mode */
+    /** Reporting mode. */
     RDataReporting rdata_reporting{RDataReporting::full};
 
     /**
@@ -446,11 +520,13 @@ class ReturnData : public ModelDimensions {
         Archive& ar, ReturnData& r, unsigned int version
     );
 
-    /** boolean indicating whether residuals for standard deviations have been
-     * added */
+    /**
+     * Boolean indicating whether residuals for standard deviations have been
+     * added.
+     */
     bool sigma_res{false};
 
-    /** log messages */
+    /** Log messages. */
     std::vector<LogItem> messages;
 
     /** The final internal time of the solver. */
