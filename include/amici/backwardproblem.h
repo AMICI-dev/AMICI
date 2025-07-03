@@ -204,8 +204,7 @@ class BackwardProblem {
 
     /** current time */
     realtype t_;
-    /** sensitivity state vector array */
-    AmiVectorArray sx0_;
+
     /** array containing the time-points of discontinuities*/
     std::vector<Discontinuity> discs_;
 
