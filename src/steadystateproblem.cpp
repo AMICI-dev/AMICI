@@ -245,32 +245,11 @@ SteadyStateBackwardProblem::SteadyStateBackwardProblem(
     , newton_solver_(
           NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
       )
-    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck()) {}
+    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
+    , model_(&model)
+    , solver_(&solver) {}
 
-void SteadyStateBackwardProblem::run(
-    Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
-    realtype t0
-) {
-    if (is_preeq) {
-        if (solver.getSensitivityMethodPreequilibration()
-            != SensitivityMethod::adjoint) {
-            // if not adjoint mode, there's nothing to do
-            return;
-        }
-
-        // If we need to reinitialize solver states, this won't work yet.
-        if (model.nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
-            );
-
-        // only preequilibrations needs a reInit,
-        // postequilibration does not
-        solver.updateAndReinitStatesAndSensitivities(&model);
-    }
-
+void SteadyStateBackwardProblem::run(AmiVector const& xB0, realtype t0) {
     newton_solver_.reinitialize();
     xB_.copy(xB0);
 
@@ -280,7 +259,7 @@ void SteadyStateBackwardProblem::run(
 
     // Compute quadratures, track computation time
     CpuTimer cpu_timer;
-    compute_steady_state_quadrature(solver, model, t0);
+    compute_steady_state_quadrature(t0);
     cpu_timeB_ = cpu_timer.elapsed_milliseconds();
 }
 
@@ -440,9 +419,7 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
     }
 }
 
-void SteadyStateBackwardProblem::compute_steady_state_quadrature(
-    Solver const& solver, Model& model, realtype t0
-) {
+void SteadyStateBackwardProblem::compute_steady_state_quadrature(realtype t0) {
     // This routine computes the quadratures:
     //     xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
     // As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
@@ -450,20 +427,20 @@ void SteadyStateBackwardProblem::compute_steady_state_quadrature(
     // We therefore compute the integral over xB first and then do a
     // matrix-vector multiplication.
 
-    auto const sensitivityMode = model.getSteadyStateSensitivityMode();
+    auto const sensitivityMode = model_->getSteadyStateSensitivityMode();
 
     // Try to compute the analytical solution for quadrature algebraically
     if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly
         || sensitivityMode
                == SteadyStateSensitivityMode::integrateIfNewtonFails)
-        compute_quadrature_by_lin_solve(model);
+        compute_quadrature_by_lin_solve();
 
     // Perform simulation if necessary
     if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly
         || (sensitivityMode
                 == SteadyStateSensitivityMode::integrateIfNewtonFails
             && !hasQuadrature()))
-        compute_quadrature_by_simulation(solver, model, t0);
+        compute_quadrature_by_simulation(t0);
 
     // If the analytic solution and integration did not work, throw
     if (!hasQuadrature())
@@ -474,7 +451,7 @@ void SteadyStateBackwardProblem::compute_steady_state_quadrature(
         );
 }
 
-void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
+void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
     // Computes the integral over the adjoint state xB:
     // If the Jacobian has full rank, this has an analytical solution, since
     //   d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
@@ -491,12 +468,13 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
     try {
         // compute integral over xB and write to xQ
         newton_solver_.prepareLinearSystemB(
-            model, {final_state_.t, final_state_.x, final_state_.dx}
+            *model_, {final_state_.t, final_state_.x, final_state_.dx}
         );
         newton_solver_.solveLinearSystem(xQ_);
         // Compute the quadrature as the inner product xQ * dxdotdp
         computeQBfromQ(
-            model, xQ_, xQB_, {final_state_.t, final_state_.x, final_state_.dx}
+            *model_, xQ_, xQB_,
+            {final_state_.t, final_state_.x, final_state_.dx}
         );
         has_quadrature_ = true;
 
@@ -507,9 +485,7 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve(Model& model) {
     }
 }
 
-void SteadyStateBackwardProblem::compute_quadrature_by_simulation(
-    Solver const& solver, Model& model, realtype t0
-) {
+void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
     // If the Jacobian is singular, the integral over xB must be computed
     // by usual integration over time, but simplifications can be applied:
     // x is not time-dependent, no forward trajectory is needed.
@@ -519,18 +495,18 @@ void SteadyStateBackwardProblem::compute_quadrature_by_simulation(
     // xQ was written in getQuadratureByLinSolve() -> set to zero
     xQ_.zero();
 
-    auto sim_solver = std::unique_ptr<Solver>(solver.clone());
-    sim_solver->logger = solver.logger;
+    auto sim_solver = std::unique_ptr<Solver>(solver_->clone());
+    sim_solver->logger = solver_->logger;
     sim_solver->setSensitivityMethod(SensitivityMethod::none);
     sim_solver->setSensitivityOrder(SensitivityOrder::none);
-    sim_solver->setup(t0, &model, xB_, xB_, final_state_.sx, final_state_.sx);
+    sim_solver->setup(t0, model_, xB_, xB_, final_state_.sx, final_state_.sx);
     sim_solver->setupSteadystate(
-        t0, &model, final_state_.x, final_state_.dx, xB_, xB_, xQ_
+        t0, model_, final_state_.x, final_state_.dx, xB_, xB_, xQ_
     );
 
     // perform integration and quadrature
     try {
-        run_simulation(*sim_solver, model);
+        run_simulation(*sim_solver);
         has_quadrature_ = true;
     } catch (NewtonFailure const&) {
         has_quadrature_ = false;
@@ -681,10 +657,8 @@ void SteadystateProblem::runSteadystateSimulationFwd(Model& model) {
         updateSensiSimulation();
 }
 
-void SteadyStateBackwardProblem::run_simulation(
-    Solver const& solver, Model& model
-) {
-    if (model.nx_solver == 0)
+void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
+    if (model_->nx_solver == 0)
         return;
 
     if (newton_step_conv_) {
@@ -699,13 +673,13 @@ void SteadyStateBackwardProblem::run_simulation(
 
     // WRMS computer for xQB
     WRMSComputer wrms_computer_xQB_(
-        model.nplist(), solver.getSunContext(),
+        model_->nplist(), solver.getSunContext(),
         solver.getAbsoluteToleranceQuadratures(),
         solver.getRelativeToleranceQuadratures(), AmiVector()
     );
 
     // time-derivative of quadrature state vector
-    AmiVector xQBdot(model.nplist(), solver.getSunContext());
+    AmiVector xQBdot(model_->nplist(), solver.getSunContext());
 
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
     auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
@@ -722,11 +696,11 @@ void SteadyStateBackwardProblem::run_simulation(
             // converge to zero at all. So we need xQBdot, hence compute xQB
             // first.
             computeQBfromQ(
-                model, xQ_, xQB_,
+                *model_, xQ_, xQB_,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
             computeQBfromQ(
-                model, xB_, xQBdot,
+                *model_, xB_, xQBdot,
                 {final_state_.t, final_state_.x, final_state_.dx}
             );
             auto wrms = wrms_computer_xQB_.wrms(xQBdot, xQB_);

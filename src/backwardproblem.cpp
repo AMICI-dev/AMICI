@@ -66,15 +66,31 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     // handle pre-equilibration
-    if (preeq_problem_) {
+    if (preeq_problem_
+        && preeq_problem_->get_solver()->getSensitivityMethodPreequilibration()
+               == SensitivityMethod::adjoint) {
+        auto preeq_solver = preeq_problem_->get_solver();
+
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
         auto const t0
             = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
         auto final_state = preeq_problem_->getFinalSimulationState();
+
+        // If we need to reinitialize solver states, this won't work yet.
+        if (model_->nx_reinit() > 0)
+            throw NewtonFailure(
+                AMICI_NOT_IMPLEMENTED,
+                "Adjoint preequilibration with reinitialization of "
+                "non-constant states is not yet implemented. Stopping."
+            );
+
+        // only preequilibrations needs a reInit, postequilibration does not
+        preeq_solver->updateAndReinitStatesAndSensitivities(model_);
+
         preeq_problem_bwd_.emplace(*solver_, *model_, final_state);
-        preeq_problem_bwd_->run(*solver_, *model_, ws_.xB_, true, t0);
+        preeq_problem_bwd_->run(ws_.xB_, t0);
     }
 }
 
@@ -93,7 +109,7 @@ void BackwardProblem::handlePostequilibration() {
 
     auto final_state = posteq_problem_->getFinalSimulationState();
     posteq_problem_bwd_.emplace(*solver_, *model_, final_state);
-    posteq_problem_bwd_->run(*solver_, *model_, ws_.xB_, false, model_->t0());
+    posteq_problem_bwd_->run(ws_.xB_, model_->t0());
     ws_.xQB_ = posteq_problem_bwd_->getEquilibrationQuadratures();
 }
 

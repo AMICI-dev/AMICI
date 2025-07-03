@@ -308,6 +308,12 @@ class SteadystateProblem {
      */
     [[nodiscard]] bool checkSteadyStateSuccess() const;
 
+    /**
+     * @brief Get the preequilibration solver.
+     * @return The preequilibration solver.
+     */
+    [[nodiscard]] Solver const* get_solver() const { return solver_; }
+
   private:
     /**
      * @brief Handle the computation of the steady state.
@@ -467,15 +473,10 @@ class SteadyStateBackwardProblem {
      * Integrates over the adjoint state backward in time by solving a linear
      * system of equations, which gives the analytical solution.
      *
-     * @param solver The solver instance
-     * @param model The model instance
      * @param xB0 Initial adjoint state vector.
-     * @param is_preeq Flag indicating whether this is a preequilibration.
      * @param t0 Initial time for the steady state simulation.
      */
-    void
-    run(Solver const& solver, Model& model, AmiVector const& xB0, bool is_preeq,
-        realtype t0);
+    void run(AmiVector const& xB0, realtype t0);
 
     /**
      * @brief Return the quadratures from pre- or postequilibration
@@ -521,37 +522,27 @@ class SteadyStateBackwardProblem {
      * @brief Launch backward simulation if Newton solver or linear system solve
      * fail or are disabled.
      * @param solver Solver instance.
-     * @param model Model instance.
      */
-    void run_simulation(Solver const& solver, Model& model);
+    void run_simulation(Solver const& solver);
 
     /**
      * @brief Compute quadratures in adjoint mode
-     * @param solver Solver instance.
-     * @param model Model instance.
      * @param t0 Initial time for the steady state simulation.
      */
-    void compute_steady_state_quadrature(
-        Solver const& solver, Model& model, realtype t0
-    );
+    void compute_steady_state_quadrature(realtype t0);
 
     /**
      * @brief Compute the quadrature in steady state backward mode by
      * solving the linear system defined by the backward Jacobian.
-     * @param model Model instance.
      */
-    void compute_quadrature_by_lin_solve(Model& model);
+    void compute_quadrature_by_lin_solve();
 
     /**
      * @brief Computes the quadrature in steady state backward mode by
      * numerical integration of xB forward in time.
-     * @param solver Solver instance.
-     * @param model Model instance.
      * @param t0 Initial time for the steady state simulation.
      */
-    void compute_quadrature_by_simulation(
-        Solver const& solver, Model& model, realtype t0
-    );
+    void compute_quadrature_by_simulation(realtype t0);
 
     /** CPU time for solving the backward problem (milliseconds) */
     double cpu_timeB_{0.0};
@@ -582,6 +573,9 @@ class SteadyStateBackwardProblem {
      * checks during simulation.
      */
     bool newton_step_conv_{false};
+
+    Model* model_{nullptr};
+    Solver const* solver_{nullptr};
 };
 
 } // namespace amici
