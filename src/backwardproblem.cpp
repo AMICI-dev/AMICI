@@ -64,6 +64,11 @@ void BackwardProblem::workBackwardProblem() {
         );
     }
 
+    // store pre-pre-equilibration adjoint state and quadrature still needed
+    // for computing sllh in ReturnData
+    xB_pre_preeq_ = ws_.xB_;
+    xQB_pre_preeq_ = ws_.xQB_;
+
     // handle pre-equilibration
     if (preeq_problem_
         && preeq_problem_->get_solver()->getSensitivityMethodPreequilibration()
@@ -88,8 +93,8 @@ void BackwardProblem::workBackwardProblem() {
         // only preequilibrations needs a reInit, postequilibration does not
         preeq_solver->updateAndReinitStatesAndSensitivities(model_);
 
-        preeq_problem_bwd_.emplace(*solver_, *model_, final_state);
-        preeq_problem_bwd_->run(ws_.xB_, t0);
+        preeq_problem_bwd_.emplace(*solver_, *model_, final_state, &ws_);
+        preeq_problem_bwd_->run(t0);
     }
 }
 
@@ -107,9 +112,8 @@ void BackwardProblem::handlePostequilibration() {
     }
 
     auto final_state = posteq_problem_->getFinalSimulationState();
-    posteq_problem_bwd_.emplace(*solver_, *model_, final_state);
-    posteq_problem_bwd_->run(ws_.xB_, model_->t0());
-    ws_.xQB_ = posteq_problem_bwd_->getEquilibrationQuadratures();
+    posteq_problem_bwd_.emplace(*solver_, *model_, final_state, &ws_);
+    posteq_problem_bwd_->run(model_->t0());
 }
 
 void EventHandlingBwdSimulator::handleEventB(

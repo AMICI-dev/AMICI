@@ -13,6 +13,7 @@ class Solver;
 class Model;
 class BackwardProblem;
 struct FwdSimWorkspace;
+struct BwdSimWorkspace;
 
 /**
  * @brief Computes the weighted root-mean-square norm.
@@ -462,9 +463,11 @@ class SteadyStateBackwardProblem {
      * @param model
      * @param final_state Final state from pre/post-equilibration forward
      * problem
+     * @param ws Workspace for backward simulation
      */
     SteadyStateBackwardProblem(
-        Solver const& solver, Model& model, SimulationState& final_state
+        Solver const& solver, Model& model, SimulationState& final_state,
+        gsl::not_null<BwdSimWorkspace*> ws
     );
 
     /**
@@ -473,18 +476,13 @@ class SteadyStateBackwardProblem {
      * Integrates over the adjoint state backward in time by solving a linear
      * system of equations, which gives the analytical solution.
      *
-     * @param xB0 Initial adjoint state vector.
+     * Expects the workspace `ws_` to be initialized.
+     *
+     * The results will be written to the workspace `ws_`.
+     *
      * @param t0 Initial time for the steady state simulation.
      */
-    void run(AmiVector const& xB0, realtype t0);
-
-    /**
-     * @brief Return the quadratures from pre- or postequilibration
-     * @return xQB Vector with quadratures
-     */
-    [[nodiscard]] AmiVector const& getEquilibrationQuadratures() const {
-        return xQB_;
-    }
+    void run(realtype t0);
 
     /**
      * @brief Get the CPU time taken to solve the backward problem.
@@ -501,15 +499,23 @@ class SteadyStateBackwardProblem {
 
     /**
      * @brief Return the adjoint state
+     *
+     * Accessible only after run() has been called and before ws_ is used
+     * elsewhere.
+     *
      * @return xB adjoint state
      */
-    [[nodiscard]] AmiVector const& getAdjointState() const { return xB_; }
+    [[nodiscard]] AmiVector const& getAdjointState() const;
 
     /**
      * @brief Get the adjoint quadratures (xQB).
+     *
+     * Accessible only after run() has been called and before ws_ is used
+     * elsewhere.
+
      * @return xQB
      */
-    [[nodiscard]] AmiVector const& getAdjointQuadrature() const { return xQB_; }
+    [[nodiscard]] AmiVector const& getAdjointQuadrature() const;
 
     /**
      * @brief Accessor for has_quadrature_
@@ -553,14 +559,8 @@ class SteadyStateBackwardProblem {
     /** The employed number of backward steps */
     int numstepsB_{0};
 
-    /** adjoint state vector */
-    AmiVector xB_;
-
     /** integral over adjoint state vector */
     AmiVector xQ_;
-
-    /** quadrature state vector */
-    AmiVector xQB_;
 
     /** Final state from pre/post-equilibration forward problem */
     SimulationState& final_state_;
@@ -576,6 +576,7 @@ class SteadyStateBackwardProblem {
 
     Model* model_{nullptr};
     Solver const* solver_{nullptr};
+    BwdSimWorkspace* ws_{nullptr};
 };
 
 } // namespace amici
