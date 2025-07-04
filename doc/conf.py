@@ -227,6 +227,8 @@ nbsphinx_prolog = (
     """
 )
 
+nbsphinx_execute = "never" if os.environ.get("AMICI_NO_NB_EXEC") else "auto"
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
