@@ -110,6 +110,19 @@ void Model_DAE::froot(
         state_.unscaledParameters.data(), state_.fixedParameters.data(),
         state_.h.data(), N_VGetArrayPointerConst(dx)
     );
+
+    for (int ie = 0; ie < ne; ++ie) {
+        if (!state_.root_enabled[ie]) {
+            if (root[ie] < 0.0) {
+                // If the disabled root function becomes negative,
+                // re-enable it.
+                state_.root_enabled[ie] = true;
+            } else {
+                // If the root function is disabled, mask it
+                root[ie] = 1.0;
+            }
+        }
+    }
 }
 
 void Model_DAE::fxdot(

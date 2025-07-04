@@ -344,6 +344,18 @@ class CpuTimer {
 };
 #endif
 
+/**
+ * @brief The sign function.
+ *
+ * @param x The value to determine the sign of.
+ * @return -1, 0, or 1 depending on the sign of x.
+ */
+template <typename T>
+int sign(T x) {
+    return (T(0) < x) - (x < T(0));
+}
+
+
 } // namespace amici
 
 #endif // AMICI_MISC_H

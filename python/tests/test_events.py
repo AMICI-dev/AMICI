@@ -1072,3 +1072,47 @@ def test_event_uses_values_from_trigger_time(tempdir):
     )
 
     # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+
+
+def test_simultaneous_events(tempdir):
+    """Test simultaneously firing events with different trigger functions."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_simultaneous_events"
+    antimony2amici(
+        r"""
+        target1_0 = 1
+        target1 = target1_0
+        one = 1
+        target1' = one
+        two = 2
+        target2_0 = two
+        target2 = target2_0
+        target2' = 1
+        some_time = time
+        some_time' = 1
+        trigger_time = 1000
+
+        E1: at some_time >= trigger_time, priority=10, fromTrigger=false:
+            target1 = target1 + 10;
+        E2: at time >= trigger_time, priority=20, fromTrigger=false:
+            target2 = target2 + 10;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+    model.setTimepoints([0, 2])
+    solver = model.getSolver()
+    solver.setRelativeTolerance(1e-6)
+    solver.setAbsoluteTolerance(1e-6)
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert_allclose(rdata.by_id("target1"), [1.0, 13.0])
+    assert_allclose(rdata.by_id("target2"), [2.0, 14.0])

@@ -97,6 +97,19 @@ void Model_ODE::froot(realtype t, const_N_Vector x, gsl::span<realtype> root) {
         state_.unscaledParameters.data(), state_.fixedParameters.data(),
         state_.h.data(), state_.total_cl.data()
     );
+
+    for (int ie = 0; ie < ne; ++ie) {
+        auto sgn = sign(root[ie]);
+        if (!state_.root_enabled[ie] && sgn != 0 && sgn != state_.root_last_sign[ie]) {
+            // The sign flipped, so we re-enable the root function
+            state_.root_enabled[ie] = true;
+        }
+
+        if(!state_.root_enabled[ie]) {
+            // If the root function is disabled, mask it
+            root[ie] = (state_.root_last_sign[ie] > 0) ?  1.0 : -1.0;
+        }
+    }
 }
 
 void Model_ODE::fxdot(
