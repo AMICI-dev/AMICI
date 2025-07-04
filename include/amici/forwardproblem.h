@@ -189,6 +189,7 @@ struct PeriodResult {
 
     /** Discontinuities encountered so far (dimension: dynamic) */
     std::vector<Discontinuity> discs;
+
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
@@ -395,12 +396,11 @@ class SteadystateProblem {
      * Expects that solver, model, and ws_ are already initialized.
      *
      * @param solver The solver instance
-     * @param model The model instance
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
     void
-    workSteadyStateProblem(Solver& solver, Model& model, int it, realtype t0);
+    workSteadyStateProblem(Solver& solver, int it, realtype t0);
 
     /**
      * @brief Return the stored SimulationState.
@@ -469,7 +469,7 @@ class SteadystateProblem {
     [[nodiscard]] bool checkSteadyStateSuccess() const;
 
     /**
-     * @brief Get the preequilibration solver.
+     * @brief Get the pre-equilibration solver.
      * @return The preequilibration solver.
      */
     [[nodiscard]] Solver const* get_solver() const { return solver_; }
@@ -480,11 +480,10 @@ class SteadystateProblem {
      *
      * Throws an AmiException if no steady state was found.
      *
-     * @param model Model instance.
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void findSteadyState(Model& model, int it, realtype t0);
+    void findSteadyState(int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
@@ -492,18 +491,16 @@ class SteadystateProblem {
      * @param newton_retry Flag indicating whether Newton's method is being
      * relaunched.
      */
-    void findSteadyStateByNewtonsMethod(Model& model, bool newton_retry);
+    void findSteadyStateByNewtonsMethod(bool newton_retry);
 
     /**
      * @brief Try to determine the steady state by using forward simulation.
-     * @param model Model instance.
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
      * successfully, or if it failed.
      */
-    SteadyStateStatus
-    findSteadyStateBySimulation(Model& model, int it, realtype t0);
+    SteadyStateStatus findSteadyStateBySimulation(int it, realtype t0);
 
     /**
      * @brief Store state and throw an exception if equilibration failed
@@ -519,19 +516,17 @@ class SteadystateProblem {
 
     /**
      * @brief Checks convergence for state sensitivities
-     * @param model Model instance
      * @param wrms_computer_sx WRMSComputer instance for state sensitivities
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrmsFSA(Model& model, WRMSComputer& wrms_computer_sx);
+    realtype getWrmsFSA(WRMSComputer& wrms_computer_sx);
 
     /**
      * @brief Launch simulation if Newton solver or linear system solve
      * fail or are disabled.
-     * @param model Model instance.
      * simulation.
      */
-    void runSteadystateSimulationFwd(Model& model);
+    void runSteadystateSimulationFwd();
 
     /**
      * @brief Update member variables to indicate that state_.x has been
@@ -548,9 +543,8 @@ class SteadystateProblem {
     /**
      * @brief Compute the right-hand side for the current state_.x and set the
      * corresponding flag to indicate xdot_ is up to date.
-     * @param model model instance
      */
-    void updateRightHandSide(Model& model);
+    void updateRightHandSide();
 
     /** Workspace for forward simulation */
     FwdSimWorkspace* ws_;
@@ -608,6 +602,9 @@ class SteadystateProblem {
 
     /** Pointer to the pre-equilibration solver */
     Solver const* solver_{nullptr};
+
+    /** The model to equilibrate */
+    Model* model_{nullptr};
 };
 
 /**
