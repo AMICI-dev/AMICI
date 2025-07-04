@@ -1,6 +1,7 @@
 #ifndef AMICI_VECTOR_H
 #define AMICI_VECTOR_H
 
+#include <ostream>
 #include <type_traits>
 #include <vector>
 
@@ -282,6 +283,23 @@ class AmiVector {
 };
 
 /**
+ * @brief Output formatter for AmiVector.
+ * @param os output stream
+ * @param v AmiVector to output
+ * @return os
+ */
+inline std::ostream& operator<<(std::ostream& os, AmiVector const& v) {
+    os << "[";
+    for (int i = 0; i < v.getLength(); ++i) {
+        if (i > 0)
+            os << ", ";
+        os << v.at(i);
+    }
+    os << "]";
+    return os;
+}
+
+/**
  * @brief AmiVectorArray class.
  *
  * Provides a generic interface to arrays of NVector_Serial structs
@@ -435,6 +453,23 @@ class AmiVectorArray {
      */
     std::vector<N_Vector> nvec_array_;
 };
+
+/**
+ * @brief Output formatter for AmiVectorArray.
+ * @param os output stream
+ * @param arr AmiVectorArray to output
+ * @return os
+ */
+inline std::ostream& operator<<(std::ostream& os, AmiVectorArray const& arr) {
+    os << "[";
+    for (int i = 0; i < arr.getLength(); ++i) {
+        if (i > 0)
+            os << ", ";
+        os << arr[i];
+    }
+    os << "]";
+    return os;
+}
 
 /**
  * @brief Computes z = a*x + b*y
