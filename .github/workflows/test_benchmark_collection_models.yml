@@ -52,7 +52,7 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
 
@@ -128,7 +128,7 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
 
