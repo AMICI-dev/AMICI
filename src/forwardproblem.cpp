@@ -248,7 +248,7 @@ void ForwardProblem::handlePreequilibration() {
 
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
-    preeq_problem_.emplace(&ws_, *solver, *model);
+    preeq_problem_.emplace(&ws_, *solver, *model, true);
     auto t0 = std::isnan(model->t0Preeq()) ? model->t0() : model->t0Preeq();
 
     // The solver was not run before, set up everything.
@@ -354,7 +354,7 @@ void ForwardProblem::handleMainSimulation() {
 
 void ForwardProblem::handlePostequilibration() {
     if (getCurrentTimeIteration() < model->nt()) {
-        posteq_problem_.emplace(&ws_, *solver, *model);
+        posteq_problem_.emplace(&ws_, *solver, *model, false);
         auto it = getCurrentTimeIteration();
         auto t0 = it < 1 ? model->t0() : model->getTimepoint(it - 1);
 
@@ -734,23 +734,15 @@ writeErrorString(std::string& errorString, SteadyStateStatus status) {
 }
 
 SteadystateProblem::SteadystateProblem(
-    FwdSimWorkspace* ws, Solver const& solver, Model& model
+    FwdSimWorkspace* ws, Solver const& solver, Model& model, bool const is_preeq
 )
-    : ws_(ws)
+    : is_preeq_(is_preeq)
+    , ws_(ws)
     , wrms_computer_x_(
           model.nx_solver, solver.getSunContext(),
           solver.getAbsoluteToleranceSteadyState(),
           solver.getRelativeToleranceSteadyState(),
           AmiVector(model.get_steadystate_mask(), solver.getSunContext())
-      )
-    , final_state_(
-          {.t = INFINITY,
-           .x = AmiVector(model.nx_solver, solver.getSunContext()),
-           .dx = AmiVector(model.nx_solver, solver.getSunContext()),
-           .sx = AmiVectorArray(
-               model.nx_solver, model.nplist(), solver.getSunContext()
-           ),
-           .state = model.getModelState()}
       )
     , newton_solver_(
           NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
@@ -796,9 +788,15 @@ void SteadystateProblem::workSteadyStateProblem(
     CpuTimer cpu_timer;
     ws_->t = t0;
 
-    // handle initial events
-    EventHandlingSimulator sim(model_, solver_, ws_, nullptr);
-    sim.handle_event(true, nullptr);
+    // store final results at exit, independent of success or failure
+    auto const _ = gsl::finally([&]() {
+        cpu_time_ = cpu_timer.elapsed_milliseconds();
+        period_result_.final_state_.state = model_->getModelState();
+        period_result_.final_state_.t = ws_->t;
+        period_result_.final_state_.x = ws_->x;
+        period_result_.final_state_.dx = ws_->dx;
+        period_result_.final_state_.sx = ws_->sx;
+    });
 
     flagUpdatedState();
     newton_solver_.reinitialize();
@@ -817,15 +815,13 @@ void SteadystateProblem::workSteadyStateProblem(
         = steady_state_status_[0] == SteadyStateStatus::success
           && numsteps_[0] == 0;
     // Do we need forward sensis for postequilibration?
-    // Are we running in preequilibration (and hence create)?
-    bool const is_preequilibration = (it == -1);
     // Do we need forward sensitivities for pre- or post-equilibration?
     bool const needForwardSensisPosteq
-        = !is_preequilibration && !forwardSensisAlreadyComputed
+        = !is_preeq_ && !forwardSensisAlreadyComputed
           && solver.getSensitivityOrder() >= SensitivityOrder::first
           && solver.getSensitivityMethod() == SensitivityMethod::forward;
     bool const needForwardSensisPreeq
-        = is_preequilibration && !forwardSensisAlreadyComputed
+        = is_preeq_ && !forwardSensisAlreadyComputed
           && solver.getSensitivityMethodPreequilibration()
                  == SensitivityMethod::forward
           && solver.getSensitivityOrder() >= SensitivityOrder::first;
@@ -846,21 +842,29 @@ void SteadystateProblem::workSteadyStateProblem(
             );
         }
     }
-    cpu_time_ = cpu_timer.elapsed_milliseconds();
-    final_state_.state = model_->getModelState();
-    final_state_.t = ws_->t;
-    final_state_.x = ws_->x;
-    final_state_.dx = ws_->dx;
-    final_state_.sx = ws_->sx;
 }
 
 SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
-    int const it, realtype const t0
+    int const /*it*/, realtype const t0
 ) {
+    if (simulator_.has_value()) {
+        // There was already a (failed) Newton attempt
+        // reset the workspace to its initial state and restart with a fresh
+        // simulator. (Depending on the combination of methods, the old one
+        // might not have stored all required information for sensitivity
+        // computation.)
+        auto const& init_sim_state = simulator_->result.initial_state_;
+        model_->setModelState(init_sim_state.state);
+        ws_->t = init_sim_state.t;
+        ws_->x = init_sim_state.x;
+        ws_->dx = init_sim_state.dx;
+        ws_->sx = init_sim_state.sx;
+    }
+
     try {
         // Preequilibration -> Create a new solver instance for simulation
         // Postequilibration -> Solver was already created, use that one
-        if (it < 0) {
+        if (is_preeq_) {
             // TODO(performance): We should be able to avoid this clone
             //   if we aren't using ASA in combination with events.
             auto main_solver = solver_;
@@ -926,6 +930,8 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
             );
         return SteadyStateStatus::failed;
     }
+
+    period_result_ = simulator_->result;
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(
@@ -948,8 +954,7 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
     throw AmiException(errorString.c_str());
 }
 
-realtype
-SteadystateProblem::getWrmsFSA(WRMSComputer& wrms_computer_sx) {
+realtype SteadystateProblem::getWrmsFSA(WRMSComputer& wrms_computer_sx) {
     // Forward sensitivities: Compute weighted error norm for their RHS
     realtype wrms = 0.0;
 
@@ -1053,13 +1058,19 @@ void SteadystateProblem::runSteadystateSimulationFwd() {
         return false;
     };
 
-    updateRightHandSide();
+    // Create a new simulator that uses the (potentially changed) solver
+    // with the right sensitivity settings.
+    simulator_.emplace(model_, solver_, ws_, nullptr);
+    simulator_->result.initial_state_ = period_result_.initial_state_;
 
-    EventHandlingSimulator sim(model_, solver_, ws_, nullptr);
+    // handle initial events
+    simulator_->handle_event(true, nullptr);
+
+    updateRightHandSide();
 
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
 
-    sim.run_steady_state(
+    simulator_->run_steady_state(
         check_convergence, convergence_check_frequency, numsteps_.at(1)
     );
 
@@ -1089,7 +1100,7 @@ void SteadystateProblem::findSteadyState(int it, realtype t0) {
           || (solver_->getSensitivityOrder() >= SensitivityOrder::first
               && model_->getSteadyStateSensitivityMode()
                      == SteadyStateSensitivityMode::integrationOnly
-              && ((it == -1
+              && ((is_preeq_
                    && solver_->getSensitivityMethodPreequilibration()
                           == SensitivityMethod::forward)
                   || solver_->getSensitivityMethod()
@@ -1119,6 +1130,21 @@ void SteadystateProblem::findSteadyState(int it, realtype t0) {
 }
 
 void SteadystateProblem::findSteadyStateByNewtonsMethod(bool newton_retry) {
+    // store initial state and handle initial events, unless that was already
+    // done during a previous (failed) simulation
+    if (!newton_retry) {
+        simulator_.emplace(model_, solver_, ws_, nullptr);
+        // store initial state
+        simulator_->result.initial_state_.state = model_->getModelState();
+        simulator_->result.initial_state_.t = ws_->t;
+        simulator_->result.initial_state_.x = ws_->x;
+        simulator_->result.initial_state_.dx = ws_->dx;
+        simulator_->result.initial_state_.sx = ws_->sx;
+
+        simulator_->handle_event(true, nullptr);
+        period_result_ = simulator_->result;
+    }
+
     int const stage = newton_retry ? 2 : 0;
     try {
         updateRightHandSide();
@@ -1126,6 +1152,11 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(bool newton_retry) {
             ws_->xdot, {ws_->t, ws_->x, ws_->dx}, wrms_computer_x_
         );
         steady_state_status_[stage] = SteadyStateStatus::success;
+        // store final state
+        period_result_.final_state_.state = model_->getModelState();
+        period_result_.final_state_.t = ws_->t;
+        period_result_.final_state_.x = ws_->x;
+        period_result_.final_state_.dx = ws_->dx;
     } catch (NewtonFailure const& ex) {
         switch (ex.error_code) {
         case AMICI_TOO_MUCH_WORK:

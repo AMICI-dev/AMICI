@@ -335,8 +335,8 @@ class BackwardProblem {
     /** current time */
     realtype t_;
 
-    /** array containing the time-points of discontinuities*/
-    std::vector<Discontinuity> discs_;
+    /** The discontinuities encountered during the main simulation. */
+    std::vector<Discontinuity> discs_main_;
 
     /**
      * state derivative of data likelihood
