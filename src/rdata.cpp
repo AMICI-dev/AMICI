@@ -19,51 +19,53 @@ ReturnData::ReturnData(Solver const& solver, Model const& model)
     : ReturnData(
           model.getTimepoints(),
           ModelDimensions(static_cast<ModelDimensions const&>(model)),
-          model.nplist(), model.nMaxEvent(), model.nt(),
-          solver.getNewtonMaxSteps(), model.getParameterScale(), model.o2mode,
+          model.nMaxEvent(), solver.getNewtonMaxSteps(),
+          model.getParameterList(), model.getParameterScale(), model.o2mode,
           solver.getSensitivityOrder(), solver.getSensitivityMethod(),
           solver.getReturnDataReportingMode(), model.hasQuadraticLLH(),
           model.getAddSigmaResiduals(), model.getMinimumSigmaResiduals()
       ) {}
 
 ReturnData::ReturnData(
-    std::vector<realtype> ts, ModelDimensions const& model_dimensions,
-    int nplist, int nmaxevent, int nt, int newton_maxsteps,
-    std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
-    SensitivityOrder sensi, SensitivityMethod sensi_meth, RDataReporting rdrm,
-    bool quadratic_llh, bool sigma_res, realtype sigma_offset
+    std::vector<realtype> ts_, ModelDimensions const& model_dimensions_,
+    int nmaxevent_, int newton_maxsteps_, std::vector<int> plist_,
+    std::vector<ParameterScaling> pscale_, SecondOrderMode o2mode_,
+    SensitivityOrder sensi_, SensitivityMethod sensi_meth_,
+    RDataReporting rdrm_, bool quadratic_llh_, bool sigma_res_,
+    realtype sigma_offset_
 )
-    : ModelDimensions(model_dimensions)
-    , ts(std::move(ts))
+    : ModelDimensions(model_dimensions_)
+    , ts(std::move(ts_))
     , nx(nx_rdata)
     , nxtrue(nxtrue_rdata)
-    , nplist(nplist)
-    , nmaxevent(nmaxevent)
-    , nt(nt)
-    , newton_maxsteps(newton_maxsteps)
-    , pscale(std::move(pscale))
-    , o2mode(o2mode)
-    , sensi(sensi)
-    , sensi_meth(sensi_meth)
-    , rdata_reporting(rdrm)
-    , sigma_res(sigma_res)
-    , sigma_offset(sigma_offset)
+    , nplist(plist_.size())
+    , nmaxevent(nmaxevent_)
+    , nt(ts.size())
+    , newton_maxsteps(newton_maxsteps_)
+    , pscale(std::move(pscale_))
+    , o2mode(o2mode_)
+    , sensi(sensi_)
+    , sensi_meth(sensi_meth_)
+    , rdata_reporting(rdrm_)
+    , sigma_res(sigma_res_)
+    , plist(plist_)
+    , sigma_offset(sigma_offset_)
     , nroots_(ne) {
     switch (rdata_reporting) {
     case RDataReporting::full:
-        initializeFullReporting(quadratic_llh);
+        initializeFullReporting(quadratic_llh_);
         break;
 
     case RDataReporting::residuals:
-        initializeResidualReporting(quadratic_llh);
+        initializeResidualReporting(quadratic_llh_);
         break;
 
     case RDataReporting::likelihood:
-        initializeLikelihoodReporting(quadratic_llh);
+        initializeLikelihoodReporting(quadratic_llh_);
         break;
 
     case RDataReporting::observables_likelihood:
-        initializeObservablesLikelihoodReporting(quadratic_llh);
+        initializeObservablesLikelihoodReporting(quadratic_llh_);
         break;
     }
 }

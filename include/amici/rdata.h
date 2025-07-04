@@ -41,30 +41,29 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Constructor
-     * @param ts see amici::SimulationParameters::ts
-     * @param model_dimensions Model dimensions
-     * @param nplist see amici::ModelDimensions::nplist
-     * @param nmaxevent see amici::ModelDimensions::nmaxevent
-     * @param nt see amici::ModelDimensions::nt
-     * @param newton_maxsteps see amici::Solver::newton_maxsteps
-     * @param pscale see amici::SimulationParameters::pscale
-     * @param o2mode see amici::SimulationParameters::o2mode
-     * @param sensi see amici::Solver::sensi
-     * @param sensi_meth see amici::Solver::sensi_meth
-     * @param rdrm see amici::Solver::rdata_reporting
-     * @param quadratic_llh whether model defines a quadratic nllh and
+     * @param ts_ see amici::SimulationParameters::ts
+     * @param model_dimensions_ Model dimensions
+     * @param nmaxevent_ see amici::ModelDimensions::nmaxevent
+     * @param newton_maxsteps_ see amici::Solver::newton_maxsteps
+     * @param plist_ see amici::Model::getParameterList
+     * @param pscale_ see amici::SimulationParameters::pscale
+     * @param o2mode_ see amici::SimulationParameters::o2mode
+     * @param sensi_ see amici::Solver::sensi
+     * @param sensi_meth_ see amici::Solver::sensi_meth
+     * @param rdrm_ see amici::Solver::rdata_reporting
+     * @param quadratic_llh_ whether model defines a quadratic nllh and
      * computing res, sres and FIM makes sense
-     * @param sigma_res indicates whether additional residuals are to be added
+     * @param sigma_res_ indicates whether additional residuals are to be added
      * for each sigma
-     * @param sigma_offset offset to ensure real-valuedness of sigma residuals
+     * @param sigma_offset_ offset to ensure real-valuedness of sigma residuals
      */
     ReturnData(
-        std::vector<realtype> ts, ModelDimensions const& model_dimensions,
-        int nplist, int nmaxevent, int nt, int newton_maxsteps,
-        std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
-        SensitivityOrder sensi, SensitivityMethod sensi_meth,
-        RDataReporting rdrm, bool quadratic_llh, bool sigma_res,
-        realtype sigma_offset
+        std::vector<realtype> ts_, ModelDimensions const& model_dimensions_,
+        int nmaxevent_, int newton_maxsteps_, std::vector<int> plist_,
+        std::vector<ParameterScaling> pscale_, SecondOrderMode o2mode_,
+        SensitivityOrder sensi_, SensitivityMethod sensi_meth_,
+        RDataReporting rdrm_, bool quadratic_llh_, bool sigma_res_,
+        realtype sigma_offset_
     );
 
     /**
@@ -531,6 +530,14 @@ class ReturnData : public ModelDimensions {
 
     /** The final internal time of the solver. */
     realtype t_last{std::numeric_limits<realtype>::quiet_NaN()};
+
+    /**
+     * @brief Indices of the parameters w.r.t. which sensitivities were
+     * computed.
+     *
+     * The indices refer to parameter IDs in Model::getParameterIds().
+     */
+    std::vector<int> plist;
 
   protected:
     /** offset for sigma_residuals */
