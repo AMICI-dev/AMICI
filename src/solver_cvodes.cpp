@@ -592,6 +592,10 @@ void CVodeSolver::reInit(
 void CVodeSolver::sensReInit(
     AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/
 ) const {
+    if (!sens_initialized_) {
+        return;
+    }
+
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)

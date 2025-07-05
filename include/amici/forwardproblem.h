@@ -383,9 +383,11 @@ class SteadystateProblem {
      * @param ws Workspace for forward simulation
      * @param solver Solver instance
      * @param model Model instance
+     * @param is_preeq Whether this is a pre-equilibration (`true`) or
+     * post-equilibration problem (`false`).
      */
     explicit SteadystateProblem(
-        FwdSimWorkspace* ws, Solver const& solver, Model& model
+        FwdSimWorkspace* ws, Solver const& solver, Model& model, bool is_preeq
     );
 
     /**
@@ -399,29 +401,30 @@ class SteadystateProblem {
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void
-    workSteadyStateProblem(Solver& solver, int it, realtype t0);
+    void workSteadyStateProblem(Solver& solver, int it, realtype t0);
 
     /**
      * @brief Return the stored SimulationState.
      * @return stored SimulationState
      */
     [[nodiscard]] SimulationState const& getFinalSimulationState() const {
-        return final_state_;
+        return period_result_.final_state_;
     }
 
     /**
      * @brief Return state at steady state
      * @return x
      */
-    [[nodiscard]] AmiVector const& getState() const { return final_state_.x; }
+    [[nodiscard]] AmiVector const& getState() const {
+        return period_result_.final_state_.x;
+    }
 
     /**
      * @brief Return state sensitivity at steady state
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
-        return final_state_.sx;
+        return period_result_.final_state_.sx;
     }
 
     /**
@@ -444,7 +447,9 @@ class SteadystateProblem {
      * @brief Get model time at which steady state was found through simulation.
      * @return Time at which steady state was found (model time units).
      */
-    [[nodiscard]] realtype getSteadyStateTime() const { return final_state_.t; }
+    [[nodiscard]] realtype getSteadyStateTime() const {
+        return period_result_.final_state_.t;
+    }
 
     /**
      * @brief Get the weighted root mean square of the residuals.
@@ -546,15 +551,20 @@ class SteadystateProblem {
      */
     void updateRightHandSide();
 
+    /** Whether this is a pre- or post-equilibration problem */
+    bool is_preeq_;
+
     /** Workspace for forward simulation */
     FwdSimWorkspace* ws_;
+
     /** WRMS computer for x */
     WRMSComputer wrms_computer_x_;
+
     /** weighted root-mean-square error */
     realtype wrms_{NAN};
 
-    /** The simulation state at the end of the forward problem. */
-    SimulationState final_state_;
+    /** Results for this period. */
+    PeriodResult period_result_;
 
     /** stores diagnostic information about employed number of steps */
     std::vector<int> numsteps_{std::vector<int>(3, 0)};
@@ -605,6 +615,9 @@ class SteadystateProblem {
 
     /** The model to equilibrate */
     Model* model_{nullptr};
+
+    /** Simulator for event handling */
+    std::optional<EventHandlingSimulator> simulator_;
 };
 
 /**
