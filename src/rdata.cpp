@@ -198,7 +198,6 @@ void ReturnData::processSimulationObjects(
             posteq_bwd = bwd->getPostequilibrationBwdProblem();
         }
     }
-
     if (preeq)
         processPreEquilibration(*preeq, preeq_bwd, model);
 
@@ -210,7 +209,11 @@ void ReturnData::processSimulationObjects(
     if (posteq)
         processPostEquilibration(*posteq, posteq_bwd, model, edata);
 
-    if (fwd && !posteq)
+    if (edata && !edata->fixedParametersPreequilibration.empty() && fwd
+        && !fwd->was_preequilibrated() && preeq) {
+        // failure during preequilibration
+        storeJacobianAndDerivativeInReturnData(*preeq, model);
+    } else if (fwd && !posteq)
         storeJacobianAndDerivativeInReturnData(*fwd, model);
     else if (posteq)
         storeJacobianAndDerivativeInReturnData(*posteq, model);
