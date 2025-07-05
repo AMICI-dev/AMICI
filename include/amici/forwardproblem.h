@@ -794,6 +794,12 @@ class ForwardProblem {
         return pre_simulator_.result;
     }
 
+    /**
+     * @brief Whether pre-equilibration was performed successfully.
+     * @return
+     */
+    bool was_preequilibrated() const { return preequilibrated_; }
+
     /** pointer to model instance */
     Model* model;
 
