@@ -60,7 +60,7 @@ class EventHandlingBwdSimulator {
      * @param ws The workspace to use for the simulation.
      */
     EventHandlingBwdSimulator(
-        gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
+        gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
         gsl::not_null<BwdSimWorkspace*> ws
     )
         : model_(model)
@@ -127,7 +127,7 @@ class EventHandlingBwdSimulator {
     Model* model_;
 
     /** The solver to use for the simulation. */
-    Solver* solver_;
+    Solver const* solver_;
 
     /** The workspace to use for the simulation. */
     gsl::not_null<BwdSimWorkspace*> ws_;
