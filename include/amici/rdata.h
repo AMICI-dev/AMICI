@@ -833,7 +833,7 @@ class ReturnData : public ModelDimensions {
      */
     void handleSx0Forward(
         Model const& model, SimulationState const& simulation_state,
-        std::vector<realtype>& llhS0, AmiVector& xB
+        std::vector<realtype>& llhS0, AmiVector const& xB
     ) const;
 };
 

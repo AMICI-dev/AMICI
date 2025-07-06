@@ -497,13 +497,12 @@ void ReturnData::processBackwardProblem(
     model.setModelState(simulation_state.state);
 
     std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
-    auto xB = bwd.getAdjointStatePrePreeq();
     auto xQB = bwd.getAdjointQuadraturePrePreeq();
 
     if (preeq_bwd && preeq_bwd->hasQuadrature()) {
         handleSx0Backward(model, *preeq, preeq_bwd, llhS0, xQB);
     } else {
-        handleSx0Forward(model, simulation_state, llhS0, xB);
+        handleSx0Forward(model, simulation_state, llhS0, bwd.getAdjointStatePrePreeq());
     }
 
     for (int iJ = 0; iJ < model.nJ; iJ++) {
@@ -552,7 +551,7 @@ void ReturnData::handleSx0Backward(
 
 void ReturnData::handleSx0Forward(
     Model const& model, SimulationState const& simulation_state,
-    std::vector<realtype>& llhS0, AmiVector& xB
+    std::vector<realtype>& llhS0, AmiVector const& xB
 ) const {
     /* If preequilibration is run in forward mode or is not needed, then adjoint
        sensitivity analysis still needs the state sensitivities at t=0 (sx0),

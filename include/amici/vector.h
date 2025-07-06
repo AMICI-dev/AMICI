@@ -211,6 +211,14 @@ class AmiVector {
      * @return element
      */
     realtype& operator[](int pos);
+
+    /**
+     * @brief accessor to data elements of the vector
+     * @param pos index of element
+     * @return element
+     */
+    realtype const& operator[](int pos)  const;
+
     /**
      * @brief accessor to data elements of the vector
      * @param pos index of element
