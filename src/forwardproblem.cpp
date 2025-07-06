@@ -61,12 +61,7 @@ void EventHandlingSimulator::run(
     ws_->t = t0;
     ws_->tlastroot = t0;
 
-    // handle initial events
-    if (model_->ne && std::ranges::any_of(ws_->roots_found, [](int rf) {
-            return rf == 1;
-        })) {
-        handle_event(true, edata);
-    }
+    handle_initial_events(edata);
 
     // store initial state and sensitivity
     result.initial_state_ = get_simulation_state();
@@ -137,7 +132,7 @@ void EventHandlingSimulator::run(
                         ++it_trigger_timepoints;
                     }
 
-                    handle_event(false, edata);
+                    handle_events(false, edata);
                 }
             }
         }
@@ -221,7 +216,7 @@ void EventHandlingSimulator::run_steady_state(
                 ++it_trigger_timepoints;
             }
 
-            handle_event(false, nullptr);
+            handle_events(false, nullptr);
         }
 
         solver_->writeSolution(ws_->t, ws_->x, ws_->dx, ws_->sx);
@@ -365,7 +360,7 @@ void ForwardProblem::handlePostequilibration() {
     }
 }
 
-void EventHandlingSimulator::handle_event(
+void EventHandlingSimulator::handle_events(
     bool const initial_event, ExpData const* edata
 ) {
     // Some event triggered. This may be due to some discontinuity, a bolus to
@@ -490,6 +485,14 @@ void EventHandlingSimulator::handle_event(
     solver_->reInit(ws_->t, ws_->x, ws_->dx);
     if (solver_->computingFSA()) {
         solver_->sensReInit(ws_->sx, ws_->sdx);
+    }
+}
+
+void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
+    if (model_->ne && std::ranges::any_of(ws_->roots_found, [](int const rf) {
+            return rf == 1;
+        })) {
+        handle_events(true, edata);
     }
 }
 
@@ -1063,8 +1066,7 @@ void SteadystateProblem::runSteadystateSimulationFwd() {
     simulator_.emplace(model_, solver_, ws_, nullptr);
     simulator_->result.initial_state_ = period_result_.initial_state_;
 
-    // handle initial events
-    simulator_->handle_event(true, nullptr);
+    simulator_->handle_initial_events(nullptr);
 
     updateRightHandSide();
 
@@ -1141,7 +1143,7 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(bool newton_retry) {
         simulator_->result.initial_state_.dx = ws_->dx;
         simulator_->result.initial_state_.sx = ws_->sx;
 
-        simulator_->handle_event(true, nullptr);
+        simulator_->handle_initial_events(nullptr);
         period_result_ = simulator_->result;
     }
 

@@ -304,12 +304,24 @@ class EventHandlingSimulator {
     int it_ = -1;
 
     /**
-     * @brief Execute everything necessary for the handling of events
+     * @brief Execute everything necessary for the handling of events.
+     *
+     * Assumes that at least one event triggered.
      *
      * @param initial_event initial event flag
      * @param edata experimental data
      */
-    void handle_event(bool initial_event, ExpData const* edata);
+    void handle_events(bool initial_event, ExpData const* edata);
+
+    /**
+     * @brief Handle initial events.
+     *
+     * Check if there are any initial events that need to be handled
+     * and execute the necessary steps.
+     *
+     * @param edata experimental data
+     */
+    void handle_initial_events(ExpData const* edata);
 
   private:
     /**
