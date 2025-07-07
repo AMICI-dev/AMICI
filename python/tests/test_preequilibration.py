@@ -829,8 +829,7 @@ def test_preequilibration_events(tempdir):
     for sensi_meth, sensi_meth_preeq in (
         (SensitivityMethod.forward, SensitivityMethod.forward),
         (SensitivityMethod.adjoint, SensitivityMethod.forward),
-        # TODO https://github.com/AMICI-dev/AMICI/issues/2775
-        #  (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
     ):
         amici_solver.setSensitivityMethod(sensi_meth)
         amici_solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)

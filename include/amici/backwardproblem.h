@@ -308,6 +308,20 @@ class BackwardProblem {
     }
 
     /**
+     * @brief The final adjoint state vector
+     * @return xB
+     */
+    [[nodiscard]] AmiVector const& getAdjointState() const { return ws_.xB_; }
+
+    /**
+     * @brief The final quadrature state vector.
+     * @return xQB
+     */
+    [[nodiscard]] AmiVector const& getAdjointQuadrature() const {
+        return ws_.xQB_;
+    }
+
+    /**
      * @brief Return the postequilibration SteadyStateBwdProblem.
      * @return The postequilibration SteadyStateBackwardProblem, if any.
      */
