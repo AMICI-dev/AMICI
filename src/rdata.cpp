@@ -488,11 +488,44 @@ void ReturnData::processBackwardProblem(
     model.setModelState(simulation_state.mod);
 
     std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
+    // Adjoint quadratures before pre-equilibration
     auto xQB = bwd.getAdjointQuadraturePrePreeq();
 
     if (preeq_bwd && preeq_bwd->hasQuadrature()) {
-        handleSx0Backward(model, *preeq, preeq_bwd, llhS0, xQB);
+        // Pre-equilibration with ASA steady-state shortcuts
+
+        // If pre-equilibration is run in adjoint mode, the scalar product of
+        // sx0 with its adjoint counterpart (see handleSx0Forward()) is not
+        // necessary:
+        // the actual simulation is "extended" by the pre-equilibration time.
+        // At initialization (at t=-inf), the adjoint state is in steady state
+        // (= 0) and so is the scalar product.
+        // Instead of the scalar product, the quadratures xQB from
+        // pre-equilibration contribute to the gradient
+        // (see example notebook on equilibration for further documentation).
+
+        // Adjoint quadratures after pre-equilibration
+        auto const& xQB_post_preeq = preeq_bwd->getAdjointQuadrature();
+        for (int ip = 0; ip < model.nplist(); ++ip)
+            xQB[ip] += xQB_post_preeq.at(ip);
+
+        handleSx0Backward(
+            model, preeq->getStateSensitivity(), bwd.getAdjointState(), llhS0
+        );
+    } else if (preeq
+               && preeq->getSteadyStateStatus()[1]
+                      != SteadyStateStatus::not_run) {
+        // Pre-equilibration with ASA backward simulation
+
+        // Adjoint quadratures after pre-equilibration
+        xQB = bwd.getAdjointQuadrature();
+
+        handleSx0Backward(
+            model, preeq->getStateSensitivity(), bwd.getAdjointState(), llhS0
+        );
+
     } else {
+        // No pre-equilibration, or pre-equilibration with FSA
         handleSx0Forward(
             model, simulation_state.sol, llhS0, bwd.getAdjointStatePrePreeq()
         );
@@ -512,32 +545,17 @@ void ReturnData::processBackwardProblem(
 }
 
 void ReturnData::handleSx0Backward(
-    Model const& model, SteadystateProblem const& preeq,
-    SteadyStateBackwardProblem const* preeq_bwd, std::vector<realtype>& llhS0,
-    AmiVector& xQB
+    Model const& model, AmiVectorArray const& sx0, AmiVector const& xB,
+    std::vector<realtype>& llhS0
 ) const {
-    /* If preequilibration is run in adjoint mode, the scalar product of sx0
-       with its adjoint counterpart (see handleSx0Forward()) is not necessary:
-       the actual simulation is "extended" by the preequilibration time.
-       At initialization (at t=-inf), the adjoint state is in steady state (= 0)
-       and so is the scalar product. Instead of the scalar product, the
-       quadratures xQB from preequilibration contribute to the gradient
-       (see example notebook on equilibration for further documentation). */
-    auto const& xQBpreeq = preeq_bwd->getAdjointQuadrature();
-    for (int ip = 0; ip < model.nplist(); ++ip)
-        xQB[ip] += xQBpreeq.at(ip);
 
-    /* We really need references here, as sx0 can be large... */
-    auto const& sx0preeq = preeq.getStateSensitivity();
-    auto const& xBpreeq = preeq_bwd->getAdjointState();
-
-    /* Add the contribution for sx0 from preequilibration. If backward
-     * preequilibration was done by simulation due to a singular Jacobian,
-     * xB is not necessarily 0 and we may get a non-zero contribution here. */
+    // Add the contribution for sx0 from preequilibration. If backward
+    // preequilibration was done by simulation due to a singular Jacobian,
+    // xB is not necessarily 0 and we may get a non-zero contribution here.
     for (int ip = 0; ip < model.nplist(); ++ip) {
         llhS0[ip] = 0.0;
         for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
-            llhS0[ip] += xBpreeq.at(ix) * sx0preeq.at(ix, ip);
+            llhS0[ip] += xB.at(ix) * sx0.at(ix, ip);
         }
     }
 }
