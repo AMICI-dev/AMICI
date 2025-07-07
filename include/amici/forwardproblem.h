@@ -125,6 +125,7 @@ struct FwdSimWorkspace {
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
 
     {}
+    /** Current solution state */
     SolutionState sol;
 
     /** old state vector (dimension: nx_solver) */

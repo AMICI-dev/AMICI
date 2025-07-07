@@ -484,6 +484,13 @@ struct SolutionState {
 
     SolutionState() = default;
 
+    /**
+     * @brief Constructor.
+     * @param t_ Current timepoint.
+     * @param nx_solver Number of solver state variables.
+     * @param nplist Number of parameter w.r.t. which to compute sensitivities.
+     * @param ctx SUNDIALS context.
+     */
     SolutionState(
         realtype t_, long int nx_solver, long int nplist, SUNContext ctx
     )
