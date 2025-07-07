@@ -484,7 +484,9 @@ struct SolutionState {
 
     SolutionState() = default;
 
-    SolutionState(realtype t_, long int nx_solver, long int nplist, SUNContext ctx)
+    SolutionState(
+        realtype t_, long int nx_solver, long int nplist, SUNContext ctx
+    )
         : t(t_)
         , x(nx_solver, ctx)
         , dx(nx_solver, ctx)

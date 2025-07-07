@@ -660,12 +660,6 @@ class ForwardProblem {
     std::vector<realtype> getAdjointUpdates(Model& model, ExpData const& edata);
 
     /**
-     * @brief Accessor for t
-     * @return t
-     */
-    [[nodiscard]] realtype getTime() const { return t_; }
-
-    /**
      * @brief Accessor for sx
      * @return sx
      */
@@ -864,9 +858,6 @@ class ForwardProblem {
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype> dJzdx_;
-
-    /** current time */
-    realtype t_;
 
     /** flag to indicate whether solver was preeinitialized via preequilibration
      */

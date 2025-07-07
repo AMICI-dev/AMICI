@@ -45,7 +45,6 @@ ForwardProblem::ForwardProblem(
     , solver(solver)
     , edata(edata)
     , dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0)
-    , t_(model->t0())
     , uses_presimulation_(edata && edata->t_presim > 0)
     , ws_(model, solver)
     , main_simulator_(model, solver, &ws_, &dJzdx_)
@@ -279,24 +278,24 @@ void ForwardProblem::handlePresimulation() {
         );
 
     // compute initial time and setup solver for (pre-)simulation
-    t_ = model->t0() - edata->t_presim;
+    ws_.sol.t = model->t0() - edata->t_presim;
 
     // if preequilibration was done, model was already initialized
     if (!preequilibrated_) {
         model->initialize(
-            t_, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx,
+            ws_.sol.t, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx,
             solver->getSensitivityOrder() >= SensitivityOrder::first,
             ws_.roots_found
         );
     } else if (model->ne) {
-        model->initEvents(t_, ws_.sol.x, ws_.sol.dx, ws_.roots_found);
+        model->initEvents(ws_.sol.t, ws_.sol.x, ws_.sol.dx, ws_.roots_found);
     }
-    solver->setup(t_, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
+    solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
     solver->updateAndReinitStatesAndSensitivities(model);
 
     std::vector<realtype> const timepoints{model->t0()};
-    pre_simulator_.run(t_, edata, timepoints, false);
-    solver->writeSolution(t_, ws_.sol.x, ws_.sol.dx, ws_.sol.sx);
+    pre_simulator_.run(ws_.sol.t, edata, timepoints, false);
+    solver->writeSolution(ws_.sol);
 }
 
 void ForwardProblem::handleMainSimulation() {
@@ -317,11 +316,13 @@ void ForwardProblem::handleMainSimulation() {
         );
     }
 
-    t_ = model->t0();
+    ws_.sol.t = model->t0();
 
     // in case of presimulation, the solver was set up already
     if (!uses_presimulation_) {
-        solver->setup(t_, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
+        solver->setup(
+            ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx
+        );
     }
 
     if (preequilibrated_ || uses_presimulation_) {
@@ -344,8 +345,7 @@ void ForwardProblem::handleMainSimulation() {
         || (solver->computingASA() && !uses_presimulation_))
         ws_.sol.sx = solver->getStateSensitivity(model->t0());
 
-    main_simulator_.run(t_, edata, model->getTimepoints(), true);
-    t_ = ws_.sol.t;
+    main_simulator_.run(ws_.sol.t, edata, model->getTimepoints(), true);
     it_ = main_simulator_.it_;
 }
 
