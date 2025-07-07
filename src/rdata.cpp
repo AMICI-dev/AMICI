@@ -438,7 +438,7 @@ void ReturnData::getEventOutput(
 
         if (sensi >= SensitivityOrder::first) {
             if (sensi_meth == SensitivityMethod::forward) {
-                getEventSensisFSA(ie, sol.t, model, sol, edata);
+                getEventSensisFSA(ie, model, sol, edata);
             } else if (edata && !sllh.empty()) {
                 model.addPartialEventObjectiveSensitivity(
                     sllh, s2llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
@@ -450,10 +450,9 @@ void ReturnData::getEventOutput(
 }
 
 void ReturnData::getEventSensisFSA(
-    int ie, realtype t, Model& model, SolutionState const& sol,
-    ExpData const* edata
+    int ie, Model& model, SolutionState const& sol, ExpData const* edata
 ) {
-    if (t == model.getTimepoint(nt - 1)) {
+    if (sol.t == model.getTimepoint(nt - 1)) {
         // call from fillEvent at last timepoint
         if (!sz.empty())
             model.getUnobservedEventSensitivity(
@@ -461,17 +460,18 @@ void ReturnData::getEventSensisFSA(
             );
         if (!srz.empty())
             model.getEventRegularizationSensitivity(
-                slice(srz, nroots_.at(ie), nz * nplist), ie, t, sol.x, sol.sx
+                slice(srz, nroots_.at(ie), nz * nplist), ie, sol.t, sol.x,
+                sol.sx
             );
     } else if (!sz.empty()) {
         model.getEventSensitivity(
-            slice(sz, nroots_.at(ie), nz * nplist), ie, t, sol.x, sol.sx
+            slice(sz, nroots_.at(ie), nz * nplist), ie, sol.t, sol.x, sol.sx
         );
     }
 
     if (edata && !sllh.empty()) {
         model.addEventObjectiveSensitivity(
-            sllh, s2llh, ie, nroots_.at(ie), t, sol.x, sol.sx, *edata
+            sllh, s2llh, ie, nroots_.at(ie), sol.t, sol.x, sol.sx, *edata
         );
     }
 }

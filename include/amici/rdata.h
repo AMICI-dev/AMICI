@@ -780,14 +780,12 @@ class ReturnData : public ModelDimensions {
      * @brief Extracts event information for forward sensitivity analysis,
      * expects the model state was set appropriately
      * @param ie index of event type
-     * @param t event timepoint
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
     void getEventSensisFSA(
-        int ie, realtype t, Model& model, SolutionState const& sol,
-        ExpData const* edata
+        int ie, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
