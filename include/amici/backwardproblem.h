@@ -151,7 +151,7 @@ class SteadyStateBackwardProblem {
      * @param ws Workspace for backward simulation
      */
     SteadyStateBackwardProblem(
-        Solver const& solver, Model& model, SimulationState& final_state,
+        Solver const& solver, Model& model, SolutionState& final_state,
         gsl::not_null<BwdSimWorkspace*> ws
     );
 
@@ -248,7 +248,7 @@ class SteadyStateBackwardProblem {
     AmiVector xQ_;
 
     /** Final state from pre/post-equilibration forward problem */
-    SimulationState& final_state_;
+    SolutionState& final_state_;
 
     /** Newton solver */
     NewtonSolver newton_solver_;

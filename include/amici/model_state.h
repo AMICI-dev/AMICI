@@ -462,12 +462,11 @@ struct ModelStateDerived {
 };
 
 /**
- * @brief implements an exchange format to store and transfer the state of a
- * simulation at a specific timepoint.
+ * @brief Container for the IVP solution state at a specific timepoint.
  */
-struct SimulationState {
+struct SolutionState {
     /** timepoint */
-    realtype t;
+    realtype t{NAN};
     /**
      * partial state vector, excluding states eliminated from conservation laws
      */
@@ -482,8 +481,26 @@ struct SimulationState {
      * conservation laws
      */
     AmiVectorArray sx;
+
+    SolutionState() = default;
+
+    SolutionState(realtype t_, long int nx_solver, long int nplist, SUNContext ctx)
+        : t(t_)
+        , x(nx_solver, ctx)
+        , dx(nx_solver, ctx)
+        , sx(nx_solver, nplist, ctx) {}
+};
+
+/**
+ * @brief implements an exchange format to store and transfer the state of a
+ * simulation at a specific timepoint.
+ */
+struct SimulationState {
+    /** Solution state */
+    SolutionState sol;
+
     /** state of the model that was used for simulation */
-    ModelState state;
+    ModelState mod;
 };
 
 } // namespace amici

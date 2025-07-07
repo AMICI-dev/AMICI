@@ -113,12 +113,10 @@ struct FwdSimWorkspace {
     FwdSimWorkspace(
         gsl::not_null<Model*> const& model, gsl::not_null<Solver*> solver
     )
-        : x(model->nx_solver, solver->getSunContext())
+        : sol(NAN, model->nx_solver, model->nplist(), solver->getSunContext())
         , x_old(model->nx_solver, solver->getSunContext())
-        , dx(model->nx_solver, solver->getSunContext())
         , xdot(model->nx_solver, solver->getSunContext())
         , xdot_old(model->nx_solver, solver->getSunContext())
-        , sx(model->nx_solver, model->nplist(), solver->getSunContext())
         , sdx(model->nx_solver, model->nplist(), solver->getSunContext())
         , stau(model->nplist())
         , roots_found(model->ne, 0)
@@ -127,26 +125,16 @@ struct FwdSimWorkspace {
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
 
     {}
-    /** current simulation time */
-    realtype t{NAN};
-
-    /** state vector (dimension: nx_solver) */
-    AmiVector x;
+    SolutionState sol;
 
     /** old state vector (dimension: nx_solver) */
     AmiVector x_old;
-
-    /** differential state vector (dimension: nx_solver) */
-    AmiVector dx;
 
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot;
 
     /** old time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_old;
-
-    /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sx;
 
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
@@ -362,7 +350,7 @@ class EventHandlingSimulator {
             }))
             return;
 
-        result.discs.emplace_back(ws_->t);
+        result.discs.emplace_back(ws_->sol.t);
         store_event(edata);
     }
 
@@ -428,7 +416,7 @@ class SteadystateProblem {
      * @return x
      */
     [[nodiscard]] AmiVector const& getState() const {
-        return period_result_.final_state_.x;
+        return period_result_.final_state_.sol.x;
     }
 
     /**
@@ -436,7 +424,7 @@ class SteadystateProblem {
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
-        return period_result_.final_state_.sx;
+        return period_result_.final_state_.sol.sx;
     }
 
     /**
@@ -460,7 +448,7 @@ class SteadystateProblem {
      * @return Time at which steady state was found (model time units).
      */
     [[nodiscard]] realtype getSteadyStateTime() const {
-        return period_result_.final_state_.t;
+        return period_result_.final_state_.sol.t;
     }
 
     /**
@@ -504,7 +492,6 @@ class SteadystateProblem {
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
-     * @param model Model instance.
      * @param newton_retry Flag indicating whether Newton's method is being
      * relaunched.
      */
@@ -683,7 +670,7 @@ class ForwardProblem {
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
-        return ws_.sx;
+        return ws_.sol.sx;
     }
 
     /**
@@ -713,7 +700,7 @@ class ForwardProblem {
      * @return time point
      */
     [[nodiscard]] realtype getFinalTime() const {
-        return main_simulator_.result.final_state_.t;
+        return main_simulator_.result.final_state_.sol.t;
     }
 
     /**
@@ -732,7 +719,8 @@ class ForwardProblem {
      */
     [[nodiscard]] SimulationState const&
     getSimulationStateTimepoint(int const it) const {
-        if (model->getTimepoint(it) == main_simulator_.result.initial_state_.t)
+        if (model->getTimepoint(it)
+            == main_simulator_.result.initial_state_.sol.t)
             return getInitialSimulationState();
         auto const map_iter = main_simulator_.result.timepoint_states_.find(
             model->getTimepoint(it)

@@ -94,7 +94,7 @@ void BackwardProblem::workBackwardProblem() {
         // only preequilibrations needs a reInit, postequilibration does not
         preeq_solver->updateAndReinitStatesAndSensitivities(model_);
 
-        preeq_problem_bwd_.emplace(*solver_, *model_, final_state, &ws_);
+        preeq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
         preeq_problem_bwd_->run(t0);
     }
 }
@@ -113,7 +113,7 @@ void BackwardProblem::handlePostequilibration() {
     }
 
     auto final_state = posteq_problem_->getFinalSimulationState();
-    posteq_problem_bwd_.emplace(*solver_, *model_, final_state, &ws_);
+    posteq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
     posteq_problem_bwd_->run(model_->t0());
 }
 
@@ -297,7 +297,7 @@ void computeQBfromQ(
 }
 
 SteadyStateBackwardProblem::SteadyStateBackwardProblem(
-    Solver const& solver, Model& model, SimulationState& final_state,
+    Solver const& solver, Model& model, SolutionState& final_state,
     gsl::not_null<BwdSimWorkspace*> ws
 )
     : xQ_(model.nJ * model.nx_solver, solver.getSunContext())

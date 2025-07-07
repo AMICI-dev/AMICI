@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/logging.h"
 #include "amici/misc.h"
+#include "amici/model_state.h"
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
 
@@ -665,6 +666,12 @@ class Solver {
     void writeSolution(
         realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
     ) const;
+
+    /**
+     * @brief write solution from forward simulation
+     * @param sol solution state
+     */
+    void writeSolution(SolutionState& sol) const;
 
     /**
      * @brief write solution from backward simulation
