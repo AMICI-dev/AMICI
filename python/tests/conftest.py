@@ -20,9 +20,6 @@ MODEL_STEADYSTATE_SCALED_XML = (
 MODEL_PRESIMULATION_XML = (
     EXAMPLES_DIR / "example_presimulation" / "model_presimulation.xml"
 )
-MODEL_CONSTANT_SPECIES_XML = (
-    EXAMPLES_DIR / "example_steady_states" / "model_constant_species.xml"
-)
 
 
 @pytest.fixture(scope="session")
