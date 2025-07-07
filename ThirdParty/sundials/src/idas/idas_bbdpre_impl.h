@@ -3,7 +3,7 @@
  *                Alan C. Hindmarsh and Radu Serban @ LLNL
  *-----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2021, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -22,10 +22,10 @@
 #define _IDASBBDPRE_IMPL_H
 
 #include <idas/idas_bbdpre.h>
-#include <sunmatrix/sunmatrix_band.h>
 #include <sunlinsol/sunlinsol_band.h>
+#include <sunmatrix/sunmatrix_band.h>
 
-#ifdef __cplusplus  /* wrapper to enable C++ usage */
+#ifdef __cplusplus /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
@@ -35,16 +35,16 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-typedef struct IBBDPrecDataRec {
-
+typedef struct IBBDPrecDataRec
+{
   /* passed by user to IDABBDPrecAlloc and used by
      IDABBDPrecSetup/IDABBDPrecSolve functions */
   sunindextype mudq, mldq, mukeep, mlkeep;
-  realtype rel_yy;
+  sunrealtype rel_yy;
   IDABBDLocalFn glocal;
   IDABBDCommFn gcomm;
 
-  /* set by IDABBDPrecSetup and used by IDABBDPrecSetup and 
+  /* set by IDABBDPrecSetup and used by IDABBDPrecSetup and
      IDABBDPrecSolve functions */
   sunindextype n_local;
   SUNMatrix PP;
@@ -62,9 +62,9 @@ typedef struct IBBDPrecDataRec {
   long int nge;
 
   /* pointer to ida_mem */
-  void *ida_mem;
+  void* ida_mem;
 
-} *IBBDPrecData;
+}* IBBDPrecData;
 
 /*
  * -----------------------------------------------------------------
@@ -72,14 +72,13 @@ typedef struct IBBDPrecDataRec {
  * -----------------------------------------------------------------
  */
 
-typedef struct IDABBDPrecDataRecB {
-
+typedef struct IDABBDPrecDataRecB
+{
   /* BBD user functions (glocB and cfnB) for backward run */
   IDABBDLocalFnB glocalB;
-  IDABBDCommFnB  gcommB;
-    
-} *IDABBDPrecDataB;
+  IDABBDCommFnB gcommB;
 
+}* IDABBDPrecDataB;
 
 /*
  * -----------------------------------------------------------------
@@ -87,18 +86,23 @@ typedef struct IDABBDPrecDataRecB {
  * -----------------------------------------------------------------
  */
 
-#define MSGBBD_MEM_NULL    "Integrator memory is NULL."
-#define MSGBBD_LMEM_NULL   "Linear solver memory is NULL. One of the SPILS linear solvers must be attached."
+#define MSGBBD_MEM_NULL "Integrator memory is NULL."
+#define MSGBBD_LMEM_NULL                                                   \
+  "Linear solver memory is NULL. One of the SPILS linear solvers must be " \
+  "attached."
 #define MSGBBD_MEM_FAIL    "A memory request failed."
 #define MSGBBD_BAD_NVECTOR "A required vector operation is not implemented."
 #define MSGBBD_SUNMAT_FAIL "An error arose from a SUNBandMatrix routine."
 #define MSGBBD_SUNLS_FAIL  "An error arose from a SUNBandLinearSolver routine."
-#define MSGBBD_PMEM_NULL   "BBD peconditioner memory is NULL. IDABBDPrecInit must be called."
-#define MSGBBD_FUNC_FAILED "The Glocal or Gcomm routine failed in an unrecoverable manner."
+#define MSGBBD_PMEM_NULL \
+  "BBD peconditioner memory is NULL. IDABBDPrecInit must be called."
+#define MSGBBD_FUNC_FAILED \
+  "The Glocal or Gcomm routine failed in an unrecoverable manner."
 
-#define MSGBBD_AMEM_NULL   "idaadj_mem = NULL illegal."
-#define MSGBBD_PDATAB_NULL "IDABBDPRE memory is NULL for the backward integration."
-#define MSGBBD_BAD_T       "Bad t for interpolation."
+#define MSGBBD_AMEM_NULL "idaadj_mem = NULL illegal."
+#define MSGBBD_PDATAB_NULL \
+  "IDABBDPRE memory is NULL for the backward integration."
+#define MSGBBD_BAD_T "Bad t for interpolation."
 
 #ifdef __cplusplus
 }

@@ -1,13 +1,12 @@
 """Find conserved quantities deterministically"""
 
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 
 
 def rref(
-        mat: np.array,
-        round_ndigits: Optional[Union[Literal[False], int]] = None
+    mat: np.array, round_ndigits: Literal[False] | int | None = None
 ) -> np.array:
     """
     Bring matrix ``mat`` to reduced row echelon form
@@ -25,14 +24,15 @@ def rref(
         # no-op
         def _round(mat):
             return mat
+
     else:
         if round_ndigits is None:
             # drop the least significant digit (more or less)
-            round_ndigits = - int(np.ceil(np.log10(np.spacing(1))))
+            round_ndigits = -int(np.ceil(np.log10(np.spacing(1))))
 
         def _round(mat):
             mat = np.round(mat, round_ndigits)
-            mat[np.abs(mat) <= 10**(-round_ndigits)] = 0
+            mat[np.abs(mat) <= 10 ** (-round_ndigits)] = 0
             return mat
 
     # create a copy  that will be modified
@@ -67,7 +67,7 @@ def rref(
     return mat
 
 
-def pivots(mat: np.array) -> List[int]:
+def pivots(mat: np.array) -> list[int]:
     """Get indices of pivot columns in ``mat``, assumed to be in reduced row
     echelon form"""
     pivot_cols = []

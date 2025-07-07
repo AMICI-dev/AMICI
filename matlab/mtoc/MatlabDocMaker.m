@@ -23,7 +23,7 @@ classdef MatlabDocMaker
 % @change{1,5,dw,2013-12-03} Fixed default value selection for properties,
 % now not having set a description or logo does not cause an error to be
 % thrown.
-% 
+%
 % @change{1,5,dw,2013-02-21} Fixed the callback for suggested direct documentation creation
 % after MatlabDocMaker.setup (Thanks to Aurelien Queffurust)
 %
@@ -111,7 +111,7 @@ classdef MatlabDocMaker
         %
         % @type char @default 'Doxyfile.template'
         DOXYFILE_TEMPLATE = 'Doxyfile.template';
-        
+
         % File name for the latex extras style file processed by the MatlabDocMaker.
         %
         % Assumed to reside in the MatlabDocMaker.getConfigDirectory.
@@ -119,7 +119,7 @@ classdef MatlabDocMaker
         %
         % @type char @default 'latexextras.template'
         LATEXEXTRAS_TEMPLATE = 'latexextras.template';
-        
+
         % File name the mtoc++ configuration file.
         %
         % Assumed to reside in the MatlabDocMaker.getConfigDirectory.
@@ -139,17 +139,17 @@ classdef MatlabDocMaker
             %
             % Return values:
             % name: The project name @type char
-            
+
             %error('Please replace this by returning your project name as string.');
             % Example:
             name = 'AMICI';
         end
     end
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% End of user defined part.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     methods(Static, Sealed)
         function dir = getOutputDirectory
             % Returns the directory where the applications source files
@@ -159,7 +159,7 @@ classdef MatlabDocMaker
             % dir: The output directory @type char
             dir = MatlabDocMaker.getPref('outdir');
         end
-        
+
         function dir = getSourceDirectory
             % Returns the directory where the applications source files
             % reside
@@ -168,7 +168,7 @@ classdef MatlabDocMaker
             % dir: The project source directory @type char
             dir = MatlabDocMaker.getPref('srcdir');
         end
-        
+
         function dir = getConfigDirectory
             % Returns the directory where the applications documentation
             % configuration files reside
@@ -180,7 +180,7 @@ classdef MatlabDocMaker
             % dir: The documentation configuration directory @type char
             dir = MatlabDocMaker.getPref('confdir');
         end
-        
+
         function desc = getProjectDescription
             % Returns the short project description.
             %
@@ -190,7 +190,7 @@ classdef MatlabDocMaker
             % See also: setProjectDescription
             desc =  MatlabDocMaker.getPref('proj_desc', '');
         end
-        
+
         function setProjectDescription(value)
             % Sets the project description.
             %
@@ -203,7 +203,7 @@ classdef MatlabDocMaker
             end
             MatlabDocMaker.setPref('proj_desc', value);
         end
-        
+
         function version = getProjectVersion
             % Returns the current version of the project.
             %
@@ -216,7 +216,7 @@ classdef MatlabDocMaker
             % See also: setProjectVersion
             version = MatlabDocMaker.getPref('proj_ver', '0');
         end
-        
+
         function setProjectVersion(value)
             % Sets the project version.
             %
@@ -229,7 +229,7 @@ classdef MatlabDocMaker
             end
             MatlabDocMaker.setPref('proj_ver', value);
         end
-        
+
         function fullPath = getProjectLogo
             % Returns the logo image file for the project. Either an absolute path or a plain
             % filename. For the latter case the image file is assumed to reside inside the
@@ -253,7 +253,7 @@ classdef MatlabDocMaker
                 end
             end
         end
-        
+
         function setProjectLogo(value)
             % Sets the project logo. Set to '' to unset.
             %
@@ -289,9 +289,9 @@ classdef MatlabDocMaker
             MatlabDocMaker.setPref('proj_logo', value);
         end
     end
-        
+
     methods(Static)
-        
+
         function open
             % Opens the generated documentation.
             %
@@ -308,7 +308,7 @@ classdef MatlabDocMaker
                 end
             end
         end
-        
+
         function create(varargin)
             % Creates the Doxygen documentation
             %
@@ -318,14 +318,14 @@ classdef MatlabDocMaker
             % successful compilation @type logical @default false
             % latex: Set to true if `\text{\LaTeX}` output should be generated, too. @type logical
             % @default false
-           
+
             %% Preparations
             ip = inputParser;
             ip.addParameter('open',false,@islogical);
             ip.addParameter('latex',false,@islogical);
             ip.parse(varargin{:});
             genlatex = ip.Results.latex;
-            
+
             % Check for correct setup
             cdir = MatlabDocMaker.getConfigDirectory;
             srcdir = MatlabDocMaker.getSourceDirectory;
@@ -335,7 +335,7 @@ classdef MatlabDocMaker
             if exist(doxyfile_in,'file') ~= 2
                 error('No doxygen configuration file template found at "%s"',doxyfile_in);
             end
-            
+
             lstr = '';
             if genlatex
                 lstr = '(+Latex)';
@@ -344,7 +344,7 @@ classdef MatlabDocMaker
                 'Sources: %s\nOutput to: <a href="matlab:MatlabDocMaker.open">%s</a>\nCreating config files...'],lstr,...
                 MatlabDocMaker.getProjectName,MatlabDocMaker.getProjectVersion,...
                 srcdir,outdir);
-            
+
             % Operation-system dependent strings
             strs = struct;
             if isunix
@@ -356,17 +356,17 @@ classdef MatlabDocMaker
             else
                 error('Current platform not supported.');
             end
-            
+
             % Save current working dir and change into the KerMor home
             % directory; only from there all classes and packages are
             % detected properly.
             curdir = pwd;
             cd(srcdir);
-            
+
             % Append the configuration file directory to the current PATH
             pathadd = [pathsep cdir];
             setenv('PATH',[getenv('PATH') pathadd]);
-            
+
             mtoc_conf = fullfile(cdir,MatlabDocMaker.MTOCPP_CONFIGFILE);
             filter = sprintf('%smtocpp',strs.silencer);
             if exist(mtoc_conf,'file')
@@ -381,7 +381,7 @@ classdef MatlabDocMaker
                 end
                 %% Creation part
                 cdir = MatlabDocMaker.getConfigDirectory;
-                % Create "configured" filter script for inclusion in doxygen 
+                % Create "configured" filter script for inclusion in doxygen
                 filter = fullfile(cdir,strs.filter);
                 f = fopen(filter,'w');
                 fprintf(f,'%smtocpp %s %s',strs.silencer,strs.farg,mtoc_conf);
@@ -390,7 +390,7 @@ classdef MatlabDocMaker
                     unix(['chmod +x ' filter]);
                 end
             end
-            
+
             %% Prepare placeholders in the Doxyfile template
             m = {'_OutputDir_' strrep(outdir,'\','\\'); ...
                  '_SourceDir_' strrep(MatlabDocMaker.getSourceDirectory,'\','\\');...
@@ -401,11 +401,11 @@ classdef MatlabDocMaker
                  '_ProjectVersion_' MatlabDocMaker.getProjectVersion; ...
                  '_MTOCFILTER_' strrep(filter,'\','\\'); ...
                  };
-             
+
             % Check for latex extra stuff
             texin = fullfile(cdir,MatlabDocMaker.LATEXEXTRAS_TEMPLATE);
             latexextras = '';
-            if exist(texin,'file') == 2  
+            if exist(texin,'file') == 2
                 latexstr = strrep(fileread(texin),'_ConfDir_',strrep(cdir,'\','/'));
                 latexextras = fullfile(cdir,'latexextras.sty');
                 fid = fopen(latexextras,'w+'); fprintf(fid,'%s',latexstr); fclose(fid);
@@ -418,7 +418,7 @@ classdef MatlabDocMaker
                 L = 'YES';
             end
             m(end+1,:) = {'_GenLatex_',L};
-            
+
             % Check how to set the HAVE_DOT flag
             [s, ~] = system('dot -V');
             if s == 0
@@ -428,12 +428,12 @@ classdef MatlabDocMaker
                 fprintf('no "dot" found...');
             end
             m(end+1,:) = {'_HaveDot_',HD};
-            
+
             % Read, replace & write doxygen config file
             doxyfile = fullfile(cdir,'Doxyfile');
             doxyconfstr = regexprep(fileread(doxyfile_in),m(:,1),m(:,2));
             fid = fopen(doxyfile,'w'); fprintf(fid,'%s',doxyconfstr); fclose(fid);
-            
+
             % Fix for unix systems where the MatLab installation uses older
             % GLIBSTD libraries than doxygen/mtoc++
             ldpath = '';
@@ -443,7 +443,7 @@ classdef MatlabDocMaker
             % Call doxygen
             fprintf('running doxygen with mtoc++ filter...');
             [~,warn] = system(sprintf('%sdoxygen "%s" 1>%s',ldpath, doxyfile, strs.null));
-            
+
             % Postprocess
             fprintf('running mtoc++ postprocessor...');
             [~,postwarn] = system(sprintf('%smtocpp_post "%s" 1>%s',ldpath,...
@@ -451,7 +451,7 @@ classdef MatlabDocMaker
             if ~isempty(postwarn)
                 warn = [warn sprintf('mtoc++ postprocessor messages:\n') postwarn];
             end
-            
+
             % Create latex document if desired
             if genlatex
                 oldd = pwd;
@@ -460,7 +460,7 @@ classdef MatlabDocMaker
                 if exist(latexdir,'dir') == 7
                     if exist(fullfile(latexdir,'refman.tex'),'file') == 2
                         fprintf('compiling LaTeX output...');
-                        cd(latexdir);                        
+                        cd(latexdir);
                         [s, latexmsg] = system('make');
                         if s ~= 0
                             warn = [warn sprintf('LaTeX compiler output:\n') latexmsg];
@@ -472,7 +472,7 @@ classdef MatlabDocMaker
                 end
                 cd(oldd);
             end
-            
+
             % Tidy up
             fprintf('cleaning up...');
             if isfield(strs,'filter')
@@ -482,14 +482,14 @@ classdef MatlabDocMaker
                 delete(latexextras);
             end
             delete(doxyfile);
-            
-            %% Post generation phase 
+
+            %% Post generation phase
             cd(curdir);
             % Restore PATH to previous value
             curpath = getenv('PATH');
             setenv('PATH',curpath(1:end-length(pathadd)));
             fprintf('done!\n');
-            
+
             % Process warnings
             showchars = 800;
             warn = strtrim(warn);
@@ -514,21 +514,21 @@ classdef MatlabDocMaker
             else
                 fprintf('MatlabDocMaker finished with no warnings!\n');
             end
-            
+
             % Open index.html if wanted
             if ip.Results.open
                 MatlabDocMaker.open;
             end
         end
-        
+
         function setup
             % Runs the setup script for MatlabDocMaker and collects all
             % necessary paths in order for the documentation creation to
             % work properly.
-            
+
             %% Validity checks
             fprintf('<<<< Welcome to the MatlabDocMaker setup for your project "%s"! >>>>\n',MatlabDocMaker.getProjectName);
-            
+
             %% Setup directories
             % Source directory
             srcdir = MatlabDocMaker.getPref('srcdir','');
@@ -547,7 +547,7 @@ classdef MatlabDocMaker
                 srcdir = d;
             end
             MatlabDocMaker.setPref('srcdir',srcdir);
-            
+
             % Config directory
             confdir = MatlabDocMaker.getPref('confdir','');
             word = 'keep';
@@ -565,7 +565,7 @@ classdef MatlabDocMaker
                 confdir = d;
             end
             MatlabDocMaker.setPref('confdir',confdir);
-            
+
             % Output directory
             outdir = MatlabDocMaker.getPref('outdir','');
             word = 'keep';
@@ -583,7 +583,7 @@ classdef MatlabDocMaker
                 outdir = d;
             end
             MatlabDocMaker.setPref('outdir',outdir);
-            
+
             %% Additional Project properties
             if isequal(lower(input(['Do you want to specify further project details?\n'...
                     'You can set them later using provided set methods. (Y)es/(N)o?: '],'s')),'y')
@@ -591,7 +591,7 @@ classdef MatlabDocMaker
                 MatlabDocMaker.setPref('proj_desc',input('Please specify a short project description: ','s'));
                 MatlabDocMaker.setProjectLogo;
             end
-            
+
             %% Check for necessary and recommended tools
             hasall = true;
             setenv('PATH',[getenv('PATH') pathsep confdir]);
@@ -601,7 +601,7 @@ classdef MatlabDocMaker
                 fprintf(' found %s\n',vers(1:end-1));
             else
                 fprintf(2,' not found!\n');
-                hasall = false;                
+                hasall = false;
             end
             fprintf('[Required] Checking for mtoc++... ');
             ldpath = '';
@@ -653,20 +653,20 @@ classdef MatlabDocMaker
             end
         end
     end
-    
+
     methods(Static, Access=private)
         function value = getProjPrefTag
             % Gets the tag for the MatLab preferences struct.
-            % 
+            %
             % @change{0,7,dw,2013-04-02} Now also removing "~" and "-" characters from ProjectName tags for preferences.
             str = regexprep(strrep(strtrim(MatlabDocMaker.getProjectName),' ','_'),'[^\d\w]','');
             value = sprintf('MatlabDocMaker_on_%s',str);
         end
-        
+
         function value = getPref(name, default)
             if nargin < 2
                 def = [];
-            else 
+            else
                 def = default;
             end
             value = getpref(MatlabDocMaker.getProjPrefTag,name,def);
@@ -674,7 +674,7 @@ classdef MatlabDocMaker
                 error('MatlabDocMaker preferences not found/set correctly. (Re-)Run the MatlabDocMaker.setup method.');
             end
         end
-        
+
         function value = setPref(name, value)
             setpref(MatlabDocMaker.getProjPrefTag,name,value);
         end

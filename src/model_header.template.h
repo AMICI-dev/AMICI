@@ -5,6 +5,8 @@
 #include <gsl/gsl-lite.hpp>
 
 #include "amici/model_TPL_MODEL_TYPE_LOWER.h"
+#include "amici/splinefunctions.h"
+#include "amici/event.h"
 
 namespace amici {
 
@@ -24,7 +26,6 @@ extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 extern std::array<const char*, TPL_NW> expressionIds;
 extern std::array<int, TPL_NX_SOLVER> stateIdxsSolver;
-extern std::array<bool, TPL_NEVENT> rootInitialValues;
 
 TPL_JY_DEF
 TPL_DJYDSIGMA_DEF
@@ -79,6 +80,8 @@ TPL_RZ_DEF
 TPL_STAU_DEF
 TPL_DELTAX_DEF
 TPL_DELTASX_DEF
+TPL_DELTAXB_DEF
+TPL_DELTAQB_DEF
 TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
@@ -93,6 +96,10 @@ TPL_DTOTAL_CLDP_DEF
 TPL_DTOTAL_CLDX_RDATA_DEF
 TPL_DTOTAL_CLDX_RDATA_COLPTRS_DEF
 TPL_DTOTAL_CLDX_RDATA_ROWVALS_DEF
+TPL_CREATE_SPLINES_DEF
+TPL_DSPLINE_VALUESDP_DEF
+TPL_DSPLINE_SLOPESDP_DEF
+
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -116,6 +123,8 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   TPL_NZ,                                  // nz
                   TPL_NZTRUE,                              // nztrue
                   TPL_NEVENT,                              // nevent
+                  TPL_NEVENT_SOLVER,                       // nevent_solver
+                  TPL_NSPL,                                // nspl
                   TPL_NOBJECTIVE,                          // nobjective
                   TPL_NW,                                  // nw
                   TPL_NDWDX,                               // ndwdx
@@ -128,7 +137,11 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   TPL_NDTOTALCLDXRDATA,                        // ndtotal_cldx_rdata
                   0,                                       // nnz
                   TPL_UBW,                                 // ubw
-                  TPL_LBW                                  // lbw
+                  TPL_LBW,                                 // lbw
+                  true,                                    // pythonGenerated
+                  TPL_NDXDOTDP_EXPLICIT,                   // ndxdotdp_explicit
+                  TPL_NDXDOTDX_EXPLICIT,                   // ndxdotdx_explicit
+                  TPL_W_RECURSION_DEPTH                    // w_recursion_depth
               ),
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
@@ -137,14 +150,9 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_ID},   // idlist
               std::vector<int>{TPL_Z2EVENT},               // z2events
-              true,                                        // pythonGenerated
-              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
-              TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
-              TPL_W_RECURSION_DEPTH                        // w_recursion_depth
+              std::vector<Event>{TPL_EVENT_LIST_INITIALIZER}, // events
+              {TPL_STATE_INDEPENDENT_EVENTS}               // state-independent events
           ) {
-                 root_initial_values_ = std::vector<bool>(
-                     rootInitialValues.begin(), rootInitialValues.end()
-                 );
           }
 
     /**
@@ -171,49 +179,13 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
 
     TPL_DJZDZ_IMPL
 
-    /**
-     * @brief model specific implementation of fdeltasx
-     * @param deltaqB sensitivity update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     * @param ip sensitivity index
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param xB adjoint state
-     */
-    void fdeltaqB(realtype *deltaqB, const realtype t,
-                  const realtype *x, const realtype *p,
-                  const realtype *k, const realtype *h, const int ip,
-                  const int ie, const realtype *xdot,
-                  const realtype *xdot_old,
-                  const realtype *xB) override {}
+    TPL_DELTAX_IMPL
 
     TPL_DELTASX_IMPL
 
-    TPL_DELTAX_IMPL
+    TPL_DELTAXB_IMPL
 
-    /**
-     * @brief model specific implementation of fdeltaxB
-     * @param deltaxB adjoint state update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param xB current adjoint state
-     */
-    void fdeltaxB(realtype *deltaxB, const realtype t,
-                  const realtype *x, const realtype *p,
-                  const realtype *k, const realtype *h, const int ie,
-                  const realtype *xdot, const realtype *xdot_old,
-                  const realtype *xB) override {}
+    TPL_DELTAQB_IMPL
 
     TPL_DRZDP_IMPL
 
@@ -228,6 +200,10 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     TPL_DJYDY_IMPL
     TPL_DJYDY_COLPTRS_IMPL
     TPL_DJYDY_ROWVALS_IMPL
+
+    TPL_CREATE_SPLINES_IMPL
+    TPL_DSPLINE_VALUESDP_IMPL
+    TPL_DSPLINE_SLOPESDP_IMPL
 
     TPL_DWDP_IMPL
     TPL_DWDP_COLPTRS_IMPL
@@ -335,7 +311,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     std::vector<std::string> getStateNamesSolver() const override {
         std::vector<std::string> result;
         result.reserve(stateIdxsSolver.size());
-        for(auto idx: stateIdxsSolver) {
+        for(auto const idx: stateIdxsSolver) {
             result.push_back(stateNames[idx]);
         }
         return result;

@@ -9,7 +9,9 @@ set(ALL_CMAKE_FILES
     tests/cpp/unittests/CMakeLists.txt
     ${CMAKE_MODULE_PATH}/cmakelang-tools.cmake
     ${CMAKE_MODULE_PATH}/clang-tools.cmake
+    ${CMAKE_MODULE_PATH}/AmiciFindBLAS.cmake
     ${CMAKE_MODULE_PATH}/version.cmake)
+
 list(JOIN ALL_CMAKE_FILES " " ALL_CMAKE_FILES)
 
 # --- cmake-format ---

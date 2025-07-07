@@ -6,9 +6,7 @@
 #include "amici/rdata.h"
 #include "amici/solver.h"
 
-
 namespace amici {
-
 
 /**
  * @brief Core integration routine. Initializes the solver and runs the forward

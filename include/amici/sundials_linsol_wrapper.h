@@ -5,19 +5,12 @@
 #include "amici/vector.h"
 
 #include <sundials/sundials_config.h>
-#include <sunlinsol/sunlinsol_band.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol/sunlinsol_klu.h>
-#include <sunlinsol/sunlinsol_pcg.h>
+#include <sundials/sundials_iterative.h>
+#include <sundials/sundials_nonlinearsolver.h>
 #include <sunlinsol/sunlinsol_spbcgs.h>
 #include <sunlinsol/sunlinsol_spfgmr.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
-#ifdef SUNDIALS_SUPERLUMT
-#include <sunlinsol/sunlinsol_superlumt.h>
-#endif
-#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
-#include <sunnonlinsol/sunnonlinsol_newton.h>
 
 namespace amici {
 
@@ -33,9 +26,20 @@ class SUNLinSolWrapper {
 
     /**
      * @brief Wrap existing SUNLinearSolver
-     * @param linsol
+     *
+     * @param linsol SUNLinSolWrapper takes ownership of `linsol`.
      */
     explicit SUNLinSolWrapper(SUNLinearSolver linsol);
+
+    /**
+     * @brief Wrap existing SUNLinearSolver
+     *
+     * @param linsol SUNLinSolWrapper takes ownership of `linsol`.
+     * @param A Matrix
+     */
+    explicit SUNLinSolWrapper(
+        SUNLinearSolver linsol, SUNMatrixWrapper const& A
+    );
 
     virtual ~SUNLinSolWrapper();
 
@@ -43,27 +47,27 @@ class SUNLinSolWrapper {
      * @brief Copy constructor
      * @param other
      */
-    SUNLinSolWrapper(const SUNLinSolWrapper &other) = delete;
+    SUNLinSolWrapper(SUNLinSolWrapper const& other) = delete;
 
     /**
      * @brief Move constructor
      * @param other
      */
-    SUNLinSolWrapper(SUNLinSolWrapper &&other) noexcept;
+    SUNLinSolWrapper(SUNLinSolWrapper&& other) noexcept;
 
     /**
      * @brief Copy assignment
      * @param other
      * @return
      */
-    SUNLinSolWrapper &operator=(const SUNLinSolWrapper &other) = delete;
+    SUNLinSolWrapper& operator=(SUNLinSolWrapper const& other) = delete;
 
     /**
      * @brief Move assignment
      * @param other
      * @return
      */
-    SUNLinSolWrapper &operator=(SUNLinSolWrapper &&other) noexcept;
+    SUNLinSolWrapper& operator=(SUNLinSolWrapper&& other) noexcept;
 
     /**
      * @brief Returns the wrapped SUNLinSol.
@@ -80,26 +84,17 @@ class SUNLinSolWrapper {
     /**
      * @brief Performs any linear solver setup needed, based on an updated
      * system matrix A.
-     * @param A
      */
-    void setup(SUNMatrix A) const;
-
-    /**
-     * @brief Performs any linear solver setup needed, based on an updated
-     * system matrix A.
-     * @param A
-     */
-    void setup(const SUNMatrixWrapper& A) const;
+    void setup() const;
 
     /**
      * @brief Solves a linear system A*x = b
-     * @param A
      * @param x A template for cloning vectors needed within the solver.
      * @param b
      * @param tol Tolerance (weighted 2-norm), iterative solvers only
      * @return error flag
      */
-    int Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) const;
+    int solve(N_Vector x, N_Vector b, realtype tol) const;
 
     /**
      * @brief Returns the last error flag encountered within the linear solver
@@ -113,13 +108,13 @@ class SUNLinSolWrapper {
      * @param leniwLS output argument for size of integer workspace
      * @return workspace size
      */
-    int space(long int *lenrwLS, long int *leniwLS) const;
+    int space(long int* lenrwLS, long int* leniwLS) const;
 
     /**
      * @brief Get the matrix A (matrix solvers only).
      * @return A
      */
-    virtual SUNMatrix getMatrix() const;
+    virtual SUNMatrixWrapper& getMatrix();
 
   protected:
     /**
@@ -130,9 +125,11 @@ class SUNLinSolWrapper {
     int initialize();
 
     /** Wrapped solver */
-    SUNLinearSolver solver_ {nullptr};
-};
+    SUNLinearSolver solver_{nullptr};
 
+    /** Matrix A for solver. */
+    SUNMatrixWrapper A_;
+};
 
 /**
  * @brief SUNDIALS band direct solver.
@@ -140,12 +137,12 @@ class SUNLinSolWrapper {
 class SUNLinSolBand : public SUNLinSolWrapper {
   public:
     /**
-     * @brief Create solver using existing matrix A without taking ownership of
-     * A.
+     * @brief Create solver using existing matrix A
+     *
      * @param x A template for cloning vectors needed within the solver.
      * @param A square matrix
      */
-    SUNLinSolBand(N_Vector x, SUNMatrix A);
+    SUNLinSolBand(N_Vector x, SUNMatrixWrapper A);
 
     /**
      * @brief Create new band solver and matrix A.
@@ -153,15 +150,8 @@ class SUNLinSolBand : public SUNLinSolWrapper {
      * @param ubw upper bandwidth of band matrix A
      * @param lbw lower bandwidth of band matrix A
      */
-    SUNLinSolBand(AmiVector const &x, int ubw, int lbw);
-
-    SUNMatrix getMatrix() const override;
-
-  private:
-    /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A_;
+    SUNLinSolBand(AmiVector const& x, int ubw, int lbw);
 };
-
 
 /**
  * @brief SUNDIALS dense direct solver.
@@ -172,15 +162,8 @@ class SUNLinSolDense : public SUNLinSolWrapper {
      * @brief Create dense solver
      * @param x A template for cloning vectors needed within the solver.
      */
-    explicit SUNLinSolDense(AmiVector const &x);
-
-    SUNMatrix getMatrix() const override;
-
-  private:
-    /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A_;
+    explicit SUNLinSolDense(AmiVector const& x);
 };
-
 
 /**
  * @brief SUNDIALS KLU sparse direct solver.
@@ -188,18 +171,14 @@ class SUNLinSolDense : public SUNLinSolWrapper {
 class SUNLinSolKLU : public SUNLinSolWrapper {
   public:
     /** KLU state reordering (different from SuperLUMT ordering!) */
-    enum class StateOrdering {
-        AMD,
-        COLAMD,
-        natural
-    };
+    enum class StateOrdering { AMD, COLAMD, natural };
 
     /**
      * @brief Create KLU solver with given matrix
      * @param x A template for cloning vectors needed within the solver.
      * @param A sparse matrix
      */
-    SUNLinSolKLU(N_Vector x, SUNMatrix A);
+    SUNLinSolKLU(N_Vector x, SUNMatrixWrapper A);
 
     /**
      * @brief Create KLU solver and matrix to operate on
@@ -208,10 +187,10 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
      * @param ordering
      */
-    SUNLinSolKLU(AmiVector const &x, int nnz, int sparsetype,
-                 StateOrdering ordering);
-
-    SUNMatrix getMatrix() const override;
+    SUNLinSolKLU(
+        AmiVector const& x, int nnz, int sparsetype,
+        StateOrdering ordering = StateOrdering::COLAMD
+    );
 
     /**
      * @brief Reinitializes memory and flags for a new factorization
@@ -230,16 +209,20 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      */
     void setOrdering(StateOrdering ordering);
 
-  private:
-    /** Sparse matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A_;
+    /**
+     * @brief Checks whether the linear system is singular
+     *
+     * @return boolean indicating whether the linear system is singular
+     * (condition number < 1/machine precision)
+     */
+    bool is_singular() const;
 };
 
 #ifdef SUNDIALS_SUPERLUMT
 /**
  * @brief SUNDIALS SuperLUMT sparse direct solver.
  */
-class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
+class SUNLinSolSuperLUMT : public SUNLinSolWrapper {
   public:
     /** SuperLUMT ordering (different from KLU ordering!) */
     enum class StateOrdering {
@@ -255,7 +238,7 @@ class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
      * @param A sparse matrix
      * @param numThreads Number of threads to be used by SuperLUMT
      */
-    SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads);
+    SUNLinSolSuperLUMT(N_Vector x, SUNMatrixWrapper A, int numThreads);
 
     /**
      * @brief Create SuperLUMT solver and matrix to operate on
@@ -268,8 +251,9 @@ class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
      * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
      * @param ordering
      */
-    SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
-                       StateOrdering ordering);
+    SUNLinSolSuperLUMT(
+        AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering
+    );
 
     /**
      * @brief Create SuperLUMT solver and matrix to operate on
@@ -279,10 +263,10 @@ class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
      * @param ordering
      * @param numThreads Number of threads to be used by SuperLUMT
      */
-    SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
-                       StateOrdering ordering, int numThreads);
-
-    SUNMatrix getMatrix() const override;
+    SUNLinSolSuperLUMT(
+        AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering,
+        int numThreads
+    );
 
     /**
      * @brief Sets the ordering used by SuperLUMT for reducing fill in the
@@ -290,10 +274,6 @@ class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
      * @param ordering
      */
     void setOrdering(StateOrdering ordering);
-
-  private:
-    /** Sparse matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
 };
 
 #endif
@@ -320,7 +300,7 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void *A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -331,7 +311,7 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void *P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -362,7 +342,6 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      */
     N_Vector getResid() const;
 };
-
 
 /**
  * @brief SUNDIALS scaled preconditioned Bi-CGStab (Bi-Conjugate Gradient
@@ -377,8 +356,10 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    explicit SUNLinSolSPBCGS(N_Vector x, int pretype = PREC_NONE,
-                             int maxl = SUNSPBCGS_MAXL_DEFAULT);
+    explicit SUNLinSolSPBCGS(
+        N_Vector x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPBCGS_MAXL_DEFAULT
+    );
 
     /**
      * @brief SUNLinSolSPBCGS
@@ -387,8 +368,10 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    explicit SUNLinSolSPBCGS(AmiVector const &x, int pretype = PREC_NONE,
-                             int maxl = SUNSPBCGS_MAXL_DEFAULT);
+    explicit SUNLinSolSPBCGS(
+        AmiVector const& x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPBCGS_MAXL_DEFAULT
+    );
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -397,7 +380,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void *A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -408,7 +391,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void *P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -439,7 +422,6 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      */
     N_Vector getResid() const;
 };
-
 
 /**
  * @brief SUNDIALS scaled preconditioned FGMRES (Flexible Generalized Minimal
@@ -454,7 +436,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPFGMR(AmiVector const &x, int pretype, int maxl);
+    SUNLinSolSPFGMR(AmiVector const& x, int pretype, int maxl);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -463,7 +445,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void *A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -474,7 +456,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void *P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -505,7 +487,6 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      */
     N_Vector getResid() const;
 };
-
 
 /**
  * @brief SUNDIALS scaled preconditioned GMRES (Generalized Minimal Residual
@@ -520,8 +501,10 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    explicit SUNLinSolSPGMR(AmiVector const &x, int pretype = PREC_NONE,
-                            int maxl = SUNSPGMR_MAXL_DEFAULT);
+    explicit SUNLinSolSPGMR(
+        AmiVector const& x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPGMR_MAXL_DEFAULT
+    );
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -530,7 +513,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void *A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -541,7 +524,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void *P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -572,7 +555,6 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      */
     N_Vector getResid() const;
 };
-
 
 /**
  * @brief SUNDIALS scaled preconditioned TFQMR (Transpose-Free Quasi-Minimal
@@ -587,8 +569,10 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    explicit SUNLinSolSPTFQMR(N_Vector x, int pretype = PREC_NONE,
-                              int maxl = SUNSPTFQMR_MAXL_DEFAULT);
+    explicit SUNLinSolSPTFQMR(
+        N_Vector x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPTFQMR_MAXL_DEFAULT
+    );
 
     /**
      * @brief Create SPTFQMR solver
@@ -597,8 +581,10 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    explicit SUNLinSolSPTFQMR(AmiVector const &x, int pretype = PREC_NONE,
-                              int maxl = SUNSPTFQMR_MAXL_DEFAULT);
+    explicit SUNLinSolSPTFQMR(
+        AmiVector const& x, int pretype = SUN_PREC_NONE,
+        int maxl = SUNSPTFQMR_MAXL_DEFAULT
+    );
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -607,7 +593,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void *A_data, ATimesFn ATimes);
+    int setATimes(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -618,7 +604,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void *P_data, PSetupFn Pset, PSolveFn Psol);
+    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -649,7 +635,6 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      */
     N_Vector getResid() const;
 };
-
 
 /**
  * @brief A RAII wrapper for SUNNonLinearSolver structs which solve the
@@ -669,27 +654,27 @@ class SUNNonLinSolWrapper {
      * @brief Copy constructor
      * @param other
      */
-    SUNNonLinSolWrapper(const SUNNonLinSolWrapper &other) = delete;
+    SUNNonLinSolWrapper(SUNNonLinSolWrapper const& other) = delete;
 
     /**
      * @brief Move constructor
      * @param other
      */
-    SUNNonLinSolWrapper(SUNNonLinSolWrapper &&other) noexcept;
+    SUNNonLinSolWrapper(SUNNonLinSolWrapper&& other) noexcept;
 
     /**
      * @brief Copy assignment
      * @param other
      * @return
      */
-    SUNNonLinSolWrapper &operator=(const SUNNonLinSolWrapper &other) = delete;
+    SUNNonLinSolWrapper& operator=(SUNNonLinSolWrapper const& other) = delete;
 
     /**
      * @brief Move assignment
      * @param other
      * @return
      */
-    SUNNonLinSolWrapper &operator=(SUNNonLinSolWrapper &&other) noexcept;
+    SUNNonLinSolWrapper& operator=(SUNNonLinSolWrapper&& other) noexcept;
 
     /**
      * @brief Get the wrapped SUNNonlinearSolver
@@ -709,7 +694,7 @@ class SUNNonLinSolWrapper {
      * @param mem the sundials integrator memory structure.
      * @return
      */
-    int setup(N_Vector y, void *mem);
+    int setup(N_Vector y, void* mem);
 
     /**
      * @brief Solve the nonlinear system F (y) = 0 or G(y) = y.
@@ -725,8 +710,10 @@ class SUNNonLinSolWrapper {
      * @param mem the sundials integrator memory structure.
      * @return
      */
-    int Solve(N_Vector y0, N_Vector y, N_Vector w, realtype tol,
-              bool callLSetup, void *mem);
+    int Solve(
+        N_Vector y0, N_Vector y, N_Vector w, realtype tol, bool callLSetup,
+        void* mem
+    );
 
     /**
      * @brief Set function to evaluate the nonlinear residual function F(y) = 0
@@ -793,7 +780,6 @@ class SUNNonLinSolWrapper {
     SUNNonlinearSolver solver = nullptr;
 };
 
-
 /**
  * @brief SUNDIALS Newton non-linear solver to solve F (y) = 0.
  */
@@ -820,9 +806,8 @@ class SUNNonLinSolNewton : public SUNNonLinSolWrapper {
      * @param SysFn
      * @return
      */
-    int getSysFn(SUNNonlinSolSysFn *SysFn) const;
+    int getSysFn(SUNNonlinSolSysFn* SysFn) const;
 };
-
 
 /**
  * @brief SUNDIALS Fixed point non-linear solver to solve G(y) = y.
@@ -852,7 +837,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param SysFn
      * @return
      */
-    int getSysFn(SUNNonlinSolSysFn *SysFn) const;
+    int getSysFn(SUNNonlinSolSysFn* SysFn) const;
 };
 
 } // namespace amici

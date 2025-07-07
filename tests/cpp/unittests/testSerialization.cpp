@@ -5,7 +5,7 @@
 #include "testfunctions.h"
 
 #include <cmath>
-
+#include <fstream>
 #include <gtest/gtest.h>
 
 void
@@ -121,6 +121,7 @@ class SolverSerializationTest : public ::testing::Test {
 
 TEST(ModelSerializationTest, ToFile)
 {
+    using amici::realtype;
     int np = 1;
     int nk = 2;
     int nx = 3;
@@ -142,6 +143,8 @@ TEST(ModelSerializationTest, ToFile)
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             9,         // nw
             2,         // ndwdx
@@ -185,6 +188,7 @@ TEST(ModelSerializationTest, ToFile)
 
 TEST(ReturnDataSerializationTest, ToString)
 {
+    using amici::realtype;
     int np = 1;
     int nk = 2;
     int nx = 3;
@@ -206,6 +210,8 @@ TEST(ReturnDataSerializationTest, ToString)
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             9,         // nw
             10,        // ndwdx

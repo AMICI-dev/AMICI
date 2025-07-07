@@ -42,17 +42,17 @@ if(usejava('jvm'))
     errorbar(t,D.Y,D.Sigma_Y)
     hold on
     % plot(t,sol.y)
-    
+
     xlabel('time t')
     ylabel('observable')
     title(['log-likelihood: ' num2str(sol.llh) ])
-    
+
     y = (p(2)*t + p(3)).*(t<2) + ( (2*p(2)+p(3)-p(2)/p(1))*exp(-p(1)*(t-2))+p(2)/p(1) ).*(t>=2);
-    
-    
+
+
     tfine = linspace(0,4,100001);
     xfine = (p(2)*tfine + 1).*(tfine<2) + ( (2*p(2)+p(3)-p(2)/p(1))*exp(-p(1)*(tfine-2))+p(2)/p(1) ).*(tfine>=2);
-    
+
     mu = zeros(1,length(tfine));
     for it = 1:length(t)
         if(t(it)<=2)
@@ -69,9 +69,9 @@ if(usejava('jvm'))
     ylabel('adjoint')
     xlabel('time t')
     xlim([min(t)-0.5,max(t)+0.5])
-    
+
     subplot(3,1,3)
-    
+
     plot(fliplr(tfine),-cumsum(fliplr(-mu.*xfine.*(tfine>2)))*p(1)*log(10)*(t(end)/numel(tfine)))
     hold on
     plot(fliplr(tfine),-cumsum(fliplr(mu))*p(2)*log(10)*(t(end)/numel(tfine)))
@@ -79,13 +79,13 @@ if(usejava('jvm'))
     xlim([min(t)-0.5,max(t)+0.5])
     ylabel('integral')
     xlabel('time t')
-    
+
     legend('p1','p2','p3')
-    
+
     grad(1,1) = -trapz(tfine,-mu.*xfine.*(tfine>2))*p(1)*log(10);
     grad(2,1) = -trapz(tfine,mu)*p(2)*log(10);
     grad(3,1) = -mu(1)*p(3)*log(10);
-    
+
     plot(zeros(3,1),grad,'ko')
 end
 
@@ -123,7 +123,7 @@ if(usejava('jvm'))
     xlabel('analytic absolute value of gradient element')
     ylabel('computed absolute value of gradient element')
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 

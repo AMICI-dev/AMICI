@@ -19,17 +19,20 @@ class SymbolId(str, enum.Enum):
         SymbolId.SPECIES], which is how the field should be accessed
         programmatically.
     """
-    SPECIES = 'species'
-    ALGEBRAIC_STATE = 'algebraic_state'
-    ALGEBRAIC_EQUATION = 'algebraic_equation'
-    PARAMETER = 'parameter'
-    FIXED_PARAMETER = 'fixed_parameter'
-    OBSERVABLE = 'observable'
-    EXPRESSION = 'expression'
-    SIGMAY = 'sigmay'
-    LLHY = 'llhy'
-    EVENT = 'event'
-    EVENT_OBSERVABLE = 'event_observable'
-    SIGMAZ = 'sigmaz'
-    LLHZ = 'llhz'
-    LLHRZ = 'llhrz'
+
+    SPECIES = "species"
+    ALGEBRAIC_STATE = "algebraic_state"
+    ALGEBRAIC_EQUATION = "algebraic_equation"
+    PARAMETER = "parameter"
+    FIXED_PARAMETER = "fixed_parameter"
+    OBSERVABLE = "observable"
+    EXPRESSION = "expression"
+    SIGMAY = "sigmay"
+    LLHY = "llhy"
+    EVENT = "event"
+    EVENT_OBSERVABLE = "event_observable"
+    SIGMAZ = "sigmaz"
+    LLHZ = "llhz"
+    LLHRZ = "llhrz"
+    NOISE_PARAMETER = "noise_parameter"
+    OBSERVABLE_PARAMETER = "observable_parameter"

@@ -5,43 +5,37 @@ on:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     name: Tests Windows
 
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
-      openBLAS_version: "0.3.19"
-      AMICI_DLL_DIRS: "C:\\BLAS\\OpenBLAS\\bin"
-      LIB: "C:/BLAS/OpenBLAS/lib"
       CFLAGS: "-nologo"
       CXXFLAGS: "-nologo"
       LDFLAGS: "-nologo"
 
     strategy:
       matrix:
-        python-version: [ "3.9" ]
+        python-version: [ "3.11" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow
 
     - shell: bash
       run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - shell: bash
-      run: echo "C:\\BLAS\\OpenBLAS\\bin" >> $GITHUB_PATH
-    - shell: bash
-      run: echo "BLAS_LIBS=-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib" >> $GITHUB_ENV
-    - shell: bash
-      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS/include/openblas/" >> $GITHUB_ENV
 
     # Developer Command Prompt for Microsoft Visual C++
     - uses: ilammy/msvc-dev-cmd@v1
@@ -49,18 +43,7 @@ jobs:
     - name: Install deps
       shell: bash
       run: |
-        python -m pip install --upgrade pip \
-          && choco install -y ninja \
-          && choco install -y swig
-
-    - name: Install OpenBLAS
-      shell: powershell
-      run: scripts/installOpenBLAS
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: OpenBLAS
-        path: C:\BLAS\OpenBLAS
+        python -m pip install --upgrade pip
 
     - name: Create sdist
       working-directory: python/sdist
@@ -73,5 +56,27 @@ jobs:
 
     - run: python -m amici
 
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Run Python tests
-      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
+      shell: bash
+      run: |
+        python -m pytest \
+          --ignore-glob=*petab* \
+          --ignore-glob=*special* \
+          --ignore-glob=*test_splines.py \
+          python/tests
+
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
+      run: python -m pytest python/tests/test_splines.py

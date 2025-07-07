@@ -9,15 +9,9 @@ tests/cpp/build_xcode/*
 tests/cpp/Testing/*
 
 doc-venv/*
-doc/*
 fonts/*
 images/*
 stylesheets/*
-documentation/_build/*
-documentation/_exhale_cpp_api/*
-documentation/_exhale_matlab_api/*
-documentation/_doxyoutput_amici_cpp/*
-documentation/_doxyoutput_amici_matlab/*
 sed-ml/*
 
 models/*
@@ -42,7 +36,7 @@ models/model_robertson/build/*
 !models/model_calvetti
 models/model_calvetti/build/*
 
-amici_models/*
+amici_models/
 
 simulate_model_*_hdf.m
 simulate_model_*.m
@@ -77,7 +71,6 @@ python/.idea/*
 *.mexmaci32
 *.mexa32
 *.mexw32
-*.eps
 *.md5
 *.json
 *.mat
@@ -106,7 +99,6 @@ __pycache__
 
 /misc.xml
 
-python/testSpeedy.py
 python/test.txt
 
 tests/test/*
@@ -137,14 +129,15 @@ tests/test/*
 */tests/explicit_amici/*
 */tests/fixed_initial_amici/*
 */tests/localfunc_amici/*
+*/tests/conversion/*
+*/tests/dimerization/*
 tests/cpp/writeResults.h5
 tests/cpp/writeResults.h5.bak
-tests/sbml-test-suite/*
-tests/sbml-test-suite/
-tests/sedml-test-suite/
+tests/sbml/sbml-test-suite/*
+tests/sbml/sbml-test-suite/
 */sbml-semantic-test-cases/*
-tests/SBMLTestModels/
-tests/benchmark-models/test_bmc
+tests/sbml/SBMLTestModels/
+tests/benchmark_models/test_bmc
 tests/petab_test_suite
 petab_test_suite
 */tests/BIOMD0000000529/*
@@ -182,13 +175,12 @@ ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
 ThirdParty/SuiteSparse/include/
 ThirdParty/SuiteSparse/share/*
+ThirdParty/SuiteSparse/install/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
 ThirdParty/ragel-*.tar.gz
 _untracked/
-
-documentation/generated/*
 
 # vim
 *.swp
@@ -201,4 +193,6 @@ Benchmark-Models-PEtab/
 CS_Signalling_ERBB_RAS_AKT/
 cache_fiddy/*
 debug/*
-tests/benchmark-models/cache_fiddy/*
+tests/benchmark_models/cache_fiddy/*
+venv/*
+.coverage

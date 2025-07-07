@@ -1,7 +1,6 @@
 #include "testfunctions.h"
 
 #include "wrapfunctions.h"
-#include <cstring>
 
 #include <gtest/gtest.h>
 
@@ -175,7 +174,8 @@ TEST(ExampleSteadystate, SensitivityForwardErrorNewt)
 
 TEST(ExampleSteadystate, SensitivityForwardDense)
 {
-    amici::simulateVerifyWrite("/model_steadystate/sensiforwarddense/");
+    amici::simulateVerifyWrite("/model_steadystate/sensiforwarddense/",
+                               1e-9, TEST_RTOL);
 }
 
 TEST(ExampleSteadystate, SensiFwdNewtonPreeq)

@@ -2,7 +2,7 @@
 # Programmer(s): Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2021, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -24,33 +24,22 @@ sundials_add_library(sundials_sunlinsollapackdense
     ${SUNDIALS_SOURCE_DIR}/include/sunlinsol/sunlinsol_lapackdense.h
   INCLUDE_SUBDIR
     sunlinsol
-  OBJECT_LIBRARIES
-    sundials_generic_obj
   LINK_LIBRARIES
-    PUBLIC sundials_sunmatrixdense ${LAPACK_LIBRARIES}
+    PUBLIC sundials_core
+  OBJECT_LIBRARIES
+  LINK_LIBRARIES
+    PUBLIC sundials_sunmatrixdense "${LAPACK_LIBRARIES}"
   OUTPUT_NAME
     sundials_sunlinsollapackdense
   VERSION
     ${sunlinsollib_VERSION}
   SOVERSION
-    ${sunlinsollib_VERSION}
+  ${sunlinsollib_SOVERSION}
 )
 
 message(STATUS "Added SUNLINSOL_LAPACKDENSE module")
 
-# If FCMIX is enabled, build and install the Fortran77 library
-if(BUILD_FORTRAN77_INTERFACE)
-  sundials_add_library(sundials_fsunlinsollapackdense
-    SOURCES
-    fsunlinsol_lapackdense.c
-    LINK_LIBRARIES
-      PRIVATE sundials_fnvecserial sundials_fsunmatrixdense sundials_sunlinsollapackdense
-    OUTPUT_NAME
-      sundials_fsunlinsollapackdense
-    VERSION
-      ${sunlinsollib_VERSION}
-    SOVERSION
-      ${sunlinsollib_SOVERSION}
-  )
-  message(STATUS "Added SUNLINSOL_LAPACKDENSE F77 interface")
+# Add module if F2003 interface is enabled
+if(BUILD_FORTRAN_MODULE_INTERFACE)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

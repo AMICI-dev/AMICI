@@ -17,7 +17,7 @@ git archive -o container/amici.tar.gz --format=tar.gz HEAD
 cd container && docker build -t $USER/amici:latest .
 ```
 Note that this will include files from the last commit, but no uncommitted
-changes.  
+changes.
 
 ### Pull published image
 
@@ -34,7 +34,7 @@ In the AMICI base directory run:
 ```bash
 # prepare amici files to be copied to the image
 # Note that this will include files from the last commit, but no uncommitted
-# changes.  
+# changes.
 git archive -o container/amici.tar.gz --format=tar.gz HEAD
 # install spython if necessary
 test -x "$(command -v spython)" || pip install spython

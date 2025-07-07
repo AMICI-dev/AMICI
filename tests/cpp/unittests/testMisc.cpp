@@ -10,7 +10,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <exception>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -65,6 +64,8 @@ class ModelTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             nmaxevent, // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             0,         // nw
             0,         // ndwdx
@@ -174,8 +175,9 @@ TEST_F(ModelTest, ReinitializeFixedParameterInitialStates)
                  AmiException);
     model.setReinitializeFixedParameterInitialStates(false);
     ASSERT_TRUE(!model.getReinitializeFixedParameterInitialStates());
-    AmiVector x(nx);
-    AmiVectorArray sx(model.np(), nx);
+    sundials::Context sunctx;
+    AmiVector x(nx, sunctx);
+    AmiVectorArray sx(model.np(), nx, sunctx);
 }
 
 TEST(SymbolicFunctionsTest, Sign)
@@ -259,6 +261,13 @@ TEST(SolverIdasTest, DefaultConstructableAndNotLeaky)
     IDASolver solver;
 }
 
+TEST(SolverIdasTest, CopyCtor)
+{
+    IDASolver solver1;
+    IDASolver solver2(solver1);
+}
+
+
 
 class SolverTest : public ::testing::Test {
   protected:
@@ -302,6 +311,8 @@ class SolverTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
+            0,         // nspl
             0,         // nJ
             0,         // nw
             0,         // ndwdx
@@ -345,14 +356,13 @@ TEST_F(SolverTest, SettersGettersNoSetup)
 
 TEST_F(SolverTest, SettersGettersWithSetup)
 {
-
     solver.setSensitivityMethod(sensi_meth);
     ASSERT_EQ(static_cast<int>(solver.getSensitivityMethod()),
               static_cast<int>(sensi_meth));
 
     auto rdata = std::make_unique<ReturnData>(solver, testModel);
-    AmiVector x(nx), dx(nx);
-    AmiVectorArray sx(nx, 1), sdx(nx, 1);
+    AmiVector x(nx, solver.getSunContext()), dx(nx, solver.getSunContext());
+    AmiVectorArray sx(nx, 1, solver.getSunContext()), sdx(nx, 1, solver.getSunContext());
 
     testModel.setInitialStates(std::vector<realtype>{ 0 });
 
@@ -511,16 +521,22 @@ class AmiVectorTest : public ::testing::Test {
 
 TEST_F(AmiVectorTest, Vector)
 {
-    AmiVector av(vec1);
+    sundials::Context sunctx;
+    AmiVector av(vec1, sunctx);
     N_Vector nvec = av.getNVector();
     for (int i = 0; i < av.getLength(); ++i)
         ASSERT_EQ(av.at(i), NV_Ith_S(nvec, i));
+
+    std::stringstream ss;
+    ss << av;
+    ASSERT_EQ(ss.str(), "[1, 2, 4, 3]");
 }
 
 TEST_F(AmiVectorTest, VectorArray)
 {
-    AmiVectorArray ava(4, 3);
-    AmiVector av1(vec1), av2(vec2), av3(vec3);
+    sundials::Context sunctx;
+    AmiVectorArray ava(4, 3, sunctx);
+    AmiVector av1(vec1, sunctx), av2(vec2, sunctx), av3(vec3, sunctx);
     std::vector<AmiVector> avs{ av1, av2, av3 };
     for (int i = 0; i < ava.getLength(); ++i)
         ava[i] = avs.at(i);
@@ -535,6 +551,10 @@ TEST_F(AmiVectorTest, VectorArray)
         for (int j = 0; j < av.getLength(); ++j)
             ASSERT_EQ(flattened.at(i * av.getLength() + j), av.at(j));
     }
+
+    std::stringstream ss;
+    ss << ava;
+    ASSERT_EQ(ss.str(), "[[1, 2, 4, 3], [4, 1, 2, 3], [4, 4, 2, 1]]");
 }
 
 class SunMatrixWrapperTest : public ::testing::Test {
@@ -568,11 +588,12 @@ class SunMatrixWrapperTest : public ::testing::Test {
         B.set_indexval(6, 3);
     }
 
+    sundials::Context sunctx;
     //inputs
     std::vector<double> a{0.82, 0.91, 0.13};
     std::vector<double> b{0.77, 0.80};
-    SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
-    SUNMatrixWrapper B = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
+    SUNMatrixWrapper A = SUNMatrixWrapper(3, 2, sunctx);
+    SUNMatrixWrapper B = SUNMatrixWrapper(4, 4, 7, CSC_MAT, sunctx);
     // result
     std::vector<double> d{1.3753, 1.5084, 1.1655};
 };
@@ -589,13 +610,14 @@ TEST_F(SunMatrixWrapperTest, SparseMultiply)
 TEST_F(SunMatrixWrapperTest, SparseMultiplyEmpty)
 {
     // Ensure empty Matrix vector multiplication succeeds
-    auto A_sparse = SUNMatrixWrapper(1, 1, 0, CSR_MAT);
+    sundials::Context sunctx;
+    auto A_sparse = SUNMatrixWrapper(1, 1, 0, CSR_MAT, sunctx);
     std::vector<double> b {0.1};
     std::vector<double> c {0.1};
     A_sparse.multiply(c, b);
     ASSERT_TRUE(c[0] == 0.1);
 
-    A_sparse = SUNMatrixWrapper(1, 1, 0, CSC_MAT);
+    A_sparse = SUNMatrixWrapper(1, 1, 0, CSC_MAT, sunctx);
     A_sparse.multiply(c, b);
     ASSERT_TRUE(c[0] == 0.1);
 }
@@ -609,12 +631,14 @@ TEST_F(SunMatrixWrapperTest, DenseMultiply)
 
 TEST_F(SunMatrixWrapperTest, StdVectorCtor)
 {
-    auto b_amivector = AmiVector(b);
-    auto a_amivector = AmiVector(a);
+    sundials::Context sunctx;
+    auto b_amivector = AmiVector(b, sunctx);
+    auto a_amivector = AmiVector(a, sunctx);
 }
 
 TEST_F(SunMatrixWrapperTest, TransformThrows)
 {
+    sundials::Context sunctx;
     ASSERT_THROW(SUNMatrixWrapper(A, 0.0, 13), std::invalid_argument);
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
     ASSERT_THROW(SUNMatrixWrapper(A_sparse, 0.0, CSR_MAT),
@@ -623,10 +647,11 @@ TEST_F(SunMatrixWrapperTest, TransformThrows)
 
 TEST_F(SunMatrixWrapperTest, BlockTranspose)
 {
-    SUNMatrixWrapper B_sparse(4, 4, 7, CSR_MAT);
+    sundials::Context sunctx;
+    SUNMatrixWrapper B_sparse(4, 4, 7, CSR_MAT, sunctx);
     ASSERT_THROW(B.transpose(B_sparse, 1.0, 4), std::domain_error);
 
-    B_sparse = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
+    B_sparse = SUNMatrixWrapper(4, 4, 7, CSC_MAT, sunctx);
     B.transpose(B_sparse, -1.0, 2);
     for (int idx = 0; idx < 7; idx++) {
         ASSERT_EQ(SM_INDEXVALS_S(B.get())[idx],
@@ -660,7 +685,8 @@ TEST(UnravelIndex, UnravelIndex)
 
 TEST(UnravelIndex, UnravelIndexSunMatDense)
 {
-    SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
+    sundials::Context sunctx;
+    SUNMatrixWrapper A = SUNMatrixWrapper(3, 2, sunctx);
 
     A.set_data(0, 0, 0);
     A.set_data(1, 0, 1);
@@ -670,14 +696,15 @@ TEST(UnravelIndex, UnravelIndexSunMatDense)
     A.set_data(2, 1, 5);
 
     for(int i = 0; i < 6; ++i) {
-        auto idx = unravel_index(i, A.get());
+        auto idx = unravel_index(i, A);
         EXPECT_EQ(A.get_data(idx.first, idx.second), i);
     }
 }
 
 TEST(UnravelIndex, UnravelIndexSunMatSparse)
 {
-    SUNMatrixWrapper D = SUNMatrixWrapper(4, 2);
+    sundials::Context sunctx;
+    SUNMatrixWrapper D = SUNMatrixWrapper(4, 2, sunctx);
 
     // [0, 3]
     // [0, 0]
@@ -685,7 +712,7 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     // [2, 0]
     // data [1, 2, 3]
     // colptrs [0, 2, 3]
-    // rowidxs [2, 3, 1]
+    // rowidxs [2, 3, 0]
     D.set_data(0, 0, 0);
     D.set_data(1, 0, 0);
     D.set_data(2, 0, 1);
@@ -695,7 +722,7 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     D.set_data(2, 1, 0);
     D.set_data(3, 1, 0);
 
-    auto S = SUNSparseFromDenseMatrix(D.get(), 1e-15, CSC_MAT);
+    auto S = SUNSparseFromDenseMatrix(D, 1e-15, CSC_MAT);
 
     EXPECT_EQ(unravel_index(0, S), std::make_pair((sunindextype) 2, (sunindextype) 0));
     EXPECT_EQ(unravel_index(1, S), std::make_pair((sunindextype) 3, (sunindextype) 0));
@@ -703,6 +730,17 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
 
     SUNMatDestroy(S);
 }
+
+
+TEST(UnravelIndex, UnravelIndexSunMatSparseMissingIndices)
+{
+    sundials::Context sunctx;
+    // Sparse matrix without any indices set
+    SUNMatrixWrapper mat = SUNMatrixWrapper(2, 3, 2, CSC_MAT, sunctx);
+    EXPECT_EQ(unravel_index(0, mat), std::make_pair((sunindextype) -1, (sunindextype) -1));
+    EXPECT_EQ(unravel_index(1, mat), std::make_pair((sunindextype) -1, (sunindextype) -1));
+}
+
 
 TEST(ReturnCodeToStr, ReturnCodeToStr)
 {
@@ -719,6 +757,18 @@ TEST(SpanEqual, SpanEqual)
     EXPECT_TRUE(is_equal(a, a));
     EXPECT_TRUE(is_equal(b, b));
     EXPECT_FALSE(is_equal(a, b));
+}
+
+TEST(CpuTimer, CpuTimer)
+{
+    amici::CpuTimer timer;
+    auto elapsed = timer.elapsed_seconds();
+    EXPECT_LE(0.0, elapsed);
+    EXPECT_GT(1.0, elapsed);
+
+    elapsed = timer.elapsed_milliseconds();
+    EXPECT_LT(0.0, elapsed);
+    EXPECT_GT(1000.0, elapsed);
 }
 
 } // namespace

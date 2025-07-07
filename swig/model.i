@@ -24,6 +24,7 @@ using namespace amici;
 %ignore getAdjointStateEventUpdate;
 %ignore getEventTimeSensitivity;
 %ignore getAdjointStateObservableUpdate;
+%ignore get_event;
 %ignore getEvent;
 %ignore getEventRegularization;
 %ignore getEventRegularizationSensitivity;
@@ -37,6 +38,7 @@ using namespace amici;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
 %ignore initializeStates;
+%ignore reinitialize;
 %ignore ModelState;
 %ignore getModelState;
 %ignore setModelState;
@@ -84,10 +86,32 @@ using namespace amici;
 %ignore getObservableSigma;
 %ignore getObservableSigmaSensitivity;
 %ignore getUnobservedEventSensitivity;
-
-
+%ignore fdsigmaydy;
+%ignore fdspline_slopesdp;
+%ignore fdspline_valuesdp;
+%ignore fdtotal_cldp;
+%ignore fdtotal_cldx_rdata;
+%ignore fdx_rdatadp;
+%ignore fdx_rdatadtcl;
+%ignore fdx_rdatadx_solver;
+%ignore fdsigmaydy;
+%ignore get_steadystate_mask_av;
 
 %newobject amici::Model::clone;
+
+%extend amici::Model {
+%pythoncode %{
+def __deepcopy__(self, memo):
+    return self.clone()
+%}
+};
+
+%extend std::unique_ptr<amici::Model> {
+%pythoncode %{
+def __deepcopy__(self, memo):
+    return self.clone()
+%}
+};
 
 // Process symbols in header
 %include "amici/model.h"

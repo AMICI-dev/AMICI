@@ -4,14 +4,12 @@
 #include "amici/defines.h"
 #include "amici/exception.h"
 #include "amici/vector.h"
-#include <sunmatrix/sunmatrix_sparse.h> // SUNMatrixContent_Sparse
 
 #include <algorithm>
-#include <vector>
-#include <memory>
-#include <regex>
-#include <functional>
 #include <ctime>
+#include <functional>
+#include <regex>
+#include <vector>
 
 #ifdef HAS_BOOST_CHRONO
 #include <boost/chrono/thread_clock.hpp>
@@ -31,11 +29,11 @@ namespace amici {
  */
 
 template <class T>
-gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
+gsl::span<T> slice(std::vector<T>& data, int const index, unsigned const size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
-        return gsl::make_span(&data.at(index*size), size);
+        return gsl::make_span(&data.at(index * size), size);
 
     return gsl::make_span(static_cast<T*>(nullptr), 0);
 }
@@ -54,7 +52,7 @@ gsl::span<T const> slice(std::vector<T> const& data, int index, unsigned size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
-        return gsl::make_span(&data.at(index*size), size);
+        return gsl::make_span(&data.at(index * size), size);
 
     return gsl::make_span(static_cast<T*>(nullptr), 0);
 }
@@ -66,69 +64,81 @@ gsl::span<T const> slice(std::vector<T> const& data, int index, unsigned size) {
  * @param expected_size expected size of the buffer
  */
 template <class T>
-void checkBufferSize(gsl::span<T> buffer,
-                     typename gsl::span<T>::index_type expected_size) {
+void checkBufferSize(
+    gsl::span<T> buffer, typename gsl::span<T>::index_type expected_size
+) {
     if (buffer.size() != expected_size)
-        throw AmiException("Incorrect buffer size! Was %u, expected %u.",
-                           buffer.size(), expected_size);
+        throw AmiException(
+            "Incorrect buffer size! Was %u, expected %u.", buffer.size(),
+            expected_size
+        );
 }
 
 /* TODO: templating writeSlice breaks implicit conversion between vector & span
  not sure whether this is fixable */
 
 /**
- * @brief local helper function to write computed slice to provided buffer (span)
+ * @brief local helper function to write computed slice to provided buffer
+ * (span)
  * @param slice computed value
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
-};
+}
 
 /**
- * @brief local helper function to add the computed slice to provided buffer (span)
+ * @brief local helper function to add the computed slice to provided buffer
+ * (span)
  * @param slice computed value
  * @param buffer buffer to which values are to be added
  */
 template <class T>
-void addSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
-    std::transform(slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
-                   std::plus<T>());
-};
+    std::transform(
+        slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
+        std::plus<T>()
+    );
+}
 
 /**
- * @brief local helper function to write computed slice to provided buffer (vector)
+ * @brief local helper function to write computed slice to provided buffer
+ * (vector)
  * @param s computed value
  * @param b buffer to which values are to be written
  */
 template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
-    writeSlice(gsl::make_span(s.data(), s.size()),
-               gsl::make_span(b.data(), b.size()));
-};
+    writeSlice(
+        gsl::make_span(s.data(), s.size()), gsl::make_span(b.data(), b.size())
+    );
+}
 
 /**
- * @brief local helper function to write computed slice to provided buffer (vector/span)
+ * @brief local helper function to write computed slice to provided buffer
+ * (vector/span)
  * @param s computed value
  * @param b buffer to which values are to be written
  */
 template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
     writeSlice(gsl::make_span(s.data(), s.size()), b);
-};
+}
 
 /**
- * @brief local helper function to add the computed slice to provided buffer (vector/span)
+ * @brief local helper function to add the computed slice to provided buffer
+ * (vector/span)
  * @param s computed value
  * @param b buffer to which values are to be written
  */
 template <class T> void addSlice(std::vector<T> const& s, gsl::span<T> b) {
     addSlice(gsl::make_span(s.data(), s.size()), b);
-};
+}
 
 /**
- * @brief local helper function to write computed slice to provided buffer (AmiVector/span)
+ * @brief local helper function to write computed slice to provided buffer
+ * (AmiVector/span)
  * @param s computed value
  * @param b buffer to which values are to be written
  */
@@ -149,15 +159,14 @@ void unscaleParameters(
 );
 
 /**
-  * @brief Remove parameter scaling according to `scaling`
-  *
-  * @param scaledParameter scaled parameter
-  * @param scaling parameter scaling
-  *
-  * @return Unscaled parameter
-  */
+ * @brief Remove parameter scaling according to `scaling`
+ *
+ * @param scaledParameter scaled parameter
+ * @param scaling parameter scaling
+ *
+ * @return Unscaled parameter
+ */
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling);
-
 
 /**
  * @brief Apply parameter scaling according to `scaling`
@@ -166,7 +175,6 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling);
  * @return Scaled parameter
  */
 double getScaledParameter(double unscaledParameter, ParameterScaling scaling);
-
 
 /**
  * @brief Apply parameter scaling according to `scaling`
@@ -185,7 +193,7 @@ void scaleParameters(
  * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames, int const first_frame = 0);
+std::string backtraceString(int maxFrames, int first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
@@ -206,13 +214,12 @@ std::string printfToString(char const* fmt, va_list ap);
  * @brief Generic implementation for a context manager, explicitly deletes copy
  * and move operators for derived classes
  */
-class ContextManager{
+class ContextManager {
   public:
     ContextManager() = default;
-    ContextManager(ContextManager &other) = delete;
-    ContextManager(ContextManager &&other) = delete;
+    ContextManager(ContextManager& other) = delete;
+    ContextManager(ContextManager&& other) = delete;
 };
-
 
 /**
  * @brief Convert a flat index to a pair of row/column indices,
@@ -231,15 +238,14 @@ auto unravel_index(size_t flat_idx, size_t num_cols)
  * @param b
  * @return Whether the contents of the two spans are equal.
  */
-template <class T>
-bool is_equal(T const& a, T const& b) {
-    if(a.size() != b.size())
+template <class T> bool is_equal(T const& a, T const& b) {
+    if (a.size() != b.size())
         return false;
 
     auto a_data = a.data();
     auto b_data = b.data();
-    for(typename T::size_type i = 0; i < a.size(); ++i) {
-        if(a_data[i] != b_data[i]
+    for (typename T::size_type i = 0; i < a.size(); ++i) {
+        if (a_data[i] != b_data[i]
             && !(std::isnan(a_data[i]) && std::isnan(b_data[i])))
             return false;
     }
@@ -247,17 +253,19 @@ bool is_equal(T const& a, T const& b) {
 }
 
 #ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
-/** Tracks elapsed CPU time. */
+/** Tracks elapsed CPU time using boost::chrono::thread_clock. */
 class CpuTimer {
     using clock = boost::chrono::thread_clock;
-    using time_point = boost::chrono::thread_clock::time_point;
+    using time_point = clock::time_point;
     using d_seconds = boost::chrono::duration<double>;
     using d_milliseconds = boost::chrono::duration<double, boost::milli>;
+
   public:
     /**
      * @brief Constructor
      */
-    CpuTimer() : start_(clock::now()){}
+    CpuTimer()
+        : start_(clock::now()) {}
 
     /**
      * @brief Reset the timer
@@ -268,9 +276,8 @@ class CpuTimer {
      * @brief Get elapsed CPU time in seconds since initialization or last reset
      * @return CPU time in seconds
      */
-    double elapsed_seconds() const {
-        return boost::chrono::duration_cast<d_seconds>(
-                   clock::now() - start_).count();
+    [[nodiscard]] double elapsed_seconds() const {
+        return d_seconds(clock::now() - start_).count();
     }
 
     /**
@@ -278,22 +285,29 @@ class CpuTimer {
      * reset
      * @return CPU time in milliseconds
      */
-    double elapsed_milliseconds() const {
-        return boost::chrono::duration_cast<d_milliseconds>(
-                   clock::now() - start_).count();
+    [[nodiscard]] double elapsed_milliseconds() const {
+        return d_milliseconds(clock::now() - start_).count();
     }
+
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
+    static bool constexpr uses_thread_clock = true;
+
   private:
     /** Start time */
     time_point start_;
 };
 #else
-/** Tracks elapsed CPU time. */
+/** Tracks elapsed CPU time using std::clock. */
 class CpuTimer {
   public:
     /**
      * @brief Constructor
      */
-    CpuTimer() : start_(std::clock()){}
+    CpuTimer()
+        : start_(std::clock()) {}
 
     /**
      * @brief Reset the timer
@@ -314,8 +328,16 @@ class CpuTimer {
      * @return CPU time in milliseconds
      */
     double elapsed_milliseconds() const {
-        return static_cast<double>(std::clock() - start_) * 1000.0 / CLOCKS_PER_SEC;
+        return static_cast<double>(std::clock() - start_) * 1000.0
+               / CLOCKS_PER_SEC;
     }
+
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
+    static bool const uses_thread_clock = false;
+
   private:
     /** Start time */
     std::clock_t start_;

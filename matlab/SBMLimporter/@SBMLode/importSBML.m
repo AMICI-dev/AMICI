@@ -36,7 +36,7 @@ else
 end
 
 if(isfield(model,'fbc_objective'))
-   error('Flux Balance Constraints are currently not supported!') 
+   error('Flux Balance Constraints are currently not supported!')
 end
 
 %% COMPARTMENTS
@@ -77,7 +77,7 @@ all_rulevars = sym({model.rule.variable});
 if(any(arrayfun(@(x) ismember(x,compartments_sym),all_rulevars)))
     error('Rules for compartments are currently not supported!');
 end
-all_rulemath = cleanedsym({model.rule.formula}); 
+all_rulemath = cleanedsym({model.rule.formula});
 % remove rate rules
 rulevars = all_rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
 rulemath = all_rulemath(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
@@ -129,7 +129,7 @@ if(~isempty(this.state))
     boundary_sym = this.state(bound_idx);
     boundaries = this.initState(bound_idx);
 else
-    
+
     cond_idx = [];
     bound_idx = [];
     condition_sym = sym([]);
@@ -230,7 +230,7 @@ if(length({model.reaction.id})>0)
             'UniformOutput',false);
         this.flux = [tmp{:}];
         this.flux = this.flux(:);
-        
+
     catch
         tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.localParameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
         plocal = transpose([tmp{:}]);
@@ -240,14 +240,14 @@ if(length({model.reaction.id})>0)
         tmp = cellfun(@(x,y,z) subs(x,sym({y.localParameter.id}),sym(cellfun(@(x) [x '_' z],{y.localParameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
         this.flux = [tmp{:}];
         this.flux = this.flux(:);
-        
+
     end
-    
+
     this.param = [this.param;plocal];
     parameter_sym = [parameter_sym;plocal];
     parameter_val = [parameter_val;pvallocal];
     np = length(this.param);
-    
+
     reactants = cellfun(@(x) {x.species},{model.reaction.reactant},'UniformOutput',false);
     % species index of the reactant
     reactant_sidx = double(subs(sym(cat(2,reactants{:})),species_sym,species_idx));
@@ -304,7 +304,7 @@ if(length({model.reaction.id})>0)
     end
 
     this.stochiometry = - eS + pS;
-    
+
     this.xdot = this.stochiometry*this.flux;
 else
     this.xdot = sym(zeros(size(this.state)));
@@ -315,7 +315,7 @@ reactionsymbols = sym({model.reaction.id}');
 if(length({model.reaction.id})>0)
     stoichsymbols = [reactant_id{:},product_id{:}];
     stoichmath = [tmp_rs,tmp_ps];
-    
+
     stoichidx = not(strcmp(stoichsymbols,''));
     stoichsymbols = stoichsymbols(stoichidx);
     stoichmath = stoichmath(stoichidx);
@@ -440,7 +440,7 @@ if(model.SBML_level>=3)
         error('Event priorities are currently not supported!');
     end
 end
-    
+
 try
     tmp = cellfun(@(x) sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];
@@ -459,10 +459,10 @@ if(length(this.trigger)>0)
     for ievent = 1:length(this.trigger)
         tmp = cellfun(@(x) {x.variable},{model.event(ievent).eventAssignment},'UniformOutput',false);
         assignments = sym(cat(2,tmp{:}));
-        
+
         tmp = cellfun(@(x) {x.math},{model.event(ievent).eventAssignment},'UniformOutput',false);
         assignments_math = cleanedsym(cat(2,tmp{:}));
-        
+
         for iassign = 1:length(assignments)
             state_assign_idx = find(assignments(iassign)==this.state);
             param_assign_idx = find(assignments(iassign)==this.param);
@@ -470,37 +470,37 @@ if(length(this.trigger)>0)
             bound_assign_idx = find(assignments(iassign)==boundary_sym);
             stoich_assign_idx = find(assignments(iassign)==stoichsymbols);
             vol_assign_idx = find(assignments(iassign)==compartments_sym);
-            
+
             if(np>0 && ~isempty(param_assign_idx))
                 error('Assignments of parameters via events are currently not supported')
                 this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
-            
+
             if(nk>0 && ~isempty(cond_assign_idx))
                 error('Assignments of constants via events are currently not supported')
                 conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
-            
+
             if(length(boundaries)>0 && ~isempty(bound_assign_idx))
                 error('Assignments of boundary conditions via events are currently not supported')
                 boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
-            
+
             if(length(stoichsymbols)>0 && ~isempty(stoich_assign_idx))
                 error('Assignments of stoichiometries via events are currently not supported')
                 stoichmath(stoich_assign_idx) = stoichmath(stoich_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
-            
+
             if(length(compartments_sym)>0 && ~isempty(vol_assign_idx))
                 error('Assignments of compartment volumes via events are currently not supported')
             end
-            
+
             if(length(this.state)>0 && ~isempty(state_assign_idx))
-                
+
                 this.bolus(state_assign_idx,ievent) = -this.state(state_assign_idx);
                 addToBolus = sym(zeros(size(this.bolus(:,ievent))));
                 addToBolus(state_assign_idx) = assignments_math(iassign);
-                
+
                 this.bolus(:,ievent) = this.bolus(:,ievent) + addToBolus;
             end
 
@@ -526,15 +526,15 @@ if(~isempty(lambdas))
     tmpfun = cellfun(@(x) ['fun_' num2str(x)],num2cell(1:length(model.functionDefinition)),'UniformOutput',false);
     this.funmath = strrep(this.funmath,{model.functionDefinition.id},tmpfun);
     % replace helper functions
-    
+
     checkIllegalFunctions(this.funmath);
     this.funmath = replaceLogicalFunctions(this.funmath);
-    
+
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
     this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,replaceReservedFunctionIDs({model.functionDefinition.id}),'UniformOutput',false);
-    
+
     % make functions available in this file
-    
+
     for ifun = 1:length(this.funmath)
         token = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)','tokens');
         start = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)');
@@ -567,7 +567,7 @@ for iIA = 1:length(initassignments_sym)
     if(ismember(initassignments_sym(iIA),this.param))
         if(ismember(sym(model.time_symbol),symvar(initassignments_math(iIA))))
             error('Time dependent initial assignments are currently not supported!')
-        end          
+        end
         param_idx =  find(initassignments_sym(iIA)==this.param);
         parameter_sym(param_idx) = [];
         parameter_val(param_idx) = [];
@@ -579,7 +579,7 @@ for iIA = 1:length(initassignments_sym)
         this.param = subs(this.param,initassignments_sym(iIA),initassignments_math(iIA));
         rulemath = subs(rulemath,initassignments_sym(iIA),initassignments_math(iIA));
         np = np-1;
-    end  
+    end
 end
 applyRule(this,model,'param',rulevars,rulemath)
 
@@ -760,7 +760,7 @@ function expr = math_expr(y)
     if(isfield(y,'math'))
     expr = cleanedsym(y.math);
     else
-    expr = cleanedsym();       
+    expr = cleanedsym();
     end
 end
 
@@ -771,4 +771,3 @@ function id = getId(x)
         id = {x.species};
     end
 end
-

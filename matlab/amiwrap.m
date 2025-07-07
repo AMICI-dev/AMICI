@@ -199,4 +199,3 @@ function amiwrap( varargin )
     end
     warning(warningreset);
 end
-

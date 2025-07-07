@@ -7,60 +7,62 @@
 
 namespace amici {
 /************************************************/
+/*  Legacy implementation of spline functions   */
 /*  adapted from                                */
 /*  CMATH.  Copyright (c) 1989 Design Software  */
 /*                                              */
 /************************************************/
 
+int spline(
+    int n, int end1, int end2, double slope1, double slope2, double x[],
+    double y[], double b[], double c[], double d[]
+)
+/**
+Evaluate the coefficients b[i], c[i], d[i], i = 0, 1, .. n-1 for
+a cubic interpolating spline
 
-int spline(int n, int end1, int end2, double slope1, double slope2, double x[],
-           double y[], double b[], double c[], double d[])
-    /**
-   Evaluate the coefficients b[i], c[i], d[i], i = 0, 1, .. n-1 for
-   a cubic interpolating spline
+S(xx) = Y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
+where w = xx - x[i]
+and   x[i] <= xx <= x[i+1]
 
-   S(xx) = Y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
-   where w = xx - x[i]
-   and   x[i] <= xx <= x[i+1]
+The n supplied data points are x[i], y[i], i = 0 ... n-1.
 
-   The n supplied data points are x[i], y[i], i = 0 ... n-1.
+@param[in] n The number of data points or knots (n >= 2)
+@param[in] end1 0: default condition 1: specify the slopes at x[0]
+@param[in] end2 0: default condition 1: specify the slopes at x[n-1]
+@param[in] slope1 slope at x[0]
+@param[in] slope2 slope at x[n-1]
+@param[in] x[] the abscissas of the knots in strictly increasing order
+@param[in] y[] the ordinates of the knots
+@param[out] b[] array of spline coefficients
+@param[out] c[] array of spline coefficients
+@param[out] d[] array of spline coefficients
 
-   @param[in] n The number of data points or knots (n >= 2)
-   @param[in] end1 0: default condition 1: specify the slopes at x[0]
-   @param[in] end2 0: default condition 1: specify the slopes at x[n-1]
-   @param[in] slope1 slope at x[0]
-   @param[in] slope2 slope at x[n-1]
-   @param[in] x[] the abscissas of the knots in strictly increasing order
-   @param[in] y[] the ordinates of the knots
-   @param[out] b[] array of spline coefficients
-   @param[out] c[] array of spline coefficients
-   @param[out] d[] array of spline coefficients
+@retval 0 normal return
+@retval 1 less than two data points; cannot interpolate
+@retval 2 x[] are not in ascending order
 
-   @retval 0 normal return
-   @retval 1 less than two data points; cannot interpolate
-   @retval 2 x[] are not in ascending order
-
-   Notes
-   -----
-     - The accompanying function seval() may be used to evaluate the
-       spline while deriv will provide the first derivative.
-     - Using p to denote differentiation
-       y[i] = S(X[i])
-       b[i] = Sp(X[i])
-       c[i] = Spp(X[i])/2
-       d[i] = Sppp(X[i])/6  ( Derivative from the right )
-     - Since the zero elements of the arrays ARE NOW used here,
-       all arrays to be passed from the main program should be
-       dimensioned at least [n].  These routines will use elements
-       [0 .. n-1].
-     - Adapted from the text
-       Forsythe, G.E., Malcolm, M.A. and Moler, C.B. (1977)
-       "Computer Methods for Mathematical Computations"
-       Prentice Hall
-     - Note that although there are only n-1 polynomial segments,
-       n elements are requird in b, c, d.  The elements b[n-1],
-       c[n-1] and d[n-1] are set to continue the last segment
-       past x[n-1].
+Notes
+-----
+ - The accompanying function seval() may be used to evaluate the
+   spline while deriv will provide the first derivative.
+ - Using p to denote differentiation
+   y[i] = S(X[i])
+   b[i] = Sp(X[i])
+   c[i] = Spp(X[i])/2
+   d[i] = Sppp(X[i])/6  ( Derivative from the right )
+ - Since the zero elements of the arrays ARE NOW used here,
+   all arrays to be passed from the main program should be
+   dimensioned at least [n].  These routines will use elements
+   [0 .. n-1].
+ - Adapted from the text
+   Forsythe, G.E., Malcolm, M.A. and Moler, C.B. (1977)
+   "Computer Methods for Mathematical Computations"
+   Prentice Hall
+ - Note that although there are only n-1 polynomial segments,
+   n elements are requird in b, c, d.  The elements b[n-1],
+   c[n-1] and d[n-1] are set to continue the last segment
+   past x[n-1].
 */
 
 { /* begin procedure spline() */
@@ -107,8 +109,8 @@ int spline(int n, int end1, int end2, double slope1, double slope2, double x[],
         c[nm1] = 0.0;
         if (n != 3) {
             c[0] = c[2] / (x[3] - x[1]) - c[1] / (x[2] - x[0]);
-            c[nm1] = c[n - 2] / (x[nm1] - x[n - 3]) -
-                     c[n - 3] / (x[n - 2] - x[n - 4]);
+            c[nm1] = c[n - 2] / (x[nm1] - x[n - 3])
+                     - c[n - 3] / (x[n - 2] - x[n - 4]);
             c[0] = c[0] * d[0] * d[0] / (x[3] - x[0]);
             c[nm1] = -c[nm1] * d[n - 2] * d[n - 2] / (x[nm1] - x[n - 4]);
         }
@@ -140,8 +142,8 @@ int spline(int n, int end1, int end2, double slope1, double slope2, double x[],
         /* c[i] is now the sigma[i] of the text */
 
         /* Compute the polynomial coefficients */
-        b[nm1] = (y[nm1] - y[n - 2]) / d[n - 2] +
-                 d[n - 2] * (c[n - 2] + 2.0 * c[nm1]);
+        b[nm1] = (y[nm1] - y[n - 2]) / d[n - 2]
+                 + d[n - 2] * (c[n - 2] + 2.0 * c[nm1]);
         for (i = 0; i < nm1; ++i) {
             b[i] = (y[i + 1] - y[i]) / d[i] - d[i] * (c[i + 1] + 2.0 * c[i]);
             d[i] = (c[i + 1] - c[i]) / d[i];
@@ -192,8 +194,9 @@ LeaveSpline:
 
 */
 
-double seval(int n, double u, double x[], double y[], double b[], double c[],
-             double d[])
+double seval(
+    int n, double u, double x[], double y[], double b[], double c[], double d[]
+)
 
 { /* begin function seval() */
 
@@ -214,7 +217,7 @@ double seval(int n, double u, double x[], double y[], double b[], double c[],
                     j = k; /* move the upper bound */
                 if (u >= x[k])
                     i = k; /* move the lower bound */
-            }              /* there are no more segments to search */
+            } /* there are no more segments to search */
             while (j > i + 1);
         }
     }
@@ -253,8 +256,9 @@ double seval(int n, double u, double x[], double y[], double b[], double c[],
 
 */
 
-double sinteg(int n, double u, double x[], double y[], double b[], double c[],
-              double d[]) { /* begin function sinteg() */
+double sinteg(
+    int n, double u, double x[], double y[], double b[], double c[], double d[]
+) { /* begin function sinteg() */
 
     int i, j;
     double sum, dx;
@@ -269,7 +273,7 @@ double sinteg(int n, double u, double x[], double y[], double b[], double c[],
                 j = k; /* move the upper bound */
             if (u >= x[k])
                 i = k; /* move the lower bound */
-        }              /* there are no more segments to search */
+        } /* there are no more segments to search */
         while (j > i + 1);
     }
 
@@ -277,14 +281,15 @@ double sinteg(int n, double u, double x[], double y[], double b[], double c[],
     /* ---- Evaluate the integral for segments x < u ---- */
     for (j = 0; j < i; ++j) {
         dx = x[j + 1] - x[j];
-        sum += dx * (y[j] +
-                     dx * (0.5 * b[j] + dx * (c[j] / 3.0 + dx * 0.25 * d[j])));
+        sum += dx
+               * (y[j]
+                  + dx * (0.5 * b[j] + dx * (c[j] / 3.0 + dx * 0.25 * d[j])));
     }
 
     /* ---- Evaluate the integral fot this segment ---- */
     dx = u - x[i];
-    sum +=
-        dx * (y[i] + dx * (0.5 * b[i] + dx * (c[i] / 3.0 + dx * 0.25 * d[i])));
+    sum += dx
+           * (y[i] + dx * (0.5 * b[i] + dx * (c[i] / 3.0 + dx * 0.25 * d[i])));
 
     return (sum);
 }

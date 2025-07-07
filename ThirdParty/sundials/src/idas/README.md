@@ -1,7 +1,7 @@
 # IDAS
-### Version 4.8.0 (Sep 2021)
+### Version 6.1.1 (Jun 2024)
 
-**Radu Serban, Cosmin Petra, Alan C. Hindmarsh, Cody J. Balos, David J. Gardner, 
+**Radu Serban, Cosmin Petra, Alan C. Hindmarsh, Cody J. Balos, David J. Gardner,
   and Carol S. Woodward, Center for Applied Scientific Computing, LLNL**
 
 **Daniel R. Reynolds, Department of Mathematics, Southern Methodist University**
@@ -26,14 +26,13 @@ nonlinear solver APIs used across SUNDIALS packages.
 
 ## Documentation
 
-See the [IDAS User Guide](/doc/idas/idas_guide.pdf) and
-[IDAS Examples](/doc/idas/idas_examples.pdf) document for more information
-about IDAS usage and the provided example programs respectively.
+See the IDAS documentation at [Read the Docs](https://sundials.readthedocs.io/en/latest/idas)
+for more information about IDAS usage.
 
 ## Installation
 
-For installation instructions see the [INSTALL_GUIDE](/INSTALL_GUIDE.pdf)
-or the "Installation Procedure" chapter in the IDAS User Guide.
+For installation instructions see the
+[SUNDIALS Installation Guide](https://sundials.readthedocs.io/en/latest/Install_link.html).
 
 ## Release History
 
@@ -44,11 +43,11 @@ the "SUNDIALS Release History" appendix of the IDAS User Guide.
 ## References
 
 * R. Serban, C. Petra, A. C. Hindmarsh, C. J. Balos, D. J. Gardner,
-  D. R. Reynolds and C. S. Woodward, "User Documentation for IDAS v4.8.0,"
-  LLNL technical report UCRL-SM-234051, Sep 2021.
+  D. R. Reynolds and C. S. Woodward, "User Documentation for IDAS v6.1.1,"
+  LLNL technical report UCRL-SM-234051, Jun 2024.
 
-* R. Serban and A.C. Hindmarsh, "Example Programs for IDAS v4.8.0,"
-  LLNL technical report LLNL-TR-437091, Sep 2021.
+* R. Serban and A.C. Hindmarsh, "Example Programs for IDAS v6.1.1,"
+  LLNL technical report LLNL-TR-437091, Jun 2024.
 
 * A. C. Hindmarsh, P. N. Brown, K. E. Grant, S. L. Lee, R. Serban,
   D. E. Shumaker, and C. S. Woodward, "SUNDIALS, Suite of Nonlinear and

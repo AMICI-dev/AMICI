@@ -1,19 +1,47 @@
 """Tests for SBML events, including piecewise expressions."""
+
 from copy import deepcopy
 
+import amici
 import numpy as np
 import pytest
-
-from util import (check_trajectories_with_forward_sensitivities,
-                  check_trajectories_without_sensitivities, create_amici_model,
-                  create_sbml_model)
+from amici import import_model_module, SensitivityMethod, SensitivityOrder
+from amici.antimony_import import antimony2amici
+from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
+from util import (
+    check_trajectories_with_adjoint_sensitivities,
+    check_trajectories_with_forward_sensitivities,
+    check_trajectories_without_sensitivities,
+    create_amici_model,
+    create_sbml_model,
+)
+from numpy.testing import assert_allclose
+
+pytestmark = pytest.mark.filterwarnings(
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
+)
 
 
-@pytest.fixture(params=[
-    pytest.param('events_plus_heavisides', marks=skip_on_valgrind),
-    'nested_events',
-])
+@pytest.fixture(
+    params=[
+        pytest.param("events_plus_heavisides", marks=skip_on_valgrind),
+        pytest.param(
+            "piecewise_plus_event_simple_case", marks=skip_on_valgrind
+        ),
+        pytest.param(
+            "piecewise_plus_event_semi_complicated", marks=skip_on_valgrind
+        ),
+        pytest.param(
+            "piecewise_plus_event_trigger_depends_on_state",
+            marks=skip_on_valgrind,
+        ),
+        pytest.param("nested_events", marks=skip_on_valgrind),
+        pytest.param("event_state_dep_ddeltax_dtpx", marks=skip_on_valgrind),
+    ]
+)
 def model(request):
     """Returns the requested AMICI model and analytical expressions."""
     (
@@ -23,8 +51,8 @@ def model(request):
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected,
     ) = get_model_definition(request.param)
 
     # SBML model
@@ -45,22 +73,30 @@ def model(request):
     )
     amici_model.setTimepoints(timepoints)
 
-    return amici_model, parameters, timepoints, x_pected, sx_pected
+    return amici_model, parameters, timepoints, x_expected, sx_expected
 
 
 def get_model_definition(model_name):
-    if model_name == 'events_plus_heavisides':
-       return model_definition_events_plus_heavisides()
-    if model_name == 'nested_events':
+    if model_name == "piecewise_plus_event_simple_case":
+        return model_definition_piecewise_plus_event_simple_case()
+    if model_name == "piecewise_plus_event_semi_complicated":
+        return model_definition_piecewise_plus_event_semi_complicated()
+    if model_name == "piecewise_plus_event_trigger_depends_on_state":
+        return model_definition_piecewise_plus_event_trigger_depends_on_state()
+    if model_name == "events_plus_heavisides":
+        return model_definition_events_plus_heavisides()
+    if model_name == "nested_events":
         return model_definition_nested_events()
-    else:
-        raise NotImplementedError(
-            f'Model with name {model_name} is not implemented.'
-        )
+    if model_name == "event_state_dep_ddeltax_dtpx":
+        return model_definition_event_state_dep_ddeltax_dtpx()
+
+    raise NotImplementedError(
+        f"Model with name {model_name} is not implemented."
+    )
 
 
 def model_definition_events_plus_heavisides():
-    """Test model for state- and parameter-dependent heavisides.
+    """Test model for state- and parameter-dependent Heavisides.
 
     ODEs
     ----
@@ -87,44 +123,47 @@ def model_definition_events_plus_heavisides():
                 [ zeta / 3]]
     """
     # Model components
-    species = ['x_1', 'x_2', 'x_3']
+    species = ["x_1", "x_2", "x_3"]
     initial_assignments = {
-        'x_1': 'k1',
-        'x_2': 'k2',
-        'x_3': 'k3',
+        "x_1": "k1",
+        "x_2": "k2",
+        "x_3": "k3",
     }
     rate_rules = {
-        'x_1': 'piecewise( -alpha * x_1, time >= delta, 0)',
-        'x_2': 'beta * x_1 - gamma * x_2',
-        'x_3': '-eta * x_3 + piecewise( 1, time >= zeta, 0)',
+        "x_1": "piecewise( -alpha * x_1, time >= delta, 0)",
+        "x_2": "beta * x_1 - gamma * x_2",
+        "x_3": "-eta * x_3 + piecewise( 1, time >= zeta, 0)",
     }
     parameters = {
-        'k1':  2,
-        'k2': 0.01,
-        'k3': 5,
-        'alpha': 2,
-        'beta': 3,
-        'gamma': 2,
-        'delta': 3,
-        'eta': 1,
-        'zeta': 5,
+        "k1": 2,
+        "k2": 0.01,
+        "k3": 5,
+        "alpha": 2,
+        # FIXME: adjoint sensitivities w.r.t. beta are slightly off
+        "beta": 3,
+        "gamma": 2,
+        "delta": 3,
+        # FIXME: adjoint sensitivities w.r.t. eta are slightly off
+        #  changing eta to e.g. 2.5 "fixes" python/tests/test_events.py::test_models[events_plus_heavisides]
+        "eta": 1,
+        "zeta": 5,
     }
     events = {
-        'event_1': {
-            'trigger': 'x_3 < k1',
-            'target': 'x_1',
-            'assignment': 'x_1 - x_3 / 2'
+        "event_1": {
+            "trigger": "x_3 < k1",
+            "target": "x_1",
+            "assignment": "x_1 - x_3 / 2",
         },
-        'event_2': {
-            'trigger': 'time >= zeta',
-            'target': 'x_3',
-            'assignment': 'x_3 + zeta / 3'
-        }
+        "event_2": {
+            "trigger": "time >= zeta",
+            "target": "x_3",
+            "assignment": "x_3 + zeta / 3",
+        },
     }
     timepoints = np.linspace(0, 8, 400)
 
     # Analytical solution
-    def x_pected(t, k1, k2, k3, alpha, beta, gamma, delta, eta, zeta):
+    def x_expected(t, k1, k2, k3, alpha, beta, gamma, delta, eta, zeta):
         # The system reads dx/dt = Ax + b
         # x0 = (k1, k2, k3)
         x0 = np.array([[k1], [k2], [k3]])
@@ -138,21 +177,17 @@ def model_definition_events_plus_heavisides():
             # compute dynamics
             if t < event_1_time:
                 # Define A
-                A = np.array([[0, 0, 0],
-                              [beta, -gamma, 0],
-                              [0, 0, -eta]])
+                A = np.array([[0, 0, 0], [beta, -gamma, 0], [0, 0, -eta]])
                 tmp_x = expm(t * A)
                 return np.matmul(tmp_x, x0)
 
             elif t <= event_2_time:
                 # "simulate" until first event
-                A = np.array([[0, 0, 0],
-                              [beta, -gamma, 0],
-                              [0, 0, -eta]])
+                A = np.array([[0, 0, 0], [beta, -gamma, 0], [0, 0, -eta]])
                 tmp_x = expm(event_1_time * A)
                 x1 = np.matmul(tmp_x, x0)
                 # apply bolus
-                delta_x = np.array([[float(-x1[2, :] / 2)], [0], [0]])
+                delta_x = np.array([[float(-x1[2, 0] / 2)], [0], [0]])
                 x1 += delta_x
                 # "simulate" on
                 tmp_x = expm((t - event_1_time) * A)
@@ -163,42 +198,40 @@ def model_definition_events_plus_heavisides():
         elif t < event_3_time:
             x2 = get_early_x(event_2_time)
 
-            A = np.array([[-alpha, 0, 0],
-                          [beta, -gamma, 0],
-                          [0, 0, -eta]])
+            A = np.array([[-alpha, 0, 0], [beta, -gamma, 0], [0, 0, -eta]])
             tmp_x = expm((t - event_2_time) * A)
             x = np.matmul(tmp_x, x2).flatten()
         else:
             x2 = get_early_x(event_2_time)
 
-            A = np.array([[-alpha, 0, 0],
-                          [beta, -gamma, 0],
-                          [0, 0, -eta]])
+            A = np.array([[-alpha, 0, 0], [beta, -gamma, 0], [0, 0, -eta]])
             tmp_x = expm((event_3_time - event_2_time) * A)
             x3 = np.matmul(tmp_x, x2)
             # apply bolus
             x3 += np.array([[0], [0], [zeta / 3]])
 
             hom_x = np.matmul(expm((t - event_3_time) * A), x3)
-            inhom_x = [[0], [0],
-                       [-np.exp(-eta * (t - event_3_time)) / (eta)
-                        + 1 / (eta)]]
+            inhom_x = [
+                [0],
+                [0],
+                [-np.exp(-eta * (t - event_3_time)) / eta + 1 / eta],
+            ]
 
             x = (hom_x + inhom_x).flatten()
 
         return np.array(x)
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = x_pected(t, **perturbed_params)
-            perturbed_params[ip] -= 2*eps
-            sx_m = x_pected(t, **perturbed_params)
+            sx_p = x_expected(t, **perturbed_params)
+            perturbed_params[ip] -= 2 * eps
+            sx_m = x_expected(t, **perturbed_params)
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -210,8 +243,8 @@ def model_definition_events_plus_heavisides():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected,
     )
 
 
@@ -237,49 +270,52 @@ def model_definition_nested_events():
                 [ bolus]]
     """
     # Model components
-    species = ['x_1', 'x_2']
+    species = ["x_1", "x_2"]
     initial_assignments = {
-        'x_1': 'k1',
-        'x_2': 'k2',
+        "x_1": "k1",
+        "x_2": "k2",
     }
     rate_rules = {
-        'x_1': 'inflow_1 - decay_1 * x_1',
-        'x_2': '- decay_2 * x_2',
+        "x_1": "inflow_1 - decay_1 * x_1",
+        "x_2": "- decay_2 * x_2",
     }
     parameters = {
-        'k1': 0,
-        'k2': 0,
-        'inflow_1': 4,
-        'decay_1': 2,
-        'decay_2': 5,
-        'bolus': 0, # for bolus != 0, nested event sensitivities are off!
+        "k1": 0,
+        "k2": 0,
+        "inflow_1": 4,
+        "decay_1": 2,
+        # FIXME adjoint sensitivities w.r.t. decay_2 are slightly off
+        "decay_2": 5,
+        "bolus": 0,  # for bolus != 0, nested event sensitivities are off!
     }
     events = {
-        'event_1': {
-            'trigger': 'x_1 > inflow_1 / decay_2',
-            'target': 'x_2',
-            'assignment': 'x_2 - 1 / time'
+        "event_1": {
+            "trigger": "x_1 > inflow_1 / decay_2",
+            "target": "x_2",
+            "assignment": "x_2 - 1 / time",
         },
-        'event_2': {
-            'trigger': 'x_2 < - 0.5',
-            'target': ['x_1', 'x_2'],
-            'assignment': ['x_1 + bolus', 'x_2 + bolus'],
-        }
+        "event_2": {
+            "trigger": "x_2 < - 0.5",
+            "target": ["x_1", "x_2"],
+            "assignment": ["x_1 + bolus", "x_2 + bolus"],
+        },
     }
     timepoints = np.linspace(0, 1, 101)
 
     # Analytical solution
-    def x_pected(t, k1, k2, inflow_1, decay_1, decay_2, bolus):
+    def x_expected(t, k1, k2, inflow_1, decay_1, decay_2, bolus):
         # gather temporary variables
         # event_time = x_1 > inflow_1 / decay_2
         equil = inflow_1 / decay_1
         tmp1 = inflow_1 / decay_2 - inflow_1 / decay_1
         tmp2 = k1 - inflow_1 / decay_1
-        event_time = (- 1 / decay_1) * np.log( tmp1 / tmp2)
+        event_time = (-1 / decay_1) * np.log(tmp1 / tmp2)
 
         def get_early_x(t):
             # compute dynamics before event
-            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1*np.exp(-decay_1 * t)
+            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1 * np.exp(
+                -decay_1 * t
+            )
             x_2 = k2 * np.exp(-decay_2 * t)
             return np.array([[x_1], [x_2]])
 
@@ -293,25 +329,26 @@ def model_definition_nested_events():
 
             # compute dynamics after event
             inhom = np.exp(decay_1 * event_time) * tau_x1
-            x_1 = equil * (1 - np.exp(decay_1 * (event_time - t))) + \
-                inhom * np.exp(- decay_1 * t)
+            x_1 = equil * (
+                1 - np.exp(decay_1 * (event_time - t))
+            ) + inhom * np.exp(-decay_1 * t)
             x_2 = tau_x2 * np.exp(decay_2 * event_time) * np.exp(-decay_2 * t)
 
             x = np.array([[x_1], [x_2]])
 
         return x.flatten()
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = x_pected(t, **perturbed_params)
-            perturbed_params[ip] -= 2*eps
-            sx_m = x_pected(t, **perturbed_params)
+            sx_p = x_expected(t, **perturbed_params)
+            perturbed_params[ip] -= 2 * eps
+            sx_m = x_expected(t, **perturbed_params)
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -323,29 +360,366 @@ def model_definition_nested_events():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected,
+    )
+
+
+def model_definition_piecewise_plus_event_simple_case():
+    """Test model for boolean operations in a piecewise condition.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    (alpha <= t and t < beta)
+        - { 0,    otherwise
+    """
+    # Model components
+    species = ["x_1"]
+    initial_assignments = {"x_1": "x_1_0"}
+    rate_rules = {"x_1": "piecewise(1, (alpha < time && time < beta), 0)"}
+    parameters = {
+        "alpha": 2,
+        "beta": 3,
+        "gamma": 4.5,
+        "x_1_0": 1,
+    }
+    timepoints = np.linspace(0.0, 5.0, 100)  # np.array((0.0, 4.0,))
+    events = {
+        "event_1": {
+            "trigger": "time > alpha",
+            "target": "x_1",
+            "assignment": "gamma",
+        },
+        "event_2": {
+            "trigger": "time > beta",
+            "target": "x_1",
+            "assignment": "x_1 + 2.5",
+        },
+    }
+
+    # Analytical solution
+    def x_expected(t, x_1_0, alpha, beta, gamma):
+        t_event_1 = alpha
+        t_event_2 = beta
+
+        if t < t_event_1:
+            x = x_1_0
+        elif t < t_event_2:
+            x = gamma + t - t_event_1
+        else:
+            x = gamma + t_event_2 - t_event_1 + 2.5
+
+        return np.array((x,))
+
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
+        sx = []
+        eps = 1e-6
+
+        for ip in parameters:
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_expected(t, **perturbed_params))
+            perturbed_params[ip] -= 2 * eps
+            sx_m = np.array(x_expected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_expected,
+        sx_expected,
+    )
+
+
+def model_definition_event_state_dep_ddeltax_dtpx():
+    """Test model with state-dependent partial derivatives of update functions wrt parameters, time, and states."""
+    # Model components
+    species = ["x_1"]
+    initial_assignments = {"x_1": "x_1_0"}
+    rate_rules = {"x_1": "1"}
+    parameters = {
+        "alpha": 1.5,
+        "beta": 2.5,
+        "gamma": 3.5,
+        "delta": 5.5,
+        "x_1_0": 1,
+    }
+    timepoints = np.linspace(0.0, 5.0, 100)
+    events = {
+        # state-dependent ddeltaxdt
+        "event_1": {
+            "trigger": "time > alpha",
+            "target": "x_1",
+            "assignment": "x_1 * time",
+        },
+        # state-dependent ddeltaxdp
+        "event_2": {
+            "trigger": "time > beta",
+            "target": "x_1",
+            "assignment": "x_1 * delta",
+        },
+        # state-dependent ddeltaxdx
+        "event_3": {
+            "trigger": "time > gamma",
+            "target": "x_1",
+            "assignment": "2 * x_1 * x_1",
+        },
+    }
+
+    # Analytical solution
+    def x_expected(t, x_1_0, alpha, beta, gamma, delta):
+        if t < alpha:
+            # before first event triggered
+            x = x_1_0 + t
+        elif t < beta:
+            # after first event triggered
+            x = (x_1_0 + alpha) * alpha + (t - alpha)
+        elif t < gamma:
+            # after second event triggered
+            x = ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (t - beta)
+        else:
+            # after third event triggered
+            x = (
+                ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta
+                + (gamma - beta)
+            ) ** 2 * 2 + (t - gamma)
+
+        return np.array((x,))
+
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
+        sx = []
+        eps = 1e-6
+
+        for ip in parameters:
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_expected(t, **perturbed_params))
+            perturbed_params[ip] -= 2 * eps
+            sx_m = np.array(x_expected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_expected,
+        sx_expected,
+    )
+
+
+def model_definition_piecewise_plus_event_semi_complicated():
+    """Test model for boolean operations in a piecewise condition, discrete
+    events and a non-vanishing quadrature for the adjoint state.
+    """
+    # Model components
+    species = ["x_1", "x_2"]
+    initial_assignments = {"x_1": "x_1_0", "x_2": "x_2_0"}
+    rate_rules = {
+        "x_1": "piecewise(delta * x_1, (alpha < time && time < beta), - x_1)",
+        "x_2": "- eta * x_2",
+    }
+    parameters = {
+        "alpha": 2,
+        "beta": 3,
+        "gamma": 4.5,
+        "x_1_0": 1,
+        "x_2_0": 5,
+        "delta": 2.5,
+        "eta": 1.4,
+    }
+    timepoints = np.linspace(0.0, 5.0, 100)
+    events = {
+        "event_1": {
+            "trigger": "time > alpha / 2",
+            "target": "x_1",
+            "assignment": "gamma",
+        },
+        "event_2": {
+            "trigger": "time > beta",
+            "target": "x_1",
+            "assignment": "x_1 + x_2",
+        },
+    }
+
+    # Analytical solution
+    def x_expected(t, x_1_0, x_2_0, alpha, beta, gamma, delta, eta):
+        t_event_1 = alpha / 2
+        t_event_2 = beta
+        heaviside_1 = alpha
+
+        x_2 = x_2_0 * np.exp(-eta * t)
+
+        if t < t_event_1:
+            x_1 = x_1_0 * np.exp(-t)
+        elif t < heaviside_1:
+            x_1 = gamma * np.exp(-(t - t_event_1))
+        elif t < t_event_2:
+            x_1_heaviside_1 = gamma * np.exp(-(heaviside_1 - t_event_1))
+            x_1 = x_1_heaviside_1 * np.exp(delta * (t - heaviside_1))
+        else:
+            x_1_heaviside_1 = gamma * np.exp(-(heaviside_1 - t_event_1))
+            x_1_at_event_2 = x_1_heaviside_1 * np.exp(
+                delta * (t_event_2 - heaviside_1)
+            )
+            x_2_at_event_2 = x_2_0 * np.exp(-eta * t_event_2)
+            x1_after_event_2 = x_1_at_event_2 + x_2_at_event_2
+            x_1 = x1_after_event_2 * np.exp(-(t - t_event_2))
+
+        return np.array((x_1, x_2))
+
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
+        sx = []
+        eps = 1e-6
+
+        for ip in parameters:
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_expected(t, **perturbed_params))
+            perturbed_params[ip] -= 2 * eps
+            sx_m = np.array(x_expected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_expected,
+        sx_expected,
+    )
+
+
+def model_definition_piecewise_plus_event_trigger_depends_on_state():
+    """Test model for boolean operations in a piecewise condition.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    (alpha <= t and t < beta)
+        - { 0,    otherwise
+    """
+    # Model components
+    species = ["x_1", "x_2"]
+    initial_assignments = {"x_1": "x_1_0", "x_2": "x_2_0"}
+    rate_rules = {
+        "x_1": "piecewise(1, (alpha < time && time < beta), 0)",
+        "x_2": "- x_2",
+    }
+    parameters = {
+        "alpha": 2,
+        "beta": 3,
+        "gamma": 4.5,
+        "x_1_0": 1,
+        "x_2_0": 5,
+    }
+    timepoints = np.linspace(0.0, 5.0, 100)
+    events = {
+        "event_1": {
+            "trigger": "x_1 > 1.4",
+            "target": "x_1",
+            "assignment": "x_1 + gamma",
+        },
+        "event_2": {
+            "trigger": "time > beta",
+            "target": "x_1",
+            "assignment": "x_1 + x_2",
+        },
+    }
+
+    # Analytical solution
+    def x_expected(t, x_1_0, x_2_0, alpha, beta, gamma):
+        heaviside_1 = alpha
+        t_event_1 = alpha + 1.4 - x_1_0
+        t_event_2 = beta
+        # This should hold in order that the analytical solution is correct
+        assert heaviside_1 < t_event_1
+
+        # x_2 never gets perturbed
+        x_2 = x_2_0 * np.exp(-t)
+
+        if t < heaviside_1:
+            x_1 = x_1_0
+        elif t < t_event_1:
+            x_1 = (t - heaviside_1) + x_1_0
+        elif t < t_event_2:
+            x_1 = gamma + (t - heaviside_1) + x_1_0
+        else:
+            x_2_at_event_2 = x_2_0 * np.exp(-t_event_2)
+            x_1_at_event_2 = gamma + (t_event_2 - heaviside_1) + x_1_0
+            x_1 = x_1_at_event_2 + x_2_at_event_2
+
+        return np.array((x_1, x_2))
+
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
+        sx = []
+        eps = 1e-6
+
+        for ip in parameters:
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_expected(t, **perturbed_params))
+            perturbed_params[ip] -= 2 * eps
+            sx_m = np.array(x_expected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_expected,
+        sx_expected,
     )
 
 
 def test_models(model):
-    amici_model, parameters, timepoints, x_pected, sx_pected = model
+    amici_model, parameters, timepoints, x_expected, sx_expected = model
 
-    result_expected_x = np.array([
-        x_pected(t, **parameters)
-        for t in timepoints
-    ])
-    result_expected_sx = np.array([
-        sx_pected(t, parameters)
-        for t in timepoints
-    ])
+    result_expected_x = np.array(
+        [x_expected(t, **parameters) for t in timepoints]
+    )
+    result_expected_sx = np.array(
+        [sx_expected(t, parameters) for t in timepoints]
+    )
 
     # assert correctness of trajectories
-    check_trajectories_without_sensitivities(amici_model,
-                                             result_expected_x)
-    check_trajectories_with_forward_sensitivities(amici_model,
-                                                  result_expected_x,
-                                                  result_expected_sx)
+    check_trajectories_without_sensitivities(amici_model, result_expected_x)
+    check_trajectories_with_forward_sensitivities(
+        amici_model, result_expected_x, result_expected_sx
+    )
+
+    # FIXME: For a few parameters of these models, adjoint sensitivities
+    # are somewhat off. This needs to be investigated further.
+    asa_xfail = amici_model.getName() in (
+        "events_plus_heavisides",
+        "piecewise_plus_event_semi_complicated",
+        "nested_events",
+    )
+    check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
 
 
 def expm(x):
@@ -354,4 +728,347 @@ def expm(x):
     Uses ``expm`` from ``mpmath``. *Something* changed in scipy's ``expm`` in
     version 1.9.0 breaking these tests"""
     from mpmath import expm
+
     return np.array(expm(x).tolist()).astype(float)
+
+
+def test_handling_of_fixed_time_point_event_triggers(tempdir):
+    """Test handling of events without solver-tracked root functions."""
+    ant_model = """
+    model test_events_time_based
+        event_target = 0
+        bolus = 1
+        at (time > 1): event_target = 1
+        at (time > 2): event_target = event_target + bolus
+        at (time > 3): event_target = 3
+    end
+    """
+    module_name = "test_events_time_based"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    model_module = import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    assert amici_model.ne == 3
+    assert amici_model.ne_solver == 0
+    amici_model.setTimepoints(np.linspace(0, 4, 200))
+    amici_solver = amici_model.getSolver()
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert (rdata.x[rdata.ts < 1] == 0).all()
+    assert (rdata.x[(rdata.ts >= 1) & (rdata.ts < 2)] == 1).all()
+    assert (rdata.x[(rdata.ts >= 2) & (rdata.ts < 3)] == 2).all()
+    assert (rdata.x[(rdata.ts >= 3)] == 3).all()
+
+    check_derivatives(amici_model, amici_solver, edata=None)
+
+
+@skip_on_valgrind
+def test_multiple_event_assignment_with_compartment(tempdir):
+    """see https://github.com/AMICI-dev/AMICI/issues/2426"""
+    ant_model = """
+    model test_events_multiple_assignments
+        compartment event_target = 1
+        event_target' = 0
+        species species_in_event_target in event_target = 1
+        unrelated = 2
+
+        # use different order of event assignments for the two events
+        at (time > 5): unrelated = 4, event_target = 10
+        at (time > 10): event_target = 1, unrelated = 2
+    end
+    """
+    # watch out for too long path names on windows ...
+    module_name = "tst_mltple_ea_w_cmprtmnt"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    model_module = import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    assert amici_model.ne == 2
+    assert amici_model.ne_solver == 0
+    assert amici_model.nx_rdata == 3
+    amici_model.setTimepoints(np.linspace(0, 15, 16))
+    amici_solver = amici_model.getSolver()
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    idx_event_target = amici_model.getStateIds().index("event_target")
+    idx_unrelated = amici_model.getStateIds().index("unrelated")
+    idx_species_in_event_target = amici_model.getStateIds().index(
+        "species_in_event_target"
+    )
+
+    assert_allclose(
+        rdata.x[(rdata.ts < 5) & (rdata.ts > 10), idx_event_target],
+        1,
+        rtol=0,
+        atol=1e-15,
+    )
+    assert_allclose(
+        rdata.x[(5 < rdata.ts) & (rdata.ts < 10), idx_event_target],
+        10,
+        rtol=0,
+        atol=1e-15,
+    )
+    assert_allclose(
+        rdata.x[(rdata.ts < 5) & (rdata.ts > 10), idx_unrelated],
+        2,
+        rtol=0,
+        atol=1e-15,
+    )
+    assert_allclose(
+        rdata.x[(5 < rdata.ts) & (rdata.ts < 10), idx_unrelated],
+        4,
+        rtol=0,
+        atol=1e-15,
+    )
+    assert_allclose(
+        rdata.x[(rdata.ts < 5) & (rdata.ts > 10), idx_species_in_event_target],
+        1,
+        rtol=0,
+        atol=1e-15,
+    )
+    assert_allclose(
+        rdata.x[(5 < rdata.ts) & (rdata.ts < 10), idx_species_in_event_target],
+        0.1,
+        rtol=0,
+        atol=1e-15,
+    )
+
+
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+)
+@skip_on_valgrind
+def test_event_priorities(tempdir):
+    """Test SBML event priorities."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_priorities"
+    antimony2amici(
+        r"""
+        target1 = 1
+        target2 = 2
+        target3 = 3
+        target3_rate = 0
+        target3' = target3_rate
+        trigger_time = 1
+
+        # test time- and state-dependent triggers
+        some_time = time
+        some_time' = 1
+
+        two = 2
+
+        # three events with different priorities, where priorities
+        #  don't match alphabetical order of IDs or anything the like
+        E_two: \
+            at some_time >= trigger_time, priority=22, fromTrigger=false:
+            target2 = two * target1 + target2 - two;
+        E_one: \
+            at some_time >= trigger_time, priority=111, fromTrigger=false:
+            target1 = 10 + time;
+        E_three: \
+            at some_time >= trigger_time, priority=3, fromTrigger=false:
+            target3 = target1 + target2, target3_rate = 1;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+
+    # check just after the trigger time,
+    # the event does not fire at *exactly* 1
+    model.setTimepoints([0, 1 + 1e-6, 2])
+
+    solver = model.getSolver()
+    solver.setAbsoluteTolerance(1e-16)
+    solver.setRelativeTolerance(1e-14)
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+
+    rdata = amici.runAmiciSimulation(model, solver)
+
+    assert np.all(rdata.by_id("target1") == [1, 11, 11])
+    assert np.all(rdata.by_id("target2") == [2, 22, 22])
+    assert_allclose(rdata.by_id("target3"), [3, 33 + 1e-6, 33 + 1])
+
+    # generate synthetic measurements
+    edata = amici.ExpData(rdata, 1, 0)
+
+    # check forward sensitivities against finite differences
+    # FIXME: sensitivities w.r.t. the bolus parameter are not correct
+    model.setParameterList(
+        [ip for ip, par in enumerate(model.getParameterIds()) if par != "two"]
+    )
+
+    check_derivatives(
+        model,
+        solver,
+        edata=edata,
+        atol=1e-6,
+        rtol=1e-6,
+        # smaller than the offset from the trigger time
+        epsilon=1e-8,
+    )
+
+    # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+    # FIXME: sensitivities w.r.t. the bolus and trigger parameter are totally off
+    # solver.setSensitivityMethod(SensitivityMethod.adjoint)
+    # edata.plist = []
+    # model.requireSensitivitiesForAllParameters()
+    # check_derivatives(
+    #     model,
+    #     solver,
+    #     edata=edata,
+    #     atol=1e-6,
+    #     rtol=1e-6,
+    #     # smaller than the offset from the trigger time
+    #     epsilon=1e-8,
+    # )
+
+
+@skip_on_valgrind
+def test_random_event_ordering(tempdir):
+    """For simultaneously executed events, the order of execution
+    must be random."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_prio_rnd"
+    antimony2amici(
+        r"""
+        target_rnd = 0
+        target_first = 0
+        target_last = 0
+        # test time- and state-dependent triggers
+        some_time = time
+        some_time' = 1
+        trigger_time = 1
+
+        # {E1, E2, E3} must be executed in random order after E_first,
+        # but before E_last
+        E1: at some_time >= trigger_time, priority=1, fromTrigger=false:
+            target_rnd = 1;
+        E2: at some_time >= trigger_time, priority=1, fromTrigger=false:
+            target_rnd = 2;
+        E3: at some_time >= trigger_time, priority=1, fromTrigger=false:
+            target_rnd = 3;
+        E_first: \
+            at some_time >= trigger_time, priority=10, fromTrigger=false:
+            target_first = target_rnd + 2;
+        E_last: \
+            at some_time >= trigger_time, priority=-1, fromTrigger=false:
+            target_last = target_rnd >= 1;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+    model.setTimepoints([0, 2, 3])
+    solver = model.getSolver()
+
+    # the outcomes of the random assignment
+    outcomes = []
+    N = 1000
+    for i in range(N):
+        rdata = amici.runAmiciSimulation(model, solver)
+        assert np.all(rdata.by_id("target_first") == [0, 2, 2])
+        assert np.all(rdata.by_id("target_last") == [0, 1, 1])
+        traj = rdata.by_id("target_rnd")
+        assert traj[0] == 0
+        assert traj[1] == traj[2]
+        # collect the random outputs
+        outcomes.append(traj[2])
+
+    assert set(outcomes) == {1, 2, 3}
+
+    # check that the outcomes are about equally distributed
+    # between 1, 2, and 3
+    assert np.allclose(
+        [outcomes.count(1), outcomes.count(2), outcomes.count(3)],
+        [N / 3, N / 3, N / 3],
+        rtol=0.25,
+    )
+
+
+@skip_on_valgrind
+def test_event_uses_values_from_trigger_time(tempdir):
+    """For simultaneously executed events, check that values from trigger
+    times are used to compute the state update."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_event_vals_trig_time"
+    antimony2amici(
+        r"""
+        some_time = time
+        some_time' = 1
+        trigger_time = 0.5
+        target1 = 2
+        target2 = 0
+        one = 1
+        three = 3
+
+        E1: at some_time >= trigger_time, priority=10, fromTrigger=false:
+            target1 = 10,
+            target2 = target1 + one;
+
+        E2: at some_time >= trigger_time, priority=-10, fromTrigger=true:
+            # this must reset `target1` to its initial value!!
+            target1 = target1,
+            target2 = target2 + three
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+
+    model = model_module.get_model()
+    model.setTimepoints([0, 1.1, 2])
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert np.all(rdata.by_id("target1") == [2, 2, 2])
+    assert np.all(rdata.by_id("target2") == [0, 3, 3])
+
+    # generate synthetic measurements
+    edata = amici.ExpData(rdata, 1, 0)
+
+    # check forward sensitivities against finite differences
+    # FIXME: sensitivities w.r.t. the bolus parameter of the first event
+    #  are wrong
+    model.setParameterList(
+        [
+            ip
+            for ip, par in enumerate(model.getParameterIds())
+            if par not in ["one"]
+        ]
+    )
+
+    check_derivatives(
+        model,
+        solver,
+        edata=edata,
+        atol=1e-6,
+        rtol=1e-6,
+        # smaller than the offset from the trigger time
+        epsilon=1e-8,
+    )
+
+    # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539

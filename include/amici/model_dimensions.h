@@ -9,7 +9,7 @@ namespace amici {
 /**
  * @brief Container for model dimensions.
  *
- * Holds number of states, observables, etc.
+ * Holds number of state variables, observables, etc.
  */
 struct ModelDimensions {
     /** Default ctor */
@@ -31,6 +31,8 @@ struct ModelDimensions {
      * @param nz Number of event observables
      * @param nztrue Number of event observables of the non-augmented model
      * @param ne Number of events
+     * @param ne_solver Number of events that require root-finding
+     * @param nspl Number of splines
      * @param nJ Number of objective functions
      * @param nw Number of repeating elements
      * @param ndwdx Number of nonzero elements in the `x` derivative of the
@@ -52,26 +54,55 @@ struct ModelDimensions {
      * @param nnz Number of nonzero elements in Jacobian
      * @param ubw Upper matrix bandwidth in the Jacobian
      * @param lbw Lower matrix bandwidth in the Jacobian
+     * @param pythonGenerated Flag indicating model creation from Matlab or
+     * Python
+     * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
+     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
+     * @param w_recursion_depth Recursion depth of fw
      */
     ModelDimensions(
-            const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-            const int nxtrue_solver, const int nx_solver_reinit, const int np,
-            const int nk, const int ny,
-            const int nytrue, const int nz, const int nztrue, const int ne,
-            const int nJ, const int nw, const int ndwdx, const int ndwdp,
-            const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
-            const int ndxrdatadxsolver, const int ndxrdatadtcl,
-            const int ndtotal_cldx_rdata,
-            const int nnz, const int ubw, const int lbw)
-        : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
-          nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit),
-          np(np), nk(nk),
-          ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue),
-          ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp), ndwdw(ndwdw),
-          ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)),
-          ndxrdatadxsolver(ndxrdatadxsolver), ndxrdatadtcl(ndxrdatadtcl),
-          ndtotal_cldx_rdata(ndtotal_cldx_rdata),
-          nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw) {
+        int const nx_rdata, int const nxtrue_rdata, int const nx_solver,
+        int const nxtrue_solver, int const nx_solver_reinit, int const np,
+        int const nk, int const ny, int const nytrue, int const nz,
+        int const nztrue, int const ne, int const ne_solver, int const nspl,
+        int const nJ, int const nw, int const ndwdx, int const ndwdp,
+        int const ndwdw, int const ndxdotdw, std::vector<int> ndJydy,
+        int const ndxrdatadxsolver, int const ndxrdatadtcl,
+        int const ndtotal_cldx_rdata, int const nnz, int const ubw,
+        int const lbw, bool pythonGenerated = false, int ndxdotdp_explicit = 0,
+        int ndxdotdx_explicit = 0, int w_recursion_depth = 0
+    )
+        : nx_rdata(nx_rdata)
+        , nxtrue_rdata(nxtrue_rdata)
+        , nx_solver(nx_solver)
+        , nxtrue_solver(nxtrue_solver)
+        , nx_solver_reinit(nx_solver_reinit)
+        , np(np)
+        , nk(nk)
+        , ny(ny)
+        , nytrue(nytrue)
+        , nz(nz)
+        , nztrue(nztrue)
+        , ne(ne)
+        , ne_solver(ne_solver)
+        , nspl(nspl)
+        , nw(nw)
+        , ndwdx(ndwdx)
+        , ndwdp(ndwdp)
+        , ndwdw(ndwdw)
+        , ndxdotdw(ndxdotdw)
+        , ndJydy(std::move(ndJydy))
+        , ndxrdatadxsolver(ndxrdatadxsolver)
+        , ndxrdatadtcl(ndxrdatadtcl)
+        , ndtotal_cldx_rdata(ndtotal_cldx_rdata)
+        , nnz(nnz)
+        , nJ(nJ)
+        , ubw(ubw)
+        , lbw(lbw)
+        , pythonGenerated(pythonGenerated)
+        , ndxdotdp_explicit(ndxdotdp_explicit)
+        , ndxdotdx_explicit(ndxdotdx_explicit)
+        , w_recursion_depth(w_recursion_depth) {
         Expects(nxtrue_rdata >= 0);
         Expects(nxtrue_rdata <= nx_rdata);
         Expects(nxtrue_solver >= 0);
@@ -86,6 +117,9 @@ struct ModelDimensions {
         Expects(nztrue >= 0);
         Expects(nztrue <= nz);
         Expects(ne >= 0);
+        Expects(ne_solver >= 0);
+        Expects(ne >= ne_solver);
+        Expects(nspl >= 0);
         Expects(nw >= 0);
         Expects(ndwdx >= 0);
         Expects(ndwdx <= nw * nx_solver);
@@ -97,13 +131,16 @@ struct ModelDimensions {
         Expects(ndxrdatadxsolver >= 0);
         Expects(ndxrdatadxsolver <= nx_rdata * nx_solver);
         Expects(ndxrdatadtcl >= 0);
-        Expects(ndxrdatadtcl <= nx_rdata * (nx_rdata-nx_solver));
+        Expects(ndxrdatadtcl <= nx_rdata * (nx_rdata - nx_solver));
         Expects(ndtotal_cldx_rdata >= 0);
-        Expects(ndtotal_cldx_rdata <= (nx_rdata-nx_solver) * nx_rdata);
+        Expects(ndtotal_cldx_rdata <= (nx_rdata - nx_solver) * nx_rdata);
         Expects(nnz >= 0);
         Expects(nJ >= 0);
         Expects(ubw >= 0);
         Expects(lbw >= 0);
+        Expects(ndxdotdp_explicit >= 0);
+        Expects(ndxdotdx_explicit >= 0);
+        Expects(w_recursion_depth >= 0);
     }
 
     /** Number of states */
@@ -145,6 +182,12 @@ struct ModelDimensions {
     /** Number of events */
     int ne{0};
 
+    /** Number of events that require root-finding */
+    int ne_solver{0};
+
+    /** Number of spline functions in the model */
+    int nspl{0};
+
     /** Number of common expressions */
     int nw{0};
 
@@ -152,22 +195,23 @@ struct ModelDimensions {
      * Number of nonzero elements in the `x` derivative of the
      * repeating elements
      */
-    int ndwdx {0};
+    int ndwdx{0};
 
     /**
      * Number of nonzero elements in the `p` derivative of the
      * repeating elements
      */
-    int ndwdp {0};
+    int ndwdp{0};
 
     /**
      * Number of nonzero elements in the `w` derivative of the
      * repeating elements
      */
-    int ndwdw {0};
+    int ndwdw{0};
 
-    /** Number of nonzero elements in the \f$ w \f$ derivative of \f$ xdot \f$ */
-    int ndxdotdw {0};
+    /** Number of nonzero elements in the \f$ w \f$ derivative of \f$ xdot \f$
+     */
+    int ndxdotdw{0};
 
     /**
      * Number of nonzero elements in the \f$ y \f$ derivative of
@@ -175,10 +219,12 @@ struct ModelDimensions {
      */
     std::vector<int> ndJydy;
 
-    /** Number of nonzero elements in the \f$ x \f$ derivative of \f$ x_rdata \f$ */
+    /** Number of nonzero elements in the \f$ x \f$ derivative of \f$ x_rdata
+     * \f$ */
     int ndxrdatadxsolver{0};
 
-    /** Number of nonzero elements in the \f$ tcl\f$ derivative of \f$ x_rdata \f$ */
+    /** Number of nonzero elements in the \f$ tcl\f$ derivative of \f$ x_rdata
+     * \f$ */
     int ndxrdatadtcl{0};
 
     /** Number of nonzero elements in the \f$ x_rdata\f$ derivative of
@@ -196,6 +242,18 @@ struct ModelDimensions {
 
     /** Lower bandwidth of the Jacobian */
     int lbw{0};
+
+    /** Flag indicating model creation from Matlab or Python */
+    bool pythonGenerated = false;
+
+    /** Number of nonzero elements in `dxdotdx_explicit` */
+    int ndxdotdp_explicit = 0;
+
+    /** Number of nonzero elements in `dxdotdp_explicit` */
+    int ndxdotdx_explicit = 0;
+
+    /** Recursion depth of fw */
+    int w_recursion_depth = 0;
 };
 
 } // namespace amici

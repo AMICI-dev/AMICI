@@ -79,7 +79,7 @@ if(usejava('jvm'))
     xlabel('adjoint sensitivity absolute value of gradient element')
     ylabel('computed absolute value of gradient element')
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 end

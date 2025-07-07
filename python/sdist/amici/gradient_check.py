@@ -5,25 +5,34 @@ This module provides functions to automatically check correctness of amici
 computed sensitivities using finite difference approximations
 """
 
-from . import (
-    runAmiciSimulation, SensitivityOrder, AMICI_SUCCESS, SensitivityMethod,
-    Model, Solver, ExpData, ReturnData, ParameterScaling)
-import numpy as np
 import copy
+from collections.abc import Sequence
 
-from typing import Callable, Optional, List, Sequence
+import numpy as np
+
+from . import (
+    AMICI_SUCCESS,
+    ExpData,
+    Model,
+    ParameterScaling,
+    ReturnData,
+    SensitivityMethod,
+    SensitivityOrder,
+    Solver,
+    runAmiciSimulation,
+)
 
 
 def check_finite_difference(
-        x0: Sequence[float],
-        model: Model,
-        solver: Solver,
-        edata: ExpData,
-        ip: int,
-        fields: List[str],
-        atol: Optional[float] = 1e-4,
-        rtol: Optional[float] = 1e-4,
-        epsilon: Optional[float] = 1e-3
+    x0: Sequence[float],
+    model: Model,
+    solver: Solver,
+    edata: ExpData,
+    ip: int,
+    fields: list[str],
+    atol: float | None = 1e-4,
+    rtol: float | None = 1e-4,
+    epsilon: float | None = 1e-3,
 ) -> None:
     """
     Checks the computed sensitivity based derivatives against a finite
@@ -76,7 +85,7 @@ def check_finite_difference(
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
         solver.setSensitivityOrder(SensitivityOrder.first)
     rdata = runAmiciSimulation(model, solver, edata)
-    if rdata['status'] != AMICI_SUCCESS:
+    if rdata["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdata['status']}")
 
     # finite difference
@@ -95,17 +104,17 @@ def check_finite_difference(
     # forward:
     model.setParameters(pf)
     rdataf = runAmiciSimulation(model, solver, edata)
-    if rdataf['status'] != AMICI_SUCCESS:
+    if rdataf["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdataf['status']}")
 
     # backward:
     model.setParameters(pb)
     rdatab = runAmiciSimulation(model, solver, edata)
-    if rdatab['status'] != AMICI_SUCCESS:
+    if rdatab["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdatab['status']}")
 
     for field in fields:
-        sensi_raw = rdata[f's{field}']
+        sensi_raw = rdata[f"s{field}"]
         fd = (rdataf[field] - rdatab[field]) / (pf[ip] - pb[ip])
         if len(sensi_raw.shape) == 1:
             sensi = sensi_raw[0]
@@ -116,7 +125,17 @@ def check_finite_difference(
         else:
             raise NotImplementedError()
 
-        _check_close(sensi, fd, atol=atol, rtol=rtol, field=field, ip=ip)
+        _check_close(
+            sensi,
+            fd,
+            atol=atol,
+            rtol=rtol,
+            field=field,
+            ip=ip,
+            parameter_id=model.getParameterIds()[ip]
+            if model.hasParameterIds()
+            else None,
+        )
 
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
@@ -126,14 +145,14 @@ def check_finite_difference(
 
 
 def check_derivatives(
-        model: Model,
-        solver: Solver,
-        edata: Optional[ExpData] = None,
-        atol: Optional[float] = 1e-4,
-        rtol: Optional[float] = 1e-4,
-        epsilon: Optional[float] = 1e-3,
-        check_least_squares: bool = True,
-        skip_zero_pars: bool = False
+    model: Model,
+    solver: Solver,
+    edata: ExpData | None = None,
+    atol: float | None = 1e-4,
+    rtol: float | None = 1e-4,
+    epsilon: float | None = 1e-3,
+    check_least_squares: bool = True,
+    skip_zero_pars: bool = False,
 ) -> None:
     """
     Finite differences check for likelihood gradient.
@@ -172,50 +191,83 @@ def check_derivatives(
     rdata = runAmiciSimulation(model, solver, edata)
     solver.setSensitivityOrder(og_sens_order)
 
-    if rdata['status'] != AMICI_SUCCESS:
+    if rdata["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdata['status']}")
 
     fields = []
 
-    if solver.getSensitivityMethod() == SensitivityMethod.forward and \
-            solver.getSensitivityOrder() <= SensitivityOrder.first:
-        fields.append('x')
+    if (
+        solver.getSensitivityMethod() == SensitivityMethod.forward
+        and solver.getSensitivityOrder() <= SensitivityOrder.first
+    ):
+        fields.append("x")
 
-    leastsquares_applicable = \
-        solver.getSensitivityMethod() == SensitivityMethod.forward \
+    leastsquares_applicable = (
+        solver.getSensitivityMethod() == SensitivityMethod.forward
         and edata is not None
+    )
 
-    if 'ssigmay' in rdata.keys() \
-            and rdata['ssigmay'] is not None \
-            and rdata['ssigmay'].any() and not model.getAddSigmaResiduals():
+    if (
+        "ssigmay" in rdata.keys()
+        and rdata["ssigmay"] is not None
+        and rdata["ssigmay"].any()
+        and not model.getAddSigmaResiduals()
+    ):
         leastsquares_applicable = False
 
     if check_least_squares and leastsquares_applicable:
-        fields += ['res', 'y']
+        fields += ["res", "y"]
 
-        _check_results(rdata, 'FIM', np.dot(rdata['sres'].T, rdata['sres']),
-                       atol=1e-8, rtol=1e-4)
-        _check_results(rdata, 'sllh', -np.dot(rdata['res'].T, rdata['sres']),
-                       atol=1e-8, rtol=1e-4)
+        _check_results(
+            rdata,
+            "FIM",
+            np.dot(rdata["sres"].T, rdata["sres"]),
+            atol=1e-8,
+            rtol=1e-4,
+        )
+        _check_results(
+            rdata,
+            "sllh",
+            -np.dot(rdata["res"].T, rdata["sres"]),
+            atol=1e-8,
+            rtol=1e-4,
+        )
 
     if edata is not None:
-        fields.append('llh')
+        fields.append("llh")
+
+    # only check the sensitivities w.r.t. the selected parameters
+    plist = model.getParameterList()
+    if edata and edata.plist:
+        plist = edata.plist
 
     for ip, pval in enumerate(p):
+        if plist and ip not in plist:
+            continue
         if pval == 0.0 and skip_zero_pars:
             continue
-        check_finite_difference(p, model, solver, edata, ip, fields,
-                                atol=atol, rtol=rtol, epsilon=epsilon)
+        check_finite_difference(
+            p,
+            model,
+            solver,
+            edata,
+            ip,
+            fields,
+            atol=atol,
+            rtol=rtol,
+            epsilon=epsilon,
+        )
 
 
 def _check_close(
-        result: np.array,
-        expected: np.array,
-        atol: float,
-        rtol: float,
-        field: str,
-        ip: Optional[int] = None,
-        verbose: Optional[bool] = True,
+    result: np.array,
+    expected: np.array,
+    atol: float,
+    rtol: float,
+    field: str,
+    ip: int | None = None,
+    parameter_id: str | None = None,
+    verbose: bool | None = True,
 ) -> None:
     """
     Compares computed values against expected values and provides rich
@@ -239,6 +291,9 @@ def _check_close(
     :param ip:
         parameter index, for more informative output
 
+    :param parameter_id:
+        parameter ID, for more informative output
+
     :param verbose:
         produce a more verbose error message in case of unmatched expectations
     """
@@ -247,14 +302,18 @@ def _check_close(
         return
 
     if ip is None:
-        index_str = ''
-        check_type = 'Regression check'
+        index_str = ""
+        check_type = "Regression check"
     else:
-        index_str = f'at index ip={ip} '
-        check_type = 'FD check'
+        index_str = f"at index ip={ip} "
+        if parameter_id:
+            index_str += f"({parameter_id}) "
+        check_type = "FD check"
 
-    lines = [f'{check_type} failed for {field} {index_str}for '
-             f'{close.size - close.sum()} indices:']
+    lines = [
+        f"{check_type} failed for {field} {index_str}for "
+        f"{close.size - close.sum()} indices:"
+    ]
     if verbose:
         for idx in np.argwhere(~close):
             idx = tuple(idx)
@@ -262,22 +321,17 @@ def _check_close(
                 rr = result[idx]
             else:
                 rr = result
-            lines.append(
-                f"\tat {idx}: Expected {expected[idx]}, got {rr}")
+            lines.append(f"\tat {idx}: Expected {expected[idx]}, got {rr}")
     adev = np.abs(result - expected)
     rdev = np.abs((result - expected) / (expected + atol))
-    lines.append(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
+    lines.append(f"max(adev): {adev.max()}, max(rdev): {rdev.max()}")
 
     raise AssertionError("\n".join(lines))
 
 
 def _check_results(
-        rdata: ReturnData,
-        field: str,
-        expected: np.array,
-        atol: float,
-        rtol: float
-        ) -> None:
+    rdata: ReturnData, field: str, expected: np.array, atol: float, rtol: float
+) -> None:
     """
     Checks whether rdata[field] agrees with expected according to provided
     tolerances.
@@ -300,8 +354,9 @@ def _check_results(
     """
 
     result = rdata[field]
-    if type(result) is float:
+    if type(result) is float:  # noqa E721
         result = np.array(result)
 
-    _check_close(result=result, expected=expected,
-                 atol=atol, rtol=rtol, field=field)
+    _check_close(
+        result=result, expected=expected, atol=atol, rtol=rtol, field=field
+    )

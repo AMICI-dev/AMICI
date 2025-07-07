@@ -64,7 +64,7 @@ if(usejava('jvm'))
     legend('error x1','error x2','error x3','Location','NorthEastOutside')
     legend boxoff
     ylabel('x')
-    
+
     subplot(2,2,3)
     plot(t,sol.y,'.-','Color',c_x(1,:))
     hold on
@@ -74,7 +74,7 @@ if(usejava('jvm'))
     xlabel('time t')
     ylabel('y')
     box on
-    
+
     subplot(2,2,4)
     plot(t,abs(sol.y-p(4)*sum(X_ode15s,2)),'--')
     set(gca,'YScale','log')
@@ -83,7 +83,7 @@ if(usejava('jvm'))
     xlabel('time t')
     ylabel('y')
     box on
-    
+
     set(gcf,'Position',[100 300 1200 500])
 end
 
@@ -125,7 +125,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('sx')
         box on
-        
+
         subplot(4,2,ip*2)
         plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'--')
         legend('error sx1','error sx2','error sx3','Location','NorthEastOutside')
@@ -137,7 +137,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     figure
     for ip = 1:4
         subplot(4,2,ip*2-1)
@@ -152,7 +152,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('sy')
         box on
-        
+
         subplot(4,2,ip*2)
         plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'--')
         legend('error sy1','Location','NorthEastOutside')
@@ -164,7 +164,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     figure
     for ip = 1:4
         subplot(4,2,2*ip-1)
@@ -177,7 +177,7 @@ if(usejava('jvm'))
         xlabel('event #')
         ylabel('sz')
         box on
-        
+
         subplot(4,2,2*ip)
         bar(1:D.ne,sol.sz(1:D.ne,:,ip)-sz_fd(1:D.ne,:,ip),0.8)
         hold on
@@ -189,7 +189,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 end

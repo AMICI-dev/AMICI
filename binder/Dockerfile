@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # install dependencies
 
@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     python3-pip \
     python3-venv \
-    swig \
     wget
 
 # BEGIN BINDER
@@ -43,9 +42,8 @@ USER ${NB_USER}
 
 WORKDIR ${HOME}
 RUN . ./.profile && python3 -m build --sdist python/sdist && \
-    python3 -m pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb] && \
+    python3 -m pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb,vis] && \
     python3 -m pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
     scripts/buildBNGL.sh
 
 ENV BNGPATH="${HOME}/ThirdParty/BioNetGen-2.7.0"
-

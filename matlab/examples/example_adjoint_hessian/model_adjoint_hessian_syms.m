@@ -13,9 +13,9 @@ model.sym.x = [x1];
 % PARAMETERS ( for these sensitivities will be computed )
 
 % create parameter syms
-syms p1 p2 p3 
+syms p1 p2 p3
 
-% create parameter vector 
+% create parameter vector
 model.sym.p = [p1 p2 p3];
 
 

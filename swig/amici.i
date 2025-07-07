@@ -1,7 +1,7 @@
 %define DOCSTRING
 """
 Core C++ bindings
------------------
+
 This module encompasses the complete public C++ API of AMICI, which was
 exposed via swig. All functions listed here are directly accessible in the
 main amici package, i.e., :py:class:`amici.amici.ExpData` is available as
@@ -16,6 +16,7 @@ nonstandard type conversions.
 
 // typemaps for docstrings
 %typemap(doctype) std::unique_ptr< amici::ExpData >::pointer "ExpData";
+%typemap(doctype) std::unique_ptr< amici::Model > "ModelPtr";
 %typemap(doctype) std::unique_ptr< amici::Solver > "SolverPtr";
 %typemap(doctype) std::vector< amici::realtype,std::allocator< amici::realtype > > "DoubleVector";
 %typemap(doctype) std::vector< double,std::allocator< double > > "DoubleVector";
@@ -43,8 +44,8 @@ nonstandard type conversions.
 %typemap(doctype) amici::SteadyStateSensitivityMode "SteadyStateSensitivityMode";
 %typemap(doctype) amici::realtype "float";
 %typemap(doctype) DoubleVector "numpy.ndarray";
-%typemap(doctype) IntVector "List[int]";
-%typemap(doctype) std::pair< size_t,size_t > "Tuple[int, int]";
+%typemap(doctype) IntVector "list[int]";
+%typemap(doctype) std::pair< size_t,size_t > "tuple[int, int]";
 %typemap(doctype) std::string "str";
 %typemap(doctype) std::string const & "str";
 %typemap(doctype) std::unique_ptr< amici::ExpData >   "ExpData";
@@ -154,12 +155,15 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_sim;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_presim;
 
+// DO NOT IGNORE amici::SimulationParameters, amici::ModelDimensions, amici::CpuTimer
 %ignore amici::ModelContext;
 %ignore amici::ContextManager;
 %ignore amici::ModelState;
 %ignore amici::ModelStateDerived;
 %ignore amici::unravel_index;
 %ignore amici::backtraceString;
+%ignore amici::Logger;
+%ignore amici::SimulationState;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
@@ -228,6 +232,14 @@ def __repr__(self):
 def __repr__(self):
     return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
 
+%}
+};
+
+%extend amici::LogItem {
+%pythoncode %{
+def __repr__(self):
+    return (f"{self.__class__.__name__}(severity={self.severity}, "
+        f"identifier={self.identifier!r}, message={self.message!r})")
 %}
 };
 
@@ -309,11 +321,13 @@ InternalSensitivityMethod = enum('InternalSensitivityMethod')
 InterpolationType = enum('InterpolationType')
 LinearMultistepMethod = enum('LinearMultistepMethod')
 NonlinearSolverIteration = enum('NonlinearSolverIteration')
+SteadyStateComputationMode = enum('SteadyStateComputationMode')
 SteadyStateSensitivityMode = enum('SteadyStateSensitivityMode')
 SteadyStateStatus = enum('SteadyStateStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
+Constraint = enum('Constraint')
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
@@ -327,6 +341,8 @@ def __repr__(self):
 
 // Handle AMICI_DLL_DIRS environment variable
 %pythonbegin %{
+from __future__ import annotations
+
 import sys
 import os
 
@@ -336,11 +352,69 @@ if sys.platform == 'win32' and (dll_dirs := os.environ.get('AMICI_DLL_DIRS')):
 
 %}
 
+
+%pythonbegin %{
+# If AMICI was linked against `scipy_openblas64`, we need to tell the runtime
+# loader where to find the OpenBLAS library.
+from pathlib import Path
+
+_amici_dir = Path(__file__).parent.absolute()
+_lib_dir = str(_amici_dir / "lib")
+
+if sys.platform == 'win32':
+    os.add_dll_directory(_lib_dir)
+
+%}
+
 // import additional types for typehints
 // also import np for use in __repr__ functions
 %pythonbegin %{
-from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
+from typing import TYPE_CHECKING, Iterable, Union
+from collections.abc import Sequence
 import numpy as np
 if TYPE_CHECKING:
     import numpy
+%}
+
+%pythoncode %{
+
+AmiciModel = Union[Model, ModelPtr]
+AmiciSolver = Union[Solver, SolverPtr]
+AmiciExpData = Union[ExpData, ExpDataPtr]
+AmiciReturnData = Union[ReturnData, ReturnDataPtr]
+AmiciExpDataVector = Union[ExpDataPtrVector, Sequence[AmiciExpData]]
+
+
+def _get_ptr(
+    obj: AmiciModel | AmiciExpData | AmiciSolver | AmiciReturnData,
+) -> Model | ExpData | Solver | ReturnData:
+    """
+    Convenience wrapper that returns the smart pointer pointee, if applicable
+
+    :param obj:
+        Potential smart pointer
+
+    :returns:
+        Non-smart pointer
+    """
+    if isinstance(
+        obj,
+        (
+            ModelPtr,
+            ExpDataPtr,
+            SolverPtr,
+            ReturnDataPtr,
+        ),
+    ):
+        return obj.get()
+    return obj
+
+
+__all__ = [
+    x
+    for x in dir(sys.modules[__name__])
+    if not x.startswith('_')
+    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence", "Path"}
+]
+
 %}

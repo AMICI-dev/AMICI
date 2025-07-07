@@ -14,7 +14,7 @@ namespace amici {
  * @param rdata ReturnDataObject
  * @return rdatamatlab ReturnDataObject stored as matlab compatible data
  */
-mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const *rdata);
+mxArray* getReturnDataMatlabFromAmiciCall(ReturnData const* rdata);
 
 /**
  * @brief allocates and initializes solution mxArray with the corresponding
@@ -22,7 +22,7 @@ mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const *rdata);
  * @param rdata ReturnDataObject
  * @return Solution mxArray
  */
-mxArray *initMatlabReturnFields(ReturnData const *rdata);
+mxArray* initMatlabReturnFields(ReturnData const* rdata);
 
 /**
  * @brief allocates and initializes diagnosis mxArray with the corresponding
@@ -30,7 +30,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata);
  * @param rdata ReturnDataObject
  * @return Diagnosis mxArray
  */
-mxArray *initMatlabDiagnosisFields(ReturnData const *rdata);
+mxArray* initMatlabDiagnosisFields(ReturnData const* rdata);
 
 /**
  * @brief initialize vector and attach to the field
@@ -55,7 +55,7 @@ void writeMatlabField0(
 template <typename T>
 void writeMatlabField1(
     mxArray* matlabStruct, char const* fieldName,
-    gsl::span<T const> const& fieldData, const mwSize dim0
+    gsl::span<T const> const& fieldData, mwSize const dim0
 );
 
 /**
@@ -137,8 +137,8 @@ void checkFieldNames(char const** fieldNames, int const fieldCount);
  * @return Reordered vector
  */
 template <typename T>
-std::vector<T> reorder(std::vector<T> const& input,
-                       std::vector<int> const& order);
+std::vector<T>
+reorder(std::vector<T> const& input, std::vector<int> const& order);
 
 } // namespace amici
 

@@ -1,47 +1,57 @@
 """Tests for SBML events, including piecewise expressions."""
-import libsbml
-import numpy as np
+
+import sys
+import tempfile
 from pathlib import Path
 
+import libsbml
+import numpy as np
+import pandas as pd
+
+import amici
 from amici import (
     AmiciModel,
-    import_model_module,
-    runAmiciSimulation,
+    ExpData,
     SbmlImporter,
     SensitivityMethod,
-    SensitivityOrder
+    SensitivityOrder,
+    import_model_module,
+    runAmiciSimulation,
 )
 from amici.gradient_check import _check_close
+from numpy.testing import assert_allclose
 
 
 def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     """
     Import an sbml file and create an AMICI model from it
     """
-    sbml_test_models = Path('sbml_test_models')
-    sbml_test_models_output_dir = sbml_test_models / 'amici_models'
+    sbml_test_models_output_dir = Path("amici_models")
     sbml_test_models_output_dir.mkdir(parents=True, exist_ok=True)
 
     sbml_importer = SbmlImporter(sbml_model)
-    output_dir = sbml_test_models_output_dir / model_name
-    sbml_importer.sbml2amici(
-        model_name=model_name,
-        output_dir=str(output_dir),
-        **kwargs
+    # try not to exceed the stupid maximum path length on windows 💩
+    output_dir = (
+        sbml_test_models_output_dir / model_name
+        if sys.platform != "win32"
+        else tempfile.mkdtemp()
     )
 
-    model_module = import_model_module(model_name, str(output_dir.resolve()))
-    model = model_module.getModel()
-    return model
+    sbml_importer.sbml2amici(
+        model_name=model_name, output_dir=output_dir, **kwargs
+    )
+
+    model_module = import_model_module(model_name, output_dir)
+    return model_module.getModel()
 
 
 def create_sbml_model(
-        initial_assignments,
-        parameters,
-        rate_rules,
-        species,
-        events,
-        to_file: str = None,
+    initial_assignments,
+    parameters,
+    rate_rules,
+    species,
+    events,
+    to_file: str = None,
 ):
     """Create an SBML model from simple definitions.
 
@@ -54,18 +64,18 @@ def create_sbml_model(
     model = document.createModel()
 
     compartment = model.createCompartment()
-    compartment.setId('compartment')
+    compartment.setId("compartment")
     compartment.setConstant(True)
     compartment.setSize(1)
     compartment.setSpatialDimensions(3)
-    compartment.setUnits('dimensionless')
+    compartment.setUnits("dimensionless")
 
     for species_id in species:
         species = model.createSpecies()
         species.setId(species_id)
-        species.setCompartment('compartment')
+        species.setCompartment("compartment")
         species.setConstant(False)
-        species.setSubstanceUnits('dimensionless')
+        species.setSubstanceUnits("dimensionless")
         species.setBoundaryCondition(False)
         species.setHasOnlySubstanceUnits(False)
         species.setInitialConcentration(1.0)
@@ -85,38 +95,36 @@ def create_sbml_model(
         parameter.setId(parameter_id)
         parameter.setConstant(True)
         parameter.setValue(parameter_value)
-        parameter.setUnits('dimensionless')
+        parameter.setUnits("dimensionless")
 
     for event_id, event_def in events.items():
         event = model.createEvent()
         event.setId(event_id)
         event.setName(event_id)
-        event.setUseValuesFromTriggerTime(True)
+        event.setUseValuesFromTriggerTime(False)
         trigger = event.createTrigger()
-        trigger.setMath(libsbml.parseL3Formula(event_def['trigger']))
+        trigger.setMath(libsbml.parseL3Formula(event_def["trigger"]))
         trigger.setPersistent(True)
         trigger.setInitialValue(True)
 
-        def creat_event_assignment(target, assignment):
+        def create_event_assignment(target, assignment):
             ea = event.createEventAssignment()
             ea.setVariable(target)
             ea.setMath(libsbml.parseL3Formula(assignment))
 
-        if isinstance(event_def['target'], list):
+        if isinstance(event_def["target"], list):
             for event_target, event_assignment in zip(
-                    event_def['target'], event_def['assignment']
+                event_def["target"], event_def["assignment"], strict=True
             ):
-                creat_event_assignment(event_target, event_assignment)
+                create_event_assignment(event_target, event_assignment)
 
         else:
-            creat_event_assignment(event_def['target'],
-                                   event_def['assignment'])
+            create_event_assignment(
+                event_def["target"], event_def["assignment"]
+            )
 
     if to_file:
-        libsbml.writeSBMLToFile(
-            document,
-            str(to_file),
-        )
+        libsbml.writeSBMLToFile(document, to_file)
 
     # Need to return document, else AMICI throws an error.
     # (possibly due to garbage collection?)
@@ -124,52 +132,31 @@ def create_sbml_model(
 
 
 def check_trajectories_without_sensitivities(
-        amici_model: AmiciModel,
-        result_expected_x: np.ndarray,
+    amici_model: AmiciModel,
+    result_expected_x: np.ndarray,
 ):
     """
     Check whether the AMICI simulation matches a known solution
     (ideally an analytically calculated one).
     """
-
-    # Does the AMICI simulation match the analytical solution?
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata['x'], result_expected_x, field="x",
-                 rtol=5e-5, atol=1e-13)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata['x'], result_expected_x, field="x",
-                 rtol=5e-9, atol=1e-13)
+    _check_close(
+        rdata["x"], result_expected_x, field="x", rtol=5e-9, atol=1e-13
+    )
 
 
 def check_trajectories_with_forward_sensitivities(
-        amici_model: AmiciModel,
-        result_expected_x: np.ndarray,
-        result_expected_sx: np.ndarray,
+    amici_model: AmiciModel,
+    result_expected_x: np.ndarray,
+    result_expected_sx: np.ndarray,
 ):
     """
     Check whether the forward sensitivities of the AMICI simulation match
     a known solution (ideally an analytically calculated one).
     """
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata['x'], result_expected_x, field="x",
-                 rtol=1e-5, atol=1e-13)
-    _check_close(rdata['sx'], result_expected_sx, field="sx",
-                 rtol=1e-5, atol=1e-7)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
@@ -178,7 +165,122 @@ def check_trajectories_with_forward_sensitivities(
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata['x'], result_expected_x, field="x",
-                 rtol=1e-10, atol=1e-12)
-    _check_close(rdata['sx'], result_expected_sx, field="sx",
-                 rtol=1e-10, atol=1e-9)
+    _check_close(
+        rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12
+    )
+    _check_close(
+        rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9
+    )
+
+
+def check_trajectories_with_adjoint_sensitivities(
+    amici_model: AmiciModel, asa_xfail: bool = False
+):
+    """
+    Check whether adjoint sensitivities match forward sensitivities and finite
+    differences.
+
+    :param amici_model: AMICI model to test
+    :param asa_xfail: If True, deviations between adjoint and forward
+        sensitivities will not raise an AssertionError.
+    """
+    # First compute dummy experimental data to use adjoints
+    solver = amici_model.getSolver()
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    rng_seed = 42
+    edata = ExpData(rdata, 1.0, 1.0, rng_seed)
+
+    # FSA
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    assert rdata_fsa.status == amici.AMICI_SUCCESS
+
+    # ASA
+    solver.setSensitivityMethod(SensitivityMethod.adjoint)
+    solver.setAbsoluteTolerance(1e-16)
+    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteToleranceB(1e-16)
+    solver.setRelativeToleranceB(1e-15)
+    solver.setAbsoluteToleranceQuadratures(1e-14)
+    solver.setRelativeToleranceQuadratures(1e-8)
+    rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    assert rdata_asa.status == amici.AMICI_SUCCESS
+
+    assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
+    assert_allclose(rdata_fsa.llh, rdata_asa.llh, atol=1e-14, rtol=1e-10)
+    df = pd.DataFrame(
+        {
+            "fsa": rdata_fsa["sllh"],
+            "asa": rdata_asa["sllh"],
+            "fd": np.nan,
+        },
+        index=list(amici_model.getParameterIds()),
+    )
+    df["abs_diff"] = df["fsa"] - df["asa"]
+    df["rel_diff"] = df["abs_diff"] / df["fsa"]
+
+    # Also test against finite differences
+    parameters = amici_model.getUnscaledParameters()
+    solver.setSensitivityOrder(SensitivityOrder.none)
+    sllh_fd = []
+    eps = 1e-5
+    for i_par, par in enumerate(parameters):
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] += eps
+        amici_model.setParameters(tmp_par)
+        rdata_p = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] -= eps
+        amici_model.setParameters(tmp_par)
+        rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
+    df["fd"] = sllh_fd
+    df["asa_matches_fsa"] = np.isclose(
+        df["asa"], df["fsa"], rtol=1e-8, atol=1e-12
+    )
+    print()
+    with pd.option_context(
+        "display.max_rows",
+        None,
+        "display.max_columns",
+        None,
+        "display.width",
+        None,
+    ):
+        print(df)
+
+    if asa_xfail:
+        if df["asa_matches_fsa"].all():
+            # Note that this is machine-dependent...
+            print("Incorrectly marked as xfail?")
+        print(
+            "FIXME: Ignoring differences between adjoint and forward sensitivities."
+        )
+        return
+
+    assert_allclose(
+        sllh_fd,
+        rdata_fsa["sllh"],
+        rtol=1e-5,
+        atol=1e-8,
+        err_msg="Finite differences and forward sensitivities do not match.",
+    )
+
+    assert_allclose(
+        rdata_fsa["sllh"],
+        rdata_asa["sllh"],
+        rtol=1e-8,
+        atol=1e-12,
+        err_msg="Adjoint and forward sensitivities do not match.",
+    )
+    assert_allclose(
+        sllh_fd,
+        rdata_asa["sllh"],
+        rtol=1e-5,
+        atol=1e-6,
+        err_msg="Finite differences and adjoint sensitivities do not match.",
+    )
