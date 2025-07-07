@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from amici.testing import skip_on_valgrind
-from conftest import MODEL_CONSTANT_SPECIES_XML
 
 
 @pytest.fixture
@@ -44,8 +43,40 @@ def edata_fixture():
 
 @pytest.fixture(scope="session")
 def models():
-    # SBML model we want to import
-    sbml_importer = amici.SbmlImporter(MODEL_CONSTANT_SPECIES_XML)
+    from amici.antimony_import import antimony2sbml
+
+    ant_model = """model *model_constant_species()
+  const compartment compartment_ = 1;
+  var species substrate in compartment_ = 0;
+  const species $enzyme in compartment_;
+  var species complex in compartment_ = 0;
+  species product in compartment_ = 0;
+
+  var substrate_product := complex + product + substrate;
+
+  creation:  => substrate; compartment_*(synthesis_substrate + k_create);
+  binding: substrate + $enzyme -> complex; compartment_*(k_bind*substrate*enzyme - k_unbind*complex);
+  conversion: complex => $enzyme + product; compartment_*k_convert*complex;
+  decay: product => ; compartment_*k_decay*product;
+
+  enzyme = init_enzyme;
+  substrate = init_substrate;
+
+  const init_enzyme = 2;
+  const init_substrate = 5;
+  const synthesis_substrate = 0;
+  const k_bind = 10;
+  const k_unbind = 1;
+  const k_convert = 10;
+  const k_create = 2;
+  const k_decay = 1;
+
+  unit volume = 1e-3 litre;
+  unit substance = 1e-3 mole;
+end"""
+    sbml_importer = amici.SbmlImporter(
+        antimony2sbml(ant_model), from_file=False
+    )
 
     # Name of the model that will also be the name of the python module
     model_name = model_output_dir = "model_constant_species"
