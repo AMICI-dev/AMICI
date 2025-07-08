@@ -59,7 +59,7 @@ def _jax_variable_equations(
     code_printer: AmiciJaxCodePrinter,
     eq_names: tuple[str, ...],
     subs: dict,
-    indent: int = 8,
+    indent: int,
 ) -> dict:
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
@@ -154,10 +154,6 @@ class ODEExporter:
             raise NotImplementedError(
                 "The JAX backend does not support models with algebraic states."
             )
-        if ode_model.has_parameter_dependent_implicit_roots():
-            raise NotImplementedError(
-                "The JAX backend does not support models with parameter dependent implicit event triggers."
-            )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
@@ -207,6 +203,7 @@ class ODEExporter:
             "x_solver",
             "x_rdata",
             "total_cl",
+            "iroot",
         )
         sym_names = (
             "p",
@@ -214,11 +211,13 @@ class ODEExporter:
             "op",
             "x",
             "tcl",
+            "ih",
             "w",
             "my",
             "y",
             "sigmay",
             "x_rdata",
+            "iroot",
         )
 
         indent = 8
@@ -226,11 +225,12 @@ class ODEExporter:
         # replaces Heaviside variables with corresponding functions
         subs_heaviside = dict(
             zip(
-                self.model.sym("h"),
-                [sp.Heaviside(x) for x in self.model.eq("root")],
+                self.model.sym("eh"),
+                [sp.Heaviside(x) for x in self.model.eq("eroot")],
                 strict=True,
             )
         )
+
         # replaces observables with a generic my variable
         subs_observables = dict(
             zip(
@@ -260,6 +260,7 @@ class ODEExporter:
                     for root in e.get_trigger_times()
                 }
             ),
+            "N_IEVENTS": str(len(self.model.get_implicit_roots())),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we
@@ -282,12 +283,26 @@ class ODEExporter:
             tpl_data,
         )
 
+
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridisation.items():
             generate_equinox(
                 net["model"],
                 self.model_path / f"{net_name}.py",
             )
+
+    def _implicit_roots(self) -> list[sp.Expr]:
+        """Return root functions that require rootfinding."""
+        roots = []
+        for root in self.model.get_implicit_roots():
+            if any(
+                sp.simplify(root + r) == 0 or sp.simplify(root - r) == 0
+                for r in roots
+            ):
+                continue
+            roots.append(root)
+        return roots
+
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:
         """

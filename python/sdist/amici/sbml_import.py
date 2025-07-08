@@ -1478,6 +1478,7 @@ class SbmlImporter:
                     self.stoichiometric_matrix[
                         species["index"], reaction_index
                     ] += sign * stoichiometry * species["conversion_factor"]
+
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
@@ -1485,12 +1486,8 @@ class SbmlImporter:
                     reaction.getKineticLaw() or sp.Float(0)
                 )
 
-            self.flux_vector[reaction_index] = sym_math.subs(
-                {
-                    BooleanTrue(): sp.Float(1.0),
-                    BooleanFalse(): sp.Float(0.0),
-                }
-            )
+            self.flux_vector[reaction_index] = sym_math
+
             if any(
                 str(symbol) in reaction_ids
                 for symbol in self.flux_vector[reaction_index].free_symbols

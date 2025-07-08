@@ -10,6 +10,8 @@ import logging
 
 
 import diffrax
+import optimistix
+from optimistix import AbstractRootFinder
 import equinox as eqx
 import jaxtyping as jt
 import jax.lax
@@ -33,6 +35,11 @@ DEFAULT_CONTROLLER_SETTINGS = {
     "pcoeff": 0.4,
     "icoeff": 0.3,
     "dcoeff": 0.0,
+}
+
+DEFAULT_ROOT_FINDER_SETTINGS = {
+    "atol": 1e-12,
+    "rtol": 1e-12,
 }
 
 SCALE_TO_INT = {
@@ -989,6 +996,7 @@ class JAXProblem(eqx.Module):
         x_reinit: jt.Float[jt.Array, "nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
         steady_state_event: Callable[
             ..., diffrax._custom_types.BoolScalarLike
         ],
@@ -1054,6 +1062,7 @@ class JAXProblem(eqx.Module):
             ts_mask=jax.lax.stop_gradient(jnp.array(ts_mask)),
             solver=solver,
             controller=controller,
+            root_finder=root_finder,
             max_steps=max_steps,
             steady_state_event=steady_state_event,
             adjoint=diffrax.RecursiveCheckpointAdjoint()
@@ -1068,6 +1077,7 @@ class JAXProblem(eqx.Module):
         preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
         steady_state_event: Callable[
             ..., diffrax._custom_types.BoolScalarLike
         ],
@@ -1121,6 +1131,7 @@ class JAXProblem(eqx.Module):
             x_reinit_array,
             solver,
             controller,
+            root_finder,
             steady_state_event,
             max_steps,
             preeq_array,
@@ -1141,6 +1152,7 @@ class JAXProblem(eqx.Module):
         x_reinit: jt.Float[jt.Array, "nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
         steady_state_event: Callable[
             ..., diffrax._custom_types.BoolScalarLike
         ],
@@ -1173,6 +1185,7 @@ class JAXProblem(eqx.Module):
             x_reinit=x_reinit,
             solver=solver,
             controller=controller,
+            root_finder=root_finder,
             max_steps=max_steps,
             steady_state_event=steady_state_event,
         )
@@ -1182,6 +1195,7 @@ class JAXProblem(eqx.Module):
         simulation_conditions: list[str],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
         steady_state_event: Callable[
             ..., diffrax._custom_types.BoolScalarLike
         ],
@@ -1196,6 +1210,7 @@ class JAXProblem(eqx.Module):
             x_reinit_array,
             solver,
             controller,
+            root_finder,
             steady_state_event,
             max_steps,
         )
@@ -1207,6 +1222,9 @@ def run_simulations(
     solver: diffrax.AbstractSolver = diffrax.Kvaerno5(),
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         **DEFAULT_CONTROLLER_SETTINGS
+    ),
+    root_finder: AbstractRootFinder = optimistix.Newton(
+        **DEFAULT_ROOT_FINDER_SETTINGS
     ),
     steady_state_event: Callable[
         ..., diffrax._custom_types.BoolScalarLike
@@ -1227,6 +1245,8 @@ def run_simulations(
         ODE solver to use for simulation.
     :param controller:
         Step size controller to use for simulation.
+    :param root_finder:
+        Root finder to use for event detection.
     :param steady_state_event:
         Steady state event function to use for pre-/post-equilibration. Allows customisation of the steady state
         condition, see :func:`diffrax.steady_state_event` for details.
@@ -1259,6 +1279,7 @@ def run_simulations(
             preequilibration_conditions,
             solver,
             controller,
+            root_finder,
             steady_state_event,
             max_steps,
         )
@@ -1281,6 +1302,7 @@ def run_simulations(
             preeq_array,
             solver,
             controller,
+            root_finder,
             steady_state_event,
             max_steps,
             ret,

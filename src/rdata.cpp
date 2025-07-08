@@ -19,51 +19,53 @@ ReturnData::ReturnData(Solver const& solver, Model const& model)
     : ReturnData(
           model.getTimepoints(),
           ModelDimensions(static_cast<ModelDimensions const&>(model)),
-          model.nplist(), model.nMaxEvent(), model.nt(),
-          solver.getNewtonMaxSteps(), model.getParameterScale(), model.o2mode,
+          model.nMaxEvent(), solver.getNewtonMaxSteps(),
+          model.getParameterList(), model.getParameterScale(), model.o2mode,
           solver.getSensitivityOrder(), solver.getSensitivityMethod(),
           solver.getReturnDataReportingMode(), model.hasQuadraticLLH(),
           model.getAddSigmaResiduals(), model.getMinimumSigmaResiduals()
       ) {}
 
 ReturnData::ReturnData(
-    std::vector<realtype> ts, ModelDimensions const& model_dimensions,
-    int nplist, int nmaxevent, int nt, int newton_maxsteps,
-    std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
-    SensitivityOrder sensi, SensitivityMethod sensi_meth, RDataReporting rdrm,
-    bool quadratic_llh, bool sigma_res, realtype sigma_offset
+    std::vector<realtype> ts_, ModelDimensions const& model_dimensions_,
+    int nmaxevent_, int newton_maxsteps_, std::vector<int> plist_,
+    std::vector<ParameterScaling> pscale_, SecondOrderMode o2mode_,
+    SensitivityOrder sensi_, SensitivityMethod sensi_meth_,
+    RDataReporting rdrm_, bool quadratic_llh_, bool sigma_res_,
+    realtype sigma_offset_
 )
-    : ModelDimensions(model_dimensions)
-    , ts(std::move(ts))
+    : ModelDimensions(model_dimensions_)
+    , ts(std::move(ts_))
     , nx(nx_rdata)
     , nxtrue(nxtrue_rdata)
-    , nplist(nplist)
-    , nmaxevent(nmaxevent)
-    , nt(nt)
-    , newton_maxsteps(newton_maxsteps)
-    , pscale(std::move(pscale))
-    , o2mode(o2mode)
-    , sensi(sensi)
-    , sensi_meth(sensi_meth)
-    , rdata_reporting(rdrm)
-    , sigma_res(sigma_res)
-    , sigma_offset(sigma_offset)
+    , nplist(plist_.size())
+    , nmaxevent(nmaxevent_)
+    , nt(ts.size())
+    , newton_maxsteps(newton_maxsteps_)
+    , pscale(std::move(pscale_))
+    , o2mode(o2mode_)
+    , sensi(sensi_)
+    , sensi_meth(sensi_meth_)
+    , rdata_reporting(rdrm_)
+    , sigma_res(sigma_res_)
+    , plist(plist_)
+    , sigma_offset(sigma_offset_)
     , nroots_(ne) {
     switch (rdata_reporting) {
     case RDataReporting::full:
-        initializeFullReporting(quadratic_llh);
+        initializeFullReporting(quadratic_llh_);
         break;
 
     case RDataReporting::residuals:
-        initializeResidualReporting(quadratic_llh);
+        initializeResidualReporting(quadratic_llh_);
         break;
 
     case RDataReporting::likelihood:
-        initializeLikelihoodReporting(quadratic_llh);
+        initializeLikelihoodReporting(quadratic_llh_);
         break;
 
     case RDataReporting::observables_likelihood:
-        initializeObservablesLikelihoodReporting(quadratic_llh);
+        initializeObservablesLikelihoodReporting(quadratic_llh_);
         break;
     }
 }
@@ -186,13 +188,18 @@ void ReturnData::processSimulationObjects(
 
     SteadystateProblem const* preeq = nullptr;
     SteadystateProblem const* posteq = nullptr;
+    SteadyStateBackwardProblem const* preeq_bwd = nullptr;
+    SteadyStateBackwardProblem const* posteq_bwd = nullptr;
     if (fwd) {
         preeq = fwd->getPreequilibrationProblem();
         posteq = fwd->getPostequilibrationProblem();
+        if (bwd) {
+            preeq_bwd = bwd->getPreequilibrationBwdProblem();
+            posteq_bwd = bwd->getPostequilibrationBwdProblem();
+        }
     }
-
     if (preeq)
-        processPreEquilibration(*preeq, model);
+        processPreEquilibration(*preeq, preeq_bwd, model);
 
     if (fwd)
         processForwardProblem(*fwd, model, edata);
@@ -200,15 +207,19 @@ void ReturnData::processSimulationObjects(
         invalidate(0);
 
     if (posteq)
-        processPostEquilibration(*posteq, model, edata);
+        processPostEquilibration(*posteq, posteq_bwd, model, edata);
 
-    if (fwd && !posteq)
+    if (edata && !edata->fixedParametersPreequilibration.empty() && fwd
+        && !fwd->was_preequilibrated() && preeq) {
+        // failure during preequilibration
+        storeJacobianAndDerivativeInReturnData(*preeq, model);
+    } else if (fwd && !posteq)
         storeJacobianAndDerivativeInReturnData(*fwd, model);
     else if (posteq)
         storeJacobianAndDerivativeInReturnData(*posteq, model);
 
     if (fwd && bwd)
-        processBackwardProblem(*fwd, *bwd, preeq, model);
+        processBackwardProblem(*fwd, *bwd, preeq, preeq_bwd, model);
     else if (solver.computingASA())
         invalidateSLLH();
 
@@ -216,7 +227,8 @@ void ReturnData::processSimulationObjects(
 }
 
 void ReturnData::processPreEquilibration(
-    SteadystateProblem const& preeq, Model& model
+    SteadystateProblem const& preeq,
+    SteadyStateBackwardProblem const* preeq_bwd, Model& model
 ) {
     auto const simulation_state = preeq.getFinalSimulationState();
     model.setModelState(simulation_state.state);
@@ -229,8 +241,10 @@ void ReturnData::processPreEquilibration(
     }
     /* Get cpu time for pre-equilibration in milliseconds */
     preeq_cpu_time = preeq.getCPUTime();
-    preeq_cpu_timeB = preeq.getCPUTimeB();
-    preeq_numstepsB = preeq.getNumStepsB();
+    if (preeq_bwd) {
+        preeq_cpu_timeB = preeq_bwd->getCPUTimeB();
+        preeq_numstepsB = preeq_bwd->getNumStepsB();
+    }
     preeq_wrms = preeq.getResidualNorm();
     preeq_status = preeq.getSteadyStateStatus();
     if (preeq_status[1] == SteadyStateStatus::success)
@@ -240,7 +254,9 @@ void ReturnData::processPreEquilibration(
 }
 
 void ReturnData::processPostEquilibration(
-    SteadystateProblem const& posteq, Model& model, ExpData const* edata
+    SteadystateProblem const& posteq,
+    SteadyStateBackwardProblem const* posteq_bwd, Model& model,
+    ExpData const* edata
 ) {
     for (int it = 0; it < nt; it++) {
         auto t = model.getTimepoint(it);
@@ -252,8 +268,10 @@ void ReturnData::processPostEquilibration(
     }
     /* Get cpu time for Newton solve in milliseconds */
     posteq_cpu_time = posteq.getCPUTime();
-    posteq_cpu_timeB = posteq.getCPUTimeB();
-    posteq_numstepsB = posteq.getNumStepsB();
+    if (posteq_bwd) {
+        posteq_cpu_timeB = posteq_bwd->getCPUTimeB();
+        posteq_numstepsB = posteq_bwd->getNumStepsB();
+    }
     posteq_wrms = posteq.getResidualNorm();
     posteq_status = posteq.getSteadyStateStatus();
     if (posteq_status[1] == SteadyStateStatus::success)
@@ -469,7 +487,8 @@ void ReturnData::getEventSensisFSA(
 
 void ReturnData::processBackwardProblem(
     ForwardProblem const& fwd, BackwardProblem const& bwd,
-    SteadystateProblem const* preeq, Model& model
+    SteadystateProblem const* preeq,
+    SteadyStateBackwardProblem const* preeq_bwd, Model& model
 ) {
     if (sllh.empty())
         return;
@@ -478,13 +497,12 @@ void ReturnData::processBackwardProblem(
     model.setModelState(simulation_state.state);
 
     std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
-    auto xB = bwd.getAdjointState();
-    auto xQB = bwd.getAdjointQuadrature();
+    auto xQB = bwd.getAdjointQuadraturePrePreeq();
 
-    if (preeq && preeq->hasQuadrature()) {
-        handleSx0Backward(model, *preeq, llhS0, xQB);
+    if (preeq_bwd && preeq_bwd->hasQuadrature()) {
+        handleSx0Backward(model, *preeq, preeq_bwd, llhS0, xQB);
     } else {
-        handleSx0Forward(model, simulation_state, llhS0, xB);
+        handleSx0Forward(model, simulation_state, llhS0, bwd.getAdjointStatePrePreeq());
     }
 
     for (int iJ = 0; iJ < model.nJ; iJ++) {
@@ -502,7 +520,8 @@ void ReturnData::processBackwardProblem(
 
 void ReturnData::handleSx0Backward(
     Model const& model, SteadystateProblem const& preeq,
-    std::vector<realtype>& llhS0, AmiVector& xQB
+    SteadyStateBackwardProblem const* preeq_bwd, std::vector<realtype>& llhS0,
+    AmiVector& xQB
 ) const {
     /* If preequilibration is run in adjoint mode, the scalar product of sx0
        with its adjoint counterpart (see handleSx0Forward()) is not necessary:
@@ -511,13 +530,13 @@ void ReturnData::handleSx0Backward(
        and so is the scalar product. Instead of the scalar product, the
        quadratures xQB from preequilibration contribute to the gradient
        (see example notebook on equilibration for further documentation). */
-    auto const& xQBpreeq = preeq.getAdjointQuadrature();
+    auto const& xQBpreeq = preeq_bwd->getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
         xQB[ip] += xQBpreeq.at(ip);
 
     /* We really need references here, as sx0 can be large... */
     auto const& sx0preeq = preeq.getStateSensitivity();
-    auto const& xBpreeq = preeq.getAdjointState();
+    auto const& xBpreeq = preeq_bwd->getAdjointState();
 
     /* Add the contribution for sx0 from preequilibration. If backward
      * preequilibration was done by simulation due to a singular Jacobian,
@@ -532,7 +551,7 @@ void ReturnData::handleSx0Backward(
 
 void ReturnData::handleSx0Forward(
     Model const& model, SimulationState const& simulation_state,
-    std::vector<realtype>& llhS0, AmiVector& xB
+    std::vector<realtype>& llhS0, AmiVector const& xB
 ) const {
     /* If preequilibration is run in forward mode or is not needed, then adjoint
        sensitivity analysis still needs the state sensitivities at t=0 (sx0),

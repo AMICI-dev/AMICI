@@ -5,6 +5,7 @@
 #include "amici/forwardproblem.h"
 #include "amici/vector.h"
 
+#include <optional>
 #include <vector>
 
 namespace amici {
@@ -59,7 +60,7 @@ class EventHandlingBwdSimulator {
      * @param ws The workspace to use for the simulation.
      */
     EventHandlingBwdSimulator(
-        gsl::not_null<Model*> model, gsl::not_null<Solver*> solver,
+        gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
         gsl::not_null<BwdSimWorkspace*> ws
     )
         : model_(model)
@@ -126,13 +127,141 @@ class EventHandlingBwdSimulator {
     Model* model_;
 
     /** The solver to use for the simulation. */
-    Solver* solver_;
+    Solver const* solver_;
 
     /** The workspace to use for the simulation. */
     gsl::not_null<BwdSimWorkspace*> ws_;
 
     /** current time */
     realtype t_{0};
+};
+
+/**
+ * @brief The SteadyStateBackwardProblem class computes the adjoint state and
+ * quadratures for pre- or post-equilibration.
+ */
+class SteadyStateBackwardProblem {
+  public:
+    /**
+     * @brief SteadyStateBackwardProblem ctor
+     * @param solver
+     * @param model
+     * @param final_state Final state from pre/post-equilibration forward
+     * problem
+     * @param ws Workspace for backward simulation
+     */
+    SteadyStateBackwardProblem(
+        Solver const& solver, Model& model, SimulationState& final_state,
+        gsl::not_null<BwdSimWorkspace*> ws
+    );
+
+    /**
+     * @brief Compute the gradient via adjoint steady-state sensitivities.
+     *
+     * Integrates over the adjoint state backward in time by solving a linear
+     * system of equations, which gives the analytical solution.
+     *
+     * Expects the workspace `ws_` to be initialized.
+     *
+     * The results will be written to the workspace `ws_`.
+     *
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void run(realtype t0);
+
+    /**
+     * @brief Get the CPU time taken to solve the backward problem.
+     * @return The CPU time in milliseconds.
+     */
+    [[nodiscard]] double getCPUTimeB() const { return cpu_timeB_; }
+
+    /**
+     * @brief Get the number of steps taken to find the steady state in the
+     * adjoint case.
+     * @return Number of steps.
+     */
+    [[nodiscard]] int getNumStepsB() const { return numstepsB_; }
+
+    /**
+     * @brief Return the adjoint state
+     *
+     * Accessible only after run() has been called and before ws_ is used
+     * elsewhere.
+     *
+     * @return xB adjoint state
+     */
+    [[nodiscard]] AmiVector const& getAdjointState() const;
+
+    /**
+     * @brief Get the adjoint quadratures (xQB).
+     *
+     * Accessible only after run() has been called and before ws_ is used
+     * elsewhere.
+
+     * @return xQB
+     */
+    [[nodiscard]] AmiVector const& getAdjointQuadrature() const;
+
+    /**
+     * @brief Accessor for has_quadrature_
+     * @return has_quadrature_
+     */
+    [[nodiscard]] bool hasQuadrature() const { return has_quadrature_; }
+
+  private:
+    /**
+     * @brief Launch backward simulation if Newton solver or linear system solve
+     * fail or are disabled.
+     * @param solver Solver instance.
+     */
+    void run_simulation(Solver const& solver);
+
+    /**
+     * @brief Compute quadratures in adjoint mode
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void compute_steady_state_quadrature(realtype t0);
+
+    /**
+     * @brief Compute the quadrature in steady state backward mode by
+     * solving the linear system defined by the backward Jacobian.
+     */
+    void compute_quadrature_by_lin_solve();
+
+    /**
+     * @brief Computes the quadrature in steady state backward mode by
+     * numerical integration of xB forward in time.
+     * @param t0 Initial time for the steady state simulation.
+     */
+    void compute_quadrature_by_simulation(realtype t0);
+
+    /** CPU time for solving the backward problem (milliseconds) */
+    double cpu_timeB_{0.0};
+
+    /** flag indicating whether backward mode was run */
+    bool has_quadrature_{false};
+
+    /** The employed number of backward steps */
+    int numstepsB_{0};
+
+    /** integral over adjoint state vector */
+    AmiVector xQ_;
+
+    /** Final state from pre/post-equilibration forward problem */
+    SimulationState& final_state_;
+
+    /** Newton solver */
+    NewtonSolver newton_solver_;
+
+    /**
+     * Whether the Newton step should be used instead of xdot for convergence
+     * checks during simulation.
+     */
+    bool newton_step_conv_{false};
+
+    Model* model_{nullptr};
+    Solver const* solver_{nullptr};
+    BwdSimWorkspace* ws_{nullptr};
 };
 
 //!  class to solve backwards problems.
@@ -159,17 +288,41 @@ class BackwardProblem {
     void workBackwardProblem();
 
     /**
-     * @brief Accessor for xB
+     * @brief The adjoint state vector from before pre-equilibration.
      * @return xB
      */
-    [[nodiscard]] AmiVector const& getAdjointState() const { return ws_.xB_; }
+    [[nodiscard]] AmiVector const& getAdjointStatePrePreeq() const {
+        return xB_pre_preeq_;
+    }
 
     /**
-     * @brief Accessor for xQB
+     * @brief The quadrature state vector from before pre-equilibration.
      * @return xQB
      */
-    [[nodiscard]] AmiVector const& getAdjointQuadrature() const {
-        return ws_.xQB_;
+    [[nodiscard]] AmiVector const& getAdjointQuadraturePrePreeq() const {
+        return xQB_pre_preeq_;
+    }
+
+    /**
+     * @brief Return the postequilibration SteadyStateBwdProblem.
+     * @return The postequilibration SteadyStateBackwardProblem, if any.
+     */
+    [[nodiscard]] SteadyStateBackwardProblem const*
+    getPostequilibrationBwdProblem() const {
+        if (posteq_problem_bwd_.has_value())
+            return &*posteq_problem_bwd_;
+        return nullptr;
+    }
+
+    /**
+     * @brief Return the preequilibration SteadyStateBackwardProblem.
+     * @return The preequilibration SteadyStateBackwardProblem, if any.
+     */
+    [[nodiscard]] SteadyStateBackwardProblem const*
+    getPreequilibrationBwdProblem() const {
+        if (preeq_problem_bwd_.has_value())
+            return &*preeq_problem_bwd_;
+        return nullptr;
     }
 
   private:
@@ -181,10 +334,9 @@ class BackwardProblem {
 
     /** current time */
     realtype t_;
-    /** sensitivity state vector array */
-    AmiVectorArray sx0_;
-    /** array containing the time-points of discontinuities*/
-    std::vector<Discontinuity> discs_;
+
+    /** The discontinuities encountered during the main simulation. */
+    std::vector<Discontinuity> discs_main_;
 
     /**
      * state derivative of data likelihood
@@ -209,6 +361,22 @@ class BackwardProblem {
     BwdSimWorkspace ws_;
 
     EventHandlingBwdSimulator simulator_;
+
+    /** The preequilibration steady-state backward problem, if any. */
+    std::optional<SteadyStateBackwardProblem> preeq_problem_bwd_;
+
+    /** The postequilibration steady-state backward problem, if any. */
+    std::optional<SteadyStateBackwardProblem> posteq_problem_bwd_;
+
+    /**
+     * The adjoint state vector before pre-equilibration.
+     */
+    AmiVector xB_pre_preeq_;
+
+    /**
+     * The quadrature state vector before pre-equilibration.
+     */
+    AmiVector xQB_pre_preeq_;
 };
 
 } // namespace amici

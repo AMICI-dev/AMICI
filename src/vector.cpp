@@ -35,6 +35,10 @@ realtype& AmiVector::operator[](int pos) {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
+realtype const& AmiVector::operator[](int pos) const {
+    return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
+}
+
 realtype& AmiVector::at(int pos) {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }

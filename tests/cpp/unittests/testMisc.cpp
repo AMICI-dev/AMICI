@@ -526,6 +526,10 @@ TEST_F(AmiVectorTest, Vector)
     N_Vector nvec = av.getNVector();
     for (int i = 0; i < av.getLength(); ++i)
         ASSERT_EQ(av.at(i), NV_Ith_S(nvec, i));
+
+    std::stringstream ss;
+    ss << av;
+    ASSERT_EQ(ss.str(), "[1, 2, 4, 3]");
 }
 
 TEST_F(AmiVectorTest, VectorArray)
@@ -547,6 +551,10 @@ TEST_F(AmiVectorTest, VectorArray)
         for (int j = 0; j < av.getLength(); ++j)
             ASSERT_EQ(flattened.at(i * av.getLength() + j), av.at(j));
     }
+
+    std::stringstream ss;
+    ss << ava;
+    ASSERT_EQ(ss.str(), "[[1, 2, 4, 3], [4, 1, 2, 3], [4, 4, 2, 1]]");
 }
 
 class SunMatrixWrapperTest : public ::testing::Test {

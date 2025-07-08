@@ -52,7 +52,7 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
 
@@ -128,11 +128,11 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@develop \
+        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
 
-    - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654
+    - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax@dev # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654 + event dirs
 
     - name: Download benchmark collection
       run: |

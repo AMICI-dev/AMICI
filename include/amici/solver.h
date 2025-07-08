@@ -651,7 +651,7 @@ class Solver {
      * @param xQ quadrature
      */
     void writeSolution(
-        realtype* t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
+        realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
         AmiVector& xQ
     ) const;
 
