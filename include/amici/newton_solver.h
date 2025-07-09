@@ -2,6 +2,7 @@
 #define amici_newton_solver_h
 
 #include "amici/defines.h"
+#include "amici/model_state.h"
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
 
@@ -46,6 +47,15 @@ struct DEStateView {
         : t(t_)
         , x(x_)
         , dx(dx_) {}
+
+    /**
+     * @brief Construct a DEStateView from a SolutionState reference.
+     * @param sol
+     */
+    DEStateView(SolutionState& sol)
+        : t(sol.t)
+        , x(sol.x)
+        , dx(sol.dx) {}
 };
 
 /**
