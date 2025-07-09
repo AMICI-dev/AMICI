@@ -80,8 +80,8 @@ is then used for model simulation.
 The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
 To install AMICI, first read the installation instructions for
 [Python](https://amici.readthedocs.io/en/latest/python_installation.html),
-[C++](https://amici.readthedocs.io/en/main/cpp_installation.html) or
-[Matlab](https://amici.readthedocs.io/en/main/matlab_installation.html).
+[C++](https://amici.readthedocs.io/en/latest/cpp_installation.html) or
+[Matlab](https://amici.readthedocs.io/en/latest/matlab_installation.html).
 There are also instructions for using AMICI inside
 [containers](https://github.com/AMICI-dev/AMICI/tree/master/container).
 
@@ -95,7 +95,7 @@ in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/exam
 Comprehensive documentation is available at
 [https://amici.readthedocs.io/en/latest/](https://amici.readthedocs.io/en/latest/).
 
-Any [contributions](https://amici.readthedocs.io/en/main/CONTRIBUTING.html)
+Any [contributions](https://amici.readthedocs.io/en/latest/CONTRIBUTING.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
