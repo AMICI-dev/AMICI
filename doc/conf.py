@@ -104,7 +104,7 @@ def install_mtocpp():
 
 def install_doxygen():
     """Get a more recent doxygen"""
-    version = "1.11.0"
+    version = "1.14.0"
     release = f"Release_{version.replace('.', '_')}"
     filename = f"doxygen-{version}.linux.bin.tar.gz"
     doxygen_exe = os.path.join(
@@ -175,7 +175,7 @@ for mod_name in autodoc_mock_imports:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "readthedocs_ext.readthedocs",
+    "myst_parser",
     # Required, e.g. for PEtab-derived classes where the base class has non-rst
     #  docstrings
     "sphinx.ext.napoleon",
@@ -189,9 +189,7 @@ extensions = [
     "sphinxcontrib.matlab",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
-    "recommonmark",
     "sphinx_autodoc_typehints",
-    "hoverxref.extension",
     "breathe",
     "exhale",
 ]
@@ -234,8 +232,6 @@ templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
 source_suffix = [".rst", ".md"]
 
 # The master toctree document.
@@ -281,21 +277,6 @@ autodoc_default_options = {
 typehints_fully_qualified = True
 typehints_document_rtype = True
 set_type_checking_flag = True
-
-# hoverxref
-hoverxref_auto_ref = True
-hoverxref_roles = ["term"]
-hoverxref_domains = ["py"]
-hoverxref_role_types = {
-    "hoverxref": "tooltip",
-    "ref": "tooltip",
-    "term": "tooltip",
-    "obj": "tooltip",
-    "func": "tooltip",
-    "mod": "tooltip",
-    "meth": "tooltip",
-    "class": "tooltip",
-}
 
 # breathe settings
 breathe_projects = {
