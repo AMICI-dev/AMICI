@@ -143,7 +143,7 @@ class DEModel:
         model
 
     :ivar _sparsesyms:
-        carries linear list of all symbolic identifiers for sparsified
+        carries linear list of all symbolS for sparsified
         variables
 
     :ivar _colptrs:
@@ -193,7 +193,7 @@ class DEModel:
         res and FIM make sense.
 
     :ivar _static_indices:
-        dict of lists list of indices of static variables for different
+        dict of lists of indices of static variables for different
         model entities.
 
     :ivar _z2event:
@@ -254,7 +254,9 @@ class DEModel:
         self._vals: dict[str, list[sp.Expr]] = dict()
         self._names: dict[str, list[str]] = dict()
         self._syms: dict[str, sp.Matrix | list[sp.Matrix]] = dict()
-        self._sparsesyms: dict[str, list[str] | list[list[str]]] = dict()
+        self._sparsesyms: dict[
+            str, list[sp.Symbol] | list[list[sp.Symbol]]
+        ] = dict()
         self._colptrs: dict[str, list[int] | list[list[int]]] = dict()
         self._rowvals: dict[str, list[int] | list[list[int]]] = dict()
 
@@ -616,11 +618,11 @@ class DEModel:
         variables.
 
         :param state:
-            symbolic identifier of the state that should be replaced by
+            Symbol of the state that should be replaced by
             the conservation law (:math:`x_j`)
 
         :param total_abundance:
-            symbolic identifier of the total abundance (:math:`T/a_j`)
+            Symbol of the total abundance (:math:`T/a_j`)
 
         :param coefficients:
             Dictionary of coefficients {x_i: a_i}
@@ -814,16 +816,18 @@ class DEModel:
             name of the symbolic variable
 
         :return:
-            matrix of symbolic identifiers
+            matrix of symbols
         """
         if name not in self._syms:
             self._generate_symbol(name)
 
         return self._syms[name]
 
-    def sparsesym(self, name: str, force_generate: bool = True) -> list[str]:
+    def sparsesym(
+        self, name: str, force_generate: bool = True
+    ) -> list[sp.Symbol]:
         """
-        Returns (and constructs if necessary) the sparsified identifiers for
+        Returns (and constructs if necessary) the sparsified symbols for
         a sparsified symbolic variable.
 
         :param name:
@@ -833,7 +837,7 @@ class DEModel:
             whether the symbols should be generated if not available
 
         :return:
-            linearized Matrix containing the symbolic identifiers
+            linearized Matrix containing the symbols
         """
         if name not in sparse_functions:
             raise ValueError(f"{name} is not marked as sparse")
@@ -1101,7 +1105,7 @@ class DEModel:
 
     def _generate_symbol(self, name: str) -> None:
         """
-        Generates the symbolic identifiers for a symbolic variable
+        Generates the symbols for a symbolic variable
 
         :param name:
             name of the symbolic variable

@@ -26,7 +26,9 @@ __all__ = [
     "LogLikelihoodZ",
     "LogLikelihoodRZ",
     "ModelQuantity",
+    "NoiseParameter",
     "Observable",
+    "ObservableParameter",
     "Parameter",
     "SigmaY",
     "SigmaZ",
@@ -176,7 +178,7 @@ class ConservationLaw(ModelQuantity):
         :param state_id:
             identifier of the state
 
-        :return: normalized coefficent of the state
+        :return: normalized coefficient of the state
         """
         return self._coefficients.get(state_id, 0.0) / self._ncoeff
 
@@ -404,7 +406,7 @@ class Observable(ModelQuantity):
         value: sp.Expr,
         measurement_symbol: sp.Symbol | None = None,
         transformation: None
-        | (ObservableTransformation) = ObservableTransformation.LIN,
+        | ObservableTransformation = ObservableTransformation.LIN,
     ):
         """
         Create a new Observable instance.

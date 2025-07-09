@@ -399,7 +399,7 @@ class DEExporter:
         lines = []
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
-            if str(symbol) == "0":
+            if symbol.is_zero:
                 continue
             if str(symbol_name) == "":
                 raise ValueError(f'{name} contains a symbol called ""')
@@ -816,10 +816,11 @@ class DEExporter:
             function in self.model.sym_names()
             and function not in non_unique_id_symbols
         ):
-            if function in sparse_functions:
-                symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
-            else:
-                symbols = self.model.sym(function)
+            symbols = (
+                self.model.sparsesym(function)
+                if function in sparse_functions
+                else self.model.sym(function)
+            )
 
             if function in ("w", "dwdw", "dwdx", "dwdp"):
                 # Split into a block of static and dynamic expressions.

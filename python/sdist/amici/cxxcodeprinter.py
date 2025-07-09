@@ -13,6 +13,8 @@ from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
 from toposort import toposort
 
+from .import_utils import symbol_with_assumptions
+
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):
     """
@@ -322,7 +324,7 @@ def csc_matrix(
     colnames: list[sp.Symbol],
     identifier: int | None = 0,
     pattern_only: bool | None = False,
-) -> tuple[list[int], list[int], sp.Matrix, list[str], sp.Matrix]:
+) -> tuple[list[int], list[int], sp.Matrix, list[sp.Symbol], sp.Matrix]:
     """
     Generates the sparse symbolic identifiers, symbolic identifiers,
     sparse matrix, column pointers and row values for a symbolic
@@ -371,11 +373,11 @@ def csc_matrix(
             symbol_name = f"d{rownames[row].name}_d{colnames[col].name}"
             if identifier:
                 symbol_name += f"_{identifier}"
-            symbol_list.append(symbol_name)
+            symbol_list.append(symbol_with_assumptions(symbol_name))
             if pattern_only:
                 continue
 
-            sparse_matrix[row, col] = sp.Symbol(symbol_name, real=True)
+            sparse_matrix[row, col] = symbol_with_assumptions(symbol_name)
             sparse_list.append(matrix[row, col])
 
     if idx == 0:
