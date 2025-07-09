@@ -96,7 +96,12 @@ def test_pregenerated_model(sub_test, case):
         and not model_name.startswith("model_neuron")
         and not case.endswith("byhandpreeq")
     ):
-        check_derivatives(model, solver, edata, **check_derivative_opts)
+        check_derivatives(
+            model,
+            solver,
+            edata,
+            **check_derivative_opts,
+        )
 
     verify_simulation_opts = dict()
 

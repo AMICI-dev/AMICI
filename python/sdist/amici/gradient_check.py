@@ -116,7 +116,7 @@ def check_finite_difference(
     for field in fields:
         sensi_raw = rdata[f"s{field}"]
         fd = (rdataf[field] - rdatab[field]) / (pf[ip] - pb[ip])
-        if len(sensi_raw.shape) == 1:
+        if len(sensi_raw.shape) == 1 or field == "x_ss":
             sensi = sensi_raw[0]
         elif len(sensi_raw.shape) == 2:
             sensi = sensi_raw[:, 0]
@@ -153,34 +153,21 @@ def check_derivatives(
     epsilon: float | None = 1e-3,
     check_least_squares: bool = True,
     skip_zero_pars: bool = False,
+    skip_fields: list[str] | None = None,
 ) -> None:
     """
     Finite differences check for likelihood gradient.
 
-    :param model:
-        amici model
-
-    :param solver:
-        amici solver
-
-    :param edata:
-        exp data
-
-    :param atol:
-        absolute tolerance for comparison
-
-    :param rtol:
-        relative tolerance for comparison
-
-    :param epsilon:
-        finite difference step-size
-
-    :param check_least_squares:
-        whether to check least squares related values.
-
-    :param skip_zero_pars:
-        whether to perform FD checks for parameters that are zero
-
+    :param model: amici model
+    :param solver: amici solver
+    :param edata: exp data
+    :param atol: absolute tolerance for comparison
+    :param rtol: relative tolerance for comparison
+    :param epsilon: finite difference step-size
+    :param check_least_squares: whether to check least squares related values.
+    :param skip_zero_pars: whether to perform FD checks for parameters that
+        are zero
+    :param skip_fields: list of fields to skip
     """
     p = np.array(model.getParameters())
 
@@ -200,6 +187,9 @@ def check_derivatives(
         solver.getSensitivityMethod() == SensitivityMethod.forward
         and solver.getSensitivityOrder() <= SensitivityOrder.first
     ):
+        if rdata.sx_ss is not None:
+            fields.append("x_ss")
+
         fields.append("x")
 
     leastsquares_applicable = (
@@ -235,6 +225,8 @@ def check_derivatives(
 
     if edata is not None:
         fields.append("llh")
+
+    fields = [f for f in fields if f not in (skip_fields or [])]
 
     # only check the sensitivities w.r.t. the selected parameters
     plist = model.getParameterList()

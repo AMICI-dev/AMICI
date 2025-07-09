@@ -767,6 +767,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
         chain_rule(ssigmaz, nztrue, nz, nmaxevent);
         chain_rule(srz, nztrue, nz, nmaxevent);
         chain_rule(sx0, nxtrue, nx, 1);
+        chain_rule(sx_ss, nxtrue, nx, 1);
     }
 
     if (o2mode == SecondOrderMode::full) {
