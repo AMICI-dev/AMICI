@@ -889,11 +889,11 @@ static realtype
 fres(realtype y, realtype my, realtype sigma_y, ObservableScaling scale) {
     switch (scale) {
     case ObservableScaling::lin:
-        return (y - my) / sigma_y;
+        return (my - y) / sigma_y;
     case ObservableScaling::log:
-        return (std::log(y) - std::log(my)) / sigma_y;
+        return (std::log(my) - std::log(y)) / sigma_y;
     case ObservableScaling::log10:
-        return (std::log10(y) - std::log10(my)) / sigma_y;
+        return (std::log10(my) - std::log10(y)) / sigma_y;
     default:
         throw std::invalid_argument("only lin, log, log10 allowed.");
     }
@@ -951,11 +951,11 @@ static realtype fsres(
     auto res = fres(y, my, sigma_y, scale);
     switch (scale) {
     case ObservableScaling::lin:
-        return (sy - ssigma_y * res) / sigma_y;
+        return (-sy - ssigma_y * res) / sigma_y;
     case ObservableScaling::log:
-        return (sy / y - ssigma_y * res) / sigma_y;
+        return (-sy / y - ssigma_y * res) / sigma_y;
     case ObservableScaling::log10:
-        return (sy / (y * std::log(10)) - ssigma_y * res) / sigma_y;
+        return (-sy / (y * std::log(10)) - ssigma_y * res) / sigma_y;
     default:
         throw std::invalid_argument("only lin, log, log10 allowed.");
     }
