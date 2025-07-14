@@ -262,6 +262,7 @@ functions = {
     "stau": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *dx, "
         "const realtype *tcl, const realtype *sx, const int ip, "
         "const int ie"
     ),

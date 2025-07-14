@@ -67,6 +67,19 @@ void AbstractModel::fstau(
     );
 }
 
+void AbstractModel::fstau(
+    realtype* /*stau*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*dx*/, realtype const* /*tcl*/, realtype const* /*sx*/,
+    int const /*ip*/, int const /*ie*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s is "
+        "not implemented for this model!",
+        __func__
+    );
+}
+
 void AbstractModel::
     fy(realtype* /*y*/, realtype const /*t*/, realtype const* /*x*/,
        realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,

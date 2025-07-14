@@ -288,7 +288,7 @@ class AbstractModel {
     virtual void fdx0(AmiVector& x0, AmiVector& dx0);
 
     /**
-     * @brief Model-specific implementation of fstau
+     * @brief Model-specific implementation of fstau (MATLAB-only, DEPRECATED)
      * @param stau total derivative of event timepoint
      * @param t current time
      * @param x current state
@@ -304,6 +304,26 @@ class AbstractModel {
         realtype* stau, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* tcl,
         realtype const* sx, int ip, int ie
+    );
+
+    /**
+     * @brief Model-specific implementation of fstau
+     * @param stau total derivative of event timepoint
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param dx time derivative of state (DAE only)
+     * @param tcl total abundances for conservation laws
+     * @param sx current state sensitivity
+     * @param ip sensitivity index
+     * @param ie event index
+     */
+    virtual void fstau(
+        realtype* stau, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* dx,
+        realtype const* tcl, realtype const* sx, int ip, int ie
     );
 
     /**
