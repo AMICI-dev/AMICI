@@ -572,7 +572,8 @@ void EventHandlingSimulator::store_pre_event_state(
                 // only consider transitions false -> true
                 if (ws_->roots_found.at(ie) == 1) {
                     model_->getEventTimeSensitivity(
-                        ws_->stau, ws_->sol.t, ie, ws_->sol.x, ws_->sol.sx
+                        ws_->stau, ws_->sol.t, ie, ws_->sol.x, ws_->sol.sx,
+                        ws_->sol.dx
                     );
                 }
             }

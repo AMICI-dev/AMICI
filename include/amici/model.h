@@ -1276,10 +1276,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie Event index
      * @param x State variables
      * @param sx State sensitivities
+     * @param dx Current derivative of state (DAE only)
      */
     void getEventTimeSensitivity(
         std::vector<realtype>& stau, realtype t, int ie, AmiVector const& x,
-        AmiVectorArray const& sx
+        AmiVectorArray const& sx, AmiVector const& dx
     );
 
     /**
