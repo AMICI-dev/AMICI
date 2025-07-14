@@ -32,6 +32,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - uses: actions/checkout@v4
+      with:
+        lfs: true
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -253,6 +255,9 @@ jobs:
         python-version: "3.11"
 
     - uses: actions/checkout@v4
+      with:
+        lfs: true
+
     - run: git fetch --prune --unshallow
 
     - name: Install dependencies
@@ -315,6 +320,8 @@ jobs:
         python-version: "3.11"
 
     - uses: actions/checkout@v4
+      with:
+        lfs: true
     - run: git fetch --prune --unshallow
 
     - name: Install dependencies

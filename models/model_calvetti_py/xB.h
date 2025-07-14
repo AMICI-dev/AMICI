@@ -1,0 +1,6 @@
+#define xB0 xB[0]
+#define xB1 xB[1]
+#define xB2 xB[2]
+#define xB3 xB[3]
+#define xB4 xB[4]
+#define xB5 xB[5]

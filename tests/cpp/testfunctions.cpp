@@ -6,8 +6,9 @@
 #include <cxxabi.h>   // for __cxa_demangle
 #include <cstdio>
 #include <cmath>
-#include <utility>
 #include <unistd.h>
+#include <iostream>
+#include <format>
 
 #include "gtest/gtest.h"
 
@@ -175,6 +176,12 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     std::vector<realtype> expected;
 
     auto statusExp = hdf5::getIntScalarAttribute(file, resultPath, "status");
+    if(rdata->status != statusExp && !rdata->messages.empty()) {
+        std::cerr<<"Messages:"<<std::endl;
+        for(const auto& msg: rdata->messages) {
+            std::cerr << std::format("[{}][{}] {}", static_cast<int>(msg.severity), msg.identifier, msg.message)<< std::endl;
+        }
+    }
     ASSERT_EQ(statusExp, rdata->status);
 
     double llhExp = hdf5::getDoubleScalarAttribute(file, resultPath, "llh");
