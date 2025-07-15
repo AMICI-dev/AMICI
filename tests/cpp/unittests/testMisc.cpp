@@ -524,8 +524,13 @@ TEST_F(AmiVectorTest, Vector)
     sundials::Context sunctx;
     AmiVector av(vec1, sunctx);
     N_Vector nvec = av.getNVector();
-    for (int i = 0; i < av.getLength(); ++i)
+    AmiVector av2(nvec);
+    ASSERT_NE(av.data(), av2.data());
+
+    for (int i = 0; i < av.getLength(); ++i) {
         ASSERT_EQ(av.at(i), NV_Ith_S(nvec, i));
+        ASSERT_EQ(av.at(i), av2.at(i));
+    }
 
     std::stringstream ss;
     ss << av;

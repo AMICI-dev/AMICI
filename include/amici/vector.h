@@ -93,6 +93,18 @@ class AmiVector {
     }
 
     /**
+     * @brief Copy from N_Vector
+     * @param vold vector from which the data will be copied
+     */
+    AmiVector(N_Vector const& vold)
+        : AmiVector(
+              gsl::span(
+                  N_VGetArrayPointerConst(vold), N_VGetLength_Serial(vold)
+              ),
+              vold->sunctx
+          ) {}
+
+    /**
      * @brief move constructor
      * @param other vector from which the data will be moved
      */
