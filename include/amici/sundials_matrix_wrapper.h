@@ -8,9 +8,10 @@
 #include <gsl/gsl-lite.hpp>
 
 #include <algorithm>
+#include <ostream>
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 #include "amici/vector.h"
 
@@ -589,6 +590,37 @@ class SUNMatrixWrapper {
      */
     bool ownmat = true;
 };
+
+
+/**
+ * @brief Output formatter for SUNMatrixWrapper.
+ * @param os output stream
+ * @param mat SUNMatrixWrapper to output
+ * @return os
+ */
+inline std::ostream& operator<<(std::ostream& os, SUNMatrixWrapper const& mat) {
+    // convert sparse to dense for easy printing
+    if (mat.matrix_id() == SUNMATRIX_SPARSE) {
+        SUNMatrixWrapper dense_mat(mat.rows(), mat.columns(), mat.get_ctx());
+        mat.to_dense(dense_mat);
+        return os << dense_mat;
+    }
+
+    os << "[";
+    for (sunindextype i = 0; i < mat.rows(); ++i) {
+        if (i > 0)
+            os << ", ";
+        os << "[";
+        for (sunindextype j = 0; j < mat.columns(); ++j) {
+            if (j > 0)
+                os << ", ";
+            os << mat.get_data(i, j);
+        }
+        os << "]";
+    }
+    os << "]";
+    return os;
+}
 
 /**
  * @brief Convert a flat index to a pair of row/column indices.
