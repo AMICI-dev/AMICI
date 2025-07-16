@@ -210,11 +210,18 @@ struct ModelStateDerived {
     /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
     SUNMatrixWrapper dwdp_;
 
-    /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
+    /**
+     * Dense Mass matrix (dimension: `nx_solver` x `nx_solver`)
+     *
+     * MATLAB-generated-only, DEPRECATED.
+     */
     SUNMatrixWrapper M_;
 
-    /** Sparse Mass matrix (dimension: `nx_solver` x `nx_solver`, nnz:
-     * `sum(amici::Model::idlist)`) */
+    /**
+     * Sparse Mass matrix, Python-generated-only
+     *
+     * (dimension: `nx_solver` x `nx_solver`, nnz: `sum(amici::Model::idlist)`)
+     */
     SUNMatrixWrapper MSparse_;
 
     /** JSparse intermediate matrix (dimension: `nx_solver` x `nx_solver`, nnz:

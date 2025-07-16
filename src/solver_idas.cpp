@@ -39,6 +39,7 @@ STATIC_ASSERT_EQUAL(amici::AMICI_TOO_MUCH_WORK, IDA_TOO_MUCH_WORK);
 STATIC_ASSERT_EQUAL(amici::AMICI_ERR_FAILURE, IDA_ERR_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_CONV_FAILURE, IDA_CONV_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_LSETUP_FAIL, IDA_LSETUP_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_LINESEARCH_FAIL, IDA_LINESEARCH_FAIL);
 // This does not match the CVODE code, we need separate return values
 STATIC_ASSERT_EQUAL(amici::AMICI_IDAS_CONSTR_FAIL, IDA_CONSTR_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_WARNING, IDA_WARNING);
@@ -394,7 +395,7 @@ void IDASolver::setId(Model const* model) const {
 
     int status = IDASetId(solver_memory_.get(), id);
     if (status != IDA_SUCCESS)
-        throw IDAException(status, "IDASetMaxNumSteps");
+        throw IDAException(status, "IDASetId");
 
     N_VDestroy_Serial(id);
 }
@@ -825,7 +826,7 @@ void IDASolver::calcIC(realtype tout1) const {
         solver_memory_.get(), x_.getNVector(), dx_.getNVector()
     );
     if (status != IDA_SUCCESS)
-        throw IDAException(status, "IDACalcIC");
+        throw IDAException(status, "IDAGetConsistentIC");
 }
 
 void IDASolver::calcICB(int const which, realtype const tout1) const {

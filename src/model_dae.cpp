@@ -165,15 +165,37 @@ void Model_DAE::fdxdotdp(
     realtype const t, const_N_Vector const x, const_N_Vector const dx
 ) {
     auto x_pos = computeX_pos(x);
+    fdwdp(t, N_VGetArrayPointerConst(x_pos));
 
     if (pythonGenerated) {
-        // python generated, not yet implemented for DAEs
-        throw AmiException(
-            "Wrapping of DAEs is not yet implemented from Python"
+        // python generated
+        derived_state_.dxdotdp_explicit.zero();
+        derived_state_.dxdotdp_implicit.zero();
+        if (derived_state_.dxdotdp_explicit.capacity()) {
+            fdxdotdp_explicit_colptrs(derived_state_.dxdotdp_explicit);
+            fdxdotdp_explicit_rowvals(derived_state_.dxdotdp_explicit);
+            fdxdotdp_explicit(
+                derived_state_.dxdotdp_explicit.data(), t,
+                N_VGetArrayPointerConst(x_pos),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), N_VGetArrayPointerConst(dx),
+                derived_state_.w_.data()
+            );
+        }
+
+        fdxdotdw(t, x_pos, dx);
+        /* Sparse matrix multiplication
+         dxdotdp_implicit += dxdotdw * dwdp */
+        derived_state_.dxdotdw_.sparse_multiply(
+            derived_state_.dxdotdp_implicit, derived_state_.dwdp_
+        );
+
+        derived_state_.dxdotdp_full.sparse_add(
+            derived_state_.dxdotdp_explicit, 1.0,
+            derived_state_.dxdotdp_implicit, 1.0
         );
     } else {
         // matlab generated
-        fdwdp(t, N_VGetArrayPointerConst(x_pos), false);
 
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, derived_state_.dxdotdp.getNVector(ip));
@@ -189,7 +211,6 @@ void Model_DAE::fdxdotdp(
 }
 
 void Model_DAE::fM(realtype t, const_N_Vector x) {
-    derived_state_.M_.zero();
     if (pythonGenerated) {
         /*
          * non-algebraic states in python generated code always have factor
@@ -208,6 +229,7 @@ void Model_DAE::fM(realtype t, const_N_Vector x) {
         derived_state_.MSparse_.set_indexptr(nx_solver, ndiff);
         assert(ndiff == derived_state_.MSparse_.capacity());
     } else {
+        derived_state_.M_.zero();
         auto x_pos = computeX_pos(x);
         fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
            state_.unscaledParameters.data(), state_.fixedParameters.data());
@@ -498,17 +520,24 @@ void Model_DAE::fsxdot(
     }
 
     if (pythonGenerated) {
-        // python generated, not yet implemented for DAEs
-        throw AmiException(
-            "Wrapping of DAEs is not yet implemented from Python"
+        /* copy dxdotdp and the implicit version over */
+        // initialize
+        N_VConst(0.0, sxdot);
+        realtype* sxdot_tmp = N_VGetArrayPointer(sxdot);
+        derived_state_.dxdotdp_full.scatter(
+            plist(ip), 1.0, nullptr, gsl::make_span(sxdot_tmp, nx_solver), 0,
+            nullptr, 0
         );
+
+        derived_state_.J_.multiply(sxdot, sx);
+        derived_state_.MSparse_.multiply(sxdot, sdx, -1.0);
     } else {
         /* copy dxdotdp over */
         N_VScale(1.0, derived_state_.dxdotdp.getNVector(ip), sxdot);
-    }
 
-    derived_state_.J_.multiply(sxdot, sx);
-    derived_state_.M_.multiply(sxdot, sdx, -1.0);
+        derived_state_.J_.multiply(sxdot, sx);
+        derived_state_.M_.multiply(sxdot, sdx, -1.0);
+    }
 }
 
 } // namespace amici
