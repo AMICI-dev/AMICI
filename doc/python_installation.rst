@@ -191,7 +191,7 @@ dependencies, you can run
 .. note::
 
    If you run into an error with above installation command, install all AMICI
-   dependencies listed in `setup.py <https://github.com/AMICI-dev/AMICI/blob/master/python/sdist/setup.py>`_
+   dependencies listed in `setup.py <https://github.com/AMICI-dev/AMICI/blob/main/python/sdist/setup.py>`_
    manually, and try again. (This is because ``pip`` ``--install-option`` is
    applied to *all* installed packages, including dependencies.)
 
