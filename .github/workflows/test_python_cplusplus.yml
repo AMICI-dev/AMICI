@@ -1,6 +1,8 @@
 name: C++/Python Tests
 on:
   push:
+    branches:
+      - main
   merge_group:
   workflow_dispatch:
   pull_request:
