@@ -677,6 +677,16 @@ TEST_F(SunMatrixWrapperTest, BlockTranspose)
                   SM_INDEXPTRS_S(B_sparse.get())[icol]);
 }
 
+TEST_F(SunMatrixWrapperTest, TestPrint)
+{
+    std::stringstream ss;
+        ss << A;
+    EXPECT_EQ(ss.str() , "[[0.69, 0.03], [0.32, 0.44], [0.95, 0.38]]");
+        ss.str("");
+    ss<< B;
+        EXPECT_EQ(ss.str(), "[[0, 3, 1, 0], [3, 0, 0, 2], [0, 7, 0, 0], [1, 0, 0, 9]]");
+}
+
 TEST(UnravelIndex, UnravelIndex)
 {
     EXPECT_EQ(unravel_index(0, 2), std::make_pair((size_t) 0, (size_t) 0));
