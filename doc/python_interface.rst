@@ -12,7 +12,7 @@ Model definition
 
 This document provides an overview of different interfaces to import models
 in AMICI. Further examples are available in the AMICI repository in the
-`python/examples <https://github.com/AMICI-dev/AMICI/tree/master/python/examples>`_
+`python/examples <https://github.com/AMICI-dev/AMICI/tree/main/python/examples>`_
 directory.
 
 SBML import
