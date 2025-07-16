@@ -658,6 +658,10 @@ void ReturnData::invalidateSLLH() {
 void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
     // chain-rule factor: multiplier for am_p
     std::vector<realtype> coefficient(nplist, 1.0);
+    // Only apply `pcoefficient` to non-zero sensitivities. This allows
+    // having unused parameters that are set to NAN, and still having finite
+    // sensitivities. Otherwise, this would lead to NAN-sensitivities w.r.t.
+    // to such parameters if they are log-scaled.
     std::vector<realtype> pcoefficient(nplist, 1.0);
 
     std::vector<realtype> unscaledParameters = model.getParameters();
@@ -726,18 +730,20 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
 
         if (!sllh.empty())
             for (int ip = 0; ip < nplist; ++ip)
-                sllh.at(ip) *= pcoefficient.at(ip);
+                if (auto&& val = sllh.at(ip); val != 0.0)
+                    val *= pcoefficient.at(ip);
 
         if (!sres.empty())
             for (int ires = 0; ires < gsl::narrow<int>(res.size()); ++ires)
                 for (int ip = 0; ip < nplist; ++ip)
-                    sres.at((ires * nplist + ip)) *= pcoefficient.at(ip);
+                    if (auto&& val = sres.at(ires * nplist + ip); val != 0.0)
+                        val *= pcoefficient.at(ip);
 
         if (!FIM.empty())
             for (int ip = 0; ip < nplist; ++ip)
                 for (int jp = 0; jp < nplist; ++jp)
-                    FIM.at(jp + ip * nplist)
-                        *= pcoefficient.at(ip) * pcoefficient.at(jp);
+                    if (auto&& val = FIM.at(jp + ip * nplist); val != 0.0)
+                        val *= pcoefficient.at(ip) * pcoefficient.at(jp);
 
         // apply chain rule to sensitivities
         auto chain_rule = [&](auto& sens, int n1, int stride1, int n2) {
@@ -756,8 +762,10 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                      ++ip)
                     for (index_type i2 = 0; i2 < gsl::narrow<index_type>(n2);
                          ++i2)
-                        sens[(i2 * nplist + ip) * (stride1) + (i1)]
-                            *= pcoefficient[ip];
+                        if (auto&& val
+                            = sens.at((i2 * nplist + ip) * stride1 + i1);
+                            val != 0.0)
+                            val *= pcoefficient[ip];
         };
 
         chain_rule(sx, nxtrue, nx, nt);
@@ -774,11 +782,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
         if (!s2llh.empty() && !sllh.empty()) {
             for (int ip = 0; ip < nplist; ++ip) {
                 for (int iJ = 1; iJ < nJ; ++iJ) {
-                    s2llh[ip * nplist + (iJ - 1)]
-                        *= pcoefficient.at(ip) * augcoefficient[iJ - 1];
+                    auto&& val = s2llh[ip * nplist + (iJ - 1)];
+                    if (val != 0.0)
+                        val *= pcoefficient.at(ip) * augcoefficient[iJ - 1];
                     if (model.plist(ip) == iJ - 1)
-                        s2llh[ip * nplist + (iJ - 1)]
-                            += sllh.at(ip) * coefficient.at(ip);
+                        val += sllh.at(ip) * coefficient.at(ip);
                 }
             }
         }
@@ -802,13 +810,15 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                         for (int i2 = 0; i2 < n2; ++i2) {
                             auto idx
                                 = (i2 * nplist + ip) * stride1 + i1 + iJ * n1;
-                            sens.at(idx)
-                                *= pcoefficient.at(ip) * augcoefficient[iJ - 1];
+                            auto&& val = sens.at(idx);
+                            if (val != 0.0)
+                                val *= pcoefficient.at(ip)
+                                       * augcoefficient[iJ - 1];
                             if (model.plist(ip) == iJ - 1)
-                                sens.at(
-                                    idx
-                                ) += sens.at((i2 * nplist + ip) * stride1 + i1)
-                                     * coefficient[ip];
+                                val += sens.at(
+                                           (i2 * nplist + ip) * stride1 + i1
+                                       )
+                                       * coefficient[ip];
                         }
         };
 
@@ -820,9 +830,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
         chain_rule(srz, nztrue, nz, nmaxevent);
     } else if (o2mode == SecondOrderMode::directional) {
         for (int ip = 0; ip < nplist; ++ip) {
-            s2llh.at(ip) *= pcoefficient.at(ip);
-            s2llh.at(ip) += model.k()[nk - nplist + ip] * sllh.at(ip)
-                            / unscaledParameters[model.plist(ip)];
+            auto&& val = sllh.at(ip);
+            if (val != 0.0)
+                val *= pcoefficient.at(ip);
+            val += model.k()[nk - nplist + ip] * sllh.at(ip)
+                   / unscaledParameters[model.plist(ip)];
         }
 
         auto chain_rule = [&](auto& sens, int n1, int stride1, int n2) {
@@ -841,9 +853,10 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                 for (int i1 = 0; i1 < n1; ++i1)
                     for (int i2 = 0; i2 < n2; ++i2) {
                         auto idx = (i2 * nplist + ip) * stride1 + i1 + n1;
-                        sens.at(idx) *= pcoefficient.at(ip);
-                        sens.at(idx)
-                            += model.k()[nk - nplist + ip]
+                        auto&& val = sens.at(idx);
+                        if (val != 0.0)
+                            val *= pcoefficient.at(ip);
+                        val += model.k()[nk - nplist + ip]
                                * sens.at((i2 * nplist + ip) * stride1 + i1)
                                / unscaledParameters[model.plist(ip)];
                     }
