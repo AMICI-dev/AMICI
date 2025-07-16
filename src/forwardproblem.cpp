@@ -196,6 +196,7 @@ void EventHandlingSimulator::run_steady_state(
         // direction w.r.t. current t.
         auto status = solver_->step(std::max(ws_->sol.t, 1.0) * 10);
         ws_->sol.t = solver_->gett();
+        solver_->writeSolution(ws_->sol);
 
         if (status < 0) {
             throw IntegrationFailure(status, ws_->sol.t);
@@ -217,8 +218,6 @@ void EventHandlingSimulator::run_steady_state(
 
             handle_events(false, nullptr);
         }
-
-        solver_->writeSolution(ws_->sol);
     }
 }
 
@@ -679,17 +678,10 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
 }
 
 SimulationState EventHandlingSimulator::get_simulation_state() {
-    if (std::isfinite(solver_->gett())) {
-        solver_->writeSolution(ws_->sol);
-    }
-    auto state = SimulationState();
-    state.sol.t = ws_->sol.t;
-    state.sol.x = ws_->sol.x;
-    state.sol.dx = ws_->sol.dx;
-    if (solver_->computingFSA() || ws_->sol.t == t0_)
-        state.sol.sx = ws_->sol.sx;
-    state.mod = model_->getModelState();
-    return state;
+    return {
+        .sol = ws_->sol,
+        .mod = model_->getModelState()
+    };
 }
 
 std::vector<int> compute_nroots(
