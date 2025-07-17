@@ -17,6 +17,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 from amici import import_model_module
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from conftest import MODEL_STEADYSTATE_SCALED_XML
+import sympy as sp
 
 
 def simple_sbml_model():
@@ -39,6 +40,22 @@ def simple_sbml_model():
     model.addParameter(p1)
 
     return document, model
+
+
+def test_event_trigger_to_root_function():
+    """Test that root functions for event triggers are generated correctly."""
+    from amici.sbml_import import _parse_event_trigger as to_trig
+
+    a, b = sp.symbols("a b")
+
+    assert to_trig(None) == sp.Float(-1)
+    assert to_trig(sp.false) == sp.Float(-1)
+    assert to_trig(sp.true) == sp.Float(1)
+
+    assert to_trig(a > b) == a - b
+    assert to_trig(a >= b) == a - b
+    assert to_trig(a < b) == b - a
+    assert to_trig(a <= b) == b - a
 
 
 def test_sbml2amici_no_observables(tempdir):
