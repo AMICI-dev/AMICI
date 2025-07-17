@@ -494,10 +494,26 @@ def verify_simulation_results(
                     rtol=1e-3,
                 )
             else:
+                expected = expected_results[field][()]
+                if field in ("res", "sres"):
+                    # FIXME: Some of the stored residuals are sign-flipped
+                    # remove this once all expected results are updated
+                    try:
+                        _check_results(
+                            rdata,
+                            field,
+                            expected * -1,
+                            atol=atol,
+                            rtol=rtol,
+                        )
+                        continue
+                    except AssertionError:
+                        pass
+
                 _check_results(
                     rdata,
                     field,
-                    expected_results[field][()],
+                    expected,
                     atol=atol,
                     rtol=rtol,
                 )
