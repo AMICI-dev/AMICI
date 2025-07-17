@@ -344,8 +344,18 @@ def _check_results(
     :param rtol:
         relative tolerance for comparison
     """
+    if field in ("rdrm", "messages"):
+        return
 
     result = rdata[field]
+
+    if isinstance(result, str):
+        if result != expected:
+            raise AssertionError(
+                f"Expected {expected} but got {result} for field {field}"
+            )
+        return
+
     if type(result) is float:  # noqa E721
         result = np.array(result)
 

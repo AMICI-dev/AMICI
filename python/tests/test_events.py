@@ -13,9 +13,8 @@ from util import (
     check_trajectories_with_adjoint_sensitivities,
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,
-    create_amici_model,
-    create_sbml_model,
 )
+from amici.testing.models import create_sbml_model, create_amici_model
 from numpy.testing import assert_allclose
 
 pytestmark = pytest.mark.filterwarnings(

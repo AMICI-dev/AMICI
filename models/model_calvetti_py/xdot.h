@@ -1,0 +1,6 @@
+#define de_0 xdot[0]
+#define de_1 xdot[1]
+#define de_2 xdot[2]
+#define ae_0 xdot[3]
+#define ae_1 xdot[4]
+#define ae_2 xdot[5]

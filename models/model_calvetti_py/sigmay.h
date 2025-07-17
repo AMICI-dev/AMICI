@@ -1,0 +1,6 @@
+#define sigma_obs_V1 sigmay[0]
+#define sigma_obs_V2 sigmay[1]
+#define sigma_obs_V3 sigmay[2]
+#define sigma_obs_f0 sigmay[3]
+#define sigma_obs_f1 sigmay[4]
+#define sigma_obs_f2 sigmay[5]

@@ -1,0 +1,6 @@
+#define dJy0_dobs_V1 dJydy[0]
+#define dJy0_dobs_V2_1 dJydy[1]
+#define dJy0_dobs_V3_2 dJydy[2]
+#define dJy0_dobs_f0_3 dJydy[3]
+#define dJy0_dobs_f1_4 dJydy[4]
+#define dJy0_dobs_f2_5 dJydy[5]

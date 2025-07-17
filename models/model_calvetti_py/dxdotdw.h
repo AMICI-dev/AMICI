@@ -1,0 +1,7 @@
+#define dae_0_df0 dxdotdw[0]
+#define dde_0_drate_of_V1 dxdotdw[1]
+#define dae_0_drate_of_V1 dxdotdw[2]
+#define dde_1_drate_of_V2 dxdotdw[3]
+#define dae_1_drate_of_V2 dxdotdw[4]
+#define dde_2_drate_of_V3 dxdotdw[5]
+#define dae_2_drate_of_V3 dxdotdw[6]

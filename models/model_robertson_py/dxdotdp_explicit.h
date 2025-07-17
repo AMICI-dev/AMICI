@@ -1,0 +1,5 @@
+#define dde_0_dp1 dxdotdp_explicit[0]
+#define dde_1_dp1 dxdotdp_explicit[1]
+#define dde_0_dp2 dxdotdp_explicit[2]
+#define dde_1_dp2 dxdotdp_explicit[3]
+#define dde_1_dp3 dxdotdp_explicit[4]
