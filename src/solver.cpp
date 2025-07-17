@@ -15,8 +15,8 @@ namespace amici {
 
 /* Error handler passed to SUNDIALS. */
 void wrapErrHandlerFn(
-    [[maybe_unused]] int line, char const* func, char const* file,
-    char const* msg, SUNErrCode err_code, void* err_user_data,
+    [[maybe_unused]] int const line, char const* func, char const* file,
+    char const* msg, SUNErrCode const err_code, void* err_user_data,
     [[maybe_unused]] SUNContext sunctx
 ) {
     constexpr int BUF_SIZE = 250;
@@ -33,7 +33,7 @@ void wrapErrHandlerFn(
     // we need a matlab-compatible message ID
     // i.e. colon separated and only  [A-Za-z0-9_]
     // see https://mathworks.com/help/matlab/ref/mexception.html
-    std::filesystem::path path(file);
+    std::filesystem::path const path(file);
     auto file_stem = path.stem().string();
 
     // Error code to string. Remove 'AMICI_' prefix.
@@ -139,7 +139,7 @@ void Solver::apply_max_num_steps_B() const {
 
 int Solver::run(realtype const tout) const {
     setStopTime(tout);
-    CpuTimer cpu_timer;
+    CpuTimer const cpu_timer;
     int status = AMICI_SUCCESS;
 
     apply_max_num_steps();
@@ -672,8 +672,8 @@ void Solver::applyQuadTolerancesASA(int const which) const {
     if (sensi_ < SensitivityOrder::first)
         return;
 
-    realtype quad_rtol = isNaN(quad_rtol_) ? rtol_ : quad_rtol_;
-    realtype quad_atol = isNaN(quad_atol_) ? atol_ : quad_atol_;
+    realtype const quad_rtol = isNaN(quad_rtol_) ? rtol_ : quad_rtol_;
+    realtype const quad_atol = isNaN(quad_atol_) ? atol_ : quad_atol_;
 
     /* Enable Quadrature Error Control */
     setQuadErrConB(which, !std::isinf(quad_atol) && !std::isinf(quad_rtol));
@@ -740,7 +740,7 @@ void Solver::setSensitivityMethodPreequilibration(
 }
 
 void Solver::checkSensitivityMethod(
-    SensitivityMethod const sensi_meth, bool preequilibration
+    SensitivityMethod const sensi_meth, bool const preequilibration
 ) const {
     if (rdata_mode_ == RDataReporting::residuals
         && sensi_meth == SensitivityMethod::adjoint)
@@ -752,7 +752,7 @@ void Solver::checkSensitivityMethod(
         resetMutableMemory(nx(), nplist(), nquad());
 }
 
-void Solver::setMaxNonlinIters(int max_nonlin_iters) {
+void Solver::setMaxNonlinIters(int const max_nonlin_iters) {
     if (max_nonlin_iters < 0)
         throw AmiException("max_nonlin_iters must be a non-negative number");
 
@@ -761,7 +761,7 @@ void Solver::setMaxNonlinIters(int max_nonlin_iters) {
 
 int Solver::getMaxNonlinIters() const { return max_nonlin_iters_; }
 
-void Solver::setMaxConvFails(int max_conv_fails) {
+void Solver::setMaxConvFails(int const max_conv_fails) {
     if (max_conv_fails < 0)
         throw AmiException("max_conv_fails must be a non-negative number");
 
@@ -813,7 +813,7 @@ double Solver::getNewtonDampingFactorLowerBound() const {
     return newton_damping_factor_lower_bound_;
 }
 
-void Solver::setNewtonDampingFactorLowerBound(double dampingFactorLowerBound) {
+void Solver::setNewtonDampingFactorLowerBound(double const dampingFactorLowerBound) {
     newton_damping_factor_lower_bound_ = dampingFactorLowerBound;
 }
 
@@ -848,7 +848,7 @@ double Solver::getAbsoluteTolerance() const {
     return static_cast<double>(atol_);
 }
 
-void Solver::setAbsoluteTolerance(double atol) {
+void Solver::setAbsoluteTolerance(double const atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
 
@@ -960,11 +960,11 @@ double Solver::getSteadyStateToleranceFactor() const {
     return static_cast<double>(ss_tol_factor_);
 }
 
-void Solver::setSteadyStateToleranceFactor(double const ss_tol_factor) {
-    if (ss_tol_factor < 0)
+void Solver::setSteadyStateToleranceFactor(double const factor) {
+    if (factor < 0)
         throw AmiException("ss_tol_factor must be a non-negative number");
 
-    ss_tol_factor_ = static_cast<realtype>(ss_tol_factor);
+    ss_tol_factor_ = static_cast<realtype>(factor);
 }
 
 double Solver::getRelativeToleranceSteadyState() const {
@@ -1036,13 +1036,13 @@ long int Solver::getMaxSteps() const { return maxsteps_; }
 
 double Solver::getMaxTime() const { return maxtime_.count(); }
 
-void Solver::setMaxTime(double maxtime) {
+void Solver::setMaxTime(double const maxtime) {
     maxtime_ = std::chrono::duration<double>(maxtime);
 }
 
 void Solver::startTimer() const { simulation_timer_.reset(); }
 
-bool Solver::timeExceeded(int interval) const {
+bool Solver::timeExceeded(int const interval) const {
     thread_local int eval_counter = 0;
 
     // 0 means infinite time
@@ -1139,7 +1139,7 @@ void Solver::setStabilityLimitFlag(bool const stldet) {
 
 LinearSolver Solver::getLinearSolver() const { return linsol_; }
 
-void Solver::setLinearSolver(LinearSolver linsol) {
+void Solver::setLinearSolver(LinearSolver const linsol) {
     if (solver_memory_)
         resetMutableMemory(nx(), nplist(), nquad());
     linsol_ = linsol;
@@ -1234,7 +1234,7 @@ int Solver::nx() const { return x_.getLength(); }
 
 int Solver::nquad() const { return xQB_.getLength(); }
 
-bool Solver::getInitDone() const { return initialized_; };
+bool Solver::getInitDone() const { return initialized_; }
 
 bool Solver::getSensInitDone() const { return sens_initialized_; }
 
@@ -1252,7 +1252,7 @@ bool Solver::getQuadInitDoneB(int const which) const {
 
 bool Solver::getQuadInitDone() const { return quad_initialized_; }
 
-void Solver::setInitDone() const { initialized_ = true; };
+void Solver::setInitDone() const { initialized_ = true; }
 
 void Solver::setSensInitDone() const { sens_initialized_ = true; }
 

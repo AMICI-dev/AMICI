@@ -24,12 +24,10 @@ class Solver;
 } // namespace amici
 
 // for serialization friend in Solver
-namespace boost {
-namespace serialization {
+namespace boost::serialization {
 template <class Archive>
 void serialize(Archive& ar, amici::Solver& s, unsigned int version);
-}
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 
