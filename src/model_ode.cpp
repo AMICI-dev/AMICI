@@ -12,7 +12,7 @@ void Model_ODE::fJ(
 }
 
 void Model_ODE::fJ(
-    realtype t, const_N_Vector x, const_N_Vector /*xdot*/, SUNMatrix J
+    realtype const t, const_N_Vector x, const_N_Vector /*xdot*/, SUNMatrix J
 ) {
     fJSparse(t, x, derived_state_.J_);
     derived_state_.J_.refresh();
@@ -27,7 +27,7 @@ void Model_ODE::fJSparse(
     fJSparse(t, x.getNVector(), J);
 }
 
-void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
+void Model_ODE::fJSparse(realtype const t, const_N_Vector x, SUNMatrix J) {
     auto const x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
     if (pythonGenerated) {
@@ -74,7 +74,7 @@ void Model_ODE::
 }
 
 void Model_ODE::fJv(
-    const_N_Vector v, N_Vector Jv, realtype t, const_N_Vector x
+    const_N_Vector v, N_Vector Jv, realtype const t, const_N_Vector x
 ) {
     N_VConst(0.0, Jv);
     fJSparse(t, x, derived_state_.J_);
@@ -89,8 +89,8 @@ void Model_ODE::froot(
     froot(t, x.getNVector(), root);
 }
 
-void Model_ODE::froot(realtype t, const_N_Vector x, gsl::span<realtype> root) {
-    auto x_pos = computeX_pos(x);
+void Model_ODE::froot(realtype const t, const_N_Vector x, gsl::span<realtype> root) {
+    auto const x_pos = computeX_pos(x);
     std::ranges::fill(root, 0.0);
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
@@ -106,8 +106,8 @@ void Model_ODE::fxdot(
     fxdot(t, x.getNVector(), xdot.getNVector());
 }
 
-void Model_ODE::fxdot(realtype t, const_N_Vector x, N_Vector xdot) {
-    auto x_pos = computeX_pos(x);
+void Model_ODE::fxdot(realtype const t, const_N_Vector x, N_Vector xdot) {
+    auto const x_pos = computeX_pos(x);
     fw(t, N_VGetArrayPointerConst(x_pos));
     N_VConst(0.0, xdot);
     fxdot(
@@ -130,7 +130,7 @@ void Model_ODE::fJDiag(
 void Model_ODE::fdxdotdw(realtype const t, const_N_Vector x) {
     derived_state_.dxdotdw_.zero();
     if (nw > 0 && derived_state_.dxdotdw_.capacity()) {
-        auto x_pos = computeX_pos(x);
+        auto const x_pos = computeX_pos(x);
 
         fdxdotdw_colptrs(derived_state_.dxdotdw_);
         fdxdotdw_rowvals(derived_state_.dxdotdw_);
@@ -143,7 +143,7 @@ void Model_ODE::fdxdotdw(realtype const t, const_N_Vector x) {
 }
 
 void Model_ODE::fdxdotdp(realtype const t, const_N_Vector x) {
-    auto x_pos = computeX_pos(x);
+    auto const x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointerConst(x_pos), false);
 
     if (pythonGenerated) {
@@ -193,7 +193,7 @@ void Model_ODE::
 }
 
 std::unique_ptr<Solver> Model_ODE::getSolver() {
-    return std::unique_ptr<Solver>(new amici::CVodeSolver());
+    return std::unique_ptr<Solver>(new CVodeSolver());
 }
 
 void Model_ODE::fJSparse(

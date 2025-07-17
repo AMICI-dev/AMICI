@@ -1,9 +1,7 @@
 #include <amici/defines.h>
 #include <array>
 
-namespace amici {
-
-namespace model_TPL_MODELNAME {
+namespace amici::model_TPL_MODELNAME {
 
 // clang-format off
 
@@ -57,6 +55,4 @@ std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
 
 // clang-format on
 
-} // namespace model_TPL_MODELNAME
-
-} // namespace amici
+} // namespace amici::model_TPL_MODELNAME

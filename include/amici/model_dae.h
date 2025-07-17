@@ -148,7 +148,7 @@ class Model_DAE : public Model {
 
     void
     fJv(realtype t, AmiVector const& x, AmiVector const& dx,
-        AmiVector const& xdot, AmiVector const& v, AmiVector& nJv,
+        AmiVector const& xdot, AmiVector const& v, AmiVector& Jv,
         realtype cj) override;
 
     /**

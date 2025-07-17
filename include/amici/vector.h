@@ -16,12 +16,10 @@ class AmiVector;
 }
 
 // for serialization friend
-namespace boost {
-namespace serialization {
+namespace boost::serialization {
 template <class Archive>
 void serialize(Archive& ar, amici::AmiVector& v, unsigned int version);
-}
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 
@@ -51,7 +49,7 @@ class AmiVector {
      * @param length number of elements in vector
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(long int const length, SUNContext sunctx)
+    explicit AmiVector(long int const length, SUNContext const sunctx)
         : vec_(static_cast<decltype(vec_)::size_type>(length), 0.0)
         , nvec_(N_VMake_Serial(length, vec_.data(), sunctx)) {}
 
@@ -63,7 +61,7 @@ class AmiVector {
      * @param rvec vector from which the data will be moved
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(std::vector<realtype> rvec, SUNContext sunctx)
+    explicit AmiVector(std::vector<realtype> rvec, SUNContext const sunctx)
         : vec_(std::move(rvec))
         , nvec_(N_VMake_Serial(
               gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
@@ -74,7 +72,7 @@ class AmiVector {
      * @param rvec vector from which the data will be copied
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(gsl::span<realtype const> rvec, SUNContext sunctx)
+    explicit AmiVector(gsl::span<realtype const> const rvec, SUNContext const sunctx)
         : AmiVector(std::vector(rvec.begin(), rvec.end()), sunctx) {}
 
     /**

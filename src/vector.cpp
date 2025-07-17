@@ -29,21 +29,21 @@ void AmiVector::minus() {
     std::ranges::transform(vec_, vec_.begin(), std::negate<realtype>());
 }
 
-void AmiVector::set(realtype val) { std::ranges::fill(vec_, val); }
+void AmiVector::set(realtype const val) { std::ranges::fill(vec_, val); }
 
-realtype& AmiVector::operator[](int pos) {
+realtype& AmiVector::operator[](int const pos) {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
-realtype const& AmiVector::operator[](int pos) const {
+realtype const& AmiVector::operator[](int const pos) const {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
-realtype& AmiVector::at(int pos) {
+realtype& AmiVector::at(int const pos) {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
-realtype const& AmiVector::at(int pos) const {
+realtype const& AmiVector::at(int const pos) const {
     return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
@@ -57,7 +57,7 @@ void AmiVector::copy(AmiVector const& other) {
     std::ranges::copy(other.vec_, vec_.begin());
 }
 
-void AmiVector::synchroniseNVector(SUNContext sunctx) {
+void AmiVector::synchroniseNVector(SUNContext const sunctx) {
     if (nvec_)
         N_VDestroy_Serial(nvec_);
     if (sunctx) {
@@ -73,7 +73,7 @@ AmiVector::~AmiVector() {
 }
 
 AmiVectorArray::AmiVectorArray(
-    long int length_inner, long int length_outer, SUNContext sunctx
+    long int const length_inner, long int const length_outer, SUNContext const sunctx
 )
     : vec_array_(length_outer, AmiVector(length_inner, sunctx)) {
     nvec_array_.resize(length_outer);
@@ -101,29 +101,29 @@ AmiVectorArray::AmiVectorArray(AmiVectorArray const& vaold)
 
 realtype* AmiVectorArray::data(int pos) { return vec_array_.at(pos).data(); }
 
-realtype const* AmiVectorArray::data(int pos) const {
+realtype const* AmiVectorArray::data(int const pos) const {
     return vec_array_.at(pos).data();
 }
 
-realtype& AmiVectorArray::at(int ipos, int jpos) {
+realtype& AmiVectorArray::at(int const ipos, int const jpos) {
     return vec_array_.at(jpos).at(ipos);
 }
 
-realtype const& AmiVectorArray::at(int ipos, int jpos) const {
+realtype const& AmiVectorArray::at(int const ipos, int const jpos) const {
     return vec_array_.at(jpos).at(ipos);
 }
 
 N_Vector* AmiVectorArray::getNVectorArray() { return nvec_array_.data(); }
 
-N_Vector AmiVectorArray::getNVector(int pos) { return nvec_array_.at(pos); }
+N_Vector AmiVectorArray::getNVector(int const pos) { return nvec_array_.at(pos); }
 
-const_N_Vector AmiVectorArray::getNVector(int pos) const {
+const_N_Vector AmiVectorArray::getNVector(int const pos) const {
     return nvec_array_.at(pos);
 }
 
-AmiVector& AmiVectorArray::operator[](int pos) { return vec_array_.at(pos); }
+AmiVector& AmiVectorArray::operator[](int const pos) { return vec_array_.at(pos); }
 
-AmiVector const& AmiVectorArray::operator[](int pos) const {
+AmiVector const& AmiVectorArray::operator[](int const pos) const {
     return vec_array_.at(pos);
 }
 

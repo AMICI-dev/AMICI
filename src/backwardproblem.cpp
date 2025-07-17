@@ -204,7 +204,7 @@ BwdSimWorkspace::BwdSimWorkspace(
     , xQB_(model_->nJ * model_->nplist(), solver->getSunContext()) {}
 
 void EventHandlingBwdSimulator::run(
-    realtype t_start, realtype t_end, realtype it,
+    realtype const t_start, realtype const t_end, realtype it,
     std::vector<realtype> const& timepoints, std::vector<realtype> const* dJydx,
     std::vector<realtype> const* dJzdx
 ) {
@@ -311,7 +311,7 @@ SteadyStateBackwardProblem::SteadyStateBackwardProblem(
     , solver_(&solver)
     , ws_(ws) {}
 
-void SteadyStateBackwardProblem::run(realtype t0) {
+void SteadyStateBackwardProblem::run(realtype const t0) {
     newton_solver_.reinitialize();
 
     // initialize quadratures
@@ -319,7 +319,7 @@ void SteadyStateBackwardProblem::run(realtype t0) {
     ws_->xQB_.zero();
 
     // Compute quadratures, track computation time
-    CpuTimer cpu_timer;
+    CpuTimer const cpu_timer;
 
     compute_steady_state_quadrature(t0);
     cpu_timeB_ = cpu_timer.elapsed_milliseconds();
@@ -333,7 +333,7 @@ AmiVector const& SteadyStateBackwardProblem::getAdjointQuadrature() const {
     return ws_->xQB_;
 }
 
-void SteadyStateBackwardProblem::compute_steady_state_quadrature(realtype t0) {
+void SteadyStateBackwardProblem::compute_steady_state_quadrature(realtype const t0) {
     // This routine computes the quadratures:
     //     xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
     // As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
@@ -399,7 +399,7 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
     }
 }
 
-void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
+void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype const t0) {
     // If the Jacobian is singular, the integral over xB must be computed
     // by usual integration over time, but simplifications can be applied:
     // x is not time-dependent, no forward trajectory is needed.
@@ -409,7 +409,7 @@ void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
     // xQ was written in getQuadratureByLinSolve() -> set to zero
     xQ_.zero();
 
-    auto sim_solver = std::unique_ptr<Solver>(solver_->clone());
+    auto const sim_solver = std::unique_ptr<Solver>(solver_->clone());
     sim_solver->logger = solver_->logger;
     sim_solver->setSensitivityMethod(SensitivityMethod::none);
     sim_solver->setSensitivityOrder(SensitivityOrder::none);
@@ -454,7 +454,7 @@ void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
     AmiVector xQBdot(model_->nplist(), solver.getSunContext());
 
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
-    auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
+    auto const max_steps = (solver.getMaxStepsBackwardProblem() > 0)
                          ? solver.getMaxStepsBackwardProblem()
                          : solver.getMaxSteps() * 100;
 

@@ -84,7 +84,7 @@ void createGroup(
     H5::H5File const& file, std::string const& groupPath, bool recursively
 ) {
 #if H5_VERSION_GE(1, 10, 6)
-    H5::LinkCreatPropList lcpl;
+    H5::LinkCreatPropList const lcpl;
     lcpl.setCreateIntermediateGroup(recursively);
     file.createGroup(groupPath.c_str(), lcpl);
 #else
@@ -113,7 +113,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
     std::string const& hdf5Filename, std::string const& hdf5Root,
     Model const& model
 ) {
-    H5::H5File file(hdf5Filename.c_str(), H5F_ACC_RDONLY);
+    H5::H5File const file(hdf5Filename.c_str(), H5F_ACC_RDONLY);
 
     hsize_t m, n;
 
@@ -125,7 +125,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
 
     if (model.ny * model.nt() > 0) {
         if (locationExists(file, hdf5Root + "/Y")) {
-            auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
+            auto const my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
             edata->setObservedData(my);
         } else {
@@ -135,7 +135,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
         }
 
         if (locationExists(file, hdf5Root + "/Sigma_Y")) {
-            auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
+            auto const sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
             edata->setObservedDataStdDev(sigmay);
         } else {
@@ -148,7 +148,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
 
     if (model.nz * model.nMaxEvent() > 0) {
         if (locationExists(file, hdf5Root + "/Z")) {
-            auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
+            auto const mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
             edata->setObservedEvents(mz);
         } else {
@@ -719,7 +719,7 @@ struct LogItemCStr {
 };
 
 void writeLogItemsToHDF5(
-    H5::H5File const& file, std::vector<amici::LogItem> const& logItems,
+    H5::H5File const& file, std::vector<LogItem> const& logItems,
     std::string const& hdf5Location
 ) {
     if (logItems.empty())
@@ -727,7 +727,7 @@ void writeLogItemsToHDF5(
 
     try {
         hsize_t dims[1] = {logItems.size()};
-        H5::DataSpace dataspace(1, dims);
+        const H5::DataSpace dataspace(1, dims);
 
         // works on Ubuntu, but segfaults on macos:
         /*
@@ -871,11 +871,11 @@ int getIntScalarAttribute(
 
 void createAndWriteInt1DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<int const> buffer
+    gsl::span<int const> const buffer
 ) {
     hsize_t size = buffer.size();
     H5::DataSpace dataspace(1, &size);
-    auto dataset = file.createDataSet(
+    auto const dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_INT, dataspace
     );
     dataset.write(buffer.data(), H5::PredType::NATIVE_INT);
@@ -885,9 +885,9 @@ void createAndWriteDouble1DDataset(
     const H5::H5File& file, std::string const& datasetName,
     gsl::span<double const> buffer
 ) {
-    hsize_t size = buffer.size();
+    hsize_t const size = buffer.size();
     H5::DataSpace dataspace(1, &size);
-    auto dataset = file.createDataSet(
+    auto const dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_DOUBLE, dataspace
     );
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
@@ -895,7 +895,7 @@ void createAndWriteDouble1DDataset(
 
 void createAndWriteDouble2DDataset(
     const H5::H5File& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t const m, hsize_t const n
+    gsl::span<double const> const buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -908,7 +908,7 @@ void createAndWriteDouble2DDataset(
 
 void createAndWriteInt2DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<int const> buffer, hsize_t const m, hsize_t const n
+    gsl::span<int const> const buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -921,7 +921,7 @@ void createAndWriteInt2DDataset(
 
 void createAndWriteDouble3DDataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t const m, hsize_t const n,
+    gsl::span<double const> const buffer, hsize_t const m, hsize_t const n,
     hsize_t const o
 ) {
     Expects(buffer.size() == m * n * o);
@@ -958,7 +958,7 @@ void writeSolverSettingsToHDF5(
     Solver const& solver, std::string const& hdf5Filename,
     std::string const& hdf5Location
 ) {
-    auto file = createOrOpenForWriting(hdf5Filename);
+    auto const file = createOrOpenForWriting(hdf5Filename);
 
     writeSolverSettingsToHDF5(solver, file, hdf5Location);
 }

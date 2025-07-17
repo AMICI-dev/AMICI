@@ -55,7 +55,7 @@ void amici_dgemv(
 }
 
 void amici_daxpy(
-    int n, double alpha, double const* x, int const incx, double* y, int incy
+    int const n, double const alpha, double const* x, int const incx, double* y, int const incy
 ) {
     BLAS_FUNC(daxpy)(n, alpha, x, incx, y, incy);
 }
