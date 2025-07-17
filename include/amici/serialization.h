@@ -145,6 +145,8 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar & m.state_.unscaledParameters;
     ar & m.state_.fixedParameters;
     ar & m.state_.plist;
+    ar & m.state_.root_enabled;
+    ar & m.state_.root_last_sign;
     ar & m.x0data_;
     ar & m.sx0data_;
     ar & m.nmaxevent_;

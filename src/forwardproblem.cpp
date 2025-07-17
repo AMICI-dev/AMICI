@@ -430,6 +430,10 @@ void EventHandlingSimulator::handle_events(
                         ? std::optional<SimulationState>(get_simulation_state())
                         : std::nullopt)}
             );
+
+        }
+        if(ws_->roots_found.at(ie) != 0) {
+            model_->register_root(ie, ws_->roots_found.at(ie));
         }
     }
 
@@ -615,6 +619,7 @@ int EventHandlingSimulator::detect_secondary_events() {
                 } else {
                     ws_->roots_found.at(ie) = -1;
                 }
+                model_->register_root(ie, ws_->roots_found.at(ie));
                 secondevent++;
             } else {
                 ws_->roots_found.at(ie) = 0;

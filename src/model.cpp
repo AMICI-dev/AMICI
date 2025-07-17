@@ -437,6 +437,8 @@ void Model::initEvents(
                 roots_found.at(ie) = 1;
             }
         }
+        state_.root_enabled[ie] = rootvals[ie] != 0;
+        state_.root_last_sign[ie] = events_[ie].get_initial_value()?1:-1;
     }
 }
 
