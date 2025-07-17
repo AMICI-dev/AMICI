@@ -26,7 +26,7 @@ bool operator==(SimulationParameters const& a, SimulationParameters const& b) {
 
 void SimulationParameters::
     reinitializeAllFixedParameterDependentInitialStatesForPresimulation(
-        int nx_rdata
+        int const nx_rdata
     ) {
     reinitialization_state_idxs_presim.resize(nx_rdata);
     std::iota(
@@ -37,7 +37,7 @@ void SimulationParameters::
 
 void SimulationParameters::
     reinitializeAllFixedParameterDependentInitialStatesForSimulation(
-        int nx_rdata
+        int const nx_rdata
     ) {
     reinitialization_state_idxs_sim.resize(nx_rdata);
     std::iota(
@@ -47,7 +47,7 @@ void SimulationParameters::
 }
 
 void SimulationParameters::reinitializeAllFixedParameterDependentInitialStates(
-    int nx_rdata
+    int const nx_rdata
 ) {
     reinitializeAllFixedParameterDependentInitialStatesForPresimulation(
         nx_rdata

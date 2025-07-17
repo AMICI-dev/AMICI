@@ -56,7 +56,7 @@ class Event {
      * @brief Get the initial value of the root function
      * @return The value of the root function at t_0.
      */
-    bool get_initial_value() { return initial_value_; }
+    bool get_initial_value() const { return initial_value_; }
 
     /**
      * @brief Get the priority of the event assignments

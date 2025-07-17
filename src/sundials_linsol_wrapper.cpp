@@ -15,7 +15,7 @@
 
 namespace amici {
 
-SUNLinSolWrapper::SUNLinSolWrapper(SUNLinearSolver linsol)
+SUNLinSolWrapper::SUNLinSolWrapper(SUNLinearSolver const linsol)
     : solver_(linsol) {}
 
 SUNLinSolWrapper::SUNLinSolWrapper(
