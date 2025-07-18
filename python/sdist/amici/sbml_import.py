@@ -3132,13 +3132,18 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     Recursively translates a boolean trigger function into a real valued
     root function
 
-    :param trigger:
-    :return: real valued root function expression
+    :param trigger: The Boolean trigger expression.
+        The event triggers when this expression changes from False to True.
+    :return: real-valued root function expression
     """
     # Events can be defined without trigger, i.e., the event will never fire.
     # In this case, set a dummy trigger:
     if trigger is None or trigger is sp.false:
+        return sp.Float(-1.0)
+
+    if trigger is sp.true:
         return sp.Float(1.0)
+
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
         _check_unsupported_functions_sbml(root, "sympy.Expression")
