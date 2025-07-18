@@ -591,7 +591,6 @@ class SUNMatrixWrapper {
     bool ownmat = true;
 };
 
-
 /**
  * @brief Output formatter for SUNMatrixWrapper.
  * @param os output stream

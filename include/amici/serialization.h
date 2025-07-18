@@ -154,7 +154,7 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar & m.sigma_res_;
     ar & m.steadystate_computation_mode_;
     ar & m.steadystate_sensitivity_mode_;
-    ar & m.state_independent_events_;
+    ar & m.explicit_roots_;
     ar & m.steadystate_mask_;
 }
 

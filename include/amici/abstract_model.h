@@ -1170,6 +1170,17 @@ class AbstractModel {
     virtual void fdspline_slopesdp(
         realtype* dspline_slopesdp, realtype const* p, realtype const* k, int ip
     );
+
+    /**
+     * @brief Compute explicit roots of the model.
+     * @param p parameter vector
+     * @param k constant vector
+     * @return A vector of length ne_solver, each containing a vector of
+     * explicit roots for the corresponding event.
+     */
+    virtual std::vector<std::vector<realtype>> fexplicit_roots(
+        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k
+    ) = 0;
 };
 
 } // namespace amici

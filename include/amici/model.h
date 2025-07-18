@@ -112,15 +112,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
      * @param events Vector of events
-     * @param state_independent_events Map of events with state-independent
-     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters, SecondOrderMode o2mode,
         std::vector<realtype> idlist, std::vector<int> z2event,
-        std::vector<Event> events = {},
-        std::map<realtype, std::vector<int>> state_independent_events = {}
+        std::vector<Event> events = {}
     );
 
     /** Destructor. */
@@ -300,6 +297,13 @@ class Model : public AbstractModel, public ModelDimensions {
         realtype t, AmiVector const& x, AmiVector const& dx,
         std::vector<int>& roots_found
     );
+
+    /**
+     * @brief Re-compute the explicit roots.
+     *
+     * Re-compute the explicit roots based on the current model parameters.
+     */
+    void reinit_explicit_roots();
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
@@ -1514,6 +1518,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get trigger times for events that don't require root-finding.
      *
+     * To be called only after Model::initialize.
+     *
      * @return List of unique trigger points for events that don't require
      * root-finding (i.e. that trigger at predetermined timepoints),
      * in ascending order.
@@ -1562,6 +1568,18 @@ class Model : public AbstractModel, public ModelDimensions {
         return any_state_non_negative_;
     }
 
+    [[nodiscard]] std::vector<std::vector<realtype>> fexplicit_roots(
+        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k
+    ) override {
+        if (ne != ne_solver) {
+            throw AmiException(
+                "ne!=ne_solver, but 'fexplicit_roots' is not implemented for "
+                "this model."
+            );
+        }
+        return {};
+    }
+
     /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
@@ -1579,7 +1597,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Map of trigger timepoints to event indices for events that don't
      * require root-finding.
      */
-    std::map<realtype, std::vector<int>> state_independent_events_ = {};
+    std::map<realtype, std::vector<int>> explicit_roots_ = {};
 
   protected:
     /**

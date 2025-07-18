@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 
 
@@ -28,6 +28,11 @@ class _FunctionInfo:
         indicates whether a model-specific implementation is to be generated
     :ivar body:
         the actual function body. will be filled later
+    :ivar default_return_value:
+        The value to return if the function does not generate a body.
+    :ivar header:
+        List of header lines to include in the generated C++ file for this
+        function such as `#include` statements.
     """
 
     ode_arguments: str = ""
@@ -37,6 +42,8 @@ class _FunctionInfo:
     sparse: bool = False
     generate_body: bool = True
     body: str = ""
+    default_return_value: str = ""
+    header: list[str] = field(default_factory=list)
 
     def arguments(self, ode: bool = True) -> str:
         """Get the arguments for the ODE or DAE function"""
@@ -143,6 +150,10 @@ functions = {
     "create_splines": _FunctionInfo(
         "const realtype *p, const realtype *k",
         return_type="std::vector<HermiteSpline>",
+        header=[
+            '#include "amici/splinefunctions.h"',
+            "#include <vector>",
+        ],
     ),
     "spl": _FunctionInfo(generate_body=False),
     "sspl": _FunctionInfo(generate_body=False),
@@ -378,6 +389,14 @@ functions = {
     "rz": _FunctionInfo(
         "realtype *rz, const int ie, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h"
+    ),
+    "explicit_roots": _FunctionInfo(
+        "const realtype *p, const realtype *k",
+        return_type="std::vector<std::vector<realtype>>",
+        default_return_value="{}",
+        header=[
+            "#include <vector>",
+        ],
     ),
 }
 

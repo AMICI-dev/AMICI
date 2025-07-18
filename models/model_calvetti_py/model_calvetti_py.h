@@ -99,7 +99,7 @@ extern void x_solver_model_calvetti_py(realtype *x_solver, const realtype *x_rda
 extern std::vector<HermiteSpline> create_splines_model_calvetti_py(const realtype *p, const realtype *k);
 
 
-
+extern std::vector<std::vector<realtype>> explicit_roots_model_calvetti_py(const realtype *p, const realtype *k);
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -155,8 +155,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
                   Event("Heaviside_1", true, true, NAN),
                   Event("Heaviside_2", true, true, NAN),
                   Event("Heaviside_3", true, true, NAN)
-              }, // events
-              {{10.0, {0, 1}}, {12.0, {2, 3}}}               // state-independent events
+              } // events
           ) {
           }
 
@@ -413,6 +412,11 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k) override {
+        return explicit_roots_model_calvetti_py(p, k);
+    }
+
+
     std::string getName() const override {
         return "model_calvetti_py";
     }
@@ -554,7 +558,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "bcedb951ddf674996b269489d74f9b86112038ff";
+        return "d587a622b8295dff051b8cb45d009d9b037f7012";
     }
 
     bool hasQuadraticLLH() const override {

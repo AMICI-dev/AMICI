@@ -72,6 +72,7 @@ dxdotdw.h
 dxdotdx_explicit.cpp 
 dxdotdx_explicit.h 
 dydx.cpp 
+explicit_roots.cpp 
 h.h 
 k.h 
 model_calvetti_py.cpp 

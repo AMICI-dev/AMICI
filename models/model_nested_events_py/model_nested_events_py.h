@@ -99,7 +99,7 @@ extern void x_solver_model_nested_events_py(realtype *x_solver, const realtype *
 extern std::vector<HermiteSpline> create_splines_model_nested_events_py(const realtype *p, const realtype *k);
 
 
-
+extern std::vector<std::vector<realtype>> explicit_roots_model_nested_events_py(const realtype *p, const realtype *k);
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -123,7 +123,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
                   0,                                  // nz
                   0,                              // nztrue
                   3,                              // nevent
-                  3,                       // nevent_solver
+                  2,                       // nevent_solver
                   0,                                // nspl
                   1,                          // nobjective
                   1,                                  // nw
@@ -151,11 +151,10 @@ class Model_model_nested_events_py : public amici::Model_ODE {
               std::vector<realtype>{1.0},   // idlist
               std::vector<int>{},               // z2events
               std::vector<Event>{
-                  Event("injection", true, true, NAN),
                   Event("Heaviside_1", true, true, NAN),
-                  Event("Heaviside_2", true, true, NAN)
-              }, // events
-              {}               // state-independent events
+                  Event("Heaviside_2", true, true, NAN),
+                  Event("injection", true, true, NAN)
+              } // events
           ) {
           }
 
@@ -408,6 +407,11 @@ class Model_model_nested_events_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k) override {
+        return explicit_roots_model_nested_events_py(p, k);
+    }
+
+
     std::string getName() const override {
         return "model_nested_events_py";
     }
@@ -549,7 +553,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "bcedb951ddf674996b269489d74f9b86112038ff";
+        return "d587a622b8295dff051b8cb45d009d9b037f7012";
     }
 
     bool hasQuadraticLLH() const override {
