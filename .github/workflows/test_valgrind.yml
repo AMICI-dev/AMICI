@@ -5,6 +5,7 @@ on:
       - python/tests/valgrind-python.supp
       - scripts/run-valgrind-cpp.sh
       - scripts/run-valgrind-py.sh
+      - .github/workflows/test_valgrind.yml
   pull_request:
     branches:
       - update_valgrind_supp
@@ -39,10 +40,13 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: main
+        lfs: true
 
     - name: Checkout code (manual, push, pull request)
       if: github.event_name != 'schedule'
       uses: actions/checkout@v4
+      with:
+        lfs: true
 
     - run: git fetch --prune --unshallow
 
@@ -86,6 +90,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - uses: actions/checkout@v4
+      with:
+        lfs: true
     - run: git fetch --prune --unshallow
 
     - name: Install apt dependencies
