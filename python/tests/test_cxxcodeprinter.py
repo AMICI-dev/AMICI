@@ -49,3 +49,16 @@ def test_print_infinity():
         )
         assert cp.doprint(sp.zoo) == "std::numeric_limits<double>::infinity()"
         assert cp.doprint(-sp.zoo) == "std::numeric_limits<double>::infinity()"
+
+
+@skip_on_valgrind
+def test_min_max():
+    """Check that AmiciCxxCodePrinter prints min() and max() correctly."""
+    a, b, c = sp.symbols("a b c")
+    cp = AmiciCxxCodePrinter()
+    assert cp.doprint(sp.Min(a)) == "a"
+    assert cp.doprint(sp.Max(a)) == "a"
+    assert cp.doprint(sp.Min(a, b)) == "std::min(a, b)"
+    assert cp.doprint(sp.Max(a, b)) == "std::max(a, b)"
+    assert cp.doprint(sp.Min(a, b, c)) == "std::min({a, b, c})"
+    assert cp.doprint(sp.Max(a, b, c)) == "std::max({a, b, c})"
