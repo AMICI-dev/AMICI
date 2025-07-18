@@ -6,6 +6,7 @@ requires = [
     "wheel",
     "numpy>=2.0",
     "cmake-build-extension==0.6.0",
+    "scipy-openblas64==0.3.30.0.1; platform_system!='Darwin'",
     "swig",
 ]
 build-backend = "setuptools.build_meta"
@@ -86,7 +87,7 @@ examples = [
 jax = [
     "jax>=0.4.36",
     "jaxlib>=0.4.36",
-    "diffrax>=0.6.1",
+    "diffrax>=0.7.0",
     "jaxtyping>=0.2.34",
     "equinox>=0.11.10",
     "optimistix>=0.0.9",

@@ -536,14 +536,15 @@ void CVodeSolver::reInitPostProcess(
 
     status = CVode(ami_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
 
-    if (status == CV_ROOT_RETURN)
-        throw CvodeException(
-            status,
-            "CVode returned a root after reinitialization. "
-            "The initial step-size after the event or "
-            "Heaviside function is too small. To fix this, increase absolute "
-            "and relative tolerances!"
-        );
+    if (status == CV_ROOT_RETURN) {
+        auto message
+            = std::string("CVode returned a root after reinitialization at t=")
+              + std::to_string(*t)
+              + ". The initial step-size after the event or "
+                "Heaviside function is too small. To fix this, increase "
+                "absolute and relative tolerances!";
+        throw CvodeException(status, message.c_str());
+    }
     if (status != CV_SUCCESS) {
         std::stringstream msg;
         msg << "tout: " << tout << ", t: " << *t << ".";
@@ -591,6 +592,10 @@ void CVodeSolver::reInit(
 void CVodeSolver::sensReInit(
     AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/
 ) const {
+    if (!sens_initialized_) {
+        return;
+    }
+
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)

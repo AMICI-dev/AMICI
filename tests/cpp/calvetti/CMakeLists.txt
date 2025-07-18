@@ -9,11 +9,11 @@ add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_dependencies(${PROJECT_NAME} external_model_${MODEL_NAME})
+add_dependencies(${PROJECT_NAME} external_model_${MODEL_NAME}_py)
 
 target_link_libraries(${PROJECT_NAME}
-    amici-testing
-    model_${MODEL_NAME}
+    amici-testing-py
+    model_${MODEL_NAME}_py
     gtest_main
 )
 

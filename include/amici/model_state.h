@@ -210,11 +210,18 @@ struct ModelStateDerived {
     /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
     SUNMatrixWrapper dwdp_;
 
-    /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
+    /**
+     * Dense Mass matrix (dimension: `nx_solver` x `nx_solver`)
+     *
+     * MATLAB-generated-only, DEPRECATED.
+     */
     SUNMatrixWrapper M_;
 
-    /** Sparse Mass matrix (dimension: `nx_solver` x `nx_solver`, nnz:
-     * `sum(amici::Model::idlist)`) */
+    /**
+     * Sparse Mass matrix, Python-generated-only
+     *
+     * (dimension: `nx_solver` x `nx_solver`, nnz: `sum(amici::Model::idlist)`)
+     */
     SUNMatrixWrapper MSparse_;
 
     /** JSparse intermediate matrix (dimension: `nx_solver` x `nx_solver`, nnz:
@@ -462,12 +469,11 @@ struct ModelStateDerived {
 };
 
 /**
- * @brief implements an exchange format to store and transfer the state of a
- * simulation at a specific timepoint.
+ * @brief Container for the IVP solution state at a specific timepoint.
  */
-struct SimulationState {
+struct SolutionState {
     /** timepoint */
-    realtype t;
+    realtype t{NAN};
     /**
      * partial state vector, excluding states eliminated from conservation laws
      */
@@ -482,8 +488,35 @@ struct SimulationState {
      * conservation laws
      */
     AmiVectorArray sx;
+
+    SolutionState() = default;
+
+    /**
+     * @brief Constructor.
+     * @param t_ Current timepoint.
+     * @param nx_solver Number of solver state variables.
+     * @param nplist Number of parameter w.r.t. which to compute sensitivities.
+     * @param ctx SUNDIALS context.
+     */
+    SolutionState(
+        realtype t_, long int nx_solver, long int nplist, SUNContext ctx
+    )
+        : t(t_)
+        , x(nx_solver, ctx)
+        , dx(nx_solver, ctx)
+        , sx(nx_solver, nplist, ctx) {}
+};
+
+/**
+ * @brief implements an exchange format to store and transfer the state of a
+ * simulation at a specific timepoint.
+ */
+struct SimulationState {
+    /** Solution state */
+    SolutionState sol;
+
     /** state of the model that was used for simulation */
-    ModelState state;
+    ModelState mod;
 };
 
 } // namespace amici

@@ -524,8 +524,17 @@ TEST_F(AmiVectorTest, Vector)
     sundials::Context sunctx;
     AmiVector av(vec1, sunctx);
     N_Vector nvec = av.getNVector();
-    for (int i = 0; i < av.getLength(); ++i)
+    AmiVector av2(nvec);
+    ASSERT_NE(av.data(), av2.data());
+
+    for (int i = 0; i < av.getLength(); ++i) {
         ASSERT_EQ(av.at(i), NV_Ith_S(nvec, i));
+        ASSERT_EQ(av.at(i), av2.at(i));
+    }
+
+    std::stringstream ss;
+    ss << av;
+    ASSERT_EQ(ss.str(), "[1, 2, 4, 3]");
 }
 
 TEST_F(AmiVectorTest, VectorArray)
@@ -547,6 +556,10 @@ TEST_F(AmiVectorTest, VectorArray)
         for (int j = 0; j < av.getLength(); ++j)
             ASSERT_EQ(flattened.at(i * av.getLength() + j), av.at(j));
     }
+
+    std::stringstream ss;
+    ss << ava;
+    ASSERT_EQ(ss.str(), "[[1, 2, 4, 3], [4, 1, 2, 3], [4, 4, 2, 1]]");
 }
 
 class SunMatrixWrapperTest : public ::testing::Test {
@@ -662,6 +675,16 @@ TEST_F(SunMatrixWrapperTest, BlockTranspose)
     for (int icol = 0; icol <= 4; icol++)
         ASSERT_EQ(SM_INDEXPTRS_S(B.get())[icol],
                   SM_INDEXPTRS_S(B_sparse.get())[icol]);
+}
+
+TEST_F(SunMatrixWrapperTest, TestPrint)
+{
+    std::stringstream ss;
+        ss << A;
+    EXPECT_EQ(ss.str() , "[[0.69, 0.03], [0.32, 0.44], [0.95, 0.38]]");
+        ss.str("");
+    ss<< B;
+        EXPECT_EQ(ss.str(), "[[0, 3, 1, 0], [3, 0, 0, 2], [0, 7, 0, 0], [1, 0, 0, 9]]");
 }
 
 TEST(UnravelIndex, UnravelIndex)

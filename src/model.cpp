@@ -985,6 +985,13 @@ void Model::setUnscaledInitialStateSensitivities(
 void Model::setSteadyStateComputationMode(
     SteadyStateComputationMode const mode
 ) {
+    if (mode != SteadyStateComputationMode::integrationOnly && ne && logger) {
+        logger->log(
+            LogSeverity::warning, "WARNING",
+            "Non-initial events will not be handled if Newton's method is used "
+            "for steady state computation."
+        );
+    }
     steadystate_computation_mode_ = mode;
 }
 
@@ -1414,17 +1421,29 @@ void Model::addPartialEventObjectiveSensitivity(
 
 void Model::getEventTimeSensitivity(
     std::vector<realtype>& stau, realtype const t, int const ie,
-    AmiVector const& x, AmiVectorArray const& sx
+    AmiVector const& x, AmiVectorArray const& sx, AmiVector const& dx
 ) {
 
     std::ranges::fill(stau, 0.0);
 
-    for (int ip = 0; ip < nplist(); ip++) {
-        fstau(
-            &stau.at(ip), t, computeX_pos(x), state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), state_.h.data(),
-            state_.total_cl.data(), sx.data(ip), plist(ip), ie
-        );
+    if (pythonGenerated) {
+        for (int ip = 0; ip < nplist(); ip++) {
+            fstau(
+                &stau.at(ip), t, computeX_pos(x),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), dx.data(), state_.total_cl.data(), sx.data(ip),
+                plist(ip), ie
+            );
+        }
+    } else {
+        for (int ip = 0; ip < nplist(); ip++) {
+            fstau(
+                &stau.at(ip), t, computeX_pos(x),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), state_.total_cl.data(), sx.data(ip), plist(ip),
+                ie
+            );
+        }
     }
 }
 

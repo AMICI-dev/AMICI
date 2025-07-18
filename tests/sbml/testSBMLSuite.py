@@ -71,11 +71,16 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
             current_test_path,
             test_id,
             model_dir,
-            generate_sensitivity_code=test_id in sensitivity_check_cases,
+            generate_sensitivity_code=True,
         )
         settings = read_settings_file(current_test_path, test_id)
 
         atol, rtol = apply_settings(settings, solver, model, test_id)
+
+        if test_id != "00885":
+            # 00885: root-after-reinitialization with FSA
+            solver.setSensitivityOrder(amici.SensitivityOrder.first)
+            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
@@ -95,8 +100,6 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
 
         # check sensitivities for selected models
         if epsilon := sensitivity_check_cases.get(test_id):
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
             check_derivatives(model, solver, epsilon=epsilon)
             jax_sensitivity_check(
                 current_test_path,
@@ -245,8 +248,6 @@ def jax_sensitivity_check(
             rdata = amici.runAmiciSimulation(amici_model, solver_amici)
 
         np.testing.assert_allclose(x, rdata["x"], rtol=rtol, atol=atol)
-        np.testing.assert_allclose(
-            sx, rdata["sx"], rtol=rtol * tol_factor, atol=atol * tol_factor
-        )
+        np.testing.assert_allclose(sx, rdata["sx"], rtol=rtol, atol=atol)
     finally:
         shutil.rmtree(model_dir, ignore_errors=True)

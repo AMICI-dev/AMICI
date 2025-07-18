@@ -6,8 +6,8 @@ Source code
 
 The AMICI source code is available as
 
-- `tar archive <https://github.com/AMICI-dev/AMICI/tarball/master>`_
-- `zip archive <https://github.com/AMICI-dev/AMICI/zipball/master>`_
+- `tar archive <https://github.com/AMICI-dev/AMICI/tarball/main>`_
+- `zip archive <https://github.com/AMICI-dev/AMICI/zipball/main>`_
 - Git repository on `GitHub <https://github.com/AMICI-dev/AMICI>`_
 
 If AMICI was downloaded as an archive, it needs to be unpacked. If AMICI was

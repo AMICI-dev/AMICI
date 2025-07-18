@@ -6,12 +6,8 @@
 
 #include <H5Cpp.h>
 
-#ifndef __APPLE__
-#include <iostream>
-#endif
-
-#include <sstream>
 #include <string>
+#include <string_view>
 
 namespace amici {
 
@@ -31,8 +27,7 @@ class ExpData;
  * @param length number of variables
  * @return default names/ids
  */
-std::vector<std::string>
-getVariableNames(const char* name, int length);
+std::vector<std::string> getVariableNames(std::string const& name, int length);
 
 /**
  * @brief The Model_Test class is a model-unspecific implementation
@@ -191,28 +186,19 @@ void simulateVerifyWrite(const std::string &hdffileOptions,
 
 std::unique_ptr<ExpData> getTestExpData(const Model &model);
 
-bool withinTolerance(double expected, double actual, double atol, double rtol,
-                     int index, const char *name);
+bool withinTolerance(
+    double expected, double actual, double atol, double rtol, int index,
+    std::string_view name
+);
 
-void checkEqualArray(const double *expected, const double *actual, int length,
-                     double atol, double rtol, const char *name);
+void checkEqualArray(
+    double const* expected, double const* actual, int length, double atol,
+    double rtol, std::string_view name
+);
 
 void checkEqualArray(std::vector<double> const &expected,
                      std::vector<double> const &actual, double atol,
                      double rtol, std::string const &name);
-
-// TODO: delete after transitioning to C++-written test results
-void verifyReturnDataMatlab(const std::string &hdffile,
-                            const std::string &resultPath,
-                            const ReturnData *rdata, const Model *model,
-                            double atol, double rtol);
-
-// TODO: delete after transitioning to C++-written test results
-void verifyReturnDataSensitivitiesMatlab(const H5::H5File &file_id,
-                                         const std::string &resultPath,
-                                         const ReturnData *rdata,
-                                         const Model *model, double atol,
-                                         double rtol);
 
 void verifyReturnData(const std::string &hdffile, const std::string &resultPath,
                       const ReturnData *rdata, const Model *model, double atol,

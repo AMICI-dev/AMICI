@@ -1,7 +1,6 @@
 name: Python nogil Tests
 on:
   push:
-  pull_request:
     branches:
       - main
   merge_group:

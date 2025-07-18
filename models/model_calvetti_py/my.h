@@ -1,0 +1,6 @@
+#define mobs_V1 my[0]
+#define mobs_V2 my[1]
+#define mobs_V3 my[2]
+#define mobs_f0 my[3]
+#define mobs_f1 my[4]
+#define mobs_f2 my[5]

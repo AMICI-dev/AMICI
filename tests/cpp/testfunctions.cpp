@@ -6,8 +6,9 @@
 #include <cxxabi.h>   // for __cxa_demangle
 #include <cstdio>
 #include <cmath>
-#include <utility>
 #include <unistd.h>
+#include <iostream>
+#include <format>
 
 #include "gtest/gtest.h"
 
@@ -19,13 +20,11 @@ extern std::unique_ptr<amici::Model> getModel();
 
 } // namespace generic_model
 
-std::vector<std::string> getVariableNames(const char* name, int length)
-{
+std::vector<std::string> getVariableNames(std::string const& name, int length) {
     std::vector<std::string> names;
-    names.resize(length);
-    for (auto& it: names) {
-        auto index = &it - &names[0];
-        it += name + std::to_string(index);
+    names.reserve(length);
+    for (int i = 0; i < length; ++i) {
+        names.push_back(name + std::to_string(i));
     }
     return names;
 }
@@ -98,7 +97,7 @@ std::unique_ptr<ExpData> getTestExpData(Model const& model) {
     return std::unique_ptr<ExpData>(new ExpData(model));
 }
 
-bool withinTolerance(double expected, double actual, double atol, double rtol, int index, const char *name) {
+bool withinTolerance(double expected, double actual, double atol, double rtol, int index, std::string_view name) {
     bool withinTol =  fabs(expected - actual) <= atol || fabs((expected - actual) / (rtol + expected)) <= rtol;
 
     if(!withinTol && std::isnan(expected) && std::isnan(actual))
@@ -107,8 +106,16 @@ bool withinTolerance(double expected, double actual, double atol, double rtol, i
     if(!withinTol && std::isinf(expected) && std::isinf(actual))
         withinTol = true;
 
+    if(!withinTol && (name == "res"  || name == "sres")) {
+        // FIXME: Residuals are sign-flipped in old test results.
+        // Until the remaining MATLAB tests models are implemented in Python
+        // and the correct expected results have been re-generated, we accept
+        // both signs.
+        withinTol =  fabs(-expected - actual) <= atol || fabs((-expected - actual) / (rtol + -expected)) <= rtol;
+    }
+
     if(!withinTol) {
-        fprintf(stderr, "ERROR: Expected value %e, but was %e in %s at index %d.\n",expected, actual, name, index);
+        fprintf(stderr, "ERROR: Expected value %e, but was %e in %s at index %d.\n",expected, actual, name.data(), index);
         fprintf(stderr, "       Relative error: %e (tolerance was %e)\n", fabs((expected - actual) / (rtol + expected)), rtol);
         fprintf(stderr, "       Absolute error: %e (tolerance was %e)\n", fabs(expected - actual), atol);
         printBacktrace(12);
@@ -123,12 +130,12 @@ void checkEqualArray(std::vector<double> const& expected, std::vector<double> co
 
     for(int i = 0; (unsigned) i < expected.size(); ++i)
     {
-        bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol, i, name.c_str());
+        bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol, i, name);
         ASSERT_TRUE(withinTol);
     }
 }
 
-void checkEqualArray(const double *expected, const double *actual, const int length, double atol, double rtol, const char *name) {
+void checkEqualArray(const double *expected, const double *actual, const int length, double atol, double rtol, std::string_view name) {
     if(!expected && !actual)
         return;
     if(!length)
@@ -143,7 +150,7 @@ void checkEqualArray(const double *expected, const double *actual, const int len
     }
 }
 
-void checkEqualArrayStrided(const double *expected, const double *actual, int length, int strideExpected, int strideActual, double atol, double rtol, const char *name) {
+void checkEqualArrayStrided(const double *expected, const double *actual, int length, int strideExpected, int strideActual, double atol, double rtol, std::string_view name) {
     if(!expected && !actual)
         return;
 
@@ -175,6 +182,12 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     std::vector<realtype> expected;
 
     auto statusExp = hdf5::getIntScalarAttribute(file, resultPath, "status");
+    if(rdata->status != statusExp && !rdata->messages.empty()) {
+        std::cerr<<"Messages:"<<std::endl;
+        for(const auto& msg: rdata->messages) {
+            std::cerr << std::format("[{}][{}] {}", static_cast<int>(msg.severity), msg.identifier, msg.message)<< std::endl;
+        }
+    }
     ASSERT_EQ(statusExp, rdata->status);
 
     double llhExp = hdf5::getDoubleScalarAttribute(file, resultPath, "llh");

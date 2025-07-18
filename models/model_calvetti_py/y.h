@@ -1,0 +1,6 @@
+#define obs_V1 y[0]
+#define obs_V2 y[1]
+#define obs_V3 y[2]
+#define obs_f0 y[3]
+#define obs_f1 y[4]
+#define obs_f2 y[5]

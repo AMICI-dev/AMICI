@@ -37,7 +37,7 @@ TEST(ExampleJakstatAdjoint, SensitivityAdjointEmptySensInd)
       "/model_jakstat_adjoint/sensiadjointemptysensind/");
 }
 
-TEST(ExampleJakstatAdjoint, DISABLED_SensitivityAdjointUnusedNanOutputs)
+TEST(ExampleJakstatAdjoint, SensitivityAdjointUnusedNanOutputs)
 {
     /* UN-IGNORE ONCE THIS MODEL HAS BEEN IMPORTED VIA PYTHON INTERFACE */
     auto model = amici::generic_model::getModel();
@@ -54,14 +54,13 @@ TEST(ExampleJakstatAdjoint, DISABLED_SensitivityAdjointUnusedNanOutputs)
 
     auto p = model->getParameters();
     p[10] = NAN;
-    model->setParameters(p);
+    model->setParameterById("offset_tSTAT", NAN);
 
+    auto iy = 1;
+    Expects(model->getObservableIds()[iy] == "obs_tSTAT");
     auto d = edata->getObservedData();
     for (int it = 0; it < edata->nt(); ++it) {
-        for (int iy = 0; iy < edata->nytrue(); ++iy) {
-            if (iy == 1)
-                d[it * edata->nytrue() + iy] = NAN;
-        }
+        d[it * edata->nytrue() + iy] = NAN;
     }
     edata->setObservedData(d);
 

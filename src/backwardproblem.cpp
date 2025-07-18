@@ -8,14 +8,14 @@
 #include "amici/steadystateproblem.h"
 
 namespace amici {
+constexpr realtype conv_thresh = 1.0;
 
 BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     : model_(fwd.model)
     , solver_(fwd.solver)
     , edata_(fwd.edata)
-    , t_(fwd.getTime())
-    , sx0_(fwd.getStateSensitivity())
-    , discs_(fwd.getDiscontinuities())
+    , t_(fwd.getFinalTime())
+    , discs_main_(fwd.getDiscontinuities())
     , dJydx_(fwd.getAdjointUpdates(*model_, *edata_))
     , dJzdx_(fwd.getDJzdx())
     , preeq_problem_(fwd.getPreequilibrationProblem())
@@ -45,8 +45,8 @@ void BackwardProblem::workBackwardProblem() {
 
     // initialize state vectors, depending on postequilibration
     model_->initializeB(ws_.xB_, ws_.dxB_, ws_.xQB_, it < model_->nt() - 1);
-    ws_.discs_ = discs_;
-    ws_.nroots_ = compute_nroots(discs_, model_->ne, model_->nMaxEvent());
+    ws_.discs_ = discs_main_;
+    ws_.nroots_ = compute_nroots(discs_main_, model_->ne, model_->nMaxEvent());
     simulator_.run(
         t_, model_->t0(), it, model_->getTimepoints(), &dJydx_, &dJzdx_
     );
@@ -65,16 +65,37 @@ void BackwardProblem::workBackwardProblem() {
         );
     }
 
+    // store pre-pre-equilibration adjoint state and quadrature still needed
+    // for computing sllh in ReturnData
+    xB_pre_preeq_ = ws_.xB_;
+    xQB_pre_preeq_ = ws_.xQB_;
+
     // handle pre-equilibration
-    if (preeq_problem_) {
+    if (preeq_problem_
+        && preeq_problem_->get_solver()->getSensitivityMethodPreequilibration()
+               == SensitivityMethod::adjoint) {
+        auto preeq_solver = preeq_problem_->get_solver();
+
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
         auto const t0
             = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
-        preeq_problem_->workSteadyStateBackwardProblem(
-            *solver_, *model_, ws_.xB_, true, t0
-        );
+        auto final_state = preeq_problem_->getFinalSimulationState();
+
+        // If we need to reinitialize solver states, this won't work yet.
+        if (model_->nx_reinit() > 0)
+            throw NewtonFailure(
+                AMICI_NOT_IMPLEMENTED,
+                "Adjoint preequilibration with reinitialization of "
+                "non-constant states is not yet implemented. Stopping."
+            );
+
+        // only preequilibrations needs a reInit, postequilibration does not
+        preeq_solver->updateAndReinitStatesAndSensitivities(model_);
+
+        preeq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
+        preeq_problem_bwd_->run(t0);
     }
 }
 
@@ -91,10 +112,9 @@ void BackwardProblem::handlePostequilibration() {
         }
     }
 
-    posteq_problem_->workSteadyStateBackwardProblem(
-        *solver_, *model_, ws_.xB_, false, model_->t0()
-    );
-    ws_.xQB_ = posteq_problem_->getEquilibrationQuadratures();
+    auto final_state = posteq_problem_->getFinalSimulationState();
+    posteq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
+    posteq_problem_bwd_->run(model_->t0());
 }
 
 void EventHandlingBwdSimulator::handleEventB(
@@ -244,6 +264,243 @@ void EventHandlingBwdSimulator::run(
     if (t_ > t_end) {
         solver_->runB(t_end);
         solver_->writeSolutionB(t_, ws_->xB_, ws_->dxB_, ws_->xQB_, ws_->which);
+    }
+}
+
+/**
+ * @brief Compute the backward quadratures, which contribute to the
+ * gradient (xQB) from the quadrature over the backward state itself (xQ)
+ * @param model Model instance.
+ * @param yQ vector to be multiplied with dxdotdp
+ * @param yQB resulting vector after multiplication
+ * @param state Simulation state for which to compute dxdot/dp
+ */
+void computeQBfromQ(
+    Model& model, AmiVector const& yQ, AmiVector& yQB, DEStateView const& state
+) {
+    // Compute the quadrature as the inner product: `yQB = dxdotdp * yQ`.
+
+    // set to zero first, as multiplication adds to existing value
+    yQB.zero();
+    // yQB += dxdotdp * yQ
+    if (model.pythonGenerated) {
+        // fill dxdotdp with current values
+        auto const& plist = model.getParameterList();
+        model.fdxdotdp(state.t, state.x, state.dx);
+        model.get_dxdotdp_full().multiply(
+            yQB.getNVector(), yQ.getNVector(), plist, true
+        );
+    } else {
+        for (int ip = 0; ip < model.nplist(); ++ip)
+            yQB[ip] = dotProd(yQ, model.get_dxdotdp()[ip]);
+    }
+}
+
+SteadyStateBackwardProblem::SteadyStateBackwardProblem(
+    Solver const& solver, Model& model, SolutionState& final_state,
+    gsl::not_null<BwdSimWorkspace*> ws
+)
+    : xQ_(model.nJ * model.nx_solver, solver.getSunContext())
+    , final_state_(final_state)
+    , newton_solver_(
+          NewtonSolver(model, solver.getLinearSolver(), solver.getSunContext())
+      )
+    , newton_step_conv_(solver.getNewtonStepSteadyStateCheck())
+    , model_(&model)
+    , solver_(&solver)
+    , ws_(ws) {}
+
+void SteadyStateBackwardProblem::run(realtype t0) {
+    newton_solver_.reinitialize();
+
+    // initialize quadratures
+    xQ_.zero();
+    ws_->xQB_.zero();
+
+    // Compute quadratures, track computation time
+    CpuTimer cpu_timer;
+
+    compute_steady_state_quadrature(t0);
+    cpu_timeB_ = cpu_timer.elapsed_milliseconds();
+}
+
+AmiVector const& SteadyStateBackwardProblem::getAdjointState() const {
+    return ws_->xB_;
+}
+
+AmiVector const& SteadyStateBackwardProblem::getAdjointQuadrature() const {
+    return ws_->xQB_;
+}
+
+void SteadyStateBackwardProblem::compute_steady_state_quadrature(realtype t0) {
+    // This routine computes the quadratures:
+    //     xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
+    // As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
+    //     xQB = Integral[ xB(x_ss, t, p) | dt ] * dxdot/dp(x_ss, t, p)
+    // We therefore compute the integral over xB first and then do a
+    // matrix-vector multiplication.
+
+    auto const sensitivityMode = model_->getSteadyStateSensitivityMode();
+
+    // Try to compute the analytical solution for quadrature algebraically
+    if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly
+        || sensitivityMode
+               == SteadyStateSensitivityMode::integrateIfNewtonFails)
+        compute_quadrature_by_lin_solve();
+
+    // Perform simulation if necessary
+    if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly
+        || (sensitivityMode
+                == SteadyStateSensitivityMode::integrateIfNewtonFails
+            && !hasQuadrature()))
+        compute_quadrature_by_simulation(t0);
+
+    // If the analytic solution and integration did not work, throw
+    if (!hasQuadrature())
+        throw AmiException(
+            "Steady state backward computation failed: Linear "
+            "system could not be solved (possibly due to singular Jacobian), "
+            "and numerical integration did not equilibrate within maxsteps"
+        );
+}
+
+void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
+    // Computes the integral over the adjoint state xB:
+    // If the Jacobian has full rank, this has an analytical solution, since
+    //   d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
+    // This linear ODE system with time-constant matrix has the solution
+    //   xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
+    // This integral xQ over xB is given as the solution of
+    //   JB^T(x_ss, p) * xQ = xB(0)
+    // So we first try to solve the linear system, if possible.
+
+    // copy content of xB into vector with integral
+    xQ_.copy(ws_->xB_);
+
+    // try to solve the linear system
+    try {
+        // compute integral over xB and write to xQ
+        newton_solver_.prepareLinearSystemB(
+            *model_, {final_state_.t, final_state_.x, final_state_.dx}
+        );
+        newton_solver_.solveLinearSystem(xQ_);
+        // Compute the quadrature as the inner product xQ * dxdotdp
+        computeQBfromQ(
+            *model_, xQ_, ws_->xQB_,
+            {final_state_.t, final_state_.x, final_state_.dx}
+        );
+        has_quadrature_ = true;
+
+        // Finalize by setting adjoint state to zero (its steady state)
+        ws_->xB_.zero();
+    } catch (NewtonFailure const&) {
+        has_quadrature_ = false;
+    }
+}
+
+void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
+    // If the Jacobian is singular, the integral over xB must be computed
+    // by usual integration over time, but simplifications can be applied:
+    // x is not time-dependent, no forward trajectory is needed.
+
+    // Set starting timepoint for the simulation solver
+    final_state_.t = t0;
+    // xQ was written in getQuadratureByLinSolve() -> set to zero
+    xQ_.zero();
+
+    auto sim_solver = std::unique_ptr<Solver>(solver_->clone());
+    sim_solver->logger = solver_->logger;
+    sim_solver->setSensitivityMethod(SensitivityMethod::none);
+    sim_solver->setSensitivityOrder(SensitivityOrder::none);
+    sim_solver->setup(
+        t0, model_, ws_->xB_, ws_->dxB_, final_state_.sx, final_state_.sx
+    );
+    sim_solver->setupSteadystate(
+        t0, model_, final_state_.x, final_state_.dx, ws_->xB_, ws_->dxB_, xQ_
+    );
+
+    // perform integration and quadrature
+    try {
+        run_simulation(*sim_solver);
+        has_quadrature_ = true;
+    } catch (NewtonFailure const&) {
+        has_quadrature_ = false;
+    }
+}
+
+void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
+    if (model_->nx_solver == 0)
+        return;
+
+    if (newton_step_conv_) {
+        throw NewtonFailure(
+            AMICI_NOT_IMPLEMENTED,
+            "Newton type convergence check is not implemented for adjoint "
+            "steady state computations. Stopping."
+        );
+    }
+
+    int& sim_steps = numstepsB_;
+
+    // WRMS computer for xQB
+    WRMSComputer wrms_computer_xQB_(
+        model_->nplist(), solver.getSunContext(),
+        solver.getAbsoluteToleranceQuadratures(),
+        solver.getRelativeToleranceQuadratures(), AmiVector()
+    );
+
+    // time-derivative of quadrature state vector
+    AmiVector xQBdot(model_->nplist(), solver.getSunContext());
+
+    int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
+    auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
+                         ? solver.getMaxStepsBackwardProblem()
+                         : solver.getMaxSteps() * 100;
+
+    while (true) {
+        if (sim_steps % convergence_check_frequency == 0) {
+            // Check for convergence (already before simulation, since we might
+            // start in steady state)
+
+            // In the adjoint case, only xQB contributes to the gradient, the
+            // exact steadystate is less important, as xB = xQdot may even not
+            // converge to zero at all. So we need xQBdot, hence compute xQB
+            // first.
+            computeQBfromQ(
+                *model_, xQ_, ws_->xQB_,
+                {final_state_.t, final_state_.x, final_state_.dx}
+            );
+            computeQBfromQ(
+                *model_, ws_->xB_, xQBdot,
+                {final_state_.t, final_state_.x, final_state_.dx}
+            );
+            auto wrms = wrms_computer_xQB_.wrms(xQBdot, ws_->xQB_);
+            if (wrms < conv_thresh) {
+                break; // converged
+            }
+        }
+
+        // check for maxsteps
+        if (sim_steps >= max_steps) {
+            throw IntegrationFailureB(AMICI_TOO_MUCH_WORK, final_state_.t);
+        }
+
+        // increase counter
+        sim_steps++;
+
+        // One step of ODE integration
+        // Reason for tout specification:
+        // * max with 1 ensures the correct direction
+        //  (any positive value would do)
+        // * multiplication with 10 ensures nonzero difference and should
+        //   ensure stable computation.
+        // The value is not important for AMICI_ONE_STEP mode, only the
+        // direction w.r.t. current t.
+        solver.step(std::max(final_state_.t, 1.0) * 10);
+
+        solver.writeSolution(
+            final_state_.t, ws_->xB_, final_state_.dx, final_state_.sx, xQ_
+        );
     }
 }
 

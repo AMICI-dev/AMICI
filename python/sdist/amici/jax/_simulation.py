@@ -84,6 +84,7 @@ def eq(
             max_steps,
             diffrax.DirectAdjoint(),
             [steady_state_event],
+            [None],
             diffrax.SaveAt(t1=True),
             term,
             known_discs,
@@ -120,6 +121,7 @@ def eq(
             max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
             diffrax.DirectAdjoint(),
             [steady_state_event] + root_cond_fns,
+            [None] + [True] * len(root_cond_fns),
             diffrax.SaveAt(t1=True),
             term,
             known_discs,
@@ -233,6 +235,7 @@ def solve(
             max_steps,
             adjoint,
             [],
+            [],
             diffrax.SaveAt(ts=ts),
             term,
             known_discs,
@@ -264,7 +267,8 @@ def solve(
             root_finder,
             max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
             adjoint,
-            list(root_cond_fns),
+            root_cond_fns,
+            [True] * len(root_cond_fns),
             diffrax.SaveAt(
                 subs=[
                     diffrax.SubSaveAt(
@@ -345,6 +349,7 @@ def _run_segment(
     max_steps: jnp.int_,
     adjoint: diffrax.AbstractAdjoint,
     cond_fns: list[Callable],
+    cond_dirs: list[None | bool],
     saveat: diffrax.SaveAt,
     term: diffrax.ODETerm,
     known_discs: jt.Float[jt.Array, "*nediscs"],
@@ -359,7 +364,15 @@ def _run_segment(
     """
 
     # combine all discontinuity conditions into a single diffrax.Event
-    event = diffrax.Event(cond_fns, root_finder) if cond_fns else None
+    event = (
+        diffrax.Event(
+            cond_fn=cond_fns,
+            root_finder=root_finder,
+            direction=cond_dirs,
+        )
+        if cond_fns
+        else None
+    )
 
     # manage events with explicit discontinuities
     controller = (
@@ -460,71 +473,4 @@ def _handle_event(
             h,
             h_next,
         )
-
-    # while we are trying to step out of the event
-    y0_next, t0_next, stats = _step_out_of_event(
-        t0_next,
-        t_max,
-        y0_next,
-        p,
-        tcl,
-        h_next,
-        solver,
-        controller,
-        adjoint,
-        term,
-        stats,
-    )
     return y0_next, t0_next, h_next, stats
-
-
-def _step_out_of_event(
-    t_start: float,
-    t_end: float,
-    y0: jt.Float[jt.Array, "nxs"],
-    p: jt.Float[jt.Array, "np"],
-    tcl: jt.Float[jt.Array, "ncl"],
-    h: jt.Float[jt.Array, "ne"],
-    solver: diffrax.AbstractSolver,
-    controller: diffrax.AbstractStepSizeController,
-    adjoint: diffrax.AbstractAdjoint,
-    term: diffrax.ODETerm,
-    stats: dict,
-):
-    # take a single step, without event, to step out of the event
-    # TODO: loop until we are out of the event
-    sol = diffrax.diffeqsolve(
-        term,
-        solver,
-        args=(p, tcl, h),
-        t0=t_start,
-        t1=t_end,
-        dt0=None,
-        y0=y0,
-        stepsize_controller=controller,
-        max_steps=1,
-        adjoint=adjoint,
-        saveat=diffrax.SaveAt(
-            subs=[
-                diffrax.SubSaveAt(t1=True),  # we manage to reach t_end
-                diffrax.SubSaveAt(
-                    steps=True
-                ),  # we want to save the state at t_end
-            ]
-        ),
-        throw=False,
-    )
-    if os.getenv("JAX_DEBUG") == "1":
-        jax.debug.print(
-            "StepOutOfEvent: t0 = {}, t1 = {}, y0 = {}, y1 = {}, numsteps = {}, num_rejected = {}, result = {}",
-            t_start,
-            t_end,
-            y0,
-            sol.ys[0][-1],
-            sol.stats["num_steps"],
-            sol.stats["num_rejected_steps"],
-            sol.result,
-        )
-    # aggregate stats
-    stats = jtu.tree_map(lambda x, y: x + y, stats, sol.stats)
-    return sol.ys[0][-1], sol.ts[0][-1], stats

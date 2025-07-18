@@ -12,6 +12,14 @@ from amici.testing import (
     TemporaryDirectoryWinSafe as TemporaryDirectory,
     skip_on_valgrind,
 )
+from amici.gradient_check import check_derivatives
+from amici import SensitivityMethod, SensitivityOrder
+
+pytestmark = pytest.mark.filterwarnings(
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
+)
 
 
 @pytest.fixture
@@ -734,3 +742,117 @@ def test_preequilibration_t0(tempdir):
     assert np.isclose(
         rdata.x_ss[idx_time_integral], rdata.preeq_t - amici_model.t0Preeq()
     )
+
+
+def test_preequilibration_events(tempdir):
+    """Test that events are handled correctly during preequilibration."""
+    from amici.antimony_import import antimony2amici
+
+    ant_str = """
+    model test_preequilibration_events
+        some_time = 0
+        some_time' = 1
+        target1 = 0
+        target2 = 0
+        target3 = 0
+        target4 = 0
+        is_preeq = 0
+        bolus1 = 1
+        bolus2 = 1
+        bolus3 = 1
+        bolus4 = 1
+        # E1 & E2 will both trigger during pre-equilibration and main
+        #  simulation (Heaviside is reset after pre-equilibration)
+        E1: at some_time >= 0, t0 = false: target1 = target1 + bolus1
+        E2: at time >= 0, t0 = false: target2 = target2 + bolus2
+        # requires early time point
+        # https://github.com/AMICI-dev/AMICI/issues/2804
+        trigger_time2 = 1e-3
+        # E3 will trigger only during preequilibration
+        # (some_time is not reset and trigger initial value is `true`)
+        E3: at some_time >= trigger_time2: target3 = target3 + bolus3
+        # will trigger during preequilibration and main simulation
+        E4: at time >= trigger_time2: target4 = target4 + bolus4
+    end
+    """
+    module_name = "test_preequilibration_events"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        constant_parameters=["is_preeq"],
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.getModel()
+    target1_idx = amici_model.getStateIds().index("target1")
+    target2_idx = amici_model.getStateIds().index("target2")
+    target3_idx = amici_model.getStateIds().index("target3")
+    target4_idx = amici_model.getStateIds().index("target4")
+
+    amici_model.setTimepoints([0, 11])
+    amici_solver = amici_model.getSolver()
+    amici_solver.setNewtonMaxSteps(10**5)
+
+    edata = amici.ExpData(amici_model)
+    edata.setTimepoints([0, 11])
+    edata.fixedParametersPreequilibration = [1.0]
+    edata.fixedParameters = [0.0]
+
+    # Integration-only preequilibration should handle all events
+    amici_model = model_module.getModel()
+    amici_model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode.integrationOnly
+    )
+    amici_model.setSteadyStateComputationMode(
+        amici.SteadyStateSensitivityMode.integrationOnly
+    )
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver, edata)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert rdata.preeq_t > 1e-3  # verifies that integration was done
+    assert rdata.x_ss[target1_idx] == 1
+    assert rdata.x_ss[target2_idx] == 1
+    assert rdata.x_ss[target3_idx] == 1
+    assert rdata.x_ss[target4_idx] == 1
+    assert np.all(rdata.x[:, target1_idx] == [2, 2])
+    assert np.all(rdata.x[:, target2_idx] == [2, 2])
+    assert np.all(rdata.x[:, target3_idx] == [1, 1])
+    assert np.all(rdata.x[:, target4_idx] == [1, 2])
+
+    edata = amici.ExpData(rdata, 1.0, 1.0, 1)
+    edata.fixedParametersPreequilibration = [1.0]
+    edata.fixedParameters = [0.0]
+
+    amici_solver.setSensitivityOrder(SensitivityOrder.first)
+
+    for sensi_meth, sensi_meth_preeq in (
+        (SensitivityMethod.forward, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.forward),
+        # TODO https://github.com/AMICI-dev/AMICI/issues/2775
+        #  (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
+    ):
+        amici_solver.setSensitivityMethod(sensi_meth)
+        amici_solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
+
+        # amici_model.requireSensitivitiesForAllParameters()
+        # FIXME: finite differences w.r.t. trigger time are off
+        #   need different epsilon for trigger time
+        amici_model.setParameterList(
+            [
+                i
+                for i, p in enumerate(amici_model.getParameterIds())
+                if p != "trigger_time2"
+            ]
+        )
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver, edata)
+        assert rdata.status == amici.AMICI_SUCCESS
+
+        check_derivatives(
+            amici_model,
+            amici_solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            epsilon=1e-8,
+        )

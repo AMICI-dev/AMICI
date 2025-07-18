@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/doc/gfx/banner.png" height="60" align="left" alt="AMICI logo">
+<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/main/doc/gfx/banner.png" height="60" align="left" alt="AMICI logo">
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
@@ -36,9 +36,9 @@ constrained optimization problems.
 <a href="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml">
   <img src="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml/badge.svg" alt="PyPI installation"></a>
 <a href="https://codecov.io/gh/AMICI-dev/AMICI">
-  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg" alt="Code coverage"></a>
-<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master">
-  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index" alt="SonarCloud technical debt"></a>
+  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/main/graph/badge.svg" alt="Code coverage"></a>
+<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=main">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=ICB-DCM_AMICI&metric=sqale_index" alt="SonarCloud technical debt"></a>
 <a href="https://zenodo.org/badge/latestdoi/43677177">
   <img src="https://zenodo.org/badge/43677177.svg" alt="Zenodo DOI"></a>
 <a href="https://amici.readthedocs.io/en/latest/?badge=latest">
@@ -73,29 +73,29 @@ are derived symbolically and C++ code is generated. This code is then
 compiled into a C++ library, a Python module, or a Matlab `.mex` file and
 is then used for model simulation.
 
-![AMICI workflow](https://raw.githubusercontent.com/AMICI-dev/AMICI/master/doc/gfx/amici_workflow.png)
+![AMICI workflow](https://raw.githubusercontent.com/AMICI-dev/AMICI/main/doc/gfx/amici_workflow.png)
 
 ## Getting started
 
 The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
 To install AMICI, first read the installation instructions for
 [Python](https://amici.readthedocs.io/en/latest/python_installation.html),
-[C++](https://amici.readthedocs.io/en/main/cpp_installation.html) or
-[Matlab](https://amici.readthedocs.io/en/main/matlab_installation.html).
+[C++](https://amici.readthedocs.io/en/latest/cpp_installation.html) or
+[Matlab](https://amici.readthedocs.io/en/latest/matlab_installation.html).
 There are also instructions for using AMICI inside
-[containers](https://github.com/AMICI-dev/AMICI/tree/master/container).
+[containers](https://github.com/AMICI-dev/AMICI/tree/main/container).
 
 To get you started with Python-AMICI, the best way might be checking out this
-[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/doc/examples/getting_started/GettingStarted.ipynb)
+[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/main/doc/examples/getting_started/GettingStarted.ipynb)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AMICI-dev/AMICI/main?labpath=doc%2Fexamples%2Fgetting_started%2FGettingStarted.ipynb).
 
 To get started with Matlab-AMICI, various examples are available
-in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/examples).
+in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/main/matlab/examples).
 
 Comprehensive documentation is available at
 [https://amici.readthedocs.io/en/latest/](https://amici.readthedocs.io/en/latest/).
 
-Any [contributions](https://amici.readthedocs.io/en/main/CONTRIBUTING.html)
+Any [contributions](https://amici.readthedocs.io/en/latest/CONTRIBUTING.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
@@ -149,11 +149,11 @@ When using AMICI in your project, please cite:
   ```
 
 When presenting work that employs AMICI, feel free to use one of the icons in
-[doc/gfx/](https://github.com/AMICI-dev/AMICI/tree/master/doc/gfx),
+[doc/gfx/](https://github.com/AMICI-dev/AMICI/tree/main/doc/gfx),
 which are available under a
-[CC0](https://github.com/AMICI-dev/AMICI/tree/master/doc/gfx/LICENSE.md)
+[CC0](https://github.com/AMICI-dev/AMICI/tree/main/doc/gfx/LICENSE.md)
 license:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/doc/gfx/logo_text.png" height="75" alt="AMICI Logo">
+  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/main/doc/gfx/logo_text.png" height="75" alt="AMICI Logo">
 </p>

@@ -1,0 +1,6 @@
+#define dV1dt dx[0]
+#define dV2dt dx[1]
+#define dV3dt dx[2]
+#define df1dt dx[3]
+#define df2dt dx[4]
+#define df3dt dx[5]
