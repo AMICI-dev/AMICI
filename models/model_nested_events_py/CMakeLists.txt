@@ -71,6 +71,7 @@ dxdotdp_explicit.h
 dxdotdx_explicit.cpp 
 dxdotdx_explicit.h 
 dydx.cpp 
+explicit_roots.cpp 
 h.h 
 model_nested_events_py.cpp 
 model_nested_events_py.h 

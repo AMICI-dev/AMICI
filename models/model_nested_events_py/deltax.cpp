@@ -16,7 +16,7 @@ namespace model_model_nested_events_py {
 
 void deltax_model_nested_events_py(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old){
     switch(ie) {
-        case 0:
+        case 2:
             deltax[0] = V_0_inject - Virus + x_old0;
             break;
     }

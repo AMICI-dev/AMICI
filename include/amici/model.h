@@ -1514,6 +1514,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get trigger times for events that don't require root-finding.
      *
+     * To be called only after Model::initialize.
+     *
      * @return List of unique trigger points for events that don't require
      * root-finding (i.e. that trigger at predetermined timepoints),
      * in ascending order.
@@ -1560,6 +1562,18 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     [[nodiscard]] bool get_any_state_nonnegative() const {
         return any_state_non_negative_;
+    }
+
+    [[nodiscard]] std::vector<std::vector<realtype>> fexplicit_roots(
+        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k
+    ) override {
+        if (ne != ne_solver) {
+            throw AmiException(
+                "ne!=ne_solver, but 'fexplicit_roots' is not implemented for "
+                "this model."
+            );
+        }
+        return {};
     }
 
     /**

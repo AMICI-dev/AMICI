@@ -735,16 +735,25 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
     """Test handling of events without solver-tracked root functions."""
     ant_model = """
     model test_events_time_based
+        one = 1
+        two = 2
+        three = 3
+        four = 4
+        five = 5
         event_target = 0
         bolus = 1
-        at (time > 1): event_target = 1
-        at (time > 2): event_target = event_target + bolus
-        at (time > 3): event_target = 3
+        at (time > one): event_target = one
+        at (time > two): event_target = event_target + bolus
+        at (time > three): event_target = three
+        at (time > four): event_target = four
+        at (time > five): event_target = five
     end
     """
     module_name = "test_events_time_based"
     antimony2amici(
         ant_model,
+        # test with constant parameters and non-constant parameters!
+        constant_parameters=["four"],
         model_name=module_name,
         output_dir=tempdir,
     )
@@ -752,18 +761,30 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
         module_name=module_name, module_path=tempdir
     )
     amici_model = model_module.getModel()
-    assert amici_model.ne == 3
+    assert amici_model.ne == 5
     assert amici_model.ne_solver == 0
-    amici_model.setTimepoints(np.linspace(0, 4, 200))
+
+    amici_model.setTimepoints(np.linspace(0, 10, 20))
     amici_solver = amici_model.getSolver()
     rdata = amici.runAmiciSimulation(amici_model, amici_solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert (rdata.x[rdata.ts < 1] == 0).all()
     assert (rdata.x[(rdata.ts >= 1) & (rdata.ts < 2)] == 1).all()
     assert (rdata.x[(rdata.ts >= 2) & (rdata.ts < 3)] == 2).all()
-    assert (rdata.x[(rdata.ts >= 3)] == 3).all()
+    assert (rdata.x[(rdata.ts >= 3) & (rdata.ts < 4)] == 3).all()
+    assert (rdata.x[(rdata.ts >= 4) & (rdata.ts < 5)] == 4).all()
+    assert (rdata.x[(rdata.ts >= 5)] == 5).all()
+    assert rdata.x[-1, :] == 5
 
-    check_derivatives(amici_model, amici_solver, edata=None)
+    edata = amici.ExpData(rdata, 1, 0, 0)
+
+    for sens_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        amici_solver.setSensitivityMethod(sens_meth)
+        amici_solver.setSensitivityOrder(SensitivityOrder.first)
+        check_derivatives(amici_model, amici_solver, edata=edata)
 
 
 @skip_on_valgrind
