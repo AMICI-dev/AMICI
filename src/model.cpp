@@ -438,6 +438,28 @@ void Model::initEvents(
             }
         }
     }
+
+    // compute parameter-dependent but state-independent roots
+    state_independent_events_.clear();
+    auto exp_roots = fexplicit_roots(
+        state_.unscaledParameters.data(), state_.fixedParameters.data()
+    );
+    Expects(exp_roots.size() == gsl::narrow<size_t>(ne - ne_solver));
+    for (decltype(exp_roots)::size_type iee = 0; iee < exp_roots.size();
+         ++iee) {
+        // index in all roots (not just explicit ones)
+        int const ie = ne_solver + gsl::narrow<int>(iee);
+        auto const& cur_roots = exp_roots[iee];
+        Expects(!cur_roots.empty());
+        for (auto const& root : cur_roots) {
+            auto it = state_independent_events_.find(root);
+            if (it != state_independent_events_.end()) {
+                it->second.push_back(ie);
+            } else {
+                state_independent_events_[root] = {ie};
+            }
+        }
+    }
 }
 
 int Model::nplist() const { return gsl::narrow<int>(state_.plist.size()); }

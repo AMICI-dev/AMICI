@@ -99,7 +99,7 @@ TPL_DTOTAL_CLDX_RDATA_ROWVALS_DEF
 TPL_CREATE_SPLINES_DEF
 TPL_DSPLINE_VALUESDP_DEF
 TPL_DSPLINE_SLOPESDP_DEF
-
+TPL_EXPLICIT_ROOTS_DEF
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -150,8 +150,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_ID},   // idlist
               std::vector<int>{TPL_Z2EVENT},               // z2events
-              std::vector<Event>{TPL_EVENT_LIST_INITIALIZER}, // events
-              {TPL_STATE_INDEPENDENT_EVENTS}               // state-independent events
+              std::vector<Event>{TPL_EVENT_LIST_INITIALIZER} // events
           ) {
           }
 
@@ -282,6 +281,8 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     TPL_DTOTAL_CLDX_RDATA_IMPL
     TPL_DTOTAL_CLDX_RDATA_COLPTRS_IMPL
     TPL_DTOTAL_CLDX_RDATA_ROWVALS_IMPL
+
+    TPL_EXPLICIT_ROOTS_IMPL
 
     std::string getName() const override {
         return "TPL_MODELNAME";

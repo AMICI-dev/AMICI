@@ -73,7 +73,8 @@ void EventHandlingSimulator::run(
     auto trigger_timepoints = std::ranges::views::filter(
         trigger_timepoints_tmp,
         [this, timepoints](auto t) {
-            return t > ws_->sol.t && t <= timepoints.at(timepoints.size() - 1);
+            return t > ws_->sol.t && !timepoints.empty()
+                   && t <= timepoints.at(timepoints.size() - 1);
         }
     );
     auto it_trigger_timepoints = trigger_timepoints.begin();
@@ -678,10 +679,7 @@ ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
 }
 
 SimulationState EventHandlingSimulator::get_simulation_state() {
-    return {
-        .sol = ws_->sol,
-        .mod = model_->getModelState()
-    };
+    return {.sol = ws_->sol, .mod = model_->getModelState()};
 }
 
 std::vector<int> compute_nroots(

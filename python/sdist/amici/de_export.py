@@ -47,7 +47,6 @@ from ._codegen.model_class import (
     get_sunindex_extern_declaration,
     get_model_override_implementation,
     get_sunindex_override_implementation,
-    get_state_independent_event_intializer,
 )
 from ._codegen.template import apply_template
 from .cxxcodeprinter import (
@@ -433,7 +432,7 @@ class DEExporter:
         ):
             # Not required. Will create empty function body.
             equations = sp.Matrix()
-        elif function == "create_splines":
+        elif function in ("create_splines", "explicit_roots"):
             # nothing to do
             pass
         else:
@@ -442,6 +441,8 @@ class DEExporter:
         # function body
         if function == "create_splines":
             body = self._get_create_splines_body()
+        elif function == "explicit_roots":
+            body = self._get_explicit_roots_body()
         else:
             body = self._get_function_body(function, equations)
         if not body:
@@ -455,6 +456,8 @@ class DEExporter:
         else:
             lines = []
 
+        func_info = self.functions[function]
+
         # function header
         lines.extend(
             [
@@ -465,15 +468,9 @@ class DEExporter:
                 "#include <gsl/gsl-lite.hpp>",
                 "#include <algorithm>",
                 "",
+                *func_info.header,
             ]
         )
-        if function == "create_splines":
-            lines += [
-                '#include "amici/splinefunctions.h"',
-                "#include <vector>",
-            ]
-
-        func_info = self.functions[function]
 
         # extract symbols that need definitions from signature
         # don't add includes for files that won't be generated.
@@ -961,6 +958,37 @@ class DEExporter:
         body.append("};")
         return ["    " + line for line in body]
 
+    def _get_explicit_roots_body(self) -> list[str]:
+        events = self.model.events()
+        lines = []
+        constant_syms = set(self.model.sym("k")) | set(self.model.sym("p"))
+
+        for event_idx, event in enumerate(events):
+            if not (
+                tigger_times := {
+                    tt
+                    for tt in event.get_trigger_times()
+                    if tt.free_symbols.issubset(constant_syms)
+                }
+            ):
+                continue
+
+            line = (
+                "    {"
+                + ", ".join(
+                    self._code_printer.doprint(tt) for tt in tigger_times
+                )
+                + "},"
+            )
+            if event_idx == len(events) - 1:
+                line = line[:-1]  # remove trailing comma for last event
+            lines.append(line)
+
+        if not lines:
+            return []
+
+        return ["    return {", *(" " * 4 + line for line in lines), "    };"]
+
     def _write_wrapfunctions_cpp(self) -> None:
         """
         Write model-specific 'wrapper' file (``wrapfunctions.cpp``).
@@ -1111,9 +1139,6 @@ class DEExporter:
             ),
             "EVENT_LIST_INITIALIZER": event_initializer_list(),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
-            "STATE_INDEPENDENT_EVENTS": get_state_independent_event_intializer(
-                self.model.events()
-            ),
             "ID": ", ".join(
                 str(float(isinstance(s, DifferentialState)))
                 for s in self.model.states()

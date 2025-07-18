@@ -79,6 +79,7 @@ dxdotdx_explicit.h
 dydp.cpp 
 dydx.cpp 
 dzdx.cpp 
+explicit_roots.cpp 
 h.h 
 k.h 
 model_events_py.cpp 
