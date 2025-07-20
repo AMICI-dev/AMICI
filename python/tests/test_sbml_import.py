@@ -1143,3 +1143,16 @@ def test_t0(tempdir):
     solver = model.getSolver()
     rdata = amici.runAmiciSimulation(model, solver)
     assert rdata.x == [[2.0]], rdata.x
+
+
+@skip_on_valgrind
+def test_contains_periodic_subexpression():
+    """Test that periodic subexpressions are detected."""
+    from amici.import_utils import contains_periodic_subexpression as cps
+
+    t = sp.Symbol("t")
+
+    assert cps(t, t) is False
+    assert cps(sp.sin(t), t) is True
+    assert cps(sp.cos(t), t) is True
+    assert cps(t + sp.sin(t), t) is True
