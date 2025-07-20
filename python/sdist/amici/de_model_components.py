@@ -13,6 +13,7 @@ from .import_utils import (
     cast_to_sym,
     generate_measurement_symbol,
     generate_regularization_symbol,
+    contains_periodic_subexpression,
 )
 from .constants import SymbolId
 
@@ -753,11 +754,18 @@ class Event(ModelQuantity):
         self._use_values_from_trigger_time = use_values_from_trigger_time
 
         # expression(s) for the timepoint(s) at which the event triggers
-        try:
-            self._t_root = sp.solve(self.get_val(), amici_time_symbol)
-        except NotImplementedError:
-            # the trigger can't be solved for `t`
-            self._t_root = []
+        self._t_root = []
+
+        if not contains_periodic_subexpression(
+            self.get_val(), amici_time_symbol
+        ):
+            # `solve` will solve, e.g., sin(t), but will only return [0, pi],
+            #  so we better skip any periodic expressions here
+            try:
+                self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+            except NotImplementedError:
+                # the trigger can't be solved for `t`
+                pass
 
     def get_state_update(
         self, x: sp.Matrix, x_old: sp.Matrix
@@ -841,6 +849,13 @@ class Event(ModelQuantity):
 
         Returns a set of expressions, which may contain multiple time points
         for events that trigger at multiple time points.
+
+        If the return value is empty, the trigger function cannot be solved
+        for `t`. I.e., the event does not explicitly depend on time,
+        or sympy is unable to solve the trigger function for `t`.
+
+        If the return value is non-empty, it contains expressions for *all*
+        time points at which the event triggers.
         """
         return set(self._t_root)
 

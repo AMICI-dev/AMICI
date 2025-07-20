@@ -816,3 +816,18 @@ def _default_simplify(x):
     # We need this as a free function instead of a lambda to have it picklable
     #  for parallel simplification
     return sp.powsimp(x, deep=True)
+
+
+def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
+    """
+    Check if a sympy expression contains any periodic subexpression.
+
+    :param expr: The sympy expression to check.
+    :param symbol: The variable with respect to which periodicity is checked.
+    :return: `True` if the expression contains a periodic subexpression,
+        `False` otherwise.
+    """
+    for subexpr in expr.atoms(sp.Function):
+        if sp.periodicity(subexpr, symbol) is not None:
+            return True
+    return False
