@@ -541,8 +541,8 @@ void CVodeSolver::reInitPostProcess(
             = std::string("CVode returned a root after reinitialization at t=")
               + std::to_string(*t)
               + ". The initial step-size after the event or "
-                "Heaviside function is too small. To fix this, increase "
-                "absolute and relative tolerances!";
+                "Heaviside function is too small. To fix this, adjust "
+                "absolute or relative tolerances!";
         throw CvodeException(status, message.c_str());
     }
     if (status != CV_SUCCESS) {
