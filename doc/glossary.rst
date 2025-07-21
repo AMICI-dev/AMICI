@@ -93,6 +93,9 @@ Glossary
         be specified for each period, except for post-equilibration, which
         always uses the fixed parameters of the main simulation period.
 
+        For SBML models, initial assignments and initial values of event
+        triggers are only applied once at the start of the first period.
+
     steady state
         In AMICI, a model is considered to be at steady state if the time
         derivative of the state variables is zero, up to the specified

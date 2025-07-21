@@ -299,6 +299,22 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Re-initialize the Heaviside variables `h` at the beginning
+     * of the second or subsequent simulation.
+     *
+     * @param t Timepoint
+     * @param x Reference to state variables
+     * @param dx Reference to time derivative of states (DAE only)
+     * @param h_old Previous values of Heaviside variables
+     * @param roots_found boolean indicators indicating whether roots were found
+     * at t0 by this fun
+     */
+    void reinit_events(
+        realtype t, AmiVector const& x, AmiVector const& dx,
+        std::vector<realtype> const& h_old, std::vector<int>& roots_found
+    );
+
+    /**
      * @brief Re-compute the explicit roots.
      *
      * Re-compute the explicit roots based on the current model parameters.

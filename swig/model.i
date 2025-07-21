@@ -34,6 +34,7 @@ using namespace amici;
 %ignore getObservableSensitivity;
 %ignore getExpression;
 %ignore initEvents;
+%ignore reinit_events;
 %ignore initialize;
 %ignore initializeB;
 %ignore initializeStateSensitivities;

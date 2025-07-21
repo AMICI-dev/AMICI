@@ -1180,3 +1180,84 @@ def test_posteq_events_are_handled(tempdir):
             epsilon=1e-8,
             skip_fields=["res"],
         )
+
+
+@skip_on_valgrind
+def test_preeq_presim_preserve_heaviside_state(tempdir):
+    """Test the state of event trigger functions is preserved after
+    pre-equilibration and presimulation.
+
+    I.e., the trigger.initialValue is only applied in the very beginning.
+    """
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_preeq_presim_preserve_heaviside_state"
+    antimony2amici(
+        r"""
+        some_time = 0
+        some_time' = piecewise(1, (time <= 10), 0)
+
+        target1 = 0
+        target2 = 0
+
+        # random parameter to be able to enable
+        #  pre-equilibration and presimulation
+        k1 = 42
+
+        # this should only trigger at the beginning of the first period
+        E1: at true, t0=false:
+            target1 = target1 + 1;
+        # this will only trigger at the beginning of the second period
+        #  if the trigger is not re-initialized to `true`
+        E2: at some_time >= 10 and time < 1, t0 = true:
+            target2 = target2 + 1;
+        """,
+        constant_parameters=["k1"],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    model.setTimepoints(np.linspace(0, 2, 3))
+    model.setSteadyStateComputationMode(
+        amici.SteadyStateComputationMode.integrationOnly
+    )
+    solver = model.getSolver()
+
+    # Only main simulation. E1 triggers, E2 does not.
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
+    assert list(rdata.by_id("target2")) == [0.0, 0.0, 0.0]
+
+    # Pre-equilibration + main simulation. Both E1 and E2 trigger.
+    edata = amici.ExpData(rdata, 1, 0, 0)
+    edata.fixedParametersPreequilibration = [1]
+    rdata = amici.runAmiciSimulation(model, solver, edata=edata)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
+    assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
+
+    # Pre-simulation + main simulation. Both E1 and E2 trigger.
+    # FIXME: this is currently not supported
+    #  (root-after-reinitialization when switching from pre-simulation#
+    #   to main simulation)
+    # edata = amici.ExpData(rdata, 1, 0, 0)
+    # edata.fixedParametersPresimulation = [1]
+    # edata.t_presim = 10
+    # rdata = amici.runAmiciSimulation(model, solver, edata=edata)
+    # assert rdata.status == amici.AMICI_SUCCESS
+    # assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
+    # assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
+
+    # Pre-equilibration + pre-simulation + main simulation.
+    # Both E1 and E2 trigger.
+    edata = amici.ExpData(rdata, 1, 0, 0)
+    edata.fixedParametersPreequilibration = [1]
+    edata.fixedParametersPresimulation = [1]
+    edata.t_presim = 10
+    rdata = amici.runAmiciSimulation(model, solver, edata=edata)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
+    assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
