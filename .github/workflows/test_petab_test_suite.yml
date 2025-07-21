@@ -60,11 +60,21 @@ jobs:
 
       # retrieve test models
       - name: Download and install PEtab test suite
+        # FIXME: Until we have proper PEtab v2 import
+        #  (https://github.com/AMICI-dev/AMICI/issues/2662),
+        #  we need `10ffb050380933b60ac192962bf9550a9df65a9c`
+        #  with the pseudo-v2 format instead of `main`
+#        run: |
+#          git clone --depth 1 --branch main \
+#            https://github.com/PEtab-dev/petab_test_suite \
+#            && source ./venv/bin/activate \
+#            && cd petab_test_suite && pip3 install -e .
         run: |
-          git clone --depth 1 --branch main \
-            https://github.com/PEtab-dev/petab_test_suite \
+          git clone https://github.com/PEtab-dev/petab_test_suite \
             && source ./venv/bin/activate \
-            && cd petab_test_suite && pip3 install -e .
+            && cd petab_test_suite \
+            && git checkout 10ffb050380933b60ac192962bf9550a9df65a9c \
+            && pip3 install -e .
 
       - name: Install PEtab benchmark collection
         run: |
