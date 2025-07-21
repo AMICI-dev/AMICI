@@ -799,8 +799,10 @@ class DEModel:
         :return:
             number of event symbols (length of the root vector in AMICI)
         """
+        constant_syms = set(self.sym("k")) | set(self.sym("p"))
         return sum(
-            not event.triggers_at_fixed_timepoint() for event in self.events()
+            not event.has_explicit_trigger_times(constant_syms)
+            for event in self.events()
         )
 
     def sym(self, name: str) -> sp.Matrix:
@@ -1305,12 +1307,17 @@ class DEModel:
             self.add_component(root)
 
         # re-order events - first those that require root tracking, then the others
+        constant_syms = set(self.sym("k")) | set(self.sym("p"))
         self._events = list(
             chain(
                 itertools.filterfalse(
-                    Event.triggers_at_fixed_timepoint, self._events
+                    lambda e: e.has_explicit_trigger_times(constant_syms),
+                    self._events,
                 ),
-                filter(Event.triggers_at_fixed_timepoint, self._events),
+                filter(
+                    lambda e: e.has_explicit_trigger_times(constant_syms),
+                    self._events,
+                ),
             )
         )
 

@@ -70,6 +70,7 @@ dxdotdp_explicit.h
 dxdotdx_explicit.cpp 
 dxdotdx_explicit.h 
 dydx.cpp 
+explicit_roots.cpp 
 h.h 
 model_dirac_py.cpp 
 model_dirac_py.h 

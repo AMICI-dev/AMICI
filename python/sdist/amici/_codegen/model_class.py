@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 from .cxx_functions import functions, multiobs_functions
-from ..cxxcodeprinter import get_initializer_list
-
-from ..de_model_components import Event
 
 
 def get_function_extern_declaration(fun: str, name: str, ode: bool) -> str:
@@ -72,7 +69,9 @@ def get_model_override_implementation(
     """
     func_info = functions[fun]
     body = (
-        ""
+        f" return {func_info.default_return_value}; "
+        if nobody and func_info.default_return_value
+        else ""
         if nobody
         else "\n{ind8}{maybe_return}{fun}_{name}({eval_signature});\n{ind4}".format(
             ind4=" " * 4,
@@ -164,21 +163,3 @@ def remove_argument_types(signature: str) -> str:
         signature = signature.replace(type_str, "")
 
     return signature
-
-
-def get_state_independent_event_intializer(events: list[Event]) -> str:
-    """Get initializer list for state independent events in amici::Model."""
-    map_time_to_event_idx = {}
-    for event_idx, event in enumerate(events):
-        if not event.triggers_at_fixed_timepoint():
-            continue
-        trigger_time = float(event.get_trigger_time())
-        try:
-            map_time_to_event_idx[trigger_time].append(event_idx)
-        except KeyError:
-            map_time_to_event_idx[trigger_time] = [event_idx]
-
-    return ", ".join(
-        f"{{{trigger_time}, {get_initializer_list(event_idxs)}}}"
-        for trigger_time, event_idxs in map_time_to_event_idx.items()
-    )
