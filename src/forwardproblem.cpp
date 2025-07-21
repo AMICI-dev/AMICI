@@ -73,7 +73,8 @@ void EventHandlingSimulator::run(
     auto trigger_timepoints = std::ranges::views::filter(
         trigger_timepoints_tmp,
         [this, timepoints](auto t) {
-            return t > ws_->sol.t && t <= timepoints.at(timepoints.size() - 1);
+            return t > ws_->sol.t && !timepoints.empty()
+                   && t <= timepoints.at(timepoints.size() - 1);
         }
     );
     auto it_trigger_timepoints = trigger_timepoints.begin();
@@ -122,7 +123,7 @@ void EventHandlingSimulator::run(
                     // if so, set the root-found flag
                     if (ws_->sol.t == next_t_event) {
                         for (auto const ie :
-                             model_->state_independent_events_[ws_->sol.t]) {
+                             model_->explicit_roots_[ws_->sol.t]) {
                             // determine the direction of root crossing from
                             // root function value at the previous event
                             ws_->roots_found[ie]
@@ -214,8 +215,7 @@ void EventHandlingSimulator::run_steady_state(
             // check if we are at a trigger timepoint.
             // if so, set the root-found flag
             if (ws_->sol.t == next_t_event) {
-                for (auto const ie :
-                     model_->state_independent_events_[ws_->sol.t]) {
+                for (auto const ie : model_->explicit_roots_[ws_->sol.t]) {
                     // determine the direction of root crossing from
                     // root function value at the previous event
                     ws_->roots_found[ie] = std::copysign(1, -ws_->rootvals[ie]);

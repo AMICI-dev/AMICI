@@ -150,8 +150,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},   // idlist
               std::vector<int>{},               // z2events
-              std::vector<Event>{}, // events
-              {}               // state-independent events
+              std::vector<Event>{} // events
           ) {
           }
 
@@ -410,6 +409,9 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k) override { return {}; }
+
+
     std::string getName() const override {
         return "model_jakstat_adjoint_py";
     }
@@ -551,7 +553,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "bcedb951ddf674996b269489d74f9b86112038ff";
+        return "d587a622b8295dff051b8cb45d009d9b037f7012";
     }
 
     bool hasQuadraticLLH() const override {

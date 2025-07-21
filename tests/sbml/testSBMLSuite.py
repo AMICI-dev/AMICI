@@ -77,10 +77,13 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
 
         atol, rtol = apply_settings(settings, solver, model, test_id)
 
-        if test_id != "00885":
-            # 00885: root-after-reinitialization with FSA
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+
+        if test_id == "00885":
+            # 00885: root-after-reinitialization with FSA with default settings
+            solver.setAbsoluteTolerance(1e-16)
+            solver.setRelativeTolerance(1e-15)
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)

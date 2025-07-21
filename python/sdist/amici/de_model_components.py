@@ -836,13 +836,26 @@ class Event(ModelQuantity):
             )
         return self._t_root[0]
 
-    def has_explicit_trigger_times(self) -> bool:
+    def has_explicit_trigger_times(
+        self, allowed_symbols: set[sp.Symbol] | None = None
+    ) -> bool:
         """Check whether the event has explicit trigger times.
 
         Explicit trigger times do not require root finding to determine
         the time points at which the event triggers.
+
+        :param allowed_symbols:
+            The set of symbols that are allowed in the trigger time
+            expressions. If `None`, any symbols are allowed.
+            If empty, only numeric values are allowed.
         """
-        return len(self._t_root) > 0
+        if allowed_symbols is None:
+            return len(self._t_root) > 0
+
+        return len(self._t_root) > 0 and all(
+            t.is_Number or t.free_symbols.issubset(allowed_symbols)
+            for t in self._t_root
+        )
 
     def get_trigger_times(self) -> set[sp.Expr]:
         """Get the time points at which the event triggers.

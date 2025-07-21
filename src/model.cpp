@@ -177,13 +177,11 @@ Model::Model(
     ModelDimensions const& model_dimensions,
     SimulationParameters simulation_parameters, SecondOrderMode const o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
-    std::vector<Event> events,
-    std::map<realtype, std::vector<int>> state_independent_events
+    std::vector<Event> events
 )
     : ModelDimensions(model_dimensions)
     , o2mode(o2mode)
     , idlist(std::move(idlist))
-    , state_independent_events_(std::move(state_independent_events))
     , state_(*this)
     , derived_state_(*this)
     , z2event_(std::move(z2event))
@@ -435,6 +433,36 @@ void Model::initEvents(
             if (pythonGenerated && !events_.at(ie).get_initial_value()) {
                 // only false->true triggers event
                 roots_found.at(ie) = 1;
+            }
+        }
+    }
+
+    // re-compute parameter-dependent but state-independent roots
+    reinit_explicit_roots();
+}
+
+void Model::reinit_explicit_roots() {
+    explicit_roots_.clear();
+
+    // evaluate timepoints
+    auto const exp_roots = fexplicit_roots(
+        state_.unscaledParameters.data(), state_.fixedParameters.data()
+    );
+    Expects(exp_roots.size() == gsl::narrow<size_t>(ne - ne_solver));
+
+    // group events by timepoints
+    for (decltype(exp_roots)::size_type iee = 0; iee < exp_roots.size();
+         ++iee) {
+        // index within all events / root functions (not just explicit ones)
+        int const ie = ne_solver + gsl::narrow<int>(iee);
+        auto const& cur_roots = exp_roots[iee];
+        Expects(!cur_roots.empty());
+        for (auto const& root : cur_roots) {
+            auto it = explicit_roots_.find(root);
+            if (it != explicit_roots_.end()) {
+                it->second.push_back(ie);
+            } else {
+                explicit_roots_[root] = {ie};
             }
         }
     }
@@ -3147,13 +3175,11 @@ void Model::fstotal_cl(
 }
 
 std::vector<double> Model::get_trigger_timepoints() const {
-    std::vector<double> trigger_timepoints(
-        state_independent_events_.size(), 0.0
-    );
+    std::vector<double> trigger_timepoints(explicit_roots_.size(), 0.0);
     // collect keys from state_independent_events_ which are the trigger
     // timepoints
     auto it = trigger_timepoints.begin();
-    for (auto const& kv : state_independent_events_) {
+    for (auto const& kv : explicit_roots_) {
         *(it++) = kv.first;
     }
     std::ranges::sort(trigger_timepoints);
