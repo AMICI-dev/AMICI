@@ -179,10 +179,6 @@ struct PeriodResult {
     /** Discontinuities encountered so far (dimension: dynamic) */
     std::vector<Discontinuity> discs;
 
-    /** array of number of found roots for a certain event type
-     * (dimension: ne) */
-    std::vector<int> nroots;
-
     /** simulation states history at timepoints */
     std::map<realtype, SimulationState> timepoint_states_;
 

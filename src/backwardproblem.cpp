@@ -112,6 +112,7 @@ void BackwardProblem::handlePostequilibration() {
         }
     }
 
+    // TODO handle any events
     auto final_state = posteq_problem_->getFinalSimulationState();
     posteq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
     posteq_problem_bwd_->run(model_->t0());
