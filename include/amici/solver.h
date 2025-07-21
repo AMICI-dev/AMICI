@@ -674,6 +674,15 @@ class Solver {
     void writeSolution(SolutionState& sol) const;
 
     /**
+     * @brief write solution from forward simulation
+     * @param t Time for which to retrieve the solution
+     * (interpolated if necessary). Must be greater than or equal to
+     * the initial timepoint and less than or equal to the current timepoint.
+     * @param sol solution state
+     */
+    void writeSolution(realtype t, SolutionState& sol) const;
+
+    /**
      * @brief write solution from backward simulation
      * @param t time
      * @param xB adjoint state

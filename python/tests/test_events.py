@@ -1070,25 +1070,113 @@ def test_event_uses_values_from_trigger_time(tempdir):
     # generate synthetic measurements
     edata = amici.ExpData(rdata, 1, 0)
 
-    # check forward sensitivities against finite differences
-    # FIXME: sensitivities w.r.t. the bolus parameter of the first event
-    #  are wrong
-    model.setParameterList(
-        [
-            ip
-            for ip, par in enumerate(model.getParameterIds())
-            if par not in ["one"]
-        ]
+    # check sensitivities against finite differences
+
+    for sens_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        if sens_method == SensitivityMethod.forward:
+            # FIXME: forward sensitivities w.r.t. the bolus parameter
+            #  of the first event are wrong
+            model.setParameterList(
+                [
+                    ip
+                    for ip, par in enumerate(model.getParameterIds())
+                    if par not in ["one"]
+                ]
+            )
+        elif sens_method == SensitivityMethod.adjoint:
+            # FIXME: adjoint sensitivities w.r.t. the bolus parameter `three`
+            #  are wrong.
+            #  maybe related to https://github.com/AMICI-dev/AMICI/issues/2805
+            model.setParameterList(
+                [
+                    ip
+                    for ip, par in enumerate(model.getParameterIds())
+                    if par not in ["one", "three"]
+                ]
+            )
+
+        solver.setSensitivityMethod(sens_method)
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            # smaller than the offset from the trigger time
+            epsilon=1e-8,
+        )
+
+
+@skip_on_valgrind
+def test_posteq_events_are_handled(tempdir):
+    """Test that events are handled during post-equilibration."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_posteq_events_are_handled"
+    antimony2amici(
+        r"""
+        some_time = 0
+        some_time' = piecewise(1, (time < 10), 0)
+
+        bolus = 1
+        target_initial = 0
+        target = target_initial
+        E1: at time > 1: target = target + bolus
+        E2: at some_time >= 2: target = target + bolus
+        """,
+        observables={
+            "obs_target": {
+                "formula": "target",
+            }
+        },
+        model_name=model_name,
+        output_dir=tempdir,
+        verbose=True,
     )
 
-    check_derivatives(
-        model,
-        solver,
-        edata=edata,
-        atol=1e-6,
-        rtol=1e-6,
-        # smaller than the offset from the trigger time
-        epsilon=1e-8,
-    )
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    solver = model.getSolver()
 
-    # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
+    # test without post-equilibration
+    model.setTimepoints([10])
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert rdata.by_id("target").squeeze() == 2.0
+    assert rdata.by_id("obs_target").squeeze() == 2.0
+
+    # test with post-equilibration
+    model.setSteadyStateComputationMode(
+        amici.SteadyStateComputationMode.integrationOnly
+    )
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode.integrationOnly
+    )
+    model.setTimepoints([np.inf])
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert rdata.by_id("target").squeeze() == 2.0
+    assert rdata.by_id("obs_target").squeeze() == 2.0
+    assert rdata.posteq_t == 10.0
+
+    # check sensitivities against finite differences
+    edata = amici.ExpData(rdata, 1, 0, 0)
+    for sens_method in (
+        SensitivityMethod.forward,
+        # FIXME: sensitivities w.r.t. the bolus parameter are off for ASA (0.0)
+        # SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityOrder(SensitivityOrder.first)
+        solver.setSensitivityMethod(sens_method)
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-12,
+            rtol=1e-7,
+            epsilon=1e-8,
+            skip_fields=["res"],
+        )

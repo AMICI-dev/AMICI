@@ -1336,6 +1336,14 @@ void Solver::writeSolution(SolutionState& sol) const {
     sol.dx.copy(getDerivativeState(sol.t));
 }
 
+void Solver::writeSolution(realtype const t, SolutionState& sol) const {
+    sol.t = t;
+    if (sens_initialized_)
+        sol.sx.copy(getStateSensitivity(sol.t));
+    sol.x.copy(getState(sol.t));
+    sol.dx.copy(getDerivativeState(sol.t));
+}
+
 void Solver::writeSolutionB(
     realtype& t, AmiVector& xB, AmiVector& dxB, AmiVector& xQB, int const which
 ) const {

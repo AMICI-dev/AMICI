@@ -1728,7 +1728,11 @@ class SbmlImporter:
                     "assignment rules."
                 )
             parameter_def = None
-            for symbol_id in {SymbolId.PARAMETER, SymbolId.FIXED_PARAMETER}:
+            for symbol_id in {
+                SymbolId.PARAMETER,
+                SymbolId.FIXED_PARAMETER,
+                SymbolId.EXPRESSION,
+            }:
                 if parameter_target in self.symbols[symbol_id]:
                     # `parameter_target` should only exist in one of the
                     # `symbol_id` dictionaries.

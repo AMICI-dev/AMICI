@@ -259,9 +259,9 @@ void ReturnData::processPostEquilibration(
     ExpData const* edata
 ) {
     for (int it = 0; it < nt; it++) {
-        auto t = model.getTimepoint(it);
+        auto const t = model.getTimepoint(it);
         if (std::isinf(t)) {
-            auto const simulation_state = posteq.getFinalSimulationState();
+            auto const& simulation_state = posteq.getFinalSimulationState();
             model.setModelState(simulation_state.mod);
             getDataOutput(it, model, simulation_state.sol, edata);
         }

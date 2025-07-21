@@ -148,7 +148,7 @@ void EventHandlingSimulator::run(
         fill_events(model_->nMaxEvent(), edata);
     }
 
-    result.nroots = ws_->nroots;
+    result.final_state_ = {.sol = ws_->sol, .mod = model_->getModelState()};
 }
 
 void EventHandlingSimulator::run_steady_state(
@@ -195,13 +195,20 @@ void EventHandlingSimulator::run_steady_state(
         //   ensure stable computation.
         // The value is not important for AMICI_ONE_STEP mode, only the
         // direction w.r.t. current t.
-        auto status = solver_->step(std::max(ws_->sol.t, 1.0) * 10);
-        ws_->sol.t = solver_->gett();
+        auto tout = std::isfinite(next_t_event)
+                        ? next_t_event
+                        : std::max(ws_->sol.t, 1.0) * 10;
+        auto status = solver_->step(tout);
         solver_->writeSolution(ws_->sol);
 
         if (status < 0) {
             throw IntegrationFailure(status, ws_->sol.t);
-        } else if (status == AMICI_ROOT_RETURN || ws_->sol.t == next_t_event) {
+        } else if (status == AMICI_ROOT_RETURN || ws_->sol.t >= next_t_event) {
+            if (ws_->sol.t >= next_t_event) {
+                // Solver::step will over-step next_t_event
+                solver_->writeSolution(next_t_event, ws_->sol);
+            }
+
             // solver-tracked or time-triggered event
             solver_->getRootInfo(ws_->roots_found.data());
 
@@ -214,11 +221,16 @@ void EventHandlingSimulator::run_steady_state(
                     ws_->roots_found[ie] = std::copysign(1, -ws_->rootvals[ie]);
                 }
                 ++it_trigger_timepoints;
+                next_t_event = it_trigger_timepoints != trigger_timepoints.end()
+                                   ? *it_trigger_timepoints
+                                   : std::numeric_limits<realtype>::infinity();
             }
 
             handle_events(false, nullptr);
         }
     }
+
+    result.final_state_ = {.sol = ws_->sol, .mod = model_->getModelState()};
 }
 
 void ForwardProblem::workForwardProblem() {

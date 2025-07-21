@@ -212,6 +212,10 @@ class SteadyStateBackwardProblem {
     /**
      * @brief Launch backward simulation if Newton solver or linear system solve
      * fail or are disabled.
+     *
+     * This does not perform any event-handling.
+     * For event-handling, see EventHandlingBwdSimulator.
+     *
      * @param solver Solver instance.
      */
     void run_simulation(Solver const& solver);
