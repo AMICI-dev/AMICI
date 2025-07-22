@@ -99,6 +99,8 @@ using namespace amici;
 
 %newobject amici::Model::clone;
 
+%rename(create_solver) amici::Model::getSolver;
+
 %extend amici::Model {
 %pythoncode %{
 def __deepcopy__(self, memo):
