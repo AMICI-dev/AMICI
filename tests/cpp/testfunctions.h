@@ -204,7 +204,7 @@ void verifyReturnData(const std::string &hdffile, const std::string &resultPath,
                       const ReturnData *rdata, const Model *model, double atol,
                       double rtol);
 
-void verifyReturnDataSensitivities(const H5::H5File &file_id,
+void verifyReturnDataSensitivities(const H5::H5File &file,
                                    const std::string &resultPath,
                                    const ReturnData *rdata, const Model *model,
                                    double atol, double rtol);

@@ -5,9 +5,7 @@
 
 #include "amici/model.h"
 
-namespace amici {
-namespace generic_model {
-
+namespace amici::generic_model {
 
 /**
  * @brief Wrapper function to instantiate the linked Amici model without knowing
@@ -16,10 +14,7 @@ namespace generic_model {
  */
 std::unique_ptr<amici::Model> getModel();
 
-
-} // namespace generic_model
-
-} // namespace amici
+} // namespace amici::generic_model
 
 
 #endif /* _amici_wrapfunctions_h */

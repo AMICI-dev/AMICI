@@ -11,7 +11,7 @@ void Model_DAE::fJ(
 }
 
 void Model_DAE::fJ(
-    realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
+    realtype const t, realtype const cj, const_N_Vector x, const_N_Vector dx,
     const_N_Vector /*xdot*/, SUNMatrix J
 ) {
     fJSparse(t, cj, x, dx, derived_state_.J_);
@@ -28,9 +28,9 @@ void Model_DAE::fJSparse(
 }
 
 void Model_DAE::fJSparse(
-    realtype t, realtype cj, const_N_Vector x, const_N_Vector dx, SUNMatrix J
+    realtype const t, realtype const cj, const_N_Vector x, const_N_Vector dx, SUNMatrix J
 ) {
-    auto x_pos = computeX_pos(x);
+    auto const x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);
@@ -84,8 +84,8 @@ void Model_DAE::fJv(
 }
 
 void Model_DAE::fJv(
-    realtype t, const_N_Vector x, const_N_Vector dx, const_N_Vector v,
-    N_Vector Jv, realtype cj
+    realtype const t, const_N_Vector x, const_N_Vector dx, const_N_Vector v,
+    N_Vector Jv, realtype const cj
 ) {
     N_VConst(0.0, Jv);
     fJSparse(t, cj, x, dx, derived_state_.J_);
@@ -95,16 +95,16 @@ void Model_DAE::fJv(
 
 void Model_DAE::froot(
     realtype const t, AmiVector const& x, AmiVector const& dx,
-    gsl::span<realtype> root
+    gsl::span<realtype> const root
 ) {
     froot(t, x.getNVector(), dx.getNVector(), root);
 }
 
 void Model_DAE::froot(
-    realtype t, const_N_Vector x, const_N_Vector dx, gsl::span<realtype> root
+    realtype const t, const_N_Vector x, const_N_Vector dx, gsl::span<realtype> root
 ) {
     std::ranges::fill(root, 0.0);
-    auto x_pos = computeX_pos(x);
+    auto const x_pos = computeX_pos(x);
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaledParameters.data(), state_.fixedParameters.data(),
@@ -119,9 +119,9 @@ void Model_DAE::fxdot(
 }
 
 void Model_DAE::fxdot(
-    realtype t, const_N_Vector x, const_N_Vector dx, N_Vector xdot
+    realtype const t, const_N_Vector x, const_N_Vector dx, N_Vector xdot
 ) {
-    auto x_pos = computeX_pos(x);
+    auto const x_pos = computeX_pos(x);
     fw(t, N_VGetArrayPointerConst(x), false);
     N_VConst(0.0, xdot);
     fxdot(
@@ -148,7 +148,7 @@ void Model_DAE::fdxdotdw(
 ) {
     derived_state_.dxdotdw_.zero();
     if (nw > 0 && derived_state_.dxdotdw_.capacity()) {
-        auto x_pos = computeX_pos(x);
+        auto const x_pos = computeX_pos(x);
 
         fdxdotdw_colptrs(derived_state_.dxdotdw_);
         fdxdotdw_rowvals(derived_state_.dxdotdw_);
@@ -164,7 +164,7 @@ void Model_DAE::fdxdotdw(
 void Model_DAE::fdxdotdp(
     realtype const t, const_N_Vector const x, const_N_Vector const dx
 ) {
-    auto x_pos = computeX_pos(x);
+    auto const x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointerConst(x_pos));
 
     if (pythonGenerated) {
@@ -210,7 +210,7 @@ void Model_DAE::fdxdotdp(
     }
 }
 
-void Model_DAE::fM(realtype t, const_N_Vector x) {
+void Model_DAE::fM(realtype const t, const_N_Vector x) {
     if (pythonGenerated) {
         /*
          * non-algebraic states in python generated code always have factor
@@ -230,7 +230,7 @@ void Model_DAE::fM(realtype t, const_N_Vector x) {
         assert(ndiff == derived_state_.MSparse_.capacity());
     } else {
         derived_state_.M_.zero();
-        auto x_pos = computeX_pos(x);
+        auto const x_pos = computeX_pos(x);
         fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
            state_.unscaledParameters.data(), state_.fixedParameters.data());
     }
@@ -376,7 +376,7 @@ void Model_DAE::fJB(
 }
 
 void Model_DAE::fJB(
-    realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
+    realtype const t, realtype const cj, const_N_Vector x, const_N_Vector dx,
     const_N_Vector /*xB*/, const_N_Vector /*dxB*/, SUNMatrix JB
 ) {
     fJSparse(t, cj, x, dx, derived_state_.J_);
@@ -386,7 +386,7 @@ void Model_DAE::fJB(
 }
 
 void Model_DAE::fJSparseB(
-    realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    realtype const t, realtype const cj, AmiVector const& x, AmiVector const& dx,
     AmiVector const& xB, AmiVector const& dxB, AmiVector const& /*xBdot*/,
     SUNMatrix JB
 ) {
@@ -397,7 +397,7 @@ void Model_DAE::fJSparseB(
 }
 
 void Model_DAE::fJSparseB(
-    realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
+    realtype const t, realtype const cj, const_N_Vector x, const_N_Vector dx,
     const_N_Vector /*xB*/, const_N_Vector /*dxB*/, SUNMatrix JB
 ) {
     fJSparse(t, cj, x, dx, derived_state_.J_);
@@ -407,7 +407,7 @@ void Model_DAE::fJSparseB(
 }
 
 void Model_DAE::fJvB(
-    realtype t, const_N_Vector x, const_N_Vector dx, const_N_Vector xB,
+    realtype const t, const_N_Vector x, const_N_Vector dx, const_N_Vector xB,
     const_N_Vector dxB, const_N_Vector vB, N_Vector JvB, realtype cj
 ) {
     N_VConst(0.0, JvB);
@@ -417,7 +417,7 @@ void Model_DAE::fJvB(
 }
 
 void Model_DAE::fxBdot(
-    realtype t, const_N_Vector x, const_N_Vector dx, const_N_Vector xB,
+    realtype const t, const_N_Vector x, const_N_Vector dx, const_N_Vector xB,
     const_N_Vector dxB, N_Vector xBdot
 ) {
     N_VConst(0.0, xBdot);
@@ -428,7 +428,7 @@ void Model_DAE::fxBdot(
 }
 
 void Model_DAE::fqBdot(
-    realtype t, const_N_Vector x, const_N_Vector dx, const_N_Vector xB,
+    realtype const t, const_N_Vector x, const_N_Vector dx, const_N_Vector xB,
     const_N_Vector /*dxB*/, N_Vector qBdot
 ) {
     N_VConst(0.0, qBdot);
