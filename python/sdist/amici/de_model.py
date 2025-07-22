@@ -143,7 +143,7 @@ class DEModel:
         model
 
     :ivar _sparsesyms:
-        carries linear list of all symbolS for sparsified
+        carries linear list of all symbols for sparsified
         variables
 
     :ivar _colptrs:
