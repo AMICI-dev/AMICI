@@ -476,6 +476,14 @@ class SteadystateProblem {
      */
     [[nodiscard]] Solver const* get_solver() const { return solver_; }
 
+    /**
+     * @brief Get the preequilibration result.
+     * @return
+     */
+    [[nodiscard]] PeriodResult const& get_result() const {
+        return period_result_;
+    }
+
   private:
     /**
      * @brief Handle the computation of the steady state.

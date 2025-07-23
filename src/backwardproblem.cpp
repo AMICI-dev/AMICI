@@ -79,9 +79,6 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-        auto const t0
-            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
-        auto final_state = preeq_problem_->getFinalSimulationState();
 
         // If we need to reinitialize solver states, this won't work yet.
         if (model_->nx_reinit() > 0)
@@ -91,11 +88,45 @@ void BackwardProblem::workBackwardProblem() {
                 "non-constant states is not yet implemented. Stopping."
             );
 
-        // only preequilibrations needs a reInit, postequilibration does not
-        preeq_solver->updateAndReinitStatesAndSensitivities(model_);
+        auto const t0
+            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
 
-        preeq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
-        preeq_problem_bwd_->run(t0);
+        auto const& preeq_result = preeq_problem_->get_result();
+
+        // If there were no discontinuities or no simulation was performed,
+        // we can use the steady-state shortcuts.
+        // If not we need to do the regular backward integration.
+        if (preeq_problem_->getSteadyStateStatus()[1]
+                == SteadyStateStatus::not_run
+            || preeq_result.discs.empty()) {
+            preeq_solver->updateAndReinitStatesAndSensitivities(model_);
+
+            auto preeq_final_fwd_state = preeq_result.final_state_;
+            preeq_problem_bwd_.emplace(
+                *solver_, *model_, preeq_final_fwd_state.sol, &ws_
+            );
+            preeq_problem_bwd_->run(t0);
+        } else if (preeq_problem_->getSteadyStateStatus()[1]
+                   != SteadyStateStatus::not_run) {
+            // backward integration of the pre-equilibration problem
+            // (only if preequilibration was done via simulation)
+            ws_.discs_ = preeq_result.discs;
+            ws_.nroots_
+                = compute_nroots(ws_.discs_, model_->ne, model_->nMaxEvent());
+            EventHandlingBwdSimulator preeq_simulator(
+                model_, preeq_solver, &ws_
+            );
+            preeq_simulator.run(
+                preeq_result.final_state_.sol.t,
+                preeq_result.initial_state_.sol.t, -1, {}, &dJydx_, &dJzdx_
+            );
+        } else {
+            Expects(
+                false
+                && "Unhandled preequilibration case in "
+                   "BackwardProblem::workBackwardProblem()"
+            );
+        }
     }
 }
 

@@ -257,14 +257,12 @@ void ForwardProblem::handlePreequilibration() {
     auto t0 = std::isnan(model->t0Preeq()) ? model->t0() : model->t0Preeq();
 
     // The solver was not run before, set up everything.
-    // TODO: For pre-equilibration in combination with adjoint sensitivities,
-    // we will need to use a separate solver instance because we still need the
-    // forward solver for each period for backward integration.
     model->initialize(
         t0, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx,
         solver->getSensitivityOrder() >= SensitivityOrder::first,
         ws_.roots_found
     );
+    model->initializeStateSensitivities(t0, ws_.sol.sx, ws_.sol.x);
     solver->setup(t0, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
 
     preeq_problem_->workSteadyStateProblem(*solver, -1, t0);
@@ -874,16 +872,17 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
             new_solver->logger = main_solver->logger;
 
             // do we need sensitivities?
-            if (new_solver->getSensitivityMethodPreequilibration()
-                    == SensitivityMethod::forward
-                && new_solver->getSensitivityOrder() >= SensitivityOrder::first
+            if (new_solver->getSensitivityOrder() >= SensitivityOrder::first
                 && (model_->getSteadyStateSensitivityMode()
                         == SteadyStateSensitivityMode::integrationOnly
                     || model_->getSteadyStateSensitivityMode()
                            == SteadyStateSensitivityMode::integrateIfNewtonFails
                 )) {
-                // need forward to compute sx0 for the pre/main simulation
-                new_solver->setSensitivityMethod(SensitivityMethod::forward);
+                // need FSA to compute sx0 for the pre/main simulation,
+                // or enable ASA for backward integration of pre-equibration
+                new_solver->setSensitivityMethod(
+                    new_solver->getSensitivityMethodPreequilibration()
+                );
             } else {
                 new_solver->setSensitivityMethod(SensitivityMethod::none);
                 new_solver->setSensitivityOrder(SensitivityOrder::none);
@@ -934,8 +933,6 @@ SteadyStateStatus SteadystateProblem::findSteadyStateBySimulation(
             );
         return SteadyStateStatus::failed;
     }
-
-    period_result_ = simulator_->result;
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(
@@ -1068,7 +1065,11 @@ void SteadystateProblem::runSteadystateSimulationFwd() {
     // Create a new simulator that uses the (potentially changed) solver
     // with the right sensitivity settings.
     simulator_.emplace(model_, solver_, ws_, nullptr);
-    simulator_->result.initial_state_ = period_result_.initial_state_;
+    simulator_->result.initial_state_.mod = model_->getModelState();
+    simulator_->result.initial_state_.sol = ws_->sol;
+
+    // store results on (any) exit
+    auto _ = gsl::finally([&]() { period_result_ = simulator_->result; });
 
     simulator_->handle_initial_events(nullptr);
 
@@ -1146,6 +1147,10 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(bool newton_retry) {
 
         simulator_->handle_initial_events(nullptr);
         period_result_ = simulator_->result;
+        // set time to infinity after processing initial events,
+        //  so we'll get warnings in case of explicit time dependencies
+        //  which are incompatible with Newton's method
+        ws_->sol.t = INFINITY;
     }
 
     int const stage = newton_retry ? 2 : 0;
