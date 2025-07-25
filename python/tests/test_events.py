@@ -1166,11 +1166,11 @@ def test_posteq_events_are_handled(tempdir):
     edata = amici.ExpData(rdata, 1, 0, 0)
     for sens_method in (
         SensitivityMethod.forward,
-        # FIXME: sensitivities w.r.t. the bolus parameter are off for ASA (0.0)
-        # SensitivityMethod.adjoint,
+        SensitivityMethod.adjoint,
     ):
         solver.setSensitivityOrder(SensitivityOrder.first)
         solver.setSensitivityMethod(sens_method)
+
         check_derivatives(
             model,
             solver,
@@ -1178,7 +1178,6 @@ def test_posteq_events_are_handled(tempdir):
             atol=1e-12,
             rtol=1e-7,
             epsilon=1e-8,
-            skip_fields=["res"],
         )
 
 
