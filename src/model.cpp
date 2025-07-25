@@ -422,15 +422,29 @@ void Model::initEvents(
     realtype t, AmiVector const& x, AmiVector const& dx,
     std::vector<int>& roots_found
 ) {
+    // construct "old" Heaviside vector from initial values
+    std::vector<realtype> h_old(ne, 1.0);
+    for (int ie = 0; ie < ne; ie++) {
+        if (events_.at(ie).get_initial_value() == false)
+            h_old.at(ie) = 0.0;
+    }
+
+    reinit_events(t, x, dx, h_old, roots_found);
+}
+
+void Model::reinit_events(
+    realtype t, AmiVector const& x, AmiVector const& dx,
+    std::vector<realtype> const& h_old, std::vector<int>& roots_found
+) {
     std::vector<realtype> rootvals(ne, 0.0);
     froot(t, x, dx, rootvals);
     std::ranges::fill(roots_found, 0);
     for (int ie = 0; ie < ne; ie++) {
-        if (rootvals.at(ie) < 0) {
+        if (rootvals.at(ie) < 0.0) {
             state_.h.at(ie) = 0.0;
         } else {
             state_.h.at(ie) = 1.0;
-            if (pythonGenerated && !events_.at(ie).get_initial_value()) {
+            if (h_old.at(ie) <= 0.0) {
                 // only false->true triggers event
                 roots_found.at(ie) = 1;
             }

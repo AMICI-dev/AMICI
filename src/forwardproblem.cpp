@@ -300,7 +300,11 @@ void ForwardProblem::handlePresimulation() {
             ws_.roots_found
         );
     } else if (model->ne) {
-        model->initEvents(ws_.sol.t, ws_.sol.x, ws_.sol.dx, ws_.roots_found);
+        // copy, since model state will be updated in reinit_events
+        auto h_old = model->getModelState().h;
+        model->reinit_events(
+            ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
+        );
     }
     solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
     solver->updateAndReinitStatesAndSensitivities(model);
@@ -341,8 +345,10 @@ void ForwardProblem::handleMainSimulation() {
         // Reset the time and re-initialize events for the main simulation
         solver->updateAndReinitStatesAndSensitivities(model);
         if (model->ne) {
-            model->initEvents(
-                model->t0(), ws_.sol.x, ws_.sol.dx, ws_.roots_found
+            // copy, since model state will be updated in reinit_events
+            auto h_old = model->getModelState().h;
+            model->reinit_events(
+                ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
             );
         }
     }

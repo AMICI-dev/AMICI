@@ -378,9 +378,7 @@ def test_presimulation_events_and_sensitivities(tempdir):
     xx = 0
     xx' = piecewise(k_pre, time < 0, k_main)
 
-    # this will trigger twice, once in presimulation
-    # and once in the main simulation
-    at time >= -1 , t0=false: some_time = some_time + bolus
+    at time < -1 , t0=false: some_time = some_time + bolus
     """,
         model_name=model_name,
         output_dir=tempdir,
@@ -412,22 +410,10 @@ def test_presimulation_events_and_sensitivities(tempdir):
 
         assert rdata.status == amici.AMICI_SUCCESS
         assert_allclose(
-            rdata.by_id("some_time"), np.array([0, 1, 2]) + 2.1, atol=1e-14
+            rdata.by_id("some_time"), np.array([0, 1, 2]) + 1.1, atol=1e-14
         )
 
-        if sensi_method == amici.SensitivityMethod.forward:
-            model.requireSensitivitiesForAllParameters()
-        else:
-            # FIXME ASA with events:
-            #   https://github.com/AMICI-dev/AMICI/pull/1539
-            model.setParameterList(
-                [
-                    i
-                    for i, p in enumerate(model.getParameterIds())
-                    if p != "bolus"
-                ]
-            )
-
+        model.requireSensitivitiesForAllParameters()
         check_derivatives(
             model,
             solver,
