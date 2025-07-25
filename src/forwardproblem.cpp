@@ -262,7 +262,10 @@ void ForwardProblem::handlePreequilibration() {
         solver->getSensitivityOrder() >= SensitivityOrder::first,
         ws_.roots_found
     );
-    model->initializeStateSensitivities(t0, ws_.sol.sx, ws_.sol.x);
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first
+        and solver->getSensitivityMethod() != SensitivityMethod::none) {
+        model->initializeStateSensitivities(t0, ws_.sol.sx, ws_.sol.x);
+    }
     solver->setup(t0, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
 
     preeq_problem_->workSteadyStateProblem(*solver, -1, t0);
