@@ -495,9 +495,7 @@ void EventHandlingSimulator::handle_events(
 
             store_pre_event_info(true);
 
-            if (!initial_event) {
-                model_->updateHeaviside(ws_->roots_found);
-            }
+            model_->updateHeaviside(ws_->roots_found);
         }
     }
     store_post_event_info();
@@ -616,8 +614,8 @@ int EventHandlingSimulator::detect_secondary_events() {
     for (int ie = 0; ie < model_->ne; ie++) {
         // the same event should not trigger itself
         if (ws_->roots_found.at(ie) == 0) {
-            // check whether there was a zero-crossing
-            if (0 > ws_->rval_tmp.at(ie) * ws_->rootvals.at(ie)) {
+            // check whether the value of the Heaviside function changed
+            if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
                 if (ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie)) {
                     ws_->roots_found.at(ie) = 1;
                     auto const& event = model_->get_event(ie);
