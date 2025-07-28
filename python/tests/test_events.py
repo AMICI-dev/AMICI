@@ -1260,3 +1260,36 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
     assert rdata.status == amici.AMICI_SUCCESS
     assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
     assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
+
+
+@skip_on_valgrind
+def test_gh2926(tempdir):
+    """Two simultaneous events. Event `E1` changes the root function
+    for the piecewise-switch from 0 to <0."""
+    from amici.antimony_import import antimony2amici
+
+    model_name = "test_gh2926"
+    antimony2amici(
+        r"""
+        some_time = 0
+        some_time' = 1
+
+        threshold = 0
+
+        x1 := piecewise(2, (some_time >= threshold), 1)
+        E1: at some_time >= 0, t0 = false: threshold = 10
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    # check output just after t=10, otherwise the solver stops at `10 - eps`
+    #  and the event triggers only after the output was recorded
+    model.setTimepoints([0, 5, 10.1, 11])
+    solver = model.getSolver()
+
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert rdata.by_id("x1").tolist() == [1.0, 1.0, 2.0, 2.0]
