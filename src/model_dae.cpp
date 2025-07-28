@@ -28,7 +28,8 @@ void Model_DAE::fJSparse(
 }
 
 void Model_DAE::fJSparse(
-    realtype const t, realtype const cj, const_N_Vector x, const_N_Vector dx, SUNMatrix J
+    realtype const t, realtype const cj, const_N_Vector x, const_N_Vector dx,
+    SUNMatrix J
 ) {
     auto const x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
@@ -101,7 +102,8 @@ void Model_DAE::froot(
 }
 
 void Model_DAE::froot(
-    realtype const t, const_N_Vector x, const_N_Vector dx, gsl::span<realtype> root
+    realtype const t, const_N_Vector x, const_N_Vector dx,
+    gsl::span<realtype> root
 ) {
     std::ranges::fill(root, 0.0);
     auto const x_pos = computeX_pos(x);
@@ -386,9 +388,9 @@ void Model_DAE::fJB(
 }
 
 void Model_DAE::fJSparseB(
-    realtype const t, realtype const cj, AmiVector const& x, AmiVector const& dx,
-    AmiVector const& xB, AmiVector const& dxB, AmiVector const& /*xBdot*/,
-    SUNMatrix JB
+    realtype const t, realtype const cj, AmiVector const& x,
+    AmiVector const& dx, AmiVector const& xB, AmiVector const& dxB,
+    AmiVector const& /*xBdot*/, SUNMatrix JB
 ) {
     fJSparseB(
         t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(),

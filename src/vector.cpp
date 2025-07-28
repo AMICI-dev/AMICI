@@ -73,7 +73,8 @@ AmiVector::~AmiVector() {
 }
 
 AmiVectorArray::AmiVectorArray(
-    long int const length_inner, long int const length_outer, SUNContext const sunctx
+    long int const length_inner, long int const length_outer,
+    SUNContext const sunctx
 )
     : vec_array_(length_outer, AmiVector(length_inner, sunctx)) {
     nvec_array_.resize(length_outer);
@@ -115,13 +116,17 @@ realtype const& AmiVectorArray::at(int const ipos, int const jpos) const {
 
 N_Vector* AmiVectorArray::getNVectorArray() { return nvec_array_.data(); }
 
-N_Vector AmiVectorArray::getNVector(int const pos) { return nvec_array_.at(pos); }
+N_Vector AmiVectorArray::getNVector(int const pos) {
+    return nvec_array_.at(pos);
+}
 
 const_N_Vector AmiVectorArray::getNVector(int const pos) const {
     return nvec_array_.at(pos);
 }
 
-AmiVector& AmiVectorArray::operator[](int const pos) { return vec_array_.at(pos); }
+AmiVector& AmiVectorArray::operator[](int const pos) {
+    return vec_array_.at(pos);
+}
 
 AmiVector const& AmiVectorArray::operator[](int const pos) const {
     return vec_array_.at(pos);

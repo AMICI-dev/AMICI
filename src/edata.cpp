@@ -18,7 +18,8 @@ ExpData::ExpData(int const nytrue, int const nztrue, int const nmaxevent)
 }
 
 ExpData::ExpData(
-    int const nytrue, int const nztrue, int const nmaxevent, std::vector<realtype> ts
+    int const nytrue, int const nztrue, int const nmaxevent,
+    std::vector<realtype> ts
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
@@ -28,8 +29,8 @@ ExpData::ExpData(
 }
 
 ExpData::ExpData(
-    int const nytrue, int const nztrue, int const nmaxevent, std::vector<realtype> ts,
-    std::vector<realtype> fixedParameters
+    int const nytrue, int const nztrue, int const nmaxevent,
+    std::vector<realtype> ts, std::vector<realtype> fixedParameters
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
@@ -40,8 +41,8 @@ ExpData::ExpData(
 }
 
 ExpData::ExpData(
-    int const nytrue, int const nztrue, int const nmaxevent, std::vector<realtype> ts,
-    std::vector<realtype> const& observedData,
+    int const nytrue, int const nztrue, int const nmaxevent,
+    std::vector<realtype> ts, std::vector<realtype> const& observedData,
     std::vector<realtype> const& observedDataStdDev,
     std::vector<realtype> const& observedEvents,
     std::vector<realtype> const& observedEventsStdDev
@@ -69,7 +70,8 @@ ExpData::ExpData(Model const& model)
 }
 
 ExpData::ExpData(
-    ReturnData const& rdata, realtype const sigma_y, realtype const sigma_z, int const seed
+    ReturnData const& rdata, realtype const sigma_y, realtype const sigma_z,
+    int const seed
 )
     : ExpData(
           rdata, std::vector<realtype>(rdata.nytrue * rdata.nt, sigma_y),
@@ -261,7 +263,7 @@ void ExpData::setObservedEvents(
         observed_events_.at(iz + ie * nztrue_) = observedEvents.at(ie);
 }
 
-bool ExpData::isSetObservedEvents(int const ie, int const  iz) const {
+bool ExpData::isSetObservedEvents(int const ie, int const iz) const {
     return !observed_events_.empty()
            && !isNaN(observed_events_.at(ie * nztrue_ + iz));
 }
@@ -270,7 +272,7 @@ std::vector<realtype> const& ExpData::getObservedEvents() const {
     return observed_events_;
 }
 
-realtype const* ExpData::getObservedEventsPtr(int const  ie) const {
+realtype const* ExpData::getObservedEventsPtr(int const ie) const {
     if (!observed_events_.empty())
         return &observed_events_.at(ie * nztrue_);
 
@@ -370,7 +372,8 @@ void ExpData::checkDataDimension(
 void ExpData::checkEventsDimension(
     std::vector<realtype> const& input, char const* fieldname
 ) const {
-    if (input.size() != static_cast<unsigned>(nmaxevent_) * nztrue_ && !input.empty())
+    if (input.size() != static_cast<unsigned>(nmaxevent_) * nztrue_
+        && !input.empty())
         throw AmiException(
             "Input %s did not match dimensions nt (%i) x nytrue (%i), was %i",
             fieldname, nmaxevent_, nztrue_, input.size()

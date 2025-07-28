@@ -89,7 +89,9 @@ void Model_ODE::froot(
     froot(t, x.getNVector(), root);
 }
 
-void Model_ODE::froot(realtype const t, const_N_Vector x, gsl::span<realtype> root) {
+void Model_ODE::froot(
+    realtype const t, const_N_Vector x, gsl::span<realtype> root
+) {
     auto const x_pos = computeX_pos(x);
     std::ranges::fill(root, 0.0);
     froot(

@@ -631,7 +631,9 @@ void IDASolver::getQuad(realtype& t) const {
         throw IDAException(status, "IDAGetQuad");
 }
 
-void IDASolver::getQuadDkyB(realtype const t, int const k, int const which) const {
+void IDASolver::getQuadDkyB(
+    realtype const t, int const k, int const which
+) const {
     int status = IDAGetQuadDky(
         IDAGetAdjIDABmem(solver_memory_.get(), which), t, k, xQB_.getNVector()
     );

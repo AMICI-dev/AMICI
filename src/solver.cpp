@@ -813,7 +813,9 @@ double Solver::getNewtonDampingFactorLowerBound() const {
     return newton_damping_factor_lower_bound_;
 }
 
-void Solver::setNewtonDampingFactorLowerBound(double const dampingFactorLowerBound) {
+void Solver::setNewtonDampingFactorLowerBound(
+    double const dampingFactorLowerBound
+) {
     newton_damping_factor_lower_bound_ = dampingFactorLowerBound;
 }
 

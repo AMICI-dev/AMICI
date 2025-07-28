@@ -135,7 +135,8 @@ std::unique_ptr<ExpData> readSimulationExpData(
         }
 
         if (locationExists(file, hdf5Root + "/Sigma_Y")) {
-            auto const sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
+            auto const sigmay
+                = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
             edata->setObservedDataStdDev(sigmay);
         } else {

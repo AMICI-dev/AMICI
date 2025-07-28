@@ -41,7 +41,8 @@ double getUnscaledParameter(
 
 void unscaleParameters(
     gsl::span<realtype const> const bufferScaled,
-    gsl::span<ParameterScaling const> const pscale, gsl::span<realtype> const bufferUnscaled
+    gsl::span<ParameterScaling const> const pscale,
+    gsl::span<realtype> const bufferUnscaled
 ) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
@@ -52,7 +53,9 @@ void unscaleParameters(
     }
 }
 
-double getScaledParameter(double const unscaledParameter, ParameterScaling const scaling) {
+double getScaledParameter(
+    double const unscaledParameter, ParameterScaling const scaling
+) {
     switch (scaling) {
     case ParameterScaling::log10:
         return log10(unscaledParameter);
@@ -67,7 +70,8 @@ double getScaledParameter(double const unscaledParameter, ParameterScaling const
 
 void scaleParameters(
     gsl::span<realtype const> const bufferUnscaled,
-    gsl::span<ParameterScaling const> const pscale, gsl::span<realtype> const bufferScaled
+    gsl::span<ParameterScaling const> const pscale,
+    gsl::span<realtype> const bufferScaled
 ) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
@@ -127,7 +131,8 @@ std::string backtraceString(int const maxFrames, int const first_frame) {
     return trace_buf.str();
 }
 
-std::string regexErrorToString(std::regex_constants::error_type const err_type) {
+std::string
+regexErrorToString(std::regex_constants::error_type const err_type) {
     switch (err_type) {
     case std::regex_constants::error_collate:
         return "error_collate";
@@ -177,7 +182,8 @@ std::string printfToString(char const* fmt, va_list ap) {
     return str;
 }
 
-std::pair<size_t, size_t> unravel_index(size_t const flat_idx, size_t const num_cols) {
+std::pair<size_t, size_t>
+unravel_index(size_t const flat_idx, size_t const num_cols) {
     return {flat_idx / num_cols, flat_idx % num_cols};
 }
 

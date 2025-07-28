@@ -72,7 +72,9 @@ class AmiVector {
      * @param rvec vector from which the data will be copied
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(gsl::span<realtype const> const rvec, SUNContext const sunctx)
+    explicit AmiVector(
+        gsl::span<realtype const> const rvec, SUNContext const sunctx
+    )
         : AmiVector(std::vector(rvec.begin(), rvec.end()), sunctx) {}
 
     /**
