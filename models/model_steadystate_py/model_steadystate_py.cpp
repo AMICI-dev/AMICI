@@ -1,9 +1,7 @@
 #include <amici/defines.h>
 #include <array>
 
-namespace amici {
-
-namespace model_model_steadystate_py {
+namespace amici::model_model_steadystate_py {
 
 // clang-format off
 
@@ -81,6 +79,4 @@ std::array<int, 3> stateIdxsSolver = {
 
 // clang-format on
 
-} // namespace model_model_steadystate_py
-
-} // namespace amici
+} // namespace amici::model_model_steadystate_py

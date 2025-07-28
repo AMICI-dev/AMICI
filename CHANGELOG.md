@@ -4,6 +4,76 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.34.0 (2025-07-29)
+
+This will probably be the last release to include the MATLAB interface.
+
+**Fixes**
+
+* **Breaking changes** Events are now also handled during pre-equilibration,
+  presimulation, and post-equilibration.
+  This may be a breaking change, as it may lead to different results for models
+  with events that may trigger during these periods. This change is
+  considered a bugfix, as it was not intended to ignore events during these
+  periods.
+
+  (by @dweindl in #2777, #2780, #2859, #2881, #2889, #2920, #2921, #2925)
+* Fixed various issues related to adjoint sensitivity analysis for models with
+  events.
+  While many cases are now supported, it is still highly recommended to
+  check the ASA results for models with events against forward sensitivities
+  or finite differences.
+  * Adjoint sensitivities for Python-imported models with events
+    (by @paulstapor & @dweindl in https://github.com/AMICI-dev/AMICI/pull/1539)
+  * Fix Model::addAdjointQuadratureEventUpdate
+    (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2787)
+  * Fix indexing errors for adjoint quadratures during event updates
+    (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2796)
+  * Fix deltaxB dimensions (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2803)
+  * Fix (some) ASA event handling (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2797)
+* Fixed a number of issues related to the handling of events or discontinuities
+  in general:
+  * Fixed import of DAE models with events (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2897)
+  * Fixed root functions for events with initialValue=trigger=false (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2910)
+  * Fixed check for sign change, fix Heaviside update (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2927)
+* Fixed sign of residuals (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2896)
+* Updated the steady state notebook to match the current implementation
+  (by @plakrisenko & @dweindl in https://github.com/AMICI-dev/AMICI/pull/2891)
+* Improved sigma<=0 error reporting (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2829)
+* Fixed sensitivities for the total abundances of conservation laws
+  (only relevant if `AMICI_EXPERIMENTAL_SBML_NONCONST_CLS` is enabled)
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2782)
+* Fix sensitivities w.r.t. unused log-scaled NaN parameters (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2903)
+
+**Features**
+
+* AMICI should now be pip-installable without pre-installing SWIG or BLAS
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2774,
+  https://github.com/AMICI-dev/AMICI/pull/2772)
+* Event/discontinuity handling for JAX models
+  * Track discontinuities in JAX & fix gradient for models with parameter
+    dependent roots (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2815)
+  * Improve JAX event integration (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2841)
+  * mask event functions in jax (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2863)
+* Handle state-independent, parameter-dependent event triggers without root-finding
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2913)
+* Presimulation is now also supported in combination with adjoint sensitivities
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2786)
+* It is now possible to set a separate $t_0$ for pre-equilibration and main
+  simulation (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2793)
+* Sensitivity analysis for `AlgebraicRule` / DAE models is now also supported
+  for Python-imported models
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2101)
+* An optional random generator seed can now be passed to
+  `ExpData::ExpData(ReturnData const&, ...)` when generating synthetic
+  measurements (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2802)
+* Added `ReturnData::plist` (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2874)
+
+... and extended tests, documentation, and many changes under the hood.
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.33.0...v0.34.0
+
+
 ### v0.33.0 (2025-06-11)
 
 Note that this release requires Python >= 3.11.
