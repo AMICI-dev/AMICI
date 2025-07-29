@@ -1,9 +1,7 @@
 #include <amici/defines.h>
 #include <array>
 
-namespace amici {
-
-namespace model_model_neuron_py {
+namespace amici::model_model_neuron_py {
 
 // clang-format off
 
@@ -67,6 +65,4 @@ std::array<int, 2> stateIdxsSolver = {
 
 // clang-format on
 
-} // namespace model_model_neuron_py
-
-} // namespace amici
+} // namespace amici::model_model_neuron_py

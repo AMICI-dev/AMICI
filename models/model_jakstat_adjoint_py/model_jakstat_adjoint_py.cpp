@@ -1,9 +1,7 @@
 #include <amici/defines.h>
 #include <array>
 
-namespace amici {
-
-namespace model_model_jakstat_adjoint_py {
+namespace amici::model_model_jakstat_adjoint_py {
 
 // clang-format off
 
@@ -115,6 +113,4 @@ std::array<int, 9> stateIdxsSolver = {
 
 // clang-format on
 
-} // namespace model_model_jakstat_adjoint_py
-
-} // namespace amici
+} // namespace amici::model_model_jakstat_adjoint_py
