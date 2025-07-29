@@ -8,6 +8,7 @@ setuptools>=67.7.2
 #  for building the documentation, we don't care whether this fully works
 git+https://github.com/pysb/pysb@0afeaab385e9a1d813ecf6fdaf0153f4b91358af
 matplotlib>=3.7.1
+optax
 nbsphinx
 nbformat
 myst-parser

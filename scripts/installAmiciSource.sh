@@ -39,6 +39,7 @@ python -m pip install --upgrade pip wheel
 python -m pip install --upgrade pip setuptools cmake_build_extension==0.6.0 numpy petab swig
 python -m pip install git+https://github.com/pysb/pysb@master # for SPM with compartments
 python -m pip install git+https://github.com/patrick-kidger/diffrax@dev # for events with direction
+python -m pip install optax # for jax petab notebook
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
   python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis,jax]" --no-build-isolation
 deactivate
