@@ -308,35 +308,6 @@ if(AMICI_PYTHON_BUILD_EXT_ONLY)
 endif()
 
 # Create targets to make the sources show up in IDEs for convenience
-
-# For matlab interface
-if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
-
-  set(MATLAB_SOURCES
-      src/interface_matlab.cpp src/returndata_matlab.cpp
-      include/amici/interface_matlab.h include/amici/returndata_matlab.h)
-  find_package(Matlab)
-  # In case we can find Matlab, we create a respective library to compile the
-  # extension from cmake. Otherwise we just create a dummy target for the files
-  # to show up inside IDEs. (Set the Matlab_ROOT_DIR cmake variable if CMake
-  # cannot find your Matlab installation)
-  if(${Matlab_FOUND})
-    add_library(matlabInterface ${MATLAB_SOURCES})
-    set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
-                                                     "${Matlab_INCLUDE_DIRS}")
-    target_link_libraries(matlabInterface PUBLIC amici)
-  else()
-    add_custom_target(
-      matlabInterface
-      SOURCES ${MATLAB_SOURCES}
-      COMMENT "Dummy target for MATLAB interface files")
-  endif()
-  set_property(
-    TARGET matlabInterface
-    APPEND
-    PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-endif()
-
 # For template files
 add_custom_target(
   fileTemplates

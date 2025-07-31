@@ -19,7 +19,6 @@ ipython>=8.13.2
 breathe>=4.35.0
 exhale>=0.3.7
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
-sphinxcontrib-matlabdomain>=0.20.0
 sphinxcontrib-napoleon>=0.7
 pygments>=2.15.1
 Jinja2>=3.1.6

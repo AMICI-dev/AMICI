@@ -947,10 +947,8 @@ WARN_LOGFILE           =
 
 INPUT                  = "_SourceDir_/README.md" \
                          "_SourceDir_/LICENSE.md" \
-                         "_SourceDir_/doc/MATLAB_.md" \
                          "_SourceDir_/doc/CPP_.md" \
-                         "_SourceDir_/include" \
-                         "_SourceDir_/matlab"
+                         "_SourceDir_/include"
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1040,11 +1038,6 @@ EXCLUDE_PATTERNS       = "_SourceDir_/models/*" \
                          "_SourceDir_/tests/*" \
                          "_SourceDir_/scripts/*" \
                          "_SourceDir_/ThirdParty/*" \
-                         "_SourceDir_/matlab/examples/*" \
-                         "_SourceDir_/matlab/mtoc/*" \
-                         "_SourceDir_/matlab/auxiliary/*" \
-                         "_SourceDir_/matlab/SBMLimporter/*" \
-                         "_SourceDir_/matlab/tests/*" \
                          "_SourceDir_/python/tests/*" \
                          "_SourceDir_/python/sdist/*" \
                          "_SourceDir_/python/examples/example_*/model_*" \
@@ -1127,7 +1120,7 @@ INPUT_FILTER           =
 # need to set EXTENSION_MAPPING for the extension otherwise the files are not
 # properly processed by doxygen.
 
-FILTER_PATTERNS        = "*.m=_MTOCFILTER_"
+# FILTER_PATTERNS        = "*.m=_MTOCFILTER_"
 
 # If the FILTER_SOURCE_FILES tag is set to YES, the input filter (if set using
 # INPUT_FILTER) will also be used to filter the input files that are used for
@@ -1330,7 +1323,7 @@ HTML_FOOTER            =
 # obsolete.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_STYLESHEET        = _ConfDir_/customdoxygen.css
+# HTML_STYLESHEET        = _ConfDir_/customdoxygen.css
 
 # The HTML_EXTRA_STYLESHEET tag can be used to specify additional user-defined
 # cascading style sheets that are included after the standard style sheets
@@ -1971,7 +1964,7 @@ PAPER_TYPE             = a4
 # If left blank no extra packages will be included.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-EXTRA_PACKAGES         = "_LatexExtras_"
+# EXTRA_PACKAGES         = "_LatexExtras_"
 
 # The LATEX_HEADER tag can be used to specify a user-defined LaTeX header for
 # the generated LaTeX document. The header should contain everything until the

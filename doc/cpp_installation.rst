@@ -8,9 +8,8 @@ The following section describes building the AMICI C++ library:
 .. note::
 
    The AMICI C++ interface only supports simulation of models imported using
-   the :ref:`Python interface <python_interface>` and
-   :ref:`Matlab interface <matlab_interface>`. It cannot be used for model
-   import itself.
+   the :ref:`Python interface <python_interface>`.
+   It cannot be used for model import itself.
 
 Prerequisites:
 
