@@ -1,0 +1,94 @@
+{% set name = "amici" %}
+{% set version = "0.34.0" %}
+{% set python_min = "3.11" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/amici-{{ version }}.tar.gz
+  sha256: 8b68f8a244c267ecdb92fd50e8031aa7b89a7f01674a7b3c3170f9618e7a7d31
+
+build:
+  skip: true  # [py<311]
+  entry_points:
+    - amici_import_petab = amici.petab.cli.import_petab:_main
+    - amici_import_petab.py = amici.petab.cli.import_petab:_main
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - {{ compiler('c') }}
+#    - {{ stdlib("c") }}
+  host:
+    - python {{ python_min }}
+    - setuptools >=77
+    - wheel
+    - numpy >=2.0
+    - cmake-build-extension ==0.6.0
+    - libblas * *openblas
+    - openblas-ilp64
+    - swig>=4
+    - pip
+  run:
+    - python {{ python_min }}
+    - cmake-build-extension ==0.6.0
+    - libblas * *openblas
+    - openblas-ilp64
+    - sympy >=1.12.1
+    - python-libsbml
+    - pandas >=2.0.2
+    - pyarrow
+    - sbmlmath >=0.4.0
+    - toposort
+    - setuptools >=48
+    - mpmath
+    - swig
+    - {{ pin_compatible('numpy') }}
+
+test:
+  imports:
+    - SuiteSparse
+    - amici
+    - sundials
+  commands:
+    - pip check
+    - amici_import_petab --help
+    - amici_import_petab.py --help
+  requires:
+    - pip
+
+about:
+  home: https://github.com/amici-dev/amici
+  summary: Advanced multi-language Interface to CVODES and IDAS
+  license: BSD-3-Clause AND Apache-2.0
+  license_file:
+    - LICENSE.md
+    - amici/ThirdParty/SuiteSparse/LICENSE.txt
+    - amici/ThirdParty/SuiteSparse/BTF/Doc/License.txt
+    - amici/ThirdParty/SuiteSparse/KLU/Doc/License.txt
+    - amici/ThirdParty/SuiteSparse/COLAMD/Doc/License.txt
+    - amici/ThirdParty/SuiteSparse/AMD/Doc/License.txt
+    - amici/ThirdParty/sundials/LICENSE
+    - amici/ThirdParty/sundials/NOTICE
+    - amici/ThirdParty/sundials/src/idas/LICENSE
+    - amici/ThirdParty/sundials/src/idas/NOTICE
+    - amici/ThirdParty/sundials/src/cvodes/LICENSE
+    - amici/ThirdParty/sundials/src/cvodes/NOTICE
+  description: |
+    AMICI provides a multi-language (Python, C++, Matlab) interface for the
+    SUNDIALS solvers CVODES (for ordinary differential equations) and IDAS
+    (for algebraic differential equations). AMICI allows the user to read
+    differential equation models specified as SBML or PySB and automatically
+    compiles such models into .mex simulation files (Matlab), C++ executables
+    or Python modules.
+  doc_url: https://amici.readthedocs.io/en/latest/
+  dev_url: https://github.com/amici-dev/amici
+
+extra:
+  recipe-maintainers:
+    - kaiserls
+    - dweindl

@@ -1,0 +1,114 @@
+{% set name = "amici" %}
+{% set version = "0.34.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 8b68f8a244c267ecdb92fd50e8031aa7b89a7f01674a7b3c3170f9618e7a7d31
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+  skip: true  # [win or py<37]
+  script_env:
+    - BLAS_LIBS="-lopenblas"
+
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - numpy>=2.0
+    - pip
+    - setuptools>=77
+    - cmake-build-extension==0.6.0
+    - python>=3.11
+    - swig>=4
+    - _openmp_mutex
+    - libstdcxx-ng
+    - libgcc-ng
+    - pandas>=2.0.2
+    - sympy>=1.12.1
+    - openblas
+    - boost
+    - hdf5
+    - pkg-config
+    - libxml2
+    - libxslt
+  host:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - numpy>=2.0
+    - pip
+    - setuptools>=77
+    - cmake-build-extension==0.6.0
+    - python>=3.11
+    - swig>=4
+    - _openmp_mutex
+    - libstdcxx-ng
+    - libgcc-ng
+    - pandas>=2.0.2
+    - sympy>=1.12.1
+    - openblas
+    - boost
+    - hdf5
+    - pkg-config
+    - libxml2
+    - libxslt
+  run:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - numpy>=2.0
+    - pip
+    - python>=3.11
+    - swig>=4
+    - _openmp_mutex
+    - libstdcxx-ng
+    - libgcc-ng
+    - pandas>=2.0.2
+    - sympy>=1.12.1
+    - libopenblas
+    - libboost
+    - libgomp
+    - hdf5
+    - pkg-config
+    - libxml2
+    - libxslt
+    - libpython
+test:
+  requires:
+    - python-libsbml
+    - sbmlmath
+    - toposort
+    - wurlitzer
+    - pandas
+  imports:
+    - amici
+    - amici.amici
+  commands:
+    - python -m amici
+
+about:
+  home: https://github.com/amici-dev/amici
+  license: BSD-3-Clause
+  license_family: BSD
+  #license_file: LICENSE.txt
+  summary: 'Advanced Multilanguage Interface to CVODES and IDAS'
+
+  # The remaining entries in this section are optional, but recommended.
+  description: |
+    AMICI provides a multi-language (Python, C++, Matlab) interface for the
+    SUNDIALS solvers CVODES (for ordinary differential equations) and IDAS
+    (for algebraic differential equations). AMICI allows the user to read
+    differential equation models specified as SBML or PySB and automatically
+    compiles such models into .mex simulation files (Matlab), C++ executables
+    or Python modules.
+  doc_url: https://amici.readthedocs.io/en/latest/
+  dev_url: https://github.com/amici-dev/amici
+
+extra:
+  recipe-maintainers:
+    - dweindl
