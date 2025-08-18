@@ -1116,3 +1116,13 @@
    fun:PyUFunc_AddLoopFromSpec_int
    ...
 }
+
+{
+   pybind11
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:_ZN8pybind1112cpp_function18initialize_genericEOSt10unique_ptrINS_6detail15function_recordENS0_33InitializingFunctionRecordDeleterEEPKcPKPKSt9type_infom
+   ...
+}
