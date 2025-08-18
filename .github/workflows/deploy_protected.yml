@@ -41,7 +41,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git archive -o container/amici.tar.gz --format=tar.gz HEAD
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3

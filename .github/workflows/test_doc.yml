@@ -26,7 +26,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git fetch --prune --unshallow
 
     - name: Set up doxygen
@@ -49,7 +49,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: git fetch --prune --unshallow
 
       - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
