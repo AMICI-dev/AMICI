@@ -1386,15 +1386,20 @@ class SbmlImporter:
         # Parameters that need to be turned into expressions or species
         #  so far, this concerns parameters with symbolic initial assignments
         #  (those have been skipped above) that are not rate rule targets
+
+        # Set of symbols in initial assignments that still allows handling them
+        #  via amici expressions
+        syms_allowed_in_expr_ia = set(self.symbols[SymbolId.PARAMETER]) | set(
+            self.symbols[SymbolId.PARAMETER]
+        )
+
         for par in self.sbml.getListOfParameters():
             if (
                 (ia := par_id_to_ia.get(par.getId())) is not None
                 and not ia.is_Number
                 and not self.is_rate_rule_target(par)
             ):
-                if not ia.has(sbml_time_symbol) and not (
-                    ia.free_symbols - set(self.symbols[SymbolId.PARAMETER])
-                ):
+                if not (ia.free_symbols - syms_allowed_in_expr_ia):
                     self.symbols[SymbolId.EXPRESSION][
                         _get_identifier_symbol(par)
                     ] = {
@@ -1522,12 +1527,21 @@ class SbmlImporter:
         )
 
         # expressions must not occur in definition of x0
+        allowed_syms = (
+            set(self.symbols[SymbolId.PARAMETER])
+            | set(self.symbols[SymbolId.FIXED_PARAMETER])
+            | {amici_time_symbol}
+        )
         for species in self.symbols[SymbolId.SPECIES].values():
-            species["init"] = self._make_initial(
-                smart_subs_dict(
-                    species["init"], self.symbols[SymbolId.EXPRESSION], "value"
+            # only parameters are allowed as free symbols
+            while species["init"].free_symbols - allowed_syms:
+                species["init"] = self._make_initial(
+                    smart_subs_dict(
+                        species["init"],
+                        self.symbols[SymbolId.EXPRESSION],
+                        "value",
+                    )
                 )
-            )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
         formula = self._sympify(rule)
