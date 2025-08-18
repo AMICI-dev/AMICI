@@ -31,7 +31,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         lfs: true
     - run: git fetch --prune --unshallow
@@ -140,7 +140,7 @@ jobs:
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -223,7 +223,7 @@ jobs:
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -254,7 +254,7 @@ jobs:
       with:
         python-version: "3.11"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         lfs: true
 
@@ -319,7 +319,7 @@ jobs:
       with:
         python-version: "3.11"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         lfs: true
     - run: git fetch --prune --unshallow
