@@ -1392,7 +1392,9 @@ class SbmlImporter:
                 and not ia.is_Number
                 and not self.is_rate_rule_target(par)
             ):
-                if not ia.has(sbml_time_symbol):
+                if not ia.has(sbml_time_symbol) and not (
+                    ia.free_symbols - set(self.symbols[SymbolId.PARAMETER])
+                ):
                     self.symbols[SymbolId.EXPRESSION][
                         _get_identifier_symbol(par)
                     ] = {
@@ -1407,6 +1409,10 @@ class SbmlImporter:
                     #  We can't represent that as expression, since the
                     #  initial simulation time is only known at the time of the
                     #  simulation, so we can't substitute it.
+                    # Also, any parameter with an initial assignment
+                    #  that expression that is implicitly time-dependent
+                    #  must be converted to a species to avoid re-evaluating
+                    #  the initial assignment at every time step.
                     self.symbols[SymbolId.SPECIES][
                         _get_identifier_symbol(par)
                     ] = {
