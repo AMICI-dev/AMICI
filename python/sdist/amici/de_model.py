@@ -455,12 +455,21 @@ class DEModel:
             self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
         # replace rateOf-instances in x0 by xdot equation
+        made_substitutions = False
         for i_state in range(len(self.eq("x0"))):
             new, replacement = self._eqs["x0"][i_state].replace(
                 rate_of_func, get_rate, map=True
             )
             if replacement:
                 self._eqs["x0"][i_state] = new
+                made_substitutions = True
+        if made_substitutions:
+            # replace any newly introduced state variables
+            #  by their x0 expressions
+            subs = toposort_symbols(
+                dict(zip(self.sym("x_rdata"), self.eq("x0"), strict=True))
+            )
+            self._eqs["x0"] = smart_subs_dict(self.eq("x0"), subs)
 
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w

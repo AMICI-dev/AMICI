@@ -1526,7 +1526,7 @@ class SbmlImporter:
             self.symbols[SymbolId.EXPRESSION], "value"
         )
 
-        # expressions must not occur in definition of x0
+        # expressions must not occur in the definition of x0
         allowed_syms = (
             set(self.symbols[SymbolId.PARAMETER])
             | set(self.symbols[SymbolId.FIXED_PARAMETER])
@@ -1534,7 +1534,15 @@ class SbmlImporter:
         )
         for species in self.symbols[SymbolId.SPECIES].values():
             # only parameters are allowed as free symbols
-            while species["init"].free_symbols - allowed_syms:
+            while True:
+                sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
+                if (
+                    sym_math.free_symbols
+                    - allowed_syms
+                    - set(rateof_to_dummy.values())
+                    == set()
+                ):
+                    break
                 species["init"] = self._make_initial(
                     smart_subs_dict(
                         species["init"],
