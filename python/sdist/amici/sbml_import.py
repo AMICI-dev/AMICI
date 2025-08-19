@@ -1390,7 +1390,7 @@ class SbmlImporter:
         # Set of symbols in initial assignments that still allows handling them
         #  via amici expressions
         syms_allowed_in_expr_ia = set(self.symbols[SymbolId.PARAMETER]) | set(
-            self.symbols[SymbolId.PARAMETER]
+            self.symbols[SymbolId.FIXED_PARAMETER]
         )
 
         for par in self.sbml.getListOfParameters():
@@ -1530,13 +1530,15 @@ class SbmlImporter:
         allowed_syms = (
             set(self.symbols[SymbolId.PARAMETER])
             | set(self.symbols[SymbolId.FIXED_PARAMETER])
-            | {amici_time_symbol}
+            | {sbml_time_symbol}
         )
         for species in self.symbols[SymbolId.SPECIES].values():
             species["init"] = species["init"].subs(self.compartments)
             # only parameters are allowed as free symbols
+            old_init = None
             while True:
                 sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
+                old_init = species["init"]
                 if (
                     sym_math.free_symbols
                     - allowed_syms
@@ -1551,6 +1553,10 @@ class SbmlImporter:
                         "value",
                     )
                 )
+                if species["init"] == old_init:
+                    raise AssertionError(
+                        "Infinite loop detected in _process_rules."
+                    )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
         formula = self._sympify(rule)
