@@ -1533,10 +1533,9 @@ class SbmlImporter:
             | {sbml_time_symbol}
         )
         for species in self.symbols[SymbolId.SPECIES].values():
-            species["init"] = species["init"].subs(self.compartments)
             # only parameters are allowed as free symbols
-            old_init = None
             while True:
+                species["init"] = species["init"].subs(self.compartments)
                 sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
                 old_init = species["init"]
                 if (
@@ -1555,7 +1554,7 @@ class SbmlImporter:
                 )
                 if species["init"] == old_init:
                     raise AssertionError(
-                        "Infinite loop detected in _process_rules."
+                        f"Infinite loop detected in _process_rules {species}."
                     )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
@@ -2393,6 +2392,10 @@ class SbmlImporter:
             elif var in self.symbols[SymbolId.SPECIES]:
                 sym_math = sym_math.subs(
                     var, self.symbols[SymbolId.SPECIES][var]["init"]
+                )
+            elif var in self.symbols[SymbolId.ALGEBRAIC_STATE]:
+                sym_math = sym_math.subs(
+                    var, self.symbols[SymbolId.ALGEBRAIC_STATE][var]["init"]
                 )
             elif (
                 element := self.sbml.getElementBySId(element_id)

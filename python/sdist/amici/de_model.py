@@ -454,23 +454,6 @@ class DEModel:
             )
             self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
-        # replace rateOf-instances in x0 by xdot equation
-        made_substitutions = False
-        for i_state in range(len(self.eq("x0"))):
-            new, replacement = self._eqs["x0"][i_state].replace(
-                rate_of_func, get_rate, map=True
-            )
-            if replacement:
-                self._eqs["x0"][i_state] = new
-                made_substitutions = True
-        if made_substitutions:
-            # replace any newly introduced state variables
-            #  by their x0 expressions
-            subs = toposort_symbols(
-                dict(zip(self.sym("x_rdata"), self.eq("x0"), strict=True))
-            )
-            self._eqs["x0"] = smart_subs_dict(self.eq("x0"), subs)
-
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w
         made_substitutions = False
@@ -517,6 +500,26 @@ class DEModel:
             self._expressions = [self._expressions[i] for i in new_order]
             self._syms["w"] = sp.Matrix(topo_expr_syms)
             self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
+
+        # replace rateOf-instances in x0 by xdot equation
+        made_substitutions = False
+        for i_state in range(len(self.eq("x0"))):
+            new, replacement = self._eqs["x0"][i_state].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["x0"][i_state] = new
+                made_substitutions = True
+        if made_substitutions:
+            # Replace any newly introduced state variables
+            #  by their x0 expressions.
+            # Also replace any newly introduced `w` symbols by their
+            #  expressions (after `w` was toposorted above).
+            subs = toposort_symbols(
+                dict(zip(self.sym("x_rdata"), self.eq("x0"), strict=True))
+            )
+            subs = dict(zip(self._syms["w"], self.eq("w"), strict=True)) | subs
+            self._eqs["x0"] = smart_subs_dict(self.eq("x0"), subs)
 
         for component in chain(
             self.observables(),
