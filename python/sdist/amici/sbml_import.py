@@ -1533,6 +1533,7 @@ class SbmlImporter:
             | {amici_time_symbol}
         )
         for species in self.symbols[SymbolId.SPECIES].values():
+            species["init"] = species["init"].subs(self.compartments)
             # only parameters are allowed as free symbols
             while True:
                 sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
