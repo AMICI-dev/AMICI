@@ -1386,13 +1386,20 @@ class SbmlImporter:
         # Parameters that need to be turned into expressions or species
         #  so far, this concerns parameters with symbolic initial assignments
         #  (those have been skipped above) that are not rate rule targets
+
+        # Set of symbols in initial assignments that still allows handling them
+        #  via amici expressions
+        syms_allowed_in_expr_ia = set(self.symbols[SymbolId.PARAMETER]) | set(
+            self.symbols[SymbolId.FIXED_PARAMETER]
+        )
+
         for par in self.sbml.getListOfParameters():
             if (
                 (ia := par_id_to_ia.get(par.getId())) is not None
                 and not ia.is_Number
                 and not self.is_rate_rule_target(par)
             ):
-                if not ia.has(sbml_time_symbol):
+                if not (ia.free_symbols - syms_allowed_in_expr_ia):
                     self.symbols[SymbolId.EXPRESSION][
                         _get_identifier_symbol(par)
                     ] = {
@@ -1407,6 +1414,10 @@ class SbmlImporter:
                     #  We can't represent that as expression, since the
                     #  initial simulation time is only known at the time of the
                     #  simulation, so we can't substitute it.
+                    # Also, any parameter with an initial assignment
+                    #  that expression that is implicitly time-dependent
+                    #  must be converted to a species to avoid re-evaluating
+                    #  the initial assignment at every time step.
                     self.symbols[SymbolId.SPECIES][
                         _get_identifier_symbol(par)
                     ] = {
@@ -1515,13 +1526,36 @@ class SbmlImporter:
             self.symbols[SymbolId.EXPRESSION], "value"
         )
 
-        # expressions must not occur in definition of x0
+        # expressions must not occur in the definition of x0
+        allowed_syms = (
+            set(self.symbols[SymbolId.PARAMETER])
+            | set(self.symbols[SymbolId.FIXED_PARAMETER])
+            | {sbml_time_symbol}
+        )
         for species in self.symbols[SymbolId.SPECIES].values():
-            species["init"] = self._make_initial(
-                smart_subs_dict(
-                    species["init"], self.symbols[SymbolId.EXPRESSION], "value"
+            # only parameters are allowed as free symbols
+            while True:
+                species["init"] = species["init"].subs(self.compartments)
+                sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
+                old_init = species["init"]
+                if (
+                    sym_math.free_symbols
+                    - allowed_syms
+                    - set(rateof_to_dummy.values())
+                    == set()
+                ):
+                    break
+                species["init"] = self._make_initial(
+                    smart_subs_dict(
+                        species["init"],
+                        self.symbols[SymbolId.EXPRESSION],
+                        "value",
+                    )
                 )
-            )
+                if species["init"] == old_init:
+                    raise AssertionError(
+                        f"Infinite loop detected in _process_rules {species}."
+                    )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
         formula = self._sympify(rule)
@@ -2358,6 +2392,10 @@ class SbmlImporter:
             elif var in self.symbols[SymbolId.SPECIES]:
                 sym_math = sym_math.subs(
                     var, self.symbols[SymbolId.SPECIES][var]["init"]
+                )
+            elif var in self.symbols[SymbolId.ALGEBRAIC_STATE]:
+                sym_math = sym_math.subs(
+                    var, self.symbols[SymbolId.ALGEBRAIC_STATE][var]["init"]
                 )
             elif (
                 element := self.sbml.getElementBySId(element_id)
