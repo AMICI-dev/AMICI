@@ -4,6 +4,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.34.1 (2025-08-25)
+
+Bugfix release.
+
+* Fixed a bug that would lead to incorrect model initialization in SBML models
+  with initial assignments that depend on dynamic entities
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2939)
+
 ### v0.34.0 (2025-07-29)
 
 This will probably be the last release to include the MATLAB interface.
