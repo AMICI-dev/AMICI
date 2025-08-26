@@ -502,15 +502,16 @@ class DEModel:
             self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
 
         # replace rateOf-instances in x0 by xdot equation
-        made_substitutions = False
+        # indices of state variables whose x0 was modified
+        changed_indices = []
         for i_state in range(len(self.eq("x0"))):
             new, replacement = self._eqs["x0"][i_state].replace(
                 rate_of_func, get_rate, map=True
             )
             if replacement:
                 self._eqs["x0"][i_state] = new
-                made_substitutions = True
-        if made_substitutions:
+                changed_indices.append(i_state)
+        if changed_indices:
             # Replace any newly introduced state variables
             #  by their x0 expressions.
             # Also replace any newly introduced `w` symbols by their
@@ -519,7 +520,10 @@ class DEModel:
                 dict(zip(self.sym("x_rdata"), self.eq("x0"), strict=True))
             )
             subs = dict(zip(self._syms["w"], self.eq("w"), strict=True)) | subs
-            self._eqs["x0"] = smart_subs_dict(self.eq("x0"), subs)
+            for i_state in changed_indices:
+                self._eqs["x0"][i_state] = smart_subs_dict(
+                    self._eqs["x0"][i_state], subs
+                )
 
         for component in chain(
             self.observables(),
