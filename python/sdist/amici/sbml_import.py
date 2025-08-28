@@ -1526,14 +1526,14 @@ class SbmlImporter:
             self.symbols[SymbolId.EXPRESSION], "value"
         )
 
-        # expressions must not occur in the definition of x0
+        # substitute symbols that must not occur in the definition of x0
+        # allowed symbols: amici model parameters and time
         allowed_syms = (
             set(self.symbols[SymbolId.PARAMETER])
             | set(self.symbols[SymbolId.FIXED_PARAMETER])
             | {sbml_time_symbol}
         )
         for species in self.symbols[SymbolId.SPECIES].values():
-            # only parameters are allowed as free symbols
             while True:
                 species["init"] = species["init"].subs(self.compartments)
                 sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
@@ -2403,6 +2403,18 @@ class SbmlImporter:
                 # no need to recurse here, as value is numeric
                 init = sp.Float(element.getValue())
                 sym_math = sym_math.subs(var, init)
+            elif spline := [spl for spl in self.splines if spl.sbml_id == var]:
+                # x0 must not depend on splines -- substitute
+                assert len(spline) == 1
+                spline = spline[0]
+                if spline.evaluate_at != sbml_time_symbol:
+                    raise NotImplementedError(
+                        "AMICI at the moment does not support splines "
+                        "whose evaluation point is not the model time."
+                    )
+                sym_math = sym_math.subs(
+                    var, spline.evaluate(sbml_time_symbol)
+                )
 
         sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 
