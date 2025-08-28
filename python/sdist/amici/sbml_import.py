@@ -3048,7 +3048,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        return a is not None and self._sympify(a) is not None
+        return a is not None and a.getMath() is not None
 
     def is_rate_rule_target(self, element: libsbml.SBase) -> bool:
         """
@@ -3062,7 +3062,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getRateRuleByVariable(element.getId())
-        return a is not None and self._sympify(a) is not None
+        return a is not None and a.getMath() is not None
 
     def _transform_dxdt_to_concentration(
         self, species_id: sp.Symbol, dxdt: sp.Expr
