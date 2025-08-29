@@ -1570,7 +1570,13 @@ class SbmlImporter:
         # completely determined by other constructs in the model"
         # find those elements:
         for symbol in formula.free_symbols:
+            if symbol == sbml_time_symbol:
+                continue
             sbml_var = self.sbml.getElementBySId(str(symbol))
+            if sbml_var is None:
+                raise SBMLException(
+                    f"Algebraic rule references unexpected symbol '{symbol}'."
+                )
             # This means that at least this entity must
             # not have the attribute constant=“true”
             if sbml_var.isSetConstant() and sbml_var.getConstant():
