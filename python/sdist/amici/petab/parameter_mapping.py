@@ -384,7 +384,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            mapping_df=petab_problem.mapping_df,
+            # mapping_df=petab_problem.mapping_df,
             model=petab_problem.model,
             simulation_conditions=simulation_conditions,
             fill_fixed_parameters=fill_fixed_parameters,
@@ -393,6 +393,8 @@ def create_parameter_mapping(
             ),
         )
     )
+
+    # ?? put mappings in later ?? after mapping for condition ?? will there be a performance regression as a result ??
 
     parameter_mapping = ParameterMapping()
     for (_, condition), prelim_mapping_for_condition in zip(
@@ -584,6 +586,26 @@ def create_parameter_mapping_for_condition(
         condition,
     )
     logger.debug(f"Merged: {condition_map_sim_var}")
+
+    # ?? right place for static hybridization here ??
+
+    if "sciml" in petab_problem.extensions_config:
+        hybridizations = [
+            pd.read_csv(hf, sep="\t")
+            for hf in petab_problem.extensions_config["sciml"][
+                "hybridization_files"
+            ]
+        ]
+        hybridization_df = pd.concat(hybridizations)
+        for net_id, config in petab_problem.extensions_config["sciml"][
+            "neural_nets"
+        ].items():
+            if config["static"]:
+                for _, row in hybridization_df.iterrows():
+                    if row["targetValue"].startswith(net_id):
+                        condition_map_sim_var[row["targetId"]] = row[
+                            "targetValue"
+                        ]
 
     parameter_mapping_for_condition = ParameterMappingForCondition(
         map_preeq_fix=condition_map_preeq_fix,

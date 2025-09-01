@@ -50,9 +50,7 @@ ude_cases_dir = cases_dir / "hybrid"
 
 def _reshape_flat_array(array_flat):
     array_flat["ix"] = array_flat["ix"].astype(str)
-    ix_cols = [
-        f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))
-    ]
+    ix_cols = [f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))]
     if len(ix_cols) == 1:
         array_flat[ix_cols[0]] = array_flat["ix"].apply(int)
     else:
@@ -66,9 +64,7 @@ def _reshape_flat_array(array_flat):
     return array
 
 
-@pytest.mark.parametrize(
-    "test", sorted([d.stem for d in net_cases_dir.glob("[0-9]*")])
-)
+@pytest.mark.parametrize("test", sorted([d.stem for d in net_cases_dir.glob("[0-9]*")]))
 def test_net(test):
     test_dir = net_cases_dir / test
     with open(test_dir / "solutions.yaml") as f:
@@ -128,9 +124,7 @@ def test_net(test):
                     w = par["parameters"][ml_model.nn_model_id][layer]["weight"][:]
                     if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
                         # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-                        w = np.flip(
-                            w, axis=tuple(range(2, w.ndim))
-                        ).swapaxes(0, 1)
+                        w = np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(0, 1)
                     assert w.shape == net.layers[layer].weight.shape
                     net = eqx.tree_at(
                         lambda x: x.layers[layer].weight,
@@ -176,9 +170,7 @@ def test_net(test):
             )
 
 
-@pytest.mark.parametrize(
-    "test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")])
-)
+@pytest.mark.parametrize("test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")]))
 def test_ude(test):
     test_dir = ude_cases_dir / test
     with open(test_dir / "petab" / "problem.yaml") as f:
@@ -202,8 +194,16 @@ def test_ude(test):
 
     # llh
     if test in (
+        # ?? cases where nn part of observable formula ??
         "004",
-        "016",
+        "009",
+        "012",
+        "013",
+        "018",
+        "020",
+        "022",
+        "025",
+        "028",
     ):
         with pytest.raises(NotImplementedError):
             run_simulations(jax_problem)
@@ -260,13 +260,9 @@ def test_ude(test):
             )
         else:
             expected = h5py.File(test_dir / file, "r")
-            for layer_name, layer in jax_problem.model.nns[
-                component
-            ].layers.items():
+            for layer_name, layer in jax_problem.model.nns[component].layers.items():
                 for attribute in dir(layer):
-                    if not isinstance(
-                        getattr(layer, attribute), jax.numpy.ndarray
-                    ):
+                    if not isinstance(getattr(layer, attribute), jax.numpy.ndarray):
                         continue
                     actual = getattr(
                         sllh.model.nns[component].layers[layer_name], attribute
@@ -281,7 +277,7 @@ def test_ude(test):
                         )
                     np.testing.assert_allclose(
                         actual,
-                        expected[layer_name][attribute][:],
+                        expected["parameters"][component][layer_name][attribute][:],
                         atol=solutions["tol_grad_llh"],
                         rtol=solutions["tol_grad_llh"],
                     )

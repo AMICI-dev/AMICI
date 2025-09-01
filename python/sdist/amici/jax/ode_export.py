@@ -283,7 +283,6 @@ class ODEExporter:
             tpl_data,
         )
 
-
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridisation.items():
             generate_equinox(
@@ -302,7 +301,6 @@ class ODEExporter:
                 continue
             roots.append(root)
         return roots
-
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:
         """
