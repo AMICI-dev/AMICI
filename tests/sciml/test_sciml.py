@@ -78,102 +78,102 @@ def test_net(test):
         net_file = cases_dir / test.replace("_alt", "") / solutions["net_file"]
     else:
         net_file = test_dir / solutions["net_file"]
-    ml_models = NNModelStandard.load_data(net_file)
+    ml_model = NNModelStandard.load_data(net_file)
 
     nets = {}
     outdir = Path(__file__).parent / "models" / test
-    for ml_model in ml_models.models:
-        module_dir = outdir / f"{ml_model.mlmodel_id}.py"
-        if test in (
-            "002",
-            "009",
-            "018",
-            "019",
-            "020",
-            "021",
-            "022",
-            "042",
-            "043",
-            "044",
-            "045",
-            "046",
-            "047",
-            "048",
-        ):
-            with pytest.raises(NotImplementedError):
-                generate_equinox(ml_model, module_dir)
-            return
-        generate_equinox(ml_model, module_dir)
-        nets[ml_model.mlmodel_id] = amici._module_from_path(
-            ml_model.mlmodel_id, module_dir
-        ).net
+    module_dir = outdir / f"{ml_model.nn_model_id}.py"
+    if test in (
+        "002",
+        "009",
+        "018",
+        "019",
+        "020",
+        "021",
+        "022",
+        "042",
+        "043",
+        "044",
+        "045",
+        "046",
+        "047",
+        "048",
+    ):
+        with pytest.raises(NotImplementedError):
+            generate_equinox(ml_model, module_dir)
+        return
+    generate_equinox(ml_model, module_dir)
+    nets[ml_model.nn_model_id] = amici._module_from_path(
+        ml_model.nn_model_id, module_dir
+    ).net
 
     for input_file, par_file, output_file in zip(
         solutions["net_input"],
         solutions.get("net_ps", solutions["net_input"]),
         solutions["net_output"],
     ):
-        input = h5py.File(test_dir / input_file, "r")["input"][:]
-        output = h5py.File(test_dir / output_file, "r")["output"][:]
+        input = h5py.File(test_dir / input_file, "r")["inputs"]["input0"]["data"][:]
+        output = h5py.File(test_dir / output_file, "r")["outputs"]["output0"]["data"][:]
 
         if "net_ps" in solutions:
             par = h5py.File(test_dir / par_file, "r")
-            for ml_model in ml_models.models:
-                net = nets[ml_model.mlmodel_id](jr.PRNGKey(0))
-                for layer in net.layers.keys():
-                    if (
-                        isinstance(net.layers[layer], eqx.Module)
-                        and hasattr(net.layers[layer], "weight")
-                        and net.layers[layer].weight is not None
+            net = nets[ml_model.nn_model_id](jr.PRNGKey(0))
+            for layer in net.layers.keys():
+                if (
+                    isinstance(net.layers[layer], eqx.Module)
+                    and hasattr(net.layers[layer], "weight")
+                    and net.layers[layer].weight is not None
+                ):
+                    # ?? grabbing weights from the parameters file ?? need to check if they are present in above if condition ??
+                    w = par["parameters"][ml_model.nn_model_id][layer]["weight"][:]
+                    if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
+                        # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
+                        w = np.flip(
+                            w, axis=tuple(range(2, w.ndim))
+                        ).swapaxes(0, 1)
+                    assert w.shape == net.layers[layer].weight.shape
+                    net = eqx.tree_at(
+                        lambda x: x.layers[layer].weight,
+                        net,
+                        jnp.array(w),
+                    )
+                if (
+                    isinstance(net.layers[layer], eqx.Module)
+                    and hasattr(net.layers[layer], "bias")
+                    and net.layers[layer].bias is not None
+                ):
+                    # ?? grabbing biases from the parameters file ?? need to check if they are present in above if condition ??
+                    b = par["parameters"][ml_model.nn_model_id][layer]["bias"][:]
+                    if isinstance(
+                        net.layers[layer],
+                        eqx.nn.Conv | eqx.nn.ConvTranspose,
                     ):
-                        w = par[layer]["weight"][:]
-                        if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
-                            # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-                            w = np.flip(
-                                w, axis=tuple(range(2, w.ndim))
-                            ).swapaxes(0, 1)
-                        assert w.shape == net.layers[layer].weight.shape
-                        net = eqx.tree_at(
-                            lambda x: x.layers[layer].weight,
-                            net,
-                            jnp.array(w),
+                        b = np.expand_dims(
+                            b,
+                            tuple(
+                                range(
+                                    1,
+                                    net.layers[layer].num_spatial_dims + 1,
+                                )
+                            ),
                         )
-                    if (
-                        isinstance(net.layers[layer], eqx.Module)
-                        and hasattr(net.layers[layer], "bias")
-                        and net.layers[layer].bias is not None
-                    ):
-                        b = par[layer]["bias"][:]
-                        if isinstance(
-                            net.layers[layer],
-                            eqx.nn.Conv | eqx.nn.ConvTranspose,
-                        ):
-                            b = np.expand_dims(
-                                b,
-                                tuple(
-                                    range(
-                                        1,
-                                        net.layers[layer].num_spatial_dims + 1,
-                                    )
-                                ),
-                            )
-                        assert b.shape == net.layers[layer].bias.shape
-                        net = eqx.tree_at(
-                            lambda x: x.layers[layer].bias,
-                            net,
-                            jnp.array(b),
-                        )
-                net = eqx.nn.inference_mode(net)
+                    assert b.shape == net.layers[layer].bias.shape
+                    net = eqx.tree_at(
+                        lambda x: x.layers[layer].bias,
+                        net,
+                        jnp.array(b),
+                    )
+            net = eqx.nn.inference_mode(net)
 
-                if test == "net_004_alt":
-                    return  # skipping, no support for non-cross-correlation in equinox
+            if test == "net_004_alt":
+                return  # skipping, no support for non-cross-correlation in equinox
 
-                np.testing.assert_allclose(
-                    net.forward(input),
-                    output,
-                    atol=1e-3,
-                    rtol=1e-3,
-                )
+            np.testing.assert_allclose(
+                net.forward(input),
+                output,
+                atol=1e-3,
+                rtol=1e-3,
+            )
 
 
 @pytest.mark.parametrize(
