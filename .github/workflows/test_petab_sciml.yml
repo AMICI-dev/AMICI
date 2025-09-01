@@ -3,11 +3,12 @@ on:
   push:
     branches:
       - develop
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
       - develop
+      - jax_sciml
   merge_group:
   workflow_dispatch:
 
@@ -59,7 +60,7 @@ jobs:
       - name: Download and install PEtab SciML
         run: |
           source ./venv/bin/activate \
-            && python -m pip install git+https://github.com/sebapersson/petab_sciml.git@unify_data#subdirectory=src/python \
+            && python -m pip install git+https://github.com/sebapersson/petab_sciml.git@main#subdirectory=src/python \
 
 
       - name: Install petab
