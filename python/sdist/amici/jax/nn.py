@@ -120,7 +120,7 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
             "bias": "use_bias",
         },
         "LayerNorm": {
-            "elementwise_affine": "use_bias", # Deprecation warning - replace LayerNorm(elementwise_affine) with LayerNorm(use_bias)
+            "elementwise_affine": "use_bias",  # Deprecation warning - replace LayerNorm(elementwise_affine) with LayerNorm(use_bias)
             "normalized_shape": "shape",
         },
     }
@@ -190,7 +190,9 @@ def _generate_forward(node: "Node", indent, layer_type=str) -> str:  # noqa: F82
 
     args = ", ".join([f"{arg}" for arg in node.args])
     kwargs = [
-        f"{k}={item}" for k, item in node.kwargs.items() if k not in ("inplace",)
+        f"{k}={item}"
+        for k, item in node.kwargs.items()
+        if k not in ("inplace",)
     ]
     if layer_type.startswith(("Dropout",)):
         kwargs += ["key=key"]

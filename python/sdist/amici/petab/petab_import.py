@@ -147,14 +147,17 @@ def import_petab_problem(
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
 
-        if "neural_nets" in petab_problem.extensions_config:  # TODO: fixme
+        if "sciml" in petab_problem.extensions_config:
             from petab_sciml.standard import NNModelStandard
 
-            config = petab_problem.extensions_config
+            config = petab_problem.extensions_config["sciml"]
             # TODO: only accept YAML format for now
-            hybridization_table = pd.read_csv(
-                config["hybridization_file"], sep="\t"
-            )
+            hybridizations = [
+                pd.read_csv(hf, sep="\t")
+                for hf in config["hybridization_files"]
+            ]
+            hybridization_table = pd.concat(hybridizations)
+
             input_mapping = dict(
                 zip(
                     hybridization_table["targetId"],
@@ -184,6 +187,7 @@ def import_petab_problem(
                         .to_dict()
                         .items()
                         if model_id.split(".")[1].startswith("input")
+                        and petab_id in input_mapping.keys()
                     ],
                     "output_vars": [
                         output_mapping[petab_id]
@@ -197,7 +201,9 @@ def import_petab_problem(
                         .to_dict()
                         .items()
                         if model_id.split(".")[1].startswith("output")
+                        and petab_id in output_mapping.keys()
                     ],
+                    # ?? static included here ?? and handled later ??
                     **net_config,
                 }
                 for net_id, net_config in config["neural_nets"].items()
