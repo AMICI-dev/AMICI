@@ -541,7 +541,7 @@ class JAXProblem(eqx.Module):
                 ]["array_files"]
                 if "parameters" in h5py.File(file_spec, "r").keys()
             ]
-        )
+        ) if self._petab_problem.extensions_config else {}
 
         nn_input_arrays = dict(
             [
@@ -551,7 +551,7 @@ class JAXProblem(eqx.Module):
                 ]["array_files"]
                 if "inputs" in h5py.File(file_spec, "r").keys()
             ]
-        )
+        ) if self._petab_problem.extensions_config else {}
 
         # extract nominal values from petab problem
         for pname, row in self._petab_problem.parameter_df.iterrows():
@@ -696,7 +696,9 @@ class JAXProblem(eqx.Module):
                 ]
             ]
             hybridization_df = pd.concat(hybridizations)
-        return hybridization_df
+            return hybridization_df
+        else:
+            return None
 
     @property
     def parameter_ids(self) -> list[str]:
