@@ -16,6 +16,7 @@ import equinox as eqx
 import jaxtyping as jt
 import jax.lax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
@@ -1414,6 +1415,7 @@ def run_simulations(
         ..., diffrax._custom_types.BoolScalarLike
     ] = diffrax.steady_state_event(),
     max_steps: int = 2**10,
+    is_grad_mode: bool = False,
     ret: ReturnValue | str = ReturnValue.llh,
 ):
     """
@@ -1481,16 +1483,39 @@ def run_simulations(
                 for sc in simulation_conditions
             ]
         )
-        output, results = problem.run_simulations(
-            dynamic_conditions,
-            preeq_array,
-            solver,
-            controller,
-            root_finder,
-            steady_state_event,
-            max_steps,
-            ret,
-        )
+        if is_grad_mode:
+            output, _ = eqx.filter_grad(
+                grad_filter_run_simulations, has_aux=True
+            )(
+                problem,
+                dynamic_conditions,
+                preeq_array,
+                solver,
+                controller,
+                root_finder,
+                steady_state_event,
+                max_steps,
+                ret,
+            )
+            results = {
+                "llh": jnp.array([]),
+                "stats_dyn": None,
+                "stats_posteq": None,
+                "ts": jnp.array([]),
+                "x": jnp.array([]),
+            }
+
+        else:
+            output, results = problem.run_simulations(
+                dynamic_conditions,
+                preeq_array,
+                solver,
+                controller,
+                root_finder,
+                steady_state_event,
+                max_steps,
+                ret,
+            )
     else:
         output = jnp.array(0.0)
         results = {
@@ -1501,7 +1526,7 @@ def run_simulations(
             "x": jnp.array([]),
         }
 
-    if ret in (ReturnValue.llh, ReturnValue.chi2):
+    if ret in (ReturnValue.llh, ReturnValue.chi2) and not is_grad_mode:
         output = jnp.sum(output)
 
     return output, results | preresults | conditions
@@ -1590,3 +1615,52 @@ def petab_simulate(
             )
         dfs.append(df_sc)
     return pd.concat(dfs).sort_index()
+
+def apply_grad_filter(problem: JAXProblem,):
+    for entity in problem._petab_problem.mapping_df[petab.MODEL_ENTITY_ID]:
+        if "layer" in entity:
+            net_id = entity.split(".")[0]
+            layer_id = re.findall(r"\[(.*?)\]", entity)[0]
+            array_attr = entity.split(".")[-1]
+            if array_attr in ("weight", "bias"):
+                problem = eqx.tree_at(
+                    lambda problem: getattr(problem.model.nns[net_id].layers[layer_id], array_attr),
+                    problem,
+                    replace_fn=lambda array_attr: jax.lax.stop_gradient(array_attr)
+                )
+            else:
+                problem = eqx.tree_at(
+                    lambda problem: problem.model.nns[net_id].layers[layer_id],
+                    problem,
+                    replace_fn=lambda layer: jax.lax.stop_gradient(layer)
+                )
+
+    return problem
+
+def grad_filter_run_simulations(
+        problem,
+        simulation_conditions: list[str],
+        preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
+        max_steps: jnp.int_,
+        ret: ReturnValue = ReturnValue.llh,
+    ):
+    problem_grad_filtered = apply_grad_filter(problem)
+    output, stats = problem_grad_filtered.run_simulations(
+        simulation_conditions,
+        preeq_array,
+        solver,
+        controller,
+        root_finder,
+        steady_state_event,
+        max_steps,
+        ret,
+    )
+    output = jnp.sum(output)
+
+    return output, stats
