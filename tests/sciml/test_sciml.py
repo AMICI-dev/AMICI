@@ -234,11 +234,12 @@ def test_ude(test):
     )
 
     # gradient
-    sllh, _ = eqx.filter_grad(run_simulations, has_aux=True)(
+    sllh, _ = run_simulations(
         jax_problem,
         solver=diffrax.Kvaerno5(),
         controller=diffrax.PIDController(atol=1e-14, rtol=1e-14),
         max_steps=2**16,
+        is_grad_mode=True,
     )
     for component, file in solutions["grad_files"].items():
         actual_dict = {}
@@ -246,6 +247,7 @@ def test_ude(test):
             expected = pd.read_csv(test_dir / file, sep="\t").set_index(
                 petab.PARAMETER_ID
             )
+            
             for ip in expected.index:
                 if ip in jax_problem.parameter_ids:
                     actual_dict[ip] = sllh.parameters[
@@ -275,9 +277,12 @@ def test_ude(test):
                             actual.swapaxes(0, 1),
                             axis=tuple(range(2, actual.ndim)),
                         )
-                    np.testing.assert_allclose(
-                        actual,
-                        expected["parameters"][component][layer_name][attribute][:],
-                        atol=solutions["tol_grad_llh"],
-                        rtol=solutions["tol_grad_llh"],
-                    )
+                    if np.squeeze(expected["parameters"][component][layer_name][attribute][:]).size == 0:
+                        assert np.all(actual == 0.0)
+                    else:
+                        np.testing.assert_allclose(
+                            np.squeeze(actual),
+                            np.squeeze(expected["parameters"][component][layer_name][attribute][:]),
+                            atol=solutions["tol_grad_llh"],
+                            rtol=solutions["tol_grad_llh"],
+                        )
