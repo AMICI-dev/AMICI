@@ -57,6 +57,7 @@ from .cxxcodeprinter import (
 from .de_model_components import *
 from .de_model import DEModel
 from .import_utils import (
+    RESERVED_SYMBOLS,
     strip_pysb,
 )
 from .logging import get_logger, log_execution_time, set_log_level
@@ -403,7 +404,12 @@ class DEExporter:
                 continue
             if str(symbol_name) == "":
                 raise ValueError(f'{name} contains a symbol called ""')
-            lines.append(f"#define {symbol_name} {name}[{index}]")
+            sanitized_name = (
+                f"amici_{symbol_name}"
+                if str(symbol_name) in RESERVED_SYMBOLS
+                else str(symbol_name)
+            )
+            lines.append(f"#define {sanitized_name} {name}[{index}]")
             if name == "stau":
                 # we only need a single macro, as all entries have the same symbol
                 break
@@ -1269,7 +1275,7 @@ class DEExporter:
             Template initializer list of ids
         """
         return "\n".join(
-            f'"{self._code_printer.doprint(symbol)}", // {name}[{idx}]'
+            f'"{strip_pysb(symbol)}", // {name}[{idx}]'
             for idx, symbol in enumerate(self.model.sym(name))
         )
 
