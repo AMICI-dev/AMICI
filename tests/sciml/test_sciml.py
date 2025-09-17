@@ -193,21 +193,6 @@ def test_ude(test):
         jax_problem = JAXProblem(jax_model, petab_problem)
 
     # llh
-    if test in (
-        # ?? cases where nn part of observable formula ??
-        "004",
-        "009",
-        "012",
-        "013",
-        "018",
-        "020",
-        "022",
-        "025",
-        "028",
-    ):
-        with pytest.raises(NotImplementedError):
-            run_simulations(jax_problem)
-        return
     llh, r = run_simulations(jax_problem)
     np.testing.assert_allclose(
         llh,

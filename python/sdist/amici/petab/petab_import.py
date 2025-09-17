@@ -152,6 +152,12 @@ def import_petab_problem(
                     hybridization_table["targetId"],
                 )
             )
+            observable_mapping = dict(
+                zip(
+                    petab_problem.observable_df["observableFormula"],
+                    petab_problem.observable_df.index,
+                )
+            )
             hybridization = {
                 net_id: {
                     "model": NNModelStandard.load_data(
@@ -185,7 +191,20 @@ def import_petab_problem(
                         if model_id.split(".")[1].startswith("output")
                         and petab_id in output_mapping.keys()
                     ],
-                    # ?? static included here ?? and handled later ??
+                    "observable_vars": [
+                        observable_mapping[petab_id]
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
+                        ]
+                        .to_dict()
+                        .items()
+                        if model_id.split(".")[1].startswith("output")
+                        and petab_id in observable_mapping.keys()
+                    ],
                     **net_config,
                 }
                 for net_id, net_config in config["neural_nets"].items()
