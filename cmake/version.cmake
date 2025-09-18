@@ -9,9 +9,7 @@ if(Git_FOUND)
 endif()
 
 # get project root directory
-get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_FILE}
+get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_CURRENT_LIST_DIR}
                        DIRECTORY)
-get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_DIR} DIRECTORY)
-
 file(STRINGS "${CMAKE_PARENT_LIST_DIR}/version.txt" PROJECT_VERSION)
 message(DEBUG "Version number: ${PROJECT_VERSION}")
