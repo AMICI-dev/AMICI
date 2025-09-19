@@ -378,13 +378,20 @@ def create_parameter_mapping(
     if parameter_mapping_kwargs is None:
         parameter_mapping_kwargs = {}
 
+    # TODO: Add support for conditions with sciml mappings in petab library
+    mapping = (
+        None
+        if "sciml" in petab_problem.extensions_config
+        else petab_problem.mapping_df
+    )
+
     prelim_parameter_mapping = (
         petab.get_optimization_to_simulation_parameter_mapping(
             condition_df=petab_problem.condition_df,
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            # mapping_df=petab_problem.mapping_df,
+            mapping_df=mapping,
             model=petab_problem.model,
             simulation_conditions=simulation_conditions,
             fill_fixed_parameters=fill_fixed_parameters,
@@ -393,8 +400,6 @@ def create_parameter_mapping(
             ),
         )
     )
-
-    # ?? put mappings in later ?? after mapping for condition ?? will there be a performance regression as a result ??
 
     parameter_mapping = ParameterMapping()
     for (_, condition), prelim_mapping_for_condition in zip(
@@ -586,8 +591,6 @@ def create_parameter_mapping_for_condition(
         condition,
     )
     logger.debug(f"Merged: {condition_map_sim_var}")
-
-    # ?? right place for static hybridization here ??
 
     if "sciml" in petab_problem.extensions_config:
         hybridizations = [
