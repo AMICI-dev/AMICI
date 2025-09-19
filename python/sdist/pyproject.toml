@@ -65,7 +65,8 @@ test = [
     "h5py",
     "pytest",
     "pytest-cov",
-    "pytest-rerunfailures",
+    # v16.0: https://github.com/pytest-dev/pytest-rerunfailures/issues/302
+    "pytest-rerunfailures!=16.0",
     "coverage",
     "shyaml",
     "antimony>=2.13",
