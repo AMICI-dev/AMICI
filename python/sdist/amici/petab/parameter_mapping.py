@@ -378,13 +378,20 @@ def create_parameter_mapping(
     if parameter_mapping_kwargs is None:
         parameter_mapping_kwargs = {}
 
+    # TODO: Add support for conditions with sciml mappings in petab library
+    mapping = (
+        None
+        if "sciml" in petab_problem.extensions_config
+        else petab_problem.mapping_df
+    )
+
     prelim_parameter_mapping = (
         petab.get_optimization_to_simulation_parameter_mapping(
             condition_df=petab_problem.condition_df,
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            mapping_df=petab_problem.mapping_df,
+            mapping_df=mapping,
             model=petab_problem.model,
             simulation_conditions=simulation_conditions,
             fill_fixed_parameters=fill_fixed_parameters,
@@ -584,6 +591,24 @@ def create_parameter_mapping_for_condition(
         condition,
     )
     logger.debug(f"Merged: {condition_map_sim_var}")
+
+    if "sciml" in petab_problem.extensions_config:
+        hybridizations = [
+            pd.read_csv(hf, sep="\t")
+            for hf in petab_problem.extensions_config["sciml"][
+                "hybridization_files"
+            ]
+        ]
+        hybridization_df = pd.concat(hybridizations)
+        for net_id, config in petab_problem.extensions_config["sciml"][
+            "neural_nets"
+        ].items():
+            if config["static"]:
+                for _, row in hybridization_df.iterrows():
+                    if row["targetValue"].startswith(net_id):
+                        condition_map_sim_var[row["targetId"]] = row[
+                            "targetValue"
+                        ]
 
     parameter_mapping_for_condition = ParameterMappingForCondition(
         map_preeq_fix=condition_map_preeq_fix,

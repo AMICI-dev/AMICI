@@ -10,6 +10,7 @@ import os
 import shutil
 from pathlib import Path
 from warnings import warn
+import re
 
 import amici
 import pandas as pd
@@ -147,14 +148,17 @@ def import_petab_problem(
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
 
-        if "neural_nets" in petab_problem.extensions_config:  # TODO: fixme
+        if "sciml" in petab_problem.extensions_config:
             from petab_sciml.standard import NNModelStandard
 
-            config = petab_problem.extensions_config
+            config = petab_problem.extensions_config["sciml"]
             # TODO: only accept YAML format for now
-            hybridization_table = pd.read_csv(
-                config["hybridization_file"], sep="\t"
-            )
+            hybridizations = [
+                pd.read_csv(hf, sep="\t")
+                for hf in config["hybridization_files"]
+            ]
+            hybridization_table = pd.concat(hybridizations)
+
             input_mapping = dict(
                 zip(
                     hybridization_table["targetId"],
@@ -165,6 +169,12 @@ def import_petab_problem(
                 zip(
                     hybridization_table["targetValue"],
                     hybridization_table["targetId"],
+                )
+            )
+            observable_mapping = dict(
+                zip(
+                    petab_problem.observable_df["observableFormula"],
+                    petab_problem.observable_df.index,
                 )
             )
             hybridization = {
@@ -184,20 +194,46 @@ def import_petab_problem(
                         .to_dict()
                         .items()
                         if model_id.split(".")[1].startswith("input")
+                        and petab_id in input_mapping.keys()
                     ],
-                    "output_vars": [
-                        output_mapping[petab_id]
-                        for petab_id, model_id in petab_problem.mapping_df.loc[
-                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                            .str.split(".")
-                            .str[0]
-                            == net_id,
-                            petab.MODEL_ENTITY_ID,
+                    "output_vars": dict(
+                        [
+                            (
+                                output_mapping[petab_id],
+                                _get_net_index(model_id),
+                            )
+                            for petab_id, model_id in petab_problem.mapping_df.loc[
+                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                                .str.split(".")
+                                .str[0]
+                                == net_id,
+                                petab.MODEL_ENTITY_ID,
+                            ]
+                            .to_dict()
+                            .items()
+                            if model_id.split(".")[1].startswith("output")
+                            and petab_id in output_mapping.keys()
                         ]
-                        .to_dict()
-                        .items()
-                        if model_id.split(".")[1].startswith("output")
-                    ],
+                    ),
+                    "observable_vars": dict(
+                        [
+                            (
+                                observable_mapping[petab_id],
+                                _get_net_index(model_id),
+                            )
+                            for petab_id, model_id in petab_problem.mapping_df.loc[
+                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                                .str.split(".")
+                                .str[0]
+                                == net_id,
+                                petab.MODEL_ENTITY_ID,
+                            ]
+                            .to_dict()
+                            .items()
+                            if model_id.split(".")[1].startswith("output")
+                            and petab_id in observable_mapping.keys()
+                        ]
+                    ),
                     **net_config,
                 }
                 for net_id, net_config in config["neural_nets"].items()
@@ -251,6 +287,13 @@ def import_petab_problem(
     )
 
     return model
+
+
+def _get_net_index(model_id: str):
+    matches = re.findall(r"\[(\d+)\]", model_id)
+    if matches:
+        return int(matches[-1])
+    return None
 
 
 # for backwards compatibility
