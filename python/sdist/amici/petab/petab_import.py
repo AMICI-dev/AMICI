@@ -9,6 +9,11 @@ import logging
 import os
 import shutil
 from pathlib import Path
+<<<<<<< HEAD
+=======
+from warnings import warn
+import re
+>>>>>>> 05f22cc9 (tidy, refactor, generalise sciml test case implementations)
 
 import amici
 import pandas as pd
@@ -177,34 +182,44 @@ def import_petab_problem(
                         if model_id.split(".")[1].startswith("input")
                         and petab_id in input_mapping.keys()
                     ],
-                    "output_vars": [
-                        output_mapping[petab_id]
-                        for petab_id, model_id in petab_problem.mapping_df.loc[
-                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                            .str.split(".")
-                            .str[0]
-                            == net_id,
-                            petab.MODEL_ENTITY_ID,
+                    "output_vars": dict(
+                        [
+                            (
+                                output_mapping[petab_id],
+                                _get_net_index(model_id),
+                            )
+                            for petab_id, model_id in petab_problem.mapping_df.loc[
+                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                                .str.split(".")
+                                .str[0]
+                                == net_id,
+                                petab.MODEL_ENTITY_ID,
+                            ]
+                            .to_dict()
+                            .items()
+                            if model_id.split(".")[1].startswith("output")
+                            and petab_id in output_mapping.keys()
                         ]
-                        .to_dict()
-                        .items()
-                        if model_id.split(".")[1].startswith("output")
-                        and petab_id in output_mapping.keys()
-                    ],
-                    "observable_vars": [
-                        observable_mapping[petab_id]
-                        for petab_id, model_id in petab_problem.mapping_df.loc[
-                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                            .str.split(".")
-                            .str[0]
-                            == net_id,
-                            petab.MODEL_ENTITY_ID,
+                    ),
+                    "observable_vars": dict(
+                        [
+                            (
+                                observable_mapping[petab_id],
+                                _get_net_index(model_id),
+                            )
+                            for petab_id, model_id in petab_problem.mapping_df.loc[
+                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                                .str.split(".")
+                                .str[0]
+                                == net_id,
+                                petab.MODEL_ENTITY_ID,
+                            ]
+                            .to_dict()
+                            .items()
+                            if model_id.split(".")[1].startswith("output")
+                            and petab_id in observable_mapping.keys()
                         ]
-                        .to_dict()
-                        .items()
-                        if model_id.split(".")[1].startswith("output")
-                        and petab_id in observable_mapping.keys()
-                    ],
+                    ),
                     **net_config,
                 }
                 for net_id, net_config in config["neural_nets"].items()
@@ -258,3 +273,14 @@ def import_petab_problem(
     )
 
     return model
+
+
+def _get_net_index(model_id: str):
+    matches = re.findall(r"\[(\d+)\]", model_id)
+    if matches:
+        return int(matches[-1])
+    return None
+
+
+# for backwards compatibility
+import_model = import_model_sbml

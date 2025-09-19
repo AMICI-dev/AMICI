@@ -120,7 +120,6 @@ def test_net(test):
                     and hasattr(net.layers[layer], "weight")
                     and net.layers[layer].weight is not None
                 ):
-                    # ?? grabbing weights from the parameters file ?? need to check if they are present in above if condition ??
                     w = par["parameters"][ml_model.nn_model_id][layer]["weight"][:]
                     if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
                         # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
@@ -136,7 +135,6 @@ def test_net(test):
                     and hasattr(net.layers[layer], "bias")
                     and net.layers[layer].bias is not None
                 ):
-                    # ?? grabbing biases from the parameters file ?? need to check if they are present in above if condition ??
                     b = par["parameters"][ml_model.nn_model_id][layer]["bias"][:]
                     if isinstance(
                         net.layers[layer],
@@ -232,7 +230,7 @@ def test_ude(test):
             expected = pd.read_csv(test_dir / file, sep="\t").set_index(
                 petab.PARAMETER_ID
             )
-            
+
             for ip in expected.index:
                 if ip in jax_problem.parameter_ids:
                     actual_dict[ip] = sllh.parameters[
@@ -262,12 +260,21 @@ def test_ude(test):
                             actual.swapaxes(0, 1),
                             axis=tuple(range(2, actual.ndim)),
                         )
-                    if np.squeeze(expected["parameters"][component][layer_name][attribute][:]).size == 0:
+                    if (
+                        np.squeeze(
+                            expected["parameters"][component][layer_name][attribute][:]
+                        ).size
+                        == 0
+                    ):
                         assert np.all(actual == 0.0)
                     else:
                         np.testing.assert_allclose(
                             np.squeeze(actual),
-                            np.squeeze(expected["parameters"][component][layer_name][attribute][:]),
+                            np.squeeze(
+                                expected["parameters"][component][layer_name][
+                                    attribute
+                                ][:]
+                            ),
                             atol=solutions["tol_grad_llh"],
                             rtol=solutions["tol_grad_llh"],
                         )

@@ -2596,7 +2596,7 @@ class DEModel:
                     )
 
             outputs = {
-                out_var: comp
+                out_var: {"comp": comp, "ind": net["output_vars"][out_var]}
                 for comp in self._components
                 if (out_var := str(comp.get_id())) in net["output_vars"]
                 # TODO: SYNTAX NEEDS to CHANGE
@@ -2607,8 +2607,9 @@ class DEModel:
                 raise ValueError(
                     f"Could not find all output variables for neural network {net_id}"
                 )
-            
-            for iout, (out_var, comp) in enumerate(outputs.items()):
+
+            for out_var, parts in outputs.items():
+                comp = parts["comp"]
                 # remove output from model components
                 if isinstance(comp, Parameter):
                     self._parameters.remove(comp)
@@ -2622,10 +2623,8 @@ class DEModel:
                     )
 
                 # generate dummy Function
-                # FIXME: not robust to an observable output and a regular output being in the other order
-                ind = iout + len(net["observable_vars"])
                 out_val = sp.Function(net_id)(
-                    *[input.get_id() for input in inputs], ind
+                    *[input.get_id() for input in inputs], parts["ind"]
                 )
 
                 # add to the model
@@ -2645,21 +2644,22 @@ class DEModel:
                         )
                     )
                     added_expressions = True
-            
+
             observables = {
-                ob_var: comp
+                ob_var: {"comp": comp, "ind": net["observable_vars"][ob_var]}
                 for comp in self._components
                 if (ob_var := str(comp.get_id())) in net["observable_vars"]
-                # TODO: SYNTAX NEEDS to CHANGE
-                or (ob_var := str(comp.get_id()) + "_dot")
-                in net["observable_vars"]
+                # # TODO: SYNTAX NEEDS to CHANGE
+                # or (ob_var := str(comp.get_id()) + "_dot")
+                # in net["observable_vars"]
             }
             if len(observables.keys()) != len(net["observable_vars"]):
                 raise ValueError(
                     f"Could not find all observable variables for neural network {net_id}"
                 )
-            
-            for iout, (ob_var, comp) in enumerate(observables.items()):
+
+            for ob_var, parts in observables.items():
+                comp = parts["comp"]
                 if isinstance(comp, Observable):
                     self._observables.remove(comp)
                 else:
@@ -2667,7 +2667,7 @@ class DEModel:
                         f"{comp.get_name()} ({type(comp)}) is not an observable."
                     )
                 out_val = sp.Function(net_id)(
-                    *[input.get_id() for input in inputs], iout
+                    *[input.get_id() for input in inputs], parts["ind"]
                 )
                 # add to the model
                 self.add_component(
