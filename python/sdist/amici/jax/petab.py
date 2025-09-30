@@ -7,6 +7,7 @@ from collections.abc import Sized, Iterable
 from pathlib import Path
 from collections.abc import Callable
 import logging
+from typing import Union
 
 
 import diffrax
@@ -76,6 +77,30 @@ def jax_unscale(
         return jnp.power(10, parameter)
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
+# IDEA: Implement hybridization_df in petab.v2.Problem instead? Then class here could be removed
+class HybridProblem(petab.Problem):
+    hybridization_df: pd.DataFrame
+
+    def __init__(self, petab_problem: petab.Problem):
+        self.__dict__.update(petab_problem.__dict__)
+        self.hybridization_df = _get_hybridization_df(petab_problem)
+
+
+def _get_hybridization_df(petab_problem):
+    if "sciml" in petab_problem.extensions_config:
+        hybridizations = [
+            pd.read_csv(hf, sep="\t", index_col=0)
+            for hf in petab_problem.extensions_config["sciml"][
+                "hybridization_files"
+            ]
+        ]
+        hybridization_df = pd.concat(hybridizations)
+        return hybridization_df
+    else:
+        return None
+    
+def _get_hybrid_petab_problem(petab_problem: petab.Problem):
+    return HybridProblem(petab_problem)
 
 class JAXProblem(eqx.Module):
     """
@@ -97,7 +122,6 @@ class JAXProblem(eqx.Module):
     model: JAXModel
     simulation_conditions: tuple[tuple[str, ...], ...]
     _parameter_mappings: dict[str, ParameterMappingForCondition]
-    _hybridization_df: pd.DataFrame
     _ts_dyn: np.ndarray
     _ts_posteq: np.ndarray
     _my: np.ndarray
@@ -111,7 +135,7 @@ class JAXProblem(eqx.Module):
     _np_mask: np.ndarray
     _np_indices: np.ndarray
     _petab_measurement_indices: np.ndarray
-    _petab_problem: petab.Problem
+    _petab_problem: petab.Problem | HybridProblem
 
     def __init__(self, model: JAXModel, petab_problem: petab.Problem):
         """
@@ -124,8 +148,7 @@ class JAXProblem(eqx.Module):
         """
         scs = petab_problem.get_simulation_conditions_from_measurement_df()
         self.simulation_conditions = tuple(tuple(sc) for sc in scs.values)
-        self._petab_problem = petab_problem
-        self._hybridization_df = self._get_hybridization_df()
+        self._petab_problem = _get_hybrid_petab_problem(petab_problem)
         self.parameters, self.model = self._get_nominal_parameter_values(model)
         self._parameter_mappings = self._get_parameter_mappings(scs)
         (
@@ -698,19 +721,6 @@ class JAXProblem(eqx.Module):
                 ].values.reshape(shape)
         return inputs
 
-    def _get_hybridization_df(self):
-        if "sciml" in self._petab_problem.extensions_config:
-            hybridizations = [
-                pd.read_csv(hf, sep="\t", index_col=0)
-                for hf in self._petab_problem.extensions_config["sciml"][
-                    "hybridization_files"
-                ]
-            ]
-            hybridization_df = pd.concat(hybridizations)
-            return hybridization_df
-        else:
-            return None
-
     @property
     def parameter_ids(self) -> list[str]:
         """
@@ -827,9 +837,9 @@ class JAXProblem(eqx.Module):
 
         hybridization_parameter_map = dict(
             [
-                (petab_id, self._hybridization_df.loc[petab_id, "targetValue"])
+                (petab_id, self._petab_problem.hybridization_df.loc[petab_id, "targetValue"])
                 for petab_id in model_id_map.values()
-                if petab_id in set(self._hybridization_df.index)
+                if petab_id in set(self._petab_problem.hybridization_df.index)
             ]
         )
 
@@ -1297,32 +1307,32 @@ class JAXProblem(eqx.Module):
                 for sc in simulation_conditions
             ]
         )
-        if not init_override_mask.any():
-            init_override_mask = jnp.stack(
-                [jnp.array([]) for _ in simulation_conditions]
-            )
-            init_override = jnp.stack(
-                [jnp.array([]) for _ in simulation_conditions]
-            )
-        else:
-            init_override = jnp.stack(
-                [
-                    jnp.array(
-                        [
-                            self._eval_nn(
-                                self._parameter_mappings[sc].map_sim_var[p], sc
-                            )
-                            if p
-                            in set(
-                                self._parameter_mappings[sc].map_sim_var.keys()
-                            )
-                            else 1.0
-                            for p in self.model.state_ids
-                        ]
-                    )
-                    for sc in simulation_conditions
-                ]
-            )
+        # if init_override_mask.sum() == 0.0:
+        #     init_override_mask = jnp.stack(
+        #         [jnp.array([]) for _ in simulation_conditions]
+        #     )
+        #     init_override = jnp.stack(
+        #         [jnp.array([]) for _ in simulation_conditions]
+        #     )
+        # else:
+        init_override = jnp.stack(
+            [
+                jnp.array(
+                    [
+                        self._eval_nn(
+                            self._parameter_mappings[sc].map_sim_var[p], sc
+                        )
+                        if p
+                        in set(
+                            self._parameter_mappings[sc].map_sim_var.keys()
+                        )
+                        else 1.0
+                        for p in self.model.state_ids
+                    ]
+                )
+                for sc in simulation_conditions
+            ]
+        )
 
         return self.run_simulation(
             p_array,
