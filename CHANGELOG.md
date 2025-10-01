@@ -2,6 +2,15 @@
 
 See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioning_policy.html).
 
+## v1.X Series
+
+### v1.0.0 (unreleased)
+
+BREAKING CHANGES
+
+* The MATLAB interface has been removed.
+
+
 ## v0.X Series
 
 ### v0.34.1 (2025-08-25)

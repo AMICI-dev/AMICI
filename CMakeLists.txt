@@ -172,7 +172,6 @@ set(AMICI_SRC_LIST
     src/edata.cpp
     src/exception.cpp
     src/simulation_parameters.cpp
-    src/spline.cpp
     src/solver.cpp
     src/solver_cvodes.cpp
     src/solver_idas.cpp
@@ -213,7 +212,6 @@ set(AMICI_SRC_LIST
     include/amici/solver_cvodes.h
     include/amici/solver.h
     include/amici/solver_idas.h
-    include/amici/spline.h
     include/amici/splinefunctions.h
     include/amici/steadystateproblem.h
     include/amici/sundials_linsol_wrapper.h

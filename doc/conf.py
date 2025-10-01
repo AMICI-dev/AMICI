@@ -241,9 +241,6 @@ exhale_projects_args = {
                 "INPUT = ../include/amici",
                 "BUILTIN_STL_SUPPORT    = YES",
                 "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
-                "EXCLUDE += ../include/amici/interface_matlab.h",
-                "EXCLUDE += ../include/amici/returndata_matlab.h",
-                "EXCLUDE += ../include/amici/spline.h",
                 # amici::log collides with amici::${some_enum}::log
                 #  potentially fixed in
                 #  https://github.com/svenevs/exhale/commit/c924df2e139a09fbacd07587779c55fd0ee4e00b
