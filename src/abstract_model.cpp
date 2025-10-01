@@ -1,4 +1,6 @@
 #include "amici/abstract_model.h"
+#include "amici/exception.h"
+#include "amici/splinefunctions.h"
 
 namespace amici {
 
