@@ -45,6 +45,20 @@ class _FunctionInfo:
     default_return_value: str = ""
     header: list[str] = field(default_factory=list)
 
+    def __post_init__(self):
+        common_header = [
+            '#include "amici/symbolic_functions.h"',
+            '#include "amici/defines.h"',
+            "",
+            # std::{min,find}
+            "#include <algorithm>",
+        ]
+        if self.sparse:
+            common_header.append("#include <sundials/sundials_types.h>")
+            common_header.append("#include <gsl/gsl-lite.hpp>")
+
+        self.header = common_header + self.header
+
     def arguments(self, ode: bool = True) -> str:
         """Get the arguments for the ODE or DAE function"""
         if ode or not self.dae_arguments:
@@ -324,6 +338,7 @@ functions = {
         "realtype *x0_fixedParameters, const realtype t, "
         "const realtype *p, const realtype *k, "
         "gsl::span<const int> reinitialization_state_idxs",
+        header=["#include <gsl/gsl-lite.hpp>"],
     ),
     "sx0": _FunctionInfo(
         "realtype *sx0, const realtype t, const realtype *x, "
@@ -333,6 +348,7 @@ functions = {
         "realtype *sx0_fixedParameters, const realtype t, "
         "const realtype *x0, const realtype *p, const realtype *k, "
         "const int ip, gsl::span<const int> reinitialization_state_idxs",
+        header=["#include <gsl/gsl-lite.hpp>"],
     ),
     "xdot": _FunctionInfo(
         "realtype *xdot, const realtype t, const realtype *x, "
