@@ -454,14 +454,6 @@ class DEModel:
             )
             self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
-        # replace rateOf-instances in x0 by xdot equation
-        for i_state in range(len(self.eq("x0"))):
-            new, replacement = self._eqs["x0"][i_state].replace(
-                rate_of_func, get_rate, map=True
-            )
-            if replacement:
-                self._eqs["x0"][i_state] = new
-
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w
         made_substitutions = False
@@ -508,6 +500,30 @@ class DEModel:
             self._expressions = [self._expressions[i] for i in new_order]
             self._syms["w"] = sp.Matrix(topo_expr_syms)
             self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
+
+        # replace rateOf-instances in x0 by xdot equation
+        # indices of state variables whose x0 was modified
+        changed_indices = []
+        for i_state in range(len(self.eq("x0"))):
+            new, replacement = self._eqs["x0"][i_state].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["x0"][i_state] = new
+                changed_indices.append(i_state)
+        if changed_indices:
+            # Replace any newly introduced state variables
+            #  by their x0 expressions.
+            # Also replace any newly introduced `w` symbols by their
+            #  expressions (after `w` was toposorted above).
+            subs = toposort_symbols(
+                dict(zip(self.sym("x_rdata"), self.eq("x0"), strict=True))
+            )
+            subs = dict(zip(self._syms["w"], self.eq("w"), strict=True)) | subs
+            for i_state in changed_indices:
+                self._eqs["x0"][i_state] = smart_subs_dict(
+                    self._eqs["x0"][i_state], subs
+                )
 
         for component in chain(
             self.observables(),

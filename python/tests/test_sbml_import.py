@@ -5,16 +5,16 @@ import re
 import sys
 from numbers import Number
 from pathlib import Path
-
 import amici
 import libsbml
 import numpy as np
 import pytest
 from amici.gradient_check import check_derivatives
-from amici.sbml_import import SbmlImporter
-from amici.testing import skip_on_valgrind
+from amici.sbml_import import SbmlImporter, SymbolId
+from amici.import_utils import symbol_with_assumptions
 from numpy.testing import assert_allclose, assert_array_equal
 from amici import import_model_module
+from amici.testing import skip_on_valgrind
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from conftest import MODEL_STEADYSTATE_SCALED_XML
 import sympy as sp
@@ -1142,3 +1142,61 @@ def test_contains_periodic_subexpression():
     assert cps(sp.sin(t), t) is True
     assert cps(sp.cos(t), t) is True
     assert cps(t + sp.sin(t), t) is True
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("compute_conservation_laws", [True, False])
+def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
+    """Check that dynamic expressions for initial assignments are only
+    evaluated at t=t0."""
+    from amici.antimony_import import antimony2sbml
+    from amici.import_utils import amici_time_symbol
+
+    ant_model = """
+    x1' = 1
+    x1 = p0
+    p0 = 1
+    p1 = x1
+    x2 := x1
+    p2 = x2
+    spline1 = 0 # replaced by actual spline below
+    x3' = 0
+    x3 = spline1
+    """
+    sbml_str = antimony2sbml(ant_model)
+    sbml_reader = libsbml.SBMLReader()
+    sbml_document = sbml_reader.readSBMLFromString(sbml_str)
+    sbml_model = sbml_document.getModel()
+
+    spline = amici.splines.CubicHermiteSpline(
+        sbml_id="spline1",
+        nodes=[0, 1, 2],
+        values_at_nodes=[3, 4, 5],
+    )
+    spline.add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spline1").setConstant(False)
+
+    si = SbmlImporter(sbml_model, from_file=False)
+    de_model = si._build_ode_model(
+        observables={"obs_p1": {"formula": "p1"}, "obs_p2": {"formula": "p2"}},
+        compute_conservation_laws=compute_conservation_laws,
+    )
+    # "species", because the initial assignment expression is time-dependent
+    assert symbol_with_assumptions("p2") in si.symbols[SymbolId.SPECIES].keys()
+    # "species", because differential state
+    assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
+
+    assert "p0" in [str(p.get_id()) for p in de_model.parameters()]
+    assert "p1" not in [str(p.get_id()) for p in de_model.parameters()]
+    assert "p2" not in [str(p.get_id()) for p in de_model.parameters()]
+
+    assert list(de_model.sym("x_rdata")) == [
+        symbol_with_assumptions("p2"),
+        symbol_with_assumptions("x1"),
+        symbol_with_assumptions("x3"),
+    ]
+    assert list(de_model.eq("x0")) == [
+        symbol_with_assumptions("p0"),
+        symbol_with_assumptions("p0"),
+        amici_time_symbol * 1.0 + 3.0,
+    ]
