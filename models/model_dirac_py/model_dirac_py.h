@@ -537,7 +537,7 @@ class Model_model_dirac_py : public amici::Model_ODE {
      * @return AMICI version string
      */
     std::string getAmiciVersion() const override {
-        return "0.34.0";
+        return "0.34.1";
     }
 
     /**
@@ -545,7 +545,7 @@ class Model_model_dirac_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "08d0c9533715453de60b684970751c6de07ffd9b";
+        return "b12c68a7a02f1cbd33de59d47cbc0c4d77d30d6f";
     }
 
     bool hasQuadraticLLH() const override {

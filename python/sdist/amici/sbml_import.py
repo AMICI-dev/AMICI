@@ -1386,13 +1386,20 @@ class SbmlImporter:
         # Parameters that need to be turned into expressions or species
         #  so far, this concerns parameters with symbolic initial assignments
         #  (those have been skipped above) that are not rate rule targets
+
+        # Set of symbols in initial assignments that still allows handling them
+        #  via amici expressions
+        syms_allowed_in_expr_ia = set(self.symbols[SymbolId.PARAMETER]) | set(
+            self.symbols[SymbolId.FIXED_PARAMETER]
+        )
+
         for par in self.sbml.getListOfParameters():
             if (
                 (ia := par_id_to_ia.get(par.getId())) is not None
                 and not ia.is_Number
                 and not self.is_rate_rule_target(par)
             ):
-                if not ia.has(sbml_time_symbol):
+                if not (ia.free_symbols - syms_allowed_in_expr_ia):
                     self.symbols[SymbolId.EXPRESSION][
                         _get_identifier_symbol(par)
                     ] = {
@@ -1407,6 +1414,10 @@ class SbmlImporter:
                     #  We can't represent that as expression, since the
                     #  initial simulation time is only known at the time of the
                     #  simulation, so we can't substitute it.
+                    # Also, any parameter with an initial assignment
+                    #  that expression that is implicitly time-dependent
+                    #  must be converted to a species to avoid re-evaluating
+                    #  the initial assignment at every time step.
                     self.symbols[SymbolId.SPECIES][
                         _get_identifier_symbol(par)
                     ] = {
@@ -1515,13 +1526,36 @@ class SbmlImporter:
             self.symbols[SymbolId.EXPRESSION], "value"
         )
 
-        # expressions must not occur in definition of x0
+        # substitute symbols that must not occur in the definition of x0
+        # allowed symbols: amici model parameters and time
+        allowed_syms = (
+            set(self.symbols[SymbolId.PARAMETER])
+            | set(self.symbols[SymbolId.FIXED_PARAMETER])
+            | {sbml_time_symbol}
+        )
         for species in self.symbols[SymbolId.SPECIES].values():
-            species["init"] = self._make_initial(
-                smart_subs_dict(
-                    species["init"], self.symbols[SymbolId.EXPRESSION], "value"
+            while True:
+                species["init"] = species["init"].subs(self.compartments)
+                sym_math, rateof_to_dummy = _rateof_to_dummy(species["init"])
+                old_init = species["init"]
+                if (
+                    sym_math.free_symbols
+                    - allowed_syms
+                    - set(rateof_to_dummy.values())
+                    == set()
+                ):
+                    break
+                species["init"] = self._make_initial(
+                    smart_subs_dict(
+                        species["init"],
+                        self.symbols[SymbolId.EXPRESSION],
+                        "value",
+                    )
                 )
-            )
+                if species["init"] == old_init:
+                    raise AssertionError(
+                        f"Infinite loop detected in _process_rules {species}."
+                    )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
         formula = self._sympify(rule)
@@ -1536,7 +1570,13 @@ class SbmlImporter:
         # completely determined by other constructs in the model"
         # find those elements:
         for symbol in formula.free_symbols:
+            if symbol == sbml_time_symbol:
+                continue
             sbml_var = self.sbml.getElementBySId(str(symbol))
+            if sbml_var is None:
+                raise SBMLException(
+                    f"Algebraic rule references unexpected symbol '{symbol}'."
+                )
             # This means that at least this entity must
             # not have the attribute constant=“true”
             if sbml_var.isSetConstant() and sbml_var.getConstant():
@@ -2359,12 +2399,28 @@ class SbmlImporter:
                 sym_math = sym_math.subs(
                     var, self.symbols[SymbolId.SPECIES][var]["init"]
                 )
+            elif var in self.symbols[SymbolId.ALGEBRAIC_STATE]:
+                sym_math = sym_math.subs(
+                    var, self.symbols[SymbolId.ALGEBRAIC_STATE][var]["init"]
+                )
             elif (
                 element := self.sbml.getElementBySId(element_id)
             ) and self.is_rate_rule_target(element):
                 # no need to recurse here, as value is numeric
                 init = sp.Float(element.getValue())
                 sym_math = sym_math.subs(var, init)
+            elif spline := [spl for spl in self.splines if spl.sbml_id == var]:
+                # x0 must not depend on splines -- substitute
+                assert len(spline) == 1
+                spline = spline[0]
+                if spline.evaluate_at != sbml_time_symbol:
+                    raise NotImplementedError(
+                        "AMICI at the moment does not support splines "
+                        "whose evaluation point is not the model time."
+                    )
+                sym_math = sym_math.subs(
+                    var, spline.evaluate(sbml_time_symbol)
+                )
 
         sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 
@@ -3010,7 +3066,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        return a is not None and self._sympify(a) is not None
+        return a is not None and a.getMath() is not None
 
     def is_rate_rule_target(self, element: libsbml.SBase) -> bool:
         """
@@ -3024,7 +3080,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getRateRuleByVariable(element.getId())
-        return a is not None and self._sympify(a) is not None
+        return a is not None and a.getMath() is not None
 
     def _transform_dxdt_to_concentration(
         self, species_id: sp.Symbol, dxdt: sp.Expr

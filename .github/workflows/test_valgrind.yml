@@ -31,20 +31,20 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Checkout code (scheduled)
       if: github.event_name == 'schedule'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         ref: main
         lfs: true
 
     - name: Checkout code (manual, push, pull request)
       if: github.event_name != 'schedule'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         lfs: true
 
@@ -85,11 +85,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         lfs: true
     - run: git fetch --prune --unshallow

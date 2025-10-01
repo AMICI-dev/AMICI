@@ -6,13 +6,13 @@ import amici
 import warnings
 
 # Ensure we are binary-compatible, see #556
-if "0.34.0" != amici.__version__:
+if "0.34.1" != amici.__version__:
     raise amici.AmiciVersionError(
         f"Cannot use model `model_steadystate_py` in {Path(__file__).parent}, "
-        "generated with amici==0.34.0, "
+        "generated with amici==0.34.1, "
         f"together with amici=={amici.__version__} "
         "which is currently installed. To use this model, install "
-        "amici==0.34.0 or re-import the model with the amici "
+        "amici==0.34.1 or re-import the model with the amici "
         "version currently installed."
     )
 
