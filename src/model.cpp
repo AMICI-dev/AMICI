@@ -2846,32 +2846,31 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
     fw(t, x, include_static);
 
     derived_state_.dwdx_.zero();
-        fdwdw(t, x, include_static);
+    fdwdw(t, x, include_static);
 
-        auto&& dwdx_hierarchical_0 = derived_state_.dwdx_hierarchical_.at(0);
-        if (!dwdx_hierarchical_0.data() || !dwdx_hierarchical_0.capacity())
-            return;
+    auto&& dwdx_hierarchical_0 = derived_state_.dwdx_hierarchical_.at(0);
+    if (!dwdx_hierarchical_0.data() || !dwdx_hierarchical_0.capacity())
+        return;
 
-        if (include_static) {
-            dwdx_hierarchical_0.zero();
-            fdwdx_colptrs(dwdx_hierarchical_0);
-            fdwdx_rowvals(dwdx_hierarchical_0);
-        }
-        fdwdx(
-            dwdx_hierarchical_0.data(), t, x, state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(),
-            derived_state_.spl_.data(), include_static
+    if (include_static) {
+        dwdx_hierarchical_0.zero();
+        fdwdx_colptrs(dwdx_hierarchical_0);
+        fdwdx_rowvals(dwdx_hierarchical_0);
+    }
+    fdwdx(
+        dwdx_hierarchical_0.data(), t, x, state_.unscaledParameters.data(),
+        state_.fixedParameters.data(), state_.h.data(),
+        derived_state_.w_.data(), state_.total_cl.data(),
+        derived_state_.spl_.data(), include_static
+    );
+
+    for (int irecursion = 1; irecursion <= w_recursion_depth; irecursion++) {
+        derived_state_.dwdw_.sparse_multiply(
+            derived_state_.dwdx_hierarchical_.at(irecursion),
+            derived_state_.dwdx_hierarchical_.at(irecursion - 1)
         );
-
-        for (int irecursion = 1; irecursion <= w_recursion_depth;
-             irecursion++) {
-            derived_state_.dwdw_.sparse_multiply(
-                derived_state_.dwdx_hierarchical_.at(irecursion),
-                derived_state_.dwdx_hierarchical_.at(irecursion - 1)
-            );
-        }
-        derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
+    }
+    derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.dwdx_, ModelQuantity::dwdx, t);

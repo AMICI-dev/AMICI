@@ -175,7 +175,6 @@ std::unique_ptr<Solver> Model_ODE::getSolver() {
     return std::unique_ptr<Solver>(new CVodeSolver());
 }
 
-
 void Model_ODE::fJSparse(
     realtype* /*JSparse*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
@@ -215,7 +214,6 @@ void Model_ODE::froot(
         __func__
     ); // not implemented
 }
-
 
 void Model_ODE::fdxdotdp_explicit(
     realtype* /*dxdotdp_explicit*/, realtype const /*t*/, realtype const* /*x*/,

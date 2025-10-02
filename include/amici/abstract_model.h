@@ -287,7 +287,6 @@ class AbstractModel {
      */
     virtual void fdx0(AmiVector& x0, AmiVector& dx0);
 
-
     /**
      * @brief Model-specific implementation of fstau
      * @param stau total derivative of event timepoint
@@ -321,7 +320,6 @@ class AbstractModel {
     virtual void
     fy(realtype* y, realtype t, realtype const* x, realtype const* p,
        realtype const* k, realtype const* h, realtype const* w);
-
 
     /**
      * @brief Model-specific implementation of fdydp
@@ -556,7 +554,6 @@ class AbstractModel {
         realtype const* xdot, realtype const* xdot_old, realtype const* x_old,
         realtype const* xB, realtype const* tcl
     );
-
 
     /**
      * @brief Model-specific implementation of fdeltaqB

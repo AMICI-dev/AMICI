@@ -279,7 +279,6 @@ class Model_ODE : public Model {
     std::unique_ptr<Solver> getSolver() override;
 
   protected:
-
     /**
      * @brief Model specific implementation for fJSparse, data only
      * @param JSparse Matrix to which the Jacobian will be written
@@ -338,7 +337,6 @@ class Model_ODE : public Model {
         realtype* xdot, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w
     ) = 0;
-
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule

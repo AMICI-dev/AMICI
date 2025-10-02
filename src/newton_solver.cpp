@@ -64,15 +64,15 @@ void NewtonSolver::computeNewtonSensis(
         );
     }
 
-        for (int ip = 0; ip < model.nplist(); ip++) {
-            N_VConst(0.0, sx.getNVector(ip));
-            model.get_dxdotdp_full().scatter(
-                model.plist(ip), -1.0, nullptr,
-                gsl::make_span(sx.getNVector(ip)), 0, nullptr, 0
-            );
+    for (int ip = 0; ip < model.nplist(); ip++) {
+        N_VConst(0.0, sx.getNVector(ip));
+        model.get_dxdotdp_full().scatter(
+            model.plist(ip), -1.0, nullptr, gsl::make_span(sx.getNVector(ip)),
+            0, nullptr, 0
+        );
 
-            solveLinearSystem(sx[ip]);
-        }
+        solveLinearSystem(sx[ip]);
+    }
 }
 
 void NewtonSolver::prepareLinearSystem(Model& model, DEStateView const& state) {

@@ -54,7 +54,6 @@ void AbstractModel::fdx0(AmiVector& /*x0*/, AmiVector& /*dx0*/) {
     // no-op default implementation
 }
 
-
 void AbstractModel::fstau(
     realtype* /*stau*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
@@ -78,7 +77,6 @@ void AbstractModel::
         __func__
     );
 }
-
 
 void AbstractModel::fdydp(
     realtype* /*dydp*/, realtype const /*t*/, realtype const* /*x*/,
@@ -199,7 +197,6 @@ void AbstractModel::fdrzdx(
     );
 }
 
-
 void AbstractModel::fdeltax(
     realtype* /*deltax*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
@@ -241,7 +238,6 @@ void AbstractModel::fdeltaxB(
         __func__
     );
 }
-
 
 void AbstractModel::fdeltaqB(
     realtype* /*deltaqB*/, realtype const /*t*/, realtype const* /*x*/,
