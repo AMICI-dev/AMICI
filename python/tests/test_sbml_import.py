@@ -11,7 +11,10 @@ import numpy as np
 import pytest
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter, SymbolId
-from amici.import_utils import symbol_with_assumptions
+from amici.import_utils import (
+    symbol_with_assumptions,
+    MeasurementChannel as MC,
+)
 from numpy.testing import assert_allclose, assert_array_equal
 from amici import import_model_module
 from amici.testing import skip_on_valgrind
@@ -66,7 +69,7 @@ def test_sbml2amici_no_observables(tempdir):
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observables=None,
+        observation_model=None,
         compute_conservation_laws=False,
     )
 
@@ -86,10 +89,10 @@ def test_sbml2amici_nested_observables_fail(tempdir):
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=tempdir,
-            observables={
-                "outer": {"formula": "inner"},
-                "inner": {"formula": "S1"},
-            },
+            observation_model=[
+                MC("outer", formula="inner"),
+                MC("inner", formula="S1"),
+            ],
             compute_conservation_laws=False,
             generate_sensitivity_code=False,
             compile=False,
@@ -104,7 +107,7 @@ def test_nosensi(tempdir):
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observables=None,
+        observation_model=None,
         compute_conservation_laws=False,
         generate_sensitivity_code=False,
     )
@@ -142,14 +145,18 @@ def observable_dependent_error_model():
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=tmpdir,
-            observables={
-                "observable_s1": {"formula": "S1"},
-                "observable_s1_scaled": {"formula": "0.5 * S1"},
-            },
-            sigmas={
-                "observable_s1": "0.1 + relative_sigma * observable_s1",
-                "observable_s1_scaled": "0.02 * observable_s1_scaled",
-            },
+            observation_model=[
+                MC(
+                    "observable_s1",
+                    formula="S1",
+                    sigma="0.1 + relative_sigma * S1",
+                ),
+                MC(
+                    "observable_s1_scaled",
+                    formula="0.5 * S1",
+                    sigma="0.02 * observable_s1_scaled",
+                ),
+            ],
         )
         yield amici.import_model_module(
             module_name=model_name, module_path=tmpdir
@@ -220,22 +227,25 @@ def model_steadystate_module():
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    observables = amici.assignmentRules2observables(
+    observables = amici.assignment_rules_to_observables(
         sbml_importer.sbml,
         filter_function=lambda variable: variable.getId().startswith(
             "observable_"
         )
         and not variable.getId().endswith("_sigma"),
+        as_dict=True,
     )
+    observables[
+        "observable_x1withsigma"
+    ].sigma = "observable_x1withsigma_sigma"
 
     module_name = "test_model_steadystate_scaled"
     with TemporaryDirectory(prefix=module_name) as outdir:
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
             constant_parameters=["k0"],
-            sigmas={"observable_x1withsigma": "observable_x1withsigma_sigma"},
+            observation_model=list(observables.values()),
         )
 
         yield amici.import_model_module(
@@ -548,36 +558,27 @@ def model_test_likelihoods(tempdir):
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    # define observables
-    observables = {
-        "o1": {"formula": "x1"},
-        "o2": {"formula": "10^x1"},
-        "o3": {"formula": "10^x1"},
-        "o4": {"formula": "x1"},
-        "o5": {"formula": "10^x1"},
-        "o6": {"formula": "10^x1"},
-        "o7": {"formula": "x1"},
-    }
-
-    # define different noise models
-    noise_distributions = {
-        "o1": "normal",
-        "o2": "log-normal",
-        "o3": "log10-normal",
-        "o4": "laplace",
-        "o5": "log-laplace",
-        "o6": "log10-laplace",
-        "o7": lambda str_symbol: f"Abs({str_symbol} - m{str_symbol}) "
-        f"/ sigma{str_symbol}",
-    }
+    # define observation model
+    observation_model = [
+        MC("o1", formula="x1", noise_distribution="normal"),
+        MC("o2", formula="10^x1", noise_distribution="log-normal"),
+        MC("o3", formula="10^x1", noise_distribution="log10-normal"),
+        MC("o4", formula="x1", noise_distribution="laplace"),
+        MC("o5", formula="10^x1", noise_distribution="log-laplace"),
+        MC("o6", formula="10^x1", noise_distribution="log10-laplace"),
+        MC(
+            "o7",
+            formula="x1",
+            noise_distribution=lambda str_symbol: f"Abs({str_symbol} - m{str_symbol}) / sigma{str_symbol}",
+        ),
+    ]
 
     module_name = "model_test_likelihoods"
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=tempdir,
-        observables=observables,
         constant_parameters=["k0"],
-        noise_distributions=noise_distributions,
+        observation_model=observation_model,
     )
 
     yield amici.import_model_module(
@@ -656,21 +657,16 @@ def test_likelihoods_error():
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    # define observables
-    observables = {"o1": {"formula": "x1"}}
-
-    # define different noise models
-    noise_distributions = {"o1": "nörmal"}
-
     module_name = "test_likelihoods_error"
     outdir = "test_likelihoods_error"
     with pytest.raises(ValueError):
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
             constant_parameters=["k0"],
-            noise_distributions=noise_distributions,
+            observation_model=[
+                MC("o1", formula="x1", noise_distribution="nörmal")
+            ],
         )
 
 
@@ -1178,7 +1174,10 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
 
     si = SbmlImporter(sbml_model, from_file=False)
     de_model = si._build_ode_model(
-        observables={"obs_p1": {"formula": "p1"}, "obs_p2": {"formula": "p2"}},
+        observation_model=[
+            MC("obs_p1", formula="p1"),
+            MC("obs_p2", formula="p2"),
+        ],
         compute_conservation_laws=compute_conservation_laws,
     )
     # "species", because the initial assignment expression is time-dependent
