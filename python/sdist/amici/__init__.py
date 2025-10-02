@@ -133,6 +133,7 @@ if not _imported_from_setup():
         SbmlImporter,
         assignmentRules2observables,
     )
+    from .import_utils import MeasurementChannel  # noqa: F401
 
     try:
         from .jax import JAXModel
