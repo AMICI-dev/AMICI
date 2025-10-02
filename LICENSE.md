@@ -32,9 +32,3 @@ The AMICI logo is released under the Creative Commons CC0 1.0 Universal
   terms given in `ThirdParty/SuiteSparse/LICENSE.txt`
 * *gsl-lite* is redistributed under the MIT License (MIT) with the terms given
   in `ThirdParty/gsl/gsl/gsl-lite.hpp`
-* *xml2struct* and *struct2xml* are redistributed under the BSD 2-Clause
-  License (BSD-2-Clause) with terms given in
-  `matlab/auxiliary/xml2struct/license.txt` and
-  `matlab/auxiliary/struct2xml/license.txt`
-* *CalcMD5* is redistributed under the BSD 2-Clause License (BSD-2-Clause)
-  with terms given in `matlab/auxiliary/CalcMD5/license.txt`

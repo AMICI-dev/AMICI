@@ -4,14 +4,13 @@ This Agents.md file provides comprehensive guidance for OpenAI Codex and other A
 
 ## Project Structure for OpenAI Codex Navigation
 
-AMICI is a python package that uses SWIG to generate python bindings to C++ code. There are also a deprecated matlab interface to the C++ code, which will be removed at some point in the future.
+AMICI is a python package that uses SWIG to generate python bindings to C++ code.
 
 - `/binder`: binder configuration
 - `/cmake`: various cmake utility functions
 - `/container`: docker configuration
 - `/doc`: high level documentation, all API documentation is automatically generated using doxygen/sphinx
 - `/include`: C++ header files
-- `/matlab`: matlab interface
 - `/models`: pre-generated c++ models for testing
 - `/python`: python source code
   - `/benchmark`: helper scripts for benchmarking

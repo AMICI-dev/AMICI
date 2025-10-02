@@ -248,7 +248,6 @@ class DEExporter:
         ):
             self._prepare_model_folder()
             self._generate_c_code()
-            self._generate_m_code()
 
     @log_execution_time("compiling cpp code", logger)
     def compile_model(self) -> None:
@@ -316,41 +315,6 @@ class DEExporter:
         shutil.copy(
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
         )
-
-    def _generate_m_code(self) -> None:
-        """
-        Create a Matlab script for compiling code files to a mex file
-        """
-
-        # Second order code is not yet implemented. Once this is done,
-        # those variables will have to be replaced by
-        # "self.model.<var>true()", or the corresponding "model.self.o2flag"
-        nxtrue_rdata = self.model.num_states_rdata()
-        nytrue = self.model.num_obs()
-        nztrue = self.model.num_eventobs()
-        o2flag = 0
-
-        lines = [
-            "% This compile script was automatically created from"
-            " Python SBML import.",
-            "% If mex compiler is set up within MATLAB, it can be run"
-            " from MATLAB ",
-            "% in order to compile a mex-file from the Python"
-            " generated C++ files.",
-            "",
-            f"modelName = '{self.model_name}';",
-            "amimodel.compileAndLinkModel(modelName, '', [], [], [], []);",
-            f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
-            f"{nytrue}, {self.model.num_par()}, "
-            f"{self.model.num_const()}, {nztrue}, {o2flag}, ...",
-            "    [], ['simulate_' modelName '.m'], modelName, ...",
-            "    'lin', 1, 1);",
-        ]
-
-        # write compile script (for mex)
-        compile_script = os.path.join(self.model_path, "compileMexFile.m")
-        with open(compile_script, "w") as fileout:
-            fileout.write("\n".join(lines))
 
     def _get_index(self, name: str) -> dict[sp.Symbol, int]:
         """
