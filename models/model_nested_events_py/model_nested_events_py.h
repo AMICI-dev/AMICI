@@ -138,7 +138,6 @@ class Model_model_nested_events_py : public amici::Model_ODE {
                   0,                                       // nnz
                   1,                                 // ubw
                   1,                                 // lbw
-                  true,                                    // pythonGenerated
                   2,                   // ndxdotdp_explicit
                   1,                   // ndxdotdx_explicit
                   0                    // w_recursion_depth
@@ -553,7 +552,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "b12c68a7a02f1cbd33de59d47cbc0c4d77d30d6f";
+        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
     }
 
     bool hasQuadraticLLH() const override {

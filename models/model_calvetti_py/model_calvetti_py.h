@@ -138,7 +138,6 @@ class Model_model_calvetti_py : public amici::Model_DAE {
                   0,                                       // nnz
                   6,                                 // ubw
                   6,                                 // lbw
-                  true,                                    // pythonGenerated
                   0,                   // ndxdotdp_explicit
                   5,                   // ndxdotdx_explicit
                   2                    // w_recursion_depth
@@ -558,7 +557,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "b12c68a7a02f1cbd33de59d47cbc0c4d77d30d6f";
+        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
     }
 
     bool hasQuadraticLLH() const override {

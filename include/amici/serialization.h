@@ -149,7 +149,6 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar & m.sx0data_;
     ar & m.nmaxevent_;
     ar & m.state_is_non_negative_;
-    ar & m.pythonGenerated;
     ar & m.min_sigma_;
     ar & m.sigma_res_;
     ar & m.steadystate_computation_mode_;
