@@ -64,7 +64,6 @@ void NewtonSolver::computeNewtonSensis(
         );
     }
 
-    if (model.pythonGenerated) {
         for (int ip = 0; ip < model.nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
             model.get_dxdotdp_full().scatter(
@@ -74,14 +73,6 @@ void NewtonSolver::computeNewtonSensis(
 
             solveLinearSystem(sx[ip]);
         }
-    } else {
-        for (int ip = 0; ip < model.nplist(); ip++) {
-            for (int ix = 0; ix < model.nx_solver; ix++)
-                sx.at(ix, ip) = -model.get_dxdotdp().at(ix, ip);
-
-            solveLinearSystem(sx[ip]);
-        }
-    }
 }
 
 void NewtonSolver::prepareLinearSystem(Model& model, DEStateView const& state) {

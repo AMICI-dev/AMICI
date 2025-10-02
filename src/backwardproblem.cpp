@@ -342,17 +342,12 @@ void computeQBfromQ(
     // set to zero first, as multiplication adds to existing value
     yQB.zero();
     // yQB += dxdotdp * yQ
-    if (model.pythonGenerated) {
-        // fill dxdotdp with current values
-        auto const& plist = model.getParameterList();
-        model.fdxdotdp(state.t, state.x, state.dx);
-        model.get_dxdotdp_full().multiply(
-            yQB.getNVector(), yQ.getNVector(), plist, true
-        );
-    } else {
-        for (int ip = 0; ip < model.nplist(); ++ip)
-            yQB[ip] = dotProd(yQ, model.get_dxdotdp()[ip]);
-    }
+    // fill dxdotdp with current values
+    auto const& plist = model.getParameterList();
+    model.fdxdotdp(state.t, state.x, state.dx);
+    model.get_dxdotdp_full().multiply(
+        yQB.getNVector(), yQ.getNVector(), plist, true
+    );
 }
 
 SteadyStateBackwardProblem::SteadyStateBackwardProblem(

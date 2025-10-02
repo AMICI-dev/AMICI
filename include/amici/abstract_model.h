@@ -287,24 +287,6 @@ class AbstractModel {
      */
     virtual void fdx0(AmiVector& x0, AmiVector& dx0);
 
-    /**
-     * @brief Model-specific implementation of fstau (MATLAB-only, DEPRECATED)
-     * @param stau total derivative of event timepoint
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h Heaviside vector
-     * @param tcl total abundances for conservation laws
-     * @param sx current state sensitivity
-     * @param ip sensitivity index
-     * @param ie event index
-     */
-    virtual void fstau(
-        realtype* stau, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* tcl,
-        realtype const* sx, int ip, int ie
-    );
 
     /**
      * @brief Model-specific implementation of fstau
@@ -340,26 +322,9 @@ class AbstractModel {
     fy(realtype* y, realtype t, realtype const* x, realtype const* p,
        realtype const* k, realtype const* h, realtype const* w);
 
-    /**
-     * @brief Model-specific implementation of fdydp (MATLAB-only)
-     * @param dydp partial derivative of observables y w.r.t. model parameters p
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h Heaviside vector
-     * @param ip parameter index w.r.t. which the derivative is requested
-     * @param w repeating elements vector
-     * @param dwdp Recurring terms in xdot, parameter derivative
-     */
-    virtual void fdydp(
-        realtype* dydp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, realtype const* w,
-        realtype const* dwdp
-    );
 
     /**
-     * @brief Model-specific implementation of fdydp (Python)
+     * @brief Model-specific implementation of fdydp
      * @param dydp partial derivative of observables y w.r.t. model parameters p
      * @param t current time
      * @param x current state
@@ -526,25 +491,7 @@ class AbstractModel {
     );
 
     /**
-     * @brief Model-specific implementation of fdeltax (MATLAB-only)
-     * @param deltax state update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h Heaviside vector
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     */
-    virtual void fdeltax(
-        realtype* deltax, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ie, realtype const* xdot,
-        realtype const* xdot_old
-    );
-
-    /**
-     * @brief Model-specific implementation of fdeltax (Python-only)
+     * @brief Model-specific implementation of fdeltax
      * @param deltax state update
      * @param t current time
      * @param x current state
@@ -563,31 +510,7 @@ class AbstractModel {
     );
 
     /**
-     * @brief Model-specific implementation of fdeltasx (MATLAB-only)
-     * @param deltasx sensitivity update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h Heaviside vector
-     * @param w repeating elements vector
-     * @param ip sensitivity index
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param sx state sensitivity
-     * @param stau event-time sensitivity
-     * @param tcl total abundances for conservation laws
-     */
-    virtual void fdeltasx(
-        realtype* deltasx, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w, int ip, int ie,
-        realtype const* xdot, realtype const* xdot_old, realtype const* sx,
-        realtype const* stau, realtype const* tcl
-    );
-
-    /**
-     * @brief Model-specific implementation of fdeltasx (Python-only)
+     * @brief Model-specific implementation of fdeltasx
      * @param deltasx sensitivity update
      * @param t current time
      * @param x current state
@@ -634,24 +557,6 @@ class AbstractModel {
         realtype const* xB, realtype const* tcl
     );
 
-    /**
-     * @brief Model-specific implementation of fdeltaxB (MATLAB-only!!)
-     * @param deltaxB adjoint state update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h Heaviside vector
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param xB current adjoint state
-     */
-    virtual void fdeltaxB(
-        realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ie, realtype const* xdot,
-        realtype const* xdot_old, realtype const* xB
-    );
 
     /**
      * @brief Model-specific implementation of fdeltaqB
@@ -674,26 +579,6 @@ class AbstractModel {
         realtype const* k, realtype const* h, realtype const* dx, int ip,
         int ie, realtype const* xdot, realtype const* xdot_old,
         realtype const* x_old, realtype const* xB
-    );
-
-    /**
-     * @brief Model-specific implementation of fdeltaqB (MATLAB-only!!)
-     * @param deltaqB sensitivity update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h Heaviside vector
-     * @param ip sensitivity index
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param xB adjoint state
-     */
-    virtual void fdeltaqB(
-        realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, int ie,
-        realtype const* xdot, realtype const* xdot_old, realtype const* xB
     );
 
     /**
@@ -1002,7 +887,7 @@ class AbstractModel {
     virtual void fdwdx_rowvals(SUNMatrixWrapper& dwdx);
 
     /**
-     * @brief Model-specific implementation of fdwdw, no w chainrule (Py)
+     * @brief Model-specific implementation of fdwdw, no w chainrule
      * @param dwdw partial derivative w wrt w
      * @param t timepoint
      * @param x Vector with the states
