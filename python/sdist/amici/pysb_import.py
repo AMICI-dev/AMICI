@@ -55,9 +55,7 @@ logger = get_logger(__name__, logging.ERROR)
 def pysb2jax(
     model: pysb.Model,
     output_dir: str | Path | None = None,
-    observables: list[str] = None,
-    sigmas: dict[str, str] = None,
-    noise_distributions: dict[str, str | Callable] | None = None,
+    observation_model: list[MeasurementChannel] = None,
     verbose: int | bool = False,
     compute_conservation_laws: bool = True,
     simplify: Callable = _default_simplify,
@@ -87,20 +85,16 @@ def pysb2jax(
     :param output_dir:
         see :meth:`amici.de_export.ODEExporter.set_paths`
 
-    :param observables:
-        list of :class:`pysb.core.Expression` or :class:`pysb.core.Observable`
-        names in the provided model that should be mapped to observables
-
-    :param sigmas:
-        dict of :class:`pysb.core.Expression` names that should be mapped to
-        sigmas
-
-    :param noise_distributions:
-        dict with names of observable Expressions as keys and a noise type
-        identifier, or a callable generating a custom noise formula string
-        (see :py:func:`amici.import_utils.noise_distribution_to_cost_function`
-        ). If nothing is passed for some observable id, a normal model is
-        assumed as default.
+    :param observation_model:
+        The different measurement channels that make up the observation
+        model, see also :class:`amici.import_utils.MeasurementChannel`.
+        The ID is expected to be the name of a :class:`pysb.Expression` or
+        :class:`pysb.Observable` in the provided model that should be mapped to
+        an observable.
+        ``sigma`` is expected to be the name of a :class:`pysb.Expression` to
+        be mapped to the scale parameter of the noise distribution.
+        ``MeasurementChannel.formula`` is expected to be
+        ``None``. Event-observables are not supported.
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -126,20 +120,12 @@ def pysb2jax(
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra observables and noise variables added
     """
-    if observables is None:
-        observables = []
-
-    if sigmas is None:
-        sigmas = {}
-
     model_name = model_name or model.name
 
     set_log_level(logger, verbose)
     ode_model = ode_model_from_pysb_importer(
         model,
-        observables=observables,
-        sigmas=sigmas,
-        noise_distributions=noise_distributions,
+        observation_model=observation_model,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
         cache_simplify=cache_simplify,

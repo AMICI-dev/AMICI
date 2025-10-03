@@ -7,6 +7,8 @@ import sys
 import amici
 import pytest
 from pathlib import Path
+
+from amici import MeasurementChannel
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 
@@ -78,7 +80,7 @@ def pysb_example_presimulation_module():
             model,
             outdir,
             verbose=True,
-            observables=["pPROT_obs"],
+            observation_model=[MeasurementChannel("pPROT_obs")],
             constant_parameters=constant_parameters,
         )
 
