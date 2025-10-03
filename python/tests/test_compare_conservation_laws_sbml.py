@@ -4,7 +4,8 @@ import warnings
 import amici
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from amici import SteadyStateStatus
+from numpy.testing import assert_allclose
 from amici.testing import skip_on_valgrind
 
 
@@ -229,9 +230,17 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     )
     assert rdata["status"] == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
-    assert_array_equal(rdata["preeq_status"], np.array([[-3, 1, 0]]))
+    assert rdata["preeq_status"] == [
+        SteadyStateStatus.failed_factorization,
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+    ]
     # check that steady state computation succeeded by Newton in reduced model
-    assert_array_equal(rdata_cl["preeq_status"], np.array([[1, 0, 0]]))
+    assert rdata_cl["preeq_status"] == [
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+        SteadyStateStatus.not_run,
+    ]
 
     # compare state sensitivities with edata and preequilibration
     for field in ["x", "x_ss", "sx", "llh", "sllh"]:

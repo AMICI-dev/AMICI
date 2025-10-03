@@ -9,7 +9,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 BREAKING CHANGES
 
 * The MATLAB interface has been removed.
-
+* `ReturnDataView.posteq_numsteps` and `ReturnDataView.posteq_numsteps` now
+  return a one-dimensional array of shape `(num_timepoints,)` instead of a
+  two-dimensional array of shape `(1, num_timepoints)`.
+* `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now
+  return `list[SteadyStateStatus]` instead of an `ndarray[int]` of shape
+  `(1, 3)`.
 
 ## v0.X Series
 

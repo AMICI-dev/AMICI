@@ -13,7 +13,7 @@ from amici.testing import (
     skip_on_valgrind,
 )
 from amici.gradient_check import check_derivatives
-from amici import SensitivityMethod, SensitivityOrder
+from amici import SensitivityMethod, SensitivityOrder, SteadyStateStatus
 
 pytestmark = pytest.mark.filterwarnings(
     # https://github.com/AMICI-dev/AMICI/issues/18
@@ -517,28 +517,32 @@ def test_steadystate_computation_mode(preeq_fixture):
 
         # assert successful simulation
         assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
+    assert rdatas[amici.SteadyStateComputationMode.integrationOnly][
+        "preeq_status"
+    ] == [
+        SteadyStateStatus.not_run,
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+    ]
 
-    assert np.all(
-        rdatas[amici.SteadyStateComputationMode.integrationOnly][
-            "preeq_status"
-        ][0]
-        == [0, 1, 0]
-    )
     assert (
         rdatas[amici.SteadyStateComputationMode.integrationOnly][
             "preeq_numsteps"
-        ][0][0]
+        ][0]
         == 0
     )
 
-    assert np.all(
-        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_status"][0]
-        == [1, 0, 0]
-    )
+    assert rdatas[amici.SteadyStateComputationMode.newtonOnly][
+        "preeq_status"
+    ] == [
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+        SteadyStateStatus.not_run,
+    ]
     assert (
         rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][
             0
-        ][0]
+        ]
         > 0
     )
 

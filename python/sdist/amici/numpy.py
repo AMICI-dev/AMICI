@@ -14,7 +14,14 @@ import amici
 import numpy as np
 import sympy as sp
 from sympy.abc import _clash
-from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
+from . import (
+    ExpData,
+    ExpDataPtr,
+    Model,
+    ReturnData,
+    ReturnDataPtr,
+    SteadyStateStatus,
+)
 
 StrOrExpr = str | sp.Expr
 
@@ -290,11 +297,9 @@ class ReturnDataView(SwigPtrView):
             "w": [rdata.nt, rdata.nw],
             "xdot": [rdata.nx_solver],
             "preeq_numlinsteps": [rdata.newton_maxsteps, 2],
-            "preeq_numsteps": [1, 3],
-            "preeq_status": [1, 3],
+            "preeq_numsteps": [3],
             "posteq_numlinsteps": [rdata.newton_maxsteps, 2],
-            "posteq_numsteps": [1, 3],
-            "posteq_status": [1, 3],
+            "posteq_numsteps": [3],
             "numsteps": [rdata.nt],
             "numrhsevals": [rdata.nt],
             "numerrtestfails": [rdata.nt],
@@ -309,7 +314,7 @@ class ReturnDataView(SwigPtrView):
 
     def __getitem__(
         self, item: str
-    ) -> np.ndarray | ReturnDataPtr | ReturnData | float:
+    ) -> np.ndarray | ReturnDataPtr | ReturnData | float | int | list:
         """
         Access fields by name.
 
@@ -321,6 +326,9 @@ class ReturnDataView(SwigPtrView):
         """
         if item == "status":
             return int(super().__getitem__(item))
+
+        if item in ("preeq_status", "posteq_status"):
+            return list(map(SteadyStateStatus, super().__getitem__(item)))
 
         if item == "t":
             item = "ts"
