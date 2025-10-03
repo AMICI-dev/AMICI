@@ -138,7 +138,6 @@ class Model_model_steadystate_py : public amici::Model_ODE {
                   0,                                       // nnz
                   3,                                 // ubw
                   3,                                 // lbw
-                  true,                                    // pythonGenerated
                   11,                   // ndxdotdp_explicit
                   9,                   // ndxdotdx_explicit
                   0                    // w_recursion_depth
@@ -537,7 +536,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "b12c68a7a02f1cbd33de59d47cbc0c4d77d30d6f";
+        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
     }
 
     bool hasQuadraticLLH() const override {

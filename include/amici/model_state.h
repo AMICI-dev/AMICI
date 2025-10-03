@@ -93,7 +93,6 @@ struct ModelStateDerived {
         , dxdotdw_(other.dxdotdw_)
         , dwdx_(other.dwdx_)
         , dwdp_(other.dwdp_)
-        , M_(other.M_)
         , MSparse_(other.MSparse_)
         , dfdx_(other.dfdx_)
         , dxdotdp_full(other.dxdotdp_full)
@@ -106,7 +105,6 @@ struct ModelStateDerived {
         , dtotal_cldx_rdata(other.dtotal_cldx_rdata)
         , dxdotdp(other.dxdotdp)
         , dJydy_(other.dJydy_)
-        , dJydy_matlab_(other.dJydy_matlab_)
         , dJydsigma_(other.dJydsigma_)
         , dJydx_(other.dJydx_)
         , dJydp_(other.dJydp_)
@@ -152,7 +150,6 @@ struct ModelStateDerived {
         dxdotdw_.set_ctx(sunctx_);
         dwdx_.set_ctx(sunctx_);
         dwdp_.set_ctx(sunctx_);
-        M_.set_ctx(sunctx_);
         MSparse_.set_ctx(sunctx_);
         dfdx_.set_ctx(sunctx_);
         dxdotdp_full.set_ctx(sunctx_);
@@ -209,13 +206,6 @@ struct ModelStateDerived {
 
     /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
     SUNMatrixWrapper dwdp_;
-
-    /**
-     * Dense Mass matrix (dimension: `nx_solver` x `nx_solver`)
-     *
-     * MATLAB-generated-only, DEPRECATED.
-     */
-    SUNMatrixWrapper M_;
 
     /**
      * Sparse Mass matrix, Python-generated-only
@@ -295,12 +285,6 @@ struct ModelStateDerived {
      * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
      */
     std::vector<SUNMatrixWrapper> dJydy_;
-
-    /** Observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `false` (dimension `nJ` x `ny` x `nytrue` ,
-     * row-major)
-     */
-    std::vector<realtype> dJydy_matlab_;
 
     /** Observable sigma derivative of data likelihood
      * (dimension nJ x ny x nytrue, row-major)

@@ -57,7 +57,6 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
     {ModelQuantity::p, "p"},
     {ModelQuantity::ts, "ts"},
     {ModelQuantity::dJydy, "dJydy"},
-    {ModelQuantity::dJydy_matlab, "dJydy"},
     {ModelQuantity::deltaqB, "deltaqB"},
     {ModelQuantity::dsigmaydp, "dsigmaydp"},
     {ModelQuantity::dsigmaydy, "dsigmaydy"},
@@ -197,23 +196,7 @@ Model::Model(
         == gsl::narrow<int>(simulation_parameters_.fixedParameters.size())
     );
 
-    Expects(
-        (events_.empty() && !pythonGenerated)
-        || (events_.size() == (unsigned long)ne)
-    );
-
-    if (events_.empty()) {
-        // for MATLAB generated models, create event objects here
-        for (int ie = 0; ie < ne; ie++) {
-            events_.emplace_back(
-                // The default for use_values_from_trigger_time used to be
-                // `true` in SBML. However, the MATLAB interface always
-                // implicitly used `false`, so we keep it that way until it
-                // will be removed completely.
-                std::string("event_") + std::to_string(ie), false, true, 0
-            );
-        }
-    }
+    Expects((events_.size() == (unsigned long)ne));
 
     simulation_parameters_.pscale = std::vector<ParameterScaling>(
         model_dimensions.np, ParameterScaling::none
@@ -1149,26 +1132,23 @@ void Model::getObservableSigmaSensitivity(
     fdsigmaydp(it, edata);
     writeSlice(derived_state_.dsigmaydp_, ssigmay);
 
-    if (pythonGenerated) {
-        // ssigmay = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
-        //         = dsigmaydy*sy+dsigmaydp
+    // ssigmay = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
+    //         = dsigmaydy*sy+dsigmaydp
 
-        fdsigmaydy(it, edata);
+    fdsigmaydy(it, edata);
 
-        // compute ssigmay = 1.0 * dsigmaydp + 1.0 * dsigmaydy * sy
-        // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
-        //             M  N                      M  K          K  N
-        //             ldc                       lda           ldb
-        setNaNtoZero(derived_state_.dsigmaydy_);
-        derived_state_.sy_.assign(sy.begin(), sy.end());
-        setNaNtoZero(derived_state_.sy_);
-        amici_dgemm(
-            BLASLayout::colMajor, BLASTranspose::noTrans,
-            BLASTranspose::noTrans, ny, nplist(), ny, 1.0,
-            derived_state_.dsigmaydy_.data(), ny, derived_state_.sy_.data(), ny,
-            1.0, ssigmay.data(), ny
-        );
-    }
+    // compute ssigmay = 1.0 * dsigmaydp + 1.0 * dsigmaydy * sy
+    // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
+    //             M  N                      M  K          K  N
+    //             ldc                       lda           ldb
+    setNaNtoZero(derived_state_.dsigmaydy_);
+    derived_state_.sy_.assign(sy.begin(), sy.end());
+    setNaNtoZero(derived_state_.sy_);
+    amici_dgemm(
+        BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
+        ny, nplist(), ny, 1.0, derived_state_.dsigmaydy_.data(), ny,
+        derived_state_.sy_.data(), ny, 1.0, ssigmay.data(), ny
+    );
 
     if (always_check_finite_)
         checkFinite(ssigmay, ModelQuantity::ssigmay, nplist());
@@ -1252,40 +1232,32 @@ void Model::getEventSensitivity(
     gsl::span<realtype> sz, int const ie, realtype const t, AmiVector const& x,
     AmiVectorArray const& sx
 ) {
-    if (pythonGenerated) {
-        if (!nz)
-            return;
+    if (!nz)
+        return;
 
-        fdzdx(ie, t, x);
-        fdzdp(ie, t, x);
+    fdzdx(ie, t, x);
+    fdzdp(ie, t, x);
 
-        derived_state_.sx_.resize(nx_solver * nplist());
-        sx.flatten_to_vector(derived_state_.sx_);
+    derived_state_.sx_.resize(nx_solver * nplist());
+    sx.flatten_to_vector(derived_state_.sx_);
 
-        // compute sz = 1.0*dzdx*sx + 1.0*dzdp
-        // dzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = sz C[nz,nplist]
-        //        M  K                 K  N                     M  N
-        //        lda                  ldb                      ldc
-        setNaNtoZero(derived_state_.dzdx_);
-        setNaNtoZero(derived_state_.sx_);
-        amici_dgemm(
-            BLASLayout::colMajor, BLASTranspose::noTrans,
-            BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
-            derived_state_.dzdx_.data(), nz, derived_state_.sx_.data(),
-            nx_solver, 1.0, derived_state_.dzdp_.data(), nz
-        );
+    // compute sz = 1.0*dzdx*sx + 1.0*dzdp
+    // dzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = sz C[nz,nplist]
+    //        M  K                 K  N                     M  N
+    //        lda                  ldb                      ldc
+    setNaNtoZero(derived_state_.dzdx_);
+    setNaNtoZero(derived_state_.sx_);
+    amici_dgemm(
+        BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
+        nz, nplist(), nx_solver, 1.0, derived_state_.dzdx_.data(), nz,
+        derived_state_.sx_.data(), nx_solver, 1.0, derived_state_.dzdp_.data(),
+        nz
+    );
 
-        addSlice(derived_state_.dzdp_, sz);
+    addSlice(derived_state_.dzdp_, sz);
 
-        if (always_check_finite_)
-            checkFinite(sz, ModelQuantity::sz, nplist());
-    } else {
-        for (int ip = 0; ip < nplist(); ip++) {
-            fsz(&sz[ip * nz], ie, t, computeX_pos(x),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), sx.data(ip), plist(ip));
-        }
-    }
+    if (always_check_finite_)
+        checkFinite(sz, ModelQuantity::sz, nplist());
 }
 
 void Model::getUnobservedEventSensitivity(
@@ -1310,42 +1282,33 @@ void Model::getEventRegularizationSensitivity(
     gsl::span<realtype> srz, int const ie, realtype const t, AmiVector const& x,
     AmiVectorArray const& sx
 ) {
-    if (pythonGenerated) {
-        if (!nz)
-            return;
 
-        fdrzdx(ie, t, x);
-        fdrzdp(ie, t, x);
+    if (!nz)
+        return;
 
-        derived_state_.sx_.resize(nx_solver * nplist());
-        sx.flatten_to_vector(derived_state_.sx_);
+    fdrzdx(ie, t, x);
+    fdrzdp(ie, t, x);
 
-        // compute srz = 1.0*drzdx*sx + 1.0*drzdp
-        // drzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = srz C[nz,nplist]
-        //         M  K                 K  N                      M  N
-        //         lda                  ldb                       ldc
-        setNaNtoZero(derived_state_.drzdx_);
-        setNaNtoZero(derived_state_.sx_);
-        amici_dgemm(
-            BLASLayout::colMajor, BLASTranspose::noTrans,
-            BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
-            derived_state_.drzdx_.data(), nz, derived_state_.sx_.data(),
-            nx_solver, 1.0, derived_state_.drzdp_.data(), nz
-        );
+    derived_state_.sx_.resize(nx_solver * nplist());
+    sx.flatten_to_vector(derived_state_.sx_);
 
-        addSlice(derived_state_.drzdp_, srz);
+    // compute srz = 1.0*drzdx*sx + 1.0*drzdp
+    // drzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = srz C[nz,nplist]
+    //         M  K                 K  N                      M  N
+    //         lda                  ldb                       ldc
+    setNaNtoZero(derived_state_.drzdx_);
+    setNaNtoZero(derived_state_.sx_);
+    amici_dgemm(
+        BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
+        nz, nplist(), nx_solver, 1.0, derived_state_.drzdx_.data(), nz,
+        derived_state_.sx_.data(), nx_solver, 1.0, derived_state_.drzdp_.data(),
+        nz
+    );
 
-        if (always_check_finite_)
-            checkFinite(srz, ModelQuantity::srz, nplist());
-    } else {
-        for (int ip = 0; ip < nplist(); ip++) {
-            fsrz(
-                &srz[ip * nz], ie, t, computeX_pos(x),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), sx.data(ip), plist(ip)
-            );
-        }
-    }
+    addSlice(derived_state_.drzdp_, srz);
+
+    if (always_check_finite_)
+        checkFinite(srz, ModelQuantity::srz, nplist());
 }
 
 void Model::getEventSigma(
@@ -1468,24 +1431,12 @@ void Model::getEventTimeSensitivity(
 
     std::ranges::fill(stau, 0.0);
 
-    if (pythonGenerated) {
-        for (int ip = 0; ip < nplist(); ip++) {
-            fstau(
-                &stau.at(ip), t, computeX_pos(x),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), dx.data(), state_.total_cl.data(), sx.data(ip),
-                plist(ip), ie
-            );
-        }
-    } else {
-        for (int ip = 0; ip < nplist(); ip++) {
-            fstau(
-                &stau.at(ip), t, computeX_pos(x),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), state_.total_cl.data(), sx.data(ip), plist(ip),
-                ie
-            );
-        }
+    for (int ip = 0; ip < nplist(); ip++) {
+        fstau(
+            &stau.at(ip), t, computeX_pos(x), state_.unscaledParameters.data(),
+            state_.fixedParameters.data(), state_.h.data(), dx.data(),
+            state_.total_cl.data(), sx.data(ip), plist(ip), ie
+        );
     }
 }
 
@@ -1499,22 +1450,11 @@ void Model::addStateEventUpdate(
     std::copy_n(computeX_pos(x), nx_solver, x.data());
 
     // compute update
-    if (pythonGenerated) {
-        fdeltax(
-            derived_state_.deltax_.data(), t, x.data(),
-            state.unscaledParameters.data(), state.fixedParameters.data(),
-            state.h.data(), ie, xdot.data(), xdot_old.data(), x_old.data()
-        );
-
-    } else {
-        // For MATLAB-imported models, use_values_from_trigger_time=true
-        // is not supported, and thus, x_old == x, always.
-        fdeltax(
-            derived_state_.deltax_.data(), t, x_old.data(),
-            state.unscaledParameters.data(), state.fixedParameters.data(),
-            state.h.data(), ie, xdot.data(), xdot_old.data()
-        );
-    }
+    fdeltax(
+        derived_state_.deltax_.data(), t, x.data(),
+        state.unscaledParameters.data(), state.fixedParameters.data(),
+        state.h.data(), ie, xdot.data(), xdot_old.data(), x_old.data()
+    );
 
     if (always_check_finite_) {
         checkFinite(derived_state_.deltax_, ModelQuantity::deltax, t);
@@ -1536,25 +1476,13 @@ void Model::addStateSensitivityEventUpdate(
         derived_state_.deltasx_.assign(nx_solver, 0.0);
 
         // compute update
-        if (pythonGenerated) {
-            fdeltasx(
-                derived_state_.deltasx_.data(), t, x.data(),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
-                xdot.data(), xdot_old.data(), sx_old.data(ip), &stau.at(ip),
-                state_.total_cl.data(), x_old.data()
-            );
-        } else {
-            // For MATLAB-imported models, use_values_from_trigger_time=true
-            // is not supported, and thus, x_old == x, always.
-            fdeltasx(
-                derived_state_.deltasx_.data(), t, x_old.data(),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
-                xdot.data(), xdot_old.data(), sx.data(ip), &stau.at(ip),
-                state_.total_cl.data()
-            );
-        }
+        fdeltasx(
+            derived_state_.deltasx_.data(), t, x.data(),
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
+            xdot.data(), xdot_old.data(), sx_old.data(ip), &stau.at(ip),
+            state_.total_cl.data(), x_old.data()
+        );
         if (always_check_finite_) {
             checkFinite(
                 derived_state_.deltasx_, ModelQuantity::deltasx, nplist()
@@ -1576,20 +1504,12 @@ void Model::addAdjointStateEventUpdate(
     derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
 
     // compute update
-    if (pythonGenerated) {
-        fdeltaxB(
-            derived_state_.deltaxB_.data(), t, computeX_pos(x),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), dx.data(), ie, xdot.data(), xdot_old.data(),
-            x_old.data(), xB.data(), state_.total_cl.data()
-        );
-    } else {
-        fdeltaxB(
-            derived_state_.deltaxB_.data(), t, computeX_pos(x),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), ie, xdot.data(), xdot_old.data(), xB.data()
-        );
-    }
+    fdeltaxB(
+        derived_state_.deltaxB_.data(), t, computeX_pos(x),
+        state_.unscaledParameters.data(), state_.fixedParameters.data(),
+        state_.h.data(), dx.data(), ie, xdot.data(), xdot_old.data(),
+        x_old.data(), xB.data(), state_.total_cl.data()
+    );
 
     if (always_check_finite_) {
         checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
@@ -1610,21 +1530,12 @@ void Model::addAdjointQuadratureEventUpdate(
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
 
-        if (pythonGenerated) {
-            fdeltaqB(
-                derived_state_.deltaqB_.data(), t, computeX_pos(x),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), dx.data(), plist(ip), ie, xdot.data(),
-                xdot_old.data(), x_old.data(), xB.data()
-            );
-        } else {
-            fdeltaqB(
-                derived_state_.deltaqB_.data(), t, computeX_pos(x),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), plist(ip), ie, xdot.data(), xdot_old.data(),
-                xB.data()
-            );
-        }
+        fdeltaqB(
+            derived_state_.deltaqB_.data(), t, computeX_pos(x),
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            state_.h.data(), dx.data(), plist(ip), ie, xdot.data(),
+            xdot_old.data(), x_old.data(), xB.data()
+        );
 
         for (int iJ = 0; iJ < nJ; ++iJ)
             xQB.at(ip * nJ + iJ) += derived_state_.deltaqB_.at(iJ);
@@ -1789,7 +1700,6 @@ int Model::checkFinite(
             col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dJydy:
-    case ModelQuantity::dJydy_matlab:
     case ModelQuantity::dJydsigma:
         if (hasObservableIds())
             col_id += " " + getObservableIds()[col];
@@ -2117,12 +2027,7 @@ void Model::checkLLHBufferSize(
         );
 }
 
-void Model::initializeVectors() {
-    sx0data_.clear();
-    if (!pythonGenerated)
-        derived_state_.dxdotdp
-            = AmiVectorArray(nx_solver, nplist(), derived_state_.sunctx_);
-}
+void Model::initializeVectors() { sx0data_.clear(); }
 
 void Model::fy(realtype const t, AmiVector const& x) {
     if (!ny)
@@ -2156,22 +2061,13 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
 
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
-        if (pythonGenerated) {
-            fdydp(
-                &derived_state_.dydp_.at(ip * ny), t, x_pos,
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), plist(ip), derived_state_.w_.data(),
-                state_.total_cl.data(), state_.stotal_cl.data(),
-                derived_state_.spl_.data(), derived_state_.sspl_.data()
-            );
-        } else {
-            fdydp(
-                &derived_state_.dydp_.at(ip * ny), t, x_pos,
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), plist(ip), derived_state_.w_.data(),
-                derived_state_.dwdp_.data()
-            );
-        }
+        fdydp(
+            &derived_state_.dydp_.at(ip * ny), t, x_pos,
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            state_.h.data(), plist(ip), derived_state_.w_.data(),
+            state_.total_cl.data(), state_.stotal_cl.data(),
+            derived_state_.spl_.data(), derived_state_.sspl_.data()
+        );
 
     if (always_check_finite_) {
         checkFinite(derived_state_.dydp_, ModelQuantity::dydp, nplist());
@@ -2310,81 +2206,57 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     fy(edata.getTimepoint(it), x);
     fsigmay(it, &edata);
 
-    if (pythonGenerated) {
-        fdJydsigma(it, x, edata);
-        fdsigmaydy(it, &edata);
+    fdJydsigma(it, x, edata);
+    fdsigmaydy(it, &edata);
 
-        setNaNtoZero(derived_state_.dJydsigma_);
-        setNaNtoZero(derived_state_.dsigmaydy_);
-        for (int iyt = 0; iyt < nytrue; iyt++) {
-            if (!derived_state_.dJydy_.at(iyt).capacity())
-                continue;
-            derived_state_.dJydy_.at(iyt).zero();
-            fdJydy_colptrs(derived_state_.dJydy_.at(iyt), iyt);
-            fdJydy_rowvals(derived_state_.dJydy_.at(iyt), iyt);
+    setNaNtoZero(derived_state_.dJydsigma_);
+    setNaNtoZero(derived_state_.dsigmaydy_);
+    for (int iyt = 0; iyt < nytrue; iyt++) {
+        if (!derived_state_.dJydy_.at(iyt).capacity())
+            continue;
+        derived_state_.dJydy_.at(iyt).zero();
+        fdJydy_colptrs(derived_state_.dJydy_.at(iyt), iyt);
+        fdJydy_rowvals(derived_state_.dJydy_.at(iyt), iyt);
 
-            if (!edata.isSetObservedData(it, iyt))
-                continue;
+        if (!edata.isSetObservedData(it, iyt))
+            continue;
 
-            // get dJydy slice (ny) for current timepoint and observable
-            fdJydy(
-                derived_state_.dJydy_.at(iyt).data(), iyt,
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                derived_state_.y_.data(), derived_state_.sigmay_.data(),
-                edata.getObservedDataPtr(it)
+        // get dJydy slice (ny) for current timepoint and observable
+        fdJydy(
+            derived_state_.dJydy_.at(iyt).data(), iyt,
+            state_.unscaledParameters.data(), state_.fixedParameters.data(),
+            derived_state_.y_.data(), derived_state_.sigmay_.data(),
+            edata.getObservedDataPtr(it)
+        );
+
+        // dJydy += dJydsigma * dsigmaydy
+        // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
+        // sparse    dense       dense
+        derived_state_.dJydy_dense_.zero();
+        amici_dgemm(
+            BLASLayout::colMajor, BLASTranspose::noTrans,
+            BLASTranspose::noTrans, nJ, ny, ny, 1.0,
+            &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
+            derived_state_.dsigmaydy_.data(), ny, 1.0,
+            derived_state_.dJydy_dense_.data(), nJ
+        );
+
+        auto tmp_sparse
+            = SUNMatrixWrapper(derived_state_.dJydy_dense_, 0.0, CSC_MAT);
+        auto ret
+            = SUNMatScaleAdd(1.0, derived_state_.dJydy_.at(iyt), tmp_sparse);
+        if (ret != SUN_SUCCESS) {
+            throw AmiException(
+                "SUNMatScaleAdd failed with status %d in %s", ret, __func__
             );
-
-            // dJydy += dJydsigma * dsigmaydy
-            // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
-            // sparse    dense       dense
-            derived_state_.dJydy_dense_.zero();
-            amici_dgemm(
-                BLASLayout::colMajor, BLASTranspose::noTrans,
-                BLASTranspose::noTrans, nJ, ny, ny, 1.0,
-                &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
-                derived_state_.dsigmaydy_.data(), ny, 1.0,
-                derived_state_.dJydy_dense_.data(), nJ
-            );
-
-            auto tmp_sparse
-                = SUNMatrixWrapper(derived_state_.dJydy_dense_, 0.0, CSC_MAT);
-            auto ret = SUNMatScaleAdd(
-                1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
-            );
-            if (ret != SUN_SUCCESS) {
-                throw AmiException(
-                    "SUNMatScaleAdd failed with status %d in %s", ret, __func__
-                );
-            }
-            derived_state_.dJydy_.at(iyt).refresh();
-
-            if (always_check_finite_) {
-                checkFinite(
-                    gsl::make_span(derived_state_.dJydy_.at(iyt).get()),
-                    ModelQuantity::dJydy, ny
-                );
-            }
         }
-    } else {
-        std::ranges::fill(derived_state_.dJydy_matlab_, 0.0);
-        for (int iyt = 0; iyt < nytrue; iyt++) {
-            if (!edata.isSetObservedData(it, iyt))
-                continue;
-            fdJydy(
-                &derived_state_.dJydy_matlab_.at(iyt * ny * nJ), iyt,
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                derived_state_.y_.data(), derived_state_.sigmay_.data(),
-                edata.getObservedDataPtr(it)
+        derived_state_.dJydy_.at(iyt).refresh();
+
+        if (always_check_finite_) {
+            checkFinite(
+                gsl::make_span(derived_state_.dJydy_.at(iyt).get()),
+                ModelQuantity::dJydy, ny
             );
-            if (always_check_finite_) {
-                // get dJydy slice (ny) for current timepoint and observable
-                checkFinite(
-                    gsl::span<realtype>(
-                        &derived_state_.dJydy_matlab_[iyt * ny * nJ], ny * nJ
-                    ),
-                    ModelQuantity::dJydy, ny
-                );
-            }
         }
     }
 }
@@ -2440,27 +2312,16 @@ void Model::fdJydp(int const it, AmiVector const& x, ExpData const& edata) {
         if (!edata.isSetObservedData(it, iyt))
             continue;
 
-        if (pythonGenerated) {
-            // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
-            for (int iplist = 0; iplist < nplist(); ++iplist) {
-                derived_state_.dJydy_.at(iyt).multiply(
-                    gsl::span<realtype>(
-                        &derived_state_.dJydp_.at(iplist * nJ), nJ
-                    ),
-                    gsl::span<realtype const>(
-                        &derived_state_.dydp_.at(iplist * ny), ny
-                    )
-                );
-            }
-        } else {
-            amici_dgemm(
-                BLASLayout::colMajor, BLASTranspose::noTrans,
-                BLASTranspose::noTrans, nJ, nplist(), ny, 1.0,
-                &derived_state_.dJydy_matlab_.at(iyt * nJ * ny), nJ,
-                derived_state_.dydp_.data(), ny, 1.0,
-                derived_state_.dJydp_.data(), nJ
+        // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
+        for (int iplist = 0; iplist < nplist(); ++iplist) {
+            derived_state_.dJydy_.at(iyt).multiply(
+                gsl::span<realtype>(&derived_state_.dJydp_.at(iplist * nJ), nJ),
+                gsl::span<realtype const>(
+                    &derived_state_.dydp_.at(iplist * ny), ny
+                )
             );
         }
+
         // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
         amici_dgemm(
             BLASLayout::colMajor, BLASTranspose::noTrans,
@@ -2492,22 +2353,10 @@ void Model::fdJydx(int const it, AmiVector const& x, ExpData const& edata) {
         //          M  K            K  N                       M  N
         //           lda             ldb                        ldc
 
-        if (pythonGenerated) {
-            for (int ix = 0; ix < nx_solver; ++ix) {
-                derived_state_.dJydy_.at(iyt).multiply(
-                    gsl::span<realtype>(&derived_state_.dJydx_.at(ix * nJ), nJ),
-                    gsl::span<realtype const>(
-                        &derived_state_.dydx_.at(ix * ny), ny
-                    )
-                );
-            }
-        } else {
-            amici_dgemm(
-                BLASLayout::colMajor, BLASTranspose::noTrans,
-                BLASTranspose::noTrans, nJ, nx_solver, ny, 1.0,
-                &derived_state_.dJydy_matlab_.at(iyt * ny * nJ), nJ,
-                derived_state_.dydx_.data(), ny, 1.0,
-                derived_state_.dJydx_.data(), nJ
+        for (int ix = 0; ix < nx_solver; ++ix) {
+            derived_state_.dJydy_.at(iyt).multiply(
+                gsl::span<realtype>(&derived_state_.dJydx_.at(ix * nJ), nJ),
+                gsl::span<realtype const>(&derived_state_.dydx_.at(ix * ny), ny)
             );
         }
     }
@@ -2958,45 +2807,30 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
 
     fw(t, x, include_static);
     derived_state_.dwdp_.zero();
-    if (pythonGenerated) {
-        if (!ndwdp)
-            return;
-        fsspl(t);
-        fdwdw(t, x, include_static);
-        if (include_static) {
-            derived_state_.dwdp_hierarchical_.at(0).zero();
-            fdwdp_colptrs(derived_state_.dwdp_hierarchical_.at(0));
-            fdwdp_rowvals(derived_state_.dwdp_hierarchical_.at(0));
-        }
-        fdwdp(
-            derived_state_.dwdp_hierarchical_.at(0).data(), t, x,
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), derived_state_.spl_.data(),
-            derived_state_.sspl_.data(), include_static
-        );
+    if (!ndwdp)
+        return;
+    fsspl(t);
+    fdwdw(t, x, include_static);
+    if (include_static) {
+        derived_state_.dwdp_hierarchical_.at(0).zero();
+        fdwdp_colptrs(derived_state_.dwdp_hierarchical_.at(0));
+        fdwdp_rowvals(derived_state_.dwdp_hierarchical_.at(0));
+    }
+    fdwdp(
+        derived_state_.dwdp_hierarchical_.at(0).data(), t, x,
+        state_.unscaledParameters.data(), state_.fixedParameters.data(),
+        state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
+        state_.stotal_cl.data(), derived_state_.spl_.data(),
+        derived_state_.sspl_.data(), include_static
+    );
 
-        for (int irecursion = 1; irecursion <= w_recursion_depth;
-             irecursion++) {
-            derived_state_.dwdw_.sparse_multiply(
-                derived_state_.dwdp_hierarchical_.at(irecursion),
-                derived_state_.dwdp_hierarchical_.at(irecursion - 1)
-            );
-        }
-        derived_state_.dwdp_.sparse_sum(derived_state_.dwdp_hierarchical_);
-
-    } else {
-        if (!derived_state_.dwdp_.capacity())
-            return;
-        // matlab generated
-        fdwdp(
-            derived_state_.dwdp_.data(), t, x, state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(),
-            state_.stotal_cl.data(), derived_state_.spl_.data(),
-            derived_state_.sspl_.data()
+    for (int irecursion = 1; irecursion <= w_recursion_depth; irecursion++) {
+        derived_state_.dwdw_.sparse_multiply(
+            derived_state_.dwdp_hierarchical_.at(irecursion),
+            derived_state_.dwdp_hierarchical_.at(irecursion - 1)
         );
     }
+    derived_state_.dwdp_.sparse_sum(derived_state_.dwdp_hierarchical_);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.dwdp_, ModelQuantity::dwdp, t);
@@ -3012,45 +2846,31 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
     fw(t, x, include_static);
 
     derived_state_.dwdx_.zero();
-    if (pythonGenerated) {
-        fdwdw(t, x, include_static);
+    fdwdw(t, x, include_static);
 
-        auto&& dwdx_hierarchical_0 = derived_state_.dwdx_hierarchical_.at(0);
-        if (!dwdx_hierarchical_0.data() || !dwdx_hierarchical_0.capacity())
-            return;
+    auto&& dwdx_hierarchical_0 = derived_state_.dwdx_hierarchical_.at(0);
+    if (!dwdx_hierarchical_0.data() || !dwdx_hierarchical_0.capacity())
+        return;
 
-        if (include_static) {
-            dwdx_hierarchical_0.zero();
-            fdwdx_colptrs(dwdx_hierarchical_0);
-            fdwdx_rowvals(dwdx_hierarchical_0);
-        }
-        fdwdx(
-            dwdx_hierarchical_0.data(), t, x, state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(),
-            derived_state_.spl_.data(), include_static
-        );
+    if (include_static) {
+        dwdx_hierarchical_0.zero();
+        fdwdx_colptrs(dwdx_hierarchical_0);
+        fdwdx_rowvals(dwdx_hierarchical_0);
+    }
+    fdwdx(
+        dwdx_hierarchical_0.data(), t, x, state_.unscaledParameters.data(),
+        state_.fixedParameters.data(), state_.h.data(),
+        derived_state_.w_.data(), state_.total_cl.data(),
+        derived_state_.spl_.data(), include_static
+    );
 
-        for (int irecursion = 1; irecursion <= w_recursion_depth;
-             irecursion++) {
-            derived_state_.dwdw_.sparse_multiply(
-                derived_state_.dwdx_hierarchical_.at(irecursion),
-                derived_state_.dwdx_hierarchical_.at(irecursion - 1)
-            );
-        }
-        derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
-
-    } else {
-        if (!derived_state_.dwdx_.capacity())
-            return;
-        derived_state_.dwdx_.zero();
-        fdwdx(
-            derived_state_.dwdx_.data(), t, x, state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), state_.h.data(),
-            derived_state_.w_.data(), state_.total_cl.data(),
-            derived_state_.spl_.data()
+    for (int irecursion = 1; irecursion <= w_recursion_depth; irecursion++) {
+        derived_state_.dwdw_.sparse_multiply(
+            derived_state_.dwdx_hierarchical_.at(irecursion),
+            derived_state_.dwdx_hierarchical_.at(irecursion - 1)
         );
     }
+    derived_state_.dwdx_.sparse_sum(derived_state_.dwdx_hierarchical_);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.dwdx_, ModelQuantity::dwdx, t);
@@ -3250,13 +3070,7 @@ std::vector<int> const& Model::getReinitializationStateIdxs() const {
     return simulation_parameters_.reinitialization_state_idxs_sim;
 }
 
-AmiVectorArray const& Model::get_dxdotdp() const {
-    assert(!pythonGenerated);
-    return derived_state_.dxdotdp;
-}
-
 SUNMatrixWrapper const& Model::get_dxdotdp_full() const {
-    assert(pythonGenerated);
     return derived_state_.dxdotdp_full;
 }
 

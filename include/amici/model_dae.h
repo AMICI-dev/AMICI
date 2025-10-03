@@ -46,7 +46,6 @@ class Model_DAE : public Model {
               events
           ) {
         SUNContext sunctx = derived_state_.sunctx_;
-        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto const M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );

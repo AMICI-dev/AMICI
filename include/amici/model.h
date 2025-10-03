@@ -72,7 +72,6 @@ enum class ModelQuantity {
     p,
     ts,
     dJydy,
-    dJydy_matlab,
     deltaqB,
     dsigmaydp,
     dsigmaydy,
@@ -1520,13 +1519,7 @@ class Model : public AbstractModel, public ModelDimensions {
     [[nodiscard]] std::vector<int> const& getReinitializationStateIdxs() const;
 
     /**
-     * @brief getter for dxdotdp (matlab generated)
-     * @return dxdotdp
-     */
-    [[nodiscard]] AmiVectorArray const& get_dxdotdp() const;
-
-    /**
-     * @brief getter for dxdotdp (python generated)
+     * @brief getter for dxdotdp
      * @return dxdotdp
      */
     [[nodiscard]] SUNMatrixWrapper const& get_dxdotdp_full() const;

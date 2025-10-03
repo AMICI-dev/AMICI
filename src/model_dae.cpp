@@ -33,46 +33,34 @@ void Model_DAE::fJSparse(
 ) {
     auto const x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
-    if (pythonGenerated) {
-        auto JSparse = SUNMatrixWrapper(J);
-        // python generated
-        derived_state_.dxdotdx_explicit.zero();
-        derived_state_.dxdotdx_implicit.zero();
-        if (derived_state_.dxdotdx_explicit.capacity()) {
-            fdxdotdx_explicit_colptrs(derived_state_.dxdotdx_explicit);
-            fdxdotdx_explicit_rowvals(derived_state_.dxdotdx_explicit);
-            fdxdotdx_explicit(
-                derived_state_.dxdotdx_explicit.data(), t,
-                N_VGetArrayPointerConst(x_pos),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), N_VGetArrayPointerConst(dx),
-                derived_state_.w_.data()
-            );
-        }
-        fdxdotdw(t, x_pos, dx);
-        /* Sparse matrix multiplication
-         dxdotdx_implicit += dxdotdw * dwdx */
-        derived_state_.dxdotdw_.sparse_multiply(
-            derived_state_.dxdotdx_implicit, derived_state_.dwdx_
-        );
 
-        derived_state_.dfdx_.sparse_add(
-            derived_state_.dxdotdx_explicit, 1.0,
-            derived_state_.dxdotdx_implicit, 1.0
-        );
-        fM(t, x_pos);
-        JSparse.sparse_add(
-            derived_state_.MSparse_, -cj, derived_state_.dfdx_, 1.0
-        );
-    } else {
-        fJSparse(
-            static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
+    auto JSparse = SUNMatrixWrapper(J);
+    // python generated
+    derived_state_.dxdotdx_explicit.zero();
+    derived_state_.dxdotdx_implicit.zero();
+    if (derived_state_.dxdotdx_explicit.capacity()) {
+        fdxdotdx_explicit_colptrs(derived_state_.dxdotdx_explicit);
+        fdxdotdx_explicit_rowvals(derived_state_.dxdotdx_explicit);
+        fdxdotdx_explicit(
+            derived_state_.dxdotdx_explicit.data(), t,
             N_VGetArrayPointerConst(x_pos), state_.unscaledParameters.data(),
-            state_.fixedParameters.data(), state_.h.data(), cj,
-            N_VGetArrayPointerConst(dx), derived_state_.w_.data(),
-            derived_state_.dwdx_.data()
+            state_.fixedParameters.data(), state_.h.data(),
+            N_VGetArrayPointerConst(dx), derived_state_.w_.data()
         );
     }
+    fdxdotdw(t, x_pos, dx);
+    /* Sparse matrix multiplication
+     dxdotdx_implicit += dxdotdw * dwdx */
+    derived_state_.dxdotdw_.sparse_multiply(
+        derived_state_.dxdotdx_implicit, derived_state_.dwdx_
+    );
+
+    derived_state_.dfdx_.sparse_add(
+        derived_state_.dxdotdx_explicit, 1.0, derived_state_.dxdotdx_implicit,
+        1.0
+    );
+    fM(t, x_pos);
+    JSparse.sparse_add(derived_state_.MSparse_, -cj, derived_state_.dfdx_, 1.0);
 }
 
 void Model_DAE::fJv(
@@ -169,73 +157,49 @@ void Model_DAE::fdxdotdp(
     auto const x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointerConst(x_pos));
 
-    if (pythonGenerated) {
-        // python generated
-        derived_state_.dxdotdp_explicit.zero();
-        derived_state_.dxdotdp_implicit.zero();
-        if (derived_state_.dxdotdp_explicit.capacity()) {
-            fdxdotdp_explicit_colptrs(derived_state_.dxdotdp_explicit);
-            fdxdotdp_explicit_rowvals(derived_state_.dxdotdp_explicit);
-            fdxdotdp_explicit(
-                derived_state_.dxdotdp_explicit.data(), t,
-                N_VGetArrayPointerConst(x_pos),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), N_VGetArrayPointerConst(dx),
-                derived_state_.w_.data()
-            );
-        }
-
-        fdxdotdw(t, x_pos, dx);
-        /* Sparse matrix multiplication
-         dxdotdp_implicit += dxdotdw * dwdp */
-        derived_state_.dxdotdw_.sparse_multiply(
-            derived_state_.dxdotdp_implicit, derived_state_.dwdp_
+    derived_state_.dxdotdp_explicit.zero();
+    derived_state_.dxdotdp_implicit.zero();
+    if (derived_state_.dxdotdp_explicit.capacity()) {
+        fdxdotdp_explicit_colptrs(derived_state_.dxdotdp_explicit);
+        fdxdotdp_explicit_rowvals(derived_state_.dxdotdp_explicit);
+        fdxdotdp_explicit(
+            derived_state_.dxdotdp_explicit.data(), t,
+            N_VGetArrayPointerConst(x_pos), state_.unscaledParameters.data(),
+            state_.fixedParameters.data(), state_.h.data(),
+            N_VGetArrayPointerConst(dx), derived_state_.w_.data()
         );
-
-        derived_state_.dxdotdp_full.sparse_add(
-            derived_state_.dxdotdp_explicit, 1.0,
-            derived_state_.dxdotdp_implicit, 1.0
-        );
-    } else {
-        // matlab generated
-
-        for (int ip = 0; ip < nplist(); ip++) {
-            N_VConst(0.0, derived_state_.dxdotdp.getNVector(ip));
-            fdxdotdp(
-                derived_state_.dxdotdp.data(ip), t,
-                N_VGetArrayPointerConst(x_pos),
-                state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), plist(ip), N_VGetArrayPointerConst(dx),
-                derived_state_.w_.data(), derived_state_.dwdp_.data()
-            );
-        }
     }
+
+    fdxdotdw(t, x_pos, dx);
+    /* Sparse matrix multiplication
+     dxdotdp_implicit += dxdotdw * dwdp */
+    derived_state_.dxdotdw_.sparse_multiply(
+        derived_state_.dxdotdp_implicit, derived_state_.dwdp_
+    );
+
+    derived_state_.dxdotdp_full.sparse_add(
+        derived_state_.dxdotdp_explicit, 1.0, derived_state_.dxdotdp_implicit,
+        1.0
+    );
 }
 
-void Model_DAE::fM(realtype const t, const_N_Vector x) {
-    if (pythonGenerated) {
-        /*
-         * non-algebraic states in python generated code always have factor
-         * 1 in the mass matrix, so we can easily construct this matrix here
-         * and avoid having to generate c++ code
-         */
-        int ndiff = 0;
-        for (int ix = 0; ix < nx_solver; ix++) {
-            derived_state_.MSparse_.set_indexptr(ix, ndiff);
-            if (this->idlist.at(ix) == 1.0) {
-                derived_state_.MSparse_.set_data(ndiff, 1.0);
-                derived_state_.MSparse_.set_indexval(ndiff, ix);
-                ndiff++;
-            }
+void Model_DAE::fM(realtype const /*t*/, const_N_Vector /*x*/) {
+    /*
+     * non-algebraic states in python generated code always have factor
+     * 1 in the mass matrix, so we can easily construct this matrix here
+     * and avoid having to generate c++ code
+     */
+    int ndiff = 0;
+    for (int ix = 0; ix < nx_solver; ix++) {
+        derived_state_.MSparse_.set_indexptr(ix, ndiff);
+        if (this->idlist.at(ix) == 1.0) {
+            derived_state_.MSparse_.set_data(ndiff, 1.0);
+            derived_state_.MSparse_.set_indexval(ndiff, ix);
+            ndiff++;
         }
-        derived_state_.MSparse_.set_indexptr(nx_solver, ndiff);
-        assert(ndiff == derived_state_.MSparse_.capacity());
-    } else {
-        derived_state_.M_.zero();
-        auto const x_pos = computeX_pos(x);
-        fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
-           state_.unscaledParameters.data(), state_.fixedParameters.data());
     }
+    derived_state_.MSparse_.set_indexptr(nx_solver, ndiff);
+    assert(ndiff == derived_state_.MSparse_.capacity());
 }
 
 std::unique_ptr<Solver> Model_DAE::getSolver() {
@@ -521,25 +485,17 @@ void Model_DAE::fsxdot(
         derived_state_.J_.refresh();
     }
 
-    if (pythonGenerated) {
-        /* copy dxdotdp and the implicit version over */
-        // initialize
-        N_VConst(0.0, sxdot);
-        realtype* sxdot_tmp = N_VGetArrayPointer(sxdot);
-        derived_state_.dxdotdp_full.scatter(
-            plist(ip), 1.0, nullptr, gsl::make_span(sxdot_tmp, nx_solver), 0,
-            nullptr, 0
-        );
+    /* copy dxdotdp and the implicit version over */
+    // initialize
+    N_VConst(0.0, sxdot);
+    realtype* sxdot_tmp = N_VGetArrayPointer(sxdot);
+    derived_state_.dxdotdp_full.scatter(
+        plist(ip), 1.0, nullptr, gsl::make_span(sxdot_tmp, nx_solver), 0,
+        nullptr, 0
+    );
 
-        derived_state_.J_.multiply(sxdot, sx);
-        derived_state_.MSparse_.multiply(sxdot, sdx, -1.0);
-    } else {
-        /* copy dxdotdp over */
-        N_VScale(1.0, derived_state_.dxdotdp.getNVector(ip), sxdot);
-
-        derived_state_.J_.multiply(sxdot, sx);
-        derived_state_.M_.multiply(sxdot, sdx, -1.0);
-    }
+    derived_state_.J_.multiply(sxdot, sx);
+    derived_state_.MSparse_.multiply(sxdot, sdx, -1.0);
 }
 
 } // namespace amici

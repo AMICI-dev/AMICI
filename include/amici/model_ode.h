@@ -280,24 +280,7 @@ class Model_ODE : public Model {
 
   protected:
     /**
-     * @brief Model specific implementation for fJSparse (Matlab)
-     * @param JSparse Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparse(
-        SUNMatrixContent_Sparse JSparse, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* w, realtype const* dwdx
-    );
-
-    /**
-     * @brief Model specific implementation for fJSparse, data only (Py)
+     * @brief Model specific implementation for fJSparse, data only
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -356,27 +339,7 @@ class Model_ODE : public Model {
     ) = 0;
 
     /**
-     * @brief Model specific implementation of fdxdotdp, with w chainrule
-     * (Matlab)
-     * @param dxdotdp partial derivative xdot wrt p
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param ip parameter index
-     * @param w vector with helper variables
-     * @param dwdp derivative of w wrt p
-     */
-    virtual void fdxdotdp(
-        realtype* dxdotdp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, realtype const* w,
-        realtype const* dwdp
-    );
-
-    /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule
-     * (Py)
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states

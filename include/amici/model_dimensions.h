@@ -54,8 +54,6 @@ struct ModelDimensions {
      * @param nnz Number of nonzero elements in Jacobian
      * @param ubw Upper matrix bandwidth in the Jacobian
      * @param lbw Lower matrix bandwidth in the Jacobian
-     * @param pythonGenerated Flag indicating model creation from Matlab or
-     * Python
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
      * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
      * @param w_recursion_depth Recursion depth of fw
@@ -69,8 +67,8 @@ struct ModelDimensions {
         int const ndwdw, int const ndxdotdw, std::vector<int> ndJydy,
         int const ndxrdatadxsolver, int const ndxrdatadtcl,
         int const ndtotal_cldx_rdata, int const nnz, int const ubw,
-        int const lbw, bool pythonGenerated = false, int ndxdotdp_explicit = 0,
-        int ndxdotdx_explicit = 0, int w_recursion_depth = 0
+        int const lbw, int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
+        int w_recursion_depth = 0
     )
         : nx_rdata(nx_rdata)
         , nxtrue_rdata(nxtrue_rdata)
@@ -99,7 +97,6 @@ struct ModelDimensions {
         , nJ(nJ)
         , ubw(ubw)
         , lbw(lbw)
-        , pythonGenerated(pythonGenerated)
         , ndxdotdp_explicit(ndxdotdp_explicit)
         , ndxdotdx_explicit(ndxdotdx_explicit)
         , w_recursion_depth(w_recursion_depth) {
@@ -242,9 +239,6 @@ struct ModelDimensions {
 
     /** Lower bandwidth of the Jacobian */
     int lbw{0};
-
-    /** Flag indicating model creation from Matlab or Python */
-    bool pythonGenerated = false;
 
     /** Number of nonzero elements in `dxdotdx_explicit` */
     int ndxdotdp_explicit = 0;
