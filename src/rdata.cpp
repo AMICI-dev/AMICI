@@ -14,6 +14,7 @@
 #include <cmath>
 
 namespace amici {
+using std::isnan;
 
 ReturnData::ReturnData(Solver const& solver, Model const& model)
     : ReturnData(
@@ -348,7 +349,7 @@ void ReturnData::getDataOutput(
         model.getObservableSigma(slice(sigmay, it, ny), it, edata);
 
     if (edata) {
-        if (!isNaN(llh))
+        if (!isnan(llh))
             model.addObservableObjective(llh, it, sol.x, *edata);
         fres(it, model, sol, *edata);
         fchi2(it, *edata);
@@ -424,14 +425,14 @@ void ReturnData::getEventOutput(
                     slice(sigmaz, nroots_.at(ie), nz), ie, nroots_.at(ie),
                     sol.t, edata
                 );
-            if (!isNaN(llh))
+            if (!isnan(llh))
                 model.addEventObjective(
                     llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
                 );
 
             /* if called from fillEvent at last timepoint,
                add regularization based on rz */
-            if (sol.t == model.getTimepoint(nt - 1) && !isNaN(llh)) {
+            if (sol.t == model.getTimepoint(nt - 1) && !isnan(llh)) {
                 model.addEventObjectiveRegularization(
                     llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
                 );
@@ -953,7 +954,7 @@ void ReturnData::fres(
 }
 
 void ReturnData::fchi2(int const it, ExpData const& edata) {
-    if (res.empty() || isNaN(chi2))
+    if (res.empty() || isnan(chi2))
         return;
 
     for (int iy = 0; iy < nytrue; ++iy) {

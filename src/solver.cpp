@@ -3,7 +3,6 @@
 #include "amici/amici.h"
 #include "amici/exception.h"
 #include "amici/model.h"
-#include "amici/symbolic_functions.h"
 
 #include <sundials/sundials_context.h>
 
@@ -12,6 +11,7 @@
 #include <memory>
 
 namespace amici {
+using std::isnan;
 
 /* Error handler passed to SUNDIALS. */
 void wrapErrHandlerFn(
@@ -604,11 +604,11 @@ bool operator==(Solver const& a, Solver const& b) {
            && (a.getRelativeToleranceSteadyStateSensi()
                == b.getRelativeToleranceSteadyStateSensi())
            && (a.rtol_fsa_ == b.rtol_fsa_
-               || (isNaN(a.rtol_fsa_) && isNaN(b.rtol_fsa_)))
+               || (isnan(a.rtol_fsa_) && isnan(b.rtol_fsa_)))
            && (a.atol_fsa_ == b.atol_fsa_
-               || (isNaN(a.atol_fsa_) && isNaN(b.atol_fsa_)))
-           && (a.rtolB_ == b.rtolB_ || (isNaN(a.rtolB_) && isNaN(b.rtolB_)))
-           && (a.atolB_ == b.atolB_ || (isNaN(a.atolB_) && isNaN(b.atolB_)))
+               || (isnan(a.atol_fsa_) && isnan(b.atol_fsa_)))
+           && (a.rtolB_ == b.rtolB_ || (isnan(a.rtolB_) && isnan(b.rtolB_)))
+           && (a.atolB_ == b.atolB_ || (isnan(a.atolB_) && isnan(b.atolB_)))
            && (a.sensi_ == b.sensi_) && (a.sensi_meth_ == b.sensi_meth_)
            && (a.newton_step_steadystate_conv_
                == b.newton_step_steadystate_conv_)
@@ -672,8 +672,8 @@ void Solver::applyQuadTolerancesASA(int const which) const {
     if (sensi_ < SensitivityOrder::first)
         return;
 
-    realtype const quad_rtol = isNaN(quad_rtol_) ? rtol_ : quad_rtol_;
-    realtype const quad_atol = isNaN(quad_atol_) ? atol_ : quad_atol_;
+    realtype const quad_rtol = isnan(quad_rtol_) ? rtol_ : quad_rtol_;
+    realtype const quad_atol = isnan(quad_atol_) ? atol_ : quad_atol_;
 
     /* Enable Quadrature Error Control */
     setQuadErrConB(which, !std::isinf(quad_atol) && !std::isinf(quad_rtol));
@@ -691,8 +691,8 @@ void Solver::applyQuadTolerances() const {
     if (sensi_ < SensitivityOrder::first)
         return;
 
-    realtype quad_rtolF = isNaN(quad_rtol_) ? rtol_ : quad_rtol_;
-    realtype quad_atolF = isNaN(quad_atol_) ? atol_ : quad_atol_;
+    realtype quad_rtolF = isnan(quad_rtol_) ? rtol_ : quad_rtol_;
+    realtype quad_atolF = isnan(quad_atol_) ? atol_ : quad_atol_;
 
     /* Enable Quadrature Error Control */
     setQuadErrCon(!std::isinf(quad_atolF) && !std::isinf(quad_rtolF));
@@ -863,7 +863,7 @@ void Solver::setAbsoluteTolerance(double const atol) {
 }
 
 double Solver::getRelativeToleranceFSA() const {
-    return static_cast<double>(isNaN(rtol_fsa_) ? rtol_ : rtol_fsa_);
+    return static_cast<double>(isnan(rtol_fsa_) ? rtol_ : rtol_fsa_);
 }
 
 void Solver::setRelativeToleranceFSA(double const rtol) {
@@ -878,7 +878,7 @@ void Solver::setRelativeToleranceFSA(double const rtol) {
 }
 
 double Solver::getAbsoluteToleranceFSA() const {
-    return static_cast<double>(isNaN(atol_fsa_) ? atol_ : atol_fsa_);
+    return static_cast<double>(isnan(atol_fsa_) ? atol_ : atol_fsa_);
 }
 
 void Solver::setAbsoluteToleranceFSA(double const atol) {
@@ -893,7 +893,7 @@ void Solver::setAbsoluteToleranceFSA(double const atol) {
 }
 
 double Solver::getRelativeToleranceB() const {
-    return static_cast<double>(isNaN(rtolB_) ? rtol_ : rtolB_);
+    return static_cast<double>(isnan(rtolB_) ? rtol_ : rtolB_);
 }
 
 void Solver::setRelativeToleranceB(double const rtol) {
@@ -908,7 +908,7 @@ void Solver::setRelativeToleranceB(double const rtol) {
 }
 
 double Solver::getAbsoluteToleranceB() const {
-    return static_cast<double>(isNaN(atolB_) ? atol_ : atolB_);
+    return static_cast<double>(isnan(atolB_) ? atol_ : atolB_);
 }
 
 void Solver::setAbsoluteToleranceB(double const atol) {
@@ -971,7 +971,7 @@ void Solver::setSteadyStateToleranceFactor(double const factor) {
 
 double Solver::getRelativeToleranceSteadyState() const {
     return static_cast<double>(
-        isNaN(ss_rtol_) ? rtol_ * ss_tol_factor_ : ss_rtol_
+        isnan(ss_rtol_) ? rtol_ * ss_tol_factor_ : ss_rtol_
     );
 }
 
@@ -984,7 +984,7 @@ void Solver::setRelativeToleranceSteadyState(double const rtol) {
 
 double Solver::getAbsoluteToleranceSteadyState() const {
     return static_cast<double>(
-        isNaN(ss_atol_) ? atol_ * ss_tol_factor_ : ss_atol_
+        isnan(ss_atol_) ? atol_ * ss_tol_factor_ : ss_atol_
     );
 }
 
@@ -1010,7 +1010,7 @@ void Solver::setSteadyStateSensiToleranceFactor(
 
 double Solver::getRelativeToleranceSteadyStateSensi() const {
     return static_cast<double>(
-        isNaN(ss_rtol_sensi_) ? rtol_ * ss_tol_sensi_factor_ : ss_rtol_sensi_
+        isnan(ss_rtol_sensi_) ? rtol_ * ss_tol_sensi_factor_ : ss_rtol_sensi_
     );
 }
 
@@ -1023,7 +1023,7 @@ void Solver::setRelativeToleranceSteadyStateSensi(double const rtol) {
 
 double Solver::getAbsoluteToleranceSteadyStateSensi() const {
     return static_cast<double>(
-        isNaN(ss_atol_sensi_) ? atol_ * ss_tol_sensi_factor_ : ss_atol_sensi_
+        isnan(ss_atol_sensi_) ? atol_ * ss_tol_sensi_factor_ : ss_atol_sensi_
     );
 }
 

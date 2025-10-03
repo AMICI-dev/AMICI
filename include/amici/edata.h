@@ -5,6 +5,7 @@
 #include "amici/misc.h"
 #include "amici/simulation_parameters.h"
 
+#include <string>
 #include <vector>
 
 namespace amici {

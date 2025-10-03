@@ -10,6 +10,8 @@
 
 namespace amici {
 
+using std::isnan;
+
 ExpData::ExpData(int const nytrue, int const nztrue, int const nmaxevent)
     : nytrue_(nytrue)
     , nztrue_(nztrue)
@@ -171,7 +173,7 @@ void ExpData::setObservedData(
 
 bool ExpData::isSetObservedData(int const it, int const iy) const {
     return !observed_data_.empty()
-           && !isNaN(observed_data_.at(it * nytrue_ + iy));
+           && !isnan(observed_data_.at(it * nytrue_ + iy));
 }
 
 std::vector<realtype> const& ExpData::getObservedData() const {
@@ -225,7 +227,7 @@ void ExpData::setObservedDataStdDev(realtype const stdDev, int const iy) {
 
 bool ExpData::isSetObservedDataStdDev(int const it, int const iy) const {
     return !observed_data_std_dev_.empty()
-           && !isNaN(observed_data_std_dev_.at(it * nytrue_ + iy));
+           && !isnan(observed_data_std_dev_.at(it * nytrue_ + iy));
 }
 
 std::vector<realtype> const& ExpData::getObservedDataStdDev() const {
@@ -265,7 +267,7 @@ void ExpData::setObservedEvents(
 
 bool ExpData::isSetObservedEvents(int const ie, int const iz) const {
     return !observed_events_.empty()
-           && !isNaN(observed_events_.at(ie * nztrue_ + iz));
+           && !isnan(observed_events_.at(ie * nztrue_ + iz));
 }
 
 std::vector<realtype> const& ExpData::getObservedEvents() const {
@@ -321,7 +323,7 @@ void ExpData::setObservedEventsStdDev(realtype const stdDev, int const iz) {
 
 bool ExpData::isSetObservedEventsStdDev(int const ie, int const iz) const {
     if (!observed_events_std_dev_.empty()) // avoid out of bound memory access
-        return !isNaN(observed_events_std_dev_.at(ie * nztrue_ + iz));
+        return !isnan(observed_events_std_dev_.at(ie * nztrue_ + iz));
 
     return false;
 }

@@ -2,14 +2,18 @@
 #define AMICI_ABSTRACT_MODEL_H
 
 #include "amici/defines.h"
-#include "amici/splinefunctions.h"
-#include "amici/sundials_matrix_wrapper.h"
-#include "amici/vector.h"
+
+#include <gsl/gsl-lite.hpp>
+#include <sundials/sundials_matrix.h>
 
 #include <memory>
+#include <vector>
 
 namespace amici {
 class Solver;
+class HermiteSpline;
+class SUNMatrixWrapper;
+class AmiVector;
 
 /**
  * @brief Abstract base class of amici::Model defining functions that need to
