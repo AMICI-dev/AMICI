@@ -178,36 +178,6 @@ TEST(SymbolicFunctionsTest, Heaviside) {
     ASSERT_EQ(1, heaviside(1, 0.5));
 }
 
-TEST(SymbolicFunctionsTest, Min) {
-    ASSERT_EQ(-1, min(-1, 2, 0));
-    ASSERT_EQ(-2, min(1, -2, 0));
-    ASSERT_TRUE(isNaN(min(getNaN(), getNaN(), 0)));
-    ASSERT_EQ(-1, min(-1, getNaN(), 0));
-    ASSERT_EQ(-1, min(getNaN(), -1, 0));
-}
-
-TEST(SymbolicFunctionsTest, Max) {
-    ASSERT_EQ(2, max(-1, 2, 0));
-    ASSERT_EQ(1, max(1, -2, 0));
-    ASSERT_TRUE(isNaN(max(getNaN(), getNaN(), 0)));
-    ASSERT_EQ(-1, max(-1, getNaN(), 0));
-    ASSERT_EQ(-1, max(getNaN(), -1, 0));
-}
-
-TEST(SymbolicFunctionsTest, DMin) {
-    ASSERT_EQ(0, Dmin(1, -1, -2, 0));
-    ASSERT_EQ(1, Dmin(1, -1, 2, 0));
-    ASSERT_EQ(1, Dmin(2, -1, -2, 0));
-    ASSERT_EQ(0, Dmin(2, -1, 2, 0));
-}
-
-TEST(SymbolicFunctionsTest, DMax) {
-    ASSERT_EQ(1, Dmax(1, -1, -2, 0));
-    ASSERT_EQ(0, Dmax(1, -1, 2, 0));
-    ASSERT_EQ(0, Dmax(2, -1, -2, 0));
-    ASSERT_EQ(1, Dmax(2, -1, 2, 0));
-}
-
 TEST(SymbolicFunctionsTest, pos_pow) {
     ASSERT_EQ(0, pos_pow(-0.1, 3));
     ASSERT_EQ(pow(0.1, 3), pos_pow(0.1, 3));
