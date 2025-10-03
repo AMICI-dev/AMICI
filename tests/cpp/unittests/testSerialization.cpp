@@ -143,35 +143,36 @@ TEST(ModelSerializationTest, ToFile) {
     int ne = 6;
     amici::CVodeSolver solver;
     amici::Model_Test m = amici::Model_Test(
-        amici::ModelDimensions(
-            nx,           // nx_rdata
-            nx,           // nxtrue_rdata
-            nx,           // nx_solver
-            nx,           // nxtrue_solver
-            0,            // nx_solver_reinit
-            np,           // np
-            nk,           // nk
-            ny,           // ny
-            ny,           // nytrue
-            nz,           // nz
-            nz,           // nztrue
-            ne,           // ne
-            0,            // ne_solver
-            0,            // nspl
-            0,            // nJ
-            9,            // nw
-            2,            // ndwdx
-            2,            // ndwdp
-            2,            // dwdw
-            13,           // ndxdotdw
-            {0, 0, 0, 0}, // ndJydy
-            9,            // ndxrdatadxsolver
-            0,            // ndxrdatadtcl
-            0,            // ndtotal_cldx_rdata
-            17,           // nnz
-            18,           // ubw
-            19            // lbw
-        ),
+        amici::ModelDimensions{
+            .nx_rdata = nx,
+            .nxtrue_rdata = nx,
+            .nx_solver = nx,
+            .nxtrue_solver = nx,
+            .nx_solver_reinit = 0,
+            .np = np,
+            .nk = nk,
+            .ny = ny,
+            .nytrue = ny,
+            .nz = nz,
+            .nztrue = nz,
+            .ne = ne,
+            .ne_solver = 0,
+            .nspl = 0,
+            .nw = 9,
+            .ndwdx = 2,
+            .ndwdp = 2,
+            .ndwdw = 2,
+            .ndxdotdw = 13,
+            .ndJydy = {0, 0, 0, 0},
+            .ndxrdatadxsolver = 9,
+            .ndxrdatadtcl = 0,
+            .ndtotal_cldx_rdata = 0,
+            .nnz = 17,
+            .nJ = 0,
+            .ubw = 18,
+            .lbw = 19
+        },
+
         amici::SimulationParameters(
             std::vector<realtype>(nk, 0.0), std::vector<realtype>(np, 0.0),
             std::vector<int>(np, 0)
@@ -216,35 +217,36 @@ TEST(ReturnDataSerializationTest, ToString) {
     int ne = 6;
     amici::CVodeSolver solver;
     amici::Model_Test m = amici::Model_Test(
-        amici::ModelDimensions(
-            nx,           // nx_rdata
-            nx,           // nxtrue_rdata
-            nx,           // nx_solver
-            nx,           // nxtrue_solver
-            0,            // nx_solver_reinit
-            np,           // np
-            nk,           // nk
-            ny,           // ny
-            ny,           // nytrue
-            nz,           // nz
-            nz,           // nztrue
-            ne,           // ne
-            0,            // ne_solver
-            0,            // nspl
-            0,            // nJ
-            9,            // nw
-            10,           // ndwdx
-            2,            // ndwdp
-            12,           // dwdw
-            13,           // ndxdotdw
-            {0, 0, 0, 0}, // ndJydy
-            9,            // ndxrdatadxsolver
-            0,            // ndxrdatadtcl
-            0,            // ndtotal_cldx_rdata
-            17,           // nnz
-            18,           // ubw
-            19            // lbw
-        ),
+        amici::ModelDimensions{
+            .nx_rdata = nx,
+            .nxtrue_rdata = nx,
+            .nx_solver = nx,
+            .nxtrue_solver = nx,
+            .nx_solver_reinit = 0,
+            .np = np,
+            .nk = nk,
+            .ny = ny,
+            .nytrue = ny,
+            .nz = nz,
+            .nztrue = nz,
+            .ne = ne,
+            .ne_solver = 0,
+            .nspl = 0,
+            .nw = 9,
+            .ndwdx = 10,
+            .ndwdp = 2,
+            .ndwdw = 12,
+            .ndxdotdw = 13,
+            .ndJydy = {0, 0, 0, 0},
+            .ndxrdatadxsolver = 9,
+            .ndxrdatadtcl = 0,
+            .ndtotal_cldx_rdata = 0,
+            .nnz = 17,
+            .nJ = 0,
+            .ubw = 18,
+            .lbw = 19
+        },
+
         amici::SimulationParameters(
             std::vector<realtype>(nk, 0.0), std::vector<realtype>(np, 0.0),
             std::vector<int>(np, 0)

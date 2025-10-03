@@ -187,6 +187,7 @@ Model::Model(
     , state_is_non_negative_(nx_solver, false)
     , simulation_parameters_(std::move(simulation_parameters))
     , events_(std::move(events)) {
+    model_dimensions.validate();
     Expects(
         model_dimensions.np
         == gsl::narrow<int>(simulation_parameters_.parameters.size())

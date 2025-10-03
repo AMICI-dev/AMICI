@@ -110,38 +110,38 @@ class Model_model_steadystate_py : public amici::Model_ODE {
      */
     Model_model_steadystate_py()
         : amici::Model_ODE(
-              amici::ModelDimensions(
-                  3,                            // nx_rdata
-                  3,                        // nxtrue_rdata
-                  3,                           // nx_solver
-                  3,                       // nxtrue_solver
-                  0,                    // nx_solver_reinit
-                  5,                                  // np
-                  4,                                  // nk
-                  3,                                  // ny
-                  3,                              // nytrue
-                  0,                                  // nz
-                  0,                              // nztrue
-                  0,                              // nevent
-                  0,                       // nevent_solver
-                  0,                                // nspl
-                  1,                          // nobjective
-                  1,                                  // nw
-                  0,                               // ndwdx
-                  0,                               // ndwdp
-                  0,                               // ndwdw
-                  0,                            // ndxdotdw
-                  std::vector<int>{1, 1, 1},                              // ndjydy
-                  0,                    // ndxrdatadxsolver
-                  0,                        // ndxrdatadtcl
-                  0,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  3,                                 // ubw
-                  3,                                 // lbw
-                  11,                   // ndxdotdp_explicit
-                  9,                   // ndxdotdx_explicit
-                  0                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = 3,
+                  .nxtrue_rdata = 3,
+                  .nx_solver = 3,
+                  .nxtrue_solver = 3,
+                  .nx_solver_reinit = 0,
+                  .np = 5,
+                  .nk = 4,
+                  .ny = 3,
+                  .nytrue = 3,
+                  .nz = 0,
+                  .nztrue = 0,
+                  .ne = 0,
+                  .ne_solver = 0,
+                  .nspl = 0,
+                  .nw = 1,
+                  .ndwdx = 0,
+                  .ndwdp = 0,
+                  .ndwdw = 0,
+                  .ndxdotdw = 0,
+                  .ndJydy = std::vector<int>{1, 1, 1},
+                  .ndxrdatadxsolver = 0,
+                  .ndxrdatadtcl = 0,
+                  .ndtotal_cldx_rdata = 0,
+                  .nnz = 0,
+                  .nJ = 1,
+                  .ubw = 3,
+                  .lbw = 3,
+                  .ndxdotdp_explicit = 11,
+                  .ndxdotdx_explicit = 9,
+                  .w_recursion_depth = 0,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{0.10000000000000001, 0.40000000000000002, 0.69999999999999996, 1.0}, // fixedParameters
                   std::vector<realtype>{1.0, 0.5, 0.40000000000000002, 2.0, 0.10000000000000001}        // dynamic parameters
@@ -536,7 +536,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
+        return "570c71d2a041ed15d548e826df3d97e05d124309";
     }
 
     bool hasQuadraticLLH() const override {

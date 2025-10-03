@@ -110,38 +110,38 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      */
     Model_TPL_MODELNAME()
         : amici::Model_TPL_MODEL_TYPE_UPPER(
-              amici::ModelDimensions(
-                  TPL_NX_RDATA,                            // nx_rdata
-                  TPL_NXTRUE_RDATA,                        // nxtrue_rdata
-                  TPL_NX_SOLVER,                           // nx_solver
-                  TPL_NXTRUE_SOLVER,                       // nxtrue_solver
-                  TPL_NX_SOLVER_REINIT,                    // nx_solver_reinit
-                  TPL_NP,                                  // np
-                  TPL_NK,                                  // nk
-                  TPL_NY,                                  // ny
-                  TPL_NYTRUE,                              // nytrue
-                  TPL_NZ,                                  // nz
-                  TPL_NZTRUE,                              // nztrue
-                  TPL_NEVENT,                              // nevent
-                  TPL_NEVENT_SOLVER,                       // nevent_solver
-                  TPL_NSPL,                                // nspl
-                  TPL_NOBJECTIVE,                          // nobjective
-                  TPL_NW,                                  // nw
-                  TPL_NDWDX,                               // ndwdx
-                  TPL_NDWDP,                               // ndwdp
-                  TPL_NDWDW,                               // ndwdw
-                  TPL_NDXDOTDW,                            // ndxdotdw
-                  TPL_NDJYDY,                              // ndjydy
-                  TPL_NDXRDATADXSOLVER,                    // ndxrdatadxsolver
-                  TPL_NDXRDATADTCL,                        // ndxrdatadtcl
-                  TPL_NDTOTALCLDXRDATA,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  TPL_UBW,                                 // ubw
-                  TPL_LBW,                                 // lbw
-                  TPL_NDXDOTDP_EXPLICIT,                   // ndxdotdp_explicit
-                  TPL_NDXDOTDX_EXPLICIT,                   // ndxdotdx_explicit
-                  TPL_W_RECURSION_DEPTH                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = TPL_NX_RDATA,
+                  .nxtrue_rdata = TPL_NXTRUE_RDATA,
+                  .nx_solver = TPL_NX_SOLVER,
+                  .nxtrue_solver = TPL_NXTRUE_SOLVER,
+                  .nx_solver_reinit = TPL_NX_SOLVER_REINIT,
+                  .np = TPL_NP,
+                  .nk = TPL_NK,
+                  .ny = TPL_NY,
+                  .nytrue = TPL_NYTRUE,
+                  .nz = TPL_NZ,
+                  .nztrue = TPL_NZTRUE,
+                  .ne = TPL_NEVENT,
+                  .ne_solver = TPL_NEVENT_SOLVER,
+                  .nspl = TPL_NSPL,
+                  .nw = TPL_NW,
+                  .ndwdx = TPL_NDWDX,
+                  .ndwdp = TPL_NDWDP,
+                  .ndwdw = TPL_NDWDW,
+                  .ndxdotdw = TPL_NDXDOTDW,
+                  .ndJydy = TPL_NDJYDY,
+                  .ndxrdatadxsolver = TPL_NDXRDATADXSOLVER,
+                  .ndxrdatadtcl = TPL_NDXRDATADTCL,
+                  .ndtotal_cldx_rdata = TPL_NDTOTALCLDXRDATA,
+                  .nnz = 0,
+                  .nJ = TPL_NOBJECTIVE,
+                  .ubw = TPL_UBW,
+                  .lbw = TPL_LBW,
+                  .ndxdotdp_explicit = TPL_NDXDOTDP_EXPLICIT,
+                  .ndxdotdx_explicit = TPL_NDXDOTDX_EXPLICIT,
+                  .w_recursion_depth = TPL_W_RECURSION_DEPTH,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
                   std::vector<realtype>{TPL_PARAMETERS}        // dynamic parameters
