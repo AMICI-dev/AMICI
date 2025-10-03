@@ -418,9 +418,7 @@ class SbmlImporter:
         self,
         model_name: str,
         output_dir: str | Path = None,
-        observables: dict[str, dict[str, str]] = None,
-        sigmas: dict[str, str | float] = None,
-        noise_distributions: dict[str, str | Callable] = None,
+        observation_model: list[MeasurementChannel] = None,
         verbose: int | bool = logging.ERROR,
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
@@ -446,21 +444,15 @@ class SbmlImporter:
         :param output_dir:
             Directory where the generated model package will be stored.
 
-        :param observables:
-            Observables to be added to the model:
-            ``dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)})``.
-
-        :param sigmas:
-            dictionary(observableId: sigma value or (existing) parameter name)
-
-        :param noise_distributions:
-            dictionary(observableId: noise type).
-            If nothing is passed for some observable id, a normal model is
-            assumed as default. Either pass a noise type identifier, or a
-            callable generating a custom noise string.
-            For noise identifiers, see
-            :func:`amici.import_utils.noise_distribution_to_cost_function`.
+        :param observation_model:
+            The different measurement channels that make up the observation
+            model, see :class:`amici.import_utils.MeasurementChannel`.
+            Only time-resolved observables are supported here.
+            If ``None``, default observables will be added (for all
+            state variables of the model and all species, compartments,
+            and assignment rule targets) and normally distributed
+            measurement noise is assumed.
+            If ``[]``, no observables will be added.
 
         :param verbose:
             verbosity level for logging, ``True``/``False`` default to
@@ -492,9 +484,7 @@ class SbmlImporter:
         set_log_level(logger, verbose)
 
         ode_model = self._build_ode_model(
-            observables=observables,
-            sigmas=sigmas,
-            noise_distributions=noise_distributions,
+            observation_model=observation_model,
             verbose=verbose,
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
@@ -3079,11 +3069,15 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     )
 
 
-def assignmentRules2observables(
-    sbml_model: libsbml.Model, filter_function: Callable = lambda *_: True
-):
+def assignment_rules_to_observables(
+    sbml_model: libsbml.Model,
+    filter_function: Callable = lambda *_: True,
+    as_dict=False,
+) -> list[MeasurementChannel] | dict[str, MeasurementChannel]:
     """
     Turn assignment rules into observables.
+
+    The matching assignment rules and their targets are removed from the model.
 
     :param sbml_model:
         Model to operate on
@@ -3093,30 +3087,35 @@ def assignmentRules2observables(
         ``True``/``False`` to indicate if the respective rule should be
         turned into an observable.
 
+    :param as_dict:
+        If ``True``, return a dict instead of a list, using the observable IDs
+        as keys.
+
     :return:
-        A dictionary(observableId:{
-        'name': observableName,
-        'formula': formulaString
-        })
+        A list or dict of measurement channels.
     """
     observables = {}
     for rule in sbml_model.getListOfRules():
         if rule.getTypeCode() != libsbml.SBML_ASSIGNMENT_RULE:
             continue
-        parameter_id = rule.getVariable()
-        if (p := sbml_model.getParameter(parameter_id)) and filter_function(p):
-            observables[parameter_id] = {
-                "name": p.getName() if p.isSetName() else parameter_id,
-                "formula": sbml_model.getAssignmentRuleByVariable(
-                    parameter_id
+        target_id = rule.getVariable()
+        if (p := sbml_model.getParameter(target_id)) and filter_function(p):
+            observables[target_id] = MeasurementChannel(
+                id_=target_id,
+                name=p.getName() if p.isSetName() else target_id,
+                formula=sbml_model.getAssignmentRuleByVariable(
+                    target_id
                 ).getFormula(),
-            }
+            )
 
-    for parameter_id in observables:
-        sbml_model.removeRuleByVariable(parameter_id)
-        sbml_model.removeParameter(parameter_id)
+    for target_id in observables:
+        sbml_model.removeRuleByVariable(target_id)
+        sbml_model.removeParameter(target_id)
 
-    return observables
+    if as_dict:
+        return observables
+
+    return list(observables.values())
 
 
 def _add_conservation_for_constant_species(

@@ -4,7 +4,7 @@ import warnings
 import amici
 import numpy as np
 import pytest
-from amici import SteadyStateStatus
+from amici import SteadyStateStatus, ExpData, MeasurementChannel as MC
 from numpy.testing import assert_allclose
 from amici.testing import skip_on_valgrind
 
@@ -12,7 +12,7 @@ from amici.testing import skip_on_valgrind
 @pytest.fixture
 def edata_fixture():
     """edata is generated to test pre- and postequilibration"""
-    edata_pre = amici.ExpData(
+    edata_pre = ExpData(
         2, 0, 0, np.array([0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0])
     )
     edata_pre.setObservedData([1.5] * 16)
@@ -21,12 +21,12 @@ def edata_fixture():
     edata_pre.reinitializeFixedParameterInitialStates = True
 
     # edata for postequilibration
-    edata_post = amici.ExpData(2, 0, 0, np.array([float("inf")] * 3))
+    edata_post = ExpData(2, 0, 0, np.array([float("inf")] * 3))
     edata_post.setObservedData([0.75] * 6)
     edata_post.fixedParameters = np.array([7.5, 30.0])
 
     # edata with both equilibrations
-    edata_full = amici.ExpData(
+    edata_full = ExpData(
         2,
         0,
         0,
@@ -85,26 +85,23 @@ end"""
 
     # Define constants, observables, sigmas
     constant_parameters = ["synthesis_substrate", "init_enzyme"]
-    observables = {
-        "observable_product": {"name": "", "formula": "product"},
-        "observable_substrate": {"name": "", "formula": "substrate"},
-    }
-    sigmas = {"observable_product": 1.0, "observable_substrate": 1.0}
+    observation_model = [
+        MC("observable_product", formula="product", sigma=1.0, name=""),
+        MC("observable_substrate", formula="substrate", sigma=1.0, name=""),
+    ]
 
     # wrap models with and without conservations laws
     sbml_importer.sbml2amici(
         model_name_cl,
         model_output_dir_cl,
-        observables=observables,
         constant_parameters=constant_parameters,
-        sigmas=sigmas,
+        observation_model=observation_model,
     )
     sbml_importer.sbml2amici(
         model_name,
         model_output_dir,
-        observables=observables,
         constant_parameters=constant_parameters,
-        sigmas=sigmas,
+        observation_model=observation_model,
         compute_conservation_laws=False,
     )
 

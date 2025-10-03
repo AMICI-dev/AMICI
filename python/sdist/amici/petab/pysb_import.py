@@ -13,7 +13,13 @@ import petab.v1 as petab
 import pysb
 import pysb.bng
 import sympy as sp
-from petab.v1.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
+from amici import MeasurementChannel
+from petab.v1.C import (
+    CONDITION_NAME,
+    NOISE_FORMULA,
+    OBSERVABLE_FORMULA,
+    NOISE_DISTRIBUTION,
+)
 from petab.v1.models.pysb_model import PySBModel
 
 from ..import_utils import strip_pysb
@@ -270,22 +276,18 @@ def import_model_pysb(
     )
 
     if petab_problem.observable_df is None:
-        observables = None
-        sigmas = None
-        noise_distrs = None
+        observation_model = []
     else:
-        observables = [
-            expr.name
-            for expr in pysb_model.expressions
-            if expr.name in petab_problem.observable_df.index
-        ]
-
-        sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
-
-        noise_distrs = {
-            observable.name: petab_noise_distribution_to_amici(observable)
+        observation_model = [
+            MeasurementChannel(
+                id_=observable.name,
+                sigma=f"{observable.name}_sigma",
+                noise_distribution=petab_noise_distribution_to_amici(
+                    observable.get_name(NOISE_DISTRIBUTION)
+                ),
+            )
             for _, observable in petab_problem.observable_df.iterrows()
-        }
+        ]
 
     if jax:
         from amici.pysb_import import pysb2jax
@@ -295,9 +297,7 @@ def import_model_pysb(
             output_dir=model_output_dir,
             model_name=model_name,
             verbose=True,
-            observables=observables,
-            sigmas=sigmas,
-            noise_distributions=noise_distrs,
+            observation_model=observation_model,
             pysb_model_has_obs_and_noise=True,
             **kwargs,
         )
@@ -310,10 +310,8 @@ def import_model_pysb(
             output_dir=model_output_dir,
             model_name=model_name,
             verbose=True,
-            observables=observables,
-            sigmas=sigmas,
             constant_parameters=constant_parameters,
-            noise_distributions=noise_distrs,
+            observation_model=observation_model,
             pysb_model_has_obs_and_noise=True,
             **kwargs,
         )

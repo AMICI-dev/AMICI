@@ -251,7 +251,7 @@ def noise_distribution_to_cost_function(
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
          exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
-
+c
     - `'laplace'`, `'lin-laplace'`: A laplace distribution:
 
       .. math::
