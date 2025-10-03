@@ -4,13 +4,11 @@
 #include "amici/abstract_model.h"
 #include "amici/defines.h"
 #include "amici/event.h"
-#include "amici/logging.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
 #include "amici/simulation_parameters.h"
 #include "amici/splinefunctions.h"
 #include "amici/sundials_matrix_wrapper.h"
-#include "amici/vector.h"
 
 #include <map>
 #include <vector>
@@ -20,6 +18,9 @@ namespace amici {
 class ExpData;
 class Model;
 class Solver;
+class Logger;
+class AmiVector;
+class AmiVectorArray;
 
 } // namespace amici
 

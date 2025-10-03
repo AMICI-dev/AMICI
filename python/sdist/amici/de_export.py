@@ -423,18 +423,7 @@ class DEExporter:
         func_info = self.functions[function]
 
         # function header
-        lines.extend(
-            [
-                '#include "amici/symbolic_functions.h"',
-                '#include "amici/defines.h"',
-                '#include "sundials/sundials_types.h"',
-                "",
-                "#include <gsl/gsl-lite.hpp>",
-                "#include <algorithm>",
-                "",
-                *func_info.header,
-            ]
-        )
+        lines.extend(func_info.header)
 
         # extract symbols that need definitions from signature
         # don't add includes for files that won't be generated.
