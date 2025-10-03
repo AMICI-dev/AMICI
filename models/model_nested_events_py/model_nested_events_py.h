@@ -110,38 +110,38 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      */
     Model_model_nested_events_py()
         : amici::Model_ODE(
-              amici::ModelDimensions(
-                  1,                            // nx_rdata
-                  1,                        // nxtrue_rdata
-                  1,                           // nx_solver
-                  1,                       // nxtrue_solver
-                  0,                    // nx_solver_reinit
-                  5,                                  // np
-                  0,                                  // nk
-                  1,                                  // ny
-                  1,                              // nytrue
-                  0,                                  // nz
-                  0,                              // nztrue
-                  3,                              // nevent
-                  2,                       // nevent_solver
-                  0,                                // nspl
-                  1,                          // nobjective
-                  1,                                  // nw
-                  0,                               // ndwdx
-                  0,                               // ndwdp
-                  0,                               // ndwdw
-                  0,                            // ndxdotdw
-                  std::vector<int>{1},                              // ndjydy
-                  0,                    // ndxrdatadxsolver
-                  0,                        // ndxrdatadtcl
-                  0,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  1,                                 // ubw
-                  1,                                 // lbw
-                  2,                   // ndxdotdp_explicit
-                  1,                   // ndxdotdx_explicit
-                  0                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = 1,
+                  .nxtrue_rdata = 1,
+                  .nx_solver = 1,
+                  .nxtrue_solver = 1,
+                  .nx_solver_reinit = 0,
+                  .np = 5,
+                  .nk = 0,
+                  .ny = 1,
+                  .nytrue = 1,
+                  .nz = 0,
+                  .nztrue = 0,
+                  .ne = 3,
+                  .ne_solver = 2,
+                  .nspl = 0,
+                  .nw = 1,
+                  .ndwdx = 0,
+                  .ndwdp = 0,
+                  .ndwdw = 0,
+                  .ndxdotdw = 0,
+                  .ndJydy = std::vector<int>{1},
+                  .ndxrdatadxsolver = 0,
+                  .ndxrdatadtcl = 0,
+                  .ndtotal_cldx_rdata = 0,
+                  .nnz = 0,
+                  .nJ = 1,
+                  .ubw = 1,
+                  .lbw = 1,
+                  .ndxdotdp_explicit = 2,
+                  .ndxdotdx_explicit = 1,
+                  .w_recursion_depth = 0,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{}, // fixedParameters
                   std::vector<realtype>{0.10000000000000001, 1000.0, 2.0, 0.80000000000000004, 1.6000000000000001}        // dynamic parameters
@@ -552,7 +552,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
+        return "570c71d2a041ed15d548e826df3d97e05d124309";
     }
 
     bool hasQuadraticLLH() const override {

@@ -42,35 +42,35 @@ class ModelTest : public ::testing::Test {
     std::vector<realtype> idlist{0};
     std::vector<int> z2event{0, 0, 0};
     Model_Test model = Model_Test(
-        ModelDimensions(
-            nx,                         // nx_rdata
-            nx,                         // nxtrue_rdata
-            nx,                         // nx_solver
-            nx,                         // nxtrue_solver
-            0,                          // nx_solver_reinit
-            static_cast<int>(p.size()), // np
-            static_cast<int>(k.size()), // nk
-            ny,                         // ny
-            ny,                         // nytrue
-            nz,                         // nz
-            nz,                         // nztrue
-            nmaxevent,                  // ne
-            0,                          // ne_solver
-            0,                          // nspl
-            0,                          // nJ
-            0,                          // nw
-            0,                          // ndwdx
-            0,                          // ndwdp
-            0,                          // dwdw
-            0,                          // ndxdotdw
-            {0, 0},                     // ndJydy
-            0,                          // ndxrdatadxsolver
-            0,                          // ndxrdatadtcl
-            0,                          // ndtotal_cldx_rdata
-            0,                          // nnz
-            0,                          // ubw
-            0                           // lbw
-        ),
+        ModelDimensions{
+            .nx_rdata = nx,
+            .nxtrue_rdata = nx,
+            .nx_solver = nx,
+            .nxtrue_solver = nx,
+            .nx_solver_reinit = 0,
+            .np = static_cast<int>(p.size()),
+            .nk = static_cast<int>(k.size()),
+            .ny = ny,
+            .nytrue = ny,
+            .nz = nz,
+            .nztrue = nz,
+            .ne = nmaxevent,
+            .ne_solver = 0,
+            .nspl = 0,
+            .nw = 0,
+            .ndwdx = 0,
+            .ndwdp = 0,
+            .ndwdw = 0,
+            .ndxdotdw = 0,
+            .ndJydy = {0, 0},
+            .ndxrdatadxsolver = 0,
+            .ndxrdatadtcl = 0,
+            .ndtotal_cldx_rdata = 0,
+            .nnz = 0,
+            .nJ = 0,
+            .ubw = 0,
+            .lbw = 0
+        },
         SimulationParameters(k, p, plist), SecondOrderMode::none, idlist,
         z2event, {}
     );
@@ -269,35 +269,36 @@ class SolverTest : public ::testing::Test {
     InterpolationType interp;
 
     Model_Test testModel = Model_Test(
-        ModelDimensions(
-            nx,     // nx_rdata
-            nx,     // nxtrue_rdata
-            nx,     // nx_solver
-            nx,     // nxtrue_solver
-            0,      // nx_solver_reinit
-            1,      // np
-            3,      // nk
-            ny,     // ny
-            ny,     // nytrue
-            nz,     // nz
-            nz,     // nztrue
-            ne,     // ne
-            0,      // ne_solver
-            0,      // nspl
-            0,      // nJ
-            0,      // nw
-            0,      // ndwdx
-            0,      // ndwdp
-            0,      // dwdw
-            0,      // ndxdotdw
-            {0, 0}, // ndJydy
-            0,      // ndxrdatadxsolver
-            0,      // ndxrdatadtcl
-            0,      // ndtotal_cldx_rdata
-            1,      // nnz
-            0,      // ubw
-            0       // lbw
-        ),
+        ModelDimensions{
+            .nx_rdata = nx,
+            .nxtrue_rdata = nx,
+            .nx_solver = nx,
+            .nxtrue_solver = nx,
+            .nx_solver_reinit = 0,
+            .np = 1,
+            .nk = 3,
+            .ny = ny,
+            .nytrue = ny,
+            .nz = nz,
+            .nztrue = nz,
+            .ne = ne,
+            .ne_solver = 0,
+            .nspl = 0,
+            .nw = 0,
+            .ndwdx = 0,
+            .ndwdp = 0,
+            .ndwdw = 0,
+            .ndxdotdw = 0,
+            .ndJydy = {0, 0},
+            .ndxrdatadxsolver = 0,
+            .ndxrdatadtcl = 0,
+            .ndtotal_cldx_rdata = 0,
+            .nnz = 1,
+            .nJ = 0,
+            .ubw = 0,
+            .lbw = 0
+        },
+
         SimulationParameters(
             std::vector<realtype>(3, 0.0), std::vector<realtype>(1, 0.0),
             std::vector<int>(2, 1)

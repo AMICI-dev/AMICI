@@ -51,6 +51,8 @@ ReturnData::ReturnData(
     , plist(plist_)
     , sigma_offset(sigma_offset_)
     , nroots_(ne) {
+    model_dimensions_.validate();
+
     switch (rdata_reporting) {
     case RDataReporting::full:
         initializeFullReporting(quadratic_llh_);

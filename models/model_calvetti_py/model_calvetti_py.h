@@ -110,38 +110,38 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      */
     Model_model_calvetti_py()
         : amici::Model_DAE(
-              amici::ModelDimensions(
-                  6,                            // nx_rdata
-                  6,                        // nxtrue_rdata
-                  6,                           // nx_solver
-                  6,                       // nxtrue_solver
-                  0,                    // nx_solver_reinit
-                  0,                                  // np
-                  6,                                  // nk
-                  6,                                  // ny
-                  6,                              // nytrue
-                  0,                                  // nz
-                  0,                              // nztrue
-                  4,                              // nevent
-                  0,                       // nevent_solver
-                  0,                                // nspl
-                  1,                          // nobjective
-                  17,                                  // nw
-                  15,                               // ndwdx
-                  0,                               // ndwdp
-                  16,                               // ndwdw
-                  7,                            // ndxdotdw
-                  std::vector<int>{1, 1, 1, 1, 1, 1},                              // ndjydy
-                  0,                    // ndxrdatadxsolver
-                  0,                        // ndxrdatadtcl
-                  0,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  6,                                 // ubw
-                  6,                                 // lbw
-                  0,                   // ndxdotdp_explicit
-                  5,                   // ndxdotdx_explicit
-                  2                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = 6,
+                  .nxtrue_rdata = 6,
+                  .nx_solver = 6,
+                  .nxtrue_solver = 6,
+                  .nx_solver_reinit = 0,
+                  .np = 0,
+                  .nk = 6,
+                  .ny = 6,
+                  .nytrue = 6,
+                  .nz = 0,
+                  .nztrue = 0,
+                  .ne = 4,
+                  .ne_solver = 0,
+                  .nspl = 0,
+                  .nw = 17,
+                  .ndwdx = 15,
+                  .ndwdp = 0,
+                  .ndwdw = 16,
+                  .ndxdotdw = 7,
+                  .ndJydy = std::vector<int>{1, 1, 1, 1, 1, 1},
+                  .ndxrdatadxsolver = 0,
+                  .ndxrdatadtcl = 0,
+                  .ndtotal_cldx_rdata = 0,
+                  .nnz = 0,
+                  .nJ = 1,
+                  .ubw = 6,
+                  .lbw = 6,
+                  .ndxdotdp_explicit = 0,
+                  .ndxdotdx_explicit = 5,
+                  .w_recursion_depth = 2,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{0.28999999999999998, 0.73999999999999999, 0.44, 0.080000000000000002, 0.27000000000000002, 0.17999999999999999}, // fixedParameters
                   std::vector<realtype>{}        // dynamic parameters
@@ -557,7 +557,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
+        return "570c71d2a041ed15d548e826df3d97e05d124309";
     }
 
     bool hasQuadraticLLH() const override {

@@ -110,38 +110,38 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      */
     Model_model_jakstat_adjoint_py()
         : amici::Model_ODE(
-              amici::ModelDimensions(
-                  9,                            // nx_rdata
-                  9,                        // nxtrue_rdata
-                  9,                           // nx_solver
-                  9,                       // nxtrue_solver
-                  0,                    // nx_solver_reinit
-                  17,                                  // np
-                  2,                                  // nk
-                  3,                                  // ny
-                  3,                              // nytrue
-                  0,                                  // nz
-                  0,                              // nztrue
-                  0,                              // nevent
-                  0,                       // nevent_solver
-                  1,                                // nspl
-                  1,                          // nobjective
-                  2,                                  // nw
-                  0,                               // ndwdx
-                  5,                               // ndwdp
-                  0,                               // ndwdw
-                  2,                            // ndxdotdw
-                  std::vector<int>{1, 1, 1},                              // ndjydy
-                  0,                    // ndxrdatadxsolver
-                  0,                        // ndxrdatadtcl
-                  0,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  9,                                 // ubw
-                  9,                                 // lbw
-                  13,                   // ndxdotdp_explicit
-                  18,                   // ndxdotdx_explicit
-                  0                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = 9,
+                  .nxtrue_rdata = 9,
+                  .nx_solver = 9,
+                  .nxtrue_solver = 9,
+                  .nx_solver_reinit = 0,
+                  .np = 17,
+                  .nk = 2,
+                  .ny = 3,
+                  .nytrue = 3,
+                  .nz = 0,
+                  .nztrue = 0,
+                  .ne = 0,
+                  .ne_solver = 0,
+                  .nspl = 1,
+                  .nw = 2,
+                  .ndwdx = 0,
+                  .ndwdp = 5,
+                  .ndwdw = 0,
+                  .ndxdotdw = 2,
+                  .ndJydy = std::vector<int>{1, 1, 1},
+                  .ndxrdatadxsolver = 0,
+                  .ndxrdatadtcl = 0,
+                  .ndtotal_cldx_rdata = 0,
+                  .nnz = 0,
+                  .nJ = 1,
+                  .ubw = 9,
+                  .lbw = 9,
+                  .ndxdotdp_explicit = 13,
+                  .ndxdotdx_explicit = 18,
+                  .w_recursion_depth = 0,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{1.3999999999999999, 0.45000000000000001}, // fixedParameters
                   std::vector<realtype>{3.9810717055349727, 1000.0, 0.11220184543019635, 0.98287887300003218, 1.0, 0.0015848931924611134, 0.54954087385762451, 0.84139514164519513, 0.38904514499428061, 9.9999999999999991e-6, 0.18197008586099833, 0.22908676527677729, 0.77624711662869172, 1.0641430182243161, 0.31622776601683794, 1.0, 0.31622776601683794}        // dynamic parameters
@@ -552,7 +552,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "dcbbae0f8e9b52afd7ab8b4b7a046da36b907139";
+        return "570c71d2a041ed15d548e826df3d97e05d124309";
     }
 
     bool hasQuadraticLLH() const override {
