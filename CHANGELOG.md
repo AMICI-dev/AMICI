@@ -14,6 +14,12 @@ BREAKING CHANGES
 * `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now
   return `list[SteadyStateStatus]` instead of an `ndarray[int]` of shape
   `(1, 3)`.
+* The way the observation model is passed to the different import functions
+  has changed.
+  The information split across `observables`, `sigmas`, `noise_distributions`,
+  `event_observables`, `event_sigmas`, and `event_noise_distributions` dicts
+  is now passed as a single `observation_model: list[MeasurementChannel]`
+  argument.
 * The following deprecated functionality has been removed:
   * The complete MATLAB interface has been removed.
   * `NonlinearSolverIteration::functional` has been removed,

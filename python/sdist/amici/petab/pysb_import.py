@@ -21,7 +21,7 @@ from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
     get_fixed_parameters,
-    petab_noise_distributions_to_amici,
+    petab_noise_distribution_to_amici,
 )
 from .util import get_states_in_condition_table
 
@@ -282,9 +282,10 @@ def import_model_pysb(
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
-        noise_distrs = petab_noise_distributions_to_amici(
-            petab_problem.observable_df
-        )
+        noise_distrs = {
+            observable.name: petab_noise_distribution_to_amici(observable)
+            for _, observable in petab_problem.observable_df.iterrows()
+        }
 
     if jax:
         from amici.pysb_import import pysb2jax

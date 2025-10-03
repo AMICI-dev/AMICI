@@ -306,7 +306,7 @@ def noise_distribution_to_cost_function(
 
     AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
 
-    In addition to the above mentioned distributions, it is also possible to
+    In addition to the above-mentioned distributions, it is also possible to
     pass a function taking a symbol string and returning a log-distribution
     string with variables '{str_symbol}', 'm{str_symbol}', 'sigma{str_symbol}'
     for y, m, sigma, respectively.
