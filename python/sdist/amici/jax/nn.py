@@ -30,7 +30,7 @@ def tanhshrink(x: jnp.ndarray) -> jnp.ndarray:
     return x - jnp.tanh(x)
 
 
-def generate_equinox(nn_model: "NNModel", filename: Path | str):  # noqa: F821
+def generate_equinox(nn_model: "NNModel", filename: Path | str, frozen_layers: dict = {}):  # noqa: F821
     # TODO: move to top level import and replace forward type definitions
     from petab_sciml import Layer
 
@@ -53,6 +53,7 @@ def generate_equinox(nn_model: "NNModel", filename: Path | str):  # noqa: F821
                 _generate_forward(
                     node,
                     node_indent,
+                    frozen_layers,
                     layers.get(
                         node.target,
                         Layer(layer_id="dummy", layer_type="Linear"),
@@ -149,13 +150,25 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     return f"{' ' * indent}'{layer.layer_id}': {layer_str}"
 
 
-def _generate_forward(node: "Node", indent, layer_type=str) -> str:  # noqa: F821
+def _generate_forward(node: "Node", indent, frozen_layers: dict = {}, layer_type=str) -> str:  # noqa: F821
     if node.op == "placeholder":
         # TODO: inconsistent target vs name
         return f"{' ' * indent}{node.name} = input"
 
     if node.op == "call_module":
         fun_str = f"self.layers['{node.target}']"
+        if node.name in frozen_layers:
+            if frozen_layers[node.name]:
+                arr_attr = frozen_layers[node.name]
+                get_lambda = f"lambda layer: getattr(layer, '{arr_attr}')"
+                replacer = (
+                    "replace_fn = lambda arr: jax.lax.stop_gradient(arr)"
+                )
+                tree_string = f"tree_{node.name} = eqx.tree_at({get_lambda}, {fun_str}, {replacer})"
+                fun_str = f"tree_{node.name}"
+            else:
+                fun_str = f"jax.lax.stop_gradient({fun_str})"
+                tree_string = ""
         if layer_type.startswith(("Conv", "Linear", "LayerNorm")):
             if layer_type in ("LayerNorm",):
                 dims = f"len({fun_str}.shape)+1"
@@ -198,6 +211,9 @@ def _generate_forward(node: "Node", indent, layer_type=str) -> str:  # noqa: F82
         kwargs += ["key=key"]
     kwargs_str = ", ".join(kwargs)
     if node.op in ("call_module", "call_function", "call_method"):
-        return f"{' ' * indent}{node.name} = {fun_str}({args + ', ' + kwargs_str})"
+        if node.name in frozen_layers:
+            return f"{' ' * indent}{tree_string}\n{' ' * indent}{node.name} = {fun_str}({args + ', ' + kwargs_str})"
+        else:
+            return f"{' ' * indent}{node.name} = {fun_str}({args + ', ' + kwargs_str})"
     if node.op == "output":
         return f"{' ' * indent}{node.target} = {args}"
