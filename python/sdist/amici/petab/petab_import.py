@@ -220,6 +220,25 @@ def import_petab_problem(
                             and petab_id in observable_mapping.keys()
                         ]
                     ),
+                    "frozen_layers": dict(
+                        [
+                            _get_frozen_layers(model_id)
+                            for petab_id, model_id in petab_problem.mapping_df.loc[
+                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                                .str.split(".")
+                                .str[0]
+                                == net_id,
+                                petab.MODEL_ENTITY_ID,
+                            ]
+                            .to_dict()
+                            .items()
+                            if petab_id in petab_problem.parameter_df.index
+                            and petab_problem.parameter_df.loc[
+                                petab_id, petab.ESTIMATE
+                            ]
+                            == 0
+                        ]
+                    ),
                     **net_config,
                 }
                 for net_id, net_config in config["neural_nets"].items()
@@ -280,6 +299,14 @@ def _get_net_index(model_id: str):
     if matches:
         return int(matches[-1])
     return None
+
+
+def _get_frozen_layers(model_id):
+    layers = re.findall(r"\[(.*?)\]", model_id)
+    array_attr = model_id.split(".")[-1]
+    layer_id = layers[0] if len(layers) else None
+    array_attr = array_attr if array_attr in ("weight", "bias") else None
+    return layer_id, array_attr
 
 
 # for backwards compatibility
