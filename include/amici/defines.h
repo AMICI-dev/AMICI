@@ -195,7 +195,6 @@ enum class LinearMultistepMethod {
 
 /** CVODES/IDAS Nonlinear Iteration method */
 enum class NonlinearSolverIteration {
-    functional = 1, /** deprecated */
     fixedpoint = 1,
     newton = 2
 };

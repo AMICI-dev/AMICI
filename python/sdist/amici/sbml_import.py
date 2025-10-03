@@ -293,7 +293,6 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = None,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
@@ -448,10 +447,6 @@ class SbmlImporter:
         :param cache_simplify:
             See :meth:`amici.DEModel.__init__`.
 
-        :param log_as_log10:
-            This option is deprecated and will be removed in a future version.
-            Also, this option never had any effect on model import.
-
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
             not be generated.
@@ -463,16 +458,6 @@ class SbmlImporter:
             initial assignments are supported.
         """
         set_log_level(logger, verbose)
-
-        if log_as_log10 is not None:
-            # deprecated 04/2025
-            warnings.warn(
-                "The `log_as_log10` argument is deprecated and will be "
-                "removed in a future version. This argument can safely be "
-                "dropped without replacement.",
-                category=DeprecationWarning,
-                stacklevel=2,
-            )
 
         ode_model = self._build_ode_model(
             observables=observables,
@@ -521,7 +506,6 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
-        log_as_log10: bool = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -585,21 +569,8 @@ class SbmlImporter:
 
         :param cache_simplify:
                 see :meth:`amici.DEModel.__init__`
-
-        :param log_as_log10:
-            This option is deprecated and will be removed in a future version.
-            Also, this option never had any effect on model import.
         """
         set_log_level(logger, verbose)
-
-        if log_as_log10 is not None:
-            warnings.warn(
-                "The `log_as_log10` argument is deprecated and will be "
-                "removed in a future version. This argument can safely be "
-                "dropped without replacement.",
-                category=DeprecationWarning,
-                stacklevel=2,
-            )
 
         ode_model = self._build_ode_model(
             observables=observables,

@@ -8,13 +8,24 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 BREAKING CHANGES
 
-* The MATLAB interface has been removed.
 * `ReturnDataView.posteq_numsteps` and `ReturnDataView.posteq_numsteps` now
   return a one-dimensional array of shape `(num_timepoints,)` instead of a
   two-dimensional array of shape `(1, num_timepoints)`.
 * `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now
   return `list[SteadyStateStatus]` instead of an `ndarray[int]` of shape
   `(1, 3)`.
+* The following deprecated functionality has been removed:
+  * The complete MATLAB interface has been removed.
+  * `NonlinearSolverIteration::functional` has been removed,
+    use `NonlinearSolverIteration::fixedpoint` instead.
+  * The deprecated argument `log_as_log10` to `SbmlImporter.sbml2amici` and
+    `SbmlImporter.sbml2jax` has been removed. Just remove this argument, as
+    this never had any effect.
+  * Deprecated imports from `amici.petab.*` in `amici.petab.simulations`
+    have been removed. Import those functions directly from their respective
+    modules.
+  * The `force_compile` argument to `import_petab_problem` has been removed.
+    See the `compile_` argument.
 
 ## v0.X Series
 

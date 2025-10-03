@@ -18,24 +18,14 @@ from petab.v1.C import *  # noqa: F403
 from .. import AmiciExpData, AmiciModel
 from ..logging import get_logger, log_execution_time
 
-# some extra imports for backward-compatibility
-# DEPRECATED: remove in 1.0
-from .conditions import (  # noqa # pylint: disable=unused-import
-    create_edata_for_condition,
+from .conditions import (
     create_edatas,
-    create_parameterized_edatas,
     fill_in_parameters,
 )
-from .parameter_mapping import (  # noqa # pylint: disable=unused-import
+from .parameter_mapping import (
     ParameterMapping,
     create_parameter_mapping,
-    create_parameter_mapping_for_condition,
 )
-from .util import (  # noqa # pylint: disable=unused-import
-    get_states_in_condition_table,
-)
-
-# END DEPRECATED
 
 try:
     import pysb
