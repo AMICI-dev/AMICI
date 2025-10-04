@@ -75,7 +75,11 @@ for example in pysb_models:
                 pysb_model,
                 outdir,
                 compute_conservation_laws=compute_conservation_laws,
-                observables=list(pysb_model.observables.keys()),
+                observation_model=list(
+                    map(
+                        amici.MeasurementChannel, pysb_model.observables.keys()
+                    )
+                ),
             )
 
             amici_model_module = amici.import_model_module(

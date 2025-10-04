@@ -20,6 +20,7 @@ from amici.petab.petab_import import import_petab_problem
 from amici.jax import JAXProblem, ReturnValue, run_simulations
 from numpy.testing import assert_allclose
 from test_petab_objective import lotka_volterra  # noqa: F401
+from amici import MeasurementChannel as MC
 
 pysb = pytest.importorskip("pysb")
 
@@ -42,8 +43,8 @@ def test_conversion():
     pysb.Observable("ab", a(s="b"))
 
     with TemporaryDirectoryWinSafe() as outdir:
-        pysb2amici(model, outdir, verbose=True, observables=["ab"])
-        pysb2jax(model, outdir, verbose=True, observables=["ab"])
+        pysb2amici(model, outdir, verbose=True, observation_model=[MC("ab")])
+        pysb2jax(model, outdir, verbose=True, observation_model=[MC("ab")])
 
         amici_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
@@ -97,13 +98,13 @@ def test_dimerization():
             model,
             outdir,
             verbose=True,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
             constant_parameters=["ksyn_a", "ksyn_b"],
         )
         pysb2jax(
             model,
             outdir,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
         )
 
         amici_module = amici.import_model_module(

@@ -5,7 +5,12 @@ from copy import deepcopy
 import amici
 import numpy as np
 import pytest
-from amici import import_model_module, SensitivityMethod, SensitivityOrder
+from amici import (
+    import_model_module,
+    SensitivityMethod,
+    SensitivityOrder,
+    MeasurementChannel as MC,
+)
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
@@ -1127,11 +1132,7 @@ def test_posteq_events_are_handled(tempdir):
         E1: at time > 1: target = target + bolus
         E2: at some_time >= 2: target = target + bolus
         """,
-        observables={
-            "obs_target": {
-                "formula": "target",
-            }
-        },
+        observation_model=[MC("obs_target", formula="target")],
         model_name=model_name,
         output_dir=tempdir,
         verbose=True,

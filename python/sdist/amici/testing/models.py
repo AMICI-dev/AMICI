@@ -4,7 +4,7 @@ from .. import import_model_module, Model
 from ..antimony_import import antimony2amici, antimony2sbml
 from pathlib import Path
 import libsbml
-from amici import SbmlImporter, AmiciModel
+from amici import SbmlImporter, AmiciModel, MeasurementChannel
 import sys
 import tempfile
 from amici.sbml_utils import amici_time_symbol
@@ -113,11 +113,11 @@ def import_model_robertson(outdir: Path = None) -> Model:
     antimony2amici(
         robertson_ant,
         constant_parameters=["k1"],
-        observables={
-            "obs_x1": {"formula": "x1"},
-            "obs_x2": {"formula": "1e4 * x2"},
-            "obs_x3": {"formula": "x3"},
-        },
+        observation_model=[
+            MeasurementChannel(id_="obs_x1", formula="x1"),
+            MeasurementChannel(id_="obs_x2", formula="1e4 * x2"),
+            MeasurementChannel(id_="obs_x3", formula="x3"),
+        ],
         model_name=model_name,
         output_dir=outdir,
     )
@@ -136,14 +136,14 @@ def import_model_calvetti(outdir: Path = None) -> Model:
     antimony2amici(
         calvetti_ant,
         constant_parameters=["V1ss", "R1ss", "V2ss", "R2ss", "V3ss", "R3ss"],
-        observables={
-            "obs_V1": {"formula": "V1"},
-            "obs_V2": {"formula": "V2"},
-            "obs_V3": {"formula": "V3"},
-            "obs_f0": {"formula": "f0"},
-            "obs_f1": {"formula": "f1"},
-            "obs_f2": {"formula": "f2"},
-        },
+        observation_model=[
+            MeasurementChannel(id_="obs_V1", formula="V1"),
+            MeasurementChannel(id_="obs_V2", formula="V2"),
+            MeasurementChannel(id_="obs_V3", formula="V3"),
+            MeasurementChannel(id_="obs_f0", formula="f0"),
+            MeasurementChannel(id_="obs_f1", formula="f1"),
+            MeasurementChannel(id_="obs_f2", formula="f2"),
+        ],
         model_name=model_name,
         output_dir=outdir,
         hardcode_symbols=["p1"],
@@ -172,9 +172,7 @@ def import_model_dirac(outdir: Path = None) -> Model:
 
     antimony2amici(
         model_dirac_ant,
-        observables={
-            "obs_x2": {"formula": "x2"},
-        },
+        observation_model=[MeasurementChannel(id_="obs_x2", formula="x2")],
         model_name=model_name,
         output_dir=outdir,
     )
@@ -228,17 +226,6 @@ def import_model_neuron(outdir: Path = None) -> AmiciModel:
         },
     }
 
-    observables = {
-        "y1": {
-            "name": "v",
-            "formula": "v",
-        }
-    }
-
-    event_observables = {
-        "z1": {"name": "z1", "event": "event_1", "formula": "time"}
-    }
-
     sbml_document, sbml_model = create_sbml_model(
         initial_assignments=initial_assignments,
         parameters=parameters,
@@ -254,9 +241,11 @@ def import_model_neuron(outdir: Path = None) -> AmiciModel:
     model = create_amici_model(
         sbml_model,
         model_name=model_name,
-        observables=observables,
+        observation_model=[
+            MeasurementChannel(id_="y1", name="v", formula="v"),
+            MeasurementChannel(id_="z1", event_id="event_1", formula="time"),
+        ],
         constant_parameters=constants,
-        event_observables=event_observables,
         output_dir=outdir,
     )
     return model
@@ -312,18 +301,6 @@ def import_model_events(outdir: Path = None) -> AmiciModel:
         "event_2": {"trigger": "x1 > x3", "target": [], "assignment": []},
     }
 
-    observables = {
-        "y1": {
-            "name": "y1",
-            "formula": "p4*(x1+x2+x3)",
-        }
-    }
-
-    event_observables = {
-        "z1": {"name": "z1", "event": "event_1", "formula": "time"},
-        "z2": {"name": "z2", "event": "event_2", "formula": "time"},
-    }
-
     sbml_document, sbml_model = create_sbml_model(
         initial_assignments=initial_assignments,
         parameters=parameters,
@@ -336,12 +313,16 @@ def import_model_events(outdir: Path = None) -> AmiciModel:
 
     model_name = "model_events_py"
     constants = ["k1", "k2", "k3", "k4"]
+
     model = create_amici_model(
         sbml_model,
         model_name=model_name,
-        observables=observables,
+        observation_model=[
+            MeasurementChannel(id_="y1", formula="p4*(x1+x2+x3)", name="y1"),
+            MeasurementChannel(id_="z1", event_id="event_1", formula="time"),
+            MeasurementChannel(id_="z2", event_id="event_2", formula="time"),
+        ],
         constant_parameters=constants,
-        event_observables=event_observables,
         output_dir=outdir,
     )
     return model
@@ -432,20 +413,21 @@ def import_model_jakstat(outdir: Path = None) -> AmiciModel:
 
     SbmlImporter(sbml_model).sbml2amici(
         constant_parameters=["Omega_cyt", "Omega_nuc"],
-        observables={
-            "obs_pSTAT": {
-                "formula": "offset_pSTAT + scale_pSTAT/init_STAT*(pSTAT + 2*pSTAT_pSTAT)"
-            },
-            "obs_tSTAT": {
-                "formula": "offset_tSTAT + scale_tSTAT/init_STAT*(STAT + pSTAT + 2*(pSTAT_pSTAT))"
-            },
-            "obs_spline": {"formula": "u"},
-        },
-        sigmas={
-            "obs_pSTAT": "sigma_pSTAT",
-            "obs_tSTAT": "sigma_tSTAT",
-            "obs_spline": "sigma_pEpoR",
-        },
+        observation_model=[
+            MeasurementChannel(
+                id_="obs_pSTAT",
+                formula="offset_pSTAT + scale_pSTAT/init_STAT*(pSTAT + 2*pSTAT_pSTAT)",
+                sigma="sigma_pSTAT",
+            ),
+            MeasurementChannel(
+                id_="obs_tSTAT",
+                formula="offset_tSTAT + scale_tSTAT/init_STAT*(STAT + pSTAT + 2*(pSTAT_pSTAT))",
+                sigma="sigma_tSTAT",
+            ),
+            MeasurementChannel(
+                id_="obs_spline", formula="u", sigma="sigma_pEpoR"
+            ),
+        ],
         model_name=model_name,
         output_dir=outdir,
     )
@@ -480,9 +462,9 @@ def import_model_nested_events(outdir: Path = None) -> AmiciModel:
 
     antimony2amici(
         ant_str,
-        observables={
-            "obs_Virus": {"formula": "Virus"},
-        },
+        observation_model=[
+            MeasurementChannel(id_="obs_Virus", formula="Virus"),
+        ],
         model_name=model_name,
         output_dir=outdir,
     )
@@ -523,11 +505,11 @@ def import_model_steadystate(outdir: Path = None) -> AmiciModel:
     antimony2amici(
         ant_str,
         constant_parameters=["k1", "k2", "k3", "k4"],
-        observables={
-            "obs_x1": {"formula": "x1"},
-            "obs_x2": {"formula": "x2"},
-            "obs_x3": {"formula": "x3"},
-        },
+        observation_model=[
+            MeasurementChannel(id_="obs_x1", formula="x1"),
+            MeasurementChannel(id_="obs_x2", formula="x2"),
+            MeasurementChannel(id_="obs_x3", formula="x3"),
+        ],
         model_name=model_name,
         output_dir=outdir,
     )

@@ -69,7 +69,9 @@ def test_compare_to_pysb_simulation(example):
 
     kwargs = {
         "compute_conservation_laws": cl,
-        "observables": list(pysb_model.observables.keys()),
+        "observation_model": list(
+            map(amici.MeasurementChannel, pysb_model.observables.keys())
+        ),
     }
 
     with TemporaryDirectoryWinSafe(prefix=pysb_model.name) as outdir:

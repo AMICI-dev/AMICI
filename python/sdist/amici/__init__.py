@@ -131,8 +131,9 @@ if not _imported_from_setup():
     from .de_export import DEExporter  # noqa: F401
     from .sbml_import import (  # noqa: F401
         SbmlImporter,
-        assignmentRules2observables,
+        assignment_rules_to_observables,
     )
+    from .import_utils import MeasurementChannel  # noqa: F401
 
     try:
         from .jax import JAXModel
