@@ -1,7 +1,6 @@
 # Find a BLAS
 #
-# AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
-# The latter is not supported via CMake yet.
+# AMICI requires BLAS, currently at least Intel MKL, CBLAS can be used.
 #
 # This module defines the BLAS::BLAS IMPORTED target.
 

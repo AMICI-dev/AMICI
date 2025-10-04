@@ -239,13 +239,13 @@ def import_model_module(
 
     module_path = Path(model_root, module_name, "__init__.py")
 
-    # We may want to import a matlab-generated model where the extension
+    # We may want to import an externally compiled model where the extension
     #  is in a different directory. This is not a regular use case. It's only
     #  used in the amici tests and can be removed at any time.
     #  The models (currently) use the default swig-import and require
     #  modifying sys.path.
-    module_path_matlab = Path(model_root, f"{module_name}.py")
-    if not module_path.is_file() and module_path_matlab.is_file():
+    module_path_external = Path(model_root, f"{module_name}.py")
+    if not module_path.is_file() and module_path_external.is_file():
         with set_path(model_root):
             # prevent segfaults under pytest
             #  see also:
@@ -257,7 +257,7 @@ def import_model_module(
                     category=DeprecationWarning,
                     message="builtin type .* has no __module__ attribute",
                 )
-                return _module_from_path(module_name, module_path_matlab)
+                return _module_from_path(module_name, module_path_external)
 
     module = _module_from_path(module_name, module_path)
     module._self = module

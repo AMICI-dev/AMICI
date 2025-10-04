@@ -301,8 +301,8 @@ class SbmlImporter:
         constructor.
 
         The resulting model can be imported as a regular Python module (if
-        `compile=True`), or used from Matlab or C++ as described in the
-        documentation of the respective AMICI interface.
+        `compile=True`), or used from C++ as described in the documentation of
+        AMICI's C++ interface.
 
         Note that this generates model ODEs for changes in concentrations, not
         amounts unless the `hasOnlySubstanceUnits` attribute has been

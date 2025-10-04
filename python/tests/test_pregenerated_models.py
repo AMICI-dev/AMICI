@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Run simulations with Matlab-AMICI pre-generated models and verify using
+"""Run simulations with pre-generated models and verify using
 saved expectations."""
 
 import os
