@@ -18,7 +18,6 @@ from petab.v1.C import (
     CONDITION_NAME,
     NOISE_FORMULA,
     OBSERVABLE_FORMULA,
-    NOISE_DISTRIBUTION,
 )
 from petab.v1.models.pysb_model import PySBModel
 
@@ -283,7 +282,7 @@ def import_model_pysb(
                 id_=observable.name,
                 sigma=f"{observable.name}_sigma",
                 noise_distribution=petab_noise_distribution_to_amici(
-                    observable.get(NOISE_DISTRIBUTION)
+                    observable
                 ),
             )
             for _, observable in petab_problem.observable_df.iterrows()

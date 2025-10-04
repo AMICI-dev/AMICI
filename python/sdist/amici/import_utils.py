@@ -149,9 +149,9 @@ class MeasurementChannel:
         ...     sigma="sigma1"
         ... )
         >>> mc1  # doctest: +NORMALIZE_WHITESPACE
-        MeasurementChannel(id_='obs1', name='Observable 1',
-            formula='k1 * x1 + k2', noise_distribution='log-normal',
-            sigma='sigma1', event_id=None)
+        MeasurementChannel(id_='obs1', name='Observable 1', \
+formula='k1 * x1 + k2', noise_distribution='log-normal', \
+sigma='sigma1', event_id=None)
         >>> mc1.is_time_resolved
         True
         >>> mc1.is_event_resolved
@@ -166,8 +166,8 @@ class MeasurementChannel:
         ...     event_id="event1"
         ... )
         >>> mc2  # doctest: +NORMALIZE_WHITESPACE
-        MeasurementChannel(id_='obs2', name='Observable 2', formula='x3',
-         noise_distribution='log-normal', sigma='sigma1', event_id='event1')
+        MeasurementChannel(id_='obs2', name='Observable 2', formula='x3', \
+ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
         >>> mc2.is_event_resolved
         True
         >>> mc2.is_time_resolved
@@ -251,7 +251,7 @@ def noise_distribution_to_cost_function(
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
          exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
-c
+
     - `'laplace'`, `'lin-laplace'`: A laplace distribution:
 
       .. math::
