@@ -9,7 +9,6 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from warnings import warn
 
 import amici
 import petab.v1 as petab
@@ -82,17 +81,6 @@ def import_petab_problem(
     :return:
         The imported model.
     """
-    if "force_compile" in kwargs:
-        if kwargs["force_compile"]:
-            compile_ = True
-            del kwargs["force_compile"]
-        warn(
-            "The `force_compile` option is deprecated, please use the "
-            "new `compile_` option, which also supports 'do not compile'.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
         raise NotImplementedError(
             "Unsupported model type " + petab_problem.model.type_id
