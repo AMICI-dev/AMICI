@@ -1936,11 +1936,10 @@ class DEModel:
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
             xs_in_sigma = {}
-            for i, (sym_yz, eq_sigma_yz, eq_yz) in enumerate(
+            for i, (sym_yz, eq_sigma_yz) in enumerate(
                 zip(
                     syms_yz,
                     self._eqs[name],
-                    self.eq(name.removeprefix("sigma")),
                     strict=True,
                 )
             ):
@@ -1949,6 +1948,12 @@ class DEModel:
                     # Can we replace x symbols by an equivalent observable?
                     #  (currently, only the matching observable is supported)
                     x_to_eliminate = next(iter(tmp))
+                    eq_yz = (
+                        self.eq("y")[i]
+                        if name == "sigmay"
+                        else self.eq("z")[self._z2event[i]][i]
+                    )
+
                     try:
                         # solve for the next best x symbol and substitute
                         #  (maybe try another one if we fail?)

@@ -98,13 +98,13 @@ def test_dimerization():
             model,
             outdir,
             verbose=True,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
             constant_parameters=["ksyn_a", "ksyn_b"],
         )
         pysb2jax(
             model,
             outdir,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
         )
 
         amici_module = amici.import_model_module(
