@@ -199,7 +199,7 @@ class AmiVector {
      * @brief returns the length of the vector
      * @return length
      */
-    [[nodiscard]] int getLength() const;
+    [[nodiscard]] int size() const;
 
     /**
      * @brief fills vector with zero values
@@ -310,7 +310,7 @@ class AmiVector {
  */
 inline std::ostream& operator<<(std::ostream& os, AmiVector const& v) {
     os << "[";
-    for (int i = 0; i < v.getLength(); ++i) {
+    for (int i = 0; i < v.size(); ++i) {
         if (i > 0)
             os << ", ";
         os << v.at(i);
@@ -429,7 +429,7 @@ class AmiVectorArray {
      * @brief length of AmiVectorArray
      * @return length
      */
-    int getLength() const;
+    int size() const;
 
     /**
      * @brief set every AmiVector in AmiVectorArray to zero
@@ -482,7 +482,7 @@ class AmiVectorArray {
  */
 inline std::ostream& operator<<(std::ostream& os, AmiVectorArray const& arr) {
     os << "[";
-    for (int i = 0; i < arr.getLength(); ++i) {
+    for (int i = 0; i < arr.size(); ++i) {
         if (i > 0)
             os << ", ";
         os << arr[i];

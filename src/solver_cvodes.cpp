@@ -299,7 +299,7 @@ void CVodeSolver::apply_constraints() const {
 
     int status = CVodeSetConstraints(
         solver_memory_.get(),
-        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+        constraints_.size() > 0 ? constraints_.getNVector() : nullptr
     );
     if (status != CV_SUCCESS) {
         throw CvodeException(status, "CVodeSetConstraints");
