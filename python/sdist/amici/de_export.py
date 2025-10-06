@@ -240,8 +240,7 @@ class DEExporter:
     @log_execution_time("generating cpp code", logger)
     def generate_model_code(self) -> None:
         """
-        Generates the native C++ code for the loaded model and a Matlab
-        script that can be run to compile a mex file from the C++ code
+        Generates the model code (Python package + C++ extension).
         """
         with _monkeypatched(
             sp.Pow, "_eval_derivative", _custom_pow_eval_derivative

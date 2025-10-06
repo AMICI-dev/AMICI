@@ -713,8 +713,8 @@ void Solver::applySensitivityTolerances() const {
 }
 
 void Solver::apply_constraints() const {
-    if (constraints_.getLength() != 0
-        && gsl::narrow<int>(constraints_.getLength()) != nx()) {
+    if (constraints_.size() != 0
+        && gsl::narrow<int>(constraints_.size()) != nx()) {
         throw std::invalid_argument(
             "Constraints must have the same size as the state vector."
         );
@@ -1230,11 +1230,11 @@ void Solver::setErrHandlerFn() const {
         );
 }
 
-int Solver::nplist() const { return sx_.getLength(); }
+int Solver::nplist() const { return sx_.size(); }
 
-int Solver::nx() const { return x_.getLength(); }
+int Solver::nx() const { return x_.size(); }
 
-int Solver::nquad() const { return xQB_.getLength(); }
+int Solver::nquad() const { return xQB_.size(); }
 
 bool Solver::getInitDone() const { return initialized_; }
 

@@ -288,7 +288,7 @@ void ReturnData::processForwardProblem(
         initializeObjectiveFunction(model.hasQuadraticLLH());
 
     auto const& initialState = fwd.getInitialSimulationState();
-    if (initialState.sol.x.getLength() == 0 && model.nx_solver > 0)
+    if (initialState.sol.x.size() == 0 && model.nx_solver > 0)
         return; // if x wasn't set forward problem failed during initialization
 
     model.setModelState(initialState.mod);

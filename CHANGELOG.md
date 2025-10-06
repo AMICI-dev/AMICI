@@ -14,6 +14,8 @@ BREAKING CHANGES
 * `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now
   return `list[SteadyStateStatus]` instead of an `ndarray[int]` of shape
   `(1, 3)`.
+* `AmiVector::getLength` and `AmiVectorArray::getLength` have been renamed to
+  `size` to be more consistent with STL containers.
 * The following deprecated functionality has been removed:
   * The complete MATLAB interface has been removed.
   * `NonlinearSolverIteration::functional` has been removed,

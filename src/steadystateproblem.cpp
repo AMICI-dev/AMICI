@@ -40,7 +40,7 @@ realtype getWrmsNorm(
     N_VInv(ewt.getNVector(), ewt.getNVector());
 
     // wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector
-    if (mask.getLength()) {
+    if (mask.size()) {
         return N_VWrmsNormMask(
             const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector(),
             const_cast<N_Vector>(mask.getNVector())
@@ -189,7 +189,7 @@ bool NewtonsMethod::has_converged(
     auto nonnegative = model_->getStateIsNonNegative();
     Expects(nonnegative.size() == state.x.getVector().size());
     auto state_modified = false;
-    for (int ix = 0; ix < state.x.getLength(); ix++) {
+    for (int ix = 0; ix < state.x.size(); ix++) {
         if (state.x[ix] < 0.0 && nonnegative[ix]) {
             state.x[ix] = 0.0;
             state_modified = true;
