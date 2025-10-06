@@ -174,7 +174,3 @@ def import_petab_problem(
     )
 
     return model
-
-
-# for backwards compatibility
-import_model = import_model_sbml
