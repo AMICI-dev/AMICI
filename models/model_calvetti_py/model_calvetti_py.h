@@ -57,7 +57,7 @@ extern void dxdotdw_rowvals_model_calvetti_py(SUNMatrixWrapper &rowvals);
 extern void dxdotdx_explicit_model_calvetti_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_calvetti_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_calvetti_py(SUNMatrixWrapper &rowvals);
-extern void dydx_model_calvetti_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void dydx_model_calvetti_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 
 
 
@@ -309,8 +309,8 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     }
 
 
-    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
-        dydx_model_calvetti_py(dydx, t, x, p, k, h, w, dwdx);
+    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        dydx_model_calvetti_py(dydx, t, x, p, k, h, w);
     }
 
 
@@ -557,7 +557,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "570c71d2a041ed15d548e826df3d97e05d124309";
+        return "d5492c37f7dbc5faa374128e3559b96518e9a937";
     }
 
     bool hasQuadraticLLH() const override {

@@ -357,12 +357,10 @@ class AbstractModel {
      * @param k constant vector
      * @param h Heaviside vector
      * @param w repeating elements vector
-     * @param dwdx Recurring terms in xdot, state derivative
      */
     virtual void fdydx(
         realtype* dydx, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dwdx
+        realtype const* k, realtype const* h, realtype const* w
     );
 
     /**

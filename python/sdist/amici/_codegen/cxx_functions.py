@@ -78,7 +78,8 @@ class _FunctionInfo:
         )
 
     def var_in_signature(self, varname: str, ode: bool = True) -> bool:
-        """Check if a variable is in the function signature.
+        """
+        Check if a variable is in the function signature as input (``const``).
 
         :param varname: name of the variable to check
         :param ode: whether to check the ODE (``True``) or DAE (``False``)
@@ -225,7 +226,7 @@ functions = {
     "dydx": _FunctionInfo(
         "realtype *dydx, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *w, const realtype *dwdx",
+        "const realtype *w"
     ),
     "dydp": _FunctionInfo(
         "realtype *dydp, const realtype t, const realtype *x, "
@@ -483,6 +484,6 @@ def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
 
     :return:
         boolean indicating whether the variable occurs in the function
-        signature
+        signature as ``const`` input.
     """
     return name in functions and functions[name].var_in_signature(varname, ode)

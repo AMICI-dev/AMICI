@@ -1,20 +1,16 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
 #include "x.h"
 #include "k.h"
 #include "h.h"
 #include "w.h"
-#include "dwdx.h"
 
 namespace amici {
 namespace model_model_calvetti_py {
 
-void dydx_model_calvetti_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx){
+void dydx_model_calvetti_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
     dydx[0] = 1;
     dydx[3] = std::pow(L1, 3)*(2*f1/R1 - 2*(R3*f3 + f1*(R1 + R2) + f2*(R2 + R3))/std::pow(R1, 2) + 4/std::pow(R1, 2))/std::pow(V1, 3);
     dydx[7] = 1;

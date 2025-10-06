@@ -2084,11 +2084,10 @@ void Model::fdydx(realtype const t, AmiVector const& x) {
     derived_state_.dydx_.assign(ny * nx_solver, 0.0);
 
     fw(t, x_pos, false);
-    fdwdx(t, x_pos, false);
     fdydx(
         derived_state_.dydx_.data(), t, x_pos, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
-        derived_state_.w_.data(), derived_state_.dwdx_.data()
+        derived_state_.w_.data()
     );
 
     if (always_check_finite_) {
