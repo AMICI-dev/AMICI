@@ -148,7 +148,7 @@ class Model_model_events_py : public amici::Model_ODE {
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0, 1.0},   // idlist
-              std::vector<int>{1, 2},               // z2events
+              std::vector<int>{0, 1},               // z2events
               std::vector<Event>{
                   Event("event_1", false, true, NAN),
                   Event("event_2", false, true, NAN),
@@ -579,7 +579,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "570c71d2a041ed15d548e826df3d97e05d124309";
+        return "d5492c37f7dbc5faa374128e3559b96518e9a937";
     }
 
     bool hasQuadraticLLH() const override {

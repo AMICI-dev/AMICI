@@ -41,11 +41,10 @@ void dxdotdp_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &dxdotdp_explicit
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 #include "x.h"
 #include "p.h"
 #include "k.h"
