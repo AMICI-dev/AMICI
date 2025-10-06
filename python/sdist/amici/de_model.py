@@ -2147,16 +2147,15 @@ class DEModel:
             the variable symbols if the variable is part of the signature and
             the variable equations otherwise.
         """
-        # dwdx and dwdp will be dynamically computed and their ordering
-        # within a column may differ from the initialization of symbols here,
-        # so those are not safe to use. Not removing them from signature as
-        # this would break backwards compatibility.
-        if var_in_function_signature(
-            name, varname, self.is_ode()
-        ) and varname not in [
-            "dwdx",
-            "dwdp",
-        ]:
+        if var_in_function_signature(name, varname, self.is_ode()):
+            if varname in [
+                "dwdx",
+                "dwdp",
+            ]:
+                # dwdx and dwdp will be dynamically computed, and their
+                #  ordering within a column may differ from the initialization
+                #  of symbols here, so those are not safe to use.
+                raise AssertionError()
             return self.sym(varname)
         else:
             return self.eq(varname)

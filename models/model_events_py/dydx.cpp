@@ -10,7 +10,7 @@
 namespace amici {
 namespace model_model_events_py {
 
-void dydx_model_events_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx){
+void dydx_model_events_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
     dydx[0] = p4;
     dydx[1] = p4;
     dydx[2] = p4;

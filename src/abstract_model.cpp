@@ -97,7 +97,7 @@ void AbstractModel::fdydp(
 void AbstractModel::fdydx(
     realtype* /*dydx*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*dwdx*/
+    realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "

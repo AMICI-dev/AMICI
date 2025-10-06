@@ -9,7 +9,7 @@
 namespace amici {
 namespace model_model_steadystate_py {
 
-void dydx_model_steadystate_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx){
+void dydx_model_steadystate_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
     dydx[0] = 1;
     dydx[4] = 1;
     dydx[8] = 1;
