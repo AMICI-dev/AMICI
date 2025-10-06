@@ -388,12 +388,12 @@ class ReturnDataView(SwigPtrView):
             )
         self._field_dimensions = {
             "ts": [rdata.nt],
-            "x": [rdata.nt, rdata.nx],
-            "x0": [rdata.nx],
-            "x_ss": [rdata.nx],
-            "sx": [rdata.nt, rdata.nplist, rdata.nx],
-            "sx0": [rdata.nplist, rdata.nx],
-            "sx_ss": [rdata.nplist, rdata.nx],
+            "x": [rdata.nt, rdata.nx_rdata],
+            "x0": [rdata.nx_rdata],
+            "x_ss": [rdata.nx_rdata],
+            "sx": [rdata.nt, rdata.nplist, rdata.nx_rdata],
+            "sx0": [rdata.nplist, rdata.nx_rdata],
+            "sx_ss": [rdata.nplist, rdata.nx_rdata],
             # observables
             "y": [rdata.nt, rdata.ny],
             "sigmay": [rdata.nt, rdata.ny],

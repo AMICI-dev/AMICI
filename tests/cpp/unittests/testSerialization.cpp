@@ -14,8 +14,8 @@ void checkReturnDataEqual(
     ASSERT_EQ(r.id, s.id);
     ASSERT_EQ(r.np, s.np);
     ASSERT_EQ(r.nk, s.nk);
-    ASSERT_EQ(r.nx, s.nx);
-    ASSERT_EQ(r.nxtrue, s.nxtrue);
+    ASSERT_EQ(r.nx_rdata, s.nx_rdata);
+    ASSERT_EQ(r.nxtrue_rdata, s.nxtrue_rdata);
     ASSERT_EQ(r.nx_solver, s.nx_solver);
     ASSERT_EQ(r.nx_solver_reinit, s.nx_solver_reinit);
     ASSERT_EQ(r.ny, s.ny);
