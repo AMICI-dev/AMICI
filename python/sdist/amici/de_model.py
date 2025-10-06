@@ -1680,16 +1680,14 @@ class DEModel:
                 sp.zeros(self.num_eventobs(), 1) for _ in self._events
             ]
             event_ids = [e.get_id() for e in self._events]
-            # TODO: get rid of this stupid 1-based indexing as soon as we can
-            #  drop the matlab interface
             z2event = [
-                event_ids.index(event_obs.get_event()) + 1
+                event_ids.index(event_obs.get_event())
                 for event_obs in self._event_observables
             ]
             for (iz, ie), event_obs in zip(
                 enumerate(z2event), self._event_observables, strict=True
             ):
-                event_observables[ie - 1][iz] = event_obs.get_val()
+                event_observables[ie][iz] = event_obs.get_val()
 
             self._eqs[name] = event_observables
             self._z2event = z2event
@@ -1715,7 +1713,7 @@ class DEModel:
                 dtaudx = self.eq("dtaudx")
                 for ie in range(self.num_events()):
                     for iz in range(self.num_eventobs()):
-                        if ie != self._z2event[iz] - 1:
+                        if ie != self._z2event[iz]:
                             continue
                         dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
                         self._eqs[name][ie][iz, :] += dzdt * -dtaudx[ie]
@@ -1729,7 +1727,7 @@ class DEModel:
                 )
                 # match event observables to root function
                 for iz in range(self.num_eventobs()):
-                    if ie == self._z2event[iz] - 1:
+                    if ie == self._z2event[iz]:
                         val[iz, :] = self.eq(name.replace("rz", "root"))[ie, :]
                 eq_events.append(val)
 

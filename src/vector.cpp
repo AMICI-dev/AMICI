@@ -21,7 +21,7 @@ const_N_Vector AmiVector::getNVector() const { return nvec_; }
 
 std::vector<realtype> const& AmiVector::getVector() const { return vec_; }
 
-int AmiVector::getLength() const { return gsl::narrow<int>(vec_.size()); }
+int AmiVector::size() const { return gsl::narrow<int>(vec_.size()); }
 
 void AmiVector::zero() { set(0.0); }
 
@@ -48,11 +48,11 @@ realtype const& AmiVector::at(int const pos) const {
 }
 
 void AmiVector::copy(AmiVector const& other) {
-    if (getLength() != other.getLength())
+    if (size() != other.size())
         throw AmiException(
             "Dimension of AmiVector (%i) does not "
             "match input dimension (%i)",
-            getLength(), other.getLength()
+            size(), other.size()
         );
     std::ranges::copy(other.vec_, vec_.begin());
 }
@@ -85,8 +85,8 @@ AmiVectorArray::AmiVectorArray(
 
 AmiVectorArray& AmiVectorArray::operator=(AmiVectorArray const& other) {
     vec_array_ = other.vec_array_;
-    nvec_array_.resize(other.getLength());
-    for (int idx = 0; idx < other.getLength(); idx++) {
+    nvec_array_.resize(other.size());
+    for (int idx = 0; idx < other.size(); idx++) {
         nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
     }
     return *this;
@@ -94,8 +94,8 @@ AmiVectorArray& AmiVectorArray::operator=(AmiVectorArray const& other) {
 
 AmiVectorArray::AmiVectorArray(AmiVectorArray const& vaold)
     : vec_array_(vaold.vec_array_) {
-    nvec_array_.resize(vaold.getLength());
-    for (int idx = 0; idx < vaold.getLength(); idx++) {
+    nvec_array_.resize(vaold.size());
+    for (int idx = 0; idx < vaold.size(); idx++) {
         nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
     }
 }
@@ -132,7 +132,7 @@ AmiVector const& AmiVectorArray::operator[](int const pos) const {
     return vec_array_.at(pos);
 }
 
-int AmiVectorArray::getLength() const {
+int AmiVectorArray::size() const {
     return gsl::narrow<int>(vec_array_.size());
 }
 
@@ -145,7 +145,7 @@ void AmiVectorArray::flatten_to_vector(std::vector<realtype>& vec) const {
     int n_outer = gsl::narrow<int>(vec_array_.size());
     if (n_outer == 0)
         return; // nothing to do ...
-    int n_inner = vec_array_.at(0).getLength();
+    int n_inner = vec_array_.at(0).size();
 
     if (gsl::narrow<int>(vec.size()) != n_inner * n_outer) {
         throw AmiException(
@@ -162,14 +162,14 @@ void AmiVectorArray::flatten_to_vector(std::vector<realtype>& vec) const {
 }
 
 void AmiVectorArray::copy(AmiVectorArray const& other) {
-    if (getLength() != other.getLength())
+    if (size() != other.size())
         throw AmiException(
             "Dimension of AmiVectorArray (%i) does not "
             "match input dimension (%i)",
-            getLength(), other.getLength()
+            size(), other.size()
         );
 
-    for (int iv = 0; iv < getLength(); ++iv) {
+    for (int iv = 0; iv < size(); ++iv) {
         vec_array_.at(iv).copy(other.vec_array_.at(iv));
         nvec_array_[iv] = vec_array_.at(iv).getNVector();
     }

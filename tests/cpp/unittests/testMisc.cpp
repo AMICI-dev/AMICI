@@ -472,7 +472,7 @@ TEST_F(AmiVectorTest, Vector) {
     AmiVector av2(nvec);
     ASSERT_NE(av.data(), av2.data());
 
-    for (int i = 0; i < av.getLength(); ++i) {
+    for (int i = 0; i < av.size(); ++i) {
         ASSERT_EQ(av.at(i), NV_Ith_S(nvec, i));
         ASSERT_EQ(av.at(i), av2.at(i));
     }
@@ -487,7 +487,7 @@ TEST_F(AmiVectorTest, VectorArray) {
     AmiVectorArray ava(4, 3, sunctx);
     AmiVector av1(vec1, sunctx), av2(vec2, sunctx), av3(vec3, sunctx);
     std::vector<AmiVector> avs{av1, av2, av3};
-    for (int i = 0; i < ava.getLength(); ++i)
+    for (int i = 0; i < ava.size(); ++i)
         ava[i] = avs.at(i);
 
     std::vector<double> badLengthVector(13, 0.0);
@@ -495,10 +495,10 @@ TEST_F(AmiVectorTest, VectorArray) {
 
     ASSERT_THROW(ava.flatten_to_vector(badLengthVector), AmiException);
     ava.flatten_to_vector(flattened);
-    for (int i = 0; i < ava.getLength(); ++i) {
+    for (int i = 0; i < ava.size(); ++i) {
         AmiVector const av = ava[i];
-        for (int j = 0; j < av.getLength(); ++j)
-            ASSERT_EQ(flattened.at(i * av.getLength() + j), av.at(j));
+        for (int j = 0; j < av.size(); ++j)
+            ASSERT_EQ(flattened.at(i * av.size() + j), av.at(j));
     }
 
     std::stringstream ss;

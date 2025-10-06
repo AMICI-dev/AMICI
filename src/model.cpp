@@ -1267,7 +1267,7 @@ void Model::getUnobservedEventSensitivity(
     checkBufferSize(sz, nz * nplist());
 
     for (int iz = 0; iz < nz; ++iz)
-        if (z2event_.at(iz) - 1 == ie)
+        if (z2event_.at(iz) == ie)
             for (int ip = 0; ip < nplist(); ++ip)
                 sz[ip * nz + iz] = 0.0;
 }
@@ -1984,7 +1984,7 @@ void Model::writeSliceEvent(
     checkBufferSize(buffer, slice.size());
     checkBufferSize(buffer, z2event_.size());
     for (unsigned izt = 0; izt < z2event_.size(); ++izt)
-        if (z2event_.at(izt) - 1 == ie)
+        if (z2event_.at(izt) == ie)
             buffer[izt] = slice[izt];
 }
 
@@ -1995,7 +1995,7 @@ void Model::writeSensitivitySliceEvent(
     checkBufferSize(buffer, z2event_.size() * nplist());
     for (int ip = 0; ip < nplist(); ++ip)
         for (unsigned izt = 0; izt < z2event_.size(); ++izt)
-            if (z2event_.at(izt) - 1 == ie)
+            if (z2event_.at(izt) == ie)
                 buffer[ip * nztrue + izt] = slice[ip * nztrue + izt];
 }
 
@@ -2470,7 +2470,7 @@ void Model::fsigmaz(
 
     if (edata) {
         for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-            if (z2event_.at(iztrue) - 1 == ie) {
+            if (z2event_.at(iztrue) == ie) {
                 if (edata->isSetObservedEventsStdDev(nroots, iztrue)) {
                     auto sigmaz_edata
                         = edata->getObservedEventsStdDevPtr(nroots);
@@ -2513,7 +2513,7 @@ void Model::fdsigmazdp(
     // to zero
     if (edata) {
         for (int iz = 0; iz < nztrue; iz++) {
-            if (z2event_.at(iz) - 1 == ie
+            if (z2event_.at(iz) == ie
                 && !edata->isSetObservedEventsStdDev(nroots, iz)) {
                 for (int ip = 0; ip < nplist(); ip++)
                     derived_state_.dsigmazdp_.at(iz + nz * ip) = 0;
@@ -3037,7 +3037,7 @@ void Model::set_steadystate_mask(std::vector<realtype> const& mask) {
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {
     if (any_state_non_negative_) {
-        for (int ix = 0; ix < derived_state_.x_pos_tmp_.getLength(); ++ix) {
+        for (int ix = 0; ix < derived_state_.x_pos_tmp_.size(); ++ix) {
             derived_state_.x_pos_tmp_.at(ix)
                 = (state_is_non_negative_.at(ix) && NV_Ith_S(x, ix) < 0)
                       ? 0

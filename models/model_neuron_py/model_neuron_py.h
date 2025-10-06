@@ -148,7 +148,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0},   // idlist
-              std::vector<int>{1},               // z2events
+              std::vector<int>{0},               // z2events
               std::vector<Event>{
                   Event("event_1", false, true, NAN)
               } // events
