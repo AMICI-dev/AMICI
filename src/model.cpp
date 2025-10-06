@@ -3038,7 +3038,7 @@ void Model::set_steadystate_mask(std::vector<realtype> const& mask) {
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {
     if (any_state_non_negative_) {
-        for (int ix = 0; ix < derived_state_.x_pos_tmp_.getLength(); ++ix) {
+        for (int ix = 0; ix < derived_state_.x_pos_tmp_.size(); ++ix) {
             derived_state_.x_pos_tmp_.at(ix)
                 = (state_is_non_negative_.at(ix) && NV_Ith_S(x, ix) < 0)
                       ? 0
