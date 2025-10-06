@@ -41,11 +41,10 @@ void dxdotdx_explicit_rowvals_model_calvetti_py(SUNMatrixWrapper &dxdotdx_explic
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 #include "x.h"
 #include "k.h"
 #include "h.h"
