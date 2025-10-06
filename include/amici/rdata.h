@@ -468,19 +468,6 @@ class ReturnData : public ModelDimensions {
      */
     int status = AMICI_NOT_RUN;
 
-    /**
-     * @brief Number of state variables.
-     *
-     * (alias `nx_rdata`, kept for backward compatibility)
-     */
-    int nx{0};
-
-    /**
-     * Number of state variables in the unaugmented system
-     * (alias nxtrue_rdata, kept for backward compatibility)
-     */
-    int nxtrue{0};
-
     /** Number of parameters w.r.t. which sensitivities were requested */
     int nplist{0};
 

@@ -208,8 +208,8 @@ void serialize(
 ) {
     ar& dynamic_cast<amici::ModelDimensions&>(r);
     ar & r.id;
-    ar & r.nx;
-    ar & r.nxtrue;
+    ar & r.nx_rdata;
+    ar & r.nxtrue_rdata;
     ar & r.nplist;
     ar & r.nmaxevent;
     ar & r.nt;

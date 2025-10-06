@@ -37,8 +37,6 @@ ReturnData::ReturnData(
 )
     : ModelDimensions(model_dimensions_)
     , ts(std::move(ts_))
-    , nx(nx_rdata)
-    , nxtrue(nxtrue_rdata)
     , nplist(plist_.size())
     , nmaxevent(nmaxevent_)
     , nt(ts.size())
@@ -135,7 +133,7 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
     sigmaz.resize(nmaxevent * nz, 0.0);
 
     rz.resize(nmaxevent * nz, 0.0);
-    x.resize(nt * nx, 0.0);
+    x.resize(nt * nx_rdata, 0.0);
     w.resize(nt * nw, 0.0);
 
     preeq_numsteps.resize(3, 0);
@@ -159,17 +157,17 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
         }
     }
 
-    x0.resize(nx, getNaN());
-    x_ss.resize(nx, getNaN());
+    x0.resize(nx_rdata, getNaN());
+    x_ss.resize(nx_rdata, getNaN());
 
     if (sensi >= SensitivityOrder::first) {
-        sx0.resize(nx * nplist, getNaN());
-        sx_ss.resize(nx * nplist, getNaN());
+        sx0.resize(nx_rdata * nplist, getNaN());
+        sx_ss.resize(nx_rdata * nplist, getNaN());
 
         if (sensi_meth == SensitivityMethod::forward
             || sensi >= SensitivityOrder::second) {
             // for second order we can fill in from the augmented states
-            sx.resize(nt * nx * nplist, 0.0);
+            sx.resize(nt * nx_rdata * nplist, 0.0);
             sz.resize(nmaxevent * nz * nplist, 0.0);
             srz.resize(nmaxevent * nz * nplist, 0.0);
         }
@@ -339,7 +337,7 @@ void ReturnData::getDataOutput(
     int it, Model& model, SolutionState const& sol, ExpData const* edata
 ) {
     if (!x.empty()) {
-        model.fx_rdata(slice(x, it, nx), sol.x);
+        model.fx_rdata(slice(x, it, nx_rdata), sol.x);
     }
     if (!w.empty())
         model.getExpression(slice(w, it, nw), ts[it], sol.x);
@@ -378,7 +376,7 @@ void ReturnData::getDataSensisFSA(
 ) {
     if (!sx.empty()) {
         model.fsx_rdata(
-            gsl::span<realtype>(&sx.at(it * nplist * nx), nplist * nx), sol.sx,
+            gsl::span<realtype>(&sx.at(it * nplist * nx_rdata), nplist * nx_rdata), sol.sx,
             sol.x
         );
     }
@@ -652,14 +650,14 @@ void ReturnData::invalidate(int const it_start) {
     invalidateSLLH();
 
     if (!x.empty())
-        std::fill(x.begin() + nx * it_start, x.end(), getNaN());
+        std::fill(x.begin() + nx_rdata * it_start, x.end(), getNaN());
     if (!y.empty())
         std::fill(y.begin() + ny * it_start, y.end(), getNaN());
     if (!w.empty())
         std::fill(w.begin() + nw * it_start, w.end(), getNaN());
 
     if (!sx.empty())
-        std::fill(sx.begin() + nx * nplist * it_start, sx.end(), getNaN());
+        std::fill(sx.begin() + nx_rdata * nplist * it_start, sx.end(), getNaN());
     if (!sy.empty())
         std::fill(sy.begin() + ny * nplist * it_start, sy.end(), getNaN());
 }
@@ -729,10 +727,10 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
             && sensi_meth == SensitivityMethod::adjoint) {
             if (!sx.empty() && !x.empty())
                 for (int ip = 0; ip < nplist; ++ip)
-                    for (int ix = 0; ix < nxtrue; ++ix)
+                    for (int ix = 0; ix < nxtrue_rdata; ++ix)
                         for (int it = 0; it < nt; ++it)
-                            sx.at(ix + nxtrue * (ip + it * nplist))
-                                = x.at(it * nx + nxtrue + ip * nxtrue + ix);
+                            sx.at(ix + nxtrue_rdata * (ip + it * nplist))
+                                = x.at(it * nx_rdata + nxtrue_rdata + ip * nxtrue_rdata + ix);
 
             if (!sy.empty() && !y.empty())
                 for (int ip = 0; ip < nplist; ++ip)
@@ -789,14 +787,14 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                             val *= pcoefficient[ip];
         };
 
-        chain_rule(sx, nxtrue, nx, nt);
+        chain_rule(sx, nxtrue_rdata, nx_rdata, nt);
         chain_rule(sy, nytrue, ny, nt);
         chain_rule(ssigmay, nytrue, ny, nt);
         chain_rule(sz, nztrue, nz, nmaxevent);
         chain_rule(ssigmaz, nztrue, nz, nmaxevent);
         chain_rule(srz, nztrue, nz, nmaxevent);
-        chain_rule(sx0, nxtrue, nx, 1);
-        chain_rule(sx_ss, nxtrue, nx, 1);
+        chain_rule(sx0, nxtrue_rdata, nx_rdata, 1);
+        chain_rule(sx_ss, nxtrue_rdata, nx_rdata, 1);
     }
 
     if (o2mode == SecondOrderMode::full) {
@@ -843,7 +841,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                         }
         };
 
-        chain_rule(sx, nxtrue, nx, nt);
+        chain_rule(sx, nxtrue_rdata, nx_rdata, nt);
         chain_rule(sy, nytrue, ny, nt);
         chain_rule(ssigmay, nytrue, ny, nt);
         chain_rule(sz, nztrue, nz, nmaxevent);
@@ -883,7 +881,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(Model const& model) {
                     }
         };
 
-        chain_rule(sx, nxtrue, nx, nt);
+        chain_rule(sx, nxtrue_rdata, nx_rdata, nt);
         chain_rule(sy, nytrue, ny, nt);
         chain_rule(ssigmay, nytrue, ny, nt);
         chain_rule(sz, nztrue, nz, nmaxevent);

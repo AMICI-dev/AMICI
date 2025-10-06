@@ -78,14 +78,14 @@ int main() {
 
     std::cout << "State sensitivities for timepoint " << rdata->ts[i_time]
               << std::endl; // nt x nplist x nx
-    for (int i_state = 0; i_state < rdata->nx; ++i_state) {
+    for (int i_state = 0; i_state < rdata->nx_rdata; ++i_state) {
         std::cout << "\td(" << state_ids[i_state] << ")/d("
                   << parameter_ids[model->plist(i_nplist)] << ") = ";
 
         // rdata->sx is a flat 3D array in row-major ordering
         std::cout << rdata->sx
-                         [i_time * rdata->nplist * rdata->nx
-                          + i_nplist * rdata->nx + i_state];
+                         [i_time * rdata->nplist * rdata->nx_rdata
+                          + i_nplist * rdata->nx_rdata + i_state];
         std::cout << std::endl;
     }
 

@@ -1,10 +1,7 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
 #include "amici/splinefunctions.h"
 #include <vector>
 #include "k.h"

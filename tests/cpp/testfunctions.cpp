@@ -307,7 +307,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                 expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
                     checkEqualArray(&expected[ip * model->nt() * model->nxtrue_rdata],
-                            &rdata->sx[ip * model->nt() * rdata->nx],
+                            &rdata->sx[ip * model->nt() * rdata->nx_rdata],
                             model->nt() * model->nxtrue_rdata, atol, rtol, "sx");
             } else {
                 ASSERT_TRUE(rdata->sx.empty());
