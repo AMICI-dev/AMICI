@@ -118,10 +118,7 @@ def test_nosensi(tempdir):
 
     model = model_module.get_model()
     model.set_timepoints(np.linspace(0, 60, 61))
-    solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
-    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-    rdata = amici.run_simulation(model, solver)
+    rdata = model.simulate(sensi_order="first", sensi_method="forward")
     assert rdata.status == amici.AMICI_ERROR
 
 
@@ -598,7 +595,7 @@ def test_likelihoods(model_test_likelihoods):
 
     # run model once to create an edata
 
-    rdata = amici.run_simulation(model, solver)
+    rdata = model.simulate(solver=solver)
     sigmas = rdata["y"].max(axis=0) * 0.05
     edata = amici.ExpData(rdata, sigmas, [])
     # just make all observables positive since some are logarithmic
@@ -606,7 +603,7 @@ def test_likelihoods(model_test_likelihoods):
         edata = amici.ExpData(rdata, sigmas, [])
 
     # and now run for real and also compute likelihood values
-    rdata = amici.run_simulations(model, solver, [edata])[0]
+    rdata = model.simulate(solver=solver, edata=[edata])[0]
 
     # check if the values make overall sense
     assert np.isfinite(rdata["llh"])
@@ -1054,8 +1051,7 @@ def test_regression_2700(tempdir):
     model_module = import_model_module(model_name, tempdir)
     model = model_module.get_model()
     model.set_timepoints([0, 1, 2])
-    solver = model.create_solver()
-    rdata = amici.run_simulation(model, solver)
+    rdata = model.simulate()
 
     assert np.all(rdata.by_id("pp") == [1, 1, 1])
 
@@ -1093,8 +1089,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
 
     model = model_module.get_model()
     model.set_timepoints([0, 1, 2])
-    solver = model.create_solver()
-    rdata = amici.run_simulation(model, solver)
+    rdata = model.simulate()
 
     assert np.all(rdata.by_id("a") == np.array([2, 2, 2])), rdata.by_id("a")
     assert np.all(rdata.by_id("b") == np.array([0, 1, 1])), rdata.by_id("b")

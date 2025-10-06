@@ -150,7 +150,7 @@ if not _imported_from_setup():
             """Create a model instance."""
             ...
 
-    AmiciModel = Union[amici.Model, amici.ModelPtr]
+    AmiciModel = amici.Model | amici.ModelPtr
 else:
     ModelModule = ModuleType
 
