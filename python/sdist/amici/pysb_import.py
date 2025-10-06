@@ -42,6 +42,7 @@ from .import_utils import (
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
     _default_simplify,
+    MeasurementChannel,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -54,9 +55,7 @@ logger = get_logger(__name__, logging.ERROR)
 def pysb2jax(
     model: pysb.Model,
     output_dir: str | Path | None = None,
-    observables: list[str] = None,
-    sigmas: dict[str, str] = None,
-    noise_distributions: dict[str, str | Callable] | None = None,
+    observation_model: list[MeasurementChannel] = None,
     verbose: int | bool = False,
     compute_conservation_laws: bool = True,
     simplify: Callable = _default_simplify,
@@ -86,20 +85,16 @@ def pysb2jax(
     :param output_dir:
         see :meth:`amici.de_export.ODEExporter.set_paths`
 
-    :param observables:
-        list of :class:`pysb.core.Expression` or :class:`pysb.core.Observable`
-        names in the provided model that should be mapped to observables
-
-    :param sigmas:
-        dict of :class:`pysb.core.Expression` names that should be mapped to
-        sigmas
-
-    :param noise_distributions:
-        dict with names of observable Expressions as keys and a noise type
-        identifier, or a callable generating a custom noise formula string
-        (see :py:func:`amici.import_utils.noise_distribution_to_cost_function`
-        ). If nothing is passed for some observable id, a normal model is
-        assumed as default.
+    :param observation_model:
+        The different measurement channels that make up the observation
+        model, see also :class:`amici.import_utils.MeasurementChannel`.
+        The ID is expected to be the name of a :class:`pysb.Expression` or
+        :class:`pysb.Observable` in the provided model that should be mapped to
+        an observable.
+        ``sigma`` is expected to be the name of a :class:`pysb.Expression` to
+        be mapped to the scale parameter of the noise distribution.
+        ``MeasurementChannel.formula`` is expected to be
+        ``None``. Event-observables are not supported.
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -125,20 +120,12 @@ def pysb2jax(
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra observables and noise variables added
     """
-    if observables is None:
-        observables = []
-
-    if sigmas is None:
-        sigmas = {}
-
     model_name = model_name or model.name
 
     set_log_level(logger, verbose)
     ode_model = ode_model_from_pysb_importer(
         model,
-        observables=observables,
-        sigmas=sigmas,
-        noise_distributions=noise_distributions,
+        observation_model=observation_model,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
         cache_simplify=cache_simplify,
@@ -161,10 +148,8 @@ def pysb2jax(
 def pysb2amici(
     model: pysb.Model,
     output_dir: str | Path | None = None,
-    observables: list[str] = None,
+    observation_model: list[MeasurementChannel] = None,
     constant_parameters: list[str] = None,
-    sigmas: dict[str, str] = None,
-    noise_distributions: dict[str, str | Callable] | None = None,
     verbose: int | bool = False,
     assume_pow_positivity: bool = False,
     compiler: str = None,
@@ -198,20 +183,16 @@ def pysb2amici(
     :param output_dir:
         see :meth:`amici.de_export.ODEExporter.set_paths`
 
-    :param observables:
-        list of :class:`pysb.core.Expression` or :class:`pysb.core.Observable`
-        names in the provided model that should be mapped to observables
-
-    :param sigmas:
-        dict of :class:`pysb.core.Expression` names that should be mapped to
-        sigmas
-
-    :param noise_distributions:
-        dict with names of observable Expressions as keys and a noise type
-        identifier, or a callable generating a custom noise formula string
-        (see :py:func:`amici.import_utils.noise_distribution_to_cost_function`
-        ). If nothing is passed for some observable id, a normal model is
-        assumed as default.
+    :param observation_model:
+        The different measurement channels that make up the observation
+        model, see also :class:`amici.import_utils.MeasurementChannel`.
+        The ID is expected to be the name of a :class:`pysb.Expression` or
+        :class:`pysb.Observable` in the provided model that should be mapped to
+        an observable.
+        ``sigma`` is expected to be the name of a :class:`pysb.Expression` to
+        be mapped to the scale parameter of the noise distribution.
+        ``MeasurementChannel.formula`` is expected to be
+        ``None``. Event-observables are not supported.
 
     :param constant_parameters:
         list of :class:`pysb.core.Parameter` names that should be mapped as
@@ -233,7 +214,7 @@ def pysb2amici(
         if set to ``True``, conservation laws are automatically computed and
         applied such that the state-jacobian of the ODE right-hand-side has
         full rank. This option should be set to ``True`` when using the Newton
-        algorithm to compute steadystates
+        algorithm to compute steady states
 
     :param compile:
         If ``True``, build the python module for the generated model. If false,
@@ -256,15 +237,13 @@ def pysb2amici(
         will be used.
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra observables and noise variables added
+        if set to ``True``, the pysb model is expected to have extra
+        observables and noise variables added
     """
-    if observables is None:
-        observables = []
+    if observation_model is None:
+        observation_model = []
     if constant_parameters is None:
         constant_parameters = []
-
-    if sigmas is None:
-        sigmas = {}
 
     model_name = model_name or model.name
 
@@ -272,9 +251,7 @@ def pysb2amici(
     ode_model = ode_model_from_pysb_importer(
         model,
         constant_parameters=constant_parameters,
-        observables=observables,
-        sigmas=sigmas,
-        noise_distributions=noise_distributions,
+        observation_model=observation_model,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
         cache_simplify=cache_simplify,
@@ -304,9 +281,7 @@ def pysb2amici(
 def ode_model_from_pysb_importer(
     model: pysb.Model,
     constant_parameters: list[str] = None,
-    observables: list[str] = None,
-    sigmas: dict[str, str] = None,
-    noise_distributions: dict[str, str | Callable] | None = None,
+    observation_model: list[MeasurementChannel] = None,
     compute_conservation_laws: bool = True,
     simplify: Callable = sp.powsimp,
     # Do not enable by default without testing.
@@ -326,14 +301,7 @@ def ode_model_from_pysb_importer(
     :param constant_parameters:
         see :func:`amici.pysb_import.pysb2amici`
 
-    :param observables:
-        see :func:`amici.pysb_import.pysb2amici`
-
-    :param sigmas:
-        dict with names of observable Expressions as keys and names of sigma
-        Expressions as value sigma
-
-    :param noise_distributions:
+    :param observation_model:
         see :func:`amici.pysb_import.pysb2amici`
 
     :param compute_conservation_laws:
@@ -354,7 +322,8 @@ def ode_model_from_pysb_importer(
         if set to ``True``, the generated model will be compatible with JAX export
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra observables and noise variables added
+        if set to ``True``, the pysb model is expected to have extra
+        observables and noise variables added
 
     :return:
         New DEModel instance according to pysbModel
@@ -369,11 +338,9 @@ def ode_model_from_pysb_importer(
     if constant_parameters is None:
         constant_parameters = []
 
-    if observables is None:
-        observables = []
-
-    if sigmas is None:
-        sigmas = {}
+    if observation_model is None:
+        observation_model = []
+    observation_model = {channel.id: channel for channel in observation_model}
 
     pysb.bng.generate_equations(model, verbose=verbose)
 
@@ -384,22 +351,19 @@ def ode_model_from_pysb_importer(
     _process_pysb_observables(
         model,
         ode,
-        observables,
-        sigmas,
-        noise_distributions,
+        observation_model,
         pysb_model_has_obs_and_noise,
     )
     _process_pysb_expressions(
         model,
         ode,
-        observables,
-        sigmas,
-        noise_distributions,
+        observation_model,
         pysb_model_has_obs_and_noise,
     )
-    ode._has_quadratic_nllh = not noise_distributions or all(
-        noise_distr in ["normal", "lin-normal", "log-normal", "log10-normal"]
-        for noise_distr in noise_distributions.values()
+    ode._has_quadratic_nllh = all(
+        channel.noise_distribution
+        in ["normal", "lin-normal", "log-normal", "log10-normal"]
+        for channel in observation_model.values()
     )
 
     _process_stoichiometric_matrix(model, ode, constant_parameters)
@@ -582,9 +546,7 @@ def _process_pysb_parameters(
 def _process_pysb_expressions(
     pysb_model: pysb.Model,
     ode_model: DEModel,
-    observables: list[str],
-    sigmas: dict[str, str],
-    noise_distributions: dict[str, str | Callable] | None = None,
+    observation_model: dict[str, MeasurementChannel],
     pysb_model_has_obs_and_noise: bool = False,
 ) -> None:
     r"""
@@ -595,24 +557,17 @@ def _process_pysb_expressions(
     :param pysb_model:
         pysb model
 
-    :param observables:
-        list of names of :class`pysb.Expression`\ s or
-        :class:`pysb.Observable`\ s that are to be mapped to DEModel
-        observables
-
-    :param sigmas:
-        dict with names of observable :class:`pysb.Expression` /
-        :class:`pysb.Observable` names as keys and names of sigma
-        :class:`pysb.Expressions` as values
-
-    :param noise_distributions:
-        see :func:`amici.pysb_import.pysb2amici`
+    :param observation_model:
+        A map of observable names to
+        :class:`amici.import_utils.MeasurementChannel`.
+        see also :func:`amici.pysb_import.pysb2amici`
 
     :param ode_model:
         DEModel instance
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra observables and noise variables added
+        if set to ``True``, the pysb model is expected to have extra
+        observables and noise variables added
     """
     # we no longer expand expressions here. pysb/bng guarantees that
     # they are ordered according to their dependency and we can
@@ -639,9 +594,7 @@ def _process_pysb_expressions(
             expr.expr,
             pysb_model,
             ode_model,
-            observables,
-            sigmas,
-            noise_distributions,
+            observation_model,
             pysb_model_has_obs_and_noise,
         )
 
@@ -652,9 +605,7 @@ def _add_expression(
     expr: sp.Basic,
     pysb_model: pysb.Model,
     ode_model: DEModel,
-    observables: list[str],
-    sigmas: dict[str, str],
-    noise_distributions: dict[str, str | Callable] | None = None,
+    observation_model: dict[str, MeasurementChannel],
     pysb_model_has_obs_and_noise: bool = False,
 ):
     """
@@ -673,23 +624,20 @@ def _add_expression(
     :param pysb_model:
         see :py:func:`_process_pysb_expressions`
 
-    :param observables:
+    :param observation_model:
         see :py:func:`_process_pysb_expressions`
-
-    :param sigmas:
-        see :py:func:`_process_pysb_expressions`
-
-    :param noise_distributions:
-        see :py:func:`amici.pysb_import.pysb2amici`
 
     :param ode_model:
         see :py:func:`_process_pysb_expressions`
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra observables and noise variables added
+        if set to ``True``, the pysb model is expected to have extra
+        observables and noise variables added
     """
-    if not pysb_model_has_obs_and_noise or name not in observables:
-        if name in list(sigmas.values()):
+    if not pysb_model_has_obs_and_noise or name not in observation_model:
+        if any(
+            name == channel.sigma for channel in observation_model.values()
+        ):
             component = SigmaY
         else:
             component = Expression
@@ -697,12 +645,8 @@ def _add_expression(
             component(sym, name, _parse_special_functions(expr))
         )
 
-    if name in observables:
-        noise_dist = (
-            noise_distributions.get(name, "normal")
-            if noise_distributions
-            else "normal"
-        )
+    if name in observation_model:
+        noise_dist = observation_model[name].noise_distribution
 
         y = sp.Symbol(name)
         trafo = noise_distribution_to_observable_transformation(noise_dist)
@@ -715,7 +659,7 @@ def _add_expression(
         )
         ode_model.add_component(obs)
 
-        sigma = _get_sigma(pysb_model, name, sigmas)
+        sigma = _get_sigma(pysb_model, name, observation_model[name].sigma)
         if not pysb_model_has_obs_and_noise:
             ode_model.add_component(
                 SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))
@@ -741,7 +685,7 @@ def _add_expression(
 
 
 def _get_sigma(
-    pysb_model: pysb.Model, obs_name: str, sigmas: dict[str, str]
+    pysb_model: pysb.Model, obs_name: str, sigma_name: str | None
 ) -> sp.Symbol:
     """
     Tries to extract standard deviation symbolic identifier and formula
@@ -754,15 +698,14 @@ def _get_sigma(
     :param obs_name:
         name of the observable
 
-    :param sigmas:
-        dict of :class:`pysb.core.Expression` names that should be mapped to
-        sigmas
+    :param sigma_name:
+        Name of a :class:`pysb.core.Expression` that should be mapped to a
+        sigma or ``None``.
 
     :return:
         symbolic variable representing the standard deviation of the observable
     """
-    if obs_name in sigmas:
-        sigma_name = sigmas[obs_name]
+    if sigma_name is not None:
         if sigma_name in pysb_model.expressions.keys():
             return pysb_model.expressions[sigma_name]
         raise ValueError(
@@ -776,9 +719,7 @@ def _get_sigma(
 def _process_pysb_observables(
     pysb_model: pysb.Model,
     ode_model: DEModel,
-    observables: list[str],
-    sigmas: dict[str, str],
-    noise_distributions: dict[str, str | Callable] | None = None,
+    observation_model: dict[str, MeasurementChannel],
     pysb_model_has_obs_and_noise: bool = False,
 ) -> None:
     """
@@ -791,19 +732,13 @@ def _process_pysb_observables(
     :param ode_model:
         DEModel instance
 
-    :param observables:
-        list of names of pysb.Expressions or pysb.Observables that are to be
-        mapped to DEModel observables
-
-    :param sigmas:
-        dict with names of observable pysb.Expressions/pysb.Observables
-        names as keys and names of sigma pysb.Expressions as values
-
-    :param noise_distributions:
-        see :func:`amici.pysb_import.pysb2amici`
+    :param observation_model:
+        Mapping from observable name to
+        :class:`amici.import_utils.MeasurementChannel`.
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra observables and noise variables added
+        if set to ``True``, the pysb model is expected to have extra
+        observables and noise variables added
     """
     # only add those pysb observables that occur in the added
     # Observables as expressions
@@ -814,9 +749,7 @@ def _process_pysb_observables(
             obs.expand_obs(),
             pysb_model,
             ode_model,
-            observables,
-            sigmas,
-            noise_distributions,
+            observation_model,
             pysb_model_has_obs_and_noise,
         )
 

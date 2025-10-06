@@ -1934,9 +1934,46 @@ class DEModel:
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
             xs_in_sigma = {}
-            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name], strict=True):
-                yz_free_syms = eq_yz.free_symbols
+            for i, (sym_yz, eq_sigma_yz) in enumerate(
+                zip(
+                    syms_yz,
+                    self._eqs[name],
+                    strict=True,
+                )
+            ):
+                yz_free_syms = eq_sigma_yz.free_symbols
                 if tmp := {x for x in syms_x if x in yz_free_syms}:
+                    # Can we replace x symbols by an equivalent observable?
+                    #  (currently, only the matching observable is supported)
+                    x_to_eliminate = next(iter(tmp))
+                    eq_yz = (
+                        self.eq("y")[i]
+                        if name == "sigmay"
+                        else self.eq("z")[self._z2event[i]][i]
+                    )
+
+                    try:
+                        # solve for the next best x symbol and substitute
+                        #  (maybe try another one if we fail?)
+                        replacement = sp.solve(
+                            sp.Eq(sym_yz, eq_yz), x_to_eliminate
+                        )
+                    except NotImplementedError:
+                        # can't solve
+                        replacement = []
+
+                    if len(replacement) == 1:
+                        self._eqs[name][i] = self._eqs[name][i].subs(
+                            x_to_eliminate, replacement[0]
+                        )
+                        if not any(
+                            x in self._eqs[name][i].free_symbols
+                            for x in syms_x
+                        ):
+                            # successfully eliminated x symbols
+                            continue
+
+                    # Report all x symbols that cannot be replaced
                     xs_in_sigma[sym_yz] = tmp
             if xs_in_sigma:
                 msg = ", ".join(

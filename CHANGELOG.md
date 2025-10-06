@@ -14,6 +14,18 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now
   return `list[SteadyStateStatus]` instead of an `ndarray[int]` of shape
   `(1, 3)`.
+* The way the observation model is passed to the different import functions
+  (`sbml2amici`, `pysb2amici`, ...) has changed:
+  The information previously split across `observables`, `sigmas`,
+  `noise_distributions`, `event_observables`, `event_sigmas`, and
+  `event_noise_distributions` dicts is now passed as a single
+  `observation_model: list[MeasurementChannel]` argument.
+* `assignmentRules2observables` has been renamed to
+  `assignment_rules_to_observables` and now returns `list[MeasurementChannel]`
+  to be passed to the import functions.
+* `assignmentRules2observables` has been renamed to
+  `assignment_rules_to_observables` and now returns `list[MeasurementChannel]`
+  to be passed to the import functions.
 * `AmiVector::getLength` and `AmiVectorArray::getLength` have been renamed to
   `size` to be more consistent with STL containers.
 * The following deprecated functionality has been removed:
