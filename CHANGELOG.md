@@ -28,6 +28,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   to be passed to the import functions.
 * `AmiVector::getLength` and `AmiVectorArray::getLength` have been renamed to
   `size` to be more consistent with STL containers.
+* `amici.petab.petab_import.import_model` has been removed.
+  Use `amici.petab.petab_import.import_model_sbml` instead.
+  (The former was just an alias for the latter.)
 * The following deprecated functionality has been removed:
   * The complete MATLAB interface has been removed.
   * `NonlinearSolverIteration::functional` has been removed,
