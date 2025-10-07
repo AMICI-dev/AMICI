@@ -9,11 +9,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-<<<<<<< HEAD
-=======
-from warnings import warn
 import re
->>>>>>> 05f22cc9 (tidy, refactor, generalise sciml test case implementations)
 
 import amici
 import pandas as pd
