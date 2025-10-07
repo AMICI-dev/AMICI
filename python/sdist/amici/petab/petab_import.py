@@ -294,7 +294,6 @@ def _get_net_index(model_id: str):
     matches = re.findall(r"\[(\d+)\]", model_id)
     if matches:
         return int(matches[-1])
-    return None
 
 
 def _get_frozen_layers(model_id):

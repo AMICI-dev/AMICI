@@ -97,8 +97,6 @@ def _get_hybridization_df(petab_problem):
         ]
         hybridization_df = pd.concat(hybridizations)
         return hybridization_df
-    else:
-        return None
 
 
 def _get_hybrid_petab_problem(petab_problem: petab.Problem):
