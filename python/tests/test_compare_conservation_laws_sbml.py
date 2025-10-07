@@ -15,15 +15,15 @@ def edata_fixture():
     edata_pre = ExpData(
         2, 0, 0, np.array([0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0])
     )
-    edata_pre.setObservedData([1.5] * 16)
-    edata_pre.fixedParameters = np.array([5.0, 20.0])
-    edata_pre.fixedParametersPreequilibration = np.array([0.0, 10.0])
-    edata_pre.reinitializeFixedParameterInitialStates = True
+    edata_pre.set_observed_data([1.5] * 16)
+    edata_pre.fixed_parameters = np.array([5.0, 20.0])
+    edata_pre.fixed_parameters_pre_equilibration = np.array([0.0, 10.0])
+    edata_pre.reinitialize_fixed_parameter_initial_states = True
 
     # edata for postequilibration
     edata_post = ExpData(2, 0, 0, np.array([float("inf")] * 3))
-    edata_post.setObservedData([0.75] * 6)
-    edata_post.fixedParameters = np.array([7.5, 30.0])
+    edata_post.set_observed_data([0.75] * 6)
+    edata_post.fixed_parameters = np.array([7.5, 30.0])
 
     # edata with both equilibrations
     edata_full = ExpData(
@@ -34,10 +34,10 @@ def edata_fixture():
             [0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 4.0, float("inf"), float("inf")]
         ),
     )
-    edata_full.setObservedData([3.14] * 18)
-    edata_full.fixedParameters = np.array([1.0, 2.0])
-    edata_full.fixedParametersPreequilibration = np.array([3.0, 4.0])
-    edata_full.reinitializeFixedParameterInitialStates = True
+    edata_full.set_observed_data([3.14] * 18)
+    edata_full.fixed_parameters = np.array([1.0, 2.0])
+    edata_full.fixed_parameters_pre_equilibration = np.array([3.0, 4.0])
+    edata_full.reinitialize_fixed_parameter_initial_states = True
 
     return edata_pre, edata_post, edata_full
 
@@ -114,8 +114,8 @@ end"""
     )
 
     # get the models and return
-    model_without_cl = model_without_cl_module.getModel()
-    model_with_cl = model_with_cl_module.getModel()
+    model_without_cl = model_without_cl_module.get_model()
+    model_with_cl = model_with_cl_module.get_model()
     return model_with_cl, model_without_cl
 
 
@@ -130,23 +130,23 @@ def get_results(
     reinitialize_states=False,
 ):
     # set model and data properties
-    model.setReinitializeFixedParameterInitialStates(reinitialize_states)
+    model.set_reinitialize_fixed_parameter_initial_states(reinitialize_states)
 
     # get the solver, set the properties
-    solver = model.getSolver()
-    solver.setNewtonMaxSteps(20)
-    solver.setSensitivityOrder(sensi_order)
-    solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
-    solver.setSensitivityMethod(sensi_meth)
-    model.setSteadyStateSensitivityMode(stst_sensi_mode)
-    model.setSteadyStateComputationMode(stst_mode)
+    solver = model.create_solver()
+    solver.set_newton_max_steps(20)
+    solver.set_sensitivity_order(sensi_order)
+    solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+    solver.set_sensitivity_method(sensi_meth)
+    model.set_steady_state_sensitivity_mode(stst_sensi_mode)
+    model.set_steady_state_computation_mode(stst_mode)
     if edata is None:
-        model.setTimepoints(np.linspace(0, 5, 101))
+        model.set_timepoints(np.linspace(0, 5, 101))
     else:
-        edata.reinitializeFixedParameterInitialStates = reinitialize_states
+        edata.reinitialize_fixed_parameter_initial_states = reinitialize_states
 
     # return simulation results
-    return amici.runAmiciSimulation(model, solver, edata)
+    return amici.run_simulation(model, solver, edata)
 
 
 @skip_on_valgrind
@@ -157,9 +157,10 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     assert model_with_cl.ncl() > 0
     assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
     assert model_with_cl.nx_solver < model_without_cl.nx_solver
-    assert len(model_with_cl.getStateIdsSolver()) == model_with_cl.nx_solver
+    assert len(model_with_cl.get_state_ids_solver()) == model_with_cl.nx_solver
     assert (
-        len(model_without_cl.getStateIdsSolver()) == model_without_cl.nx_solver
+        len(model_without_cl.get_state_ids_solver())
+        == model_without_cl.nx_solver
     )
 
     # ----- compare simulations wo edata, sensi = 0, states ------------------
@@ -251,7 +252,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state sensitivity computation if run wo CLs
-    model_without_cl.setSteadyStateSensitivityMode(
+    model_without_cl.set_steady_state_sensitivity_mode(
         amici.SteadyStateSensitivityMode.newtonOnly
     )
     with warnings.catch_warnings():

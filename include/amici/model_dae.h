@@ -299,7 +299,7 @@ class Model_DAE : public Model {
     void fdxdotdp(
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {
-        fdxdotdp(t, x.getNVector(), dx.getNVector());
+        fdxdotdp(t, x.get_nvector(), dx.get_nvector());
     }
 
     void fsxdot(
@@ -329,7 +329,7 @@ class Model_DAE : public Model {
      */
     void fM(realtype t, const_N_Vector x);
 
-    std::unique_ptr<Solver> getSolver() override;
+    std::unique_ptr<Solver> create_solver() override;
 
   protected:
     /**

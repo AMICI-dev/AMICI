@@ -132,7 +132,7 @@ def simulate_petab(
     logger.setLevel(log_level)
 
     if solver is None:
-        solver = amici_model.getSolver()
+        solver = amici_model.create_solver()
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
@@ -203,7 +203,7 @@ def simulate_petab(
     )
 
     # Simulate
-    rdatas = amici.runAmiciSimulations(
+    rdatas = amici.run_simulations(
         amici_model,
         solver,
         edata_list=edatas,
@@ -215,7 +215,7 @@ def simulate_petab(
     llh = sum(rdata["llh"] for rdata in rdatas)
     # Compute total sllh
     sllh = None
-    if solver.getSensitivityOrder() != amici.SensitivityOrder.none:
+    if solver.get_sensitivity_order() != amici.SensitivityOrder.none:
         sllh = aggregate_sllh(
             amici_model=amici_model,
             rdatas=rdatas,
@@ -284,7 +284,7 @@ def aggregate_sllh(
         Aggregated likelihood sensitivities.
     """
     accumulated_sllh = {}
-    model_parameter_ids = amici_model.getParameterIds()
+    model_parameter_ids = amici_model.get_parameter_ids()
 
     if petab_scale and petab_problem is None:
         raise ValueError(
@@ -423,7 +423,7 @@ def rdatas_to_measurement_df(
     """
     simulation_conditions = petab.get_simulation_conditions(measurement_df)
 
-    observable_ids = model.getObservableIds()
+    observable_ids = model.get_observable_ids()
     rows = []
     # iterate over conditions
     for (_, condition), rdata in zip(

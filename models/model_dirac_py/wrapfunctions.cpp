@@ -5,7 +5,7 @@
 namespace amici {
 namespace generic_model {
 
-std::unique_ptr<amici::Model> getModel() {
+std::unique_ptr<amici::Model> get_model() {
     return std::unique_ptr<amici::Model>(
         new amici::model_model_dirac_py::Model_model_dirac_py()
     );

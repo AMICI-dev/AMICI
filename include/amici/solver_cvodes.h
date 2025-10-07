@@ -38,165 +38,166 @@ class CVodeSolver : public Solver {
      */
     Solver* clone() const override;
 
-    void reInit(
+    void reinit(
         realtype t0, AmiVector const& yy0, AmiVector const& yp0
     ) const override;
 
-    void sensReInit(
+    void sens_reinit(
         AmiVectorArray const& yyS0, AmiVectorArray const& ypS0
     ) const override;
 
-    void sensToggleOff() const override;
+    void sens_toggle_off() const override;
 
-    void reInitB(
+    void reinit_b(
         int which, realtype tB0, AmiVector const& yyB0, AmiVector const& ypB0
     ) const override;
 
-    void quadReInitB(int which, AmiVector const& yQB0) const override;
+    void reinit_quad_b(int which, AmiVector const& yQB0) const override;
 
     int solve(realtype tout, int itask) const override;
 
-    int solveF(realtype tout, int itask, int* ncheckPtr) const override;
+    int solve_f(realtype tout, int itask, int* ncheckPtr) const override;
 
-    void solveB(realtype tBout, int itaskB) const override;
+    void solve_b(realtype tBout, int itaskB) const override;
 
-    void getDky(realtype t, int k) const override;
+    void get_dky(realtype t, int k) const override;
 
-    void getSensDky(realtype t, int k) const override;
+    void get_sens_dky(realtype t, int k) const override;
 
-    void getQuadDkyB(realtype t, int k, int which) const override;
+    void get_quad_dky_b(realtype t, int k, int which) const override;
 
-    void getDkyB(realtype t, int k, int which) const override;
+    void get_dky_b(realtype t, int k, int which) const override;
 
-    void getRootInfo(int* rootsfound) const override;
+    void get_root_info(int* rootsfound) const override;
 
-    void setStopTime(realtype tstop) const override;
+    void set_stop_time(realtype tstop) const override;
 
-    void turnOffRootFinding() const override;
+    void turn_off_root_finding() const override;
 
-    Model const* getModel() const override;
+    Model const* get_model() const override;
 
 #if !defined(EXHALE_DOXYGEN_SHOULD_SKIP_THIS)
-    using Solver::setLinearSolver;
+    using Solver::set_linear_solver;
 
-    using Solver::setLinearSolverB;
+    using Solver::set_linear_solver_b;
 #endif
-    void setLinearSolver() const override;
+    void set_linear_solver() const override;
 
-    void setLinearSolverB(int which) const override;
+    void set_linear_solver_b(int which) const override;
 
-    void setNonLinearSolver() const override;
+    void set_non_linear_solver() const override;
 
-    void setNonLinearSolverSens() const override;
+    void set_non_linear_solver_sens() const override;
 
-    void setNonLinearSolverB(int which) const override;
+    void set_non_linear_solver_b(int which) const override;
 
   protected:
-    void calcIC(realtype tout1) const override;
+    void calc_ic(realtype tout1) const override;
 
-    void calcICB(int which, realtype tout1) const override;
+    void calc_ic_b(int which, realtype tout1) const override;
 
-    void getB(int which) const override;
+    void get_b(int which) const override;
 
-    void getSens() const override;
+    void get_sens() const override;
 
-    void getQuadB(int which) const override;
+    void get_quad_b(int which) const override;
 
-    void getQuad(realtype& t) const override;
+    void get_quad(realtype& t) const override;
 
-    void getQuadDky(realtype t, int k) const override;
+    void get_quad_dky(realtype t, int k) const override;
 
-    void reInitPostProcessF(realtype tnext) const override;
+    void reinit_post_process_f(realtype tnext) const override;
 
-    void reInitPostProcessB(realtype tnext) const override;
+    void reinit_post_process_b(realtype tnext) const override;
 
     /**
-     * @brief Postprocessing of the solver memory after a discontinuity
+     * @brief Post-processing of the solver memory after a discontinuity
      * @param cv_mem pointer to CVODES solver memory object
      * @param t pointer to integration time
      * @param yout  new state vector
      * @param tout  anticipated next integration timepoint.
      */
-    void reInitPostProcess(
+    void reInit_post_process(
         void* cv_mem, realtype* t, AmiVector* yout, realtype tout
     ) const;
 
-    void allocateSolver() const override;
+    void allocate_solver() const override;
 
-    void setSStolerances(double rtol, double atol) const override;
+    void set_ss_tolerances(double rtol, double atol) const override;
 
-    void setSensSStolerances(double rtol, double const* atol) const override;
+    void set_sens_ss_tolerances(double rtol, double const* atol) const override;
 
-    void setSensErrCon(bool error_corr) const override;
+    void set_sens_err_con(bool error_corr) const override;
 
-    void setQuadErrConB(int which, bool flag) const override;
+    void set_quad_err_con_b(int which, bool flag) const override;
 
-    void setQuadErrCon(bool flag) const override;
+    void set_quad_err_con(bool flag) const override;
 
-    void setUserData() const override;
+    void set_user_data() const override;
 
-    void setUserDataB(int which) const override;
+    void set_user_data_b(int which) const override;
 
-    void setMaxNumSteps(long int mxsteps) const override;
+    void set_max_num_steps(long int mxsteps) const override;
 
-    void setStabLimDet(int stldet) const override;
+    void set_stab_lim_det(int stldet) const override;
 
-    void setStabLimDetB(int which, int stldet) const override;
+    void set_stab_lim_det_b(int which, int stldet) const override;
 
-    void setId(Model const* model) const override;
+    void set_id(Model const* model) const override;
 
-    void setSuppressAlg(bool flag) const override;
+    void set_suppress_alg(bool flag) const override;
 
     /**
-     * @brief resetState reset the CVODES solver to restart integration after a
+     * @brief reset_state reset the CVODES solver to restart integration after a
      * rhs discontinuity.
      * @param cv_mem pointer to CVODES solver memory object
      * @param y0 new state vector
      */
-    void resetState(void* cv_mem, const_N_Vector y0) const;
+    void reset_state(void* cv_mem, const_N_Vector y0) const;
 
-    void setSensParams(
+    void set_sens_params(
         realtype const* p, realtype const* pbar, int const* plist
     ) const override;
 
-    void adjInit() const override;
+    void adj_init() const override;
 
-    void quadInit(AmiVector const& xQ0) const override;
+    void quad_init(AmiVector const& xQ0) const override;
 
-    void allocateSolverB(int* which) const override;
+    void allocate_solver_b(int* which) const override;
 
-    void setSStolerancesB(
+    void set_ss_tolerances_b(
         int which, realtype relTolB, realtype absTolB
     ) const override;
 
-    void quadSStolerancesB(
+    void quad_ss_tolerances_b(
         int which, realtype reltolQB, realtype abstolQB
     ) const override;
 
-    void quadSStolerances(realtype reltolQ, realtype abstolQ) const override;
+    void quad_ss_tolerances(realtype reltolQ, realtype abstolQ) const override;
 
-    void setMaxNumStepsB(int which, long int mxstepsB) const override;
+    void set_max_num_steps_b(int which, long int mxstepsB) const override;
 
     void diag() const override;
 
-    void diagB(int which) const override;
+    void diag_b(int which) const override;
 
-    void getNumSteps(void const* ami_mem, long int* numsteps) const override;
+    void get_num_steps(void const* ami_mem, long int* numsteps) const override;
 
-    void
-    getNumRhsEvals(void const* ami_mem, long int* numrhsevals) const override;
+    void get_num_rhs_evals(
+        void const* ami_mem, long int* numrhsevals
+    ) const override;
 
-    void getNumErrTestFails(
+    void get_num_err_test_fails(
         void const* ami_mem, long int* numerrtestfails
     ) const override;
 
-    void getNumNonlinSolvConvFails(
+    void get_num_non_lin_solv_conv_fails(
         void const* ami_mem, long int* numnonlinsolvconvfails
     ) const override;
 
-    void getLastOrder(void const* ami_mem, int* order) const override;
+    void get_last_order(void const* ami_mem, int* order) const override;
 
-    void* getAdjBmem(void* ami_mem, int which) const override;
+    void* get_adj_b_mem(void* ami_mem, int which) const override;
 
     /**
      * @brief Serialize amici::CVodeSolver to boost archive
@@ -218,39 +219,39 @@ class CVodeSolver : public Solver {
     void
     init(realtype t0, AmiVector const& x0, AmiVector const& dx0) const override;
 
-    void initSteadystate(
+    void init_steady_state(
         realtype t0, AmiVector const& x0, AmiVector const& dx0
     ) const override;
 
-    void sensInit1(
+    void sens_init_1(
         AmiVectorArray const& sx0, AmiVectorArray const& sdx0
     ) const override;
 
-    void binit(
+    void b_init(
         int which, realtype tf, AmiVector const& xB0, AmiVector const& dxB0
     ) const override;
 
-    void qbinit(int which, AmiVector const& xQB0) const override;
+    void qb_init(int which, AmiVector const& xQB0) const override;
 
-    void rootInit(int ne) const override;
+    void root_init(int ne) const override;
 
-    void setDenseJacFn() const override;
+    void set_dense_jac_fn() const override;
 
-    void setSparseJacFn() const override;
+    void set_sparse_jac_fn() const override;
 
-    void setBandJacFn() const override;
+    void set_band_jac_fn() const override;
 
-    void setJacTimesVecFn() const override;
+    void set_jac_times_vec_fn() const override;
 
-    void setDenseJacFnB(int which) const override;
+    void set_dense_jac_fn_b(int which) const override;
 
-    void setSparseJacFnB(int which) const override;
+    void set_sparse_jac_fn_b(int which) const override;
 
-    void setBandJacFnB(int which) const override;
+    void set_band_jac_fn_b(int which) const override;
 
-    void setJacTimesVecFnB(int which) const override;
+    void set_jac_times_vec_fn_b(int which) const override;
 
-    void setSparseJacFn_ss() const override;
+    void set_sparse_jac_fn_ss() const override;
 
     void apply_max_nonlin_iters() const override;
 

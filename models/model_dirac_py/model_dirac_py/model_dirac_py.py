@@ -97,8 +97,8 @@ import amici
 def _get_import_time():
     return _model_dirac_py._get_import_time()
 
-def getModel():
-    val = _model_dirac_py.getModel()
+def get_model():
+    val = _model_dirac_py.get_model()
 
     if '.' in __name__:
         val.module = _model_module

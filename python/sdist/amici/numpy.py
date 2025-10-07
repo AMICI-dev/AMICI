@@ -348,28 +348,28 @@ class ReturnDataView(SwigPtrView):
         "preeq_wrms",
         "preeq_t",
         "preeq_numsteps",
-        "preeq_numstepsB",
+        "preeq_numsteps_b",
         "preeq_status",
         "preeq_cpu_time",
-        "preeq_cpu_timeB",
+        "preeq_cpu_time_b",
         "posteq_wrms",
         "posteq_t",
         "posteq_numsteps",
-        "posteq_numstepsB",
+        "posteq_numsteps_b",
         "posteq_status",
         "posteq_cpu_time",
-        "posteq_cpu_timeB",
+        "posteq_cpu_time_b",
         "numsteps",
-        "numrhsevals",
-        "numerrtestfails",
-        "numnonlinsolvconvfails",
+        "num_rhs_evals",
+        "num_err_test_fails",
+        "num_non_lin_solv_conv_fails",
         "order",
         "cpu_time",
-        "numstepsB",
-        "numrhsevalsB",
-        "numerrtestfailsB",
-        "numnonlinsolvconvfailsB",
-        "cpu_timeB",
+        "numsteps_b",
+        "num_rhs_evals_b",
+        "num_err_test_fails_b",
+        "num_non_lin_solv_conv_fails_b",
+        "cpu_time_b",
         "cpu_time_total",
         "messages",
         "t_last",
@@ -424,14 +424,14 @@ class ReturnDataView(SwigPtrView):
             "posteq_numlinsteps": [rdata.newton_maxsteps, 2],
             "posteq_numsteps": [3],
             "numsteps": [rdata.nt],
-            "numrhsevals": [rdata.nt],
-            "numerrtestfails": [rdata.nt],
-            "numnonlinsolvconvfails": [rdata.nt],
+            "num_rhs_evals": [rdata.nt],
+            "num_err_test_fails": [rdata.nt],
+            "num_non_lin_solv_conv_fails": [rdata.nt],
             "order": [rdata.nt],
-            "numstepsB": [rdata.nt],
-            "numrhsevalsB": [rdata.nt],
-            "numerrtestfailsB": [rdata.nt],
-            "numnonlinsolvconvfailsB": [rdata.nt],
+            "numsteps_b": [rdata.nt],
+            "num_rhs_evals_b": [rdata.nt],
+            "num_err_test_fails_b": [rdata.nt],
+            "num_non_lin_solv_conv_fails_b": [rdata.nt],
         }
         self.xr = XArrayFactory(self)
         super().__init__(rdata)
@@ -481,18 +481,18 @@ class ReturnDataView(SwigPtrView):
             field = _entity_type_from_id(entity_id, self, model)
 
         if field in {"x", "x0", "x_ss", "sx", "sx0", "sx_ss"}:
-            ids = (model and model.getStateIds()) or self._swigptr.state_ids
+            ids = (model and model.get_state_ids()) or self._swigptr.state_ids
         elif field in {"w"}:
             ids = (
-                model and model.getExpressionIds()
+                model and model.get_expression_ids()
             ) or self._swigptr.expression_ids
         elif field in {"y", "sy", "sigmay"}:
             ids = (
-                model and model.getObservableIds()
+                model and model.get_observable_ids()
             ) or self._swigptr.observable_ids
         elif field in {"sllh"}:
             ids = (
-                model and model.getParameterIds()
+                model and model.get_parameter_ids()
             ) or self._swigptr.parameter_ids
         else:
             raise NotImplementedError(
@@ -514,13 +514,13 @@ class ExpDataView(SwigPtrView):
 
     _field_names = [
         "ts",
-        "observedData",
-        "observedDataStdDev",
-        "observedEvents",
-        "observedEventsStdDev",
-        "fixedParameters",
-        "fixedParametersPreequilibration",
-        "fixedParametersPresimulation",
+        "observed_data",
+        "observed_data_std_dev",
+        "observed_events",
+        "observed_events_std_dev",
+        "fixed_parameters",
+        "fixed_parameters_pre_equilibration",
+        "fixed_parameters_presimulation",
     ]
 
     def __init__(self, edata: ExpDataPtr | ExpData):
@@ -536,25 +536,25 @@ class ExpDataView(SwigPtrView):
         self._field_dimensions = {
             "ts": [edata.nt()],
             # observables
-            "observedData": [edata.nt(), edata.nytrue()],
-            "observedDataStdDev": [edata.nt(), edata.nytrue()],
+            "observed_data": [edata.nt(), edata.nytrue()],
+            "observed_data_std_dev": [edata.nt(), edata.nytrue()],
             # event observables
-            "observedEvents": [edata.nmaxevent(), edata.nztrue()],
-            "observedEventsStdDev": [edata.nmaxevent(), edata.nztrue()],
+            "observed_events": [edata.nmaxevent(), edata.nztrue()],
+            "observed_events_std_dev": [edata.nmaxevent(), edata.nztrue()],
             # fixed parameters
-            "fixedParameters": [len(edata.fixedParameters)],
-            "fixedParametersPreequilibration": [
-                len(edata.fixedParametersPreequilibration)
+            "fixed_parameters": [len(edata.fixed_parameters)],
+            "fixed_parameters_pre_equilibration": [
+                len(edata.fixed_parameters_pre_equilibration)
             ],
-            "fixedParametersPresimulation": [
-                len(edata.fixedParametersPresimulation)
+            "fixed_parameters_presimulation": [
+                len(edata.fixed_parameters_presimulation)
             ],
         }
-        edata.ts = edata.ts_
-        edata.observedData = edata.getObservedData()
-        edata.observedDataStdDev = edata.getObservedDataStdDev()
-        edata.observedEvents = edata.getObservedEvents()
-        edata.observedEventsStdDev = edata.getObservedEventsStdDev()
+        edata.ts = edata.timepoints
+        edata.observed_data = edata.get_observed_data()
+        edata.observed_data_std_dev = edata.get_observed_data_std_dev()
+        edata.observed_events = edata.get_observed_events()
+        edata.observed_events_std_dev = edata.get_observed_events_std_dev()
         super().__init__(edata)
 
 
@@ -590,14 +590,14 @@ def _entity_type_from_id(
 ) -> Literal["x", "y", "w", "p", "k"]:
     """Guess the type of some entity by its ID."""
     for entity_type, symbol in (
-        ("State", "x"),
-        ("Observable", "y"),
-        ("Expression", "w"),
-        ("Parameter", "p"),
-        ("FixedParameter", "k"),
+        ("state", "x"),
+        ("observable", "y"),
+        ("expression", "w"),
+        ("parameter", "p"),
+        ("fixed_parameter", "k"),
     ):
         if model:
-            if entity_id in getattr(model, f"get{entity_type}Ids")():
+            if entity_id in getattr(model, f"get_{entity_type}_ids")():
                 return symbol
         else:
             if entity_id in getattr(

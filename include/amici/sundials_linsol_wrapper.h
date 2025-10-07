@@ -79,7 +79,7 @@ class SUNLinSolWrapper {
      * @brief Returns an identifier for the linear solver type.
      * @return
      */
-    SUNLinearSolver_Type getType() const;
+    SUNLinearSolver_Type get_type() const;
 
     /**
      * @brief Performs any linear solver setup needed, based on an updated
@@ -100,7 +100,7 @@ class SUNLinSolWrapper {
      * @brief Returns the last error flag encountered within the linear solver
      * @return error flag
      */
-    long int getLastFlag() const;
+    long int get_last_flag() const;
 
     /**
      * @brief Returns the integer and real workspace sizes for the linear solver
@@ -200,14 +200,14 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param nnz Number of non-zeros
      * @param reinit_type SUNKLU_REINIT_FULL or SUNKLU_REINIT_PARTIAL
      */
-    void reInit(int nnz, int reinit_type);
+    void reinit(int nnz, int reinit_type);
 
     /**
      * @brief Sets the ordering used by KLU for reducing fill in the linear
      * solve.
      * @param ordering
      */
-    void setOrdering(StateOrdering ordering);
+    void set_ordering(StateOrdering ordering);
 
     /**
      * @brief Checks whether the linear system is singular
@@ -273,7 +273,7 @@ class SUNLinSolSuperLUMT : public SUNLinSolWrapper {
      * linear solve.
      * @param ordering
      */
-    void setOrdering(StateOrdering ordering);
+    void set_ordering(StateOrdering ordering);
 };
 
 #endif
@@ -300,7 +300,7 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, SUNATimesFn ATimes);
+    int set_a_times(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -311,7 +311,7 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
+    int set_preconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -320,27 +320,27 @@ class SUNLinSolPCG : public SUNLinSolWrapper {
      * @param nul
      * @return
      */
-    int setScalingVectors(N_Vector s, N_Vector nul);
+    int set_scaling_vectors(N_Vector s, N_Vector nul);
 
     /**
      * @brief Returns the number of linear iterations performed in the last
      * 'Solve' call
      * @return Number of iterations
      */
-    int getNumIters() const;
+    int get_num_iters() const;
 
     /**
      * @brief Returns the final residual norm from the last 'Solve' call.
      * @return residual norm
      */
-    realtype getResNorm() const;
+    realtype get_res_norm() const;
 
     /**
      * @brief Get preconditioned initial residual
      * (see sundials/sundials_linearsolver.h).
      * @return
      */
-    N_Vector getResid() const;
+    N_Vector get_resid() const;
 };
 
 /**
@@ -380,7 +380,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, SUNATimesFn ATimes);
+    int set_a_times(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -391,7 +391,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
+    int set_preconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -400,27 +400,27 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * @param nul
      * @return
      */
-    int setScalingVectors(N_Vector s, N_Vector nul);
+    int set_scaling_vectors(N_Vector s, N_Vector nul);
 
     /**
      * @brief Returns the number of linear iterations performed in the last
      * 'Solve' call
      * @return Number of iterations
      */
-    int getNumIters() const;
+    int get_num_iters() const;
 
     /**
      * @brief Returns the final residual norm from the last 'Solve' call.
      * @return residual norm
      */
-    realtype getResNorm() const;
+    realtype get_res_norm() const;
 
     /**
      * @brief Get preconditioned initial residual
      * (see sundials/sundials_linearsolver.h).
      * @return
      */
-    N_Vector getResid() const;
+    N_Vector get_resid() const;
 };
 
 /**
@@ -445,7 +445,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, SUNATimesFn ATimes);
+    int set_a_times(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -456,7 +456,7 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
+    int set_preconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -465,27 +465,27 @@ class SUNLinSolSPFGMR : public SUNLinSolWrapper {
      * @param nul
      * @return
      */
-    int setScalingVectors(N_Vector s, N_Vector nul);
+    int set_scaling_vectors(N_Vector s, N_Vector nul);
 
     /**
      * @brief Returns the number of linear iterations performed in the last
      * 'Solve' call
      * @return Number of iterations
      */
-    int getNumIters() const;
+    int get_num_iters() const;
 
     /**
      * @brief Returns the final residual norm from the last 'Solve' call.
      * @return residual norm
      */
-    realtype getResNorm() const;
+    realtype get_res_norm() const;
 
     /**
      * @brief Get preconditioned initial residual
      * (see sundials/sundials_linearsolver.h).
      * @return
      */
-    N_Vector getResid() const;
+    N_Vector get_resid() const;
 };
 
 /**
@@ -513,7 +513,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, SUNATimesFn ATimes);
+    int set_a_times(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -524,7 +524,7 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
+    int set_preconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -533,27 +533,27 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * @param nul
      * @return
      */
-    int setScalingVectors(N_Vector s, N_Vector nul);
+    int set_scaling_vectors(N_Vector s, N_Vector nul);
 
     /**
      * @brief Returns the number of linear iterations performed in the last
      * 'Solve' call
      * @return Number of iterations
      */
-    int getNumIters() const;
+    int get_num_iters() const;
 
     /**
      * @brief Returns the final residual norm from the last 'Solve' call.
      * @return residual norm
      */
-    realtype getResNorm() const;
+    realtype get_res_norm() const;
 
     /**
      * @brief Get preconditioned initial residual
      * (see sundials/sundials_linearsolver.h).
      * @return
      */
-    N_Vector getResid() const;
+    N_Vector get_resid() const;
 };
 
 /**
@@ -593,7 +593,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param ATimes
      * @return
      */
-    int setATimes(void* A_data, SUNATimesFn ATimes);
+    int set_a_times(void* A_data, SUNATimesFn ATimes);
 
     /**
      * @brief Sets function pointers for PSetup and PSolve routines inside
@@ -604,7 +604,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param Psol
      * @return
      */
-    int setPreconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
+    int set_preconditioner(void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol);
 
     /**
      * @brief Sets pointers to left/right scaling vectors for the linear
@@ -613,27 +613,27 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * @param nul
      * @return
      */
-    int setScalingVectors(N_Vector s, N_Vector nul);
+    int set_scaling_vectors(N_Vector s, N_Vector nul);
 
     /**
      * @brief Returns the number of linear iterations performed in the last
      * 'Solve' call
      * @return Number of iterations
      */
-    int getNumIters() const;
+    int get_num_iters() const;
 
     /**
      * @brief Returns the final residual norm from the last 'Solve' call.
      * @return residual norm
      */
-    realtype getResNorm() const;
+    realtype get_res_norm() const;
 
     /**
      * @brief Get preconditioned initial residual
      * (see sundials/sundials_linearsolver.h).
      * @return
      */
-    N_Vector getResid() const;
+    N_Vector get_resid() const;
 };
 
 /**
@@ -686,7 +686,7 @@ class SUNNonLinSolWrapper {
      * @brief Get type ID of the solver
      * @return
      */
-    SUNNonlinearSolver_Type getType() const;
+    SUNNonlinearSolver_Type get_type() const;
 
     /**
      * @brief Setup solver
@@ -697,7 +697,7 @@ class SUNNonLinSolWrapper {
     int setup(N_Vector y, void* mem);
 
     /**
-     * @brief Solve the nonlinear system F (y) = 0 or G(y) = y.
+     * @brief solve the nonlinear system F (y) = 0 or G(y) = y.
      * @param y0 the initial iterate for the nonlinear solve. This must remain
      * unchanged throughout the solution process.
      * @param y the solution to the nonlinear system
@@ -710,7 +710,7 @@ class SUNNonLinSolWrapper {
      * @param mem the sundials integrator memory structure.
      * @return
      */
-    int Solve(
+    int solve(
         N_Vector y0, N_Vector y, N_Vector w, realtype tol, bool callLSetup,
         void* mem
     );
@@ -721,21 +721,21 @@ class SUNNonLinSolWrapper {
      * @param SysFn
      * @return
      */
-    int setSysFn(SUNNonlinSolSysFn SysFn);
+    int set_sys_fn(SUNNonlinSolSysFn SysFn);
 
     /**
      * @brief Set linear solver setup function.
      * @param SetupFn
      * @return
      */
-    int setLSetupFn(SUNNonlinSolLSetupFn SetupFn);
+    int set_l_setup_fn(SUNNonlinSolLSetupFn SetupFn);
 
     /**
      * @brief Set linear solver solve function.
      * @param SolveFn
      * @return
      */
-    int setLSolveFn(SUNNonlinSolLSolveFn SolveFn);
+    int set_l_solve_fn(SUNNonlinSolLSolveFn SolveFn);
 
     /**
      * @brief Set function to test for convergence
@@ -743,32 +743,32 @@ class SUNNonLinSolWrapper {
      * @param ctest_data
      * @return
      */
-    int setConvTestFn(SUNNonlinSolConvTestFn CTestFn, void* ctest_data);
+    int set_conv_test_fn(SUNNonlinSolConvTestFn CTestFn, void* ctest_data);
 
     /**
      * @brief Set maximum number of non-linear iterations
      * @param maxiters
      * @return
      */
-    int setMaxIters(int maxiters);
+    int set_max_iters(int maxiters);
 
     /**
-     * @brief getNumIters
+     * @brief get_num_iters
      * @return
      */
-    long int getNumIters() const;
+    long int get_num_iters() const;
 
     /**
-     * @brief getCurIter
+     * @brief get_cur_iter
      * @return
      */
-    int getCurIter() const;
+    int get_cur_iter() const;
 
     /**
-     * @brief getNumConvFails
+     * @brief get_num_conv_fails
      * @return
      */
-    long int getNumConvFails() const;
+    long int get_num_conv_fails() const;
 
   protected:
     /**
@@ -806,7 +806,7 @@ class SUNNonLinSolNewton : public SUNNonLinSolWrapper {
      * @param SysFn
      * @return
      */
-    int getSysFn(SUNNonlinSolSysFn* SysFn) const;
+    int get_sys_fn(SUNNonlinSolSysFn* SysFn) const;
 };
 
 /**
@@ -837,7 +837,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param SysFn
      * @return
      */
-    int getSysFn(SUNNonlinSolSysFn* SysFn) const;
+    int get_sys_fn(SUNNonlinSolSysFn* SysFn) const;
 };
 
 } // namespace amici

@@ -35,7 +35,6 @@ with warnings.catch_warnings():
 for var in dir(model_steadystate_py):
     if not var.startswith("_"):
         globals()[var] = getattr(model_steadystate_py, var)
-get_model = model_steadystate_py.getModel
 
 try:
     # _self: this module; will be set during import

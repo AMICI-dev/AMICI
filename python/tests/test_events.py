@@ -75,7 +75,7 @@ def model(request):
         sbml_model=sbml_model,
         model_name=request.param,
     )
-    amici_model.setTimepoints(timepoints)
+    amici_model.set_timepoints(timepoints)
 
     return amici_model, parameters, timepoints, x_expected, sx_expected
 
@@ -718,7 +718,7 @@ def test_models(model):
 
     # FIXME: For a few parameters of these models, adjoint sensitivities
     # are somewhat off. This needs to be investigated further.
-    asa_xfail = amici_model.getName() in (
+    asa_xfail = amici_model.get_name() in (
         "events_plus_heavisides",
         "piecewise_plus_event_semi_complicated",
         "nested_events",
@@ -765,13 +765,13 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
     model_module = import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
+    amici_model = model_module.get_model()
     assert amici_model.ne == 5
     assert amici_model.ne_solver == 0
 
-    amici_model.setTimepoints(np.linspace(0, 10, 20))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model.set_timepoints(np.linspace(0, 10, 20))
+    amici_solver = amici_model.create_solver()
+    rdata = amici.run_simulation(amici_model, amici_solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert (rdata.x[rdata.ts < 1] == 0).all()
     assert (rdata.x[(rdata.ts >= 1) & (rdata.ts < 2)] == 1).all()
@@ -787,8 +787,8 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
         SensitivityMethod.forward,
         SensitivityMethod.adjoint,
     ):
-        amici_solver.setSensitivityMethod(sens_meth)
-        amici_solver.setSensitivityOrder(SensitivityOrder.first)
+        amici_solver.set_sensitivity_method(sens_meth)
+        amici_solver.set_sensitivity_order(SensitivityOrder.first)
         check_derivatives(amici_model, amici_solver, edata=edata)
 
 
@@ -817,17 +817,17 @@ def test_multiple_event_assignment_with_compartment(tempdir):
     model_module = import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
+    amici_model = model_module.get_model()
     assert amici_model.ne == 2
     assert amici_model.ne_solver == 0
     assert amici_model.nx_rdata == 3
-    amici_model.setTimepoints(np.linspace(0, 15, 16))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model.set_timepoints(np.linspace(0, 15, 16))
+    amici_solver = amici_model.create_solver()
+    rdata = amici.run_simulation(amici_model, amici_solver)
     assert rdata.status == amici.AMICI_SUCCESS
-    idx_event_target = amici_model.getStateIds().index("event_target")
-    idx_unrelated = amici_model.getStateIds().index("unrelated")
-    idx_species_in_event_target = amici_model.getStateIds().index(
+    idx_event_target = amici_model.get_state_ids().index("event_target")
+    idx_unrelated = amici_model.get_state_ids().index("unrelated")
+    idx_species_in_event_target = amici_model.get_state_ids().index(
         "species_in_event_target"
     )
 
@@ -915,15 +915,15 @@ def test_event_priorities(tempdir):
 
     # check just after the trigger time,
     # the event does not fire at *exactly* 1
-    model.setTimepoints([0, 1 + 1e-6, 2])
+    model.set_timepoints([0, 1 + 1e-6, 2])
 
-    solver = model.getSolver()
-    solver.setAbsoluteTolerance(1e-16)
-    solver.setRelativeTolerance(1e-14)
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver = model.create_solver()
+    solver.set_absolute_tolerance(1e-16)
+    solver.set_relative_tolerance(1e-14)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
 
     assert np.all(rdata.by_id("target1") == [1, 11, 11])
     assert np.all(rdata.by_id("target2") == [2, 22, 22])
@@ -934,8 +934,12 @@ def test_event_priorities(tempdir):
 
     # check forward sensitivities against finite differences
     # FIXME: sensitivities w.r.t. the bolus parameter are not correct
-    model.setParameterList(
-        [ip for ip, par in enumerate(model.getParameterIds()) if par != "two"]
+    model.set_parameter_list(
+        [
+            ip
+            for ip, par in enumerate(model.get_parameter_ids())
+            if par != "two"
+        ]
     )
 
     check_derivatives(
@@ -1003,14 +1007,14 @@ def test_random_event_ordering(tempdir):
     model_module = import_model_module(model_name, tempdir)
 
     model = model_module.get_model()
-    model.setTimepoints([0, 2, 3])
-    solver = model.getSolver()
+    model.set_timepoints([0, 2, 3])
+    solver = model.create_solver()
 
     # the outcomes of the random assignment
     outcomes = []
     N = 1000
     for i in range(N):
-        rdata = amici.runAmiciSimulation(model, solver)
+        rdata = amici.run_simulation(model, solver)
         assert np.all(rdata.by_id("target_first") == [0, 2, 2])
         assert np.all(rdata.by_id("target_last") == [0, 1, 1])
         traj = rdata.by_id("target_rnd")
@@ -1063,12 +1067,12 @@ def test_event_uses_values_from_trigger_time(tempdir):
     model_module = import_model_module(model_name, tempdir)
 
     model = model_module.get_model()
-    model.setTimepoints([0, 1.1, 2])
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
+    model.set_timepoints([0, 1.1, 2])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
     assert np.all(rdata.by_id("target1") == [2, 2, 2])
     assert np.all(rdata.by_id("target2") == [0, 3, 3])
 
@@ -1084,10 +1088,10 @@ def test_event_uses_values_from_trigger_time(tempdir):
         if sens_method == SensitivityMethod.forward:
             # FIXME: forward sensitivities w.r.t. the bolus parameter
             #  of the first event are wrong
-            model.setParameterList(
+            model.set_parameter_list(
                 [
                     ip
-                    for ip, par in enumerate(model.getParameterIds())
+                    for ip, par in enumerate(model.get_parameter_ids())
                     if par not in ["one"]
                 ]
             )
@@ -1095,15 +1099,15 @@ def test_event_uses_values_from_trigger_time(tempdir):
             # FIXME: adjoint sensitivities w.r.t. the bolus parameter `three`
             #  are wrong.
             #  maybe related to https://github.com/AMICI-dev/AMICI/issues/2805
-            model.setParameterList(
+            model.set_parameter_list(
                 [
                     ip
-                    for ip, par in enumerate(model.getParameterIds())
+                    for ip, par in enumerate(model.get_parameter_ids())
                     if par not in ["one", "three"]
                 ]
             )
 
-        solver.setSensitivityMethod(sens_method)
+        solver.set_sensitivity_method(sens_method)
         check_derivatives(
             model,
             solver,
@@ -1140,24 +1144,24 @@ def test_posteq_events_are_handled(tempdir):
 
     model_module = import_model_module(model_name, tempdir)
     model = model_module.get_model()
-    solver = model.getSolver()
+    solver = model.create_solver()
 
     # test without post-equilibration
-    model.setTimepoints([10])
-    rdata = amici.runAmiciSimulation(model, solver)
+    model.set_timepoints([10])
+    rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert rdata.by_id("target").squeeze() == 2.0
     assert rdata.by_id("obs_target").squeeze() == 2.0
 
     # test with post-equilibration
-    model.setSteadyStateComputationMode(
+    model.set_steady_state_computation_mode(
         amici.SteadyStateComputationMode.integrationOnly
     )
-    model.setSteadyStateSensitivityMode(
+    model.set_steady_state_sensitivity_mode(
         amici.SteadyStateSensitivityMode.integrationOnly
     )
-    model.setTimepoints([np.inf])
-    rdata = amici.runAmiciSimulation(model, solver)
+    model.set_timepoints([np.inf])
+    rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert rdata.by_id("target").squeeze() == 2.0
     assert rdata.by_id("obs_target").squeeze() == 2.0
@@ -1169,8 +1173,8 @@ def test_posteq_events_are_handled(tempdir):
         SensitivityMethod.forward,
         SensitivityMethod.adjoint,
     ):
-        solver.setSensitivityOrder(SensitivityOrder.first)
-        solver.setSensitivityMethod(sens_method)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
 
         check_derivatives(
             model,
@@ -1219,22 +1223,22 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
 
     model_module = import_model_module(model_name, tempdir)
     model = model_module.get_model()
-    model.setTimepoints(np.linspace(0, 2, 3))
-    model.setSteadyStateComputationMode(
+    model.set_timepoints(np.linspace(0, 2, 3))
+    model.set_steady_state_computation_mode(
         amici.SteadyStateComputationMode.integrationOnly
     )
-    solver = model.getSolver()
+    solver = model.create_solver()
 
     # Only main simulation. E1 triggers, E2 does not.
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
     assert list(rdata.by_id("target2")) == [0.0, 0.0, 0.0]
 
     # Pre-equilibration + main simulation. Both E1 and E2 trigger.
     edata = amici.ExpData(rdata, 1, 0, 0)
-    edata.fixedParametersPreequilibration = [1]
-    rdata = amici.runAmiciSimulation(model, solver, edata=edata)
+    edata.fixed_parameters_pre_equilibration = [1]
+    rdata = amici.run_simulation(model, solver, edata=edata)
     assert rdata.status == amici.AMICI_SUCCESS
     assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
     assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
@@ -1254,10 +1258,10 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
     # Pre-equilibration + pre-simulation + main simulation.
     # Both E1 and E2 trigger.
     edata = amici.ExpData(rdata, 1, 0, 0)
-    edata.fixedParametersPreequilibration = [1]
-    edata.fixedParametersPresimulation = [1]
+    edata.fixed_parameters_pre_equilibration = [1]
+    edata.fixed_parameters_presimulation = [1]
     edata.t_presim = 10
-    rdata = amici.runAmiciSimulation(model, solver, edata=edata)
+    rdata = amici.run_simulation(model, solver, edata=edata)
     assert rdata.status == amici.AMICI_SUCCESS
     assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
     assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
@@ -1288,9 +1292,9 @@ def test_gh2926(tempdir):
     model = model_module.get_model()
     # check output just after t=10, otherwise the solver stops at `10 - eps`
     #  and the event triggers only after the output was recorded
-    model.setTimepoints([0, 5, 10.1, 11])
-    solver = model.getSolver()
+    model.set_timepoints([0, 5, 10.1, 11])
+    solver = model.create_solver()
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert rdata.by_id("x1").tolist() == [1.0, 1.0, 2.0, 2.0]

@@ -62,7 +62,7 @@ class Model_Test : public Model {
 
     Model* clone() const override { return new Model_Test(*this); }
 
-    std::unique_ptr<Solver> getSolver() override {
+    std::unique_ptr<Solver> create_solver() override {
         throw AmiException("not implemented");
     }
     void froot(
@@ -147,35 +147,35 @@ class Model_Test : public Model {
         throw AmiException("not implemented");
     }
 
-    std::vector<std::string> getParameterNames() const override {
+    std::vector<std::string> get_parameter_names() const override {
         return getVariableNames("p", np());
     }
 
-    std::vector<std::string> getStateNames() const override {
+    std::vector<std::string> get_state_names() const override {
         return getVariableNames("x", nx_rdata);
     }
 
-    std::vector<std::string> getFixedParameterNames() const override {
+    std::vector<std::string> get_fixed_parameter_names() const override {
         return getVariableNames("k", nk());
     }
 
-    std::vector<std::string> getObservableNames() const override {
+    std::vector<std::string> get_observable_names() const override {
         return getVariableNames("y", ny);
     }
 
-    std::vector<std::string> getParameterIds() const override {
+    std::vector<std::string> get_parameter_ids() const override {
         return getVariableNames("p", np());
     }
 
-    std::vector<std::string> getStateIds() const override {
+    std::vector<std::string> get_state_ids() const override {
         return getVariableNames("x", nx_rdata);
     }
 
-    std::vector<std::string> getFixedParameterIds() const override {
+    std::vector<std::string> get_fixed_parameter_ids() const override {
         return getVariableNames("k", nk());
     }
 
-    std::vector<std::string> getObservableIds() const override {
+    std::vector<std::string> get_observable_ids() const override {
         return getVariableNames("y", ny);
     }
 };

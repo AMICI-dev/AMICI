@@ -171,10 +171,10 @@ An example using Antimony to specify the Lotka-Volterra equations is shown below
     model_module = amici.import_model_module(
         module_name=module_name, module_path=outdir
     )
-    amici_model = model_module.getModel()
-    amici_model.setTimepoints(np.linspace(0, 100, 200))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model = model_module.get_model()
+    amici_model.set_timepoints(np.linspace(0, 100, 200))
+    amici_solver = amici_model.create_solver()
+    rdata = amici.run_simulation(amici_model, amici_solver)
 
     from amici.plotting import plot_state_trajectories
     plot_state_trajectories(rdata, model=amici_model)
@@ -238,7 +238,7 @@ On Linux and OSX this is enabled by default. This can be verified using:
 .. code-block:: python
 
    import amici
-   amici.compiledWithOpenMP()
+   amici.compiled_with_openmp()
 
 If not already enabled by default, you can enable OpenMP support by setting
 the environment variables ``AMICI_CXXFLAGS`` and ``AMICI_LDFLAGS`` to the

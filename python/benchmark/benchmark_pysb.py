@@ -86,17 +86,17 @@ for example in pysb_models:
                 pysb_model.name, outdir
             )
 
-            model_pysb = amici_model_module.getModel()
+            model_pysb = amici_model_module.get_model()
 
-            model_pysb.setTimepoints(tspan)
+            model_pysb.set_timepoints(tspan)
 
-            solver = model_pysb.getSolver()
-            solver.setMaxSteps(int(1e6))
-            solver.setAbsoluteTolerance(atol)
-            solver.setRelativeTolerance(rtol)
+            solver = model_pysb.create_solver()
+            solver.set_max_steps(int(1e6))
+            solver.set_absolute_tolerance(atol)
+            solver.set_relative_tolerance(rtol)
             time_amici = (
                 timeit.Timer(
-                    "rdata = amici.runAmiciSimulation(model, solver)",
+                    "rdata = amici.run_simulation(model, solver)",
                     globals={
                         "model": model_pysb,
                         "solver": solver,

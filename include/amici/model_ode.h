@@ -276,7 +276,7 @@ class Model_ODE : public Model {
         realtype t, const_N_Vector x, int ip, const_N_Vector sx, N_Vector sxdot
     );
 
-    std::unique_ptr<Solver> getSolver() override;
+    std::unique_ptr<Solver> create_solver() override;
 
   protected:
     /**
@@ -339,7 +339,8 @@ class Model_ODE : public Model {
     ) = 0;
 
     /**
-     * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule
+     * @brief Model specific implementation of fdxdotdp_explicit, no w chain
+     * rule
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -367,14 +368,14 @@ class Model_ODE : public Model {
     virtual void fdxdotdp_explicit_rowvals(SUNMatrixWrapper& dxdotdp);
 
     /**
-     * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule
-     * (Py)
+     * @brief Model specific implementation of fdxdotdx_explicit, no w chain
+     * rule
      * @param dxdotdx_explicit partial derivative xdot wrt x
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param w vector with helper variables
      */
     virtual void fdxdotdx_explicit(

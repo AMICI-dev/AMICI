@@ -5,11 +5,11 @@ namespace amici::model_model_calvetti_py {
 
 // clang-format off
 
-std::array<const char*, 0> parameterNames = {
+std::array<const char*, 0> parameter_names = {
     
 };
 
-std::array<const char*, 6> fixedParameterNames = {
+std::array<const char*, 6> fixed_parameter_names = {
     "V1ss", // k[0]
 "R1ss", // k[1]
 "V2ss", // k[2]
@@ -18,7 +18,7 @@ std::array<const char*, 6> fixedParameterNames = {
 "R3ss", // k[5]
 };
 
-std::array<const char*, 6> stateNames = {
+std::array<const char*, 6> state_names = {
     "V1", // x_rdata[0]
 "V2", // x_rdata[1]
 "V3", // x_rdata[2]
@@ -27,7 +27,7 @@ std::array<const char*, 6> stateNames = {
 "f3", // x_rdata[5]
 };
 
-std::array<const char*, 6> observableNames = {
+std::array<const char*, 6> observable_names = {
     "y0", // y[0]
 "y1", // y[1]
 "y2", // y[2]
@@ -36,7 +36,7 @@ std::array<const char*, 6> observableNames = {
 "y5", // y[5]
 };
 
-std::array<const ObservableScaling, 6> observableScalings = {
+std::array<const ObservableScaling, 6> observable_scalings = {
     ObservableScaling::lin, // y[0]
 ObservableScaling::lin, // y[1]
 ObservableScaling::lin, // y[2]
@@ -45,7 +45,7 @@ ObservableScaling::lin, // y[4]
 ObservableScaling::lin, // y[5]
 };
 
-std::array<const char*, 17> expressionNames = {
+std::array<const char*, 17> expression_names = {
     "C1ss", // w[0]
 "C2ss", // w[1]
 "C3ss", // w[2]
@@ -65,11 +65,11 @@ std::array<const char*, 17> expressionNames = {
 "flux_r0", // w[16]
 };
 
-std::array<const char*, 0> parameterIds = {
+std::array<const char*, 0> parameter_ids = {
     
 };
 
-std::array<const char*, 6> fixedParameterIds = {
+std::array<const char*, 6> fixed_parameter_ids = {
     "V1ss", // k[0]
 "R1ss", // k[1]
 "V2ss", // k[2]
@@ -78,7 +78,7 @@ std::array<const char*, 6> fixedParameterIds = {
 "R3ss", // k[5]
 };
 
-std::array<const char*, 6> stateIds = {
+std::array<const char*, 6> state_ids = {
     "V1", // x_rdata[0]
 "V2", // x_rdata[1]
 "V3", // x_rdata[2]
@@ -87,7 +87,7 @@ std::array<const char*, 6> stateIds = {
 "f3", // x_rdata[5]
 };
 
-std::array<const char*, 6> observableIds = {
+std::array<const char*, 6> observable_ids = {
     "obs_V1", // y[0]
 "obs_V2", // y[1]
 "obs_V3", // y[2]
@@ -96,7 +96,7 @@ std::array<const char*, 6> observableIds = {
 "obs_f2", // y[5]
 };
 
-std::array<const char*, 17> expressionIds = {
+std::array<const char*, 17> expression_ids = {
     "C1ss", // w[0]
 "C2ss", // w[1]
 "C3ss", // w[2]
@@ -116,7 +116,7 @@ std::array<const char*, 17> expressionIds = {
 "flux_r0", // w[16]
 };
 
-std::array<int, 6> stateIdxsSolver = {
+std::array<int, 6> state_idxs_solver = {
     0, 1, 2, 3, 4, 5
 };
 

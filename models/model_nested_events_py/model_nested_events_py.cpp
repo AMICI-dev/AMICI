@@ -5,7 +5,7 @@ namespace amici::model_model_nested_events_py {
 
 // clang-format off
 
-std::array<const char*, 5> parameterNames = {
+std::array<const char*, 5> parameter_names = {
     "V_0", // p[0]
 "V_0_inject", // p[1]
 "t_0", // p[2]
@@ -13,27 +13,27 @@ std::array<const char*, 5> parameterNames = {
 "delta_V", // p[4]
 };
 
-std::array<const char*, 0> fixedParameterNames = {
+std::array<const char*, 0> fixed_parameter_names = {
     
 };
 
-std::array<const char*, 1> stateNames = {
+std::array<const char*, 1> state_names = {
     "Virus", // x_rdata[0]
 };
 
-std::array<const char*, 1> observableNames = {
+std::array<const char*, 1> observable_names = {
     "y0", // y[0]
 };
 
-std::array<const ObservableScaling, 1> observableScalings = {
+std::array<const ObservableScaling, 1> observable_scalings = {
     ObservableScaling::lin, // y[0]
 };
 
-std::array<const char*, 1> expressionNames = {
+std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 5> parameterIds = {
+std::array<const char*, 5> parameter_ids = {
     "V_0", // p[0]
 "V_0_inject", // p[1]
 "t_0", // p[2]
@@ -41,23 +41,23 @@ std::array<const char*, 5> parameterIds = {
 "delta_V", // p[4]
 };
 
-std::array<const char*, 0> fixedParameterIds = {
+std::array<const char*, 0> fixed_parameter_ids = {
     
 };
 
-std::array<const char*, 1> stateIds = {
+std::array<const char*, 1> state_ids = {
     "Virus", // x_rdata[0]
 };
 
-std::array<const char*, 1> observableIds = {
+std::array<const char*, 1> observable_ids = {
     "obs_Virus", // y[0]
 };
 
-std::array<const char*, 1> expressionIds = {
+std::array<const char*, 1> expression_ids = {
     "flux_r0", // w[0]
 };
 
-std::array<int, 1> stateIdxsSolver = {
+std::array<int, 1> state_idxs_solver = {
     0
 };
 

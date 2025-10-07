@@ -72,7 +72,7 @@ static double _get_import_time();
 
 
 // Make model module accessible from the model
-%feature("pythonappend") amici::generic_model::getModel %{
+%feature("pythonappend") amici::generic_model::get_model %{
     if '.' in __name__:
         val.module = _model_module
 %}

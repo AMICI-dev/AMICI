@@ -5,67 +5,67 @@ namespace amici::model_model_events_py {
 
 // clang-format off
 
-std::array<const char*, 4> parameterNames = {
+std::array<const char*, 4> parameter_names = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
 "p4", // p[3]
 };
 
-std::array<const char*, 4> fixedParameterNames = {
+std::array<const char*, 4> fixed_parameter_names = {
     "k1", // k[0]
 "k2", // k[1]
 "k3", // k[2]
 "k4", // k[3]
 };
 
-std::array<const char*, 3> stateNames = {
+std::array<const char*, 3> state_names = {
     "x1", // x_rdata[0]
 "x2", // x_rdata[1]
 "x3", // x_rdata[2]
 };
 
-std::array<const char*, 1> observableNames = {
+std::array<const char*, 1> observable_names = {
     "y1", // y[0]
 };
 
-std::array<const ObservableScaling, 1> observableScalings = {
+std::array<const ObservableScaling, 1> observable_scalings = {
     ObservableScaling::lin, // y[0]
 };
 
-std::array<const char*, 1> expressionNames = {
+std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 4> parameterIds = {
+std::array<const char*, 4> parameter_ids = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
 "p4", // p[3]
 };
 
-std::array<const char*, 4> fixedParameterIds = {
+std::array<const char*, 4> fixed_parameter_ids = {
     "k1", // k[0]
 "k2", // k[1]
 "k3", // k[2]
 "k4", // k[3]
 };
 
-std::array<const char*, 3> stateIds = {
+std::array<const char*, 3> state_ids = {
     "x1", // x_rdata[0]
 "x2", // x_rdata[1]
 "x3", // x_rdata[2]
 };
 
-std::array<const char*, 1> observableIds = {
+std::array<const char*, 1> observable_ids = {
     "y1", // y[0]
 };
 
-std::array<const char*, 1> expressionIds = {
+std::array<const char*, 1> expression_ids = {
     "flux_r0", // w[0]
 };
 
-std::array<int, 3> stateIdxsSolver = {
+std::array<int, 3> state_idxs_solver = {
     0, 1, 2
 };
 

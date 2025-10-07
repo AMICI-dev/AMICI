@@ -19,7 +19,7 @@ class SimulationParameters {
      * @param timepoints Timepoints for which simulation results are requested
      */
     explicit SimulationParameters(std::vector<realtype> timepoints)
-        : ts_(std::move(timepoints)) {}
+        : timepoints(std::move(timepoints)) {}
 
     /**
      * @brief Constructor
@@ -29,7 +29,7 @@ class SimulationParameters {
     SimulationParameters(
         std::vector<realtype> fixedParameters, std::vector<realtype> parameters
     )
-        : fixedParameters(std::move(fixedParameters))
+        : fixed_parameters(std::move(fixedParameters))
         , parameters(std::move(parameters))
         , pscale(std::vector(this->parameters.size(), ParameterScaling::none)) {
     }
@@ -58,7 +58,7 @@ class SimulationParameters {
         std::vector<realtype> fixedParameters, std::vector<realtype> parameters,
         std::vector<int> plist
     )
-        : fixedParameters(std::move(fixedParameters))
+        : fixed_parameters(std::move(fixedParameters))
         , parameters(std::move(parameters))
         , pscale(std::vector(this->parameters.size(), ParameterScaling::none))
         , plist(std::move(plist)) {}
@@ -73,10 +73,10 @@ class SimulationParameters {
         std::vector<realtype> timepoints, std::vector<realtype> fixedParameters,
         std::vector<realtype> parameters
     )
-        : fixedParameters(std::move(fixedParameters))
+        : fixed_parameters(std::move(fixedParameters))
         , parameters(std::move(parameters))
         , pscale(std::vector(this->parameters.size(), ParameterScaling::none))
-        , ts_(std::move(timepoints)) {}
+        , timepoints(std::move(timepoints)) {}
 #endif
 
     /**
@@ -89,7 +89,8 @@ class SimulationParameters {
      *
      * @param nx_rdata Number of states (Model::nx_rdata)
      */
-    void reinitializeAllFixedParameterDependentInitialStatesForPresimulation(
+    void
+    reinitialize_all_fixed_parameter_dependent_initial_states_for_presimulation(
         int nx_rdata
     );
 
@@ -104,7 +105,8 @@ class SimulationParameters {
      *
      * @param nx_rdata Number of states (Model::nx_rdata)
      */
-    void reinitializeAllFixedParameterDependentInitialStatesForSimulation(
+    void
+    reinitialize_all_fixed_parameter_dependent_initial_states_for_simulation(
         int nx_rdata
     );
 
@@ -118,28 +120,29 @@ class SimulationParameters {
      *
      * @param nx_rdata Number of states (Model::nx_rdata)
      */
-    void reinitializeAllFixedParameterDependentInitialStates(int nx_rdata);
+    void
+    reinitialize_all_fixed_parameter_dependent_initial_states(int nx_rdata);
 
     /**
      * @brief Model constants
      *
      * Vector of size Model::nk() or empty
      */
-    std::vector<realtype> fixedParameters;
+    std::vector<realtype> fixed_parameters;
 
     /**
      * @brief Model constants for pre-equilibration
      *
      * Vector of size Model::nk() or empty.
      */
-    std::vector<realtype> fixedParametersPreequilibration;
+    std::vector<realtype> fixed_parameters_pre_equilibration;
 
     /**
      * @brief Model constants for pre-simulation
      *
      * Vector of size Model::nk() or empty.
      */
-    std::vector<realtype> fixedParametersPresimulation;
+    std::vector<realtype> fixed_parameters_presimulation;
 
     /**
      * @brief Model parameters
@@ -183,7 +186,7 @@ class SimulationParameters {
      *
      * NAN indicates that `tstart_` should be used.
      */
-    realtype tstart_preeq_{NAN};
+    realtype t_start_preeq{NAN};
 
     /**
      * @brief Starting time of the simulation.
@@ -193,7 +196,7 @@ class SimulationParameters {
      * For output timepoints \f$ t <  t_{start} \f$, the initial state will be
      * returned.
      */
-    realtype tstart_{0.0};
+    realtype t_start{0.0};
 
     /**
      * @brief Duration of pre-simulation.
@@ -209,13 +212,13 @@ class SimulationParameters {
      *
      * Vector of timepoints.
      */
-    std::vector<realtype> ts_;
+    std::vector<realtype> timepoints;
 
     /**
      * @brief Flag indicating whether reinitialization of states depending on
      * fixed parameters is activated
      */
-    bool reinitializeFixedParameterInitialStates{false};
+    bool reinitialize_fixed_parameter_initial_states{false};
 
     /**
      * @brief Indices of states to be reinitialized based on provided

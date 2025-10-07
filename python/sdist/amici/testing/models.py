@@ -151,7 +151,7 @@ def import_model_calvetti(outdir: Path = None) -> Model:
     model_module = import_model_module(model_name, outdir)
     model = model_module.get_model()
 
-    assert model.getFixedParameterIds() == (
+    assert model.get_fixed_parameter_ids() == (
         "V1ss",
         "R1ss",
         "V2ss",
@@ -652,4 +652,4 @@ def create_amici_model(
     )
 
     model_module = import_model_module(model_name, output_dir)
-    return model_module.getModel()
+    return model_module.get_model()

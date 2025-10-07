@@ -25,24 +25,24 @@ int main() {
     std::cout << "********************************" << std::endl << std::endl;
 
     // Create a model instance
-    auto model = amici::generic_model::getModel();
+    auto model = amici::generic_model::get_model();
 
     // Set desired output timepoints
-    model->setTimepoints({0.0, 1.0, 10.0, 100.0, 1000.0});
+    model->set_timepoints({0.0, 1.0, 10.0, 100.0, 1000.0});
 
     // Create a solver instance
-    auto solver = model->getSolver();
+    auto solver = model->create_solver();
 
     // Optionally set integration tolerance
-    solver->setAbsoluteTolerance(1e-16);
-    solver->setRelativeTolerance(1e-8);
+    solver->set_absolute_tolerance(1e-16);
+    solver->set_relative_tolerance(1e-8);
 
     // Run the simulation using default parameters set during model import
     // (can be changed using model->setParameters() or model->setParameterBy*())
-    auto rdata = runAmiciSimulation(*solver, nullptr, *model);
+    auto rdata = run_simulation(*solver, nullptr, *model);
 
     // Print observable time course
-    auto observable_ids = model->getObservableIds();
+    auto observable_ids = model->get_observable_ids();
     std::cout << "Simulated observables for timepoints " << rdata->ts << "\n\n";
     for (int i_observable = 0; i_observable < rdata->ny; ++i_observable) {
         std::cout << observable_ids[i_observable] << ":\n\t";
@@ -59,12 +59,12 @@ int main() {
     std::cout << "**********************************" << std::endl << std::endl;
 
     // Enable first-order sensitivity analysis
-    solver->setSensitivityOrder(amici::SensitivityOrder::first);
+    solver->set_sensitivity_order(amici::SensitivityOrder::first);
     // Use forward sensitivities
-    solver->setSensitivityMethod(amici::SensitivityMethod::forward);
+    solver->set_sensitivity_method(amici::SensitivityMethod::forward);
 
     // Run the simulation
-    rdata = runAmiciSimulation(*solver, nullptr, *model);
+    rdata = run_simulation(*solver, nullptr, *model);
 
     // Print state sensitivities sx...
     // ... for the first timepoint...
@@ -73,8 +73,8 @@ int main() {
     int i_nplist = 0;
 
     // get identifiers from model
-    auto state_ids = model->getStateIds();
-    auto parameter_ids = model->getParameterIds();
+    auto state_ids = model->get_state_ids();
+    auto parameter_ids = model->get_parameter_ids();
 
     std::cout << "State sensitivities for timepoint " << rdata->ts[i_time]
               << std::endl; // nt x nplist x nx

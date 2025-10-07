@@ -36,7 +36,7 @@ namespace serialization {
  * @param size Size of p
  */
 template <class Archive, typename T>
-void archiveVector(Archive& ar, T** p, int size) {
+void archive_vector(Archive& ar, T** p, int size) {
     if (Archive::is_loading::value) {
         if (*p != nullptr)
             delete[] *p;
@@ -86,7 +86,7 @@ void serialize(Archive& ar, amici::Solver& s, unsigned int const /*version*/) {
     ar & s.stldet_;
     ar & s.ordering_;
     ar & s.cpu_time_;
-    ar & s.cpu_timeB_;
+    ar & s.cpu_time_b_;
     ar & s.newton_step_steadystate_conv_;
     ar & s.check_sensi_steadystate_conv_;
     ar & s.rdata_mode_;
@@ -138,12 +138,12 @@ template <class Archive>
 void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar& dynamic_cast<amici::ModelDimensions&>(m);
     ar & m.simulation_parameters_;
-    ar & m.o2mode;
+    ar & m.o2_mode_;
     ar & m.z2event_;
-    ar & m.idlist;
+    ar & m.id_list_;
     ar & m.state_.h;
-    ar & m.state_.unscaledParameters;
-    ar & m.state_.fixedParameters;
+    ar & m.state_.unscaled_parameters;
+    ar & m.state_.fixed_parameters;
     ar & m.state_.plist;
     ar & m.x0data_;
     ar & m.sx0data_;
@@ -166,34 +166,34 @@ template <class Archive>
 void serialize(
     Archive& ar, amici::SimulationParameters& s, unsigned int const /*version*/
 ) {
-    ar & s.fixedParameters;
-    ar & s.fixedParametersPreequilibration;
-    ar & s.fixedParametersPresimulation;
+    ar & s.fixed_parameters;
+    ar & s.fixed_parameters_pre_equilibration;
+    ar & s.fixed_parameters_presimulation;
     ar & s.parameters;
     ar & s.x0;
     ar & s.sx0;
     ar & s.pscale;
     ar & s.plist;
-    ar & s.ts_;
+    ar & s.timepoints;
     // for some reason, serializing NAN fails
     if (Archive::is_loading::value) {
         bool tstart_preeq_is_nan;
         ar & tstart_preeq_is_nan;
         if (tstart_preeq_is_nan) {
-            s.tstart_preeq_ = std::numeric_limits<amici::realtype>::quiet_NaN();
+            s.t_start_preeq = std::numeric_limits<amici::realtype>::quiet_NaN();
         } else {
-            ar & s.tstart_preeq_;
+            ar & s.t_start_preeq;
         }
     } else {
-        bool tstart_preeq_is_nan = std::isnan(s.tstart_preeq_);
+        bool tstart_preeq_is_nan = std::isnan(s.t_start_preeq);
         ar & tstart_preeq_is_nan;
         if (!tstart_preeq_is_nan) {
-            ar & s.tstart_preeq_;
+            ar & s.t_start_preeq;
         }
     }
-    ar & s.tstart_;
+    ar & s.t_start;
     ar & s.t_presim;
-    ar & s.reinitializeFixedParameterInitialStates;
+    ar & s.reinitialize_fixed_parameter_initial_states;
 }
 
 /**
@@ -234,25 +234,25 @@ void serialize(
     ar & r.sy & r.ssigmay;
 
     ar & r.numsteps;
-    ar & r.numstepsB;
-    ar & r.numrhsevals;
-    ar & r.numrhsevalsB;
-    ar & r.numerrtestfails;
-    ar & r.numerrtestfailsB;
-    ar & r.numnonlinsolvconvfails;
-    ar & r.numnonlinsolvconvfailsB;
+    ar & r.numsteps_b;
+    ar & r.num_rhs_evals;
+    ar & r.num_rhs_evals_b;
+    ar & r.num_err_test_fails;
+    ar & r.num_err_test_fails_b;
+    ar & r.num_non_lin_solv_conv_fails;
+    ar & r.num_non_lin_solv_conv_fails_b;
     ar & r.order;
     ar & r.cpu_time;
-    ar & r.cpu_timeB;
+    ar & r.cpu_time_b;
     ar & r.cpu_time_total;
     ar & r.preeq_cpu_time;
-    ar & r.preeq_cpu_timeB;
+    ar & r.preeq_cpu_time_b;
     ar & r.preeq_status;
     ar & r.preeq_numsteps;
     ar & r.preeq_wrms;
     ar & r.preeq_t;
     ar & r.posteq_cpu_time;
-    ar & r.posteq_cpu_timeB;
+    ar & r.posteq_cpu_time_b;
     ar & r.posteq_status;
     ar & r.posteq_numsteps;
     ar & r.posteq_wrms;
@@ -322,7 +322,7 @@ void serialize(
         v = amici::AmiVector(tmp, sunctx);
         v.set_ctx(sunctx);
     } else {
-        auto tmp = v.getVector();
+        auto tmp = v.get_vector();
         ar & tmp;
     }
 }
@@ -340,7 +340,7 @@ namespace amici {
  *
  * @return The object serialized as char
  */
-template <typename T> char* serializeToChar(T const& data, int* size) {
+template <typename T> char* serialize_to_char(T const& data, int* size) {
 
     try {
         std::string serialized;
@@ -376,7 +376,7 @@ template <typename T> char* serializeToChar(T const& data, int* size) {
  */
 
 template <typename T>
-T deserializeFromChar(char const* buffer, int const size) {
+T deserialize_from_char(char const* buffer, int const size) {
     namespace ba = ::boost::archive;
     namespace bio = ::boost::iostreams;
 
@@ -403,7 +403,7 @@ T deserializeFromChar(char const* buffer, int const size) {
  * @return The object serialized as string
  */
 
-template <typename T> std::string serializeToString(T const& data) {
+template <typename T> std::string serialize_to_string(T const& data) {
     namespace ba = ::boost::archive;
     namespace bio = ::boost::iostreams;
 
@@ -430,7 +430,7 @@ template <typename T> std::string serializeToString(T const& data) {
  * @return The object serialized as std::vector<char>
  */
 
-template <typename T> std::vector<char> serializeToStdVec(T const& data) {
+template <typename T> std::vector<char> serialize_to_std_vec(T const& data) {
     namespace ba = ::boost::archive;
     namespace bio = ::boost::iostreams;
 
@@ -456,7 +456,7 @@ template <typename T> std::vector<char> serializeToStdVec(T const& data) {
  * @return The deserialized object
  */
 
-template <typename T> T deserializeFromString(std::string const& serialized) {
+template <typename T> T deserialize_from_string(std::string const& serialized) {
     namespace ba = ::boost::archive;
     namespace bio = ::boost::iostreams;
 
