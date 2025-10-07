@@ -6,6 +6,7 @@ from logging import warning
 
 import sympy as sp
 from sympy.printing.numpy import NumPyPrinter
+from sympy.core.function import UndefinedFunction
 
 
 def _jnp_array_str(array) -> str:
@@ -42,8 +43,11 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             return super()._print_Mul(expr)
         return f"safe_div({self.doprint(numer)}, {self.doprint(denom)})"
 
-    def _print_Function(self, expr):
-        return f"self.nns['{expr.func.__name__}'].forward(jnp.array([{', '.join(self.doprint(a) for a in expr.args[:-1])}]))[{expr.args[-1]}]"
+    def _print_Function(self, expr: sp.Expr) -> str:
+        if isinstance(expr.func, UndefinedFunction):
+            return f"self.nns['{expr.func.__name__}'].forward(jnp.array([{', '.join(self.doprint(a) for a in expr.args[:-1])}]))[{expr.args[-1]}]"
+        else:
+            return super()._print_Function(expr)
 
     def _print_Max(self, expr: sp.Expr) -> str:
         """
