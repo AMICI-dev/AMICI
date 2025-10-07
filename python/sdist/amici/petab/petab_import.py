@@ -87,12 +87,6 @@ def import_petab_problem(
             "Unsupported model type " + petab_problem.model.type_id
         )
 
-    if petab_problem.mapping_df is not None:
-        warn(
-            "PEtab v2.0.0 mapping tables are only partially supported, use at your own risk.",
-            stacklevel=2,
-        )
-
     model_name = model_name or petab_problem.model.model_id
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB and model_name is None:
