@@ -5,8 +5,7 @@ Using AMICI's C++ interface
 ===========================
 
 The various import functions in of the
-:ref:`Python interface <python_interface>` and
-:ref:`Matlab interface <matlab_interface>` translate models defined in
+:ref:`Python interface <python_interface>` translate models defined in
 different formats into C++ code. These generated model libraries, together with
 the AMICI base library can be used in any C++ application for model simulation
 and sensitivity analysis. This section will give a short overview over the
@@ -17,10 +16,9 @@ included in other applications. Further details are available in the
 AMICI-generated C++ model files
 ===============================
 
-After importing a model using either the
-:ref:`Python interface <python_interface>` or the
-:ref:`Matlab interface <matlab_interface>`, the specified output directory
-contains (among others) C++ code for the various model functions.
+After importing a model using the :ref:`Python interface <python_interface>`,
+the specified output directory contains (among others) C++ code for the various
+model functions.
 
 The content of a model source directory looks something like this (given
 `MODEL_NAME=model_steadystate`):

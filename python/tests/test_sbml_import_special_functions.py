@@ -10,6 +10,7 @@ import pytest
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
+from amici import SbmlImporter, MeasurementChannel as MC
 from numpy.testing import (
     assert_approx_equal,
     assert_array_almost_equal_nulp,
@@ -22,29 +23,21 @@ from scipy.special import loggamma
 @pytest.fixture(scope="session")
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
-    # load sbml model
-    sbml_importer = amici.SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
-
-    # define observables
-    observables = {
-        "o1": {"formula": "100*10^x1"},
-        "o2": {"formula": "100*10^x1"},
-    }
-
-    # define different noise models
-    noise_distributions = {
-        "o1": "binomial",
-        "o2": "negative-binomial",
-    }
-
+    sbml_importer = SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
     module_name = "test_special_likelihoods"
     with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
             constant_parameters=["k0"],
-            noise_distributions=noise_distributions,
+            observation_model=[
+                MC("o1", formula="100*10^x1", noise_distribution="binomial"),
+                MC(
+                    "o2",
+                    formula="100*10^x1",
+                    noise_distribution="negative-binomial",
+                ),
+            ],
         )
 
         yield amici.import_model_module(

@@ -5,18 +5,22 @@ import re
 import sys
 from numbers import Number
 from pathlib import Path
-
 import amici
 import libsbml
 import numpy as np
 import pytest
 from amici.gradient_check import check_derivatives
-from amici.sbml_import import SbmlImporter
-from amici.testing import skip_on_valgrind
+from amici.sbml_import import SbmlImporter, SymbolId
+from amici.import_utils import (
+    symbol_with_assumptions,
+    MeasurementChannel as MC,
+)
 from numpy.testing import assert_allclose, assert_array_equal
 from amici import import_model_module
+from amici.testing import skip_on_valgrind
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from conftest import MODEL_STEADYSTATE_SCALED_XML
+import sympy as sp
 
 
 def simple_sbml_model():
@@ -41,6 +45,22 @@ def simple_sbml_model():
     return document, model
 
 
+def test_event_trigger_to_root_function():
+    """Test that root functions for event triggers are generated correctly."""
+    from amici.sbml_import import _parse_event_trigger as to_trig
+
+    a, b = sp.symbols("a b")
+
+    assert to_trig(None) == sp.Float(-1)
+    assert to_trig(sp.false) == sp.Float(-1)
+    assert to_trig(sp.true) == sp.Float(1)
+
+    assert to_trig(a > b) == a - b
+    assert to_trig(a >= b) == a - b
+    assert to_trig(a < b) == b - a
+    assert to_trig(a <= b) == b - a
+
+
 def test_sbml2amici_no_observables(tempdir):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model()
@@ -49,7 +69,7 @@ def test_sbml2amici_no_observables(tempdir):
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observables=None,
+        observation_model=None,
         compute_conservation_laws=False,
     )
 
@@ -69,10 +89,10 @@ def test_sbml2amici_nested_observables_fail(tempdir):
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=tempdir,
-            observables={
-                "outer": {"formula": "inner"},
-                "inner": {"formula": "S1"},
-            },
+            observation_model=[
+                MC("outer", formula="inner"),
+                MC("inner", formula="S1"),
+            ],
             compute_conservation_laws=False,
             generate_sensitivity_code=False,
             compile=False,
@@ -87,7 +107,7 @@ def test_nosensi(tempdir):
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observables=None,
+        observation_model=None,
         compute_conservation_laws=False,
         generate_sensitivity_code=False,
     )
@@ -125,14 +145,18 @@ def observable_dependent_error_model():
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=tmpdir,
-            observables={
-                "observable_s1": {"formula": "S1"},
-                "observable_s1_scaled": {"formula": "0.5 * S1"},
-            },
-            sigmas={
-                "observable_s1": "0.1 + relative_sigma * observable_s1",
-                "observable_s1_scaled": "0.02 * observable_s1_scaled",
-            },
+            observation_model=[
+                MC(
+                    "observable_s1",
+                    formula="S1",
+                    sigma="0.1 + relative_sigma * S1",
+                ),
+                MC(
+                    "observable_s1_scaled",
+                    formula="0.5 * S1",
+                    sigma="0.02 * observable_s1_scaled",
+                ),
+            ],
         )
         yield amici.import_model_module(
             module_name=model_name, module_path=tmpdir
@@ -203,22 +227,25 @@ def model_steadystate_module():
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    observables = amici.assignmentRules2observables(
+    observables = amici.assignment_rules_to_observables(
         sbml_importer.sbml,
         filter_function=lambda variable: variable.getId().startswith(
             "observable_"
         )
         and not variable.getId().endswith("_sigma"),
+        as_dict=True,
     )
+    observables[
+        "observable_x1withsigma"
+    ].sigma = "observable_x1withsigma_sigma"
 
     module_name = "test_model_steadystate_scaled"
     with TemporaryDirectory(prefix=module_name) as outdir:
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
             constant_parameters=["k0"],
-            sigmas={"observable_x1withsigma": "observable_x1withsigma_sigma"},
+            observation_model=list(observables.values()),
         )
 
         yield amici.import_model_module(
@@ -361,9 +388,7 @@ def test_presimulation_events_and_sensitivities(tempdir):
     xx = 0
     xx' = piecewise(k_pre, time < 0, k_main)
 
-    # this will trigger twice, once in presimulation
-    # and once in the main simulation
-    at time >= -1 , t0=false: some_time = some_time + bolus
+    at time < -1 , t0=false: some_time = some_time + bolus
     """,
         model_name=model_name,
         output_dir=tempdir,
@@ -395,22 +420,10 @@ def test_presimulation_events_and_sensitivities(tempdir):
 
         assert rdata.status == amici.AMICI_SUCCESS
         assert_allclose(
-            rdata.by_id("some_time"), np.array([0, 1, 2]) + 2.1, atol=1e-14
+            rdata.by_id("some_time"), np.array([0, 1, 2]) + 1.1, atol=1e-14
         )
 
-        if sensi_method == amici.SensitivityMethod.forward:
-            model.requireSensitivitiesForAllParameters()
-        else:
-            # FIXME ASA with events:
-            #   https://github.com/AMICI-dev/AMICI/pull/1539
-            model.setParameterList(
-                [
-                    i
-                    for i, p in enumerate(model.getParameterIds())
-                    if p != "bolus"
-                ]
-            )
-
+        model.requireSensitivitiesForAllParameters()
         check_derivatives(
             model,
             solver,
@@ -545,36 +558,27 @@ def model_test_likelihoods(tempdir):
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    # define observables
-    observables = {
-        "o1": {"formula": "x1"},
-        "o2": {"formula": "10^x1"},
-        "o3": {"formula": "10^x1"},
-        "o4": {"formula": "x1"},
-        "o5": {"formula": "10^x1"},
-        "o6": {"formula": "10^x1"},
-        "o7": {"formula": "x1"},
-    }
-
-    # define different noise models
-    noise_distributions = {
-        "o1": "normal",
-        "o2": "log-normal",
-        "o3": "log10-normal",
-        "o4": "laplace",
-        "o5": "log-laplace",
-        "o6": "log10-laplace",
-        "o7": lambda str_symbol: f"Abs({str_symbol} - m{str_symbol}) "
-        f"/ sigma{str_symbol}",
-    }
+    # define observation model
+    observation_model = [
+        MC("o1", formula="x1", noise_distribution="normal"),
+        MC("o2", formula="10^x1", noise_distribution="log-normal"),
+        MC("o3", formula="10^x1", noise_distribution="log10-normal"),
+        MC("o4", formula="x1", noise_distribution="laplace"),
+        MC("o5", formula="10^x1", noise_distribution="log-laplace"),
+        MC("o6", formula="10^x1", noise_distribution="log10-laplace"),
+        MC(
+            "o7",
+            formula="x1",
+            noise_distribution=lambda str_symbol: f"Abs({str_symbol} - m{str_symbol}) / sigma{str_symbol}",
+        ),
+    ]
 
     module_name = "model_test_likelihoods"
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=tempdir,
-        observables=observables,
         constant_parameters=["k0"],
-        noise_distributions=noise_distributions,
+        observation_model=observation_model,
     )
 
     yield amici.import_model_module(
@@ -653,21 +657,16 @@ def test_likelihoods_error():
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    # define observables
-    observables = {"o1": {"formula": "x1"}}
-
-    # define different noise models
-    noise_distributions = {"o1": "nörmal"}
-
     module_name = "test_likelihoods_error"
     outdir = "test_likelihoods_error"
     with pytest.raises(ValueError):
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
             constant_parameters=["k0"],
-            noise_distributions=noise_distributions,
+            observation_model=[
+                MC("o1", formula="x1", noise_distribution="nörmal")
+            ],
         )
 
 
@@ -1126,3 +1125,77 @@ def test_t0(tempdir):
     solver = model.getSolver()
     rdata = amici.runAmiciSimulation(model, solver)
     assert rdata.x == [[2.0]], rdata.x
+
+
+@skip_on_valgrind
+def test_contains_periodic_subexpression():
+    """Test that periodic subexpressions are detected."""
+    from amici.import_utils import contains_periodic_subexpression as cps
+
+    t = sp.Symbol("t")
+
+    assert cps(t, t) is False
+    assert cps(sp.sin(t), t) is True
+    assert cps(sp.cos(t), t) is True
+    assert cps(t + sp.sin(t), t) is True
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("compute_conservation_laws", [True, False])
+def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
+    """Check that dynamic expressions for initial assignments are only
+    evaluated at t=t0."""
+    from amici.antimony_import import antimony2sbml
+    from amici.import_utils import amici_time_symbol
+
+    ant_model = """
+    x1' = 1
+    x1 = p0
+    p0 = 1
+    p1 = x1
+    x2 := x1
+    p2 = x2
+    spline1 = 0 # replaced by actual spline below
+    x3' = 0
+    x3 = spline1
+    """
+    sbml_str = antimony2sbml(ant_model)
+    sbml_reader = libsbml.SBMLReader()
+    sbml_document = sbml_reader.readSBMLFromString(sbml_str)
+    sbml_model = sbml_document.getModel()
+
+    spline = amici.splines.CubicHermiteSpline(
+        sbml_id="spline1",
+        nodes=[0, 1, 2],
+        values_at_nodes=[3, 4, 5],
+    )
+    spline.add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spline1").setConstant(False)
+
+    si = SbmlImporter(sbml_model, from_file=False)
+    de_model = si._build_ode_model(
+        observation_model=[
+            MC("obs_p1", formula="p1"),
+            MC("obs_p2", formula="p2"),
+        ],
+        compute_conservation_laws=compute_conservation_laws,
+    )
+    # "species", because the initial assignment expression is time-dependent
+    assert symbol_with_assumptions("p2") in si.symbols[SymbolId.SPECIES].keys()
+    # "species", because differential state
+    assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
+
+    assert "p0" in [str(p.get_id()) for p in de_model.parameters()]
+    assert "p1" not in [str(p.get_id()) for p in de_model.parameters()]
+    assert "p2" not in [str(p.get_id()) for p in de_model.parameters()]
+
+    assert list(de_model.sym("x_rdata")) == [
+        symbol_with_assumptions("p2"),
+        symbol_with_assumptions("x1"),
+        symbol_with_assumptions("x3"),
+    ]
+    assert list(de_model.eq("x0")) == [
+        symbol_with_assumptions("p0"),
+        symbol_with_assumptions("p0"),
+        amici_time_symbol * 1.0 + 3.0,
+    ]

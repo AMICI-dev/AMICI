@@ -7,6 +7,8 @@ import sys
 import amici
 import pytest
 from pathlib import Path
+
+from amici import MeasurementChannel
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 
@@ -30,7 +32,7 @@ def sbml_example_presimulation_module():
 
     constant_parameters = ["DRUG_0", "KIN_0"]
 
-    observables = amici.assignmentRules2observables(
+    observables = amici.assignment_rules_to_observables(
         sbml_importer.sbml,  # the libsbml model object
         filter_function=lambda variable: variable.getName() == "pPROT_obs",
     )
@@ -41,7 +43,7 @@ def sbml_example_presimulation_module():
             model_name=module_name,
             output_dir=outdir,
             verbose=False,
-            observables=observables,
+            observation_model=observables,
             constant_parameters=constant_parameters,
         )
 
@@ -78,7 +80,7 @@ def pysb_example_presimulation_module():
             model,
             outdir,
             verbose=True,
-            observables=["pPROT_obs"],
+            observation_model=[MeasurementChannel("pPROT_obs")],
             constant_parameters=constant_parameters,
         )
 

@@ -24,14 +24,13 @@ jobs:
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
-
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 20
 
@@ -99,16 +98,16 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.12" ]
-        extract_subexpressions: ["true", "false"]
+        extract_subexpressions: ["false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 20
 

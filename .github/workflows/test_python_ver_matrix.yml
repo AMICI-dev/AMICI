@@ -1,11 +1,5 @@
 name: Python Tests
 on:
-  push:
-    branches:
-      - main
-
-  pull_request:
-    branches:
   workflow_dispatch:
   merge_group:
   schedule:
@@ -37,13 +31,14 @@ jobs:
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 20
+        lfs: true
 
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies

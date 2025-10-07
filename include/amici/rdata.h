@@ -468,19 +468,6 @@ class ReturnData : public ModelDimensions {
      */
     int status = AMICI_NOT_RUN;
 
-    /**
-     * @brief Number of state variables.
-     *
-     * (alias `nx_rdata`, kept for backward compatibility)
-     */
-    int nx{0};
-
-    /**
-     * Number of state variables in the unaugmented system
-     * (alias nxtrue_rdata, kept for backward compatibility)
-     */
-    int nxtrue{0};
-
     /** Number of parameters w.r.t. which sensitivities were requested */
     int nplist{0};
 
@@ -642,26 +629,20 @@ class ReturnData : public ModelDimensions {
     template <class T>
     void
     storeJacobianAndDerivativeInReturnData(T const& problem, Model& model) {
-        auto simulation_state = problem.getFinalSimulationState();
-        model.setModelState(simulation_state.state);
-
+        auto const& simulation_state = problem.getFinalSimulationState();
+        model.setModelState(simulation_state.mod);
+        auto const& sol = simulation_state.sol;
         sundials::Context sunctx;
         AmiVector xdot(nx_solver, sunctx);
         if (!this->xdot.empty() || !this->J.empty())
-            model.fxdot(
-                simulation_state.t, simulation_state.x, simulation_state.dx,
-                xdot
-            );
+            model.fxdot(sol.t, sol.x, sol.dx, xdot);
 
         if (!this->xdot.empty())
             writeSlice(xdot, this->xdot);
 
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver, sunctx);
-            model.fJ(
-                simulation_state.t, 0.0, simulation_state.x,
-                simulation_state.dx, xdot, J
-            );
+            model.fJ(sol.t, 0.0, sol.x, sol.dx, xdot, J);
             // CVODES uses colmajor, so we need to transform to rowmajor
             for (int ix = 0; ix < model.nx_solver; ix++)
                 for (int jx = 0; jx < model.nx_solver; jx++)
@@ -674,13 +655,11 @@ class ReturnData : public ModelDimensions {
      * @brief Residual function
      * @param it time index
      * @param model model that was used for forward/backward simulation
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance containing observable data
      */
-    void fres(
-        int it, Model& model, SimulationState const& simulation_state,
-        ExpData const& edata
-    );
+    void
+    fres(int it, Model& model, SolutionState const& sol, ExpData const& edata);
 
     /**
      * @brief Chi-squared function
@@ -693,25 +672,21 @@ class ReturnData : public ModelDimensions {
      * @brief Residual sensitivity function
      * @param it time index
      * @param model model that was used for forward/backward simulation
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol solution state the timepoint `it`
      * @param edata ExpData instance containing observable data
      */
-    void fsres(
-        int it, Model& model, SimulationState const& simulation_state,
-        ExpData const& edata
-    );
+    void
+    fsres(int it, Model& model, SolutionState const& sol, ExpData const& edata);
 
     /**
      * @brief Fisher information matrix function
      * @param it time index
      * @param model model that was used for forward/backward simulation
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance containing observable data
      */
-    void fFIM(
-        int it, Model& model, SimulationState const& simulation_state,
-        ExpData const& edata
-    );
+    void
+    fFIM(int it, Model& model, SolutionState const& sol, ExpData const& edata);
 
     /**
      * @brief Set likelihood, state variables, outputs and respective
@@ -755,12 +730,11 @@ class ReturnData : public ModelDimensions {
      * the model state was set appropriately
      * @param it timepoint index
      * @param model model that was used in forward solve
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
     void getDataOutput(
-        int it, Model& model, SimulationState const& simulation_state,
-        ExpData const* edata
+        int it, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
@@ -768,57 +742,51 @@ class ReturnData : public ModelDimensions {
      * expects that the model state was set appropriately
      * @param it index of current timepoint
      * @param model model that was used in forward solve
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
     void getDataSensisFSA(
-        int it, Model& model, SimulationState const& simulation_state,
-        ExpData const* edata
+        int it, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
      * @brief Extracts output information for events, expects that the model
      * state was set appropriately
-     * @param t event timepoint
      * @param rootidx information about which roots fired
      * (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
     void getEventOutput(
-        realtype t, std::vector<int> const& rootidx, Model& model,
-        SimulationState const& simulation_state, ExpData const* edata
+        std::vector<int> const& rootidx, Model& model, SolutionState const& sol,
+        ExpData const* edata
     );
 
     /**
      * @brief Extracts event information for forward sensitivity analysis,
      * expects the model state was set appropriately
      * @param ie index of event type
-     * @param t event timepoint
      * @param model model that was used in forward solve
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
     void getEventSensisFSA(
-        int ie, realtype t, Model& model,
-        SimulationState const& simulation_state, ExpData const* edata
+        int ie, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
      * @brief Updates contribution to likelihood from quadratures (xQB),
      * if preequilibration was run in adjoint mode
      * @param model model that was used for forward/backward simulation
-     * @param preeq SteadyStateProblem for preequilibration
-     * @param preeq_bwd SteadyStateBackwardProblem for preequilibration
+     * @param sx0 State sensitivities at pre-equilibration steady state
+     * @param xB Adjoint state from pre-equilibration.
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * of preequilibration
-     * @param xQB vector with quadratures from adjoint computation
      */
     void handleSx0Backward(
-        Model const& model, SteadystateProblem const& preeq,
-        SteadyStateBackwardProblem const* preeq_bwd,
-        std::vector<realtype>& llhS0, AmiVector& xQB
+        Model const& model, AmiVectorArray const& sx0, AmiVector const& xB,
+        std::vector<realtype>& llhS0
     ) const;
 
     /**
@@ -826,13 +794,13 @@ class ReturnData : public ModelDimensions {
      * (llhS0), if no preequilibration was run or if forward sensitivities were
      * used
      * @param model model that was used for forward/backward simulation
-     * @param simulation_state simulation state the timepoint `it`
+     * @param sol Solution state the timepoint `it`
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * @param xB vector with final adjoint state
      * (excluding conservation laws)
      */
     void handleSx0Forward(
-        Model const& model, SimulationState const& simulation_state,
+        Model const& model, SolutionState const& sol,
         std::vector<realtype>& llhS0, AmiVector const& xB
     ) const;
 };

@@ -252,6 +252,20 @@ template <class T> bool is_equal(T const& a, T const& b) {
     return true;
 }
 
+/**
+ * @brief Check whether the value of a Heaviside function differs for the two
+ * arguments.
+ *
+ * Assumes H(x) = (x >= 1 ? 1 : 0).
+ *
+ * @param a First value
+ * @param b Second value
+ * @return H(a) != H(b).
+ */
+template <typename T> bool heaviside_differs(T a, T b) {
+    return (a < T{0} && b >= T{0}) || (a >= T{0} && b < T{0});
+}
+
 #ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
 /** Tracks elapsed CPU time using boost::chrono::thread_clock. */
 class CpuTimer {

@@ -2,7 +2,7 @@ Welcome to AMICI's documentation!
 =================================
 
 
-.. image:: https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/AMICI-dev/AMICI/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/AMICI-dev/AMICI
    :alt: Code coverage
 .. image:: https://readthedocs.org/projects/amici/badge/?version=latest
@@ -33,7 +33,6 @@ Welcome to AMICI's documentation!
 
 .. include:: PYTHON.rst
 .. include:: CPP.rst
-.. include:: MATLAB.rst
 
 .. toctree::
    :maxdepth: 2

@@ -1,0 +1,5 @@
+#define du_dsp1 dwdp[0]
+#define du_dsp2 dwdp[1]
+#define du_dsp3 dwdp[2]
+#define du_dsp4 dwdp[3]
+#define du_dsp5 dwdp[4]

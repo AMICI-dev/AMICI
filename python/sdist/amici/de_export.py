@@ -47,7 +47,6 @@ from ._codegen.model_class import (
     get_sunindex_extern_declaration,
     get_model_override_implementation,
     get_sunindex_override_implementation,
-    get_state_independent_event_intializer,
 )
 from ._codegen.template import apply_template
 from .cxxcodeprinter import (
@@ -243,15 +242,13 @@ class DEExporter:
     @log_execution_time("generating cpp code", logger)
     def generate_model_code(self) -> None:
         """
-        Generates the native C++ code for the loaded model and a Matlab
-        script that can be run to compile a mex file from the C++ code
+        Generates the model code (Python package + C++ extension).
         """
         with _monkeypatched(
             sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
         ):
             self._prepare_model_folder()
             self._generate_c_code()
-            self._generate_m_code()
 
     @log_execution_time("compiling cpp code", logger)
     def compile_model(self) -> None:
@@ -320,41 +317,6 @@ class DEExporter:
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
         )
 
-    def _generate_m_code(self) -> None:
-        """
-        Create a Matlab script for compiling code files to a mex file
-        """
-
-        # Second order code is not yet implemented. Once this is done,
-        # those variables will have to be replaced by
-        # "self.model.<var>true()", or the corresponding "model.self.o2flag"
-        nxtrue_rdata = self.model.num_states_rdata()
-        nytrue = self.model.num_obs()
-        nztrue = self.model.num_eventobs()
-        o2flag = 0
-
-        lines = [
-            "% This compile script was automatically created from"
-            " Python SBML import.",
-            "% If mex compiler is set up within MATLAB, it can be run"
-            " from MATLAB ",
-            "% in order to compile a mex-file from the Python"
-            " generated C++ files.",
-            "",
-            f"modelName = '{self.model_name}';",
-            "amimodel.compileAndLinkModel(modelName, '', [], [], [], []);",
-            f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
-            f"{nytrue}, {self.model.num_par()}, "
-            f"{self.model.num_const()}, {nztrue}, {o2flag}, ...",
-            "    [], ['simulate_' modelName '.m'], modelName, ...",
-            "    'lin', 1, 1);",
-        ]
-
-        # write compile script (for mex)
-        compile_script = os.path.join(self.model_path, "compileMexFile.m")
-        with open(compile_script, "w") as fileout:
-            fileout.write("\n".join(lines))
-
     def _get_index(self, name: str) -> dict[sp.Symbol, int]:
         """
         Compute indices for a symbolic array.
@@ -402,7 +364,7 @@ class DEExporter:
         lines = []
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
-            if str(symbol) == "0":
+            if symbol.is_zero:
                 continue
             if str(symbol_name) == "":
                 raise ValueError(f'{name} contains a symbol called ""')
@@ -435,7 +397,7 @@ class DEExporter:
         ):
             # Not required. Will create empty function body.
             equations = sp.Matrix()
-        elif function == "create_splines":
+        elif function in ("create_splines", "explicit_roots"):
             # nothing to do
             pass
         else:
@@ -444,6 +406,8 @@ class DEExporter:
         # function body
         if function == "create_splines":
             body = self._get_create_splines_body()
+        elif function == "explicit_roots":
+            body = self._get_explicit_roots_body()
         else:
             body = self._get_function_body(function, equations)
         if not body:
@@ -457,25 +421,10 @@ class DEExporter:
         else:
             lines = []
 
-        # function header
-        lines.extend(
-            [
-                '#include "amici/symbolic_functions.h"',
-                '#include "amici/defines.h"',
-                '#include "sundials/sundials_types.h"',
-                "",
-                "#include <gsl/gsl-lite.hpp>",
-                "#include <algorithm>",
-                "",
-            ]
-        )
-        if function == "create_splines":
-            lines += [
-                '#include "amici/splinefunctions.h"',
-                "#include <vector>",
-            ]
-
         func_info = self.functions[function]
+
+        # function header
+        lines.extend(func_info.header)
 
         # extract symbols that need definitions from signature
         # don't add includes for files that won't be generated.
@@ -821,10 +770,11 @@ class DEExporter:
             function in self.model.sym_names()
             and function not in non_unique_id_symbols
         ):
-            if function in sparse_functions:
-                symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
-            else:
-                symbols = self.model.sym(function)
+            symbols = (
+                self.model.sparsesym(function)
+                if function in sparse_functions
+                else self.model.sym(function)
+            )
 
             if function in ("w", "dwdw", "dwdx", "dwdp"):
                 # Split into a block of static and dynamic expressions.
@@ -962,6 +912,37 @@ class DEExporter:
 
         body.append("};")
         return ["    " + line for line in body]
+
+    def _get_explicit_roots_body(self) -> list[str]:
+        events = self.model.events()
+        lines = []
+        constant_syms = set(self.model.sym("k")) | set(self.model.sym("p"))
+
+        for event_idx, event in enumerate(events):
+            if not (
+                tigger_times := {
+                    tt
+                    for tt in event.get_trigger_times()
+                    if tt.free_symbols.issubset(constant_syms)
+                }
+            ):
+                continue
+
+            line = (
+                "    {"
+                + ", ".join(
+                    self._code_printer.doprint(tt) for tt in tigger_times
+                )
+                + "},"
+            )
+            if event_idx == len(events) - 1:
+                line = line[:-1]  # remove trailing comma for last event
+            lines.append(line)
+
+        if not lines:
+            return []
+
+        return ["    return {", *(" " * 4 + line for line in lines), "    };"]
 
     def _write_wrapfunctions_cpp(self) -> None:
         """
@@ -1113,9 +1094,6 @@ class DEExporter:
             ),
             "EVENT_LIST_INITIALIZER": event_initializer_list(),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
-            "STATE_INDEPENDENT_EVENTS": get_state_independent_event_intializer(
-                self.model.events()
-            ),
             "ID": ", ".join(
                 str(float(isinstance(s, DifferentialState)))
                 for s in self.model.states()

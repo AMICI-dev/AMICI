@@ -29,7 +29,7 @@ RUN adduser --disabled-password \
     ${NB_USER}
 USER ${NB_USER}
 RUN python3 -m pip install --upgrade build wheel setuptools pip && \
-    python3 -m pip install --no-cache-dir notebook jupyterlab jupyterhub jax[cpu]
+    python3 -m pip install --no-cache-dir notebook jupyterlab jupyterhub jax[cpu] antimony
 # END BINDER
 
 # BEGIN BINDER

@@ -34,6 +34,7 @@ using namespace amici;
 %ignore getObservableSensitivity;
 %ignore getExpression;
 %ignore initEvents;
+%ignore reinit_events;
 %ignore initialize;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
@@ -98,6 +99,8 @@ using namespace amici;
 %ignore get_steadystate_mask_av;
 
 %newobject amici::Model::clone;
+
+%rename(create_solver) amici::Model::getSolver;
 
 %extend amici::Model {
 %pythoncode %{

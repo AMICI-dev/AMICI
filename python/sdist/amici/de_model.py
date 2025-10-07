@@ -145,7 +145,7 @@ class DEModel:
         model
 
     :ivar _sparsesyms:
-        carries linear list of all symbolic identifiers for sparsified
+        carries linear list of all symbols for sparsified
         variables
 
     :ivar _colptrs:
@@ -195,7 +195,7 @@ class DEModel:
         res and FIM make sense.
 
     :ivar _static_indices:
-        dict of lists list of indices of static variables for different
+        dict of lists of indices of static variables for different
         model entities.
 
     :ivar _z2event:
@@ -257,7 +257,9 @@ class DEModel:
         self._vals: dict[str, list[sp.Expr]] = dict()
         self._names: dict[str, list[str]] = dict()
         self._syms: dict[str, sp.Matrix | list[sp.Matrix]] = dict()
-        self._sparsesyms: dict[str, list[str] | list[list[str]]] = dict()
+        self._sparsesyms: dict[
+            str, list[sp.Symbol] | list[list[sp.Symbol]]
+        ] = dict()
         self._colptrs: dict[str, list[int] | list[list[int]]] = dict()
         self._rowvals: dict[str, list[int] | list[list[int]]] = dict()
 
@@ -455,14 +457,6 @@ class DEModel:
             )
             self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
-        # replace rateOf-instances in x0 by xdot equation
-        for i_state in range(len(self.eq("x0"))):
-            new, replacement = self._eqs["x0"][i_state].replace(
-                rate_of_func, get_rate, map=True
-            )
-            if replacement:
-                self._eqs["x0"][i_state] = new
-
         # replace rateOf-instances in w by xdot equation
         #  here we may need toposort, as xdot may depend on w
         made_substitutions = False
@@ -509,6 +503,30 @@ class DEModel:
             self._expressions = [self._expressions[i] for i in new_order]
             self._syms["w"] = sp.Matrix(topo_expr_syms)
             self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
+
+        # replace rateOf-instances in x0 by xdot equation
+        # indices of state variables whose x0 was modified
+        changed_indices = []
+        for i_state in range(len(self.eq("x0"))):
+            new, replacement = self._eqs["x0"][i_state].replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                self._eqs["x0"][i_state] = new
+                changed_indices.append(i_state)
+        if changed_indices:
+            # Replace any newly introduced state variables
+            #  by their x0 expressions.
+            # Also replace any newly introduced `w` symbols by their
+            #  expressions (after `w` was toposorted above).
+            subs = toposort_symbols(
+                dict(zip(self.sym("x_rdata"), self.eq("x0"), strict=True))
+            )
+            subs = dict(zip(self._syms["w"], self.eq("w"), strict=True)) | subs
+            for i_state in changed_indices:
+                self._eqs["x0"][i_state] = smart_subs_dict(
+                    self._eqs["x0"][i_state], subs
+                )
 
         for component in chain(
             self.observables(),
@@ -619,11 +637,11 @@ class DEModel:
         variables.
 
         :param state:
-            symbolic identifier of the state that should be replaced by
+            Symbol of the state that should be replaced by
             the conservation law (:math:`x_j`)
 
         :param total_abundance:
-            symbolic identifier of the total abundance (:math:`T/a_j`)
+            Symbol of the total abundance (:math:`T/a_j`)
 
         :param coefficients:
             Dictionary of coefficients {x_i: a_i}
@@ -802,8 +820,10 @@ class DEModel:
         :return:
             number of event symbols (length of the root vector in AMICI)
         """
+        constant_syms = set(self.sym("k")) | set(self.sym("p"))
         return sum(
-            not event.triggers_at_fixed_timepoint() for event in self.events()
+            not event.has_explicit_trigger_times(constant_syms)
+            for event in self.events()
         )
 
     def sym(self, name: str) -> sp.Matrix:
@@ -815,16 +835,18 @@ class DEModel:
             name of the symbolic variable
 
         :return:
-            matrix of symbolic identifiers
+            matrix of symbols
         """
         if name not in self._syms:
             self._generate_symbol(name)
 
         return self._syms[name]
 
-    def sparsesym(self, name: str, force_generate: bool = True) -> list[str]:
+    def sparsesym(
+        self, name: str, force_generate: bool = True
+    ) -> list[sp.Symbol]:
         """
-        Returns (and constructs if necessary) the sparsified identifiers for
+        Returns (and constructs if necessary) the sparsified symbols for
         a sparsified symbolic variable.
 
         :param name:
@@ -834,7 +856,7 @@ class DEModel:
             whether the symbols should be generated if not available
 
         :return:
-            linearized Matrix containing the symbolic identifiers
+            linearized Matrix containing the symbols
         """
         if name not in sparse_functions:
             raise ValueError(f"{name} is not marked as sparse")
@@ -1102,7 +1124,7 @@ class DEModel:
 
     def _generate_symbol(self, name: str) -> None:
         """
-        Generates the symbolic identifiers for a symbolic variable
+        Generates the symbols for a symbolic variable
 
         :param name:
             name of the symbolic variable
@@ -1308,12 +1330,17 @@ class DEModel:
             self.add_component(root)
 
         # re-order events - first those that require root tracking, then the others
+        constant_syms = set(self.sym("k")) | set(self.sym("p"))
         self._events = list(
             chain(
                 itertools.filterfalse(
-                    Event.triggers_at_fixed_timepoint, self._events
+                    lambda e: e.has_explicit_trigger_times(constant_syms),
+                    self._events,
                 ),
-                filter(Event.triggers_at_fixed_timepoint, self._events),
+                filter(
+                    lambda e: e.has_explicit_trigger_times(constant_syms),
+                    self._events,
+                ),
             )
         )
 
@@ -1656,16 +1683,14 @@ class DEModel:
                 sp.zeros(self.num_eventobs(), 1) for _ in self._events
             ]
             event_ids = [e.get_id() for e in self._events]
-            # TODO: get rid of this stupid 1-based indexing as soon as we can
-            #  drop the matlab interface
             z2event = [
-                event_ids.index(event_obs.get_event()) + 1
+                event_ids.index(event_obs.get_event())
                 for event_obs in self._event_observables
             ]
             for (iz, ie), event_obs in zip(
                 enumerate(z2event), self._event_observables, strict=True
             ):
-                event_observables[ie - 1][iz] = event_obs.get_val()
+                event_observables[ie][iz] = event_obs.get_val()
 
             self._eqs[name] = event_observables
             self._z2event = z2event
@@ -1691,7 +1716,7 @@ class DEModel:
                 dtaudx = self.eq("dtaudx")
                 for ie in range(self.num_events()):
                     for iz in range(self.num_eventobs()):
-                        if ie != self._z2event[iz] - 1:
+                        if ie != self._z2event[iz]:
                             continue
                         dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
                         self._eqs[name][ie][iz, :] += dzdt * -dtaudx[ie]
@@ -1705,7 +1730,7 @@ class DEModel:
                 )
                 # match event observables to root function
                 for iz in range(self.num_eventobs()):
-                    if ie == self._z2event[iz] - 1:
+                    if ie == self._z2event[iz]:
                         val[iz, :] = self.eq(name.replace("rz", "root"))[ie, :]
                 eq_events.append(val)
 
@@ -1912,9 +1937,46 @@ class DEModel:
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
             xs_in_sigma = {}
-            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name], strict=True):
-                yz_free_syms = eq_yz.free_symbols
+            for i, (sym_yz, eq_sigma_yz) in enumerate(
+                zip(
+                    syms_yz,
+                    self._eqs[name],
+                    strict=True,
+                )
+            ):
+                yz_free_syms = eq_sigma_yz.free_symbols
                 if tmp := {x for x in syms_x if x in yz_free_syms}:
+                    # Can we replace x symbols by an equivalent observable?
+                    #  (currently, only the matching observable is supported)
+                    x_to_eliminate = next(iter(tmp))
+                    eq_yz = (
+                        self.eq("y")[i]
+                        if name == "sigmay"
+                        else self.eq("z")[self._z2event[i]][i]
+                    )
+
+                    try:
+                        # solve for the next best x symbol and substitute
+                        #  (maybe try another one if we fail?)
+                        replacement = sp.solve(
+                            sp.Eq(sym_yz, eq_yz), x_to_eliminate
+                        )
+                    except NotImplementedError:
+                        # can't solve
+                        replacement = []
+
+                    if len(replacement) == 1:
+                        self._eqs[name][i] = self._eqs[name][i].subs(
+                            x_to_eliminate, replacement[0]
+                        )
+                        if not any(
+                            x in self._eqs[name][i].free_symbols
+                            for x in syms_x
+                        ):
+                            # successfully eliminated x symbols
+                            continue
+
+                    # Report all x symbols that cannot be replaced
                     xs_in_sigma[sym_yz] = tmp
             if xs_in_sigma:
                 msg = ", ".join(
@@ -2125,16 +2187,15 @@ class DEModel:
             the variable symbols if the variable is part of the signature and
             the variable equations otherwise.
         """
-        # dwdx and dwdp will be dynamically computed and their ordering
-        # within a column may differ from the initialization of symbols here,
-        # so those are not safe to use. Not removing them from signature as
-        # this would break backwards compatibility.
-        if var_in_function_signature(
-            name, varname, self.is_ode()
-        ) and varname not in [
-            "dwdx",
-            "dwdp",
-        ]:
+        if var_in_function_signature(name, varname, self.is_ode()):
+            if varname in [
+                "dwdx",
+                "dwdp",
+            ]:
+                # dwdx and dwdp will be dynamically computed, and their
+                #  ordering within a column may differ from the initialization
+                #  of symbols here, so those are not safe to use.
+                raise AssertionError()
             return self.sym(varname)
         else:
             return self.eq(varname)

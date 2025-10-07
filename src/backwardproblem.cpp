@@ -14,7 +14,7 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     : model_(fwd.model)
     , solver_(fwd.solver)
     , edata_(fwd.edata)
-    , t_(fwd.getTime())
+    , t_(fwd.getFinalTime())
     , discs_main_(fwd.getDiscontinuities())
     , dJydx_(fwd.getAdjointUpdates(*model_, *edata_))
     , dJzdx_(fwd.getDJzdx())
@@ -43,8 +43,6 @@ void BackwardProblem::workBackwardProblem() {
         --it;
     }
 
-    // initialize state vectors, depending on postequilibration
-    model_->initializeB(ws_.xB_, ws_.dxB_, ws_.xQB_, it < model_->nt() - 1);
     ws_.discs_ = discs_main_;
     ws_.nroots_ = compute_nroots(discs_main_, model_->ne, model_->nMaxEvent());
     simulator_.run(
@@ -79,9 +77,6 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-        auto const t0
-            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
-        auto final_state = preeq_problem_->getFinalSimulationState();
 
         // If we need to reinitialize solver states, this won't work yet.
         if (model_->nx_reinit() > 0)
@@ -91,11 +86,45 @@ void BackwardProblem::workBackwardProblem() {
                 "non-constant states is not yet implemented. Stopping."
             );
 
-        // only preequilibrations needs a reInit, postequilibration does not
-        preeq_solver->updateAndReinitStatesAndSensitivities(model_);
+        auto const t0
+            = std::isnan(model_->t0Preeq()) ? model_->t0() : model_->t0Preeq();
 
-        preeq_problem_bwd_.emplace(*solver_, *model_, final_state, &ws_);
-        preeq_problem_bwd_->run(t0);
+        auto const& preeq_result = preeq_problem_->get_result();
+
+        // If there were no discontinuities or no simulation was performed,
+        // we can use the steady-state shortcuts.
+        // If not we need to do the regular backward integration.
+        if (preeq_problem_->getSteadyStateStatus()[1]
+                == SteadyStateStatus::not_run
+            || preeq_result.discs.empty()) {
+            preeq_solver->updateAndReinitStatesAndSensitivities(model_);
+
+            auto preeq_final_fwd_state = preeq_result.final_state_;
+            preeq_problem_bwd_.emplace(
+                *solver_, *model_, preeq_final_fwd_state.sol, &ws_
+            );
+            preeq_problem_bwd_->run(t0);
+        } else if (preeq_problem_->getSteadyStateStatus()[1]
+                   != SteadyStateStatus::not_run) {
+            // backward integration of the pre-equilibration problem
+            // (only if preequilibration was done via simulation)
+            ws_.discs_ = preeq_result.discs;
+            ws_.nroots_
+                = compute_nroots(ws_.discs_, model_->ne, model_->nMaxEvent());
+            EventHandlingBwdSimulator preeq_simulator(
+                model_, preeq_solver, &ws_
+            );
+            preeq_simulator.run(
+                preeq_result.final_state_.sol.t,
+                preeq_result.initial_state_.sol.t, -1, {}, &dJydx_, &dJzdx_
+            );
+        } else {
+            Expects(
+                false
+                && "Unhandled preequilibration case in "
+                   "BackwardProblem::workBackwardProblem()"
+            );
+        }
     }
 }
 
@@ -104,7 +133,7 @@ void BackwardProblem::handlePostequilibration() {
         return;
     }
 
-    // initialize xB - only process the postequilibration timepoints
+    // initialize xB - only process the post-equilibration timepoints
     for (int it = 0; it < model_->nt(); it++) {
         if (std::isinf(model_->getTimepoint(it))) {
             for (int ix = 0; ix < model_->nxtrue_solver; ix++)
@@ -112,9 +141,39 @@ void BackwardProblem::handlePostequilibration() {
         }
     }
 
-    auto final_state = posteq_problem_->getFinalSimulationState();
-    posteq_problem_bwd_.emplace(*solver_, *model_, final_state, &ws_);
-    posteq_problem_bwd_->run(model_->t0());
+    auto const& posteq_result = posteq_problem_->get_result();
+
+    // If there were no discontinuities or no simulation was performed,
+    // we can use the steady-state shortcuts.
+    // If not we need to do the regular backward integration.
+    if (posteq_problem_->getSteadyStateStatus()[1] == SteadyStateStatus::not_run
+        || posteq_result.discs.empty()) {
+
+        auto final_state = posteq_problem_->getFinalSimulationState();
+        posteq_problem_bwd_.emplace(*solver_, *model_, final_state.sol, &ws_);
+        posteq_problem_bwd_->run(model_->t0());
+
+        // re-initialize state vectors for main simulation
+        model_->initializeB(ws_.xB_, ws_.dxB_, ws_.xQB_, true);
+    } else if (posteq_problem_->getSteadyStateStatus()[1]
+               != SteadyStateStatus::not_run) {
+        // backward integration of the post-equilibration problem
+        // (only if post-equilibration was done via simulation)
+        ws_.discs_ = posteq_result.discs;
+        ws_.nroots_
+            = compute_nroots(ws_.discs_, model_->ne, model_->nMaxEvent());
+        EventHandlingBwdSimulator posteq_simulator(model_, solver_, &ws_);
+        posteq_simulator.run(
+            posteq_result.final_state_.sol.t,
+            posteq_result.initial_state_.sol.t, -1, {}, &dJydx_, &dJzdx_
+        );
+    } else {
+        Expects(
+            false
+            && "Unhandled post-equilibration case in "
+               "BackwardProblem::handlePostequilibration()"
+        );
+    }
 }
 
 void EventHandlingBwdSimulator::handleEventB(
@@ -203,7 +262,7 @@ BwdSimWorkspace::BwdSimWorkspace(
     , xQB_(model_->nJ * model_->nplist(), solver->getSunContext()) {}
 
 void EventHandlingBwdSimulator::run(
-    realtype t_start, realtype t_end, realtype it,
+    realtype const t_start, realtype const t_end, realtype it,
     std::vector<realtype> const& timepoints, std::vector<realtype> const* dJydx,
     std::vector<realtype> const* dJzdx
 ) {
@@ -283,21 +342,16 @@ void computeQBfromQ(
     // set to zero first, as multiplication adds to existing value
     yQB.zero();
     // yQB += dxdotdp * yQ
-    if (model.pythonGenerated) {
-        // fill dxdotdp with current values
-        auto const& plist = model.getParameterList();
-        model.fdxdotdp(state.t, state.x, state.dx);
-        model.get_dxdotdp_full().multiply(
-            yQB.getNVector(), yQ.getNVector(), plist, true
-        );
-    } else {
-        for (int ip = 0; ip < model.nplist(); ++ip)
-            yQB[ip] = dotProd(yQ, model.get_dxdotdp()[ip]);
-    }
+    // fill dxdotdp with current values
+    auto const& plist = model.getParameterList();
+    model.fdxdotdp(state.t, state.x, state.dx);
+    model.get_dxdotdp_full().multiply(
+        yQB.getNVector(), yQ.getNVector(), plist, true
+    );
 }
 
 SteadyStateBackwardProblem::SteadyStateBackwardProblem(
-    Solver const& solver, Model& model, SimulationState& final_state,
+    Solver const& solver, Model& model, SolutionState& final_state,
     gsl::not_null<BwdSimWorkspace*> ws
 )
     : xQ_(model.nJ * model.nx_solver, solver.getSunContext())
@@ -310,7 +364,7 @@ SteadyStateBackwardProblem::SteadyStateBackwardProblem(
     , solver_(&solver)
     , ws_(ws) {}
 
-void SteadyStateBackwardProblem::run(realtype t0) {
+void SteadyStateBackwardProblem::run(realtype const t0) {
     newton_solver_.reinitialize();
 
     // initialize quadratures
@@ -318,7 +372,7 @@ void SteadyStateBackwardProblem::run(realtype t0) {
     ws_->xQB_.zero();
 
     // Compute quadratures, track computation time
-    CpuTimer cpu_timer;
+    CpuTimer const cpu_timer;
 
     compute_steady_state_quadrature(t0);
     cpu_timeB_ = cpu_timer.elapsed_milliseconds();
@@ -332,7 +386,9 @@ AmiVector const& SteadyStateBackwardProblem::getAdjointQuadrature() const {
     return ws_->xQB_;
 }
 
-void SteadyStateBackwardProblem::compute_steady_state_quadrature(realtype t0) {
+void SteadyStateBackwardProblem::compute_steady_state_quadrature(
+    realtype const t0
+) {
     // This routine computes the quadratures:
     //     xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
     // As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
@@ -398,7 +454,9 @@ void SteadyStateBackwardProblem::compute_quadrature_by_lin_solve() {
     }
 }
 
-void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
+void SteadyStateBackwardProblem::compute_quadrature_by_simulation(
+    realtype const t0
+) {
     // If the Jacobian is singular, the integral over xB must be computed
     // by usual integration over time, but simplifications can be applied:
     // x is not time-dependent, no forward trajectory is needed.
@@ -408,7 +466,7 @@ void SteadyStateBackwardProblem::compute_quadrature_by_simulation(realtype t0) {
     // xQ was written in getQuadratureByLinSolve() -> set to zero
     xQ_.zero();
 
-    auto sim_solver = std::unique_ptr<Solver>(solver_->clone());
+    auto const sim_solver = std::unique_ptr<Solver>(solver_->clone());
     sim_solver->logger = solver_->logger;
     sim_solver->setSensitivityMethod(SensitivityMethod::none);
     sim_solver->setSensitivityOrder(SensitivityOrder::none);
@@ -453,9 +511,9 @@ void SteadyStateBackwardProblem::run_simulation(Solver const& solver) {
     AmiVector xQBdot(model_->nplist(), solver.getSunContext());
 
     int const convergence_check_frequency = newton_step_conv_ ? 25 : 1;
-    auto max_steps = (solver.getMaxStepsBackwardProblem() > 0)
-                         ? solver.getMaxStepsBackwardProblem()
-                         : solver.getMaxSteps() * 100;
+    auto const max_steps = (solver.getMaxStepsBackwardProblem() > 0)
+                               ? solver.getMaxStepsBackwardProblem()
+                               : solver.getMaxSteps() * 100;
 
     while (true) {
         if (sim_steps % convergence_check_frequency == 0) {

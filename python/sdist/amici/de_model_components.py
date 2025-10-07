@@ -13,6 +13,7 @@ from .import_utils import (
     cast_to_sym,
     generate_measurement_symbol,
     generate_regularization_symbol,
+    contains_periodic_subexpression,
 )
 from .constants import SymbolId
 
@@ -25,7 +26,9 @@ __all__ = [
     "LogLikelihoodZ",
     "LogLikelihoodRZ",
     "ModelQuantity",
+    "NoiseParameter",
     "Observable",
+    "ObservableParameter",
     "Parameter",
     "SigmaY",
     "SigmaZ",
@@ -175,7 +178,7 @@ class ConservationLaw(ModelQuantity):
         :param state_id:
             identifier of the state
 
-        :return: normalized coefficent of the state
+        :return: normalized coefficient of the state
         """
         return self._coefficients.get(state_id, 0.0) / self._ncoeff
 
@@ -403,7 +406,7 @@ class Observable(ModelQuantity):
         value: sp.Expr,
         measurement_symbol: sp.Symbol | None = None,
         transformation: None
-        | (ObservableTransformation) = ObservableTransformation.LIN,
+        | ObservableTransformation = ObservableTransformation.LIN,
     ):
         """
         Create a new Observable instance.
@@ -753,11 +756,18 @@ class Event(ModelQuantity):
         self._use_values_from_trigger_time = use_values_from_trigger_time
 
         # expression(s) for the timepoint(s) at which the event triggers
-        try:
-            self._t_root = sp.solve(self.get_val(), amici_time_symbol)
-        except NotImplementedError:
-            # the trigger can't be solved for `t`
-            self._t_root = []
+        self._t_root = []
+
+        if not contains_periodic_subexpression(
+            self.get_val(), amici_time_symbol
+        ):
+            # `solve` will solve, e.g., sin(t), but will only return [0, pi],
+            #  so we better skip any periodic expressions here
+            try:
+                self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+            except NotImplementedError:
+                # the trigger can't be solved for `t`
+                pass
 
     def get_state_update(
         self, x: sp.Matrix, x_old: sp.Matrix
@@ -828,19 +838,39 @@ class Event(ModelQuantity):
             )
         return self._t_root[0]
 
-    def has_explicit_trigger_times(self) -> bool:
+    def has_explicit_trigger_times(
+        self, allowed_symbols: set[sp.Symbol] | None = None
+    ) -> bool:
         """Check whether the event has explicit trigger times.
 
         Explicit trigger times do not require root finding to determine
         the time points at which the event triggers.
+
+        :param allowed_symbols:
+            The set of symbols that are allowed in the trigger time
+            expressions. If `None`, any symbols are allowed.
+            If empty, only numeric values are allowed.
         """
-        return len(self._t_root) > 0
+        if allowed_symbols is None:
+            return len(self._t_root) > 0
+
+        return len(self._t_root) > 0 and all(
+            t.is_Number or t.free_symbols.issubset(allowed_symbols)
+            for t in self._t_root
+        )
 
     def get_trigger_times(self) -> set[sp.Expr]:
         """Get the time points at which the event triggers.
 
         Returns a set of expressions, which may contain multiple time points
         for events that trigger at multiple time points.
+
+        If the return value is empty, the trigger function cannot be solved
+        for `t`. I.e., the event does not explicitly depend on time,
+        or sympy is unable to solve the trigger function for `t`.
+
+        If the return value is non-empty, it contains expressions for *all*
+        time points at which the event triggers.
         """
         return set(self._t_root)
 

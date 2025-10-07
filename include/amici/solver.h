@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/logging.h"
 #include "amici/misc.h"
+#include "amici/model_state.h"
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
 
@@ -23,12 +24,10 @@ class Solver;
 } // namespace amici
 
 // for serialization friend in Solver
-namespace boost {
-namespace serialization {
+namespace boost::serialization {
 template <class Archive>
 void serialize(Archive& ar, amici::Solver& s, unsigned int version);
-}
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 
@@ -665,6 +664,21 @@ class Solver {
     void writeSolution(
         realtype& t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx
     ) const;
+
+    /**
+     * @brief write solution from forward simulation
+     * @param sol solution state
+     */
+    void writeSolution(SolutionState& sol) const;
+
+    /**
+     * @brief write solution from forward simulation
+     * @param t Time for which to retrieve the solution
+     * (interpolated if necessary). Must be greater than or equal to
+     * the initial timepoint and less than or equal to the current timepoint.
+     * @param sol solution state
+     */
+    void writeSolution(realtype t, SolutionState& sol) const;
 
     /**
      * @brief write solution from backward simulation

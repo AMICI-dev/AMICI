@@ -4,7 +4,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import libsbml
 import numpy as np
 import pandas as pd
 
@@ -43,92 +42,6 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
 
     model_module = import_model_module(model_name, output_dir)
     return model_module.getModel()
-
-
-def create_sbml_model(
-    initial_assignments,
-    parameters,
-    rate_rules,
-    species,
-    events,
-    to_file: str = None,
-):
-    """Create an SBML model from simple definitions.
-
-    See the model definitions and usage in :py:func:`model` for example input.
-
-    The default initial concentration of species is `1.0`. This can currently
-    be changed by specifying an initial assignment.
-    """
-    document = libsbml.SBMLDocument(3, 1)
-    model = document.createModel()
-
-    compartment = model.createCompartment()
-    compartment.setId("compartment")
-    compartment.setConstant(True)
-    compartment.setSize(1)
-    compartment.setSpatialDimensions(3)
-    compartment.setUnits("dimensionless")
-
-    for species_id in species:
-        species = model.createSpecies()
-        species.setId(species_id)
-        species.setCompartment("compartment")
-        species.setConstant(False)
-        species.setSubstanceUnits("dimensionless")
-        species.setBoundaryCondition(False)
-        species.setHasOnlySubstanceUnits(False)
-        species.setInitialConcentration(1.0)
-
-    for target, formula in initial_assignments.items():
-        initial_assignment = model.createInitialAssignment()
-        initial_assignment.setSymbol(target)
-        initial_assignment.setMath(libsbml.parseL3Formula(formula))
-
-    for target, formula in rate_rules.items():
-        rate_rule = model.createRateRule()
-        rate_rule.setVariable(target)
-        rate_rule.setMath(libsbml.parseL3Formula(formula))
-
-    for parameter_id, parameter_value in parameters.items():
-        parameter = model.createParameter()
-        parameter.setId(parameter_id)
-        parameter.setConstant(True)
-        parameter.setValue(parameter_value)
-        parameter.setUnits("dimensionless")
-
-    for event_id, event_def in events.items():
-        event = model.createEvent()
-        event.setId(event_id)
-        event.setName(event_id)
-        event.setUseValuesFromTriggerTime(False)
-        trigger = event.createTrigger()
-        trigger.setMath(libsbml.parseL3Formula(event_def["trigger"]))
-        trigger.setPersistent(True)
-        trigger.setInitialValue(True)
-
-        def create_event_assignment(target, assignment):
-            ea = event.createEventAssignment()
-            ea.setVariable(target)
-            ea.setMath(libsbml.parseL3Formula(assignment))
-
-        if isinstance(event_def["target"], list):
-            for event_target, event_assignment in zip(
-                event_def["target"], event_def["assignment"], strict=True
-            ):
-                create_event_assignment(event_target, event_assignment)
-
-        else:
-            create_event_assignment(
-                event_def["target"], event_def["assignment"]
-            )
-
-    if to_file:
-        libsbml.writeSBMLToFile(document, to_file)
-
-    # Need to return document, else AMICI throws an error.
-    # (possibly due to garbage collection?)
-    return document, model
 
 
 def check_trajectories_without_sensitivities(

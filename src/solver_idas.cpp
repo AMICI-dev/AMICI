@@ -39,6 +39,7 @@ STATIC_ASSERT_EQUAL(amici::AMICI_TOO_MUCH_WORK, IDA_TOO_MUCH_WORK);
 STATIC_ASSERT_EQUAL(amici::AMICI_ERR_FAILURE, IDA_ERR_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_CONV_FAILURE, IDA_CONV_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_LSETUP_FAIL, IDA_LSETUP_FAIL);
+STATIC_ASSERT_EQUAL(amici::AMICI_LINESEARCH_FAIL, IDA_LINESEARCH_FAIL);
 // This does not match the CVODE code, we need separate return values
 STATIC_ASSERT_EQUAL(amici::AMICI_IDAS_CONSTR_FAIL, IDA_CONSTR_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_WARNING, IDA_WARNING);
@@ -222,7 +223,7 @@ void IDASolver::qbinit(int const which, AmiVector const& xQB0) const {
         throw IDAException(status, "IDAQuadInitB");
 }
 
-void IDASolver::rootInit(int ne) const {
+void IDASolver::rootInit(int const ne) const {
     int status = IDARootInit(solver_memory_.get(), ne, froot);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDARootInit");
@@ -300,7 +301,7 @@ void IDASolver::apply_constraints() const {
 
     int status = IDASetConstraints(
         solver_memory_.get(),
-        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+        constraints_.size() > 0 ? constraints_.getNVector() : nullptr
     );
     if (status != IDA_SUCCESS) {
         throw IDAException(status, "IDASetConstraints");
@@ -369,7 +370,7 @@ void IDASolver::setUserData() const {
         throw IDAException(status, "IDASetUserData");
 }
 
-void IDASolver::setUserDataB(int which) const {
+void IDASolver::setUserDataB(int const which) const {
     int status = IDASetUserDataB(solver_memory_.get(), which, &user_data);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetUserDataB");
@@ -394,7 +395,7 @@ void IDASolver::setId(Model const* model) const {
 
     int status = IDASetId(solver_memory_.get(), id);
     if (status != IDA_SUCCESS)
-        throw IDAException(status, "IDASetMaxNumSteps");
+        throw IDAException(status, "IDASetId");
 
     N_VDestroy_Serial(id);
 }
@@ -609,14 +610,14 @@ void IDASolver::getB(int const which) const {
         throw IDAException(status, "IDAGetB");
 }
 
-void IDASolver::getDkyB(realtype const t, int k, int const which) const {
+void IDASolver::getDkyB(realtype const t, int const k, int const which) const {
     int status = IDAGetDky(
         IDAGetAdjIDABmem(solver_memory_.get(), which), t, k, dky_.getNVector()
     );
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetB");
 }
-void IDASolver::getQuadB(int which) const {
+void IDASolver::getQuadB(int const which) const {
     realtype tDummy = 0;
     int status
         = IDAGetQuadB(solver_memory_.get(), which, &tDummy, xQB_.getNVector());
@@ -630,7 +631,9 @@ void IDASolver::getQuad(realtype& t) const {
         throw IDAException(status, "IDAGetQuad");
 }
 
-void IDASolver::getQuadDkyB(realtype const t, int k, int const which) const {
+void IDASolver::getQuadDkyB(
+    realtype const t, int const k, int const which
+) const {
     int status = IDAGetQuadDky(
         IDAGetAdjIDABmem(solver_memory_.get(), which), t, k, xQB_.getNVector()
     );
@@ -709,9 +712,9 @@ void IDASolver::quadSStolerancesB(
 }
 
 void IDASolver::quadSStolerances(
-    realtype const reltolQB, realtype const abstolQB
+    realtype const reltolQ, realtype const abstolQ
 ) const {
-    int status = IDAQuadSStolerances(solver_memory_.get(), reltolQB, abstolQB);
+    int status = IDAQuadSStolerances(solver_memory_.get(), reltolQ, abstolQ);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAQuadSStolerances");
 }
@@ -825,7 +828,7 @@ void IDASolver::calcIC(realtype tout1) const {
         solver_memory_.get(), x_.getNVector(), dx_.getNVector()
     );
     if (status != IDA_SUCCESS)
-        throw IDAException(status, "IDACalcIC");
+        throw IDAException(status, "IDAGetConsistentIC");
 }
 
 void IDASolver::calcICB(int const which, realtype const tout1) const {
@@ -853,9 +856,8 @@ Model const* IDASolver::getModel() const {
         throw AmiException(
             "Solver has not been allocated, information is not available"
         );
-    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
-    auto user_data = static_cast<user_data_type*>(ida_mem->ida_user_data);
-    if (user_data)
+    auto const ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    if (auto user_data = static_cast<user_data_type*>(ida_mem->ida_user_data))
         return user_data->first;
     return nullptr;
 }

@@ -714,11 +714,11 @@ class JAXModel(eqx.Module):
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
                 sigma_obj = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
-                chi2 = jnp.square((ys_obj - m_obj) / sigma_obj)
+                chi2 = jnp.square((m_obj - ys_obj) / sigma_obj)
                 chi2 = jnp.where(ts_mask, chi2, 0.0)
                 output = jnp.sum(chi2)
             else:
-                output = ys_obj - m_obj
+                output = m_obj - ys_obj
                 output = jnp.where(ts_mask, output, 0.0)
         else:
             raise NotImplementedError(f"Return value {ret} not implemented.")

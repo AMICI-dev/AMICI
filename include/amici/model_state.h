@@ -93,7 +93,6 @@ struct ModelStateDerived {
         , dxdotdw_(other.dxdotdw_)
         , dwdx_(other.dwdx_)
         , dwdp_(other.dwdp_)
-        , M_(other.M_)
         , MSparse_(other.MSparse_)
         , dfdx_(other.dfdx_)
         , dxdotdp_full(other.dxdotdp_full)
@@ -106,7 +105,6 @@ struct ModelStateDerived {
         , dtotal_cldx_rdata(other.dtotal_cldx_rdata)
         , dxdotdp(other.dxdotdp)
         , dJydy_(other.dJydy_)
-        , dJydy_matlab_(other.dJydy_matlab_)
         , dJydsigma_(other.dJydsigma_)
         , dJydx_(other.dJydx_)
         , dJydp_(other.dJydp_)
@@ -152,7 +150,6 @@ struct ModelStateDerived {
         dxdotdw_.set_ctx(sunctx_);
         dwdx_.set_ctx(sunctx_);
         dwdp_.set_ctx(sunctx_);
-        M_.set_ctx(sunctx_);
         MSparse_.set_ctx(sunctx_);
         dfdx_.set_ctx(sunctx_);
         dxdotdp_full.set_ctx(sunctx_);
@@ -210,11 +207,11 @@ struct ModelStateDerived {
     /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
     SUNMatrixWrapper dwdp_;
 
-    /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
-    SUNMatrixWrapper M_;
-
-    /** Sparse Mass matrix (dimension: `nx_solver` x `nx_solver`, nnz:
-     * `sum(amici::Model::idlist)`) */
+    /**
+     * Sparse Mass matrix, Python-generated-only
+     *
+     * (dimension: `nx_solver` x `nx_solver`, nnz: `sum(amici::Model::idlist)`)
+     */
     SUNMatrixWrapper MSparse_;
 
     /** JSparse intermediate matrix (dimension: `nx_solver` x `nx_solver`, nnz:
@@ -288,12 +285,6 @@ struct ModelStateDerived {
      * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
      */
     std::vector<SUNMatrixWrapper> dJydy_;
-
-    /** Observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `false` (dimension `nJ` x `ny` x `nytrue` ,
-     * row-major)
-     */
-    std::vector<realtype> dJydy_matlab_;
 
     /** Observable sigma derivative of data likelihood
      * (dimension nJ x ny x nytrue, row-major)
@@ -462,12 +453,11 @@ struct ModelStateDerived {
 };
 
 /**
- * @brief implements an exchange format to store and transfer the state of a
- * simulation at a specific timepoint.
+ * @brief Container for the IVP solution state at a specific timepoint.
  */
-struct SimulationState {
+struct SolutionState {
     /** timepoint */
-    realtype t;
+    realtype t{NAN};
     /**
      * partial state vector, excluding states eliminated from conservation laws
      */
@@ -482,8 +472,35 @@ struct SimulationState {
      * conservation laws
      */
     AmiVectorArray sx;
+
+    SolutionState() = default;
+
+    /**
+     * @brief Constructor.
+     * @param t_ Current timepoint.
+     * @param nx_solver Number of solver state variables.
+     * @param nplist Number of parameter w.r.t. which to compute sensitivities.
+     * @param ctx SUNDIALS context.
+     */
+    SolutionState(
+        realtype t_, long int nx_solver, long int nplist, SUNContext ctx
+    )
+        : t(t_)
+        , x(nx_solver, ctx)
+        , dx(nx_solver, ctx)
+        , sx(nx_solver, nplist, ctx) {}
+};
+
+/**
+ * @brief implements an exchange format to store and transfer the state of a
+ * simulation at a specific timepoint.
+ */
+struct SimulationState {
+    /** Solution state */
+    SolutionState sol;
+
     /** state of the model that was used for simulation */
-    ModelState state;
+    ModelState mod;
 };
 
 } // namespace amici

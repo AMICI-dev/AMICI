@@ -32,19 +32,16 @@ class Model_ODE : public Model {
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      * @param events Vector of events
-     * @param state_independent_events Map of events with state-independent
-     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model_ODE(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event, std::vector<Event> events = {},
-        std::map<realtype, std::vector<int>> state_independent_events = {}
+        std::vector<int> const& z2event, std::vector<Event> events = {}
     )
         : Model(
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-              events, state_independent_events
+              events
           ) {}
 
     void
@@ -144,7 +141,7 @@ class Model_ODE : public Model {
 
     void
     fJv(realtype t, AmiVector const& x, AmiVector const& dx,
-        AmiVector const& xdot, AmiVector const& v, AmiVector& nJv,
+        AmiVector const& xdot, AmiVector const& v, AmiVector& Jv,
         realtype cj) override;
 
     /**
@@ -283,24 +280,7 @@ class Model_ODE : public Model {
 
   protected:
     /**
-     * @brief Model specific implementation for fJSparse (Matlab)
-     * @param JSparse Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparse(
-        SUNMatrixContent_Sparse JSparse, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* w, realtype const* dwdx
-    );
-
-    /**
-     * @brief Model specific implementation for fJSparse, data only (Py)
+     * @brief Model specific implementation for fJSparse, data only
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -359,27 +339,7 @@ class Model_ODE : public Model {
     ) = 0;
 
     /**
-     * @brief Model specific implementation of fdxdotdp, with w chainrule
-     * (Matlab)
-     * @param dxdotdp partial derivative xdot wrt p
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param ip parameter index
-     * @param w vector with helper variables
-     * @param dwdp derivative of w wrt p
-     */
-    virtual void fdxdotdp(
-        realtype* dxdotdp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, realtype const* w,
-        realtype const* dwdp
-    );
-
-    /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule
-     * (Py)
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states

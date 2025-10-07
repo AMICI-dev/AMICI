@@ -4,13 +4,11 @@
 #include "amici/abstract_model.h"
 #include "amici/defines.h"
 #include "amici/event.h"
-#include "amici/logging.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
 #include "amici/simulation_parameters.h"
 #include "amici/splinefunctions.h"
 #include "amici/sundials_matrix_wrapper.h"
-#include "amici/vector.h"
 
 #include <map>
 #include <vector>
@@ -20,6 +18,9 @@ namespace amici {
 class ExpData;
 class Model;
 class Solver;
+class Logger;
+class AmiVector;
+class AmiVectorArray;
 
 } // namespace amici
 
@@ -72,7 +73,6 @@ enum class ModelQuantity {
     p,
     ts,
     dJydy,
-    dJydy_matlab,
     deltaqB,
     dsigmaydp,
     dsigmaydy,
@@ -112,15 +112,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
      * @param events Vector of events
-     * @param state_independent_events Map of events with state-independent
-     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters, SecondOrderMode o2mode,
         std::vector<realtype> idlist, std::vector<int> z2event,
-        std::vector<Event> events = {},
-        std::map<realtype, std::vector<int>> state_independent_events = {}
+        std::vector<Event> events = {}
     );
 
     /** Destructor. */
@@ -300,6 +297,29 @@ class Model : public AbstractModel, public ModelDimensions {
         realtype t, AmiVector const& x, AmiVector const& dx,
         std::vector<int>& roots_found
     );
+
+    /**
+     * @brief Re-initialize the Heaviside variables `h` at the beginning
+     * of the second or subsequent simulation.
+     *
+     * @param t Timepoint
+     * @param x Reference to state variables
+     * @param dx Reference to time derivative of states (DAE only)
+     * @param h_old Previous values of Heaviside variables
+     * @param roots_found boolean indicators indicating whether roots were found
+     * at t0 by this fun
+     */
+    void reinit_events(
+        realtype t, AmiVector const& x, AmiVector const& dx,
+        std::vector<realtype> const& h_old, std::vector<int>& roots_found
+    );
+
+    /**
+     * @brief Re-compute the explicit roots.
+     *
+     * Re-compute the explicit roots based on the current model parameters.
+     */
+    void reinit_explicit_roots();
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
@@ -1276,10 +1296,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie Event index
      * @param x State variables
      * @param sx State sensitivities
+     * @param dx Current derivative of state (DAE only)
      */
     void getEventTimeSensitivity(
         std::vector<realtype>& stau, realtype t, int ie, AmiVector const& x,
-        AmiVectorArray const& sx
+        AmiVectorArray const& sx, AmiVector const& dx
     );
 
     /**
@@ -1499,19 +1520,15 @@ class Model : public AbstractModel, public ModelDimensions {
     [[nodiscard]] std::vector<int> const& getReinitializationStateIdxs() const;
 
     /**
-     * @brief getter for dxdotdp (matlab generated)
-     * @return dxdotdp
-     */
-    [[nodiscard]] AmiVectorArray const& get_dxdotdp() const;
-
-    /**
-     * @brief getter for dxdotdp (python generated)
+     * @brief getter for dxdotdp
      * @return dxdotdp
      */
     [[nodiscard]] SUNMatrixWrapper const& get_dxdotdp_full() const;
 
     /**
      * @brief Get trigger times for events that don't require root-finding.
+     *
+     * To be called only after Model::initialize.
      *
      * @return List of unique trigger points for events that don't require
      * root-finding (i.e. that trigger at predetermined timepoints),
@@ -1561,6 +1578,18 @@ class Model : public AbstractModel, public ModelDimensions {
         return any_state_non_negative_;
     }
 
+    [[nodiscard]] std::vector<std::vector<realtype>> fexplicit_roots(
+        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k
+    ) override {
+        if (ne != ne_solver) {
+            throw AmiException(
+                "ne!=ne_solver, but 'fexplicit_roots' is not implemented for "
+                "this model."
+            );
+        }
+        return {};
+    }
+
     /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
@@ -1578,7 +1607,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Map of trigger timepoints to event indices for events that don't
      * require root-finding.
      */
-    std::map<realtype, std::vector<int>> state_independent_events_ = {};
+    std::map<realtype, std::vector<int>> explicit_roots_ = {};
 
   protected:
     /**

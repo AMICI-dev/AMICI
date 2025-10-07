@@ -9,7 +9,7 @@ from pathlib import Path
 
 import amici
 import petab.v1 as petab
-from amici.petab.petab_import import import_model
+from amici.petab.petab_import import import_model_sbml
 
 
 def parse_args():
@@ -74,7 +74,7 @@ def run_import(model_name, model_dir: Path):
     petab.lint_problem(pp)
     amici.de_export.logger.setLevel(logging.DEBUG)
     amici.sbml_import.logger.setLevel(logging.DEBUG)
-    import_model(
+    import_model_sbml(
         model_name=model_name,
         model_output_dir=model_dir,
         petab_problem=pp,

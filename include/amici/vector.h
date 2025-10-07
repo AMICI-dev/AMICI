@@ -16,12 +16,10 @@ class AmiVector;
 }
 
 // for serialization friend
-namespace boost {
-namespace serialization {
+namespace boost::serialization {
 template <class Archive>
 void serialize(Archive& ar, amici::AmiVector& v, unsigned int version);
-}
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 
@@ -51,7 +49,7 @@ class AmiVector {
      * @param length number of elements in vector
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(long int const length, SUNContext sunctx)
+    explicit AmiVector(long int const length, SUNContext const sunctx)
         : vec_(static_cast<decltype(vec_)::size_type>(length), 0.0)
         , nvec_(N_VMake_Serial(length, vec_.data(), sunctx)) {}
 
@@ -63,7 +61,7 @@ class AmiVector {
      * @param rvec vector from which the data will be moved
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(std::vector<realtype> rvec, SUNContext sunctx)
+    explicit AmiVector(std::vector<realtype> rvec, SUNContext const sunctx)
         : vec_(std::move(rvec))
         , nvec_(N_VMake_Serial(
               gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
@@ -74,7 +72,9 @@ class AmiVector {
      * @param rvec vector from which the data will be copied
      * @param sunctx SUNDIALS context
      */
-    explicit AmiVector(gsl::span<realtype const> rvec, SUNContext sunctx)
+    explicit AmiVector(
+        gsl::span<realtype const> const rvec, SUNContext const sunctx
+    )
         : AmiVector(std::vector(rvec.begin(), rvec.end()), sunctx) {}
 
     /**
@@ -91,6 +91,18 @@ class AmiVector {
             gsl::narrow<long int>(vec_.size()), vec_.data(), vold.nvec_->sunctx
         );
     }
+
+    /**
+     * @brief Copy from N_Vector
+     * @param vold vector from which the data will be copied
+     */
+    AmiVector(N_Vector const& vold)
+        : AmiVector(
+              gsl::span(
+                  N_VGetArrayPointerConst(vold), N_VGetLength_Serial(vold)
+              ),
+              vold->sunctx
+          ) {}
 
     /**
      * @brief move constructor
@@ -187,7 +199,7 @@ class AmiVector {
      * @brief returns the length of the vector
      * @return length
      */
-    [[nodiscard]] int getLength() const;
+    [[nodiscard]] int size() const;
 
     /**
      * @brief fills vector with zero values
@@ -217,7 +229,7 @@ class AmiVector {
      * @param pos index of element
      * @return element
      */
-    realtype const& operator[](int pos)  const;
+    realtype const& operator[](int pos) const;
 
     /**
      * @brief accessor to data elements of the vector
@@ -298,7 +310,7 @@ class AmiVector {
  */
 inline std::ostream& operator<<(std::ostream& os, AmiVector const& v) {
     os << "[";
-    for (int i = 0; i < v.getLength(); ++i) {
+    for (int i = 0; i < v.size(); ++i) {
         if (i > 0)
             os << ", ";
         os << v.at(i);
@@ -417,7 +429,7 @@ class AmiVectorArray {
      * @brief length of AmiVectorArray
      * @return length
      */
-    int getLength() const;
+    int size() const;
 
     /**
      * @brief set every AmiVector in AmiVectorArray to zero
@@ -470,7 +482,7 @@ class AmiVectorArray {
  */
 inline std::ostream& operator<<(std::ostream& os, AmiVectorArray const& arr) {
     os << "[";
-    for (int i = 0; i < arr.getLength(); ++i) {
+    for (int i = 0; i < arr.size(); ++i) {
         if (i > 0)
             os << ", ";
         os << arr[i];

@@ -2,17 +2,13 @@
 About AMICI
 ===========
 
-AMICI provides a multi-language (Python, C++, Matlab) interface to the
+AMICI provides a Python and C++ interface to the
 :term:`SUNDIALS` solvers :term:`CVODES` (for :term:`ODE`\ s) and :term:`IDAS`
 (for :term:`DAE`\ s). AMICI allows the user to read
 differential equation models specified as :term:`SBML` or :term:`PySB`
-and automatically compiles such models into Python modules, C++ libraries or
-`.mex` simulation files (Matlab).
-
-In contrast to the (no longer maintained)
-`sundialsTB <https://computing.llnl.gov/projects/sundials/sundials-software>`_
-Matlab interface, all necessary functions are transformed into native
-C++ code, which allows for a significantly faster simulation.
+and automatically compiles such models into Python modules or C++ libraries.
+All necessary functions are transformed into native C++ code, which allows for
+efficient simulation.
 
 Beyond forward integration, the compiled simulation file also allows for
 forward sensitivity analysis, steady state sensitivity analysis and
@@ -31,13 +27,12 @@ Features
 * Generation of C++ code for model simulation and sensitivity
   computation
 * Access to and high customizability of :term:`CVODES` and :term:`IDAS` solver
-* Python, C++, Matlab interface
-* Sensitivity analysis
+* Python and C++ interface
+* Sensitivity analysis (first-order)
 
   * forward
   * steady state
   * adjoint
-  * first- and second-order (second-order Matlab-only)
 
 * :term:`Pre-equilibration <pre-equilibration>` and :term:`pre-simulation`
   conditions
@@ -48,16 +43,15 @@ Interfaces & workflow
 ======================
 
 The AMICI workflow starts with importing a model from either :term:`SBML`
-(Matlab, Python), :term:`PySB` (Python), or a Matlab definition of the model
-(Matlab-only). From this input, all equations for model simulation are derived
-symbolically and C++ code is generated. This code is then compiled into a C++
-library, a Python module, or a Matlab `.mex` file and is then used for model
-simulation.
+(Python) or :term:`PySB` (Python).
+From this input, all equations for model simulation are derived
+symbolically and C++ code is generated. This code is then compiled into a plain
+C++ library or a Python module, and is then used for model simulation.
 
 .. image:: gfx/amici_workflow.png
   :alt: AMICI workflow
 
-The functionality of the Python, Matlab and C++ interfaces slightly differ,
+The functionality of the Python and C++ interfaces differ,
 as shown in the following table:
 
 .. list-table::
@@ -67,44 +61,30 @@ as shown in the following table:
    * - Feature \\ Interface
      - Python
      - C++
-     - Matlab
    * - :term:`SBML` import
      - yes (:ref:`details <amici_python_sbml_support>`)
      - no
-     - yes (<=R2017b)
    * - :term:`PySB` import
      - yes
      - no
-     - no
    * - :term:`DAE` import
-     - no
-     - no
      - yes
+     - no
    * - Forward sensitivities
-     - yes
      - yes
      - yes
    * - Adjoint sensitivities
      - yes
      - yes
-     - yes
    * - Steadystate sensitivities
      - yes
      - yes
-     - yes
-   * - Second-order sensitivities
-     - no
-     - no
-     - yes
    * - Events
-     - yes
      - yes
      - yes
    * - :term:`pre-equilibration`
      - yes
      - yes
-     - yes
    * - :term:`pre-simulation`
      - yes
      - yes
-     - no

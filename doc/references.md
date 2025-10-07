@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 104.
+List of publications using AMICI. Total number is 105.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -15,6 +15,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2025</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 data-entry-spacing="0" role="list">
+<div id="ref-ErnstBan2025" class="csl-entry" role="listitem">
+Ernst, Ariane, Anastasia Bankowski, Meida Jusyte, Toluwani Okunola, Tino
+Petrov, Alexander M. Walter, and Stefanie Winkelmann. 2025.
+<span>“Parameter Optimization for a Neurotransmission Recovery
+Model.”</span> <em>Bulletin of Mathematical Biology</em> 87 (8). <a
+href="https://doi.org/10.1007/s11538-025-01486-2">https://doi.org/10.1007/s11538-025-01486-2</a>.
+</div>
 <div id="ref-HoepflOez2025" class="csl-entry" role="listitem">
 Höpfl, Sebastian, Merih Özverin, Helena Nowack, Raluca Tamas, Andrew G.
 Clark, Nicole Radde, and Monilola A. Olayioye. 2025. <span>“Integrated
@@ -35,6 +42,13 @@ Jan Hasenauer. 2025. <span>“Pseudo-Time Trajectory of Single-Cell
 Lipidomics: Suggestion for Experimental Setup and Computational
 Analysis.”</span> <em>bioRxiv</em>. <a
 href="https://doi.org/10.1101/2025.04.11.648323">https://doi.org/10.1101/2025.04.11.648323</a>.
+</div>
+<div id="ref-LentBun2025" class="csl-entry" role="listitem">
+Lent, Olga AND Magyar van, Paul AND Bunkova. 2025.
+<span>“Jaxkineticmodel: Neural Ordinary Differential Equations Inspired
+Parameterization of Kinetic Models.”</span> <em>PLOS Computational
+Biology</em> 21 (7): 1–17. <a
+href="https://doi.org/10.1371/journal.pcbi.1012733">https://doi.org/10.1371/journal.pcbi.1012733</a>.
 </div>
 <div id="ref-NoordijkRei2025" class="csl-entry" role="listitem">
 Noordijk, Ben, Marcel Reinders, Aalt D. J. van Dijk, and Dick de Ridder.
@@ -107,11 +121,6 @@ G. Baltussen, Max T. G. M. Derks, Jana Roithová, and Wilhelm T. S. Huck.
 Network by Ion Mobility–Mass Spectrometry.”</span> <em>Journal of the
 American Chemical Society</em> 146 (30): 20778–87. <a
 href="https://doi.org/10.1021/jacs.4c04218">https://doi.org/10.1021/jacs.4c04218</a>.
-</div>
-<div id="ref-Ernst2024" class="csl-entry" role="listitem">
-Ernst, Ariane. 2024. <span>“Mathematical Modeling and Analysis of
-Neurotransmission.”</span> Dissertation. <a
-href="http://dx.doi.org/10.17169/refubium-47210">http://dx.doi.org/10.17169/refubium-47210</a>.
 </div>
 <div id="ref-JakstaiteZho2024" class="csl-entry" role="listitem">
 Jakštaitė, ‪Miglė, Tao Zhou, Frank Nelissen, Wilhelm T. S. Huck, and Bob

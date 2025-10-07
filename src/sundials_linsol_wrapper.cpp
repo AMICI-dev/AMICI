@@ -15,7 +15,7 @@
 
 namespace amici {
 
-SUNLinSolWrapper::SUNLinSolWrapper(SUNLinearSolver linsol)
+SUNLinSolWrapper::SUNLinSolWrapper(SUNLinearSolver const linsol)
     : solver_(linsol) {}
 
 SUNLinSolWrapper::SUNLinSolWrapper(
@@ -181,7 +181,7 @@ SUNLinSolBand::SUNLinSolBand(N_Vector x, SUNMatrixWrapper A)
 
 SUNLinSolBand::SUNLinSolBand(AmiVector const& x, int ubw, int lbw)
     : SUNLinSolWrapper(
-          nullptr, SUNMatrixWrapper(x.getLength(), ubw, lbw, x.get_ctx())
+          nullptr, SUNMatrixWrapper(x.size(), ubw, lbw, x.get_ctx())
       ) {
     solver_
         = SUNLinSol_Band(const_cast<N_Vector>(x.getNVector()), A_, x.get_ctx());
@@ -191,7 +191,7 @@ SUNLinSolBand::SUNLinSolBand(AmiVector const& x, int ubw, int lbw)
 
 SUNLinSolDense::SUNLinSolDense(AmiVector const& x)
     : SUNLinSolWrapper(
-          nullptr, SUNMatrixWrapper(x.getLength(), x.getLength(), x.get_ctx())
+          nullptr, SUNMatrixWrapper(x.size(), x.size(), x.get_ctx())
       ) {
     solver_ = SUNLinSol_Dense(
         const_cast<N_Vector>(x.getNVector()), A_, x.get_ctx()
@@ -212,7 +212,7 @@ SUNLinSolKLU::SUNLinSolKLU(
     : SUNLinSolWrapper(
           nullptr,
           SUNMatrixWrapper(
-              x.getLength(), x.getLength(), nnz, sparsetype, x.get_ctx()
+              x.size(), x.size(), nnz, sparsetype, x.get_ctx()
           )
       ) {
     solver_

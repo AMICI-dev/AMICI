@@ -149,12 +149,11 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar & m.sx0data_;
     ar & m.nmaxevent_;
     ar & m.state_is_non_negative_;
-    ar & m.pythonGenerated;
     ar & m.min_sigma_;
     ar & m.sigma_res_;
     ar & m.steadystate_computation_mode_;
     ar & m.steadystate_sensitivity_mode_;
-    ar & m.state_independent_events_;
+    ar & m.explicit_roots_;
     ar & m.steadystate_mask_;
 }
 
@@ -209,8 +208,8 @@ void serialize(
 ) {
     ar& dynamic_cast<amici::ModelDimensions&>(r);
     ar & r.id;
-    ar & r.nx;
-    ar & r.nxtrue;
+    ar & r.nx_rdata;
+    ar & r.nxtrue_rdata;
     ar & r.nplist;
     ar & r.nmaxevent;
     ar & r.nt;

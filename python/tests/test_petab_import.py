@@ -116,7 +116,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
 
 @skip_on_valgrind
 def test_default_output_parameters(simple_sbml_model, tempdir):
-    from amici.petab.petab_import import import_model
+    from amici.petab.petab_import import import_model_sbml
     from petab.v1.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = simple_sbml_model
@@ -146,7 +146,7 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
         observable_df=observable_df,
     )
 
-    sbml_importer = import_model(
+    sbml_importer = import_model_sbml(
         petab_problem=petab_problem,
         output_parameter_defaults={"observableParameter1_obs1": 1.0},
         compile=False,
@@ -160,7 +160,7 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
     )
 
     with pytest.raises(ValueError):
-        import_model(
+        import_model_sbml(
             petab_problem=petab_problem,
             output_parameter_defaults={"nonExistentParameter": 1.0},
             compile=False,

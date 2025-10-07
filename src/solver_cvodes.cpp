@@ -299,7 +299,7 @@ void CVodeSolver::apply_constraints() const {
 
     int status = CVodeSetConstraints(
         solver_memory_.get(),
-        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+        constraints_.size() > 0 ? constraints_.getNVector() : nullptr
     );
     if (status != CV_SUCCESS) {
         throw CvodeException(status, "CVodeSetConstraints");
@@ -541,8 +541,8 @@ void CVodeSolver::reInitPostProcess(
             = std::string("CVode returned a root after reinitialization at t=")
               + std::to_string(*t)
               + ". The initial step-size after the event or "
-                "Heaviside function is too small. To fix this, increase "
-                "absolute and relative tolerances!";
+                "Heaviside function is too small. To fix this, adjust "
+                "absolute or relative tolerances!";
         throw CvodeException(status, message.c_str());
     }
     if (status != CV_SUCCESS) {

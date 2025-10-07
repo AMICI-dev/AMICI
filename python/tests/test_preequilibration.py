@@ -13,7 +13,7 @@ from amici.testing import (
     skip_on_valgrind,
 )
 from amici.gradient_check import check_derivatives
-from amici import SensitivityMethod, SensitivityOrder
+from amici import SensitivityMethod, SensitivityOrder, SteadyStateStatus
 
 pytestmark = pytest.mark.filterwarnings(
     # https://github.com/AMICI-dev/AMICI/issues/18
@@ -517,28 +517,32 @@ def test_steadystate_computation_mode(preeq_fixture):
 
         # assert successful simulation
         assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
+    assert rdatas[amici.SteadyStateComputationMode.integrationOnly][
+        "preeq_status"
+    ] == [
+        SteadyStateStatus.not_run,
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+    ]
 
-    assert np.all(
-        rdatas[amici.SteadyStateComputationMode.integrationOnly][
-            "preeq_status"
-        ][0]
-        == [0, 1, 0]
-    )
     assert (
         rdatas[amici.SteadyStateComputationMode.integrationOnly][
             "preeq_numsteps"
-        ][0][0]
+        ][0]
         == 0
     )
 
-    assert np.all(
-        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_status"][0]
-        == [1, 0, 0]
-    )
+    assert rdatas[amici.SteadyStateComputationMode.newtonOnly][
+        "preeq_status"
+    ] == [
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+        SteadyStateStatus.not_run,
+    ]
     assert (
         rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][
             0
-        ][0]
+        ]
         > 0
     )
 
@@ -761,8 +765,8 @@ def test_preequilibration_events(tempdir):
         bolus2 = 1
         bolus3 = 1
         bolus4 = 1
-        # E1 & E2 will both trigger during pre-equilibration and main
-        #  simulation (Heaviside is reset after pre-equilibration)
+        # E1 & E2 will only trigger during pre-equilibration
+        # (initialValue is only used once at the start of pre-equilibration)
         E1: at some_time >= 0, t0 = false: target1 = target1 + bolus1
         E2: at time >= 0, t0 = false: target2 = target2 + bolus2
         # requires early time point
@@ -815,8 +819,8 @@ def test_preequilibration_events(tempdir):
     assert rdata.x_ss[target2_idx] == 1
     assert rdata.x_ss[target3_idx] == 1
     assert rdata.x_ss[target4_idx] == 1
-    assert np.all(rdata.x[:, target1_idx] == [2, 2])
-    assert np.all(rdata.x[:, target2_idx] == [2, 2])
+    assert np.all(rdata.x[:, target1_idx] == [1, 1])
+    assert np.all(rdata.x[:, target2_idx] == [1, 1])
     assert np.all(rdata.x[:, target3_idx] == [1, 1])
     assert np.all(rdata.x[:, target4_idx] == [1, 2])
 
@@ -829,8 +833,7 @@ def test_preequilibration_events(tempdir):
     for sensi_meth, sensi_meth_preeq in (
         (SensitivityMethod.forward, SensitivityMethod.forward),
         (SensitivityMethod.adjoint, SensitivityMethod.forward),
-        # TODO https://github.com/AMICI-dev/AMICI/issues/2775
-        #  (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
     ):
         amici_solver.setSensitivityMethod(sensi_meth)
         amici_solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)

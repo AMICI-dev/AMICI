@@ -1,6 +1,8 @@
 name: C++/Python Tests
 on:
   push:
+    branches:
+      - main
   merge_group:
   workflow_dispatch:
   pull_request:
@@ -25,11 +27,13 @@ jobs:
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+      with:
+        lfs: true
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -125,7 +129,7 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -136,7 +140,7 @@ jobs:
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -208,7 +212,7 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -219,7 +223,7 @@ jobs:
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -246,11 +250,14 @@ jobs:
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.11"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+      with:
+        lfs: true
+
     - run: git fetch --prune --unshallow
 
     - name: Install dependencies
@@ -308,11 +315,13 @@ jobs:
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.11"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+      with:
+        lfs: true
     - run: git fetch --prune --unshallow
 
     - name: Install dependencies

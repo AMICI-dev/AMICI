@@ -151,7 +151,7 @@ class SteadyStateBackwardProblem {
      * @param ws Workspace for backward simulation
      */
     SteadyStateBackwardProblem(
-        Solver const& solver, Model& model, SimulationState& final_state,
+        Solver const& solver, Model& model, SolutionState& final_state,
         gsl::not_null<BwdSimWorkspace*> ws
     );
 
@@ -212,6 +212,10 @@ class SteadyStateBackwardProblem {
     /**
      * @brief Launch backward simulation if Newton solver or linear system solve
      * fail or are disabled.
+     *
+     * This does not perform any event-handling.
+     * For event-handling, see EventHandlingBwdSimulator.
+     *
      * @param solver Solver instance.
      */
     void run_simulation(Solver const& solver);
@@ -248,7 +252,7 @@ class SteadyStateBackwardProblem {
     AmiVector xQ_;
 
     /** Final state from pre/post-equilibration forward problem */
-    SimulationState& final_state_;
+    SolutionState& final_state_;
 
     /** Newton solver */
     NewtonSolver newton_solver_;
@@ -301,6 +305,20 @@ class BackwardProblem {
      */
     [[nodiscard]] AmiVector const& getAdjointQuadraturePrePreeq() const {
         return xQB_pre_preeq_;
+    }
+
+    /**
+     * @brief The final adjoint state vector
+     * @return xB
+     */
+    [[nodiscard]] AmiVector const& getAdjointState() const { return ws_.xB_; }
+
+    /**
+     * @brief The final quadrature state vector.
+     * @return xQB
+     */
+    [[nodiscard]] AmiVector const& getAdjointQuadrature() const {
+        return ws_.xQB_;
     }
 
     /**

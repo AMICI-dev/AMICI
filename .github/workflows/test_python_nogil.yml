@@ -1,7 +1,6 @@
 name: Python nogil Tests
 on:
   push:
-  pull_request:
     branches:
       - main
   merge_group:
@@ -17,11 +16,11 @@ jobs:
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - name: Set up Python 3.13 free-threaded
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.13'
         freethreaded: true
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 20
     - name: Install apt dependencies

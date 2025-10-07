@@ -1,21 +1,21 @@
+#include "testfunctions.h"
+#include <amici/event.h>
 #include <amici/model.h>
 #include <amici/serialization.h>
 #include <amici/solver_cvodes.h>
-
-#include "testfunctions.h"
 
 #include <cmath>
 #include <fstream>
 #include <gtest/gtest.h>
 
-void
-checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
-{
+void checkReturnDataEqual(
+    amici::ReturnData const& r, amici::ReturnData const& s
+) {
     ASSERT_EQ(r.id, s.id);
     ASSERT_EQ(r.np, s.np);
     ASSERT_EQ(r.nk, s.nk);
-    ASSERT_EQ(r.nx, s.nx);
-    ASSERT_EQ(r.nxtrue, s.nxtrue);
+    ASSERT_EQ(r.nx_rdata, s.nx_rdata);
+    ASSERT_EQ(r.nxtrue_rdata, s.nxtrue_rdata);
     ASSERT_EQ(r.nx_solver, s.nx_solver);
     ASSERT_EQ(r.nx_solver_reinit, s.nx_solver_reinit);
     ASSERT_EQ(r.ny, s.ny);
@@ -65,18 +65,26 @@ checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
     ASSERT_EQ(r.cpu_timeB, s.cpu_timeB);
 
     ASSERT_EQ(r.preeq_status, s.preeq_status);
-    ASSERT_TRUE(r.preeq_t == s.preeq_t ||
-                (std::isnan(r.preeq_t) && std::isnan(s.preeq_t)));
-    ASSERT_TRUE(r.preeq_wrms == s.preeq_wrms ||
-                (std::isnan(r.preeq_wrms) && std::isnan(s.preeq_wrms)));
+    ASSERT_TRUE(
+        r.preeq_t == s.preeq_t
+        || (std::isnan(r.preeq_t) && std::isnan(s.preeq_t))
+    );
+    ASSERT_TRUE(
+        r.preeq_wrms == s.preeq_wrms
+        || (std::isnan(r.preeq_wrms) && std::isnan(s.preeq_wrms))
+    );
     ASSERT_EQ(r.preeq_numsteps, s.preeq_numsteps);
     EXPECT_NEAR(r.preeq_cpu_time, s.preeq_cpu_time, 1e-16);
 
     ASSERT_EQ(r.posteq_status, s.posteq_status);
-    ASSERT_TRUE(r.posteq_t == s.posteq_t ||
-                (std::isnan(r.posteq_t) && std::isnan(s.posteq_t)));
-    ASSERT_TRUE(r.posteq_wrms == s.posteq_wrms ||
-                (std::isnan(r.posteq_wrms) && std::isnan(s.posteq_wrms)));
+    ASSERT_TRUE(
+        r.posteq_t == s.posteq_t
+        || (std::isnan(r.posteq_t) && std::isnan(s.posteq_t))
+    );
+    ASSERT_TRUE(
+        r.posteq_wrms == s.posteq_wrms
+        || (std::isnan(r.posteq_wrms) && std::isnan(s.posteq_wrms))
+    );
     ASSERT_EQ(r.posteq_numsteps, s.posteq_numsteps);
     EXPECT_NEAR(r.posteq_cpu_time, s.posteq_cpu_time, 1e-16);
 
@@ -106,21 +114,26 @@ class SolverSerializationTest : public ::testing::Test {
         solver.setMaxSteps(1e1);
         solver.setMaxStepsBackwardProblem(1e2);
         solver.setNewtonMaxSteps(1e3);
-        solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
+        solver.setStateOrdering(
+            static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD)
+        );
         solver.setInterpolationType(amici::InterpolationType::polynomial);
         solver.setStabilityLimitFlag(false);
         solver.setLinearSolver(amici::LinearSolver::dense);
         solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
-        solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
-        solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
+        solver.setNonlinearSolverIteration(
+            amici::NonlinearSolverIteration::newton
+        );
+        solver.setInternalSensitivityMethod(
+            amici::InternalSensitivityMethod::staggered
+        );
         solver.setReturnDataReportingMode(amici::RDataReporting::likelihood);
     }
 
     amici::CVodeSolver solver;
 };
 
-TEST(ModelSerializationTest, ToFile)
-{
+TEST(ModelSerializationTest, ToFile) {
     using amici::realtype;
     int np = 1;
     int nk = 2;
@@ -130,43 +143,51 @@ TEST(ModelSerializationTest, ToFile)
     int ne = 6;
     amici::CVodeSolver solver;
     amici::Model_Test m = amici::Model_Test(
-        amici::ModelDimensions(
-            nx,        // nx_rdata
-            nx,        // nxtrue_rdata
-            nx,        // nx_solver
-            nx,        // nxtrue_solver
-            0,         // nx_solver_reinit
-            np,         // np
-            nk,        // nk
-            ny,        // ny
-            ny,        // nytrue
-            nz,        // nz
-            nz,        // nztrue
-            ne,        // ne
-            0,         // ne_solver
-            0,         // nspl
-            0,         // nJ
-            9,         // nw
-            2,         // ndwdx
-            2,         // ndwdp
-            2,         // dwdw
-            13,         // ndxdotdw
-            {},         // ndJydy
-            9,         // ndxrdatadxsolver
-            0,         // ndxrdatadtcl
-            0,          // ndtotal_cldx_rdata
-            17,         // nnz
-            18,         // ubw
-            19          // lbw
-            ),
+        amici::ModelDimensions{
+            .nx_rdata = nx,
+            .nxtrue_rdata = nx,
+            .nx_solver = nx,
+            .nxtrue_solver = nx,
+            .nx_solver_reinit = 0,
+            .np = np,
+            .nk = nk,
+            .ny = ny,
+            .nytrue = ny,
+            .nz = nz,
+            .nztrue = nz,
+            .ne = ne,
+            .ne_solver = 0,
+            .nspl = 0,
+            .nw = 9,
+            .ndwdx = 2,
+            .ndwdp = 2,
+            .ndwdw = 2,
+            .ndxdotdw = 13,
+            .ndJydy = {0, 0, 0, 0},
+            .ndxrdatadxsolver = 9,
+            .ndxrdatadtcl = 0,
+            .ndtotal_cldx_rdata = 0,
+            .nnz = 17,
+            .nJ = 0,
+            .ubw = 18,
+            .lbw = 19
+        },
+
         amici::SimulationParameters(
-            std::vector<realtype>(nk, 0.0),
-            std::vector<realtype>(np, 0.0),
+            std::vector<realtype>(nk, 0.0), std::vector<realtype>(np, 0.0),
             std::vector<int>(np, 0)
-            ),
-        amici::SecondOrderMode::none,
-        std::vector<realtype>(nx, 0.0),
-        std::vector<int>(nz, 0));
+        ),
+        amici::SecondOrderMode::none, std::vector<realtype>(nx, 0.0),
+        std::vector<int>(nz, 0),
+        {
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+        }
+    );
 
     {
         std::ofstream ofs("sstore.dat");
@@ -186,8 +207,7 @@ TEST(ModelSerializationTest, ToFile)
     }
 }
 
-TEST(ReturnDataSerializationTest, ToString)
-{
+TEST(ReturnDataSerializationTest, ToString) {
     using amici::realtype;
     int np = 1;
     int nk = 2;
@@ -197,70 +217,78 @@ TEST(ReturnDataSerializationTest, ToString)
     int ne = 6;
     amici::CVodeSolver solver;
     amici::Model_Test m = amici::Model_Test(
-        amici::ModelDimensions(
-            nx,        // nx_rdata
-            nx,        // nxtrue_rdata
-            nx,        // nx_solver
-            nx,        // nxtrue_solver
-            0,         // nx_solver_reinit
-            np,        // np
-            nk,        // nk
-            ny,        // ny
-            ny,        // nytrue
-            nz,        // nz
-            nz,        // nztrue
-            ne,        // ne
-            0,         // ne_solver
-            0,         // nspl
-            0,         // nJ
-            9,         // nw
-            10,        // ndwdx
-            2,         // ndwdp
-            12,        // dwdw
-            13,        // ndxdotdw
-            {},        // ndJydy
-            9,         // ndxrdatadxsolver
-            0,         // ndxrdatadtcl
-            0,         // ndtotal_cldx_rdata
-            17,        // nnz
-            18,        // ubw
-            19         // lbw
-            ),
+        amici::ModelDimensions{
+            .nx_rdata = nx,
+            .nxtrue_rdata = nx,
+            .nx_solver = nx,
+            .nxtrue_solver = nx,
+            .nx_solver_reinit = 0,
+            .np = np,
+            .nk = nk,
+            .ny = ny,
+            .nytrue = ny,
+            .nz = nz,
+            .nztrue = nz,
+            .ne = ne,
+            .ne_solver = 0,
+            .nspl = 0,
+            .nw = 9,
+            .ndwdx = 10,
+            .ndwdp = 2,
+            .ndwdw = 12,
+            .ndxdotdw = 13,
+            .ndJydy = {0, 0, 0, 0},
+            .ndxrdatadxsolver = 9,
+            .ndxrdatadtcl = 0,
+            .ndtotal_cldx_rdata = 0,
+            .nnz = 17,
+            .nJ = 0,
+            .ubw = 18,
+            .lbw = 19
+        },
+
         amici::SimulationParameters(
-            std::vector<realtype>(nk, 0.0),
-            std::vector<realtype>(np, 0.0),
+            std::vector<realtype>(nk, 0.0), std::vector<realtype>(np, 0.0),
             std::vector<int>(np, 0)
-            ),
-        amici::SecondOrderMode::none,
-        std::vector<realtype>(nx, 0.0),
-        std::vector<int>(nz, 0));
+        ),
+        amici::SecondOrderMode::none, std::vector<realtype>(nx, 0.0),
+        std::vector<int>(nz, 0),
+        {
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+            amici::Event("e1", true, true, 1),
+        }
+    );
 
     amici::ReturnData r(solver, m);
     r.id = "some_id";
     std::string serialized = amici::serializeToString(r);
 
     checkReturnDataEqual(
-        r, amici::deserializeFromString<amici::ReturnData>(serialized));
+        r, amici::deserializeFromString<amici::ReturnData>(serialized)
+    );
 }
 
-TEST_F(SolverSerializationTest, ToChar)
-{
+TEST_F(SolverSerializationTest, ToChar) {
     int length;
     char* buf = amici::serializeToChar(solver, &length);
 
-    amici::CVodeSolver v =
-        amici::deserializeFromChar<amici::CVodeSolver>(buf, length);
+    amici::CVodeSolver v
+        = amici::deserializeFromChar<amici::CVodeSolver>(buf, length);
 
     delete[] buf;
     ASSERT_EQ(solver, v);
 }
 
-TEST_F(SolverSerializationTest, ToStdVec)
-{
+TEST_F(SolverSerializationTest, ToStdVec) {
 
     auto buf = amici::serializeToStdVec(solver);
-    amici::CVodeSolver v =
-        amici::deserializeFromChar<amici::CVodeSolver>(buf.data(), buf.size());
+    amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(
+        buf.data(), buf.size()
+    );
 
     ASSERT_EQ(solver, v);
 }

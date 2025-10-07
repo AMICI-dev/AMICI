@@ -67,6 +67,138 @@ class ObservableTransformation(str, enum.Enum):
     LIN = "lin"
 
 
+class MeasurementChannel:
+    """
+    A measurement channel (observable) definition.
+
+    Measurement channels define how model state and parameters are mapped to
+    observables, including any associated noise models.
+
+    Measurement channels can be time-resolved (i.e., defined over the course of
+    a simulation) or event-resolved (i.e., defined at specific events during
+    a simulation). Event-resolved observables are associated with a specific
+    event via the `event_id` attribute.
+    """
+
+    def __init__(
+        self,
+        id_: str,
+        name: str | None = None,
+        formula: str | sp.Expr | None = None,
+        noise_distribution: str | Callable[[str], str] | None = None,
+        sigma: str | sp.Expr | float | None = None,
+        event_id: str | None = None,
+    ):
+        """
+        Initialize a measurement channel.
+
+        .. note::
+
+            When providing expressions for (event) observables and their sigmas
+            as strings (see below), those will be passed to
+            :func:`sympy.sympify`. The supported grammar is not well-defined.
+            Note there can be issues with, for example, ``==`` or n-ary (n>2)
+            comparison operators.
+            Also note that operator precedence and function names may differ
+            from SBML L3 formulas or PEtab math expressions.
+            Passing a sympy expression directly will
+            be the safer option for more complex expressions.
+
+        .. note::
+
+            In any math expressions passed to this function, ``time`` will
+            be interpreted as the time symbol.
+
+        :param id_:
+            Unique identifier for the measurement channel.
+        :param name:
+            Human-readable name for the measurement channel.
+        :param formula:
+            Expression defining how the observable is computed from model state
+            and parameters.
+        :param noise_distribution:
+            Noise distribution associated with the observable.
+            This is usually a string identifier (e.g., 'normal', 'log-normal';
+            see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`).
+            If ``None``, a normal distribution is assumed.
+
+            Alternatively, a callable can be passed to account for a
+            custom noise model. The callable must take a single argument
+            ``str_symbol``, and return a string defining the negative
+            log-likelihood contribution for a single data point, using
+            variables ``{str_symbol}``, ``m{str_symbol}``, and
+            ``sigma{str_symbol}`` for the simulation, measurement, and
+            scale parameter, respectively.
+        :param sigma:
+            Expression representing the scale parameter of the noise
+            distribution. This can be a numeric value, a sympy expression,
+            or an expression string that will be passed to
+            :func:`sympy.sympify`.
+        :param event_id:
+            Identifier of the associated event for event-resolved observables.
+            `None` for time-resolved observables.
+
+        Example usage:
+        >>> # Time-resolved observable
+        >>> mc1 = MeasurementChannel(
+        ...     id_="obs1",
+        ...     name="Observable 1",
+        ...     formula="k1 * x1 + k2",
+        ...     noise_distribution="log-normal",
+        ...     sigma="sigma1"
+        ... )
+        >>> mc1  # doctest: +NORMALIZE_WHITESPACE
+        MeasurementChannel(id_='obs1', name='Observable 1', \
+formula='k1 * x1 + k2', noise_distribution='log-normal', \
+sigma='sigma1', event_id=None)
+        >>> mc1.is_time_resolved
+        True
+        >>> mc1.is_event_resolved
+        False
+        >>> # Event-resolved observable
+        >>> mc2 = MeasurementChannel(
+        ...     id_="obs2",
+        ...     name="Observable 2",
+        ...     formula="x3",
+        ...     noise_distribution="log-normal",
+        ...     sigma="sigma1",
+        ...     event_id="event1"
+        ... )
+        >>> mc2  # doctest: +NORMALIZE_WHITESPACE
+        MeasurementChannel(id_='obs2', name='Observable 2', formula='x3', \
+ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
+        >>> mc2.is_event_resolved
+        True
+        >>> mc2.is_time_resolved
+        False
+        """
+        self.id = id_
+        self.name = name
+        self.formula = formula
+        self.noise_distribution = noise_distribution or "normal"
+        self.sigma = sigma
+        self.event_id = event_id
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(id_={self.id!r}, name={self.name!r}, "
+            f"formula={self.formula!r}, noise_distribution="
+            f"{self.noise_distribution!r}, sigma={self.sigma!r}, "
+            f"event_id={self.event_id!r})"
+        )
+
+    @property
+    def is_time_resolved(self):
+        """Whether this is a time-resolved observable."""
+        return self.event_id is None
+
+    @property
+    def is_event_resolved(self) -> bool:
+        """Whether this is an event-resolved observable."""
+        return self.event_id is not None
+
+
 def noise_distribution_to_observable_transformation(
     noise_distribution: str | Callable,
 ) -> ObservableTransformation:
@@ -174,7 +306,7 @@ def noise_distribution_to_cost_function(
 
     AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
 
-    In addition to the above mentioned distributions, it is also possible to
+    In addition to the above-mentioned distributions, it is also possible to
     pass a function taking a symbol string and returning a log-distribution
     string with variables '{str_symbol}', 'm{str_symbol}', 'sigma{str_symbol}'
     for y, m, sigma, respectively.
@@ -816,3 +948,18 @@ def _default_simplify(x):
     # We need this as a free function instead of a lambda to have it picklable
     #  for parallel simplification
     return sp.powsimp(x, deep=True)
+
+
+def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
+    """
+    Check if a sympy expression contains any periodic subexpression.
+
+    :param expr: The sympy expression to check.
+    :param symbol: The variable with respect to which periodicity is checked.
+    :return: `True` if the expression contains a periodic subexpression,
+        `False` otherwise.
+    """
+    for subexpr in expr.atoms(sp.Function):
+        if sp.periodicity(subexpr, symbol) is not None:
+            return True
+    return False

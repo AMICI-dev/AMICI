@@ -1,0 +1,5 @@
+#define dae_0_df1 dxdotdx_explicit[0]
+#define dae_1_df1 dxdotdx_explicit[1]
+#define dae_1_df2 dxdotdx_explicit[2]
+#define dae_2_df2 dxdotdx_explicit[3]
+#define dae_2_df3 dxdotdx_explicit[4]

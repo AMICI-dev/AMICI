@@ -185,7 +185,12 @@ def test_compare_to_pysb_simulation(example):
                     outdir,
                     verbose=logging.INFO,
                     compute_conservation_laws=compute_conservation_laws,
-                    observables=list(pysb_model.observables.keys()),
+                    observation_model=list(
+                        map(
+                            amici.MeasurementChannel,
+                            pysb_model.observables.keys(),
+                        )
+                    ),
                 )
 
                 amici_model_module = amici.import_model_module(
@@ -338,7 +343,12 @@ def test_heavyside_and_special_symbols():
     )
 
     with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
-        pysb2amici(model, outdir, verbose=True, observables=["a"])
+        pysb2amici(
+            model,
+            outdir,
+            verbose=True,
+            observation_model=[amici.MeasurementChannel("a")],
+        )
 
         model_module = amici.import_model_module(
             module_name=model.name, module_path=outdir

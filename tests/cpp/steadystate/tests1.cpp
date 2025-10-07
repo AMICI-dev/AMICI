@@ -1,6 +1,7 @@
 #include "testfunctions.h"
 
 #include "wrapfunctions.h"
+#include "model_steadystate_py.h"
 
 #include <gtest/gtest.h>
 
@@ -52,7 +53,7 @@ TEST(ExampleSteadystate, CloneModel)
 {
     auto modelA = amici::generic_model::getModel();
     auto modelB = std::make_unique<
-        amici::model_model_steadystate::Model_model_steadystate>();
+        amici::model_model_steadystate_py::Model_model_steadystate_py>();
 
     ASSERT_EQ(*modelA, *modelB);
 }

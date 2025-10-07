@@ -12,7 +12,7 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(
-    Model const& model, LinearSolver const linsol_type, SUNContext sunctx
+    Model const& model, LinearSolver const linsol_type, SUNContext const sunctx
 )
     : xdot_(model.nx_solver, sunctx)
     , x_(model.nx_solver, sunctx)
@@ -64,23 +64,14 @@ void NewtonSolver::computeNewtonSensis(
         );
     }
 
-    if (model.pythonGenerated) {
-        for (int ip = 0; ip < model.nplist(); ip++) {
-            N_VConst(0.0, sx.getNVector(ip));
-            model.get_dxdotdp_full().scatter(
-                model.plist(ip), -1.0, nullptr,
-                gsl::make_span(sx.getNVector(ip)), 0, nullptr, 0
-            );
+    for (int ip = 0; ip < model.nplist(); ip++) {
+        N_VConst(0.0, sx.getNVector(ip));
+        model.get_dxdotdp_full().scatter(
+            model.plist(ip), -1.0, nullptr, gsl::make_span(sx.getNVector(ip)),
+            0, nullptr, 0
+        );
 
-            solveLinearSystem(sx[ip]);
-        }
-    } else {
-        for (int ip = 0; ip < model.nplist(); ip++) {
-            for (int ix = 0; ix < model.nx_solver; ix++)
-                sx.at(ix, ip) = -model.get_dxdotdp().at(ix, ip);
-
-            solveLinearSystem(sx[ip]);
-        }
+        solveLinearSystem(sx[ip]);
     }
 }
 

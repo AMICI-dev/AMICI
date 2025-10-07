@@ -490,8 +490,8 @@ void HermiteSpline::compute_slope_sensitivities_by_fd(
     int nplist, int spline_offset, int ip, gsl::span<realtype> dvaluesdp,
     gsl::span<realtype> dslopesdp
 ) {
-    int last = n_nodes() - 1;
-    int node_offset = spline_offset + ip;
+    int const last = n_nodes() - 1;
+    int const node_offset = spline_offset + ip;
 
     // Left boundary (first node)
     switch (first_node_bc_) {
