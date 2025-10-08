@@ -343,17 +343,13 @@ def test_heavyside_and_special_symbols():
     )
 
     with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
-        pysb2amici(
+        amici_model = pysb2amici(
             model,
             outdir,
             verbose=True,
             observation_model=[amici.MeasurementChannel("a")],
         )
 
-        model_module = amici.import_model_module(
-            module_name=model.name, module_path=outdir
-        )
-        amici_model = model_module.get_model()
         assert amici_model.ne
 
 
