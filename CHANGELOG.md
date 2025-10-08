@@ -51,7 +51,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   `DataArray`s include the identifiers and are often more convenient than the
   plain numpy arrays. This allows for easy subselection and plotting of the
   results, and conversion to DataFrames.
-
+* The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
+  return an instance of the generated model class if called with `compile=True`
+  (default).
 
 ## v0.X Series
 
