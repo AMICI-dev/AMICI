@@ -14,9 +14,7 @@ import re
 import warnings
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import (
-    Any,
-)
+from typing import Any
 from collections.abc import Callable
 from collections.abc import Iterable, Sequence
 
@@ -26,12 +24,11 @@ import numpy as np
 import sympy as sp
 from sympy.logic.boolalg import BooleanFalse, BooleanTrue, Boolean
 
+import amici
 from . import has_clibs
 from .de_model import DEModel
 from .constants import SymbolId
-from .de_export import (
-    DEExporter,
-)
+from .de_export import DEExporter
 from .de_model_components import symbol_to_type, Expression
 from .sympy_utils import smart_is_zero_matrix, smart_multiply
 from .import_utils import (
@@ -291,7 +288,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
-    ) -> None:
+    ) -> amici.Model | None:
         """
         Generate and compile AMICI C++ files for the model provided to the
         constructor.
@@ -380,6 +377,10 @@ class SbmlImporter:
             Their values cannot be changed anymore after model import.
             Currently, only parameters that are not targets of rules or
             initial assignments are supported.
+
+        :return:
+            If `compile` is `True` and compilation was successful, an instance
+            of the generated model class, otherwise `None`.
         """
         set_log_level(logger, verbose)
 
@@ -413,6 +414,14 @@ class SbmlImporter:
                     stacklevel=2,
                 )
             exporter.compile_model()
+
+            from . import import_model_module
+
+            return import_model_module(
+                module_name=model_name, module_path=output_dir
+            ).get_model()
+
+        return None
 
     def sbml2jax(
         self,
