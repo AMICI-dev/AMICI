@@ -1133,6 +1133,5 @@
    match-leak-kinds: definite
    ...
    fun:PyInit__pydantic_core
-   fun:_PyImport_RunModInitFunc
    ...
 }
