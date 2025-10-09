@@ -121,7 +121,7 @@ def prepare_simulation(arg, model, solver, edata):
         model.set_steady_state_sensitivity_mode(
             amici.SteadyStateSensitivityMode.newtonOnly
         )
-        edata.setTimepoints([float("inf")])
+        edata.set_timepoints([float("inf")])
     elif arg == "adjoint_steadystate_sensitivities_non_optimal_parameters":
         tmp_par = model.get_parameters()
         model.set_parameters([0.1 for _ in tmp_par])
