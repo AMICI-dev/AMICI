@@ -2,7 +2,9 @@
 
 import logging
 import warnings
-from typing import Any
+from typing import Any, overload
+from collections.abc import Sequence
+import contextlib
 
 import amici
 import amici.amici as amici_swig
@@ -12,8 +14,11 @@ from amici.amici import (
     AmiciExpDataVector,
     AmiciModel,
     AmiciSolver,
+    SensitivityMethod,
+    SensitivityOrder,
+    Solver,
 )
-from . import numpy
+from . import numpy, ReturnDataView
 from .logging import get_logger
 
 logger = get_logger(__name__, log_level=logging.DEBUG)
@@ -267,5 +272,123 @@ def _ids_and_names_to_rdata(
                 f"{entity_type.lower()}_{name_or_id.lower()}",
                 names_or_ids,
             )
+
     rdata.state_ids_solver = model.get_state_ids_solver()
     rdata.state_names_solver = model.get_state_names_solver()
+
+
+@contextlib.contextmanager
+def _solver_settings(solver, sensi_method=None, sensi_order=None):
+    """Context manager to temporarily set solver settings."""
+    old_method = old_order = None
+
+    if sensi_method is not None:
+        old_method = solver.get_sensitivity_method()
+        if isinstance(sensi_method, str):
+            sensi_method = SensitivityMethod[sensi_method]
+        solver.set_sensitivity_method(sensi_method)
+
+    if sensi_order is not None:
+        old_order = solver.get_sensitivity_order()
+        if isinstance(sensi_order, str):
+            sensi_order = SensitivityOrder[sensi_order]
+        solver.set_sensitivity_order(sensi_order)
+
+    try:
+        yield solver
+    finally:
+        if old_method is not None:
+            solver.set_sensitivity_method(old_method)
+        if old_order is not None:
+            solver.set_sensitivity_order(old_order)
+
+
+# Monkey-patch amici.Model
+
+
+@overload
+def Model_simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | None = None,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView: ...
+
+
+@overload
+def Model_simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> list[ReturnDataView]: ...
+
+
+def Model_simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView | list[ReturnDataView]:
+    """Simulate model with given solver and experimental data.
+
+    :param solver:
+        Solver to use for simulation. Defaults to :meth:`Model.get_solver`.
+    :param edata:
+        Experimental data to use for simulation.
+        A single :class:`ExpData` instance or a sequence of such instances.
+        If `None`, no experimental data is used and the model is simulated
+        as is.
+    :param sensi_method:
+        Sensitivity method to use for simulation.
+        If `None`, the solver's current sensitivity method is used.
+    :param sensi_order:
+        Sensitivity order to use for simulation.
+        If `None`, the solvers's current sensitivity order is used.
+    :param failfast:
+        Whether to stop simulations on first failure.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
+    :param num_threads:
+        Number of threads to use for simulation.
+        Only relevant if AMICI was compiled with OpenMP support and if `edata`
+        is a sequence of :class:`ExpData` instances.
+    :return:
+        A single :class:`ReturnDataView` instance containing the simulation
+        results if `edata` is a single :class:`ExpData` instance or `None`.
+        If `edata` is a sequence of :class:`ExpData` instances, a list of
+        :class:`ReturnDataView` instances is returned.
+    """
+    if solver is None:
+        solver = self.create_solver()
+
+    with _solver_settings(
+        solver=solver, sensi_method=sensi_method, sensi_order=sensi_order
+    ):
+        if isinstance(edata, Sequence):
+            return run_simulations(
+                model=_get_ptr(self),
+                solver=_get_ptr(solver),
+                edata_list=edata,
+                failfast=failfast,
+                num_threads=num_threads,
+            )
+
+        return run_simulation(
+            model=_get_ptr(self),
+            solver=_get_ptr(solver),
+            edata=_get_ptr(edata),
+        )
+
+
+amici_swig.Model.simulate = Model_simulate
+amici_swig.ModelPtr.simulate = Model_simulate
