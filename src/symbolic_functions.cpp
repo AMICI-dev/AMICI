@@ -13,7 +13,7 @@
 
 namespace amici {
 
-double getNaN() { return std::numeric_limits<double>::quiet_NaN(); }
+double get_nan() { return std::numeric_limits<double>::quiet_NaN(); }
 
 double log(double x) {
     if (x <= 0) {

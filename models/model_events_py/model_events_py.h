@@ -14,18 +14,18 @@ class Solver;
 
 namespace model_model_events_py {
 
-extern std::array<const char*, 4> parameterNames;
-extern std::array<const char*, 4> fixedParameterNames;
-extern std::array<const char*, 3> stateNames;
-extern std::array<const char*, 1> observableNames;
-extern std::array<const ObservableScaling, 1> observableScalings;
-extern std::array<const char*, 1> expressionNames;
-extern std::array<const char*, 4> parameterIds;
-extern std::array<const char*, 4> fixedParameterIds;
-extern std::array<const char*, 3> stateIds;
-extern std::array<const char*, 1> observableIds;
-extern std::array<const char*, 1> expressionIds;
-extern std::array<int, 3> stateIdxsSolver;
+extern std::array<const char*, 4> parameter_names;
+extern std::array<const char*, 4> fixed_parameter_names;
+extern std::array<const char*, 3> state_names;
+extern std::array<const char*, 1> observable_names;
+extern std::array<const ObservableScaling, 1> observable_scalings;
+extern std::array<const char*, 1> expression_names;
+extern std::array<const char*, 4> parameter_ids;
+extern std::array<const char*, 4> fixed_parameter_ids;
+extern std::array<const char*, 3> state_ids;
+extern std::array<const char*, 1> observable_ids;
+extern std::array<const char*, 1> expression_ids;
+extern std::array<int, 3> state_idxs_solver;
 
 extern void Jy_model_events_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydsigma_model_events_py(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
@@ -438,7 +438,7 @@ class Model_model_events_py : public amici::Model_ODE {
     }
 
 
-    std::string getName() const override {
+    std::string get_name() const override {
         return "model_events_py";
     }
 
@@ -446,28 +446,28 @@ class Model_model_events_py : public amici::Model_ODE {
      * @brief Get names of the model parameters
      * @return the names
      */
-    std::vector<std::string> getParameterNames() const override {
-        return std::vector<std::string>(parameterNames.begin(),
-                                        parameterNames.end());
+    std::vector<std::string> get_parameter_names() const override {
+        return std::vector<std::string>(parameter_names.begin(),
+                                        parameter_names.end());
     }
 
     /**
      * @brief Get names of the model states
      * @return the names
      */
-    std::vector<std::string> getStateNames() const override {
-        return std::vector<std::string>(stateNames.begin(), stateNames.end());
+    std::vector<std::string> get_state_names() const override {
+        return std::vector<std::string>(state_names.begin(), state_names.end());
     }
 
     /**
      * @brief Get names of the solver states
      * @return the names
      */
-    std::vector<std::string> getStateNamesSolver() const override {
+    std::vector<std::string> get_state_names_solver() const override {
         std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto const idx: stateIdxsSolver) {
-            result.push_back(stateNames[idx]);
+        result.reserve(state_idxs_solver.size());
+        for(auto const idx: state_idxs_solver) {
+            result.push_back(state_names[idx]);
         }
         return result;
     }
@@ -476,55 +476,55 @@ class Model_model_events_py : public amici::Model_ODE {
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    std::vector<std::string> getFixedParameterNames() const override {
-        return std::vector<std::string>(fixedParameterNames.begin(),
-                                        fixedParameterNames.end());
+    std::vector<std::string> get_fixed_parameter_names() const override {
+        return std::vector<std::string>(fixed_parameter_names.begin(),
+                                        fixed_parameter_names.end());
     }
 
     /**
      * @brief Get names of the observables
      * @return the names
      */
-    std::vector<std::string> getObservableNames() const override {
-        return std::vector<std::string>(observableNames.begin(),
-                                        observableNames.end());
+    std::vector<std::string> get_observable_names() const override {
+        return std::vector<std::string>(observable_names.begin(),
+                                        observable_names.end());
     }
 
     /**
      * @brief Get names of model expressions
      * @return Expression names
      */
-    std::vector<std::string> getExpressionNames() const override {
-        return std::vector<std::string>(expressionNames.begin(),
-                                        expressionNames.end());
+    std::vector<std::string> get_expression_names() const override {
+        return std::vector<std::string>(expression_names.begin(),
+                                        expression_names.end());
     }
 
     /**
      * @brief Get ids of the model parameters
      * @return the ids
      */
-    std::vector<std::string> getParameterIds() const override {
-        return std::vector<std::string>(parameterIds.begin(),
-                                        parameterIds.end());
+    std::vector<std::string> get_parameter_ids() const override {
+        return std::vector<std::string>(parameter_ids.begin(),
+                                        parameter_ids.end());
     }
 
     /**
      * @brief Get ids of the model states
      * @return the ids
      */
-    std::vector<std::string> getStateIds() const override {
-        return std::vector<std::string>(stateIds.begin(), stateIds.end());
+    std::vector<std::string> get_state_ids() const override {
+        return std::vector<std::string>(state_ids.begin(), state_ids.end());
     }
 
     /**
      * @brief Get ids of the solver states
      * @return the ids
      */
-    std::vector<std::string> getStateIdsSolver() const override {
+    std::vector<std::string> get_state_ids_solver() const override {
         std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto idx: stateIdxsSolver) {
-            result.push_back(stateIds[idx]);
+        result.reserve(state_idxs_solver.size());
+        for(auto idx: state_idxs_solver) {
+            result.push_back(state_ids[idx]);
         }
         return result;
     }
@@ -533,27 +533,27 @@ class Model_model_events_py : public amici::Model_ODE {
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    std::vector<std::string> getFixedParameterIds() const override {
-        return std::vector<std::string>(fixedParameterIds.begin(),
-                                        fixedParameterIds.end());
+    std::vector<std::string> get_fixed_parameter_ids() const override {
+        return std::vector<std::string>(fixed_parameter_ids.begin(),
+                                        fixed_parameter_ids.end());
     }
 
     /**
      * @brief Get ids of the observables
      * @return the ids
      */
-    std::vector<std::string> getObservableIds() const override {
-        return std::vector<std::string>(observableIds.begin(),
-                                        observableIds.end());
+    std::vector<std::string> get_observable_ids() const override {
+        return std::vector<std::string>(observable_ids.begin(),
+                                        observable_ids.end());
     }
 
     /**
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    std::vector<std::string> getExpressionIds() const override {
-        return std::vector<std::string>(expressionIds.begin(),
-                                        expressionIds.end());
+    std::vector<std::string> get_expression_ids() const override {
+        return std::vector<std::string>(expression_ids.begin(),
+                                        expression_ids.end());
     }
 
     /**
@@ -562,7 +562,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return flag indicating whether reinitialization of states depending on
      * fixed parameters is permissible
      */
-    bool isFixedParameterStateReinitializationAllowed() const override {
+    bool is_fixed_parameter_state_reinitialization_allowed() const override {
         return true;
     }
 
@@ -570,7 +570,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @brief returns the AMICI version that was used to generate the model
      * @return AMICI version string
      */
-    std::string getAmiciVersion() const override {
+    std::string get_amici_version() const override {
         return "0.34.1";
     }
 
@@ -578,16 +578,16 @@ class Model_model_events_py : public amici::Model_ODE {
      * @brief returns the amici version that was used to generate the model
      * @return AMICI git commit hash
      */
-    std::string getAmiciCommit() const override {
-        return "d5492c37f7dbc5faa374128e3559b96518e9a937";
+    std::string get_amici_commit() const override {
+        return "f005fac9e2de7c3c90be2ac55d4ad165471ed1e7";
     }
 
-    bool hasQuadraticLLH() const override {
+    bool has_quadratic_llh() const override {
         return true;
     }
 
-    ObservableScaling getObservableScaling(int iy) const override {
-        return observableScalings.at(iy);
+    ObservableScaling get_observable_scaling(int iy) const override {
+        return observable_scalings.at(iy);
     }
 };
 

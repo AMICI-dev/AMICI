@@ -27,8 +27,8 @@ struct ModelState {
         h.resize(dim.ne, 0.0);
         total_cl.resize(dim.nx_rdata - dim.nx_solver, 0.0);
         stotal_cl.resize((dim.nx_rdata - dim.nx_solver) * dim.np, 0.0);
-        unscaledParameters.resize(dim.np);
-        fixedParameters.resize(dim.nk);
+        unscaled_parameters.resize(dim.np);
+        fixed_parameters.resize(dim.nk);
     }
 
     /**
@@ -46,10 +46,10 @@ struct ModelState {
     std::vector<realtype> stotal_cl;
 
     /** Unscaled parameters (dimension: `np`) */
-    std::vector<realtype> unscaledParameters;
+    std::vector<realtype> unscaled_parameters;
 
     /** Constants (dimension: `nk`) */
-    std::vector<realtype> fixedParameters;
+    std::vector<realtype> fixed_parameters;
 
     /**
      * Indexes of parameters wrt to which sensitivities are computed
@@ -61,8 +61,8 @@ struct ModelState {
 inline bool operator==(ModelState const& a, ModelState const& b) {
     return is_equal(a.h, b.h) && is_equal(a.total_cl, b.total_cl)
            && is_equal(a.stotal_cl, b.stotal_cl)
-           && is_equal(a.unscaledParameters, b.unscaledParameters)
-           && is_equal(a.fixedParameters, b.fixedParameters)
+           && is_equal(a.unscaled_parameters, b.unscaled_parameters)
+           && is_equal(a.fixed_parameters, b.fixed_parameters)
            && a.plist == b.plist;
 }
 
@@ -82,7 +82,7 @@ struct ModelStateDerived {
     explicit ModelStateDerived(ModelDimensions const& dim);
 
     /**
-     * Copy constructor
+     * @brief Copy constructor
      *
      * @param other ModelStateDerived object to copy
      */

@@ -25,7 +25,7 @@ char const* AmiException::getBacktrace() const { return trace_.data(); }
 void AmiException::storeBacktrace(int const nMaxFrames, int const first_frame) {
     snprintf(
         trace_.data(), trace_.size(), "%s",
-        backtraceString(nMaxFrames, first_frame).c_str()
+        get_backtrace_string(nMaxFrames, first_frame).c_str()
     );
 }
 

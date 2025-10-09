@@ -361,7 +361,7 @@ class SUNMatrixWrapper {
     void multiply(
         AmiVector& c, AmiVector const& b, realtype const alpha = 1.0
     ) const {
-        multiply(c.getNVector(), b.getNVector(), alpha);
+        multiply(c.get_nvector(), b.get_nvector(), alpha);
     }
 
     /**
@@ -481,7 +481,7 @@ class SUNMatrixWrapper {
     /**
      * @brief Writes the diagonal of sparse matrix A to a dense vector v.
      *
-     * @param v dense outut vector
+     * @param v dense output vector
      */
     void to_diag(N_Vector v) const;
 
@@ -588,7 +588,7 @@ class SUNMatrixWrapper {
      * @brief indicator whether this wrapper allocated matrix_ and is
      * responsible for deallocation
      */
-    bool ownmat = true;
+    bool ownmat_ = true;
 };
 
 /**

@@ -15,7 +15,7 @@ from amici import (
     SensitivityMethod,
     SensitivityOrder,
     import_model_module,
-    runAmiciSimulation,
+    run_simulation,
 )
 from amici.gradient_check import _check_close
 from numpy.testing import assert_allclose
@@ -41,7 +41,7 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     )
 
     model_module = import_model_module(model_name, output_dir)
-    return model_module.getModel()
+    return model_module.get_model()
 
 
 def check_trajectories_without_sensitivities(
@@ -52,10 +52,10 @@ def check_trajectories_without_sensitivities(
     Check whether the AMICI simulation matches a known solution
     (ideally an analytically calculated one).
     """
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-12)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver = amici_model.create_solver()
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_relative_tolerance(1e-12)
+    rdata = run_simulation(amici_model, solver=solver)
     _check_close(
         rdata["x"], result_expected_x, field="x", rtol=5e-9, atol=1e-13
     )
@@ -70,14 +70,14 @@ def check_trajectories_with_forward_sensitivities(
     Check whether the forward sensitivities of the AMICI simulation match
     a known solution (ideally an analytically calculated one).
     """
-    solver = amici_model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    solver.setAbsoluteToleranceFSA(1e-15)
-    solver.setRelativeToleranceFSA(1e-13)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver = amici_model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_relative_tolerance(1e-13)
+    solver.set_absolute_tolerance_fsa(1e-15)
+    solver.set_relative_tolerance_fsa(1e-13)
+    rdata = run_simulation(amici_model, solver=solver)
     _check_close(
         rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12
     )
@@ -98,29 +98,29 @@ def check_trajectories_with_adjoint_sensitivities(
         sensitivities will not raise an AssertionError.
     """
     # First compute dummy experimental data to use adjoints
-    solver = amici_model.getSolver()
-    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, solver=solver)
     assert rdata.status == amici.AMICI_SUCCESS
     rng_seed = 42
     edata = ExpData(rdata, 1.0, 1.0, rng_seed)
 
     # FSA
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_relative_tolerance(1e-13)
+    rdata_fsa = run_simulation(amici_model, solver=solver, edata=edata)
     assert rdata_fsa.status == amici.AMICI_SUCCESS
 
     # ASA
-    solver.setSensitivityMethod(SensitivityMethod.adjoint)
-    solver.setAbsoluteTolerance(1e-16)
-    solver.setRelativeTolerance(1e-14)
-    solver.setAbsoluteToleranceB(1e-16)
-    solver.setRelativeToleranceB(1e-15)
-    solver.setAbsoluteToleranceQuadratures(1e-14)
-    solver.setRelativeToleranceQuadratures(1e-8)
-    rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_absolute_tolerance(1e-16)
+    solver.set_relative_tolerance(1e-14)
+    solver.set_absolute_tolerance_b(1e-16)
+    solver.set_relative_tolerance_b(1e-15)
+    solver.set_absolute_tolerance_quadratures(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-8)
+    rdata_asa = run_simulation(amici_model, solver=solver, edata=edata)
     assert rdata_asa.status == amici.AMICI_SUCCESS
 
     assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
@@ -131,25 +131,25 @@ def check_trajectories_with_adjoint_sensitivities(
             "asa": rdata_asa["sllh"],
             "fd": np.nan,
         },
-        index=list(amici_model.getParameterIds()),
+        index=list(amici_model.get_parameter_ids()),
     )
     df["abs_diff"] = df["fsa"] - df["asa"]
     df["rel_diff"] = df["abs_diff"] / df["fsa"]
 
     # Also test against finite differences
-    parameters = amici_model.getUnscaledParameters()
-    solver.setSensitivityOrder(SensitivityOrder.none)
+    parameters = amici_model.get_unscaled_parameters()
+    solver.set_sensitivity_order(SensitivityOrder.none)
     sllh_fd = []
     eps = 1e-5
     for i_par, par in enumerate(parameters):
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] += eps
-        amici_model.setParameters(tmp_par)
-        rdata_p = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        amici_model.set_parameters(tmp_par)
+        rdata_p = run_simulation(amici_model, solver=solver, edata=edata)
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] -= eps
-        amici_model.setParameters(tmp_par)
-        rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        amici_model.set_parameters(tmp_par)
+        rdata_m = run_simulation(amici_model, solver=solver, edata=edata)
         sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
     df["fd"] = sllh_fd
     df["asa_matches_fsa"] = np.isclose(

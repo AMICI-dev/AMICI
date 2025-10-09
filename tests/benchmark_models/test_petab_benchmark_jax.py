@@ -35,11 +35,11 @@ def test_jax_llh(benchmark_problem):
             "Skipping Smith_BMCSystBiol2013 due to non-supported events in JAX."
         )
 
-    amici_solver = amici_model.getSolver()
+    amici_solver = amici_model.create_solver()
     cur_settings = settings[problem_id]
-    amici_solver.setAbsoluteTolerance(1e-8)
-    amici_solver.setRelativeTolerance(1e-8)
-    amici_solver.setMaxSteps(10_000)
+    amici_solver.set_absolute_tolerance(1e-8)
+    amici_solver.set_relative_tolerance(1e-8)
+    amici_solver.set_max_steps(10_000)
 
     simulate_amici = partial(
         simulate_petab,
@@ -57,9 +57,11 @@ def test_jax_llh(benchmark_problem):
     if problem_id in problems_for_gradient_check:
         point = flat_petab_problem.x_nominal_free_scaled
         for _ in range(20):
-            amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            amici_model.setSteadyStateSensitivityMode(
+            amici_solver.set_sensitivity_method(
+                amici.SensitivityMethod.forward
+            )
+            amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
+            amici_model.set_steady_state_sensitivity_mode(
                 cur_settings.ss_sensitivity_mode
             )
             point_noise = (

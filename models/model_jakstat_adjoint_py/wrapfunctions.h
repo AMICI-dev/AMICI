@@ -12,7 +12,7 @@ namespace amici::generic_model {
  * the name at compile time.
  * @return Model instance
  */
-std::unique_ptr<amici::Model> getModel();
+std::unique_ptr<amici::Model> get_model();
 
 } // namespace amici::generic_model
 

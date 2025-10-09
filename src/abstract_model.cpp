@@ -4,11 +4,11 @@
 
 namespace amici {
 
-std::string AbstractModel::getAmiciVersion() const {
+std::string AbstractModel::get_amici_version() const {
     throw AmiException("Version not set during code generation");
 }
 
-std::string AbstractModel::getAmiciCommit() const {
+std::string AbstractModel::get_amici_commit() const {
     throw AmiException("Commit not set during code generation");
 }
 
@@ -22,7 +22,7 @@ void AbstractModel::
     );
 }
 
-bool AbstractModel::isFixedParameterStateReinitializationAllowed() const {
+bool AbstractModel::is_fixed_parameter_state_reinitialization_allowed() const {
     return false;
 }
 

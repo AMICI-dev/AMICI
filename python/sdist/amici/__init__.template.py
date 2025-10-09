@@ -35,7 +35,6 @@ with warnings.catch_warnings():
 for var in dir(TPL_MODELNAME):
     if not var.startswith("_"):
         globals()[var] = getattr(TPL_MODELNAME, var)
-get_model = TPL_MODELNAME.getModel
 
 try:
     # _self: this module; will be set during import

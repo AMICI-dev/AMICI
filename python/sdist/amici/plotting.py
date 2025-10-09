@@ -56,12 +56,13 @@ def plot_state_trajectories(
     if model is None and rdata.ptr.state_ids is None:
         labels = [f"$x_{{{ix}}}$" for ix in state_indices]
     elif model is not None and prefer_names:
-        labels = np.asarray(model.getStateNames())[list(state_indices)]
+        labels = np.asarray(model.get_state_names())[list(state_indices)]
         labels = [
-            l if l else model.getStateIds()[ix] for ix, l in enumerate(labels)
+            l if l else model.get_state_ids()[ix]
+            for ix, l in enumerate(labels)
         ]
     elif model is not None:
-        labels = np.asarray(model.getStateIds())[list(state_indices)]
+        labels = np.asarray(model.get_state_ids())[list(state_indices)]
     else:
         labels = np.asarray(rdata.ptr.state_ids)[list(state_indices)]
 
@@ -88,7 +89,7 @@ def plot_observable_trajectories(
 
     :param rdata:
         AMICI simulation results as returned by
-        :func:`amici.amici.runAmiciSimulation`.
+        :func:`amici.amici.run_simulation`.
     :param observable_indices:
         Indices of observables for which trajectories are to be plotted.
     :param ax:
@@ -119,15 +120,17 @@ def plot_observable_trajectories(
     if model is None and rdata.ptr.observable_ids is None:
         labels = [f"$y_{{{iy}}}$" for iy in observable_indices]
     elif model is not None and prefer_names:
-        labels = np.asarray(model.getObservableNames())[
+        labels = np.asarray(model.get_observable_names())[
             list(observable_indices)
         ]
         labels = [
-            l if l else model.getObservableIds()[ix]
+            l if l else model.get_observable_ids()[ix]
             for ix, l in enumerate(labels)
         ]
     elif model is not None:
-        labels = np.asarray(model.getObservableIds())[list(observable_indices)]
+        labels = np.asarray(model.get_observable_ids())[
+            list(observable_indices)
+        ]
     else:
         labels = np.asarray(rdata.ptr.observable_ids)[list(observable_indices)]
 
@@ -139,14 +142,14 @@ def plot_observable_trajectories(
         if edata is not None:
             ax.plot(
                 edata.ts,
-                edata.observedData[:, iy],
+                edata.observed_data[:, iy],
                 "x",
                 label=f"exp. {label}",
                 color=l.get_color(),
             )
             ax.errorbar(
                 edata.ts,
-                edata.observedData[:, iy],
+                edata.observed_data[:, iy],
                 yerr=rdata.sigmay[:, iy],
                 fmt="none",
                 color=l.get_color(),
@@ -167,11 +170,6 @@ def plot_jacobian(rdata: ReturnDataView):
     )
     sns.heatmap(df, center=0.0)
     plt.title("Jacobian")
-
-
-# backwards compatibility
-plotStateTrajectories = plot_state_trajectories
-plotObservableTrajectories = plot_observable_trajectories
 
 
 def plot_expressions(

@@ -31,6 +31,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * `amici.petab.petab_import.import_model` has been removed.
   Use `amici.petab.petab_import.import_model_sbml` instead.
   (The former was just an alias for the latter.)
+* For a more consistent API, all function names are now snake_case instead of
+  camelCase.
+* `Model.getSolver` has been renamed to `Model.create_solver`.
 * The following deprecated functionality has been removed:
   * The complete MATLAB interface has been removed.
   * `NonlinearSolverIteration::functional` has been removed,

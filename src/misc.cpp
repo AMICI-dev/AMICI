@@ -20,11 +20,11 @@
 
 namespace amici {
 
-void writeSlice(AmiVector const& s, gsl::span<realtype> const b) {
-    writeSlice(s.getVector(), b);
+void write_slice(AmiVector const& s, gsl::span<realtype> const b) {
+    write_slice(s.get_vector(), b);
 }
 
-double getUnscaledParameter(
+double unscale_parameter(
     double const scaledParameter, ParameterScaling const scaling
 ) {
     switch (scaling) {
@@ -39,7 +39,7 @@ double getUnscaledParameter(
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void unscaleParameters(
+void unscale_parameters(
     gsl::span<realtype const> const bufferScaled,
     gsl::span<ParameterScaling const> const pscale,
     gsl::span<realtype> const bufferUnscaled
@@ -49,11 +49,11 @@ void unscaleParameters(
 
     for (gsl::span<realtype>::index_type ip = 0; ip < bufferScaled.size();
          ++ip) {
-        bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
+        bufferUnscaled[ip] = unscale_parameter(bufferScaled[ip], pscale[ip]);
     }
 }
 
-double getScaledParameter(
+double scale_parameter(
     double const unscaledParameter, ParameterScaling const scaling
 ) {
     switch (scaling) {
@@ -68,7 +68,7 @@ double getScaledParameter(
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void scaleParameters(
+void scale_parameters(
     gsl::span<realtype const> const bufferUnscaled,
     gsl::span<ParameterScaling const> const pscale,
     gsl::span<realtype> const bufferScaled
@@ -78,11 +78,11 @@ void scaleParameters(
 
     for (gsl::span<realtype>::index_type ip = 0; ip < bufferUnscaled.size();
          ++ip) {
-        bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
+        bufferScaled[ip] = scale_parameter(bufferUnscaled[ip], pscale[ip]);
     }
 }
 
-std::string backtraceString(int const maxFrames, int const first_frame) {
+std::string get_backtrace_string(int const maxFrames, int const first_frame) {
     std::ostringstream trace_buf;
 
 #ifdef PLATFORM_WINDOWS
@@ -132,7 +132,7 @@ std::string backtraceString(int const maxFrames, int const first_frame) {
 }
 
 std::string
-regexErrorToString(std::regex_constants::error_type const err_type) {
+regex_error_to_string(std::regex_constants::error_type const err_type) {
     switch (err_type) {
     case std::regex_constants::error_collate:
         return "error_collate";
@@ -165,7 +165,7 @@ regexErrorToString(std::regex_constants::error_type const err_type) {
     }
 }
 
-std::string printfToString(char const* fmt, va_list ap) {
+std::string printf_to_string(char const* fmt, va_list ap) {
     // Get size of string
     va_list ap_count;
     va_copy(ap_count, ap);

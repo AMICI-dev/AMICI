@@ -31,23 +31,23 @@ realtype getWrmsNorm(
     realtype atol, realtype rtol, AmiVector& ewt
 ) {
     // ewt = x
-    N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
+    N_VAbs(const_cast<N_Vector>(x.get_nvector()), ewt.get_nvector());
     // ewt *= rtol
-    N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
+    N_VScale(rtol, ewt.get_nvector(), ewt.get_nvector());
     // ewt += atol
-    N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
+    N_VAddConst(ewt.get_nvector(), atol, ewt.get_nvector());
     // ewt = 1/ewt (ewt = 1/(rtol*x+atol))
-    N_VInv(ewt.getNVector(), ewt.getNVector());
+    N_VInv(ewt.get_nvector(), ewt.get_nvector());
 
     // wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector
     if (mask.size()) {
         return N_VWrmsNormMask(
-            const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector(),
-            const_cast<N_Vector>(mask.getNVector())
+            const_cast<N_Vector>(xdot.get_nvector()), ewt.get_nvector(),
+            const_cast<N_Vector>(mask.get_nvector())
         );
     }
     return N_VWrmsNorm(
-        const_cast<N_Vector>(xdot.getNVector()), ewt.getNVector()
+        const_cast<N_Vector>(xdot.get_nvector()), ewt.get_nvector()
     );
 }
 
@@ -74,7 +74,7 @@ NewtonsMethod::NewtonsMethod(
 void NewtonsMethod::run(
     AmiVector& xdot, DEStateView const& state, WRMSComputer& wrms_computer
 ) {
-    i_step = 0;
+    i_step_ = 0;
 
     if (model_->nx_solver == 0) {
         wrms_ = 0.0;
@@ -94,7 +94,7 @@ void NewtonsMethod::run(
     // Whether the step was successful
     bool step_successful = true;
 
-    while (!converged && i_step < max_steps_) {
+    while (!converged && i_step_ < max_steps_) {
         if (step_successful) {
             // If new residuals are smaller than the old ones, update state
             x_old_.copy(state.x);
@@ -114,7 +114,7 @@ void NewtonsMethod::run(
 
         // Try step with new gamma_/delta_, evaluate rhs
         // x = x_old + delta_[old_] * gamma
-        linearSum(
+        linear_sum(
             1.0, x_old_, gamma, update_direction ? delta_ : delta_old_, state.x
         );
         model_->fxdot(state.t, state.x, state.dx, xdot);
@@ -127,7 +127,7 @@ void NewtonsMethod::run(
         }
 
         update_direction = update_damping_factor(step_successful, gamma);
-        ++i_step;
+        ++i_step_;
     }
 
     if (!converged)
@@ -138,7 +138,7 @@ void NewtonsMethod::compute_step(
     AmiVector const& xdot, DEStateView const& state
 ) {
     delta_.copy(xdot);
-    solver_->getStep(delta_, *model_, state);
+    solver_->get_step(delta_, *model_, state);
 }
 
 bool NewtonsMethod::update_damping_factor(bool step_successful, double& gamma) {
@@ -186,8 +186,8 @@ bool NewtonsMethod::has_converged(
 
     // Ensure state positivity if requested,
     // and repeat the convergence check if necessary
-    auto nonnegative = model_->getStateIsNonNegative();
-    Expects(nonnegative.size() == state.x.getVector().size());
+    auto nonnegative = model_->get_state_is_non_negative();
+    Expects(nonnegative.size() == state.x.get_vector().size());
     auto state_modified = false;
     for (int ix = 0; ix < state.x.size(); ix++) {
         if (state.x[ix] < 0.0 && nonnegative[ix]) {

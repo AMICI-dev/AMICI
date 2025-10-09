@@ -14,12 +14,13 @@ import numpy as np
 import pysb.examples  # noqa: F811
 import pytest
 import sympy as sp
-from amici import ParameterScaling, parameterScalingFromIntVector
+from amici import ParameterScaling, parameter_scaling_from_int_vector
 from amici.gradient_check import check_derivatives
 from amici.pysb_import import pysb2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
 from pysb.simulator import ScipyOdeSimulator
+from pathlib import Path
 
 
 @skip_on_valgrind
@@ -28,7 +29,7 @@ def test_compare_to_sbml_import(
 ):
     # -------------- PYSB -----------------
 
-    model_pysb = pysb_example_presimulation_module.getModel()
+    model_pysb = pysb_example_presimulation_module.get_model()
 
     edata = get_data(model_pysb)
 
@@ -36,7 +37,7 @@ def test_compare_to_sbml_import(
 
     # -------------- SBML -----------------
 
-    model_sbml = sbml_example_presimulation_module.getModel()
+    model_sbml = sbml_example_presimulation_module.get_model()
 
     rdata_sbml = get_results(model_sbml, edata)
 
@@ -47,7 +48,7 @@ def test_compare_to_sbml_import(
         # check equilibrium fixed parameters
         assert np.isclose(
             [sum(rdata["x_ss"][[1, 3]]), sum(rdata["x_ss"][[2, 4]])],
-            edata.fixedParametersPreequilibration,
+            edata.fixed_parameters_pre_equilibration,
             atol=1e-6,
             rtol=1e-6,
         ).all(), f"{importer} preequilibration"
@@ -55,7 +56,7 @@ def test_compare_to_sbml_import(
         # check equilibrium initial parameters
         assert np.isclose(
             sum(rdata["x_ss"][[0, 3, 4, 5]]),
-            model.getParameterByName("PROT_0"),
+            model.get_parameter_by_name("PROT_0"),
             atol=1e-6,
             rtol=1e-6,
         ), f"{importer} preequilibration"
@@ -64,7 +65,7 @@ def test_compare_to_sbml_import(
         # presimulation
         assert np.isclose(
             [rdata["x0"][1], rdata["x0"][2]],
-            edata.fixedParameters,
+            edata.fixed_parameters,
             atol=1e-6,
             rtol=1e-6,
         ).all(), f"{importer} presimulation"
@@ -74,15 +75,15 @@ def test_compare_to_sbml_import(
         "preeq_t",
         "numsteps",
         "preeq_numsteps",
-        "numrhsevals",
-        "numerrtestfails",
+        "num_rhs_evals",
+        "num_err_test_fails",
         "order",
         "J",
         "xdot",
         "preeq_wrms",
         "preeq_cpu_time",
         "cpu_time",
-        "cpu_timeB",
+        "cpu_time_b",
         "cpu_time_total",
         "w",
     ]
@@ -142,9 +143,7 @@ def test_compare_to_pysb_simulation(example):
 
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(
-            os.path.join(
-                os.path.dirname(__file__), "..", "tests", "pysb_test_models"
-            )
+            Path(__file__).parents[1] / "tests" / "pysb_test_models"
         ):
             # load example
             pysb.SelfExporter.cleanup()  # reset pysb
@@ -196,14 +195,14 @@ def test_compare_to_pysb_simulation(example):
                 amici_model_module = amici.import_model_module(
                     pysb_model.name, outdir
                 )
-                model_pysb = amici_model_module.getModel()
-                model_pysb.setTimepoints(tspan)
+                model_pysb = amici_model_module.get_model()
+                model_pysb.set_timepoints(tspan)
 
-                solver = model_pysb.getSolver()
-                solver.setMaxSteps(int(1e6))
-                solver.setAbsoluteTolerance(atol)
-                solver.setRelativeTolerance(rtol)
-                rdata = amici.runAmiciSimulation(model_pysb, solver)
+                solver = model_pysb.create_solver()
+                solver.set_max_steps(int(1e6))
+                solver.set_absolute_tolerance(atol)
+                solver.set_relative_tolerance(rtol)
+                rdata = amici.run_simulation(model_pysb, solver)
 
                 # check agreement of species simulations
                 assert np.isclose(
@@ -224,20 +223,20 @@ def test_compare_to_pysb_simulation(example):
                         "bngwiki_enzymatic_cycle_mm",
                         "bngwiki_simple",
                     ]:
-                        solver.setAbsoluteTolerance(1e-14)
-                        solver.setRelativeTolerance(1e-14)
+                        solver.set_absolute_tolerance(1e-14)
+                        solver.set_relative_tolerance(1e-14)
                         epsilon = 1e-4
                     else:
-                        solver.setAbsoluteTolerance(1e-10)
-                        solver.setRelativeTolerance(1e-10)
+                        solver.set_absolute_tolerance(1e-10)
+                        solver.set_relative_tolerance(1e-10)
                         epsilon = 1e-3
-                    model_pysb.setParameterScale(
-                        parameterScalingFromIntVector(
+                    model_pysb.set_parameter_scale(
+                        parameter_scaling_from_int_vector(
                             [
                                 ParameterScaling.log10
                                 if p > 0
                                 else ParameterScaling.none
-                                for p in model_pysb.getParameters()
+                                for p in model_pysb.get_parameters()
                             ]
                         )
                     )
@@ -252,38 +251,38 @@ def test_compare_to_pysb_simulation(example):
 
 
 def get_data(model):
-    solver = model.getSolver()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    model.setSteadyStateSensitivityMode(
+    solver = model.create_solver()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    model.set_steady_state_sensitivity_mode(
         amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
     edata = amici.ExpData(rdata, 0.1, 0.0)
     edata.t_presim = 2
-    edata.fixedParameters = [10, 2]
-    edata.fixedParametersPresimulation = [3, 2]
-    edata.fixedParametersPreequilibration = [3, 0]
-    edata.reinitializeFixedParameterInitialStates = True
+    edata.fixed_parameters = [10, 2]
+    edata.fixed_parameters_presimulation = [3, 2]
+    edata.fixed_parameters_pre_equilibration = [3, 0]
+    edata.reinitialize_fixed_parameter_initial_states = True
     return edata
 
 
 def get_results(model, edata):
-    solver = model.getSolver()
-    solver.setSensitivityOrder(1)
-    edata.reinitializeFixedParameterInitialStates = True
-    model.setTimepoints(np.linspace(0, 60, 61))
-    model.setSteadyStateSensitivityMode(
+    solver = model.create_solver()
+    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    edata.reinitialize_fixed_parameter_initial_states = True
+    model.set_timepoints(np.linspace(0, 60, 61))
+    model.set_steady_state_sensitivity_mode(
         amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
-    return amici.runAmiciSimulation(model, solver, edata)
+    return amici.run_simulation(model, solver, edata)
 
 
 @skip_on_valgrind
 def test_names_and_ids(pysb_example_presimulation_module):
-    model_pysb = pysb_example_presimulation_module.getModel()
+    model_pysb = pysb_example_presimulation_module.get_model()
     expected = {
-        "ExpressionIds": (
+        "expression_ids": (
             "__s2",
             "__s1",
             "__s5",
@@ -294,11 +293,11 @@ def test_names_and_ids(pysb_example_presimulation_module):
             "initKin",
             "pPROT_obs",
         ),
-        "FixedParameterIds": ("DRUG_0", "KIN_0"),
-        "FixedParameterNames": ("DRUG_0", "KIN_0"),
-        "ObservableIds": ("pPROT_obs",),
-        "ObservableNames": ("pPROT_obs",),
-        "ParameterIds": (
+        "fixed_parameter_ids": ("DRUG_0", "KIN_0"),
+        "fixed_parameter_names": ("DRUG_0", "KIN_0"),
+        "observable_ids": ("pPROT_obs",),
+        "observable_names": ("pPROT_obs",),
+        "parameter_ids": (
             "PROT_0",
             "kon_prot_drug",
             "koff_prot_drug",
@@ -306,8 +305,8 @@ def test_names_and_ids(pysb_example_presimulation_module):
             "kphospho_prot_kin",
             "kdephospho_prot",
         ),
-        "StateIds": ("__s0", "__s1", "__s2", "__s3", "__s4", "__s5"),
-        "StateNames": (
+        "state_ids": ("__s0", "__s1", "__s2", "__s3", "__s4", "__s5"),
+        "state_names": (
             "PROT(kin=None, drug=None, phospho='u')",
             "DRUG(bound=None)",
             "KIN(bound=None)",
@@ -317,11 +316,11 @@ def test_names_and_ids(pysb_example_presimulation_module):
         ),
     }
     # Names and IDs are the same here
-    expected["ExpressionNames"] = expected["ExpressionIds"]
-    expected["ParameterNames"] = expected["ParameterIds"]
+    expected["expression_names"] = expected["expression_ids"]
+    expected["parameter_names"] = expected["parameter_ids"]
 
     for field_name, cur_expected in expected.items():
-        actual = getattr(model_pysb, f"get{field_name}")()
+        actual = getattr(model_pysb, f"get_{field_name}")()
         assert actual == cur_expected
 
 
@@ -353,7 +352,7 @@ def test_heavyside_and_special_symbols():
         model_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
         )
-        amici_model = model_module.getModel()
+        amici_model = model_module.get_model()
         assert amici_model.ne
 
 
@@ -386,11 +385,11 @@ def test_energy():
         model_module = amici.import_model_module(
             module_name=model_pysb.name, module_path=outdir
         )
-        amici_model = model_module.getModel()
-        amici_model.setTimepoints(np.logspace(-4, 5, 10))
-        solver = amici_model.getSolver()
-        solver.setRelativeTolerance(1e-14)
-        solver.setAbsoluteTolerance(1e-14)
+        amici_model = model_module.get_model()
+        amici_model.set_timepoints(np.logspace(-4, 5, 10))
+        solver = amici_model.create_solver()
+        solver.set_relative_tolerance(1e-14)
+        solver.set_absolute_tolerance(1e-14)
 
         check_derivatives(
             amici_model, solver, epsilon=1e-4, rtol=1e-2, atol=1e-2

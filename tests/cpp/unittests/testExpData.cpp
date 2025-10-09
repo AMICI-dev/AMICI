@@ -12,7 +12,7 @@
 
 namespace amici {
 namespace generic_model {
-std::unique_ptr<Model> getModel();
+std::unique_ptr<Model> get_model();
 } // namespace generic_model
 } // namespace amici
 
@@ -23,16 +23,16 @@ namespace {
 class ExpDataTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        model->setTimepoints(timepoints);
-        model->setNMaxEvent(nmaxevent);
-        testModel.setTimepoints(timepoints);
-        testModel.setNMaxEvent(nmaxevent);
+        model->set_timepoints(timepoints);
+        model->set_n_max_event(nmaxevent);
+        testModel.set_timepoints(timepoints);
+        testModel.set_n_max_event(nmaxevent);
     }
 
     int nx = 1, ny = 2, nz = 3, nmaxevent = 4;
     std::vector<realtype> timepoints = {1, 2, 3, 4};
 
-    std::unique_ptr<Model> model = generic_model::getModel();
+    std::unique_ptr<Model> model = generic_model::get_model();
 
     Model_Test testModel = Model_Test(
         ModelDimensions{
@@ -85,20 +85,22 @@ TEST_F(ExpDataTest, DefaultConstructable) {
     ASSERT_EQ(edata.nmaxevent(), 0);
 }
 TEST_F(ExpDataTest, ModelCtor) {
-    ExpData edata(model->nytrue, model->nztrue, model->nMaxEvent());
+    ExpData edata(model->nytrue, model->nztrue, model->n_max_event());
     ASSERT_EQ(edata.nytrue(), model->nytrue);
     ASSERT_EQ(edata.nztrue(), model->nztrue);
-    ASSERT_EQ(edata.nmaxevent(), model->nMaxEvent());
+    ASSERT_EQ(edata.nmaxevent(), model->n_max_event());
 }
 
 TEST_F(ExpDataTest, DimensionCtor) {
-    ExpData edata(model->nytrue, model->nztrue, model->nMaxEvent(), timepoints);
+    ExpData edata(
+        model->nytrue, model->nztrue, model->n_max_event(), timepoints
+    );
     ASSERT_EQ(edata.nytrue(), model->nytrue);
     ASSERT_EQ(edata.nztrue(), model->nztrue);
-    ASSERT_EQ(edata.nmaxevent(), model->nMaxEvent());
+    ASSERT_EQ(edata.nmaxevent(), model->n_max_event());
     ASSERT_EQ(edata.nt(), model->nt());
     checkEqualArray(
-        timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts"
+        timepoints, edata.get_timepoints(), TEST_ATOL, TEST_RTOL, "ts"
     );
 }
 
@@ -109,28 +111,28 @@ TEST_F(ExpDataTest, MeasurementCtor) {
     std::vector<realtype> z_std(nz * nmaxevent, 0.1);
 
     ExpData edata(
-        testModel.nytrue, testModel.nztrue, testModel.nMaxEvent(), timepoints,
+        testModel.nytrue, testModel.nztrue, testModel.n_max_event(), timepoints,
         y, y_std, z, z_std
     );
     ASSERT_EQ(edata.nytrue(), testModel.nytrue);
     ASSERT_EQ(edata.nztrue(), testModel.nztrue);
-    ASSERT_EQ(edata.nmaxevent(), testModel.nMaxEvent());
+    ASSERT_EQ(edata.nmaxevent(), testModel.n_max_event());
     ASSERT_EQ(edata.nt(), testModel.nt());
     checkEqualArray(
-        timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts"
+        timepoints, edata.get_timepoints(), TEST_ATOL, TEST_RTOL, "ts"
     );
     checkEqualArray(
-        y, edata.getObservedData(), TEST_ATOL, TEST_RTOL, "observedData"
+        y, edata.get_observed_data(), TEST_ATOL, TEST_RTOL, "observedData"
     );
     checkEqualArray(
-        y_std, edata.getObservedDataStdDev(), TEST_ATOL, TEST_RTOL,
+        y_std, edata.get_observed_data_std_dev(), TEST_ATOL, TEST_RTOL,
         "observedDataStdDev"
     );
     checkEqualArray(
-        z, edata.getObservedEvents(), TEST_ATOL, TEST_RTOL, "observedEvents"
+        z, edata.get_observed_events(), TEST_ATOL, TEST_RTOL, "observedEvents"
     );
     checkEqualArray(
-        z_std, edata.getObservedEventsStdDev(), TEST_ATOL, TEST_RTOL,
+        z_std, edata.get_observed_events_std_dev(), TEST_ATOL, TEST_RTOL,
         "observedEventsStdDev"
     );
 
@@ -140,37 +142,39 @@ TEST_F(ExpDataTest, MeasurementCtor) {
     ASSERT_EQ(edata.nmaxevent(), edata_copy.nmaxevent());
     ASSERT_EQ(edata.nt(), edata_copy.nt());
     checkEqualArray(
-        edata_copy.getTimepoints(), edata.getTimepoints(), TEST_ATOL, TEST_RTOL,
-        "ts"
+        edata_copy.get_timepoints(), edata.get_timepoints(), TEST_ATOL,
+        TEST_RTOL, "ts"
     );
     checkEqualArray(
-        edata_copy.getObservedData(), edata.getObservedData(), TEST_ATOL,
+        edata_copy.get_observed_data(), edata.get_observed_data(), TEST_ATOL,
         TEST_RTOL, "observedData"
     );
     checkEqualArray(
-        edata_copy.getObservedDataStdDev(), edata.getObservedDataStdDev(),
-        TEST_ATOL, TEST_RTOL, "observedDataStdDev"
+        edata_copy.get_observed_data_std_dev(),
+        edata.get_observed_data_std_dev(), TEST_ATOL, TEST_RTOL,
+        "observedDataStdDev"
     );
     checkEqualArray(
-        edata_copy.getObservedEvents(), edata.getObservedEvents(), TEST_ATOL,
-        TEST_RTOL, "observedEvents"
+        edata_copy.get_observed_events(), edata.get_observed_events(),
+        TEST_ATOL, TEST_RTOL, "observedEvents"
     );
     checkEqualArray(
-        edata_copy.getObservedEventsStdDev(), edata.getObservedEventsStdDev(),
-        TEST_ATOL, TEST_RTOL, "observedEventsStdDev"
+        edata_copy.get_observed_events_std_dev(),
+        edata.get_observed_events_std_dev(), TEST_ATOL, TEST_RTOL,
+        "observedEventsStdDev"
     );
 }
 
 TEST_F(ExpDataTest, CopyConstructable) {
-    testModel.setTimepoints(timepoints);
+    testModel.set_timepoints(timepoints);
     auto edata = ExpData(testModel);
     ASSERT_EQ(edata.nytrue(), testModel.nytrue);
     ASSERT_EQ(edata.nztrue(), testModel.nztrue);
-    ASSERT_EQ(edata.nmaxevent(), testModel.nMaxEvent());
+    ASSERT_EQ(edata.nmaxevent(), testModel.n_max_event());
     ASSERT_EQ(edata.nt(), testModel.nt());
     checkEqualArray(
-        testModel.getTimepoints(), edata.getTimepoints(), TEST_ATOL, TEST_RTOL,
-        "ts"
+        testModel.get_timepoints(), edata.get_timepoints(), TEST_ATOL,
+        TEST_RTOL, "ts"
     );
 }
 
@@ -192,7 +196,7 @@ TEST_F(ExpDataTest, DimensionChecks) {
 
     ASSERT_THROW(
         ExpData(
-            testModel.nytrue, testModel.nztrue, testModel.nMaxEvent(),
+            testModel.nytrue, testModel.nztrue, testModel.n_max_event(),
             timepoints, z, z_std, z, z_std
         ),
         AmiException
@@ -200,7 +204,7 @@ TEST_F(ExpDataTest, DimensionChecks) {
 
     ASSERT_THROW(
         ExpData(
-            testModel.nytrue, testModel.nztrue, testModel.nMaxEvent(),
+            testModel.nytrue, testModel.nztrue, testModel.n_max_event(),
             timepoints, z, bad_std, z, z_std
         ),
         AmiException
@@ -213,27 +217,27 @@ TEST_F(ExpDataTest, DimensionChecks) {
     std::vector<realtype> bad_z(nz * nmaxevent + 1, 0.0);
     std::vector<realtype> bad_z_std(nz * nmaxevent + 1, 0.1);
 
-    ASSERT_THROW(edata.setObservedData(bad_y), AmiException);
-    ASSERT_THROW(edata.setObservedDataStdDev(bad_y_std), AmiException);
-    ASSERT_THROW(edata.setObservedEvents(bad_z), AmiException);
-    ASSERT_THROW(edata.setObservedEventsStdDev(bad_y_std), AmiException);
+    ASSERT_THROW(edata.set_observed_data(bad_y), AmiException);
+    ASSERT_THROW(edata.set_observed_data_std_dev(bad_y_std), AmiException);
+    ASSERT_THROW(edata.set_observed_events(bad_z), AmiException);
+    ASSERT_THROW(edata.set_observed_events_std_dev(bad_y_std), AmiException);
 
     std::vector<realtype> bad_single_y(edata.nt() + 1, 0.0);
     std::vector<realtype> bad_single_y_std(edata.nt() + 1, 0.1);
     std::vector<realtype> bad_single_z(edata.nmaxevent() + 1, 0.0);
     std::vector<realtype> bad_single_z_std(edata.nmaxevent() + 1, 0.1);
 
-    ASSERT_THROW(edata.setObservedData(bad_single_y, 0), AmiException);
+    ASSERT_THROW(edata.set_observed_data(bad_single_y, 0), AmiException);
     ASSERT_THROW(
-        edata.setObservedDataStdDev(bad_single_y_std, 0), AmiException
+        edata.set_observed_data_std_dev(bad_single_y_std, 0), AmiException
     );
-    ASSERT_THROW(edata.setObservedEvents(bad_single_z, 0), AmiException);
+    ASSERT_THROW(edata.set_observed_events(bad_single_z, 0), AmiException);
     ASSERT_THROW(
-        edata.setObservedEventsStdDev(bad_single_y_std, 0), AmiException
+        edata.set_observed_events_std_dev(bad_single_y_std, 0), AmiException
     );
 
     ASSERT_THROW(
-        edata.setTimepoints(std::vector<realtype>{0.0, 1.0, 0.5}), AmiException
+        edata.set_timepoints(std::vector<realtype>{0.0, 1.0, 0.5}), AmiException
     );
 }
 
@@ -245,22 +249,22 @@ TEST_F(ExpDataTest, SettersGetters) {
     std::vector<realtype> z(nz * nmaxevent, 0.0);
     std::vector<realtype> z_std(nz * nmaxevent, 0.1);
 
-    edata.setObservedData(y);
+    edata.set_observed_data(y);
     checkEqualArray(
-        edata.getObservedData(), y, TEST_ATOL, TEST_RTOL, "ObservedData"
+        edata.get_observed_data(), y, TEST_ATOL, TEST_RTOL, "ObservedData"
     );
-    edata.setObservedDataStdDev(y_std);
+    edata.set_observed_data_std_dev(y_std);
     checkEqualArray(
-        edata.getObservedDataStdDev(), y_std, TEST_ATOL, TEST_RTOL,
+        edata.get_observed_data_std_dev(), y_std, TEST_ATOL, TEST_RTOL,
         "ObservedDataStdDev"
     );
-    edata.setObservedEvents(z);
+    edata.set_observed_events(z);
     checkEqualArray(
-        edata.getObservedEvents(), z, TEST_ATOL, TEST_RTOL, "ObservedEvents"
+        edata.get_observed_events(), z, TEST_ATOL, TEST_RTOL, "ObservedEvents"
     );
-    edata.setObservedEventsStdDev(z_std);
+    edata.set_observed_events_std_dev(z_std);
     checkEqualArray(
-        edata.getObservedEventsStdDev(), z_std, TEST_ATOL, TEST_RTOL,
+        edata.get_observed_events_std_dev(), z_std, TEST_ATOL, TEST_RTOL,
         "ObservedEventsStdDev"
     );
 
@@ -268,60 +272,65 @@ TEST_F(ExpDataTest, SettersGetters) {
     std::vector<realtype> single_y_std(edata.nt(), 0.1);
 
     for (int iy = 0; iy < ny; ++iy) {
-        edata.setObservedData(single_y, iy);
-        edata.setObservedDataStdDev(single_y_std, iy);
+        edata.set_observed_data(single_y, iy);
+        edata.set_observed_data_std_dev(single_y_std, iy);
     }
-    ASSERT_THROW(edata.setObservedData(single_y, ny), std::exception);
-    ASSERT_THROW(edata.setObservedData(single_y, -1), std::exception);
-    ASSERT_THROW(edata.setObservedDataStdDev(single_y_std, ny), std::exception);
-    ASSERT_THROW(edata.setObservedDataStdDev(single_y_std, -1), std::exception);
+    ASSERT_THROW(edata.set_observed_data(single_y, ny), std::exception);
+    ASSERT_THROW(edata.set_observed_data(single_y, -1), std::exception);
+    ASSERT_THROW(
+        edata.set_observed_data_std_dev(single_y_std, ny), std::exception
+    );
+    ASSERT_THROW(
+        edata.set_observed_data_std_dev(single_y_std, -1), std::exception
+    );
 
     std::vector<realtype> single_z(edata.nmaxevent(), 0.0);
     std::vector<realtype> single_z_std(edata.nmaxevent(), 0.1);
 
     for (int iz = 0; iz < nz; ++iz) {
-        edata.setObservedEvents(single_z, iz);
-        edata.setObservedEventsStdDev(single_z_std, iz);
+        edata.set_observed_events(single_z, iz);
+        edata.set_observed_events_std_dev(single_z_std, iz);
     }
 
-    ASSERT_THROW(edata.setObservedEvents(single_z, nz), std::exception);
-    ASSERT_THROW(edata.setObservedEvents(single_z, -1), std::exception);
+    ASSERT_THROW(edata.set_observed_events(single_z, nz), std::exception);
+    ASSERT_THROW(edata.set_observed_events(single_z, -1), std::exception);
     ASSERT_THROW(
-        edata.setObservedEventsStdDev(single_z_std, nz), std::exception
+        edata.set_observed_events_std_dev(single_z_std, nz), std::exception
     );
     ASSERT_THROW(
-        edata.setObservedEventsStdDev(single_z_std, -1), std::exception
+        edata.set_observed_events_std_dev(single_z_std, -1), std::exception
     );
 
-    ASSERT_TRUE(edata.getObservedDataPtr(0));
-    ASSERT_TRUE(edata.getObservedDataStdDevPtr(0));
-    ASSERT_TRUE(edata.getObservedEventsPtr(0));
-    ASSERT_TRUE(edata.getObservedEventsStdDevPtr(0));
+    ASSERT_TRUE(edata.get_observed_data_ptr(0));
+    ASSERT_TRUE(edata.get_observed_data_std_dev_ptr(0));
+    ASSERT_TRUE(edata.get_observed_events_ptr(0));
+    ASSERT_TRUE(edata.get_observed_events_std_dev_ptr(0));
 
     std::vector<realtype> empty(0, 0.0);
 
-    edata.setObservedData(empty);
-    edata.setObservedDataStdDev(empty);
-    edata.setObservedEvents(empty);
-    edata.setObservedEventsStdDev(empty);
+    edata.set_observed_data(empty);
+    edata.set_observed_data_std_dev(empty);
+    edata.set_observed_events(empty);
+    edata.set_observed_events_std_dev(empty);
 
-    ASSERT_TRUE(!edata.getObservedDataPtr(0));
-    ASSERT_TRUE(!edata.getObservedDataStdDevPtr(0));
-    ASSERT_TRUE(!edata.getObservedEventsPtr(0));
-    ASSERT_TRUE(!edata.getObservedEventsStdDevPtr(0));
+    ASSERT_TRUE(!edata.get_observed_data_ptr(0));
+    ASSERT_TRUE(!edata.get_observed_data_std_dev_ptr(0));
+    ASSERT_TRUE(!edata.get_observed_events_ptr(0));
+    ASSERT_TRUE(!edata.get_observed_events_std_dev_ptr(0));
 
     checkEqualArray(
-        edata.getObservedData(), empty, TEST_ATOL, TEST_RTOL, "ObservedData"
+        edata.get_observed_data(), empty, TEST_ATOL, TEST_RTOL, "ObservedData"
     );
     checkEqualArray(
-        edata.getObservedDataStdDev(), empty, TEST_ATOL, TEST_RTOL,
+        edata.get_observed_data_std_dev(), empty, TEST_ATOL, TEST_RTOL,
         "ObservedDataStdDev"
     );
     checkEqualArray(
-        edata.getObservedEvents(), empty, TEST_ATOL, TEST_RTOL, "ObservedEvents"
+        edata.get_observed_events(), empty, TEST_ATOL, TEST_RTOL,
+        "ObservedEvents"
     );
     checkEqualArray(
-        edata.getObservedEventsStdDev(), empty, TEST_ATOL, TEST_RTOL,
+        edata.get_observed_events_std_dev(), empty, TEST_ATOL, TEST_RTOL,
         "ObservedEventsStdDev"
     );
 }
@@ -329,21 +338,21 @@ TEST_F(ExpDataTest, SettersGetters) {
 TEST_F(ExpDataTest, RngSeed) {
     ReturnData rdata(CVodeSolver(), testModel);
     rdata.y.assign(testModel.ny * testModel.nt(), 1.0);
-    rdata.z.assign(testModel.nz * testModel.nMaxEvent(), 1.0);
+    rdata.z.assign(testModel.nz * testModel.n_max_event(), 1.0);
 
     // random RNG seed
     ExpData edata1(rdata, 1, 1, -1);
 
-    ASSERT_TRUE(edata1.getObservedData() != rdata.y);
+    ASSERT_TRUE(edata1.get_observed_data() != rdata.y);
 
     // fixed RNG seed
     ExpData edata2(rdata, 1, 1, 1);
 
-    ASSERT_TRUE(edata2.getObservedData() != rdata.y);
-    ASSERT_TRUE(edata2.getObservedData() != edata1.getObservedData());
+    ASSERT_TRUE(edata2.get_observed_data() != rdata.y);
+    ASSERT_TRUE(edata2.get_observed_data() != edata1.get_observed_data());
 
     ExpData edata3(rdata, 1, 1, 1);
-    ASSERT_TRUE(edata3.getObservedData() == edata2.getObservedData());
+    ASSERT_TRUE(edata3.get_observed_data() == edata2.get_observed_data());
 }
 
 } // namespace

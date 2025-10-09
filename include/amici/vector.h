@@ -110,7 +110,7 @@ class AmiVector {
      */
     AmiVector(AmiVector&& other) noexcept
         : vec_(std::move(other.vec_)) {
-        synchroniseNVector(other.get_ctx());
+        synchronise_nvector(other.get_ctx());
     }
 
     /**
@@ -132,8 +132,8 @@ class AmiVector {
      */
     AmiVector& operator*=(AmiVector const& multiplier) {
         N_VProd(
-            getNVector(), const_cast<N_Vector>(multiplier.getNVector()),
-            getNVector()
+            get_nvector(), const_cast<N_Vector>(multiplier.get_nvector()),
+            get_nvector()
         );
         return *this;
     }
@@ -145,8 +145,8 @@ class AmiVector {
      */
     AmiVector& operator/=(AmiVector const& divisor) {
         N_VDiv(
-            getNVector(), const_cast<N_Vector>(divisor.getNVector()),
-            getNVector()
+            get_nvector(), const_cast<N_Vector>(divisor.get_nvector()),
+            get_nvector()
         );
         return *this;
     }
@@ -181,19 +181,19 @@ class AmiVector {
      * @brief N_Vector accessor
      * @return N_Vector
      */
-    N_Vector getNVector();
+    N_Vector get_nvector();
 
     /**
      * @brief N_Vector accessor
      * @return N_Vector
      */
-    [[nodiscard]] const_N_Vector getNVector() const;
+    [[nodiscard]] const_N_Vector get_nvector() const;
 
     /**
      * @brief Vector accessor
      * @return Vector
      */
-    [[nodiscard]] std::vector<realtype> const& getVector() const;
+    [[nodiscard]] std::vector<realtype> const& get_vector() const;
 
     /**
      * @brief returns the length of the vector
@@ -254,7 +254,7 @@ class AmiVector {
     /**
      * @brief Take absolute value (in-place)
      */
-    void abs() { N_VAbs(getNVector(), getNVector()); }
+    void abs() { N_VAbs(get_nvector(), get_nvector()); }
 
     /**
      * @brief Serialize AmiVector (see boost::serialization::serialize)
@@ -299,7 +299,7 @@ class AmiVector {
      * @brief reconstructs nvec such that data pointer points to vec data array
      * @param sunctx SUNDIALS context
      */
-    void synchroniseNVector(SUNContext sunctx);
+    void synchronise_nvector(SUNContext sunctx);
 };
 
 /**
@@ -395,21 +395,21 @@ class AmiVectorArray {
      * @brief accessor to NVectorArray
      * @return N_VectorArray
      */
-    N_Vector* getNVectorArray();
+    N_Vector* get_nvector_array();
 
     /**
      * @brief accessor to NVector element
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    N_Vector getNVector(int pos);
+    N_Vector get_nvector(int pos);
 
     /**
      * @brief const accessor to NVector element
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    [[nodiscard]] const_N_Vector getNVector(int pos) const;
+    [[nodiscard]] const_N_Vector get_nvector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements
@@ -499,13 +499,13 @@ inline std::ostream& operator<<(std::ostream& os, AmiVectorArray const& arr) {
  * @param y another vector with same size as x
  * @param z result vector of same size as x and y
  */
-inline void linearSum(
+inline void linear_sum(
     realtype const a, AmiVector const& x, realtype const b, AmiVector const& y,
     AmiVector& z
 ) {
     N_VLinearSum(
-        a, const_cast<N_Vector>(x.getNVector()), b,
-        const_cast<N_Vector>(y.getNVector()), z.getNVector()
+        a, const_cast<N_Vector>(x.get_nvector()), b,
+        const_cast<N_Vector>(y.get_nvector()), z.get_nvector()
     );
 }
 
@@ -515,10 +515,10 @@ inline void linearSum(
  * @param y vector
  * @return dot product of x and y
  */
-inline realtype dotProd(AmiVector const& x, AmiVector const& y) {
+inline realtype dot_prod(AmiVector const& x, AmiVector const& y) {
     return N_VDotProd(
-        const_cast<N_Vector>(x.getNVector()),
-        const_cast<N_Vector>(y.getNVector())
+        const_cast<N_Vector>(x.get_nvector()),
+        const_cast<N_Vector>(y.get_nvector())
     );
 }
 
@@ -540,7 +540,7 @@ inline span<amici::realtype> make_span(N_Vector nv) {
  *
  */
 inline span<amici::realtype const> make_span(amici::AmiVector const& av) {
-    return make_span(av.getVector());
+    return make_span(av.get_vector());
 }
 
 } // namespace gsl

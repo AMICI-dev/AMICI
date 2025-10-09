@@ -5,65 +5,65 @@ namespace amici::model_model_robertson_py {
 
 // clang-format off
 
-std::array<const char*, 3> parameterNames = {
+std::array<const char*, 3> parameter_names = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
 };
 
-std::array<const char*, 1> fixedParameterNames = {
+std::array<const char*, 1> fixed_parameter_names = {
     "k1", // k[0]
 };
 
-std::array<const char*, 3> stateNames = {
+std::array<const char*, 3> state_names = {
     "x1", // x_rdata[0]
 "x2", // x_rdata[1]
 "x3", // x_rdata[2]
 };
 
-std::array<const char*, 3> observableNames = {
+std::array<const char*, 3> observable_names = {
     "y0", // y[0]
 "y1", // y[1]
 "y2", // y[2]
 };
 
-std::array<const ObservableScaling, 3> observableScalings = {
+std::array<const ObservableScaling, 3> observable_scalings = {
     ObservableScaling::lin, // y[0]
 ObservableScaling::lin, // y[1]
 ObservableScaling::lin, // y[2]
 };
 
-std::array<const char*, 1> expressionNames = {
+std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 3> parameterIds = {
+std::array<const char*, 3> parameter_ids = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
 };
 
-std::array<const char*, 1> fixedParameterIds = {
+std::array<const char*, 1> fixed_parameter_ids = {
     "k1", // k[0]
 };
 
-std::array<const char*, 3> stateIds = {
+std::array<const char*, 3> state_ids = {
     "x1", // x_rdata[0]
 "x2", // x_rdata[1]
 "x3", // x_rdata[2]
 };
 
-std::array<const char*, 3> observableIds = {
+std::array<const char*, 3> observable_ids = {
     "obs_x1", // y[0]
 "obs_x2", // y[1]
 "obs_x3", // y[2]
 };
 
-std::array<const char*, 1> expressionIds = {
+std::array<const char*, 1> expression_ids = {
     "flux_r0", // w[0]
 };
 
-std::array<int, 3> stateIdxsSolver = {
+std::array<int, 3> state_idxs_solver = {
     0, 1, 2
 };
 

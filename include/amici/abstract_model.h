@@ -27,10 +27,10 @@ class AbstractModel {
     virtual ~AbstractModel() = default;
 
     /**
-     * @brief Retrieves the solver object
+     * @brief Creates a solver instance to simulate this model.
      * @return The Solver instance
      */
-    virtual std::unique_ptr<Solver> getSolver() = 0;
+    virtual std::unique_ptr<Solver> create_solver() = 0;
 
     /**
      * @brief Root function
@@ -210,13 +210,13 @@ class AbstractModel {
      * @brief Returns the AMICI version that was used to generate the model
      * @return AMICI version string
      */
-    [[nodiscard]] virtual std::string getAmiciVersion() const;
+    [[nodiscard]] virtual std::string get_amici_version() const;
 
     /**
      * @brief Returns the AMICI commit that was used to generate the model
      * @return AMICI commit string
      */
-    [[nodiscard]] virtual std::string getAmiciCommit() const;
+    [[nodiscard]] virtual std::string get_amici_commit() const;
 
     /**
      * @brief Model-specific implementation of fx0
@@ -235,7 +235,7 @@ class AbstractModel {
      * fixed parameters is permissible
      */
     [[nodiscard]] virtual bool
-    isFixedParameterStateReinitializationAllowed() const;
+    is_fixed_parameter_state_reinitialization_allowed() const;
 
     /**
      * @brief Model-specific implementation of fx0_fixedParameters

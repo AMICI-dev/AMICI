@@ -5,7 +5,7 @@ namespace amici::model_model_jakstat_adjoint_py {
 
 // clang-format off
 
-std::array<const char*, 17> parameterNames = {
+std::array<const char*, 17> parameter_names = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
@@ -25,12 +25,12 @@ std::array<const char*, 17> parameterNames = {
 "sigma_pEpoR", // p[16]
 };
 
-std::array<const char*, 2> fixedParameterNames = {
+std::array<const char*, 2> fixed_parameter_names = {
     "Omega_cyt", // k[0]
 "Omega_nuc", // k[1]
 };
 
-std::array<const char*, 9> stateNames = {
+std::array<const char*, 9> state_names = {
     "STAT", // x_rdata[0]
 "pSTAT", // x_rdata[1]
 "pSTAT_pSTAT", // x_rdata[2]
@@ -42,24 +42,24 @@ std::array<const char*, 9> stateNames = {
 "nSTAT5", // x_rdata[8]
 };
 
-std::array<const char*, 3> observableNames = {
+std::array<const char*, 3> observable_names = {
     "y0", // y[0]
 "y1", // y[1]
 "y2", // y[2]
 };
 
-std::array<const ObservableScaling, 3> observableScalings = {
+std::array<const ObservableScaling, 3> observable_scalings = {
     ObservableScaling::lin, // y[0]
 ObservableScaling::lin, // y[1]
 ObservableScaling::lin, // y[2]
 };
 
-std::array<const char*, 2> expressionNames = {
+std::array<const char*, 2> expression_names = {
     "u", // w[0]
 "flux_r0", // w[1]
 };
 
-std::array<const char*, 17> parameterIds = {
+std::array<const char*, 17> parameter_ids = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
@@ -79,12 +79,12 @@ std::array<const char*, 17> parameterIds = {
 "sigma_pEpoR", // p[16]
 };
 
-std::array<const char*, 2> fixedParameterIds = {
+std::array<const char*, 2> fixed_parameter_ids = {
     "Omega_cyt", // k[0]
 "Omega_nuc", // k[1]
 };
 
-std::array<const char*, 9> stateIds = {
+std::array<const char*, 9> state_ids = {
     "STAT", // x_rdata[0]
 "pSTAT", // x_rdata[1]
 "pSTAT_pSTAT", // x_rdata[2]
@@ -96,18 +96,18 @@ std::array<const char*, 9> stateIds = {
 "nSTAT5", // x_rdata[8]
 };
 
-std::array<const char*, 3> observableIds = {
+std::array<const char*, 3> observable_ids = {
     "obs_pSTAT", // y[0]
 "obs_tSTAT", // y[1]
 "obs_spline", // y[2]
 };
 
-std::array<const char*, 2> expressionIds = {
+std::array<const char*, 2> expression_ids = {
     "u", // w[0]
 "flux_r0", // w[1]
 };
 
-std::array<int, 9> stateIdxsSolver = {
+std::array<int, 9> state_idxs_solver = {
     0, 1, 2, 3, 4, 5, 6, 7, 8
 };
 

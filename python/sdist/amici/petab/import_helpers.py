@@ -150,7 +150,7 @@ def _can_import_model(
     if jax:
         return hasattr(model_module, "Model")
     else:
-        return hasattr(model_module, "getModel")
+        return hasattr(model_module, "get_model")
 
 
 def get_fixed_parameters(
@@ -252,8 +252,8 @@ def check_model(
     if petab_problem.parameter_df is None:
         return
 
-    amici_ids_free = set(amici_model.getParameterIds())
-    amici_ids = amici_ids_free | set(amici_model.getFixedParameterIds())
+    amici_ids_free = set(amici_model.get_parameter_ids())
+    amici_ids = amici_ids_free | set(amici_model.get_fixed_parameter_ids())
 
     petab_ids_free = set(
         petab_problem.parameter_df.loc[

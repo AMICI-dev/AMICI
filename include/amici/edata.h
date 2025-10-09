@@ -58,11 +58,11 @@ class ExpData : public SimulationParameters {
      * @param nztrue Number of event outputs
      * @param nmaxevent Maximal number of events to track
      * @param ts Timepoints (dimension: nt)
-     * @param fixedParameters Model constants (dimension: nk)
+     * @param fixed_parameters Model constants (dimension: nk)
      */
     ExpData(
         int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-        std::vector<realtype> fixedParameters
+        std::vector<realtype> fixed_parameters
     );
 
     /**
@@ -72,20 +72,20 @@ class ExpData : public SimulationParameters {
      * @param nztrue Number of event outputs
      * @param nmaxevent Maximal number of events to track
      * @param ts Timepoints (dimension: nt)
-     * @param observedData observed data (dimension: nt x nytrue, row-major)
-     * @param observedDataStdDev standard deviation of observed data
+     * @param observed_data observed data (dimension: nt x nytrue, row-major)
+     * @param observed_data_std_dev standard deviation of observed data
      * (dimension: nt x nytrue, row-major)
-     * @param observedEvents observed events
+     * @param observed_events observed events
      * (dimension: nmaxevents x nztrue, row-major)
-     * @param observedEventsStdDev standard deviation of observed events/roots
-     * (dimension: nmaxevents x nztrue, row-major)
+     * @param observed_events_std_dev standard deviation of observed
+     * events/roots (dimension: nmaxevents x nztrue, row-major)
      */
     ExpData(
         int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-        std::vector<realtype> const& observedData,
-        std::vector<realtype> const& observedDataStdDev,
-        std::vector<realtype> const& observedEvents,
-        std::vector<realtype> const& observedEventsStdDev
+        std::vector<realtype> const& observed_data,
+        std::vector<realtype> const& observed_data_std_dev,
+        std::vector<realtype> const& observed_events,
+        std::vector<realtype> const& observed_events_std_dev
     );
 
     /**
@@ -160,28 +160,28 @@ class ExpData : public SimulationParameters {
     int nt() const;
 
     /**
-     * @brief Set output timepoints.
+     * @brief Set output ts.
      *
      * If the number of timepoint increases, this will grow the
      * observation/sigma matrices and fill new entries with NaN.
-     * If the number of timepoints decreases, this will shrink the
+     * If the number of ts decreases, this will shrink the
      * observation/sigma matrices.
      *
-     * Note that the mapping from timepoints to measurements will not be
+     * Note that the mapping from ts to measurements will not be
      * preserved. E.g., say there are measurements at t = 2, and this
      * function is called with [1, 2], then the old measurements will belong to
      * t = 1.
      *
-     * @param ts timepoints
+     * @param ts ts
      */
-    void setTimepoints(std::vector<realtype> const& ts);
+    void set_timepoints(std::vector<realtype> const& ts);
 
     /**
      * @brief Get output timepoints.
      *
      * @return ExpData::ts
      */
-    std::vector<realtype> const& getTimepoints() const;
+    std::vector<realtype> const& get_timepoints() const;
 
     /**
      * @brief Get timepoint for the given index
@@ -190,22 +190,22 @@ class ExpData : public SimulationParameters {
      *
      * @return timepoint timepoint at index
      */
-    realtype getTimepoint(int it) const;
+    realtype get_timepoint(int it) const;
 
     /**
      * @brief Set all measurements.
      *
-     * @param observedData observed data (dimension: nt x nytrue, row-major)
+     * @param observed_data observed data (dimension: nt x nytrue, row-major)
      */
-    void setObservedData(std::vector<realtype> const& observedData);
+    void set_observed_data(std::vector<realtype> const& observed_data);
 
     /**
      * @brief Set measurements for a given observable index
      *
-     * @param observedData observed data (dimension: nt)
+     * @param observed_data observed data (dimension: nt)
      * @param iy observed data index
      */
-    void setObservedData(std::vector<realtype> const& observedData, int iy);
+    void set_observed_data(std::vector<realtype> const& observed_data, int iy);
 
     /**
      * @brief Whether there is a measurement for the given time- and observable-
@@ -216,14 +216,14 @@ class ExpData : public SimulationParameters {
      *
      * @return boolean specifying if data was set
      */
-    bool isSetObservedData(int it, int iy) const;
+    bool is_set_observed_data(int it, int iy) const;
 
     /**
      * @brief Get all measurements.
      *
      * @return observed data (dimension: nt x nytrue, row-major)
      */
-    std::vector<realtype> const& getObservedData() const;
+    std::vector<realtype> const& get_observed_data() const;
 
     /**
      * @brief Get measurements for a given timepoint index.
@@ -232,22 +232,24 @@ class ExpData : public SimulationParameters {
      *
      * @return pointer to observed data at index (dimension: nytrue)
      */
-    realtype const* getObservedDataPtr(int it) const;
+    realtype const* get_observed_data_ptr(int it) const;
 
     /**
      * @brief Set standard deviations for measurements.
      *
-     * @param observedDataStdDev standard deviation of observed data (dimension:
-     * nt x nytrue, row-major)
+     * @param observed_data_std_dev standard deviation of observed data
+     * (dimension: nt x nytrue, row-major)
      */
-    void setObservedDataStdDev(std::vector<realtype> const& observedDataStdDev);
+    void set_observed_data_std_dev(
+        std::vector<realtype> const& observed_data_std_dev
+    );
 
     /**
      * @brief Set identical standard deviation for all measurements.
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
-    void setObservedDataStdDev(realtype stdDev);
+    void set_observed_data_std_dev(realtype stdDev);
 
     /**
      * @brief Set standard deviations of observed data for a
@@ -257,7 +259,7 @@ class ExpData : public SimulationParameters {
      * nt)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(
+    void set_observed_data_std_dev(
         std::vector<realtype> const& observedDataStdDev, int iy
     );
 
@@ -268,7 +270,7 @@ class ExpData : public SimulationParameters {
      * @param stdDev standard deviation (dimension: scalar)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(realtype stdDev, int iy);
+    void set_observed_data_std_dev(realtype stdDev, int iy);
 
     /**
      * @brief Whether standard deviation for a measurement at
@@ -278,14 +280,14 @@ class ExpData : public SimulationParameters {
      * @param iy observable index
      * @return boolean specifying if standard deviation of data was set
      */
-    bool isSetObservedDataStdDev(int it, int iy) const;
+    bool is_set_observed_data_std_dev(int it, int iy) const;
 
     /**
      * @brief Get measurement standard deviations.
      *
      * @return standard deviation of observed data
      */
-    std::vector<realtype> const& getObservedDataStdDev() const;
+    std::vector<realtype> const& get_observed_data_std_dev() const;
 
     /**
      * @brief Get pointer to measurement standard deviations.
@@ -293,7 +295,7 @@ class ExpData : public SimulationParameters {
      * @param it timepoint index
      * @return pointer to standard deviation of observed data at index
      */
-    realtype const* getObservedDataStdDevPtr(int it) const;
+    realtype const* get_observed_data_std_dev_ptr(int it) const;
 
     /**
      * @brief Set observed event data.
@@ -301,7 +303,7 @@ class ExpData : public SimulationParameters {
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void setObservedEvents(std::vector<realtype> const& observedEvents);
+    void set_observed_events(std::vector<realtype> const& observedEvents);
 
     /**
      * @brief Set observed event data for specific event observable.
@@ -309,7 +311,8 @@ class ExpData : public SimulationParameters {
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
      */
-    void setObservedEvents(std::vector<realtype> const& observedEvents, int iz);
+    void
+    set_observed_events(std::vector<realtype> const& observedEvents, int iz);
 
     /**
      * @brief Check whether event data at specified indices has been set.
@@ -318,14 +321,14 @@ class ExpData : public SimulationParameters {
      * @param iz event observable index
      * @return boolean specifying if data was set
      */
-    bool isSetObservedEvents(int ie, int iz) const;
+    bool is_set_observed_events(int ie, int iz) const;
 
     /**
      * @brief Get observed event data.
      *
      * @return observed event data
      */
-    std::vector<realtype> const& getObservedEvents() const;
+    std::vector<realtype> const& get_observed_events() const;
 
     /**
      * @brief Get pointer to observed data at ie-th occurrence.
@@ -334,22 +337,23 @@ class ExpData : public SimulationParameters {
      *
      * @return pointer to observed event data at ie-th occurrence
      */
-    realtype const* getObservedEventsPtr(int ie) const;
+    realtype const* get_observed_events_ptr(int ie) const;
 
     /**
      * @brief Set standard deviation of observed event data.
      *
      * @param observedEventsStdDev standard deviation of observed event data
      */
-    void
-    setObservedEventsStdDev(std::vector<realtype> const& observedEventsStdDev);
+    void set_observed_events_std_dev(
+        std::vector<realtype> const& observedEventsStdDev
+    );
 
     /**
      * @brief Set standard deviation of observed event data.
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
-    void setObservedEventsStdDev(realtype stdDev);
+    void set_observed_events_std_dev(realtype stdDev);
 
     /**
      * @brief Set standard deviation of observed data for a specific observable.
@@ -358,7 +362,7 @@ class ExpData : public SimulationParameters {
      * (dimension: nmaxevent)
      * @param iz observed data index
      */
-    void setObservedEventsStdDev(
+    void set_observed_events_std_dev(
         std::vector<realtype> const& observedEventsStdDev, int iz
     );
 
@@ -368,7 +372,7 @@ class ExpData : public SimulationParameters {
      * @param stdDev standard deviation (dimension: scalar)
      * @param iz observed data index
      */
-    void setObservedEventsStdDev(realtype stdDev, int iz);
+    void set_observed_events_std_dev(realtype stdDev, int iz);
 
     /**
      * @brief Check whether standard deviation of event data
@@ -378,14 +382,14 @@ class ExpData : public SimulationParameters {
      * @param iz event observable index
      * @return boolean specifying if standard deviation of event data was set
      */
-    bool isSetObservedEventsStdDev(int ie, int iz) const;
+    bool is_set_observed_events_std_dev(int ie, int iz) const;
 
     /**
      * @brief Get standard deviation of observed event data.
      *
      * @return standard deviation of observed event data
      */
-    std::vector<realtype> const& getObservedEventsStdDev() const;
+    std::vector<realtype> const& get_observed_events_std_dev() const;
 
     /**
      * @brief Get pointer to standard deviation of
@@ -396,7 +400,7 @@ class ExpData : public SimulationParameters {
      * @return pointer to standard deviation of observed event data at ie-th
      * occurrence
      */
-    realtype const* getObservedEventsStdDevPtr(int ie) const;
+    realtype const* get_observed_events_std_dev_ptr(int ie) const;
 
     /**
      * @brief Set all observations and their standard deviations to NaN.
@@ -415,17 +419,17 @@ class ExpData : public SimulationParameters {
      * @brief resizes observedData, observedDataStdDev, observedEvents and
      * observedEventsStdDev
      */
-    void applyDimensions();
+    void apply_dimensions();
 
     /**
      * @brief resizes observedData and observedDataStdDev
      */
-    void applyDataDimension();
+    void apply_data_dimension();
 
     /**
      * @brief resizes observedEvents and observedEventsStdDev
      */
-    void applyEventDimension();
+    void apply_event_dimension();
 
     /**
      * @brief checker for dimensions of input observedData or observedDataStdDev
@@ -433,7 +437,7 @@ class ExpData : public SimulationParameters {
      * @param input vector input to be checked
      * @param fieldname name of the input
      */
-    void checkDataDimension(
+    void check_data_dimension(
         std::vector<realtype> const& input, char const* fieldname
     ) const;
 
@@ -444,7 +448,7 @@ class ExpData : public SimulationParameters {
      * @param input vector input to be checked
      * @param fieldname name of the input
      */
-    void checkEventsDimension(
+    void check_events_dimension(
         std::vector<realtype> const& input, char const* fieldname
     ) const;
 
@@ -546,7 +550,7 @@ class ConditionContext : public ContextManager {
      * @param edata
      * @param fpc flag indicating which fixedParameter from edata to apply
      */
-    void applyCondition(ExpData const* edata, FixedParameterContext fpc);
+    void apply_condition(ExpData const* edata, FixedParameterContext fpc);
 
     /**
      * @brief Restore original settings on constructor-supplied amici::Model.
