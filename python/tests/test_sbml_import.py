@@ -119,7 +119,6 @@ def test_nosensi(tempdir):
     model = model_module.get_model()
     model.set_timepoints(np.linspace(0, 60, 61))
     rdata = model.simulate(sensi_order="first", sensi_method="forward")
-    rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_ERROR
 
 
@@ -604,7 +603,7 @@ def test_likelihoods(model_test_likelihoods):
         edata = amici.ExpData(rdata, sigmas, [])
 
     # and now run for real and also compute likelihood values
-    rdata = model.simulate_multiple(solver=solver, edatas=[edata])[0]
+    rdata = model.simulate(solver=solver, edata=[edata])[0]
 
     # check if the values make overall sense
     assert np.isfinite(rdata["llh"])

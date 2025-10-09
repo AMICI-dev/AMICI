@@ -3,6 +3,7 @@
 import logging
 import warnings
 from typing import Any
+from collections.abc import Sequence
 import contextlib
 
 import amici
@@ -16,7 +17,6 @@ from amici.amici import (
     SensitivityMethod,
     SensitivityOrder,
     Solver,
-    ExpData,
 )
 from . import numpy, ReturnDataView
 from .logging import get_logger
@@ -306,25 +306,41 @@ def _solver_settings(solver, sensi_method=None, sensi_order=None):
 # Monkey-patch amici.Model
 def Model_simulate(
     self: AmiciModel,
+    *,
     solver: Solver | None = None,
-    edata: ExpData | None = None,
-    sensi_method: SensitivityMethod = None,
-    sensi_order: SensitivityOrder = None,
-) -> ReturnDataView:
+    edata: AmiciExpData | AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView | list[ReturnDataView]:
     """Simulate model with given solver and experimental data.
 
     :param solver:
-        Solver to use for simulation. Defaults to :meth:`Model.getSolver`.
+        Solver to use for simulation. Defaults to :meth:`Model.get_solver`.
     :param edata:
         Experimental data to use for simulation.
+        A single :class:`ExpData` instance or a sequence of such instances.
+        If `None`, no experimental data is used and the model is simulated
+        as is.
     :param sensi_method:
         Sensitivity method to use for simulation.
-        If `None`, the model's current sensitivity method is used.
+        If `None`, the solver's current sensitivity method is used.
     :param sensi_order:
         Sensitivity order to use for simulation.
-        If `None`, the model's current sensitivity order is used.
+        If `None`, the solvers's current sensitivity order is used.
+    :param failfast:
+        Whether to stop simulations on first failure.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
+    :param num_threads:
+        Number of threads to use for simulation.
+        Only relevant if AMICI was compiled with OpenMP support and if `edata`
+        is a sequence of :class:`ExpData` instances.
     :return:
-        Object containing results of the simulation.
+        A single :class:`ReturnDataView` instance containing the simulation
+        results if `edata` is a single :class:`ExpData` instance or `None`.
+        If `edata` is a sequence of :class:`ExpData` instances, a list of
+        :class:`ReturnDataView` instances is returned.
     """
     if solver is None:
         solver = self.create_solver()
@@ -332,6 +348,15 @@ def Model_simulate(
     with _solver_settings(
         solver=solver, sensi_method=sensi_method, sensi_order=sensi_order
     ):
+        if isinstance(edata, Sequence):
+            return run_simulations(
+                model=_get_ptr(self),
+                solver=_get_ptr(solver),
+                edata_list=edata,
+                failfast=failfast,
+                num_threads=num_threads,
+            )
+
         return run_simulation(
             model=_get_ptr(self),
             solver=_get_ptr(solver),
@@ -341,51 +366,3 @@ def Model_simulate(
 
 amici_swig.Model.simulate = Model_simulate
 amici_swig.ModelPtr.simulate = Model_simulate
-
-
-def Model_simulate_multiple(
-    self: AmiciModel,
-    edatas: list[ExpData],
-    solver: Solver | None = None,
-    failfast: bool = True,
-    num_threads: int = 1,
-    sensi_method: SensitivityMethod = None,
-    sensi_order: SensitivityOrder = None,
-) -> list[ReturnDataView]:
-    """Simulate model with given solver and multiple experimental data sets.
-
-    :param edatas:
-        List of experimental data to use for simulation.
-    :param solver:
-        Solver to use for simulation. Defaults to :meth:`Model.getSolver`.
-    :param failfast:
-        Whether to stop simulations on first failure.
-    :param num_threads:
-        Number of threads to use for simulation.
-        Only relevant if AMICI was compiled with OpenMP support.
-    :param sensi_method:
-        Sensitivity method to use for simulation.
-        If `None`, the model's current sensitivity method is used.
-    :param sensi_order:
-        Sensitivity order to use for simulation.
-        If `None`, the model's current sensitivity order is used.
-    :return:
-        List of objects containing results of the simulations.
-    """
-    if solver is None:
-        solver = self.get_solver()
-
-    with _solver_settings(
-        solver=solver, sensi_method=sensi_method, sensi_order=sensi_order
-    ):
-        return run_simulations(
-            model=_get_ptr(self),
-            solver=_get_ptr(solver),
-            edata_list=edatas,
-            failfast=failfast,
-            num_threads=num_threads,
-        )
-
-
-amici_swig.Model.simulate_multiple = Model_simulate_multiple
-amici_swig.ModelPtr.simulate_multiple = Model_simulate_multiple
