@@ -2,7 +2,7 @@
 
 import logging
 import warnings
-from typing import Any
+from typing import Any, overload
 from collections.abc import Sequence
 import contextlib
 
@@ -304,6 +304,32 @@ def _solver_settings(solver, sensi_method=None, sensi_order=None):
 
 
 # Monkey-patch amici.Model
+
+
+@overload
+def Model_simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | None = None,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView: ...
+
+
+@overload
+def Model_simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> list[ReturnDataView]: ...
+
+
 def Model_simulate(
     self: AmiciModel,
     *,
