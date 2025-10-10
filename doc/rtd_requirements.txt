@@ -16,6 +16,7 @@ sphinx_rtd_theme>=1.2.0
 petab[vis]>=0.2.0
 sphinx-autodoc-typehints
 ipython>=8.13.2
+h5py>=3.14.0
 breathe>=4.35.0
 exhale>=0.3.7
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject

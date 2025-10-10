@@ -2564,6 +2564,7 @@ class DEModel:
             hybridization information
         """
         added_expressions = False
+        orig_obs = tuple([s.get_id() for s in self._observables])
         for net_id, net in hybridization.items():
             if net["static"]:
                 continue  # do not integrate into ODEs, handle in amici.jax.petab
@@ -2595,7 +2596,7 @@ class DEModel:
                     )
 
             outputs = {
-                out_var: comp
+                out_var: {"comp": comp, "ind": net["output_vars"][out_var]}
                 for comp in self._components
                 if (out_var := str(comp.get_id())) in net["output_vars"]
                 # TODO: SYNTAX NEEDS to CHANGE
@@ -2606,7 +2607,9 @@ class DEModel:
                 raise ValueError(
                     f"Could not find all output variables for neural network {net_id}"
                 )
-            for iout, (out_var, comp) in enumerate(outputs.items()):
+
+            for out_var, parts in outputs.items():
+                comp = parts["comp"]
                 # remove output from model components
                 if isinstance(comp, Parameter):
                     self._parameters.remove(comp)
@@ -2621,7 +2624,7 @@ class DEModel:
 
                 # generate dummy Function
                 out_val = sp.Function(net_id)(
-                    *[input.get_id() for input in inputs], iout
+                    *[input.get_id() for input in inputs], parts["ind"]
                 )
 
                 # add to the model
@@ -2641,6 +2644,42 @@ class DEModel:
                         )
                     )
                     added_expressions = True
+
+            observables = {
+                ob_var: {"comp": comp, "ind": net["observable_vars"][ob_var]}
+                for comp in self._components
+                if (ob_var := str(comp.get_id())) in net["observable_vars"]
+                # # TODO: SYNTAX NEEDS to CHANGE
+                # or (ob_var := str(comp.get_id()) + "_dot")
+                # in net["observable_vars"]
+            }
+            if len(observables.keys()) != len(net["observable_vars"]):
+                raise ValueError(
+                    f"Could not find all observable variables for neural network {net_id}"
+                )
+
+            for ob_var, parts in observables.items():
+                comp = parts["comp"]
+                if isinstance(comp, Observable):
+                    self._observables.remove(comp)
+                else:
+                    raise ValueError(
+                        f"{comp.get_name()} ({type(comp)}) is not an observable."
+                    )
+                out_val = sp.Function(net_id)(
+                    *[input.get_id() for input in inputs], parts["ind"]
+                )
+                # add to the model
+                self.add_component(
+                    Observable(
+                        identifier=comp.get_id(),
+                        name=net_id,
+                        value=out_val,
+                    )
+                )
+
+        new_order = [orig_obs.index(s.get_id()) for s in self._observables]
+        self._observables = [self._observables[i] for i in new_order]
 
         if added_expressions:
             # toposort expressions

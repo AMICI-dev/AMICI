@@ -545,6 +545,8 @@ class JAXModel(eqx.Module):
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
@@ -588,6 +590,10 @@ class JAXModel(eqx.Module):
             mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
         :param x_reinit:
             re-initialized state vector. If not provided, the state vector is not re-initialized.
+        :param init_override:
+            override model input e.g. with neural net outputs. If not provided, the inputs are not overridden.
+        :param init_override_mask:
+            mask for input override. If `True`, the corresponding input is replaced with value from init_override.
         :param ts_mask:
             mask to remove (padded) time points. If `True`, the corresponding time point is used for the evaluation of
             the output. Only applied if ret is ReturnValue.llh, ReturnValue.nllhs, ReturnValue.res, or ReturnValue.chi2.
@@ -602,6 +608,11 @@ class JAXModel(eqx.Module):
 
         if x_preeq.shape[0]:
             x = x_preeq
+        elif init_override.shape[0]:
+            x_def = self._x0(t0, p)
+            x = jnp.squeeze(
+                jnp.where(init_override_mask, init_override, x_def)
+            )
         else:
             x = self._x0(t0, p)
 
