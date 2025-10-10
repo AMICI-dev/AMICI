@@ -73,7 +73,7 @@ jobs:
       - name: Run PEtab SciML testsuite
         run: |
           source ./venv/bin/activate \
-            && pytest --cov-report=xml:coverage.xml \
+            && pytest --cov-report=xml:coverage_petab_sciml.xml \
               --cov=./ tests/sciml/test_sciml.py
 
       - name: Codecov
@@ -81,6 +81,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: coverage.xml
-          flags: petab
+          file: coverage_petab_sciml.xml
+          flags: petab_sciml
           fail_ci_if_error: true
