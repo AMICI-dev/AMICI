@@ -11,6 +11,7 @@ import shutil
 from pathlib import Path
 
 import amici
+import pandas as pd
 import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
@@ -86,12 +87,6 @@ def import_petab_problem(
             "Unsupported model type " + petab_problem.model.type_id
         )
 
-    if petab_problem.mapping_df is not None:
-        # It's partially supported. Remove at your own risk...
-        raise NotImplementedError(
-            "PEtab v2.0.0 mapping tables are not yet supported."
-        )
-
     model_name = model_name or petab_problem.model.model_id
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB and model_name is None:
@@ -133,6 +128,69 @@ def import_petab_problem(
             shutil.rmtree(model_output_dir)
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
+
+        if "neural_nets" in petab_problem.extensions_config:  # TODO: fixme
+            from petab_sciml.standard import NNModelStandard
+
+            config = petab_problem.extensions_config
+            # TODO: only accept YAML format for now
+            hybridization_table = pd.read_csv(
+                config["hybridization_file"], sep="\t"
+            )
+            input_mapping = dict(
+                zip(
+                    hybridization_table["targetId"],
+                    hybridization_table["targetValue"],
+                )
+            )
+            output_mapping = dict(
+                zip(
+                    hybridization_table["targetValue"],
+                    hybridization_table["targetId"],
+                )
+            )
+            hybridization = {
+                net_id: {
+                    "model": NNModelStandard.load_data(
+                        Path() / net_config["location"]
+                    ),
+                    "input_vars": [
+                        input_mapping[petab_id]
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
+                        ]
+                        .to_dict()
+                        .items()
+                        if model_id.split(".")[1].startswith("input")
+                    ],
+                    "output_vars": [
+                        output_mapping[petab_id]
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
+                        ]
+                        .to_dict()
+                        .items()
+                        if model_id.split(".")[1].startswith("output")
+                    ],
+                    **net_config,
+                }
+                for net_id, net_config in config["neural_nets"].items()
+            }
+            if not jax or petab_problem.model.type_id == MODEL_TYPE_PYSB:
+                raise NotImplementedError(
+                    "petab_sciml extension is currently only supported for sbml models"
+                )
+        else:
+            hybridization = None
+
         # compile the model
         if petab_problem.model.type_id == MODEL_TYPE_PYSB:
             import_model_pysb(
@@ -148,6 +206,7 @@ def import_petab_problem(
                 model_name=model_name,
                 model_output_dir=model_output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
+                hybridization=hybridization,
                 jax=jax,
                 **kwargs,
             )

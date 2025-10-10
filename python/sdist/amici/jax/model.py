@@ -49,6 +49,7 @@ class JAXModel(eqx.Module):
     MODEL_API_VERSION = "0.0.4"
     api_version: str
     jax_py_file: Path
+    nns: dict
     parameters: jnp.ndarray = field(default_factory=lambda: jnp.array([]))
 
     def __init__(self):
