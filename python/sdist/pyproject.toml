@@ -63,7 +63,7 @@ classifiers = [
 petab = ["petab>=0.4.0"]
 pysb = ["pysb>=1.13.1"]
 test = [
-    "h5py",
+    "h5py!=3.15",
     "pytest",
     "pytest-cov",
     # v16.0: https://github.com/pytest-dev/pytest-rerunfailures/issues/302
