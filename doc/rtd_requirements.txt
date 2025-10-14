@@ -7,6 +7,8 @@ setuptools>=67.7.2
 #  https://github.com/pysb/pysb/pull/599
 #  for building the documentation, we don't care whether this fully works
 git+https://github.com/pysb/pysb@0afeaab385e9a1d813ecf6fdaf0153f4b91358af
+# For forward type definition in generate_equinox
+git+https://github.com/PEtab-dev/petab_sciml.git@727d177fd3f85509d0bdcc278b672e9eeafd2384#subdirectory=src/python
 matplotlib>=3.7.1
 optax
 nbsphinx
