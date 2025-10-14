@@ -45,7 +45,7 @@ def verify_results(
             new_key = expr_id.removeprefix("flux_")
         else:
             new_key = expr_id
-            if expr_id.removeprefix("amici_") in simulated.columns:
+            if expr_id in simulated.columns:
                 continue  # skip if already present
         expression_data[new_key] = rdata.w[:, expr_idx]
 
@@ -57,12 +57,6 @@ def verify_results(
             pd.DataFrame(parameter_data),
         ],
         axis=1,
-    )
-
-    # handle renamed reserved symbols
-    simulated.rename(
-        columns={c: c.replace("amici_", "") for c in simulated.columns},
-        inplace=True,
     )
 
     # SBML test suite case 01308 defines species with initialAmount and
@@ -161,9 +155,9 @@ def concentrations_to_amounts(
         ) or comp is None:
             continue
 
-        simulated.loc[:, species] *= simulated.loc[
-            :, comp if comp in simulated.columns else f"amici_{comp}"
-        ]
+        if comp not in simulated.columns:
+            continue
+        simulated.loc[:, species] *= simulated.loc[:, comp]
 
 
 def write_result_file(
