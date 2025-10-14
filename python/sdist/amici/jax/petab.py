@@ -7,6 +7,7 @@ from collections.abc import Sized, Iterable
 from pathlib import Path
 from collections.abc import Callable
 import logging
+from typing import Union
 
 
 import diffrax
@@ -16,10 +17,12 @@ import equinox as eqx
 import jaxtyping as jt
 import jax.lax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import h5py
+import re
 
 from amici import _module_from_path
 from amici.petab.parameter_mapping import (
@@ -75,6 +78,31 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
+# IDEA: Implement this class in petab-sciml instead?
+class HybridProblem(petab.Problem):
+    hybridization_df: pd.DataFrame
+
+    def __init__(self, petab_problem: petab.Problem):
+        self.__dict__.update(petab_problem.__dict__)
+        self.hybridization_df = _get_hybridization_df(petab_problem)
+
+
+def _get_hybridization_df(petab_problem):
+    if "sciml" in petab_problem.extensions_config:
+        hybridizations = [
+            pd.read_csv(hf, sep="\t", index_col=0)
+            for hf in petab_problem.extensions_config["sciml"][
+                "hybridization_files"
+            ]
+        ]
+        hybridization_df = pd.concat(hybridizations)
+        return hybridization_df
+
+
+def _get_hybrid_petab_problem(petab_problem: petab.Problem):
+    return HybridProblem(petab_problem)
+
+
 class JAXProblem(eqx.Module):
     """
     PEtab problem wrapper for JAX models.
@@ -108,7 +136,7 @@ class JAXProblem(eqx.Module):
     _np_mask: np.ndarray
     _np_indices: np.ndarray
     _petab_measurement_indices: np.ndarray
-    _petab_problem: petab.Problem
+    _petab_problem: petab.Problem | HybridProblem
 
     def __init__(self, model: JAXModel, petab_problem: petab.Problem):
         """
@@ -121,7 +149,7 @@ class JAXProblem(eqx.Module):
         """
         scs = petab_problem.get_simulation_conditions_from_measurement_df()
         self.simulation_conditions = tuple(tuple(sc) for sc in scs.values)
-        self._petab_problem = petab_problem
+        self._petab_problem = _get_hybrid_petab_problem(petab_problem)
         self.parameters, self.model = self._get_nominal_parameter_values(model)
         self._parameter_mappings = self._get_parameter_mappings(scs)
         (
@@ -524,24 +552,55 @@ class JAXProblem(eqx.Module):
             for net_id, nn in model.nns.items()
         }
         # load nn parameters from file
-        par_arrays = {
-            array_id: h5py.File(file_spec["location"], "r")
-            for array_id, file_spec in self._petab_problem.extensions_config[
-                "array_files"
-            ].items()
-            # TODO: FIXME (https://github.com/sebapersson/petab_sciml_testsuite/issues/1)
-        }
+        par_arrays = (
+            dict(
+                [
+                    (
+                        file_spec.split("_")[0],
+                        h5py.File(file_spec, "r")["parameters"][
+                            file_spec.split("_")[0]
+                        ],
+                    )
+                    for file_spec in self._petab_problem.extensions_config[
+                        "sciml"
+                    ]["array_files"]
+                    if "parameters" in h5py.File(file_spec, "r").keys()
+                ]
+            )
+            if self._petab_problem.extensions_config
+            else {}
+        )
+
+        nn_input_arrays = (
+            dict(
+                [
+                    (
+                        file_spec.split("_")[0],
+                        h5py.File(file_spec, "r")["inputs"],
+                    )
+                    for file_spec in self._petab_problem.extensions_config[
+                        "sciml"
+                    ]["array_files"]
+                    if "inputs" in h5py.File(file_spec, "r").keys()
+                ]
+            )
+            if self._petab_problem.extensions_config
+            else {}
+        )
 
         # extract nominal values from petab problem
         for pname, row in self._petab_problem.parameter_df.iterrows():
-            if (net := pname.split(".")[0]) in model.nns:
+            if (net := pname.split("_")[0]) in model.nns:
                 to_set = []
                 nn = model_pars[net]
-                try:
-                    value = float(row[petab.NOMINAL_VALUE])
-                except ValueError:
-                    value = par_arrays[row[petab.NOMINAL_VALUE]]
+                scalar = True
+
+                if np.isnan(row[petab.NOMINAL_VALUE]):
+                    value = par_arrays[net]
                     scalar = False
+                else:
+                    value = float(row[petab.NOMINAL_VALUE])
+
                 if len(pname.split(".")) > 1:
                     layer_name = pname.split(".")[1]
                     layer = nn[layer_name]
@@ -567,11 +626,11 @@ class JAXProblem(eqx.Module):
                 for layer, attribute in to_set:
                     if scalar:
                         nn[layer][attribute] = value * jnp.ones_like(
-                            model.nns[net].layers[layer][attribute]
+                            getattr(model.nns[net].layers[layer], attribute)
                         )
                     else:
                         nn[layer][attribute] = jnp.array(
-                            value[layer][attribute]
+                            value[layer][attribute][:]
                         )
 
         # set values in model
@@ -588,6 +647,26 @@ class JAXProblem(eqx.Module):
                         model,
                         model_pars[net_id][layer_id][attribute],
                     )
+
+        # set inputs in the model if provided
+        if len(nn_input_arrays) > 0:
+            for net_id in model_pars:
+                input_array = {
+                    input: {
+                        k: jnp.array(
+                            arr[:],
+                            dtype=jnp.float64
+                            if jax.config.jax_enable_x64
+                            else jnp.float32,
+                        )
+                        for k, arr in nn_input_arrays[net_id][input].items()
+                    }
+                    for input in model.nns[net_id].inputs
+                }
+                model = eqx.tree_at(
+                    lambda model: model.nns[net_id].inputs, model, input_array
+                )
+
         return jnp.array(
             [
                 petab.scale(
@@ -691,35 +770,107 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
-    def _eval_nn(self, output_par: str):
+    def _eval_nn(self, output_par: str, condition_id: str):
         net_id = self._petab_problem.mapping_df.loc[
             output_par, petab.MODEL_ENTITY_ID
         ].split(".")[0]
         nn = self.model.nns[net_id]
 
+        def _is_net_input(model_id):
+            comps = model_id.split(".")
+            return comps[0] == net_id and comps[1].startswith("inputs")
+
         model_id_map = (
             self._petab_problem.mapping_df[
-                self._petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                .str.split(".")
-                .str[0]
-                == net_id
+                self._petab_problem.mapping_df[petab.MODEL_ENTITY_ID].apply(
+                    _is_net_input
+                )
             ]
             .reset_index()
             .set_index(petab.MODEL_ENTITY_ID)[petab.PETAB_ENTITY_ID]
             .to_dict()
         )
 
+        condition_input_map = (
+            dict(
+                [
+                    (
+                        petab_id,
+                        self._petab_problem.parameter_df.loc[
+                            self._petab_problem.condition_df.loc[
+                                condition_id, petab_id
+                            ],
+                            petab.NOMINAL_VALUE,
+                        ],
+                    )
+                    if self._petab_problem.condition_df.loc[
+                        condition_id, petab_id
+                    ]
+                    in self._petab_problem.parameter_df.index
+                    else (
+                        petab_id,
+                        np.float64(
+                            self._petab_problem.condition_df.loc[
+                                condition_id, petab_id
+                            ]
+                        ),
+                    )
+                    for petab_id in model_id_map.values()
+                ]
+            )
+            if not self._petab_problem.condition_df.empty
+            else {}
+        )
+
+        hybridization_parameter_map = dict(
+            [
+                (
+                    petab_id,
+                    self._petab_problem.hybridization_df.loc[
+                        petab_id, "targetValue"
+                    ],
+                )
+                for petab_id in model_id_map.values()
+                if petab_id in set(self._petab_problem.hybridization_df.index)
+            ]
+        )
+
+        # handle conditions
+        if len(condition_input_map) > 0:
+            net_input = jnp.array(
+                [
+                    condition_input_map[petab_id]
+                    for _, petab_id in model_id_map.items()
+                ]
+            )
+            return nn.forward(net_input).squeeze()
+
+        # handle array inputs
+        if isinstance(self.model.nns[net_id].inputs, dict):
+            net_input = jnp.array(
+                [
+                    self.model.nns[net_id].inputs[petab_id][condition_id]
+                    if condition_id in self.model.nns[net_id].inputs[petab_id]
+                    else self.model.nns[net_id].inputs[petab_id]["0"]
+                    for _, petab_id in model_id_map.items()
+                ]
+            )
+            return nn.forward(net_input).squeeze()
+
         net_input = jnp.array(
             [
-                jax.lax.stop_gradient(self._inputs[net_id][model_id])
-                if model_id in self._inputs[net_id]
+                jax.lax.stop_gradient(self.model.nns[net_id][model_id])
+                if model_id in self.model.nns[net_id].inputs
                 else self.get_petab_parameter_by_id(petab_id)
                 if petab_id in self.parameter_ids
                 else self._petab_problem.parameter_df.loc[
                     petab_id, petab.NOMINAL_VALUE
                 ]
+                if petab_id in set(self._petab_problem.parameter_df.index)
+                else self._petab_problem.parameter_df.loc[
+                    hybridization_parameter_map[petab_id], petab.NOMINAL_VALUE
+                ]
                 for model_id, petab_id in model_id_map.items()
-                if model_id.split(".")[1].startswith("input")
             ]
         )
         return nn.forward(net_input).squeeze()
@@ -728,10 +879,19 @@ class JAXProblem(eqx.Module):
         self,
         mapping: ParameterMappingForCondition,
         pname: str,
+        condition_id: str,
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
-        if pname in self.nn_output_ids:
-            return self._eval_nn(pname)
         pval = mapping.map_sim_var[pname]
+        if pval in self.nn_output_ids:
+            nn_output = self._eval_nn(pval, condition_id)
+            if nn_output.size > 1:
+                entityId = self._petab_problem.mapping_df.loc[
+                    pval, petab.MODEL_ENTITY_ID
+                ]
+                ind = int(re.search(r"\[\d+\]\[(\d+)\]", entityId).group(1))
+                return nn_output[ind]
+            else:
+                return nn_output
         if isinstance(pval, Number):
             return pval
         return self.get_petab_parameter_by_id(pval)
@@ -751,7 +911,9 @@ class JAXProblem(eqx.Module):
 
         p = jnp.array(
             [
-                self._map_model_parameter_value(mapping, pname)
+                self._map_model_parameter_value(
+                    mapping, pname, simulation_condition
+                )
                 for pname in self.model.parameter_ids
             ]
         )
@@ -928,17 +1090,21 @@ class JAXProblem(eqx.Module):
         p_array = jnp.stack(
             [self.load_model_parameters(sc) for sc in conditions]
         )
-        unscaled_parameters = jnp.stack(
-            [
-                jax_unscale(
-                    self.parameters[ip],
-                    self._petab_problem.parameter_df.loc[
-                        p_id, petab.PARAMETER_SCALE
-                    ],
-                )
-                for ip, p_id in enumerate(self.parameter_ids)
-            ]
-        )
+
+        if self.parameters.size:
+            unscaled_parameters = jnp.stack(
+                [
+                    jax_unscale(
+                        self.parameters[ip],
+                        self._petab_problem.parameter_df.loc[
+                            p_id, petab.PARAMETER_SCALE
+                        ],
+                    )
+                    for ip, p_id in enumerate(self.parameter_ids)
+                ]
+            )
+        else:
+            unscaled_parameters = jnp.zeros((*self._ts_masks.shape[:2], 0))
 
         if op_numeric is not None and op_numeric.size:
             op_array = jnp.where(
@@ -994,6 +1160,8 @@ class JAXProblem(eqx.Module):
         nps: jt.Float[jt.Array, "nt *nnp"],  # noqa: F821, F722
         mask_reinit: jt.Bool[jt.Array, "nx"],  # noqa: F821, F722
         x_reinit: jt.Float[jt.Array, "nx"],  # noqa: F821, F722
+        init_override: jt.Float[jt.Array, "nx"],  # noqa: F821, F722
+        init_override_mask: jt.Bool[jt.Array, "nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -1059,6 +1227,8 @@ class JAXProblem(eqx.Module):
             x_preeq=x_preeq,
             mask_reinit=jax.lax.stop_gradient(mask_reinit),
             x_reinit=x_reinit,
+            init_override=init_override,
+            init_override_mask=jax.lax.stop_gradient(init_override_mask),
             ts_mask=jax.lax.stop_gradient(jnp.array(ts_mask)),
             solver=solver,
             controller=controller,
@@ -1118,6 +1288,38 @@ class JAXProblem(eqx.Module):
                 self._np_indices,
             )
         )
+
+        init_override_mask = jnp.stack(
+            [
+                jnp.array(
+                    [
+                        True
+                        if p
+                        in set(self._parameter_mappings[sc].map_sim_var.keys())
+                        else False
+                        for p in self.model.state_ids
+                    ]
+                )
+                for sc in simulation_conditions
+            ]
+        )
+        init_override = jnp.stack(
+            [
+                jnp.array(
+                    [
+                        self._eval_nn(
+                            self._parameter_mappings[sc].map_sim_var[p], sc
+                        )
+                        if p
+                        in set(self._parameter_mappings[sc].map_sim_var.keys())
+                        else 1.0
+                        for p in self.model.state_ids
+                    ]
+                )
+                for sc in simulation_conditions
+            ]
+        )
+
         return self.run_simulation(
             p_array,
             self._ts_dyn,
@@ -1129,6 +1331,8 @@ class JAXProblem(eqx.Module):
             np_array,
             mask_reinit_array,
             x_reinit_array,
+            init_override,
+            init_override_mask,
             solver,
             controller,
             root_finder,

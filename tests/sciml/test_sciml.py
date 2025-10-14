@@ -50,9 +50,7 @@ ude_cases_dir = cases_dir / "hybrid"
 
 def _reshape_flat_array(array_flat):
     array_flat["ix"] = array_flat["ix"].astype(str)
-    ix_cols = [
-        f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))
-    ]
+    ix_cols = [f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))]
     if len(ix_cols) == 1:
         array_flat[ix_cols[0]] = array_flat["ix"].apply(int)
     else:
@@ -66,9 +64,7 @@ def _reshape_flat_array(array_flat):
     return array
 
 
-@pytest.mark.parametrize(
-    "test", sorted([d.stem for d in net_cases_dir.glob("[0-9]*")])
-)
+@pytest.mark.parametrize("test", sorted([d.stem for d in net_cases_dir.glob("[0-9]*")]))
 def test_net(test):
     test_dir = net_cases_dir / test
     with open(test_dir / "solutions.yaml") as f:
@@ -78,107 +74,101 @@ def test_net(test):
         net_file = cases_dir / test.replace("_alt", "") / solutions["net_file"]
     else:
         net_file = test_dir / solutions["net_file"]
-    ml_models = NNModelStandard.load_data(net_file)
+    ml_model = NNModelStandard.load_data(net_file)
 
     nets = {}
     outdir = Path(__file__).parent / "models" / test
-    for ml_model in ml_models.models:
-        module_dir = outdir / f"{ml_model.mlmodel_id}.py"
-        if test in (
-            "002",
-            "009",
-            "018",
-            "019",
-            "020",
-            "021",
-            "022",
-            "042",
-            "043",
-            "044",
-            "045",
-            "046",
-            "047",
-            "048",
-        ):
-            with pytest.raises(NotImplementedError):
-                generate_equinox(ml_model, module_dir)
-            return
-        generate_equinox(ml_model, module_dir)
-        nets[ml_model.mlmodel_id] = amici._module_from_path(
-            ml_model.mlmodel_id, module_dir
-        ).net
+    module_dir = outdir / f"{ml_model.nn_model_id}.py"
+    if test in (
+        "002",
+        "009",
+        "018",
+        "019",
+        "020",
+        "021",
+        "022",
+        "042",
+        "043",
+        "044",
+        "045",
+        "046",
+        "047",
+        "048",
+    ):
+        with pytest.raises(NotImplementedError):
+            generate_equinox(ml_model, module_dir)
+        return
+    generate_equinox(ml_model, module_dir)
+    nets[ml_model.nn_model_id] = amici._module_from_path(
+        ml_model.nn_model_id, module_dir
+    ).net
 
     for input_file, par_file, output_file in zip(
         solutions["net_input"],
         solutions.get("net_ps", solutions["net_input"]),
         solutions["net_output"],
     ):
-        input = h5py.File(test_dir / input_file, "r")["input"][:]
-        output = h5py.File(test_dir / output_file, "r")["output"][:]
+        input = h5py.File(test_dir / input_file, "r")["inputs"]["input0"]["data"][:]
+        output = h5py.File(test_dir / output_file, "r")["outputs"]["output0"]["data"][:]
 
         if "net_ps" in solutions:
             par = h5py.File(test_dir / par_file, "r")
-            for ml_model in ml_models.models:
-                net = nets[ml_model.mlmodel_id](jr.PRNGKey(0))
-                for layer in net.layers.keys():
-                    if (
-                        isinstance(net.layers[layer], eqx.Module)
-                        and hasattr(net.layers[layer], "weight")
-                        and net.layers[layer].weight is not None
+            net = nets[ml_model.nn_model_id](jr.PRNGKey(0))
+            for layer in net.layers.keys():
+                if (
+                    isinstance(net.layers[layer], eqx.Module)
+                    and hasattr(net.layers[layer], "weight")
+                    and net.layers[layer].weight is not None
+                ):
+                    w = par["parameters"][ml_model.nn_model_id][layer]["weight"][:]
+                    if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
+                        # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
+                        w = np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(0, 1)
+                    assert w.shape == net.layers[layer].weight.shape
+                    net = eqx.tree_at(
+                        lambda x: x.layers[layer].weight,
+                        net,
+                        jnp.array(w),
+                    )
+                if (
+                    isinstance(net.layers[layer], eqx.Module)
+                    and hasattr(net.layers[layer], "bias")
+                    and net.layers[layer].bias is not None
+                ):
+                    b = par["parameters"][ml_model.nn_model_id][layer]["bias"][:]
+                    if isinstance(
+                        net.layers[layer],
+                        eqx.nn.Conv | eqx.nn.ConvTranspose,
                     ):
-                        w = par[layer]["weight"][:]
-                        if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
-                            # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-                            w = np.flip(
-                                w, axis=tuple(range(2, w.ndim))
-                            ).swapaxes(0, 1)
-                        assert w.shape == net.layers[layer].weight.shape
-                        net = eqx.tree_at(
-                            lambda x: x.layers[layer].weight,
-                            net,
-                            jnp.array(w),
+                        b = np.expand_dims(
+                            b,
+                            tuple(
+                                range(
+                                    1,
+                                    net.layers[layer].num_spatial_dims + 1,
+                                )
+                            ),
                         )
-                    if (
-                        isinstance(net.layers[layer], eqx.Module)
-                        and hasattr(net.layers[layer], "bias")
-                        and net.layers[layer].bias is not None
-                    ):
-                        b = par[layer]["bias"][:]
-                        if isinstance(
-                            net.layers[layer],
-                            eqx.nn.Conv | eqx.nn.ConvTranspose,
-                        ):
-                            b = np.expand_dims(
-                                b,
-                                tuple(
-                                    range(
-                                        1,
-                                        net.layers[layer].num_spatial_dims + 1,
-                                    )
-                                ),
-                            )
-                        assert b.shape == net.layers[layer].bias.shape
-                        net = eqx.tree_at(
-                            lambda x: x.layers[layer].bias,
-                            net,
-                            jnp.array(b),
-                        )
-                net = eqx.nn.inference_mode(net)
+                    assert b.shape == net.layers[layer].bias.shape
+                    net = eqx.tree_at(
+                        lambda x: x.layers[layer].bias,
+                        net,
+                        jnp.array(b),
+                    )
+            net = eqx.nn.inference_mode(net)
 
-                if test == "net_004_alt":
-                    return  # skipping, no support for non-cross-correlation in equinox
+            if test == "net_004_alt":
+                return  # skipping, no support for non-cross-correlation in equinox
 
-                np.testing.assert_allclose(
-                    net.forward(input),
-                    output,
-                    atol=1e-3,
-                    rtol=1e-3,
-                )
+            np.testing.assert_allclose(
+                net.forward(input),
+                output,
+                atol=1e-3,
+                rtol=1e-3,
+            )
 
 
-@pytest.mark.parametrize(
-    "test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")])
-)
+@pytest.mark.parametrize("test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")]))
 def test_ude(test):
     test_dir = ude_cases_dir / test
     with open(test_dir / "petab" / "problem.yaml") as f:
@@ -201,13 +191,6 @@ def test_ude(test):
         jax_problem = JAXProblem(jax_model, petab_problem)
 
     # llh
-    if test in (
-        "004",
-        "016",
-    ):
-        with pytest.raises(NotImplementedError):
-            run_simulations(jax_problem)
-        return
     llh, r = run_simulations(jax_problem)
     np.testing.assert_allclose(
         llh,
@@ -246,6 +229,7 @@ def test_ude(test):
             expected = pd.read_csv(test_dir / file, sep="\t").set_index(
                 petab.PARAMETER_ID
             )
+
             for ip in expected.index:
                 if ip in jax_problem.parameter_ids:
                     actual_dict[ip] = sllh.parameters[
@@ -260,13 +244,9 @@ def test_ude(test):
             )
         else:
             expected = h5py.File(test_dir / file, "r")
-            for layer_name, layer in jax_problem.model.nns[
-                component
-            ].layers.items():
+            for layer_name, layer in jax_problem.model.nns[component].layers.items():
                 for attribute in dir(layer):
-                    if not isinstance(
-                        getattr(layer, attribute), jax.numpy.ndarray
-                    ):
+                    if not isinstance(getattr(layer, attribute), jax.numpy.ndarray):
                         continue
                     actual = getattr(
                         sllh.model.nns[component].layers[layer_name], attribute
@@ -279,9 +259,21 @@ def test_ude(test):
                             actual.swapaxes(0, 1),
                             axis=tuple(range(2, actual.ndim)),
                         )
-                    np.testing.assert_allclose(
-                        actual,
-                        expected[layer_name][attribute][:],
-                        atol=solutions["tol_grad_llh"],
-                        rtol=solutions["tol_grad_llh"],
-                    )
+                    if (
+                        np.squeeze(
+                            expected["parameters"][component][layer_name][attribute][:]
+                        ).size
+                        == 0
+                    ):
+                        assert np.all(actual == 0.0)
+                    else:
+                        np.testing.assert_allclose(
+                            np.squeeze(actual),
+                            np.squeeze(
+                                expected["parameters"][component][layer_name][
+                                    attribute
+                                ][:]
+                            ),
+                            atol=solutions["tol_grad_llh"],
+                            rtol=solutions["tol_grad_llh"],
+                        )

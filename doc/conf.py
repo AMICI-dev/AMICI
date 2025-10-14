@@ -33,6 +33,7 @@ except ModuleNotFoundError:
 import amici
 import pandas as pd  # noqa: F401
 import sympy as sp  # noqa: F401
+import warnings
 
 
 def install_doxygen():
@@ -364,6 +365,10 @@ vector_types = {
     "ExpDataPtrVector": ":class:`amici.amici.ExpData`",
 }
 
+# TODO: alias for forward type definition, remove after release of petab_sciml
+autodoc_type_aliases = {
+    "NNModel": "petab_sciml.NNModel",
+}
 
 def process_docstring(app, what, name, obj, options, lines):
     # only apply in the amici.amici module

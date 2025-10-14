@@ -6,7 +6,7 @@ differential equation model and generate executable jax simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
 :py:func:`amici.pysb_import.pysb2jax`,
-:py:func:`amici.sbml_import.SbmlImporter.sbml2jax` and
+:py:func:`amici.sbml_import.SbmlImporter.` and
 :py:func:`amici.petab_import.import_model`.
 """
 
@@ -283,12 +283,12 @@ class ODEExporter:
             tpl_data,
         )
 
-
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridisation.items():
             generate_equinox(
                 net["model"],
                 self.model_path / f"{net_name}.py",
+                net["frozen_layers"],
             )
 
     def _implicit_roots(self) -> list[sp.Expr]:
@@ -302,7 +302,6 @@ class ODEExporter:
                 continue
             roots.append(root)
         return roots
-
 
     def set_paths(self, output_dir: str | Path | None = None) -> None:
         """
