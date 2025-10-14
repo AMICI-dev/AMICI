@@ -651,32 +651,18 @@ class JAXProblem(eqx.Module):
         # set inputs in the model if provided
         if len(nn_input_arrays) > 0:
             for net_id in model_pars:
-                for input in model.nns[net_id].inputs:
-                    input_array = dict(
-                        [
-                            (
-                                input,
-                                dict(
-                                    [
-                                        (
-                                            k,
-                                            jnp.array(
-                                                nn_input_arrays[net_id][input][
-                                                    k
-                                                ][:],
-                                                dtype=jnp.float64
-                                                if jax.config.jax_enable_x64
-                                                else jnp.float32,
-                                            ),
-                                        )
-                                        for k in nn_input_arrays[net_id][
-                                            input
-                                        ].keys()
-                                    ]
-                                ),
-                            )
-                        ]
-                    )
+                input_array = {
+                    input: {
+                        k: jnp.array(
+                            arr[:],
+                            dtype=jnp.float64
+                            if jax.config.jax_enable_x64
+                            else jnp.float32,
+                        )
+                        for k, arr in nn_input_arrays[net_id][input].items()
+                    }
+                    for input in model.nns[net_id].inputs
+                }
                 model = eqx.tree_at(
                     lambda model: model.nns[net_id].inputs, model, input_array
                 )
