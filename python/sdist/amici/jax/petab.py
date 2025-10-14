@@ -1104,17 +1104,21 @@ class JAXProblem(eqx.Module):
         p_array = jnp.stack(
             [self.load_model_parameters(sc) for sc in conditions]
         )
-        unscaled_parameters = jnp.stack(
-            [
-                jax_unscale(
-                    self.parameters[ip],
-                    self._petab_problem.parameter_df.loc[
-                        p_id, petab.PARAMETER_SCALE
-                    ],
-                )
-                for ip, p_id in enumerate(self.parameter_ids)
-            ]
-        )
+
+        if self.parameters.size:
+            unscaled_parameters = jnp.stack(
+                [
+                    jax_unscale(
+                        self.parameters[ip],
+                        self._petab_problem.parameter_df.loc[
+                            p_id, petab.PARAMETER_SCALE
+                        ],
+                    )
+                    for ip, p_id in enumerate(self.parameter_ids)
+                ]
+            )
+        else:
+            unscaled_parameters = jnp.zeros((*self._ts_masks.shape[:2], 0))
 
         if op_numeric is not None and op_numeric.size:
             op_array = jnp.where(
