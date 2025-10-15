@@ -880,7 +880,7 @@ class JAXProblem(eqx.Module):
         condition_id: str,
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         pval = mapping.map_sim_var[pname]
-        if pval in self.nn_output_ids:
+        if hasattr(self, "nn_output_ids") and pval in self.nn_output_ids:
             nn_output = self._eval_nn(pval, condition_id)
             if nn_output.size > 1:
                 entityId = self._petab_problem.mapping_df.loc[
@@ -1018,7 +1018,7 @@ class JAXProblem(eqx.Module):
         """
         if not any(
             x_id in self._petab_problem.condition_df
-            or x_id in self.nn_output_ids
+            or hasattr(self, "nn_output_ids") and x_id in self.nn_output_ids
             for x_id in self.model.state_ids
         ):
             return jnp.array([]), jnp.array([])
