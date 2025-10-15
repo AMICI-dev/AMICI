@@ -149,9 +149,9 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::parameters;
 %naturalvar amici::SimulationParameters::pscale;
 %naturalvar amici::SimulationParameters::plist;
-%naturalvar amici::SimulationParameters::fixedParameters;
-%naturalvar amici::SimulationParameters::fixedParametersPreequilibration;
-%naturalvar amici::SimulationParameters::fixedParametersPresimulation;
+%naturalvar amici::SimulationParameters::fixed_parameters;
+%naturalvar amici::SimulationParameters::fixed_parameters_pre_equilibration;
+%naturalvar amici::SimulationParameters::fixed_parameters_presimulation;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_sim;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_presim;
 
@@ -250,34 +250,34 @@ def __repr__(self):
 // Convert integer values to enum class
 // defeats the purpose of enum class, but didn't find a better way to allow for
 // vectors of enum class types in python
-%feature("docstring") parameterScalingFromIntVector
+%feature("docstring") parameter_scaling_from_int_vector
 "Swig-Generated class, which, in contrast to other Vector
 classes, does not allow for simple interoperability with common
 Python types, but must be created using
-:func:`amici.amici.parameterScalingFromIntVector`";
+:func:`amici.amici.parameter_scaling_from_int_vector`";
 %{
 namespace amici {
-std::vector<amici::ParameterScaling> parameterScalingFromIntVector(std::vector<int> const& intVec) {
-    std::vector<amici::ParameterScaling> result(intVec.size());
+std::vector<amici::ParameterScaling> parameter_scaling_from_int_vector(std::vector<int> const& int_vec) {
+    std::vector<amici::ParameterScaling> result(int_vec.size());
     for (int i = 0; i < (int) result.size(); ++i) {
-        result[i] = static_cast<amici::ParameterScaling>(intVec[i]);
+        result[i] = static_cast<amici::ParameterScaling>(int_vec[i]);
     }
     return result;
 }
 }; // namespace amici
 %}
 %extend amici::Model {
-    void setParameterScale(std::vector<int> const& intVec) {
-        std::vector<amici::ParameterScaling> result(intVec.size());
+    void set_parameter_scale(std::vector<int> const& int_vec) {
+        std::vector<amici::ParameterScaling> result(int_vec.size());
         for (int i = 0; i < (int) result.size(); ++i) {
-            result[i] = static_cast<amici::ParameterScaling>(intVec[i]);
+            result[i] = static_cast<amici::ParameterScaling>(int_vec[i]);
         }
-        $self->setParameterScale(result);
+        $self->set_parameter_scale(result);
     }
 }
 namespace amici {
-    std::vector<amici::ParameterScaling> parameterScalingFromIntVector(std::vector<int> const& intVec);
-    void Model::setParameterScale(std::vector<int> const& intVec);
+    std::vector<amici::ParameterScaling> parameter_scaling_from_int_vector(std::vector<int> const& int_vec);
+    void Model::set_parameter_scale(std::vector<int> const& int_vec);
 }
 %template(ParameterScalingVector) std::vector<amici::ParameterScaling>;
 %extend std::vector<amici::ParameterScaling> {
@@ -290,12 +290,12 @@ def __repr__(self):
 
 
 // Add function to check if amici was compiled with OpenMP
-%feature("docstring") compiledWithOpenMP
+%feature("docstring") compiled_with_openmp
     "AMICI extension was compiled with OpenMP?";
 %{
 namespace amici {
 /** AMICI extension was compiled with OpenMP? */
-bool compiledWithOpenMP() {
+bool compiled_with_openmp() {
 #if defined(_OPENMP)
     return true;
 #else
@@ -305,7 +305,7 @@ bool compiledWithOpenMP() {
 };
 %}
 namespace amici {
-bool compiledWithOpenMP();
+bool compiled_with_openmp();
 }
 
 %pythoncode %{
@@ -331,6 +331,7 @@ NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
 Constraint = enum('Constraint')
+LogSeverity = enum('LogSeverity')
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;

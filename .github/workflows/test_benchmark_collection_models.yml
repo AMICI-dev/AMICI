@@ -53,7 +53,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@amici100
 
     - name: Download benchmark collection
       run: |
@@ -129,7 +129,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@amici100
 
     - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax@dev # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654 + event dirs
 

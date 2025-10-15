@@ -88,15 +88,15 @@ def test_compare_to_pysb_simulation(example):
 
         amici_model_module = amici.import_model_module(pysb_model.name, outdir)
 
-        model_amici = amici_model_module.getModel()
+        model_amici = amici_model_module.get_model()
 
-        model_amici.setTimepoints(tspan)
+        model_amici.set_timepoints(tspan)
 
-        solver = model_amici.getSolver()
-        solver.setMaxSteps(10**6)
-        solver.setAbsoluteTolerance(atol)
-        solver.setRelativeTolerance(rtol)
-        rdata = amici.runAmiciSimulation(model_amici, solver)
+        solver = model_amici.create_solver()
+        solver.set_max_steps(10**6)
+        solver.set_absolute_tolerance(atol)
+        solver.set_relative_tolerance(rtol)
+        rdata = amici.run_simulation(model_amici, solver)
 
         # check agreement of species simulation
         assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()

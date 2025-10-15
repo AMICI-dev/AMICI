@@ -7,7 +7,7 @@ namespace amici {
 
 AmiVector& AmiVector::operator=(AmiVector const& other) {
     vec_ = other.vec_;
-    synchroniseNVector(other.get_ctx());
+    synchronise_nvector(other.get_ctx());
     return *this;
 }
 
@@ -15,11 +15,11 @@ realtype* AmiVector::data() { return vec_.data(); }
 
 realtype const* AmiVector::data() const { return vec_.data(); }
 
-N_Vector AmiVector::getNVector() { return nvec_; }
+N_Vector AmiVector::get_nvector() { return nvec_; }
 
-const_N_Vector AmiVector::getNVector() const { return nvec_; }
+const_N_Vector AmiVector::get_nvector() const { return nvec_; }
 
-std::vector<realtype> const& AmiVector::getVector() const { return vec_; }
+std::vector<realtype> const& AmiVector::get_vector() const { return vec_; }
 
 int AmiVector::size() const { return gsl::narrow<int>(vec_.size()); }
 
@@ -57,7 +57,7 @@ void AmiVector::copy(AmiVector const& other) {
     std::ranges::copy(other.vec_, vec_.begin());
 }
 
-void AmiVector::synchroniseNVector(SUNContext const sunctx) {
+void AmiVector::synchronise_nvector(SUNContext const sunctx) {
     if (nvec_)
         N_VDestroy_Serial(nvec_);
     if (sunctx) {
@@ -79,7 +79,7 @@ AmiVectorArray::AmiVectorArray(
     : vec_array_(length_outer, AmiVector(length_inner, sunctx)) {
     nvec_array_.resize(length_outer);
     for (int idx = 0; idx < length_outer; idx++) {
-        nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
+        nvec_array_.at(idx) = vec_array_.at(idx).get_nvector();
     }
 }
 
@@ -87,7 +87,7 @@ AmiVectorArray& AmiVectorArray::operator=(AmiVectorArray const& other) {
     vec_array_ = other.vec_array_;
     nvec_array_.resize(other.size());
     for (int idx = 0; idx < other.size(); idx++) {
-        nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
+        nvec_array_.at(idx) = vec_array_.at(idx).get_nvector();
     }
     return *this;
 }
@@ -96,7 +96,7 @@ AmiVectorArray::AmiVectorArray(AmiVectorArray const& vaold)
     : vec_array_(vaold.vec_array_) {
     nvec_array_.resize(vaold.size());
     for (int idx = 0; idx < vaold.size(); idx++) {
-        nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
+        nvec_array_.at(idx) = vec_array_.at(idx).get_nvector();
     }
 }
 
@@ -114,13 +114,13 @@ realtype const& AmiVectorArray::at(int const ipos, int const jpos) const {
     return vec_array_.at(jpos).at(ipos);
 }
 
-N_Vector* AmiVectorArray::getNVectorArray() { return nvec_array_.data(); }
+N_Vector* AmiVectorArray::get_nvector_array() { return nvec_array_.data(); }
 
-N_Vector AmiVectorArray::getNVector(int const pos) {
+N_Vector AmiVectorArray::get_nvector(int const pos) {
     return nvec_array_.at(pos);
 }
 
-const_N_Vector AmiVectorArray::getNVector(int const pos) const {
+const_N_Vector AmiVectorArray::get_nvector(int const pos) const {
     return nvec_array_.at(pos);
 }
 
@@ -132,9 +132,7 @@ AmiVector const& AmiVectorArray::operator[](int const pos) const {
     return vec_array_.at(pos);
 }
 
-int AmiVectorArray::size() const {
-    return gsl::narrow<int>(vec_array_.size());
-}
+int AmiVectorArray::size() const { return gsl::narrow<int>(vec_array_.size()); }
 
 void AmiVectorArray::zero() {
     for (auto& v : vec_array_)
@@ -171,7 +169,7 @@ void AmiVectorArray::copy(AmiVectorArray const& other) {
 
     for (int iv = 0; iv < size(); ++iv) {
         vec_array_.at(iv).copy(other.vec_array_.at(iv));
-        nvec_array_[iv] = vec_array_.at(iv).getNVector();
+        nvec_array_[iv] = vec_array_.at(iv).get_nvector();
     }
 }
 

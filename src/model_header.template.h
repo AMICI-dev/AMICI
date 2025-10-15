@@ -14,18 +14,18 @@ class Solver;
 
 namespace model_TPL_MODELNAME {
 
-extern std::array<const char*, TPL_NP> parameterNames;
-extern std::array<const char*, TPL_NK> fixedParameterNames;
-extern std::array<const char*, TPL_NX_RDATA> stateNames;
-extern std::array<const char*, TPL_NY> observableNames;
-extern std::array<const ObservableScaling, TPL_NY> observableScalings;
-extern std::array<const char*, TPL_NW> expressionNames;
-extern std::array<const char*, TPL_NP> parameterIds;
-extern std::array<const char*, TPL_NK> fixedParameterIds;
-extern std::array<const char*, TPL_NX_RDATA> stateIds;
-extern std::array<const char*, TPL_NY> observableIds;
-extern std::array<const char*, TPL_NW> expressionIds;
-extern std::array<int, TPL_NX_SOLVER> stateIdxsSolver;
+extern std::array<const char*, TPL_NP> parameter_names;
+extern std::array<const char*, TPL_NK> fixed_parameter_names;
+extern std::array<const char*, TPL_NX_RDATA> state_names;
+extern std::array<const char*, TPL_NY> observable_names;
+extern std::array<const ObservableScaling, TPL_NY> observable_scalings;
+extern std::array<const char*, TPL_NW> expression_names;
+extern std::array<const char*, TPL_NP> parameter_ids;
+extern std::array<const char*, TPL_NK> fixed_parameter_ids;
+extern std::array<const char*, TPL_NX_RDATA> state_ids;
+extern std::array<const char*, TPL_NY> observable_ids;
+extern std::array<const char*, TPL_NW> expression_ids;
+extern std::array<int, TPL_NX_SOLVER> state_idxs_solver;
 
 TPL_JY_DEF
 TPL_DJYDSIGMA_DEF
@@ -283,7 +283,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
 
     TPL_EXPLICIT_ROOTS_IMPL
 
-    std::string getName() const override {
+    std::string get_name() const override {
         return "TPL_MODELNAME";
     }
 
@@ -291,28 +291,28 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief Get names of the model parameters
      * @return the names
      */
-    std::vector<std::string> getParameterNames() const override {
-        return std::vector<std::string>(parameterNames.begin(),
-                                        parameterNames.end());
+    std::vector<std::string> get_parameter_names() const override {
+        return std::vector<std::string>(parameter_names.begin(),
+                                        parameter_names.end());
     }
 
     /**
      * @brief Get names of the model states
      * @return the names
      */
-    std::vector<std::string> getStateNames() const override {
-        return std::vector<std::string>(stateNames.begin(), stateNames.end());
+    std::vector<std::string> get_state_names() const override {
+        return std::vector<std::string>(state_names.begin(), state_names.end());
     }
 
     /**
      * @brief Get names of the solver states
      * @return the names
      */
-    std::vector<std::string> getStateNamesSolver() const override {
+    std::vector<std::string> get_state_names_solver() const override {
         std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto const idx: stateIdxsSolver) {
-            result.push_back(stateNames[idx]);
+        result.reserve(state_idxs_solver.size());
+        for(auto const idx: state_idxs_solver) {
+            result.push_back(state_names[idx]);
         }
         return result;
     }
@@ -321,55 +321,55 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    std::vector<std::string> getFixedParameterNames() const override {
-        return std::vector<std::string>(fixedParameterNames.begin(),
-                                        fixedParameterNames.end());
+    std::vector<std::string> get_fixed_parameter_names() const override {
+        return std::vector<std::string>(fixed_parameter_names.begin(),
+                                        fixed_parameter_names.end());
     }
 
     /**
      * @brief Get names of the observables
      * @return the names
      */
-    std::vector<std::string> getObservableNames() const override {
-        return std::vector<std::string>(observableNames.begin(),
-                                        observableNames.end());
+    std::vector<std::string> get_observable_names() const override {
+        return std::vector<std::string>(observable_names.begin(),
+                                        observable_names.end());
     }
 
     /**
      * @brief Get names of model expressions
      * @return Expression names
      */
-    std::vector<std::string> getExpressionNames() const override {
-        return std::vector<std::string>(expressionNames.begin(),
-                                        expressionNames.end());
+    std::vector<std::string> get_expression_names() const override {
+        return std::vector<std::string>(expression_names.begin(),
+                                        expression_names.end());
     }
 
     /**
      * @brief Get ids of the model parameters
      * @return the ids
      */
-    std::vector<std::string> getParameterIds() const override {
-        return std::vector<std::string>(parameterIds.begin(),
-                                        parameterIds.end());
+    std::vector<std::string> get_parameter_ids() const override {
+        return std::vector<std::string>(parameter_ids.begin(),
+                                        parameter_ids.end());
     }
 
     /**
      * @brief Get ids of the model states
      * @return the ids
      */
-    std::vector<std::string> getStateIds() const override {
-        return std::vector<std::string>(stateIds.begin(), stateIds.end());
+    std::vector<std::string> get_state_ids() const override {
+        return std::vector<std::string>(state_ids.begin(), state_ids.end());
     }
 
     /**
      * @brief Get ids of the solver states
      * @return the ids
      */
-    std::vector<std::string> getStateIdsSolver() const override {
+    std::vector<std::string> get_state_ids_solver() const override {
         std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto idx: stateIdxsSolver) {
-            result.push_back(stateIds[idx]);
+        result.reserve(state_idxs_solver.size());
+        for(auto idx: state_idxs_solver) {
+            result.push_back(state_ids[idx]);
         }
         return result;
     }
@@ -378,27 +378,27 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    std::vector<std::string> getFixedParameterIds() const override {
-        return std::vector<std::string>(fixedParameterIds.begin(),
-                                        fixedParameterIds.end());
+    std::vector<std::string> get_fixed_parameter_ids() const override {
+        return std::vector<std::string>(fixed_parameter_ids.begin(),
+                                        fixed_parameter_ids.end());
     }
 
     /**
      * @brief Get ids of the observables
      * @return the ids
      */
-    std::vector<std::string> getObservableIds() const override {
-        return std::vector<std::string>(observableIds.begin(),
-                                        observableIds.end());
+    std::vector<std::string> get_observable_ids() const override {
+        return std::vector<std::string>(observable_ids.begin(),
+                                        observable_ids.end());
     }
 
     /**
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    std::vector<std::string> getExpressionIds() const override {
-        return std::vector<std::string>(expressionIds.begin(),
-                                        expressionIds.end());
+    std::vector<std::string> get_expression_ids() const override {
+        return std::vector<std::string>(expression_ids.begin(),
+                                        expression_ids.end());
     }
 
     /**
@@ -407,7 +407,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @return flag indicating whether reinitialization of states depending on
      * fixed parameters is permissible
      */
-    bool isFixedParameterStateReinitializationAllowed() const override {
+    bool is_fixed_parameter_state_reinitialization_allowed() const override {
         return TPL_REINIT_FIXPAR_INITCOND;
     }
 
@@ -415,7 +415,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief returns the AMICI version that was used to generate the model
      * @return AMICI version string
      */
-    std::string getAmiciVersion() const override {
+    std::string get_amici_version() const override {
         return "TPL_AMICI_VERSION_STRING";
     }
 
@@ -423,16 +423,16 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief returns the amici version that was used to generate the model
      * @return AMICI git commit hash
      */
-    std::string getAmiciCommit() const override {
+    std::string get_amici_commit() const override {
         return "TPL_AMICI_COMMIT_STRING";
     }
 
-    bool hasQuadraticLLH() const override {
+    bool has_quadratic_llh() const override {
         return TPL_QUADRATIC_LLH;
     }
 
-    ObservableScaling getObservableScaling(int iy) const override {
-        return observableScalings.at(iy);
+    ObservableScaling get_observable_scaling(int iy) const override {
+        return observable_scalings.at(iy);
     }
 };
 

@@ -47,7 +47,7 @@ double pos_pow(double base, double exponent);
  *
  * @return NaN
  */
-double getNaN();
+double get_nan();
 
 /**
  * @brief The sign function.

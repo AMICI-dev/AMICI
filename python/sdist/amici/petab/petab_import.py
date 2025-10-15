@@ -280,7 +280,7 @@ def import_petab_problem(
         )
         return model
 
-    model = model_module.getModel()
+    model = model_module.get_model()
     check_model(amici_model=model, petab_problem=petab_problem)
 
     logger.info(

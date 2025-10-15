@@ -61,21 +61,22 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_LINESEARCH_FAIL, "AMICI_LINESEARCH_FAIL"},
 };
 
-std::unique_ptr<ReturnData> runAmiciSimulation(
+std::unique_ptr<ReturnData> run_simulation(
     Solver& solver, ExpData const* edata, Model& model, bool const rethrow
 ) {
     // create a temporary logger instance for Solver and Model to capture
     // messages from only this simulation
     Logger logger;
-    solver.logger = &logger;
-    model.logger = &logger;
+    solver.set_logger(&logger);
+    model.set_logger(&logger);
     // prevent dangling pointer
     auto _ = gsl::finally([&solver, &model] {
-        solver.logger = model.logger = nullptr;
+        solver.set_logger(nullptr);
+        model.set_logger(nullptr);
     });
 
     CpuTimer cpu_timer;
-    solver.startTimer();
+    solver.start_timer();
 
     // Applies condition-specific model settings and restores them when going
     // out of scope. (This also sets `plist`, which is required for initializing
@@ -94,9 +95,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
         fwd = std::make_unique<ForwardProblem>(edata, &model, &solver);
-        fwd->workForwardProblem();
+        fwd->run();
 
-        if (edata && solver.computingASA()) {
+        if (edata && solver.computing_asa()) {
             bwd_success = false; // NOLINT
 
             bwd = std::make_unique<BackwardProblem>(*fwd);
@@ -107,7 +108,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
         rdata->status = AMICI_SUCCESS;
     } catch (IntegrationFailure const& ex) {
-        if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+        if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.time_exceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if (rethrow)
                 throw;
@@ -128,7 +129,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             );
         }
     } catch (IntegrationFailureB const& ex) {
-        if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+        if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.time_exceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if (rethrow)
                 throw;
@@ -176,7 +177,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     }
 
     try {
-        rdata->processSimulationObjects(
+        rdata->process_simulation_objects(
             fwd.get(), bwd_success ? bwd.get() : nullptr, model, solver, edata
         );
     } catch (std::exception const& ex) {
@@ -189,24 +190,24 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         );
     }
 
-    rdata->t_last = solver.gett();
+    rdata->t_last = solver.get_t();
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
     // verify that reported CPU times are plausible
     gsl_EnsuresDebug(rdata->cpu_time <= rdata->cpu_time_total);
-    gsl_EnsuresDebug(rdata->cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->cpu_time_b <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->preeq_cpu_time <= rdata->cpu_time_total);
-    gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_time_b <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
-    gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
-    if (fwd && !fwd->getPostequilibrationProblem())
+    gsl_EnsuresDebug(rdata->posteq_cpu_time_b <= rdata->cpu_time_total);
+    if (fwd && !fwd->get_posteq_problem())
         gsl_EnsuresDebug(
             std::ranges::is_sorted(rdata->numsteps)
             || rdata->status != AMICI_SUCCESS
         );
-    if (fwd && !fwd->getPreequilibrationProblem())
+    if (fwd && !fwd->get_preeq_problem())
         gsl_EnsuresDebug(
-            std::ranges::is_sorted(rdata->numstepsB)
+            std::ranges::is_sorted(rdata->numsteps_b)
             || rdata->status != AMICI_SUCCESS
         );
 
@@ -215,7 +216,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     return rdata;
 }
 
-std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
+std::vector<std::unique_ptr<ReturnData>> run_simulations(
     Solver const& solver, std::vector<ExpData*> const& edatas,
     Model const& model, bool const failfast,
 #if defined(_OPENMP)
@@ -245,7 +246,7 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
                 ConditionContext conditionContext(myModel.get(), edatas[i]);
                 results[i] = std::make_unique<ReturnData>(solver, model);
             } else {
-                results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+                results[i] = run_simulation(*mySolver, edatas[i], *myModel);
             }
         } catch (std::exception const& ex) {
             results[i] = std::make_unique<ReturnData>(solver, model);

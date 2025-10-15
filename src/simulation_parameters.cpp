@@ -6,26 +6,27 @@
 namespace amici {
 
 bool operator==(SimulationParameters const& a, SimulationParameters const& b) {
-    return is_equal(a.fixedParameters, b.fixedParameters)
+    return is_equal(a.fixed_parameters, b.fixed_parameters)
            && is_equal(
-               a.fixedParametersPreequilibration,
-               b.fixedParametersPreequilibration
+               a.fixed_parameters_pre_equilibration,
+               b.fixed_parameters_pre_equilibration
            )
            && is_equal(
-               a.fixedParametersPresimulation, b.fixedParametersPresimulation
+               a.fixed_parameters_presimulation,
+               b.fixed_parameters_presimulation
            )
            && is_equal(a.parameters, b.parameters) && (a.plist == b.plist)
            && (a.pscale == b.pscale)
-           && (a.reinitializeFixedParameterInitialStates
-               == b.reinitializeFixedParameterInitialStates)
+           && (a.reinitialize_fixed_parameter_initial_states
+               == b.reinitialize_fixed_parameter_initial_states)
            && is_equal(a.sx0, b.sx0) && (a.t_presim == b.t_presim)
-           && (a.tstart_ == b.tstart_) && (a.ts_ == b.ts_)
-           && ((a.tstart_preeq_ == b.tstart_preeq_)
-               || (std::isnan(a.tstart_preeq_) && std::isnan(b.tstart_preeq_)));
+           && (a.t_start == b.t_start) && (a.timepoints == b.timepoints)
+           && ((a.t_start_preeq == b.t_start_preeq)
+               || (std::isnan(a.t_start_preeq) && std::isnan(b.t_start_preeq)));
 }
 
 void SimulationParameters::
-    reinitializeAllFixedParameterDependentInitialStatesForPresimulation(
+    reinitialize_all_fixed_parameter_dependent_initial_states_for_presimulation(
         int const nx_rdata
     ) {
     reinitialization_state_idxs_presim.resize(nx_rdata);
@@ -36,7 +37,7 @@ void SimulationParameters::
 }
 
 void SimulationParameters::
-    reinitializeAllFixedParameterDependentInitialStatesForSimulation(
+    reinitialize_all_fixed_parameter_dependent_initial_states_for_simulation(
         int const nx_rdata
     ) {
     reinitialization_state_idxs_sim.resize(nx_rdata);
@@ -46,13 +47,16 @@ void SimulationParameters::
     );
 }
 
-void SimulationParameters::reinitializeAllFixedParameterDependentInitialStates(
-    int const nx_rdata
-) {
-    reinitializeAllFixedParameterDependentInitialStatesForPresimulation(
+void SimulationParameters::
+    reinitialize_all_fixed_parameter_dependent_initial_states(
+        int const nx_rdata
+    ) {
+    reinitialize_all_fixed_parameter_dependent_initial_states_for_presimulation(
         nx_rdata
     );
-    reinitializeAllFixedParameterDependentInitialStatesForSimulation(nx_rdata);
+    reinitialize_all_fixed_parameter_dependent_initial_states_for_simulation(
+        nx_rdata
+    );
 }
 
 } // namespace amici

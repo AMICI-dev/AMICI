@@ -146,10 +146,6 @@ if not _imported_from_setup():
 
         To enable static type checking."""
 
-        def getModel(self) -> amici.Model:
-            """Create a model instance."""
-            ...
-
         def get_model(self) -> amici.Model:
             """Create a model instance."""
             ...

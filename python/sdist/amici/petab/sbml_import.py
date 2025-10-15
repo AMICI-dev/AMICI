@@ -419,7 +419,7 @@ def import_model_sbml(
     ):
         # check that the model extension was compiled successfully
         model_module = amici.import_model_module(model_name, model_output_dir)
-        model = model_module.getModel()
+        model = model_module.get_model()
         check_model(amici_model=model, petab_problem=petab_problem)
 
     return sbml_importer

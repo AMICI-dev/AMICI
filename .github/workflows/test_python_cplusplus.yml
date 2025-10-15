@@ -53,7 +53,7 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiled_with_openmp())"
 
     - name: Python tests (part 1)
       run: |
@@ -273,7 +273,7 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiled_with_openmp())"
 
     - name: cppcheck
       run: scripts/run-cppcheck.sh
@@ -333,7 +333,7 @@ jobs:
         scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiled_with_openmp())"
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh

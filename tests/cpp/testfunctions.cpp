@@ -16,7 +16,7 @@ namespace amici {
 
 namespace generic_model {
 
-extern std::unique_ptr<amici::Model> getModel();
+extern std::unique_ptr<amici::Model> get_model();
 
 } // namespace generic_model
 
@@ -41,10 +41,10 @@ void simulateVerifyWrite(const std::string &path, double atol, double rtol)
 
 void simulateWithDefaultOptions() {
     using namespace amici;
-    auto model = amici::generic_model::getModel();
-    auto solver = model->getSolver();
+    auto model = amici::generic_model::get_model();
+    auto solver = model->create_solver();
     std::unique_ptr<const ExpData> edata;
-    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
+    auto rdata = run_simulation(*solver, edata.get(), *model);
 }
 
 void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& hdffileResults, const std::string& hdffilewrite, const std::string& path, double atol, double rtol)
@@ -52,38 +52,38 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
     using namespace amici;
     // read options from file
     std::string optionsPath = path + "/options";
-    auto model = amici::generic_model::getModel();
-    auto solver = model->getSolver();
-    hdf5::readModelDataFromHDF5(hdffileOptions, *model, optionsPath);
-    hdf5::readSolverSettingsFromHDF5(hdffileOptions, *solver, optionsPath);
+    auto model = amici::generic_model::get_model();
+    auto solver = model->create_solver();
+    hdf5::read_model_data_from_hdf5(hdffileOptions, *model, optionsPath);
+    hdf5::read_solver_settings_from_hdf5(hdffileOptions, *solver, optionsPath);
 
     // read measurements from file
     std::string measurementPath = path + "/data";
     std::unique_ptr<const ExpData> edata;
-    if(hdf5::locationExists(hdffileOptions, measurementPath))
-        edata = hdf5::readSimulationExpData(hdffileOptions, measurementPath, *model);
+    if(hdf5::location_exists(hdffileOptions, measurementPath))
+        edata = hdf5::read_exp_data_from_hdf5(hdffileOptions, measurementPath, *model);
 
     // simulate & verify
-    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
+    auto rdata = run_simulation(*solver, edata.get(), *model);
     // perform second simulation to check reuse of solver and model object
-    auto rdata_resimulation = runAmiciSimulation(*solver, edata.get(), *model);
+    auto rdata_resimulation = run_simulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
 
     // write
     // delete destination group
     H5::H5File in(hdffileOptions.c_str(), H5F_ACC_RDONLY);
-    auto out = amici::hdf5::createOrOpenForWriting(hdffilewrite);
-    if(hdf5::locationExists(out, path))
+    auto out = amici::hdf5::create_or_open_for_writing(hdffilewrite);
+    if(hdf5::location_exists(out, path))
         H5Ldelete(out.getId(), path.c_str(), H5P_DEFAULT);
-    hdf5::createGroup(out, path);
+    hdf5::create_group(out, path);
     std::string writePath = path + "/options";
     H5Ocopy(in.getId(), writePath.c_str(), out.getId(), writePath.c_str(), H5P_DEFAULT, H5P_DEFAULT);
     writePath = path + "/data";
     if(edata)
-        hdf5::writeSimulationExpData(*edata, out, writePath);
+        hdf5::write_exp_data_to_hdf5(*edata, out, writePath);
 
     writePath = path + "/results";
-    hdf5::writeReturnData(*rdata, out, writePath);
+    hdf5::write_return_data_to_hdf5(*rdata, out, writePath);
 
     // verify simulated results
     verifyReturnData(hdffileResults, resultPath, rdata.get(), model.get(), atol, rtol);
@@ -168,7 +168,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     ASSERT_FALSE(rdata == nullptr);
 
-    if(!hdf5::locationExists(hdffile, resultPath)) {
+    if(!hdf5::location_exists(hdffile, resultPath)) {
         fprintf(stderr, "ERROR: No results available for %s!\n",
                 resultPath.c_str());
         return;
@@ -181,7 +181,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     std::vector<realtype> expected;
 
-    auto statusExp = hdf5::getIntScalarAttribute(file, resultPath, "status");
+    auto statusExp = hdf5::get_int_scalar_attribute(file, resultPath, "status");
     if(rdata->status != statusExp && !rdata->messages.empty()) {
         std::cerr<<"Messages:"<<std::endl;
         for(const auto& msg: rdata->messages) {
@@ -190,14 +190,14 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     }
     ASSERT_EQ(statusExp, rdata->status);
 
-    double llhExp = hdf5::getDoubleScalarAttribute(file, resultPath, "llh");
+    double llhExp = hdf5::get_double_scalar_attribute(file, resultPath, "llh");
     ASSERT_TRUE(withinTolerance(llhExp, rdata->llh, atol, rtol, 1, "llh"));
 
-    double chi2Exp = hdf5::getDoubleScalarAttribute(file, resultPath, "chi2");
+    double chi2Exp = hdf5::get_double_scalar_attribute(file, resultPath, "chi2");
     ASSERT_TRUE(withinTolerance(chi2Exp, rdata->chi2, atol, rtol, 1, "chi2"));
 
-    if(hdf5::locationExists(file, resultPath + "/x")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/x", m, n);
+    if(hdf5::location_exists(file, resultPath + "/x")) {
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/x", m, n);
         checkEqualArray(expected, rdata->x, atol, rtol, "x");
     } else {
         ASSERT_TRUE(rdata->x.empty());
@@ -205,52 +205,52 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
 
-    if(hdf5::locationExists(file, resultPath + "/y")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
+    if(hdf5::location_exists(file, resultPath + "/y")) {
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/y", m, n);
         checkEqualArray(expected, rdata->y, atol, rtol, "y");
     } else {
         ASSERT_TRUE(rdata->y.empty());
     }
 
-    if(hdf5::locationExists(file, resultPath + "/res")) {
-        expected = hdf5::getDoubleDataset1D(file, resultPath + "/res");
+    if(hdf5::location_exists(file, resultPath + "/res")) {
+        expected = hdf5::get_double_1d_dataset(file, resultPath + "/res");
         checkEqualArray(expected, rdata->res, atol, rtol, "res");
     } else {
         ASSERT_TRUE(rdata->res.empty());
     }
 
-    if(hdf5::locationExists(file, resultPath + "/z")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/z", m, n);
+    if(hdf5::location_exists(file, resultPath + "/z")) {
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/z", m, n);
         checkEqualArray(expected, rdata->z, atol, rtol, "z");
     } else {
         ASSERT_TRUE(rdata->z.empty());
     }
 
-    if(hdf5::locationExists(file, resultPath + "/rz")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/rz", m, n);
+    if(hdf5::location_exists(file, resultPath + "/rz")) {
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/rz", m, n);
         checkEqualArray(expected, rdata->rz, atol, rtol, "rz");
     } else {
         ASSERT_TRUE(rdata->rz.empty());
     }
 
-    if(hdf5::locationExists(file, resultPath + "/sigmaz")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/sigmaz", m, n);
+    if(hdf5::location_exists(file, resultPath + "/sigmaz")) {
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/sigmaz", m, n);
         checkEqualArray(expected, rdata->sigmaz, atol, rtol, "sigmaz");
     } else {
         ASSERT_TRUE(rdata->sigmaz.empty());
     }
 
-    expected = hdf5::getDoubleDataset1D(file, resultPath + "/x0");
+    expected = hdf5::get_double_1d_dataset(file, resultPath + "/x0");
     checkEqualArray(expected, rdata->x0, atol, rtol, "x0");
 
     if(rdata->status == AMICI_SUCCESS) {
         // for the failed cases, the stored results don't match
         // since https://github.com/AMICI-dev/AMICI/pull/2349
-    expected = hdf5::getDoubleDataset1D(file, resultPath + "/diagnosis/xdot");
+    expected = hdf5::get_double_1d_dataset(file, resultPath + "/diagnosis/xdot");
     checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
 
-    if(hdf5::locationExists(file, resultPath + "/diagnosis/J")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
+    if(hdf5::location_exists(file, resultPath + "/diagnosis/J")) {
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/diagnosis/J", m, n);
         checkEqualArray(expected, rdata->J, atol, rtol, "J");
     } else {
         ASSERT_TRUE(rdata->J.empty());
@@ -268,8 +268,8 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                                    const ReturnData *rdata, const Model *model, double atol, double rtol) {
     hsize_t m, n, o;
     std::vector<double> expected;
-    if(hdf5::locationExists(file, resultPath + "/sllh")) {
-        expected = hdf5::getDoubleDataset1D(file, resultPath + "/sllh");
+    if(hdf5::location_exists(file, resultPath + "/sllh")) {
+        expected = hdf5::get_double_1d_dataset(file, resultPath + "/sllh");
         checkEqualArray(expected, rdata->sllh, atol, rtol, "sllh");
     } else {
         ASSERT_TRUE(rdata->sllh.empty());
@@ -277,22 +277,22 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
 
     if(rdata->sensi_meth == SensitivityMethod::forward) {
 
-        if(hdf5::locationExists(file, resultPath + "/sx0")) {
-            expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
+        if(hdf5::location_exists(file, resultPath + "/sx0")) {
+            expected = hdf5::get_double_2d_dataset(file, resultPath + "/sx0", m, n);
             checkEqualArray(expected, rdata->sx0, atol, rtol, "sx0");
         } else {
             ASSERT_TRUE(rdata->sx0.empty());
         }
 
-        if(hdf5::locationExists(file, resultPath + "/sres")) {
-            expected = hdf5::getDoubleDataset2D(file, resultPath + "/sres", m, n);
+        if(hdf5::location_exists(file, resultPath + "/sres")) {
+            expected = hdf5::get_double_2d_dataset(file, resultPath + "/sres", m, n);
             checkEqualArray(expected, rdata->sres, atol, rtol, "sres");
         } else {
             ASSERT_TRUE(rdata->sres.empty());
         }
 
-        if(hdf5::locationExists(file, resultPath + "/FIM")) {
-            expected = hdf5::getDoubleDataset2D(file, resultPath + "/FIM", m, n);
+        if(hdf5::location_exists(file, resultPath + "/FIM")) {
+            expected = hdf5::get_double_2d_dataset(file, resultPath + "/FIM", m, n);
             checkEqualArray(expected, rdata->FIM, atol, rtol, "FIM");
         } else {
             ASSERT_TRUE(rdata->FIM.empty());
@@ -303,8 +303,8 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
         if(rdata->sensi < SensitivityOrder::second) {
         /* /TODO REMOVE ASAP */
 
-            if(hdf5::locationExists(file, resultPath + "/sx")) {
-                expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
+            if(hdf5::location_exists(file, resultPath + "/sx")) {
+                expected = hdf5::get_double_3d_dataset(file, resultPath + "/sx", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
                     checkEqualArray(&expected[ip * model->nt() * model->nxtrue_rdata],
                             &rdata->sx[ip * model->nt() * rdata->nx_rdata],
@@ -313,8 +313,8 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                 ASSERT_TRUE(rdata->sx.empty());
             }
 
-            if(hdf5::locationExists(file, resultPath + "/sy")) {
-                expected = hdf5::getDoubleDataset3D(file, resultPath + "/sy", m, n, o);
+            if(hdf5::location_exists(file, resultPath + "/sy")) {
+                expected = hdf5::get_double_3d_dataset(file, resultPath + "/sy", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
                     checkEqualArray(&expected[ip * model->nt() * model->nytrue],
                             &rdata->sy[ip * model->nt() * model->ny],
@@ -325,33 +325,33 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
 
 
             if(model->nz>0) {
-                expected = hdf5::getDoubleDataset3D(file, resultPath + "/sz", m, n, o);
+                expected = hdf5::get_double_3d_dataset(file, resultPath + "/sz", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
-                    checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                            &rdata->sz[ip * model->nMaxEvent() * model->nz],
-                            model->nMaxEvent() * model->nztrue, atol, rtol, "sz");
+                    checkEqualArray(&expected[ip * model->n_max_event() * model->nztrue],
+                            &rdata->sz[ip * model->n_max_event() * model->nz],
+                            model->n_max_event() * model->nztrue, atol, rtol, "sz");
 
-                expected = hdf5::getDoubleDataset3D(file, resultPath + "/srz", m, n, o);
+                expected = hdf5::get_double_3d_dataset(file, resultPath + "/srz", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
-                    checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                            &rdata->srz[ip * model->nMaxEvent() * model->nz],
-                            model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
+                    checkEqualArray(&expected[ip * model->n_max_event() * model->nztrue],
+                            &rdata->srz[ip * model->n_max_event() * model->nz],
+                            model->n_max_event() * model->nztrue, atol, rtol, "srz");
             }
 
-            if(hdf5::locationExists(file, resultPath + "/ssigmay") || !rdata->ssigmay.empty()) {
-                expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
+            if(hdf5::location_exists(file, resultPath + "/ssigmay") || !rdata->ssigmay.empty()) {
+                expected = hdf5::get_double_3d_dataset(file, resultPath + "/ssigmay", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
                     checkEqualArray(&expected[ip * model->nt() * model->nytrue],
                             &rdata->ssigmay[ip * model->nt() * model->ny],
                             model->nt() * model->nytrue, atol, rtol, "ssigmay");
             }
-            if(hdf5::locationExists(file, resultPath + "/ssigmaz") || !rdata->ssigmaz.empty()) {
+            if(hdf5::location_exists(file, resultPath + "/ssigmaz") || !rdata->ssigmaz.empty()) {
                 if(model->nz>0) {
-                    expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmaz", m, n, o);
+                    expected = hdf5::get_double_3d_dataset(file, resultPath + "/ssigmaz", m, n, o);
                     for(int ip = 0; ip < model->nplist(); ++ip)
-                        checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                                &rdata->ssigmaz[ip * model->nMaxEvent() * model->nz],
-                                model->nMaxEvent() * model->nztrue, atol, rtol, "ssigmaz");
+                        checkEqualArray(&expected[ip * model->n_max_event() * model->nztrue],
+                                &rdata->ssigmaz[ip * model->n_max_event() * model->nz],
+                                model->n_max_event() * model->nztrue, atol, rtol, "ssigmaz");
                 }
             }
         /* TODO REMOVE ASAP */
@@ -361,7 +361,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
     }
 
     if(rdata->sensi >= SensitivityOrder::second) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/s2llh", m, n);
+        expected = hdf5::get_double_2d_dataset(file, resultPath + "/s2llh", m, n);
         checkEqualArray(expected, rdata->s2llh, atol, rtol, "s2llh");
     } else {
         ASSERT_EQ(0, rdata->s2llh.size());

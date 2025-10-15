@@ -104,12 +104,12 @@ SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat)
     : matrix_(mat)
     , id_(get_sparse_id_w_default(mat))
     , sparsetype_(get_sparse_type_w_default(mat))
-    , ownmat(false) {
+    , ownmat_(false) {
     finish_init();
 }
 
 SUNMatrixWrapper::~SUNMatrixWrapper() {
-    if (matrix_ && ownmat)
+    if (matrix_ && ownmat_)
         SUNMatDestroy(matrix_);
 }
 

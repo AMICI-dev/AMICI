@@ -39,7 +39,7 @@ namespace hdf5 {
  * @param hdf5filename File to open
  * @return File object
  */
-H5::H5File createOrOpenForWriting(std::string const& hdf5filename);
+H5::H5File create_or_open_for_writing(std::string const& hdf5filename);
 
 /**
  * @brief Read solver options from HDF5 file.
@@ -47,7 +47,7 @@ H5::H5File createOrOpenForWriting(std::string const& hdf5filename);
  * @param solver Solver to set options on
  * @param datasetPath Path inside the HDF5 file
  */
-void readSolverSettingsFromHDF5(
+void read_solver_settings_from_hdf5(
     const H5::H5File& file, Solver& solver, std::string const& datasetPath
 );
 
@@ -57,7 +57,7 @@ void readSolverSettingsFromHDF5(
  * @param solver Solver to write options from
  * @param hdf5Location Path inside the HDF5 file
  */
-void writeSolverSettingsToHDF5(
+void write_solver_settings_to_hdf5(
     Solver const& solver, std::string const& hdf5Filename,
     std::string const& hdf5Location
 );
@@ -68,7 +68,7 @@ void writeSolverSettingsToHDF5(
  * @param solver Solver to write options from
  * @param hdf5Location Path inside the HDF5 file
  */
-void writeSolverSettingsToHDF5(
+void write_solver_settings_to_hdf5(
     Solver const& solver, H5::H5File const& file,
     std::string const& hdf5Location
 );
@@ -79,7 +79,7 @@ void writeSolverSettingsToHDF5(
  * @param solver Solver to set options on
  * @param datasetPath Path inside the HDF5 file
  */
-void readSolverSettingsFromHDF5(
+void read_solver_settings_from_hdf5(
     std::string const& hdffile, Solver& solver, std::string const& datasetPath
 );
 
@@ -89,7 +89,7 @@ void readSolverSettingsFromHDF5(
  * @param model Model to set data on
  * @param datasetPath Path inside the HDF5 file
  */
-void readModelDataFromHDF5(
+void read_model_data_from_hdf5(
     std::string const& hdffile, Model& model, std::string const& datasetPath
 );
 
@@ -99,7 +99,7 @@ void readModelDataFromHDF5(
  * @param model Model to set data on
  * @param datasetPath Path inside the HDF5 file
  */
-void readModelDataFromHDF5(
+void read_model_data_from_hdf5(
     H5::H5File const& file, Model& model, std::string const& datasetPath
 );
 
@@ -110,7 +110,7 @@ void readModelDataFromHDF5(
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
  */
 
-void writeReturnData(
+void write_return_data_to_hdf5(
     ReturnData const& rdata, H5::H5File const& file,
     std::string const& hdf5Location
 );
@@ -122,7 +122,7 @@ void writeReturnData(
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
  */
 
-void writeReturnData(
+void write_return_data_to_hdf5(
     ReturnData const& rdata, std::string const& hdf5Filename,
     std::string const& hdf5Location
 );
@@ -133,7 +133,7 @@ void writeReturnData(
  * @param file HDF5 file to write to
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
  */
-void writeReturnDataDiagnosis(
+void write_return_data_diagnosis(
     ReturnData const& rdata, H5::H5File const& file,
     std::string const& hdf5Location
 );
@@ -144,7 +144,7 @@ void writeReturnDataDiagnosis(
  * @param logItems Log items to write
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
  */
-void writeLogItemsToHDF5(
+void write_log_items_to_hdf5(
     H5::H5File const& file, std::vector<LogItem> const& logItems,
     std::string const& hdf5Location
 );
@@ -155,7 +155,7 @@ void writeLogItemsToHDF5(
  * @param groupPath Path to the group to be created
  * @param recursively Create intermediary groups
  */
-void createGroup(
+void create_group(
     const H5::H5File& file, std::string const& groupPath,
     bool recursively = true
 );
@@ -168,7 +168,7 @@ void createGroup(
  * @return ExpData created from data in the given location
  */
 
-std::unique_ptr<ExpData> readSimulationExpData(
+std::unique_ptr<ExpData> read_exp_data_from_hdf5(
     std::string const& hdf5Filename, std::string const& hdf5Root,
     Model const& model
 );
@@ -180,7 +180,7 @@ std::unique_ptr<ExpData> readSimulationExpData(
  * @param hdf5Location Path inside the HDF5 file
  */
 
-void writeSimulationExpData(
+void write_exp_data_to_hdf5(
     ExpData const& edata, H5::H5File const& file,
     std::string const& hdf5Location
 );
@@ -191,7 +191,7 @@ void writeSimulationExpData(
  * @param filepath Name of HDF5 file
  * @param hdf5Location Path inside the HDF5 file
  */
-void writeSimulationExpData(
+void write_exp_data_to_hdf5(
     ExpData const& edata, std::string const& filepath,
     std::string const& hdf5Location
 );
@@ -204,7 +204,7 @@ void writeSimulationExpData(
  * @param attributeName Name of the attribute of interest
  * @return `true` if attribute exists, `false` otherwise
  */
-bool attributeExists(
+bool attribute_exists(
     H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 );
@@ -216,7 +216,7 @@ bool attributeExists(
  * @param attributeName Name of the attribute of interest
  * @return `true` if attribute exists, `false` otherwise
  */
-bool attributeExists(
+bool attribute_exists(
     H5::H5Object const& object, std::string const& attributeName
 );
 
@@ -226,7 +226,7 @@ bool attributeExists(
  * @param datasetName Name of dataset to create
  * @param buffer Data to write to dataset
  */
-void createAndWriteInt1DDataset(
+void create_and_write_int_1d_dataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<int const> buffer
 );
@@ -239,7 +239,7 @@ void createAndWriteInt1DDataset(
  * @param m Number of rows in buffer
  * @param n Number of columns buffer
  */
-void createAndWriteInt2DDataset(
+void create_and_write_int_2d_dataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<int const> buffer, hsize_t m, hsize_t n
 );
@@ -250,7 +250,7 @@ void createAndWriteInt2DDataset(
  * @param datasetName Name of dataset to create
  * @param buffer Data to write to dataset
  */
-void createAndWriteDouble1DDataset(
+void create_and_write_double_1d_dataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> buffer
 );
@@ -264,7 +264,7 @@ void createAndWriteDouble1DDataset(
  * @param n Number of columns buffer
  */
 
-void createAndWriteDouble2DDataset(
+void create_and_write_double_2d_dataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> buffer, hsize_t m, hsize_t n
 );
@@ -279,7 +279,7 @@ void createAndWriteDouble2DDataset(
  * @param o Length of first dimension in buffer
  */
 
-void createAndWriteDouble3DDataset(
+void create_and_write_double_3d_dataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> buffer, hsize_t m, hsize_t n, hsize_t o
 );
@@ -291,7 +291,7 @@ void createAndWriteDouble3DDataset(
  * @param attributeName Name of attribute to read
  * @return Attribute value
  */
-std::string getStringAttribute(
+std::string get_string_attribute(
     H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 );
@@ -303,7 +303,7 @@ std::string getStringAttribute(
  * @param attributeName Name of attribute to read
  * @return Attribute value
  */
-double getDoubleScalarAttribute(
+double get_double_scalar_attribute(
     const H5::H5File& file, std::string const& optionsObject,
     std::string const& attributeName
 );
@@ -316,7 +316,7 @@ double getDoubleScalarAttribute(
  * @return Attribute value
  */
 
-int getIntScalarAttribute(
+int get_int_scalar_attribute(
     const H5::H5File& file, std::string const& optionsObject,
     std::string const& attributeName
 );
@@ -328,7 +328,7 @@ int getIntScalarAttribute(
  * @return Data read
  */
 std::vector<int>
-getIntDataset1D(const H5::H5File& file, std::string const& name);
+get_int_1d_dataset(const H5::H5File& file, std::string const& name);
 
 /**
  * @brief Read 1-dimensional native double dataset from HDF5 file.
@@ -338,7 +338,7 @@ getIntDataset1D(const H5::H5File& file, std::string const& name);
  */
 
 std::vector<double>
-getDoubleDataset1D(const H5::H5File& file, std::string const& name);
+get_double_1d_dataset(const H5::H5File& file, std::string const& name);
 
 /**
  * @brief Read 2-dimensional native double dataset from HDF5 file.
@@ -349,7 +349,7 @@ getDoubleDataset1D(const H5::H5File& file, std::string const& name);
  * @return Flattened data (row-major)
  */
 
-std::vector<double> getDoubleDataset2D(
+std::vector<double> get_double_2d_dataset(
     const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n
 );
 
@@ -363,7 +363,7 @@ std::vector<double> getDoubleDataset2D(
  * @return Flattened data (row-major)
  */
 
-std::vector<double> getDoubleDataset3D(
+std::vector<double> get_double_3d_dataset(
     const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n,
     hsize_t& o
 );
@@ -375,7 +375,7 @@ std::vector<double> getDoubleDataset3D(
  * @param location Location to test for
  * @return `true` if exists, `false` otherwise
  */
-bool locationExists(std::string const& filename, std::string const& location);
+bool location_exists(std::string const& filename, std::string const& location);
 
 /**
  * @brief Check if the given location (group, link or dataset) exists in the
@@ -385,7 +385,7 @@ bool locationExists(std::string const& filename, std::string const& location);
  * @return `true` if exists, `false` otherwise
  */
 
-bool locationExists(H5::H5File const& file, std::string const& location);
+bool location_exists(H5::H5File const& file, std::string const& location);
 
 } // namespace hdf5
 } // namespace amici

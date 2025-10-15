@@ -41,23 +41,23 @@ NewtonSolver::NewtonSolver(
     }
 }
 
-void NewtonSolver::getStep(
+void NewtonSolver::get_step(
     AmiVector& delta, Model& model, DEStateView const& state
 ) {
-    prepareLinearSystem(model, state);
+    prepare_linear_system(model, state);
 
     delta.minus();
-    solveLinearSystem(delta);
+    solve_linear_system(delta);
 }
 
-void NewtonSolver::computeNewtonSensis(
+void NewtonSolver::compute_newton_sensis(
     AmiVectorArray& sx, Model& model, DEStateView const& state
 ) {
-    prepareLinearSystem(model, state);
+    prepare_linear_system(model, state);
     model.fdxdotdp(state.t, state.x, state.dx);
 
-    if (model.logger && is_singular(model, state)) {
-        model.logger->log(
+    if (model.get_logger() && is_singular(model, state)) {
+        model.get_logger()->log(
             LogSeverity::warning, "NEWTON_JAC_SINGULAR",
             "Jacobian is singular at steadystate, "
             "sensitivities may be inaccurate."
@@ -65,17 +65,19 @@ void NewtonSolver::computeNewtonSensis(
     }
 
     for (int ip = 0; ip < model.nplist(); ip++) {
-        N_VConst(0.0, sx.getNVector(ip));
+        N_VConst(0.0, sx.get_nvector(ip));
         model.get_dxdotdp_full().scatter(
-            model.plist(ip), -1.0, nullptr, gsl::make_span(sx.getNVector(ip)),
+            model.plist(ip), -1.0, nullptr, gsl::make_span(sx.get_nvector(ip)),
             0, nullptr, 0
         );
 
-        solveLinearSystem(sx[ip]);
+        solve_linear_system(sx[ip]);
     }
 }
 
-void NewtonSolver::prepareLinearSystem(Model& model, DEStateView const& state) {
+void NewtonSolver::prepare_linear_system(
+    Model& model, DEStateView const& state
+) {
     auto& J = linsol_->getMatrix();
     if (J.matrix_id() == SUNMATRIX_SPARSE) {
         model.fJSparse(state.t, 0.0, state.x, state.dx, xdot_, J);
@@ -90,7 +92,7 @@ void NewtonSolver::prepareLinearSystem(Model& model, DEStateView const& state) {
     }
 }
 
-void NewtonSolver::prepareLinearSystemB(
+void NewtonSolver::prepare_linear_system_b(
     Model& model, DEStateView const& state
 ) {
     auto& J = linsol_->getMatrix();
@@ -107,9 +109,9 @@ void NewtonSolver::prepareLinearSystemB(
     }
 }
 
-void NewtonSolver::solveLinearSystem(AmiVector& rhs) {
+void NewtonSolver::solve_linear_system(AmiVector& rhs) {
     // last argument is tolerance and does not have any influence on result
-    auto status = linsol_->solve(rhs.getNVector(), rhs.getNVector(), 0.0);
+    auto status = linsol_->solve(rhs.get_nvector(), rhs.get_nvector(), 0.0);
     if (status != SUN_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve");
 }
@@ -121,7 +123,7 @@ void NewtonSolver::reinitialize() {
     }
     if (auto const s = dynamic_cast<SUNLinSolKLU*>(linsol_.get())) {
         try {
-            s->reInit(s->getMatrix().capacity(), SUNKLU_REINIT_PARTIAL);
+            s->reinit(s->getMatrix().capacity(), SUNKLU_REINIT_PARTIAL);
             return;
         } catch (AmiException const&) {
             throw NewtonFailure(
@@ -145,7 +147,7 @@ bool NewtonSolver::is_singular(Model& model, DEStateView const& state) const {
     NewtonSolver sparse_solver(
         model, LinearSolver::KLU, linsol_->get()->sunctx
     );
-    sparse_solver.prepareLinearSystem(model, state);
+    sparse_solver.prepare_linear_system(model, state);
     return sparse_solver.is_singular(model, state);
 }
 

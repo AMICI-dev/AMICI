@@ -61,30 +61,30 @@ def test_pregenerated_model_py(sub_test, case):
     test_model_module = amici.import_model_module(
         module_name=f"{model_name}_py", module_path=model_swig_folder
     )
-    model = test_model_module.getModel()
-    solver = model.getSolver()
-    amici.readModelDataFromHDF5(
+    model = test_model_module.get_model()
+    solver = model.create_solver()
+    amici.read_model_data_from_hdf5(
         options_file, model.get(), f"/{sub_test}/{case}/options"
     )
     if model_name == "model_steadystate":
-        model.setSteadyStateComputationMode(
+        model.set_steady_state_computation_mode(
             amici.SteadyStateComputationMode.integrateIfNewtonFails
         )
-        model.setSteadyStateSensitivityMode(
+        model.set_steady_state_sensitivity_mode(
             amici.SteadyStateSensitivityMode.integrateIfNewtonFails
         )
-    amici.readSolverSettingsFromHDF5(
+    amici.read_solver_settings_from_hdf5(
         options_file, solver.get(), f"/{sub_test}/{case}/options"
     )
 
     edata = None
     if "data" in expected_results[sub_test][case].keys():
-        edata = amici.readSimulationExpData(
+        edata = amici.read_exp_data_from_hdf5(
             str(expected_results_file_py),
             f"/{sub_test}/{case}/data",
             model.get(),
         )
-    rdata = amici.runAmiciSimulation(model, solver, edata)
+    rdata = amici.run_simulation(model, solver, edata)
 
     check_derivative_opts = dict()
 
@@ -95,9 +95,9 @@ def test_pregenerated_model_py(sub_test, case):
 
     if (
         edata
-        and solver.getSensitivityMethod()
-        and solver.getSensitivityOrder()
-        and len(model.getParameterList())
+        and solver.get_sensitivity_method()
+        and solver.get_sensitivity_order()
+        and len(model.get_parameter_list())
         and not model_name.startswith("model_neuron")
         and not case.endswith("byhandpreeq")
     ):
@@ -130,7 +130,7 @@ def test_pregenerated_model_py(sub_test, case):
     if model_name == "model_steadystate" and case == "sensiforwarderrorint":
         edata = amici.amici.ExpData(model.get())
 
-    # Test runAmiciSimulations: ensure running twice
+    # Test run_simulations: ensure running twice
     # with same ExpData yields same results
     if (
         edata
@@ -144,7 +144,7 @@ def test_pregenerated_model_py(sub_test, case):
         else:
             edatas = [edata.get(), edata.get()]
 
-        rdatas = amici.runAmiciSimulations(
+        rdatas = amici.run_simulations(
             model, solver, edatas, num_threads=2, failfast=False
         )
         verify_simulation_results(
@@ -159,12 +159,14 @@ def test_pregenerated_model_py(sub_test, case):
         )
 
     # test residuals mode
-    if solver.getSensitivityMethod() == amici.SensitivityMethod.adjoint:
+    if solver.get_sensitivity_method() == amici.SensitivityMethod.adjoint:
         with pytest.raises(RuntimeError):
-            solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
+            solver.set_return_data_reporting_mode(
+                amici.RDataReporting.residuals
+            )
     else:
-        solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+        solver.set_return_data_reporting_mode(amici.RDataReporting.residuals)
+        rdata = amici.run_simulation(model, solver, edata)
         verify_simulation_results(
             rdata,
             expected_results[sub_test][case]["results"],
@@ -172,13 +174,13 @@ def test_pregenerated_model_py(sub_test, case):
             **verify_simulation_opts,
         )
         with pytest.raises(RuntimeError):
-            solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+            solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
 
     chi2_ref = rdata.chi2
 
     # test likelihood mode
-    solver.setReturnDataReportingMode(amici.RDataReporting.likelihood)
-    rdata = amici.runAmiciSimulation(model, solver, edata)
+    solver.set_return_data_reporting_mode(amici.RDataReporting.likelihood)
+    rdata = amici.run_simulation(model, solver, edata)
     verify_simulation_results(
         rdata,
         expected_results[sub_test][case]["results"],
@@ -190,38 +192,38 @@ def test_pregenerated_model_py(sub_test, case):
 
     if (
         model_name == "model_jakstat_adjoint"
-        and solver.getSensitivityMethod() != amici.SensitivityMethod.adjoint
+        and solver.get_sensitivity_method() != amici.SensitivityMethod.adjoint
     ):
-        model.setAddSigmaResiduals(True)
-        solver.setReturnDataReportingMode(amici.RDataReporting.full)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+        model.set_add_sigma_residuals(True)
+        solver.set_return_data_reporting_mode(amici.RDataReporting.full)
+        rdata = amici.run_simulation(model, solver, edata)
         # check whether activation changes chi2
         assert chi2_ref != rdata.chi2
 
         if (
             edata
-            and solver.getSensitivityMethod()
-            and solver.getSensitivityOrder()
-            and len(model.getParameterList())
+            and solver.get_sensitivity_method()
+            and solver.get_sensitivity_order()
+            and len(model.get_parameter_list())
         ):
             check_derivatives(model, solver, edata, **check_derivative_opts)
 
         chi2_ref = rdata.chi2
         res_ref = rdata.res
 
-        model.setMinimumSigmaResiduals(100)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+        model.set_minimum_sigma_residuals(100)
+        rdata = amici.run_simulation(model, solver, edata)
         # check whether changing the minimum changes res but not chi2
         assert np.isclose(chi2_ref, rdata.chi2)
         assert not np.allclose(res_ref, rdata.res)
 
-        model.setMinimumSigmaResiduals(-10)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+        model.set_minimum_sigma_residuals(-10)
+        rdata = amici.run_simulation(model, solver, edata)
         # check whether having a bad minimum results in nan chi2
         assert np.isnan(rdata.chi2)
 
     with pytest.raises(RuntimeError):
-        model.getParameterByName("thisParameterDoesNotExist")
+        model.get_parameter_by_name("thisParameterDoesNotExist")
 
 
 def verify_simulation_results(

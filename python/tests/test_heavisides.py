@@ -52,7 +52,7 @@ def model(request):
         sbml_model=sbml_model,
         model_name=request.param,
     )
-    amici_model.setTimepoints(timepoints)
+    amici_model.set_timepoints(timepoints)
 
     return amici_model, parameters, timepoints, x_expected, sx_expected
 
@@ -75,7 +75,7 @@ def test_models(model):
 
     # FIXME: For a few parameters of these models, adjoint sensitivities
     # are somewhat off. This needs to be investigated further.
-    asa_xfail = amici_model.getName() in ("state_and_param_dep_heavisides",)
+    asa_xfail = amici_model.get_name() in ("state_and_param_dep_heavisides",)
     check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
 
 

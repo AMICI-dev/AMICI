@@ -6,7 +6,7 @@
 using namespace amici;
 %}
 
-%ignore processSimulationObjects;
+%ignore process_simulation_objects;
 %ignore ModelContext;
 
 // Process symbols in header

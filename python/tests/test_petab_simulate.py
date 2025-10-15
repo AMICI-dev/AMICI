@@ -58,7 +58,7 @@ def test_subset_call(petab_problem):
         model_name=model_name, model_output_dir=model_output_dir
     )
     # Model name is handled correctly
-    assert simulator0.amici_model.getName() == model_name
+    assert simulator0.amici_model.get_name() == model_name
     # Check model output directory is created, by
     # :py:func:`amici.petab_import.import_petab_problem`
     assert (Path(model_output_dir) / model_name).is_dir()
@@ -66,10 +66,10 @@ def test_subset_call(petab_problem):
     simulator = PetabSimulator(petab_problem)
     simulator.simulate(amici_model=simulator0.amici_model)
     # AMICI model is handled correctly to skip import
-    assert simulator.amici_model.getName() == model_name
+    assert simulator.amici_model.get_name() == model_name
     simulator.simulate()
     # AMICI model persists between :py:func:`PetabSimulator.simulate` calls
-    assert simulator.amici_model.getName() == model_name
+    assert simulator.amici_model.get_name() == model_name
     # Erroneous solver raises an error
     with pytest.raises(TypeError):
         simulator.simulate(solver=False)

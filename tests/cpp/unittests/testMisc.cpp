@@ -17,7 +17,7 @@
 namespace amici {
 namespace generic_model {
 
-std::unique_ptr<Model> getModel() { return std::make_unique<Model_Test>(); }
+std::unique_ptr<Model> get_model() { return std::make_unique<Model_Test>(); }
 
 } // namespace generic_model
 } // namespace amici
@@ -78,89 +78,97 @@ class ModelTest : public ::testing::Test {
 };
 
 TEST_F(ModelTest, LinScaledParameterIsNotTransformed) {
-    model.setParameterScale(ParameterScaling::none);
+    model.set_parameter_scale(ParameterScaling::none);
 
-    ASSERT_EQ(p[0], model.getParameters()[0]);
+    ASSERT_EQ(p[0], model.get_parameters()[0]);
 }
 
 TEST_F(ModelTest, LogScaledParameterIsTransformed) {
-    model.setParameterScale(ParameterScaling::ln);
+    model.set_parameter_scale(ParameterScaling::ln);
 
-    ASSERT_NEAR(std::log(p[0]), model.getParameters()[0], 1e-16);
+    ASSERT_NEAR(std::log(p[0]), model.get_parameters()[0], 1e-16);
 }
 
 TEST_F(ModelTest, Log10ScaledParameterIsTransformed) {
-    model.setParameterScale(ParameterScaling::log10);
+    model.set_parameter_scale(ParameterScaling::log10);
 
-    ASSERT_NEAR(std::log10(p[0]), model.getParameters()[0], 1e-16);
+    ASSERT_NEAR(std::log10(p[0]), model.get_parameters()[0], 1e-16);
 }
 
 TEST_F(ModelTest, ParameterScaleTooShort) {
     std::vector<ParameterScaling> pscale(p.size() - 1, ParameterScaling::log10);
-    ASSERT_THROW(model.setParameterScale(pscale), AmiException);
+    ASSERT_THROW(model.set_parameter_scale(pscale), AmiException);
 }
 
 TEST_F(ModelTest, ParameterScaleTooLong) {
     std::vector<ParameterScaling> pscale(p.size() + 1, ParameterScaling::log10);
-    ASSERT_THROW(model.setParameterScale(pscale), AmiException);
+    ASSERT_THROW(model.set_parameter_scale(pscale), AmiException);
 }
 
 TEST_F(ModelTest, UnsortedTimepointsThrow) {
     ASSERT_THROW(
-        model.setTimepoints(std::vector<realtype>{0.0, 1.0, 0.5}), AmiException
+        model.set_timepoints(std::vector<realtype>{0.0, 1.0, 0.5}), AmiException
     );
 }
 
 TEST_F(ModelTest, ParameterNameIdGetterSetter) {
-    model.setParameterById("p0", 3.0);
-    ASSERT_NEAR(model.getParameterById("p0"), 3.0, 1e-16);
-    ASSERT_THROW(model.getParameterById("p1"), AmiException);
-    ASSERT_NEAR(model.setParametersByIdRegex("p[\\d]+", 5.0), p.size(), 1e-16);
-    for (auto const& ip : model.getParameters())
-        ASSERT_NEAR(ip, 5.0, 1e-16);
-    ASSERT_THROW(model.setParametersByIdRegex("k[\\d]+", 5.0), AmiException);
-
-    model.setParameterByName("p0", 3.0);
-    ASSERT_NEAR(model.getParameterByName("p0"), 3.0, 1e-16);
-    ASSERT_THROW(model.getParameterByName("p1"), AmiException);
+    model.set_parameter_by_id("p0", 3.0);
+    ASSERT_NEAR(model.get_parameter_by_id("p0"), 3.0, 1e-16);
+    ASSERT_THROW(model.get_parameter_by_id("p1"), AmiException);
     ASSERT_NEAR(
-        model.setParametersByNameRegex("p[\\d]+", 5.0), p.size(), 1e-16
+        model.set_parameters_by_id_regex("p[\\d]+", 5.0), p.size(), 1e-16
     );
-    for (auto const& ip : model.getParameters())
+    for (auto const& ip : model.get_parameters())
         ASSERT_NEAR(ip, 5.0, 1e-16);
-    ASSERT_THROW(model.setParametersByNameRegex("k[\\d]+", 5.0), AmiException);
-
-    model.setFixedParameterById("k0", 3.0);
-    ASSERT_NEAR(model.getFixedParameterById("k0"), 3.0, 1e-16);
-    ASSERT_THROW(model.getFixedParameterById("k4"), AmiException);
-    ASSERT_NEAR(
-        model.setFixedParametersByIdRegex("k[\\d]+", 5.0), k.size(), 1e-16
+    ASSERT_THROW(
+        model.set_parameters_by_id_regex("k[\\d]+", 5.0), AmiException
     );
-    for (auto const& ik : model.getFixedParameters())
+
+    model.set_parameter_by_name("p0", 3.0);
+    ASSERT_NEAR(model.get_parameter_by_name("p0"), 3.0, 1e-16);
+    ASSERT_THROW(model.get_parameter_by_name("p1"), AmiException);
+    ASSERT_NEAR(
+        model.set_parameters_by_name_regex("p[\\d]+", 5.0), p.size(), 1e-16
+    );
+    for (auto const& ip : model.get_parameters())
+        ASSERT_NEAR(ip, 5.0, 1e-16);
+    ASSERT_THROW(
+        model.set_parameters_by_name_regex("k[\\d]+", 5.0), AmiException
+    );
+
+    model.set_fixed_parameter_by_id("k0", 3.0);
+    ASSERT_NEAR(model.get_fixed_parameter_by_id("k0"), 3.0, 1e-16);
+    ASSERT_THROW(model.get_fixed_parameter_by_id("k4"), AmiException);
+    ASSERT_NEAR(
+        model.set_fixed_parameters_by_id_regex("k[\\d]+", 5.0), k.size(), 1e-16
+    );
+    for (auto const& ik : model.get_fixed_parameters())
         ASSERT_NEAR(ik, 5.0, 1e-16);
     ASSERT_THROW(
-        model.setFixedParametersByIdRegex("p[\\d]+", 5.0), AmiException
+        model.set_fixed_parameters_by_id_regex("p[\\d]+", 5.0), AmiException
     );
 
-    model.setFixedParameterByName("k0", 3.0);
-    ASSERT_NEAR(model.getFixedParameterByName("k0"), 3.0, 1e-16);
-    ASSERT_THROW(model.getFixedParameterByName("k4"), AmiException);
+    model.set_fixed_parameter_by_name("k0", 3.0);
+    ASSERT_NEAR(model.get_fixed_parameter_by_name("k0"), 3.0, 1e-16);
+    ASSERT_THROW(model.get_fixed_parameter_by_name("k4"), AmiException);
     ASSERT_NEAR(
-        model.setFixedParametersByNameRegex("k[\\d]+", 5.0), k.size(), 1e-16
+        model.set_fixed_parameters_by_name_regex("k[\\d]+", 5.0), k.size(),
+        1e-16
     );
-    for (auto const& ik : model.getFixedParameters())
+    for (auto const& ik : model.get_fixed_parameters())
         ASSERT_NEAR(ik, 5.0, 1e-16);
     ASSERT_THROW(
-        model.setFixedParametersByNameRegex("p[\\d]+", 5.0), AmiException
+        model.set_fixed_parameters_by_name_regex("p[\\d]+", 5.0), AmiException
     );
 }
 
 TEST_F(ModelTest, ReinitializeFixedParameterInitialStates) {
     ASSERT_THROW(
-        model.setReinitializeFixedParameterInitialStates(true), AmiException
+        model.set_reinitialize_fixed_parameter_initial_states(true),
+        AmiException
     );
-    model.setReinitializeFixedParameterInitialStates(false);
-    ASSERT_TRUE(!model.getReinitializeFixedParameterInitialStates());
+    model.set_reinitialize_fixed_parameter_initial_states(false);
+    ASSERT_TRUE(!model.get_reinitialize_fixed_parameter_initial_states());
     sundials::Context sunctx;
     AmiVector x(nx, sunctx);
     AmiVectorArray sx(model.np(), nx, sunctx);
@@ -229,7 +237,7 @@ class SolverTest : public ::testing::Test {
     double tol, badtol;
     std::vector<realtype> timepoints = {1, 2, 3, 4};
 
-    std::unique_ptr<Model> model = generic_model::getModel();
+    std::unique_ptr<Model> model = generic_model::get_model();
     SensitivityMethod sensi_meth;
     SensitivityOrder sensi;
     int steps, badsteps;
@@ -288,18 +296,18 @@ TEST_F(SolverTest, SettersGettersNoSetup) {
 }
 
 TEST_F(SolverTest, SettersGettersWithSetup) {
-    solver.setSensitivityMethod(sensi_meth);
+    solver.set_sensitivity_method(sensi_meth);
     ASSERT_EQ(
-        static_cast<int>(solver.getSensitivityMethod()),
+        static_cast<int>(solver.get_sensitivity_method()),
         static_cast<int>(sensi_meth)
     );
 
     auto rdata = std::make_unique<ReturnData>(solver, testModel);
-    AmiVector x(nx, solver.getSunContext()), dx(nx, solver.getSunContext());
-    AmiVectorArray sx(nx, 1, solver.getSunContext()),
-        sdx(nx, 1, solver.getSunContext());
+    AmiVector x(nx, solver.get_sun_context()), dx(nx, solver.get_sun_context());
+    AmiVectorArray sx(nx, 1, solver.get_sun_context()),
+        sdx(nx, 1, solver.get_sun_context());
 
-    testModel.setInitialStates(std::vector<realtype>{0});
+    testModel.set_initial_state(std::vector<realtype>{0});
 
     solver.setup(0, &testModel, x, dx, sx, sdx);
 
@@ -316,146 +324,155 @@ void testSolverGetterSetters(
     int badsteps, double tol, double badtol
 ) {
 
-    solver.setSensitivityMethod(sensi_meth);
+    solver.set_sensitivity_method(sensi_meth);
     ASSERT_EQ(
-        static_cast<int>(solver.getSensitivityMethod()),
+        static_cast<int>(solver.get_sensitivity_method()),
         static_cast<int>(sensi_meth)
     );
 
-    solver.setSensitivityOrder(sensi);
+    solver.set_sensitivity_order(sensi);
     ASSERT_EQ(
-        static_cast<int>(solver.getSensitivityOrder()), static_cast<int>(sensi)
+        static_cast<int>(solver.get_sensitivity_order()),
+        static_cast<int>(sensi)
     );
 
-    solver.setInternalSensitivityMethod(ism);
+    solver.set_internal_sensitivity_method(ism);
     ASSERT_EQ(
-        static_cast<int>(solver.getInternalSensitivityMethod()),
+        static_cast<int>(solver.get_internal_sensitivity_method()),
         static_cast<int>(ism)
     );
 
-    solver.setInterpolationType(interp);
+    solver.set_interpolation_type(interp);
     ASSERT_EQ(
-        static_cast<int>(solver.getInterpolationType()),
+        static_cast<int>(solver.get_interpolation_type()),
         static_cast<int>(interp)
     );
 
-    solver.setNonlinearSolverIteration(iter);
+    solver.set_non_linear_solver_iteration(iter);
     ASSERT_EQ(
-        static_cast<int>(solver.getNonlinearSolverIteration()),
+        static_cast<int>(solver.get_non_linear_solver_iteration()),
         static_cast<int>(iter)
     );
 
-    solver.setLinearMultistepMethod(lmm);
+    solver.set_linear_multistep_method(lmm);
     ASSERT_EQ(
-        static_cast<int>(solver.getLinearMultistepMethod()),
+        static_cast<int>(solver.get_linear_multistep_method()),
         static_cast<int>(lmm)
     );
 
-    solver.setStabilityLimitFlag(true);
-    ASSERT_EQ(solver.getStabilityLimitFlag(), true);
+    solver.set_stability_limit_flag(true);
+    ASSERT_EQ(solver.get_stability_limit_flag(), true);
 
-    ASSERT_THROW(solver.setNewtonMaxSteps(badsteps), AmiException);
-    solver.setNewtonMaxSteps(steps);
-    ASSERT_EQ(solver.getNewtonMaxSteps(), steps);
+    ASSERT_THROW(solver.set_newton_max_steps(badsteps), AmiException);
+    solver.set_newton_max_steps(steps);
+    ASSERT_EQ(solver.get_newton_max_steps(), steps);
 
-    ASSERT_THROW(solver.setMaxSteps(badsteps), AmiException);
-    solver.setMaxSteps(steps);
-    ASSERT_EQ(solver.getMaxSteps(), steps);
+    ASSERT_THROW(solver.set_max_steps(badsteps), AmiException);
+    solver.set_max_steps(steps);
+    ASSERT_EQ(solver.get_max_steps(), steps);
 
-    ASSERT_THROW(solver.setMaxStepsBackwardProblem(badsteps), AmiException);
-    solver.setMaxStepsBackwardProblem(steps);
-    ASSERT_EQ(solver.getMaxStepsBackwardProblem(), steps);
+    ASSERT_THROW(solver.set_max_steps_backward_problem(badsteps), AmiException);
+    solver.set_max_steps_backward_problem(steps);
+    ASSERT_EQ(solver.get_max_steps_backward_problem(), steps);
 
-    ASSERT_THROW(solver.setRelativeTolerance(badtol), AmiException);
-    solver.setRelativeTolerance(tol);
-    ASSERT_EQ(solver.getRelativeTolerance(), tol);
+    ASSERT_THROW(solver.set_relative_tolerance(badtol), AmiException);
+    solver.set_relative_tolerance(tol);
+    ASSERT_EQ(solver.get_relative_tolerance(), tol);
 
-    ASSERT_THROW(solver.setAbsoluteTolerance(badtol), AmiException);
-    solver.setAbsoluteTolerance(tol);
-    ASSERT_EQ(solver.getAbsoluteTolerance(), tol);
+    ASSERT_THROW(solver.set_absolute_tolerance(badtol), AmiException);
+    solver.set_absolute_tolerance(tol);
+    ASSERT_EQ(solver.get_absolute_tolerance(), tol);
 
-    ASSERT_THROW(solver.setRelativeToleranceQuadratures(badtol), AmiException);
-    solver.setRelativeToleranceQuadratures(tol);
-    ASSERT_EQ(solver.getRelativeToleranceQuadratures(), tol);
+    ASSERT_THROW(
+        solver.set_relative_tolerance_quadratures(badtol), AmiException
+    );
+    solver.set_relative_tolerance_quadratures(tol);
+    ASSERT_EQ(solver.get_relative_tolerance_quadratures(), tol);
 
-    ASSERT_THROW(solver.setAbsoluteToleranceQuadratures(badtol), AmiException);
-    solver.setAbsoluteToleranceQuadratures(tol);
-    ASSERT_EQ(solver.getAbsoluteToleranceQuadratures(), tol);
+    ASSERT_THROW(
+        solver.set_absolute_tolerance_quadratures(badtol), AmiException
+    );
+    solver.set_absolute_tolerance_quadratures(tol);
+    ASSERT_EQ(solver.get_absolute_tolerance_quadratures(), tol);
 
-    ASSERT_THROW(solver.setRelativeToleranceSteadyState(badtol), AmiException);
-    solver.setRelativeToleranceSteadyState(tol);
-    ASSERT_EQ(solver.getRelativeToleranceSteadyState(), tol);
+    ASSERT_THROW(
+        solver.set_relative_tolerance_steady_state(badtol), AmiException
+    );
+    solver.set_relative_tolerance_steady_state(tol);
+    ASSERT_EQ(solver.get_relative_tolerance_steady_state(), tol);
 
-    ASSERT_THROW(solver.setAbsoluteToleranceSteadyState(badtol), AmiException);
-    solver.setAbsoluteToleranceSteadyState(tol);
-    ASSERT_EQ(solver.getAbsoluteToleranceSteadyState(), tol);
+    ASSERT_THROW(
+        solver.set_absolute_tolerance_steady_state(badtol), AmiException
+    );
+    solver.set_absolute_tolerance_steady_state(tol);
+    ASSERT_EQ(solver.get_absolute_tolerance_steady_state(), tol);
 }
 
 TEST_F(SolverTest, SteadyStateToleranceFactor) {
     CVodeSolver s;
     // test with unset steadystate tolerances
     ASSERT_DOUBLE_EQ(
-        s.getRelativeToleranceSteadyState(),
-        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance()
+        s.get_relative_tolerance_steady_state(),
+        s.get_steady_state_tolerance_factor() * s.get_relative_tolerance()
     );
     ASSERT_DOUBLE_EQ(
-        s.getAbsoluteToleranceSteadyState(),
-        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance()
+        s.get_absolute_tolerance_steady_state(),
+        s.get_steady_state_tolerance_factor() * s.get_absolute_tolerance()
     );
     ASSERT_DOUBLE_EQ(
-        s.getRelativeToleranceSteadyStateSensi(),
-        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance()
+        s.get_relative_tolerance_steady_state_sensi(),
+        s.get_steady_state_sensi_tolerance_factor() * s.get_relative_tolerance()
     );
     ASSERT_DOUBLE_EQ(
-        s.getAbsoluteToleranceSteadyState(),
-        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance()
+        s.get_absolute_tolerance_steady_state(),
+        s.get_steady_state_sensi_tolerance_factor() * s.get_absolute_tolerance()
     );
 
     // test with changed steadystate tolerance factor
-    s.setSteadyStateToleranceFactor(5);
+    s.set_steady_state_tolerance_factor(5);
     ASSERT_DOUBLE_EQ(
-        s.getRelativeToleranceSteadyState(),
-        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance()
+        s.get_relative_tolerance_steady_state(),
+        s.get_steady_state_tolerance_factor() * s.get_relative_tolerance()
     );
     ASSERT_DOUBLE_EQ(
-        s.getAbsoluteToleranceSteadyState(),
-        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance()
+        s.get_absolute_tolerance_steady_state(),
+        s.get_steady_state_tolerance_factor() * s.get_absolute_tolerance()
     );
-    s.setSteadyStateSensiToleranceFactor(5);
+    s.set_steady_state_sensi_tolerance_factor(5);
     ASSERT_DOUBLE_EQ(
-        s.getRelativeToleranceSteadyStateSensi(),
-        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance()
+        s.get_relative_tolerance_steady_state_sensi(),
+        s.get_steady_state_sensi_tolerance_factor() * s.get_relative_tolerance()
     );
     ASSERT_DOUBLE_EQ(
-        s.getAbsoluteToleranceSteadyState(),
-        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance()
+        s.get_absolute_tolerance_steady_state(),
+        s.get_steady_state_sensi_tolerance_factor() * s.get_absolute_tolerance()
     );
 
     // test with steadystate tolerance override tolerance factor
-    s.setRelativeToleranceSteadyState(2);
+    s.set_relative_tolerance_steady_state(2);
     ASSERT_NE(
-        s.getRelativeToleranceSteadyState(),
-        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance()
+        s.get_relative_tolerance_steady_state(),
+        s.get_steady_state_tolerance_factor() * s.get_relative_tolerance()
     );
-    ASSERT_EQ(s.getRelativeToleranceSteadyState(), 2);
-    s.setAbsoluteToleranceSteadyState(3);
+    ASSERT_EQ(s.get_relative_tolerance_steady_state(), 2);
+    s.set_absolute_tolerance_steady_state(3);
     ASSERT_NE(
-        s.getAbsoluteToleranceSteadyState(),
-        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance()
+        s.get_absolute_tolerance_steady_state(),
+        s.get_steady_state_tolerance_factor() * s.get_absolute_tolerance()
     );
-    ASSERT_EQ(s.getAbsoluteToleranceSteadyState(), 3);
-    s.setRelativeToleranceSteadyStateSensi(4);
+    ASSERT_EQ(s.get_absolute_tolerance_steady_state(), 3);
+    s.set_relative_tolerance_steady_state_sensi(4);
     ASSERT_NE(
-        s.getRelativeToleranceSteadyStateSensi(),
-        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance()
+        s.get_relative_tolerance_steady_state_sensi(),
+        s.get_steady_state_sensi_tolerance_factor() * s.get_relative_tolerance()
     );
-    ASSERT_EQ(s.getRelativeToleranceSteadyStateSensi(), 4);
-    s.setAbsoluteToleranceSteadyStateSensi(5);
+    ASSERT_EQ(s.get_relative_tolerance_steady_state_sensi(), 4);
+    s.set_absolute_tolerance_steady_state_sensi(5);
     ASSERT_NE(
-        s.getAbsoluteToleranceSteadyStateSensi(),
-        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance()
+        s.get_absolute_tolerance_steady_state_sensi(),
+        s.get_steady_state_sensi_tolerance_factor() * s.get_absolute_tolerance()
     );
-    ASSERT_EQ(s.getAbsoluteToleranceSteadyStateSensi(), 5);
+    ASSERT_EQ(s.get_absolute_tolerance_steady_state_sensi(), 5);
 }
 
 class AmiVectorTest : public ::testing::Test {
@@ -468,7 +485,7 @@ class AmiVectorTest : public ::testing::Test {
 TEST_F(AmiVectorTest, Vector) {
     sundials::Context sunctx;
     AmiVector av(vec1, sunctx);
-    N_Vector nvec = av.getNVector();
+    N_Vector nvec = av.get_nvector();
     AmiVector av2(nvec);
     ASSERT_NE(av.data(), av2.data());
 

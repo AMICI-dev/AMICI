@@ -2465,12 +2465,16 @@ class DEModel:
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
-        if not root_funs:
-            return []
+        return root_funs
 
-        # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting 'root.cpp' and 'stau.cpp' headers
-        # to include 'w.h'
+    def _substitute_w_in_roots(
+        self,
+        root_funs: list[tuple[sp.Expr, sp.Expr]],
+    ) -> list[tuple[sp.Expr, sp.Expr]]:
+        """
+        Substitute 'w' expressions into root expressions, to avoid rewriting
+        'root.cpp' and 'stau.cpp' headers to include 'w.h'.
+        """
         w_sorted = toposort_symbols(
             dict(
                 zip(
@@ -2510,6 +2514,7 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots((dxdt,))
+        tmp_roots_old = self._substitute_w_in_roots(tmp_roots_old)
         for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_root_new = self._get_unique_root(tmp_root_old, roots)

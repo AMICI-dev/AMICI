@@ -64,7 +64,7 @@ gsl::span<T const> slice(std::vector<T> const& data, int index, unsigned size) {
  * @param expected_size expected size of the buffer
  */
 template <class T>
-void checkBufferSize(
+void check_buffer_size(
     gsl::span<T> buffer, typename gsl::span<T>::index_type expected_size
 ) {
     if (buffer.size() != expected_size)
@@ -84,8 +84,8 @@ void checkBufferSize(
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
-    checkBufferSize(buffer, slice.size());
+void write_slice(gsl::span<T const> const slice, gsl::span<T> buffer) {
+    check_buffer_size(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 }
 
@@ -96,8 +96,8 @@ void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
  * @param buffer buffer to which values are to be added
  */
 template <class T>
-void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
-    checkBufferSize(buffer, slice.size());
+void add_slice(gsl::span<T const> const slice, gsl::span<T> buffer) {
+    check_buffer_size(buffer, slice.size());
     std::transform(
         slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
         std::plus<T>()
@@ -110,8 +110,9 @@ void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
-    writeSlice(
+template <class T>
+void write_slice(std::vector<T> const& s, std::vector<T>& b) {
+    write_slice(
         gsl::make_span(s.data(), s.size()), gsl::make_span(b.data(), b.size())
     );
 }
@@ -122,8 +123,8 @@ template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
-    writeSlice(gsl::make_span(s.data(), s.size()), b);
+template <class T> void write_slice(std::vector<T> const& s, gsl::span<T> b) {
+    write_slice(gsl::make_span(s.data(), s.size()), b);
 }
 
 /**
@@ -132,8 +133,8 @@ template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T> void addSlice(std::vector<T> const& s, gsl::span<T> b) {
-    addSlice(gsl::make_span(s.data(), s.size()), b);
+template <class T> void add_slice(std::vector<T> const& s, gsl::span<T> b) {
+    add_slice(gsl::make_span(s.data(), s.size()), b);
 }
 
 /**
@@ -142,7 +143,7 @@ template <class T> void addSlice(std::vector<T> const& s, gsl::span<T> b) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-void writeSlice(AmiVector const& s, gsl::span<realtype> b);
+void write_slice(AmiVector const& s, gsl::span<realtype> b);
 
 /**
  * @brief Remove parameter scaling according to the parameter scaling in pscale
@@ -153,7 +154,7 @@ void writeSlice(AmiVector const& s, gsl::span<realtype> b);
  * @param pscale parameter scaling
  * @param bufferUnscaled unscaled parameters are written to the array
  */
-void unscaleParameters(
+void unscale_parameters(
     gsl::span<realtype const> bufferScaled,
     gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferUnscaled
 );
@@ -166,7 +167,7 @@ void unscaleParameters(
  *
  * @return Unscaled parameter
  */
-double getUnscaledParameter(double scaledParameter, ParameterScaling scaling);
+double unscale_parameter(double scaledParameter, ParameterScaling scaling);
 
 /**
  * @brief Apply parameter scaling according to `scaling`
@@ -174,7 +175,7 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling);
  * @param scaling parameter scaling
  * @return Scaled parameter
  */
-double getScaledParameter(double unscaledParameter, ParameterScaling scaling);
+double scale_parameter(double unscaledParameter, ParameterScaling scaling);
 
 /**
  * @brief Apply parameter scaling according to `scaling`
@@ -182,7 +183,7 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling);
  * @param pscale parameter scaling
  * @param bufferScaled destination
  */
-void scaleParameters(
+void scale_parameters(
     gsl::span<realtype const> bufferUnscaled,
     gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferScaled
 );
@@ -193,14 +194,14 @@ void scaleParameters(
  * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames, int first_frame = 0);
+std::string get_backtrace_string(int maxFrames, int first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
  * @param err_type error type
  * @return Error type as string
  */
-std::string regexErrorToString(std::regex_constants::error_type err_type);
+std::string regex_error_to_string(std::regex_constants::error_type err_type);
 
 /**
  * @brief Format printf-style arguments to std::string
@@ -208,7 +209,7 @@ std::string regexErrorToString(std::regex_constants::error_type err_type);
  * @param ap Argument list pointer
  * @return Formatted String
  */
-std::string printfToString(char const* fmt, va_list ap);
+std::string printf_to_string(char const* fmt, va_list ap);
 
 /**
  * @brief Generic implementation for a context manager, explicitly deletes copy

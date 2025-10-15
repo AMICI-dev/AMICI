@@ -119,7 +119,7 @@ class NewtonsMethod {
      * @brief Get the number of steps taken in the current iteration.
      * @return Number of steps taken.
      */
-    [[nodiscard]] int get_num_steps() const { return i_step; }
+    [[nodiscard]] int get_num_steps() const { return i_step_; }
 
     /**
      * @brief Get the current WRMS norm.
@@ -208,7 +208,7 @@ class NewtonsMethod {
     realtype wrms_ = INFINITY;
 
     /** The current number of Newton iterations. */
-    int i_step = 0;
+    int i_step_ = 0;
 };
 
 } // namespace amici

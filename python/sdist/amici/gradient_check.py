@@ -19,7 +19,7 @@ from . import (
     SensitivityMethod,
     SensitivityOrder,
     Solver,
-    runAmiciSimulation,
+    run_simulation,
 )
 
 
@@ -66,9 +66,9 @@ def check_finite_difference(
         finite difference step-size
 
     """
-    og_sensitivity_order = solver.getSensitivityOrder()
-    og_parameters = model.getParameters()
-    og_plist = model.getParameterList()
+    og_sensitivity_order = solver.get_sensitivity_order()
+    og_parameters = model.get_parameters()
+    og_plist = model.get_parameter_list()
     if edata:
         og_eplist = edata.plist
 
@@ -76,24 +76,24 @@ def check_finite_difference(
     p = copy.deepcopy(x0)
     plist = [ip]
 
-    model.setParameters(p)
-    model.setParameterList(plist)
+    model.set_parameters(p)
+    model.set_parameter_list(plist)
     if edata:
         edata.plist = plist
 
     # simulation with gradient
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
-        solver.setSensitivityOrder(SensitivityOrder.first)
-    rdata = runAmiciSimulation(model, solver, edata)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver, edata)
     if rdata["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdata['status']}")
 
     # finite difference
-    solver.setSensitivityOrder(SensitivityOrder.none)
+    solver.set_sensitivity_order(SensitivityOrder.none)
 
     pf = copy.deepcopy(x0)
     pb = copy.deepcopy(x0)
-    pscale = model.getParameterScale()[ip]
+    pscale = model.get_parameter_scale()[ip]
     if x0[ip] == 0 or pscale != int(ParameterScaling.none):
         pf[ip] += epsilon / 2
         pb[ip] -= epsilon / 2
@@ -102,14 +102,14 @@ def check_finite_difference(
         pb[ip] /= 1 + epsilon / 2
 
     # forward:
-    model.setParameters(pf)
-    rdataf = runAmiciSimulation(model, solver, edata)
+    model.set_parameters(pf)
+    rdataf = run_simulation(model, solver, edata)
     if rdataf["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdataf['status']}")
 
     # backward:
-    model.setParameters(pb)
-    rdatab = runAmiciSimulation(model, solver, edata)
+    model.set_parameters(pb)
+    rdatab = run_simulation(model, solver, edata)
     if rdatab["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdatab['status']}")
 
@@ -132,14 +132,14 @@ def check_finite_difference(
             rtol=rtol,
             field=field,
             ip=ip,
-            parameter_id=model.getParameterIds()[ip]
-            if model.hasParameterIds()
+            parameter_id=model.get_parameter_ids()[ip]
+            if model.has_parameter_ids()
             else None,
         )
 
-    solver.setSensitivityOrder(og_sensitivity_order)
-    model.setParameters(og_parameters)
-    model.setParameterList(og_plist)
+    solver.set_sensitivity_order(og_sensitivity_order)
+    model.set_parameters(og_parameters)
+    model.set_parameter_list(og_plist)
     if edata:
         edata.plist = og_eplist
 
@@ -169,14 +169,14 @@ def check_derivatives(
         are zero
     :param skip_fields: list of fields to skip
     """
-    p = np.array(model.getParameters())
+    p = np.array(model.get_parameters())
 
-    og_sens_order = solver.getSensitivityOrder()
+    og_sens_order = solver.get_sensitivity_order()
 
     if int(og_sens_order) < int(SensitivityOrder.first):
-        solver.setSensitivityOrder(SensitivityOrder.first)
-    rdata = runAmiciSimulation(model, solver, edata)
-    solver.setSensitivityOrder(og_sens_order)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver, edata)
+    solver.set_sensitivity_order(og_sens_order)
 
     if rdata["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdata['status']}")
@@ -184,8 +184,8 @@ def check_derivatives(
     fields = []
 
     if (
-        solver.getSensitivityMethod() == SensitivityMethod.forward
-        and solver.getSensitivityOrder() <= SensitivityOrder.first
+        solver.get_sensitivity_method() == SensitivityMethod.forward
+        and solver.get_sensitivity_order() <= SensitivityOrder.first
     ):
         if rdata.sx_ss is not None:
             fields.append("x_ss")
@@ -193,7 +193,7 @@ def check_derivatives(
         fields.append("x")
 
     leastsquares_applicable = (
-        solver.getSensitivityMethod() == SensitivityMethod.forward
+        solver.get_sensitivity_method() == SensitivityMethod.forward
         and edata is not None
     )
 
@@ -201,7 +201,7 @@ def check_derivatives(
         "ssigmay" in rdata.keys()
         and rdata["ssigmay"] is not None
         and rdata["ssigmay"].any()
-        and not model.getAddSigmaResiduals()
+        and not model.get_add_sigma_residuals()
     ):
         leastsquares_applicable = False
 
@@ -229,7 +229,7 @@ def check_derivatives(
     fields = [f for f in fields if f not in (skip_fields or [])]
 
     # only check the sensitivities w.r.t. the selected parameters
-    plist = model.getParameterList()
+    plist = model.get_parameter_list()
     if edata and edata.plist:
         plist = edata.plist
 

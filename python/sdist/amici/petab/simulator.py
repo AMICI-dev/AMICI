@@ -15,7 +15,7 @@ from collections.abc import Callable
 
 import pandas as pd
 import petab.v1 as petab
-from amici import AmiciModel, SensitivityMethod_none
+from amici import AmiciModel, SensitivityMethod
 
 from .petab_import import import_petab_problem
 from .simulations import RDATAS, rdatas_to_measurement_df, simulate_petab
@@ -81,8 +81,8 @@ class PetabSimulator(petab.simulate.Simulator):
         self.amici_model = kwargs[AMICI_MODEL]
 
         if AMICI_SOLVER not in kwargs:
-            kwargs[AMICI_SOLVER] = self.amici_model.getSolver()
-            kwargs[AMICI_SOLVER].setSensitivityMethod(SensitivityMethod_none)
+            kwargs[AMICI_SOLVER] = self.amici_model.create_solver()
+            kwargs[AMICI_SOLVER].set_sensitivity_method(SensitivityMethod.none)
 
         result = _subset_call(simulate_petab, kwargs)
         return rdatas_to_measurement_df(

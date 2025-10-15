@@ -5,61 +5,61 @@ namespace amici::model_model_neuron_py {
 
 // clang-format off
 
-std::array<const char*, 4> parameterNames = {
+std::array<const char*, 4> parameter_names = {
     "a", // p[0]
 "b", // p[1]
 "c", // p[2]
 "d", // p[3]
 };
 
-std::array<const char*, 2> fixedParameterNames = {
+std::array<const char*, 2> fixed_parameter_names = {
     "v0", // k[0]
 "I0", // k[1]
 };
 
-std::array<const char*, 2> stateNames = {
+std::array<const char*, 2> state_names = {
     "v", // x_rdata[0]
 "u", // x_rdata[1]
 };
 
-std::array<const char*, 1> observableNames = {
+std::array<const char*, 1> observable_names = {
     "v", // y[0]
 };
 
-std::array<const ObservableScaling, 1> observableScalings = {
+std::array<const ObservableScaling, 1> observable_scalings = {
     ObservableScaling::lin, // y[0]
 };
 
-std::array<const char*, 1> expressionNames = {
+std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 4> parameterIds = {
+std::array<const char*, 4> parameter_ids = {
     "a", // p[0]
 "b", // p[1]
 "c", // p[2]
 "d", // p[3]
 };
 
-std::array<const char*, 2> fixedParameterIds = {
+std::array<const char*, 2> fixed_parameter_ids = {
     "v0", // k[0]
 "I0", // k[1]
 };
 
-std::array<const char*, 2> stateIds = {
+std::array<const char*, 2> state_ids = {
     "v", // x_rdata[0]
 "u", // x_rdata[1]
 };
 
-std::array<const char*, 1> observableIds = {
+std::array<const char*, 1> observable_ids = {
     "y1", // y[0]
 };
 
-std::array<const char*, 1> expressionIds = {
+std::array<const char*, 1> expression_ids = {
     "flux_r0", // w[0]
 };
 
-std::array<int, 2> stateIdxsSolver = {
+std::array<int, 2> state_idxs_solver = {
     0, 1
 };
 
