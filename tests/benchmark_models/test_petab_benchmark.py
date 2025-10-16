@@ -338,33 +338,7 @@ def test_nominal_parameters_llh(benchmark_problem):
                 logger.info(f"Saving figure to {fig_path}")
                 ax.get_figure().savefig(fig_path, dpi=150)
 
-    try:
-        ref_llh = reference_values[problem_id]["llh"]
-        rdiff = np.abs((llh - ref_llh) / ref_llh)
-        rtol = 1e-3
-        adiff = np.abs(llh - ref_llh)
-        atol = 1e-3
-        tolstr = (
-            f" Absolute difference is {adiff:.2e} "
-            f"(tol {atol:.2e}) and relative difference is "
-            f"{rdiff:.2e} (tol {rtol:.2e})."
-        )
-
-        if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
-            logger.info(
-                f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
-                + tolstr
-            )
-        else:
-            pytest.fail(
-                f"Computed llh {llh:.4e} does not match reference "
-                f"{ref_llh:.4e}." + tolstr
-            )
-    except KeyError:
-        logger.error(
-            "No reference likelihood found for "
-            f"{problem_id} in {references_yaml}"
-        )
+    compare_to_reference(problem_id, llh)
 
     for label, key in {
         "simulation": "t_sim",
@@ -625,26 +599,23 @@ def test_nominal_parameters_llh_v2(problem_id):
         PetabImporter,
         flatten_timepoint_specific_output_overrides,
         has_timepoint_specific_overrides,
+        rdatas_to_simulation_df,
         unflatten_simulation_df,
     )
-    from petab import v2
     from petab.v2 import Problem
 
-    # TODO: differences in llh -- check simulations--
-    #  log10-normal -> log-normal:
+    # TODO: differences in llh, due to log10-normal -> log-normal noise:
+    #  max abs and rel diff in simulations <1e-4
     #   Bachmann_MSB2011
     #   Borghans_BiophysChem1997
     #   Elowitz_Nature2000
     #   Lucarelli_CellSystems2018
-    #   Perelson_Science1996
     #   Schwen_PONE2014
-    #
-    # Fiedler_BMCSystBiol2016: timepoint-specific output overrides
+    #  store new reference values or recompute llh with log10-normal noise?
 
     if problem_id not in problems_for_llh_check:
         pytest.skip("Excluded from log-likelihood check.")
 
-    repo_root = script_dir.parent.parent
     benchmark_outdir = repo_root / "test_bmc_v2"
     model_output_dir = benchmark_outdir / problem_id
 
@@ -696,48 +667,83 @@ def test_nominal_parameters_llh_v2(problem_id):
     # chi2 = sum(rdata["chi2"] for rdata in rdatas)
     llh = ret["llh"]
 
-    from amici.petab.petab_importer import rdatas_to_measurement_df
-
-    simulation_df = rdatas_to_measurement_df(
+    simulation_df = rdatas_to_simulation_df(
         rdatas, ps._model, pi.petab_problem
     )
-    # # TODO petab.check_measurement_df(simulation_df, problem.observable_df)
-    simulation_df = simulation_df.rename(
-        columns={v2.C.MEASUREMENT: v2.C.SIMULATION}
-    )
-    # revert setting default experiment Id
-    simulation_df.loc[
-        simulation_df[v2.C.EXPERIMENT_ID] == "__default__", v2.C.EXPERIMENT_ID
-    ] = np.nan
     if was_flattened:
         simulation_df = unflatten_simulation_df(simulation_df, problem)
+    print("v2 simulations:")
     print(simulation_df)
     simulation_df.to_csv("benchmark_sim.tsv", sep="\t")
 
+    # compare to benchmark_models_petab simulations, if available
+    if (
+        (
+            simulation_df_bm := benchmark_models_petab.get_simulation_df(
+                problem_id
+            )
+        )
+        is not None
+        # https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/issues/275
+        and problem_id != "Lucarelli_CellSystems2018"
+    ):
+        print("benchmark collection simulations:")
+
+        assert len(simulation_df_bm) == len(simulation_df)
+        # caveat: not necessarily in the same order
+        simulation_df_bm["actual_simulation"] = simulation_df["simulation"]
+        simulation_df_bm["abs_diff"] = np.abs(
+            simulation_df_bm["actual_simulation"]
+            - simulation_df_bm["simulation"]
+        )
+        simulation_df_bm["rel_diff"] = simulation_df_bm["abs_diff"] / np.abs(
+            simulation_df_bm["simulation"]
+        )
+        with pd.option_context(
+            "display.max_columns",
+            None,
+            "display.width",
+            None,
+            "display.max_rows",
+            None,
+        ):
+            print(simulation_df_bm)
+        print("max abs diff:", simulation_df_bm["abs_diff"].max())
+        print("max rel diff:", simulation_df_bm["rel_diff"].max())
+
+    compare_to_reference(problem_id, llh)
+
+
+def compare_to_reference(problem_id: str, llh: float):
+    """Compare simulation to reference value.
+
+    For now, only the log-likelihood is checked.
+    """
     try:
         ref_llh = reference_values[problem_id]["llh"]
-        rdiff = np.abs((llh - ref_llh) / ref_llh)
-        rtol = 1e-3
-        adiff = np.abs(llh - ref_llh)
-        atol = 1e-3
-        tolstr = (
-            f" Absolute difference is {adiff:.2e} "
-            f"(tol {atol:.2e}) and relative difference is "
-            f"{rdiff:.2e} (tol {rtol:.2e})."
-        )
-
-        if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
-            logger.info(
-                f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
-                + tolstr
-            )
-        else:
-            pytest.fail(
-                f"Computed llh {llh:.4e} does not match reference "
-                f"{ref_llh:.4e}." + tolstr
-            )
     except KeyError:
         logger.error(
             "No reference likelihood found for "
             f"{problem_id} in {references_yaml}"
+        )
+        return
+
+    rdiff = np.abs((llh - ref_llh) / ref_llh)
+    rtol = 1e-3
+    adiff = np.abs(llh - ref_llh)
+    atol = 1e-3
+    tolstr = (
+        f" Absolute difference is {adiff:.2e} "
+        f"(tol {atol:.2e}) and relative difference is "
+        f"{rdiff:.2e} (tol {rtol:.2e})."
+    )
+
+    if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
+        logger.info(
+            f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}." + tolstr
+        )
+    else:
+        pytest.fail(
+            f"Computed llh {llh:.4e} does not match reference "
+            f"{ref_llh:.4e}." + tolstr
         )
