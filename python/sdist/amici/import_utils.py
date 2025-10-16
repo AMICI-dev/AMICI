@@ -17,7 +17,17 @@ from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanAtom
 from toposort import toposort
 
-RESERVED_SYMBOLS = ["x", "k", "p", "y", "w", "h", "t", "AMICI_EMPTY_BOLUS"]
+RESERVED_SYMBOLS = [
+    "x",
+    "k",
+    "p",
+    "y",
+    "w",
+    "h",
+    "t",
+    "AMICI_EMPTY_BOLUS",
+    "NULL",
+]
 
 try:
     import pysb
