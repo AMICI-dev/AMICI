@@ -1,12 +1,12 @@
+import copy
+
 from amici.petab.petab_importer import (
     flatten_timepoint_specific_output_overrides,
-    unflatten_simulation_df,
     has_timepoint_specific_overrides,
+    unflatten_simulation_df,
 )
-from petab.v2 import Problem
-import copy
+from petab.v2 import C, Problem
 from petab.v2.models.sbml_model import SbmlModel
-from petab.v2 import C
 
 
 def test_problem_has_timepoint_specific_overrides():

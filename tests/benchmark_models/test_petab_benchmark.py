@@ -621,7 +621,12 @@ def test_nominal_parameters_llh_v2(problem_id):
 
     Also check that the simulation time is within the reference range.
     """
-    from amici.petab.petab_importer import PetabImporter
+    from amici.petab.petab_importer import (
+        PetabImporter,
+        flatten_timepoint_specific_output_overrides,
+        has_timepoint_specific_overrides,
+        unflatten_simulation_df,
+    )
     from petab import v2
     from petab.v2 import Problem
 
@@ -650,6 +655,11 @@ def test_nominal_parameters_llh_v2(problem_id):
     except ValueError as e:
         cause = f": {e.__cause__}" if e.__cause__ else ""
         pytest.skip(f"Could not load problem {problem_id}: {e}{cause}")
+
+    was_flattened = False
+    if has_timepoint_specific_overrides(problem):
+        flatten_timepoint_specific_output_overrides(problem)
+        was_flattened = True
 
     model_name = f"{problem_id}_v2"
     jax = False
@@ -699,7 +709,8 @@ def test_nominal_parameters_llh_v2(problem_id):
     simulation_df.loc[
         simulation_df[v2.C.EXPERIMENT_ID] == "__default__", v2.C.EXPERIMENT_ID
     ] = np.nan
-
+    if was_flattened:
+        simulation_df = unflatten_simulation_df(simulation_df, problem)
     print(simulation_df)
     simulation_df.to_csv("benchmark_sim.tsv", sep="\t")
 
