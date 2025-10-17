@@ -2,20 +2,20 @@
 
 # ruff: noqa: F821 F722
 
-from abc import abstractmethod
-from pathlib import Path
 import enum
+from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import field
+from pathlib import Path
 
 import diffrax
 import equinox as eqx
-import jax.numpy as jnp
 import jax
-from optimistix import AbstractRootFinder
+import jax.numpy as jnp
 import jaxtyping as jt
+from optimistix import AbstractRootFinder
 
-from collections.abc import Callable
-from ._simulation import solve, eq
+from ._simulation import eq, solve
 
 
 class ReturnValue(enum.Enum):

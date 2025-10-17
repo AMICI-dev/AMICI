@@ -1,16 +1,16 @@
 """Convenience wrappers for the swig interface"""
 
 from __future__ import annotations
+
+import contextlib
 import logging
 import warnings
-from typing import Any
 from collections.abc import Sequence
-import contextlib
+from typing import Any
 
 import amici
 import amici.amici as amici_swig
 from amici.amici import (
-    _get_ptr,
     AmiciExpData,
     AmiciExpDataVector,
     AmiciModel,
@@ -18,8 +18,10 @@ from amici.amici import (
     SensitivityMethod,
     SensitivityOrder,
     Solver,
+    _get_ptr,
 )
-from . import numpy, ReturnDataView
+
+from . import ReturnDataView, numpy
 from .logging import get_logger
 
 logger = get_logger(__name__, log_level=logging.DEBUG)

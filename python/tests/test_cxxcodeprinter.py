@@ -1,8 +1,8 @@
+import pytest
 import sympy as sp
 from amici.cxxcodeprinter import AmiciCxxCodePrinter
-from sympy.codegen.rewriting import optims_c99
 from amici.testing import skip_on_valgrind
-import pytest
+from sympy.codegen.rewriting import optims_c99
 
 
 @skip_on_valgrind
@@ -20,7 +20,7 @@ def test_optimizations():
 @skip_on_valgrind
 def test_print_infinity():
     """Check that AmiciCxxCodePrinter prints infinity correctly."""
-    from sympy.core.numbers import NegativeInfinity, Infinity, ComplexInfinity
+    from sympy.core.numbers import ComplexInfinity, Infinity, NegativeInfinity
 
     cp = AmiciCxxCodePrinter()
     assert cp.doprint(Infinity()) == "std::numeric_limits<double>::infinity()"

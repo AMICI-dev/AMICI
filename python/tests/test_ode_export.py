@@ -2,8 +2,8 @@
 
 import sympy as sp
 from amici.cxxcodeprinter import csc_matrix
-from amici.testing import skip_on_valgrind
 from amici.import_utils import symbol_with_assumptions
+from amici.testing import skip_on_valgrind
 
 
 @skip_on_valgrind

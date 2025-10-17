@@ -13,33 +13,39 @@ import os
 import re
 import warnings
 import xml.etree.ElementTree as ET
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import (
     Any,
 )
-from collections.abc import Callable
-from collections.abc import Iterable, Sequence
 
 import libsbml
-from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
 import numpy as np
 import sympy as sp
-from sympy.logic.boolalg import BooleanFalse, BooleanTrue, Boolean
+from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
+from sympy.logic.boolalg import Boolean, BooleanFalse, BooleanTrue
+from sympy.matrices.dense import MutableDenseMatrix
 
 from . import has_clibs
-from .de_model import DEModel
 from .constants import SymbolId
 from .de_export import (
     DEExporter,
 )
-from .de_model_components import symbol_to_type, Expression
-from .sympy_utils import smart_is_zero_matrix, smart_multiply
+from .de_model import DEModel
+from .de_model_components import Expression, symbol_to_type
 from .import_utils import (
     RESERVED_SYMBOLS,
+    MeasurementChannel,
     _check_unsupported_functions,
+    _default_simplify,
+    _eq_to_and,
     _get_str_symbol_identifiers,
+    _ne_to_or,
+    _parse_piecewise_to_heaviside,
+    _xor_to_or,
     amici_time_symbol,
     annotation_namespace,
+    generate_flux_symbol,
     generate_measurement_symbol,
     generate_regularization_symbol,
     noise_distribution_to_cost_function,
@@ -49,18 +55,11 @@ from .import_utils import (
     smart_subs_dict,
     symbol_with_assumptions,
     toposort_symbols,
-    _default_simplify,
-    generate_flux_symbol,
-    _parse_piecewise_to_heaviside,
-    _xor_to_or,
-    _eq_to_and,
-    _ne_to_or,
-    MeasurementChannel,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import SBMLException
 from .splines import AbstractSpline
-from sympy.matrices.dense import MutableDenseMatrix
+from .sympy_utils import smart_is_zero_matrix, smart_multiply
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 

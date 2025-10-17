@@ -9,13 +9,13 @@ compatibility.
 
 from warnings import warn
 
+from amici.jax.model import JAXModel
 from amici.jax.petab import (
     JAXProblem,
-    run_simulations,
-    petab_simulate,
     ReturnValue,
+    petab_simulate,
+    run_simulations,
 )
-from amici.jax.model import JAXModel
 
 warn(
     "The JAX module is experimental and the API may change in the future.",

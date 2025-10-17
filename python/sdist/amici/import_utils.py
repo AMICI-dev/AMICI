@@ -5,12 +5,11 @@ import enum
 import itertools as itt
 import numbers
 import sys
+from collections.abc import Callable, Iterable, Sequence
 from typing import (
     Any,
     SupportsFloat,
 )
-from collections.abc import Callable
-from collections.abc import Iterable, Sequence
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair

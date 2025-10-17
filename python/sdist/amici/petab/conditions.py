@@ -5,11 +5,9 @@ import numbers
 import warnings
 from collections.abc import Sequence
 
-import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
-from amici import AmiciModel
 from petab.v1.C import (
     MEASUREMENT,
     NOISE_PARAMETERS,
@@ -18,6 +16,9 @@ from petab.v1.C import (
     SIMULATION_CONDITION_ID,
     TIME,
 )
+
+import amici
+from amici import AmiciModel
 
 from .parameter_mapping import (
     ParameterMapping,

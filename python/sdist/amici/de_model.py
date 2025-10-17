@@ -5,62 +5,61 @@ from __future__ import annotations
 import contextlib
 import copy
 import itertools
+import logging
 import re
+from collections.abc import Callable, Sequence
 from itertools import chain
 from typing import TYPE_CHECKING
-from collections.abc import Callable
-from collections.abc import Sequence
 
 import numpy as np
 import sympy as sp
 from sympy import ImmutableDenseMatrix, MutableDenseMatrix
 
 from ._codegen.cxx_functions import (
-    sparse_functions,
-    sensi_functions,
     nobody_functions,
+    sensi_functions,
+    sparse_functions,
     var_in_function_signature,
 )
 from .cxxcodeprinter import csc_matrix
 from .de_model_components import (
-    DifferentialState,
-    AlgebraicState,
     AlgebraicEquation,
-    Observable,
-    EventObservable,
-    SigmaY,
-    SigmaZ,
-    Parameter,
+    AlgebraicState,
+    ConservationLaw,
     Constant,
+    DifferentialState,
+    Event,
+    EventObservable,
+    Expression,
+    LogLikelihoodRZ,
     LogLikelihoodY,
     LogLikelihoodZ,
-    LogLikelihoodRZ,
-    NoiseParameter,
-    ObservableParameter,
-    Expression,
-    ConservationLaw,
-    Event,
-    State,
     ModelQuantity,
+    NoiseParameter,
+    Observable,
+    ObservableParameter,
+    Parameter,
+    SigmaY,
+    SigmaZ,
+    State,
 )
 from .import_utils import (
-    _default_simplify,
-    SBMLException,
-    toposort_symbols,
-    smart_subs_dict,
     ObservableTransformation,
+    SBMLException,
+    _default_simplify,
     amici_time_symbol,
+    smart_subs_dict,
     strip_pysb,
+    toposort_symbols,
     unique_preserve_order,
 )
-from .sympy_utils import (
-    smart_jacobian,
-    smart_is_zero_matrix,
-    smart_multiply,
-    _parallel_applyfunc,
-)
 from .logging import get_logger, log_execution_time, set_log_level
-import logging
+from .sympy_utils import (
+    _parallel_applyfunc,
+    smart_is_zero_matrix,
+    smart_jacobian,
+    smart_multiply,
+)
 
 if TYPE_CHECKING:
     from .splines import AbstractSpline

@@ -5,20 +5,19 @@ import shutil
 from pathlib import Path
 
 import amici
+import diffrax
 import jax
 import jax.numpy as jnp
-import diffrax
-import optimistix
 import numpy as np
+import optimistix
 import pandas as pd
 import pytest
 from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-
 from utils import (
-    verify_results,
-    write_result_file,
     find_model_file,
     read_settings_file,
+    verify_results,
+    write_result_file,
 )
 
 jax.config.update("jax_enable_x64", True)

@@ -3,14 +3,12 @@
 import copy
 import importlib
 import sys
+from pathlib import Path
 
 import amici
 import pytest
-from pathlib import Path
-
 from amici import MeasurementChannel
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-
 
 pytest_plugins = ["amici.testing.fixtures"]
 

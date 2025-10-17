@@ -1,26 +1,25 @@
-import pytest
-import amici
 from pathlib import Path
+
+import amici
+import pytest
 
 pytest.importorskip("jax")
 import amici.jax
-
+import diffrax
+import jax
 import jax.numpy as jnp
 import jax.random as jr
-import jax
-import diffrax
-import optimistix
 import numpy as np
-from beartype import beartype
-from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
-
+import optimistix
+from amici import MeasurementChannel as MC
+from amici.jax import JAXProblem, ReturnValue, run_simulations
+from amici.petab.petab_import import import_petab_problem
 from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
-from amici.petab.petab_import import import_petab_problem
-from amici.jax import JAXProblem, ReturnValue, run_simulations
+from beartype import beartype
 from numpy.testing import assert_allclose
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 from test_petab_objective import lotka_volterra  # noqa: F401
-from amici import MeasurementChannel as MC
 
 pysb = pytest.importorskip("pysb")
 
@@ -325,9 +324,9 @@ def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""
 
     from amici.antimony_import import antimony2sbml
-    from amici.sbml_import import SbmlImporter
-    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
     from amici.jax._simulation import solve
+    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+    from amici.sbml_import import SbmlImporter
 
     ant_model = """
     model time_disc
@@ -378,9 +377,9 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     """Time dependent discontinuities are handled during equilibration."""
 
     from amici.antimony_import import antimony2sbml
-    from amici.sbml_import import SbmlImporter
-    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
     from amici.jax._simulation import eq
+    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+    from amici.sbml_import import SbmlImporter
 
     ant_model = """
     model time_disc_eq

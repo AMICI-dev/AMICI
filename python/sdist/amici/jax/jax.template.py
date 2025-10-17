@@ -1,12 +1,13 @@
 # ruff: noqa: F401, F821, F841
-import jax.numpy as jnp
-import equinox as eqx
-from interpax import interp1d
 from pathlib import Path
+
+import equinox as eqx
+import jax.numpy as jnp
+from interpax import interp1d
 from jax.numpy import inf as oo
 from jax.numpy import nan as nan
 
-from amici.jax.model import JAXModel, safe_log, safe_div
+from amici.jax.model import JAXModel, safe_div, safe_log
 
 
 class JAXModel_TPL_MODEL_NAME(JAXModel):

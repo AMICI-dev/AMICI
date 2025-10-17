@@ -4,9 +4,10 @@ import warnings
 import amici
 import numpy as np
 import pytest
-from amici import SteadyStateStatus, ExpData, MeasurementChannel as MC
-from numpy.testing import assert_allclose
+from amici import ExpData, SteadyStateStatus
+from amici import MeasurementChannel as MC
 from amici.testing import skip_on_valgrind
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture

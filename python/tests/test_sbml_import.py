@@ -5,22 +5,25 @@ import re
 import sys
 from numbers import Number
 from pathlib import Path
+
 import amici
 import libsbml
 import numpy as np
 import pytest
+import sympy as sp
+from amici import import_model_module
 from amici.gradient_check import check_derivatives
-from amici.sbml_import import SbmlImporter, SymbolId
 from amici.import_utils import (
-    symbol_with_assumptions,
     MeasurementChannel as MC,
 )
-from numpy.testing import assert_allclose, assert_array_equal
-from amici import import_model_module
-from amici.testing import skip_on_valgrind
+from amici.import_utils import (
+    symbol_with_assumptions,
+)
+from amici.sbml_import import SbmlImporter, SymbolId
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
-import sympy as sp
+from numpy.testing import assert_allclose, assert_array_equal
 
 
 def simple_sbml_model():
@@ -874,8 +877,8 @@ def test_hardcode_parameters():
 
 def test_constraints(tempdir):
     """Test non-negativity constraint handling."""
-    from amici.antimony_import import antimony2amici
     from amici import Constraint
+    from amici.antimony_import import antimony2amici
 
     ant_model = """
     model test_non_negative_species
