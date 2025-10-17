@@ -641,15 +641,9 @@ def test_nominal_parameters_llh_v2(problem_id):
         outdir=model_output_dir,
         compile_=True,
         jax=jax,
-        force_import=True,
     )
 
-    # TODO force re-import
-    import shutil
-
-    shutil.rmtree(pi.outdir, ignore_errors=True)
-
-    ps = pi.create_simulator()
+    ps = pi.create_simulator(force_import=True)
     ps._solver.set_absolute_tolerance(1e-8)
     ps._solver.set_relative_tolerance(1e-8)
     ps._solver.set_max_steps(10_000)
