@@ -1,6 +1,5 @@
 import os
 
-import amici
 import numpy as np
 import pytest
 
@@ -10,6 +9,7 @@ from amici.bngl_import import bngl2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from pysb.importers.bngl import model_from_bngl
 from pysb.simulator import ScipyOdeSimulator
+from contextlib import suppress
 
 tests = [
     "CaOscillate_Func",
@@ -39,6 +39,13 @@ tests = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", tests)
 def test_compare_to_pysb_simulation(example):
+    import amici.import_utils
+
+    # allow "NULL" as model symbol
+    # (used in CaOscillate_Func and Repressilator examples)
+    with suppress(ValueError):
+        amici.import_utils.RESERVED_SYMBOLS.remove("NULL")
+
     atol = 1e-8
     rtol = 1e-8
 
