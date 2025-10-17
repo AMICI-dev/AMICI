@@ -1135,3 +1135,22 @@
    fun:PyInit__pydantic_core
    ...
 }
+
+{
+   h5py_3.15
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyLong_New
+   fun:PyLong_FromSsize_t
+   fun:__Pyx_DelItemInt_Fast
+   fun:__pyx_pf_4h5py_8_objects_8ObjectID_4_dealloc
+   fun:__pyx_pw_4h5py_8_objects_8ObjectID_5_dealloc
+   fun:__Pyx_CyFunction_Vectorcall_FASTCALL_KEYWORDS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_VectorcallMethod
+   fun:__pyx_pf_4h5py_8_objects_8ObjectID_2__dealloc__
+   fun:__pyx_pw_4h5py_8_objects_8ObjectID_3__dealloc__
+   fun:__pyx_tp_dealloc_4h5py_8_objects_ObjectID
+   ...
+}
