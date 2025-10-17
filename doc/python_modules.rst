@@ -34,3 +34,4 @@ AMICI Python API
    amici.numpy
    amici.sbml_utils
    amici.splines
+   amici.adapters.fiddy

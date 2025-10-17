@@ -63,6 +63,7 @@ classifiers = [
 petab = ["petab>=0.4.0"]
 pysb = ["pysb>=1.13.1"]
 test = [
+    "fiddy>=0.0.3",
     "h5py!=3.15",
     "pytest",
     "pytest-cov",
