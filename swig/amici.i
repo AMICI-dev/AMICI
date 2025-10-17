@@ -373,11 +373,12 @@ if sys.platform == 'win32':
 // import additional types for typehints
 // also import np for use in __repr__ functions
 %pythonbegin %{
-from typing import TYPE_CHECKING, Iterable, Union
+from typing import TYPE_CHECKING, Iterable, Union, overload
 from collections.abc import Sequence
 import numpy as np
 if TYPE_CHECKING:
     import numpy
+    from .numpy import ReturnDataView
 %}
 
 %pythoncode %{
@@ -418,7 +419,7 @@ __all__ = [
     x
     for x in dir(sys.modules[__name__])
     if not x.startswith('_')
-    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence", "Path"}
+    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence", "Path", "Union", "overload"}
 ]
 
 %}

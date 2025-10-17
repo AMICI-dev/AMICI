@@ -34,6 +34,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * For a more consistent API, all function names are now snake_case instead of
   camelCase.
 * `Model.getSolver` has been renamed to `Model.create_solver`.
+* `amici.runAmiciSimulation` and `amici.runAmiciSimulations` have been renamed
+   to `amici.run_simulation` and `amici.run_simulations`.
 * The following deprecated functionality has been removed:
   * The complete MATLAB interface has been removed.
   * `NonlinearSolverIteration::functional` has been removed,
@@ -54,7 +56,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   `DataArray`s include the identifiers and are often more convenient than the
   plain numpy arrays. This allows for easy subselection and plotting of the
   results, and conversion to DataFrames.
-
+* `Model.simulate()` has been added as a convenience function to run
+  simulations without having to create a `Solver` object explicitly.
+  This is a wrapper for both `amici.run_simulation` and
+  `amici.run_simulations`, depending on the type of the `edata` argument.
+  It also supports passing some `Solver` options as keyword arguments.
 
 ## v0.X Series
 
