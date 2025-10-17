@@ -620,6 +620,7 @@ def test_nominal_parameters_llh_v2(problem_id):
     model_output_dir = benchmark_outdir / problem_id
 
     try:
+        # Load PEtab v1 problem. This will be upgraded to v2 automatically.
         problem = Problem.from_yaml(
             benchmark_models_petab.get_problem_yaml_path(problem_id)
         )

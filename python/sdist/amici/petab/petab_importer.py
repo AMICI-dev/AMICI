@@ -40,7 +40,8 @@ __all__ = [
     "unflatten_simulation_df",
     "has_timepoint_specific_overrides",
 ]
-logger = get_logger(__name__)
+logger = get_logger(__name__, log_level=logging.DEBUG)
+
 
 #: Default experiment ID to be used for measurements without an experiment ID.
 _DEFAULT_EXPERIMENT_ID = "__default__"
@@ -99,9 +100,10 @@ class PetabImporter:
         :param petab_problem: The PEtab problem to import.
         :param compile_: Whether to compile the model extension after import.
         :param validate: Whether to validate the PEtab problem before import.
-        :param model_id:
+        :param model_id: TODO
         :param outdir:
-        :param jax:
+            The output directory where the model files are written to.
+        :param jax: TODO
         """
         self.petab_problem: v2.Problem = self._upgrade_if_needed(petab_problem)
 
@@ -149,10 +151,11 @@ class PetabImporter:
         # ensure each measurement has an experimentId
         _set_default_experiment(self.petab_problem)
 
-        # convert petab experiments to events, because so far,
+        # Convert petab experiments to events, because so far,
         #  AMICI only supports preequilibration/presimulation/simulation, but
-        #  no arbitrary list of periods
+        #  no arbitrary list of periods.
         self._exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
+        # This will always create a copy of the problem.
         self.petab_problem = self._exp_event_conv.convert()
         for experiment in self.petab_problem.experiments:
             if len(experiment.periods) > 2:
@@ -211,7 +214,7 @@ class PetabImporter:
             ).absolute()
         return self._outdir
 
-    def _do_import(self):
+    def _do_import(self, non_estimated_parameters_as_constants: bool = True):
         """Import the model.
 
         Generate the symbolic model according to the given PEtab problem and
@@ -221,6 +224,12 @@ class PetabImporter:
            This leaves only (maybe) a pre-equilibration and a single
            simulation period.
         2. Add the observable parameters to the SBML model.
+
+        :param non_estimated_parameters_as_constants:
+            Whether parameters marked as non-estimated in PEtab should be
+            considered constant in AMICI. Setting this to ``True`` will reduce
+            model size and simulation times. If sensitivities with respect to
+            those parameters are required, this should be set to ``False``.
         """
         # TODO split into DEModel creation, code generation and compilation
         #   allow retrieving DEModel without compilation
@@ -256,18 +265,12 @@ class PetabImporter:
         logger.info(f"#Observables: {len(observation_model)}")
         logger.debug(f"Observables: {observation_model}")
 
-        # TODO update to v2 changes
         output_parameter_defaults = {}
         self._workaround_observable_parameters(
             output_parameter_defaults=output_parameter_defaults,
         )
 
-        # Create a copy, because it will be modified by SbmlImporter
-        # TODO: we already have a copy from the event conversion
-        sbml_doc = (
-            self.petab_problem.model.sbml_model.getSBMLDocument().clone()
-        )
-        sbml_model = sbml_doc.getModel()
+        sbml_model = self.petab_problem.model.sbml_model
 
         # All indicator variables, i.e., all remaining targets after
         #  experiments-to-event in the PEtab problem must be converted
@@ -281,7 +284,7 @@ class PetabImporter:
         }
 
         # show_model_info(sbml_model)
-        # TODO spline stuff
+        # TODO spline stuff, to __init__
         discard_sbml_annotations = False
         sbml_importer = amici.SbmlImporter(
             sbml_model,
@@ -359,13 +362,10 @@ class PetabImporter:
         #         "the problem and try again."
         #     )
 
-        # TODO: needs updating for v2
-        # fixed_parameters.extend(
-        #     _get_fixed_parameters_sbml(
-        #         petab_problem=petab_problem,
-        #         non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-        #     )
-        # )
+        fixed_parameters |= _get_fixed_parameters_sbml(
+            petab_problem=self.petab_problem,
+            non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
+        )
 
         fixed_parameters = list(sorted(fixed_parameters))
 
@@ -587,7 +587,7 @@ class ExperimentManager:
             def get_k(period: ExperimentPeriod):
                 """Get the fixed parameters for the period."""
                 changes = self._petab_problem.get_changes_for_period(period)
-                fixed_pars_vals = np.zeros_like(self._original_k)
+                fixed_pars_vals = self._original_k.copy()
                 for change in changes:
                     pid = self._fixed_pid_to_idx[change.target_id]
                     # those are only indicator variables that are always number
@@ -645,11 +645,12 @@ class ExperimentManager:
         edata.set_observed_data(y.flatten())
         edata.set_observed_data_std_dev(sigma_y.flatten())
 
-        print(
-            f"Created ExpData id={edata.id}, "
-            f"k_preeq={edata.fixed_parameters_pre_equilibration}, "
-            f"k={edata.fixed_parameters}"
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Created ExpData id={edata.id}, "
+                f"k_preeq={edata.fixed_parameters_pre_equilibration}, "
+                f"k={edata.fixed_parameters}"
+            )
 
         return edata
 
@@ -745,6 +746,21 @@ class ExperimentManager:
         pid_to_idx = self._pid_to_idx
         experiment_id = edata.id
         experiment = self._petab_problem[experiment_id]
+
+        # Update fixed parameters in case they are affected by problem
+        #  parameters (i.e., parameter table parameters)
+        fixed_par_vals = np.array(edata.fixed_parameters)
+        for p_id, p_val in problem_parameters.items():
+            if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None:
+                fixed_par_vals[p_idx] = p_val
+        edata.fixed_parameters = fixed_par_vals
+
+        if edata.fixed_parameters_pre_equilibration:
+            fixed_par_vals = np.array(edata.fixed_parameters_pre_equilibration)
+            for p_id, p_val in problem_parameters.items():
+                if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None:
+                    fixed_par_vals[p_idx] = p_val
+            edata.fixed_parameters_pre_equilibration = fixed_par_vals
 
         # TODO: remove; this should be handled on construction of the ExpData
         # experiment set indicator (see petab's `experiments_to_events`)
@@ -1268,3 +1284,60 @@ def unflatten_simulation_df(
         }
     )
     return unflattened_simulation_df
+
+
+def _get_fixed_parameters_sbml(
+    petab_problem: v2.Problem,
+    non_estimated_parameters_as_constants=True,
+) -> set[str]:
+    """
+    Determine, set and return fixed model parameters.
+
+    :param petab_problem:
+        The PEtab problem instance
+
+    :param non_estimated_parameters_as_constants:
+        Whether parameters marked as non-estimated in PEtab should be
+        considered constant in AMICI. Setting this to ``True`` will reduce
+        model size and simulation times. If sensitivities with respect to those
+        parameters are required, this should be set to ``False``.
+
+    :return:
+        List of IDs of (AMICI) parameters that are not estimated.
+    """
+    if not petab_problem.model.type_id == MODEL_TYPE_SBML:
+        raise ValueError("Not an SBML model.")
+
+    if not non_estimated_parameters_as_constants:
+        raise NotImplementedError(
+            "Only non_estimated_parameters_as_constants=True is supported currently."
+        )
+
+    # everything
+    # 1) that is a parameter in AMICI
+    # and
+    # 2) that is not flagged as estimated in PEtab
+    # and
+    # 3) for which there is no condition, where this parameter occurs as a
+    #    targetId where the targetValue expression contains any estimated
+    #    parameters
+    #    TODO: if we assume that condition table changes have been converted to
+    #     events, we can skip this check. indicator variables are always
+    #     literal numbers. right?
+
+    sbml_model = petab_problem.model.sbml_model
+
+    # What will be implemented as a parameter in the amici model?
+    # TODO: constant SBML parameters - what else?
+    amici_parameters = {
+        p.getId()
+        for p in sbml_model.getListOfParameters()
+        if p.getConstant() is True
+        # TODO: literal is okay?
+        # TODO: collect IAs once
+        and sbml_model.getInitialAssignmentBySymbol(p.getId()) is None
+    }
+
+    estimated_parameters = set(petab_problem.x_free_ids)
+
+    return amici_parameters - estimated_parameters
