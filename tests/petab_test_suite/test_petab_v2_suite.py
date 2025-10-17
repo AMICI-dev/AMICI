@@ -71,12 +71,13 @@ def _test_case(case, model_type, version, jax):
         outdir=model_output_dir,
         compile_=True,
         jax=jax,
-        force_import=True,
     )
     # TODO force re-import
     shutil.rmtree(pi.outdir, ignore_errors=True)
 
-    ps = pi.create_simulator()
+    ps = pi.create_simulator(
+        force_import=True,
+    )
     ps._solver.set_steady_state_tolerance_factor(1.0)
 
     problem_parameters = dict(

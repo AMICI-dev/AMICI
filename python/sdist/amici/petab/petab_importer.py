@@ -92,7 +92,6 @@ class PetabImporter:
         model_id: str = None,
         outdir: str | Path = None,
         jax: bool = False,
-        force_import: bool = False,
     ):
         """
         Create a new PetabImporter instance.
@@ -103,7 +102,6 @@ class PetabImporter:
         :param model_id:
         :param outdir:
         :param jax:
-        :param force_import:
         """
         self.petab_problem: v2.Problem = self._upgrade_if_needed(petab_problem)
 
@@ -136,8 +134,6 @@ class PetabImporter:
         )
         self._jax = jax
         self._verbose = logging.DEBUG
-        # TODO yet unused
-        self._force_import = force_import
 
         if validate:
             logger.info("Validating PEtab problem ...")
@@ -467,9 +463,14 @@ class PetabImporter:
             for observable in self.petab_problem.observables or []
         ]
 
-    def import_module(self) -> amici.ModelModule:
-        """Import the generated model module."""
-        if not self.outdir.is_dir():
+    def import_module(self, force_import: bool = False) -> amici.ModelModule:
+        """Import the generated model module.
+
+        :param force_import:
+            Whether to force re-import even if the model module already exists.
+        :return: The imported model module.
+        """
+        if not self.outdir.is_dir() or force_import:
             self._do_import()
 
         return amici.import_model_module(
@@ -484,8 +485,15 @@ class PetabImporter:
     #
     #     return self._sym_model
 
-    def create_simulator(self) -> PetabSimulator:
-        model = self.import_module().get_model()
+    def create_simulator(self, force_import: bool = False) -> PetabSimulator:
+        """
+        Create a PEtab simulator for the imported model.
+
+        :param force_import:
+            Whether to force re-import even if the model module already exists.
+        :return: The created PEtab simulator.
+        """
+        model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)
         return PetabSimulator(em=em)
 
