@@ -7,16 +7,16 @@ models and turning them into C++ Python extensions.
 """
 
 import contextlib
-import importlib.util
 import importlib
+import importlib.util
 import os
 import re
 import sys
+import warnings
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 from typing import Any
-from collections.abc import Callable
-import warnings
 
 
 def _get_amici_path():
@@ -129,11 +129,11 @@ if not _imported_from_setup():
     from typing import Protocol, runtime_checkable
 
     from .de_export import DEExporter  # noqa: F401
+    from .import_utils import MeasurementChannel  # noqa: F401
     from .sbml_import import (  # noqa: F401
         SbmlImporter,
         assignment_rules_to_observables,
     )
-    from .import_utils import MeasurementChannel  # noqa: F401
 
     try:
         from .jax import JAXModel

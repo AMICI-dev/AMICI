@@ -1,22 +1,21 @@
 import logging
-import re
-
 import math
 import os
+import re
 import tempfile
+from _collections import OrderedDict
 from itertools import chain
 from pathlib import Path
 
-import amici
 import libsbml
 import petab.v1 as petab
 import sympy as sp
-from _collections import OrderedDict
-
-from amici import MeasurementChannel
-from amici.logging import log_execution_time, set_log_level
 from petab.v1.models import MODEL_TYPE_SBML
 from sympy.abc import _clash
+
+import amici
+from amici import MeasurementChannel
+from amici.logging import log_execution_time, set_log_level
 
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (

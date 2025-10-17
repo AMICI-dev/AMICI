@@ -10,16 +10,17 @@ import os
 import shutil
 from pathlib import Path
 
-import amici
 import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+
+import amici
 
 from ..logging import get_logger
 from .import_helpers import (
     _can_import_model,
     _create_model_name,
-    check_model,
     _get_package_name_and_path,
+    check_model,
 )
 from .sbml_import import import_model_sbml
 

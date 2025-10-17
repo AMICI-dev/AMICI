@@ -4,10 +4,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+import amici
 import numpy as np
 import pandas as pd
-
-import amici
 from amici import (
     AmiciModel,
     ExpData,

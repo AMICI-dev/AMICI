@@ -1,14 +1,15 @@
 """Functionality for working with sympy objects."""
 
+import contextlib
+import logging
 import os
+from collections.abc import Callable
 from itertools import starmap
 from typing import Any
-from collections.abc import Callable
-import contextlib
-import sympy as sp
-import logging
-from .logging import log_execution_time, get_logger
 
+import sympy as sp
+
+from .logging import get_logger, log_execution_time
 
 logger = get_logger(__name__, logging.ERROR)
 

@@ -5,16 +5,21 @@ This module provides views on C++ objects for efficient access.
 """
 
 from __future__ import annotations
+
 import collections
 import copy
 import itertools
-from typing import Literal
 from collections.abc import Iterator
 from numbers import Number
-import amici
+from typing import Literal
+
 import numpy as np
 import sympy as sp
+import xarray as xr
 from sympy.abc import _clash
+
+import amici
+
 from . import (
     ExpData,
     ExpDataPtr,
@@ -23,8 +28,6 @@ from . import (
     ReturnDataPtr,
     SteadyStateStatus,
 )
-import xarray as xr
-
 
 __all__ = [
     "ReturnDataView",

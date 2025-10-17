@@ -9,9 +9,10 @@ import copy
 import math
 from typing import SupportsFloat
 
-import amici
 import numpy as np
 import pandas as pd
+
+import amici
 
 from .numpy import ExpDataView
 

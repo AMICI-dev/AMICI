@@ -10,6 +10,7 @@ import subprocess
 import sys
 from enum import EnumType
 from unittest import mock
+
 import sphinx
 from sphinx.transforms.post_transforms import ReferencesResolver
 
@@ -19,8 +20,8 @@ except ModuleNotFoundError:
     # for unclear reasons, the import of exhale_multiproject_monkeypatch
     #  fails on some systems, because the the location of the editable install
     #  is not automatically added to sys.path ¯\_(ツ)_/¯
-    from importlib.metadata import Distribution
     import json
+    from importlib.metadata import Distribution
     from urllib.parse import unquote_plus, urlparse
 
     dist = Distribution.from_name("sphinx-contrib-exhale-multiproject")

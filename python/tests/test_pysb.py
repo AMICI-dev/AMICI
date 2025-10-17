@@ -9,6 +9,8 @@ import pytest
 
 pysb = pytest.importorskip("pysb")
 
+from pathlib import Path
+
 import amici
 import numpy as np
 import pysb.examples  # noqa: F811
@@ -20,7 +22,6 @@ from amici.pysb_import import pysb2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
 from pysb.simulator import ScipyOdeSimulator
-from pathlib import Path
 
 
 @skip_on_valgrind

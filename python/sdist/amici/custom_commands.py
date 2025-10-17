@@ -5,13 +5,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from amici.swig import fix_typehints
 from cmake_build_extension import BuildExtension, CMakeExtension
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
+
+from amici.swig import fix_typehints
 
 
 class AmiciInstall(install):

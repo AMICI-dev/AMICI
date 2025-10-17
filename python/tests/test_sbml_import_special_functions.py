@@ -7,16 +7,17 @@ boost.
 import amici
 import numpy as np
 import pytest
+from amici import MeasurementChannel as MC
+from amici import SbmlImporter
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
-from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
-from amici import SbmlImporter, MeasurementChannel as MC
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from conftest import MODEL_STEADYSTATE_SCALED_XML
 from numpy.testing import (
+    assert_allclose,
     assert_approx_equal,
     assert_array_almost_equal_nulp,
-    assert_allclose,
 )
-from conftest import MODEL_STEADYSTATE_SCALED_XML
 from scipy.special import loggamma
 
 

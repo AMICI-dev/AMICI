@@ -15,6 +15,7 @@ from collections.abc import Callable
 
 import pandas as pd
 import petab.v1 as petab
+
 from amici import AmiciModel, SensitivityMethod
 
 from .petab_import import import_petab_problem

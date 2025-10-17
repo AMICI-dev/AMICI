@@ -11,30 +11,29 @@ Usage:
 """
 
 from __future__ import annotations
+
 import shutil
 from pathlib import Path
 
-import optimistix
-
 import amici
-import pandas as pd
-import pytest
-from amici.gradient_check import check_derivatives
+import diffrax
 import jax
 import jax.numpy as jnp
 import numpy as np
-import diffrax
+import optimistix
+import pandas as pd
+import pytest
+from amici.gradient_check import check_derivatives
 from amici.jax.petab import (
     DEFAULT_CONTROLLER_SETTINGS,
     DEFAULT_ROOT_FINDER_SETTINGS,
 )
-
 from utils import (
-    verify_results,
-    write_result_file,
+    apply_settings,
     find_model_file,
     read_settings_file,
-    apply_settings,
+    verify_results,
+    write_result_file,
 )
 
 

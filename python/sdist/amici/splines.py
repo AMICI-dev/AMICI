@@ -11,12 +11,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
     from numbers import Real
     from typing import (
         Any,
     )
-    from collections.abc import Callable
-    from collections.abc import Sequence
 
     from . import sbml_import
 
@@ -29,13 +28,14 @@ import logging
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from itertools import count
-from numbers import Integral
-from numbers import Real
+from numbers import Integral, Real
+
 import libsbml
 import numpy as np
 import sympy as sp
 from sympy.core.parameters import evaluate
 
+from .constants import SymbolId
 from .import_utils import (
     amici_time_symbol,
     annotation_namespace,
@@ -52,7 +52,6 @@ from .sbml_utils import (
     pretty_xml,
     sbml_mathml,
 )
-from .constants import SymbolId
 
 logger = get_logger(__name__, logging.WARNING)
 

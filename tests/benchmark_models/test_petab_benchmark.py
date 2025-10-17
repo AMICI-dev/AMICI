@@ -5,23 +5,21 @@ parameters, correctness of the gradient computation, and simulation times
 for a subset of the benchmark problems.
 """
 
-from pathlib import Path
-
 import contextlib
 import logging
 import os
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 
+import amici
+import benchmark_models_petab
+import fiddy
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
 import yaml
-from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
-from petab.v1.visualize import plot_problem
-
-import amici
 from amici import SensitivityMethod
 from amici.logging import get_logger
 from amici.petab.petab_import import import_petab_problem
@@ -31,13 +29,12 @@ from amici.petab.simulations import (
     rdatas_to_measurement_df,
     simulate_petab,
 )
-import benchmark_models_petab
-import fiddy
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
 from fiddy.success import Consistency
-
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
+from petab.v1.visualize import plot_problem
 
 # Enable various debug output
 debug = False

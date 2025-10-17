@@ -10,12 +10,11 @@ import logging
 import os
 import re
 import sys
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     Any,
 )
-from collections.abc import Callable
-from collections.abc import Iterable
 
 import numpy as np
 import pysb
@@ -36,13 +35,13 @@ from .de_export import (
 from .de_model import DEModel
 from .de_model_components import NoiseParameter, ObservableParameter
 from .import_utils import (
+    MeasurementChannel,
+    _default_simplify,
     _get_str_symbol_identifiers,
     _parse_special_functions,
     generate_measurement_symbol,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
-    _default_simplify,
-    MeasurementChannel,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 

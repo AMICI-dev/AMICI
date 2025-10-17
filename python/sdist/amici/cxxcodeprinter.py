@@ -4,8 +4,7 @@ import itertools
 import os
 import re
 import warnings
-from collections.abc import Sequence
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import sympy as sp
 from sympy.codegen.rewriting import Optimization, optimize

@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 """Generate HDF5 file with expected results for the C++ tests."""
 
+import subprocess
+from pathlib import Path
+
+import amici
+import h5py
+from amici import (
+    readModelDataFromHDF5,
+    readSimulationExpData,
+    readSolverSettingsFromHDF5,
+    runAmiciSimulation,
+    writeReturnData,
+)
 from amici.testing.models import (
+    import_model_calvetti,
     import_model_dirac,
     import_model_events,
-    import_model_neuron,
-    import_model_calvetti,
     import_model_jakstat,
     import_model_nested_events,
-    import_model_steadystate,
+    import_model_neuron,
     import_model_robertson,
+    import_model_steadystate,
 )
-from pathlib import Path
-from amici import (
-    writeReturnData,
-    readModelDataFromHDF5,
-    readSolverSettingsFromHDF5,
-    readSimulationExpData,
-)
-import subprocess
-import h5py
-from amici import runAmiciSimulation
-import amici
 
 repo_root = Path(__file__).parents[2]
 outfile = Path(__file__).parent / "expected_results_py.h5"
