@@ -2,11 +2,10 @@
 import sys
 
 import numpy as np
-
 from amici import (
     SensitivityOrder,
-    SteadyStateSensitivityMode,
     SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
 )
 from example import AmiciExample
 

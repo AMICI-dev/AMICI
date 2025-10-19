@@ -13,6 +13,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 
 import amici
+
 from . import Model, ReturnDataView
 from .numpy import StrOrExpr, evaluate
 

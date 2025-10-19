@@ -4,8 +4,8 @@ import amici
 import numpy as np
 import pytest
 from amici.numpy import evaluate
-from numpy.testing import assert_almost_equal, assert_array_equal
 from amici.testing import skip_on_valgrind
+from numpy.testing import assert_almost_equal, assert_array_equal
 
 
 @pytest.fixture(scope="session")

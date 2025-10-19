@@ -6,18 +6,18 @@ function as defined by a PEtab problem.
 
 import copy
 import logging
-from typing import Any
 from collections.abc import Sequence
+from typing import Any
 
-import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 from petab.v1.C import *  # noqa: F403
 
+import amici
+
 from .. import AmiciExpData, AmiciModel
 from ..logging import get_logger, log_execution_time
-
 from .conditions import (
     create_edatas,
     fill_in_parameters,

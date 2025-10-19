@@ -1,17 +1,16 @@
 import logging
 from functools import partial
 
-import numpy as np
-import pytest
+import amici
+import equinox as eqx
 import jax
 import jax.numpy as jnp
-import equinox as eqx
-from beartype import beartype
-
-import amici
-from amici.jax.petab import run_simulations, JAXProblem
+import numpy as np
+import pytest
+from amici.jax.petab import JAXProblem, run_simulations
 from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import simulate_petab, LLH, SLLH
+from amici.petab.simulations import LLH, SLLH, simulate_petab
+from beartype import beartype
 from test_petab_benchmark import (
     benchmark_outdir,
     problems_for_gradient_check,

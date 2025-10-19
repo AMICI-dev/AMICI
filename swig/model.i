@@ -113,6 +113,80 @@ using namespace amici;
 %pythoncode %{
 def __deepcopy__(self, memo):
     return self.clone()
+
+@overload
+def simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | None = None,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView: ...
+
+
+@overload
+def simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> list[ReturnDataView]: ...
+
+
+def simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView | list[ReturnDataView]:
+    """Simulate model with given solver and experimental data.
+
+    :param solver:
+        Solver to use for simulation. Defaults to :meth:`Model.get_solver`.
+    :param edata:
+        Experimental data to use for simulation.
+        A single :class:`ExpData` instance or a sequence of such instances.
+        If `None`, no experimental data is used and the model is simulated
+        as is.
+    :param sensi_method:
+        Sensitivity method to use for simulation.
+        If `None`, the solver's current sensitivity method is used.
+    :param sensi_order:
+        Sensitivity order to use for simulation.
+        If `None`, the solvers's current sensitivity order is used.
+    :param failfast:
+        Whether to stop simulations on first failure.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
+    :param num_threads:
+        Number of threads to use for simulation.
+        Only relevant if AMICI was compiled with OpenMP support and if `edata`
+        is a sequence of :class:`ExpData` instances.
+    :return:
+        A single :class:`ReturnDataView` instance containing the simulation
+        results if `edata` is a single :class:`ExpData` instance or `None`.
+        If `edata` is a sequence of :class:`ExpData` instances, a list of
+        :class:`ReturnDataView` instances is returned.
+    """
+    from .swig_wrappers import _Model__simulate
+
+    return _Model__simulate(
+        self,
+        solver=solver,
+        edata=edata,
+        failfast=failfast,
+        num_threads=num_threads,
+        sensi_method=sensi_method,
+        sensi_order=sensi_order,
+    )
 %}
 };
 
@@ -120,6 +194,81 @@ def __deepcopy__(self, memo):
 %pythoncode %{
 def __deepcopy__(self, memo):
     return self.clone()
+
+
+@overload
+def simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | None = None,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView: ...
+
+
+@overload
+def simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> list[ReturnDataView]: ...
+
+
+def simulate(
+    self: AmiciModel,
+    *,
+    solver: Solver | None = None,
+    edata: AmiciExpData | AmiciExpDataVector | None = None,
+    failfast: bool = True,
+    num_threads: int = 1,
+    sensi_method: SensitivityMethod | str = None,
+    sensi_order: SensitivityOrder | str = None,
+) -> ReturnDataView | list[ReturnDataView]:
+    """Simulate model with given solver and experimental data.
+
+    :param solver:
+        Solver to use for simulation. Defaults to :meth:`Model.get_solver`.
+    :param edata:
+        Experimental data to use for simulation.
+        A single :class:`ExpData` instance or a sequence of such instances.
+        If `None`, no experimental data is used and the model is simulated
+        as is.
+    :param sensi_method:
+        Sensitivity method to use for simulation.
+        If `None`, the solver's current sensitivity method is used.
+    :param sensi_order:
+        Sensitivity order to use for simulation.
+        If `None`, the solvers's current sensitivity order is used.
+    :param failfast:
+        Whether to stop simulations on first failure.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
+    :param num_threads:
+        Number of threads to use for simulation.
+        Only relevant if AMICI was compiled with OpenMP support and if `edata`
+        is a sequence of :class:`ExpData` instances.
+    :return:
+        A single :class:`ReturnDataView` instance containing the simulation
+        results if `edata` is a single :class:`ExpData` instance or `None`.
+        If `edata` is a sequence of :class:`ExpData` instances, a list of
+        :class:`ReturnDataView` instances is returned.
+    """
+    from .swig_wrappers import _Model__simulate
+
+    return _Model__simulate(
+        self,
+        solver=solver,
+        edata=edata,
+        failfast=failfast,
+        num_threads=num_threads,
+        sensi_method=sensi_method,
+        sensi_order=sensi_order,
+    )
 %}
 };
 

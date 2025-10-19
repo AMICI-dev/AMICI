@@ -6,11 +6,12 @@ from time import perf_counter
 import numpy as np
 import pytest
 import sympy as sp
-from amici.conserved_quantities_demartino import _fill, _kernel
-from amici.conserved_quantities_demartino import _output as output
 from amici.conserved_quantities_demartino import (
+    _fill,
+    _kernel,
     compute_moiety_conservation_laws,
 )
+from amici.conserved_quantities_demartino import _output as output
 from amici.logging import get_logger, log_execution_time
 from amici.testing import skip_on_valgrind
 
@@ -156,6 +157,7 @@ demartino2014_kernel_engaged_species = [
 def data_demartino2014():
     """Get tests from DeMartino2014 Suppl. Material"""
     import gzip
+
     import pooch
 
     # stoichiometric matrix

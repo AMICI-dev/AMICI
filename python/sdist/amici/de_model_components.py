@@ -6,16 +6,16 @@ from typing import SupportsFloat
 
 import sympy as sp
 
+from .constants import SymbolId
 from .import_utils import (
     RESERVED_SYMBOLS,
     ObservableTransformation,
     amici_time_symbol,
     cast_to_sym,
+    contains_periodic_subexpression,
     generate_measurement_symbol,
     generate_regularization_symbol,
-    contains_periodic_subexpression,
 )
-from .constants import SymbolId
 
 __all__ = [
     "ConservationLaw",

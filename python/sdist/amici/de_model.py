@@ -5,64 +5,61 @@ from __future__ import annotations
 import contextlib
 import copy
 import itertools
+import logging
 import re
+from collections.abc import Callable, Sequence
 from itertools import chain
 from typing import TYPE_CHECKING
-from collections.abc import Callable
-from collections.abc import Sequence
 
 import numpy as np
 import sympy as sp
 from sympy import ImmutableDenseMatrix, MutableDenseMatrix
 
 from ._codegen.cxx_functions import (
-    sparse_functions,
-    sensi_functions,
     nobody_functions,
+    sensi_functions,
+    sparse_functions,
     var_in_function_signature,
 )
 from .cxxcodeprinter import csc_matrix
 from .de_model_components import (
-    DifferentialState,
-    AlgebraicState,
     AlgebraicEquation,
-    Observable,
-    EventObservable,
-    Sigma,
-    SigmaY,
-    SigmaZ,
-    Parameter,
+    AlgebraicState,
+    ConservationLaw,
     Constant,
-    LogLikelihood,
+    DifferentialState,
+    Event,
+    EventObservable,
+    Expression,
+    LogLikelihoodRZ,
     LogLikelihoodY,
     LogLikelihoodZ,
-    LogLikelihoodRZ,
-    NoiseParameter,
-    ObservableParameter,
-    Expression,
-    ConservationLaw,
-    Event,
-    State,
     ModelQuantity,
+    NoiseParameter,
+    Observable,
+    ObservableParameter,
+    Parameter,
+    SigmaY,
+    SigmaZ,
+    State,
 )
 from .import_utils import (
-    _default_simplify,
-    SBMLException,
-    toposort_symbols,
-    smart_subs_dict,
     ObservableTransformation,
+    SBMLException,
+    _default_simplify,
     amici_time_symbol,
+    smart_subs_dict,
     strip_pysb,
+    toposort_symbols,
     unique_preserve_order,
 )
-from .sympy_utils import (
-    smart_jacobian,
-    smart_is_zero_matrix,
-    smart_multiply,
-    _parallel_applyfunc,
-)
 from .logging import get_logger, log_execution_time, set_log_level
-import logging
+from .sympy_utils import (
+    _parallel_applyfunc,
+    smart_is_zero_matrix,
+    smart_jacobian,
+    smart_multiply,
+)
 
 if TYPE_CHECKING:
     from .splines import AbstractSpline
@@ -1308,18 +1305,36 @@ class DEModel:
         and replaces the formulae of the found roots by identifiers of AMICI's
         Heaviside function implementation in the right-hand side
         """
+        # toposorted w_sym -> w_expr for substitution of 'w' in trigger function
+        #  do only once. `w` is not modified during this function.
+        w_toposorted = toposort_symbols(
+            dict(
+                zip(
+                    [expr.get_id() for expr in self._expressions],
+                    [expr.get_val() for expr in self._expressions],
+                    strict=True,
+                )
+            )
+        )
+
         # Track all roots functions in the right-hand side
         roots = copy.deepcopy(self._events)
         for state in self._differential_states:
-            state.set_dt(self._process_heavisides(state.get_dt(), roots))
+            state.set_dt(
+                self._process_heavisides(state.get_dt(), roots, w_toposorted)
+            )
 
         for expr in self._expressions:
-            expr.set_val(self._process_heavisides(expr.get_val(), roots))
+            expr.set_val(
+                self._process_heavisides(expr.get_val(), roots, w_toposorted)
+            )
 
         # remove all possible Heavisides from roots, which may arise from
         # the substitution of `'w'` in `_collect_heaviside_roots`
         for root in roots:
-            root.set_val(self._process_heavisides(root.get_val(), roots))
+            root.set_val(
+                self._process_heavisides(root.get_val(), roots, w_toposorted)
+            )
 
         # Now add the found roots to the model components
         for root in roots:
@@ -1328,6 +1343,11 @@ class DEModel:
                 continue
             # add roots of heaviside functions
             self.add_component(root)
+
+        # Substitute 'w' expressions into root expressions, to avoid rewriting
+        # 'root.cpp' and 'stau.cpp' headers to include 'w.h'.
+        for event in self.events():
+            event.set_val(event.get_val().subs(w_toposorted))
 
         # re-order events - first those that require root tracking, then the others
         constant_syms = set(self.sym("k")) | set(self.sym("p"))
@@ -2394,7 +2414,7 @@ class DEModel:
         expr_syms = {str(sym) for sym in expr.free_symbols}
 
         # Check if the time variable is in the expression.
-        if "t" in expr_syms:
+        if amici_time_symbol.name in expr_syms:
             return True
 
         # Check if any time-dependent states are in the expression.
@@ -2467,33 +2487,11 @@ class DEModel:
 
         return root_funs
 
-    def _substitute_w_in_roots(
-        self,
-        root_funs: list[tuple[sp.Expr, sp.Expr]],
-    ) -> list[tuple[sp.Expr, sp.Expr]]:
-        """
-        Substitute 'w' expressions into root expressions, to avoid rewriting
-        'root.cpp' and 'stau.cpp' headers to include 'w.h'.
-        """
-        w_sorted = toposort_symbols(
-            dict(
-                zip(
-                    [expr.get_id() for expr in self._expressions],
-                    [expr.get_val() for expr in self._expressions],
-                    strict=True,
-                )
-            )
-        )
-        root_funs = [
-            (r[0].subs(w_sorted), r[1].subs(w_sorted)) for r in root_funs
-        ]
-
-        return root_funs
-
     def _process_heavisides(
         self,
         dxdt: sp.Expr,
         roots: list[Event],
+        w_toposorted: dict[sp.Symbol, sp.Expr],
     ) -> sp.Expr:
         """
         Parses the RHS of a state variable, checks for Heaviside functions,
@@ -2505,7 +2503,8 @@ class DEModel:
             right-hand side of state variable
         :param roots:
             list of known root functions with identifier
-
+        :param w_toposorted:
+            `w` symbols->expressions sorted in topological order
         :returns:
             dxdt with Heaviside functions replaced by amici helper variables
         """
@@ -2514,7 +2513,15 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots((dxdt,))
-        tmp_roots_old = self._substitute_w_in_roots(tmp_roots_old)
+        # substitute 'w' symbols in the root expression by their equations,
+        #  because currently,
+        #  1) root functions must not depend on 'w'
+        #  2) the check for time-dependence currently assumes only state
+        #     variables are implicitly time-dependent
+        tmp_roots_old = [
+            (a.subs(w_toposorted), b.subs(w_toposorted))
+            for a, b in tmp_roots_old
+        ]
         for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_root_new = self._get_unique_root(tmp_root_old, roots)

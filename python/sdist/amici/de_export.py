@@ -11,6 +11,7 @@ as this will be done by
 """
 
 from __future__ import annotations
+
 import copy
 import logging
 import os
@@ -33,34 +34,34 @@ from . import (
 )
 from ._codegen.cxx_functions import (
     _FunctionInfo,
-    functions,
-    sparse_functions,
-    nobody_functions,
-    sensi_functions,
-    sparse_sensi_functions,
     event_functions,
     event_sensi_functions,
+    functions,
     multiobs_functions,
+    nobody_functions,
+    sensi_functions,
+    sparse_functions,
+    sparse_sensi_functions,
 )
 from ._codegen.model_class import (
     get_function_extern_declaration,
-    get_sunindex_extern_declaration,
     get_model_override_implementation,
+    get_sunindex_extern_declaration,
     get_sunindex_override_implementation,
 )
 from ._codegen.template import apply_template
+from .compile import build_model_extension
 from .cxxcodeprinter import (
     AmiciCxxCodePrinter,
-    get_switch_statement,
     get_initializer_list,
+    get_switch_statement,
 )
-from .de_model_components import *
 from .de_model import DEModel
+from .de_model_components import *
 from .import_utils import (
     strip_pysb,
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .compile import build_model_extension
 from .sympy_utils import (
     _custom_pow_eval_derivative,
     _monkeypatched,

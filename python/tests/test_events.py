@@ -6,21 +6,23 @@ import amici
 import numpy as np
 import pytest
 from amici import (
-    import_model_module,
+    MeasurementChannel as MC,
+)
+from amici import (
     SensitivityMethod,
     SensitivityOrder,
-    MeasurementChannel as MC,
+    import_model_module,
 )
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
+from amici.testing.models import create_amici_model, create_sbml_model
+from numpy.testing import assert_allclose
 from util import (
     check_trajectories_with_adjoint_sensitivities,
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,
 )
-from amici.testing.models import create_sbml_model, create_amici_model
-from numpy.testing import assert_allclose
 
 pytestmark = pytest.mark.filterwarnings(
     # https://github.com/AMICI-dev/AMICI/issues/18

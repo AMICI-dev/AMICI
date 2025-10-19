@@ -8,9 +8,9 @@ import math
 import os
 import platform
 import uuid
+from collections.abc import Sequence
 from tempfile import mkdtemp
 from typing import Any
-from collections.abc import Sequence
 
 import amici
 import numpy as np

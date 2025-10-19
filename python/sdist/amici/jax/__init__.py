@@ -9,14 +9,14 @@ compatibility.
 
 from warnings import warn
 
-from amici.jax.petab import (
-    JAXProblem,
-    run_simulations,
-    petab_simulate,
-    ReturnValue,
-)
 from amici.jax.model import JAXModel
 from amici.jax.nn import generate_equinox
+from amici.jax.petab import (
+    JAXProblem,
+    ReturnValue,
+    petab_simulate,
+    run_simulations,
+)
 
 warn(
     "The JAX module is experimental and the API may change in the future.",

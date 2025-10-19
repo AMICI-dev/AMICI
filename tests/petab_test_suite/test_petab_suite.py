@@ -4,9 +4,8 @@
 import logging
 import sys
 
-import diffrax
-
 import amici
+import diffrax
 import pandas as pd
 import petab.v1 as petab
 import petabtests
@@ -68,7 +67,7 @@ def _test_case(case, model_type, version, jax):
         jax=jax,
     )
     if jax:
-        from amici.jax import JAXProblem, run_simulations, petab_simulate
+        from amici.jax import JAXProblem, petab_simulate, run_simulations
 
         steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
         jax_problem = JAXProblem(model, problem)

@@ -1,9 +1,10 @@
 """AMICI-generated module for model TPL_MODELNAME"""
 
 import sys
-from pathlib import Path
-import amici
 import warnings
+from pathlib import Path
+
+import amici
 
 # Ensure we are binary-compatible, see #556
 if "TPL_AMICI_VERSION" != amici.__version__:

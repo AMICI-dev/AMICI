@@ -19,7 +19,6 @@ import xml.dom.minidom
 
 import libsbml
 from sympy.core.parameters import evaluate
-
 from sympy.printing.mathml import MathMLContentPrinter
 
 from .import_utils import (

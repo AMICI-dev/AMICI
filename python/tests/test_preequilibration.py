@@ -5,15 +5,17 @@ import itertools
 import amici
 import numpy as np
 import pytest
+from amici import SensitivityMethod, SensitivityOrder, SteadyStateStatus
 from amici.debugging import get_model_for_preeq
-from numpy.testing import assert_allclose, assert_equal
-from test_pysb import get_data
+from amici.gradient_check import check_derivatives
 from amici.testing import (
     TemporaryDirectoryWinSafe as TemporaryDirectory,
+)
+from amici.testing import (
     skip_on_valgrind,
 )
-from amici.gradient_check import check_derivatives
-from amici import SensitivityMethod, SensitivityOrder, SteadyStateStatus
+from numpy.testing import assert_allclose, assert_equal
+from test_pysb import get_data
 
 pytestmark = pytest.mark.filterwarnings(
     # https://github.com/AMICI-dev/AMICI/issues/18

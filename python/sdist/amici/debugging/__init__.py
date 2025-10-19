@@ -1,7 +1,8 @@
 """Functions for debugging AMICI simulation failures."""
 
-import amici
 import numpy as np
+
+import amici
 
 
 def get_model_for_preeq(model: amici.Model, edata: amici.ExpData):

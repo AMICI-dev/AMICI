@@ -1,10 +1,11 @@
 import os
 
-import amici
 import numpy as np
 import pytest
 
 pysb = pytest.importorskip("pysb")
+
+from contextlib import suppress
 
 from amici.bngl_import import bngl2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
@@ -39,6 +40,13 @@ tests = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", tests)
 def test_compare_to_pysb_simulation(example):
+    import amici.import_utils
+
+    # allow "NULL" as model symbol
+    # (used in CaOscillate_Func and Repressilator examples)
+    with suppress(ValueError):
+        amici.import_utils.RESERVED_SYMBOLS.remove("NULL")
+
     atol = 1e-8
     rtol = 1e-8
 

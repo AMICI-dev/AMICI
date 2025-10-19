@@ -6,11 +6,11 @@ Test getters, setters, etc.
 import copy
 import numbers
 from math import nan
-import pytest
-import xarray
 
 import amici
 import numpy as np
+import pytest
+import xarray
 
 
 def test_version_number(pysb_example_presimulation_module):

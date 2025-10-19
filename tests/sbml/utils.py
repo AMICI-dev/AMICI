@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 from pathlib import Path
 
+import amici
 import libsbml as sbml
 import numpy as np
 import pandas as pd
-
-import amici
 from amici.constants import SymbolId
 from numpy.testing import assert_allclose
 

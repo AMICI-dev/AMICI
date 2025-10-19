@@ -1,15 +1,18 @@
 """Test models used by AMICI."""
 
-from .. import import_model_module, Model
-from ..antimony_import import antimony2amici, antimony2sbml
-from pathlib import Path
-import libsbml
-from amici import SbmlImporter, AmiciModel, MeasurementChannel
 import sys
 import tempfile
-from amici.sbml_utils import amici_time_symbol
+from pathlib import Path
+
+import libsbml
 import sympy as sp
+
+from amici import AmiciModel, MeasurementChannel, SbmlImporter
+from amici.sbml_utils import amici_time_symbol
 from amici.splines import CubicHermiteSpline
+
+from .. import Model, import_model_module
+from ..antimony_import import antimony2amici, antimony2sbml
 
 model_dirac_ant = r"""
 p1 = 1;

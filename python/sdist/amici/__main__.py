@@ -3,11 +3,11 @@
 import sys
 
 from . import (
+    CpuTimer,
     __version__,
     compiled_with_openmp,
     has_clibs,
     hdf5_enabled,
-    CpuTimer,
 )
 
 

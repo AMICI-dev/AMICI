@@ -3,16 +3,15 @@
 # ruff: noqa: F821 F722
 
 import os
+from collections.abc import Callable
 
 import diffrax
 import equinox.internal as eqxi
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
 import jax.tree_util as jtu
-from optimistix import AbstractRootFinder
 import jaxtyping as jt
-
-from collections.abc import Callable
+from optimistix import AbstractRootFinder
 
 STARTING_STATS = {
     "max_steps": 0,
