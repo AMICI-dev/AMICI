@@ -11,6 +11,7 @@ as this will be done by
 """
 
 from __future__ import annotations
+
 import logging
 import os
 from pathlib import Path
@@ -20,16 +21,14 @@ import sympy as sp
 from amici import (
     amiciModulePath,
 )
-
 from amici._codegen.template import apply_template
-from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
-from amici.jax.model import JAXModel
-from amici.de_model import DEModel
-
 from amici.de_export import is_valid_identifier
+from amici.de_model import DEModel
 from amici.import_utils import (
     strip_pysb,
 )
+from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
+from amici.jax.model import JAXModel
 from amici.logging import get_logger, log_execution_time, set_log_level
 from amici.sympy_utils import (
     _custom_pow_eval_derivative,

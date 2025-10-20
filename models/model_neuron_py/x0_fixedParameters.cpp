@@ -1,0 +1,20 @@
+#include "amici/symbolic_functions.h"
+#include "amici/defines.h"
+
+#include <algorithm>
+#include <gsl/gsl-lite.hpp>
+#include "p.h"
+#include "k.h"
+
+namespace amici {
+namespace model_model_neuron_py {
+
+void x0_fixedParameters_model_neuron_py(realtype *x0_fixedParameters, const realtype t, const realtype *p, const realtype *k, gsl::span<const int> reinitialization_state_idxs){
+    if(std::find(reinitialization_state_idxs.cbegin(), reinitialization_state_idxs.cend(), 0) != reinitialization_state_idxs.cend())
+        x0_fixedParameters[0] = v0;
+    if(std::find(reinitialization_state_idxs.cbegin(), reinitialization_state_idxs.cend(), 1) != reinitialization_state_idxs.cend())
+        x0_fixedParameters[1] = b*v0;
+}
+
+} // namespace model_model_neuron_py
+} // namespace amici

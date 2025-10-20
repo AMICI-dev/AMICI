@@ -2,20 +2,20 @@
 
 # ruff: noqa: F821 F722
 
-from abc import abstractmethod
-from pathlib import Path
 import enum
+from abc import abstractmethod
+from collections.abc import Callable
 from dataclasses import field
+from pathlib import Path
 
 import diffrax
 import equinox as eqx
-import jax.numpy as jnp
 import jax
-from optimistix import AbstractRootFinder
+import jax.numpy as jnp
 import jaxtyping as jt
+from optimistix import AbstractRootFinder
 
-from collections.abc import Callable
-from ._simulation import solve, eq
+from ._simulation import eq, solve
 
 
 class ReturnValue(enum.Enum):
@@ -309,6 +309,16 @@ class JAXModel(eqx.Module):
 
     @property
     @abstractmethod
+    def n_events(self) -> int:
+        """
+        Get the number of events (that require implicit tracking)
+
+        :return:
+            number
+        """
+
+    @property
+    @abstractmethod
     def state_ids(self) -> list[str]:
         """
         Get the state ids of the model.
@@ -372,7 +382,7 @@ class JAXModel(eqx.Module):
         :return:
             heaviside variables
         """
-        h0 = jnp.zeros((len(self._root_cond_fns()),))  # dummy values
+        h0 = jnp.zeros((self.n_events,))  # dummy values
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
             roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
@@ -652,7 +662,7 @@ class JAXModel(eqx.Module):
         h_posteq = jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
 
         ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-        if len(self._root_cond_fns()):
+        if h.shape[0]:
             hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
         else:
             hs = jnp.zeros((ts.shape[0], h.shape[0]))
@@ -703,11 +713,11 @@ class JAXModel(eqx.Module):
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
                 sigma_obj = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
-                chi2 = jnp.square((ys_obj - m_obj) / sigma_obj)
+                chi2 = jnp.square((m_obj - ys_obj) / sigma_obj)
                 chi2 = jnp.where(ts_mask, chi2, 0.0)
                 output = jnp.sum(chi2)
             else:
-                output = ys_obj - m_obj
+                output = m_obj - ys_obj
                 output = jnp.where(ts_mask, output, 0.0)
         else:
             raise NotImplementedError(f"Return value {ret} not implemented.")

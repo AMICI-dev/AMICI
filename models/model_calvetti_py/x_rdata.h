@@ -1,0 +1,6 @@
+#define V1 x_rdata[0]
+#define V2 x_rdata[1]
+#define V3 x_rdata[2]
+#define f1 x_rdata[3]
+#define f2 x_rdata[4]
+#define f3 x_rdata[5]

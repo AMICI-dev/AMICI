@@ -1,11 +1,11 @@
 %module misc
 
-%ignore amici::printfToString;
-%ignore amici::regexErrorToString;
-%ignore amici::writeSlice;
+%ignore amici::printf_to_string;
+%ignore amici::regex_error_to_string;
+%ignore amici::write_slice;
 %ignore ContextManager;
-%ignore amici::scaleParameters;
-%ignore amici::unscaleParameters;
+%ignore amici::scale_parameters;
+%ignore amici::unscale_parameters;
 
 // Add necessary symbols to generated header
 %{

@@ -32,12 +32,12 @@ When using AMICI in your project, please cite
      }
 
 When presenting work that employs AMICI, feel free to use one of the icons in
-`documentation/gfx/ <https://github.com/AMICI-dev/AMICI/tree/master/doc/gfx>`_,
+`documentation/gfx/ <https://github.com/AMICI-dev/AMICI/tree/main/doc/gfx>`_,
 which are available under a
-`CC0 <https://github.com/AMICI-dev/AMICI/tree/master/doc/gfx/LICENSE.md>`_
+`CC0 <https://github.com/AMICI-dev/AMICI/tree/main/doc/gfx/LICENSE.md>`_
 license:
 
-.. image:: https://raw.githubusercontent.com/AMICI-dev/AMICI/master/doc/gfx/logo_text.png
-   :target: https://raw.githubusercontent.com/AMICI-dev/AMICI/master/doc/gfx/logo_text.png
+.. image:: https://raw.githubusercontent.com/AMICI-dev/AMICI/main/doc/gfx/logo_text.png
+   :target: https://raw.githubusercontent.com/AMICI-dev/AMICI/main/doc/gfx/logo_text.png
    :height: 75
    :alt: AMICI LOGO

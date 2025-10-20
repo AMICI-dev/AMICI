@@ -5,20 +5,19 @@ import shutil
 from pathlib import Path
 
 import amici
+import diffrax
 import jax
 import jax.numpy as jnp
-import diffrax
-import optimistix
 import numpy as np
+import optimistix
 import pandas as pd
 import pytest
 from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-
 from utils import (
-    verify_results,
-    write_result_file,
     find_model_file,
     read_settings_file,
+    verify_results,
+    write_result_file,
 )
 
 jax.config.update("jax_enable_x64", True)
@@ -34,17 +33,17 @@ class DummyModel:
         self.jax_model = jax_model
         self.importer = importer
 
-    def getParameterIds(self):
+    def get_parameter_ids(self):
         return list(self.jax_model.parameter_ids)
 
-    def getParameterById(self, pid: str):
+    def get_parameter_by_id(self, pid: str):
         return float(
             self.jax_model.parameters[
                 list(self.jax_model.parameter_ids).index(pid)
             ]
         )
 
-    def getExpressionIds(self):
+    def get_expression_ids(self):
         return list(self.jax_model.expression_ids)
 
 

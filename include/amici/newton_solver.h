@@ -2,6 +2,7 @@
 #define amici_newton_solver_h
 
 #include "amici/defines.h"
+#include "amici/model_state.h"
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
 
@@ -16,7 +17,7 @@ class AmiVector;
  * of differential equation system.
  *
  * It's intended to passing around the current state of a system while
- * avoiding repetetive argument passing in function signatures.
+ * avoiding repetitive argument passing in function signatures.
  */
 struct DEStateView {
     /**
@@ -46,6 +47,15 @@ struct DEStateView {
         : t(t_)
         , x(x_)
         , dx(dx_) {}
+
+    /**
+     * @brief Construct a DEStateView from a SolutionState reference.
+     * @param sol
+     */
+    DEStateView(SolutionState& sol)
+        : t(sol.t)
+        , x(sol.x)
+        , dx(sol.dx) {}
 };
 
 /**
@@ -80,7 +90,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void getStep(AmiVector& delta, Model& model, DEStateView const& state);
+    void get_step(AmiVector& delta, Model& model, DEStateView const& state);
 
     /**
      * @brief Computes steady state sensitivities
@@ -89,7 +99,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void computeNewtonSensis(
+    void compute_newton_sensis(
         AmiVectorArray& sx, Model& model, DEStateView const& state
     );
 
@@ -100,7 +110,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void prepareLinearSystem(Model& model, DEStateView const& state);
+    void prepare_linear_system(Model& model, DEStateView const& state);
 
     /**
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the
@@ -109,7 +119,7 @@ class NewtonSolver {
      * @param model the model instance
      * @param state current simulation state
      */
-    void prepareLinearSystemB(Model& model, DEStateView const& state);
+    void prepare_linear_system_b(Model& model, DEStateView const& state);
 
     /**
      * @brief Solves the linear system for the Newton step
@@ -117,7 +127,7 @@ class NewtonSolver {
      * @param rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    void solveLinearSystem(AmiVector& rhs);
+    void solve_linear_system(AmiVector& rhs);
 
     /**
      * @brief Reinitialize the linear solver

@@ -34,22 +34,18 @@ class Model_DAE : public Model {
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      * @param events Vector of events
-     * @param state_independent_events Map of events with state-independent
-     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model_DAE(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event, std::vector<Event> events = {},
-        std::map<realtype, std::vector<int>> state_independent_events = {}
+        std::vector<int> const& z2event, std::vector<Event> events = {}
     )
         : Model(
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-              events, state_independent_events
+              events
           ) {
         SUNContext sunctx = derived_state_.sunctx_;
-        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto const M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );
@@ -151,7 +147,7 @@ class Model_DAE : public Model {
 
     void
     fJv(realtype t, AmiVector const& x, AmiVector const& dx,
-        AmiVector const& xdot, AmiVector const& v, AmiVector& nJv,
+        AmiVector const& xdot, AmiVector const& v, AmiVector& Jv,
         realtype cj) override;
 
     /**
@@ -303,7 +299,7 @@ class Model_DAE : public Model {
     void fdxdotdp(
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {
-        fdxdotdp(t, x.getNVector(), dx.getNVector());
+        fdxdotdp(t, x.get_nvector(), dx.get_nvector());
     }
 
     void fsxdot(
@@ -333,7 +329,7 @@ class Model_DAE : public Model {
      */
     void fM(realtype t, const_N_Vector x);
 
-    std::unique_ptr<Solver> getSolver() override;
+    std::unique_ptr<Solver> create_solver() override;
 
   protected:
     /**

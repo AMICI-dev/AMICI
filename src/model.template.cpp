@@ -1,62 +1,58 @@
 #include <amici/defines.h>
 #include <array>
 
-namespace amici {
-
-namespace model_TPL_MODELNAME {
+namespace amici::model_TPL_MODELNAME {
 
 // clang-format off
 
-std::array<const char*, TPL_NP> parameterNames = {
+std::array<const char*, TPL_NP> parameter_names = {
     TPL_PARAMETER_NAMES_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NK> fixedParameterNames = {
+std::array<const char*, TPL_NK> fixed_parameter_names = {
     TPL_FIXED_PARAMETER_NAMES_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NX_RDATA> stateNames = {
+std::array<const char*, TPL_NX_RDATA> state_names = {
     TPL_STATE_NAMES_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NY> observableNames = {
+std::array<const char*, TPL_NY> observable_names = {
     TPL_OBSERVABLE_NAMES_INITIALIZER_LIST
 };
 
-std::array<const ObservableScaling, TPL_NY> observableScalings = {
+std::array<const ObservableScaling, TPL_NY> observable_scalings = {
     TPL_OBSERVABLE_TRAFO_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NW> expressionNames = {
+std::array<const char*, TPL_NW> expression_names = {
     TPL_EXPRESSION_NAMES_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NP> parameterIds = {
+std::array<const char*, TPL_NP> parameter_ids = {
     TPL_PARAMETER_IDS_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NK> fixedParameterIds = {
+std::array<const char*, TPL_NK> fixed_parameter_ids = {
     TPL_FIXED_PARAMETER_IDS_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NX_RDATA> stateIds = {
+std::array<const char*, TPL_NX_RDATA> state_ids = {
     TPL_STATE_IDS_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NY> observableIds = {
+std::array<const char*, TPL_NY> observable_ids = {
     TPL_OBSERVABLE_IDS_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NW> expressionIds = {
+std::array<const char*, TPL_NW> expression_ids = {
     TPL_EXPRESSION_IDS_INITIALIZER_LIST
 };
 
-std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
+std::array<int, TPL_NX_SOLVER> state_idxs_solver = {
     TPL_STATE_IDXS_SOLVER_INITIALIZER_LIST
 };
 
 // clang-format on
 
-} // namespace model_TPL_MODELNAME
-
-} // namespace amici
+} // namespace amici::model_TPL_MODELNAME

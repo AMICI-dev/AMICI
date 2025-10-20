@@ -6,7 +6,7 @@ requires = [
     "wheel",
     "numpy>=2.0",
     "cmake-build-extension==0.6.0",
-    "scipy-openblas64; platform_system!='Darwin'",
+    "scipy-openblas64==0.3.30.0.1; platform_system!='Darwin'",
     "swig",
 ]
 build-backend = "setuptools.build_meta"
@@ -29,7 +29,8 @@ dependencies = [
     "toposort",
     "setuptools>=48",
     "mpmath",
-    "swig"
+    "swig",
+    "xarray>=2025.01.0",
 ]
 license = "BSD-3-Clause"
 authors = [
@@ -62,10 +63,11 @@ classifiers = [
 petab = ["petab>=0.4.0"]
 pysb = ["pysb>=1.13.1"]
 test = [
-    "h5py",
+    "h5py!=3.15",
     "pytest",
     "pytest-cov",
-    "pytest-rerunfailures",
+    # v16.0: https://github.com/pytest-dev/pytest-rerunfailures/issues/302
+    "pytest-rerunfailures!=16.0",
     "coverage",
     "shyaml",
     "antimony>=2.13",
@@ -87,7 +89,7 @@ examples = [
 jax = [
     "jax>=0.4.36",
     "jaxlib>=0.4.36",
-    "diffrax>=0.6.1",
+    "diffrax>=0.7.0",
     "jaxtyping>=0.2.34",
     "equinox>=0.11.10",
     "optimistix>=0.0.9",
@@ -133,5 +135,5 @@ line-length = 79
 extend-include = ["*.ipynb"]
 
 [tool.ruff.lint]
-extend-select = ["B028", "UP"]
+extend-select = ["B028", "UP", "I"]
 ignore = ["E402", "F403", "F405", "E741"]

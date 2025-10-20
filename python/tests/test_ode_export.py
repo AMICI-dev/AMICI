@@ -2,6 +2,7 @@
 
 import sympy as sp
 from amici.cxxcodeprinter import csc_matrix
+from amici.import_utils import symbol_with_assumptions
 from amici.testing import skip_on_valgrind
 
 
@@ -24,7 +25,11 @@ def test_csc_matrix():
     assert symbol_col_ptrs == [0, 2, 3]
     assert symbol_row_vals == [0, 1, 1]
     assert sparse_list == sp.Matrix([[1], [2], [3]])
-    assert symbol_list == ["da1_db1", "da2_db1", "da2_db2"]
+    assert symbol_list == [
+        symbol_with_assumptions("da1_db1"),
+        symbol_with_assumptions("da2_db1"),
+        symbol_with_assumptions("da2_db2"),
+    ]
     assert str(sparse_matrix) == "Matrix([[da1_db1, 0], [da2_db1, da2_db2]])"
 
 
@@ -66,7 +71,10 @@ def test_csc_matrix_vector():
     assert symbol_col_ptrs == [0, 2]
     assert symbol_row_vals == [0, 1]
     assert sparse_list == sp.Matrix([[1], [2]])
-    assert symbol_list == ["da1_db", "da2_db"]
+    assert symbol_list == [
+        symbol_with_assumptions("da1_db"),
+        symbol_with_assumptions("da2_db"),
+    ]
     assert str(sparse_matrix) == "Matrix([[da1_db], [da2_db]])"
 
     # Test continuation of numbering of symbols
@@ -86,7 +94,7 @@ def test_csc_matrix_vector():
     assert symbol_col_ptrs == [0, 1]
     assert symbol_row_vals == [1]
     assert sparse_list == sp.Matrix([[3]])
-    assert symbol_list == ["da2_db_1"]
+    assert symbol_list == [symbol_with_assumptions("da2_db_1")]
     assert str(sparse_matrix) == "Matrix([[0], [da2_db_1]])"
 
 

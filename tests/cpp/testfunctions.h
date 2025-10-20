@@ -6,12 +6,8 @@
 
 #include <H5Cpp.h>
 
-#ifndef __APPLE__
-#include <iostream>
-#endif
-
-#include <sstream>
 #include <string>
+#include <string_view>
 
 namespace amici {
 
@@ -31,15 +27,13 @@ class ExpData;
  * @param length number of variables
  * @return default names/ids
  */
-std::vector<std::string>
-getVariableNames(const char* name, int length);
+std::vector<std::string> getVariableNames(std::string const& name, int length);
 
 /**
  * @brief The Model_Test class is a model-unspecific implementation
  of model designed for unit testing.
  */
-class Model_Test : public Model
-{
+class Model_Test : public Model {
   public:
     /** constructor with model dimensions
      * @param model_dimensions ModelDimensions model_dimensions,
@@ -48,89 +42,96 @@ class Model_Test : public Model
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
-    Model_Test(ModelDimensions const& model_dimensions,
-               SimulationParameters simulation_parameters,
-               const SecondOrderMode o2mode,
-               const std::vector<realtype> idlist,
-               const std::vector<int> z2event)
-      : Model(model_dimensions,
-              simulation_parameters,
-              o2mode,
-              idlist,
-              z2event)
-    {}
+    Model_Test(
+        ModelDimensions const& model_dimensions,
+        SimulationParameters simulation_parameters,
+        SecondOrderMode const o2mode, std::vector<realtype> const idlist,
+        std::vector<int> const z2event, std::vector<Event> const events
+    )
+        : Model(
+              model_dimensions, simulation_parameters, o2mode, idlist, z2event,
+              events
+          ) {}
 
     /** default constructor */
     Model_Test()
         : Model(
-              ModelDimensions(),
-              SimulationParameters(),
-              SecondOrderMode::none,
-              std::vector<realtype>(),
-              std::vector<int>())
-    {}
+              ModelDimensions(), SimulationParameters(), SecondOrderMode::none,
+              std::vector<realtype>(), std::vector<int>()
+          ) {}
 
-    Model *clone() const override { return new Model_Test(*this); }
+    Model* clone() const override { return new Model_Test(*this); }
 
-    std::unique_ptr<Solver> getSolver() override {
+    std::unique_ptr<Solver> create_solver() override {
         throw AmiException("not implemented");
     }
-    void froot(const realtype /*t*/, const AmiVector & /*x*/,
-               const AmiVector & /*dx*/,
-               gsl::span<realtype> /*root*/) override {
+    void froot(
+        realtype const /*t*/, AmiVector const& /*x*/, AmiVector const& /*dx*/,
+        gsl::span<realtype> /*root*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fxdot(const realtype /*t*/, const AmiVector & /*x*/,
-               const AmiVector & /*dx*/, AmiVector & /*xdot*/) override {
+    void fxdot(
+        realtype const /*t*/, AmiVector const& /*x*/, AmiVector const& /*dx*/,
+        AmiVector& /*xdot*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fsxdot(const realtype /*t*/, const AmiVector & /*x*/,
-                const AmiVector & /*dx*/, const int /*ip*/,
-                const AmiVector & /*sx*/, const AmiVector & /*sdx*/,
-                AmiVector & /*sxdot*/) override {
+    void fsxdot(
+        realtype const /*t*/, AmiVector const& /*x*/, AmiVector const& /*dx*/,
+        int const /*ip*/, AmiVector const& /*sx*/, AmiVector const& /*sdx*/,
+        AmiVector& /*sxdot*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fJ(const realtype /*t*/, const realtype /*cj*/,
-            const AmiVector & /*x*/, const AmiVector & /*dx*/,
-            const AmiVector & /*xdot*/, SUNMatrix /*J*/) override {
+    void
+    fJ(realtype const /*t*/, realtype const /*cj*/, AmiVector const& /*x*/,
+       AmiVector const& /*dx*/, AmiVector const& /*xdot*/,
+       SUNMatrix /*J*/) override {
         throw AmiException("not implemented");
     }
-    void fJSparse(const realtype /*t*/, const realtype /*cj*/,
-                  const AmiVector & /*x*/, const AmiVector & /*dx*/,
-                  const AmiVector & /*xdot*/, SUNMatrix /*J*/) override {
+    void fJSparse(
+        realtype const /*t*/, realtype const /*cj*/, AmiVector const& /*x*/,
+        AmiVector const& /*dx*/, AmiVector const& /*xdot*/, SUNMatrix /*J*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fJB(const realtype /*t*/, realtype /*cj*/, const AmiVector & /*x*/,
-             const AmiVector & /*dx*/, const AmiVector & /*xB*/,
-             const AmiVector & /*dxB*/, const AmiVector & /*xBdot*/,
-             SUNMatrix /*JB*/) override {
+    void
+    fJB(realtype const /*t*/, realtype /*cj*/, AmiVector const& /*x*/,
+        AmiVector const& /*dx*/, AmiVector const& /*xB*/,
+        AmiVector const& /*dxB*/, AmiVector const& /*xBdot*/,
+        SUNMatrix /*JB*/) override {
         throw AmiException("not implemented");
     }
-    void fJSparseB(const realtype /*t*/, realtype /*cj*/,
-                   const AmiVector & /*x*/, const AmiVector & /*dx*/,
-                   const AmiVector & /*xB*/, const AmiVector & /*dxB*/,
-                   const AmiVector & /*xBdot*/, SUNMatrix /*JB*/) override {
+    void fJSparseB(
+        realtype const /*t*/, realtype /*cj*/, AmiVector const& /*x*/,
+        AmiVector const& /*dx*/, AmiVector const& /*xB*/,
+        AmiVector const& /*dxB*/, AmiVector const& /*xBdot*/, SUNMatrix /*JB*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fJDiag(const realtype /*t*/, AmiVector & /*Jdiag*/,
-                const realtype /*cj*/, const AmiVector & /*x*/,
-                const AmiVector & /*dx*/) override {
+    void fJDiag(
+        realtype const /*t*/, AmiVector& /*Jdiag*/, realtype const /*cj*/,
+        AmiVector const& /*x*/, AmiVector const& /*dx*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fdxdotdp(const realtype /*t*/, const AmiVector & /*x*/,
-                  const AmiVector & /*dx*/) override {
+    void fdxdotdp(
+        realtype const /*t*/, AmiVector const& /*x*/, AmiVector const& /*dx*/
+    ) override {
         throw AmiException("not implemented");
     }
-    void fJv(const realtype /*t*/, const AmiVector & /*x*/,
-             const AmiVector & /*dx*/, const AmiVector & /*xdot*/,
-             const AmiVector & /*v*/, AmiVector & /*nJv*/,
-             const realtype /*cj*/) override {
+    void
+    fJv(realtype const /*t*/, AmiVector const& /*x*/, AmiVector const& /*dx*/,
+        AmiVector const& /*xdot*/, AmiVector const& /*v*/, AmiVector& /*nJv*/,
+        realtype const /*cj*/) override {
         throw AmiException("not implemented");
     }
 
-    void fxBdot_ss(const realtype /*t*/, const AmiVector & /*xB*/,
-                   const AmiVector & /*dxB*/, AmiVector & /*xBdot*/
-                   ) override {
+    void fxBdot_ss(
+        realtype const /*t*/, AmiVector const& /*xB*/, AmiVector const& /*dxB*/,
+        AmiVector& /*xBdot*/
+    ) override {
         throw AmiException("not implemented");
     }
 
@@ -138,90 +139,85 @@ class Model_Test : public Model
         throw AmiException("not implemented");
     }
 
-    void writeSteadystateJB(const realtype /*t*/, realtype /*cj*/,
-                            const AmiVector & /*x*/, const AmiVector & /*dx*/,
-                            const AmiVector & /*xB*/, const AmiVector & /*dxB*/,
-                            const AmiVector & /*xBdot*/) override {
+    void writeSteadystateJB(
+        realtype const /*t*/, realtype /*cj*/, AmiVector const& /*x*/,
+        AmiVector const& /*dx*/, AmiVector const& /*xB*/,
+        AmiVector const& /*dxB*/, AmiVector const& /*xBdot*/
+    ) override {
         throw AmiException("not implemented");
     }
 
-    std::vector<std::string> getParameterNames() const override {
+    std::vector<std::string> get_parameter_names() const override {
         return getVariableNames("p", np());
     }
 
-    std::vector<std::string> getStateNames() const override {
+    std::vector<std::string> get_state_names() const override {
         return getVariableNames("x", nx_rdata);
     }
 
-    std::vector<std::string> getFixedParameterNames() const override {
+    std::vector<std::string> get_fixed_parameter_names() const override {
         return getVariableNames("k", nk());
     }
 
-    std::vector<std::string> getObservableNames() const override {
+    std::vector<std::string> get_observable_names() const override {
         return getVariableNames("y", ny);
     }
 
-    std::vector<std::string> getParameterIds() const override {
+    std::vector<std::string> get_parameter_ids() const override {
         return getVariableNames("p", np());
     }
 
-    std::vector<std::string> getStateIds() const override {
+    std::vector<std::string> get_state_ids() const override {
         return getVariableNames("x", nx_rdata);
     }
 
-    std::vector<std::string> getFixedParameterIds() const override {
+    std::vector<std::string> get_fixed_parameter_ids() const override {
         return getVariableNames("k", nk());
     }
 
-    std::vector<std::string> getObservableIds() const override {
+    std::vector<std::string> get_observable_ids() const override {
         return getVariableNames("y", ny);
     }
 };
 
 void simulateWithDefaultOptions();
 
-void simulateVerifyWrite(const std::string &path);
+void simulateVerifyWrite(std::string const& path);
 
-void simulateVerifyWrite(std::string const &path, double atol, double rtol);
+void simulateVerifyWrite(std::string const& path, double atol, double rtol);
 
-void simulateVerifyWrite(const std::string &hdffileOptions,
-                         const std::string &hdffileResults,
-                         const std::string &hdffilewrite,
-                         const std::string &path, double atol, double rtol);
+void simulateVerifyWrite(
+    std::string const& hdffileOptions, std::string const& hdffileResults,
+    std::string const& hdffilewrite, std::string const& path, double atol,
+    double rtol
+);
 
-std::unique_ptr<ExpData> getTestExpData(const Model &model);
+std::unique_ptr<ExpData> getTestExpData(Model const& model);
 
-bool withinTolerance(double expected, double actual, double atol, double rtol,
-                     int index, const char *name);
+bool withinTolerance(
+    double expected, double actual, double atol, double rtol, int index,
+    std::string_view name
+);
 
-void checkEqualArray(const double *expected, const double *actual, int length,
-                     double atol, double rtol, const char *name);
+void checkEqualArray(
+    double const* expected, double const* actual, int length, double atol,
+    double rtol, std::string_view name
+);
 
-void checkEqualArray(std::vector<double> const &expected,
-                     std::vector<double> const &actual, double atol,
-                     double rtol, std::string const &name);
+void checkEqualArray(
+    std::vector<double> const& expected, std::vector<double> const& actual,
+    double atol, double rtol, std::string const& name
+);
 
-// TODO: delete after transitioning to C++-written test results
-void verifyReturnDataMatlab(const std::string &hdffile,
-                            const std::string &resultPath,
-                            const ReturnData *rdata, const Model *model,
-                            double atol, double rtol);
+void verifyReturnData(
+    std::string const& hdffile, std::string const& resultPath,
+    ReturnData const* rdata, Model const* model, double atol, double rtol
+);
 
-// TODO: delete after transitioning to C++-written test results
-void verifyReturnDataSensitivitiesMatlab(const H5::H5File &file_id,
-                                         const std::string &resultPath,
-                                         const ReturnData *rdata,
-                                         const Model *model, double atol,
-                                         double rtol);
-
-void verifyReturnData(const std::string &hdffile, const std::string &resultPath,
-                      const ReturnData *rdata, const Model *model, double atol,
-                      double rtol);
-
-void verifyReturnDataSensitivities(const H5::H5File &file_id,
-                                   const std::string &resultPath,
-                                   const ReturnData *rdata, const Model *model,
-                                   double atol, double rtol);
+void verifyReturnDataSensitivities(
+    const H5::H5File& file, std::string const& resultPath,
+    ReturnData const* rdata, Model const* model, double atol, double rtol
+);
 
 void printBacktrace(int depth);
 

@@ -3,12 +3,12 @@
 import copy
 import importlib
 import sys
+from pathlib import Path
 
 import amici
 import pytest
-from pathlib import Path
+from amici import MeasurementChannel
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-
 
 pytest_plugins = ["amici.testing.fixtures"]
 
@@ -20,9 +20,6 @@ MODEL_STEADYSTATE_SCALED_XML = (
 MODEL_PRESIMULATION_XML = (
     EXAMPLES_DIR / "example_presimulation" / "model_presimulation.xml"
 )
-MODEL_CONSTANT_SPECIES_XML = (
-    EXAMPLES_DIR / "example_steady_states" / "model_constant_species.xml"
-)
 
 
 @pytest.fixture(scope="session")
@@ -33,7 +30,7 @@ def sbml_example_presimulation_module():
 
     constant_parameters = ["DRUG_0", "KIN_0"]
 
-    observables = amici.assignmentRules2observables(
+    observables = amici.assignment_rules_to_observables(
         sbml_importer.sbml,  # the libsbml model object
         filter_function=lambda variable: variable.getName() == "pPROT_obs",
     )
@@ -44,7 +41,7 @@ def sbml_example_presimulation_module():
             model_name=module_name,
             output_dir=outdir,
             verbose=False,
-            observables=observables,
+            observation_model=observables,
             constant_parameters=constant_parameters,
         )
 
@@ -81,7 +78,7 @@ def pysb_example_presimulation_module():
             model,
             outdir,
             verbose=True,
-            observables=["pPROT_obs"],
+            observation_model=[MeasurementChannel("pPROT_obs")],
             constant_parameters=constant_parameters,
         )
 

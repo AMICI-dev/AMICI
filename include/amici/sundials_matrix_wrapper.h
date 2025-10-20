@@ -8,9 +8,10 @@
 #include <gsl/gsl-lite.hpp>
 
 #include <algorithm>
+#include <ostream>
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 #include "amici/vector.h"
 
@@ -360,7 +361,7 @@ class SUNMatrixWrapper {
     void multiply(
         AmiVector& c, AmiVector const& b, realtype const alpha = 1.0
     ) const {
-        multiply(c.getNVector(), b.getNVector(), alpha);
+        multiply(c.get_nvector(), b.get_nvector(), alpha);
     }
 
     /**
@@ -480,7 +481,7 @@ class SUNMatrixWrapper {
     /**
      * @brief Writes the diagonal of sparse matrix A to a dense vector v.
      *
-     * @param v dense outut vector
+     * @param v dense output vector
      */
     void to_diag(N_Vector v) const;
 
@@ -587,8 +588,38 @@ class SUNMatrixWrapper {
      * @brief indicator whether this wrapper allocated matrix_ and is
      * responsible for deallocation
      */
-    bool ownmat = true;
+    bool ownmat_ = true;
 };
+
+/**
+ * @brief Output formatter for SUNMatrixWrapper.
+ * @param os output stream
+ * @param mat SUNMatrixWrapper to output
+ * @return os
+ */
+inline std::ostream& operator<<(std::ostream& os, SUNMatrixWrapper const& mat) {
+    // convert sparse to dense for easy printing
+    if (mat.matrix_id() == SUNMATRIX_SPARSE) {
+        SUNMatrixWrapper dense_mat(mat.rows(), mat.columns(), mat.get_ctx());
+        mat.to_dense(dense_mat);
+        return os << dense_mat;
+    }
+
+    os << "[";
+    for (sunindextype i = 0; i < mat.rows(); ++i) {
+        if (i > 0)
+            os << ", ";
+        os << "[";
+        for (sunindextype j = 0; j < mat.columns(); ++j) {
+            if (j > 0)
+                os << ", ";
+            os << mat.get_data(i, j);
+        }
+        os << "]";
+    }
+    os << "]";
+    return os;
+}
 
 /**
  * @brief Convert a flat index to a pair of row/column indices.

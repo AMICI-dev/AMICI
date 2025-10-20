@@ -14,7 +14,7 @@ from amici.testing import skip_on_valgrind
 def test_parameter_scaling_from_int_vector():
     """Ensure we can generate a ParameterScaling vector from Python"""
 
-    scale_vector = amici.parameterScalingFromIntVector(
+    scale_vector = amici.parameter_scaling_from_int_vector(
         [
             amici.ParameterScaling.log10,
             amici.ParameterScaling.ln,

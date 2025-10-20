@@ -1,9 +1,10 @@
 """AMICI-generated module for model TPL_MODELNAME"""
 
 import sys
-from pathlib import Path
-import amici
 import warnings
+from pathlib import Path
+
+import amici
 
 # Ensure we are binary-compatible, see #556
 if "TPL_AMICI_VERSION" != amici.__version__:
@@ -35,7 +36,6 @@ with warnings.catch_warnings():
 for var in dir(TPL_MODELNAME):
     if not var.startswith("_"):
         globals()[var] = getattr(TPL_MODELNAME, var)
-get_model = TPL_MODELNAME.getModel
 
 try:
     # _self: this module; will be set during import

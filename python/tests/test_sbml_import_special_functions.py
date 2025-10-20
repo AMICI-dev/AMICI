@@ -7,44 +7,38 @@ boost.
 import amici
 import numpy as np
 import pytest
+from amici import MeasurementChannel as MC
+from amici import SbmlImporter
 from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
-from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from conftest import MODEL_STEADYSTATE_SCALED_XML
 from numpy.testing import (
+    assert_allclose,
     assert_approx_equal,
     assert_array_almost_equal_nulp,
-    assert_allclose,
 )
-from conftest import MODEL_STEADYSTATE_SCALED_XML
 from scipy.special import loggamma
 
 
 @pytest.fixture(scope="session")
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
-    # load sbml model
-    sbml_importer = amici.SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
-
-    # define observables
-    observables = {
-        "o1": {"formula": "100*10^x1"},
-        "o2": {"formula": "100*10^x1"},
-    }
-
-    # define different noise models
-    noise_distributions = {
-        "o1": "binomial",
-        "o2": "negative-binomial",
-    }
-
+    sbml_importer = SbmlImporter(MODEL_STEADYSTATE_SCALED_XML)
     module_name = "test_special_likelihoods"
     with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
             constant_parameters=["k0"],
-            noise_distributions=noise_distributions,
+            observation_model=[
+                MC("o1", formula="100*10^x1", noise_distribution="binomial"),
+                MC(
+                    "o2",
+                    formula="100*10^x1",
+                    noise_distribution="negative-binomial",
+                ),
+            ],
         )
 
         yield amici.import_model_module(
@@ -57,39 +51,41 @@ def model_special_likelihoods():
 @pytest.mark.flaky(reruns=5)
 def test_special_likelihoods(model_special_likelihoods):
     """Test special likelihood functions."""
-    model = model_special_likelihoods.getModel()
-    model.setTimepoints(np.linspace(0, 60, 10))
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    model = model_special_likelihoods.get_model()
+    model.set_timepoints(np.linspace(0, 60, 10))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(amici.SensitivityOrder.first)
 
     # Test in region with positive density
 
     # run model once to create an edata
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
     edata = amici.ExpData(rdata, 0.001, 0)
 
     # make sure measurements are smaller for non-degenerate probability
-    y = edata.getObservedData()
+    y = edata.get_observed_data()
     y = tuple(val * np.random.uniform(0, 1) for val in y)
-    edata.setObservedData(y)
+    edata.set_observed_data(y)
 
     # set sigmas
     sigma = 0.2
     sigmas = sigma * np.ones(len(y))
-    edata.setObservedDataStdDev(sigmas)
+    edata.set_observed_data_std_dev(sigmas)
 
     # and now run for real and also compute likelihood values
-    rdata = amici.runAmiciSimulations(model, solver, [edata])[0]
+    rdata = amici.run_simulations(model, solver, [edata])[0]
 
     # check if the values make overall sense
     assert np.isfinite(rdata["llh"])
     assert np.all(np.isfinite(rdata["sllh"]))
     assert np.any(rdata["sllh"])
 
-    rdata_df = amici.getSimulationObservablesAsDataFrame(
+    rdata_df = amici.get_simulation_observables_as_data_frame(
         model, edata, rdata, by_id=True
     )
-    edata_df = amici.getDataObservablesAsDataFrame(model, edata, by_id=True)
+    edata_df = amici.get_data_observables_as_data_frame(
+        model, edata, by_id=True
+    )
 
     # check correct likelihood value
     llh_exp = -sum(
@@ -105,9 +101,9 @@ def test_special_likelihoods(model_special_likelihoods):
         amici.SensitivityMethod.forward,
         amici.SensitivityMethod.adjoint,
     ]:
-        solver = model.getSolver()
-        solver.setSensitivityMethod(sensi_method)
-        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver = model.create_solver()
+        solver.set_sensitivity_method(sensi_method)
+        solver.set_sensitivity_order(amici.SensitivityOrder.first)
         check_derivatives(
             model,
             solver,
@@ -119,17 +115,17 @@ def test_special_likelihoods(model_special_likelihoods):
 
     # Test for m > y, i.e. in region with 0 density
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = amici.run_simulation(model, solver)
     edata = amici.ExpData(rdata, 0.001, 0)
 
     # make sure measurements are smaller for non-degenerate probability
-    y = edata.getObservedData()
+    y = edata.get_observed_data()
     y = tuple(val * np.random.uniform(0.5, 3) for val in y)
-    edata.setObservedData(y)
-    edata.setObservedDataStdDev(sigmas)
+    edata.set_observed_data(y)
+    edata.set_observed_data_std_dev(sigmas)
 
     # and now run for real and also compute likelihood values
-    rdata = amici.runAmiciSimulations(model, solver, [edata])[0]
+    rdata = amici.run_simulations(model, solver, [edata])[0]
 
     # m > y -> outside binomial domain -> 0 density
     assert rdata["llh"] == -np.inf
@@ -162,7 +158,10 @@ def negative_binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
 
 @skip_on_valgrind
 def test_rateof(tempdir):
-    """Test chained rateOf to verify that model expressions are evaluated in the correct order."""
+    """
+    Test chained rateOf to verify that model expressions are evaluated in the
+    correct order.
+    """
     ant_model = """
     model test_chained_rateof
         species S1, S2, S3, S4;
@@ -188,13 +187,13 @@ def test_rateof(tempdir):
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
+    amici_model = model_module.get_model()
     t = np.linspace(0, 10, 11)
-    amici_model.setTimepoints(t)
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model.set_timepoints(t)
+    amici_solver = amici_model.create_solver()
+    rdata = amici.run_simulation(amici_model, amici_solver)
 
-    state_ids_solver = amici_model.getStateIdsSolver()
+    state_ids_solver = amici_model.get_state_ids_solver()
     i_S1 = state_ids_solver.index("S1")
     i_S2 = state_ids_solver.index("S2")
     i_S3 = state_ids_solver.index("S3")
@@ -241,13 +240,13 @@ def test_rateof_with_expression_dependent_rate(tempdir):
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
+    amici_model = model_module.get_model()
     t = np.linspace(0, 10, 11)
-    amici_model.setTimepoints(t)
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model.set_timepoints(t)
+    amici_solver = amici_model.create_solver()
+    rdata = amici.run_simulation(amici_model, amici_solver)
 
-    state_ids_solver = amici_model.getStateIdsSolver()
+    state_ids_solver = amici_model.get_state_ids_solver()
 
     assert_array_almost_equal_nulp(rdata.by_id("e1"), 2 * t, 1)
 

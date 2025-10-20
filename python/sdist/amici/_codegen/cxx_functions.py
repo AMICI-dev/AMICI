@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -28,6 +28,11 @@ class _FunctionInfo:
         indicates whether a model-specific implementation is to be generated
     :ivar body:
         the actual function body. will be filled later
+    :ivar default_return_value:
+        The value to return if the function does not generate a body.
+    :ivar header:
+        List of header lines to include in the generated C++ file for this
+        function such as `#include` statements.
     """
 
     ode_arguments: str = ""
@@ -37,6 +42,22 @@ class _FunctionInfo:
     sparse: bool = False
     generate_body: bool = True
     body: str = ""
+    default_return_value: str = ""
+    header: list[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        common_header = [
+            '#include "amici/symbolic_functions.h"',
+            '#include "amici/defines.h"',
+            "",
+            # std::{min,find}
+            "#include <algorithm>",
+        ]
+        if self.sparse:
+            common_header.append("#include <sundials/sundials_types.h>")
+            common_header.append("#include <gsl/gsl-lite.hpp>")
+
+        self.header = common_header + self.header
 
     def arguments(self, ode: bool = True) -> str:
         """Get the arguments for the ODE or DAE function"""
@@ -57,7 +78,8 @@ class _FunctionInfo:
         )
 
     def var_in_signature(self, varname: str, ode: bool = True) -> bool:
-        """Check if a variable is in the function signature.
+        """
+        Check if a variable is in the function signature as input (``const``).
 
         :param varname: name of the variable to check
         :param ode: whether to check the ODE (``True``) or DAE (``False``)
@@ -143,6 +165,10 @@ functions = {
     "create_splines": _FunctionInfo(
         "const realtype *p, const realtype *k",
         return_type="std::vector<HermiteSpline>",
+        header=[
+            '#include "amici/splinefunctions.h"',
+            "#include <vector>",
+        ],
     ),
     "spl": _FunctionInfo(generate_body=False),
     "sspl": _FunctionInfo(generate_body=False),
@@ -200,7 +226,7 @@ functions = {
     "dydx": _FunctionInfo(
         "realtype *dydx, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *w, const realtype *dwdx",
+        "const realtype *w"
     ),
     "dydp": _FunctionInfo(
         "realtype *dydp, const realtype t, const realtype *x, "
@@ -262,6 +288,7 @@ functions = {
     "stau": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *dx, "
         "const realtype *tcl, const realtype *sx, const int ip, "
         "const int ie"
     ),
@@ -312,6 +339,7 @@ functions = {
         "realtype *x0_fixedParameters, const realtype t, "
         "const realtype *p, const realtype *k, "
         "gsl::span<const int> reinitialization_state_idxs",
+        header=["#include <gsl/gsl-lite.hpp>"],
     ),
     "sx0": _FunctionInfo(
         "realtype *sx0, const realtype t, const realtype *x, "
@@ -321,6 +349,7 @@ functions = {
         "realtype *sx0_fixedParameters, const realtype t, "
         "const realtype *x0, const realtype *p, const realtype *k, "
         "const int ip, gsl::span<const int> reinitialization_state_idxs",
+        header=["#include <gsl/gsl-lite.hpp>"],
     ),
     "xdot": _FunctionInfo(
         "realtype *xdot, const realtype t, const realtype *x, "
@@ -377,6 +406,14 @@ functions = {
     "rz": _FunctionInfo(
         "realtype *rz, const int ie, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h"
+    ),
+    "explicit_roots": _FunctionInfo(
+        "const realtype *p, const realtype *k",
+        return_type="std::vector<std::vector<realtype>>",
+        default_return_value="{}",
+        header=[
+            "#include <vector>",
+        ],
     ),
 }
 
@@ -447,6 +484,6 @@ def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
 
     :return:
         boolean indicating whether the variable occurs in the function
-        signature
+        signature as ``const`` input.
     """
     return name in functions and functions[name].var_in_signature(varname, ode)

@@ -4,11 +4,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-import libsbml
+import amici
 import numpy as np
 import pandas as pd
-
-import amici
 from amici import (
     AmiciModel,
     ExpData,
@@ -16,7 +14,7 @@ from amici import (
     SensitivityMethod,
     SensitivityOrder,
     import_model_module,
-    runAmiciSimulation,
+    run_simulation,
 )
 from amici.gradient_check import _check_close
 from numpy.testing import assert_allclose
@@ -42,93 +40,7 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     )
 
     model_module = import_model_module(model_name, output_dir)
-    return model_module.getModel()
-
-
-def create_sbml_model(
-    initial_assignments,
-    parameters,
-    rate_rules,
-    species,
-    events,
-    to_file: str = None,
-):
-    """Create an SBML model from simple definitions.
-
-    See the model definitions and usage in :py:func:`model` for example input.
-
-    The default initial concentration of species is `1.0`. This can currently
-    be changed by specifying an initial assignment.
-    """
-    document = libsbml.SBMLDocument(3, 1)
-    model = document.createModel()
-
-    compartment = model.createCompartment()
-    compartment.setId("compartment")
-    compartment.setConstant(True)
-    compartment.setSize(1)
-    compartment.setSpatialDimensions(3)
-    compartment.setUnits("dimensionless")
-
-    for species_id in species:
-        species = model.createSpecies()
-        species.setId(species_id)
-        species.setCompartment("compartment")
-        species.setConstant(False)
-        species.setSubstanceUnits("dimensionless")
-        species.setBoundaryCondition(False)
-        species.setHasOnlySubstanceUnits(False)
-        species.setInitialConcentration(1.0)
-
-    for target, formula in initial_assignments.items():
-        initial_assignment = model.createInitialAssignment()
-        initial_assignment.setSymbol(target)
-        initial_assignment.setMath(libsbml.parseL3Formula(formula))
-
-    for target, formula in rate_rules.items():
-        rate_rule = model.createRateRule()
-        rate_rule.setVariable(target)
-        rate_rule.setMath(libsbml.parseL3Formula(formula))
-
-    for parameter_id, parameter_value in parameters.items():
-        parameter = model.createParameter()
-        parameter.setId(parameter_id)
-        parameter.setConstant(True)
-        parameter.setValue(parameter_value)
-        parameter.setUnits("dimensionless")
-
-    for event_id, event_def in events.items():
-        event = model.createEvent()
-        event.setId(event_id)
-        event.setName(event_id)
-        event.setUseValuesFromTriggerTime(False)
-        trigger = event.createTrigger()
-        trigger.setMath(libsbml.parseL3Formula(event_def["trigger"]))
-        trigger.setPersistent(True)
-        trigger.setInitialValue(True)
-
-        def create_event_assignment(target, assignment):
-            ea = event.createEventAssignment()
-            ea.setVariable(target)
-            ea.setMath(libsbml.parseL3Formula(assignment))
-
-        if isinstance(event_def["target"], list):
-            for event_target, event_assignment in zip(
-                event_def["target"], event_def["assignment"], strict=True
-            ):
-                create_event_assignment(event_target, event_assignment)
-
-        else:
-            create_event_assignment(
-                event_def["target"], event_def["assignment"]
-            )
-
-    if to_file:
-        libsbml.writeSBMLToFile(document, to_file)
-
-    # Need to return document, else AMICI throws an error.
-    # (possibly due to garbage collection?)
-    return document, model
+    return model_module.get_model()
 
 
 def check_trajectories_without_sensitivities(
@@ -139,10 +51,10 @@ def check_trajectories_without_sensitivities(
     Check whether the AMICI simulation matches a known solution
     (ideally an analytically calculated one).
     """
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-12)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver = amici_model.create_solver()
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_relative_tolerance(1e-12)
+    rdata = run_simulation(amici_model, solver=solver)
     _check_close(
         rdata["x"], result_expected_x, field="x", rtol=5e-9, atol=1e-13
     )
@@ -157,14 +69,14 @@ def check_trajectories_with_forward_sensitivities(
     Check whether the forward sensitivities of the AMICI simulation match
     a known solution (ideally an analytically calculated one).
     """
-    solver = amici_model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    solver.setAbsoluteToleranceFSA(1e-15)
-    solver.setRelativeToleranceFSA(1e-13)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver = amici_model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_relative_tolerance(1e-13)
+    solver.set_absolute_tolerance_fsa(1e-15)
+    solver.set_relative_tolerance_fsa(1e-13)
+    rdata = run_simulation(amici_model, solver=solver)
     _check_close(
         rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12
     )
@@ -185,29 +97,29 @@ def check_trajectories_with_adjoint_sensitivities(
         sensitivities will not raise an AssertionError.
     """
     # First compute dummy experimental data to use adjoints
-    solver = amici_model.getSolver()
-    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, solver=solver)
     assert rdata.status == amici.AMICI_SUCCESS
     rng_seed = 42
     edata = ExpData(rdata, 1.0, 1.0, rng_seed)
 
     # FSA
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_relative_tolerance(1e-13)
+    rdata_fsa = run_simulation(amici_model, solver=solver, edata=edata)
     assert rdata_fsa.status == amici.AMICI_SUCCESS
 
     # ASA
-    solver.setSensitivityMethod(SensitivityMethod.adjoint)
-    solver.setAbsoluteTolerance(1e-16)
-    solver.setRelativeTolerance(1e-14)
-    solver.setAbsoluteToleranceB(1e-16)
-    solver.setRelativeToleranceB(1e-15)
-    solver.setAbsoluteToleranceQuadratures(1e-14)
-    solver.setRelativeToleranceQuadratures(1e-8)
-    rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_absolute_tolerance(1e-16)
+    solver.set_relative_tolerance(1e-14)
+    solver.set_absolute_tolerance_b(1e-16)
+    solver.set_relative_tolerance_b(1e-15)
+    solver.set_absolute_tolerance_quadratures(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-8)
+    rdata_asa = run_simulation(amici_model, solver=solver, edata=edata)
     assert rdata_asa.status == amici.AMICI_SUCCESS
 
     assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
@@ -218,25 +130,25 @@ def check_trajectories_with_adjoint_sensitivities(
             "asa": rdata_asa["sllh"],
             "fd": np.nan,
         },
-        index=list(amici_model.getParameterIds()),
+        index=list(amici_model.get_parameter_ids()),
     )
     df["abs_diff"] = df["fsa"] - df["asa"]
     df["rel_diff"] = df["abs_diff"] / df["fsa"]
 
     # Also test against finite differences
-    parameters = amici_model.getUnscaledParameters()
-    solver.setSensitivityOrder(SensitivityOrder.none)
+    parameters = amici_model.get_unscaled_parameters()
+    solver.set_sensitivity_order(SensitivityOrder.none)
     sllh_fd = []
     eps = 1e-5
     for i_par, par in enumerate(parameters):
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] += eps
-        amici_model.setParameters(tmp_par)
-        rdata_p = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        amici_model.set_parameters(tmp_par)
+        rdata_p = run_simulation(amici_model, solver=solver, edata=edata)
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] -= eps
-        amici_model.setParameters(tmp_par)
-        rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        amici_model.set_parameters(tmp_par)
+        rdata_m = run_simulation(amici_model, solver=solver, edata=edata)
         sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
     df["fd"] = sllh_fd
     df["asa_matches_fsa"] = np.isclose(

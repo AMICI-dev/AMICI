@@ -8,7 +8,6 @@ import os
 import re
 from pathlib import Path
 
-import amici
 import pandas as pd
 import petab.v1 as petab
 import sympy as sp
@@ -24,37 +23,37 @@ from petab.v1.C import (
 from petab.v1.parameters import get_valid_parameters_for_parameter_table
 from sympy.abc import _clash
 
+import amici
+from amici.import_utils import MeasurementChannel
+
 logger = logging.getLogger(__name__)
 
 
 def get_observation_model(
-    observable_df: pd.DataFrame,
-) -> tuple[dict[str, dict[str, str]], dict[str, str], dict[str, str | float]]:
+    observable_df: pd.DataFrame | None,
+) -> list[MeasurementChannel]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
     table in a format suitable for
     :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
 
     :param observable_df:
-        PEtab observables table
+        PEtab observable table
 
-    :return:
-        Tuple of dicts with observables, noise distributions, and sigmas.
+    :return: The observation model.
     """
     if observable_df is None:
-        return {}, {}, {}
+        return []
 
-    observables = {}
-    sigmas = {}
     nan_pat = r"^[nN]a[nN]$"
-
+    observation_model = []
     for _, observable in observable_df.iterrows():
         oid = str(observable.name)
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
         name = re.sub(nan_pat, "", str(observable.get(OBSERVABLE_NAME, "")))
         formula_obs = re.sub(nan_pat, "", str(observable[OBSERVABLE_FORMULA]))
         formula_noise = re.sub(nan_pat, "", str(observable[NOISE_FORMULA]))
-        observables[oid] = {"name": name, "formula": formula_obs}
+        # FIXME: use PEtab's formula parser here
         formula_noise_sym = sp.sympify(formula_noise, locals=_clash)
         formula_obs_sym = sp.sympify(formula_obs, locals=_clash)
         # PEtab does currently not allow observables in noiseFormula, and
@@ -66,48 +65,51 @@ def get_observation_model(
         formula_noise_sym = formula_noise_sym.subs(
             formula_obs_sym, sp.Symbol(oid)
         )
-        sigmas[oid] = str(formula_noise_sym)
+        observation_model.append(
+            MeasurementChannel(
+                id_=oid,
+                name=name,
+                formula=formula_obs,
+                # FIXME: get rid of the string conversion here
+                sigma=str(formula_noise_sym),
+                noise_distribution=petab_noise_distribution_to_amici(
+                    observable
+                ),
+            )
+        )
 
-    noise_distrs = petab_noise_distributions_to_amici(observable_df)
-
-    return observables, noise_distrs, sigmas
+    return observation_model
 
 
-def petab_noise_distributions_to_amici(
-    observable_df: pd.DataFrame,
-) -> dict[str, str]:
+def petab_noise_distribution_to_amici(observable_row) -> str:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
 
-    :param observable_df:
-        PEtab observable table
+    :param observable_row:
+        A row of the PEtab observable table
 
     :return:
-        dictionary of observable_id => AMICI noise-distributions
+        The corresponding AMICI noise-distribution
     """
-    amici_distrs = {}
-    for _, observable in observable_df.iterrows():
-        amici_val = ""
+    amici_val = ""
 
-        if (
-            OBSERVABLE_TRANSFORMATION in observable
-            and isinstance(observable[OBSERVABLE_TRANSFORMATION], str)
-            and observable[OBSERVABLE_TRANSFORMATION]
-        ):
-            amici_val += observable[OBSERVABLE_TRANSFORMATION] + "-"
+    if (
+        OBSERVABLE_TRANSFORMATION in observable_row
+        and isinstance(observable_row[OBSERVABLE_TRANSFORMATION], str)
+        and observable_row[OBSERVABLE_TRANSFORMATION]
+    ):
+        amici_val += observable_row[OBSERVABLE_TRANSFORMATION] + "-"
 
-        if (
-            NOISE_DISTRIBUTION in observable
-            and isinstance(observable[NOISE_DISTRIBUTION], str)
-            and observable[NOISE_DISTRIBUTION]
-        ):
-            amici_val += observable[NOISE_DISTRIBUTION]
-        else:
-            amici_val += "normal"
-        amici_distrs[observable.name] = amici_val
-
-    return amici_distrs
+    if (
+        NOISE_DISTRIBUTION in observable_row
+        and isinstance(observable_row[NOISE_DISTRIBUTION], str)
+        and observable_row[NOISE_DISTRIBUTION]
+    ):
+        amici_val += observable_row[NOISE_DISTRIBUTION]
+    else:
+        amici_val += "normal"
+    return amici_val
 
 
 def petab_scale_to_amici_scale(scale_str: str) -> int:
@@ -149,7 +151,7 @@ def _can_import_model(
     if jax:
         return hasattr(model_module, "Model")
     else:
-        return hasattr(model_module, "getModel")
+        return hasattr(model_module, "get_model")
 
 
 def get_fixed_parameters(
@@ -251,8 +253,8 @@ def check_model(
     if petab_problem.parameter_df is None:
         return
 
-    amici_ids_free = set(amici_model.getParameterIds())
-    amici_ids = amici_ids_free | set(amici_model.getFixedParameterIds())
+    amici_ids_free = set(amici_model.get_parameter_ids())
+    amici_ids = amici_ids_free | set(amici_model.get_fixed_parameter_ids())
 
     petab_ids_free = set(
         petab_problem.parameter_df.loc[

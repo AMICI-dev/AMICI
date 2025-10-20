@@ -1,7 +1,7 @@
 """Tests related to the sympy_utils module."""
 
-from amici.sympy_utils import _custom_pow_eval_derivative, _monkeypatched
 import sympy as sp
+from amici.sympy_utils import _custom_pow_eval_derivative, _monkeypatched
 from amici.testing import skip_on_valgrind
 
 

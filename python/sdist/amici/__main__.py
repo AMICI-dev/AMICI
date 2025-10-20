@@ -3,11 +3,11 @@
 import sys
 
 from . import (
+    CpuTimer,
     __version__,
-    compiledWithOpenMP,
+    compiled_with_openmp,
     has_clibs,
     hdf5_enabled,
-    CpuTimer,
 )
 
 
@@ -20,7 +20,7 @@ def print_info():
     if has_clibs:
         features.append("extensions")
 
-    if compiledWithOpenMP():
+    if compiled_with_openmp():
         features.append("OpenMP")
 
     if hdf5_enabled:

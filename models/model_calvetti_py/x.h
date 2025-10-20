@@ -1,0 +1,6 @@
+#define V1 x[0]
+#define V2 x[1]
+#define V3 x[2]
+#define f1 x[3]
+#define f2 x[4]
+#define f3 x[5]

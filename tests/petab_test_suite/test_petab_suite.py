@@ -4,9 +4,8 @@
 import logging
 import sys
 
-import diffrax
-
 import amici
+import diffrax
 import pandas as pd
 import petab.v1 as petab
 import petabtests
@@ -68,7 +67,7 @@ def _test_case(case, model_type, version, jax):
         jax=jax,
     )
     if jax:
-        from amici.jax import JAXProblem, run_simulations, petab_simulate
+        from amici.jax import JAXProblem, petab_simulate, run_simulations
 
         steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
         jax_problem = JAXProblem(model, problem)
@@ -85,8 +84,8 @@ def _test_case(case, model_type, version, jax):
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
     else:
-        solver = model.getSolver()
-        solver.setSteadyStateToleranceFactor(1.0)
+        solver = model.create_solver()
+        solver.set_steady_state_tolerance_factor(1.0)
         problem_parameters = dict(
             zip(problem.x_free_ids, problem.x_nominal_free, strict=True)
         )
@@ -146,7 +145,7 @@ def _test_case(case, model_type, version, jax):
         ):
             logger.log(
                 logging.DEBUG,
-                f"x_ss: {model.getStateIds()} "
+                f"x_ss: {model.get_state_ids()} "
                 f"{[rdata.x_ss for rdata in rdatas]}",
             )
             logger.log(
@@ -191,11 +190,11 @@ def check_derivatives(
         solver: AMICI solver
         problem_parameters: Dictionary of problem parameters
     """
-    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
+    solver.set_sensitivity_order(amici.SensitivityOrder.first)
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
-    model.setSteadyStateSensitivityMode(
+    model.set_steady_state_sensitivity_mode(
         SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
@@ -206,10 +205,10 @@ def check_derivatives(
     ):
         # check_derivatives does currently not support parameters in ExpData
         # set parameter scales before setting parameter values!
-        model.setParameterScale(edata.pscale)
-        model.setParameters(edata.parameters)
+        model.set_parameter_scale(edata.pscale)
+        model.set_parameters(edata.parameters)
         edata.parameters = []
-        edata.pscale = amici.parameterScalingFromIntVector([])
+        edata.pscale = amici.parameter_scaling_from_int_vector([])
         amici_check_derivatives(model, solver, edata)
 
 

@@ -1,10 +1,11 @@
 import os
 
-import amici
 import numpy as np
 import pytest
 
 pysb = pytest.importorskip("pysb")
+
+from contextlib import suppress
 
 from amici.bngl_import import bngl2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
@@ -39,6 +40,13 @@ tests = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", tests)
 def test_compare_to_pysb_simulation(example):
+    import amici.import_utils
+
+    # allow "NULL" as model symbol
+    # (used in CaOscillate_Func and Repressilator examples)
+    with suppress(ValueError):
+        amici.import_utils.RESERVED_SYMBOLS.remove("NULL")
+
     atol = 1e-8
     rtol = 1e-8
 
@@ -69,7 +77,9 @@ def test_compare_to_pysb_simulation(example):
 
     kwargs = {
         "compute_conservation_laws": cl,
-        "observables": list(pysb_model.observables.keys()),
+        "observation_model": list(
+            map(amici.MeasurementChannel, pysb_model.observables.keys())
+        ),
     }
 
     with TemporaryDirectoryWinSafe(prefix=pysb_model.name) as outdir:
@@ -86,15 +96,15 @@ def test_compare_to_pysb_simulation(example):
 
         amici_model_module = amici.import_model_module(pysb_model.name, outdir)
 
-        model_amici = amici_model_module.getModel()
+        model_amici = amici_model_module.get_model()
 
-        model_amici.setTimepoints(tspan)
+        model_amici.set_timepoints(tspan)
 
-        solver = model_amici.getSolver()
-        solver.setMaxSteps(10**6)
-        solver.setAbsoluteTolerance(atol)
-        solver.setRelativeTolerance(rtol)
-        rdata = amici.runAmiciSimulation(model_amici, solver)
+        solver = model_amici.create_solver()
+        solver.set_max_steps(10**6)
+        solver.set_absolute_tolerance(atol)
+        solver.set_relative_tolerance(rtol)
+        rdata = amici.run_simulation(model_amici, solver)
 
         # check agreement of species simulation
         assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()

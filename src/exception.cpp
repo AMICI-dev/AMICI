@@ -25,7 +25,7 @@ char const* AmiException::getBacktrace() const { return trace_.data(); }
 void AmiException::storeBacktrace(int const nMaxFrames, int const first_frame) {
     snprintf(
         trace_.data(), trace_.size(), "%s",
-        backtraceString(nMaxFrames, first_frame).c_str()
+        get_backtrace_string(nMaxFrames, first_frame).c_str()
     );
 }
 
@@ -49,17 +49,17 @@ IDAException::IDAException(
           extra ? extra : ""
       ) {}
 
-IntegrationFailure::IntegrationFailure(int code, realtype t)
+IntegrationFailure::IntegrationFailure(int const code, realtype const t)
     : AmiException("AMICI failed to integrate the forward problem")
     , error_code(code)
     , time(t) {}
 
-IntegrationFailureB::IntegrationFailureB(int code, realtype t)
+IntegrationFailureB::IntegrationFailureB(int const code, realtype const t)
     : AmiException("AMICI failed to integrate the backward problem")
     , error_code(code)
     , time(t) {}
 
-NewtonFailure::NewtonFailure(int code, char const* function)
+NewtonFailure::NewtonFailure(int const code, char const* function)
     : AmiException(
           "NewtonSolver routine %s failed with error code %i", function, code
       ) {

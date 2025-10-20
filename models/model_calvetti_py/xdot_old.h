@@ -1,0 +1,6 @@
+#define xdot_old0 xdot_old[0]
+#define xdot_old1 xdot_old[1]
+#define xdot_old2 xdot_old[2]
+#define xdot_old3 xdot_old[3]
+#define xdot_old4 xdot_old[4]
+#define xdot_old5 xdot_old[5]

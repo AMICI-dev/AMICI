@@ -1,7 +1,8 @@
 """Functions for debugging AMICI simulation failures."""
 
-import amici
 import numpy as np
+
+import amici
 
 
 def get_model_for_preeq(model: amici.Model, edata: amici.ExpData):
@@ -30,17 +31,17 @@ def get_model_for_preeq(model: amici.Model, edata: amici.ExpData):
         Output timepoints are set to ``[inf]`` and will have to be adjusted.
     """
     model = model.clone()
-    model.setTimepoints([np.inf])
-    model.setFixedParameters(edata.fixedParametersPreequilibration)
+    model.set_timepoints([np.inf])
+    model.set_fixed_parameters(edata.fixed_parameters_pre_equilibration)
     if edata.pscale:
-        model.setParameterScale(edata.pscale)
+        model.set_parameter_scale(edata.pscale)
     if edata.parameters:
-        model.setParameters(edata.parameters)
+        model.set_parameters(edata.parameters)
     if edata.plist:
-        model.setParameterList(edata.plist)
-    model.setInitialStates(edata.x0)
+        model.set_parameter_list(edata.plist)
+    model.set_initial_state(edata.x0)
     # has to be set *after* parameter list/scale!
-    model.setInitialStateSensitivities(edata.sx0)
-    model.setT0(edata.tstart_)
+    model.set_initial_state_sensitivities(edata.sx0)
+    model.set_t0(edata.t_start)
 
     return model

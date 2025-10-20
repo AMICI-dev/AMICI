@@ -1,20 +1,21 @@
 import logging
-import re
-
 import math
 import os
+import re
 import tempfile
+from _collections import OrderedDict
 from itertools import chain
 from pathlib import Path
 
-import amici
 import libsbml
 import petab.v1 as petab
 import sympy as sp
-from _collections import OrderedDict
-from amici.logging import log_execution_time, set_log_level
 from petab.v1.models import MODEL_TYPE_SBML
 from sympy.abc import _clash
+
+import amici
+from amici import MeasurementChannel
+from amici.logging import log_execution_time, set_log_level
 
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
@@ -152,8 +153,7 @@ def _workaround_initial_states(
 
 
 def _workaround_observable_parameters(
-    observables: dict[str, dict[str, str]],
-    sigmas: dict[str, str | float],
+    observation_model: list[MeasurementChannel],
     sbml_model: libsbml.Model,
     output_parameter_defaults: dict[str, float] | None,
     jax: bool = False,
@@ -166,8 +166,10 @@ def _workaround_observable_parameters(
     the actual SBML import.
     """
     formulas = chain(
-        (val["formula"] for val in observables.values()), sigmas.values()
+        (obs.formula for obs in observation_model),
+        (obs.sigma for obs in observation_model),
     )
+    id_to_observable = {obs.id: obs for obs in observation_model}
     output_parameters = OrderedDict()
     for formula in formulas:
         # we want reproducible parameter ordering upon repeated import
@@ -180,25 +182,26 @@ def _workaround_observable_parameters(
             if jax and (m := re.match(r"(noiseParameter\d+)_(\w+)", sym)):
                 # group1 is the noise parameter, group2 is the observable, don't add to sbml but replace with generic
                 # noise parameter
-                sigmas[m.group(2)] = str(
-                    sp.sympify(sigmas[m.group(2)], locals=_clash).subs(
-                        free_sym, sp.Symbol(m.group(1))
-                    )
+                # FIXME: get rid of those str(sympify(...)) here and below
+                id_to_observable[m.group(2)].sigma = str(
+                    sp.sympify(
+                        id_to_observable[m.group(2)].sigma, locals=_clash
+                    ).subs(free_sym, sp.Symbol(m.group(1)))
                 )
             elif jax and (
                 m := re.match(r"(observableParameter\d+)_(\w+)", sym)
             ):
                 # group1 is the noise parameter, group2 is the observable, don't add to sbml but replace with generic
                 # observable parameter
-                observables[m.group(2)]["formula"] = str(
+                id_to_observable[m.group(2)].formula = str(
                     sp.sympify(
-                        observables[m.group(2)]["formula"], locals=_clash
+                        id_to_observable[m.group(2)].formula, locals=_clash
                     ).subs(free_sym, sp.Symbol(m.group(1)))
                 )
             elif (
                 sbml_model.getElementBySId(sym) is None
                 and sym != "time"
-                and sym not in observables
+                and sym not in id_to_observable
             ):
                 output_parameters[sym] = None
     logger.debug(
@@ -351,24 +354,12 @@ def import_model_sbml(
             "the problem and try again."
         )
 
-    if petab_problem.observable_df is not None:
-        observables, noise_distrs, sigmas = get_observation_model(
-            petab_problem.observable_df
-        )
-    else:
-        observables = noise_distrs = sigmas = None
+    observation_model = get_observation_model(petab_problem.observable_df)
 
-    logger.info(f"Observables: {len(observables)}")
-    logger.info(f"Sigmas: {len(sigmas)}")
-
-    if len(sigmas) != len(observables):
-        raise AssertionError(
-            f"Number of provided observables ({len(observables)}) and sigmas "
-            f"({len(sigmas)}) do not match."
-        )
+    logger.info(f"Number of observables: {len(observation_model)}")
 
     _workaround_observable_parameters(
-        observables, sigmas, sbml_model, output_parameter_defaults, jax=jax
+        observation_model, sbml_model, output_parameter_defaults, jax=jax
     )
 
     if not jax:
@@ -399,9 +390,7 @@ def import_model_sbml(
         sbml_importer.sbml2jax(
             model_name=model_name,
             output_dir=model_output_dir,
-            observables=observables,
-            sigmas=sigmas,
-            noise_distributions=noise_distrs,
+            observation_model=observation_model,
             verbose=verbose,
             **kwargs,
         )
@@ -410,11 +399,9 @@ def import_model_sbml(
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=model_output_dir,
-            observables=observables,
+            observation_model=observation_model,
             constant_parameters=fixed_parameters,
-            sigmas=sigmas,
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
-            noise_distributions=noise_distrs,
             verbose=verbose,
             **kwargs,
         )
@@ -425,7 +412,7 @@ def import_model_sbml(
     ):
         # check that the model extension was compiled successfully
         model_module = amici.import_model_module(model_name, model_output_dir)
-        model = model_module.getModel()
+        model = model_module.get_model()
         check_model(amici_model=model, petab_problem=petab_problem)
 
     return sbml_importer

@@ -4,29 +4,30 @@ import warnings
 import amici
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from amici import ExpData, SteadyStateStatus
+from amici import MeasurementChannel as MC
 from amici.testing import skip_on_valgrind
-from conftest import MODEL_CONSTANT_SPECIES_XML
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
 def edata_fixture():
     """edata is generated to test pre- and postequilibration"""
-    edata_pre = amici.ExpData(
+    edata_pre = ExpData(
         2, 0, 0, np.array([0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0])
     )
-    edata_pre.setObservedData([1.5] * 16)
-    edata_pre.fixedParameters = np.array([5.0, 20.0])
-    edata_pre.fixedParametersPreequilibration = np.array([0.0, 10.0])
-    edata_pre.reinitializeFixedParameterInitialStates = True
+    edata_pre.set_observed_data([1.5] * 16)
+    edata_pre.fixed_parameters = np.array([5.0, 20.0])
+    edata_pre.fixed_parameters_pre_equilibration = np.array([0.0, 10.0])
+    edata_pre.reinitialize_fixed_parameter_initial_states = True
 
     # edata for postequilibration
-    edata_post = amici.ExpData(2, 0, 0, np.array([float("inf")] * 3))
-    edata_post.setObservedData([0.75] * 6)
-    edata_post.fixedParameters = np.array([7.5, 30.0])
+    edata_post = ExpData(2, 0, 0, np.array([float("inf")] * 3))
+    edata_post.set_observed_data([0.75] * 6)
+    edata_post.fixed_parameters = np.array([7.5, 30.0])
 
     # edata with both equilibrations
-    edata_full = amici.ExpData(
+    edata_full = ExpData(
         2,
         0,
         0,
@@ -34,18 +35,50 @@ def edata_fixture():
             [0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 4.0, float("inf"), float("inf")]
         ),
     )
-    edata_full.setObservedData([3.14] * 18)
-    edata_full.fixedParameters = np.array([1.0, 2.0])
-    edata_full.fixedParametersPreequilibration = np.array([3.0, 4.0])
-    edata_full.reinitializeFixedParameterInitialStates = True
+    edata_full.set_observed_data([3.14] * 18)
+    edata_full.fixed_parameters = np.array([1.0, 2.0])
+    edata_full.fixed_parameters_pre_equilibration = np.array([3.0, 4.0])
+    edata_full.reinitialize_fixed_parameter_initial_states = True
 
     return edata_pre, edata_post, edata_full
 
 
 @pytest.fixture(scope="session")
 def models():
-    # SBML model we want to import
-    sbml_importer = amici.SbmlImporter(MODEL_CONSTANT_SPECIES_XML)
+    from amici.antimony_import import antimony2sbml
+
+    ant_model = """model *model_constant_species()
+  const compartment compartment_ = 1;
+  var species substrate in compartment_ = 0;
+  const species $enzyme in compartment_;
+  var species complex in compartment_ = 0;
+  species product in compartment_ = 0;
+
+  var substrate_product := complex + product + substrate;
+
+  creation:  => substrate; compartment_*(synthesis_substrate + k_create);
+  binding: substrate + $enzyme -> complex; compartment_*(k_bind*substrate*enzyme - k_unbind*complex);
+  conversion: complex => $enzyme + product; compartment_*k_convert*complex;
+  decay: product => ; compartment_*k_decay*product;
+
+  enzyme = init_enzyme;
+  substrate = init_substrate;
+
+  const init_enzyme = 2;
+  const init_substrate = 5;
+  const synthesis_substrate = 0;
+  const k_bind = 10;
+  const k_unbind = 1;
+  const k_convert = 10;
+  const k_create = 2;
+  const k_decay = 1;
+
+  unit volume = 1e-3 litre;
+  unit substance = 1e-3 mole;
+end"""
+    sbml_importer = amici.SbmlImporter(
+        antimony2sbml(ant_model), from_file=False
+    )
 
     # Name of the model that will also be the name of the python module
     model_name = model_output_dir = "model_constant_species"
@@ -53,26 +86,23 @@ def models():
 
     # Define constants, observables, sigmas
     constant_parameters = ["synthesis_substrate", "init_enzyme"]
-    observables = {
-        "observable_product": {"name": "", "formula": "product"},
-        "observable_substrate": {"name": "", "formula": "substrate"},
-    }
-    sigmas = {"observable_product": 1.0, "observable_substrate": 1.0}
+    observation_model = [
+        MC("observable_product", formula="product", sigma=1.0, name=""),
+        MC("observable_substrate", formula="substrate", sigma=1.0, name=""),
+    ]
 
     # wrap models with and without conservations laws
     sbml_importer.sbml2amici(
         model_name_cl,
         model_output_dir_cl,
-        observables=observables,
         constant_parameters=constant_parameters,
-        sigmas=sigmas,
+        observation_model=observation_model,
     )
     sbml_importer.sbml2amici(
         model_name,
         model_output_dir,
-        observables=observables,
         constant_parameters=constant_parameters,
-        sigmas=sigmas,
+        observation_model=observation_model,
         compute_conservation_laws=False,
     )
 
@@ -85,8 +115,8 @@ def models():
     )
 
     # get the models and return
-    model_without_cl = model_without_cl_module.getModel()
-    model_with_cl = model_with_cl_module.getModel()
+    model_without_cl = model_without_cl_module.get_model()
+    model_with_cl = model_with_cl_module.get_model()
     return model_with_cl, model_without_cl
 
 
@@ -101,23 +131,23 @@ def get_results(
     reinitialize_states=False,
 ):
     # set model and data properties
-    model.setReinitializeFixedParameterInitialStates(reinitialize_states)
+    model.set_reinitialize_fixed_parameter_initial_states(reinitialize_states)
 
     # get the solver, set the properties
-    solver = model.getSolver()
-    solver.setNewtonMaxSteps(20)
-    solver.setSensitivityOrder(sensi_order)
-    solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
-    solver.setSensitivityMethod(sensi_meth)
-    model.setSteadyStateSensitivityMode(stst_sensi_mode)
-    model.setSteadyStateComputationMode(stst_mode)
+    solver = model.create_solver()
+    solver.set_newton_max_steps(20)
+    solver.set_sensitivity_order(sensi_order)
+    solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+    solver.set_sensitivity_method(sensi_meth)
+    model.set_steady_state_sensitivity_mode(stst_sensi_mode)
+    model.set_steady_state_computation_mode(stst_mode)
     if edata is None:
-        model.setTimepoints(np.linspace(0, 5, 101))
+        model.set_timepoints(np.linspace(0, 5, 101))
     else:
-        edata.reinitializeFixedParameterInitialStates = reinitialize_states
+        edata.reinitialize_fixed_parameter_initial_states = reinitialize_states
 
     # return simulation results
-    return amici.runAmiciSimulation(model, solver, edata)
+    return amici.run_simulation(model, solver, edata)
 
 
 @skip_on_valgrind
@@ -128,9 +158,10 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     assert model_with_cl.ncl() > 0
     assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
     assert model_with_cl.nx_solver < model_without_cl.nx_solver
-    assert len(model_with_cl.getStateIdsSolver()) == model_with_cl.nx_solver
+    assert len(model_with_cl.get_state_ids_solver()) == model_with_cl.nx_solver
     assert (
-        len(model_without_cl.getStateIdsSolver()) == model_without_cl.nx_solver
+        len(model_without_cl.get_state_ids_solver())
+        == model_without_cl.nx_solver
     )
 
     # ----- compare simulations wo edata, sensi = 0, states ------------------
@@ -198,9 +229,17 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     )
     assert rdata["status"] == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
-    assert_array_equal(rdata["preeq_status"], np.array([[-3, 1, 0]]))
+    assert rdata["preeq_status"] == [
+        SteadyStateStatus.failed_factorization,
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+    ]
     # check that steady state computation succeeded by Newton in reduced model
-    assert_array_equal(rdata_cl["preeq_status"], np.array([[1, 0, 0]]))
+    assert rdata_cl["preeq_status"] == [
+        SteadyStateStatus.success,
+        SteadyStateStatus.not_run,
+        SteadyStateStatus.not_run,
+    ]
 
     # compare state sensitivities with edata and preequilibration
     for field in ["x", "x_ss", "sx", "llh", "sllh"]:
@@ -214,7 +253,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state sensitivity computation if run wo CLs
-    model_without_cl.setSteadyStateSensitivityMode(
+    model_without_cl.set_steady_state_sensitivity_mode(
         amici.SteadyStateSensitivityMode.newtonOnly
     )
     with warnings.catch_warnings():

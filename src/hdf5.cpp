@@ -62,15 +62,15 @@ void checkEventDimensionsCompatible(
     // if this is rank 1, n and m can be swapped
     if (n == 1) {
         compatible
-            &= (n == (unsigned)model.nMaxEvent() || n == (unsigned)model.nztrue
-            );
+            &= (n == (unsigned)model.n_max_event()
+                || n == (unsigned)model.nztrue);
         compatible
-            &= (m == (unsigned)model.nztrue || m == (unsigned)model.nMaxEvent()
-            );
-        compatible &= (m * n == (unsigned)model.nytrue * model.nMaxEvent());
+            &= (m == (unsigned)model.nztrue
+                || m == (unsigned)model.n_max_event());
+        compatible &= (m * n == (unsigned)model.nytrue * model.n_max_event());
     } else {
         compatible &= (n == (unsigned)model.nztrue);
-        compatible &= (m == (unsigned)model.nMaxEvent());
+        compatible &= (m == (unsigned)model.n_max_event());
     }
 
     if (!compatible)
@@ -80,11 +80,11 @@ void checkEventDimensionsCompatible(
         ));
 }
 
-void createGroup(
+void create_group(
     H5::H5File const& file, std::string const& groupPath, bool recursively
 ) {
 #if H5_VERSION_GE(1, 10, 6)
-    H5::LinkCreatPropList lcpl;
+    H5::LinkCreatPropList const lcpl;
     lcpl.setCreateIntermediateGroup(recursively);
     file.createGroup(groupPath.c_str(), lcpl);
 #else
@@ -109,35 +109,36 @@ void createGroup(
 #endif
 }
 
-std::unique_ptr<ExpData> readSimulationExpData(
+std::unique_ptr<ExpData> read_exp_data_from_hdf5(
     std::string const& hdf5Filename, std::string const& hdf5Root,
     Model const& model
 ) {
-    H5::H5File file(hdf5Filename.c_str(), H5F_ACC_RDONLY);
+    H5::H5File const file(hdf5Filename.c_str(), H5F_ACC_RDONLY);
 
     hsize_t m, n;
 
     auto edata = std::make_unique<ExpData>(model);
 
-    if (attributeExists(file, hdf5Root, "id")) {
-        edata->id = getStringAttribute(file, hdf5Root, "id");
+    if (attribute_exists(file, hdf5Root, "id")) {
+        edata->id = get_string_attribute(file, hdf5Root, "id");
     }
 
     if (model.ny * model.nt() > 0) {
-        if (locationExists(file, hdf5Root + "/Y")) {
-            auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
+        if (location_exists(file, hdf5Root + "/Y")) {
+            auto const my = get_double_2d_dataset(file, hdf5Root + "/Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
-            edata->setObservedData(my);
+            edata->set_observed_data(my);
         } else {
             throw AmiException(
                 "Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str()
             );
         }
 
-        if (locationExists(file, hdf5Root + "/Sigma_Y")) {
-            auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
+        if (location_exists(file, hdf5Root + "/Sigma_Y")) {
+            auto const sigmay
+                = get_double_2d_dataset(file, hdf5Root + "/Sigma_Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
-            edata->setObservedDataStdDev(sigmay);
+            edata->set_observed_data_std_dev(sigmay);
         } else {
             throw AmiException(
                 "Missing %s/Sigma_Y in %s", hdf5Root.c_str(),
@@ -146,21 +147,22 @@ std::unique_ptr<ExpData> readSimulationExpData(
         }
     }
 
-    if (model.nz * model.nMaxEvent() > 0) {
-        if (locationExists(file, hdf5Root + "/Z")) {
-            auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
+    if (model.nz * model.n_max_event() > 0) {
+        if (location_exists(file, hdf5Root + "/Z")) {
+            auto const mz = get_double_2d_dataset(file, hdf5Root + "/Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
-            edata->setObservedEvents(mz);
+            edata->set_observed_events(mz);
         } else {
             throw AmiException(
                 "Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str()
             );
         }
 
-        if (locationExists(file, hdf5Root + "/Sigma_Z")) {
-            auto sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
+        if (location_exists(file, hdf5Root + "/Sigma_Z")) {
+            auto sigmaz
+                = get_double_2d_dataset(file, hdf5Root + "/Sigma_Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
-            edata->setObservedEventsStdDev(sigmaz);
+            edata->set_observed_events_std_dev(sigmaz);
         } else {
             throw AmiException(
                 "Missing %s/Sigma_Z in %s", hdf5Root.c_str(),
@@ -169,161 +171,169 @@ std::unique_ptr<ExpData> readSimulationExpData(
         }
     }
 
-    if (locationExists(file, hdf5Root + "/condition")) {
-        edata->fixedParameters
-            = getDoubleDataset1D(file, hdf5Root + "/condition");
+    if (location_exists(file, hdf5Root + "/condition")) {
+        edata->fixed_parameters
+            = get_double_1d_dataset(file, hdf5Root + "/condition");
     }
 
-    if (locationExists(file, hdf5Root + "/conditionPreequilibration")) {
-        edata->fixedParametersPreequilibration
-            = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
+    if (location_exists(file, hdf5Root + "/conditionPreequilibration")) {
+        edata->fixed_parameters_pre_equilibration = get_double_1d_dataset(
+            file, hdf5Root + "/conditionPreequilibration"
+        );
     }
 
-    if (locationExists(file, hdf5Root + "/conditionPresimulation")) {
-        edata->fixedParametersPresimulation
-            = getDoubleDataset1D(file, hdf5Root + "/conditionPresimulation");
+    if (location_exists(file, hdf5Root + "/conditionPresimulation")) {
+        edata->fixed_parameters_presimulation
+            = get_double_1d_dataset(file, hdf5Root + "/conditionPresimulation");
     }
 
-    if (attributeExists(file, hdf5Root, "t_presim")) {
-        edata->t_presim = getDoubleScalarAttribute(file, hdf5Root, "t_presim");
+    if (attribute_exists(file, hdf5Root, "t_presim")) {
+        edata->t_presim
+            = get_double_scalar_attribute(file, hdf5Root, "t_presim");
     }
 
-    if (locationExists(file, hdf5Root + "/ts")) {
-        edata->setTimepoints(getDoubleDataset1D(file, hdf5Root + "/ts"));
+    if (location_exists(file, hdf5Root + "/ts")) {
+        edata->set_timepoints(get_double_1d_dataset(file, hdf5Root + "/ts"));
     }
 
-    if (attributeExists(
+    if (attribute_exists(
             file, hdf5Root, "/reinitializeFixedParameterInitialStates"
         )) {
-        edata->reinitializeFixedParameterInitialStates
-            = static_cast<bool>(getIntScalarAttribute(
+        edata->reinitialize_fixed_parameter_initial_states
+            = static_cast<bool>(get_int_scalar_attribute(
                 file, hdf5Root, "/reinitializeFixedParameterInitialStates"
             ));
     }
 
-    if (locationExists(file, hdf5Root + "/parameters")) {
-        edata->parameters = getDoubleDataset1D(file, hdf5Root + "/parameters");
+    if (location_exists(file, hdf5Root + "/parameters")) {
+        edata->parameters
+            = get_double_1d_dataset(file, hdf5Root + "/parameters");
     }
 
-    if (locationExists(file, hdf5Root + "/x0")) {
-        edata->x0 = getDoubleDataset1D(file, hdf5Root + "/x0");
+    if (location_exists(file, hdf5Root + "/x0")) {
+        edata->x0 = get_double_1d_dataset(file, hdf5Root + "/x0");
     }
 
-    if (locationExists(file, hdf5Root + "/sx0")) {
-        edata->sx0 = getDoubleDataset1D(file, hdf5Root + "/sx0");
+    if (location_exists(file, hdf5Root + "/sx0")) {
+        edata->sx0 = get_double_1d_dataset(file, hdf5Root + "/sx0");
     }
 
-    if (locationExists(file, hdf5Root + "/pscale")) {
-        auto pscaleInt = getIntDataset1D(file, hdf5Root + "/pscale");
+    if (location_exists(file, hdf5Root + "/pscale")) {
+        auto pscaleInt = get_int_1d_dataset(file, hdf5Root + "/pscale");
         edata->pscale.resize(pscaleInt.size());
         for (int i = 0; (unsigned)i < pscaleInt.size(); ++i)
             edata->pscale[i] = static_cast<ParameterScaling>(pscaleInt[i]);
     }
 
-    if (locationExists(file, hdf5Root + "/plist")) {
-        edata->plist = getIntDataset1D(file, hdf5Root + "/plist");
+    if (location_exists(file, hdf5Root + "/plist")) {
+        edata->plist = get_int_1d_dataset(file, hdf5Root + "/plist");
     }
 
-    if (locationExists(
+    if (location_exists(
             file, hdf5Root + "/reinitialization_state_idxs_presim"
         )) {
-        edata->reinitialization_state_idxs_presim = getIntDataset1D(
+        edata->reinitialization_state_idxs_presim = get_int_1d_dataset(
             file, hdf5Root + "/reinitialization_state_idxs_presim"
         );
     }
 
-    if (locationExists(file, hdf5Root + "/reinitialization_state_idxs_sim")) {
-        edata->reinitialization_state_idxs_sim = getIntDataset1D(
+    if (location_exists(file, hdf5Root + "/reinitialization_state_idxs_sim")) {
+        edata->reinitialization_state_idxs_sim = get_int_1d_dataset(
             file, hdf5Root + "/reinitialization_state_idxs_sim"
         );
     }
 
-    if (attributeExists(file, hdf5Root, "tstart")) {
-        edata->tstart_ = getDoubleScalarAttribute(file, hdf5Root, "tstart");
+    if (attribute_exists(file, hdf5Root, "tstart")) {
+        edata->t_start = get_double_scalar_attribute(file, hdf5Root, "tstart");
     }
 
-    if (attributeExists(file, hdf5Root, "tstart_preeq")) {
-        edata->tstart_preeq_
-            = getDoubleScalarAttribute(file, hdf5Root, "tstart_preeq");
+    if (attribute_exists(file, hdf5Root, "tstart_preeq")) {
+        edata->t_start_preeq
+            = get_double_scalar_attribute(file, hdf5Root, "tstart_preeq");
     }
 
     return edata;
 }
 
-void writeSimulationExpData(
+void write_exp_data_to_hdf5(
     ExpData const& edata, H5::H5File const& file,
     std::string const& hdf5Location
 ) {
 
-    if (!locationExists(file, hdf5Location))
-        createGroup(file, hdf5Location);
+    if (!location_exists(file, hdf5Location))
+        create_group(file, hdf5Location);
 
     H5LTset_attribute_string(
         file.getId(), hdf5Location.c_str(), "id", edata.id.c_str()
     );
 
     if (edata.nt())
-        createAndWriteDouble1DDataset(
-            file, hdf5Location + "/ts", edata.getTimepoints()
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/ts", edata.get_timepoints()
         );
 
-    if (!edata.fixedParameters.empty())
-        createAndWriteDouble1DDataset(
-            file, hdf5Location + "/condition", edata.fixedParameters
+    if (!edata.fixed_parameters.empty())
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/condition", edata.fixed_parameters
         );
 
-    if (!edata.fixedParametersPreequilibration.empty())
-        createAndWriteDouble1DDataset(
+    if (!edata.fixed_parameters_pre_equilibration.empty())
+        create_and_write_double_1d_dataset(
             file, hdf5Location + "/conditionPreequilibration",
-            edata.fixedParametersPreequilibration
+            edata.fixed_parameters_pre_equilibration
         );
 
-    if (!edata.fixedParametersPresimulation.empty())
-        createAndWriteDouble1DDataset(
+    if (!edata.fixed_parameters_presimulation.empty())
+        create_and_write_double_1d_dataset(
             file, hdf5Location + "/conditionPresimulation",
-            edata.fixedParametersPresimulation
+            edata.fixed_parameters_presimulation
         );
 
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "t_presim", &edata.t_presim, 1
     );
 
-    if (!edata.getObservedData().empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/Y", edata.getObservedData(), edata.nt(),
+    if (!edata.get_observed_data().empty())
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/Y", edata.get_observed_data(), edata.nt(),
             edata.nytrue()
         );
-    if (!edata.getObservedDataStdDev().empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/Sigma_Y", edata.getObservedDataStdDev(),
+    if (!edata.get_observed_data_std_dev().empty())
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/Sigma_Y", edata.get_observed_data_std_dev(),
             edata.nt(), edata.nytrue()
         );
-    if (!edata.getObservedEvents().empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/Z", edata.getObservedEvents(),
+    if (!edata.get_observed_events().empty())
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/Z", edata.get_observed_events(),
             edata.nmaxevent(), edata.nztrue()
         );
-    if (!edata.getObservedEventsStdDev().empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/Sigma_Z", edata.getObservedEventsStdDev(),
-            edata.nmaxevent(), edata.nztrue()
+    if (!edata.get_observed_events_std_dev().empty())
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/Sigma_Z",
+            edata.get_observed_events_std_dev(), edata.nmaxevent(),
+            edata.nztrue()
         );
 
-    int int_attr = edata.reinitializeFixedParameterInitialStates;
+    int int_attr = edata.reinitialize_fixed_parameter_initial_states;
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(),
         "reinitializeFixedParameterInitialStates", &int_attr, 1
     );
 
     if (!edata.parameters.empty())
-        createAndWriteDouble1DDataset(
+        create_and_write_double_1d_dataset(
             file, hdf5Location + "/parameters", edata.parameters
         );
 
     if (!edata.x0.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/x0", edata.x0);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/x0", edata.x0
+        );
     if (!edata.sx0.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/sx0", edata.sx0);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/sx0", edata.sx0
+        );
 
     std::vector<int> int_buffer;
 
@@ -331,14 +341,18 @@ void writeSimulationExpData(
         int_buffer.resize(edata.pscale.size());
         for (int i = 0; (unsigned)i < edata.pscale.size(); i++)
             int_buffer[i] = static_cast<int>(edata.pscale[i]);
-        createAndWriteInt1DDataset(file, hdf5Location + "/pscale", int_buffer);
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/pscale", int_buffer
+        );
     }
 
     if (!edata.plist.empty()) {
         int_buffer.resize(edata.plist.size());
         for (int i = 0; (unsigned)i < edata.plist.size(); i++)
             int_buffer[i] = static_cast<int>(edata.plist[i]);
-        createAndWriteInt1DDataset(file, hdf5Location + "/plist", int_buffer);
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/plist", int_buffer
+        );
     }
 
     if (!edata.reinitialization_state_idxs_presim.empty()) {
@@ -347,7 +361,7 @@ void writeSimulationExpData(
              (unsigned)i < edata.reinitialization_state_idxs_presim.size(); i++)
             int_buffer[i]
                 = static_cast<int>(edata.reinitialization_state_idxs_presim[i]);
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/reinitialization_state_idxs_presim",
             int_buffer
         );
@@ -359,31 +373,31 @@ void writeSimulationExpData(
              (unsigned)i < edata.reinitialization_state_idxs_sim.size(); i++)
             int_buffer[i]
                 = static_cast<int>(edata.reinitialization_state_idxs_sim[i]);
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/reinitialization_state_idxs_sim", int_buffer
         );
     }
 
     H5LTset_attribute_double(
-        file.getId(), hdf5Location.c_str(), "tstart", &edata.tstart_, 1
+        file.getId(), hdf5Location.c_str(), "tstart", &edata.t_start, 1
     );
 
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "tstart_preeq",
-        &edata.tstart_preeq_, 1
+        &edata.t_start_preeq, 1
     );
 }
 
-void writeReturnData(
+void write_return_data_to_hdf5(
     ReturnData const& rdata, H5::H5File const& file,
     std::string const& hdf5Location
 ) {
 
-    if (!locationExists(file, hdf5Location))
-        createGroup(file, hdf5Location);
+    if (!location_exists(file, hdf5Location))
+        create_group(file, hdf5Location);
 
     if (!rdata.ts.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/t", rdata.ts);
+        create_and_write_double_1d_dataset(file, hdf5Location + "/t", rdata.ts);
 
     H5LTset_attribute_string(
         file.getId(), hdf5Location.c_str(), "id", rdata.id.c_str()
@@ -401,102 +415,108 @@ void writeReturnData(
     );
 
     if (!rdata.sllh.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/sllh", rdata.sllh);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/sllh", rdata.sllh
+        );
 
     if (!rdata.res.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/res", rdata.res);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/res", rdata.res
+        );
     if (!rdata.sres.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/sres", rdata.sres, rdata.nt * rdata.nytrue,
             rdata.nplist
         );
     if (!rdata.FIM.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/FIM", rdata.FIM, rdata.nplist, rdata.nplist
         );
 
     if (!rdata.x0.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/x0", rdata.x0);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/x0", rdata.x0
+        );
 
     if (!rdata.x.empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/x", rdata.x, rdata.nt, rdata.nx
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/x", rdata.x, rdata.nt, rdata.nx_rdata
         );
 
     if (!rdata.y.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/y", rdata.y, rdata.nt, rdata.ny
         );
 
     if (!rdata.w.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/w", rdata.w, rdata.nt, rdata.nw
         );
 
     if (!rdata.z.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/z", rdata.z, rdata.nmaxevent, rdata.nz
         );
 
     if (!rdata.rz.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/rz", rdata.rz, rdata.nmaxevent, rdata.nz
         );
 
     if (!rdata.sigmay.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/sigmay", rdata.sigmay, rdata.nt, rdata.ny
         );
 
     if (!rdata.sigmaz.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/sigmaz", rdata.sigmaz, rdata.nmaxevent,
             rdata.nz
         );
 
     if (!rdata.s2llh.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/s2llh", rdata.s2llh, rdata.nJ - 1,
             rdata.nplist
         );
 
     if (!rdata.sx0.empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/sx0", rdata.sx0, rdata.nplist, rdata.nx
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/sx0", rdata.sx0, rdata.nplist, rdata.nx_rdata
         );
 
     if (!rdata.sx.empty())
-        createAndWriteDouble3DDataset(
+        create_and_write_double_3d_dataset(
             file, hdf5Location + "/sx", rdata.sx, rdata.nt, rdata.nplist,
-            rdata.nx
+            rdata.nx_rdata
         );
 
     if (!rdata.sy.empty())
-        createAndWriteDouble3DDataset(
+        create_and_write_double_3d_dataset(
             file, hdf5Location + "/sy", rdata.sy, rdata.nt, rdata.nplist,
             rdata.ny
         );
 
     if (!rdata.ssigmay.empty())
-        createAndWriteDouble3DDataset(
+        create_and_write_double_3d_dataset(
             file, hdf5Location + "/ssigmay", rdata.ssigmay, rdata.nt,
             rdata.nplist, rdata.ny
         );
 
     if (!rdata.sz.empty())
-        createAndWriteDouble3DDataset(
+        create_and_write_double_3d_dataset(
             file, hdf5Location + "/sz", rdata.sz, rdata.nmaxevent, rdata.nplist,
             rdata.nz
         );
 
     if (!rdata.srz.empty())
-        createAndWriteDouble3DDataset(
+        create_and_write_double_3d_dataset(
             file, hdf5Location + "/srz", rdata.srz, rdata.nmaxevent,
             rdata.nplist, rdata.nz
         );
 
     if (!rdata.ssigmaz.empty())
-        createAndWriteDouble3DDataset(
+        create_and_write_double_3d_dataset(
             file, hdf5Location + "/ssigmaz", rdata.ssigmaz, rdata.nmaxevent,
             rdata.nplist, rdata.nz
         );
@@ -542,86 +562,92 @@ void writeReturnData(
         int_buffer.resize(rdata.pscale.size());
         for (int i = 0; (unsigned)i < rdata.pscale.size(); i++)
             int_buffer[i] = static_cast<int>(rdata.pscale[i]);
-        createAndWriteInt1DDataset(file, hdf5Location + "/pscale", int_buffer);
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/pscale", int_buffer
+        );
     }
-    writeLogItemsToHDF5(file, rdata.messages, hdf5Location + "/messages");
+    write_log_items_to_hdf5(file, rdata.messages, hdf5Location + "/messages");
 
-    writeReturnDataDiagnosis(rdata, file, hdf5Location + "/diagnosis");
+    write_return_data_diagnosis(rdata, file, hdf5Location + "/diagnosis");
 }
 
-void writeReturnDataDiagnosis(
+void write_return_data_diagnosis(
     ReturnData const& rdata, H5::H5File const& file,
     std::string const& hdf5Location
 ) {
 
-    if (!locationExists(file, hdf5Location))
-        createGroup(file, hdf5Location);
+    if (!location_exists(file, hdf5Location))
+        create_group(file, hdf5Location);
 
     if (!rdata.xdot.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/xdot", rdata.xdot);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/xdot", rdata.xdot
+        );
 
     if (!rdata.numsteps.empty())
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/numsteps", rdata.numsteps
         );
 
-    if (!rdata.numrhsevals.empty())
-        createAndWriteInt1DDataset(
-            file, hdf5Location + "/numrhsevals", rdata.numrhsevals
+    if (!rdata.num_rhs_evals.empty())
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/numrhsevals", rdata.num_rhs_evals
         );
 
-    if (!rdata.numerrtestfails.empty())
-        createAndWriteInt1DDataset(
-            file, hdf5Location + "/numerrtestfails", rdata.numerrtestfails
+    if (!rdata.num_err_test_fails.empty())
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/numerrtestfails", rdata.num_err_test_fails
         );
 
-    if (!rdata.numnonlinsolvconvfails.empty())
-        createAndWriteInt1DDataset(
+    if (!rdata.num_non_lin_solv_conv_fails.empty())
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/numnonlinsolvconvfails",
-            rdata.numnonlinsolvconvfails
+            rdata.num_non_lin_solv_conv_fails
         );
 
     if (!rdata.order.empty())
-        createAndWriteInt1DDataset(file, hdf5Location + "/order", rdata.order);
-
-    if (!rdata.numstepsB.empty())
-        createAndWriteInt1DDataset(
-            file, hdf5Location + "/numstepsB", rdata.numstepsB
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/order", rdata.order
         );
 
-    if (!rdata.numrhsevalsB.empty())
-        createAndWriteInt1DDataset(
-            file, hdf5Location + "/numrhsevalsB", rdata.numrhsevalsB
+    if (!rdata.numsteps_b.empty())
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/numstepsB", rdata.numsteps_b
         );
 
-    if (!rdata.numerrtestfailsB.empty())
-        createAndWriteInt1DDataset(
-            file, hdf5Location + "/numerrtestfailsB", rdata.numerrtestfailsB
+    if (!rdata.num_rhs_evals_b.empty())
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/numrhsevalsB", rdata.num_rhs_evals_b
         );
 
-    if (!rdata.numnonlinsolvconvfailsB.empty())
-        createAndWriteInt1DDataset(
+    if (!rdata.num_err_test_fails_b.empty())
+        create_and_write_int_1d_dataset(
+            file, hdf5Location + "/numerrtestfailsB", rdata.num_err_test_fails_b
+        );
+
+    if (!rdata.num_non_lin_solv_conv_fails_b.empty())
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/numnonlinsolvconvfailsB",
-            rdata.numnonlinsolvconvfailsB
+            rdata.num_non_lin_solv_conv_fails_b
         );
 
     if (!rdata.preeq_status.empty()) {
         std::vector<int> preeq_status_int(rdata.preeq_status.size());
         for (int i = 0; (unsigned)i < rdata.preeq_status.size(); i++)
             preeq_status_int[i] = static_cast<int>(rdata.preeq_status[i]);
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/preeq_status", preeq_status_int
         );
     }
 
     if (!rdata.preeq_numsteps.empty())
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/preeq_numsteps", rdata.preeq_numsteps
         );
 
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "preeq_numstepsB",
-        &rdata.preeq_numstepsB, 1
+        &rdata.preeq_numsteps_b, 1
     );
 
     H5LTset_attribute_double(
@@ -631,7 +657,7 @@ void writeReturnDataDiagnosis(
 
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "preeq_cpu_timeB",
-        &rdata.preeq_cpu_timeB, 1
+        &rdata.preeq_cpu_time_b, 1
     );
 
     H5LTset_attribute_double(
@@ -646,19 +672,19 @@ void writeReturnDataDiagnosis(
         std::vector<int> posteq_status_int(rdata.posteq_status.size());
         for (int i = 0; (unsigned)i < rdata.posteq_status.size(); i++)
             posteq_status_int[i] = static_cast<int>(rdata.posteq_status[i]);
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/posteq_status", posteq_status_int
         );
     }
 
     if (!rdata.posteq_numsteps.empty())
-        createAndWriteInt1DDataset(
+        create_and_write_int_1d_dataset(
             file, hdf5Location + "/posteq_numsteps", rdata.posteq_numsteps
         );
 
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "posteq_numstepsB",
-        &rdata.posteq_numstepsB, 1
+        &rdata.posteq_numsteps_b, 1
     );
 
     H5LTset_attribute_double(
@@ -668,7 +694,7 @@ void writeReturnDataDiagnosis(
 
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "posteq_cpu_timeB",
-        &rdata.posteq_cpu_timeB, 1
+        &rdata.posteq_cpu_time_b, 1
     );
 
     H5LTset_attribute_double(
@@ -684,7 +710,7 @@ void writeReturnDataDiagnosis(
     );
 
     H5LTset_attribute_double(
-        file.getId(), hdf5Location.c_str(), "cpu_timeB", &rdata.cpu_timeB, 1
+        file.getId(), hdf5Location.c_str(), "cpu_timeB", &rdata.cpu_time_b, 1
     );
 
     H5LTset_attribute_double(
@@ -697,15 +723,17 @@ void writeReturnDataDiagnosis(
     );
 
     if (!rdata.J.empty())
-        createAndWriteDouble2DDataset(
-            file, hdf5Location + "/J", rdata.J, rdata.nx, rdata.nx
+        create_and_write_double_2d_dataset(
+            file, hdf5Location + "/J", rdata.J, rdata.nx_rdata, rdata.nx_rdata
         );
 
     if (!rdata.x_ss.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/x_ss", rdata.x_ss);
+        create_and_write_double_1d_dataset(
+            file, hdf5Location + "/x_ss", rdata.x_ss
+        );
 
     if (!rdata.sx_ss.empty())
-        createAndWriteDouble2DDataset(
+        create_and_write_double_2d_dataset(
             file, hdf5Location + "/sx_ss", rdata.sx_ss, rdata.nplist,
             rdata.nx_rdata
         );
@@ -718,8 +746,8 @@ struct LogItemCStr {
     char const* message;
 };
 
-void writeLogItemsToHDF5(
-    H5::H5File const& file, std::vector<amici::LogItem> const& logItems,
+void write_log_items_to_hdf5(
+    H5::H5File const& file, std::vector<LogItem> const& logItems,
     std::string const& hdf5Location
 ) {
     if (logItems.empty())
@@ -727,7 +755,7 @@ void writeLogItemsToHDF5(
 
     try {
         hsize_t dims[1] = {logItems.size()};
-        H5::DataSpace dataspace(1, dims);
+        const H5::DataSpace dataspace(1, dims);
 
         // works on Ubuntu, but segfaults on macos:
         /*
@@ -780,16 +808,16 @@ void writeLogItemsToHDF5(
     }
 }
 
-void writeReturnData(
+void write_return_data_to_hdf5(
     ReturnData const& rdata, std::string const& hdf5Filename,
     std::string const& hdf5Location
 ) {
-    auto file = createOrOpenForWriting(hdf5Filename);
+    auto file = create_or_open_for_writing(hdf5Filename);
 
-    writeReturnData(rdata, file, hdf5Location);
+    write_return_data_to_hdf5(rdata, file, hdf5Location);
 }
 
-std::string getStringAttribute(
+std::string get_string_attribute(
     H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 ) {
@@ -824,7 +852,7 @@ std::string getStringAttribute(
     return {value.data()};
 }
 
-double getDoubleScalarAttribute(
+double get_double_scalar_attribute(
     H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 ) {
@@ -847,7 +875,7 @@ double getDoubleScalarAttribute(
     return data;
 }
 
-int getIntScalarAttribute(
+int get_int_scalar_attribute(
     H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 ) {
@@ -869,33 +897,33 @@ int getIntScalarAttribute(
     return data;
 }
 
-void createAndWriteInt1DDataset(
+void create_and_write_int_1d_dataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<int const> buffer
+    gsl::span<int const> const buffer
 ) {
     hsize_t size = buffer.size();
     H5::DataSpace dataspace(1, &size);
-    auto dataset = file.createDataSet(
+    auto const dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_INT, dataspace
     );
     dataset.write(buffer.data(), H5::PredType::NATIVE_INT);
 }
 
-void createAndWriteDouble1DDataset(
+void create_and_write_double_1d_dataset(
     const H5::H5File& file, std::string const& datasetName,
     gsl::span<double const> buffer
 ) {
-    hsize_t size = buffer.size();
+    hsize_t const size = buffer.size();
     H5::DataSpace dataspace(1, &size);
-    auto dataset = file.createDataSet(
+    auto const dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_DOUBLE, dataspace
     );
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
 }
 
-void createAndWriteDouble2DDataset(
+void create_and_write_double_2d_dataset(
     const H5::H5File& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t const m, hsize_t const n
+    gsl::span<double const> const buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -906,9 +934,9 @@ void createAndWriteDouble2DDataset(
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
 }
 
-void createAndWriteInt2DDataset(
+void create_and_write_int_2d_dataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<int const> buffer, hsize_t const m, hsize_t const n
+    gsl::span<int const> const buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
     hsize_t const adims[]{m, n};
@@ -919,9 +947,9 @@ void createAndWriteInt2DDataset(
     dataset.write(buffer.data(), H5::PredType::NATIVE_INT);
 }
 
-void createAndWriteDouble3DDataset(
+void create_and_write_double_3d_dataset(
     H5::H5File const& file, std::string const& datasetName,
-    gsl::span<double const> buffer, hsize_t const m, hsize_t const n,
+    gsl::span<double const> const buffer, hsize_t const m, hsize_t const n,
     hsize_t const o
 ) {
     Expects(buffer.size() == m * n * o);
@@ -933,7 +961,7 @@ void createAndWriteDouble3DDataset(
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
 }
 
-bool attributeExists(
+bool attribute_exists(
     H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 ) {
@@ -945,7 +973,7 @@ bool attributeExists(
     return result > 0;
 }
 
-bool attributeExists(
+bool attribute_exists(
     H5::H5Object const& object, std::string const& attributeName
 ) {
     AMICI_H5_SAVE_ERROR_HANDLER;
@@ -954,462 +982,469 @@ bool attributeExists(
     return result > 0;
 }
 
-void writeSolverSettingsToHDF5(
+void write_solver_settings_to_hdf5(
     Solver const& solver, std::string const& hdf5Filename,
     std::string const& hdf5Location
 ) {
-    auto file = createOrOpenForWriting(hdf5Filename);
+    auto const file = create_or_open_for_writing(hdf5Filename);
 
-    writeSolverSettingsToHDF5(solver, file, hdf5Location);
+    write_solver_settings_to_hdf5(solver, file, hdf5Location);
 }
 
-void writeSolverSettingsToHDF5(
+void write_solver_settings_to_hdf5(
     Solver const& solver, H5::H5File const& file,
     std::string const& hdf5Location
 ) {
-    if (!locationExists(file, hdf5Location))
-        createGroup(file, hdf5Location);
+    if (!location_exists(file, hdf5Location))
+        create_group(file, hdf5Location);
 
     double dbuffer;
     int ibuffer;
 
-    dbuffer = solver.getAbsoluteTolerance();
+    dbuffer = solver.get_absolute_tolerance();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "atol", &dbuffer, 1
     );
 
-    dbuffer = solver.getRelativeTolerance();
+    dbuffer = solver.get_relative_tolerance();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "rtol", &dbuffer, 1
     );
 
-    dbuffer = solver.getAbsoluteToleranceFSA();
+    dbuffer = solver.get_absolute_tolerance_fsa();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "atol_fsa", &dbuffer, 1
     );
 
-    dbuffer = solver.getRelativeToleranceFSA();
+    dbuffer = solver.get_relative_tolerance_fsa();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "rtol_fsa", &dbuffer, 1
     );
 
-    dbuffer = solver.getAbsoluteToleranceB();
+    dbuffer = solver.get_absolute_tolerance_b();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "atolB", &dbuffer, 1
     );
 
-    dbuffer = solver.getRelativeToleranceB();
+    dbuffer = solver.get_relative_tolerance_b();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "rtolB", &dbuffer, 1
     );
 
-    dbuffer = solver.getAbsoluteToleranceQuadratures();
+    dbuffer = solver.get_absolute_tolerance_quadratures();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "quad_atol", &dbuffer, 1
     );
 
-    dbuffer = solver.getRelativeToleranceQuadratures();
+    dbuffer = solver.get_relative_tolerance_quadratures();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "quad_rtol", &dbuffer, 1
     );
 
-    dbuffer = solver.getSteadyStateToleranceFactor();
+    dbuffer = solver.get_steady_state_tolerance_factor();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "ss_tol_factor", &dbuffer, 1
     );
 
-    dbuffer = solver.getAbsoluteToleranceSteadyState();
+    dbuffer = solver.get_absolute_tolerance_steady_state();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "ss_atol", &dbuffer, 1
     );
 
-    dbuffer = solver.getRelativeToleranceSteadyState();
+    dbuffer = solver.get_relative_tolerance_steady_state();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "ss_rtol", &dbuffer, 1
     );
 
-    dbuffer = solver.getSteadyStateSensiToleranceFactor();
+    dbuffer = solver.get_steady_state_sensi_tolerance_factor();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "ss_tol_sensi_factor", &dbuffer, 1
     );
 
-    dbuffer = solver.getAbsoluteToleranceSteadyStateSensi();
+    dbuffer = solver.get_absolute_tolerance_steady_state_sensi();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "ss_atol_sensi", &dbuffer, 1
     );
 
-    dbuffer = solver.getRelativeToleranceSteadyStateSensi();
+    dbuffer = solver.get_relative_tolerance_steady_state_sensi();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "ss_rtol_sensi", &dbuffer, 1
     );
 
-    dbuffer = solver.getMaxTime();
+    dbuffer = solver.get_max_time();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "maxtime", &dbuffer, 1
     );
 
-    dbuffer = solver.getMaxStepSize();
+    dbuffer = solver.get_max_step_size();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "max_step_size", &dbuffer, 1
     );
 
-    ibuffer = gsl::narrow<int>(solver.getMaxSteps());
+    ibuffer = gsl::narrow<int>(solver.get_max_steps());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "maxsteps", &ibuffer, 1
     );
 
-    ibuffer = gsl::narrow<int>(solver.getMaxStepsBackwardProblem());
+    ibuffer = gsl::narrow<int>(solver.get_max_steps_backward_problem());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "maxstepsB", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getLinearMultistepMethod());
+    ibuffer = static_cast<int>(solver.get_linear_multistep_method());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "lmm", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getNonlinearSolverIteration());
+    ibuffer = static_cast<int>(solver.get_non_linear_solver_iteration());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "iter", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getStabilityLimitFlag());
+    ibuffer = static_cast<int>(solver.get_stability_limit_flag());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "stldet", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getStateOrdering());
+    ibuffer = static_cast<int>(solver.get_state_ordering());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "ordering", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getInterpolationType());
+    ibuffer = static_cast<int>(solver.get_interpolation_type());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "interpType", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getSensitivityMethod());
+    ibuffer = static_cast<int>(solver.get_sensitivity_method());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "sensi_meth", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getSensitivityMethodPreequilibration());
+    ibuffer
+        = static_cast<int>(solver.get_sensitivity_method_pre_equilibration());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "sensi_meth_preeq", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getSensitivityOrder());
+    ibuffer = static_cast<int>(solver.get_sensitivity_order());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "sensi", &ibuffer, 1
     );
 
-    ibuffer = gsl::narrow<int>(solver.getNewtonMaxSteps());
+    ibuffer = gsl::narrow<int>(solver.get_newton_max_steps());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "newton_maxsteps", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getNewtonDampingFactorMode());
+    ibuffer = static_cast<int>(solver.get_newton_damping_factor_mode());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "newton_damping_factor_mode",
         &ibuffer, 1
     );
 
-    dbuffer = solver.getNewtonDampingFactorLowerBound();
+    dbuffer = solver.get_newton_damping_factor_lower_bound();
     H5LTset_attribute_double(
         file.getId(), hdf5Location.c_str(), "newton_damping_factor_lower_bound",
         &dbuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getLinearSolver());
+    ibuffer = static_cast<int>(solver.get_linear_solver());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "linsol", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getInternalSensitivityMethod());
+    ibuffer = static_cast<int>(solver.get_internal_sensitivity_method());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "ism", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getReturnDataReportingMode());
+    ibuffer = static_cast<int>(solver.get_return_data_reporting_mode());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "rdrm", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getNewtonStepSteadyStateCheck());
+    ibuffer = static_cast<int>(solver.get_newton_step_steady_state_check());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "newton_step_steadystate_conv",
         &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getSensiSteadyStateCheck());
+    ibuffer = static_cast<int>(solver.get_sensi_steady_state_check());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "check_sensi_steadystate_conv",
         &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getMaxNonlinIters());
+    ibuffer = static_cast<int>(solver.get_max_nonlin_iters());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "max_nonlin_iters", &ibuffer, 1
     );
 
-    ibuffer = static_cast<int>(solver.getMaxConvFails());
+    ibuffer = static_cast<int>(solver.get_max_conv_fails());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "max_conv_fails", &ibuffer, 1
     );
 
-    createAndWriteDouble1DDataset(
-        file, hdf5Location + "/constraints", solver.getConstraints()
+    create_and_write_double_1d_dataset(
+        file, hdf5Location + "/constraints", solver.get_constraints()
     );
 }
 
-void readSolverSettingsFromHDF5(
+void read_solver_settings_from_hdf5(
     H5::H5File const& file, Solver& solver, std::string const& datasetPath
 ) {
 
-    if (attributeExists(file, datasetPath, "atol")) {
-        solver.setAbsoluteTolerance(
-            getDoubleScalarAttribute(file, datasetPath, "atol")
+    if (attribute_exists(file, datasetPath, "atol")) {
+        solver.set_absolute_tolerance(
+            get_double_scalar_attribute(file, datasetPath, "atol")
         );
     }
 
-    if (attributeExists(file, datasetPath, "rtol")) {
-        solver.setRelativeTolerance(
-            getDoubleScalarAttribute(file, datasetPath, "rtol")
+    if (attribute_exists(file, datasetPath, "rtol")) {
+        solver.set_relative_tolerance(
+            get_double_scalar_attribute(file, datasetPath, "rtol")
         );
     }
 
-    if (attributeExists(file, datasetPath, "atol_fsa")) {
-        solver.setAbsoluteToleranceFSA(
-            getDoubleScalarAttribute(file, datasetPath, "atol_fsa")
+    if (attribute_exists(file, datasetPath, "atol_fsa")) {
+        solver.set_absolute_tolerance_fsa(
+            get_double_scalar_attribute(file, datasetPath, "atol_fsa")
         );
     }
 
-    if (attributeExists(file, datasetPath, "rtol_fsa")) {
-        solver.setRelativeToleranceFSA(
-            getDoubleScalarAttribute(file, datasetPath, "rtol_fsa")
+    if (attribute_exists(file, datasetPath, "rtol_fsa")) {
+        solver.set_relative_tolerance_fsa(
+            get_double_scalar_attribute(file, datasetPath, "rtol_fsa")
         );
     }
 
-    if (attributeExists(file, datasetPath, "atolB")) {
-        solver.setAbsoluteToleranceB(
-            getDoubleScalarAttribute(file, datasetPath, "atolB")
+    if (attribute_exists(file, datasetPath, "atolB")) {
+        solver.set_absolute_tolerance_b(
+            get_double_scalar_attribute(file, datasetPath, "atolB")
         );
     }
 
-    if (attributeExists(file, datasetPath, "rtolB")) {
-        solver.setRelativeToleranceB(
-            getDoubleScalarAttribute(file, datasetPath, "rtolB")
+    if (attribute_exists(file, datasetPath, "rtolB")) {
+        solver.set_relative_tolerance_b(
+            get_double_scalar_attribute(file, datasetPath, "rtolB")
         );
     }
 
-    if (attributeExists(file, datasetPath, "quad_atol")) {
-        solver.setAbsoluteToleranceQuadratures(
-            getDoubleScalarAttribute(file, datasetPath, "quad_atol")
+    if (attribute_exists(file, datasetPath, "quad_atol")) {
+        solver.set_absolute_tolerance_quadratures(
+            get_double_scalar_attribute(file, datasetPath, "quad_atol")
         );
     }
 
-    if (attributeExists(file, datasetPath, "quad_rtol")) {
-        solver.setRelativeToleranceQuadratures(
-            getDoubleScalarAttribute(file, datasetPath, "quad_rtol")
+    if (attribute_exists(file, datasetPath, "quad_rtol")) {
+        solver.set_relative_tolerance_quadratures(
+            get_double_scalar_attribute(file, datasetPath, "quad_rtol")
         );
     }
 
-    if (attributeExists(file, datasetPath, "ss_tol_factor")) {
-        solver.setSteadyStateToleranceFactor(
-            getDoubleScalarAttribute(file, datasetPath, "ss_tol_factor")
+    if (attribute_exists(file, datasetPath, "ss_tol_factor")) {
+        solver.set_steady_state_tolerance_factor(
+            get_double_scalar_attribute(file, datasetPath, "ss_tol_factor")
         );
     }
 
-    if (attributeExists(file, datasetPath, "ss_atol")) {
-        solver.setAbsoluteToleranceSteadyState(
-            getDoubleScalarAttribute(file, datasetPath, "ss_atol")
+    if (attribute_exists(file, datasetPath, "ss_atol")) {
+        solver.set_absolute_tolerance_steady_state(
+            get_double_scalar_attribute(file, datasetPath, "ss_atol")
         );
     }
 
-    if (attributeExists(file, datasetPath, "ss_rtol")) {
-        solver.setRelativeToleranceSteadyState(
-            getDoubleScalarAttribute(file, datasetPath, "ss_rtol")
+    if (attribute_exists(file, datasetPath, "ss_rtol")) {
+        solver.set_relative_tolerance_steady_state(
+            get_double_scalar_attribute(file, datasetPath, "ss_rtol")
         );
     }
 
-    if (attributeExists(file, datasetPath, "ss_tol_sensi_factor")) {
-        solver.setSteadyStateSensiToleranceFactor(
-            getDoubleScalarAttribute(file, datasetPath, "ss_tol_sensi_factor")
+    if (attribute_exists(file, datasetPath, "ss_tol_sensi_factor")) {
+        solver.set_steady_state_sensi_tolerance_factor(
+            get_double_scalar_attribute(
+                file, datasetPath, "ss_tol_sensi_factor"
+            )
         );
     }
 
-    if (attributeExists(file, datasetPath, "ss_atol_sensi")) {
-        solver.setAbsoluteToleranceSteadyStateSensi(
-            getDoubleScalarAttribute(file, datasetPath, "ss_atol_sensi")
+    if (attribute_exists(file, datasetPath, "ss_atol_sensi")) {
+        solver.set_absolute_tolerance_steady_state_sensi(
+            get_double_scalar_attribute(file, datasetPath, "ss_atol_sensi")
         );
     }
 
-    if (attributeExists(file, datasetPath, "ss_rtol_sensi")) {
-        solver.setRelativeToleranceSteadyStateSensi(
-            getDoubleScalarAttribute(file, datasetPath, "ss_rtol_sensi")
+    if (attribute_exists(file, datasetPath, "ss_rtol_sensi")) {
+        solver.set_relative_tolerance_steady_state_sensi(
+            get_double_scalar_attribute(file, datasetPath, "ss_rtol_sensi")
         );
     }
 
-    if (attributeExists(file, datasetPath, "maxtime")) {
-        solver.setMaxTime(getDoubleScalarAttribute(file, datasetPath, "maxtime")
+    if (attribute_exists(file, datasetPath, "maxtime")) {
+        solver.set_max_time(
+            get_double_scalar_attribute(file, datasetPath, "maxtime")
         );
     }
 
-    if (attributeExists(file, datasetPath, "max_step_size")) {
-        solver.setMaxStepSize(
-            getDoubleScalarAttribute(file, datasetPath, "max_step_size")
+    if (attribute_exists(file, datasetPath, "max_step_size")) {
+        solver.set_max_step_size(
+            get_double_scalar_attribute(file, datasetPath, "max_step_size")
         );
     }
 
-    if (attributeExists(file, datasetPath, "maxsteps")) {
-        solver.setMaxSteps(getIntScalarAttribute(file, datasetPath, "maxsteps")
+    if (attribute_exists(file, datasetPath, "maxsteps")) {
+        solver.set_max_steps(
+            get_int_scalar_attribute(file, datasetPath, "maxsteps")
         );
     }
 
-    if (attributeExists(file, datasetPath, "maxstepsB")) {
-        solver.setMaxStepsBackwardProblem(
-            getIntScalarAttribute(file, datasetPath, "maxstepsB")
+    if (attribute_exists(file, datasetPath, "maxstepsB")) {
+        solver.set_max_steps_backward_problem(
+            get_int_scalar_attribute(file, datasetPath, "maxstepsB")
         );
     }
 
-    if (attributeExists(file, datasetPath, "lmm")) {
-        solver.setLinearMultistepMethod(
+    if (attribute_exists(file, datasetPath, "lmm")) {
+        solver.set_linear_multistep_method(
             static_cast<LinearMultistepMethod>(
-                getIntScalarAttribute(file, datasetPath, "lmm")
+                get_int_scalar_attribute(file, datasetPath, "lmm")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "iter")) {
-        solver.setNonlinearSolverIteration(
+    if (attribute_exists(file, datasetPath, "iter")) {
+        solver.set_non_linear_solver_iteration(
             static_cast<NonlinearSolverIteration>(
-                getIntScalarAttribute(file, datasetPath, "iter")
+                get_int_scalar_attribute(file, datasetPath, "iter")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "stldet")) {
-        solver.setStabilityLimitFlag(
-            getIntScalarAttribute(file, datasetPath, "stldet")
+    if (attribute_exists(file, datasetPath, "stldet")) {
+        solver.set_stability_limit_flag(
+            get_int_scalar_attribute(file, datasetPath, "stldet")
         );
     }
 
-    if (attributeExists(file, datasetPath, "ordering")) {
-        solver.setStateOrdering(
-            getIntScalarAttribute(file, datasetPath, "ordering")
+    if (attribute_exists(file, datasetPath, "ordering")) {
+        solver.set_state_ordering(
+            get_int_scalar_attribute(file, datasetPath, "ordering")
         );
     }
 
-    if (attributeExists(file, datasetPath, "interpType")) {
-        solver.setInterpolationType(
+    if (attribute_exists(file, datasetPath, "interpType")) {
+        solver.set_interpolation_type(
             static_cast<InterpolationType>(
-                getIntScalarAttribute(file, datasetPath, "interpType")
+                get_int_scalar_attribute(file, datasetPath, "interpType")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "sensi_meth")) {
-        solver.setSensitivityMethod(
+    if (attribute_exists(file, datasetPath, "sensi_meth")) {
+        solver.set_sensitivity_method(
             static_cast<SensitivityMethod>(
-                getIntScalarAttribute(file, datasetPath, "sensi_meth")
+                get_int_scalar_attribute(file, datasetPath, "sensi_meth")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "sensi_meth_preeq")) {
-        solver.setSensitivityMethodPreequilibration(
+    if (attribute_exists(file, datasetPath, "sensi_meth_preeq")) {
+        solver.set_sensitivity_method_pre_equilibration(
             static_cast<SensitivityMethod>(
-                getIntScalarAttribute(file, datasetPath, "sensi_meth_preeq")
+                get_int_scalar_attribute(file, datasetPath, "sensi_meth_preeq")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "sensi")) {
-        solver.setSensitivityOrder(
+    if (attribute_exists(file, datasetPath, "sensi")) {
+        solver.set_sensitivity_order(
             static_cast<SensitivityOrder>(
-                getIntScalarAttribute(file, datasetPath, "sensi")
+                get_int_scalar_attribute(file, datasetPath, "sensi")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "newton_maxsteps")) {
-        solver.setNewtonMaxSteps(
-            getIntScalarAttribute(file, datasetPath, "newton_maxsteps")
+    if (attribute_exists(file, datasetPath, "newton_maxsteps")) {
+        solver.set_newton_max_steps(
+            get_int_scalar_attribute(file, datasetPath, "newton_maxsteps")
         );
     }
 
-    if (attributeExists(file, datasetPath, "newton_damping_factor_mode")) {
-        solver.setNewtonDampingFactorMode(
-            static_cast<NewtonDampingFactorMode>(getIntScalarAttribute(
+    if (attribute_exists(file, datasetPath, "newton_damping_factor_mode")) {
+        solver.set_newton_damping_factor_mode(
+            static_cast<NewtonDampingFactorMode>(get_int_scalar_attribute(
                 file, datasetPath, "newton_damping_factor_mode"
             ))
         );
     }
 
-    if (attributeExists(
+    if (attribute_exists(
             file, datasetPath, "newton_damping_factor_lower_bound"
         )) {
-        solver.setNewtonDampingFactorLowerBound(getDoubleScalarAttribute(
-            file, datasetPath, "newton_damping_factor_lower_bound"
-        ));
+        solver.set_newton_damping_factor_lower_bound(
+            get_double_scalar_attribute(
+                file, datasetPath, "newton_damping_factor_lower_bound"
+            )
+        );
     }
 
-    if (attributeExists(file, datasetPath, "linsol")) {
-        solver.setLinearSolver(
+    if (attribute_exists(file, datasetPath, "linsol")) {
+        solver.set_linear_solver(
             static_cast<LinearSolver>(
-                getIntScalarAttribute(file, datasetPath, "linsol")
+                get_int_scalar_attribute(file, datasetPath, "linsol")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "ism")) {
-        solver.setInternalSensitivityMethod(
+    if (attribute_exists(file, datasetPath, "ism")) {
+        solver.set_internal_sensitivity_method(
             static_cast<InternalSensitivityMethod>(
-                getIntScalarAttribute(file, datasetPath, "ism")
+                get_int_scalar_attribute(file, datasetPath, "ism")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "rdrm")) {
-        solver.setReturnDataReportingMode(
+    if (attribute_exists(file, datasetPath, "rdrm")) {
+        solver.set_return_data_reporting_mode(
             static_cast<RDataReporting>(
-                getIntScalarAttribute(file, datasetPath, "rdrm")
+                get_int_scalar_attribute(file, datasetPath, "rdrm")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
-        solver.setNewtonStepSteadyStateCheck(getIntScalarAttribute(
+    if (attribute_exists(file, datasetPath, "newton_step_steadystate_conv")) {
+        solver.set_newton_step_steady_state_check(get_int_scalar_attribute(
             file, datasetPath, "newton_step_steadystate_conv"
         ));
     }
 
-    if (attributeExists(file, datasetPath, "check_sensi_steadystate_conv")) {
-        solver.setSensiSteadyStateCheck(getIntScalarAttribute(
+    if (attribute_exists(file, datasetPath, "check_sensi_steadystate_conv")) {
+        solver.set_sensi_steady_state_check(get_int_scalar_attribute(
             file, datasetPath, "check_sensi_steadystate_conv"
         ));
     }
 
-    if (attributeExists(file, datasetPath, "max_nonlin_iters")) {
-        solver.setMaxNonlinIters(
-            getIntScalarAttribute(file, datasetPath, "max_nonlin_iters")
+    if (attribute_exists(file, datasetPath, "max_nonlin_iters")) {
+        solver.set_max_nonlin_iters(
+            get_int_scalar_attribute(file, datasetPath, "max_nonlin_iters")
         );
     }
 
-    if (attributeExists(file, datasetPath, "max_conv_fails")) {
-        solver.setMaxConvFails(
-            getIntScalarAttribute(file, datasetPath, "max_conv_fails")
+    if (attribute_exists(file, datasetPath, "max_conv_fails")) {
+        solver.set_max_conv_fails(
+            get_int_scalar_attribute(file, datasetPath, "max_conv_fails")
         );
     }
 
-    if (locationExists(file, datasetPath + "/constraints")) {
-        solver.setConstraints(
-            getDoubleDataset1D(file, datasetPath + "/constraints")
+    if (location_exists(file, datasetPath + "/constraints")) {
+        solver.set_constraints(
+            get_double_1d_dataset(file, datasetPath + "/constraints")
         );
     }
 }
 
-void readSolverSettingsFromHDF5(
+void read_solver_settings_from_hdf5(
     std::string const& hdffile, Solver& solver, std::string const& datasetPath
 ) {
     H5::H5File file(
@@ -1417,10 +1452,10 @@ void readSolverSettingsFromHDF5(
         H5::FileAccPropList::DEFAULT
     );
 
-    readSolverSettingsFromHDF5(file, solver, datasetPath);
+    read_solver_settings_from_hdf5(file, solver, datasetPath);
 }
 
-void readModelDataFromHDF5(
+void read_model_data_from_hdf5(
     std::string const& hdffile, Model& model, std::string const& datasetPath
 ) {
     H5::H5File file(
@@ -1428,95 +1463,99 @@ void readModelDataFromHDF5(
         H5::FileAccPropList::DEFAULT
     );
 
-    readModelDataFromHDF5(file, model, datasetPath);
+    read_model_data_from_hdf5(file, model, datasetPath);
 }
 
-void readModelDataFromHDF5(
+void read_model_data_from_hdf5(
     const H5::H5File& file, Model& model, std::string const& datasetPath
 ) {
-    if (attributeExists(file, datasetPath, "tstart")) {
-        model.setT0(getDoubleScalarAttribute(file, datasetPath, "tstart"));
+    if (attribute_exists(file, datasetPath, "tstart")) {
+        model.set_t0(get_double_scalar_attribute(file, datasetPath, "tstart"));
     }
 
-    if (attributeExists(file, datasetPath, "tstart_preeq")) {
-        model.setT0Preeq(
-            getDoubleScalarAttribute(file, datasetPath, "tstart_preeq")
+    if (attribute_exists(file, datasetPath, "tstart_preeq")) {
+        model.set_t0_preeq(
+            get_double_scalar_attribute(file, datasetPath, "tstart_preeq")
         );
     }
 
-    if (locationExists(file, datasetPath + "/pscale")) {
-        auto pscaleInt = getIntDataset1D(file, datasetPath + "/pscale");
+    if (location_exists(file, datasetPath + "/pscale")) {
+        auto pscaleInt = get_int_1d_dataset(file, datasetPath + "/pscale");
         std::vector<ParameterScaling> pscale(pscaleInt.size());
         for (int i = 0; (unsigned)i < pscaleInt.size(); ++i)
             pscale[i] = static_cast<ParameterScaling>(pscaleInt[i]);
-        model.setParameterScale(pscale);
-    } else if (attributeExists(file, datasetPath, "pscale")) {
+        model.set_parameter_scale(pscale);
+    } else if (attribute_exists(file, datasetPath, "pscale")) {
         // if pscale is the same for all parameters,
         // it can be set as scalar attribute for convenience
-        model.setParameterScale(
+        model.set_parameter_scale(
             static_cast<ParameterScaling>(
-                getDoubleScalarAttribute(file, datasetPath, "pscale")
+                get_double_scalar_attribute(file, datasetPath, "pscale")
             )
         );
     }
 
-    if (attributeExists(file, datasetPath, "nmaxevent")) {
-        model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent")
+    if (attribute_exists(file, datasetPath, "nmaxevent")) {
+        model.set_n_max_event(
+            get_int_scalar_attribute(file, datasetPath, "nmaxevent")
         );
     }
 
-    if (attributeExists(file, datasetPath, "steadyStateComputationMode")) {
-        model.setSteadyStateComputationMode(
-            static_cast<SteadyStateComputationMode>(getIntScalarAttribute(
+    if (attribute_exists(file, datasetPath, "steadyStateComputationMode")) {
+        model.set_steady_state_computation_mode(
+            static_cast<SteadyStateComputationMode>(get_int_scalar_attribute(
                 file, datasetPath, "steadyStateComputationMode"
             ))
         );
     }
 
-    if (attributeExists(file, datasetPath, "steadyStateSensitivityMode")) {
-        model.setSteadyStateSensitivityMode(
-            static_cast<SteadyStateSensitivityMode>(getIntScalarAttribute(
+    if (attribute_exists(file, datasetPath, "steadyStateSensitivityMode")) {
+        model.set_steady_state_sensitivity_mode(
+            static_cast<SteadyStateSensitivityMode>(get_int_scalar_attribute(
                 file, datasetPath, "steadyStateSensitivityMode"
             ))
         );
     }
 
-    if (locationExists(file, datasetPath + "/theta")) {
-        model.setParameters(getDoubleDataset1D(file, datasetPath + "/theta"));
-    }
-
-    if (locationExists(file, datasetPath + "/kappa")) {
-        model.setFixedParameters(
-            getDoubleDataset1D(file, datasetPath + "/kappa")
+    if (location_exists(file, datasetPath + "/theta")) {
+        model.set_parameters(get_double_1d_dataset(file, datasetPath + "/theta")
         );
     }
 
-    if (locationExists(file, datasetPath + "/ts")) {
-        model.setTimepoints(getDoubleDataset1D(file, datasetPath + "/ts"));
+    if (location_exists(file, datasetPath + "/kappa")) {
+        model.set_fixed_parameters(
+            get_double_1d_dataset(file, datasetPath + "/kappa")
+        );
     }
 
-    if (locationExists(file, datasetPath + "/sens_ind")) {
-        auto sensInd = getIntDataset1D(file, datasetPath + "/sens_ind");
-        model.setParameterList(sensInd);
+    if (location_exists(file, datasetPath + "/ts")) {
+        model.set_timepoints(get_double_1d_dataset(file, datasetPath + "/ts"));
     }
 
-    if (locationExists(file, datasetPath + "/x0")) {
-        auto x0 = getDoubleDataset1D(file, datasetPath + "/x0");
+    if (location_exists(file, datasetPath + "/sens_ind")) {
+        auto sensInd = get_int_1d_dataset(file, datasetPath + "/sens_ind");
+        model.set_parameter_list(sensInd);
+    }
+
+    if (location_exists(file, datasetPath + "/x0")) {
+        auto x0 = get_double_1d_dataset(file, datasetPath + "/x0");
         if (!x0.empty())
-            model.setInitialStates(x0);
+            model.set_initial_state(x0);
     }
 
-    if (locationExists(file, datasetPath + "/steadystate_mask")) {
-        auto mask = getDoubleDataset1D(file, datasetPath + "/steadystate_mask");
+    if (location_exists(file, datasetPath + "/steadystate_mask")) {
+        auto mask
+            = get_double_1d_dataset(file, datasetPath + "/steadystate_mask");
         if (!mask.empty())
             model.set_steadystate_mask(mask);
     }
 
-    if (locationExists(file, datasetPath + "/sx0")) {
+    if (location_exists(file, datasetPath + "/sx0")) {
         hsize_t length0 = 0;
         hsize_t length1 = 0;
-        auto sx0
-            = getDoubleDataset2D(file, datasetPath + "/sx0", length0, length1);
+        auto sx0 = get_double_2d_dataset(
+            file, datasetPath + "/sx0", length0, length1
+        );
         if (!sx0.empty()) {
             if (length0 != (unsigned)model.nplist()
                 && length1 != (unsigned)model.nx_rdata)
@@ -1525,23 +1564,24 @@ void readModelDataFromHDF5(
                     "Expected %dx%d, got %llu, %llu.",
                     model.nx_rdata, model.nplist(), length0, length1
                 ));
-            model.setUnscaledInitialStateSensitivities(sx0);
+            model.set_unscaled_initial_state_sensitivities(sx0);
         }
     }
 
-    if (attributeExists(file, datasetPath, "sigma_res")) {
-        auto sigma_res = getIntScalarAttribute(file, datasetPath, "sigma_res");
-        model.setAddSigmaResiduals(static_cast<bool>(sigma_res));
+    if (attribute_exists(file, datasetPath, "sigma_res")) {
+        auto sigma_res
+            = get_int_scalar_attribute(file, datasetPath, "sigma_res");
+        model.set_add_sigma_residuals(static_cast<bool>(sigma_res));
     }
 
-    if (attributeExists(file, datasetPath, "min_sigma")) {
+    if (attribute_exists(file, datasetPath, "min_sigma")) {
         auto min_sigma
-            = getDoubleScalarAttribute(file, datasetPath, "min_sigma");
-        model.setMinimumSigmaResiduals(min_sigma);
+            = get_double_scalar_attribute(file, datasetPath, "min_sigma");
+        model.set_minimum_sigma_residuals(min_sigma);
     }
 }
 
-H5::H5File createOrOpenForWriting(std::string const& hdf5filename) {
+H5::H5File create_or_open_for_writing(std::string const& hdf5filename) {
     AMICI_H5_SAVE_ERROR_HANDLER;
     try {
         H5::H5File file(hdf5filename.c_str(), H5F_ACC_RDWR);
@@ -1553,20 +1593,20 @@ H5::H5File createOrOpenForWriting(std::string const& hdf5filename) {
     }
 }
 
-bool locationExists(const H5::H5File& file, std::string const& location) {
+bool location_exists(const H5::H5File& file, std::string const& location) {
     AMICI_H5_SAVE_ERROR_HANDLER;
     auto result = H5Lexists(file.getId(), location.c_str(), H5P_DEFAULT) > 0;
     AMICI_H5_RESTORE_ERROR_HANDLER;
     return result;
 }
 
-bool locationExists(std::string const& filename, std::string const& location) {
+bool location_exists(std::string const& filename, std::string const& location) {
     H5::H5File file(filename.c_str(), H5F_ACC_RDONLY);
-    return locationExists(file, location);
+    return location_exists(file, location);
 }
 
 std::vector<int>
-getIntDataset1D(const H5::H5File& file, std::string const& name) {
+get_int_1d_dataset(const H5::H5File& file, std::string const& name) {
     auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
@@ -1583,7 +1623,7 @@ getIntDataset1D(const H5::H5File& file, std::string const& name) {
 }
 
 std::vector<double>
-getDoubleDataset1D(const H5::H5File& file, std::string const& name) {
+get_double_1d_dataset(const H5::H5File& file, std::string const& name) {
     auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
@@ -1600,7 +1640,7 @@ getDoubleDataset1D(const H5::H5File& file, std::string const& name) {
     return result;
 }
 
-std::vector<double> getDoubleDataset2D(
+std::vector<double> get_double_2d_dataset(
     const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n
 ) {
     m = n = 0;
@@ -1624,7 +1664,7 @@ std::vector<double> getDoubleDataset2D(
     return result;
 }
 
-std::vector<double> getDoubleDataset3D(
+std::vector<double> get_double_3d_dataset(
     const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n,
     hsize_t& o
 ) {
@@ -1650,13 +1690,13 @@ std::vector<double> getDoubleDataset3D(
     return result;
 }
 
-void writeSimulationExpData(
+void write_exp_data_to_hdf5(
     ExpData const& edata, std::string const& filepath,
     std::string const& hdf5Location
 ) {
-    auto const file = createOrOpenForWriting(filepath);
+    auto const file = create_or_open_for_writing(filepath);
 
-    writeSimulationExpData(edata, file, hdf5Location);
+    write_exp_data_to_hdf5(edata, file, hdf5Location);
 }
 
 } // namespace amici::hdf5

@@ -18,7 +18,7 @@ void Logger::log(
 ) {
     va_list argptr;
     va_start(argptr, format);
-    auto const message = printfToString(format, argptr);
+    auto const message = printf_to_string(format, argptr);
     va_end(argptr);
 
     log(severity, identifier, message);

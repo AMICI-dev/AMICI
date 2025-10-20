@@ -74,6 +74,7 @@ constexpr int AMICI_LSETUP_FAIL=              -6;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
 constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
 constexpr int AMICI_RTFUNC_FAIL=             -12;
+constexpr int AMICI_LINESEARCH_FAIL=         -13;
 constexpr int AMICI_CONSTR_FAIL=             -15;
 constexpr int AMICI_CVODES_CONSTR_FAIL=      -15;
 constexpr int AMICI_IDAS_CONSTR_FAIL=        -11;
@@ -194,7 +195,6 @@ enum class LinearMultistepMethod {
 
 /** CVODES/IDAS Nonlinear Iteration method */
 enum class NonlinearSolverIteration {
-    functional = 1, /** deprecated */
     fixedpoint = 1,
     newton = 2
 };

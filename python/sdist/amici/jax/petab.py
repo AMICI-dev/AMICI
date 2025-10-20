@@ -2,29 +2,27 @@
 
 import copy
 import shutil
+from collections.abc import Callable, Iterable, Sized
 from numbers import Number
-from collections.abc import Sized, Iterable
 from pathlib import Path
-from collections.abc import Callable
-
 
 import diffrax
-import optimistix
-from optimistix import AbstractRootFinder
 import equinox as eqx
-import jaxtyping as jt
 import jax.lax
 import jax.numpy as jnp
+import jaxtyping as jt
 import numpy as np
+import optimistix
 import pandas as pd
 import petab.v1 as petab
+from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
+from amici.jax.model import JAXModel, ReturnValue
 from amici.petab.parameter_mapping import (
     ParameterMappingForCondition,
     create_parameter_mapping,
 )
-from amici.jax.model import JAXModel, ReturnValue
 
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,

@@ -4,19 +4,19 @@ import amici
 import numpy as np
 import pytest
 from amici.numpy import evaluate
-from numpy.testing import assert_almost_equal, assert_array_equal
 from amici.testing import skip_on_valgrind
+from numpy.testing import assert_almost_equal, assert_array_equal
 
 
 @pytest.fixture(scope="session")
 def rdata_by_id_fixture(sbml_example_presimulation_module):
     model_module = sbml_example_presimulation_module
-    model = model_module.getModel()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    solver = model.getSolver()
-    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    rdata = amici.runAmiciSimulation(model, solver)
+    model = model_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    solver = model.create_solver()
+    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
+    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_SUCCESS
     return model, rdata
 
@@ -25,23 +25,27 @@ def rdata_by_id_fixture(sbml_example_presimulation_module):
 def test_rdata_by_id(rdata_by_id_fixture):
     model, rdata = rdata_by_id_fixture
 
-    assert_array_equal(rdata.by_id(model.getStateIds()[1]), rdata.x[:, 1])
-    assert_array_equal(rdata.by_id(model.getStateIds()[1], "x"), rdata.x[:, 1])
+    assert_array_equal(rdata.by_id(model.get_state_ids()[1]), rdata.x[:, 1])
     assert_array_equal(
-        rdata.by_id(model.getStateIds()[1], "x", model), rdata.x[:, 1]
+        rdata.by_id(model.get_state_ids()[1], "x"), rdata.x[:, 1]
+    )
+    assert_array_equal(
+        rdata.by_id(model.get_state_ids()[1], "x", model), rdata.x[:, 1]
     )
 
     assert_array_equal(
-        rdata.by_id(model.getObservableIds()[0], "y", model), rdata.y[:, 0]
-    )
-
-    assert_array_equal(rdata.by_id(model.getExpressionIds()[1]), rdata.w[:, 1])
-    assert_array_equal(
-        rdata.by_id(model.getExpressionIds()[1], "w", model), rdata.w[:, 1]
+        rdata.by_id(model.get_observable_ids()[0], "y", model), rdata.y[:, 0]
     )
 
     assert_array_equal(
-        rdata.by_id(model.getStateIds()[1], "sx", model), rdata.sx[:, :, 1]
+        rdata.by_id(model.get_expression_ids()[1]), rdata.w[:, 1]
+    )
+    assert_array_equal(
+        rdata.by_id(model.get_expression_ids()[1], "w", model), rdata.w[:, 1]
+    )
+
+    assert_array_equal(
+        rdata.by_id(model.get_state_ids()[1], "sx", model), rdata.sx[:, :, 1]
     )
 
 
@@ -49,9 +53,9 @@ def test_rdata_by_id(rdata_by_id_fixture):
 def test_evaluate(rdata_by_id_fixture):
     # get IDs of model components
     model, rdata = rdata_by_id_fixture
-    expr0_id = model.getExpressionIds()[0]
-    state1_id = model.getStateIds()[1]
-    observable0_id = model.getObservableIds()[0]
+    expr0_id = model.get_expression_ids()[0]
+    state1_id = model.get_state_ids()[1]
+    observable0_id = model.get_observable_ids()[0]
 
     # ensure `evaluate` works for atoms
     expr0 = rdata.by_id(expr0_id)

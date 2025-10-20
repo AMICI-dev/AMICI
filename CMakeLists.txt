@@ -26,6 +26,7 @@ option(BUILD_TESTS "Build integration tests?" ON)
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -142,7 +143,7 @@ else()
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 endif()
 set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
-find_package(SUNDIALS REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/")
+find_package(SUNDIALS 7.1.1 REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/" )
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
@@ -171,7 +172,6 @@ set(AMICI_SRC_LIST
     src/edata.cpp
     src/exception.cpp
     src/simulation_parameters.cpp
-    src/spline.cpp
     src/solver.cpp
     src/solver_cvodes.cpp
     src/solver_idas.cpp
@@ -212,7 +212,6 @@ set(AMICI_SRC_LIST
     include/amici/solver_cvodes.h
     include/amici/solver.h
     include/amici/solver_idas.h
-    include/amici/spline.h
     include/amici/splinefunctions.h
     include/amici/steadystateproblem.h
     include/amici/sundials_linsol_wrapper.h
@@ -308,35 +307,6 @@ if(AMICI_PYTHON_BUILD_EXT_ONLY)
 endif()
 
 # Create targets to make the sources show up in IDEs for convenience
-
-# For matlab interface
-if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
-
-  set(MATLAB_SOURCES
-      src/interface_matlab.cpp src/returndata_matlab.cpp
-      include/amici/interface_matlab.h include/amici/returndata_matlab.h)
-  find_package(Matlab)
-  # In case we can find Matlab, we create a respective library to compile the
-  # extension from cmake. Otherwise we just create a dummy target for the files
-  # to show up inside IDEs. (Set the Matlab_ROOT_DIR cmake variable if CMake
-  # cannot find your Matlab installation)
-  if(${Matlab_FOUND})
-    add_library(matlabInterface ${MATLAB_SOURCES})
-    set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
-                                                     "${Matlab_INCLUDE_DIRS}")
-    target_link_libraries(matlabInterface PUBLIC amici)
-  else()
-    add_custom_target(
-      matlabInterface
-      SOURCES ${MATLAB_SOURCES}
-      COMMENT "Dummy target for MATLAB interface files")
-  endif()
-  set_property(
-    TARGET matlabInterface
-    APPEND
-    PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-endif()
-
 # For template files
 add_custom_target(
   fileTemplates

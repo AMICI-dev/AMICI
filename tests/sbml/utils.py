@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from pathlib import Path
 
+import amici
 import libsbml as sbml
 import numpy as np
 import pandas as pd
@@ -7,7 +10,15 @@ from amici.constants import SymbolId
 from numpy.testing import assert_allclose
 
 
-def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
+def verify_results(
+    settings,
+    rdata: amici.ReturnData,
+    expected,
+    wrapper,
+    model: amici.Model,
+    atol,
+    rtol,
+):
     """Verify test results"""
     amount_species, variables = get_amount_and_variables(settings)
 
@@ -24,12 +35,12 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
     parameter_data = {}
 
     # collect parameters
-    for par in model.getParameterIds():
-        parameter_data[par] = rdata["ts"] * 0 + model.getParameterById(par)
+    for par in model.get_parameter_ids():
+        parameter_data[par] = rdata["ts"] * 0 + model.get_parameter_by_id(par)
 
     expression_data = {}
 
-    for expr_idx, expr_id in enumerate(model.getExpressionIds()):
+    for expr_idx, expr_id in enumerate(model.get_expression_ids()):
         if expr_id.startswith("flux_"):
             new_key = expr_id.removeprefix("flux_")
         else:
@@ -187,7 +198,9 @@ def get_amount_and_variables(settings):
     return amount_species, variables
 
 
-def apply_settings(settings, solver, model, test_id: str):
+def apply_settings(
+    settings, solver: amici.Solver, model: amici.Model, test_id: str
+):
     """Apply model and solver settings as specified in the test case"""
     # start/duration/steps may be empty
     ts = np.linspace(
@@ -198,14 +211,14 @@ def apply_settings(settings, solver, model, test_id: str):
     atol = float(settings["absolute"])
     rtol = float(settings["relative"])
 
-    model.setTimepoints(ts)
-    solver.setMaxSteps(int(1e6))
-    solver.setRelativeTolerance(rtol / 1e4)
+    model.set_timepoints(ts)
+    solver.set_max_steps(int(1e6))
+    solver.set_relative_tolerance(rtol / 1e4)
 
     if test_id == "01148":
-        solver.setAbsoluteTolerance(atol / 1e6)
+        solver.set_absolute_tolerance(atol / 1e6)
     else:
-        solver.setAbsoluteTolerance(atol / 1e4)
+        solver.set_absolute_tolerance(atol / 1e4)
 
     return atol, rtol
 

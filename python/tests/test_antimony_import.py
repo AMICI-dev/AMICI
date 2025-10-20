@@ -35,8 +35,8 @@ def test_antimony_example(tempdir):
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
-    amici_model.setTimepoints(np.linspace(0, 100, 200))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model = model_module.get_model()
+    amici_model.set_timepoints(np.linspace(0, 100, 200))
+    amici_solver = amici_model.create_solver()
+    rdata = amici.run_simulation(amici_model, amici_solver)
     assert rdata.status == amici.AMICI_SUCCESS

@@ -5,11 +5,9 @@ import numbers
 import warnings
 from collections.abc import Sequence
 
-import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
-from amici import AmiciModel
 from petab.v1.C import (
     MEASUREMENT,
     NOISE_PARAMETERS,
@@ -18,6 +16,9 @@ from petab.v1.C import (
     SIMULATION_CONDITION_ID,
     TIME,
 )
+
+import amici
+from amici import AmiciModel
 
 from .parameter_mapping import (
     ParameterMapping,
@@ -184,19 +185,19 @@ def fill_in_parameters_for_condition(
 
     # parameter list from mapping dict
     parameters = [
-        map_sim_var[par_id] for par_id in amici_model.getParameterIds()
+        map_sim_var[par_id] for par_id in amici_model.get_parameter_ids()
     ]
 
     # scales list from mapping dict
     scales = [
         petab_to_amici_scale(scale_map_sim_var[par_id])
-        for par_id in amici_model.getParameterIds()
+        for par_id in amici_model.get_parameter_ids()
     ]
 
     # plist
     plist = [
         ip
-        for ip, par_id in enumerate(amici_model.getParameterIds())
+        for ip, par_id in enumerate(amici_model.get_parameter_ids())
         if isinstance(parameter_mapping.map_sim_var[par_id], str)
     ]
 
@@ -204,7 +205,7 @@ def fill_in_parameters_for_condition(
         edata.parameters = np.asarray(parameters, dtype=float)
 
     if scales:
-        edata.pscale = amici.parameterScalingFromIntVector(scales)
+        edata.pscale = amici.parameter_scaling_from_int_vector(scales)
 
     if plist:
         edata.plist = plist
@@ -214,18 +215,18 @@ def fill_in_parameters_for_condition(
     if map_preeq_fix:
         fixed_pars_preeq = [
             map_preeq_fix[par_id]
-            for par_id in amici_model.getFixedParameterIds()
+            for par_id in amici_model.get_fixed_parameter_ids()
         ]
-        edata.fixedParametersPreequilibration = fixed_pars_preeq
+        edata.fixed_parameters_pre_equilibration = fixed_pars_preeq
 
     ##########################################################################
     # fixed parameters simulation
     if map_sim_fix:
         fixed_pars_sim = [
             map_sim_fix[par_id]
-            for par_id in amici_model.getFixedParameterIds()
+            for par_id in amici_model.get_fixed_parameter_ids()
         ]
-        edata.fixedParameters = fixed_pars_sim
+        edata.fixed_parameters = fixed_pars_sim
 
 
 def create_parameterized_edatas(
@@ -353,7 +354,7 @@ def create_edata_for_condition(
         condition.get(PREEQUILIBRATION_CONDITION_ID)
         and states_in_condition_table
     ):
-        state_ids = amici_model.getStateIds()
+        state_ids = amici_model.get_state_ids()
         state_idx_reinitalization = [
             state_ids.index(s)
             for s, (v, v_preeq) in states_in_condition_table.items()
@@ -374,7 +375,7 @@ def create_edata_for_condition(
     timepoints_w_reps = _get_timepoints_with_replicates(
         df_for_condition=measurement_df
     )
-    edata.setTimepoints(timepoints_w_reps)
+    edata.set_timepoints(timepoints_w_reps)
 
     ##########################################################################
     # measurements and sigmas
@@ -383,8 +384,8 @@ def create_edata_for_condition(
         timepoints_w_reps=timepoints_w_reps,
         observable_ids=observable_ids,
     )
-    edata.setObservedData(y.flatten())
-    edata.setObservedDataStdDev(sigma_y.flatten())
+    edata.set_observed_data(y.flatten())
+    edata.set_observed_data_std_dev(sigma_y.flatten())
 
     return edata
 
@@ -415,7 +416,7 @@ def create_edatas(
             petab_problem.get_simulation_conditions_from_measurement_df()
         )
 
-    observable_ids = amici_model.getObservableIds()
+    observable_ids = amici_model.get_observable_ids()
 
     measurement_groupvar = [SIMULATION_CONDITION_ID]
     if PREEQUILIBRATION_CONDITION_ID in simulation_conditions:

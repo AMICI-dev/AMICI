@@ -19,28 +19,28 @@ the mapping is automatized.
 import logging
 import numbers
 import re
-from collections.abc import Sequence
+from collections.abc import Collection, Iterator, Sequence
 from itertools import chain
 from typing import Any
-from collections.abc import Collection, Iterator
 
-import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import sympy as sp
-from amici.sbml_import import get_species_initial
 from petab.v1.C import *  # noqa: F403
 from petab.v1.C import (
+    ESTIMATE,
     LIN,
+    NOMINAL_VALUE,
     PARAMETER_SCALE,
     PREEQUILIBRATION_CONDITION_ID,
     SIMULATION_CONDITION_ID,
-    NOMINAL_VALUE,
-    ESTIMATE,
 )
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
+
+import amici
+from amici.sbml_import import get_species_initial
 
 from .. import AmiciModel
 from . import PREEQ_INDICATOR_ID
@@ -531,8 +531,8 @@ def create_parameter_mapping_for_condition(
     # merge_preeq_and_sim_pars_condition below may fail.
     # TODO: This can be done already in parameter mapping creation.
     if amici_model is not None:
-        variable_par_ids = amici_model.getParameterIds()
-        fixed_par_ids = amici_model.getFixedParameterIds()
+        variable_par_ids = amici_model.get_parameter_ids()
+        fixed_par_ids = amici_model.get_fixed_parameter_ids()
         condition_map_preeq_var, condition_map_preeq_fix = _subset_dict(
             condition_map_preeq, variable_par_ids, fixed_par_ids
         )

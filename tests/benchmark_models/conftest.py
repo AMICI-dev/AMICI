@@ -1,13 +1,12 @@
 import copy
-from pathlib import Path
 import sys
-
-import pytest
-import petab.v1 as petab
-from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
+from pathlib import Path
 
 import benchmark_models_petab
+import petab.v1 as petab
+import pytest
 from amici.petab.petab_import import import_petab_problem
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 
 script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:

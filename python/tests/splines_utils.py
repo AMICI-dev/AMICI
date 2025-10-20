@@ -8,9 +8,9 @@ import math
 import os
 import platform
 import uuid
+from collections.abc import Sequence
 from tempfile import mkdtemp
 from typing import Any
-from collections.abc import Sequence
 
 import amici
 import numpy as np
@@ -294,7 +294,7 @@ def simulate_splines(
     use_adjoint: bool = False,
     skip_sensitivity: bool = False,
     petab_problem=None,
-    amici_model=None,
+    amici_model: amici.Model = None,
     **kwargs,
 ):
     """
@@ -406,16 +406,16 @@ def simulate_splines(
         )
 
     # Set solver options
-    solver = amici_model.getSolver()
-    solver.setRelativeTolerance(rtol)
-    solver.setAbsoluteTolerance(atol)
-    solver.setMaxSteps(maxsteps)
+    solver = amici_model.create_solver()
+    solver.set_relative_tolerance(rtol)
+    solver.set_absolute_tolerance(atol)
+    solver.set_max_steps(maxsteps)
     if not skip_sensitivity:
-        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver.set_sensitivity_order(amici.SensitivityOrder.first)
         if use_adjoint:
-            solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+            solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
         else:
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+            solver.set_sensitivity_method(amici.SensitivityMethod.forward)
 
     # Compute and set timepoints
     # NB not working, will always be equal to the observation times
@@ -439,8 +439,8 @@ def simulate_splines(
         edata = edatas[0]
 
         # Return state/parameter ordering
-        state_ids = amici_model.getStateIds()
-        param_ids = amici_model.getParameterIds()
+        state_ids = amici_model.get_state_ids()
+        param_ids = amici_model.get_parameter_ids()
 
         return (
             initial_values,
@@ -728,9 +728,9 @@ def check_splines(
         and parameter_lists is not None
     ):
         for plist in parameter_lists:
-            amici_model.setParameterList(plist)
-            amici_model.setTimepoints(rdata.t)
-            rdata_partial = amici.runAmiciSimulation(amici_model, amici_solver)
+            amici_model.set_parameter_list(plist)
+            amici_model.set_timepoints(rdata.t)
+            rdata_partial = amici.run_simulation(amici_model, amici_solver)
             assert rdata.sx[:, plist, :].shape == rdata_partial.sx.shape
             assert np.allclose(rdata.sx[:, plist, :], rdata_partial.sx)
 

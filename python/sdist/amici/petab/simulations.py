@@ -6,36 +6,26 @@ function as defined by a PEtab problem.
 
 import copy
 import logging
-from typing import Any
 from collections.abc import Sequence
+from typing import Any
 
-import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 from petab.v1.C import *  # noqa: F403
 
+import amici
+
 from .. import AmiciExpData, AmiciModel
 from ..logging import get_logger, log_execution_time
-
-# some extra imports for backward-compatibility
-# DEPRECATED: remove in 1.0
-from .conditions import (  # noqa # pylint: disable=unused-import
-    create_edata_for_condition,
+from .conditions import (
     create_edatas,
-    create_parameterized_edatas,
     fill_in_parameters,
 )
-from .parameter_mapping import (  # noqa # pylint: disable=unused-import
+from .parameter_mapping import (
     ParameterMapping,
     create_parameter_mapping,
-    create_parameter_mapping_for_condition,
 )
-from .util import (  # noqa # pylint: disable=unused-import
-    get_states_in_condition_table,
-)
-
-# END DEPRECATED
 
 try:
     import pysb
@@ -142,7 +132,7 @@ def simulate_petab(
     logger.setLevel(log_level)
 
     if solver is None:
-        solver = amici_model.getSolver()
+        solver = amici_model.create_solver()
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
@@ -213,7 +203,7 @@ def simulate_petab(
     )
 
     # Simulate
-    rdatas = amici.runAmiciSimulations(
+    rdatas = amici.run_simulations(
         amici_model,
         solver,
         edata_list=edatas,
@@ -225,7 +215,7 @@ def simulate_petab(
     llh = sum(rdata["llh"] for rdata in rdatas)
     # Compute total sllh
     sllh = None
-    if solver.getSensitivityOrder() != amici.SensitivityOrder.none:
+    if solver.get_sensitivity_order() != amici.SensitivityOrder.none:
         sllh = aggregate_sllh(
             amici_model=amici_model,
             rdatas=rdatas,
@@ -294,7 +284,7 @@ def aggregate_sllh(
         Aggregated likelihood sensitivities.
     """
     accumulated_sllh = {}
-    model_parameter_ids = amici_model.getParameterIds()
+    model_parameter_ids = amici_model.get_parameter_ids()
 
     if petab_scale and petab_problem is None:
         raise ValueError(
@@ -433,7 +423,7 @@ def rdatas_to_measurement_df(
     """
     simulation_conditions = petab.get_simulation_conditions(measurement_df)
 
-    observable_ids = model.getObservableIds()
+    observable_ids = model.get_observable_ids()
     rows = []
     # iterate over conditions
     for (_, condition), rdata in zip(

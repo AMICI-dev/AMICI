@@ -19,9 +19,6 @@ models. However, there are some limitations to be aware of:
   discontinuities (e.g. events).
   See `this issue <https://github.com/AMICI-dev/AMICI/issues/18>`__.
 
-* Sensitivity analysis for DAE models with events is not supported.
-  See `this issue <https://github.com/AMICI-dev/AMICI/issues/2102>`__.
-
 * Sensitivities may be incorrect for models with cascading events, where
   secondary events have a bolus.
 
@@ -47,15 +44,11 @@ sensitivities. However, there are some limitations to be aware of:
   crosses the threshold before the discontinuity is reached.
   In this case, specify some large last output time instead of infinity to
   ensure that simulation does not stop prematurely.
+  Note that AMICI only checks the model state (`x`), but not observables (`y`)
+  or other model expressions (`w`) for steady state conditions.
 
-* Currently, events are not processed at all during pre-equilibration.
-  *This is subject to change in the future (See `here <https://github.com/AMICI-dev/AMICI/issues/2386>`__).*
-  If events influence the steady state, the steady state computation may not
-  yield the correct result.
-  If skipping events is indeed desired, make sure to future-proof your model
-  and include a switch in the event trigger to disable the event during
-  pre-equilibration.
-
+* When computing steady states using Newton's method, only initial events
+  will be handled. Subsequent events will be ignored.
 
 Discontinuities
 ===============

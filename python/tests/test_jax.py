@@ -1,24 +1,24 @@
-import pytest
-import amici
 from pathlib import Path
+
+import amici
+import pytest
 
 pytest.importorskip("jax")
 import amici.jax
-
+import diffrax
+import jax
 import jax.numpy as jnp
 import jax.random as jr
-import jax
-import diffrax
-import optimistix
 import numpy as np
-from beartype import beartype
-from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
-
+import optimistix
+from amici import MeasurementChannel as MC
+from amici.jax import JAXProblem, ReturnValue, run_simulations
+from amici.petab.petab_import import import_petab_problem
 from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
-from amici.petab.petab_import import import_petab_problem
-from amici.jax import JAXProblem, ReturnValue, run_simulations
+from beartype import beartype
 from numpy.testing import assert_allclose
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 from test_petab_objective import lotka_volterra  # noqa: F401
 
 pysb = pytest.importorskip("pysb")
@@ -42,8 +42,8 @@ def test_conversion():
     pysb.Observable("ab", a(s="b"))
 
     with TemporaryDirectoryWinSafe() as outdir:
-        pysb2amici(model, outdir, verbose=True, observables=["ab"])
-        pysb2jax(model, outdir, verbose=True, observables=["ab"])
+        pysb2amici(model, outdir, verbose=True, observation_model=[MC("ab")])
+        pysb2jax(model, outdir, verbose=True, observation_model=[MC("ab")])
 
         amici_module = amici.import_model_module(
             module_name=model.name, module_path=outdir
@@ -97,13 +97,13 @@ def test_dimerization():
             model,
             outdir,
             verbose=True,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
             constant_parameters=["ksyn_a", "ksyn_b"],
         )
         pysb2jax(
             model,
             outdir,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
         )
 
         amici_module = amici.import_model_module(
@@ -120,33 +120,33 @@ def test_dimerization():
 
 
 def _test_model(amici_module, jax_module, ts, p, k):
-    amici_model = amici_module.getModel()
+    amici_model = amici_module.get_model()
 
-    amici_model.setTimepoints(np.asarray(ts, dtype=np.float64))
-    sol_amici_ref = amici.runAmiciSimulation(
-        amici_model, amici_model.getSolver()
+    amici_model.set_timepoints(np.asarray(ts, dtype=np.float64))
+    sol_amici_ref = amici.run_simulation(
+        amici_model, amici_model.create_solver()
     )
 
     jax_model = jax_module.Model()
 
-    amici_model.setParameters(np.asarray(p, dtype=np.float64))
-    amici_model.setFixedParameters(np.asarray(k, dtype=np.float64))
+    amici_model.set_parameters(np.asarray(p, dtype=np.float64))
+    amici_model.set_fixed_parameters(np.asarray(k, dtype=np.float64))
     edata = amici.ExpData(sol_amici_ref, 1.0, 1.0)
-    edata.parameters = amici_model.getParameters()
-    edata.fixedParameters = amici_model.getFixedParameters()
-    edata.pscale = amici_model.getParameterScale()
-    amici_solver = amici_model.getSolver()
-    amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    amici_solver.setAbsoluteTolerance(ATOL_SIM)
-    amici_solver.setRelativeTolerance(RTOL_SIM)
-    rs_amici = amici.runAmiciSimulations(amici_model, amici_solver, [edata])
+    edata.parameters = amici_model.get_parameters()
+    edata.fixed_parameters = amici_model.get_fixed_parameters()
+    edata.pscale = amici_model.get_parameter_scale()
+    amici_solver = amici_model.create_solver()
+    amici_solver.set_sensitivity_method(amici.SensitivityMethod.forward)
+    amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    amici_solver.set_absolute_tolerance(ATOL_SIM)
+    amici_solver.set_relative_tolerance(RTOL_SIM)
+    rs_amici = amici.run_simulations(amici_model, amici_solver, [edata])
 
     check_fields_jax(
         rs_amici,
         jax_model,
-        amici_model.getParameterIds(),
-        amici_model.getFixedParameterIds(),
+        amici_model.get_parameter_ids(),
+        amici_model.get_fixed_parameter_ids(),
         edata,
         ["x", "y", "llh", "res", "x0"],
     )
@@ -154,8 +154,8 @@ def _test_model(amici_module, jax_module, ts, p, k):
     check_fields_jax(
         rs_amici,
         jax_model,
-        amici_model.getParameterIds(),
-        amici_model.getFixedParameterIds(),
+        amici_model.get_parameter_ids(),
+        amici_model.get_fixed_parameter_ids(),
         edata,
         ["sllh", "sx0", "sx", "sres", "sy"],
         sensi_order=amici.SensitivityOrder.first,
@@ -172,8 +172,8 @@ def check_fields_jax(
     sensi_order=amici.SensitivityOrder.none,
 ):
     r_jax = dict()
-    ts = np.array(edata.getTimepoints())
-    my = np.array(edata.getObservedData()).reshape(len(ts), -1)
+    ts = np.array(edata.get_timepoints())
+    my = np.array(edata.get_observed_data()).reshape(len(ts), -1)
     ts = np.repeat(ts.reshape(-1, 1), my.shape[1], axis=1)
     iys = np.repeat(np.arange(my.shape[1]).reshape(1, -1), len(ts), axis=0)
     my = my.flatten()
@@ -186,7 +186,7 @@ def check_fields_jax(
 
     par_dict = {
         **dict(zip(parameter_ids, edata.parameters)),
-        **dict(zip(fixed_parameter_ids, edata.fixedParameters)),
+        **dict(zip(fixed_parameter_ids, edata.fixed_parameters)),
     }
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
@@ -324,9 +324,9 @@ def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""
 
     from amici.antimony_import import antimony2sbml
-    from amici.sbml_import import SbmlImporter
-    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
     from amici.jax._simulation import solve
+    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+    from amici.sbml_import import SbmlImporter
 
     ant_model = """
     model time_disc
@@ -377,9 +377,9 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     """Time dependent discontinuities are handled during equilibration."""
 
     from amici.antimony_import import antimony2sbml
-    from amici.sbml_import import SbmlImporter
-    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
     from amici.jax._simulation import eq
+    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+    from amici.sbml_import import SbmlImporter
 
     ant_model = """
     model time_disc_eq

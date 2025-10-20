@@ -18,12 +18,12 @@ namespace amici {
  * @param rethrow rethrow integration exceptions?
  * @return rdata pointer to return data object
  */
-std::unique_ptr<ReturnData> runAmiciSimulation(
+std::unique_ptr<ReturnData> run_simulation(
     Solver& solver, ExpData const* edata, Model& model, bool rethrow = false
 );
 
 /**
- * @brief Same as runAmiciSimulation, but for multiple ExpData instances. When
+ * @brief Same as run_simulation, but for multiple ExpData instances. When
  * compiled with OpenMP support, this function runs multi-threaded.
  *
  * @param solver Solver instance
@@ -33,7 +33,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
  * @param num_threads number of threads for parallel execution
  * @return vector of pointers to return data objects
  */
-std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
+std::vector<std::unique_ptr<ReturnData>> run_simulations(
     Solver const& solver, std::vector<ExpData*> const& edatas,
     Model const& model, bool failfast, int num_threads
 );

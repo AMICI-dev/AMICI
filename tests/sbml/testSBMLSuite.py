@@ -10,30 +10,30 @@ Usage:
         specific test cases. If `--cases` is omitted, all cases are run.
 """
 
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
 
-import optimistix
-
 import amici
-import pandas as pd
-import pytest
-from amici.gradient_check import check_derivatives
+import diffrax
 import jax
 import jax.numpy as jnp
 import numpy as np
-import diffrax
+import optimistix
+import pandas as pd
+import pytest
+from amici.gradient_check import check_derivatives
 from amici.jax.petab import (
     DEFAULT_CONTROLLER_SETTINGS,
     DEFAULT_ROOT_FINDER_SETTINGS,
 )
-
 from utils import (
-    verify_results,
-    write_result_file,
+    apply_settings,
     find_model_file,
     read_settings_file,
-    apply_settings,
+    verify_results,
+    write_result_file,
 )
 
 
@@ -71,14 +71,22 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
             current_test_path,
             test_id,
             model_dir,
-            generate_sensitivity_code=test_id in sensitivity_check_cases,
+            generate_sensitivity_code=True,
         )
         settings = read_settings_file(current_test_path, test_id)
 
         atol, rtol = apply_settings(settings, solver, model, test_id)
 
+        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_method(amici.SensitivityMethod.forward)
+
+        if test_id == "00885":
+            # 00885: root-after-reinitialization with FSA with default settings
+            solver.set_absolute_tolerance(1e-16)
+            solver.set_relative_tolerance(1e-15)
+
         # simulate model
-        rdata = amici.runAmiciSimulation(model, solver)
+        rdata = amici.run_simulation(model, solver)
         if rdata["status"] != amici.AMICI_SUCCESS:
             if test_id in ("00748", "00374", "00369"):
                 pytest.skip("Simulation Failed expectedly")
@@ -95,8 +103,6 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
 
         # check sensitivities for selected models
         if epsilon := sensitivity_check_cases.get(test_id):
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
             check_derivatives(model, solver, epsilon=epsilon)
             jax_sensitivity_check(
                 current_test_path,
@@ -119,7 +125,7 @@ def compile_model(
     test_id: str,
     model_dir: Path,
     generate_sensitivity_code: bool = False,
-):
+) -> tuple[amici.Model, amici.Solver, amici.SbmlImporter]:
     """Import the given test model to AMICI"""
     model_dir.mkdir(parents=True, exist_ok=True)
 
@@ -136,8 +142,8 @@ def compile_model(
     # settings
     model_module = amici.import_model_module(model_name, model_dir)
 
-    model = model_module.getModel()
-    solver = model.getSolver()
+    model = model_module.get_model()
+    solver = model.create_solver()
 
     return model, solver, sbml_importer
 
@@ -157,7 +163,7 @@ def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
 def jax_sensitivity_check(
     sbml_dir: Path,
     test_id: str,
-    amici_model: "amici.Model",
+    amici_model: amici.Model,
     rdata: dict,
     atol: float,
     rtol: float,
@@ -234,15 +240,17 @@ def jax_sensitivity_check(
         sx = jax.jacfwd(simulate)(p)
         par_idx = [
             jax_model.parameter_ids.index(pid)
-            for pid in amici_model.getParameterIds()
+            for pid in amici_model.get_parameter_ids()
         ]
         sx = jnp.transpose(sx[:, :, par_idx], (0, 2, 1))
 
         if rdata["sx"] is None:
-            solver_amici = amici_model.getSolver()
-            solver_amici.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver_amici.setSensitivityMethod(amici.SensitivityMethod.forward)
-            rdata = amici.runAmiciSimulation(amici_model, solver_amici)
+            solver_amici = amici_model.create_solver()
+            solver_amici.set_sensitivity_order(amici.SensitivityOrder.first)
+            solver_amici.set_sensitivity_method(
+                amici.SensitivityMethod.forward
+            )
+            rdata = amici.run_simulation(amici_model, solver_amici)
 
         np.testing.assert_allclose(x, rdata["x"], rtol=rtol, atol=atol)
         np.testing.assert_allclose(sx, rdata["sx"], rtol=rtol, atol=atol)

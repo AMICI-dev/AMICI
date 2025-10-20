@@ -35,34 +35,15 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 
 project(amiciIntegrationTests)
 
+# Generate test models
+add_custom_target(
+  import_test_models
+  COMMAND "${CMAKE_SOURCE_DIR}/venv/bin/python" "-c" "from amici.testing.models import import_test_models; import_test_models()"
+  VERBATIM
+)
+
 # models depend on Upstream::amici
 add_library(Upstream::amici ALIAS amici)
-
-# Amici testing library
-add_library(amici-testing testfunctions.cpp)
-target_compile_definitions(
-  amici-testing
-  PUBLIC NEW_OPTION_FILE="${CMAKE_CURRENT_SOURCE_DIR}/testOptions.h5"
-  PUBLIC HDFFILE="${CMAKE_CURRENT_SOURCE_DIR}/expectedResults.h5"
-  PUBLIC HDFFILEWRITE="${CMAKE_CURRENT_SOURCE_DIR}/writeResults.h5")
-target_include_directories(amici-testing PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(
-  amici-testing
-  PUBLIC Upstream::amici
-  PUBLIC gtest_main)
-
-# Names of models for which tests are to be run
-set(TEST_MODELS
-    dirac
-    steadystate
-    jakstat_adjoint
-    jakstat_adjoint_o2
-    neuron
-    neuron_o2
-    events
-    nested_events
-    robertson
-    calvetti)
 
 if(ENABLE_SWIG AND ENABLE_PYTHON)
   add_custom_target(
@@ -75,7 +56,36 @@ add_subdirectory(unittests)
 
 include(ExternalProject)
 
-foreach(MODEL IN ITEMS ${TEST_MODELS})
+
+# Amici testing library
+add_library(amici-testing-py testfunctions.cpp)
+target_compile_definitions(
+  amici-testing-py
+  PUBLIC NEW_OPTION_FILE="${CMAKE_CURRENT_SOURCE_DIR}/testOptions.h5"
+  PUBLIC HDFFILE="${CMAKE_CURRENT_SOURCE_DIR}/expected_results_py.h5"
+  PUBLIC HDFFILEWRITE="${CMAKE_CURRENT_SOURCE_DIR}/writeResults.h5")
+target_include_directories(amici-testing-py PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(
+  amici-testing-py
+  PUBLIC Upstream::amici
+  PUBLIC gtest_main)
+
+
+# Names of models for which tests are to be run
+
+set(PY_TEST_MODELS
+  dirac_py
+  events_py
+  calvetti_py
+  neuron_py
+  nested_events_py
+  steadystate_py
+  robertson_py
+  jakstat_adjoint_py
+  # TODO jakstat_adjoint_o2 -- requires 2nd-order sensitivities
+  # TODO neuron_o2 -- requires 2nd-order sensitivities
+)
+foreach(MODEL IN ITEMS ${PY_TEST_MODELS})
   # Build model
   string(
     CONCAT MODEL_LIBRARY_DIR
@@ -97,7 +107,7 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
     BUILD_BYPRODUCTS "${MODEL_LIBRARY}")
   # Rebuild if amici files are updated
   ExternalProject_Add_StepDependencies(external_model_${MODEL} build amici)
-
+  # add_dependencies(external_model_${MODEL} import_test_models)
   add_library(model_${MODEL} STATIC IMPORTED)
   add_dependencies(model_${MODEL} external_model_${MODEL})
 
@@ -107,7 +117,9 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
                "${CMAKE_SOURCE_DIR}/models/model_${MODEL}/" IMPORTED_LOCATION
                                                             "${MODEL_LIBRARY}")
   # Build tests for this model
-  add_subdirectory(${MODEL})
+  # strip "_py" suffix
+  string(REPLACE "_py" "" subdir ${MODEL})
+  add_subdirectory(${subdir})
   if(TARGET python-tests)
     add_dependencies(python-tests external_model_${MODEL})
   endif()

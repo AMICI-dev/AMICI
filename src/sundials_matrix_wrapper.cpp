@@ -104,12 +104,12 @@ SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat)
     : matrix_(mat)
     , id_(get_sparse_id_w_default(mat))
     , sparsetype_(get_sparse_type_w_default(mat))
-    , ownmat(false) {
+    , ownmat_(false) {
     finish_init();
 }
 
 SUNMatrixWrapper::~SUNMatrixWrapper() {
-    if (matrix_ && ownmat)
+    if (matrix_ && ownmat_)
         SUNMatDestroy(matrix_);
 }
 
@@ -148,22 +148,22 @@ SUNMatrixWrapper& SUNMatrixWrapper::operator=(SUNMatrixWrapper&& other) {
     return *this;
 }
 
-void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
+void SUNMatrixWrapper::reallocate(sunindextype nnz) {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
         throw std::invalid_argument(
             "Invalid sparsetype. Must be CSC_MAT or "
             "CSR_MAT."
         );
 
-    if (int ret = SUNSparseMatrix_Reallocate(matrix_, NNZ) != SUN_SUCCESS)
+    if (int ret = SUNSparseMatrix_Reallocate(matrix_, nnz) != SUN_SUCCESS)
         throw std::runtime_error(
             "SUNSparseMatrix_Reallocate failed with error code "
             + std::to_string(ret) + "."
         );
 
     update_ptrs();
-    capacity_ = NNZ;
-    assert((NNZ && columns() && rows()) || !matrix_);
+    capacity_ = nnz;
+    assert((nnz && columns() && rows()) || !matrix_);
 }
 
 void SUNMatrixWrapper::realloc() {
@@ -220,7 +220,7 @@ int SUNMatrixWrapper::sparsetype() const {
 
 void SUNMatrixWrapper::scale(realtype a) {
     if (matrix_) {
-        auto cap = capacity();
+        auto const cap = capacity();
         for (sunindextype idx = 0; idx < cap; ++idx)
             data_[idx] *= a;
     }
@@ -441,9 +441,6 @@ void SUNMatrixWrapper::sparse_add(
 
     sunindextype nnz = 0; // this keeps track of the nonzero index in C
 
-    sunindextype ccol;
-    sunindextype cidx;
-
     // first call, make sure that matrix is initialized with no capacity
     if (!capacity())
         reallocate(A.num_nonzeros() + B.num_nonzeros());
@@ -451,7 +448,7 @@ void SUNMatrixWrapper::sparse_add(
     auto w = std::vector<sunindextype>(rows());
     auto x = std::vector<realtype>(rows());
 
-    for (ccol = 0; ccol < columns(); ccol++) {
+    for (sunindextype ccol = 0; ccol < columns(); ccol++) {
         set_indexptr(ccol, nnz); /* column j of C starts here */
         nnz = A.scatter(
             ccol, alpha, w.data(), gsl::make_span(x), ccol + 1, this, nnz
@@ -460,7 +457,7 @@ void SUNMatrixWrapper::sparse_add(
             ccol, beta, w.data(), gsl::make_span(x), ccol + 1, this, nnz
         );
         // no reallocation should happen here
-        for (cidx = get_indexptr(ccol); cidx < nnz; cidx++) {
+        for (sunindextype cidx = get_indexptr(ccol); cidx < nnz; cidx++) {
             auto x_idx = get_indexval(cidx);
             assert(x_idx >= 0 && gsl::narrow<std::size_t>(x_idx) < x.size());
             set_data(cidx, x[x_idx]); // copy data to C

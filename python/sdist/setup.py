@@ -11,12 +11,12 @@ Non-python-package requirements:
 """
 
 import os
+import shutil
 import sys
 from pathlib import Path
 
 from cmake_build_extension import CMakeExtension
 from setuptools import setup
-import shutil
 
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation

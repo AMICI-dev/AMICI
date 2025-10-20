@@ -5,23 +5,21 @@ parameters, correctness of the gradient computation, and simulation times
 for a subset of the benchmark problems.
 """
 
-from pathlib import Path
-
 import contextlib
 import logging
 import os
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 
+import amici
+import benchmark_models_petab
+import fiddy
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
 import yaml
-from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
-from petab.v1.visualize import plot_problem
-
-import amici
 from amici import SensitivityMethod
 from amici.logging import get_logger
 from amici.petab.petab_import import import_petab_problem
@@ -31,13 +29,12 @@ from amici.petab.simulations import (
     rdatas_to_measurement_df,
     simulate_petab,
 )
-import benchmark_models_petab
-import fiddy
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
 from fiddy.success import Consistency
-
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
+from petab.v1.visualize import plot_problem
 
 # Enable various debug output
 debug = False
@@ -254,12 +251,12 @@ def test_nominal_parameters_llh(benchmark_problem):
     if problem_id not in problems_for_llh_check:
         pytest.skip("Excluded from log-likelihood check.")
 
-    amici_solver = amici_model.getSolver()
-    amici_solver.setAbsoluteTolerance(1e-8)
-    amici_solver.setRelativeTolerance(1e-8)
-    amici_solver.setMaxSteps(10_000)
+    amici_solver = amici_model.create_solver()
+    amici_solver.set_absolute_tolerance(1e-8)
+    amici_solver.set_relative_tolerance(1e-8)
+    amici_solver.set_max_steps(10_000)
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
-        amici_model.setSteadyStateSensitivityMode(
+        amici_model.set_steady_state_sensitivity_mode(
             amici.SteadyStateSensitivityMode.integrationOnly
         )
 
@@ -270,11 +267,11 @@ def test_nominal_parameters_llh(benchmark_problem):
         "t_fwd": amici.SensitivityMethod.forward,
         "t_adj": amici.SensitivityMethod.adjoint,
     }.items():
-        amici_solver.setSensitivityMethod(sensi_mode)
+        amici_solver.set_sensitivity_method(sensi_mode)
         if sensi_mode == amici.SensitivityMethod.none:
-            amici_solver.setSensitivityOrder(amici.SensitivityOrder.none)
+            amici_solver.set_sensitivity_order(amici.SensitivityOrder.none)
         else:
-            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
+            amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
 
         res_repeats = [
             simulate_petab(
@@ -289,7 +286,7 @@ def test_nominal_parameters_llh(benchmark_problem):
 
         times[label] = np.min(
             [
-                sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
+                sum(r.cpu_time + r.cpu_time_b for r in res[RDATAS]) / 1000
                 # only forwards/backwards simulation
                 for res in res_repeats
             ]
@@ -436,13 +433,15 @@ def test_benchmark_gradient(
         petab_problem,
         model_output_dir=benchmark_outdir / problem_id,
     )
-    amici_solver = amici_model.getSolver()
-    amici_solver.setAbsoluteTolerance(cur_settings.atol_sim)
-    amici_solver.setRelativeTolerance(cur_settings.rtol_sim)
-    amici_solver.setMaxSteps(2 * 10**5)
-    amici_solver.setSensitivityMethod(sensitivity_method)
+    amici_solver = amici_model.create_solver()
+    amici_solver.set_absolute_tolerance(cur_settings.atol_sim)
+    amici_solver.set_relative_tolerance(cur_settings.rtol_sim)
+    amici_solver.set_max_steps(2 * 10**5)
+    amici_solver.set_sensitivity_method(sensitivity_method)
     # TODO: we should probably test all sensitivity modes
-    amici_model.setSteadyStateSensitivityMode(cur_settings.ss_sensitivity_mode)
+    amici_model.set_steady_state_sensitivity_mode(
+        cur_settings.ss_sensitivity_mode
+    )
 
     amici_function, amici_derivative = simulate_petab_to_cached_functions(
         petab_problem=petab_problem,
@@ -522,8 +521,8 @@ def test_benchmark_gradient(
 
 def assert_gradient_check_success(
     derivative: fiddy.Derivative,
-    expected_derivative: np.array,
-    point: np.array,
+    expected_derivative: np.ndarray,
+    point: np.ndarray,
     atol: float,
     rtol: float,
     always_print: bool = False,

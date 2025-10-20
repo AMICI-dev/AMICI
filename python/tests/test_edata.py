@@ -21,17 +21,17 @@ def test_edata_sensi_unscaling(model_units_module):  # noqa: F811
     parameter_scales_log10 = [amici.ParameterScaling.log10.value] * len(
         parameters0
     )
-    amici_parameter_scales_log10 = amici.parameterScalingFromIntVector(
+    amici_parameter_scales_log10 = amici.parameter_scaling_from_int_vector(
         parameter_scales_log10
     )
 
-    model = model_units_module.getModel()
-    model.setTimepoints(np.linspace(0, 1, 3))
-    model.setParameterScale(parameter_scales_log10)
-    model.setParameters(parameters0)
+    model = model_units_module.get_model()
+    model.set_timepoints(np.linspace(0, 1, 3))
+    model.set_parameter_scale(parameter_scales_log10)
+    model.set_parameters(parameters0)
 
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver = model.create_solver()
+    solver.set_sensitivity_order(amici.SensitivityOrder.first)
 
     edata0 = amici.ExpData(model)
     edata0.pscale = amici_parameter_scales_log10
@@ -43,8 +43,8 @@ def test_edata_sensi_unscaling(model_units_module):  # noqa: F811
     edata1.parameters = parameters1
     edata1.sx0 = sx0
 
-    rdata0 = amici.runAmiciSimulation(model, solver, edata0)
-    rdata1 = amici.runAmiciSimulation(model, solver, edata1)
+    rdata0 = amici.run_simulation(model, solver, edata0)
+    rdata1 = amici.run_simulation(model, solver, edata1)
 
     # The initial state sensitivities are as specified.
     assert np.isclose(rdata0.sx0.flatten(), sx0).all()
