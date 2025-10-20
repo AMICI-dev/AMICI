@@ -26,7 +26,10 @@ from amici import (
     SteadyStateSensitivityMode,
     get_model_root_dir
 )
-from amici.adapters.fiddy import simulate_petab_to_cached_functions
+from amici.adapters.fiddy import (
+    simulate_petab_to_cached_functions,
+    simulate_petab_v2_to_cached_functions,
+)
 from amici.logging import get_logger
 from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import (
@@ -476,8 +479,8 @@ def test_benchmark_gradient(
 
     print()
     print("Testing at:", point)
-    print("Expected derivative:", expected_derivative)
-    print("Print actual derivative:", derivative.series.values)
+    print("Expected derivative (amici):", expected_derivative)
+    print("Print actual derivative (fiddy):", derivative.series.values)
 
     if debug:
         write_debug_output(
@@ -577,7 +580,7 @@ def write_debug_output(
 
 # TODO: gradient check for PEtab v2
 # problems_for_llh_check = [
-#     "Brannmark_JBC2010",
+#     "Boehm_JProteomeRes2014",
 # ]
 
 
@@ -706,7 +709,95 @@ def test_nominal_parameters_llh_v2(problem_id):
         print("max abs diff:", simulation_df_bm["abs_diff"].max())
         print("max rel diff:", simulation_df_bm["rel_diff"].max())
 
+    # check llh
     compare_to_reference(problem_id, llh)
+
+    # check gradient
+    if problem_id not in problems_for_gradient_check:
+        return None
+        # pytest.skip("Excluded from gradient check.")
+
+    cur_settings = settings[problem_id]
+    ps._solver.set_absolute_tolerance(cur_settings.atol_sim)
+    ps._solver.set_relative_tolerance(cur_settings.rtol_sim)
+    ps._solver.set_max_steps(200_000)
+    # TODO: ASA + FSA
+    sensitivity_method = SensitivityMethod.forward
+    ps._solver.set_sensitivity_method(sensitivity_method)
+    # TODO: we should probably test all sensitivity modes
+    ps._model.set_steady_state_sensitivity_mode(
+        cur_settings.ss_sensitivity_mode
+    )
+
+    parameter_ids = ps._petab_problem.x_free_ids
+    amici_function, amici_derivative = simulate_petab_v2_to_cached_functions(
+        ps,
+        parameter_ids=parameter_ids,
+        cache=False,
+        # TODO: num_threads=os.cpu_count(),
+    )
+    np.random.seed(cur_settings.rng_seed)
+    # TODO
+    scale = False
+
+    # find a point where the derivative can be computed
+    for _ in range(5):
+        if scale:
+            point = ps._petab_problem.x_nominal_free_scaled
+            point_noise = (
+                np.random.randn(len(point)) * cur_settings.noise_level
+            )
+        else:
+            point = ps._petab_problem.x_nominal_free
+            point_noise = (
+                np.random.randn(len(point)) * point * cur_settings.noise_level
+            )
+        point += point_noise  # avoid small gradients at nominal value
+
+        try:
+            expected_derivative = amici_derivative(point)
+            break
+        except RuntimeError as e:
+            print(e)
+            continue
+    else:
+        raise RuntimeError("Could not compute expected derivative.")
+
+    derivative = get_derivative(
+        function=amici_function,
+        point=point,
+        sizes=cur_settings.step_sizes,
+        direction_ids=parameter_ids,
+        method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
+        success_checker=Consistency(
+            rtol=cur_settings.rtol_consistency,
+            atol=cur_settings.atol_consistency,
+        ),
+        expected_result=expected_derivative,
+        relative_sizes=not scale,
+    )
+
+    print()
+    print("Testing at:", point)
+    print("Expected derivative (amici):", expected_derivative)
+    print("Print actual derivative (fiddy):", derivative.series.values)
+
+    # if debug:
+    #     write_debug_output(
+    #         debug_path / f"{request.node.callspec.id}.tsv",
+    #         derivative,
+    #         expected_derivative,
+    #         parameter_ids,
+    #     )
+
+    assert_gradient_check_success(
+        derivative,
+        expected_derivative,
+        point,
+        rtol=cur_settings.rtol_check,
+        atol=cur_settings.atol_check,
+        always_print=True,
+    )
 
 
 def compare_to_reference(problem_id: str, llh: float):
