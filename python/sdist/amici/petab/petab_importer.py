@@ -18,6 +18,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import sympy as sp
 from petab import v1 as v1
 from petab import v2 as v2
 from petab.v2 import ExperimentPeriod, Observable
@@ -25,7 +26,7 @@ from petab.v2.converters import ExperimentsToSbmlConverter
 from petab.v2.models import MODEL_TYPE_SBML
 
 import amici
-from amici import MeasurementChannel
+from amici import MeasurementChannel, SensitivityOrder
 
 from ..de_model import DEModel
 from ..logging import get_logger
@@ -820,7 +821,7 @@ class ExperimentManager:
             # TODO: set sigmas via parameters or .sigmay
             if obs.noise_placeholders:
                 for placeholder, override in zip(
-                    obs.noise_placeholders, m.noise_parameters
+                    obs.noise_placeholders, m.noise_parameters, strict=True
                 ):
                     placeholder = str(placeholder)
                     if (
@@ -840,15 +841,16 @@ class ExperimentManager:
                         raise NotImplementedError(
                             f"Cannot handle override `{placeholder}' => '{override}'"
                         )
-            print(m)
-            print(dict(zip(self._parameter_ids, map(float, par_vals))))
+            # print("ExperimentManager.apply_parameters:")
+            # print(m)
+            # print(dict(zip(self._parameter_ids, map(float, par_vals))))
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
         edata.parameters = par_vals
 
         # TODO debug, remove
-        print(
-            f"Parameters: {dict(zip(self._parameter_ids, map(float, par_vals)))}"
-        )
+        # print(
+        #     f"Parameters: {dict(zip(self._parameter_ids, map(float, par_vals)))}"
+        # )
 
     @property
     def petab_problem(self) -> v2.Problem:
@@ -927,10 +929,93 @@ class PetabSimulator:
         return {
             RDATAS: rdatas,
             LLH: sum(rdata.llh for rdata in rdatas),
-            # TODO: aggregate gradients if available
-            SLLH: None,
+            SLLH: self._aggregate_sllh(rdatas),
             EDATAS: edatas,
         }
+
+    def _aggregate_sllh(
+        self, rdatas: Sequence[amici.ReturnDataView]
+    ) -> dict[str, float] | None:
+        """Aggregate the sensitivities of the log-likelihoods.
+
+        :param rdatas:
+            The ReturnData objects to aggregate the sensitivities from.
+        :return:
+            The aggregated sensitivities (parameter ID -> sensitivity value).
+        """
+        if self._solver.get_sensitivity_order() < SensitivityOrder.first:
+            return None
+
+        sllh_total: dict[str, float] = {}
+
+        # Check for issues in all condition simulation results.
+        for rdata in rdatas:
+            # Condition failed during simulation.
+            if rdata.status != amici.AMICI_SUCCESS:
+                return None
+            # Condition simulation result does not provide SLLH.
+            if rdata.sllh is None:
+                raise ValueError(
+                    f"The sensitivities of the likelihood for experiment "
+                    f"{rdata.id} were not computed."
+                )
+
+        parameter_ids = self._model.get_parameter_ids()
+
+        # TODO still needs parameter mapping for placeholders
+        for rdata in rdatas:
+            experiment = self._petab_problem[rdata.id]
+            placeholder_mappings = self._get_placeholder_mapping(experiment)
+            print("PLACEHOLDERS", experiment, placeholder_mappings)
+            for model_par_idx, sllh in zip(
+                self._model.get_parameter_list(), rdata.sllh, strict=True
+            ):
+                model_par_id = problem_par_id = parameter_ids[model_par_idx]
+                if maps_to := placeholder_mappings.get(model_par_id):
+                    problem_par_id = maps_to
+
+                print("ADDING SLLH", model_par_id, problem_par_id, sllh)
+                sllh_total[problem_par_id] = (
+                    sllh_total.get(problem_par_id, 0.0) + sllh
+                )
+        print("SLLH TOTAL", sllh_total)
+        return sllh_total
+
+    def _get_placeholder_mapping(
+        self, experiment: v2.Experiment
+    ) -> dict[str, str]:
+        """Get the mapping from model parameter IDs (= PEtab placeholder ID)
+        to problem parameter IDs for placeholders in the given experiment.
+
+        Because AMICI does not support timepoint-specific overrides,
+        this mapping is unique.
+
+        :param experiment: The experiment to get the mapping for.
+        :return: The mapping from model parameter IDs to problem parameter IDs.
+        """
+        mapping = {}
+        for measurement in self._petab_problem.get_measurements_for_experiment(
+            experiment
+        ):
+            observable = self._petab_problem[measurement.observable_id]
+            for placeholder, override in zip(
+                observable.observable_placeholders,
+                measurement.observable_parameters,
+                strict=True,
+            ):
+                # we don't care about numeric overrides here
+                if isinstance(override, sp.Symbol):
+                    mapping[str(placeholder)] = str(override)
+
+            for placeholder, override in zip(
+                observable.noise_placeholders,
+                measurement.noise_parameters,
+                strict=True,
+            ):
+                # we don't care about numeric overrides here
+                if isinstance(override, sp.Symbol):
+                    mapping[str(placeholder)] = str(override)
+        return mapping
 
 
 def _set_default_experiment(

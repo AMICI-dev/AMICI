@@ -5,10 +5,12 @@ package for finite difference checks.
 NOTE: Like fiddy, this module is experimental and subject to change.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from functools import partial
 from inspect import signature
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import petab.v1 as petab
@@ -22,6 +24,9 @@ from amici.petab.parameter_mapping import create_parameter_mapping
 from amici.petab.simulations import LLH, SLLH
 
 from .. import ReturnData, SensitivityOrder
+
+if TYPE_CHECKING:
+    from amici.petab.petab_importer import PetabSimulator
 
 __all__ = [
     "run_simulation_to_cached_functions",
@@ -378,6 +383,63 @@ def simulate_petab_to_cached_functions(
 
     def derivative(point: Type.POINT) -> Type.POINT:
         result = simulate_petab_full(point, order=SensitivityOrder.first)
+
+        if result[SLLH] is None:
+            raise RuntimeError("Simulation failed.")
+
+        sllh = np.array(
+            [result[SLLH][parameter_id] for parameter_id in parameter_ids]
+        )
+        return sllh
+
+    if cache:
+        function = CachedFunction(function)
+        derivative = CachedFunction(derivative)
+
+    return function, derivative
+
+
+def simulate_petab_v2_to_cached_functions(
+    petab_simulator: PetabSimulator,
+    parameter_ids: list[str] = None,
+    cache: bool = True,
+    **kwargs,
+) -> tuple[Type.FUNCTION, Type.FUNCTION]:
+    r"""Create fiddy functions for PetabSimulator.
+
+    :param petab_simulator:
+        The PEtab simulator to use.
+    :param parameter_ids:
+        The IDs of the parameters, in the order that parameter values will
+        be supplied. Defaults to the estimated parameters of the PEtab problem.
+    :param cache:
+        Whether to cache the function call.
+    :returns:
+        tuple of:
+
+        * 1: A method to compute the function at a point.
+        * 2: A method to compute the gradient at a point.
+    """
+    if parameter_ids is None:
+        parameter_ids = list(petab_simulator._petab_problem.x_free_ids)
+
+    def simulate(point: Type.POINT, order: SensitivityOrder) -> dict:
+        problem_parameters = dict(zip(parameter_ids, point, strict=True))
+        petab_simulator._solver.set_sensitivity_order(order)
+
+        result = petab_simulator.simulate(
+            problem_parameters=problem_parameters,
+        )
+        return result
+
+    def function(point: Type.POINT) -> np.ndarray:
+        output = simulate(point, order=SensitivityOrder.none)
+        result = output[LLH]
+        return np.array(result)
+
+    def derivative(point: Type.POINT) -> Type.POINT:
+        result = simulate(point, order=SensitivityOrder.first)
+
         if result[SLLH] is None:
             raise RuntimeError("Simulation failed.")
 
