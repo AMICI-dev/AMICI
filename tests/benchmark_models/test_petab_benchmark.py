@@ -814,6 +814,59 @@ def compare_to_reference(problem_id: str, llh: float):
         )
         return
 
+    if (
+        simulation_df_bm := benchmark_models_petab.get_simulation_df(
+            problem_id
+        )
+    ) is not None:
+        from petab.v1.calculate import calculate_llh
+
+        petab_problem = benchmark_models_petab.get_problem(problem_id)
+        if problem_id in (
+            "Bachmann_MSB2011",
+            "Borghans_BiophysChem1997",
+            "Elowitz_Nature2000",
+            "Lucarelli_CellSystems2018",
+            "Schwen_PONE2014",
+        ):
+            print(
+                petab_problem.observable_df[
+                    petab.C.OBSERVABLE_TRANSFORMATION
+                ].unique()
+            )
+            # differences due to log10-normal -> log-normal noise
+            petab_problem.observable_df.loc[
+                petab_problem.observable_df[petab.C.OBSERVABLE_TRANSFORMATION]
+                == petab.C.LOG10,
+                petab.C.OBSERVABLE_TRANSFORMATION,
+            ] = petab.C.LOG
+            print(
+                petab_problem.observable_df[
+                    petab.C.OBSERVABLE_TRANSFORMATION
+                ].unique()
+            )
+
+        try:
+            ref_llh_bm = calculate_llh(
+                measurement_dfs=petab_problem.measurement_df,
+                simulation_dfs=simulation_df_bm,
+                observable_dfs=petab_problem.observable_df,
+                parameter_dfs=petab_problem.parameter_df,
+            )
+            print(
+                "Reference llh from benchmark collection simulation table:",
+                ref_llh_bm,
+            )
+            # assert np.isclose(
+            #     ref_llh, ref_llh_bm
+            # ), f"Stored Reference llh {ref_llh} differs from the value computed "\
+            #    f"from the benchmark collection simulation table {ref_llh_bm}"
+        except Exception as e:
+            print(
+                "Could not compute reference llh from benchmark collection"
+                " simulation table:",
+                e,
+            )
     rdiff = np.abs((llh - ref_llh) / ref_llh)
     rtol = 1e-3
     adiff = np.abs(llh - ref_llh)
