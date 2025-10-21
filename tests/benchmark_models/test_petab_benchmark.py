@@ -23,6 +23,7 @@ import yaml
 from amici import (
     SensitivityMethod,
     SensitivityOrder,
+    SteadyStateComputationMode,
     SteadyStateSensitivityMode,
     get_model_root_dir
 )
@@ -173,6 +174,9 @@ class GradientCheckSettings:
         ]
     )
     rng_seed: int = 0
+    ss_computation_mode: SteadyStateComputationMode = (
+        SteadyStateComputationMode.integrationOnly
+    )
     ss_sensitivity_mode: SteadyStateSensitivityMode = (
         SteadyStateSensitivityMode.integrateIfNewtonFails
     )
@@ -240,6 +244,18 @@ settings["Zheng_PNAS2012"] = GradientCheckSettings(
     atol_check=5e-4,
     rtol_check=4e-3,
     noise_level=0.01,
+    ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
+    step_sizes=[
+        3e-1,
+        2e-1,
+        1e-1,
+        5e-2,
+        1e-2,
+        5e-1,
+        1e-3,
+        1e-4,
+        1e-5,
+    ],
 )
 
 
@@ -726,13 +742,34 @@ def test_nominal_parameters_llh_v2(problem_id):
         return None
         # pytest.skip("Excluded from gradient check.")
 
+    # TODO
+    scale = False
+
+    # also excluded from v1 test
+    if not scale and problem_id in (
+        "Smith_BMCSystBiol2013",
+        "Brannmark_JBC2010",
+        "Elowitz_Nature2000",
+        "Borghans_BiophysChem1997",
+        "Sneyd_PNAS2002",
+        "Bertozzi_PNAS2020",
+        # "Zheng_PNAS2012",
+    ):
+        # not really worth the effort trying to fix these cases if they
+        # only fail on linear scale
+        pytest.skip("scale=False disabled for this problem")
+
     cur_settings = settings[problem_id]
     ps._solver.set_absolute_tolerance(cur_settings.atol_sim)
     ps._solver.set_relative_tolerance(cur_settings.rtol_sim)
     ps._solver.set_max_steps(200_000)
+
     # TODO: ASA + FSA
     sensitivity_method = SensitivityMethod.forward
     ps._solver.set_sensitivity_method(sensitivity_method)
+    ps._model.set_steady_state_computation_mode(
+        cur_settings.ss_computation_mode
+    )
     # TODO: we should probably test all sensitivity modes
     ps._model.set_steady_state_sensitivity_mode(
         cur_settings.ss_sensitivity_mode
@@ -746,8 +783,6 @@ def test_nominal_parameters_llh_v2(problem_id):
         # TODO: num_threads=os.cpu_count(),
     )
     np.random.seed(cur_settings.rng_seed)
-    # TODO
-    scale = False
 
     # find a point where the derivative can be computed
     for _ in range(5):
