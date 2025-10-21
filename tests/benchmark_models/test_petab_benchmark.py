@@ -36,6 +36,7 @@ from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import (
     LLH,
     RDATAS,
+    SLLH,
     rdatas_to_measurement_df,
     simulate_petab,
 )
@@ -686,9 +687,9 @@ def test_nominal_parameters_llh_v2(problem_id):
 
     ret = ps.simulate(problem_parameters=problem_parameters)
 
-    rdatas = ret["rdatas"]
+    rdatas = ret[RDATAS]
     # chi2 = sum(rdata["chi2"] for rdata in rdatas)
-    llh = ret["llh"]
+    llh = ret[LLH]
 
     simulation_df = rdatas_to_simulation_df(
         rdatas, ps._model, pi.petab_problem
@@ -741,6 +742,18 @@ def test_nominal_parameters_llh_v2(problem_id):
     if problem_id not in problems_for_gradient_check:
         return None
         # pytest.skip("Excluded from gradient check.")
+
+    # sensitivities computed w.r.t. the expected parameters? (`plist` correct?)
+    ps._solver.set_sensitivity_order(SensitivityOrder.first)
+    ps._solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps._model.set_always_check_finite(True)
+    result = ps.simulate(
+        problem_parameters=problem_parameters,
+    )
+    assert result[SLLH] is not None
+    actual_sens_pars = set(result[SLLH].keys())
+    expected_sens_pars = set(problem.x_free_ids)
+    assert actual_sens_pars == expected_sens_pars
 
     # TODO
     scale = False
