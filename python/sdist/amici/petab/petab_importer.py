@@ -740,13 +740,28 @@ class ExperimentManager:
         :param problem_parameters: Problem parameters to be applied.
         """
         # TODO: support ndarray in addition to dict
-        # TODO set plist
 
         # TODO: must handle output overrides here, or add them to the events
         par_vals = np.array(self._original_p)
         pid_to_idx = self._pid_to_idx
         experiment_id = edata.id
         experiment = self._petab_problem[experiment_id]
+
+        # plist -- estimated parameters + those mapped via placeholders
+        # TODO sufficient to set them during creation of edata or allow dynamic fixing of parameters?
+        #  store list of sensitivity parameter in class instead of using x_free_ids or estimate=True
+        plist = []
+        placeholder_mappings = self._get_placeholder_mapping(experiment)
+        estimated_par_ids = self._petab_problem.x_free_ids
+        for model_par_idx, model_par_id in enumerate(
+            self._model.get_parameter_ids()
+        ):
+            if model_par_id in estimated_par_ids or (
+                (maps_to := placeholder_mappings.get(model_par_id)) is not None
+                and maps_to in estimated_par_ids
+            ):
+                plist.append(model_par_idx)
+        edata.plist = plist
 
         # Update fixed parameters in case they are affected by problem
         #  parameters (i.e., parameter table parameters)
@@ -865,6 +880,42 @@ class ExperimentManager:
         """The AMICI model used by this ExperimentManager."""
         return self._model
 
+    def _get_placeholder_mapping(
+        self, experiment: v2.Experiment
+    ) -> dict[str, str]:
+        """Get the mapping from model parameter IDs (= PEtab placeholder ID)
+        to problem parameter IDs for placeholders in the given experiment.
+
+        Because AMICI does not support timepoint-specific overrides,
+        this mapping is unique.
+
+        :param experiment: The experiment to get the mapping for.
+        :return: The mapping from model parameter IDs to problem parameter IDs.
+        """
+        mapping = {}
+        for measurement in self._petab_problem.get_measurements_for_experiment(
+            experiment
+        ):
+            observable = self._petab_problem[measurement.observable_id]
+            for placeholder, override in zip(
+                observable.observable_placeholders,
+                measurement.observable_parameters,
+                strict=True,
+            ):
+                # we don't care about numeric overrides here
+                if isinstance(override, sp.Symbol):
+                    mapping[str(placeholder)] = str(override)
+
+            for placeholder, override in zip(
+                observable.noise_placeholders,
+                measurement.noise_parameters,
+                strict=True,
+            ):
+                # we don't care about numeric overrides here
+                if isinstance(override, sp.Symbol):
+                    mapping[str(placeholder)] = str(override)
+        return mapping
+
 
 class PetabSimulator:
     """
@@ -962,60 +1013,23 @@ class PetabSimulator:
 
         parameter_ids = self._model.get_parameter_ids()
 
-        # TODO still needs parameter mapping for placeholders
+        # still needs parameter mapping for placeholders
         for rdata in rdatas:
             experiment = self._petab_problem[rdata.id]
-            placeholder_mappings = self._get_placeholder_mapping(experiment)
-            print("PLACEHOLDERS", experiment, placeholder_mappings)
+            placeholder_mappings = self._exp_man._get_placeholder_mapping(
+                experiment
+            )
             for model_par_idx, sllh in zip(
-                self._model.get_parameter_list(), rdata.sllh, strict=True
+                rdata.plist, rdata.sllh, strict=True
             ):
                 model_par_id = problem_par_id = parameter_ids[model_par_idx]
                 if maps_to := placeholder_mappings.get(model_par_id):
                     problem_par_id = maps_to
 
-                print("ADDING SLLH", model_par_id, problem_par_id, sllh)
                 sllh_total[problem_par_id] = (
                     sllh_total.get(problem_par_id, 0.0) + sllh
                 )
-        print("SLLH TOTAL", sllh_total)
         return sllh_total
-
-    def _get_placeholder_mapping(
-        self, experiment: v2.Experiment
-    ) -> dict[str, str]:
-        """Get the mapping from model parameter IDs (= PEtab placeholder ID)
-        to problem parameter IDs for placeholders in the given experiment.
-
-        Because AMICI does not support timepoint-specific overrides,
-        this mapping is unique.
-
-        :param experiment: The experiment to get the mapping for.
-        :return: The mapping from model parameter IDs to problem parameter IDs.
-        """
-        mapping = {}
-        for measurement in self._petab_problem.get_measurements_for_experiment(
-            experiment
-        ):
-            observable = self._petab_problem[measurement.observable_id]
-            for placeholder, override in zip(
-                observable.observable_placeholders,
-                measurement.observable_parameters,
-                strict=True,
-            ):
-                # we don't care about numeric overrides here
-                if isinstance(override, sp.Symbol):
-                    mapping[str(placeholder)] = str(override)
-
-            for placeholder, override in zip(
-                observable.noise_placeholders,
-                measurement.noise_parameters,
-                strict=True,
-            ):
-                # we don't care about numeric overrides here
-                if isinstance(override, sp.Symbol):
-                    mapping[str(placeholder)] = str(override)
-        return mapping
 
 
 def _set_default_experiment(
