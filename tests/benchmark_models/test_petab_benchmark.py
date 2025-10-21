@@ -615,6 +615,15 @@ def test_nominal_parameters_llh_v2(problem_id):
     #   Lucarelli_CellSystems2018
     #   Schwen_PONE2014
     #  store new reference values or recompute llh with log10-normal noise?
+    v1_problem = benchmark_models_petab.get_problem(problem_id)
+    if (
+        petab.C.OBSERVABLE_TRANSFORMATION in v1_problem.observable_df
+        and petab.C.LOG10
+        in v1_problem.observable_df[petab.C.OBSERVABLE_TRANSFORMATION].unique()
+    ):
+        pytest.skip(
+            "Problem uses log10-normal noise, not supported in PEtab v2."
+        )
 
     if problem_id not in problems_for_llh_check:
         pytest.skip("Excluded from log-likelihood check.")
