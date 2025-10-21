@@ -21,6 +21,7 @@ import petab.v1 as petab
 import pytest
 import yaml
 from amici import SensitivityMethod
+from amici.adapters.fiddy import simulate_petab_to_cached_functions
 from amici.logging import get_logger
 from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import (
@@ -31,7 +32,6 @@ from amici.petab.simulations import (
 )
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
-from fiddy.extensions.amici import simulate_petab_to_cached_functions
 from fiddy.success import Consistency
 from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 from petab.v1.visualize import plot_problem
