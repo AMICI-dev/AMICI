@@ -697,3 +697,18 @@ def test_pickle_model(sbml_example_presimulation_module):
         model.get_steady_state_sensitivity_mode()
         != model_pickled.get_steady_state_sensitivity_mode()
     )
+
+
+def test_pickle_edata():
+    ny = 2
+    nz = 3
+    ne = 4
+    nt = 5
+    edata = amici.ExpData(ny, nz, ne, range(nt))
+    edata.set_observed_data(list(np.arange(ny * nt, dtype=float)))
+    edata.pscale = amici.parameter_scaling_from_int_vector(
+        [amici.ParameterScaling.log10] * 5
+    )
+
+    edata_pickled = pickle.loads(pickle.dumps(edata))
+    assert edata == edata_pickled
