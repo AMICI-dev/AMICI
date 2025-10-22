@@ -5,12 +5,15 @@ Test getters, setters, etc.
 
 import copy
 import numbers
+import pickle
 from math import nan
 
 import amici
 import numpy as np
 import pytest
 import xarray
+from amici import SteadyStateSensitivityMode
+from amici.testing import skip_on_valgrind
 
 
 def test_version_number(pysb_example_presimulation_module):
@@ -664,3 +667,33 @@ def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
                 assert rdata.ssigmay is None
                 assert rdata.sllh.size > 0
                 assert not np.isnan(rdata.sllh).any()
+
+
+@skip_on_valgrind
+def test_pickle_model(sbml_example_presimulation_module):
+    model_module = sbml_example_presimulation_module
+    model = model_module.get_model()
+
+    assert (
+        model.get_steady_state_sensitivity_mode()
+        == SteadyStateSensitivityMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+
+    model_pickled = pickle.loads(pickle.dumps(model))
+    # ensure it's re-picklable
+    model_pickled = pickle.loads(pickle.dumps(model_pickled))
+    assert (
+        model_pickled.get_steady_state_sensitivity_mode()
+        == SteadyStateSensitivityMode.newtonOnly
+    )
+
+    model_pickled.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
+    assert (
+        model.get_steady_state_sensitivity_mode()
+        != model_pickled.get_steady_state_sensitivity_mode()
+    )
