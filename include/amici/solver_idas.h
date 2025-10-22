@@ -35,6 +35,8 @@ class IDASolver : public Solver {
      */
     Solver* clone() const override;
 
+    std::string get_class_name() const override {return "IDASolver"; };
+
     void reinit_post_process_f(realtype tnext) const override;
 
     void reinit_post_process_b(realtype tnext) const override;

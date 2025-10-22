@@ -712,3 +712,25 @@ def test_pickle_edata():
 
     edata_pickled = pickle.loads(pickle.dumps(edata))
     assert edata == edata_pickled
+
+
+@pytest.mark.skipif(
+    not amici.hdf5_enabled,
+    reason="AMICI build without HDF5 support",
+)
+def test_pickle_solver():
+    for solver in (
+        amici.CVodeSolver(),
+        amici.IDASolver(),
+        amici.SolverPtr(amici.CVodeSolver()),
+        amici.SolverPtr(amici.IDASolver()),
+    ):
+        solver.set_max_steps(1234)
+        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver_pickled = pickle.loads(pickle.dumps(solver))
+        assert type(solver) is type(solver_pickled)
+        assert solver.get_max_steps() == solver_pickled.get_max_steps()
+        assert (
+            solver.get_sensitivity_order()
+            == solver_pickled.get_sensitivity_order()
+        )

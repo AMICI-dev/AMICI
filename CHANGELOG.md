@@ -61,11 +61,19 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   This is a wrapper for both `amici.run_simulation` and
   `amici.run_simulations`, depending on the type of the `edata` argument.
   It also supports passing some `Solver` options as keyword arguments.
-* `amici.ModelPtr` now supports sufficient pickling for use in
-  multi-processing contexts. This works only if the amici-generated model
-  package exists in the same file system location and does not change until
-  unpickling.
-* `amici.ExpData` is now picklable.
+* Improved `pickle` support for `amici.{ModelPtr,Solver,ExpData`.
+  Note that AMICI's pickling support is only intended for short-term storage
+  or inter-process communication.
+  Reading pickled objects after updating AMICI or the model code will almost
+  certainly fail.
+  * `amici.ModelPtr` now supports sufficient pickling for use in
+    multi-processing contexts. This works only if the amici-generated model
+    package exists in the same file system location and does not change until
+    unpickling.
+  * `amici.Solver` is now picklable if amici was built with HDF5 support.
+    This only works on shared file systems, as the solver state is stored in a
+    temporary HDF5 file.
+  * `amici.ExpData` is now picklable.
 
 ## v0.X Series
 
