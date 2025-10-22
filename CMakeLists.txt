@@ -6,6 +6,11 @@ cmake_minimum_required(VERSION 3.22)
 # src/CMakeLists.template.cmake
 cmake_policy(VERSION 3.22...3.31)
 
+# We aren't using C++20 modules, so disable scanning for them to avoid
+# clang-scan-deps-notfound errors.
+# See also https://discourse.cmake.org/t/cmake-3-28-cmake-cxx-compiler-clang-scan-deps-notfound-not-found/9244/3
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 project(amici)
 
 # misc options
@@ -238,7 +243,8 @@ add_dependencies(${PROJECT_NAME} version)
 
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
-                                                 "${PUBLIC_HEADERS}")
+                                                 "${PUBLIC_HEADERS}"
+                                                 CXX_SCAN_FOR_MODULES OFF)
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
