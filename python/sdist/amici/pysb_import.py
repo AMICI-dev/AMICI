@@ -661,7 +661,8 @@ def _add_expression(
     """
     if not pysb_model_has_obs_and_noise or name not in observation_model:
         if any(
-            name == channel.sigma for channel in observation_model.values()
+            name == str(channel.sigma)
+            for channel in observation_model.values()
         ):
             component = SigmaY
         else:
@@ -684,7 +685,9 @@ def _add_expression(
         )
         ode_model.add_component(obs)
 
-        sigma = _get_sigma(pysb_model, name, observation_model[name].sigma)
+        sigma = _get_sigma(
+            pysb_model, name, str(observation_model[name].sigma)
+        )
         if not pysb_model_has_obs_and_noise:
             ode_model.add_component(
                 SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))

@@ -14,7 +14,7 @@ from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 from pprint import pprint
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,7 @@ from petab import v1 as v1
 from petab import v2 as v2
 from petab.v2 import ExperimentPeriod, Observable
 from petab.v2.converters import ExperimentsToSbmlConverter
-from petab.v2.models import MODEL_TYPE_SBML
+from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
 from amici import MeasurementChannel, SensitivityOrder
@@ -31,6 +31,9 @@ from amici import MeasurementChannel, SensitivityOrder
 from ..de_model import DEModel
 from ..logging import get_logger
 from .sbml_import import _add_global_parameter
+
+if TYPE_CHECKING:
+    import pysb
 
 __all__ = [
     "PetabImporter",
@@ -114,10 +117,14 @@ class PetabImporter:
                 "problems."
             )
 
-        if self.petab_problem.model.type_id != MODEL_TYPE_SBML:
+        if self.petab_problem.model.type_id not in (
+            MODEL_TYPE_SBML,
+            MODEL_TYPE_PYSB,
+        ):
+            # if self.petab_problem.model.type_id != MODEL_TYPE_SBML:
             raise NotImplementedError(
                 "PEtab v2 importer currently only supports SBML models. "
-                f"Got {self.petab_problem.model.type_id}."
+                f"Got {self.petab_problem.model.type_id!r}."
             )
         if jax:
             raise NotImplementedError(
@@ -125,7 +132,10 @@ class PetabImporter:
             )
 
         pprint(self.petab_problem.model_dump())
-        print(self.petab_problem.model.to_antimony())
+        if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
+            print(self.petab_problem.model.to_antimony())
+        elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
+            print(self.petab_problem.model.to_str())
 
         self._check_support(self.petab_problem)
 
@@ -152,21 +162,40 @@ class PetabImporter:
         # ensure each measurement has an experimentId
         _set_default_experiment(self.petab_problem)
 
-        # Convert petab experiments to events, because so far,
-        #  AMICI only supports preequilibration/presimulation/simulation, but
-        #  no arbitrary list of periods.
-        self._exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
-        # This will always create a copy of the problem.
-        self.petab_problem = self._exp_event_conv.convert()
-        for experiment in self.petab_problem.experiments:
-            if len(experiment.periods) > 2:
-                raise NotImplementedError(
-                    "AMICI currently does not support more than two periods."
-                )
+        if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
+            # Convert petab experiments to events, because so far,
+            #  AMICI only supports preequilibration/presimulation/simulation, but
+            #  no arbitrary list of periods.
+            self._exp_event_conv = ExperimentsToSbmlConverter(
+                self.petab_problem
+            )
+            # This will always create a copy of the problem.
+            self.petab_problem = self._exp_event_conv.convert()
+            for experiment in self.petab_problem.experiments:
+                if len(experiment.periods) > 2:
+                    raise NotImplementedError(
+                        "AMICI currently does not support more than two periods."
+                    )
 
-        # TODO remove dbg
-        pprint(self.petab_problem.model_dump())
-        print(self.petab_problem.model.to_antimony())
+            # TODO remove dbg
+            pprint(self.petab_problem.model_dump())
+            print(self.petab_problem.model.to_antimony())
+
+        elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
+            if any(
+                len(experiment.periods) > 1
+                for experiment in self.petab_problem.experiments
+            ):
+                raise NotImplementedError(
+                    "AMICI currently does not support more than one period "
+                    "for PySB models."
+                )
+            # TODO: test cases 1--4 7-8 14-15  work
+            #   skipped: 6 (timepoint-specific overrides) 9 (>1 condition) 10,11,13,16,17 (mapping)
+            #   failing: 5 (condition changes / preeq https://github.com/AMICI-dev/AMICI/issues/2975) 12
+            # raise NotImplementedError(
+            #     "PEtab v2 importer currently does not support PySB models. "
+            # )
 
     def _upgrade_if_needed(
         self, problem: v1.Problem | v2.Problem
@@ -215,7 +244,9 @@ class PetabImporter:
             ).absolute()
         return self._outdir
 
-    def _do_import(self, non_estimated_parameters_as_constants: bool = True):
+    def _do_import_sbml(
+        self, non_estimated_parameters_as_constants: bool = True
+    ):
         """Import the model.
 
         Generate the symbolic model according to the given PEtab problem and
@@ -293,6 +324,190 @@ class PetabImporter:
         )
         sbml_model = sbml_importer.sbml
 
+        self._check_placeholders()
+
+        fixed_parameters |= _get_fixed_parameters_sbml(
+            petab_problem=self.petab_problem,
+            non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
+        )
+
+        fixed_parameters = list(sorted(fixed_parameters))
+
+        logger.debug(f"Fixed parameters are {fixed_parameters}")
+        logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
+        logger.info(
+            "Variable parameters: "
+            + str(
+                len(sbml_model.getListOfParameters()) - len(fixed_parameters)
+            )
+        )
+
+        # Create Python module from SBML model
+        if self._jax:
+            sbml_importer.sbml2jax(
+                model_name=self.model_id,
+                output_dir=self.outdir,
+                observation_model=observation_model,
+                verbose=self._verbose,
+                # **kwargs,
+            )
+            return sbml_importer
+        else:
+            # TODO:
+            allow_reinit_fixpar_initcond = True
+            sbml_importer.sbml2amici(
+                model_name=self.model_id,
+                output_dir=self.outdir,
+                observation_model=observation_model,
+                constant_parameters=fixed_parameters,
+                allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+                verbose=self._verbose,
+                # FIXME: simplification takes ages for Smith_BMCSystBiol2013
+                #  due to nested piecewises / Heavisides?!
+                simplify=None,
+                # **kwargs,
+            )
+        # TODO: ensure that all estimated parameters are present as
+        #  (non-constant) parameters in the model
+
+        if self._compile:
+            # check that the model extension was compiled successfully
+            _ = self.import_module()
+            # model = model_module.getModel()
+            # TODO check_model(amici_model=model, petab_problem=petab_problem)
+
+        return sbml_importer
+
+    def _do_import_pysb(
+        self, non_estimated_parameters_as_constants: bool = True
+    ):
+        """Import the PySB model.
+
+        Generate the symbolic model according to the given PEtab problem and
+        generate the corresponding Python module.
+
+        :param non_estimated_parameters_as_constants:
+            Whether parameters marked as non-estimated in PEtab should be
+            considered constant in AMICI. Setting this to ``True`` will reduce
+            model size and simulation times. If sensitivities with respect to
+            those parameters are required, this should be set to ``False``.
+        """
+        # TODO split into DEModel creation, code generation and compilation
+        #   allow retrieving DEModel without compilation
+
+        from petab.v2.models.pysb_model import PySBModel
+
+        if not isinstance(self.petab_problem.model, PySBModel):
+            raise ValueError("The PEtab problem must contain a PySB model.")
+
+        logger.info("Importing PySB model ...")
+
+        if not self.petab_problem.observables:
+            raise NotImplementedError(
+                "PEtab import without observables table "
+                "is currently not supported."
+            )
+
+        if self.model_id is None:
+            raise ValueError(
+                "No `model_id` was provided and no model "
+                "ID was specified in the model."
+            )
+
+        logger.info(
+            f"Model ID is '{self.model_id}'.\n"
+            f"Writing model code to '{self.outdir}'."
+        )
+
+        import pysb
+
+        # need to create a copy here as we don't want to modify the original
+        pysb.SelfExporter.cleanup()
+        # TODO restore later
+        og_export = pysb.SelfExporter.do_export
+        pysb.SelfExporter.do_export = False
+        pysb_model = pysb.Model(
+            base=self.petab_problem.model.model,
+            name=self.petab_problem.model.model_id,
+        )
+        # TODO add observation model to PySB model
+        _add_observation_model_pysb(pysb_model, self.petab_problem, self._jax)
+        observation_model = self._get_observation_model()
+
+        logger.info(f"#Observables: {len(observation_model)}")
+        logger.debug(f"Observables: {observation_model}")
+
+        # generate species for the _original_ model
+        pysb.bng.generate_equations(self.petab_problem.model.model)
+        # fixed_parameters = _add_initialization_variables(pysb_model,
+        #                                                 petab_problem)
+        pysb.SelfExporter.do_export = og_export
+
+        # All indicator variables, i.e., all remaining targets after
+        #  experiments-to-event in the PEtab problem must be converted
+        #  to fixed parameters
+        fixed_parameters = {
+            change.target_id
+            for experiment in self.petab_problem.experiments
+            for period in experiment.periods
+            for condition_id in period.condition_ids
+            for change in self.petab_problem[condition_id].changes
+        }
+
+        self._check_placeholders()
+        # TODO pysb fixed parameters
+        # fixed_parameters |= _get_fixed_parameters_sbml(
+        #     petab_problem=self.petab_problem,
+        #     non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
+        # )
+
+        fixed_parameters = list(sorted(fixed_parameters))
+
+        logger.debug(f"Fixed parameters are {fixed_parameters}")
+        logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
+        logger.info(
+            "Variable parameters: "
+            + str(len(pysb_model.parameters) - len(fixed_parameters))
+        )
+
+        from amici.pysb_import import pysb2amici, pysb2jax
+
+        # Create Python module from PySB model
+        if self._jax:
+            pysb2jax(
+                model=pysb_model,
+                model_name=self.model_id,
+                output_dir=self.outdir,
+                observation_model=observation_model,
+                verbose=self._verbose,
+                pysb_model_has_obs_and_noise=True,
+                # **kwargs,
+            )
+            return
+        else:
+            pysb2amici(
+                model=pysb_model,
+                model_name=self.model_id,
+                output_dir=self.outdir,
+                verbose=True,
+                constant_parameters=fixed_parameters,
+                observation_model=observation_model,
+                pysb_model_has_obs_and_noise=True,
+                # **kwargs,
+            )
+
+        # TODO: ensure that all estimated parameters are present as
+        #  (non-constant) parameters in the model
+
+        if self._compile:
+            # check that the model extension was compiled successfully
+            _ = self.import_module()
+            # model = model_module.getModel()
+            # TODO check_model(amici_model=model, petab_problem=petab_problem)
+
+        return
+
+    def _check_placeholders(self):
         # check for time-point-specific placeholders
         #  for now, we only support:
         #  * observable placeholders that are replaced by the same expression
@@ -363,58 +578,6 @@ class PetabImporter:
         #         "the problem and try again."
         #     )
 
-        fixed_parameters |= _get_fixed_parameters_sbml(
-            petab_problem=self.petab_problem,
-            non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-        )
-
-        fixed_parameters = list(sorted(fixed_parameters))
-
-        logger.debug(f"Fixed parameters are {fixed_parameters}")
-        logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
-        logger.info(
-            "Variable parameters: "
-            + str(
-                len(sbml_model.getListOfParameters()) - len(fixed_parameters)
-            )
-        )
-
-        # Create Python module from SBML model
-        if self._jax:
-            sbml_importer.sbml2jax(
-                model_name=self.model_id,
-                output_dir=self.outdir,
-                observation_model=observation_model,
-                verbose=self._verbose,
-                # **kwargs,
-            )
-            return sbml_importer
-        else:
-            # TODO:
-            allow_reinit_fixpar_initcond = True
-            sbml_importer.sbml2amici(
-                model_name=self.model_id,
-                output_dir=self.outdir,
-                observation_model=observation_model,
-                constant_parameters=fixed_parameters,
-                allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
-                verbose=self._verbose,
-                # FIXME: simplification takes ages for Smith_BMCSystBiol2013
-                #  due to nested piecewises / Heavisides?!
-                simplify=None,
-                # **kwargs,
-            )
-        # TODO: ensure that all estimated parameters are present as
-        #  (non-constant) parameters in the model
-
-        if self._compile:
-            # check that the model extension was compiled successfully
-            _ = self.import_module()
-            # model = model_module.getModel()
-            # TODO check_model(amici_model=model, petab_problem=petab_problem)
-
-        return sbml_importer
-
     def _workaround_observable_parameters(
         self, output_parameter_defaults: dict[str, float] = None
     ) -> None:
@@ -472,7 +635,10 @@ class PetabImporter:
         :return: The imported model module.
         """
         if not self.outdir.is_dir() or force_import:
-            self._do_import()
+            if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
+                self._do_import_sbml()
+            else:
+                self._do_import_pysb()
 
         return amici.import_model_module(
             self.model_id,
@@ -1440,3 +1606,71 @@ def _get_fixed_parameters_sbml(
     estimated_parameters = set(petab_problem.x_free_ids)
 
     return amici_parameters - estimated_parameters
+
+
+def _add_observation_model_pysb(
+    pysb_model: pysb.Model, petab_problem: v2.Problem, jax: bool = False
+):
+    """Extend PySB model by observation model as defined in the PEtab
+    observables table"""
+    import pysb
+
+    from amici.import_utils import strip_pysb
+
+    # add any required output parameters
+    local_syms = {
+        sp.Symbol(sp.Symbol.__str__(comp), real=True): comp
+        for comp in pysb_model.components
+        if isinstance(comp, sp.Symbol)
+    }
+
+    def process_formula(sym: sp.Expr):
+        changed_formula = False
+        sym = sym.subs(local_syms)
+        for s in sym.free_symbols:
+            if not isinstance(s, pysb.Component):
+                # if jax:
+                #     name = re.sub(placeholder_pattern, r"\1", str(s))
+                # else:
+                #     name = str(s)
+                name = str(s)
+                p = pysb.Parameter(name, 1.0)
+                pysb_model.add_component(p)
+
+                # placeholders for multiple observables are mapped to the
+                # same symbol, so only add to local_syms when necessary
+                if name not in local_syms:
+                    local_syms[sp.Symbol(name, real=True)] = p
+
+                # replace placeholder with parameter
+                if jax and name != str(s):
+                    changed_formula = True
+                    sym = sym.subs(s, local_syms[name])
+        return sym, changed_formula
+
+    for observable in petab_problem.observables:
+        sym, changed_formula = process_formula(observable.formula)
+        if jax and changed_formula:
+            observable.formula = strip_pysb(sym)
+
+        sym, changed_formula = process_formula(observable.noise_formula)
+        if jax and changed_formula:
+            observable.noise_formula = strip_pysb(sym)
+
+    # add observables and sigmas to pysb model
+    for observable in petab_problem.observables:
+        # obs_symbol = sp.sympify(observable_formula, locals=local_syms)
+        if observable.id in pysb_model.expressions.keys():
+            obs_expr = pysb_model.expressions[observable.id]
+        else:
+            obs_expr = pysb.Expression(observable.id, observable.formula)
+            pysb_model.add_component(obs_expr)
+        local_syms[sp.Symbol(observable.id, real=True)] = obs_expr
+
+        sigma_id = f"{observable.id}_sigma"
+        sigma_expr = pysb.Expression(
+            sigma_id, observable.noise_formula.subs(local_syms)
+        )
+        observable.noise_formula = sp.Symbol(sigma_id, real=True)
+        pysb_model.add_component(sigma_expr)
+        local_syms[sp.Symbol(sigma_id, real=True)] = sigma_expr
