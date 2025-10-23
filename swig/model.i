@@ -195,6 +195,20 @@ def simulate(
 def __deepcopy__(self, memo):
     return self.clone()
 
+def __reduce__(self):
+    from amici.swig_wrappers import restore_model, get_model_settings, file_checksum
+
+    return (
+        restore_model,
+        (
+            self.get_name(),
+            Path(self.module.__spec__.origin).parent,
+            get_model_settings(self),
+            file_checksum(self.module.extension_path),
+        ),
+        {}
+    )
+
 
 @overload
 def simulate(

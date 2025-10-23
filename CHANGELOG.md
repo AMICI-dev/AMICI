@@ -61,6 +61,10 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   This is a wrapper for both `amici.run_simulation` and
   `amici.run_simulations`, depending on the type of the `edata` argument.
   It also supports passing some `Solver` options as keyword arguments.
+* `amici.ModelPtr` now supports sufficient pickling for use in
+  multi-processing contexts. This works only if the amici-generated model
+  package exists in the same file system location and does not change until
+  unpickling.
 
 ## v0.X Series
 
