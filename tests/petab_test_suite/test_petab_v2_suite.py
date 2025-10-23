@@ -2,7 +2,6 @@
 """Test PEtab v2 import"""
 
 import logging
-import shutil
 import sys
 
 import numpy as np
@@ -72,8 +71,6 @@ def _test_case(case, model_type, version, jax):
         compile_=True,
         jax=jax,
     )
-    # TODO force re-import
-    shutil.rmtree(pi.outdir, ignore_errors=True)
 
     ps = pi.create_simulator(
         force_import=True,
