@@ -783,7 +783,7 @@ class Event(ModelQuantity):
         if len(self._assignments) == 0:
             return None
 
-        x_to_x_old = dict(zip(x, x_old))
+        x_to_x_old = dict(zip(x, x_old, strict=True))
 
         def get_bolus(x_i: sp.Symbol) -> sp.Expr:
             """
