@@ -95,7 +95,7 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     layer_map = {
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
-        "Flatten": "amici.jax.nn.Flatten",
+        "Flatten": "amici.jax.Flatten",
     }
     if layer.layer_type.startswith(
         ("BatchNorm", "AlphaDropout", "InstanceNorm")
@@ -187,7 +187,7 @@ def _generate_forward(node: "Node", indent, frozen_layers: dict = {}, layer_type
             "hardtanh": "jax.nn.hard_tanh",
             "hardsigmoid": "jax.nn.hard_sigmoid",
             "hardswish": "jax.nn.hard_swish",
-            "tanhshrink": "amici.jax.nn.tanhshrink",
+            "tanhshrink": "amici.jax.tanhshrink",
             "softsign": "jax.nn.soft_sign",
         }
         if node.target == "hardtanh":
