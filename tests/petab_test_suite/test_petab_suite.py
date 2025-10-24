@@ -27,8 +27,7 @@ logger.addHandler(stream_handler)
 def test_case(case, model_type, version, jax):
     """Wrapper for _test_case for handling test outcomes"""
     try:
-        if model_type == "pysb" and version == "v2.0.0":
-            _test_case(case, model_type, version, jax)
+        _test_case(case, model_type, version, jax)
     except Exception as e:
         if isinstance(
             e, NotImplementedError
