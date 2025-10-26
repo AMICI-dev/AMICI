@@ -8,10 +8,11 @@ import sysconfig
 from pathlib import Path
 
 ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+extension_path = Path(__file__).parent / f'_TPL_MODELNAME{ext_suffix}'
 _TPL_MODELNAME = amici._module_from_path(
     'TPL_MODELNAME._TPL_MODELNAME' if __package__ or '.' in __name__
     else '_TPL_MODELNAME',
-    Path(__file__).parent / f'_TPL_MODELNAME{ext_suffix}',
+    extension_path,
 )
 
 def _get_import_time():

@@ -6,6 +6,7 @@ import contextlib
 import logging
 import warnings
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any
 
 import amici
@@ -342,3 +343,57 @@ def _Model__simulate(
             solver=_get_ptr(solver),
             edata=_get_ptr(edata),
         )
+
+
+def restore_model(
+    module_name: str, module_path: Path, settings: dict, checksum: str = None
+) -> amici.Model:
+    """
+    Recreate a model instance with given settings.
+
+    For use in ModelPtr.__reduce__.
+
+    :param module_name:
+        Name of the model module.
+    :param module_path:
+        Path to the model module.
+    :param settings:
+        Model settings to be applied.
+        See `set_model_settings` / `get_model_settings`.
+    :param checksum:
+        Checksum of the model extension to verify integrity.
+    """
+    from . import import_model_module
+
+    model_module = import_model_module(module_name, module_path)
+    model = model_module.get_model()
+    model.module = model_module._self
+    set_model_settings(model, settings)
+
+    if checksum is not None and checksum != file_checksum(
+        model.module.extension_path
+    ):
+        raise RuntimeError(
+            f"Model file checksum does not match the expected checksum "
+            f"({checksum}). The model file may have been modified "
+            f"after the model was pickled."
+        )
+
+    return model
+
+
+def file_checksum(
+    path: str | Path, algorithm: str = "sha256", chunk_size: int = 8192
+) -> str:
+    """
+    Compute checksum for `path` using `algorithm` (e.g. 'md5', 'sha1', 'sha256').
+    Returns the hexadecimal digest string.
+    """
+    import hashlib
+
+    path = Path(path)
+    h = hashlib.new(algorithm)
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            h.update(chunk)
+    return h.hexdigest()

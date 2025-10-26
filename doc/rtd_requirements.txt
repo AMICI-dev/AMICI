@@ -29,3 +29,4 @@ ipykernel
 -e git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab
 -e python/sdist/[jax]
 antimony>=2.13
+fiddy>=0.0.3
