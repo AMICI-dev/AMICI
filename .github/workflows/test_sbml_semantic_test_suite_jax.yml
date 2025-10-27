@@ -44,7 +44,7 @@ jobs:
     - run: ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: amici-semantic-results-jax-${{ matrix.cases }}
         path: tests/sbml/amici-semantic-results-jax
