@@ -38,6 +38,8 @@ class CVodeSolver : public Solver {
      */
     Solver* clone() const override;
 
+    std::string get_class_name() const override {return "CVodeSolver"; };
+
     void reinit(
         realtype t0, AmiVector const& yy0, AmiVector const& yp0
     ) const override;
