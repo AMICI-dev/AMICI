@@ -65,6 +65,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   multi-processing contexts. This works only if the amici-generated model
   package exists in the same file system location and does not change until
   unpickling.
+* `amici.ExpData` is now picklable.
 
 ## v0.X Series
 

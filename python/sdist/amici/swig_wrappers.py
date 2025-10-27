@@ -397,3 +397,26 @@ def file_checksum(
         for chunk in iter(lambda: f.read(chunk_size), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def restore_edata(
+    init_args: Sequence,
+    simulation_parameter_dict: dict[str, Any],
+) -> amici_swig.ExpData:
+    """
+    Recreate an ExpData instance.
+
+    For use in ExpData.__reduce__.
+    """
+    edata = amici_swig.ExpData(*init_args)
+
+    edata.pscale = amici.parameter_scaling_from_int_vector(
+        simulation_parameter_dict.pop("pscale")
+    )
+    for key, value in simulation_parameter_dict.items():
+        if key == "timepoints":
+            # timepoints are set during ExpData construction
+            continue
+        assert hasattr(edata, key)
+        setattr(edata, key, value)
+    return edata
