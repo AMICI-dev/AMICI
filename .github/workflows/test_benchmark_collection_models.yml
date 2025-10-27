@@ -84,7 +84,7 @@ jobs:
       run: |
           python3 tests/benchmark_models/evaluate_benchmark.py
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
         path: |
