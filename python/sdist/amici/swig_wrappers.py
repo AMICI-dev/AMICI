@@ -397,3 +397,52 @@ def file_checksum(
         for chunk in iter(lambda: f.read(chunk_size), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def restore_edata(
+    init_args: Sequence,
+    simulation_parameter_dict: dict[str, Any],
+) -> amici_swig.ExpData:
+    """
+    Recreate an ExpData instance.
+
+    For use in ExpData.__reduce__.
+    """
+    edata = amici_swig.ExpData(*init_args)
+
+    edata.pscale = amici.parameter_scaling_from_int_vector(
+        simulation_parameter_dict.pop("pscale")
+    )
+    for key, value in simulation_parameter_dict.items():
+        if key == "timepoints":
+            # timepoints are set during ExpData construction
+            continue
+        assert hasattr(edata, key)
+        setattr(edata, key, value)
+    return edata
+
+
+def restore_solver(cls: type, cls_name: str, hdf5_file: str) -> Solver:
+    """
+    Recreate a Solver or SolverPtr instance from an HDF5 file.
+
+    For use in Solver.__reduce__.
+
+    :param cls:
+        Class of the original object ({CVode,IDA}Solver or SolverPtr).
+    :param cls_name:
+        Name of the (pointed to) solver class ("CVodeSolver" or "IDASolver").
+    :param hdf5_file:
+        HDF5 file from which to read the solver settings.
+    """
+    if cls_name == "CVodeSolver":
+        solver = amici.CVodeSolver()
+    elif cls_name == "IDASolver":
+        solver = amici.IDASolver()
+    else:
+        raise ValueError(f"Unknown solver class name: {cls_name}")
+
+    if not issubclass(cls, Solver):
+        solver = cls(solver)
+    read_solver_settings_from_hdf5(hdf5_file, solver)
+    return solver

@@ -155,6 +155,23 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_sim;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_presim;
 
+%extend amici::SimulationParameters {
+%pythoncode %{
+    def __iter__(self):
+        for attr_name in dir(self):
+            if (
+                not attr_name.startswith('_')
+                and attr_name not in ("this", "thisown")
+                and not callable(attr_val := getattr(self, attr_name))
+            ):
+                if isinstance(attr_val, (DoubleVector, ParameterScalingVector)):
+                    yield attr_name, tuple(attr_val)
+                else:
+                    yield attr_name, attr_val
+%}
+}
+
+
 // DO NOT IGNORE amici::SimulationParameters, amici::ModelDimensions, amici::CpuTimer
 %ignore amici::ModelContext;
 %ignore amici::ContextManager;
