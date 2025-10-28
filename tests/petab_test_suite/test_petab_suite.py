@@ -52,6 +52,11 @@ def _test_case(case, model_type, version, jax):
     yaml_file = case_dir / petabtests.problem_yaml_name(case)
     problem = petab.Problem.from_yaml(yaml_file)
 
+    if problem.mapping_df is not None:
+        pytest.skip(
+            "PEtab test suite cases with mapping_df are not supported yet."
+        )
+
     # compile amici model
     if case.startswith("0006") and not jax:
         petab.flatten_timepoint_specific_output_overrides(problem)
