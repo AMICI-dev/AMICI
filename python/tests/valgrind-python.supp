@@ -1137,6 +1137,17 @@
 }
 
 {
+   libsbml
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:PyInit__libsbml
+   fun:_PyImport_RunModInitFunc
+   ...
+}
+
+{
    h5py_3.15
    Memcheck:Leak
    match-leak-kinds: definite
