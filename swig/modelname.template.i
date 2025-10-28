@@ -57,7 +57,7 @@ using namespace amici;
 // store the time a module was imported
 %{
 #include <chrono>
-static std::chrono::time_point<std::chrono::system_clock> _module_import_time;
+static std::chrono::time_point<std::chrono::system_clock> _module_import_time = std::chrono::system_clock::now();
 
 static double _get_import_time() {
     auto epoch = _module_import_time.time_since_epoch();
@@ -68,7 +68,9 @@ static double _get_import_time() {
 static double _get_import_time();
 
 %init %{
-    _module_import_time = std::chrono::system_clock::now();
+    // NOTE: from SWIG 4.4.0 onwards, %init code is executed every time the
+    // module is executed - not only on first import
+    // This code ends up in `SWIG_mod_exec`.
 %}
 
 
