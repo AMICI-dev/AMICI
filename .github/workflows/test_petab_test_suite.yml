@@ -172,7 +172,7 @@ jobs:
           git clone https://github.com/PEtab-dev/petab_test_suite \
             && source ./venv/bin/activate \
             && cd petab_test_suite \
-            && git checkout dc4204db2bc9618b68d77d28e4df29d3f89266aa \
+            && git checkout c12b9dc4e4c5585b1b83a1d6e89fd22447c46d03 \
             && pip3 install -e .
 
 #      - name: Install PEtab benchmark collection

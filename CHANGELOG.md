@@ -86,6 +86,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   can now be specified via the `AMICI_MODELS_ROOT` environment variable.
   See `amici.get_model_dir` for details.
 
+**Pending removals**
+
+* With PEtab v2 support added, support for PEtab v1 will be removed in a
+  future release.
+  PEtab v1 problems can still be imported using the PEtab v2 importer, but
+  some features may not be supported.
+
+
 ## v0.X Series
 
 ### v0.34.2 (2025-11-03)

@@ -112,7 +112,10 @@ class PetabImporter:
             The output directory where the model files are written to.
         :param jax: TODO
         """
-        self.petab_problem: v2.Problem = self._upgrade_if_needed(petab_problem)
+        # TODO: only copy if needed
+        self.petab_problem: v2.Problem = copy.deepcopy(
+            self._upgrade_if_needed(petab_problem)
+        )
 
         if len(self.petab_problem.models) > 1:
             raise NotImplementedError(
@@ -166,33 +169,52 @@ class PetabImporter:
         _set_default_experiment(self.petab_problem)
 
         if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
-            # Convert petab experiments to events, because so far,
-            #  AMICI only supports preequilibration/presimulation/simulation, but
-            #  no arbitrary list of periods.
-            self._exp_event_conv = ExperimentsToSbmlConverter(
-                self.petab_problem
-            )
-            # This will always create a copy of the problem.
-            self.petab_problem = self._exp_event_conv.convert()
-            for experiment in self.petab_problem.experiments:
-                if len(experiment.periods) > 2:
-                    raise NotImplementedError(
-                        "AMICI currently does not support more than two periods."
-                    )
-
-            # TODO remove dbg
-            pprint(self.petab_problem.model_dump())
-            print(self.petab_problem.model.to_antimony())
-
+            self._preprocess_sbml()
         elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
-            # TODO: test cases 1--4 7-8 14-15  work
-            #   skipped: 6 (timepoint-specific overrides) 9 (>1 condition) 10,11,13,16,17 (mapping)
-            #   failing: 5 (condition changes / preeq https://github.com/AMICI-dev/AMICI/issues/2975) 12
-            #  update 16: disallowed unnecessary aliasing via mapping table
-            # raise NotImplementedError(
-            #     "PEtab v2 importer currently does not support PySB models. "
-            # )
-            ...
+            self._preprocess_pysb()
+
+    def _preprocess_sbml(self):
+        """Pre-process the SBML-based PEtab problem to make it
+        amici-compatible."""
+        # Convert petab experiments to events, because so far,
+        #  AMICI only supports preequilibration/presimulation/simulation, but
+        #  no arbitrary list of periods.
+        self._exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
+        # This will always create a copy of the problem.
+        self.petab_problem = self._exp_event_conv.convert()
+        for experiment in self.petab_problem.experiments:
+            if len(experiment.periods) > 2:
+                raise NotImplementedError(
+                    "AMICI currently does not support more than two periods."
+                )
+
+        # TODO remove dbg
+        pprint(self.petab_problem.model_dump())
+        print(self.petab_problem.model.to_antimony())
+
+    def _preprocess_pysb(self):
+        """Pre-process the PySB-based PEtab problem to make it
+        amici-compatible."""
+        # TODO: test cases 1--4 7-8 14-15  work
+        #   skipped: 6 (timepoint-specific overrides) 9 (>1 condition) 10,11,13,16,17 (mapping)
+        #   failing: 5 (condition changes / preeq https://github.com/AMICI-dev/AMICI/issues/2975) 12
+        #  update 16: disallowed unnecessary aliasing via mapping table
+        import pysb
+        from petab.v2.models.pysb_model import PySBModel
+
+        if not isinstance(self.petab_problem.model, PySBModel):
+            raise ValueError("The PEtab problem must contain a PySB model.")
+
+        _add_observation_model_pysb(self.petab_problem, self._jax)
+        # generate species for the _original_ model
+        # TODO fixed_parameters = _add_initialization_variables(pysb_model,
+        #                                                 petab_problem)
+
+        pysb.bng.generate_equations(self.petab_problem.model.model)
+
+        # Convert PEtab v2 experiments/conditions to events
+        converter = ExperimentsToPySBConverter(self.petab_problem)
+        self.petab_problem, self._events = converter.convert()
 
     def _upgrade_if_needed(
         self, problem: v1.Problem | v2.Problem
@@ -392,12 +414,6 @@ class PetabImporter:
         # TODO split into DEModel creation, code generation and compilation
         #   allow retrieving DEModel without compilation
 
-        import pysb
-        from petab.v2.models.pysb_model import PySBModel
-
-        if not isinstance(self.petab_problem.model, PySBModel):
-            raise ValueError("The PEtab problem must contain a PySB model.")
-
         logger.info("Importing PySB model ...")
 
         if not self.petab_problem.observables:
@@ -417,34 +433,12 @@ class PetabImporter:
             f"Writing model code to '{self.outdir}'."
         )
 
-        # need to create a copy here as we don't want to modify the original
-        pysb.SelfExporter.cleanup()
-        og_export = pysb.SelfExporter.do_export
-        try:
-            pysb.SelfExporter.do_export = False
-            pysb_model = pysb.Model(
-                base=self.petab_problem.model.model,
-                name=self.petab_problem.model.model_id,
-            )
-            # TODO add observation model to PySB model
-            _add_observation_model_pysb(
-                pysb_model, self.petab_problem, self._jax
-            )
-            observation_model = self._get_observation_model()
+        observation_model = self._get_observation_model()
 
-            logger.info(f"#Observables: {len(observation_model)}")
-            logger.debug(f"Observables: {observation_model}")
+        logger.info(f"#Observables: {len(observation_model)}")
+        logger.debug(f"Observables: {observation_model}")
 
-            # generate species for the _original_ model
-            pysb.bng.generate_equations(self.petab_problem.model.model)
-            # TODO fixed_parameters = _add_initialization_variables(pysb_model,
-            #                                                 petab_problem)
-        finally:
-            pysb.SelfExporter.do_export = og_export
-
-        # Convert PEtab v2 experiments/conditions to events
-        converter = ExperimentsToPySBConverter(self.petab_problem, pysb_model)
-        self.petab_problem, events = converter.convert()
+        pysb_model = self.petab_problem.model.model
 
         # All indicator variables, i.e., all remaining targets after
         #  experiments-to-event in the PEtab problem must be converted
@@ -497,7 +491,7 @@ class PetabImporter:
                 constant_parameters=fixed_parameters,
                 observation_model=observation_model,
                 pysb_model_has_obs_and_noise=True,
-                _events=events,
+                _events=self._events,
                 # **kwargs,
             )
 
@@ -1613,14 +1607,14 @@ def _get_fixed_parameters_sbml(
     return amici_parameters - estimated_parameters
 
 
-def _add_observation_model_pysb(
-    pysb_model: pysb.Model, petab_problem: v2.Problem, jax: bool = False
-):
+def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
     """Extend PySB model by observation model as defined in the PEtab
     observables table"""
     import pysb
 
     from amici.import_utils import strip_pysb
+
+    pysb_model = petab_problem.model.model
 
     # add any required output parameters
     local_syms = {
@@ -1639,7 +1633,7 @@ def _add_observation_model_pysb(
                 # else:
                 #     name = str(s)
                 name = str(s)
-                p = pysb.Parameter(name, 1.0)
+                p = pysb.Parameter(name, 1.0, _export=False)
                 pysb_model.add_component(p)
 
                 # placeholders for multiple observables are mapped to the
@@ -1662,19 +1656,22 @@ def _add_observation_model_pysb(
         if jax and changed_formula:
             observable.noise_formula = strip_pysb(sym)
 
+    # FIXME: why needed?
     # add observables and sigmas to pysb model
     for observable in petab_problem.observables:
         # obs_symbol = sp.sympify(observable_formula, locals=local_syms)
         if observable.id in pysb_model.expressions.keys():
             obs_expr = pysb_model.expressions[observable.id]
         else:
-            obs_expr = pysb.Expression(observable.id, observable.formula)
+            obs_expr = pysb.Expression(
+                observable.id, observable.formula, _export=False
+            )
             pysb_model.add_component(obs_expr)
         local_syms[sp.Symbol(observable.id, real=True)] = obs_expr
 
         sigma_id = f"{observable.id}_sigma"
         sigma_expr = pysb.Expression(
-            sigma_id, observable.noise_formula.subs(local_syms)
+            sigma_id, observable.noise_formula.subs(local_syms), _export=False
         )
         observable.noise_formula = sp.Symbol(sigma_id, real=True)
         pysb_model.add_component(sigma_expr)
@@ -1694,7 +1691,7 @@ class ExperimentsToPySBConverter:
     #: pre-equilibration indicator to 0.
     CONDITION_ID_PREEQ_OFF = "_petab_preequilibration_off"
 
-    def __init__(self, petab_problem: v2.Problem, model: pysb.Model):
+    def __init__(self, petab_problem: v2.Problem):
         from petab.v2.models.pysb_model import PySBModel
 
         if len(petab_problem.models) > 1:
@@ -1704,7 +1701,7 @@ class ExperimentsToPySBConverter:
             )
         if not isinstance(petab_problem.model, PySBModel):
             raise ValueError("Only SBML models are supported.")
-
+        model = petab_problem.model.model
         compartment_ids = {c.name for c in model.compartments}
         if compartment_ids and any(
             change.target_id in compartment_ids
@@ -1756,22 +1753,21 @@ class ExperimentsToPySBConverter:
                     raise NotImplementedError(
                         "Currently, PySB parameters are not supported as "
                         "targets of condition table changes. Replace "
-                        f"parameter {change.target_id!r} by an expression."
+                        f"parameter {change.target_id!r} by a pysb.Expression."
                     )
-
+        #: The PEtab problem to convert. Not modified by this class.
         self.petab_problem = petab_problem
-        self.model = model
         self._events: list[amici.de_model_components.Event] = []
-        self._new_problem: v2.Problem = None
+        self._new_problem: v2.Problem | None = None
 
     @staticmethod
     def _get_experiment_indicator_condition_id(experiment_id: str) -> str:
         """Get the condition ID for the experiment indicator parameter."""
         return f"_petab_experiment_condition_{experiment_id}"
 
-    def convert(self) -> tuple(
-        v2.Problem, list[amici.de_model_components.Event]
-    ):
+    def convert(
+        self,
+    ) -> tuple[v2.Problem, list[amici.de_model_components.Event]]:
         """Convert PEtab experiments to amici events and pysb initials.
 
         Generate events, add Initials, or convert Parameters to Expressions
@@ -1807,7 +1803,7 @@ class ExperimentsToPySBConverter:
         """
         import pysb
 
-        model = self.model
+        model: pysb.Model = self._new_problem.model.model
         experiment.sort_periods()
         has_preequilibration = experiment.has_preequilibration
         # mapping table mappings
@@ -1898,7 +1894,7 @@ class ExperimentsToPySBConverter:
                         raise AssertionError(target_id)
                 except StopIteration:
                     # species pattern?
-                    for initial in self.model.initials:
+                    for initial in model.initials:
                         if str(initial.pattern) == self.map_petab_to_pysb.get(
                             target_id, target_id
                         ):
@@ -1931,7 +1927,7 @@ class ExperimentsToPySBConverter:
                     else:
                         # if the target is not an expression, it must be an
                         #  initial. the rest is excluded in __init__
-                        for initial in self.model.initials:
+                        for initial in model.initials:
                             if str(
                                 initial.pattern
                             ) == self.map_petab_to_pysb.get(
@@ -1999,14 +1995,13 @@ class ExperimentsToPySBConverter:
 
         event_id = f"_petab_event_{experiment.id}_{i_period}"
         assignments: dict[sp.Symbol, sp.Expr] = {}
+        model = self._new_problem.model.model
         for change in self._new_problem.get_changes_for_period(period):
-            if change.target_id in self.model.parameters:
-                # FIXME: we need the amici species IDs here (__s$i)
-                # case 0016
+            if change.target_id in model.parameters:
                 assignments[sp.Symbol(change.target_id)] = change.target_value
                 # add any missing parameters
                 for sym in change.target_value.free_symbols:
-                    if sym.name not in self.model.parameters:
+                    if sym.name not in model.parameters:
                         self._add_parameter(sym.name, 0)
             else:
                 raise AssertionError(change)
@@ -2027,7 +2022,7 @@ class ExperimentsToPySBConverter:
         import pysb
 
         p = pysb.Parameter(par_id, value, _export=False)
-        self.model.add_component(p)
+        self._new_problem.model.model.add_component(p)
 
     def _add_preequilibration_indicator(
         self,
@@ -2035,7 +2030,7 @@ class ExperimentsToPySBConverter:
         """Add an indicator parameter for the pre-equilibration to the SBML
         model."""
         par_id = self.PREEQ_INDICATOR
-        if par_id in map(str, self.model.components):
+        if par_id in map(str, self._new_problem.model.model.components):
             raise ValueError(
                 f"Entity with ID {par_id} already exists in the model."
             )
