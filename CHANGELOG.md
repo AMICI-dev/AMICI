@@ -83,6 +83,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   return an instance of the generated model class if called with `compile=True`
   (default).
 
+**Pending removals**
+
+* With PEtab v2 support added, support for PEtab v1 will be removed in a
+  future release.
+  PEtab v1 problems can still be imported using the PEtab v2 importer, but
+  some features may not be supported.
+
+
 ## v0.X Series
 
 ### v0.34.1 (2025-08-25)
