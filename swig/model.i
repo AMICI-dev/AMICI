@@ -108,11 +108,37 @@ using namespace amici;
 %newobject amici::Model::clone;
 
 %rename(create_solver) amici::Model::get_solver;
+%rename(_cpp_model_clone) amici::Model::clone;
 
 %extend amici::Model {
 %pythoncode %{
+def clone(self):
+    """Clone the model instance."""
+    clone = self._cpp_model_clone()
+    try:
+        # copy module reference if present
+        clone.module = self.module
+    except Exception:
+        pass
+
+    return clone
+
 def __deepcopy__(self, memo):
     return self.clone()
+
+def __reduce__(self):
+    from amici.swig_wrappers import restore_model, get_model_settings, file_checksum
+
+    return (
+        restore_model,
+        (
+            self.get_name(),
+            Path(self.module.__spec__.origin).parent,
+            get_model_settings(self),
+            file_checksum(self.module.extension_path),
+        ),
+        {}
+    )
 
 @overload
 def simulate(
@@ -192,6 +218,17 @@ def simulate(
 
 %extend std::unique_ptr<amici::Model> {
 %pythoncode %{
+def clone(self):
+    """Clone the model instance."""
+    clone = self._cpp_model_clone()
+    try:
+        # copy module reference if present
+        clone.module = self.module
+    except Exception:
+        pass
+
+    return clone
+
 def __deepcopy__(self, memo):
     return self.clone()
 
