@@ -1,34 +1,32 @@
 """PEtab wrappers for JAX models.""" ""
 
 import copy
+import logging
+import re
 import shutil
 from collections.abc import Callable, Iterable, Sized
 from numbers import Number
 from pathlib import Path
-import logging
-
 
 import diffrax
 import equinox as eqx
+import h5py
 import jax.lax
 import jax.numpy as jnp
-import jax.tree_util as jtu
 import jaxtyping as jt
 import numpy as np
 import optimistix
 import pandas as pd
 import petab.v1 as petab
-import h5py
-import re
 from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
 from amici.jax.model import JAXModel, ReturnValue
+from amici.logging import get_logger
 from amici.petab.parameter_mapping import (
     ParameterMappingForCondition,
     create_parameter_mapping,
 )
-from amici.logging import get_logger
 
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,
@@ -148,7 +146,9 @@ class JAXProblem(eqx.Module):
         scs = petab_problem.get_simulation_conditions_from_measurement_df()
         self.simulation_conditions = tuple(tuple(sc) for sc in scs.values)
         self._petab_problem = _get_hybrid_petab_problem(petab_problem)
-        self.parameters, self.model = self._get_nominal_parameter_values(model)
+        self.parameters, self.model = (
+            self._initialize_model_with_nominal_values(model)
+        )
         self._parameter_mappings = self._get_parameter_mappings(scs)
         (
             self._ts_dyn,
@@ -527,18 +527,17 @@ class JAXProblem(eqx.Module):
         )
         return tuple(tuple(row) for _, row in simulation_conditions.iterrows())
 
-    def _get_nominal_parameter_values(
-        self, model: JAXModel
-    ) -> tuple[jt.Float[jt.Array, "np"], JAXModel]:
+    def _initialize_model_parameters(self, model: JAXModel) -> dict:
         """
-        Get the nominal parameter values for the model based on the nominal values in the PEtab problem.
-        Also set nominal values in the model (where applicable).
+        Initialize model parameter structure with zeros.
+
+        :param model:
+            JAX model with neural networks
 
         :return:
-            jax array with nominal parameter values and model with nominal parameter values set.
+            Nested dictionary structure for model parameters
         """
-        # initialize everything with zeros
-        model_pars = {
+        return {
             net_id: {
                 layer_id: {
                     attribute: jnp.zeros_like(getattr(layer, attribute))
@@ -549,94 +548,154 @@ class JAXProblem(eqx.Module):
             }
             for net_id, nn in model.nns.items()
         }
-        # load nn parameters from file
-        par_arrays = (
-            dict(
-                [
-                    (
-                        file_spec.split("_")[0],
-                        h5py.File(file_spec, "r")["parameters"][
-                            file_spec.split("_")[0]
-                        ],
-                    )
-                    for file_spec in self._petab_problem.extensions_config[
-                        "sciml"
-                    ]["array_files"]
-                    if "parameters" in h5py.File(file_spec, "r").keys()
-                ]
-            )
-            if self._petab_problem.extensions_config
-            else {}
+
+    def _load_parameter_arrays_from_files(self) -> dict:
+        """
+        Load neural network parameter arrays from HDF5 files.
+
+        :return:
+            Dictionary mapping network IDs to parameter arrays
+        """
+        if not self._petab_problem.extensions_config:
+            return {}
+
+        array_files = self._petab_problem.extensions_config["sciml"].get(
+            "array_files", []
         )
 
-        nn_input_arrays = (
-            dict(
-                [
-                    (
-                        file_spec.split("_")[0],
-                        h5py.File(file_spec, "r")["inputs"],
-                    )
-                    for file_spec in self._petab_problem.extensions_config[
-                        "sciml"
-                    ]["array_files"]
-                    if "inputs" in h5py.File(file_spec, "r").keys()
-                ]
-            )
-            if self._petab_problem.extensions_config
-            else {}
+        return {
+            file_spec.split("_")[0]: h5py.File(file_spec, "r")["parameters"][
+                file_spec.split("_")[0]
+            ]
+            for file_spec in array_files
+            if "parameters" in h5py.File(file_spec, "r").keys()
+        }
+
+    def _load_input_arrays_from_files(self) -> dict:
+        """
+        Load neural network input arrays from HDF5 files.
+
+        :return:
+            Dictionary mapping network IDs to input arrays
+        """
+        if not self._petab_problem.extensions_config:
+            return {}
+
+        array_files = self._petab_problem.extensions_config["sciml"].get(
+            "array_files", []
         )
 
-        # extract nominal values from petab problem
+        return {
+            file_spec.split("_")[0]: h5py.File(file_spec, "r")["inputs"]
+            for file_spec in array_files
+            if "inputs" in h5py.File(file_spec, "r").keys()
+        }
+
+    def _parse_parameter_name(
+        self, pname: str, model_pars: dict
+    ) -> list[tuple[str, str]]:
+        """
+        Parse parameter name to determine which layers and attributes to set.
+
+        :param pname:
+            Parameter name from PEtab (format: net.layer.attribute)
+        :param model_pars:
+            Model parameters dictionary
+
+        :return:
+            List of (layer_name, attribute_name) tuples to set
+        """
+        net = pname.split("_")[0]
+        nn = model_pars[net]
+        to_set = []
+
+        name_parts = pname.split(".")
+
+        if len(name_parts) > 1:
+            layer_name = name_parts[1]
+            layer = nn[layer_name]
+            if len(name_parts) > 2:
+                # Specific attribute specified
+                attribute_name = name_parts[2]
+                to_set.append((layer_name, attribute_name))
+            else:
+                # All attributes of the layer
+                to_set.extend(
+                    [(layer_name, attribute) for attribute in layer.keys()]
+                )
+        else:
+            # All layers and attributes
+            to_set.extend(
+                [
+                    (layer_name, attribute)
+                    for layer_name, layer in nn.items()
+                    for attribute in layer.keys()
+                ]
+            )
+
+        return to_set
+
+    def _extract_nominal_values_from_petab(
+        self, model: JAXModel, model_pars: dict, par_arrays: dict
+    ) -> None:
+        """
+        Extract nominal parameter values from PEtab problem and populate model_pars.
+
+        :param model:
+            JAX model
+        :param model_pars:
+            Model parameters dictionary to populate (modified in place)
+        :param par_arrays:
+            Parameter arrays loaded from files
+        """
         for pname, row in self._petab_problem.parameter_df.iterrows():
-            if (net := pname.split("_")[0]) in model.nns:
-                to_set = []
-                nn = model_pars[net]
-                scalar = True
+            net = pname.split("_")[0]
+            if net not in model.nns:
+                continue
 
-                if np.isnan(row[petab.NOMINAL_VALUE]):
-                    value = par_arrays[net]
-                    scalar = False
-                else:
-                    value = float(row[petab.NOMINAL_VALUE])
+            nn = model_pars[net]
+            scalar = True
 
-                if len(pname.split(".")) > 1:
-                    layer_name = pname.split(".")[1]
-                    layer = nn[layer_name]
-                    if len(pname.split(".")) > 2:
-                        attribute_name = pname.split(".")[2]
-                        to_set.append((layer_name, attribute_name))
-                    else:
-                        to_set.extend(
-                            [
-                                (layer_name, attribute)
-                                for attribute in layer.keys()
-                            ]
-                        )
+            # Determine value source (scalar from PEtab or array from file)
+            if np.isnan(row[petab.NOMINAL_VALUE]):
+                value = par_arrays[net]
+                scalar = False
+            else:
+                value = float(row[petab.NOMINAL_VALUE])
+
+            # Parse parameter name and set values
+            to_set = self._parse_parameter_name(pname, model_pars)
+
+            for layer, attribute in to_set:
+                if scalar:
+                    nn[layer][attribute] = value * jnp.ones_like(
+                        getattr(model.nns[net].layers[layer], attribute)
+                    )
                 else:
-                    to_set.extend(
-                        [
-                            (layer_name, attribute)
-                            for layer_name, layer in nn.items()
-                            for attribute in layer.keys()
-                        ]
+                    nn[layer][attribute] = jnp.array(
+                        value[layer][attribute][:]
                     )
 
-                for layer, attribute in to_set:
-                    if scalar:
-                        nn[layer][attribute] = value * jnp.ones_like(
-                            getattr(model.nns[net].layers[layer], attribute)
-                        )
-                    else:
-                        nn[layer][attribute] = jnp.array(
-                            value[layer][attribute][:]
-                        )
+    def _set_model_parameters(
+        self, model: JAXModel, model_pars: dict
+    ) -> JAXModel:
+        """
+        Set parameter values in the model using equinox tree_at.
 
-        # set values in model
+        :param model:
+            JAX model to update
+        :param model_pars:
+            Dictionary of parameter values to set
+
+        :return:
+            Updated JAX model
+        """
         for net_id in model_pars:
             for layer_id in model_pars[net_id]:
                 for attribute in model_pars[net_id][layer_id]:
                     logger.debug(
-                        f"Setting {attribute} of layer {layer_id} in network {net_id} to {model_pars[net_id][layer_id][attribute]}"
+                        f"Setting {attribute} of layer {layer_id} in network "
+                        f"{net_id} to {model_pars[net_id][layer_id][attribute]}"
                     )
                     model = eqx.tree_at(
                         lambda model: getattr(
@@ -645,26 +704,53 @@ class JAXProblem(eqx.Module):
                         model,
                         model_pars[net_id][layer_id][attribute],
                     )
+        return model
 
-        # set inputs in the model if provided
-        if len(nn_input_arrays) > 0:
-            for net_id in model_pars:
-                input_array = {
-                    input: {
-                        k: jnp.array(
-                            arr[:],
-                            dtype=jnp.float64
-                            if jax.config.jax_enable_x64
-                            else jnp.float32,
-                        )
-                        for k, arr in nn_input_arrays[net_id][input].items()
-                    }
-                    for input in model.nns[net_id].inputs
+    def _set_input_arrays(
+        self, model: JAXModel, nn_input_arrays: dict, model_pars: dict
+    ) -> JAXModel:
+        """
+        Set input arrays in the model if provided.
+
+        :param model:
+            JAX model to update
+        :param nn_input_arrays:
+            Input arrays loaded from files
+        :param model_pars:
+            Model parameters dictionary (for network IDs)
+
+        :return:
+            Updated JAX model
+        """
+        if len(nn_input_arrays) == 0:
+            return model
+
+        for net_id in model_pars:
+            input_array = {
+                input: {
+                    k: jnp.array(
+                        arr[:],
+                        dtype=jnp.float64
+                        if jax.config.jax_enable_x64
+                        else jnp.float32,
+                    )
+                    for k, arr in nn_input_arrays[net_id][input].items()
                 }
-                model = eqx.tree_at(
-                    lambda model: model.nns[net_id].inputs, model, input_array
-                )
+                for input in model.nns[net_id].inputs
+            }
+            model = eqx.tree_at(
+                lambda model: model.nns[net_id].inputs, model, input_array
+            )
 
+        return model
+
+    def _create_scaled_parameter_array(self) -> jt.Float[jt.Array, "np"]:
+        """
+        Create array of scaled nominal parameter values for estimation.
+
+        :return:
+            JAX array of scaled parameter values
+        """
         return jnp.array(
             [
                 petab.scale(
@@ -679,7 +765,46 @@ class JAXProblem(eqx.Module):
                 )
                 for pval in self.parameter_ids
             ]
-        ), model
+        )
+
+    def _initialize_model_with_nominal_values(
+        self, model: JAXModel
+    ) -> tuple[jt.Float[jt.Array, "np"], JAXModel]:
+        """
+        Initialize the model with nominal parameter values and inputs from the PEtab problem.
+
+        This method:
+        - Initializes model parameter structure
+        - Loads parameter and input arrays from HDF5 files
+        - Extracts nominal values from PEtab problem
+        - Sets parameter values in the model
+        - Sets input arrays in the model
+        - Creates scaled parameter array to initialized to nominal values
+
+        :param model:
+            JAX model to initialize
+
+        :return:
+            Tuple of (scaled parameter array, initialized model)
+        """
+        # Initialize model parameters structure
+        model_pars = self._initialize_model_parameters(model)
+
+        # Load arrays from files (getters)
+        par_arrays = self._load_parameter_arrays_from_files()
+        nn_input_arrays = self._load_input_arrays_from_files()
+
+        # Extract nominal values from PEtab problem
+        self._extract_nominal_values_from_petab(model, model_pars, par_arrays)
+
+        # Set values in model (setters)
+        model = self._set_model_parameters(model, model_pars)
+        model = self._set_input_arrays(model, nn_input_arrays, model_pars)
+
+        # Create scaled parameter array
+        parameter_array = self._create_scaled_parameter_array()
+
+        return parameter_array, model
 
     def _get_inputs(self):
         if self._petab_problem.mapping_df is None:
@@ -820,18 +945,13 @@ class JAXProblem(eqx.Module):
             else {}
         )
 
-        hybridization_parameter_map = dict(
-            [
-                (
-                    petab_id,
-                    self._petab_problem.hybridization_df.loc[
-                        petab_id, "targetValue"
-                    ],
-                )
-                for petab_id in model_id_map.values()
-                if petab_id in set(self._petab_problem.hybridization_df.index)
+        hybridization_parameter_map = {
+            petab_id: self._petab_problem.hybridization_df.loc[
+                petab_id, "targetValue"
             ]
-        )
+            for petab_id in model_id_map.values()
+            if petab_id in set(self._petab_problem.hybridization_df.index)
+        }
 
         # handle conditions
         if len(condition_input_map) > 0:
@@ -1018,7 +1138,8 @@ class JAXProblem(eqx.Module):
         """
         if not any(
             x_id in self._petab_problem.condition_df
-            or hasattr(self, "nn_output_ids") and x_id in self.nn_output_ids
+            or hasattr(self, "nn_output_ids")
+            and x_id in self.nn_output_ids
             for x_id in self.model.state_ids
         ):
             return jnp.array([]), jnp.array([])
@@ -1291,7 +1412,8 @@ class JAXProblem(eqx.Module):
             [
                 jnp.array(
                     [
-                        p in set(self._parameter_mappings[sc].map_sim_var.keys())
+                        p
+                        in set(self._parameter_mappings[sc].map_sim_var.keys())
                         for p in self.model.state_ids
                     ]
                 )

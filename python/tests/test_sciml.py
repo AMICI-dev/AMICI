@@ -1,12 +1,8 @@
 """Tests for SBML/SciML functionality, including JAX neural network code generation."""
 
-import pytest
-
-pytest.importorskip("jax")
-pytest.importorskip("equinox")
-
 from unittest.mock import Mock
 
+import pytest
 from amici.jax.nn import (
     _format_function_call,
     _generate_forward,
