@@ -2596,8 +2596,11 @@ class DEModel:
                 key=lambda comp: net["input_vars"].index(str(comp.get_id())),
             )
             if len(inputs) != len(net["input_vars"]):
+                found_vars = {str(comp.get_id()) for comp in inputs}
+                missing_vars = set(net["input_vars"]) - found_vars
                 raise ValueError(
-                    f"Could not find all input variables for neural network {net_id}"
+                    f"Could not find all input variables for neural network {net_id}. "
+                    f"Missing variables: {sorted(missing_vars)}"
                 )
             for inp in inputs:
                 if isinstance(
@@ -2621,8 +2624,11 @@ class DEModel:
                 in net["output_vars"]
             }
             if len(outputs.keys()) != len(net["output_vars"]):
+                found_vars = set(outputs.keys())
+                missing_vars = set(net["output_vars"]) - found_vars
                 raise ValueError(
-                    f"Could not find all output variables for neural network {net_id}"
+                    f"Could not find all output variables for neural network {net_id}. "
+                    f"Missing variables: {sorted(missing_vars)}"
                 )
 
             for out_var, parts in outputs.items():
@@ -2671,8 +2677,11 @@ class DEModel:
                 # in net["observable_vars"]
             }
             if len(observables.keys()) != len(net["observable_vars"]):
+                found_vars = set(observables.keys())
+                missing_vars = set(net["observable_vars"]) - found_vars
                 raise ValueError(
-                    f"Could not find all observable variables for neural network {net_id}"
+                    f"Could not find all observable variables for neural network {net_id}. "
+                    f"Missing variables: {sorted(missing_vars)}"
                 )
 
             for ob_var, parts in observables.items():
