@@ -698,6 +698,10 @@ def test_pickle_model(sbml_example_presimulation_module):
         != model_pickled.get_steady_state_sensitivity_mode()
     )
 
+    # ensure we can pickle after clone()
+    model_clone = model.clone()
+    pickle.loads(pickle.dumps(model_clone))
+
 
 def test_pickle_edata():
     ny = 2
