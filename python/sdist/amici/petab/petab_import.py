@@ -241,7 +241,7 @@ def import_petab_problem(
                 }
                 for net_id, net_config in config["neural_nets"].items()
             }
-            if not jax or petab_problem.model.type_id == MODEL_TYPE_PYSB:
+            if not jax or petab_problem.model.type_id != MODEL_TYPE_SBML:
                 raise NotImplementedError(
                     "petab_sciml extension is currently only supported for sbml models"
                 )
