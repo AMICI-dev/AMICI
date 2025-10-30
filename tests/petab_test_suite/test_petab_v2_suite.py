@@ -9,8 +9,12 @@ import pandas as pd
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
-
-# from amici.gradient_check import check_derivatives as amici_check_derivatives
+from amici import (
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+)
+from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
 from amici.petab.petab_importer import *
 from petab import v2
@@ -132,13 +136,14 @@ def _test_case(case, model_type, version, jax):
             "display.width",
             200,
         ):
-            logger.log(
-                logging.DEBUG,
-                f"x_ss: {ps._model.get_state_ids()} "
-                f"{[rdata.x_ss for rdata in rdatas]}"
-                f"preeq_t: {[rdata.preeq_t for rdata in rdatas]}"
-                f"posteq_t: {[rdata.posteq_t for rdata in rdatas]}",
-            )
+            if not jax:
+                logger.log(
+                    logging.DEBUG,
+                    f"x_ss: {ps._model.get_state_ids()} "
+                    f"{[rdata.x_ss for rdata in rdatas]}"
+                    f"preeq_t: {[rdata.preeq_t for rdata in rdatas]}"
+                    f"posteq_t: {[rdata.posteq_t for rdata in rdatas]}",
+                )
             logger.log(
                 logging.ERROR, f"Expected simulations:\n{gt_simulation_dfs}"
             )
@@ -155,9 +160,14 @@ def _test_case(case, model_type, version, jax):
     if jax:
         pass  # skip derivative checks for now
     else:
-        pass
-        # FIXME: later
-        # check_derivatives(ps._petab_problem, ps._model, ps._solver, problem_parameters)
+        if (case, model_type, version) in (
+            ("0016", "sbml", "v2.0.0"),
+            ("0013", "pysb", "v2.0.0"),
+        ):
+            # FIXME: issue with events and sensitivities
+            ...
+        else:
+            check_derivatives(ps, problem_parameters)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
@@ -168,42 +178,34 @@ def _test_case(case, model_type, version, jax):
     logger.info(f"Case {case} passed.")
 
 
-#
-# def check_derivatives(
-#     problem: petab.Problem,
-#     model: amici.Model,
-#     solver: amici.Solver,
-#     problem_parameters: dict[str, float],
-# ) -> None:
-#     """Check derivatives using finite differences for all experimental
-#     conditions
-#
-#     Arguments:
-#         problem: PEtab problem
-#         model: AMICI model matching ``problem``
-#         solver: AMICI solver
-#         problem_parameters: Dictionary of problem parameters
-#     """
-#     solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-#     solver.setSensitivityOrder(amici.SensitivityOrder.first)
-#     # Required for case 9 to not fail in
-#     #  amici::NewtonSolver::computeNewtonSensis
-#     model.setSteadyStateSensitivityMode(
-#         SteadyStateSensitivityMode.integrateIfNewtonFails
-#     )
-#
-#     for edata in create_parameterized_edatas(
-#         amici_model=model,
-#         petab_problem=problem,
-#         problem_parameters=problem_parameters,
-#     ):
-#         # check_derivatives does currently not support parameters in ExpData
-#         # set parameter scales before setting parameter values!
-#         model.setParameterScale(edata.pscale)
-#         model.setParameters(edata.parameters)
-#         edata.parameters = []
-#         edata.pscale = amici.parameterScalingFromIntVector([])
-#         amici_check_derivatives(model, solver, edata)
+def check_derivatives(
+    petab_simulator: PetabSimulator,
+    problem_parameters: dict[str, float],
+) -> None:
+    """Check derivatives using finite differences for all experimental
+    conditions
+
+    Arguments:
+        problem: PEtab problem
+        model: AMICI model matching ``problem``
+        solver: AMICI solver
+        problem_parameters: Dictionary of problem parameters
+    """
+    solver = petab_simulator._solver
+    model = petab_simulator._model
+    edatas = petab_simulator._exp_man.create_edatas()
+
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    # Required for case 9 to not fail in
+    #  amici::NewtonSolver::computeNewtonSensis
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
+
+    for edata in edatas:
+        petab_simulator._exp_man.apply_parameters(edata, problem_parameters)
+        amici_check_derivatives(model, solver, edata)
 
 
 def run():
@@ -214,14 +216,7 @@ def run():
     version = "v2.0.0"
     jax = False
 
-    cases = petabtests.get_cases("sbml", version=version)
-    # FIXME
-    #  0019: "PEtab v2.0.0 mapping tables are not yet supported."
-    #   -> not compliant with v2.0.0?! unnecessary aliasing
-    # cases = [
-    #     "0019",
-    # ]
-
+    cases = list(petabtests.get_cases("sbml", version=version))
     n_total += len(cases)
     for case in cases:
         try:

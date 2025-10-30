@@ -152,7 +152,7 @@ def _test_case(case, model_type, version, jax):
             if not jax:
                 logger.log(
                     logging.DEBUG,
-                    f"x_ss: {model.state_ids} "
+                    f"x_ss: {model.get_state_ids()} "
                     f"{[rdata.x_ss for rdata in rdatas]}",
                 )
             logger.log(

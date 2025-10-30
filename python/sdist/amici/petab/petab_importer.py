@@ -1649,10 +1649,12 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
 
     for observable in petab_problem.observables:
         sym, changed_formula = process_formula(observable.formula)
+        observable.formula = sym
         if jax and changed_formula:
             observable.formula = strip_pysb(sym)
 
         sym, changed_formula = process_formula(observable.noise_formula)
+        observable.noise_formula = sym
         if jax and changed_formula:
             observable.noise_formula = strip_pysb(sym)
 
