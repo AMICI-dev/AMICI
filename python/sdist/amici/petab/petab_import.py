@@ -304,7 +304,3 @@ def _get_frozen_layers(model_id):
     layer_id = layers[0] if len(layers) else None
     array_attr = array_attr if array_attr in ("weight", "bias") else None
     return layer_id, array_attr
-
-
-# for backwards compatibility
-import_model = import_model_sbml
