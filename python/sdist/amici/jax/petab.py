@@ -1291,10 +1291,7 @@ class JAXProblem(eqx.Module):
             [
                 jnp.array(
                     [
-                        True
-                        if p
-                        in set(self._parameter_mappings[sc].map_sim_var.keys())
-                        else False
+                        p in set(self._parameter_mappings[sc].map_sim_var.keys())
                         for p in self.model.state_ids
                     ]
                 )
