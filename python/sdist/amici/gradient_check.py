@@ -219,7 +219,7 @@ def check_derivatives(
         leastsquares_applicable = False
 
     if check_least_squares and leastsquares_applicable:
-        fields += ["res", "y"]
+        fields += ["y", "res"]
 
         _check_results(
             rdata,
