@@ -61,7 +61,7 @@ jobs:
       - name: Download and install PEtab SciML
         run: |
           source ./venv/bin/activate \
-            && python -m pip install git+https://github.com/sebapersson/petab_sciml.git@main#subdirectory=src/python \
+            && python -m pip install git+https://github.com/petab-dev/petab_sciml.git@main#subdirectory=src/python \
 
 
       - name: Install petab
