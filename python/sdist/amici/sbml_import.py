@@ -215,7 +215,7 @@ class SbmlImporter:
         log_execution_time("validating SBML", logger)(
             self.sbml_doc.validateSBML
         )()
-        # _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+        _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # Flatten "comp" model? Do that before any other converters are run
         if any(
@@ -262,7 +262,7 @@ class SbmlImporter:
         # If any of the above calls produces an error, this will be added to
         # the SBMLError log in the sbml document. Thus, it is sufficient to
         # check the error log just once after all conversion/validation calls.
-        # _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+        _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # need to reload the converted model
         self.sbml = self.sbml_doc.getModel()
