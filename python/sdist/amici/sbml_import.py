@@ -26,6 +26,8 @@ from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
 from sympy.logic.boolalg import Boolean, BooleanFalse, BooleanTrue
 from sympy.matrices.dense import MutableDenseMatrix
 
+import amici
+
 from . import has_clibs
 from .constants import SymbolId
 from .de_export import (
@@ -290,7 +292,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
-    ) -> None:
+    ) -> amici.Model | None:
         """
         Generate and compile AMICI C++ files for the model provided to the
         constructor.
@@ -379,6 +381,10 @@ class SbmlImporter:
             Their values cannot be changed anymore after model import.
             Currently, only parameters that are not targets of rules or
             initial assignments are supported.
+
+        :return:
+            If `compile` is `True` and compilation was successful, an instance
+            of the generated model class, otherwise `None`.
         """
         set_log_level(logger, verbose)
 
@@ -412,6 +418,14 @@ class SbmlImporter:
                     stacklevel=2,
                 )
             exporter.compile_model()
+
+            from . import import_model_module
+
+            return import_model_module(
+                module_name=model_name, module_path=output_dir
+            ).get_model()
+
+        return None
 
     def sbml2jax(
         self,

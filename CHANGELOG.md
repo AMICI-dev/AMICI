@@ -76,6 +76,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   * `amici.ExpData` is now picklable.
 * Implemented support for the [PEtab SciML](https://github.com/PEtab-dev/petab_sciml)
   extension for the JAX interface.
+* The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
+  return an instance of the generated model class if called with `compile=True`
+  (default).
 
 ## v0.X Series
 

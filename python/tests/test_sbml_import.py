@@ -377,7 +377,7 @@ def test_presimulation_events_and_sensitivities(tempdir):
     from amici.antimony_import import antimony2amici
 
     model_name = "test_presim_events2"
-    antimony2amici(
+    model = antimony2amici(
         """
     some_time = time
     some_time' = 1
@@ -394,9 +394,6 @@ def test_presimulation_events_and_sensitivities(tempdir):
         output_dir=tempdir,
     )
 
-    model_module = import_model_module(model_name, tempdir)
-
-    model = model_module.get_model()
     model.set_timepoints([0, 1, 2])
     edata = amici.ExpData(model)
     edata.t_presim = 2
@@ -992,11 +989,12 @@ def test_import_same_model_name(tempdir):
     if sys.platform == "win32":
         return
 
-    antimony2amici(
-        ant_model_3,
-        model_name=module_name,
-        output_dir=outdir_2,
-    )
+    with pytest.raises(RuntimeError, match="in the same location"):
+        antimony2amici(
+            ant_model_3,
+            model_name=module_name,
+            output_dir=outdir_2,
+        )
 
     with pytest.raises(RuntimeError, match="in the same location"):
         import_model_module(module_name=module_name, module_path=outdir_2)
