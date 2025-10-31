@@ -22,6 +22,8 @@ import pysb.bng
 import pysb.pattern
 import sympy as sp
 
+import amici
+
 from .de_export import (
     Constant,
     DEExporter,
@@ -161,7 +163,7 @@ def pysb2amici(
     generate_sensitivity_code: bool = True,
     model_name: str | None = None,
     pysb_model_has_obs_and_noise: bool = False,
-):
+) -> amici.Model | None:
     r"""
     Generate AMICI C++ files for the provided model.
 
@@ -238,6 +240,10 @@ def pysb2amici(
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra
         observables and noise variables added
+
+    :return:
+        If `compile` is `True` and compilation was successful, an instance
+        of the generated model class, otherwise `None`.
     """
     if observation_model is None:
         observation_model = []
@@ -274,6 +280,14 @@ def pysb2amici(
 
     if compile:
         exporter.compile_model()
+
+        from . import import_model_module
+
+        return import_model_module(
+            module_name=model_name, module_path=output_dir
+        ).get_model()
+
+    return None
 
 
 @log_execution_time("creating ODE model", logger)
