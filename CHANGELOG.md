@@ -74,6 +74,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
     This only works on shared file systems, as the solver state is stored in a
     temporary HDF5 file.
   * `amici.ExpData` is now picklable.
+* Implemented support for the [PEtab SciML](https://github.com/PEtab-dev/petab_sciml)
+  extension for the JAX interface.
 
 ## v0.X Series
 
