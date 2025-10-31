@@ -175,6 +175,7 @@ jobs:
             && git checkout c12b9dc4e4c5585b1b83a1d6e89fd22447c46d03 \
             && pip3 install -e .
 
+# TODO: once there is a PEtab v2 benchmark collection
 #      - name: Install PEtab benchmark collection
 #        run: |
 #          git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
@@ -188,12 +189,6 @@ jobs:
             && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
             && python3 -m pip install git+https://github.com/pysb/pysb@master \
             && python3 -m pip install sympy>=1.12.1
-
-#      - name: Run PEtab-related unit tests
-#        run: |
-#          source ./venv/bin/activate \
-#            && pytest --cov-report=xml:coverage.xml \
-#              --cov=./ python/tests/test_*petab*.py python/tests/petab_/
 
       # run test models
       - name: Run PEtab test suite

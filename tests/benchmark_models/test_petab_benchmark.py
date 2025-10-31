@@ -595,12 +595,6 @@ def write_debug_output(
     df.to_csv(file_name, sep="\t")
 
 
-# TODO: gradient check for PEtab v2
-# problems_for_llh_check = [
-#     "Boehm_JProteomeRes2014",
-# ]
-
-
 @pytest.mark.filterwarnings(
     "ignore:divide by zero encountered in log",
     # https://github.com/AMICI-dev/AMICI/issues/18
@@ -611,7 +605,8 @@ def write_debug_output(
 )
 @pytest.mark.parametrize("problem_id", problems_for_llh_check)
 def test_nominal_parameters_llh_v2(problem_id):
-    """Test the log-likelihood computation at nominal parameters.
+    """Test the log-likelihood computation at nominal parameters
+    after auto-conversion of PEtab v1 benchmark problems to PEtab v2.
 
     Also check that the simulation time is within the reference range.
     """
@@ -677,6 +672,8 @@ def test_nominal_parameters_llh_v2(problem_id):
     ps._solver.set_absolute_tolerance(1e-8)
     ps._solver.set_relative_tolerance(1e-8)
     ps._solver.set_max_steps(10_000)
+    ps.num_threads = os.cpu_count()
+
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
         ps._model.set_steady_state_sensitivity_mode(
             SteadyStateSensitivityMode.integrationOnly
@@ -793,7 +790,6 @@ def test_nominal_parameters_llh_v2(problem_id):
         ps,
         parameter_ids=parameter_ids,
         cache=False,
-        # TODO: num_threads=os.cpu_count(),
     )
     np.random.seed(cur_settings.rng_seed)
 
@@ -914,6 +910,7 @@ def compare_to_reference(problem_id: str, llh: float):
                 "Reference llh from benchmark collection simulation table:",
                 ref_llh_bm,
             )
+            # TODO https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/issues/278
             # assert np.isclose(
             #     ref_llh, ref_llh_bm
             # ), f"Stored Reference llh {ref_llh} differs from the value computed "\

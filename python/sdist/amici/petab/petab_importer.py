@@ -43,6 +43,7 @@ __all__ = [
     "ExperimentManager",
     "PetabSimulator",
     "rdatas_to_measurement_df",
+    "rdatas_to_simulation_df",
     "flatten_timepoint_specific_output_overrides",
     "unflatten_simulation_df",
     "has_timepoint_specific_overrides",
@@ -65,7 +66,6 @@ _POSSIBLE_GROUPVARS_FLATTENED_PROBLEM = [
 # TODO: how to handle SBML vs PySB, jax vs sundials?
 #  -> separate importers or subclasses?
 # TODO: How to handle multi-model-problems?
-# TODO: test simulation of up-converted benchmark problems
 
 
 class PetabImporter:
@@ -74,8 +74,8 @@ class PetabImporter:
 
     This class is used to create an AMICI model from a PEtab problem.
 
-    The underlying SBML model will be modified to encode the experiments
-    defined in the PEtab problem as events.
+    The underlying SBML or PySB model will be modified to encode the
+    experiments defined in the PEtab problem as events or initial conditions.
 
     Be careful when using the imported model for anything other than the
     PEtab-encoded experiments.
@@ -112,10 +112,10 @@ class PetabImporter:
             The output directory where the model files are written to.
         :param jax: TODO
         """
-        # TODO: only copy if needed
-        self.petab_problem: v2.Problem = copy.deepcopy(
-            self._upgrade_if_needed(petab_problem)
+        self.petab_problem: v2.Problem = self._upgrade_or_copy_if_needed(
+            petab_problem
         )
+        self._debug = False
 
         if len(self.petab_problem.models) > 1:
             raise NotImplementedError(
@@ -129,21 +129,21 @@ class PetabImporter:
         ):
             # if self.petab_problem.model.type_id != MODEL_TYPE_SBML:
             raise NotImplementedError(
-                "PEtab v2 importer currently only supports SBML models. "
-                f"Got {self.petab_problem.model.type_id!r}."
+                "PEtab v2 importer currently only supports SBML and PySB "
+                f"models. Got {self.petab_problem.model.type_id!r}."
             )
         if jax:
             raise NotImplementedError(
                 "PEtab v2 importer currently does not support JAX. "
             )
 
-        pprint(self.petab_problem.model_dump())
-        if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
-            print(self.petab_problem.model.to_antimony())
-        elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
-            print(self.petab_problem.model.to_str())
-
-        self._check_support(self.petab_problem)
+        if self._debug:
+            print("PetabImpoter.__init__: petab_problem:")
+            pprint(self.petab_problem.model_dump())
+            if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
+                print(self.petab_problem.model.to_antimony())
+            elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
+                print(self.petab_problem.model.to_str())
 
         self._compile = compile_
         self._sym_model: DEModel | None = None
@@ -176,6 +176,11 @@ class PetabImporter:
     def _preprocess_sbml(self):
         """Pre-process the SBML-based PEtab problem to make it
         amici-compatible."""
+        from petab.v2.models.sbml_model import SbmlModel
+
+        if not isinstance(self.petab_problem.model, SbmlModel):
+            raise ValueError("The PEtab problem must contain an SBML model.")
+
         # Convert petab experiments to events, because so far,
         #  AMICI only supports preequilibration/presimulation/simulation, but
         #  no arbitrary list of periods.
@@ -188,17 +193,14 @@ class PetabImporter:
                     "AMICI currently does not support more than two periods."
                 )
 
-        # TODO remove dbg
-        pprint(self.petab_problem.model_dump())
-        print(self.petab_problem.model.to_antimony())
+        if self._debug:
+            print("PetabImpoter._preprocess_sbml: petab_problem:")
+            pprint(self.petab_problem.model_dump())
+            print(self.petab_problem.model.to_antimony())
 
     def _preprocess_pysb(self):
         """Pre-process the PySB-based PEtab problem to make it
         amici-compatible."""
-        # TODO: test cases 1--4 7-8 14-15  work
-        #   skipped: 6 (timepoint-specific overrides) 9 (>1 condition) 10,11,13,16,17 (mapping)
-        #   failing: 5 (condition changes / preeq https://github.com/AMICI-dev/AMICI/issues/2975) 12
-        #  update 16: disallowed unnecessary aliasing via mapping table
         import pysb
         from petab.v2.models.pysb_model import PySBModel
 
@@ -216,35 +218,21 @@ class PetabImporter:
         converter = ExperimentsToPySBConverter(self.petab_problem)
         self.petab_problem, self._events = converter.convert()
 
-    def _upgrade_if_needed(
+    def _upgrade_or_copy_if_needed(
         self, problem: v1.Problem | v2.Problem
     ) -> v2.Problem:
-        """Upgrade the problem to petab v2 if necessary."""
+        """Upgrade the problem to petab v2 if necessary.
+        Otherwise, create a deep copy of the problem."""
         if isinstance(problem, v2.Problem):
-            return problem
+            return copy.deepcopy(problem)
 
         # TODO: So far, PEtab can only upgrade file-based problems,
         #  not petab.v1.Problem objects.
-        raise NotImplementedError("Only petab.v2.Problem is supported.")
-
-    @classmethod
-    def _check_support(cls, petab_problem: v2.Problem):
-        """Check if the PEtab problem requires unsupported features."""
-        ...
-        # # check support for mapping tables
-        # relevant_mappings = [
-        #     m
-        #     for m in petab_problem.mappings
-        #     # we can ignore annotation-only entries
-        #     if m.model_id is not None
-        #     # we can ignore identity mappings
-        #     and m.petab_id != m.model_id
-        # ]
-        # if relevant_mappings:
-        #     # It's partially supported. Remove at your own risk...
-        #     raise NotImplementedError(
-        #         "PEtab v2.0.0 mapping tables are not yet supported."
-        #     )
+        raise NotImplementedError(
+            "Only `petab.v2.Problem` is currently supported. "
+            "For use with PEtab 1.0 problems, please use "
+            "`petab.v2.Problem.from_yaml(petab_v1_yaml_file)` for upgrading."
+        )
 
     @property
     def model_id(self) -> str:
@@ -285,13 +273,6 @@ class PetabImporter:
         # TODO split into DEModel creation, code generation and compilation
         #   allow retrieving DEModel without compilation
 
-        from petab.v2.models.sbml_model import SbmlModel
-
-        if not isinstance(self.petab_problem.model, SbmlModel):
-            raise ValueError("The PEtab problem must contain an SBML model.")
-
-        # set_log_level(logger, verbose)
-
         logger.info("Importing model ...")
 
         if not self.petab_problem.observables:
@@ -316,12 +297,11 @@ class PetabImporter:
         logger.info(f"#Observables: {len(observation_model)}")
         logger.debug(f"Observables: {observation_model}")
 
+        # TODO: to attr
         output_parameter_defaults = {}
         self._workaround_observable_parameters(
             output_parameter_defaults=output_parameter_defaults,
         )
-
-        sbml_model = self.petab_problem.model.sbml_model
 
         # All indicator variables, i.e., all remaining targets after
         #  experiments-to-event in the PEtab problem must be converted
@@ -334,14 +314,12 @@ class PetabImporter:
             for change in self.petab_problem[condition_id].changes
         }
 
-        # show_model_info(sbml_model)
-        # TODO spline stuff, to __init__
-        discard_sbml_annotations = False
+        from amici.petab.sbml_import import show_model_info
+
+        show_model_info(self.petab_problem.model.sbml_model)
         sbml_importer = amici.SbmlImporter(
-            sbml_model,
-            discard_annotations=discard_sbml_annotations,
+            self.petab_problem.model.sbml_model,
         )
-        sbml_model = sbml_importer.sbml
 
         self._check_placeholders()
 
@@ -351,15 +329,8 @@ class PetabImporter:
         )
 
         fixed_parameters = list(sorted(fixed_parameters))
-
+        logger.info(f"Number of fixed parameters: {len(fixed_parameters)}")
         logger.debug(f"Fixed parameters are {fixed_parameters}")
-        logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
-        logger.info(
-            "Variable parameters: "
-            + str(
-                len(sbml_model.getListOfParameters()) - len(fixed_parameters)
-            )
-        )
 
         # Create Python module from SBML model
         if self._jax:
@@ -381,19 +352,13 @@ class PetabImporter:
                 constant_parameters=fixed_parameters,
                 allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
                 verbose=self._verbose,
+                compile=self._compile,
                 # FIXME: simplification takes ages for Smith_BMCSystBiol2013
                 #  due to nested piecewises / Heavisides?!
                 simplify=None,
                 # **kwargs,
             )
-        # TODO: ensure that all estimated parameters are present as
-        #  (non-constant) parameters in the model
-
-        if self._compile:
-            # check that the model extension was compiled successfully
-            _ = self.import_module()
-            # model = model_module.getModel()
-            # TODO check_model(amici_model=model, petab_problem=petab_problem)
+        # TODO check_model(amici_model=model, petab_problem=petab_problem)
 
         return sbml_importer
 
@@ -422,6 +387,7 @@ class PetabImporter:
                 "is currently not supported."
             )
 
+        # TODO from yaml
         if self.model_id is None:
             raise ValueError(
                 "No `model_id` was provided and no model "
@@ -491,12 +457,10 @@ class PetabImporter:
                 constant_parameters=fixed_parameters,
                 observation_model=observation_model,
                 pysb_model_has_obs_and_noise=True,
+                compile=self._compile,
                 _events=self._events,
                 # **kwargs,
             )
-
-        # TODO: ensure that all estimated parameters are present as
-        #  (non-constant) parameters in the model
 
         if self._compile:
             # check that the model extension was compiled successfully
@@ -1092,10 +1056,17 @@ class PetabSimulator:
     :param em: The ExperimentManager to generate the ExpData objects.
     :param solver: The AMICI solver to use for the simulations.
         If not provided, a new solver with default settings will be used.
+    :param num_threads: The number of threads to use for parallel
+        simulation of experiments. Only relevant if multiple experiments
+        are present in the PEtab problem and if AMICI was compiled with
+        OpenMP support.
     """
 
     def __init__(
-        self, em: ExperimentManager, solver: amici.Solver | None = None
+        self,
+        em: ExperimentManager,
+        solver: amici.Solver | None = None,
+        num_threads: int = 1,
     ):
         self._petab_problem = em.petab_problem
         self._model = em.model
@@ -1103,6 +1074,7 @@ class PetabSimulator:
             solver if solver is not None else self._model.create_solver()
         )
         self._exp_man: ExperimentManager = em
+        self.num_threads = num_threads
 
     def simulate(
         self, problem_parameters: dict[str, float] = None
@@ -1139,7 +1111,9 @@ class PetabSimulator:
                 edata=edata, problem_parameters=problem_parameters
             )
 
-        rdatas = amici.run_simulations(self._model, self._solver, edatas)
+        rdatas = amici.run_simulations(
+            self._model, self._solver, edatas, num_threads=self.num_threads
+        )
         from . import EDATAS, LLH, RDATAS, SLLH
 
         return {
