@@ -593,7 +593,7 @@ class JAXModel(eqx.Module):
         :param init_override:
             override model input e.g. with neural net outputs. If not provided, the inputs are not overridden.
         :param init_override_mask:
-            mask for input override. If `True`, the corresponding input is replaced with value from init_override.
+            mask for input override. If `True`, the corresponding input is replaced with the corresponding value from `init_override`.
         :param ts_mask:
             mask to remove (padded) time points. If `True`, the corresponding time point is used for the evaluation of
             the output. Only applied if ret is ReturnValue.llh, ReturnValue.nllhs, ReturnValue.res, or ReturnValue.chi2.
