@@ -34,7 +34,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 20
-          submodules: recursive
+
+      # todo, update after https://github.com/sebapersson/petab_sciml_testsuite/issues/14 is merged
+      - name: Download PEtab SciML test suite
+        run: |
+          git clone --depth 1 --branch main \
+            https://github.com/FFroehlich/petab_sciml_testsuite \
+            tests/sciml/testsuite
 
       - name: Install apt dependencies
         uses: ./.github/actions/install-apt-dependencies

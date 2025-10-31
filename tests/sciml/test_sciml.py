@@ -44,7 +44,8 @@ jax.config.update("jax_enable_x64", True)
 
 cases_dir = Path(__file__).parent / "testsuite" / "test_cases"
 net_cases_dir = cases_dir / "net_import"
-ude_cases_dir = cases_dir / "hybrid"
+ude_cases_dir = cases_dir / "sciml_problem_import"
+initialization_cases_dir = cases_dir / "initialization"
 
 
 def _reshape_flat_array(array_flat):
@@ -298,3 +299,109 @@ def test_ude(test):
                             atol=solutions["tol_grad_llh"],
                             rtol=solutions["tol_grad_llh"],
                         )
+
+
+@pytest.mark.parametrize(
+    "test", sorted([d.stem for d in initialization_cases_dir.glob("[0-9]*")])
+)
+def test_initialization(test):
+    """Test that nominal ML parameters are imported correctly.
+
+    These tests verify that parameter initialization works properly,
+    especially when a subset of layers in a ML model are frozen.
+    """
+    test_dir = initialization_cases_dir / test
+    with open(test_dir / "petab" / "problem.yaml") as f:
+        petab_yaml = safe_load(f)
+    with open(test_dir / "solutions.yaml") as f:
+        solutions = safe_load(f)
+
+    with change_directory(test_dir / "petab"):
+        from petab.v2 import Problem
+
+        petab_yaml["format_version"] = "2.0.0"  # TODO: fixme
+        petab_problem = Problem.from_yaml(petab_yaml)
+        jax_model = import_petab_problem(
+            petab_problem,
+            model_output_dir=Path(__file__).parent
+            / "models"
+            / f"initialization_{test}",
+            compile_=True,
+            jax=True,
+        )
+        jax_problem = JAXProblem(jax_model, petab_problem)
+
+    # Check that parameters were initialized correctly
+    # The model is already initialized with nominal values during import_petab_problem
+    for net_id, param_file in solutions["parameter_files"].items():
+        expected = h5py.File(test_dir / param_file, "r")
+
+        # Iterate through all layers in the expected parameters
+        for layer_name in expected["parameters"][net_id].keys():
+            layer = jax_problem.model.nns[net_id].layers[layer_name]
+            layer_group = expected["parameters"][net_id][layer_name]
+
+            # Check weight parameters
+            if hasattr(layer, "weight") and layer.weight is not None:
+                actual_weight = layer.weight
+
+                if "weight" in layer_group:
+                    # Layer has expected weight values in the reference file
+                    expected_weight = layer_group["weight"][:]
+
+                    if isinstance(layer, eqx.nn.ConvTranspose):
+                        # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
+                        actual_weight = np.flip(
+                            actual_weight.swapaxes(0, 1),
+                            axis=tuple(range(2, actual_weight.ndim)),
+                        )
+
+                    np.testing.assert_allclose(
+                        np.squeeze(actual_weight),
+                        np.squeeze(expected_weight),
+                        atol=solutions["tol"],
+                        rtol=solutions["tol"],
+                        err_msg=f"Weight mismatch in {net_id}.{layer_name}",
+                    )
+                else:
+                    # Layer has no weight in reference file, should be initialized to 0
+                    np.testing.assert_allclose(
+                        actual_weight,
+                        0.0,
+                        atol=solutions["tol"],
+                        rtol=0.0,
+                        err_msg=f"Weight should be zero in {net_id}.{layer_name}",
+                    )
+
+            # Check bias parameters
+            if hasattr(layer, "bias") and layer.bias is not None:
+                actual_bias = layer.bias
+
+                if "bias" in layer_group:
+                    # Layer has expected bias values in the reference file
+                    expected_bias = layer_group["bias"][:]
+
+                    if isinstance(layer, eqx.nn.Conv | eqx.nn.ConvTranspose):
+                        expected_bias = np.expand_dims(
+                            expected_bias,
+                            tuple(range(1, layer.num_spatial_dims + 1)),
+                        )
+
+                    np.testing.assert_allclose(
+                        np.squeeze(actual_bias),
+                        np.squeeze(expected_bias),
+                        atol=solutions["tol"],
+                        rtol=solutions["tol"],
+                        err_msg=f"Bias mismatch in {net_id}.{layer_name}",
+                    )
+                else:
+                    # Layer has no bias in reference file, should be initialized to 0
+                    np.testing.assert_allclose(
+                        actual_bias,
+                        0.0,
+                        atol=solutions["tol"],
+                        rtol=0.0,
+                        err_msg=f"Bias should be zero in {net_id}.{layer_name}",
+                    )
+
+        expected.close()
