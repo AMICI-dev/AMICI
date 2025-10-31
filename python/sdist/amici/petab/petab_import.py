@@ -164,7 +164,7 @@ def import_petab_problem(
             hybridization = {
                 net_id: {
                     "model": NNModelStandard.load_data(
-                        Path() / net_config["location"]
+                        Path(net_config["location"])
                     ),
                     "input_vars": [
                         input_mapping[petab_id]
