@@ -46,8 +46,6 @@ def generate_equinox(
         output filename for generated Equinox model
     :param frozen_layers:
         list of layer names to freeze during training
-    :return:
-
     """
     # TODO: move to top level import and replace forward type definitions
     from petab_sciml import Layer
