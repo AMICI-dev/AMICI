@@ -269,7 +269,7 @@ class TestGenerateForward:
         node.name = "input_x"
 
         result = _generate_forward(node, indent=4)
-        assert result == "    input_x = input"
+        assert result == ""
 
     def test_output_node(self):
         """Test generation for output nodes."""
