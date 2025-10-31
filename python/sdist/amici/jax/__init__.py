@@ -10,7 +10,7 @@ compatibility.
 from warnings import warn
 
 from amici.jax.model import JAXModel
-from amici.jax.nn import Flatten, generate_equinox, tanhshrink
+from amici.jax.nn import Flatten, cat, generate_equinox, tanhshrink
 from amici.jax.petab import (
     JAXProblem,
     ReturnValue,
@@ -33,4 +33,5 @@ __all__ = [
     "petab_simulate",
     "ReturnValue",
     "tanhshrink",
+    "cat",
 ]

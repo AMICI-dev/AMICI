@@ -32,6 +32,27 @@ def tanhshrink(x: jnp.ndarray) -> jnp.ndarray:
     return x - jnp.tanh(x)
 
 
+def cat(tensors, axis: int = 0):
+    """Alias for torch.cat using JAX's concatenate/stack function.
+
+    Handles both regular arrays and zero-dimensional (scalar) arrays by
+    using stack instead of concatenate for 0D arrays.
+
+    :param tensors:
+        List of arrays to concatenate
+    :param axis:
+        Dimension along which to concatenate (default: 0)
+
+    :return:
+        Concatenated array
+    """
+    # Check if all tensors are 0-dimensional (scalars)
+    if all(jnp.ndim(t) == 0 for t in tensors):
+        # For 0D arrays, use stack instead of concatenate
+        return jnp.stack(tensors, axis=axis)
+    return jnp.concatenate(tensors, axis=axis)
+
+
 def generate_equinox(
     nn_model: "NNModel",  # noqa: F821
     filename: Path | str,
@@ -59,6 +80,38 @@ def generate_equinox(
 
     layers = {layer.layer_id: layer for layer in nn_model.layers}
 
+    # Collect placeholder nodes to determine input handling
+    placeholder_nodes = [
+        node for node in nn_model.forward if node.op == "placeholder"
+    ]
+    input_names = [node.name for node in placeholder_nodes]
+
+    # Generate input unpacking line
+    if len(input_names) == 1:
+        input_unpack = f"{input_names[0]} = input"
+    else:
+        input_unpack = f"{', '.join(input_names)} = input"
+
+    # Generate forward pass lines (excluding placeholder nodes)
+    forward_lines = [
+        _generate_forward(
+            node,
+            node_indent,
+            frozen_layers,
+            layers.get(
+                node.target,
+                Layer(layer_id="dummy", layer_type="Linear"),
+            ).layer_type,
+        )
+        for node in nn_model.forward
+    ]
+    # Filter out empty lines from placeholder processing
+    forward_lines = [line for line in forward_lines if line]
+    # Prepend input unpacking
+    forward_code = f"{' ' * node_indent}{input_unpack}\n" + "\n".join(
+        forward_lines
+    )
+
     tpl_data = {
         "MODEL_ID": nn_model.nn_model_id,
         "LAYERS": ",\n".join(
@@ -67,20 +120,7 @@ def generate_equinox(
                 for ilayer, layer in enumerate(nn_model.layers)
             ]
         )[layer_indent:],
-        "FORWARD": "\n".join(
-            [
-                _generate_forward(
-                    node,
-                    node_indent,
-                    frozen_layers,
-                    layers.get(
-                        node.target,
-                        Layer(layer_id="dummy", layer_type="Linear"),
-                    ).layer_type,
-                )
-                for node in nn_model.forward
-            ]
-        )[node_indent:],
+        "FORWARD": forward_code[node_indent:],
         "INPUT": ", ".join([f"'{inp.input_id}'" for inp in nn_model.inputs]),
         "OUTPUT": ", ".join(
             [
@@ -282,6 +322,7 @@ def _process_activation_call(node: "Node") -> str:  # noqa: F821
         "hardswish": "jax.nn.hard_swish",
         "tanhshrink": "amici.jax.tanhshrink",
         "softsign": "jax.nn.soft_sign",
+        "cat": "amici.jax.cat",
     }
 
     # Validate hardtanh parameters
@@ -293,6 +334,18 @@ def _process_activation_call(node: "Node") -> str:  # noqa: F821
         if node.kwargs.pop("max_val", 1.0) != 1.0:
             raise NotImplementedError(
                 "max_val != 1.0 not supported for hardtanh"
+            )
+
+    # Handle kwarg aliasing for cat (dim -> axis)
+    if node.target == "cat":
+        if "dim" in node.kwargs:
+            node.kwargs["axis"] = node.kwargs.pop("dim")
+        # Convert list of variable names to proper bracket-enclosed list
+        if isinstance(node.args[0], list):
+            # node.args[0] is a list like ['net_input1', 'net_input2']
+            # We need to convert it to a single string representing the list: [net_input1, net_input2]
+            node.args = tuple(
+                ["[" + ", ".join(node.args[0]) + "]"] + list(node.args[1:])
             )
 
     return activation_map.get(node.target, f"jax.nn.{node.target}")
@@ -322,10 +375,9 @@ def _generate_forward(
     if frozen_layers is None:
         frozen_layers = {}
 
-    # Handle placeholder nodes
+    # Handle placeholder nodes - skip individual processing, handled collectively in generate_equinox
     if node.op == "placeholder":
-        # TODO: inconsistent target vs name
-        return f"{' ' * indent}{node.name} = input"
+        return ""
 
     # Handle output nodes
     if node.op == "output":
