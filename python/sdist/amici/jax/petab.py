@@ -806,7 +806,7 @@ class JAXProblem(eqx.Module):
 
         return parameter_array, model
 
-    def _get_inputs(self):
+    def _get_inputs(self) -> dict:
         if self._petab_problem.mapping_df is None:
             return {}
         inputs = {net: {} for net in self.model.nns.keys()}
