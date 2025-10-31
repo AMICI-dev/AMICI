@@ -4,7 +4,6 @@
 import logging
 import sys
 
-import numpy as np
 import pandas as pd
 import petabtests
 import pytest
@@ -38,8 +37,7 @@ def test_case(case, model_type, version, jax):
         ) or "Timepoint-specific parameter overrides" in str(e):
             logger.info(
                 f"Case {case} expectedly failed. "
-                "Required functionality is not yet "
-                f"implemented: {e}"
+                f"Required functionality is not yet implemented: {e}"
             )
             pytest.skip(str(e))
         else:
@@ -90,17 +88,10 @@ def _test_case(case, model_type, version, jax):
     rdatas = ret["rdatas"]
     chi2 = sum(rdata["chi2"] for rdata in rdatas)
     llh = ret["llh"]
-    simulation_df = rdatas_to_measurement_df(
+    simulation_df = rdatas_to_simulation_df(
         rdatas, ps._model, pi.petab_problem
     )
-    # TODO petab.check_measurement_df(simulation_df, problem.observable_df)
-    simulation_df = simulation_df.rename(
-        columns={v2.C.MEASUREMENT: v2.C.SIMULATION}
-    )
-    # revert setting default experiment Id
-    simulation_df.loc[
-        simulation_df[v2.C.EXPERIMENT_ID] == "__default__", v2.C.EXPERIMENT_ID
-    ] = np.nan
+
     # FIXME: why int?? can be inf
     # simulation_df[v2.C.TIME] = simulation_df[v2.C.TIME].astype(int)
     solution = petabtests.load_solution(case, model_type, version=version)
@@ -182,14 +173,11 @@ def check_derivatives(
     petab_simulator: PetabSimulator,
     problem_parameters: dict[str, float],
 ) -> None:
-    """Check derivatives using finite differences for all experimental
-    conditions
+    """Check derivatives using finite differences for each experimental
+    conditions.
 
-    Arguments:
-        problem: PEtab problem
-        model: AMICI model matching ``problem``
-        solver: AMICI solver
-        problem_parameters: Dictionary of problem parameters
+    :param petab_simulator: PetabSimulator object
+    :param problem_parameters: Dictionary of problem parameters
     """
     solver = petab_simulator._solver
     model = petab_simulator._model
@@ -206,6 +194,8 @@ def check_derivatives(
     for edata in edatas:
         petab_simulator._exp_man.apply_parameters(edata, problem_parameters)
         amici_check_derivatives(model, solver, edata)
+
+    # TODO check aggregated sensitivities over all conditions
 
 
 def run():
