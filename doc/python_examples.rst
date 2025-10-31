@@ -12,6 +12,7 @@ Various example notebooks.
    examples/getting_started/GettingStarted.ipynb
    examples/getting_started_extended/GettingStartedExtended.ipynb
    examples/example_petab/petab.ipynb
+   examples/example_petab/petab_v2.ipynb
    examples/example_presimulation/ExampleExperimentalConditions.ipynb
    examples/example_steady_states/ExampleEquilibrationLogic.ipynb
    examples/example_errors.ipynb
