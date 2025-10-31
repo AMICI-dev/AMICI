@@ -64,7 +64,7 @@ def _reshape_flat_array(array_flat):
     return array
 
 
-@pytest.mark.parametrize("test", sorted([d.stem for d in net_cases_dir.glob("[0-9]*")]))
+@pytest.mark.parametrize("test", sorted(d.stem for d in net_cases_dir.glob("[0-9]*")))
 def test_net(test):
     test_dir = net_cases_dir / test
     with open(test_dir / "solutions.yaml") as f:
