@@ -7,11 +7,10 @@ into AMICI.
 
 import logging
 import os
+import re
 import shutil
 from pathlib import Path
-import re
 
-import amici
 import pandas as pd
 import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
@@ -180,44 +179,34 @@ def import_petab_problem(
                         if model_id.split(".")[1].startswith("input")
                         and petab_id in input_mapping.keys()
                     ],
-                    "output_vars": dict(
-                        [
-                            (
-                                output_mapping[petab_id],
-                                _get_net_index(model_id),
-                            )
-                            for petab_id, model_id in petab_problem.mapping_df.loc[
-                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                                .str.split(".")
-                                .str[0]
-                                == net_id,
-                                petab.MODEL_ENTITY_ID,
-                            ]
-                            .to_dict()
-                            .items()
-                            if model_id.split(".")[1].startswith("output")
-                            and petab_id in output_mapping.keys()
+                    "output_vars": {
+                        output_mapping[petab_id]: _get_net_index(model_id)
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
                         ]
-                    ),
-                    "observable_vars": dict(
-                        [
-                            (
-                                observable_mapping[petab_id],
-                                _get_net_index(model_id),
-                            )
-                            for petab_id, model_id in petab_problem.mapping_df.loc[
-                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                                .str.split(".")
-                                .str[0]
-                                == net_id,
-                                petab.MODEL_ENTITY_ID,
-                            ]
-                            .to_dict()
-                            .items()
-                            if model_id.split(".")[1].startswith("output")
-                            and petab_id in observable_mapping.keys()
+                        .to_dict()
+                        .items()
+                        if model_id.split(".")[1].startswith("output")
+                        and petab_id in output_mapping.keys()
+                    },
+                    "observable_vars": {
+                        observable_mapping[petab_id]: _get_net_index(model_id)
+                        for petab_id, model_id in petab_problem.mapping_df.loc[
+                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            petab.MODEL_ENTITY_ID,
                         ]
-                    ),
+                        .to_dict()
+                        .items()
+                        if model_id.split(".")[1].startswith("output")
+                        and petab_id in observable_mapping.keys()
+                    },
                     "frozen_layers": dict(
                         [
                             _get_frozen_layers(model_id)

@@ -5,8 +5,8 @@ from collections.abc import Iterable
 from logging import warning
 
 import sympy as sp
-from sympy.printing.numpy import NumPyPrinter
 from sympy.core.function import UndefinedFunction
+from sympy.printing.numpy import NumPyPrinter
 
 
 def _jnp_array_str(array) -> str:

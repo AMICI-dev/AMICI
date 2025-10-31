@@ -9,8 +9,8 @@ from interpax import interp1d
 from jax.numpy import inf as oo
 from jax.numpy import nan as nan
 
-from amici.jax.model import JAXModel, safe_log, safe_div
 from amici import _module_from_path
+from amici.jax.model import JAXModel, safe_div, safe_log
 
 TPL_NET_IMPORTS
 

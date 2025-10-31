@@ -31,10 +31,10 @@ except ModuleNotFoundError:
     import exhale_multiproject_monkeypatch  # noqa: F401
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+
 import amici
 import pandas as pd  # noqa: F401
 import sympy as sp  # noqa: F401
-import warnings
 
 
 def install_doxygen():
@@ -370,6 +370,7 @@ vector_types = {
 autodoc_type_aliases = {
     "NNModel": "petab_sciml.NNModel",
 }
+
 
 def process_docstring(app, what, name, obj, options, lines):
     # only apply in the amici.amici module

@@ -1,8 +1,9 @@
 # ruff: noqa: F401, F821, F841
 import equinox as eqx
+import jax
 import jax.nn
 import jax.random as jr
-import jax
+
 import amici.jax.nn
 
 
