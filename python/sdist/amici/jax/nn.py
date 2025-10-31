@@ -8,7 +8,7 @@ from amici._codegen.template import apply_template
 
 
 class Flatten(eqx.Module):
-    """Custom implementation of a torch.flatten layer for Equinox."""
+    """Custom implementation of a `torch.flatten` layer for Equinox."""
 
     start_dim: int
     end_dim: int
