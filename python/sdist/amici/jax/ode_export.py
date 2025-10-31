@@ -124,7 +124,7 @@ class ODEExporter:
         outdir: Path | str | None = None,
         verbose: bool | int | None = False,
         model_name: str | None = "model",
-        hybridisation: dict[str, dict] = None,
+        hybridization: dict[str, dict] = None,
     ):
         """
         Generate AMICI jax files for the ODE provided to the constructor.
@@ -141,6 +141,10 @@ class ODEExporter:
 
         :param model_name:
             name of the model to be used during code generation
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
 
@@ -163,7 +167,7 @@ class ODEExporter:
 
         self.model: DEModel = ode_model
 
-        self.hybridisation = hybridisation if hybridisation is not None else {}
+        self.hybridization = hybridization if hybridization is not None else {}
 
         self._code_printer = AmiciJaxCodePrinter()
 
@@ -268,11 +272,11 @@ class ODEExporter:
             },
             "NET_IMPORTS": "\n".join(
                 f"{net} = _module_from_path('{net}', Path(__file__).parent / '{net}.py')"
-                for net in self.hybridisation.keys()
+                for net in self.hybridization.keys()
             ),
             "NETS": ",\n".join(
                 f'"{net}": {net}.net(jr.PRNGKey(0))'
-                for net in self.hybridisation.keys()
+                for net in self.hybridization.keys()
             ),
         }
 
@@ -283,7 +287,7 @@ class ODEExporter:
         )
 
     def _generate_nn_code(self) -> None:
-        for net_name, net in self.hybridisation.items():
+        for net_name, net in self.hybridization.items():
             generate_equinox(
                 net["model"],
                 self.model_path / f"{net_name}.py",

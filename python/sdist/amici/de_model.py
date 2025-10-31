@@ -2575,10 +2575,8 @@ class DEModel:
         Parses the hybridization information and updates the model accordingly
 
         :param hybridization:
-            hybridization table for sciml models, briefly assigns model variables
-            to neural network inputs/outputs and vice versa. See
-            https://petab-sciml.readthedocs.io/latest/format.html#hybridization-table
-            for details.
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         added_expressions = False
         orig_obs = tuple([s.get_id() for s in self._observables])
