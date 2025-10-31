@@ -302,7 +302,9 @@ jobs:
 
   macos_python:
     name: Tests MacOS Python
-    runs-on: macos-latest
+    # stick to macos-14 for now. tests on macos-15 take super long
+    #  https://github.com/AMICI-dev/AMICI/issues/2996
+    runs-on: macos-14
     env:
       PYTHONFAULTHANDLER: "1"
 
