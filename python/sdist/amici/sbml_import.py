@@ -479,7 +479,11 @@ class SbmlImporter:
             see :attr:`amici.DEModel._simplify`
 
         :param cache_simplify:
-                see :meth:`amici.DEModel.__init__`
+            see :meth:`amici.DEModel.__init__`
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
 
@@ -499,7 +503,7 @@ class SbmlImporter:
             model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
-            hybridisation=hybridization,
+            hybridization=hybridization,
         )
         exporter.generate_model_code()
 
