@@ -100,6 +100,7 @@ class PetabImporter:
         model_id: str = None,
         outdir: str | Path = None,
         jax: bool = False,
+        verbose: int | bool = logging.INFO,
     ):
         """
         Create a new PetabImporter instance.
@@ -111,11 +112,22 @@ class PetabImporter:
         :param outdir:
             The output directory where the model files are written to.
         :param jax: TODO
+        :param verbose:
+            The verbosity level. If ``True``, set to ``logging.INFO``.
+            If ``False``, set to ``logging.WARNING``. Otherwise, use the given
+            logging level.
         """
         self.petab_problem: v2.Problem = self._upgrade_or_copy_if_needed(
             petab_problem
         )
         self._debug = False
+        self._verbose = (
+            logging.INFO
+            if verbose is True
+            else logging.WARNING
+            if verbose is False
+            else verbose
+        )
 
         if len(self.petab_problem.models) > 1:
             raise NotImplementedError(
@@ -145,14 +157,13 @@ class PetabImporter:
             elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
                 print(self.petab_problem.model.to_str())
 
-        self._compile = compile_
+        self._compile = not jax if compile_ is None else compile_
         self._sym_model: DEModel | None = None
         self._model_id = model_id
         self._outdir: Path | None = (
             None if outdir is None else Path(outdir).absolute()
         )
         self._jax = jax
-        self._verbose = logging.DEBUG
 
         if validate:
             logger.info("Validating PEtab problem ...")
@@ -608,12 +619,9 @@ class PetabImporter:
             self.outdir,
         )
 
-    # def get_model(self):
-    #     """Create the model."""
-    #     if self._sym_model is None:
-    #         self._sym_model = self.get_sym_model()
-    #
-    #     return self._sym_model
+    def create_model(self) -> amici.Model:
+        """Create a :class:`amici.Model` instance from the imported model."""
+        return self.import_module().get_model()
 
     def create_simulator(self, force_import: bool = False) -> PetabSimulator:
         """
@@ -782,6 +790,10 @@ class ExperimentManager:
                 f"k={edata.fixed_parameters}"
             )
 
+        self.apply_parameters(
+            edata, problem_parameters=self.petab_problem.get_x_nominal_dict()
+        )
+
         return edata
 
     def _get_measurements_and_sigmas(
@@ -871,6 +883,7 @@ class ExperimentManager:
         # TODO: support ndarray in addition to dict
 
         # TODO: must handle output overrides here, or add them to the events
+        # TODO: use the original or the current parameters if only a subset is provided?
         par_vals = np.array(self._original_p)
         pid_to_idx = self._pid_to_idx
         experiment_id = edata.id
@@ -1075,6 +1088,16 @@ class PetabSimulator:
         )
         self._exp_man: ExperimentManager = em
         self.num_threads = num_threads
+
+    @property
+    def model(self) -> amici.Model:
+        """The AMICI model used by this simulator."""
+        return self._model
+
+    @property
+    def solver(self) -> amici.Solver:
+        """The AMICI solver used by this simulator."""
+        return self._solver
 
     def simulate(
         self, problem_parameters: dict[str, float] = None
