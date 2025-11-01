@@ -2,7 +2,6 @@ import logging
 import math
 import os
 import re
-import tempfile
 from _collections import OrderedDict
 from itertools import chain
 from pathlib import Path
@@ -604,29 +603,3 @@ def _get_fixed_parameters_sbml(
                 continue
 
     return list(sorted(fixed_parameters))
-
-
-def _create_model_output_dir_name(
-    sbml_model: "libsbml.Model",
-    model_name: str | None = None,
-    jax: bool = False,
-) -> Path:
-    """
-    Find a folder for storing the compiled amici model.
-    If possible, use the sbml model id, otherwise create a random folder.
-    The folder will be located in the `amici_models` subfolder of the current
-    folder.
-    """
-    BASE_DIR = Path("amici_models").absolute()
-    BASE_DIR.mkdir(exist_ok=True)
-    # try model_name
-    suffix = "_jax" if jax else ""
-    if model_name:
-        return BASE_DIR / (model_name + suffix)
-
-    # try sbml model id
-    if sbml_model_id := sbml_model.getId():
-        return BASE_DIR / (sbml_model_id + suffix)
-
-    # create random folder name
-    return Path(tempfile.mkdtemp(dir=BASE_DIR))

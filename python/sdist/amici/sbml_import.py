@@ -28,7 +28,7 @@ from sympy.matrices.dense import MutableDenseMatrix
 
 import amici
 
-from . import has_clibs
+from . import get_model_dir, has_clibs
 from .constants import SymbolId
 from .de_export import (
     DEExporter,
@@ -317,6 +317,7 @@ class SbmlImporter:
 
         :param output_dir:
             Directory where the generated model package will be stored.
+            Defaults to :func:`amici.get_model_dir`.
 
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
@@ -397,6 +398,8 @@ class SbmlImporter:
             cache_simplify=cache_simplify,
             hardcode_symbols=hardcode_symbols,
         )
+
+        output_dir = output_dir or get_model_dir(model_name)
 
         exporter = DEExporter(
             ode_model,
