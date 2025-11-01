@@ -276,20 +276,18 @@ def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
     with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem, jax=True, model_output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         r = run_simulations(jax_problem)
         assert not np.isinf(r[0].item())
     petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
         petab_problem.measurement_df[SIMULATION_CONDITION_ID]
     )
     with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem, jax=True, model_output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         r = run_simulations(jax_problem)
         assert np.isinf(r[0].item())
 
@@ -300,10 +298,9 @@ def test_serialisation(lotka_volterra):  # noqa: F811
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
     ) as model_dir:
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem, jax=True, model_output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         # change parameters to random values to test serialisation
         jax_problem.update_parameters(
             jax_problem.parameters
