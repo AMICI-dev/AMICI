@@ -64,11 +64,12 @@ def _test_case(case, model_type, version, jax):
     model_name = (
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
+    # TODO: default name
     model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
 
     pi = PetabImporter(
         petab_problem=problem,
-        model_id=model_name,
+        module_name=model_name,
         outdir=model_output_dir,
         compile_=True,
         jax=jax,
@@ -77,20 +78,15 @@ def _test_case(case, model_type, version, jax):
     ps = pi.create_simulator(
         force_import=True,
     )
-    ps._solver.set_steady_state_tolerance_factor(1.0)
+    ps.solver.set_steady_state_tolerance_factor(1.0)
 
-    problem_parameters = dict(
-        zip(problem.x_free_ids, problem.x_nominal_free, strict=True)
-    )
-
+    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=False)
     ret = ps.simulate(problem_parameters=problem_parameters)
 
     rdatas = ret["rdatas"]
     chi2 = sum(rdata["chi2"] for rdata in rdatas)
     llh = ret["llh"]
-    simulation_df = rdatas_to_simulation_df(
-        rdatas, ps._model, pi.petab_problem
-    )
+    simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
 
     # FIXME: why int?? can be inf
     # simulation_df[v2.C.TIME] = simulation_df[v2.C.TIME].astype(int)
@@ -130,7 +126,7 @@ def _test_case(case, model_type, version, jax):
             if not jax:
                 logger.log(
                     logging.DEBUG,
-                    f"x_ss: {ps._model.get_state_ids()} "
+                    f"x_ss: {ps.model.get_state_ids()} "
                     f"{[rdata.x_ss for rdata in rdatas]}"
                     f"preeq_t: {[rdata.preeq_t for rdata in rdatas]}"
                     f"posteq_t: {[rdata.posteq_t for rdata in rdatas]}",
@@ -179,8 +175,8 @@ def check_derivatives(
     :param petab_simulator: PetabSimulator object
     :param problem_parameters: Dictionary of problem parameters
     """
-    solver = petab_simulator._solver
-    model = petab_simulator._model
+    solver = petab_simulator.solver
+    model = petab_simulator.model
     edatas = petab_simulator._exp_man.create_edatas()
 
     solver.set_sensitivity_method(SensitivityMethod.forward)

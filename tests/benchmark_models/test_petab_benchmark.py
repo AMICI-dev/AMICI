@@ -657,40 +657,34 @@ def test_nominal_parameters_llh_v2(problem_id):
         flatten_timepoint_specific_output_overrides(problem)
         was_flattened = True
 
-    model_name = f"{problem_id}_v2"
     jax = False
 
     pi = PetabImporter(
         petab_problem=problem,
-        model_id=model_name,
+        module_name=f"{problem_id}_v2",
         outdir=model_output_dir,
         compile_=True,
         jax=jax,
     )
 
     ps = pi.create_simulator(force_import=True)
-    ps._solver.set_absolute_tolerance(1e-8)
-    ps._solver.set_relative_tolerance(1e-8)
-    ps._solver.set_max_steps(10_000)
+    ps.solver.set_absolute_tolerance(1e-8)
+    ps.solver.set_relative_tolerance(1e-8)
+    ps.solver.set_max_steps(10_000)
     ps.num_threads = os.cpu_count()
 
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
-        ps._model.set_steady_state_sensitivity_mode(
+        ps.model.set_steady_state_sensitivity_mode(
             SteadyStateSensitivityMode.integrationOnly
         )
-    problem_parameters = dict(
-        zip(problem.x_free_ids, problem.x_nominal_free, strict=True)
-    )
-
+    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=False)
     ret = ps.simulate(problem_parameters=problem_parameters)
 
     rdatas = ret[RDATAS]
     # chi2 = sum(rdata["chi2"] for rdata in rdatas)
     llh = ret[LLH]
 
-    simulation_df = rdatas_to_simulation_df(
-        rdatas, ps._model, pi.petab_problem
-    )
+    simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
     if was_flattened:
         simulation_df = unflatten_simulation_df(simulation_df, problem)
     print("v2 simulations:")
@@ -741,9 +735,9 @@ def test_nominal_parameters_llh_v2(problem_id):
         # pytest.skip("Excluded from gradient check.")
 
     # sensitivities computed w.r.t. the expected parameters? (`plist` correct?)
-    ps._solver.set_sensitivity_order(SensitivityOrder.first)
-    ps._solver.set_sensitivity_method(SensitivityMethod.forward)
-    ps._model.set_always_check_finite(True)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.model.set_always_check_finite(True)
     result = ps.simulate(
         problem_parameters=problem_parameters,
     )
@@ -770,18 +764,18 @@ def test_nominal_parameters_llh_v2(problem_id):
         pytest.skip("scale=False disabled for this problem")
 
     cur_settings = settings[problem_id]
-    ps._solver.set_absolute_tolerance(cur_settings.atol_sim)
-    ps._solver.set_relative_tolerance(cur_settings.rtol_sim)
-    ps._solver.set_max_steps(200_000)
+    ps.solver.set_absolute_tolerance(cur_settings.atol_sim)
+    ps.solver.set_relative_tolerance(cur_settings.rtol_sim)
+    ps.solver.set_max_steps(200_000)
 
     # TODO: ASA + FSA
     sensitivity_method = SensitivityMethod.forward
-    ps._solver.set_sensitivity_method(sensitivity_method)
-    ps._model.set_steady_state_computation_mode(
+    ps.solver.set_sensitivity_method(sensitivity_method)
+    ps.model.set_steady_state_computation_mode(
         cur_settings.ss_computation_mode
     )
     # TODO: we should probably test all sensitivity modes
-    ps._model.set_steady_state_sensitivity_mode(
+    ps.model.set_steady_state_sensitivity_mode(
         cur_settings.ss_sensitivity_mode
     )
 
