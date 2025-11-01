@@ -46,7 +46,7 @@ def import_petab_problem(
     non_estimated_parameters_as_constants=True,
     jax=False,
     **kwargs,
-) -> "amici.Model | amici.JAXModel":
+) -> "amici.Model | amici.jax.JAXProblem":
     """
     Create an AMICI model for a PEtab problem.
 
@@ -73,8 +73,9 @@ def import_petab_problem(
         parameters are required, this should be set to ``False``.
 
     :param jax:
-        Whether to load the jax version of the model. Note that this disables
-        compilation of the model module unless `compile` is set to `True`.
+        Whether to create a JAX-based problem. If ``True``, returns a
+        :class:`amici.jax.JAXProblem` instance. If ``False``, returns a
+        standard AMICI model.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -82,7 +83,7 @@ def import_petab_problem(
         :func:`amici.pysb_import.pysb2amici`, depending on the model type.
 
     :return:
-        The imported model.
+        The imported model (if ``jax=False``) or JAX problem (if ``jax=True``).
     """
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
         raise NotImplementedError(
@@ -263,13 +264,18 @@ def import_petab_problem(
     )
 
     if jax:
+        from amici.jax import JAXProblem
+
         model = model_module.Model()
 
         logger.info(
             f"Successfully loaded jax model {model_name} "
             f"from {model_output_dir}."
         )
-        return model
+
+        # Create and return JAXProblem
+        logger.info(f"Successfully created JAXProblem for {model_name}.")
+        return JAXProblem(model, petab_problem)
 
     model = model_module.get_model()
     check_model(amici_model=model, petab_problem=petab_problem)

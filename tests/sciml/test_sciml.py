@@ -14,7 +14,6 @@ import pandas as pd
 import petab.v1 as petab
 import pytest
 from amici.jax import (
-    JAXProblem,
     generate_equinox,
     petab_simulate,
     run_simulations,
@@ -197,14 +196,12 @@ def test_ude(test):
 
         petab_yaml["format_version"] = "2.0.0"  # TODO: fixme
         petab_problem = Problem.from_yaml(petab_yaml)
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem,
             model_output_dir=Path(__file__).parent / "models" / test,
             compile_=True,
             jax=True,
         )
-
-        jax_problem = JAXProblem(jax_model, petab_problem)
 
     # llh
     llh, r = run_simulations(jax_problem)

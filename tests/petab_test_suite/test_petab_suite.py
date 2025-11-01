@@ -64,7 +64,7 @@ def _test_case(case, model_type, version, jax):
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
     model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
-    model = import_petab_problem(
+    imported = import_petab_problem(
         petab_problem=problem,
         model_output_dir=model_output_dir,
         model_name=model_name,
@@ -72,10 +72,12 @@ def _test_case(case, model_type, version, jax):
         jax=jax,
     )
     if jax:
-        from amici.jax import JAXProblem, petab_simulate, run_simulations
+        from amici.jax import petab_simulate, run_simulations
 
         steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
-        jax_problem = JAXProblem(model, problem)
+        jax_problem = (
+            imported  # import_petab_problem returns JAXProblem when jax=True
+        )
         llh, ret = run_simulations(
             jax_problem, steady_state_event=steady_state_event
         )
@@ -89,6 +91,7 @@ def _test_case(case, model_type, version, jax):
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
     else:
+        model = imported  # import_petab_problem returns Model when jax=False
         solver = model.create_solver()
         solver.set_steady_state_tolerance_factor(1.0)
         problem_parameters = dict(
