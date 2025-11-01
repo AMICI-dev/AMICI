@@ -632,7 +632,7 @@ class SbmlImporter:
         # create all basic components of the DE model and add them.
         for symbol_name in self.symbols:
             # transform dict of lists into a list of dicts
-            args = ["name", "identifier"]
+            args = ["name", "symbol"]
 
             if symbol_name == SymbolId.SPECIES:
                 args += ["dt", "init"]
@@ -655,7 +655,7 @@ class SbmlImporter:
 
             comp_kwargs = [
                 {
-                    "identifier": var_id,
+                    "symbol": var_id,
                     **{k: v for k, v in var.items() if k in args},
                 }
                 for var_id, var in self.symbols[symbol_name].items()
@@ -672,7 +672,7 @@ class SbmlImporter:
             # replace splines inside fluxes
             flux = flux.subs(spline_subs)
             ode_model.add_component(
-                Expression(identifier=flux_id, name=str(flux_id), value=flux)
+                Expression(symbol=flux_id, name=str(flux_id), value=flux)
             )
 
         if compute_conservation_laws:
@@ -1506,7 +1506,9 @@ class SbmlImporter:
         assert len(free_variables) >= 1
 
         self.symbols[SymbolId.ALGEBRAIC_EQUATION][
-            f"ae{len(self.symbols[SymbolId.ALGEBRAIC_EQUATION])}"
+            symbol_with_assumptions(
+                f"ae{len(self.symbols[SymbolId.ALGEBRAIC_EQUATION])}"
+            )
         ] = {"value": formula}
         # remove the symbol from the original definition and add to
         # algebraic symbols (if not already done)
@@ -2371,9 +2373,7 @@ class SbmlImporter:
             stoichiometric_list,
             *sm.shape,
             rng_seed=32,
-            species_names=[
-                str(x.get_id()) for x in ode_model._differential_states
-            ],
+            species_names=[x.get_id() for x in ode_model._differential_states],
         )
 
         # Sparsify conserved quantities
@@ -2502,7 +2502,7 @@ class SbmlImporter:
         # previously removed constant species
         eliminated_state_ids = {cl["state"] for cl in conservation_laws}
 
-        all_state_ids = [x.get_id() for x in model.states()]
+        all_state_ids = [x.get_sym() for x in model.states()]
         all_compartment_sizes = []
         for state_id in all_state_ids:
             symbol = {
@@ -3166,7 +3166,7 @@ def _add_conservation_for_constant_species(
         if ode_model.state_is_constant(ix):
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
-            target_state = ode_model._differential_states[ix].get_id()
+            target_state = ode_model._differential_states[ix].get_sym()
             total_abundance = symbol_with_assumptions(f"tcl_{target_state}")
             conservation_laws.append(
                 {
