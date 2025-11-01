@@ -64,6 +64,17 @@ nonstandard type conversions.
     }
 }
 
+// store swig version
+%constant int SWIG_VERSION_MAJOR = (SWIG_VERSION >> 16);
+%constant int SWIG_VERSION_MINOR = ((SWIG_VERSION >> 8) & 0xff);
+%constant int SWIG_VERSION_PATCH = (SWIG_VERSION & 0xff);
+
+%pythoncode %{
+# SWIG version used to build the amici extension as `(major, minor, patch)`
+_SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
+%}
+
+
 // Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
 %rename("__eq__") operator ==;
 
