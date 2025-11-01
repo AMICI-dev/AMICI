@@ -35,7 +35,7 @@ from .de_export import (
     SigmaY,
 )
 from .de_model import DEModel
-from .de_model_components import NoiseParameter, ObservableParameter
+from .de_model_components import Event, NoiseParameter, ObservableParameter
 from .import_utils import (
     MeasurementChannel,
     _default_simplify,
@@ -163,6 +163,7 @@ def pysb2amici(
     generate_sensitivity_code: bool = True,
     model_name: str | None = None,
     pysb_model_has_obs_and_noise: bool = False,
+    _events: list[Event] = None,
 ) -> amici.Model | None:
     r"""
     Generate AMICI C++ files for the provided model.
@@ -262,6 +263,7 @@ def pysb2amici(
         cache_simplify=cache_simplify,
         verbose=verbose,
         pysb_model_has_obs_and_noise=pysb_model_has_obs_and_noise,
+        events=_events,
     )
     exporter = DEExporter(
         ode_model,
@@ -303,6 +305,7 @@ def ode_model_from_pysb_importer(
     verbose: int | bool = False,
     jax: bool = False,
     pysb_model_has_obs_and_noise: bool = False,
+    events: list[Event] = None,
 ) -> DEModel:
     """
     Creates an :class:`amici.DEModel` instance from a :class:`pysb.Model`
@@ -360,6 +363,11 @@ def ode_model_from_pysb_importer(
     _process_pysb_species(model, ode)
     _process_pysb_parameters(model, ode, constant_parameters, jax)
     if compute_conservation_laws:
+        if events:
+            raise NotImplementedError(
+                "Conservation law computation is not supported for models "
+                "with events. Use `compute_conservation_laws=False`."
+            )
         _process_pysb_conservation_laws(model, ode)
     _process_pysb_observables(
         model,
@@ -373,6 +381,10 @@ def ode_model_from_pysb_importer(
         observation_model,
         pysb_model_has_obs_and_noise,
     )
+
+    for event in events or []:
+        ode.add_component(event)
+
     ode._has_quadratic_nllh = all(
         channel.noise_distribution
         in ["normal", "lin-normal", "log-normal", "log10-normal"]
