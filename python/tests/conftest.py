@@ -2,6 +2,7 @@
 
 import copy
 import importlib
+import os
 import sys
 from pathlib import Path
 
@@ -12,7 +13,8 @@ from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 pytest_plugins = ["amici.testing.fixtures"]
 
-EXAMPLES_DIR = Path(__file__).parents[2] / "doc" / "examples"
+REPO_ROOT = Path(__file__).parents[2]
+EXAMPLES_DIR = REPO_ROOT / "doc" / "examples"
 TEST_DIR = Path(__file__).parent
 MODEL_STEADYSTATE_SCALED_XML = (
     EXAMPLES_DIR / "getting_started" / "model_steadystate_scaled.xml"
@@ -20,6 +22,8 @@ MODEL_STEADYSTATE_SCALED_XML = (
 MODEL_PRESIMULATION_XML = (
     EXAMPLES_DIR / "example_presimulation" / "model_presimulation.xml"
 )
+
+os.environ.setdefault("AMICI_MODELS_ROOT", str(REPO_ROOT.absolute()))
 
 
 @pytest.fixture(scope="session")

@@ -79,6 +79,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
   return an instance of the generated model class if called with `compile=True`
   (default).
+* The default directory for model import changed, and a base directory
+  can now be specified via the `AMICI_MODELS_ROOT` environment variable.
+  See `amici.get_model_dir` for details.
 
 ## v0.X Series
 

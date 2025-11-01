@@ -252,7 +252,7 @@ def pysb2amici(
         constant_parameters = []
 
     model_name = model_name or model.name
-
+    output_dir = output_dir or amici.get_model_dir(model_name)
     set_log_level(logger, verbose)
     ode_model = ode_model_from_pysb_importer(
         model,

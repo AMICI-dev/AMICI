@@ -20,7 +20,7 @@ import pandas as pd
 import petab.v1 as petab
 import pytest
 import yaml
-from amici import SensitivityMethod
+from amici import SensitivityMethod, get_model_root_dir
 from amici.adapters.fiddy import simulate_petab_to_cached_functions
 from amici.logging import get_logger
 from amici.petab.petab_import import import_petab_problem
@@ -44,8 +44,7 @@ logger = get_logger(
 )
 
 script_dir = Path(__file__).parent.absolute()
-repo_root = script_dir.parent.parent
-benchmark_outdir = repo_root / "test_bmc"
+benchmark_outdir = get_model_root_dir() / "test_bmc"
 debug_path = script_dir / "debug"
 if debug:
     debug_path.mkdir(exist_ok=True, parents=True)
