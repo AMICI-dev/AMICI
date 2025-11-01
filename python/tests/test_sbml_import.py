@@ -1181,9 +1181,9 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     # "species", because differential state
     assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
 
-    assert "p0" in [str(p.get_id()) for p in de_model.parameters()]
-    assert "p1" not in [str(p.get_id()) for p in de_model.parameters()]
-    assert "p2" not in [str(p.get_id()) for p in de_model.parameters()]
+    assert "p0" in [p.get_id() for p in de_model.parameters()]
+    assert "p1" not in [p.get_id() for p in de_model.parameters()]
+    assert "p2" not in [p.get_id() for p in de_model.parameters()]
 
     assert list(de_model.sym("x_rdata")) == [
         symbol_with_assumptions("p2"),

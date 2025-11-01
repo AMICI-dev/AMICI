@@ -691,7 +691,7 @@ def _add_expression(
             )
 
         cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
-        my = generate_measurement_symbol(obs.get_id())
+        my = generate_measurement_symbol(obs.get_sym())
         cost_fun_expr = sp.sympify(
             cost_fun_str,
             locals=dict(
