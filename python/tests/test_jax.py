@@ -206,7 +206,9 @@ def check_fields_jax(
         "steady_state_event": diffrax.steady_state_event(),
         "max_steps": 2**8,  # max_steps
     }
-    fun = beartype(jax_model.simulate_condition)
+    # Use beartype-wrapped unjitted version for type checking
+    # (beartype cannot introspect jitted functions, so we wrap the unjitted version)
+    fun = beartype(jax_model.simulate_condition_unjitted)
 
     for output in ["llh", "x0", "x", "y", "res"]:
         okwargs = kwargs | {
