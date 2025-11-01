@@ -67,8 +67,5 @@ jobs:
               pandoc \
             && pip install tox
 
-      - name: Set up SWIG
-        uses: ./.github/actions/setup-swig
-
       - name: Run sphinx
         run: tox -e doc

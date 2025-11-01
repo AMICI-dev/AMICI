@@ -21,9 +21,6 @@ jobs:
       with:
         fetch-depth: 20
 
-    - name: Set up SWIG
-      uses: ./.github/actions/setup-swig
-
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     - name: Create AMICI sdist
