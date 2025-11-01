@@ -74,6 +74,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
     This only works on shared file systems, as the solver state is stored in a
     temporary HDF5 file.
   * `amici.ExpData` is now picklable.
+* Implemented support for the [PEtab SciML](https://github.com/PEtab-dev/petab_sciml)
+  extension for the JAX interface.
 * The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
   return an instance of the generated model class if called with `compile=True`
   (default).

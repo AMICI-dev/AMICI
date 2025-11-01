@@ -38,6 +38,9 @@ models/model_calvetti/build/*
 
 amici_models/
 
+# PEtab SciML test suite (downloaded dynamically)
+tests/sciml/testsuite/
+
 simulate_model_*_hdf.m
 simulate_model_*.m
 
@@ -196,3 +199,4 @@ debug/*
 tests/benchmark_models/cache_fiddy/*
 venv/*
 .coverage
+tests/sciml/models/*

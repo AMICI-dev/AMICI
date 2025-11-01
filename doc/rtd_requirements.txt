@@ -7,6 +7,8 @@ setuptools>=67.7.2
 #  https://github.com/pysb/pysb/pull/599
 #  for building the documentation, we don't care whether this fully works
 git+https://github.com/pysb/pysb@0afeaab385e9a1d813ecf6fdaf0153f4b91358af
+# For forward type definition in generate_equinox
+git+https://github.com/PEtab-dev/petab_sciml.git@727d177fd3f85509d0bdcc278b672e9eeafd2384#subdirectory=src/python
 matplotlib>=3.7.1
 optax
 nbsphinx
@@ -16,6 +18,7 @@ sphinx_rtd_theme>=1.2.0
 petab[vis]>=0.2.0
 sphinx-autodoc-typehints
 ipython>=8.13.2
+h5py>=3.14.0
 breathe>=4.35.0
 exhale>=0.3.7
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
