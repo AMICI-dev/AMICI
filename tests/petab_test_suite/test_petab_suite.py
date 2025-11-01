@@ -63,10 +63,8 @@ def _test_case(case, model_type, version, jax):
     model_name = (
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
-    model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
     imported = import_petab_problem(
         petab_problem=problem,
-        model_output_dir=model_output_dir,
         model_name=model_name,
         compile_=True,
         jax=jax,

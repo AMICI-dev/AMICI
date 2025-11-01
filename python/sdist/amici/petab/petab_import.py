@@ -55,7 +55,7 @@ def import_petab_problem(
 
     :param model_output_dir:
         Directory to write the model code to. It will be created if it doesn't
-        exist. Defaults to current directory.
+        exist. Defaults to :func:`amici.get_model_dir`.
 
     :param model_name:
         Name of the generated model module. Defaults to the ID of the model
@@ -99,20 +99,11 @@ def import_petab_problem(
 
     # generate folder and model name if necessary
     if model_output_dir is None:
-        if petab_problem.model.type_id == MODEL_TYPE_PYSB:
-            raise ValueError("Parameter `model_output_dir` is required.")
-
-        from .sbml_import import _create_model_output_dir_name
-
-        model_output_dir = _create_model_output_dir_name(
-            petab_problem.sbml_model, model_name, jax=jax
-        )
+        model_output_dir = amici.get_model_dir(model_name, jax=jax).absolute()
     else:
-        model_output_dir = os.path.abspath(model_output_dir)
+        model_output_dir = Path(model_output_dir).absolute()
 
-    # create folder
-    if not os.path.exists(model_output_dir):
-        os.makedirs(model_output_dir)
+    model_output_dir.mkdir(parents=True, exist_ok=True)
 
     # check if compilation necessary
     if compile_ or (

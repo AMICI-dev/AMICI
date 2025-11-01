@@ -30,6 +30,7 @@ from . import (
     amiciModulePath,
     amiciSrcPath,
     amiciSwigPath,
+    get_model_dir,
     splines,
 )
 from ._codegen.cxx_functions import (
@@ -1311,7 +1312,7 @@ class DEExporter:
 
         """
         if output_dir is None:
-            output_dir = os.path.join(os.getcwd(), f"amici-{self.model_name}")
+            output_dir = get_model_dir(self.model_name)
 
         self.model_path = os.path.abspath(output_dir)
         self.model_swig_path = os.path.join(self.model_path, "swig")
