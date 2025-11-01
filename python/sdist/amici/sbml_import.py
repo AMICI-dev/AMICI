@@ -436,6 +436,7 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
+        hybridization: dict = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -492,7 +493,11 @@ class SbmlImporter:
             see :attr:`amici.DEModel._simplify`
 
         :param cache_simplify:
-                see :meth:`amici.DEModel.__init__`
+            see :meth:`amici.DEModel.__init__`
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
 
@@ -502,6 +507,7 @@ class SbmlImporter:
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
             cache_simplify=cache_simplify,
+            hybridization=hybridization,
         )
 
         from amici.jax.ode_export import ODEExporter
@@ -511,6 +517,7 @@ class SbmlImporter:
             model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
+            hybridization=hybridization,
         )
         exporter.generate_model_code()
 
@@ -523,6 +530,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         hardcode_symbols: Sequence[str] = None,
+        hybridization: dict = None,
     ) -> DEModel:
         """Generate a DEModel from this SBML model.
 
@@ -669,6 +677,9 @@ class SbmlImporter:
 
         if compute_conservation_laws:
             self._process_conservation_laws(ode_model)
+
+        if hybridization:
+            ode_model._process_hybridization(hybridization)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         ode_model.generate_basic_variables()

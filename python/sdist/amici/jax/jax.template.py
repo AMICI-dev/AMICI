@@ -3,11 +3,16 @@ from pathlib import Path
 
 import equinox as eqx
 import jax.numpy as jnp
+import jax.random as jr
+import jaxtyping as jt
 from interpax import interp1d
 from jax.numpy import inf as oo
 from jax.numpy import nan as nan
 
+from amici import _module_from_path
 from amici.jax.model import JAXModel, safe_div, safe_log
+
+TPL_NET_IMPORTS
 
 
 class JAXModel_TPL_MODEL_NAME(JAXModel):
@@ -15,6 +20,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
+        self.nns = {TPL_NETS}
         self.parameters = TPL_P_VALUES
         super().__init__()
 
