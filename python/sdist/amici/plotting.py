@@ -17,6 +17,13 @@ import amici
 from . import Model, ReturnDataView
 from .numpy import StrOrExpr, evaluate
 
+__all__ = [
+    "plot_state_trajectories",
+    "plot_observable_trajectories",
+    "plot_jacobian",
+    "plot_expressions",
+]
+
 
 def plot_state_trajectories(
     rdata: ReturnDataView,
@@ -73,7 +80,11 @@ def plot_state_trajectories(
     ax.set_xlabel("$t$")
     ax.set_ylabel("$x(t)$")
     ax.legend()
-    ax.set_title("State trajectories")
+
+    title = "State trajectories"
+    if rdata.id:
+        title += f" – {rdata.id}"
+    ax.set_title(title)
 
 
 def plot_observable_trajectories(
@@ -158,8 +169,12 @@ def plot_observable_trajectories(
 
     ax.set_xlabel("$t$")
     ax.set_ylabel("$y(t)$")
-    ax.set_title("Observable trajectories")
     ax.legend()
+
+    title = "Observable trajectories"
+    if rdata.id:
+        title += f" – {rdata.id}"
+    ax.set_title(title)
 
 
 def plot_jacobian(rdata: ReturnDataView):
