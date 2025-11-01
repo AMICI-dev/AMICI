@@ -403,7 +403,6 @@ def simulate_petab_v2_to_cached_functions(
     petab_simulator: PetabSimulator,
     parameter_ids: list[str] = None,
     cache: bool = True,
-    **kwargs,
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:
     r"""Create fiddy functions for PetabSimulator.
 
@@ -425,7 +424,7 @@ def simulate_petab_v2_to_cached_functions(
 
     def simulate(point: Type.POINT, order: SensitivityOrder) -> dict:
         problem_parameters = dict(zip(parameter_ids, point, strict=True))
-        petab_simulator._solver.set_sensitivity_order(order)
+        petab_simulator.solver.set_sensitivity_order(order)
 
         result = petab_simulator.simulate(
             problem_parameters=problem_parameters,

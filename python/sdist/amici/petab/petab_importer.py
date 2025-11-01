@@ -3,6 +3,13 @@
 Functionality for importing and simulating
 `PEtab v2 <https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html#>`__
 problems.
+
+The relevant classes are:
+
+* :class:`PetabImporter`: Import a PEtab problem as an AMICI model.
+* :class:`PetabSimulator`: Simulate PEtab problems with AMICI.
+* :class:`ExperimentManager`: Create :class:`amici.ExpData` objects for PEtab
+  experiments.
 """
 
 from __future__ import annotations
@@ -26,10 +33,10 @@ from petab.v2.converters import ExperimentsToSbmlConverter
 from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
-from amici import MeasurementChannel, SensitivityOrder
-from amici.import_utils import amici_time_symbol
 
+from .. import MeasurementChannel, SensitivityOrder
 from ..de_model import DEModel
+from ..import_utils import amici_time_symbol
 from ..logging import get_logger
 from .sbml_import import _add_global_parameter
 
@@ -63,6 +70,7 @@ _POSSIBLE_GROUPVARS_FLATTENED_PROBLEM = [
     v2.C.OBSERVABLE_PARAMETERS,
     v2.C.NOISE_PARAMETERS,
 ]
+
 # TODO: how to handle SBML vs PySB, jax vs sundials?
 #  -> separate importers or subclasses?
 # TODO: How to handle multi-model-problems?
@@ -94,12 +102,15 @@ class PetabImporter:
     def __init__(
         self,
         petab_problem: v2.Problem | v1.Problem,
+        *,
         compile_: bool = None,
         validate: bool = True,
-        # TODO: override the PEtab model ID vs selecting one of multiple models
-        model_id: str = None,
+        module_name: str = None,
+        # TODO: model_id for selecting the model in multi-model problems
+        # model_id: str = None,
         outdir: str | Path = None,
         jax: bool = False,
+        output_parameter_defaults: dict[str, float] | None = None,
         verbose: int | bool = logging.INFO,
     ):
         """
@@ -108,10 +119,15 @@ class PetabImporter:
         :param petab_problem: The PEtab problem to import.
         :param compile_: Whether to compile the model extension after import.
         :param validate: Whether to validate the PEtab problem before import.
-        :param model_id: TODO
+        :param module_name: The name of model module to generate.
         :param outdir:
             The output directory where the model files are written to.
-        :param jax: TODO
+        :param jax: Whether to generate a JAX model instead of a
+            SUNDIALS model. Currently, only ``False`` is supported.
+        :param output_parameter_defaults:
+            Optional default parameter values for output parameters introduced
+            in the PEtab observables table, in particular for placeholder
+            parameters. A dictionary mapping parameter IDs to default values.
         :param verbose:
             The verbosity level. If ``True``, set to ``logging.INFO``.
             If ``False``, set to ``logging.WARNING``. Otherwise, use the given
@@ -120,6 +136,7 @@ class PetabImporter:
         self.petab_problem: v2.Problem = self._upgrade_or_copy_if_needed(
             petab_problem
         )
+        # extra debug output
         self._debug = False
         self._verbose = (
             logging.INFO
@@ -128,6 +145,7 @@ class PetabImporter:
             if verbose is False
             else verbose
         )
+        self._output_parameter_defaults = output_parameter_defaults
 
         if len(self.petab_problem.models) > 1:
             raise NotImplementedError(
@@ -139,7 +157,6 @@ class PetabImporter:
             MODEL_TYPE_SBML,
             MODEL_TYPE_PYSB,
         ):
-            # if self.petab_problem.model.type_id != MODEL_TYPE_SBML:
             raise NotImplementedError(
                 "PEtab v2 importer currently only supports SBML and PySB "
                 f"models. Got {self.petab_problem.model.type_id!r}."
@@ -159,7 +176,12 @@ class PetabImporter:
 
         self._compile = not jax if compile_ is None else compile_
         self._sym_model: DEModel | None = None
-        self._model_id = model_id
+        self._model_id = self.petab_problem.model.model_id
+        self._module_name = module_name or (
+            f"{self.petab_problem.id}_{module_name}"
+            if self.petab_problem.id
+            else module_name
+        )
         self._outdir: Path | None = (
             None if outdir is None else Path(outdir).absolute()
         )
@@ -176,13 +198,15 @@ class PetabImporter:
                     "PEtab problem is not valid, see log messages for details."
                 )
 
-        # ensure each measurement has an experimentId
+        # ensure each measurement has an experimentId to simplify processing
         _set_default_experiment(self.petab_problem)
 
         if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
             self._preprocess_sbml()
         elif self.petab_problem.model.type_id == MODEL_TYPE_PYSB:
             self._preprocess_pysb()
+        else:
+            raise AssertionError()
 
     def _preprocess_sbml(self):
         """Pre-process the SBML-based PEtab problem to make it
@@ -195,11 +219,12 @@ class PetabImporter:
         # Convert petab experiments to events, because so far,
         #  AMICI only supports preequilibration/presimulation/simulation, but
         #  no arbitrary list of periods.
-        self._exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
+        exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
         # This will always create a copy of the problem.
-        self.petab_problem = self._exp_event_conv.convert()
+        self.petab_problem = exp_event_conv.convert()
         for experiment in self.petab_problem.experiments:
             if len(experiment.periods) > 2:
+                # This should never happen due to the conversion above
                 raise NotImplementedError(
                     "AMICI currently does not support more than two periods."
                 )
@@ -219,8 +244,12 @@ class PetabImporter:
             raise ValueError("The PEtab problem must contain a PySB model.")
 
         _add_observation_model_pysb(self.petab_problem, self._jax)
-        # generate species for the _original_ model
-        # TODO fixed_parameters = _add_initialization_variables(pysb_model,
+        # TODO: clarify in PEtab whether its allowed to set initial amounts
+        #  for a species without a pysb.Initial.
+        #  Currently, we fail in that case.
+        #  If so add a test case for changing the initial amount for a species
+        #  without a pysb.Initial
+        #  fixed_parameters = _add_initialization_variables(pysb_model,
         #                                                 petab_problem)
 
         pysb.bng.generate_equations(self.petab_problem.model.model)
@@ -257,6 +286,7 @@ class PetabImporter:
     def outdir(self) -> Path:
         """The output directory where the model files are written to."""
         if self._outdir is None:
+            # TODO: amici.get_model_dir
             self._outdir = Path(
                 f"{self.model_id}-amici{amici.__version__}"
             ).absolute()
@@ -270,7 +300,8 @@ class PetabImporter:
         Generate the symbolic model according to the given PEtab problem and
         generate the corresponding Python module.
 
-        1. Encode all PEtab experiments as events in the SBML model.
+        1. Encode all PEtab experiments as events and initial assignments
+           in the SBML model.
            This leaves only (maybe) a pre-equilibration and a single
            simulation period.
         2. Add the observable parameters to the SBML model.
@@ -308,10 +339,8 @@ class PetabImporter:
         logger.info(f"#Observables: {len(observation_model)}")
         logger.debug(f"Observables: {observation_model}")
 
-        # TODO: to attr
-        output_parameter_defaults = {}
         self._workaround_observable_parameters(
-            output_parameter_defaults=output_parameter_defaults,
+            output_parameter_defaults=self._output_parameter_defaults,
         )
 
         # All indicator variables, i.e., all remaining targets after
@@ -684,32 +713,24 @@ class ExperimentManager:
 
     def create_edatas(self) -> list[amici.ExpData]:
         """Create ExpData objects for all experiments."""
-        # TODO: only those with measurements?
-        # TODO: yield?
-
-        edatas = []
-        for experiment in self._petab_problem.experiments:
-            edata = self.create_edata(experiment)
-            edatas.append(edata)
-
-        return edatas
+        return [
+            self.create_edata(experiment)
+            for experiment in self._petab_problem.experiments
+        ]
 
     def create_edata(
         self, experiment: v2.core.Experiment | str | None
     ) -> amici.ExpData:
         """Create an ExpData object for a single experiment.
 
-        Sets only parameter-independent values (timepoints, measurements,
-        and constant noise). No parameters or initial conditions.
+        Sets timepoints, measurements, initial conditions, ... based on the
+        given experiment and the nominal parameters of the PEtab problem.
 
-        :param experiment: The experiment or experiment ID to create the
-            ExpData for.
+        :param experiment:
+            The experiment or experiment ID to create the `ExpData` for.
         """
         if isinstance(experiment, str):
             experiment = self._petab_problem[experiment]
-
-        edata = amici.ExpData(self._model)
-        edata.id = experiment.id
 
         if len(experiment.periods) > 2:
             raise AssertionError(
@@ -717,47 +738,86 @@ class ExperimentManager:
                 f"for experiment {experiment.id}."
             )
 
-        # Set fixed parameters.
+        edata = amici.ExpData(self._model)
+        edata.id = experiment.id
+
+        self._set_constants(edata, experiment)
+        self._set_timepoints_and_measurements(edata, experiment)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Created ExpData id={edata.id}, "
+                f"k_preeq={edata.fixed_parameters_pre_equilibration}, "
+                f"k={edata.fixed_parameters}"
+            )
+
+        # TODO parameter argument
+        self.apply_parameters(
+            edata, problem_parameters=self.petab_problem.get_x_nominal_dict()
+        )
+
+        return edata
+
+    def _set_constants(
+        self, edata: amici.ExpData, experiment: v2.core.Experiment
+    ) -> None:
+        """
+        Set constant parameters for the given experiment.
+
+        :param edata:
+            The ExpData instance to set the constants for.
+        :param experiment:
+            The PEtab experiment to set the constants for.
+        """
         # After converting experiments to events, all remaining
         # condition parameters are constants.
-        if experiment.periods:
+        if not experiment.periods:
+            # No periods, no changes to apply.
+            # Use the original fixed parameters that are encoded in the model.
+            return
 
-            def get_k(period: ExperimentPeriod):
-                """Get the fixed parameters for the period."""
-                changes = self._petab_problem.get_changes_for_period(period)
-                fixed_pars_vals = self._original_k.copy()
-                for change in changes:
-                    pid = self._fixed_pid_to_idx[change.target_id]
-                    # those are only indicator variables that are always number
-                    #  literals
-                    fixed_pars_vals[pid] = change.target_value
-                return fixed_pars_vals
+        def get_k(period: ExperimentPeriod):
+            """Get the fixed parameters for the period."""
+            changes = self._petab_problem.get_changes_for_period(period)
+            fixed_pars_vals = self._original_k.copy()
+            for change in changes:
+                pid = self._fixed_pid_to_idx[change.target_id]
+                # those are only indicator variables that are always number
+                #  literals
+                fixed_pars_vals[pid] = change.target_value
+            return fixed_pars_vals
 
-            if experiment.sorted_periods[0].time == -np.inf:
-                # pre-equilibration period
-                edata.fixed_parameters_pre_equilibration = get_k(
-                    experiment.sorted_periods[0]
-                )
-                # In PEtab, pre-equilibration always starts at t=0, since SBML
-                # does not support specifying a different start time (yet).
-                edata.t_start_preeq = 0
-            if len(experiment.periods) >= int(
-                1 + experiment.has_preequilibration
-            ):
-                # simulation period
-                main_period = experiment.sorted_periods[
-                    int(experiment.has_preequilibration)
-                ]
-                edata.fixed_parameters = get_k(main_period)
-                edata.t_start = main_period.time
+        if experiment.sorted_periods[0].time == -np.inf:
+            # pre-equilibration period
+            edata.fixed_parameters_pre_equilibration = get_k(
+                experiment.sorted_periods[0]
+            )
+            # In PEtab, pre-equilibration always starts at t=0, since SBML
+            # does not support specifying a different start time (yet).
+            edata.t_start_preeq = 0
 
-        ##########################################################################
-        # timepoints
+        if len(experiment.periods) >= int(1 + experiment.has_preequilibration):
+            # simulation period
+            main_period = experiment.sorted_periods[
+                int(experiment.has_preequilibration)
+            ]
+            edata.fixed_parameters = get_k(main_period)
+            edata.t_start = main_period.time
 
-        # get the required time points: this is the superset of timepoints
+    def _set_timepoints_and_measurements(
+        self, edata: amici.ExpData, experiment: v2.core.Experiment
+    ) -> None:
+        """
+        Set timepoints and measurements for the given experiment.
+
+        :param edata:
+            The `ExpData` instance to update.
+        :param experiment:
+            The PEtab experiment to set the timepoints and measurements for.
+        """
+        # Get the required time points: this is the superset of timepoints
         #  of the measurements of all observables, including the different
         #  replicates
-        # TODO extract function
         measurements = self._petab_problem.get_measurements_for_experiment(
             experiment
         )
@@ -766,14 +826,16 @@ class ExperimentManager:
         for m in measurements:
             t_counters[m.observable_id].update([m.time])
             unique_t.add(m.time)
+
         max_counter = Counter()
         for t in unique_t:
             for counter in t_counters.values():
                 max_counter[t] = max(max_counter[t], counter[t])
+
         timepoints_w_reps = sorted(max_counter.elements())
+
         edata.set_timepoints(timepoints_w_reps)
 
-        ##########################################################################
         # measurements and sigmas
         y, sigma_y = self._get_measurements_and_sigmas(
             measurements=measurements,
@@ -783,25 +845,12 @@ class ExperimentManager:
         edata.set_observed_data(y.flatten())
         edata.set_observed_data_std_dev(sigma_y.flatten())
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                f"Created ExpData id={edata.id}, "
-                f"k_preeq={edata.fixed_parameters_pre_equilibration}, "
-                f"k={edata.fixed_parameters}"
-            )
-
-        self.apply_parameters(
-            edata, problem_parameters=self.petab_problem.get_x_nominal_dict()
-        )
-
-        return edata
-
     def _get_measurements_and_sigmas(
         self,
         measurements: list[v2.Measurement],
         timepoints_w_reps: Sequence[numbers.Number],
         observable_ids: Sequence[str],
-    ) -> tuple[np.array, np.array]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Get measurements and sigmas
 
@@ -866,17 +915,18 @@ class ExperimentManager:
     ) -> None:
         """Apply problem parameters.
 
-        Update the parameter-dependent values of the given ExpData instance
+        Update the parameter-dependent values of the given `ExpData` instance
         according to the provided problem parameters.
 
         This assumes that:
 
-        * the ExpData instance was created by `create_edata`,
-        * no other changes except for calls to `apply_parameters` were made,
+        * the `ExpData` instance was created by :meth:`create_edata`,
+        * no other changes except for calls to :meth:`apply_parameters`
+          were made,
         * and the PEtab problem was not modified since the creation of this
-          `ExperimentManager` instance.
+          :class:`ExperimentManager` instance.
 
-        :param edata: The ExpData instance to be updated.
+        :param edata: The :class:`ExpData` instance to be updated.
             In case of errors, the state of `edata` is undefined.
         :param problem_parameters: Problem parameters to be applied.
         """
@@ -890,7 +940,8 @@ class ExperimentManager:
         experiment = self._petab_problem[experiment_id]
 
         # plist -- estimated parameters + those mapped via placeholders
-        # TODO sufficient to set them during creation of edata or allow dynamic fixing of parameters?
+        # TODO sufficient to set them during creation of edata
+        #   or allow dynamic fixing of parameters?
         #  store list of sensitivity parameter in class instead of using x_free_ids or estimate=True
         plist = []
         placeholder_mappings = self._get_placeholder_mapping(experiment)
@@ -1065,14 +1116,6 @@ class PetabSimulator:
 
     This class is used to simulate all experiments of a given PEtab problem
     using a given AMICI model and solver, and to aggregate the results.
-
-    :param em: The ExperimentManager to generate the ExpData objects.
-    :param solver: The AMICI solver to use for the simulations.
-        If not provided, a new solver with default settings will be used.
-    :param num_threads: The number of threads to use for parallel
-        simulation of experiments. Only relevant if multiple experiments
-        are present in the PEtab problem and if AMICI was compiled with
-        OpenMP support.
     """
 
     def __init__(
@@ -1080,8 +1123,23 @@ class PetabSimulator:
         em: ExperimentManager,
         solver: amici.Solver | None = None,
         num_threads: int = 1,
+        # TODO: allow selecting specific experiments?
+        # TODO: store_edatas: bool
     ):
-        self._petab_problem = em.petab_problem
+        """
+        Initialize the simulator.
+
+        :param em:
+            The :class:`ExperimentManager` to generate the :class:`amici.ExpData`
+            objects.
+        :param solver: The AMICI solver to use for the simulations.
+            If not provided, a new solver with default settings will be used.
+        :param num_threads:
+            The number of threads to use for parallel simulation of experiments.
+            Only relevant if multiple experiments are present in the PEtab problem,
+            and if AMICI was compiled with OpenMP support.
+        """
+        self._petab_problem: v2.Problem = em.petab_problem
         self._model = em.model
         self._solver = (
             solver if solver is not None else self._model.create_solver()
@@ -1120,6 +1178,7 @@ class PetabSimulator:
         """
         if problem_parameters is None:
             # use default parameters, i.e., nominal values for all parameters
+            # TODO: Nominal parameters, or previously used parameters?
             problem_parameters = {}
 
         # use nominal values for all unspecified parameters
@@ -1289,13 +1348,10 @@ def rdatas_to_simulation_df(
     :param rdatas:
         A sequence of rdatas with the ordering of
         :func:`petab.get_simulation_conditions`.
-
     :param model:
         AMICI model used to generate ``rdatas``.
-
     :param petab_problem:
         The PEtab problem used to generate ``rdatas``.
-
     :return:
         A dataframe built from the rdatas in the format of
         ``petab_problem.measurement_df``.
@@ -1316,30 +1372,30 @@ def rdatas_to_simulation_df(
 
 
 def has_timepoint_specific_overrides(
-    problem: v2.Problem,
+    petab_problem: v2.Problem,
     ignore_scalar_numeric_noise_parameters: bool = False,
     ignore_scalar_numeric_observable_parameters: bool = False,
 ) -> bool:
     """Check if the measurements have timepoint-specific observable or
     noise parameter overrides.
 
+    :param petab_problem:
+        PEtab problem to check.
     :param ignore_scalar_numeric_noise_parameters:
         ignore scalar numeric assignments to noiseParameter placeholders
-
     :param ignore_scalar_numeric_observable_parameters:
         ignore scalar numeric assignments to observableParameter
         placeholders
-
-    :return: True if the problem has timepoint-specific overrides, False
+    :return: `True` if the problem has timepoint-specific overrides, `False`
         otherwise.
     """
-    if not problem.measurements:
+    if not petab_problem.measurements:
         return False
 
     from petab.v1.core import get_notnull_columns
     from petab.v1.lint import is_scalar_float
 
-    measurement_df = problem.measurement_df
+    measurement_df = petab_problem.measurement_df
 
     # mask numeric values
     for col, allow_scalar_numeric in [
@@ -1571,10 +1627,10 @@ def _get_fixed_parameters_sbml(
 
     if not non_estimated_parameters_as_constants:
         raise NotImplementedError(
-            "Only non_estimated_parameters_as_constants=True is supported currently."
+            "Only non_estimated_parameters_as_constants=True is supported."
         )
 
-    # everything
+    # For amici constants we select everything
     # 1) that is a parameter in AMICI
     # and
     # 2) that is not flagged as estimated in PEtab
@@ -1589,13 +1645,12 @@ def _get_fixed_parameters_sbml(
     sbml_model = petab_problem.model.sbml_model
 
     # What will be implemented as a parameter in the amici model?
-    # TODO: constant SBML parameters - what else?
     amici_parameters = {
         p.getId()
         for p in sbml_model.getListOfParameters()
         if p.getConstant() is True
-        # TODO: literal is okay?
-        # TODO: collect IAs once
+        # TODO: IAs with literals can be ignored
+        # TODO(performance): collect IAs once
         and sbml_model.getInitialAssignmentBySymbol(p.getId()) is None
     }
 
@@ -1655,7 +1710,6 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
         if jax and changed_formula:
             observable.noise_formula = strip_pysb(sym)
 
-    # FIXME: why needed?
     # add observables and sigmas to pysb model
     for observable in petab_problem.observables:
         # obs_symbol = sp.sympify(observable_formula, locals=local_syms)
@@ -1678,6 +1732,12 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
 
 
 class ExperimentsToPySBConverter:
+    """
+    Convert PEtab experiments to amici events and PySB initials.
+
+    See :meth:`convert` for details.
+    """
+
     #: ID of the parameter that indicates whether the model is in
     #  the pre-equilibration phase (1) or not (0).
     PREEQ_INDICATOR = "_petab_preequilibration_indicator"
@@ -1691,6 +1751,12 @@ class ExperimentsToPySBConverter:
     CONDITION_ID_PREEQ_OFF = "_petab_preequilibration_off"
 
     def __init__(self, petab_problem: v2.Problem):
+        """Initialize the converter.
+
+        :param petab_problem:
+            The PEtab problem to convert.
+            This will not be modified by this class.
+        """
         from petab.v2.models.pysb_model import PySBModel
 
         if len(petab_problem.models) > 1:
@@ -1714,9 +1780,8 @@ class ExperimentsToPySBConverter:
                 "models."
             )
 
-        # For the moment, we only support changes are time-constant
-        #  expressions,
-        #  i.e., that only contain numbers or pysb.Parameters
+        # For the moment, we only support changes that are time-constant
+        #  expressions, i.e., that only contain numbers or pysb.Parameters.
         # Furthermore, we only support changing species and pysb.Expressions,
         #  but not pysb.Parameter. (Expressions can be easily changed, but
         #  we can't easily convert a Parameter to an Expression, because we
@@ -1726,7 +1791,7 @@ class ExperimentsToPySBConverter:
         parameter_ids = set(petab_problem.x_ids) | {
             p.name for p in model.parameters
         }
-        print(set(petab_problem.x_ids))
+
         for cond in petab_problem.conditions:
             for change in cond.changes:
                 if (
@@ -1755,7 +1820,7 @@ class ExperimentsToPySBConverter:
                         f"parameter {change.target_id!r} by a pysb.Expression."
                     )
         #: The PEtab problem to convert. Not modified by this class.
-        self.petab_problem = petab_problem
+        self._petab_problem = petab_problem
         self._events: list[amici.de_model_components.Event] = []
         self._new_problem: v2.Problem | None = None
 
@@ -1781,7 +1846,7 @@ class ExperimentsToPySBConverter:
             (pre-equilibration and main simulation), and a list of events
             to be passed to `pysb2amici`.
         """
-        self._new_problem = copy.deepcopy(self.petab_problem)
+        self._new_problem = copy.deepcopy(self._petab_problem)
         self._events: list[amici.de_model_components.Event] = []
 
         self._add_preequilibration_indicator()
@@ -1808,12 +1873,12 @@ class ExperimentsToPySBConverter:
         # mapping table mappings
         self.map_petab_to_pysb = {
             mapping.petab_id: mapping.model_id
-            for mapping in self.petab_problem.mappings
+            for mapping in self._petab_problem.mappings
             if mapping.petab_id is not None and mapping.model_id is not None
         }
         self.map_pysb_to_petab = {
             mapping.model_id: mapping.petab_id
-            for mapping in self.petab_problem.mappings
+            for mapping in self._petab_problem.mappings
             if mapping.petab_id is not None and mapping.model_id is not None
         }
 
@@ -1855,8 +1920,6 @@ class ExperimentsToPySBConverter:
             #  pysb.Initials are required for the first period,
             #  because other initial assignments may depend on
             #  the changed values.
-            #  Additionally, tools that don't support events can still handle
-            #  single-period experiments.
             if i_period == 0:
                 exp_ind_id = self.get_experiment_indicator(experiment.id)
                 for change in self._new_problem.get_changes_for_period(period):
@@ -1870,7 +1933,7 @@ class ExperimentsToPySBConverter:
                     period=period,
                 )
 
-        # Create initial assignments for the first period
+        # Create initials for the first period
         if period0_assignments:
             free_symbols_in_assignments = set()
             for target_id, changes in period0_assignments.items():

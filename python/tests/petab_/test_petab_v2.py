@@ -308,16 +308,16 @@ def test_petab_simulator_deepcopy_and_pickle():
 
     pi = PetabImporter(problem)
     ps = pi.create_simulator(force_import=False)
-    ps._solver.set_sensitivity_order(amici.SensitivityOrder.none)
+    ps.solver.set_sensitivity_order(amici.SensitivityOrder.none)
 
     ps_copy = copy.deepcopy(ps)
 
     assert ps.simulate({"kk": 2})["llh"] == ps_copy.simulate({"kk": 2})["llh"]
 
-    ps._solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    ps.solver.set_sensitivity_order(amici.SensitivityOrder.first)
     assert (
-        ps._solver.get_sensitivity_order()
-        != ps_copy._solver.get_sensitivity_order()
+        ps.solver.get_sensitivity_order()
+        != ps_copy.solver.get_sensitivity_order()
     )
 
     import pickle

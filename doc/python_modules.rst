@@ -16,6 +16,7 @@ AMICI Python API
    amici.petab.import_helpers
    amici.petab.parameter_mapping
    amici.petab.petab_import
+   amici.petab.petab_importer
    amici.petab.pysb_import
    amici.petab.sbml_import
    amici.petab.simulations
