@@ -36,11 +36,12 @@ from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
 
-from .. import MeasurementChannel, SensitivityOrder
+from .. import MeasurementChannel, SensitivityOrder, get_model_dir
 from ..de_model import DEModel
 from ..import_utils import amici_time_symbol
 from ..logging import get_logger
 from .sbml_import import _add_global_parameter
+from .simulations import EDATAS, LLH, RDATAS, SLLH
 
 if TYPE_CHECKING:
     import pysb
@@ -56,6 +57,10 @@ __all__ = [
     "flatten_timepoint_specific_output_overrides",
     "unflatten_simulation_df",
     "has_timepoint_specific_overrides",
+    "EDATAS",
+    "RDATAS",
+    "LLH",
+    "SLLH",
 ]
 logger = get_logger(__name__, log_level=logging.DEBUG)
 
@@ -101,6 +106,9 @@ class PetabImporter:
         construction of the importer.
     """
 
+    # TODO remove: extra debug output
+    _debug = False
+
     def __init__(
         self,
         petab_problem: v2.Problem | v1.Problem,
@@ -138,8 +146,6 @@ class PetabImporter:
         self.petab_problem: v2.Problem = self._upgrade_or_copy_if_needed(
             petab_problem
         )
-        # extra debug output
-        self._debug = False
         self._verbose = (
             logging.INFO
             if verbose is True
@@ -180,10 +186,16 @@ class PetabImporter:
         self._sym_model: DEModel | None = None
         self._model_id = self.petab_problem.model.model_id
         self._module_name = module_name or (
-            f"{self.petab_problem.id}_{module_name}"
+            f"{self.petab_problem.id}_{self.model_id}"
             if self.petab_problem.id
-            else module_name
+            else self.model_id
         )
+        if self._module_name is None:
+            raise ValueError(
+                "No `module_name` was provided and no model ID "
+                "was specified in the PEtab problem."
+            )
+
         self._outdir: Path | None = (
             None if outdir is None else Path(outdir).absolute()
         )
@@ -288,10 +300,7 @@ class PetabImporter:
     def outdir(self) -> Path:
         """The output directory where the model files are written to."""
         if self._outdir is None:
-            # TODO: amici.get_model_dir
-            self._outdir = Path(
-                f"{self.model_id}-amici{amici.__version__}"
-            ).absolute()
+            self._outdir = get_model_dir(self._module_name, jax=self._jax)
         return self._outdir
 
     def _do_import_sbml(
@@ -314,10 +323,7 @@ class PetabImporter:
             model size and simulation times. If sensitivities with respect to
             those parameters are required, this should be set to ``False``.
         """
-        # TODO split into DEModel creation, code generation and compilation
-        #   allow retrieving DEModel without compilation
-
-        logger.info("Importing model ...")
+        logger.info(f"Importing model {self.model_id!r}...")
 
         if not self.petab_problem.observables:
             raise NotImplementedError(
@@ -325,14 +331,8 @@ class PetabImporter:
                 "is currently not supported."
             )
 
-        if self.model_id is None:
-            raise ValueError(
-                "No `model_id` was provided and no model "
-                "ID was specified in the SBML model."
-            )
-
         logger.info(
-            f"Model ID is '{self.model_id}'.\n"
+            f"Module name is '{self._module_name}'.\n"
             f"Writing model code to '{self.outdir}'."
         )
 
@@ -341,7 +341,7 @@ class PetabImporter:
         logger.info(f"#Observables: {len(observation_model)}")
         logger.debug(f"Observables: {observation_model}")
 
-        self._workaround_observable_parameters(
+        self._workaround_observable_parameters_sbml(
             output_parameter_defaults=self._output_parameter_defaults,
         )
 
@@ -377,7 +377,7 @@ class PetabImporter:
         # Create Python module from SBML model
         if self._jax:
             sbml_importer.sbml2jax(
-                model_name=self.model_id,
+                model_name=self._module_name,
                 output_dir=self.outdir,
                 observation_model=observation_model,
                 verbose=self._verbose,
@@ -388,7 +388,7 @@ class PetabImporter:
             # TODO:
             allow_reinit_fixpar_initcond = True
             sbml_importer.sbml2amici(
-                model_name=self.model_id,
+                model_name=self._module_name,
                 output_dir=self.outdir,
                 observation_model=observation_model,
                 constant_parameters=fixed_parameters,
@@ -418,10 +418,7 @@ class PetabImporter:
             model size and simulation times. If sensitivities with respect to
             those parameters are required, this should be set to ``False``.
         """
-        # TODO split into DEModel creation, code generation and compilation
-        #   allow retrieving DEModel without compilation
-
-        logger.info("Importing PySB model ...")
+        logger.info(f"Importing PySB model {self.model_id!r}...")
 
         if not self.petab_problem.observables:
             raise NotImplementedError(
@@ -429,15 +426,8 @@ class PetabImporter:
                 "is currently not supported."
             )
 
-        # TODO from yaml
-        if self.model_id is None:
-            raise ValueError(
-                "No `model_id` was provided and no model "
-                "ID was specified in the model."
-            )
-
         logger.info(
-            f"Model ID is '{self.model_id}'.\n"
+            f"Module name is '{self._module_name}'.\n"
             f"Writing model code to '{self.outdir}'."
         )
 
@@ -458,22 +448,13 @@ class PetabImporter:
             for condition_id in period.condition_ids
             for change in self.petab_problem[condition_id].changes
         }
+        # TODO: handle non_estimated_parameters_as_constants
 
         self._check_placeholders()
-        # TODO pysb fixed parameters
-        # fixed_parameters |= _get_fixed_parameters_sbml(
-        #     petab_problem=self.petab_problem,
-        #     non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-        # )
-
         fixed_parameters = list(sorted(fixed_parameters))
 
+        logger.info(f"Number of fixed parameters: {len(fixed_parameters)}")
         logger.debug(f"Fixed parameters are {fixed_parameters}")
-        logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
-        logger.info(
-            "Variable parameters: "
-            + str(len(pysb_model.parameters) - len(fixed_parameters))
-        )
 
         from amici.pysb_import import pysb2amici, pysb2jax
 
@@ -481,7 +462,7 @@ class PetabImporter:
         if self._jax:
             pysb2jax(
                 model=pysb_model,
-                model_name=self.model_id,
+                model_name=self._module_name,
                 output_dir=self.outdir,
                 observation_model=observation_model,
                 verbose=self._verbose,
@@ -493,7 +474,7 @@ class PetabImporter:
         else:
             pysb2amici(
                 model=pysb_model,
-                model_name=self.model_id,
+                model_name=self._module_name,
                 output_dir=self.outdir,
                 verbose=True,
                 constant_parameters=fixed_parameters,
@@ -559,31 +540,12 @@ class PetabImporter:
                 if len(overrides) == 1 and next(iter(overrides)) == ():
                     # this is a single literal, which is fine
                     continue
-            print("TODO")
-            print(observable_overrides)
-            print(noise_overrides)
+            if self._debug:
+                print(experiment.id)
+                print(observable_overrides)
+                print(noise_overrides)
 
-        # TODO
-        # allow_n_noise_pars = (
-        #     not petab.lint.observable_table_has_nontrivial_noise_formula(
-        #         petab_problem.observable_df
-        #     )
-        # )
-        # if (
-        #         not jax
-        #         and petab_problem.measurement_df is not None
-        #         and petab.lint.measurement_table_has_timepoint_specific_mappings(
-        #     petab_problem.measurement_df,
-        #     allow_scalar_numeric_noise_parameters=allow_n_noise_pars,
-        # )
-        # ):
-        #     raise ValueError(
-        #         "AMICI does not support importing models with timepoint specific "
-        #         "mappings for noise or observable parameters. Please flatten "
-        #         "the problem and try again."
-        #     )
-
-    def _workaround_observable_parameters(
+    def _workaround_observable_parameters_sbml(
         self, output_parameter_defaults: dict[str, float] = None
     ) -> None:
         """
@@ -646,7 +608,7 @@ class PetabImporter:
                 self._do_import_pysb()
 
         return amici.import_model_module(
-            self.model_id,
+            self._module_name,
             self.outdir,
         )
 
@@ -668,7 +630,7 @@ class PetabImporter:
 
 
 class ExperimentManager:
-    # TODO: support for pscale
+    # TODO: support for pscale?
     """
     Handles the creation of :class:`ExpData` objects for a given model and
     PEtab problem.
@@ -679,6 +641,9 @@ class ExperimentManager:
     problem parameters, as opposed to model parameters for a single experiment
     period).
     """
+
+    # TODO debug, remove
+    _debug = False
 
     def __init__(
         self,
@@ -697,9 +662,11 @@ class ExperimentManager:
         """
         self._model: amici.Model = model
         self._petab_problem: v2.Problem = petab_problem
-        self._state_ids: tuple[str] = self._model.get_state_ids()
-        self._parameter_ids: tuple[str] = self._model.get_parameter_ids()
-        self._fixed_parameter_ids: tuple[str] = (
+        self._state_ids: tuple[str, ...] = tuple(self._model.get_state_ids())
+        self._parameter_ids: tuple[str, ...] = tuple(
+            self._model.get_parameter_ids()
+        )
+        self._fixed_parameter_ids: tuple[str, ...] = tuple(
             self._model.get_fixed_parameter_ids()
         )
         # maps parameter IDs to parameter indices in the model
@@ -708,6 +675,10 @@ class ExperimentManager:
         }
         self._fixed_pid_to_idx: dict[str, int] = {
             id_: i for i, id_ in enumerate(self._fixed_parameter_ids)
+        }
+        # maps PEtab observable IDs to petab Observable instances
+        self._petab_id_to_obs: dict[str, v2.Observable] = {
+            obs.id: obs for obs in self._petab_problem.observables
         }
 
         # create a new model instance from the model module from which
@@ -724,7 +695,9 @@ class ExperimentManager:
         ]
 
     def create_edata(
-        self, experiment: v2.core.Experiment | str | None
+        self,
+        experiment: v2.core.Experiment | str | None,
+        problem_parameters: dict[str, float] | None = None,
     ) -> amici.ExpData:
         """Create an ExpData object for a single experiment.
 
@@ -733,6 +706,12 @@ class ExperimentManager:
 
         :param experiment:
             The experiment or experiment ID to create the `ExpData` for.
+        :param problem_parameters:
+            Optional dictionary of problem parameters to apply to the
+            `ExpData`. If `None`, the nominal parameters of the PEtab problem
+            are used.
+        :return:
+            The created `ExpData` object for the given experiment.
         """
         if isinstance(experiment, str):
             experiment = self._petab_problem[experiment]
@@ -749,17 +728,16 @@ class ExperimentManager:
         self._set_constants(edata, experiment)
         self._set_timepoints_and_measurements(edata, experiment)
 
-        if logger.isEnabledFor(logging.DEBUG):
+        if self._debug:
             logger.debug(
                 f"Created ExpData id={edata.id}, "
                 f"k_preeq={edata.fixed_parameters_pre_equilibration}, "
                 f"k={edata.fixed_parameters}"
             )
 
-        # TODO parameter argument
-        self.apply_parameters(
-            edata, problem_parameters=self.petab_problem.get_x_nominal_dict()
-        )
+        if problem_parameters is None:
+            problem_parameters = self._petab_problem.get_x_nominal_dict()
+        self.apply_parameters(edata, problem_parameters=problem_parameters)
 
         return edata
 
@@ -921,7 +899,8 @@ class ExperimentManager:
         """Apply problem parameters.
 
         Update the parameter-dependent values of the given `ExpData` instance
-        according to the provided problem parameters.
+        according to the provided problem parameters (i.e., values of the
+        parameters in the PEtab parameter table).
 
         This assumes that:
 
@@ -935,10 +914,27 @@ class ExperimentManager:
             In case of errors, the state of `edata` is undefined.
         :param problem_parameters: Problem parameters to be applied.
         """
-        # TODO: support ndarray in addition to dict
+        # TODO: support ndarray in addition to dict?
 
-        # TODO: must handle output overrides here, or add them to the events
-        # TODO: use the original or the current parameters if only a subset is provided?
+        # check parameter IDs
+        if set(problem_parameters) != set(self._petab_problem.x_ids):
+            missing = set(self._petab_problem.x_ids) - set(problem_parameters)
+            extra = set(problem_parameters) - set(self._petab_problem.x_ids)
+            msg_parts = []
+            if missing:
+                # TODO: support a subset of parameters?
+                #  if so, update only those parameters and leave the rest as is
+                #  or use nominal values for missing ones?
+                msg_parts.append(f"missing parameters: {missing}")
+            if extra:
+                msg_parts.append(f"unknown parameters: {extra}")
+            raise ValueError(
+                "Provided problem parameters do not match "
+                "PEtab problem parameters: " + "; ".join(msg_parts)
+            )
+
+        # get the original parameter values
+        #  (model parameters set during model creation)
         par_vals = np.array(self._original_p)
         pid_to_idx = self._pid_to_idx
         experiment_id = edata.id
@@ -947,7 +943,6 @@ class ExperimentManager:
         # plist -- estimated parameters + those mapped via placeholders
         # TODO sufficient to set them during creation of edata
         #   or allow dynamic fixing of parameters?
-        #  store list of sensitivity parameter in class instead of using x_free_ids or estimate=True
         plist = []
         placeholder_mappings = self._get_placeholder_mapping(experiment)
         estimated_par_ids = self._petab_problem.x_free_ids
@@ -963,7 +958,7 @@ class ExperimentManager:
 
         # Update fixed parameters in case they are affected by problem
         #  parameters (i.e., parameter table parameters)
-        fixed_par_vals = np.array(edata.fixed_parameters)
+        fixed_par_vals = np.asarray(edata.fixed_parameters)
         for p_id, p_val in problem_parameters.items():
             if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None:
                 fixed_par_vals[p_idx] = p_val
@@ -976,32 +971,43 @@ class ExperimentManager:
                     fixed_par_vals[p_idx] = p_val
             edata.fixed_parameters_pre_equilibration = fixed_par_vals
 
-        # TODO: remove; this should be handled on construction of the ExpData
-        # experiment set indicator (see petab's `experiments_to_events`)
-        ind_id = ExperimentsToSbmlConverter.get_experiment_indicator(
-            experiment_id
-        )
-        if (idx := pid_to_idx.get(ind_id)) is not None:
-            par_vals[idx] = 1
-
-        # apply problem parameter values to identical model parameters
-        #  any other parameter mapping is handled by events
+        # Apply problem parameter values to identical model parameters.
+        #  Any other parameter mapping, except for output parameter
+        #  placeholders, is handled by events.
         for k, v in problem_parameters.items():
             if (idx := pid_to_idx.get(k)) is not None:
                 par_vals[idx] = v
 
-        # TODO handle placeholders
-        #  check that all periods use the same overrides (except for numeric sigmas)
-        #  see do_import() for details
-        # TODO extract function
+        # Handle measurement-specific mappings to placeholders
         measurements = self._petab_problem.get_measurements_for_experiment(
             experiment
         )
-        # encountered placeholders and their overrides
+
+        def apply_override(placeholder: str, override: sp.Basic):
+            """Apply a single placeholder override."""
+            if (idx := pid_to_idx.get(placeholder)) is not None:
+                if override.is_Number:
+                    par_vals[idx] = float(override)
+                elif override.is_Symbol:
+                    par_vals[idx] = problem_parameters[str(override)]
+                else:
+                    raise AssertionError(
+                        f"Unexpected override type: {override} for {placeholder} in experiment {experiment_id}"
+                    )
+            else:
+                raise NotImplementedError(
+                    f"Cannot handle override `{placeholder}' => '{override}'"
+                )
+
+        # tracks encountered placeholders and their overrides
         # (across all observables -- placeholders IDs are globally unique)
+        #  and check that all periods use the same overrides
+        #  (except for numeric sigmas)
+        # TODO: this can be simplified. we only need to process overrides
+        #  that are parameters. the rest was handled during create_edata
         overrides = {}
         for m in measurements:
-            obs: Observable = self._petab_problem[m.observable_id]
+            obs = self._petab_id_to_obs[m.observable_id]
             if obs.observable_placeholders:
                 for placeholder, override in zip(
                     obs.observable_placeholders,
@@ -1016,22 +1022,7 @@ class ExperimentManager:
                             "Timepoint-specific observable placeholder "
                             "overrides are not supported"
                         )
-
-                    if (idx := pid_to_idx.get(placeholder)) is not None:
-                        if override.is_Number:
-                            par_vals[idx] = float(override)
-                        elif override.is_Symbol:
-                            par_vals[idx] = problem_parameters[str(override)]
-                        else:
-                            raise AssertionError(
-                                f"Unexpected override type: {override} for {placeholder} in experiment {experiment_id}"
-                            )
-                    else:
-                        raise NotImplementedError(
-                            f"Cannot handle override `{placeholder}' => '{override}'"
-                        )
-
-            # TODO: set sigmas via parameters or .sigmay
+                    apply_override(placeholder, override)
             if obs.noise_placeholders:
                 for placeholder, override in zip(
                     obs.noise_placeholders, m.noise_parameters, strict=True
@@ -1040,30 +1031,23 @@ class ExperimentManager:
                     if (
                         prev_override := overrides.get(placeholder)
                     ) is not None and prev_override != override:
-                        # TODO: via .sigmay if numeric
+                        # TODO: this might have been handled
+                        #  via .sigmay if numeric
                         raise NotImplementedError(
                             "Timepoint-specific observable placeholder "
                             "overrides are not supported"
                         )
-                    if (idx := pid_to_idx.get(placeholder)) is not None:
-                        if override.is_Number:
-                            par_vals[idx] = float(override)
-                        else:
-                            par_vals[idx] = problem_parameters[str(override)]
-                    else:
-                        raise NotImplementedError(
-                            f"Cannot handle override `{placeholder}' => '{override}'"
-                        )
-            # print("ExperimentManager.apply_parameters:")
-            # print(m)
-            # print(dict(zip(self._parameter_ids, map(float, par_vals))))
+                    apply_override(placeholder, override)
+
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
         edata.parameters = par_vals
 
-        # TODO debug, remove
-        # print(
-        #     f"Parameters: {dict(zip(self._parameter_ids, map(float, par_vals)))}"
-        # )
+        if self._debug:
+            logger.debug("ExperimentManager.apply_parameters:")
+            logger.debug(
+                f"Parameters: "
+                f"{dict(zip(self._parameter_ids, map(float, par_vals)))}"
+            )
 
     @property
     def petab_problem(self) -> v2.Problem:
@@ -1162,6 +1146,11 @@ class PetabSimulator:
         """The AMICI solver used by this simulator."""
         return self._solver
 
+    @property
+    def exp_man(self) -> ExperimentManager:
+        """The ExperimentManager used by this simulator."""
+        return self._exp_man
+
     def simulate(
         self, problem_parameters: dict[str, float] = None
     ) -> dict[str, Any]:
@@ -1201,7 +1190,6 @@ class PetabSimulator:
         rdatas = amici.run_simulations(
             self._model, self._solver, edatas, num_threads=self.num_threads
         )
-        from . import EDATAS, LLH, RDATAS, SLLH
 
         return {
             RDATAS: rdatas,
@@ -1665,9 +1653,7 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
     observables table"""
     import pysb
 
-    from amici.import_utils import strip_pysb
-
-    pysb_model = petab_problem.model.model
+    pysb_model: pysb.Model = petab_problem.model.model
 
     # add any required output parameters
     local_syms = {
@@ -1676,15 +1662,16 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
         if isinstance(comp, sp.Symbol)
     }
 
-    def process_formula(sym: sp.Expr):
+    def process_formula(sym: sp.Basic):
         changed_formula = False
         sym = sym.subs(local_syms)
         for s in sym.free_symbols:
             if not isinstance(s, pysb.Component):
-                # if jax:
-                #     name = re.sub(placeholder_pattern, r"\1", str(s))
-                # else:
-                #     name = str(s)
+                if not isinstance(s, sp.Symbol):
+                    raise AssertionError(
+                        f"Unexpected symbol type in observable formula: {s}, "
+                        f"{type(s)}"
+                    )
                 name = str(s)
                 p = pysb.Parameter(name, 1.0, _export=False)
                 pysb_model.add_component(p)
@@ -1703,13 +1690,8 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
     for observable in petab_problem.observables:
         sym, changed_formula = process_formula(observable.formula)
         observable.formula = sym
-        if jax and changed_formula:
-            observable.formula = strip_pysb(sym)
-
         sym, changed_formula = process_formula(observable.noise_formula)
         observable.noise_formula = sym
-        if jax and changed_formula:
-            observable.noise_formula = strip_pysb(sym)
 
     # add observables and sigmas to pysb model
     for observable in petab_problem.observables:

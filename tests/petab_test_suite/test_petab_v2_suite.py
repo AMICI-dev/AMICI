@@ -11,7 +11,6 @@ from _pytest.outcomes import Skipped
 from amici import (
     SensitivityMethod,
     SensitivityOrder,
-    SteadyStateSensitivityMode,
 )
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
@@ -64,13 +63,10 @@ def _test_case(case, model_type, version, jax):
     model_name = (
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
-    # TODO: default name
-    model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
 
     pi = PetabImporter(
         petab_problem=problem,
         module_name=model_name,
-        outdir=model_output_dir,
         compile_=True,
         jax=jax,
     )
@@ -80,16 +76,14 @@ def _test_case(case, model_type, version, jax):
     )
     ps.solver.set_steady_state_tolerance_factor(1.0)
 
-    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=False)
+    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
     ret = ps.simulate(problem_parameters=problem_parameters)
 
-    rdatas = ret["rdatas"]
-    chi2 = sum(rdata["chi2"] for rdata in rdatas)
-    llh = ret["llh"]
+    rdatas = ret[RDATAS]
+    chi2 = sum(rdata.chi2 for rdata in rdatas)
+    llh = ret[LLH]
     simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
 
-    # FIXME: why int?? can be inf
-    # simulation_df[v2.C.TIME] = simulation_df[v2.C.TIME].astype(int)
     solution = petabtests.load_solution(case, model_type, version=version)
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
@@ -177,18 +171,13 @@ def check_derivatives(
     """
     solver = petab_simulator.solver
     model = petab_simulator.model
-    edatas = petab_simulator._exp_man.create_edatas()
+    edatas = petab_simulator.exp_man.create_edatas()
 
     solver.set_sensitivity_method(SensitivityMethod.forward)
     solver.set_sensitivity_order(SensitivityOrder.first)
-    # Required for case 9 to not fail in
-    #  amici::NewtonSolver::computeNewtonSensis
-    model.set_steady_state_sensitivity_mode(
-        SteadyStateSensitivityMode.integrateIfNewtonFails
-    )
 
     for edata in edatas:
-        petab_simulator._exp_man.apply_parameters(edata, problem_parameters)
+        petab_simulator.exp_man.apply_parameters(edata, problem_parameters)
         amici_check_derivatives(model, solver, edata)
 
     # TODO check aggregated sensitivities over all conditions

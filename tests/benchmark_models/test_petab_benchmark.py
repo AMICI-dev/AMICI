@@ -25,7 +25,7 @@ from amici import (
     SensitivityOrder,
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,
-    get_model_root_dir
+    get_model_root_dir,
 )
 from amici.adapters.fiddy import (
     simulate_petab_to_cached_functions,
@@ -640,7 +640,7 @@ def test_nominal_parameters_llh_v2(problem_id):
     if problem_id not in problems_for_llh_check:
         pytest.skip("Excluded from log-likelihood check.")
 
-    benchmark_outdir = repo_root / "test_bmc_v2"
+    benchmark_outdir = get_model_root_dir() / "test_bmc_v2"
     model_output_dir = benchmark_outdir / problem_id
 
     try:
@@ -677,7 +677,7 @@ def test_nominal_parameters_llh_v2(problem_id):
         ps.model.set_steady_state_sensitivity_mode(
             SteadyStateSensitivityMode.integrationOnly
         )
-    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=False)
+    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
     ret = ps.simulate(problem_parameters=problem_parameters)
 
     rdatas = ret[RDATAS]
