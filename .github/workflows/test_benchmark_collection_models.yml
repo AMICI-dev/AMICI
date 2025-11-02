@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
@@ -97,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
         extract_subexpressions: ["false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
