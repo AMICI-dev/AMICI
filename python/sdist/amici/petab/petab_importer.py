@@ -10,6 +10,8 @@ The relevant classes are:
 * :class:`PetabSimulator`: Simulate PEtab problems with AMICI.
 * :class:`ExperimentManager`: Create :class:`amici.ExpData` objects for PEtab
   experiments.
+
+See :doc:`/examples/example_petab/petab_v2` for example usage.
 """
 
 from __future__ import annotations
@@ -78,7 +80,7 @@ _POSSIBLE_GROUPVARS_FLATTENED_PROBLEM = [
 
 class PetabImporter:
     """
-    Importer for PEtab problems.
+    Importer for PEtab2 problems.
 
     This class is used to create an AMICI model from a PEtab problem.
 
@@ -668,21 +670,14 @@ class PetabImporter:
 class ExperimentManager:
     # TODO: support for pscale
     """
-    Handles the creation of ExpData objects for a given model and PEtab
-    problem.
+    Handles the creation of :class:`ExpData` objects for a given model and
+    PEtab problem.
 
     The assumption is that we have a set of :class:`amici.ExpData` objects,
     one for each PEtab experiment.
     Those are updated based on a set of global parameters (PEtab
     problem parameters, as opposed to model parameters for a single experiment
     period).
-
-    :param model: The AMICI model to use.
-    :param petab_problem: The PEtab problem to use.
-        This is expected to be the output of
-        `petab.v2.ExperimentsToSbmlConverter` or an equivalent problem.
-        This object must not be modified after the creation of this
-        `ExperimentManager` instance.
     """
 
     def __init__(
@@ -690,6 +685,16 @@ class ExperimentManager:
         model: amici.Model,
         petab_problem: v2.Problem,
     ):
+        """
+        Initialize the `ExperimentManager`.
+
+        :param model: The AMICI model to use.
+        :param petab_problem: The PEtab problem to use.
+            This is expected to be the output of
+            :class:`petab.v2.ExperimentsToSbmlConverter` or an equivalent problem.
+            This object must not be modified after the creation of this
+            :class:`ExperimentManager` instance.
+        """
         self._model: amici.Model = model
         self._petab_problem: v2.Problem = petab_problem
         self._state_ids: tuple[str] = self._model.get_state_ids()
@@ -1112,7 +1117,7 @@ class ExperimentManager:
 
 class PetabSimulator:
     """
-    Simulator for PEtab problems.
+    Simulator for PEtab2 problems.
 
     This class is used to simulate all experiments of a given PEtab problem
     using a given AMICI model and solver, and to aggregate the results.
@@ -1284,17 +1289,14 @@ def rdatas_to_measurement_df(
     ``rdatas`` and own information.
 
     :param rdatas:
-        A sequence of rdatas with the ordering of
-        :func:`petab.get_simulation_conditions`.
-
+        A sequence of :class:`amici.ReturnData`.
     :param model:
         AMICI model used to generate ``rdatas``.
-
     :param petab_problem:
         The PEtab problem used to generate ``rdatas``.
-
     :return:
-        A dataframe built from the rdatas in the format of ``measurement_df``.
+        A dataframe built from simulation results in `rdatas` in the format
+        of the PEtab measurement table.
     """
 
     measurement_df = petab_problem.measurement_df
@@ -1346,15 +1348,14 @@ def rdatas_to_simulation_df(
     ``rdatas`` and own information.
 
     :param rdatas:
-        A sequence of rdatas with the ordering of
-        :func:`petab.get_simulation_conditions`.
+        A sequence of :class:`amici.ReturnData`.
     :param model:
         AMICI model used to generate ``rdatas``.
     :param petab_problem:
         The PEtab problem used to generate ``rdatas``.
     :return:
-        A dataframe built from the rdatas in the format of
-        ``petab_problem.measurement_df``.
+        A dataframe built from simulation results in `rdatas` in the format
+        of the PEtab simulation table.
     """
     measurement_df = rdatas_to_measurement_df(rdatas, model, petab_problem)
 
