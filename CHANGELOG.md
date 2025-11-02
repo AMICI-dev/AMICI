@@ -4,6 +4,18 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.34.2 (2025-11-03)
+
+Bugfix release.
+
+* Python 3.14 compatibility
+* Swig 4.4.0 compatibility
+* Fixed type annotations in swig wrappers
+* Fixes a bug that resulted in incorrect processing of initial assignments
+  containing (amici-)splines
+* Fixes an SBML import error during the handling of algebraic rules
+* Fixes a CMake error with certain CMake versions
+
 ### v0.34.1 (2025-08-25)
 
 Bugfix release.

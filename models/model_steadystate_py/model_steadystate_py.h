@@ -529,7 +529,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
      * @return AMICI version string
      */
     std::string getAmiciVersion() const override {
-        return "0.34.1";
+        return "0.34.2";
     }
 
     /**
@@ -537,7 +537,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string getAmiciCommit() const override {
-        return "b12c68a7a02f1cbd33de59d47cbc0c4d77d30d6f";
+        return "de6c323178301dcc74c125ebf2e089ba9e2dc49b";
     }
 
     bool hasQuadraticLLH() const override {
