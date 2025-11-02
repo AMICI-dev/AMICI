@@ -550,7 +550,7 @@ class JAXModel(eqx.Module):
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
-        Unjitted version of simulate_condition for type checking with beartype.
+        Unjitted version of simulate_condition.
 
         See :meth:`simulate_condition` for full documentation.
         """
