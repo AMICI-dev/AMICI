@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 105.
+List of publications using AMICI. Total number is 107.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -70,6 +70,13 @@ Cvijovic. 2025. <span>“PEtab.jl: Advancing the Efficiency and Utility of
 Dynamic Modelling.”</span> <em>bioRxiv</em>. <a
 href="https://doi.org/10.1101/2025.04.30.651378">https://doi.org/10.1101/2025.04.30.651378</a>.
 </div>
+<div id="ref-PhilippsSch2025" class="csl-entry" role="listitem">
+Philipps, Maren, Nina Schmid, and Jan Hasenauer. 2025. <span>“Current
+State and Open Problems in Universal Differential Equations for Systems
+Biology.”</span> <em>Npj Systems Biology and Applications</em> 11 (1).
+<a
+href="https://doi.org/10.1038/s41540-025-00550-w">https://doi.org/10.1038/s41540-025-00550-w</a>.
+</div>
 <div id="ref-SmithMal2025" class="csl-entry" role="listitem">
 Smith, Lucian, Rahuman S. Malik-Sheriff, Tung V. N. Nguyen, Henning
 Hermjakob, Jonathan Karr, Bilal Shaikh, Logan Drescher, et al. 2025.
@@ -77,6 +84,15 @@ Hermjakob, Jonathan Karr, Bilal Shaikh, Logan Drescher, et al. 2025.
 <span>BioModels</span> Across Multiple Simulation Engines.”</span>
 <em>bioRxiv</em>. <a
 href="https://doi.org/10.1101/2025.01.16.633337">https://doi.org/10.1101/2025.01.16.633337</a>.
+</div>
+<div id="ref-SundqvistPod2025" class="csl-entry" role="listitem">
+Sundqvist, Nicolas, Henrik Podéus, Sebastian Sten, Maria Engström,
+Salvador Dura-Bernal, and Gunnar Cedersund. 2025. <span>“Model-Driven
+Meta-Analysis Establishes a New Consensus View: Inhibitory Neurons
+Dominate <span class="nocase">BOLD-fMRI</span> Responses.”</span>
+<em>Computers in Biology and Medicine</em> 197: 111014.
+https://doi.org/<a
+href="https://doi.org/10.1016/j.compbiomed.2025.111014">https://doi.org/10.1016/j.compbiomed.2025.111014</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2024</h1>
