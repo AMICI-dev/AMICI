@@ -1211,7 +1211,7 @@ class DEModel:
             # sensitivities drop out, otherwise generate symbols
             self._syms[name] = sp.Matrix(
                 [
-                        [
+                    [
                         sp.Symbol(
                             f"s{tcl.get_id()}__"
                             f"{par.get_id()}",
