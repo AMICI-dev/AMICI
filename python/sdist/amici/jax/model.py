@@ -548,10 +548,10 @@ class JAXModel(eqx.Module):
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
-    ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
+    ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
         Unjitted version of simulate_condition for type checking with beartype.
-        
+
         See :meth:`simulate_condition` for full documentation.
         """
         t0 = 0.0
@@ -714,7 +714,7 @@ class JAXModel(eqx.Module):
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
-    ) -> tuple[jt.Float[jt.Array, "nt *nx"] | jnp.float_, dict]:
+    ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
         Simulate a condition (JIT-compiled version).
 
