@@ -409,7 +409,7 @@ def test_pysb_event(tempdir):
     events = [
         Event(
             # note that unlike for SBML import, we must omit the real=True here
-            identifier=sp.Symbol("event1"),
+            symbol=sp.Symbol("event1"),
             name="Event1",
             value=amici_time_symbol - 5,
             assignments={sp.Symbol("__s0"): sp.Symbol("__s0") + 1000},
