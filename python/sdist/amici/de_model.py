@@ -51,7 +51,6 @@ from .import_utils import (
     _default_simplify,
     amici_time_symbol,
     smart_subs_dict,
-    strip_pysb,
     toposort_symbols,
     unique_preserve_order,
 )
@@ -1136,7 +1135,7 @@ class DEModel:
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        str(strip_pysb(x.get_sym())).replace(
+                        x.get_id().replace(
                             "observableParameter", ""
                         )
                     ),
@@ -1145,7 +1144,7 @@ class DEModel:
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        str(strip_pysb(x.get_sym())).replace(
+                        x.get_id().replace(
                             "noiseParameter", ""
                         )
                     ),
@@ -1214,8 +1213,8 @@ class DEModel:
                 [
                     [
                         sp.Symbol(
-                            f"s{strip_pysb(tcl.get_sym())}__"
-                            f"{strip_pysb(par.get_sym())}",
+                            f"s{tcl.get_id()}__"
+                            f"{par.get_id()}",
                             real=True,
                         )
                         for par in self._parameters
