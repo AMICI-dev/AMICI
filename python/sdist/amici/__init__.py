@@ -79,6 +79,9 @@ def _imported_from_setup() -> bool:
 def get_model_root_dir() -> Path:
     """Get the default root directory for AMICI models.
 
+    Get the default root directory for AMICI models for the current AMICI
+    version.
+
     :return:
         The model root directory.
         This defaults to `{base_dir}/{amici_version}`.
@@ -116,11 +119,11 @@ def get_model_dir(model_id: str | None = None, jax: bool = False) -> Path:
     if model_id is None:
         import tempfile
 
-        return Path(
-            tempfile.mkdtemp(dir=base_dir / __version__), suffix=suffix
-        )
+        # mkdtemp requires the parent directory to exist
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return Path(tempfile.mkdtemp(dir=base_dir, suffix=suffix))
 
-    return base_dir / __version__ / (model_id + suffix)
+    return base_dir / (model_id + suffix)
 
 
 # Initialize AMICI paths
