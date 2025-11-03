@@ -85,6 +85,20 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v0.X Series
 
+### v0.34.2 (2025-11-03)
+
+Bugfix release.
+
+* Python 3.14 compatibility
+* Swig 4.4.0 compatibility
+* Fixes type annotations in swig wrappers
+* Fixes a bug that resulted in incorrect processing of initial assignments
+  containing (amici-)splines
+* Fixes an SBML import error during the handling of algebraic rules
+* Fixes a CMake error with certain CMake versions
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.34.1...v0.34.2
+
 ### v0.34.1 (2025-08-25)
 
 Bugfix release.
@@ -92,6 +106,8 @@ Bugfix release.
 * Fixed a bug that would lead to incorrect model initialization in SBML models
   with initial assignments that depend on dynamic entities
   (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2939)
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.34.0...v0.34.1
 
 ### v0.34.0 (2025-07-29)
 
