@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
