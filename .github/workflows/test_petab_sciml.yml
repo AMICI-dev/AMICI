@@ -83,7 +83,7 @@ jobs:
               --cov=amici tests/sciml/test_sciml.py
 
       - name: Codecov
-        if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+        if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
