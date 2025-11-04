@@ -59,9 +59,6 @@ from .cxxcodeprinter import (
 )
 from .de_model import DEModel
 from .de_model_components import *
-from .import_utils import (
-    strip_pysb,
-)
 from .logging import get_logger, log_execution_time, set_log_level
 from .sympy_utils import (
     _custom_pow_eval_derivative,
@@ -323,7 +320,7 @@ class DEExporter:
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
         )
 
-    def _get_index(self, name: str) -> dict[sp.Symbol, int]:
+    def _get_index(self, name: str) -> dict[str, int]:
         """
         Compute indices for a symbolic array.
         :param name:
@@ -339,10 +336,7 @@ class DEExporter:
         else:
             raise ValueError(f"Unknown symbolic array: {name}")
 
-        return {
-            strip_pysb(symbol).name: index
-            for index, symbol in enumerate(symbols)
-        }
+        return {symbol.name: index for index, symbol in enumerate(symbols)}
 
     def _write_index_files(self, name: str) -> None:
         """
@@ -369,9 +363,9 @@ class DEExporter:
 
         lines = []
         for index, symbol in enumerate(symbols):
-            symbol_name = strip_pysb(symbol)
             if symbol.is_zero:
                 continue
+            symbol_name = symbol.name
             if str(symbol_name) == "":
                 raise ValueError(f'{name} contains a symbol called ""')
             lines.append(f"#define {symbol_name} {name}[{index}]")

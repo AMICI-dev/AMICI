@@ -860,7 +860,11 @@ def generate_measurement_symbol(observable_id: str | sp.Symbol):
         symbol for the corresponding measurement
     """
     if not isinstance(observable_id, str):
-        observable_id = strip_pysb(observable_id)
+        observable_id = (
+            observable_id.name
+            if isinstance(observable_id, sp.Symbol)
+            else observable_id
+        )
     return symbol_with_assumptions(f"m{observable_id}")
 
 
@@ -875,7 +879,11 @@ def generate_regularization_symbol(observable_id: str | sp.Symbol):
         symbol for the corresponding regularization
     """
     if not isinstance(observable_id, str):
-        observable_id = strip_pysb(observable_id)
+        observable_id = (
+            observable_id.name
+            if isinstance(observable_id, sp.Symbol)
+            else observable_id
+        )
     return symbol_with_assumptions(f"r{observable_id}")
 
 
@@ -911,26 +919,6 @@ def symbol_with_assumptions(name: str):
         symbol with canonical assumptions
     """
     return sp.Symbol(name, real=True)
-
-
-def strip_pysb(symbol: sp.Basic) -> sp.Basic:
-    """
-    Strips pysb info from a :class:`pysb.Component` object
-
-    :param symbol:
-        symbolic expression
-
-    :return:
-        stripped expression
-    """
-    # strip pysb type and transform into a flat sympy.Symbol.
-    # this ensures that the pysb type specific __repr__ is used when converting
-    # to string
-    if pysb and isinstance(symbol, pysb.Component):
-        return sp.Symbol(symbol.name, real=True)
-    else:
-        # in this case we will use sympy specific transform anyways
-        return symbol
 
 
 def unique_preserve_order(seq: Sequence) -> list:

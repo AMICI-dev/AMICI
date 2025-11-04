@@ -24,9 +24,6 @@ from amici import (
 from amici._codegen.template import apply_template
 from amici.de_export import is_valid_identifier
 from amici.de_model import DEModel
-from amici.import_utils import (
-    strip_pysb,
-)
 from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
 from amici.jax.nn import generate_equinox
@@ -45,7 +42,7 @@ def _jax_variable_assignments(
 ) -> dict:
     return {
         f"{sym_name.upper()}_SYMS": "".join(
-            str(strip_pysb(s)) + ", " for s in model.sym(sym_name)
+            f"{s.name}, " for s in model.sym(sym_name)
         )
         if model.sym(sym_name)
         else "_"
@@ -63,7 +60,7 @@ def _jax_variable_equations(
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
-                (str(strip_pysb(s)) for s in model.sym(eq_name)),
+                (s.name for s in model.sym(eq_name)),
                 model.eq(eq_name).subs(subs),
                 indent,
             )
@@ -78,7 +75,7 @@ def _jax_return_variables(
 ) -> dict:
     return {
         f"{eq_name.upper()}_RET": _jnp_array_str(
-            strip_pysb(s) for s in model.sym(eq_name)
+            s.name for s in model.sym(eq_name)
         )
         if model.sym(eq_name)
         else "jnp.array([])"
@@ -89,7 +86,7 @@ def _jax_return_variables(
 def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
     return {
         f"{sym_name.upper()}_IDS": "".join(
-            f'"{strip_pysb(s)}", ' for s in model.sym(sym_name)
+            f'"{s.name}", ' for s in model.sym(sym_name)
         )
         if model.sym(sym_name)
         else "tuple()"
