@@ -22,6 +22,10 @@ find_package(
   REQUIRED)
 message(
   STATUS
+    "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}; Python3_LIBRARIES: ${Python3_LIBRARIES}"
+)
+message(
+  STATUS
     "Found numpy ${Python3_NumPy_VERSION} include dir ${Python3_NumPy_INCLUDE_DIRS}"
 )
 set(AMICI_INTERFACE_LIST
