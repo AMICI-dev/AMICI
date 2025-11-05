@@ -27,7 +27,8 @@ jobs:
       - name: Install requirements
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge compilers clang-tools
+          conda install -c conda-forge cmake ninja -compilers clang-tools
+          export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
           ls -1 /Users/runner/miniconda3/envs/amici/bin
       - name: Install AMICI
         shell: bash -l {0}
