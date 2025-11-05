@@ -22,7 +22,6 @@ from petab.v1.models.pysb_model import PySBModel
 
 from amici import MeasurementChannel
 
-from ..import_utils import strip_pysb
 from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
@@ -78,7 +77,9 @@ def _add_observation_model(
 
             # update forum
             if jax and changed_formula:
-                obs_df.at[ir, col] = str(strip_pysb(sym))
+                obs_df.at[ir, col] = (
+                    sym.name if isinstance(sym, sp.Symbol) else str(sym)
+                )
 
     # add observables and sigmas to pysb model
     for observable_id, observable_formula, noise_formula in zip(
