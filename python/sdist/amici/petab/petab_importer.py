@@ -41,7 +41,7 @@ from ..de_model import DEModel
 from ..import_utils import amici_time_symbol
 from ..logging import get_logger
 from .sbml_import import _add_global_parameter
-from .simulations import EDATAS, LLH, RDATAS, S2LLH, SLLH
+from .simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
 
 if TYPE_CHECKING:
     import pysb
@@ -62,6 +62,8 @@ __all__ = [
     "LLH",
     "SLLH",
     "S2LLH",
+    "RES",
+    "SRES",
 ]
 logger = get_logger(__name__, log_level=logging.DEBUG)
 
@@ -1188,11 +1190,14 @@ class PetabSimulator:
         )
 
         return {
+            EDATAS: edatas,
             RDATAS: rdatas,
             LLH: sum(rdata.llh for rdata in rdatas),
             SLLH: self._aggregate_sllh(rdatas),
             S2LLH: self._aggregate_s2llh(rdatas, use_fim=True),
-            EDATAS: edatas,
+            RES: np.hstack([rdata.res for rdata in rdatas]),
+            # TODO: implement residual sensitivity aggregation
+            SRES: None,
         }
 
     def _aggregate_sllh(
