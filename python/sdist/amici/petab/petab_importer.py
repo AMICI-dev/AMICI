@@ -123,6 +123,7 @@ class PetabImporter:
         jax: bool = False,
         output_parameter_defaults: dict[str, float] | None = None,
         verbose: int | bool = logging.INFO,
+        non_estimated_parameters_as_constants: bool = True,
     ):
         """
         Create a new PetabImporter instance.
@@ -143,6 +144,11 @@ class PetabImporter:
             The verbosity level. If ``True``, set to ``logging.INFO``.
             If ``False``, set to ``logging.WARNING``. Otherwise, use the given
             logging level.
+        :param non_estimated_parameters_as_constants:
+            Whether parameters marked as non-estimated in PEtab should be
+            considered constant in AMICI. Setting this to ``True`` will reduce
+            model size and simulation times. If sensitivities with respect to
+            those parameters are required, this should be set to ``False``.
         """
         self.petab_problem: v2.Problem = self._upgrade_or_copy_if_needed(
             petab_problem
@@ -201,6 +207,9 @@ class PetabImporter:
             None if outdir is None else Path(outdir).absolute()
         )
         self._jax = jax
+        self._non_estimated_parameters_as_constants: bool = (
+            non_estimated_parameters_as_constants
+        )
 
         if validate:
             logger.info("Validating PEtab problem ...")
@@ -304,9 +313,7 @@ class PetabImporter:
             self._outdir = get_model_dir(self._module_name, jax=self._jax)
         return self._outdir
 
-    def _do_import_sbml(
-        self, non_estimated_parameters_as_constants: bool = True
-    ):
+    def _do_import_sbml(self):
         """Import the model.
 
         Generate the symbolic model according to the given PEtab problem and
@@ -317,12 +324,6 @@ class PetabImporter:
            This leaves only (maybe) a pre-equilibration and a single
            simulation period.
         2. Add the observable parameters to the SBML model.
-
-        :param non_estimated_parameters_as_constants:
-            Whether parameters marked as non-estimated in PEtab should be
-            considered constant in AMICI. Setting this to ``True`` will reduce
-            model size and simulation times. If sensitivities with respect to
-            those parameters are required, this should be set to ``False``.
         """
         logger.info(f"Importing model {self.model_id!r}...")
 
@@ -368,7 +369,7 @@ class PetabImporter:
 
         fixed_parameters |= _get_fixed_parameters_sbml(
             petab_problem=self.petab_problem,
-            non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
+            non_estimated_parameters_as_constants=self._non_estimated_parameters_as_constants,
         )
 
         fixed_parameters = list(sorted(fixed_parameters))
@@ -406,18 +407,12 @@ class PetabImporter:
         return sbml_importer
 
     def _do_import_pysb(
-        self, non_estimated_parameters_as_constants: bool = True
+        self,
     ):
         """Import the PySB model.
 
         Generate the symbolic model according to the given PEtab problem and
         generate the corresponding Python module.
-
-        :param non_estimated_parameters_as_constants:
-            Whether parameters marked as non-estimated in PEtab should be
-            considered constant in AMICI. Setting this to ``True`` will reduce
-            model size and simulation times. If sensitivities with respect to
-            those parameters are required, this should be set to ``False``.
         """
         logger.info(f"Importing PySB model {self.model_id!r}...")
 
@@ -449,7 +444,7 @@ class PetabImporter:
             for condition_id in period.condition_ids
             for change in self.petab_problem[condition_id].changes
         }
-        # TODO: handle non_estimated_parameters_as_constants
+        # TODO: handle self._non_estimated_parameters_as_constants
 
         self._check_placeholders()
         fixed_parameters = list(sorted(fixed_parameters))
