@@ -41,7 +41,7 @@ from ..de_model import DEModel
 from ..import_utils import amici_time_symbol
 from ..logging import get_logger
 from .sbml_import import _add_global_parameter
-from .simulations import EDATAS, LLH, RDATAS, SLLH
+from .simulations import EDATAS, LLH, RDATAS, S2LLH, SLLH
 
 if TYPE_CHECKING:
     import pysb
@@ -61,6 +61,7 @@ __all__ = [
     "RDATAS",
     "LLH",
     "SLLH",
+    "S2LLH",
 ]
 logger = get_logger(__name__, log_level=logging.DEBUG)
 
@@ -1195,6 +1196,7 @@ class PetabSimulator:
             RDATAS: rdatas,
             LLH: sum(rdata.llh for rdata in rdatas),
             SLLH: self._aggregate_sllh(rdatas),
+            S2LLH: self._aggregate_s2llh(rdatas, use_fim=True),
             EDATAS: edatas,
         }
 
@@ -1244,6 +1246,139 @@ class PetabSimulator:
                     sllh_total.get(problem_par_id, 0.0) + sllh
                 )
         return sllh_total
+
+    def _aggregate_s2llh(
+        self,
+        rdatas: Sequence[amici.ReturnDataView],
+        use_fim: bool = True,
+    ) -> np.ndarray | None:
+        """Aggregate the Hessians from individual experiments.
+
+        Compute the total second-order sensitivities of the log-likelihoods
+        w.r.t. estimated PEtab problem parameters.
+
+        :param rdatas:
+            The ReturnData objects to aggregate the sensitivities from.
+        :param use_fim:
+            Whether to use the Fisher Information Matrix (FIM) to compute
+            the 2nd order sensitivities. Only ``True`` is currently supported.
+        :return:
+            The aggregated 2nd order sensitivities as a 2D numpy array
+            in the order of the estimated PEtab problem parameters
+            (``Problem.x_free_ids``),
+            or `None` if sensitivities were not computed.
+        """
+        # TODO: add tests
+        if self._solver.get_sensitivity_order() < SensitivityOrder.first:
+            return None
+
+        if not use_fim:
+            raise NotImplementedError(
+                "Computation of 2nd order sensitivities without FIM is not "
+                "implemented yet."
+            )
+
+        # Check for issues in all condition simulation results.
+        for rdata in rdatas:
+            # Condition failed during simulation.
+            if rdata.status != amici.AMICI_SUCCESS:
+                return None
+            # Condition simulation result does not provide FIM.
+            if rdata.FIM is None:
+                raise ValueError(
+                    f"The FIM was not computed for experiment {rdata.id!r}."
+                )
+
+        # Model parameter index to problem parameter index map for estimated
+        #  parameters except placeholders.
+        #  This is the same for all experiments.
+        global_ix_map: dict[int, int] = {
+            model_ix: self._petab_problem.x_free_ids.index(model_pid)
+            for model_ix, model_pid in enumerate(
+                self._model.get_parameter_ids()
+            )
+            if model_pid in self._petab_problem.x_free_ids
+        }
+        s2llh_total = np.zeros(
+            shape=(
+                self._petab_problem.n_estimated,
+                self._petab_problem.n_estimated,
+            ),
+            dtype=float,
+        )
+
+        for rdata in rdatas:
+            ix_map = global_ix_map.copy()
+            # still needs experiment-specific parameter mapping for
+            # placeholders
+            experiment = self._petab_problem[rdata.id]
+            placeholder_mappings = self._exp_man._get_placeholder_mapping(
+                experiment
+            )
+            for model_pid, problem_pid in placeholder_mappings.items():
+                try:
+                    ix_map[self.model.get_parameter_ids().index(model_pid)] = (
+                        self._petab_problem.x_free_ids.index(problem_pid)
+                    )
+                except ValueError:
+                    # mapped-to parameter is not estimated
+                    pass
+
+            # translate model parameter index to plist index
+            ix_map: dict[int, int] = {
+                tuple(rdata.plist).index(model_par_ix): problem_par_ix
+                for model_par_ix, problem_par_ix in ix_map.items()
+            }
+            if use_fim:
+                model_s2llh = rdata.FIM
+            else:
+                raise NotImplementedError()
+
+            model_par_slice = np.fromiter(ix_map.keys(), dtype=int)
+            problem_par_slice = np.fromiter(ix_map.values(), dtype=int)
+
+            # handle possible non-unique indices in problem_par_slice
+            # (i.e. multiple model parameters mapping to the same problem
+            # parameter)
+            problem_par_slice_unique, unique_index = np.unique(
+                problem_par_slice, return_index=True
+            )
+            # handle unique mappings
+            s2llh_total[
+                np.ix_(problem_par_slice_unique, problem_par_slice_unique)
+            ] += model_s2llh[
+                np.ix_(
+                    model_par_slice[unique_index],
+                    model_par_slice[unique_index],
+                )
+            ]
+            # handle non-unique mappings if any
+            if problem_par_slice_unique.size < problem_par_slice.size:
+                # index in the mapping arrays of non-unique entries
+                non_unique_indices = [
+                    idx
+                    for idx in range(len(problem_par_slice))
+                    if idx not in unique_index
+                ]
+                for idx in non_unique_indices:
+                    s2llh_total[
+                        problem_par_slice[idx], problem_par_slice_unique
+                    ] += model_s2llh[
+                        model_par_slice[idx], model_par_slice[unique_index]
+                    ]
+                    s2llh_total[
+                        problem_par_slice_unique, problem_par_slice[idx]
+                    ] += model_s2llh[
+                        model_par_slice[unique_index], model_par_slice[idx]
+                    ]
+                    for jdx in non_unique_indices:
+                        s2llh_total[
+                            problem_par_slice[idx], problem_par_slice[jdx]
+                        ] += model_s2llh[
+                            model_par_slice[idx], model_par_slice[jdx]
+                        ]
+
+        return s2llh_total
 
 
 def _set_default_experiment(
