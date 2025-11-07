@@ -10,7 +10,6 @@ cmake_policy(VERSION 3.22...3.31)
 # clang-scan-deps-notfound errors.
 # See also https://discourse.cmake.org/t/cmake-3-28-cmake-cxx-compiler-clang-scan-deps-notfound-not-found/9244/3
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-set(CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS /usr/bin/true)
 
 project(amici)
 
