@@ -31,7 +31,7 @@ jobs:
           export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
           export CC=$(which clang)
           export CXX=$(which clang++)
-          export SCAN_DEPS=$(which clang-scan-deps)
+          export SCAN=$(which clang-scan-deps)
           which cmake clang clang++ clang-scan-deps
           clang --version
           clang-scan-deps --version
