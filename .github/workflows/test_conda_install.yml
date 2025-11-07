@@ -27,10 +27,11 @@ jobs:
       - name: Install requirements
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge compilers clang-tools
+          conda install -c conda-forge cmake compilers clang-tools
           export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
           export CC=$(which clang)
           export CXX=$(which clang++)
+          export SCAN_DEPS=$(which clang-scan-deps)
           which cmake clang clang++ clang-scan-deps
           clang --version
           clang-scan-deps --version
