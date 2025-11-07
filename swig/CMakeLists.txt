@@ -116,7 +116,7 @@ set_target_properties(
 # NOTE: No public definitions of any dependency are forwarded to swig, they are
 # only used for compiling the swig-generated source file. Any definition that
 # are relevant for swig-code generation, need to be forwarded manually.
-target_link_libraries(_amici amici Python3::Python)
+target_link_libraries(_amici amici Python3::Module)
 if(WIN32)
   add_custom_command(
     TARGET _amici
