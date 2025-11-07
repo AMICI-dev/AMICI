@@ -249,12 +249,6 @@ Installation under conda
 There is no amici conda recipe available yet. However, you can install AMICI
 using pip in a conda environment.
 
-.. note::
-
-   It is possible, but we currently don't recommend using conda for installing
-   AMICI, as it commonly leads to conflicts with system installations of
-   libraries and compilers.
-
 Create a minimal conda environment via:
 
 .. code-block:: bash
@@ -281,30 +275,6 @@ The ``pip`` option ``--no-cache`` may be helpful here to make sure the
 installation is done completely anew.
 
 Now, you are ready to use AMICI in the virtual environment.
-
-.. note::
-
-   **conda on Mac**
-
-   If the above installation does not work for you, try installing AMICI via:
-
-   .. code-block:: bash
-
-      CFLAGS="-stdlib=libc++" CC=clang CXX=clang pip3 install --verbose amici
-
-   This will use the ``clang`` compiler.
-
-   You will have to pass the same options when compiling any model later
-   on. This can be done by inserting the following code before model import:
-
-   .. code-block:: python
-
-      import os
-      os.environ['CC'] = 'clang'
-      os.environ['CXX'] = 'clang'
-      os.environ['CFLAGS'] = '-stdlib=libc++'
-
-   (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
 
 Known issues:
 
