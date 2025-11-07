@@ -276,6 +276,18 @@ installation is done completely anew.
 
 Now, you are ready to use AMICI in the virtual environment.
 
+.. note::
+
+   **conda on Mac**
+
+   If the above installation does not work for you, try installing AMICI
+   using clang compilers provided by conda:
+
+   .. code-block:: bash
+
+      conda install -c conda-forge compilers
+      pip install amici --no-cache
+
 Known issues:
 
 * ``CMAKE_AR-NOTFOUND: not found``: Try ``conda install binutils``.
