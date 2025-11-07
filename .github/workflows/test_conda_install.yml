@@ -29,7 +29,9 @@ jobs:
         run: |
           conda install -c conda-forge compilers clang-tools
           export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
-          ls -1 /Users/runner/miniconda3/envs/amici/bin
+          which cmake clang clang++ clang-scan-deps
+          clang --version
+          clang-scan-deps --version
       - name: Install AMICI
         shell: bash -l {0}
         run: |
