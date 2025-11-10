@@ -51,6 +51,8 @@ jobs:
       run: scripts/run-cpp-tests.sh
 
     - name: Install python package
+      env:
+          CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
@@ -117,7 +119,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.cfamily.compile-commands=${AMICI_DIR}/build/compile_commands.json \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
   ubuntu-python-tests:
@@ -150,6 +152,8 @@ jobs:
       uses: ./.github/actions/setup-amici-cpp
 
     - name: Install python package
+      env:
+        CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
       run: scripts/installAmiciSource.sh
 
     - name: Python tests
@@ -199,7 +203,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.cfamily.compile-commands=${AMICI_DIR}/build/compile_commands.json \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
 
