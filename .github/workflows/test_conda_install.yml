@@ -48,5 +48,8 @@ jobs:
         shell: bash -l {0}
         run: |
           echo $PATH
+          which cmake
+          which ninja
+          ls -l /Users/runner/miniconda3/envs/amici/bin || true
           cd python/tests
-          pytest test_sbml_import.py::test_steadystate_simulation -v
+          pytest test_sbml_import.py::test_steadystate_simulation -sv
