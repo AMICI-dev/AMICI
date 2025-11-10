@@ -117,7 +117,6 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
   ubuntu-python-tests:
