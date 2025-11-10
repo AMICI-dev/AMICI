@@ -292,12 +292,11 @@ class PetabImporter:
         if isinstance(problem, v2.Problem):
             return copy.deepcopy(problem)
 
-        # TODO: So far, PEtab can only upgrade file-based problems,
-        #  not petab.v1.Problem objects.
         raise NotImplementedError(
-            "Only `petab.v2.Problem` is currently supported. "
-            "For use with PEtab 1.0 problems, please use "
-            "`petab.v2.Problem.from_yaml(petab_v1_yaml_file)` for upgrading."
+            "'petab_problem' must be a `petab.v2.Problem`. "
+            "`petab.v1.Problem` is not directly supported, but "
+            "file-based PEtab v1 problems can be upgraded via "
+            "`petab.v2.Problem.from_yaml(petab_v1_yaml_file)`."
         )
 
     @property
@@ -2107,6 +2106,10 @@ class ExperimentsToPySBConverter:
                     else:
                         # if the target is not an expression, it must be an
                         #  initial. the rest is excluded in __init__
+                        # TODO (performance): It might be more efficient
+                        #  to handle this as multi-model problem.
+                        #  Individual models might result in smaller networks
+                        #  than the superset model required here.
                         for initial in model.initials:
                             if str(
                                 initial.pattern
