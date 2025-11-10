@@ -1,6 +1,6 @@
 import pytest
 import sympy as sp
-from amici.cxxcodeprinter import AmiciCxxCodePrinter
+from amici.exporters.sundials.cxxcodeprinter import AmiciCxxCodePrinter
 from amici.testing import skip_on_valgrind
 from sympy.codegen.rewriting import optims_c99
 

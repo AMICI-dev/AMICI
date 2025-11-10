@@ -4,7 +4,8 @@ import equinox as eqx
 import jax.numpy as jnp
 
 from amici import amiciModulePath
-from amici._codegen.template import apply_template
+
+from ..exporters.template import apply_template
 
 
 class Flatten(eqx.Module):

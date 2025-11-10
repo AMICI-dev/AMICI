@@ -143,7 +143,8 @@ else()
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 endif()
 set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
-find_package(SUNDIALS 7.1.1 REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/" )
+find_package(SUNDIALS 7.1.1 REQUIRED CONFIG PATHS
+             "${SUNDIALS_ROOT}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
@@ -306,22 +307,25 @@ if(AMICI_PYTHON_BUILD_EXT_ONLY)
                           "gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1")
 endif()
 
-# Create targets to make the sources show up in IDEs for convenience
-# For template files
-add_custom_target(
-  fileTemplates
-  SOURCES src/CMakeLists.template.cmake
-          src/main.template.cpp
-          src/model_header.template.h
-          src/model.template.cpp
-          src/wrapfunctions.template.h
-          src/wrapfunctions.template.cpp
-          swig/CMakeLists_model.cmake
-          swig/modelname.template.i
-  COMMENT "Dummy target for SWIG files")
-set_target_properties(
-  fileTemplates PROPERTIES INCLUDE_DIRECTORIES
-                           "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
+  # Create targets to make the sources show up in IDEs for convenience For
+  # template files
+  set(template_dir "python/sdist/amici/exporters/sundials/templates")
+  add_custom_target(
+    fileTemplates
+    SOURCES ${template_dir}/CMakeLists.template.cmake
+            ${template_dir}//main.template.cpp
+            ${template_dir}//model_header.template.h
+            ${template_dir}//model.template.cpp
+            ${template_dir}//wrapfunctions.template.h
+            ${template_dir}//wrapfunctions.template.cpp
+            ${template_dir}//CMakeLists_model.cmake
+            ${template_dir}//modelname.template.i
+    COMMENT "Dummy target for SWIG files")
+  set_target_properties(
+    fileTemplates PROPERTIES INCLUDE_DIRECTORIES
+                             "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+endif()
 
 if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
   include(clang-tools)

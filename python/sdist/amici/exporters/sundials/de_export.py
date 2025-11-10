@@ -24,16 +24,23 @@ from typing import (
 
 import sympy as sp
 
-from . import (
+from ... import (
     __commit__,
     __version__,
-    amiciModulePath,
-    amiciSrcPath,
-    amiciSwigPath,
     get_model_dir,
     splines,
 )
-from ._codegen.cxx_functions import (
+from ...de_model import DEModel
+from ...de_model_components import *
+from ...logging import get_logger, log_execution_time, set_log_level
+from ...sympy_utils import (
+    _custom_pow_eval_derivative,
+    _monkeypatched,
+    smart_is_zero_matrix,
+)
+from ..template import apply_template
+from .compile import build_model_extension
+from .cxx_functions import (
     _FunctionInfo,
     event_functions,
     event_sensi_functions,
@@ -44,38 +51,25 @@ from ._codegen.cxx_functions import (
     sparse_functions,
     sparse_sensi_functions,
 )
-from ._codegen.model_class import (
-    get_function_extern_declaration,
-    get_model_override_implementation,
-    get_sunindex_extern_declaration,
-    get_sunindex_override_implementation,
-)
-from ._codegen.template import apply_template
-from .compile import build_model_extension
 from .cxxcodeprinter import (
     AmiciCxxCodePrinter,
     get_initializer_list,
     get_switch_statement,
 )
-from .de_model import DEModel
-from .de_model_components import *
-from .logging import get_logger, log_execution_time, set_log_level
-from .sympy_utils import (
-    _custom_pow_eval_derivative,
-    _monkeypatched,
-    smart_is_zero_matrix,
+from .model_class import (
+    get_function_extern_declaration,
+    get_model_override_implementation,
+    get_sunindex_extern_declaration,
+    get_sunindex_override_implementation,
 )
 
+TEMPLATE_DIR = Path(__file__).parent / "templates"
 # Template for model simulation main.cpp file
-CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, "main.template.cpp")
+CXX_MAIN_TEMPLATE_FILE = TEMPLATE_DIR / "main.template.cpp"
 # Template for model/swig/CMakeLists.txt
-SWIG_CMAKE_TEMPLATE_FILE = os.path.join(
-    amiciSwigPath, "CMakeLists_model.cmake"
-)
+SWIG_CMAKE_TEMPLATE_FILE = TEMPLATE_DIR / "CMakeLists_model.cmake"
 # Template for model/CMakeLists.txt
-MODEL_CMAKE_TEMPLATE_FILE = os.path.join(
-    amiciSrcPath, "CMakeLists.template.cmake"
-)
+MODEL_CMAKE_TEMPLATE_FILE = TEMPLATE_DIR / "CMakeLists.template.cmake"
 
 IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_]\w*$")
 
@@ -950,7 +944,7 @@ class DEExporter:
         """
         template_data = {"MODELNAME": self.model_name}
         apply_template(
-            os.path.join(amiciSrcPath, "wrapfunctions.template.cpp"),
+            TEMPLATE_DIR / "wrapfunctions.template.cpp",
             os.path.join(self.model_path, "wrapfunctions.cpp"),
             template_data,
         )
@@ -961,7 +955,7 @@ class DEExporter:
         """
         template_data = {"MODELNAME": str(self.model_name)}
         apply_template(
-            os.path.join(amiciSrcPath, "wrapfunctions.template.h"),
+            TEMPLATE_DIR / "wrapfunctions.template.h",
             os.path.join(self.model_path, "wrapfunctions.h"),
             template_data,
         )
@@ -1184,13 +1178,13 @@ class DEExporter:
         tpl_data = {k: str(v) for k, v in tpl_data.items()}
 
         apply_template(
-            os.path.join(amiciSrcPath, "model_header.template.h"),
+            TEMPLATE_DIR / "model_header.template.h",
             os.path.join(self.model_path, f"{self.model_name}.h"),
             tpl_data,
         )
 
         apply_template(
-            os.path.join(amiciSrcPath, "model.template.cpp"),
+            TEMPLATE_DIR / "model.template.cpp",
             os.path.join(self.model_path, f"{self.model_name}.cpp"),
             tpl_data,
         )
@@ -1256,7 +1250,7 @@ class DEExporter:
         Path(self.model_swig_path).mkdir(exist_ok=True)
         template_data = {"MODELNAME": self.model_name}
         apply_template(
-            Path(amiciSwigPath, "modelname.template.i"),
+            TEMPLATE_DIR / "modelname.template.i",
             Path(self.model_swig_path, self.model_name + ".i"),
             template_data,
         )
@@ -1276,12 +1270,12 @@ class DEExporter:
             "PACKAGE_VERSION": "0.1.0",
         }
         apply_template(
-            Path(amiciModulePath, "setup.template.py"),
+            TEMPLATE_DIR / "setup.template.py",
             Path(self.model_path, "setup.py"),
             template_data,
         )
         apply_template(
-            Path(amiciModulePath, "MANIFEST.template.in"),
+            TEMPLATE_DIR / "MANIFEST.template.in",
             Path(self.model_path, "MANIFEST.in"),
             {},
         )
@@ -1289,7 +1283,7 @@ class DEExporter:
         Path(self.model_path, self.model_name).mkdir(exist_ok=True)
 
         apply_template(
-            Path(amiciModulePath, "__init__.template.py"),
+            TEMPLATE_DIR / "__init__.template.py",
             Path(self.model_path, self.model_name, "__init__.py"),
             template_data,
         )

@@ -5,6 +5,7 @@ recursive-include amici/cmake *
 recursive-include amici/include/amici *.h
 recursive-include amici/src *
 recursive-include amici/swig *
+recursive-include amici/exporters/sundials/templates *
 include amici/*
 include version.txt
 include LICENSE.md

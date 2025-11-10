@@ -178,7 +178,6 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from typing import Protocol, runtime_checkable
 
-    from .de_export import DEExporter  # noqa: F401
     from .import_utils import MeasurementChannel  # noqa: F401
     from .sbml_import import (  # noqa: F401
         SbmlImporter,

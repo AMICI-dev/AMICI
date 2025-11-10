@@ -24,18 +24,19 @@ import sympy as sp
 
 import amici
 
-from .de_export import (
+from .de_model import DEModel
+from .de_model_components import (
     Constant,
-    DEExporter,
     DifferentialState,
+    Event,
     Expression,
     LogLikelihoodY,
+    NoiseParameter,
     Observable,
+    ObservableParameter,
     Parameter,
     SigmaY,
 )
-from .de_model import DEModel
-from .de_model_components import Event, NoiseParameter, ObservableParameter
 from .import_utils import (
     MeasurementChannel,
     _default_simplify,
@@ -265,6 +266,11 @@ def pysb2amici(
         pysb_model_has_obs_and_noise=pysb_model_has_obs_and_noise,
         events=_events,
     )
+
+    from .exporters.sundials.de_export import (
+        DEExporter,
+    )
+
     exporter = DEExporter(
         ode_model,
         outdir=output_dir,
