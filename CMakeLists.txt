@@ -243,8 +243,7 @@ add_dependencies(${PROJECT_NAME} version)
 
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
-                                                 "${PUBLIC_HEADERS}"
-                                                 CXX_SCAN_FOR_MODULES OFF)
+                                                 "${PUBLIC_HEADERS}")
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
