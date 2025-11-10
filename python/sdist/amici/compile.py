@@ -58,6 +58,10 @@ def build_model_extension(
         # CMake will use the compiler specified in the CXX environment variable
         env["CXX"] = compiler
 
+    from pprint import pprint
+
+    pprint(env)
+
     # distutils.core.run_setup looks nicer, but does not let us check the
     # result easily
     try:
