@@ -507,7 +507,7 @@ inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
  * @param sigmaVector vector input to be checked
  * @param vectorName name of the input
  */
-void checkSigmaPositivity(
+void check_sigma_positivity(
     std::vector<realtype> const& sigmaVector, char const* vectorName
 );
 
@@ -517,7 +517,7 @@ void checkSigmaPositivity(
  * @param sigma input to be checked
  * @param sigmaName name of the input
  */
-void checkSigmaPositivity(realtype sigma, char const* sigmaName);
+void check_sigma_positivity(realtype sigma, char const* sigmaName);
 
 /**
  * @brief The ConditionContext class applies condition-specific amici::Model

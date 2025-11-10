@@ -8,7 +8,7 @@
 %ignore fJSparseB;
 %ignore fxBdot_ss;
 %ignore fJSparseB_ss;
-%ignore writeSteadystateJB;
+%ignore write_steady_state_JB;
 %ignore fdx0;
 %ignore fdxdotdp;
 %ignore froot;

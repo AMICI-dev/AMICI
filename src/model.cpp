@@ -76,7 +76,7 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
 
 };
 
-static void setNaNtoZero(std::vector<realtype>& vec) {
+static void set_nan_to_zero(std::vector<realtype>& vec) {
     std::ranges::for_each(vec, [](double& val) {
         if (std::isnan(val)) {
             val = 0.0;
@@ -93,7 +93,7 @@ static void setNaNtoZero(std::vector<realtype>& vec) {
  * @param id_name string indicating whether name or id was specified
  * @return value of the selected parameter
  */
-static realtype getValueById(
+static realtype get_value_by_id(
     std::vector<std::string> const& ids, std::vector<realtype> const& values,
     std::string const& id, char const* variable_name, char const* id_name
 ) {
@@ -115,7 +115,7 @@ static realtype getValueById(
  * @param variable_name string indicating what variable we are looking at
  * @param id_name string indicating whether name or id was specified
  */
-static void setValueById(
+static void set_value_by_id(
     std::vector<std::string> const& ids, std::vector<realtype>& values,
     realtype const value, std::string const& id, char const* variable_name,
     char const* id_name
@@ -140,7 +140,7 @@ static void setValueById(
  * @return number of matched names/ids
  */
 
-static int setValueByIdRegex(
+static int set_value_by_id_regex(
     std::vector<std::string> const& ids, std::vector<realtype>& values,
     realtype value, std::string const& regex, char const* variable_name,
     char const* id_name
@@ -534,7 +534,7 @@ realtype Model::get_parameter_by_id(std::string const& par_id) const {
         throw AmiException(
             "Could not access parameters by id as they are not set"
         );
-    return getValueById(
+    return get_value_by_id(
         get_parameter_ids(), simulation_parameters_.parameters, par_id,
         "parameters", "id"
     );
@@ -545,7 +545,7 @@ realtype Model::get_parameter_by_name(std::string const& par_name) const {
         throw AmiException(
             "Could not access parameters by name as they are not set"
         );
-    return getValueById(
+    return get_value_by_id(
         get_parameter_names(), simulation_parameters_.parameters, par_name,
         "parameters", "name"
     );
@@ -586,7 +586,7 @@ void Model::set_parameter_by_id(
             "Could not access parameters by id as they are not set"
         );
 
-    setValueById(
+    set_value_by_id(
         get_parameter_ids(), simulation_parameters_.parameters, value, par_id,
         "parameter", "id"
     );
@@ -603,7 +603,7 @@ int Model::set_parameters_by_id_regex(
         throw AmiException(
             "Could not access parameters by id as they are not set"
         );
-    int n_found = setValueByIdRegex(
+    int n_found = set_value_by_id_regex(
         get_parameter_ids(), simulation_parameters_.parameters, value,
         par_id_regex, "parameter", "id"
     );
@@ -622,7 +622,7 @@ void Model::set_parameter_by_name(
             "Could not access parameters by name as they are not set"
         );
 
-    setValueById(
+    set_value_by_id(
         get_parameter_names(), simulation_parameters_.parameters, value,
         par_name, "parameter", "name"
     );
@@ -653,7 +653,7 @@ int Model::set_parameters_by_name_regex(
             "Could not access parameters by name as they are not set"
         );
 
-    int n_found = setValueByIdRegex(
+    int n_found = set_value_by_id_regex(
         get_parameter_names(), simulation_parameters_.parameters, value,
         par_name_regex, "parameter", "name"
     );
@@ -675,7 +675,7 @@ realtype Model::get_fixed_parameter_by_id(std::string const& par_id) const {
             "Could not access fixed parameters by id as they are not set"
         );
 
-    return getValueById(
+    return get_value_by_id(
         get_fixed_parameter_ids(), state_.fixed_parameters, par_id,
         "fixedParameters", "id"
     );
@@ -687,7 +687,7 @@ realtype Model::get_fixed_parameter_by_name(std::string const& par_name) const {
             "Could not access fixed parameters by name as they are not set"
         );
 
-    return getValueById(
+    return get_value_by_id(
         get_fixed_parameter_names(), state_.fixed_parameters, par_name,
         "fixedParameters", "name"
     );
@@ -710,7 +710,7 @@ void Model::set_fixed_parameter_by_id(
             "Could not access fixed parameters by id as they are not set"
         );
 
-    setValueById(
+    set_value_by_id(
         get_fixed_parameter_ids(), state_.fixed_parameters, value, par_id,
         "fixedParameters", "id"
     );
@@ -724,7 +724,7 @@ int Model::set_fixed_parameters_by_id_regex(
             "Could not access fixed parameters by id as they are not set"
         );
 
-    return setValueByIdRegex(
+    return set_value_by_id_regex(
         get_fixed_parameter_ids(), state_.fixed_parameters, value, par_id_regex,
         "fixedParameters", "id"
     );
@@ -738,7 +738,7 @@ void Model::set_fixed_parameter_by_name(
             "Could not access fixed parameters by name as they are not set"
         );
 
-    setValueById(
+    set_value_by_id(
         get_fixed_parameter_names(), state_.fixed_parameters, value, par_name,
         "fixedParameters", "name"
     );
@@ -752,7 +752,7 @@ int Model::set_fixed_parameters_by_name_regex(
             "Could not access fixed parameters by name as they are not set"
         );
 
-    return setValueByIdRegex(
+    return set_value_by_id_regex(
         get_fixed_parameter_ids(), state_.fixed_parameters, value,
         par_name_regex, "fixedParameters", "name"
     );
@@ -1113,8 +1113,8 @@ void Model::get_observable_sensitivity(
     //        lda                  ldb                      ldc
 
     if (nx_solver) {
-        setNaNtoZero(derived_state_.dydx_);
-        setNaNtoZero(derived_state_.sx_);
+        set_nan_to_zero(derived_state_.dydx_);
+        set_nan_to_zero(derived_state_.sx_);
         amici_dgemm(
             BLASLayout::colMajor, BLASTranspose::noTrans,
             BLASTranspose::noTrans, ny, nplist(), nx_solver, 1.0,
@@ -1151,9 +1151,9 @@ void Model::get_observable_sigma_sensitivity(
     // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
     //             M  N                      M  K          K  N
     //             ldc                       lda           ldb
-    setNaNtoZero(derived_state_.dsigmaydy_);
+    set_nan_to_zero(derived_state_.dsigmaydy_);
     derived_state_.sy_.assign(sy.begin(), sy.end());
-    setNaNtoZero(derived_state_.sy_);
+    set_nan_to_zero(derived_state_.sy_);
     amici_dgemm(
         BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
         ny, nplist(), ny, 1.0, derived_state_.dsigmaydy_.data(), ny,
@@ -1199,8 +1199,8 @@ void Model::add_observable_objective_sensitivity(
     sx.flatten_to_vector(derived_state_.sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
-    setNaNtoZero(derived_state_.dJydx_);
-    setNaNtoZero(derived_state_.sx_);
+    set_nan_to_zero(derived_state_.dJydx_);
+    set_nan_to_zero(derived_state_.sx_);
     amici_dgemm(
         BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
         nJ, nplist(), nx_solver, 1.0, derived_state_.dJydx_.data(), nJ,
@@ -1255,8 +1255,8 @@ void Model::get_event_sensitivity(
     // dzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = sz C[nz,nplist]
     //        M  K                 K  N                     M  N
     //        lda                  ldb                      ldc
-    setNaNtoZero(derived_state_.dzdx_);
-    setNaNtoZero(derived_state_.sx_);
+    set_nan_to_zero(derived_state_.dzdx_);
+    set_nan_to_zero(derived_state_.sx_);
     amici_dgemm(
         BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
         nz, nplist(), nx_solver, 1.0, derived_state_.dzdx_.data(), nz,
@@ -1306,8 +1306,8 @@ void Model::get_event_regularization_sensitivity(
     // drzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = srz C[nz,nplist]
     //         M  K                 K  N                      M  N
     //         lda                  ldb                       ldc
-    setNaNtoZero(derived_state_.drzdx_);
-    setNaNtoZero(derived_state_.sx_);
+    set_nan_to_zero(derived_state_.drzdx_);
+    set_nan_to_zero(derived_state_.sx_);
     amici_dgemm(
         BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
         nz, nplist(), nx_solver, 1.0, derived_state_.drzdx_.data(), nz,
@@ -1401,8 +1401,8 @@ void Model::add_event_objective_sensitivity(
     sx.flatten_to_vector(derived_state_.sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
-    setNaNtoZero(derived_state_.dJzdx_);
-    setNaNtoZero(derived_state_.sx_);
+    set_nan_to_zero(derived_state_.dJzdx_);
+    set_nan_to_zero(derived_state_.sx_);
     amici_dgemm(
         BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
         nJ, nplist(), nx_solver, 1.0, derived_state_.dJzdx_.data(), nJ,
@@ -2139,7 +2139,7 @@ void Model::fsigmay(int const it, ExpData const* edata) {
                 std::stringstream ss;
                 ss << "sigmay (" << obs_id << ", ExpData::id=" << edata->id
                    << ", t=" << get_timepoint(it) << ")";
-                checkSigmaPositivity(
+                check_sigma_positivity(
                     derived_state_.sigmay_.at(iytrue), ss.str().c_str()
                 );
             }
@@ -2220,8 +2220,8 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     fdJydsigma(it, x, edata);
     fdsigmaydy(it, &edata);
 
-    setNaNtoZero(derived_state_.dJydsigma_);
-    setNaNtoZero(derived_state_.dsigmaydy_);
+    set_nan_to_zero(derived_state_.dJydsigma_);
+    set_nan_to_zero(derived_state_.dsigmaydy_);
     for (int iyt = 0; iyt < nytrue; iyt++) {
         if (!derived_state_.dJydy_.at(iyt).capacity())
             continue;
@@ -2317,8 +2317,8 @@ void Model::fdJydp(int const it, AmiVector const& x, ExpData const& edata) {
     fdJydsigma(it, x, edata);
     fdsigmaydp(it, &edata);
 
-    setNaNtoZero(derived_state_.dJydsigma_);
-    setNaNtoZero(derived_state_.dsigmaydp_);
+    set_nan_to_zero(derived_state_.dJydsigma_);
+    set_nan_to_zero(derived_state_.dsigmaydp_);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (!edata.is_set_observed_data(it, iyt))
             continue;
@@ -2495,7 +2495,7 @@ void Model::fsigmaz(
                     derived_state_.sigmaz_.at(iztrue + iJ * nztrue) = 0;
 
                 if (edata->is_set_observed_events(nroots, iztrue))
-                    checkSigmaPositivity(
+                    check_sigma_positivity(
                         derived_state_.sigmaz_.at(iztrue), "sigmaz"
                     );
             }
@@ -2625,12 +2625,12 @@ void Model::fdJzdp(
     fdJzdsigma(ie, nroots, t, x, edata);
     fdJrzdsigma(ie, nroots, t, x, edata);
 
-    setNaNtoZero(derived_state_.dzdp_);
-    setNaNtoZero(derived_state_.dsigmazdp_);
-    setNaNtoZero(derived_state_.dJzdz_);
-    setNaNtoZero(derived_state_.dJrzdz_);
-    setNaNtoZero(derived_state_.dJzdsigma_);
-    setNaNtoZero(derived_state_.dJrzdsigma_);
+    set_nan_to_zero(derived_state_.dzdp_);
+    set_nan_to_zero(derived_state_.dsigmazdp_);
+    set_nan_to_zero(derived_state_.dJzdz_);
+    set_nan_to_zero(derived_state_.dJrzdz_);
+    set_nan_to_zero(derived_state_.dJzdsigma_);
+    set_nan_to_zero(derived_state_.dJrzdsigma_);
     for (int izt = 0; izt < nztrue; ++izt) {
         if (!edata.is_set_observed_events(nroots, izt))
             continue;
@@ -2690,10 +2690,10 @@ void Model::fdJzdx(
     fdzdx(ie, t, x);
     fdrzdx(ie, t, x);
 
-    setNaNtoZero(derived_state_.dJzdz_);
-    setNaNtoZero(derived_state_.dJrzdz_);
-    setNaNtoZero(derived_state_.dzdx_);
-    setNaNtoZero(derived_state_.drzdx_);
+    set_nan_to_zero(derived_state_.dJzdz_);
+    set_nan_to_zero(derived_state_.dJrzdz_);
+    set_nan_to_zero(derived_state_.dzdx_);
+    set_nan_to_zero(derived_state_.drzdx_);
 
     for (int izt = 0; izt < nztrue; ++izt) {
         if (!edata.is_set_observed_events(nroots, izt))
