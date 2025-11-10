@@ -56,9 +56,7 @@ def _test_case(case, model_type, version, jax):
 
     # compile amici model
     if case.startswith("0006") and not jax:
-        # TODO: petab.flatten_timepoint_specific_output_overrides(problem)
-        # petab.flatten_timepoint_specific_output_overrides(problem)
-        pytest.skip("Timepoint-specific output overrides not yet supported")
+        flatten_timepoint_specific_output_overrides(problem)
 
     model_name = (
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
@@ -89,11 +87,11 @@ def _test_case(case, model_type, version, jax):
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
     if case.startswith("0006") and not jax:
-        # account for flattening
-        gt_simulation_dfs[0].loc[:, v2.C.OBSERVABLE_ID] = (
-            "obs_a__10__c0",
-            "obs_a__15__c0",
+        unflattened_problem = v2.Problem.from_yaml(yaml_file)
+        simulation_df = unflatten_simulation_df(
+            simulation_df, unflattened_problem
         )
+
     tol_chi2 = solution[petabtests.TOL_CHI2]
     tol_llh = solution[petabtests.TOL_LLH]
     tol_simulations = solution[petabtests.TOL_SIMULATIONS]

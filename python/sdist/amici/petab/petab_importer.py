@@ -65,7 +65,7 @@ __all__ = [
     "RES",
     "SRES",
 ]
-logger = get_logger(__name__, log_level=logging.DEBUG)
+logger = get_logger(__name__, log_level=logging.INFO)
 
 
 #: Default experiment ID to be used for measurements without an experiment ID.
