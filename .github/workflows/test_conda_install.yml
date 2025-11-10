@@ -32,12 +32,12 @@ jobs:
         shell: bash -l {0}
         run: |
           echo $PATH
-          pip3 install -v --user ./python/sdist
+          pip3 install -v ./python/sdist
       - name: Install test dependencies
         shell: bash -l {0}
         run: |
           # Install test extras (pytest, scipy, etc.)
-          pip3 install --user pytest pytest-cov scipy h5py antimony
+          pip3 install pytest pytest-cov scipy h5py antimony
       - name: Test import
         shell: bash -l {0}
         run: |
