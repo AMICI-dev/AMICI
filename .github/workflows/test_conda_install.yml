@@ -32,9 +32,19 @@ jobs:
         shell: bash -l {0}
         run: |
           pip3 install -v --user ./python/sdist
+      - name: Install test dependencies
+        shell: bash -l {0}
+        run: |
+          # Install test extras (pytest, scipy, etc.)
+          pip3 install --user pytest pytest-cov scipy h5py
       - name: Test import
         shell: bash -l {0}
         run: |
           python -c "import os; import pprint; pprint.pprint(dict(os.environ))"
           python -c "from amici import _amici; print(_amici)"
           python -m amici
+      - name: Run SBML import test
+        shell: bash -l {0}
+        run: |
+          cd python/tests
+          pytest test_sbml_import.py -v
