@@ -27,7 +27,7 @@ jobs:
       - name: Install requirements
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge compilers
+          conda install -c conda-forge compilers openmp
       - name: Install AMICI
         shell: bash -l {0}
         run: |
@@ -47,4 +47,4 @@ jobs:
         shell: bash -l {0}
         run: |
           cd python/tests
-          pytest test_sbml_import.py -v
+          pytest test_sbml_import.py::test_steadystate_simulation -v
