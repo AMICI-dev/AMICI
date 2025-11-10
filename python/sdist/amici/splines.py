@@ -48,7 +48,6 @@ from .sbml_utils import (
     add_assignment_rule,
     add_parameter,
     get_sbml_units,
-    mathml2sympy,
     pretty_xml,
     sbml_mathml,
 )
@@ -1216,9 +1215,9 @@ class AbstractSpline(ABC):
         """Create a spline object from a SBML annotation.
 
         This function extracts annotation and children from the XML annotation
-        and gives them to the ``_fromAnnotation`` function for parsing.
-        Subclass behaviour should be implemented by extending
-        ``_fromAnnotation``.
+        and gives them to the ``_from_annotation`` function for parsing.
+        Subclass behavior should be implemented by extending
+        ``_from_annotation``.
         However, the mapping between method strings and subclasses
         must be hard-coded into this function here (at the moment).
         """
@@ -1240,6 +1239,12 @@ class AbstractSpline(ABC):
                 value = False
             attributes[key] = value
 
+        from sbmlmath import SBMLMathMLParser, TimeSymbol
+
+        mathml_parser = SBMLMathMLParser(
+            symbol_kwargs={"real": True}, ignore_units=True, evaluate=False
+        )
+
         children = {}
         for child in annotation:
             if not child.tag.startswith(f"{{{annotation_namespace}}}"):
@@ -1248,11 +1253,8 @@ class AbstractSpline(ABC):
                 )
             key = child.tag[len(annotation_namespace) + 2 :]
             value = [
-                mathml2sympy(
-                    ET.tostring(gc).decode(),
-                    evaluate=False,
-                    locals=locals_,
-                    expression_type="Rule",
+                mathml_parser.parse_str(ET.tostring(gc).decode()).replace(
+                    TimeSymbol, lambda *args: sbml_time_symbol
                 )
                 for gc in child
             ]
