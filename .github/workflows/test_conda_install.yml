@@ -47,4 +47,5 @@ jobs:
         shell: bash -l {0}
         run: |
           cd python/tests
+          export OpenMP_ROOT=$(brew --prefix)/opt/libomp
           pytest test_sbml_import.py -v
