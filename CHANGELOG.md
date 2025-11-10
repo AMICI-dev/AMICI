@@ -51,6 +51,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Features**
 
+* Experimental support for the PEtab data format v2.0.0 (draft, see
+  https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html)
+  for SBML- and PySB-based problems (see `amici.petab.petab_importer`). The API is subject to change.
+
+  * Current limitations for PySB-based PEtab problems:
+    * Only species and `pysb.Expression` are supported as condition table
+      targets.
+
 * Many relevant `ReturnData` fields are now available as `xarray.DataArray`
   via `ReturnData.xr.{x,y,w,x0,sx,...}`.
   `DataArray`s include the identifiers and are often more convenient than the
@@ -82,6 +90,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * The default directory for model import changed, and a base directory
   can now be specified via the `AMICI_MODELS_ROOT` environment variable.
   See `amici.get_model_dir` for details.
+
 
 ## v0.X Series
 

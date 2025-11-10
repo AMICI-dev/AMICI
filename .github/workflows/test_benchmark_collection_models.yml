@@ -54,7 +54,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@amici100
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@main
 
     - name: Download benchmark collection
       run: |

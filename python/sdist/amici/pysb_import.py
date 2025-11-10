@@ -661,7 +661,8 @@ def _add_expression(
     """
     if not pysb_model_has_obs_and_noise or name not in observation_model:
         if any(
-            name == channel.sigma for channel in observation_model.values()
+            name == str(channel.sigma)
+            for channel in observation_model.values()
         ):
             component = SigmaY
         else:
@@ -684,7 +685,11 @@ def _add_expression(
         )
         ode_model.add_component(obs)
 
-        sigma = _get_sigma(pysb_model, name, observation_model[name].sigma)
+        sigma_name = observation_model[name].sigma
+        if isinstance(sigma_name, sp.Symbol):
+            sigma_name = sigma_name.name
+
+        sigma = _get_sigma(pysb_model, name, sigma_name)
         if not pysb_model_has_obs_and_noise:
             ode_model.add_component(
                 SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))
@@ -730,14 +735,13 @@ def _get_sigma(
     :return:
         symbolic variable representing the standard deviation of the observable
     """
-    if sigma_name is not None:
-        if sigma_name in pysb_model.expressions.keys():
-            return pysb_model.expressions[sigma_name]
-        raise ValueError(
-            f"value of sigma {obs_name} is not a valid expression."
-        )
-    else:
+    if sigma_name is None:
         return sp.Symbol(f"sigma_{obs_name}")
+
+    if sigma_name in pysb_model.expressions.keys():
+        return pysb_model.expressions[sigma_name]
+
+    raise ValueError(f"value of sigma {obs_name} is not a valid expression.")
 
 
 @log_execution_time("processing PySB observables", logger)
