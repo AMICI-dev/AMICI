@@ -311,7 +311,7 @@ void Solver::setup_steady_state(
         );
     /* Set Jacobian function and initialize values */
     set_sparse_jac_fn_ss();
-    model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
+    model->write_steady_state_JB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
 
 void Solver::update_and_reinit_states_and_sensitivities(Model* model) const {

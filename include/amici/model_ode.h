@@ -254,7 +254,7 @@ class Model_ODE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param xBdot Vector with the adjoint state right hand side
      */
-    void writeSteadystateJB(
+    void write_steady_state_JB(
         realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;

@@ -448,7 +448,7 @@ void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
     derived_state_.JB_.refresh();
 }
 
-void Model_DAE::writeSteadystateJB(
+void Model_DAE::write_steady_state_JB(
     realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
     AmiVector const& xB, AmiVector const& dxB, AmiVector const& /*xBdot*/
 ) {

@@ -101,7 +101,7 @@ class AbstractModel {
      * @param dxB Vector with the adjoint derivative states
      * @param xBdot Vector with the adjoint state right hand side
      */
-    virtual void writeSteadystateJB(
+    virtual void write_steady_state_JB(
         realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) = 0;

@@ -67,7 +67,7 @@ ReturnData::ReturnData(
         break;
 
     case RDataReporting::observables_likelihood:
-        initializeObservablesLikelihoodReporting(quadratic_llh_);
+        initialize_observables_likelihood_reporting(quadratic_llh_);
         break;
     }
 }
@@ -88,7 +88,7 @@ void ReturnData::initialize_likelihood_reporting(bool enable_fim) {
     }
 }
 
-void ReturnData::initializeObservablesLikelihoodReporting(bool enable_fim) {
+void ReturnData::initialize_observables_likelihood_reporting(bool enable_fim) {
     initialize_likelihood_reporting(enable_fim);
 
     y.resize(nt * ny, 0.0);
