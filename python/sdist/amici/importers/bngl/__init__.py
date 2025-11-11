@@ -7,7 +7,7 @@ in the :term:`BNGL` format.
 
 from pysb.importers.bngl import model_from_bngl
 
-from .pysb_import import pysb2amici
+from ..pysb import pysb2amici
 
 
 def bngl2amici(bngl_model: str, *args, **kwargs) -> None:
