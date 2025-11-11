@@ -282,10 +282,10 @@ def import_model_sbml(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+        :meth:`amici.importers.sbml.SbmlImporter.sbml2amici`.
 
     :return:
-        The created :class:`amici.sbml_import.SbmlImporter` instance.
+        The created :class:`amici.importers.sbml.SbmlImporter` instance.
     """
     from petab.v1.models.sbml_model import SbmlModel
 

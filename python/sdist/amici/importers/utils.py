@@ -129,7 +129,7 @@ class MeasurementChannel:
             Noise distribution associated with the observable.
             This is usually a string identifier (e.g., 'normal', 'log-normal';
             see
-            :func:`amici.import_utils.noise_distribution_to_cost_function`).
+            :func:`amici.importers.utils.noise_distribution_to_cost_function`).
             If ``None``, a normal distribution is assumed.
 
             Alternatively, a callable can be passed to account for a

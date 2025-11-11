@@ -113,13 +113,13 @@ PySB import
 -----------
 
 AMICI can import :term:`PySB` models via
-:py:func:`amici.pysb_import.pysb2amici`.
+:py:func:`amici.importers.pysb.pysb2amici`.
 
 BNGL import
 -----------
 
 AMICI can import :term:`BNGL` models via
-:py:func:`amici.bngl_import.bngl2amici`.
+:py:func:`amici.importers.bngl.bngl2amici`.
 
 PEtab import
 ------------
@@ -162,7 +162,7 @@ An example using Antimony to specify the Lotka-Volterra equations is shown below
     end
     """
     module_name = "test_antimony_example_lv"
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
     antimony2amici(
         ant_model,
         model_name=module_name,

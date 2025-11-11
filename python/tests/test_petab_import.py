@@ -51,7 +51,7 @@ def get_fixed_parameters_model():
     p8' = 1
     p9 := p8
     """
-    from amici.antimony_import import antimony2sbml
+    from amici.importers.antimony import antimony2sbml
 
     sbml_str = antimony2sbml(ant_model)
     sbml_doc = libsbml.SBMLReader().readSBMLFromString(sbml_str)

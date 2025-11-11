@@ -1,6 +1,6 @@
 import amici
 import numpy as np
-from amici.antimony_import import antimony2amici
+from amici.importers.antimony import antimony2amici
 from amici.testing import skip_on_valgrind
 
 

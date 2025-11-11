@@ -19,10 +19,10 @@ def bngl2amici(bngl_model: str, *args, **kwargs) -> None:
         module
 
     :param args:
-        see :func:`amici.pysb_import.pysb2amici` for additional arguments
+        see :func:`amici.importers.pysb.pysb2amici` for additional arguments
 
     :param kwargs:
-        see :func:`amici.pysb_import.pysb2amici` for additional arguments
+        see :func:`amici.importers.pysb.pysb2amici` for additional arguments
 
     """
     if "model" in kwargs:

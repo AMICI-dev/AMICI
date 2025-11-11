@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pysb
-from amici.pysb_import import pysb2amici
+from amici.importers.pysb import pysb2amici
 from pysb.simulator import ScipyOdeSimulator
 
 sys.path.insert(0, os.path.join("..", "tests"))

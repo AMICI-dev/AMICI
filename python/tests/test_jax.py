@@ -12,9 +12,9 @@ import jax.random as jr
 import numpy as np
 import optimistix
 from amici import MeasurementChannel as MC
+from amici.importers.utils import pysb2amici, pysb2jax
 from amici.jax import JAXProblem, ReturnValue, run_simulations
 from amici.petab.petab_import import import_petab_problem
-from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from beartype import beartype
 from numpy.testing import assert_allclose

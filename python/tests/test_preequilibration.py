@@ -647,7 +647,7 @@ def test_get_model_for_preeq(preeq_fixture):
 @skip_on_valgrind
 def test_partial_eq():
     """Check that partial equilibration is possible."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     ant_str = """
     model test_partial_eq
@@ -705,7 +705,7 @@ def test_partial_eq():
 
 def test_preequilibration_t0(tempdir):
     """Test that preequilibration uses the correct initial time."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     ant_str = """
     model test_preequilibration_t0
@@ -752,7 +752,7 @@ def test_preequilibration_t0(tempdir):
 
 def test_preequilibration_events(tempdir):
     """Test that events are handled correctly during preequilibration."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     ant_str = """
     model test_preequilibration_events

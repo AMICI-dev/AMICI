@@ -320,7 +320,7 @@ class SbmlImporter:
 
         :param observation_model:
             The different measurement channels that make up the observation
-            model, see :class:`amici.import_utils.MeasurementChannel`.
+            model, see :class:`amici.importers.utils.MeasurementChannel`.
             If ``None``, default observables will be added (for all
             state variables of the model and all species, compartments,
             and assignment rule targets) and normally distributed
@@ -463,7 +463,7 @@ class SbmlImporter:
 
         :param observation_model:
             The different measurement channels that make up the observation
-            model, see :class:`amici.import_utils.MeasurementChannel`.
+            model, see :class:`amici.importers.utils.MeasurementChannel`.
             Only time-resolved observables are supported here.
             If ``None``, default observables will be added (for all
             state variables of the model and all species, compartments,

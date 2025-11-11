@@ -40,12 +40,13 @@ tests = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", tests)
 def test_compare_to_pysb_simulation(example):
-    import amici.import_utils
+    import amici
+    from amici.importers.utils import RESERVED_SYMBOLS, MeasurementChannel
 
     # allow "NULL" as model symbol
     # (used in CaOscillate_Func and Repressilator examples)
     with suppress(ValueError):
-        amici.import_utils.RESERVED_SYMBOLS.remove("NULL")
+        RESERVED_SYMBOLS.remove("NULL")
 
     atol = 1e-8
     rtol = 1e-8
@@ -78,7 +79,7 @@ def test_compare_to_pysb_simulation(example):
     kwargs = {
         "compute_conservation_laws": cl,
         "observation_model": list(
-            map(amici.MeasurementChannel, pysb_model.observables.keys())
+            map(MeasurementChannel, pysb_model.observables.keys())
         ),
     }
 

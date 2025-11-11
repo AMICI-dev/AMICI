@@ -13,8 +13,8 @@ from amici import (
     SensitivityOrder,
     import_model_module,
 )
-from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
+from amici.importers.antimony import antimony2amici
 from amici.testing import skip_on_valgrind
 from amici.testing.models import create_amici_model, create_sbml_model
 from numpy.testing import assert_allclose
@@ -877,7 +877,6 @@ def test_multiple_event_assignment_with_compartment(tempdir):
 @skip_on_valgrind
 def test_event_priorities(tempdir):
     """Test SBML event priorities."""
-    from amici.antimony_import import antimony2amici
 
     model_name = "test_event_priorities"
     antimony2amici(
@@ -974,7 +973,6 @@ def test_event_priorities(tempdir):
 def test_random_event_ordering(tempdir):
     """For simultaneously executed events, the order of execution
     must be random."""
-    from amici.antimony_import import antimony2amici
 
     model_name = "test_event_prio_rnd"
     antimony2amici(
@@ -1040,7 +1038,6 @@ def test_random_event_ordering(tempdir):
 def test_event_uses_values_from_trigger_time(tempdir):
     """For simultaneously executed events, check that values from trigger
     times are used to compute the state update."""
-    from amici.antimony_import import antimony2amici
 
     model_name = "test_event_vals_trig_time"
     antimony2amici(
@@ -1124,7 +1121,6 @@ def test_event_uses_values_from_trigger_time(tempdir):
 @skip_on_valgrind
 def test_posteq_events_are_handled(tempdir):
     """Test that events are handled during post-equilibration."""
-    from amici.antimony_import import antimony2amici
 
     model_name = "test_posteq_events_are_handled"
     antimony2amici(
@@ -1195,7 +1191,6 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
 
     I.e., the trigger.initialValue is only applied in the very beginning.
     """
-    from amici.antimony_import import antimony2amici
 
     model_name = "test_preeq_presim_preserve_heaviside_state"
     antimony2amici(
@@ -1273,7 +1268,6 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
 def test_gh2926(tempdir):
     """Two simultaneous events. Event `E1` changes the root function
     for the piecewise-switch from 0 to <0."""
-    from amici.antimony_import import antimony2amici
 
     model_name = "test_gh2926"
     antimony2amici(

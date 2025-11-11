@@ -284,7 +284,7 @@ def test_presimulation(sbml_example_presimulation_module):
 def test_presimulation_events(tempdir):
     """Test that events are handled during presimulation."""
 
-    from amici.antimony_import import antimony2amici
+    from amici import antimony2amici
 
     model_name = "test_presim_events"
     antimony2amici(
@@ -374,7 +374,7 @@ def test_presimulation_events_and_sensitivities(tempdir):
     """Test that presimulation with adjoint sensitivities works
     and test that events are handled during presimulation."""
 
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_presim_events2"
     model = antimony2amici(
@@ -875,7 +875,7 @@ def test_hardcode_parameters():
 def test_constraints(tempdir):
     """Test non-negativity constraint handling."""
     from amici import Constraint
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     ant_model = """
     model test_non_negative_species
@@ -925,7 +925,7 @@ def test_constraints(tempdir):
 def test_import_same_model_name(tempdir):
     """Test for error when loading a model with the same extension name as an
     already loaded model."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     # create three versions of a toy model with different parameter values
     #  to detect which model was loaded
@@ -1036,7 +1036,7 @@ def test_regression_2642(tempdir):
 @skip_on_valgrind
 def test_regression_2700(tempdir):
     """Check comparison operators."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "regression_2700"
     antimony2amici(
@@ -1064,7 +1064,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
     FIXME: Test that Heavisides for Boolean / piecewise functions use a correct
     initial value. https://github.com/AMICI-dev/AMICI/issues/2724
     """
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_bool2float"
     antimony2amici(
@@ -1100,7 +1100,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
 def test_t0(tempdir):
     """Test that a custom initial time for the simulation is applied correctly
     during species initialization."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_t0"
     antimony2amici(
@@ -1126,7 +1126,7 @@ def test_t0(tempdir):
 @skip_on_valgrind
 def test_contains_periodic_subexpression():
     """Test that periodic subexpressions are detected."""
-    from amici.import_utils import contains_periodic_subexpression as cps
+    from amici.importers.utils import contains_periodic_subexpression as cps
 
     t = sp.Symbol("t")
 
@@ -1141,8 +1141,8 @@ def test_contains_periodic_subexpression():
 def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     """Check that dynamic expressions for initial assignments are only
     evaluated at t=t0."""
-    from amici.antimony_import import antimony2sbml
-    from amici.import_utils import amici_time_symbol
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.utils import amici_time_symbol
 
     ant_model = """
     x1' = 1

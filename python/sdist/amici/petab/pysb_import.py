@@ -222,7 +222,7 @@ def import_model_pysb(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :func:`amici.pysb_import.pysb2amici`.
+        :func:`amici.importers.pysb.pysb2amici`.
     """
     set_log_level(logger, verbose)
 
@@ -291,7 +291,7 @@ def import_model_pysb(
         ]
 
     if jax:
-        from amici.pysb_import import pysb2jax
+        from amici.importers.pysb import pysb2jax
 
         pysb2jax(
             model=pysb_model,
@@ -304,7 +304,7 @@ def import_model_pysb(
         )
         return
     else:
-        from amici.pysb_import import pysb2amici
+        from amici.importers.pysb import pysb2amici
 
         pysb2amici(
             model=pysb_model,
