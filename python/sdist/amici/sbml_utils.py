@@ -509,7 +509,13 @@ def mathml2sympy(
         with sp.core.parameters.evaluate(False):
             expr = sp.sympify(formula, locals=locals)
 
-    expr = _parse_special_functions(expr)
+    # no easy way of accessing proper parameters here, so passing empty list + error
+    # if you really want to do this, replace this function by sbmlmath
+    if "Piecewise" in str(expr):
+        raise SBMLException(
+            "Piecewise expressions are not supported as part of spline functions"
+        )
+    expr = _parse_special_functions(expr, [])
 
     if expression_type is not None:
         _check_unsupported_functions(expr, expression_type)
