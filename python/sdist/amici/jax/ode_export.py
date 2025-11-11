@@ -21,9 +21,9 @@ import sympy as sp
 from amici import (
     amiciModulePath,
 )
-from amici._codegen.template import apply_template
-from amici.de_export import is_valid_identifier
 from amici.de_model import DEModel
+from amici.exporters.sundials.de_export import is_valid_identifier
+from amici.exporters.template import apply_template
 from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
 from amici.jax.nn import generate_equinox

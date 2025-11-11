@@ -30,9 +30,6 @@ import amici
 
 from . import get_model_dir, has_clibs
 from .constants import SymbolId
-from .de_export import (
-    DEExporter,
-)
 from .de_model import DEModel
 from .de_model_components import Expression, symbol_to_type
 from .import_utils import (
@@ -400,6 +397,10 @@ class SbmlImporter:
         )
 
         output_dir = output_dir or get_model_dir(model_name)
+
+        from .exporters.sundials.de_export import (
+            DEExporter,
+        )
 
         exporter = DEExporter(
             ode_model,

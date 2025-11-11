@@ -15,13 +15,6 @@ import numpy as np
 import sympy as sp
 from sympy import ImmutableDenseMatrix, MutableDenseMatrix
 
-from ._codegen.cxx_functions import (
-    nobody_functions,
-    sensi_functions,
-    sparse_functions,
-    var_in_function_signature,
-)
-from .cxxcodeprinter import csc_matrix
 from .de_model_components import (
     AlgebraicEquation,
     AlgebraicState,
@@ -45,6 +38,13 @@ from .de_model_components import (
     SigmaZ,
     State,
 )
+from .exporters.sundials.cxx_functions import (
+    nobody_functions,
+    sensi_functions,
+    sparse_functions,
+    var_in_function_signature,
+)
+from .exporters.sundials.cxxcodeprinter import csc_matrix
 from .import_utils import (
     ObservableTransformation,
     SBMLException,
@@ -1135,18 +1135,14 @@ class DEModel:
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        x.get_id().replace(
-                            "observableParameter", ""
-                        )
+                        x.get_id().replace("observableParameter", "")
                     ),
                 )
             if name == "np":
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        x.get_id().replace(
-                            "noiseParameter", ""
-                        )
+                        x.get_id().replace("noiseParameter", "")
                     ),
                 )
             self._syms[name] = sp.Matrix(
@@ -1213,8 +1209,7 @@ class DEModel:
                 [
                     [
                         sp.Symbol(
-                            f"s{tcl.get_id()}__"
-                            f"{par.get_id()}",
+                            f"s{tcl.get_id()}__{par.get_id()}",
                             real=True,
                         )
                         for par in self._parameters

@@ -72,7 +72,7 @@ def run_import(model_name, model_dir: Path):
         git_dir / "FroehlichKes2018" / "PEtab" / "FroehlichKes2018.yaml"
     )
     petab.lint_problem(pp)
-    amici.de_export.logger.setLevel(logging.DEBUG)
+    amici.exporters.sundials.de_export.logger.setLevel(logging.DEBUG)
     amici.sbml_import.logger.setLevel(logging.DEBUG)
     import_model_sbml(
         model_name=model_name,

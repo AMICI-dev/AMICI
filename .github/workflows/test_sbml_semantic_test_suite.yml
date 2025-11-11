@@ -7,7 +7,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
-      - python/sdist/amici/de_export.py
+      - python/sdist/amici/exporters/sundials/de_export.py
       - python/sdist/amici/de_model_components.py
       - python/sdist/amici/de_model.py
       - python/sdist/amici/sbml_import.py
