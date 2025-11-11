@@ -8,8 +8,8 @@ import libsbml
 import sympy as sp
 
 from amici import AmiciModel, MeasurementChannel, SbmlImporter
+from amici.importers.sbml.splines import CubicHermiteSpline
 from amici.sbml_utils import amici_time_symbol
-from amici.splines import CubicHermiteSpline
 
 from .. import Model, import_model_module
 from ..antimony_import import antimony2amici, antimony2sbml

@@ -8,9 +8,15 @@ AMICI Python API
 
    amici
    amici.amici
-   amici.sbml_import
-   amici.pysb_import
-   amici.bngl_import
+   amici.importers.utils
+   amici.importers.sbml
+   amici.importers.sbml.conserved_quantities_demartino
+   amici.importers.sbml.conserved_quantities_rref
+   amici.importers.sbml.sbml_utils
+   amici.importers.sbml.splines
+   amici.importers.pysb
+   amici.importers.bngl
+   amici.importers.antimony
    amici.petab
    amici.petab.conditions
    amici.petab.import_helpers
@@ -21,7 +27,6 @@ AMICI Python API
    amici.petab.sbml_import
    amici.petab.simulations
    amici.petab.simulator
-   amici.import_utils
    amici.jax
    amici.exporters.sundials.de_export
    amici.de_model
@@ -30,9 +35,5 @@ AMICI Python API
    amici.pandas
    amici.logging
    amici.gradient_check
-   amici.conserved_quantities_demartino
-   amici.conserved_quantities_rref
    amici.numpy
-   amici.sbml_utils
-   amici.splines
    amici.adapters.fiddy

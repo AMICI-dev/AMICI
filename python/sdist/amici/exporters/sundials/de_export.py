@@ -28,10 +28,10 @@ from ... import (
     __commit__,
     __version__,
     get_model_dir,
-    splines,
 )
 from ...de_model import DEModel
 from ...de_model_components import *
+from ...importers.sbml import splines
 from ...logging import get_logger, log_execution_time, set_log_level
 from ...sympy_utils import (
     _custom_pow_eval_derivative,

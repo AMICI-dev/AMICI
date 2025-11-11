@@ -63,7 +63,7 @@ from .sympy_utils import (
 )
 
 if TYPE_CHECKING:
-    from .splines import AbstractSpline
+    from amici.importers.sbml.splines import AbstractSpline
 
 logger = get_logger(__name__, logging.ERROR)
 

@@ -1,4 +1,4 @@
-"""Tests related to amici.sbml_import"""
+"""Tests related to amici.importers.sbml"""
 
 import os
 import re
@@ -13,13 +13,13 @@ import pytest
 import sympy as sp
 from amici import import_model_module
 from amici.gradient_check import check_derivatives
-from amici.import_utils import (
+from amici.importers.sbml import SbmlImporter, SymbolId
+from amici.importers.utils import (
     MeasurementChannel as MC,
 )
-from amici.import_utils import (
+from amici.importers.utils import (
     symbol_with_assumptions,
 )
-from amici.sbml_import import SbmlImporter, SymbolId
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
@@ -50,7 +50,7 @@ def simple_sbml_model():
 
 def test_event_trigger_to_root_function():
     """Test that root functions for event triggers are generated correctly."""
-    from amici.sbml_import import _parse_event_trigger as to_trig
+    from amici.importers.sbml import _parse_event_trigger as to_trig
 
     a, b = sp.symbols("a b")
 

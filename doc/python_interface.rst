@@ -19,7 +19,7 @@ SBML import
 -----------
 
 AMICI can import :term:`SBML` models via the
-:py:func:`amici.sbml_import.SbmlImporter` class.
+:py:func:`amici.importers.sbml.SbmlImporter` class.
 
 .. _amici_python_sbml_support:
 

@@ -31,6 +31,7 @@ from amici import get_model_dir, has_clibs
 from amici.constants import SymbolId
 from amici.de_model import DEModel
 from amici.de_model_components import Expression, symbol_to_type
+from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
     RESERVED_SYMBOLS,
@@ -56,7 +57,6 @@ from amici.importers.utils import (
     toposort_symbols,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
-from amici.splines import AbstractSpline
 from amici.sympy_utils import smart_is_zero_matrix, smart_multiply
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
