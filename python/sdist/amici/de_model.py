@@ -45,7 +45,7 @@ from .exporters.sundials.cxx_functions import (
     var_in_function_signature,
 )
 from .exporters.sundials.cxxcodeprinter import csc_matrix
-from .import_utils import (
+from .importers.utils import (
     ObservableTransformation,
     SBMLException,
     _default_simplify,

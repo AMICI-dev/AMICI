@@ -23,9 +23,8 @@ import pysb.pattern
 import sympy as sp
 
 import amici
-
-from .de_model import DEModel
-from .de_model_components import (
+from amici.de_model import DEModel
+from amici.de_model_components import (
     Constant,
     DifferentialState,
     Event,
@@ -37,7 +36,7 @@ from .de_model_components import (
     Parameter,
     SigmaY,
 )
-from .import_utils import (
+from amici.importers.utils import (
     MeasurementChannel,
     _default_simplify,
     _get_str_symbol_identifiers,
@@ -46,7 +45,7 @@ from .import_utils import (
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
 )
-from .logging import get_logger, log_execution_time, set_log_level
+from amici.logging import get_logger, log_execution_time, set_log_level
 
 CL_Prototype = dict[str, dict[str, Any]]
 ConservationLaw = dict[str, dict | str | sp.Basic]
@@ -267,7 +266,7 @@ def pysb2amici(
         events=_events,
     )
 
-    from .exporters.sundials.de_export import (
+    from amici.exporters.sundials.de_export import (
         DEExporter,
     )
 

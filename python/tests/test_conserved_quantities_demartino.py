@@ -6,12 +6,14 @@ from time import perf_counter
 import numpy as np
 import pytest
 import sympy as sp
-from amici.conserved_quantities_demartino import (
+from amici.importers.sbml.conserved_quantities_demartino import (
     _fill,
     _kernel,
     compute_moiety_conservation_laws,
 )
-from amici.conserved_quantities_demartino import _output as output
+from amici.importers.sbml.conserved_quantities_demartino import (
+    _output as output,
+)
 from amici.logging import get_logger, log_execution_time
 from amici.testing import skip_on_valgrind
 

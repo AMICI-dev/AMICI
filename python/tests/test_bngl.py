@@ -7,7 +7,7 @@ pysb = pytest.importorskip("pysb")
 
 from contextlib import suppress
 
-from amici.bngl_import import bngl2amici
+from amici.importers.bngl import bngl2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from pysb.importers.bngl import model_from_bngl
 from pysb.simulator import ScipyOdeSimulator

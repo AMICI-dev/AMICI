@@ -27,12 +27,12 @@ from sympy.logic.boolalg import Boolean, BooleanFalse, BooleanTrue
 from sympy.matrices.dense import MutableDenseMatrix
 
 import amici
-
-from . import get_model_dir, has_clibs
-from .constants import SymbolId
-from .de_model import DEModel
-from .de_model_components import Expression, symbol_to_type
-from .import_utils import (
+from amici import get_model_dir, has_clibs
+from amici.constants import SymbolId
+from amici.de_model import DEModel
+from amici.de_model_components import Expression, symbol_to_type
+from amici.importers.sbml.utils import SBMLException
+from amici.importers.utils import (
     RESERVED_SYMBOLS,
     MeasurementChannel,
     _check_unsupported_functions,
@@ -55,10 +55,9 @@ from .import_utils import (
     symbol_with_assumptions,
     toposort_symbols,
 )
-from .logging import get_logger, log_execution_time, set_log_level
-from .sbml_utils import SBMLException
-from .splines import AbstractSpline
-from .sympy_utils import smart_is_zero_matrix, smart_multiply
+from amici.logging import get_logger, log_execution_time, set_log_level
+from amici.splines import AbstractSpline
+from amici.sympy_utils import smart_is_zero_matrix, smart_multiply
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
@@ -398,7 +397,7 @@ class SbmlImporter:
 
         output_dir = output_dir or get_model_dir(model_name)
 
-        from .exporters.sundials.de_export import (
+        from amici.exporters.sundials.de_export import (
             DEExporter,
         )
 
@@ -2947,7 +2946,7 @@ class SbmlImporter:
         an assignment or rate rule.
 
         :param species_id:
-            The identifier of the species (generated in "sbml_import.py").
+            The identifier of the species (generated in "__init__.py").
 
         :param dxdt:
             The element-wise product of the row in the stoichiometric

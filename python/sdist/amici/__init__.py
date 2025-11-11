@@ -11,7 +11,6 @@ import importlib
 import importlib.util
 import os
 import re
-import sys
 import warnings
 from collections.abc import Callable
 from pathlib import Path
