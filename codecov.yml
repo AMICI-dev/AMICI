@@ -41,6 +41,6 @@ flags:
     carryforward: false
   sbmlsuite:
     paths:
-      - "python/amici/importers/sbml/*"
-      - "python/amici/de_export.py"
+      - python/amici/importers/sbml/**
+      - python/amici/exporters/sundials/de_export.py
     carryforward: true

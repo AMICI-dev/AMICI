@@ -2,14 +2,11 @@ name: PEtab
 on:
   push:
     branches:
-      - develop
       - main
       - 'release*'
   pull_request:
     branches:
       - main
-      - develop
-      - jax_sciml
   merge_group:
   workflow_dispatch:
 
