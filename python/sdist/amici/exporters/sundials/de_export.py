@@ -838,21 +838,19 @@ class DEExporter:
         body = ["return {"]
         for ispl, spline in enumerate(self.model._splines):
             if isinstance(spline.nodes, splines.UniformGrid):
-                nodes = (
-                    f"{ind8}{{{spline.nodes.start}, {spline.nodes.stop}}}, "
-                )
+                start = self._code_printer.doprint(spline.nodes.start)
+                stop = self._code_printer.doprint(spline.nodes.stop)
+                nodes = f"{ind8}{{{start}, {stop}}}, "
             else:
-                nodes = f"{ind8}{{{', '.join(map(str, spline.nodes))}}}, "
+                nodes = f"{ind8}{{{', '.join(map(self._code_printer.doprint, spline.nodes))}}}, "
 
             # vector with the node values
-            values = (
-                f"{ind8}{{{', '.join(map(str, spline.values_at_nodes))}}}, "
-            )
+            values = f"{ind8}{{{', '.join(map(self._code_printer.doprint, spline.values_at_nodes))}}}, "
             # vector with the slopes
             if spline.derivatives_by_fd:
                 slopes = f"{ind8}{{}},"
             else:
-                slopes = f"{ind8}{{{', '.join(map(str, spline.derivatives_at_nodes))}}},"
+                slopes = f"{ind8}{{{', '.join(map(self._code_printer.doprint, spline.derivatives_at_nodes))}}},"
 
             body.extend(
                 [

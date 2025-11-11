@@ -62,3 +62,13 @@ def test_min_max():
     assert cp.doprint(sp.Max(a, b)) == "std::max(a, b)"
     assert cp.doprint(sp.Min(a, b, c)) == "std::min({a, b, c})"
     assert cp.doprint(sp.Max(a, b, c)) == "std::max({a, b, c})"
+
+
+@skip_on_valgrind
+def test_float_arithmetic():
+    """
+    Check that AmiciCxxCodePrinter produces code that uses float arithmetic.
+    """
+    cp = AmiciCxxCodePrinter()
+    assert cp.doprint(sp.Rational(1, 2)) == "1.0/2.0"
+    assert cp.doprint(sp.Integer(1) / sp.Integer(2)) == "1.0/2.0"

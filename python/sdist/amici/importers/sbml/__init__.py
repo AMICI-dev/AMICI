@@ -1606,7 +1606,10 @@ class SbmlImporter:
                     ):
                         raise NotImplementedError(
                             "AMICI at the moment does not support splines "
-                            "whose evaluation point is not the model time."
+                            "whose evaluation point is not the model time. "
+                            f"'evaluate_at' was {spline.evaluate_at} "
+                            f"({type(spline.evaluate_at)}) in spline for "
+                            f"symbol {sym_id}."
                         )
                     self.splines.append(spline)
                     return
@@ -2273,6 +2276,9 @@ class SbmlImporter:
                     raise NotImplementedError(
                         "AMICI at the moment does not support splines "
                         "whose evaluation point is not the model time."
+                        f"'evaluate_at' was {spline.evaluate_at} "
+                        f"({type(spline.evaluate_at)}) in spline for "
+                        f"symbol {var}."
                     )
                 sym_math = sym_math.subs(
                     var, spline.evaluate(sbml_time_symbol)

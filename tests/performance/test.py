@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import amici
+import amici.exporters.sundials.de_export
 import petab.v1 as petab
 from amici.petab.petab_import import import_model_sbml
 
