@@ -288,7 +288,7 @@ def pysb2amici(
     if compile:
         exporter.compile_model()
 
-        from . import import_model_module
+        from amici import import_model_module
 
         return import_model_module(
             module_name=model_name, module_path=output_dir

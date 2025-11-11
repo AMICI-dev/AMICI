@@ -284,7 +284,7 @@ def test_presimulation(sbml_example_presimulation_module):
 def test_presimulation_events(tempdir):
     """Test that events are handled during presimulation."""
 
-    from amici import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_presim_events"
     antimony2amici(
@@ -1142,6 +1142,7 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     """Check that dynamic expressions for initial assignments are only
     evaluated at t=t0."""
     from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import splines
     from amici.importers.utils import amici_time_symbol
 
     ant_model = """
@@ -1160,7 +1161,7 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     sbml_document = sbml_reader.readSBMLFromString(sbml_str)
     sbml_model = sbml_document.getModel()
 
-    spline = amici.splines.CubicHermiteSpline(
+    spline = splines.CubicHermiteSpline(
         sbml_id="spline1",
         nodes=[0, 1, 2],
         values_at_nodes=[3, 4, 5],
