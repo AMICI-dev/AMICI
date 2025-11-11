@@ -23,9 +23,7 @@ from amici.importers.sbml.splines import (
     CubicHermiteSpline,
     UniformGrid,
 )
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import EDATAS, LLH, RDATAS, SLLH, simulate_petab
-from amici.sbml_utils import (
+from amici.importers.sbml.utils import (
     add_compartment,
     add_inflow,
     add_parameter,
@@ -34,6 +32,8 @@ from amici.sbml_utils import (
     amici_time_symbol,
     create_sbml_model,
 )
+from amici.petab.petab_import import import_petab_problem
+from amici.petab.simulations import EDATAS, LLH, RDATAS, SLLH, simulate_petab
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from petab.v1.models.sbml_model import SbmlModel
 
