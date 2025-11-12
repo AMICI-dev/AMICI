@@ -2445,7 +2445,9 @@ class DEModel:
             return None
 
         for root in roots:
-            if sp.simplify(root_found - root.get_val()).is_zero:
+            if (difference := (root_found - root.get_val())).is_zero or (
+                self._simplify and self._simplify(difference).is_zero
+            ):
                 return root.get_sym()
 
         # create an event for a new root function
