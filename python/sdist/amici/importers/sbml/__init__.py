@@ -709,7 +709,7 @@ class SbmlImporter:
         self.check_support()
         self._gather_locals(hardcode_symbols=hardcode_symbols)
         self._process_parameters(
-            fixed_parameters=fixed_parameters,
+            fixed_parameter_ids=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
         self._process_compartments()
@@ -1191,24 +1191,24 @@ class SbmlImporter:
     @log_execution_time("processing SBML parameters", logger)
     def _process_parameters(
         self,
-        fixed_parameters: list[str] = None,
-        hardcode_symbols: Sequence[str] = None,
+        fixed_parameter_ids: list[str] | None = None,
+        hardcode_symbols: Sequence[str] | None = None,
     ) -> None:
         """
         Get parameter information from SBML model.
 
-        :param fixed_parameters:
+        :param fixed_parameter_ids:
             SBML Ids to be excluded from sensitivity analysis
 
         :param hardcode_symbols:
             Parameter IDs to be replaced by their values in the generated model.
         """
 
-        if fixed_parameters is None:
-            fixed_parameters = []
+        if fixed_parameter_ids is None:
+            fixed_parameter_ids = []
 
         # Ensure specified constant parameters exist in the model
-        for parameter in fixed_parameters:
+        for parameter in fixed_parameter_ids:
             if not self.sbml.getParameter(parameter):
                 raise KeyError(
                     f"Cannot make {parameter} a constant parameter: "
@@ -1226,7 +1226,7 @@ class SbmlImporter:
         fixed_parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
-            if parameter.getId() in fixed_parameters
+            if parameter.getId() in fixed_parameter_ids
         ]
         for parameter in fixed_parameters:
             ia_math = par_id_to_ia.get(parameter.getId())
@@ -1245,7 +1245,7 @@ class SbmlImporter:
         parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
-            if parameter.getId() not in fixed_parameters
+            if parameter.getId() not in fixed_parameter_ids
             and (
                 (ia_math := par_id_to_ia.get(parameter.getId())) is None
                 or ia_math.is_Number
