@@ -157,7 +157,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
 %naturalvar amici::SimulationParameters::x0;
 %naturalvar amici::SimulationParameters::sx0;
-%naturalvar amici::SimulationParameters::parameters;
+%naturalvar amici::SimulationParameters::free_parameters;
 %naturalvar amici::SimulationParameters::pscale;
 %naturalvar amici::SimulationParameters::plist;
 %naturalvar amici::SimulationParameters::fixed_parameters;
