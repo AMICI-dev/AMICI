@@ -1037,7 +1037,7 @@ class ExperimentManager:
                     apply_override(placeholder, override)
 
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
-        edata.parameters = par_vals
+        edata.free_parameters = par_vals
 
         if self._debug:
             logger.debug("ExperimentManager.apply_parameters:")

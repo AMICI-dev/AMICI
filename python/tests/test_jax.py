@@ -132,7 +132,7 @@ def _test_model(amici_module, jax_module, ts, p, k):
     amici_model.set_parameters(np.asarray(p, dtype=np.float64))
     amici_model.set_fixed_parameters(np.asarray(k, dtype=np.float64))
     edata = amici.ExpData(sol_amici_ref, 1.0, 1.0)
-    edata.parameters = amici_model.get_parameters()
+    edata.free_parameters = amici_model.get_parameters()
     edata.fixed_parameters = amici_model.get_fixed_parameters()
     edata.pscale = amici_model.get_parameter_scale()
     amici_solver = amici_model.create_solver()
@@ -185,7 +185,7 @@ def check_fields_jax(
     ts_posteq = np.array([])
 
     par_dict = {
-        **dict(zip(parameter_ids, edata.parameters)),
+        **dict(zip(parameter_ids, edata.free_parameters)),
         **dict(zip(fixed_parameter_ids, edata.fixed_parameters)),
     }
 

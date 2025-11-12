@@ -202,7 +202,7 @@ def fill_in_parameters_for_condition(
     ]
 
     if parameters:
-        edata.parameters = np.asarray(parameters, dtype=float)
+        edata.free_parameters = np.asarray(parameters, dtype=float)
 
     if scales:
         edata.pscale = amici.parameter_scaling_from_int_vector(scales)

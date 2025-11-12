@@ -418,8 +418,8 @@ def _fill_conditions_dict(
     for i_par, par in enumerate(
         _get_names_or_ids(model, "parameter", by_id=by_id)
     ):
-        if len(edata.parameters):
-            datadict[par] = edata.parameters[i_par]
+        if len(edata.free_parameters):
+            datadict[par] = edata.free_parameters[i_par]
         else:
             datadict[par] = model.get_parameters()[i_par]
 
@@ -736,7 +736,7 @@ def construct_edata_from_data_frame(
     )
 
     # fill in parameters
-    edata.parameters = (
+    edata.free_parameters = (
         condition[_get_names_or_ids(model, "parameter", by_id=by_id)]
         .astype(float)
         .values

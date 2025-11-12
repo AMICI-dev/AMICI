@@ -75,11 +75,11 @@ def check_finite_difference(
     og_plist = model.get_parameter_list()
     if edata:
         og_eplist = edata.plist
-        og_eparameters = edata.parameters
+        og_eparameters = edata.free_parameters
 
         edata.plist = plist
         # we always set parameters via the model below
-        edata.parameters = []
+        edata.free_parameters = []
         pscale = (
             edata.pscale if len(edata.pscale) else model.get_parameter_scale()
         )
@@ -150,7 +150,7 @@ def check_finite_difference(
     model.set_parameter_list(og_plist)
     if edata:
         edata.plist = og_eplist
-        edata.parameters = og_eparameters
+        edata.free_parameters = og_eparameters
 
 
 def check_derivatives(
@@ -179,8 +179,8 @@ def check_derivatives(
         are zero
     :param skip_fields: list of fields to skip
     """
-    if edata and edata.parameters:
-        p = np.array(edata.parameters)
+    if edata and edata.free_parameters:
+        p = np.array(edata.free_parameters)
     else:
         p = np.array(model.get_parameters())
 

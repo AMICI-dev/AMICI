@@ -139,7 +139,7 @@ def run_simulation_to_cached_functions(
         amici_solver = amici_model.create_solver()
     if parameter_ids is None:
         parameter_ids = amici_model.get_parameter_ids()
-    if amici_edata is not None and amici_edata.parameters is not None:
+    if amici_edata is not None and amici_edata.free_parameters is not None:
         raise NotImplementedError(
             "Customization of parameter values inside AMICI ExpData."
         )

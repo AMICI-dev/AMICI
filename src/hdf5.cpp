@@ -206,7 +206,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
     }
 
     if (location_exists(file, hdf5Root + "/parameters")) {
-        edata->parameters
+        edata->free_parameters
             = get_double_1d_dataset(file, hdf5Root + "/parameters");
     }
 
@@ -321,9 +321,9 @@ void write_exp_data_to_hdf5(
         "reinitializeFixedParameterInitialStates", &int_attr, 1
     );
 
-    if (!edata.parameters.empty())
+    if (!edata.free_parameters.empty())
         create_and_write_double_1d_dataset(
-            file, hdf5Location + "/parameters", edata.parameters
+            file, hdf5Location + "/parameters", edata.free_parameters
         );
 
     if (!edata.x0.empty())
