@@ -190,7 +190,7 @@ Model::Model(
     model_dimensions.validate();
     Expects(
         model_dimensions.np
-        == gsl::narrow<int>(simulation_parameters_.parameters.size())
+        == gsl::narrow<int>(simulation_parameters_.free_parameters.size())
     );
     Expects(
         model_dimensions.nk
@@ -204,7 +204,7 @@ Model::Model(
     );
 
     unscale_parameters(
-        simulation_parameters_.parameters, simulation_parameters_.pscale,
+        simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
     );
     state_.fixed_parameters = simulation_parameters_.fixed_parameters;
@@ -500,7 +500,7 @@ void Model::set_parameter_scale(ParameterScaling pscale) {
     );
     scale_parameters(
         state_.unscaled_parameters, simulation_parameters_.pscale,
-        simulation_parameters_.parameters
+        simulation_parameters_.free_parameters
     );
     sx0data_.clear();
 }
@@ -508,7 +508,7 @@ void Model::set_parameter_scale(ParameterScaling pscale) {
 void Model::set_parameter_scale(
     std::vector<ParameterScaling> const& pscaleVec
 ) {
-    if (pscaleVec.size() != simulation_parameters_.parameters.size())
+    if (pscaleVec.size() != simulation_parameters_.free_parameters.size())
         throw AmiException(
             "Dimension mismatch. Size of parameter scaling does "
             "not match number of model parameters."
@@ -516,7 +516,7 @@ void Model::set_parameter_scale(
     simulation_parameters_.pscale = pscaleVec;
     scale_parameters(
         state_.unscaled_parameters, simulation_parameters_.pscale,
-        simulation_parameters_.parameters
+        simulation_parameters_.free_parameters
     );
     sx0data_.clear();
 }
@@ -526,7 +526,7 @@ std::vector<realtype> const& Model::get_unscaled_parameters() const {
 }
 
 std::vector<realtype> const& Model::get_parameters() const {
-    return simulation_parameters_.parameters;
+    return simulation_parameters_.free_parameters;
 }
 
 realtype Model::get_parameter_by_id(std::string const& par_id) const {
@@ -535,7 +535,7 @@ realtype Model::get_parameter_by_id(std::string const& par_id) const {
             "Could not access parameters by id as they are not set"
         );
     return get_value_by_id(
-        get_parameter_ids(), simulation_parameters_.parameters, par_id,
+        get_parameter_ids(), simulation_parameters_.free_parameters, par_id,
         "parameters", "id"
     );
 }
@@ -546,7 +546,7 @@ realtype Model::get_parameter_by_name(std::string const& par_name) const {
             "Could not access parameters by name as they are not set"
         );
     return get_value_by_id(
-        get_parameter_names(), simulation_parameters_.parameters, par_name,
+        get_parameter_names(), simulation_parameters_.free_parameters, par_name,
         "parameters", "name"
     );
 }
@@ -557,10 +557,10 @@ void Model::set_parameters(std::vector<realtype> const& p) {
             "Dimension mismatch. Size of parameters does not "
             "match number of model parameters."
         );
-    simulation_parameters_.parameters = p;
-    state_.unscaled_parameters.resize(simulation_parameters_.parameters.size());
+    simulation_parameters_.free_parameters = p;
+    state_.unscaled_parameters.resize(simulation_parameters_.free_parameters.size());
     unscale_parameters(
-        simulation_parameters_.parameters, simulation_parameters_.pscale,
+        simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
     );
 }
@@ -587,11 +587,11 @@ void Model::set_parameter_by_id(
         );
 
     set_value_by_id(
-        get_parameter_ids(), simulation_parameters_.parameters, value, par_id,
+        get_parameter_ids(), simulation_parameters_.free_parameters, value, par_id,
         "parameter", "id"
     );
     unscale_parameters(
-        simulation_parameters_.parameters, simulation_parameters_.pscale,
+        simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
     );
 }
@@ -604,11 +604,11 @@ int Model::set_parameters_by_id_regex(
             "Could not access parameters by id as they are not set"
         );
     int n_found = set_value_by_id_regex(
-        get_parameter_ids(), simulation_parameters_.parameters, value,
+        get_parameter_ids(), simulation_parameters_.free_parameters, value,
         par_id_regex, "parameter", "id"
     );
     unscale_parameters(
-        simulation_parameters_.parameters, simulation_parameters_.pscale,
+        simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
     );
     return n_found;
@@ -623,11 +623,11 @@ void Model::set_parameter_by_name(
         );
 
     set_value_by_id(
-        get_parameter_names(), simulation_parameters_.parameters, value,
+        get_parameter_names(), simulation_parameters_.free_parameters, value,
         par_name, "parameter", "name"
     );
     unscale_parameters(
-        simulation_parameters_.parameters, simulation_parameters_.pscale,
+        simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
     );
 }
@@ -654,12 +654,12 @@ int Model::set_parameters_by_name_regex(
         );
 
     int n_found = set_value_by_id_regex(
-        get_parameter_names(), simulation_parameters_.parameters, value,
+        get_parameter_names(), simulation_parameters_.free_parameters, value,
         par_name_regex, "parameter", "name"
     );
 
     unscale_parameters(
-        simulation_parameters_.parameters, simulation_parameters_.pscale,
+        simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
     );
     return n_found;

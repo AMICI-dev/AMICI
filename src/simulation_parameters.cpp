@@ -15,7 +15,7 @@ bool operator==(SimulationParameters const& a, SimulationParameters const& b) {
                a.fixed_parameters_presimulation,
                b.fixed_parameters_presimulation
            )
-           && is_equal(a.parameters, b.parameters) && (a.plist == b.plist)
+           && is_equal(a.free_parameters, b.free_parameters) && (a.plist == b.plist)
            && (a.pscale == b.pscale)
            && (a.reinitialize_fixed_parameter_initial_states
                == b.reinitialize_fixed_parameter_initial_states)

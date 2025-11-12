@@ -169,7 +169,7 @@ void serialize(
     ar & s.fixed_parameters;
     ar & s.fixed_parameters_pre_equilibration;
     ar & s.fixed_parameters_presimulation;
-    ar & s.parameters;
+    ar & s.free_parameters;
     ar & s.x0;
     ar & s.sx0;
     ar & s.pscale;

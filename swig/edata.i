@@ -68,8 +68,8 @@ def _edata_repr(self: "ExpData"):
         custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_sim)} reinitialized states (simulation)")
     if self.reinitialize_fixed_parameter_initial_states and self.reinitialization_state_idxs_presim:
         custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_presim)} reinitialized states (presimulation)")
-    if self.parameters:
-        custom_simulation_settings.append(f"parameters")
+    if self.free_parameters:
+        custom_simulation_settings.append(f"free parameters")
     if self.x0:
         custom_simulation_settings.append(f"initial states")
     if self.sx0:
