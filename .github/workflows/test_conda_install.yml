@@ -31,8 +31,14 @@ jobs:
       - name: Install AMICI
         shell: bash -l {0}
         run: |
-          echo $PATH
           pip3 install -v ./python/sdist
+      - name: Show environment
+        shell: bash -l {0}
+        run: |
+          python -c "import os; import pprint; pprint.pprint(dict(os.environ))"
+          which cmake
+          which ninja
+          ls -l /Users/runner/miniconda3/envs/amici/bin || true
       - name: Install test dependencies
         shell: bash -l {0}
         run: |
@@ -41,15 +47,10 @@ jobs:
       - name: Test import
         shell: bash -l {0}
         run: |
-          python -c "import os; import pprint; pprint.pprint(dict(os.environ))"
           python -c "from amici import _amici; print(_amici)"
           python -m amici
       - name: Run SBML import test
         shell: bash -l {0}
         run: |
-          echo $PATH
-          which cmake
-          which ninja
-          ls -l /Users/runner/miniconda3/envs/amici/bin || true
           cd python/tests
           pytest test_sbml_import.py::test_steadystate_simulation -sv
