@@ -10,8 +10,8 @@ on:
       - python/sdist/amici/exporters/sundials/de_export.py
       - python/sdist/amici/de_model_components.py
       - python/sdist/amici/de_model.py
-      - python/sdist/amici/sbml_import.py
-      - python/sdist/amici/import_utils.py
+      - python/sdist/amici/importers/sbml/**
+      - python/sdist/amici/importers/utils.py
       - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuite.py
       - tests/sbml/conftest.py

@@ -53,7 +53,7 @@ def antimony2amici(ant_model: str | Path, *args, **kwargs):
 
     For documentation see :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
     """
-    from .sbml_import import SbmlImporter
+    from amici.importers.sbml import SbmlImporter
 
     sbml_str = antimony2sbml(ant_model)
     sbml_importer = SbmlImporter(sbml_str, from_file=False)

@@ -36,9 +36,9 @@ from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
 
-from .. import MeasurementChannel, SensitivityOrder, get_model_dir
+from .. import SensitivityOrder, get_model_dir
 from ..de_model import DEModel
-from ..import_utils import amici_time_symbol
+from ..importers.utils import MeasurementChannel, amici_time_symbol
 from ..logging import get_logger
 from .sbml_import import _add_global_parameter
 from .simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
@@ -453,7 +453,7 @@ class PetabImporter:
         logger.info(f"Number of fixed parameters: {len(fixed_parameters)}")
         logger.debug(f"Fixed parameters are {fixed_parameters}")
 
-        from amici.pysb_import import pysb2amici, pysb2jax
+        from amici.importers.pysb import pysb2amici, pysb2jax
 
         # Create Python module from PySB model
         if self._jax:

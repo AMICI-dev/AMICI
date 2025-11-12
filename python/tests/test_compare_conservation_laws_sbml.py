@@ -45,7 +45,7 @@ def edata_fixture():
 
 @pytest.fixture(scope="session")
 def models():
-    from amici.antimony_import import antimony2sbml
+    from amici.importers.antimony import antimony2sbml
 
     ant_model = """model *model_constant_species()
   const compartment compartment_ = 1;

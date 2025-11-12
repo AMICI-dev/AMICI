@@ -5,8 +5,8 @@ This module provides all necessary functionality to specify an ordinary
 differential equation model and generate executable jax simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
-:py:func:`amici.pysb_import.pysb2jax`,
-:py:func:`amici.sbml_import.SbmlImporter.` and
+:py:func:`amici.importers.pysb.pysb2jax`,
+:py:func:`amici.importers.sbml.SbmlImporter.` and
 :py:func:`amici.petab_import.import_model`.
 """
 

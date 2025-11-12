@@ -12,7 +12,7 @@ from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
 from toposort import toposort
 
-from ...import_utils import symbol_with_assumptions
+from amici.importers.utils import symbol_with_assumptions
 
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):

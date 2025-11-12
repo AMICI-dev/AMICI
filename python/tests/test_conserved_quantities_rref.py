@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 import sympy as sp
-from amici.conserved_quantities_rref import nullspace_by_rref, pivots, rref
+from amici.importers.sbml.conserved_quantities_rref import (
+    nullspace_by_rref,
+    pivots,
+    rref,
+)
 from amici.testing import skip_on_valgrind
 
 

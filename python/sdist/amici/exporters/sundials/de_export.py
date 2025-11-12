@@ -5,8 +5,8 @@ This module provides all necessary functionality to specify a differential
 equation model and generate executable C++ simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
-:py:func:`amici.pysb_import.pysb2amici`,
-:py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
+:py:func:`amici.importers.pysb.pysb2amici`,
+:py:func:`amici.importers.sbml.SbmlImporter.sbml2amici` and
 :py:func:`amici.petab_import.import_model`.
 """
 
@@ -28,10 +28,10 @@ from ... import (
     __commit__,
     __version__,
     get_model_dir,
-    splines,
 )
 from ...de_model import DEModel
 from ...de_model_components import *
+from ...importers.sbml import splines
 from ...logging import get_logger, log_execution_time, set_log_level
 from ...sympy_utils import (
     _custom_pow_eval_derivative,

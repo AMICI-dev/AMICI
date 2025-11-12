@@ -178,11 +178,11 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from typing import Protocol, runtime_checkable
 
-    from .import_utils import MeasurementChannel  # noqa: F401
-    from .sbml_import import (  # noqa: F401
+    from .importers.sbml import (  # noqa: F401
         SbmlImporter,
         assignment_rules_to_observables,
     )
+    from .importers.utils import MeasurementChannel  # noqa: F401
 
     try:
         from .jax import JAXModel

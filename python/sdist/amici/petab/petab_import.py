@@ -79,8 +79,8 @@ def import_petab_problem(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :meth:`amici.sbml_import.SbmlImporter.sbml2amici` or
-        :func:`amici.pysb_import.pysb2amici`, depending on the model type.
+        :meth:`amici.importers.sbml.SbmlImporter.sbml2amici` or
+        :func:`amici.importers.pysb.pysb2amici`, depending on the model type.
 
     :return:
         The imported model (if ``jax=False``) or JAX problem (if ``jax=True``).

@@ -58,7 +58,7 @@ def sbml_example_presimulation_module():
 def pysb_example_presimulation_module():
     """PySB example_presimulation model module fixture"""
     pysb = pytest.importorskip("pysb")
-    from amici.pysb_import import pysb2amici
+    from amici.importers.pysb import pysb2amici
 
     constant_parameters = ["DRUG_0", "KIN_0"]
 

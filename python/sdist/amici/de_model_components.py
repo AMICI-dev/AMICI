@@ -7,7 +7,7 @@ from typing import SupportsFloat
 import sympy as sp
 
 from .constants import SymbolId
-from .import_utils import (
+from .importers.utils import (
     RESERVED_SYMBOLS,
     ObservableTransformation,
     amici_time_symbol,

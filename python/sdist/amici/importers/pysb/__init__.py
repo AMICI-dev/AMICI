@@ -23,9 +23,8 @@ import pysb.pattern
 import sympy as sp
 
 import amici
-
-from .de_model import DEModel
-from .de_model_components import (
+from amici.de_model import DEModel
+from amici.de_model_components import (
     Constant,
     DifferentialState,
     Event,
@@ -37,7 +36,7 @@ from .de_model_components import (
     Parameter,
     SigmaY,
 )
-from .import_utils import (
+from amici.importers.utils import (
     MeasurementChannel,
     _default_simplify,
     _get_str_symbol_identifiers,
@@ -46,7 +45,7 @@ from .import_utils import (
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
 )
-from .logging import get_logger, log_execution_time, set_log_level
+from amici.logging import get_logger, log_execution_time, set_log_level
 
 CL_Prototype = dict[str, dict[str, Any]]
 ConservationLaw = dict[str, dict | str | sp.Basic]
@@ -89,7 +88,7 @@ def pysb2jax(
 
     :param observation_model:
         The different measurement channels that make up the observation
-        model, see also :class:`amici.import_utils.MeasurementChannel`.
+        model, see also :class:`amici.importers.utils.MeasurementChannel`.
         The ID is expected to be the name of a :class:`pysb.Expression` or
         :class:`pysb.Observable` in the provided model that should be mapped to
         an observable.
@@ -188,7 +187,7 @@ def pysb2amici(
 
     :param observation_model:
         The different measurement channels that make up the observation
-        model, see also :class:`amici.import_utils.MeasurementChannel`.
+        model, see also :class:`amici.importers.utils.MeasurementChannel`.
         The ID is expected to be the name of a :class:`pysb.Expression` or
         :class:`pysb.Observable` in the provided model that should be mapped to
         an observable.
@@ -267,7 +266,7 @@ def pysb2amici(
         events=_events,
     )
 
-    from .exporters.sundials.de_export import (
+    from amici.exporters.sundials.de_export import (
         DEExporter,
     )
 
@@ -289,7 +288,7 @@ def pysb2amici(
     if compile:
         exporter.compile_model()
 
-        from . import import_model_module
+        from amici import import_model_module
 
         return import_model_module(
             module_name=model_name, module_path=output_dir
@@ -318,16 +317,16 @@ def ode_model_from_pysb_importer(
     instance.
 
     :param model:
-        see :func:`amici.pysb_import.pysb2amici`
+        see :func:`amici.importers.pysb.pysb2amici`
 
     :param constant_parameters:
-        see :func:`amici.pysb_import.pysb2amici`
+        see :func:`amici.importers.pysb.pysb2amici`
 
     :param observation_model:
-        see :func:`amici.pysb_import.pysb2amici`
+        see :func:`amici.importers.pysb.pysb2amici`
 
     :param compute_conservation_laws:
-        see :func:`amici.pysb_import.pysb2amici`
+        see :func:`amici.importers.pysb.pysb2amici`
 
     :param simplify:
             see :attr:`amici.DEModel._simplify`
@@ -590,8 +589,8 @@ def _process_pysb_expressions(
 
     :param observation_model:
         A map of observable names to
-        :class:`amici.import_utils.MeasurementChannel`.
-        see also :func:`amici.pysb_import.pysb2amici`
+        :class:`amici.importers.utils.MeasurementChannel`.
+        see also :func:`amici.importers.pysb.pysb2amici`
 
     :param ode_model:
         DEModel instance
@@ -769,7 +768,7 @@ def _process_pysb_observables(
 
     :param observation_model:
         Mapping from observable name to
-        :class:`amici.import_utils.MeasurementChannel`.
+        :class:`amici.importers.utils.MeasurementChannel`.
 
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra

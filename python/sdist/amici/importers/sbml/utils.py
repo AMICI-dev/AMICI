@@ -19,7 +19,7 @@ import libsbml
 from sympy.core.parameters import evaluate
 from sympy.printing.mathml import MathMLContentPrinter
 
-from .import_utils import (
+from amici.importers.utils import (
     SBMLException,
     amici_time_symbol,
     sbml_time_symbol,

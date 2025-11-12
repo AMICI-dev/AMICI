@@ -40,7 +40,7 @@ from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
 
 import amici
-from amici.sbml_import import get_species_initial
+from amici.importers.sbml import get_species_initial
 
 from .. import AmiciModel
 from . import PREEQ_INDICATOR_ID
