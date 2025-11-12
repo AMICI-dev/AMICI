@@ -2714,7 +2714,7 @@ class SbmlImporter:
                 if old_symbol in symbols:
                     # reconstitute the whole dict in order to keep the ordering
                     self.symbols[symbols_ids] = {
-                        new_symbol if k is old_symbol else k: v
+                        new_symbol if k == old_symbol else k: v
                         for k, v in symbols.items()
                     }
 
