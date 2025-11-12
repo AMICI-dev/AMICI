@@ -12,7 +12,7 @@ AMICI Python API
    amici.importers.sbml
    amici.importers.sbml.conserved_quantities_demartino
    amici.importers.sbml.conserved_quantities_rref
-   amici.importers.sbml.sbml_utils
+   amici.importers.sbml.utils
    amici.importers.sbml.splines
    amici.importers.pysb
    amici.importers.bngl
