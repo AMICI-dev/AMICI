@@ -573,7 +573,7 @@ class Expression(ModelQuantity):
 
 class FreeParameter(ModelQuantity):
     """
-    A model variable with respect to which sensitivities may be computed, abbreviated by ``p``.
+    A model variable with respect to which sensitivities can be computed, abbreviated by ``p``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
