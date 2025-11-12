@@ -19,7 +19,7 @@ from .importers.utils import (
 
 __all__ = [
     "ConservationLaw",
-    "FixedParameter",
+    "Constant",
     "Event",
     "Expression",
     "LogLikelihoodY",
@@ -29,7 +29,7 @@ __all__ = [
     "NoiseParameter",
     "Observable",
     "ObservableParameter",
-    "FreeParameter",
+    "Parameter",
     "SigmaY",
     "SigmaZ",
     "DifferentialState",
@@ -572,9 +572,10 @@ class Expression(ModelQuantity):
         super().__init__(symbol, name, value)
 
 
-class FreeParameter(ModelQuantity):
+class Parameter(ModelQuantity):
     """
-    A Parameter is a model variable with respect to which sensitivities can be computed, abbreviated by ``p``.
+    A Parameter is a free variable in the model with respect to which
+    sensitivities may be computed, abbreviated by ``p``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
@@ -594,9 +595,10 @@ class FreeParameter(ModelQuantity):
         super().__init__(symbol, name, value)
 
 
-class FixedParameter(ModelQuantity):
+class Constant(ModelQuantity):
     """
-    A FixedParameter is a model variable with respect to which sensitivities cannot be computed, abbreviated by ``k``.
+    A Constant is a fixed variable in the model with respect to which
+    sensitivities cannot be computed, abbreviated by ``k``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
@@ -604,10 +606,10 @@ class FixedParameter(ModelQuantity):
         Create a new Expression instance.
 
         :param symbol:
-            unique symbol of the FixedParameter
+            unique symbol of the Constant
 
         :param name:
-            individual name of the FixedParameter (does not need to be unique)
+            individual name of the Constant (does not need to be unique)
 
         :param value:
             numeric value
@@ -899,8 +901,8 @@ symbol_to_type = {
     SymbolId.SPECIES: DifferentialState,
     SymbolId.ALGEBRAIC_STATE: AlgebraicState,
     SymbolId.ALGEBRAIC_EQUATION: AlgebraicEquation,
-    SymbolId.PARAMETER: FreeParameter,
-    SymbolId.FIXED_PARAMETER: FixedParameter,
+    SymbolId.PARAMETER: Parameter,
+    SymbolId.FIXED_PARAMETER: Constant,
     SymbolId.OBSERVABLE: Observable,
     SymbolId.EVENT_OBSERVABLE: EventObservable,
     SymbolId.SIGMAY: SigmaY,
