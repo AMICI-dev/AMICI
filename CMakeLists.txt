@@ -6,6 +6,11 @@ cmake_minimum_required(VERSION 3.22)
 # src/CMakeLists.template.cmake
 cmake_policy(VERSION 3.22...3.31)
 
+# We aren't using C++20 modules, so disable scanning for them to avoid
+# clang-scan-deps-notfound errors.
+# See also https://discourse.cmake.org/t/cmake-3-28-cmake-cxx-compiler-clang-scan-deps-notfound-not-found/9244/3
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 project(amici)
 
 # misc options
@@ -27,6 +32,7 @@ message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
+message(STATUS "CMAKE_COMMAND: ${CMAKE_COMMAND}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
