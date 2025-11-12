@@ -700,9 +700,7 @@ class SbmlImporter:
         if hybridization:
             ode_model._process_hybridization(hybridization)
 
-        ode_model.parse_events()
         # substitute SBML-rateOf constructs
-        #  must be done after parse_events, but before generate_basic_variables
         self._process_sbml_rate_of(ode_model)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
@@ -3142,14 +3140,6 @@ class SbmlImporter:
                 component.set_val(do_subs(component.get_val(), rate_ofs))
 
             if isinstance(component, Event):
-                if rate_ofs:
-                    # currently, `root` cannot depend on `w`.
-                    #  this could be changed, but for now,
-                    #  we just flatten out w expressions
-                    component.set_val(
-                        smart_subs_dict(component.get_val(), w_toposorted)
-                    )
-
                 # for events, also substitute in state updates
                 for target, assignment in component._assignments.items():
                     if rate_ofs := assignment.find(rate_of_func):

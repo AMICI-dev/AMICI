@@ -442,9 +442,12 @@ void Model::reinit_events(
 void Model::reinit_explicit_roots() {
     explicit_roots_.clear();
 
-    // evaluate timepoints
+    // Evaluate event trigger timepoints.
+    // This assumes that `fw` was called before.
+    // That happens during model initialization or pre-equilibration.
     auto const exp_roots = fexplicit_roots(
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data()
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        derived_state_.w_.data()
     );
     Expects(exp_roots.size() == gsl::narrow<size_t>(ne - ne_solver));
 
@@ -1447,8 +1450,8 @@ void Model::get_event_time_sensitivity(
         fstau(
             &stau.at(ip), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), state_.total_cl.data(), sx.data(ip),
-            plist(ip), ie
+            state_.h.data(), derived_state_.w_.data(), dx.data(),
+            state_.total_cl.data(), sx.data(ip), plist(ip), ie
         );
     }
 }
@@ -1520,8 +1523,8 @@ void Model::add_adjoint_state_event_update(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, compute_x_pos(x),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), dx.data(), ie, xdot.data(), xdot_old.data(),
-        x_old.data(), xB.data(), state_.total_cl.data()
+        state_.h.data(), derived_state_.w_.data(), dx.data(), ie, xdot.data(),
+        xdot_old.data(), x_old.data(), xB.data(), state_.total_cl.data()
     );
 
     if (always_check_finite_) {
@@ -1546,7 +1549,8 @@ void Model::add_adjoint_quadrature_event_update(
         fdeltaqB(
             derived_state_.deltaqB_.data(), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), plist(ip), ie, xdot.data(),
+            state_.h.data(), derived_state_.w_.data(), dx.data(), plist(ip), ie,
+            xdot.data(),
             xdot_old.data(), x_old.data(), xB.data()
         );
 

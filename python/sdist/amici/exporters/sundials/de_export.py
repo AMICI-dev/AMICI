@@ -914,14 +914,14 @@ class DEExporter:
     def _get_explicit_roots_body(self) -> list[str]:
         events = self.model.events()
         lines = []
-        constant_syms = set(self.model.sym("k")) | set(self.model.sym("p"))
+        static_syms = self.model._static_symbols(["k", "p", "w"])
 
         for event_idx, event in enumerate(events):
             if not (
                 tigger_times := {
                     tt
                     for tt in event.get_trigger_times()
-                    if tt.free_symbols.issubset(constant_syms)
+                    if tt.free_symbols.issubset(static_syms)
                 }
             ):
                 continue

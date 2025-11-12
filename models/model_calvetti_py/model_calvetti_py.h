@@ -38,7 +38,7 @@ extern void dJydy_rowvals_model_calvetti_py(SUNMatrixWrapper &rowvals, int index
 
 
 
-extern void root_model_calvetti_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
+extern void root_model_calvetti_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
 
 
 
@@ -99,7 +99,7 @@ extern void x_solver_model_calvetti_py(realtype *x_solver, const realtype *x_rda
 extern std::vector<HermiteSpline> create_splines_model_calvetti_py(const realtype *p, const realtype *k);
 
 
-extern std::vector<std::vector<realtype>> explicit_roots_model_calvetti_py(const realtype *p, const realtype *k);
+extern std::vector<std::vector<realtype>> explicit_roots_model_calvetti_py(const realtype *p, const realtype *k, const realtype *w);
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -200,10 +200,10 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl, const realtype *x_old) override {}
 
 
-    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl) override {}
+    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl) override {}
 
 
-    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB) override {}
+    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB) override {}
 
 
     void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
@@ -323,8 +323,8 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
 
 
-    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
-        root_model_calvetti_py(root, t, x, p, k, h, tcl);
+    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
+        root_model_calvetti_py(root, t, x, p, k, h, w, tcl);
     }
 
 
@@ -339,7 +339,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) override {}
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
 
     void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {}
 
@@ -411,8 +411,8 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k) override {
-        return explicit_roots_model_calvetti_py(p, k);
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k, const realtype *w) override {
+        return explicit_roots_model_calvetti_py(p, k, w);
     }
 
 
@@ -557,7 +557,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "40190b46b1b398e321314ded4169fe910b37c484";
+        return "3fb84cd5df12639f17b179d681e8ba4b5be8a160";
     }
 
     bool has_quadratic_llh() const override {

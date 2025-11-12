@@ -95,10 +95,13 @@ void Model_DAE::froot(
 ) {
     std::ranges::fill(root, 0.0);
     auto const x_pos = compute_x_pos(x);
+    // TODO(performance) only dynamic expressions? consider storing a flag
+    //  for whether froot actually depends on `w`.
+    fw(t, N_VGetArrayPointerConst(x_pos));
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), N_VGetArrayPointerConst(dx)
+        state_.h.data(), derived_state_.w_.data(), N_VGetArrayPointerConst(dx)
     );
 }
 
@@ -222,7 +225,7 @@ void Model_DAE::fJSparse(
 void Model_DAE::froot(
     realtype* /*root*/, realtype const /*t*/, realtype const* /*x*/,
     double const* /*p*/, double const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/
+    realtype const* /*w*/, realtype const* /*dx*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is not "

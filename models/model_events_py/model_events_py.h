@@ -38,7 +38,7 @@ extern void dJzdz_model_events_py(realtype *dJzdz, const int iz, const realtype 
 extern void Jrz_model_events_py(realtype *Jrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
 extern void dJrzdsigma_model_events_py(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
 extern void dJrzdz_model_events_py(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
-extern void root_model_events_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
+extern void root_model_events_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
 
 
 
@@ -77,11 +77,11 @@ extern void xdot_model_events_py(realtype *xdot, const realtype t, const realtyp
 extern void y_model_events_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void z_model_events_py(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 extern void rz_model_events_py(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
-extern void stau_model_events_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie);
+extern void stau_model_events_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie);
 
 extern void deltasx_model_events_py(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl, const realtype *x_old);
-extern void deltaxB_model_events_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl);
-extern void deltaqB_model_events_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB);
+extern void deltaxB_model_events_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl);
+extern void deltaqB_model_events_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB);
 
 extern void x_solver_model_events_py(realtype *x_solver, const realtype *x_rdata);
 
@@ -99,7 +99,7 @@ extern void x_solver_model_events_py(realtype *x_solver, const realtype *x_rdata
 extern std::vector<HermiteSpline> create_splines_model_events_py(const realtype *p, const realtype *k);
 
 
-extern std::vector<std::vector<realtype>> explicit_roots_model_events_py(const realtype *p, const realtype *k);
+extern std::vector<std::vector<realtype>> explicit_roots_model_events_py(const realtype *p, const realtype *k, const realtype *w);
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -216,13 +216,13 @@ class Model_model_events_py : public amici::Model_ODE {
     }
 
 
-    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl) override {
-        deltaxB_model_events_py(deltaxB, t, x, p, k, h, dx, ie, xdot, xdot_old, x_old, xB, tcl);
+    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl) override {
+        deltaxB_model_events_py(deltaxB, t, x, p, k, h, w, dx, ie, xdot, xdot_old, x_old, xB, tcl);
     }
 
 
-    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB) override {
-        deltaqB_model_events_py(deltaqB, t, x, p, k, h, dx, ip, ie, xdot, xdot_old, x_old, xB);
+    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB) override {
+        deltaqB_model_events_py(deltaqB, t, x, p, k, h, w, dx, ip, ie, xdot, xdot_old, x_old, xB);
     }
 
 
@@ -337,8 +337,8 @@ class Model_model_events_py : public amici::Model_ODE {
     }
 
 
-    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
-        root_model_events_py(root, t, x, p, k, h, tcl);
+    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
+        root_model_events_py(root, t, x, p, k, h, w, tcl);
     }
 
 
@@ -357,8 +357,8 @@ class Model_model_events_py : public amici::Model_ODE {
     }
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
-        stau_model_events_py(stau, t, x, p, k, h, dx, tcl, sx, ip, ie);
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
+        stau_model_events_py(stau, t, x, p, k, h, w, dx, tcl, sx, ip, ie);
     }
 
     void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {}
@@ -433,8 +433,8 @@ class Model_model_events_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k) override {
-        return explicit_roots_model_events_py(p, k);
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k, const realtype *w) override {
+        return explicit_roots_model_events_py(p, k, w);
     }
 
 
@@ -579,7 +579,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "40190b46b1b398e321314ded4169fe910b37c484";
+        return "3fb84cd5df12639f17b179d681e8ba4b5be8a160";
     }
 
     bool has_quadratic_llh() const override {

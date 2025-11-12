@@ -1294,3 +1294,59 @@ def test_gh2926(tempdir):
     rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_SUCCESS
     assert rdata.by_id("x1").tolist() == [1.0, 1.0, 2.0, 2.0]
+
+
+@skip_on_valgrind
+def test_event_with_w_dependent_trigger(tempdir):
+    """Test sensitivities for events with trigger depending on
+    cascading expressions in `w`."""
+
+    model_name = "test_event_with_w_dependent_trigger"
+    model = antimony2amici(
+        r"""
+        one = 1
+        two = 2
+        a := two^2 - 2 # 2
+        b := a^2 - 1  # 3
+        c := b * 2 + x / 10  # 6 + time / 10
+        d := c + a + (a - 1) * time / 10 # -> d = 8 + time / 5
+
+        x = 0
+        x' = a / 2  # x' = 1
+        target = 0
+
+        E1: at x >= d:  # triggers at time = 8 + time / 5 <=> time = 10
+            target = x + one;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model.set_timepoints([0, 5, 9, 11])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_relative_tolerance(1e-14)
+
+    # generate synthetic measurements
+    rdata = amici.run_simulation(model, solver)
+    assert rdata.status == amici.AMICI_SUCCESS
+    # check that event triggered correctly
+    assert np.isclose(rdata.by_id("target")[-1], 11.0)
+    edata = amici.ExpData(rdata, 1, 0)
+
+    # check sensitivities against finite differences
+
+    for sens_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sens_method)
+        check_derivatives(
+            model,
+            solver,
+            edata=edata,
+            atol=1e-6,
+            rtol=1e-6,
+            epsilon=1e-8,
+        )

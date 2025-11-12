@@ -10,7 +10,7 @@
 namespace amici {
 namespace model_model_neuron_py {
 
-void root_model_neuron_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl){
+void root_model_neuron_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl){
     root[0] = v - 30;
 }
 
