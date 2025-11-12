@@ -421,17 +421,21 @@ def smart_subs_dict(
     :return:
         Substituted symbolic expression
     """
-    s = [
-        (eid, expr[field] if field is not None else expr)
-        for eid, expr in subs.items()
-    ]
+    if field is None:
+        s = [(eid, expr) for eid, expr in subs.items()]
+    else:
+        s = [(eid, expr[field]) for eid, expr in subs.items()]
+
     if reverse:
         s.reverse()
-    for substitution in s:
-        # note that substitution may change free symbols, so we have to do
-        # this recursively
-        if sym.has(substitution[0]):
-            sym = sym.subs(*substitution)
+
+    with sp.evaluate(False):
+        for old, new in s:
+            # note that substitution may change free symbols, so we have to do
+            # this recursively
+            if sym.has(old):
+                sym = sym.xreplace({old: new})
+
     return sym
 
 
