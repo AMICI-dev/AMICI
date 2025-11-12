@@ -19,7 +19,7 @@ from .importers.utils import (
 
 __all__ = [
     "ConservationLaw",
-    "Constant",
+    "FixedParameter",
     "Event",
     "Expression",
     "LogLikelihoodY",
@@ -29,7 +29,7 @@ __all__ = [
     "NoiseParameter",
     "Observable",
     "ObservableParameter",
-    "Parameter",
+    "FreeParameter",
     "SigmaY",
     "SigmaZ",
     "DifferentialState",
@@ -550,10 +550,9 @@ class SigmaZ(Sigma):
 
 class Expression(ModelQuantity):
     """
-    An Expression is a recurring elements in symbolic formulas. Specifying
-    this may yield more compact expression which may lead to substantially
-    shorter model compilation times, but may also reduce model simulation time.
-    Abbreviated by ``w``.
+    A derived model variable that summarizes recurring elements in symbolic formulas. Specifying this may yield more
+    compact expression which may lead to substantially shorter model compilation times, but may also reduce model
+    simulation time. Abbreviated by ``w``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: sp.Expr):
@@ -572,10 +571,9 @@ class Expression(ModelQuantity):
         super().__init__(symbol, name, value)
 
 
-class Parameter(ModelQuantity):
+class FreeParameter(ModelQuantity):
     """
-    A Parameter is a free variable in the model with respect to which
-    sensitivities may be computed, abbreviated by ``p``.
+    A model variable with respect to which sensitivities may be computed, abbreviated by ``p``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
@@ -595,10 +593,9 @@ class Parameter(ModelQuantity):
         super().__init__(symbol, name, value)
 
 
-class Constant(ModelQuantity):
+class FixedParameter(ModelQuantity):
     """
-    A Constant is a fixed variable in the model with respect to which
-    sensitivities cannot be computed, abbreviated by ``k``.
+    A model variable with respect to which sensitivities cannot be computed, abbreviated by ``k``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
@@ -619,8 +616,8 @@ class Constant(ModelQuantity):
 
 class NoiseParameter(ModelQuantity):
     """
-    A NoiseParameter is an input variable for the computation of ``sigma`` that can be specified in a data-point
-    specific manner, abbreviated by ``np``. Only used for jax models.
+    An input variable for the computation of ``sigma`` that can be specified in a data-point specific manner,
+    abbreviated by ``np``. Only used for jax models.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str):
@@ -639,8 +636,8 @@ class NoiseParameter(ModelQuantity):
 
 class ObservableParameter(ModelQuantity):
     """
-    A NoiseParameter is an input variable for the computation of ``y`` that can be specified in a data-point specific
-    manner, abbreviated by ``op``. Only used for jax models.
+    An input variable for the computation of ``y`` that can be specified in a data-point specific manner, abbreviated
+    by ``op``. Only used for jax models.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str):
@@ -659,10 +656,9 @@ class ObservableParameter(ModelQuantity):
 
 class LogLikelihood(ModelQuantity):
     """
-    A LogLikelihood defines the distance between measurements and
-    experiments for a particular observable. The final LogLikelihood value
-    in the simulation will be the sum of all specified LogLikelihood
-    instances evaluated at all timepoints, abbreviated by ``Jy``.
+    Defines the distance between measurements and experiments for a particular observable. The final LogLikelihood value
+    in the simulation will be the sum of all specified LogLikelihood instances evaluated at all timepoints, abbreviated
+    by ``Jy``.
     """
 
     def __init__(self, symbol: sp.Symbol, name: str, value: sp.Expr):
@@ -706,11 +702,9 @@ class LogLikelihoodRZ(LogLikelihood):
 
 class Event(ModelQuantity):
     """
-    An Event defines either a SBML event or a root of the argument of a
-    Heaviside function. The Heaviside functions will be tracked via the
-    vector ``h`` during simulation and are needed to inform the solver
-    about a discontinuity in either the right-hand side or the states
-    themselves, causing a reinitialization of the solver.
+    Defines either a SBML event or a root of the argument of a Heaviside function. The Heaviside functions will be
+    tracked via the vector ``h`` during simulation and are needed to inform the solver about a discontinuity in either
+    the right-hand side or the states themselves, causing a reinitialization of the solver.
     """
 
     def __init__(
@@ -901,8 +895,8 @@ symbol_to_type = {
     SymbolId.SPECIES: DifferentialState,
     SymbolId.ALGEBRAIC_STATE: AlgebraicState,
     SymbolId.ALGEBRAIC_EQUATION: AlgebraicEquation,
-    SymbolId.PARAMETER: Parameter,
-    SymbolId.FIXED_PARAMETER: Constant,
+    SymbolId.FREE_PARAMETER: FreeParameter,
+    SymbolId.FIXED_PARAMETER: FixedParameter,
     SymbolId.OBSERVABLE: Observable,
     SymbolId.EVENT_OBSERVABLE: EventObservable,
     SymbolId.SIGMAY: SigmaY,

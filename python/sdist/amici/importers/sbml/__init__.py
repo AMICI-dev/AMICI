@@ -1102,12 +1102,12 @@ class SbmlImporter:
                 name = str(variable)
                 del self.compartments[variable]
 
-            elif variable in self.symbols[SymbolId.PARAMETER]:
+            elif variable in self.symbols[SymbolId.FREE_PARAMETER]:
                 init = self._sympify(
-                    self.symbols[SymbolId.PARAMETER][variable]["value"],
+                    self.symbols[SymbolId.FREE_PARAMETER][variable]["value"],
                 )
-                name = self.symbols[SymbolId.PARAMETER][variable]["name"]
-                del self.symbols[SymbolId.PARAMETER][variable]
+                name = self.symbols[SymbolId.FREE_PARAMETER][variable]["name"]
+                del self.symbols[SymbolId.FREE_PARAMETER][variable]
 
             # parameter with initial assignment, cannot use
             # self.initial_assignments as it is not filled at this
@@ -1254,7 +1254,7 @@ class SbmlImporter:
         ]
 
         loop_settings = {
-            SymbolId.PARAMETER: {"var": parameters, "name": "parameter"},
+            SymbolId.FREE_PARAMETER: {"var": parameters, "name": "parameter"},
             SymbolId.FIXED_PARAMETER: {
                 "var": fixed_parameters,
                 "name": "fixed_parameter",
@@ -1276,9 +1276,9 @@ class SbmlImporter:
 
         # Set of symbols in initial assignments that still allows handling them
         #  via amici expressions
-        syms_allowed_in_expr_ia = set(self.symbols[SymbolId.PARAMETER]) | set(
-            self.symbols[SymbolId.FIXED_PARAMETER]
-        )
+        syms_allowed_in_expr_ia = set(
+            self.symbols[SymbolId.FREE_PARAMETER]
+        ) | set(self.symbols[SymbolId.FIXED_PARAMETER])
 
         for par in self.sbml.getListOfParameters():
             if (
@@ -1416,7 +1416,7 @@ class SbmlImporter:
         # substitute symbols that must not occur in the definition of x0
         # allowed symbols: amici model parameters and time
         allowed_syms = (
-            set(self.symbols[SymbolId.PARAMETER])
+            set(self.symbols[SymbolId.FREE_PARAMETER])
             | set(self.symbols[SymbolId.FIXED_PARAMETER])
             | {sbml_time_symbol}
         )
@@ -1540,7 +1540,10 @@ class SbmlImporter:
                 symbol_id, source_symbols = next(
                     (
                         (symbol_id, self.symbols[symbol_id])
-                        for symbol_id in (SymbolId.PARAMETER, SymbolId.SPECIES)
+                        for symbol_id in (
+                            SymbolId.FREE_PARAMETER,
+                            SymbolId.SPECIES,
+                        )
                         if var in self.symbols[symbol_id]
                     ),
                 )
@@ -1661,7 +1664,7 @@ class SbmlImporter:
                 )
             parameter_def = None
             for symbol_id in {
-                SymbolId.PARAMETER,
+                SymbolId.FREE_PARAMETER,
                 SymbolId.FIXED_PARAMETER,
                 SymbolId.EXPRESSION,
             }:
@@ -2170,7 +2173,7 @@ class SbmlImporter:
                 self.symbols[SymbolId.SPECIES],
                 self.compartments,
                 self.symbols[SymbolId.EXPRESSION],
-                self.symbols[SymbolId.PARAMETER],
+                self.symbols[SymbolId.FREE_PARAMETER],
                 self.symbols[SymbolId.FIXED_PARAMETER],
             ):
                 continue

@@ -19,11 +19,12 @@ from .de_model_components import (
     AlgebraicEquation,
     AlgebraicState,
     ConservationLaw,
-    Constant,
     DifferentialState,
     Event,
     EventObservable,
     Expression,
+    FixedParameter,
+    FreeParameter,
     LogLikelihood,
     LogLikelihoodRZ,
     LogLikelihoodY,
@@ -32,7 +33,6 @@ from .de_model_components import (
     NoiseParameter,
     Observable,
     ObservableParameter,
-    Parameter,
     Sigma,
     SigmaY,
     SigmaZ,
@@ -228,8 +228,8 @@ class DEModel:
         self._event_observables: list[EventObservable] = []
         self._sigma_ys: list[SigmaY] = []
         self._sigma_zs: list[SigmaZ] = []
-        self._parameters: list[Parameter] = []
-        self._constants: list[Constant] = []
+        self._parameters: list[FreeParameter] = []
+        self._constants: list[FixedParameter] = []
         self._log_likelihood_ys: list[LogLikelihoodY] = []
         self._log_likelihood_zs: list[LogLikelihoodZ] = []
         self._log_likelihood_rzs: list[LogLikelihoodRZ] = []
@@ -354,11 +354,11 @@ class DEModel:
         """Get all observables."""
         return self._observables
 
-    def parameters(self) -> list[Parameter]:
+    def parameters(self) -> list[FreeParameter]:
         """Get all parameters."""
         return self._parameters
 
-    def constants(self) -> list[Constant]:
+    def constants(self) -> list[FixedParameter]:
         """Get all constants."""
         return self._constants
 
@@ -589,8 +589,8 @@ class DEModel:
         if type(component) not in {
             Observable,
             Expression,
-            Parameter,
-            Constant,
+            FreeParameter,
+            FixedParameter,
             DifferentialState,
             AlgebraicState,
             AlgebraicEquation,
@@ -2630,7 +2630,7 @@ class DEModel:
             for out_var, parts in outputs.items():
                 comp = parts["comp"]
                 # remove output from model components
-                if isinstance(comp, Parameter):
+                if isinstance(comp, FreeParameter):
                     self._parameters.remove(comp)
                 elif isinstance(comp, Expression):
                     self._expressions.remove(comp)

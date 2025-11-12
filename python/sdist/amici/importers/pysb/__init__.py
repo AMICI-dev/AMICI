@@ -25,15 +25,15 @@ import sympy as sp
 import amici
 from amici.de_model import DEModel
 from amici.de_model_components import (
-    Constant,
     DifferentialState,
     Event,
     Expression,
+    FixedParameter,
+    FreeParameter,
     LogLikelihoodY,
     NoiseParameter,
     Observable,
     ObservableParameter,
-    Parameter,
     SigmaY,
 )
 from amici.importers.utils import (
@@ -559,14 +559,14 @@ def _process_pysb_parameters(
     for par in pysb_model.parameters:
         args = [par, f"{par.name}"]
         if par.name in constant_parameters:
-            comp = Constant
+            comp = FixedParameter
             args.append(par.value)
         elif jax and re.match(r"noiseParameter\d+", par.name):
             comp = NoiseParameter
         elif jax and re.match(r"observableParameter\d+", par.name):
             comp = ObservableParameter
         else:
-            comp = Parameter
+            comp = FreeParameter
             args.append(par.value)
 
         ode_model.add_component(comp(*args))

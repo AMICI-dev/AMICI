@@ -1355,7 +1355,7 @@ class AbstractSpline(ABC):
     def parameters(self, importer: sbml.SbmlImporter) -> set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
         return self._parameters().intersection(
-            set(importer.symbols[SymbolId.PARAMETER].keys())
+            set(importer.symbols[SymbolId.FREE_PARAMETER].keys())
         )
 
     def _parameters(self) -> set[sp.Symbol]:
