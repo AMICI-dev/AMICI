@@ -101,17 +101,46 @@ def _solver_repr(self: "Solver"):
         f"  state_ordering: {self.get_state_ordering()}",
         ">"
     ])
+
+def _solver_reduce(self: "Solver"):
+    """
+    For now, we just store solver settings in a temporary HDF5 file.
+    This is sufficient for multiprocessing use cases, but will not survive
+    reboots and will not work in distributed (MPI) settings.
+    This requires that amici was compiled with HDF5 support.
+    """
+    from amici.swig_wrappers import restore_solver
+    from tempfile import NamedTemporaryFile
+    from amici import write_solver_settings_to_hdf5
+    import os
+    with NamedTemporaryFile(suffix=".h5", delete=False) as tmpfile:
+        tmpfilename = tmpfile.name
+        write_solver_settings_to_hdf5(self, tmpfilename)
+
+    return (
+        restore_solver,
+        (self.__class__, self.get_class_name(), tmpfilename,),
+    )
+
 %}
 %extend amici::CVodeSolver {
 %pythoncode %{
 def __repr__(self):
     return _solver_repr(self)
+
+def __reduce__(self):
+    return _solver_reduce(self)
+
 %}
 };
 %extend amici::IDASolver {
 %pythoncode %{
 def __repr__(self):
     return _solver_repr(self)
+
+def __reduce__(self):
+    return _solver_reduce(self)
+
 %}
 };
 
@@ -122,6 +151,9 @@ def __repr__(self):
 
 def __deepcopy__(self, memo):
     return self.clone()
+
+def __reduce__(self):
+    return _solver_reduce(self)
 %}
 };
 
@@ -129,6 +161,10 @@ def __deepcopy__(self, memo):
 %pythoncode %{
 def __deepcopy__(self, memo):
     return self.clone()
+
+def __reduce__(self):
+    return _solver_reduce(self)
+
 %}
 };
 

@@ -22,7 +22,6 @@ from petab.v1.models.pysb_model import PySBModel
 
 from amici import MeasurementChannel
 
-from ..import_utils import strip_pysb
 from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
@@ -78,7 +77,9 @@ def _add_observation_model(
 
             # update forum
             if jax and changed_formula:
-                obs_df.at[ir, col] = str(strip_pysb(sym))
+                obs_df.at[ir, col] = (
+                    sym.name if isinstance(sym, sp.Symbol) else str(sym)
+                )
 
     # add observables and sigmas to pysb model
     for observable_id, observable_formula, noise_formula in zip(
@@ -221,7 +222,7 @@ def import_model_pysb(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :func:`amici.pysb_import.pysb2amici`.
+        :func:`amici.importers.pysb.pysb2amici`.
     """
     set_log_level(logger, verbose)
 
@@ -290,7 +291,7 @@ def import_model_pysb(
         ]
 
     if jax:
-        from amici.pysb_import import pysb2jax
+        from amici.importers.pysb import pysb2jax
 
         pysb2jax(
             model=pysb_model,
@@ -303,7 +304,7 @@ def import_model_pysb(
         )
         return
     else:
-        from amici.pysb_import import pysb2amici
+        from amici.importers.pysb import pysb2amici
 
         pysb2amici(
             model=pysb_model,

@@ -4,7 +4,7 @@ import random
 import sys
 from collections.abc import MutableSequence, Sequence
 
-from .logging import get_logger
+from amici.logging import get_logger
 
 logger = get_logger(__name__, logging.ERROR)
 

@@ -12,9 +12,9 @@ import jax.random as jr
 import numpy as np
 import optimistix
 from amici import MeasurementChannel as MC
+from amici.importers.pysb import pysb2amici, pysb2jax
 from amici.jax import JAXProblem, ReturnValue, run_simulations
 from amici.petab.petab_import import import_petab_problem
-from amici.pysb_import import pysb2amici, pysb2jax
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from beartype import beartype
 from numpy.testing import assert_allclose
@@ -206,7 +206,9 @@ def check_fields_jax(
         "steady_state_event": diffrax.steady_state_event(),
         "max_steps": 2**8,  # max_steps
     }
-    fun = beartype(jax_model.simulate_condition)
+    # Use beartype-wrapped unjitted version for type checking
+    # (beartype cannot introspect jitted functions, so we wrap the unjitted version)
+    fun = beartype(jax_model.simulate_condition_unjitted)
 
     for output in ["llh", "x0", "x", "y", "res"]:
         okwargs = kwargs | {
@@ -276,20 +278,18 @@ def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
     with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem, jax=True, model_output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         r = run_simulations(jax_problem)
         assert not np.isinf(r[0].item())
     petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
         petab_problem.measurement_df[SIMULATION_CONDITION_ID]
     )
     with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem, jax=True, model_output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         r = run_simulations(jax_problem)
         assert np.isinf(r[0].item())
 
@@ -300,10 +300,9 @@ def test_serialisation(lotka_volterra):  # noqa: F811
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
     ) as model_dir:
-        jax_model = import_petab_problem(
+        jax_problem = import_petab_problem(
             petab_problem, jax=True, model_output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         # change parameters to random values to test serialisation
         jax_problem.update_parameters(
             jax_problem.parameters
@@ -323,10 +322,10 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""
 
-    from amici.antimony_import import antimony2sbml
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
     from amici.jax._simulation import solve
     from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-    from amici.sbml_import import SbmlImporter
 
     ant_model = """
     model time_disc
@@ -376,10 +375,10 @@ def test_time_dependent_discontinuity(tmp_path):
 def test_time_dependent_discontinuity_equilibration(tmp_path):
     """Time dependent discontinuities are handled during equilibration."""
 
-    from amici.antimony_import import antimony2sbml
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
     from amici.jax._simulation import eq
     from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-    from amici.sbml_import import SbmlImporter
 
     ant_model = """
     model time_disc_eq

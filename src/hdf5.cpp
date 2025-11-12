@@ -25,7 +25,7 @@ namespace amici::hdf5 {
  * @param n
  * @param model
  */
-void checkMeasurementDimensionsCompatible(
+void check_measurement_dimensions_compatible(
     hsize_t const m, hsize_t const n, Model const& model
 ) {
     bool compatible = true;
@@ -54,7 +54,7 @@ void checkMeasurementDimensionsCompatible(
  * @param n
  * @param model
  */
-void checkEventDimensionsCompatible(
+void check_event_dimensions_compatible(
     hsize_t const m, hsize_t const n, Model const& model
 ) {
     bool compatible = true;
@@ -126,7 +126,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
     if (model.ny * model.nt() > 0) {
         if (location_exists(file, hdf5Root + "/Y")) {
             auto const my = get_double_2d_dataset(file, hdf5Root + "/Y", m, n);
-            checkMeasurementDimensionsCompatible(m, n, model);
+            check_measurement_dimensions_compatible(m, n, model);
             edata->set_observed_data(my);
         } else {
             throw AmiException(
@@ -137,7 +137,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
         if (location_exists(file, hdf5Root + "/Sigma_Y")) {
             auto const sigmay
                 = get_double_2d_dataset(file, hdf5Root + "/Sigma_Y", m, n);
-            checkMeasurementDimensionsCompatible(m, n, model);
+            check_measurement_dimensions_compatible(m, n, model);
             edata->set_observed_data_std_dev(sigmay);
         } else {
             throw AmiException(
@@ -150,7 +150,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
     if (model.nz * model.n_max_event() > 0) {
         if (location_exists(file, hdf5Root + "/Z")) {
             auto const mz = get_double_2d_dataset(file, hdf5Root + "/Z", m, n);
-            checkEventDimensionsCompatible(m, n, model);
+            check_event_dimensions_compatible(m, n, model);
             edata->set_observed_events(mz);
         } else {
             throw AmiException(
@@ -161,7 +161,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
         if (location_exists(file, hdf5Root + "/Sigma_Z")) {
             auto sigmaz
                 = get_double_2d_dataset(file, hdf5Root + "/Sigma_Z", m, n);
-            checkEventDimensionsCompatible(m, n, model);
+            check_event_dimensions_compatible(m, n, model);
             edata->set_observed_events_std_dev(sigmaz);
         } else {
             throw AmiException(

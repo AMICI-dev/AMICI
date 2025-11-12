@@ -2,7 +2,6 @@ import logging
 import math
 import os
 import re
-import tempfile
 from _collections import OrderedDict
 from itertools import chain
 from pathlib import Path
@@ -235,6 +234,7 @@ def import_model_sbml(
     non_estimated_parameters_as_constants=True,
     output_parameter_defaults: dict[str, float] | None = None,
     discard_sbml_annotations: bool = False,
+    hybridization: dict = None,
     jax: bool = False,
     **kwargs,
 ) -> amici.SbmlImporter:
@@ -282,10 +282,10 @@ def import_model_sbml(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+        :meth:`amici.importers.sbml.SbmlImporter.sbml2amici`.
 
     :return:
-        The created :class:`amici.sbml_import.SbmlImporter` instance.
+        The created :class:`amici.importers.sbml.SbmlImporter` instance.
     """
     from petab.v1.models.sbml_model import SbmlModel
 
@@ -392,10 +392,15 @@ def import_model_sbml(
             output_dir=model_output_dir,
             observation_model=observation_model,
             verbose=verbose,
+            hybridization=hybridization,
             **kwargs,
         )
         return sbml_importer
     else:
+        if hybridization:
+            raise NotImplementedError(
+                "Hybridization is currently only supported for JAX models."
+            )
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=model_output_dir,
@@ -598,29 +603,3 @@ def _get_fixed_parameters_sbml(
                 continue
 
     return list(sorted(fixed_parameters))
-
-
-def _create_model_output_dir_name(
-    sbml_model: "libsbml.Model",
-    model_name: str | None = None,
-    jax: bool = False,
-) -> Path:
-    """
-    Find a folder for storing the compiled amici model.
-    If possible, use the sbml model id, otherwise create a random folder.
-    The folder will be located in the `amici_models` subfolder of the current
-    folder.
-    """
-    BASE_DIR = Path("amici_models").absolute()
-    BASE_DIR.mkdir(exist_ok=True)
-    # try model_name
-    suffix = "_jax" if jax else ""
-    if model_name:
-        return BASE_DIR / (model_name + suffix)
-
-    # try sbml model id
-    if sbml_model_id := sbml_model.getId():
-        return BASE_DIR / (sbml_model_id + suffix)
-
-    # create random folder name
-    return Path(tempfile.mkdtemp(dir=BASE_DIR))

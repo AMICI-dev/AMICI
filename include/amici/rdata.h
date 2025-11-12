@@ -546,7 +546,7 @@ class ReturnData : public ModelDimensions {
      * @param quadratic_llh whether model defines a quadratic nllh and computing
      * res, sres and FIM makes sense.
      */
-    void initializeObservablesLikelihoodReporting(bool quadratic_llh);
+    void initialize_observables_likelihood_reporting(bool quadratic_llh);
 
     /**
      * @brief initializes storage for residual reporting mode

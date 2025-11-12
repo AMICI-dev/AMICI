@@ -9,8 +9,8 @@ import numpy as np
 import pytest
 from amici import MeasurementChannel as MC
 from amici import SbmlImporter
-from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
+from amici.importers.antimony import antimony2amici
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
 from numpy.testing import (

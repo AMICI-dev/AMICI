@@ -76,6 +76,12 @@ class Solver {
     SUNContext get_sun_context() const;
 
     /**
+     * @brief Get the name of this class.
+     * @return Class name.
+     */
+    virtual std::string get_class_name() const = 0;
+
+    /**
      * @brief runs a forward simulation until the specified timepoint
      *
      * @param tout next timepoint

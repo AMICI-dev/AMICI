@@ -26,14 +26,14 @@ from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
 from sympy.logic.boolalg import Boolean, BooleanFalse, BooleanTrue
 from sympy.matrices.dense import MutableDenseMatrix
 
-from . import has_clibs
-from .constants import SymbolId
-from .de_export import (
-    DEExporter,
-)
-from .de_model import DEModel
-from .de_model_components import Expression, symbol_to_type
-from .import_utils import (
+import amici
+from amici import get_model_dir, has_clibs
+from amici.constants import SymbolId
+from amici.de_model import DEModel
+from amici.de_model_components import Expression, symbol_to_type
+from amici.importers.sbml.splines import AbstractSpline
+from amici.importers.sbml.utils import SBMLException
+from amici.importers.utils import (
     RESERVED_SYMBOLS,
     MeasurementChannel,
     _check_unsupported_functions,
@@ -56,10 +56,8 @@ from .import_utils import (
     symbol_with_assumptions,
     toposort_symbols,
 )
-from .logging import get_logger, log_execution_time, set_log_level
-from .sbml_utils import SBMLException
-from .splines import AbstractSpline
-from .sympy_utils import smart_is_zero_matrix, smart_multiply
+from amici.logging import get_logger, log_execution_time, set_log_level
+from amici.sympy_utils import smart_is_zero_matrix, smart_multiply
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
@@ -290,7 +288,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
-    ) -> None:
+    ) -> amici.Model | None:
         """
         Generate and compile AMICI C++ files for the model provided to the
         constructor.
@@ -315,13 +313,14 @@ class SbmlImporter:
 
         :param output_dir:
             Directory where the generated model package will be stored.
+            Defaults to :func:`amici.get_model_dir`.
 
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
 
         :param observation_model:
             The different measurement channels that make up the observation
-            model, see :class:`amici.import_utils.MeasurementChannel`.
+            model, see :class:`amici.importers.utils.MeasurementChannel`.
             If ``None``, default observables will be added (for all
             state variables of the model and all species, compartments,
             and assignment rule targets) and normally distributed
@@ -379,6 +378,10 @@ class SbmlImporter:
             Their values cannot be changed anymore after model import.
             Currently, only parameters that are not targets of rules or
             initial assignments are supported.
+
+        :return:
+            If `compile` is `True` and compilation was successful, an instance
+            of the generated model class, otherwise `None`.
         """
         set_log_level(logger, verbose)
 
@@ -390,6 +393,12 @@ class SbmlImporter:
             simplify=simplify,
             cache_simplify=cache_simplify,
             hardcode_symbols=hardcode_symbols,
+        )
+
+        output_dir = output_dir or get_model_dir(model_name)
+
+        from amici.exporters.sundials.de_export import (
+            DEExporter,
         )
 
         exporter = DEExporter(
@@ -413,6 +422,14 @@ class SbmlImporter:
                 )
             exporter.compile_model()
 
+            from amici import import_model_module
+
+            return import_model_module(
+                module_name=model_name, module_path=output_dir
+            ).get_model()
+
+        return None
+
     def sbml2jax(
         self,
         model_name: str,
@@ -422,6 +439,7 @@ class SbmlImporter:
         compute_conservation_laws: bool = True,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
+        hybridization: dict = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -445,7 +463,7 @@ class SbmlImporter:
 
         :param observation_model:
             The different measurement channels that make up the observation
-            model, see :class:`amici.import_utils.MeasurementChannel`.
+            model, see :class:`amici.importers.utils.MeasurementChannel`.
             Only time-resolved observables are supported here.
             If ``None``, default observables will be added (for all
             state variables of the model and all species, compartments,
@@ -478,7 +496,11 @@ class SbmlImporter:
             see :attr:`amici.DEModel._simplify`
 
         :param cache_simplify:
-                see :meth:`amici.DEModel.__init__`
+            see :meth:`amici.DEModel.__init__`
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
 
@@ -488,6 +510,7 @@ class SbmlImporter:
             compute_conservation_laws=compute_conservation_laws,
             simplify=simplify,
             cache_simplify=cache_simplify,
+            hybridization=hybridization,
         )
 
         from amici.jax.ode_export import ODEExporter
@@ -497,6 +520,7 @@ class SbmlImporter:
             model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
+            hybridization=hybridization,
         )
         exporter.generate_model_code()
 
@@ -509,6 +533,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         hardcode_symbols: Sequence[str] = None,
+        hybridization: dict = None,
     ) -> DEModel:
         """Generate a DEModel from this SBML model.
 
@@ -610,7 +635,7 @@ class SbmlImporter:
         # create all basic components of the DE model and add them.
         for symbol_name in self.symbols:
             # transform dict of lists into a list of dicts
-            args = ["name", "identifier"]
+            args = ["name", "symbol"]
 
             if symbol_name == SymbolId.SPECIES:
                 args += ["dt", "init"]
@@ -633,7 +658,7 @@ class SbmlImporter:
 
             comp_kwargs = [
                 {
-                    "identifier": var_id,
+                    "symbol": var_id,
                     **{k: v for k, v in var.items() if k in args},
                 }
                 for var_id, var in self.symbols[symbol_name].items()
@@ -650,11 +675,14 @@ class SbmlImporter:
             # replace splines inside fluxes
             flux = flux.subs(spline_subs)
             ode_model.add_component(
-                Expression(identifier=flux_id, name=str(flux_id), value=flux)
+                Expression(symbol=flux_id, name=str(flux_id), value=flux)
             )
 
         if compute_conservation_laws:
             self._process_conservation_laws(ode_model)
+
+        if hybridization:
+            ode_model._process_hybridization(hybridization)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         ode_model.generate_basic_variables()
@@ -1481,7 +1509,9 @@ class SbmlImporter:
         assert len(free_variables) >= 1
 
         self.symbols[SymbolId.ALGEBRAIC_EQUATION][
-            f"ae{len(self.symbols[SymbolId.ALGEBRAIC_EQUATION])}"
+            symbol_with_assumptions(
+                f"ae{len(self.symbols[SymbolId.ALGEBRAIC_EQUATION])}"
+            )
         ] = {"value": formula}
         # remove the symbol from the original definition and add to
         # algebraic symbols (if not already done)
@@ -1576,7 +1606,10 @@ class SbmlImporter:
                     ):
                         raise NotImplementedError(
                             "AMICI at the moment does not support splines "
-                            "whose evaluation point is not the model time."
+                            "whose evaluation point is not the model time. "
+                            f"'evaluate_at' was {spline.evaluate_at} "
+                            f"({type(spline.evaluate_at)}) in spline for "
+                            f"symbol {sym_id}."
                         )
                     self.splines.append(spline)
                     return
@@ -2243,6 +2276,9 @@ class SbmlImporter:
                     raise NotImplementedError(
                         "AMICI at the moment does not support splines "
                         "whose evaluation point is not the model time."
+                        f"'evaluate_at' was {spline.evaluate_at} "
+                        f"({type(spline.evaluate_at)}) in spline for "
+                        f"symbol {var}."
                     )
                 sym_math = sym_math.subs(
                     var, spline.evaluate(sbml_time_symbol)
@@ -2346,9 +2382,7 @@ class SbmlImporter:
             stoichiometric_list,
             *sm.shape,
             rng_seed=32,
-            species_names=[
-                str(x.get_id()) for x in ode_model._differential_states
-            ],
+            species_names=[x.get_id() for x in ode_model._differential_states],
         )
 
         # Sparsify conserved quantities
@@ -2477,7 +2511,7 @@ class SbmlImporter:
         # previously removed constant species
         eliminated_state_ids = {cl["state"] for cl in conservation_laws}
 
-        all_state_ids = [x.get_id() for x in model.states()]
+        all_state_ids = [x.get_sym() for x in model.states()]
         all_compartment_sizes = []
         for state_id in all_state_ids:
             symbol = {
@@ -2680,7 +2714,7 @@ class SbmlImporter:
                 if old_symbol in symbols:
                     # reconstitute the whole dict in order to keep the ordering
                     self.symbols[symbols_ids] = {
-                        new_symbol if k is old_symbol else k: v
+                        new_symbol if k == old_symbol else k: v
                         for k, v in symbols.items()
                     }
 
@@ -2918,7 +2952,7 @@ class SbmlImporter:
         an assignment or rate rule.
 
         :param species_id:
-            The identifier of the species (generated in "sbml_import.py").
+            The identifier of the species (generated in "__init__.py").
 
         :param dxdt:
             The element-wise product of the row in the stoichiometric
@@ -3141,7 +3175,7 @@ def _add_conservation_for_constant_species(
         if ode_model.state_is_constant(ix):
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
-            target_state = ode_model._differential_states[ix].get_id()
+            target_state = ode_model._differential_states[ix].get_sym()
             total_abundance = symbol_with_assumptions(f"tcl_{target_state}")
             conservation_laws.append(
                 {

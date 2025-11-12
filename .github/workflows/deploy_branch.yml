@@ -21,9 +21,6 @@ jobs:
       with:
         fetch-depth: 20
 
-    - name: Set up SWIG
-      uses: ./.github/actions/setup-swig
-
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     - name: Create AMICI sdist
@@ -31,7 +28,7 @@ jobs:
         scripts/buildSdist.sh
 
     - name: "Upload artifact: sdist"
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: sdist
         path: python/sdist/dist/amici-*.gz

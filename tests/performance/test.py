@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 import amici
+import amici.exporters.sundials.de_export
+import amici.importers.sbml
 import petab.v1 as petab
 from amici.petab.petab_import import import_model_sbml
 
@@ -72,8 +74,8 @@ def run_import(model_name, model_dir: Path):
         git_dir / "FroehlichKes2018" / "PEtab" / "FroehlichKes2018.yaml"
     )
     petab.lint_problem(pp)
-    amici.de_export.logger.setLevel(logging.DEBUG)
-    amici.sbml_import.logger.setLevel(logging.DEBUG)
+    amici.exporters.sundials.de_export.logger.setLevel(logging.DEBUG)
+    amici.importers.sbml.logger.setLevel(logging.DEBUG)
     import_model_sbml(
         model_name=model_name,
         model_output_dir=model_dir,

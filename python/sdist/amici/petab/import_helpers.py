@@ -24,7 +24,7 @@ from petab.v1.parameters import get_valid_parameters_for_parameter_table
 from sympy.abc import _clash
 
 import amici
-from amici.import_utils import MeasurementChannel
+from amici.importers.utils import MeasurementChannel
 
 logger = logging.getLogger(__name__)
 

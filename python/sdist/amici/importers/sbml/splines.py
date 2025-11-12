@@ -17,7 +17,7 @@ if TYPE_CHECKING:
         Any,
     )
 
-    from . import sbml_import
+    from amici.importers import sbml
 
     BClike = None | str | tuple[None | str, None | str]
 
@@ -35,20 +35,20 @@ import numpy as np
 import sympy as sp
 from sympy.core.parameters import evaluate
 
-from .constants import SymbolId
-from .import_utils import (
+from amici.constants import SymbolId
+from amici.logging import get_logger
+
+from ..utils import (
     amici_time_symbol,
     annotation_namespace,
     sbml_time_symbol,
     symbol_with_assumptions,
 )
-from .logging import get_logger
-from .sbml_utils import (
+from .utils import (
     SbmlAnnotationError,
     add_assignment_rule,
     add_parameter,
     get_sbml_units,
-    mathml2sympy,
     pretty_xml,
     sbml_mathml,
 )
@@ -558,7 +558,7 @@ class AbstractSpline(ABC):
         """Spline method."""
         raise NotImplementedError()
 
-    def check_if_valid(self, importer: sbml_import.SbmlImporter) -> None:
+    def check_if_valid(self, importer: sbml.SbmlImporter) -> None:
         """
         Check if the spline described by this object can be correctly
         be implemented by AMICI. E.g., check whether the formulas
@@ -1216,9 +1216,9 @@ class AbstractSpline(ABC):
         """Create a spline object from a SBML annotation.
 
         This function extracts annotation and children from the XML annotation
-        and gives them to the ``_fromAnnotation`` function for parsing.
-        Subclass behaviour should be implemented by extending
-        ``_fromAnnotation``.
+        and gives them to the ``_from_annotation`` function for parsing.
+        Subclass behavior should be implemented by extending
+        ``_from_annotation``.
         However, the mapping between method strings and subclasses
         must be hard-coded into this function here (at the moment).
         """
@@ -1240,6 +1240,12 @@ class AbstractSpline(ABC):
                 value = False
             attributes[key] = value
 
+        from sbmlmath import SBMLMathMLParser, TimeSymbol
+
+        mathml_parser = SBMLMathMLParser(
+            symbol_kwargs={"real": True}, ignore_units=True, evaluate=False
+        )
+
         children = {}
         for child in annotation:
             if not child.tag.startswith(f"{{{annotation_namespace}}}"):
@@ -1248,11 +1254,8 @@ class AbstractSpline(ABC):
                 )
             key = child.tag[len(annotation_namespace) + 2 :]
             value = [
-                mathml2sympy(
-                    ET.tostring(gc).decode(),
-                    evaluate=False,
-                    locals=locals_,
-                    expression_type="Rule",
+                mathml_parser.parse_str(ET.tostring(gc).decode()).replace(
+                    TimeSymbol, lambda *args: sbml_time_symbol
                 )
                 for gc in child
             ]
@@ -1349,7 +1352,7 @@ class AbstractSpline(ABC):
 
         return kwargs
 
-    def parameters(self, importer: sbml_import.SbmlImporter) -> set[sp.Symbol]:
+    def parameters(self, importer: sbml.SbmlImporter) -> set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
         return self._parameters().intersection(
             set(importer.symbols[SymbolId.PARAMETER].keys())
@@ -1361,9 +1364,7 @@ class AbstractSpline(ABC):
             parameters.update(y.free_symbols)
         return parameters
 
-    def ode_model_symbol(
-        self, importer: sbml_import.SbmlImporter
-    ) -> sp.Function:
+    def ode_model_symbol(self, importer: sbml.SbmlImporter) -> sp.Function:
         """
         Returns the `sympy` object to be used by
         :py:class:`amici.de_model.DEModel`.
@@ -1656,7 +1657,7 @@ class CubicHermiteSpline(AbstractSpline):
     def derivatives_by_fd(self) -> bool:
         return self._derivatives_by_fd
 
-    def check_if_valid(self, importer: sbml_import.SbmlImporter) -> None:
+    def check_if_valid(self, importer: sbml.SbmlImporter) -> None:
         """
         Check if the spline described by this object can be correctly
         be implemented by AMICI. E.g., check whether the formulas

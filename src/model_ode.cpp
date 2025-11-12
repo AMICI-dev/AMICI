@@ -398,7 +398,7 @@ void Model_ODE::fJSparseB_ss(SUNMatrix JB) {
     derived_state_.JB_.refresh();
 }
 
-void Model_ODE::writeSteadystateJB(
+void Model_ODE::write_steady_state_JB(
     realtype const t, realtype /*cj*/, AmiVector const& x,
     AmiVector const& /*dx*/, AmiVector const& xB, AmiVector const& /*dxB*/,
     AmiVector const& xBdot

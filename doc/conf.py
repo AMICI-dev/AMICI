@@ -31,6 +31,7 @@ except ModuleNotFoundError:
     import exhale_multiproject_monkeypatch  # noqa: F401
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+
 import amici
 import pandas as pd  # noqa: F401
 import sympy as sp  # noqa: F401
@@ -363,6 +364,11 @@ vector_types = {
     "DoubleVector": ":class:`float`",
     "StringVector": ":class:`str`",
     "ExpDataPtrVector": ":class:`amici.amici.ExpData`",
+}
+
+# TODO: alias for forward type definition, remove after release of petab_sciml
+autodoc_type_aliases = {
+    "NNModel": "petab_sciml.NNModel",
 }
 
 

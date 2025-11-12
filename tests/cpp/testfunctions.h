@@ -139,7 +139,7 @@ class Model_Test : public Model {
         throw AmiException("not implemented");
     }
 
-    void writeSteadystateJB(
+    void write_steady_state_JB(
         realtype const /*t*/, realtype /*cj*/, AmiVector const& /*x*/,
         AmiVector const& /*dx*/, AmiVector const& /*xB*/,
         AmiVector const& /*dxB*/, AmiVector const& /*xBdot*/

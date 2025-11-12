@@ -5,12 +5,15 @@ Test getters, setters, etc.
 
 import copy
 import numbers
+import pickle
 from math import nan
 
 import amici
 import numpy as np
 import pytest
 import xarray
+from amici import SteadyStateSensitivityMode
+from amici.testing import skip_on_valgrind
 
 
 def test_version_number(pysb_example_presimulation_module):
@@ -664,3 +667,74 @@ def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
                 assert rdata.ssigmay is None
                 assert rdata.sllh.size > 0
                 assert not np.isnan(rdata.sllh).any()
+
+
+@skip_on_valgrind
+def test_pickle_model(sbml_example_presimulation_module):
+    model_module = sbml_example_presimulation_module
+    model = model_module.get_model()
+
+    assert (
+        model.get_steady_state_sensitivity_mode()
+        == SteadyStateSensitivityMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+
+    model_pickled = pickle.loads(pickle.dumps(model))
+    # ensure it's re-picklable
+    model_pickled = pickle.loads(pickle.dumps(model_pickled))
+    assert (
+        model_pickled.get_steady_state_sensitivity_mode()
+        == SteadyStateSensitivityMode.newtonOnly
+    )
+
+    model_pickled.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
+    assert (
+        model.get_steady_state_sensitivity_mode()
+        != model_pickled.get_steady_state_sensitivity_mode()
+    )
+
+    # ensure we can pickle after clone()
+    model_clone = model.clone()
+    pickle.loads(pickle.dumps(model_clone))
+
+
+def test_pickle_edata():
+    ny = 2
+    nz = 3
+    ne = 4
+    nt = 5
+    edata = amici.ExpData(ny, nz, ne, range(nt))
+    edata.set_observed_data(list(np.arange(ny * nt, dtype=float)))
+    edata.pscale = amici.parameter_scaling_from_int_vector(
+        [amici.ParameterScaling.log10] * 5
+    )
+
+    edata_pickled = pickle.loads(pickle.dumps(edata))
+    assert edata == edata_pickled
+
+
+@pytest.mark.skipif(
+    not amici.hdf5_enabled,
+    reason="AMICI build without HDF5 support",
+)
+def test_pickle_solver():
+    for solver in (
+        amici.CVodeSolver(),
+        amici.IDASolver(),
+        amici.SolverPtr(amici.CVodeSolver()),
+        amici.SolverPtr(amici.IDASolver()),
+    ):
+        solver.set_max_steps(1234)
+        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver_pickled = pickle.loads(pickle.dumps(solver))
+        assert type(solver) is type(solver_pickled)
+        assert solver.get_max_steps() == solver_pickled.get_max_steps()
+        assert (
+            solver.get_sensitivity_order()
+            == solver_pickled.get_sensitivity_order()
+        )

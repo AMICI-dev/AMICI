@@ -64,6 +64,17 @@ nonstandard type conversions.
     }
 }
 
+// store swig version
+%constant int SWIG_VERSION_MAJOR = (SWIG_VERSION >> 16);
+%constant int SWIG_VERSION_MINOR = ((SWIG_VERSION >> 8) & 0xff);
+%constant int SWIG_VERSION_PATCH = (SWIG_VERSION & 0xff);
+
+%pythoncode %{
+# SWIG version used to build the amici extension as `(major, minor, patch)`
+_SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
+%}
+
+
 // Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
 %rename("__eq__") operator ==;
 
@@ -154,6 +165,23 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::fixed_parameters_presimulation;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_sim;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_presim;
+
+%extend amici::SimulationParameters {
+%pythoncode %{
+    def __iter__(self):
+        for attr_name in dir(self):
+            if (
+                not attr_name.startswith('_')
+                and attr_name not in ("this", "thisown")
+                and not callable(attr_val := getattr(self, attr_name))
+            ):
+                if isinstance(attr_val, (DoubleVector, ParameterScalingVector)):
+                    yield attr_name, tuple(attr_val)
+                else:
+                    yield attr_name, attr_val
+%}
+}
+
 
 // DO NOT IGNORE amici::SimulationParameters, amici::ModelDimensions, amici::CpuTimer
 %ignore amici::ModelContext;

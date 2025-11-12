@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     branches:
       - main
@@ -66,9 +67,6 @@ jobs:
             && sudo apt-get install -y \
               pandoc \
             && pip install tox
-
-      - name: Set up SWIG
-        uses: ./.github/actions/setup-swig
 
       - name: Run sphinx
         run: tox -e doc

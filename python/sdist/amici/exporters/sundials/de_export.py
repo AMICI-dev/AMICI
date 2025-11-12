@@ -5,8 +5,8 @@ This module provides all necessary functionality to specify a differential
 equation model and generate executable C++ simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
-:py:func:`amici.pysb_import.pysb2amici`,
-:py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
+:py:func:`amici.importers.pysb.pysb2amici`,
+:py:func:`amici.importers.sbml.SbmlImporter.sbml2amici` and
 :py:func:`amici.petab_import.import_model`.
 """
 
@@ -24,15 +24,23 @@ from typing import (
 
 import sympy as sp
 
-from . import (
+from ... import (
     __commit__,
     __version__,
-    amiciModulePath,
-    amiciSrcPath,
-    amiciSwigPath,
-    splines,
+    get_model_dir,
 )
-from ._codegen.cxx_functions import (
+from ...de_model import DEModel
+from ...de_model_components import *
+from ...importers.sbml import splines
+from ...logging import get_logger, log_execution_time, set_log_level
+from ...sympy_utils import (
+    _custom_pow_eval_derivative,
+    _monkeypatched,
+    smart_is_zero_matrix,
+)
+from ..template import apply_template
+from .compile import build_model_extension
+from .cxx_functions import (
     _FunctionInfo,
     event_functions,
     event_sensi_functions,
@@ -43,41 +51,25 @@ from ._codegen.cxx_functions import (
     sparse_functions,
     sparse_sensi_functions,
 )
-from ._codegen.model_class import (
-    get_function_extern_declaration,
-    get_model_override_implementation,
-    get_sunindex_extern_declaration,
-    get_sunindex_override_implementation,
-)
-from ._codegen.template import apply_template
-from .compile import build_model_extension
 from .cxxcodeprinter import (
     AmiciCxxCodePrinter,
     get_initializer_list,
     get_switch_statement,
 )
-from .de_model import DEModel
-from .de_model_components import *
-from .import_utils import (
-    strip_pysb,
-)
-from .logging import get_logger, log_execution_time, set_log_level
-from .sympy_utils import (
-    _custom_pow_eval_derivative,
-    _monkeypatched,
-    smart_is_zero_matrix,
+from .model_class import (
+    get_function_extern_declaration,
+    get_model_override_implementation,
+    get_sunindex_extern_declaration,
+    get_sunindex_override_implementation,
 )
 
+TEMPLATE_DIR = Path(__file__).parent / "templates"
 # Template for model simulation main.cpp file
-CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, "main.template.cpp")
+CXX_MAIN_TEMPLATE_FILE = TEMPLATE_DIR / "main.template.cpp"
 # Template for model/swig/CMakeLists.txt
-SWIG_CMAKE_TEMPLATE_FILE = os.path.join(
-    amiciSwigPath, "CMakeLists_model.cmake"
-)
+SWIG_CMAKE_TEMPLATE_FILE = TEMPLATE_DIR / "CMakeLists_model.cmake"
 # Template for model/CMakeLists.txt
-MODEL_CMAKE_TEMPLATE_FILE = os.path.join(
-    amiciSrcPath, "CMakeLists.template.cmake"
-)
+MODEL_CMAKE_TEMPLATE_FILE = TEMPLATE_DIR / "CMakeLists.template.cmake"
 
 IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_]\w*$")
 
@@ -165,6 +157,7 @@ class DEExporter:
         allow_reinit_fixpar_initcond: bool | None = True,
         generate_sensitivity_code: bool | None = True,
         model_name: str | None = "model",
+        hybridization: dict | None = None,
     ):
         """
         Generate AMICI C++ files for the DE provided to the constructor.
@@ -196,6 +189,10 @@ class DEExporter:
 
         :param model_name:
             name of the model to be used during code generation
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
 
@@ -237,6 +234,7 @@ class DEExporter:
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
         self._build_hints = set()
         self.generate_sensitivity_code: bool = generate_sensitivity_code
+        self.hybridisation = hybridization
 
     @log_execution_time("generating cpp code", logger)
     def generate_model_code(self) -> None:
@@ -316,7 +314,7 @@ class DEExporter:
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
         )
 
-    def _get_index(self, name: str) -> dict[sp.Symbol, int]:
+    def _get_index(self, name: str) -> dict[str, int]:
         """
         Compute indices for a symbolic array.
         :param name:
@@ -332,10 +330,7 @@ class DEExporter:
         else:
             raise ValueError(f"Unknown symbolic array: {name}")
 
-        return {
-            strip_pysb(symbol).name: index
-            for index, symbol in enumerate(symbols)
-        }
+        return {symbol.name: index for index, symbol in enumerate(symbols)}
 
     def _write_index_files(self, name: str) -> None:
         """
@@ -362,9 +357,9 @@ class DEExporter:
 
         lines = []
         for index, symbol in enumerate(symbols):
-            symbol_name = strip_pysb(symbol)
             if symbol.is_zero:
                 continue
+            symbol_name = symbol.name
             if str(symbol_name) == "":
                 raise ValueError(f'{name} contains a symbol called ""')
             lines.append(f"#define {symbol_name} {name}[{index}]")
@@ -843,21 +838,19 @@ class DEExporter:
         body = ["return {"]
         for ispl, spline in enumerate(self.model._splines):
             if isinstance(spline.nodes, splines.UniformGrid):
-                nodes = (
-                    f"{ind8}{{{spline.nodes.start}, {spline.nodes.stop}}}, "
-                )
+                start = self._code_printer.doprint(spline.nodes.start)
+                stop = self._code_printer.doprint(spline.nodes.stop)
+                nodes = f"{ind8}{{{start}, {stop}}}, "
             else:
-                nodes = f"{ind8}{{{', '.join(map(str, spline.nodes))}}}, "
+                nodes = f"{ind8}{{{', '.join(map(self._code_printer.doprint, spline.nodes))}}}, "
 
             # vector with the node values
-            values = (
-                f"{ind8}{{{', '.join(map(str, spline.values_at_nodes))}}}, "
-            )
+            values = f"{ind8}{{{', '.join(map(self._code_printer.doprint, spline.values_at_nodes))}}}, "
             # vector with the slopes
             if spline.derivatives_by_fd:
                 slopes = f"{ind8}{{}},"
             else:
-                slopes = f"{ind8}{{{', '.join(map(str, spline.derivatives_at_nodes))}}},"
+                slopes = f"{ind8}{{{', '.join(map(self._code_printer.doprint, spline.derivatives_at_nodes))}}},"
 
             body.extend(
                 [
@@ -949,7 +942,7 @@ class DEExporter:
         """
         template_data = {"MODELNAME": self.model_name}
         apply_template(
-            os.path.join(amiciSrcPath, "wrapfunctions.template.cpp"),
+            TEMPLATE_DIR / "wrapfunctions.template.cpp",
             os.path.join(self.model_path, "wrapfunctions.cpp"),
             template_data,
         )
@@ -960,7 +953,7 @@ class DEExporter:
         """
         template_data = {"MODELNAME": str(self.model_name)}
         apply_template(
-            os.path.join(amiciSrcPath, "wrapfunctions.template.h"),
+            TEMPLATE_DIR / "wrapfunctions.template.h",
             os.path.join(self.model_path, "wrapfunctions.h"),
             template_data,
         )
@@ -1183,13 +1176,13 @@ class DEExporter:
         tpl_data = {k: str(v) for k, v in tpl_data.items()}
 
         apply_template(
-            os.path.join(amiciSrcPath, "model_header.template.h"),
+            TEMPLATE_DIR / "model_header.template.h",
             os.path.join(self.model_path, f"{self.model_name}.h"),
             tpl_data,
         )
 
         apply_template(
-            os.path.join(amiciSrcPath, "model.template.cpp"),
+            TEMPLATE_DIR / "model.template.cpp",
             os.path.join(self.model_path, f"{self.model_name}.cpp"),
             tpl_data,
         )
@@ -1255,7 +1248,7 @@ class DEExporter:
         Path(self.model_swig_path).mkdir(exist_ok=True)
         template_data = {"MODELNAME": self.model_name}
         apply_template(
-            Path(amiciSwigPath, "modelname.template.i"),
+            TEMPLATE_DIR / "modelname.template.i",
             Path(self.model_swig_path, self.model_name + ".i"),
             template_data,
         )
@@ -1275,12 +1268,12 @@ class DEExporter:
             "PACKAGE_VERSION": "0.1.0",
         }
         apply_template(
-            Path(amiciModulePath, "setup.template.py"),
+            TEMPLATE_DIR / "setup.template.py",
             Path(self.model_path, "setup.py"),
             template_data,
         )
         apply_template(
-            Path(amiciModulePath, "MANIFEST.template.in"),
+            TEMPLATE_DIR / "MANIFEST.template.in",
             Path(self.model_path, "MANIFEST.in"),
             {},
         )
@@ -1288,7 +1281,7 @@ class DEExporter:
         Path(self.model_path, self.model_name).mkdir(exist_ok=True)
 
         apply_template(
-            Path(amiciModulePath, "__init__.template.py"),
+            TEMPLATE_DIR / "__init__.template.py",
             Path(self.model_path, self.model_name, "__init__.py"),
             template_data,
         )
@@ -1305,7 +1298,7 @@ class DEExporter:
 
         """
         if output_dir is None:
-            output_dir = os.path.join(os.getcwd(), f"amici-{self.model_name}")
+            output_dir = get_model_dir(self.model_name)
 
         self.model_path = os.path.abspath(output_dir)
         self.model_swig_path = os.path.join(self.model_path, "swig")

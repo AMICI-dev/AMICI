@@ -51,6 +51,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Features**
 
+* Experimental support for the PEtab data format v2.0.0 (draft, see
+  https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html)
+  for SBML- and PySB-based problems (see `amici.petab.petab_importer`). The API is subject to change.
+
+  * Current limitations for PySB-based PEtab problems:
+    * Only species and `pysb.Expression` are supported as condition table
+      targets.
+
 * Many relevant `ReturnData` fields are now available as `xarray.DataArray`
   via `ReturnData.xr.{x,y,w,x0,sx,...}`.
   `DataArray`s include the identifiers and are often more convenient than the
@@ -61,8 +69,44 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   This is a wrapper for both `amici.run_simulation` and
   `amici.run_simulations`, depending on the type of the `edata` argument.
   It also supports passing some `Solver` options as keyword arguments.
+* Improved `pickle` support for `amici.{Model,ModelPtr,Solver,ExpData`.
+  Note that AMICI's pickling support is only intended for short-term storage
+  or inter-process communication.
+  Reading pickled objects after updating AMICI or the model code will almost
+  certainly fail.
+  * `amici.Model`and `amici.ModelPtr` now support sufficient pickling for use
+    in multi-processing contexts. This works only if the amici-generated model
+    package exists in the same file system location and does not change until
+    unpickling.
+  * `amici.Solver` is now picklable if amici was built with HDF5 support.
+    This only works on shared file systems, as the solver state is stored in a
+    temporary HDF5 file.
+  * `amici.ExpData` is now picklable.
+* Implemented support for the [PEtab SciML](https://github.com/PEtab-dev/petab_sciml)
+  extension for the JAX interface.
+* The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
+  return an instance of the generated model class if called with `compile=True`
+  (default).
+* The default directory for model import changed, and a base directory
+  can now be specified via the `AMICI_MODELS_ROOT` environment variable.
+  See `amici.get_model_dir` for details.
+
 
 ## v0.X Series
+
+### v0.34.2 (2025-11-03)
+
+Bugfix release.
+
+* Python 3.14 compatibility
+* Swig 4.4.0 compatibility
+* Fixes type annotations in swig wrappers
+* Fixes a bug that resulted in incorrect processing of initial assignments
+  containing (amici-)splines
+* Fixes an SBML import error during the handling of algebraic rules
+* Fixes a CMake error with certain CMake versions
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.34.1...v0.34.2
 
 ### v0.34.1 (2025-08-25)
 
@@ -71,6 +115,8 @@ Bugfix release.
 * Fixed a bug that would lead to incorrect model initialization in SBML models
   with initial assignments that depend on dynamic entities
   (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2939)
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.34.0...v0.34.1
 
 ### v0.34.0 (2025-07-29)
 

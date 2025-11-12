@@ -27,10 +27,4 @@ repos:
         - --config
         - python/sdist/pyproject.toml
 
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.0
-    hooks:
-    -   id: pyupgrade
-        args: ["--py310-plus"]
-
 exclude: '^(ThirdParty|models)/'

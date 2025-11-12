@@ -103,8 +103,8 @@ ExpData::ExpData(
 
     realtype sigma;
 
-    checkSigmaPositivity(sigma_y, "sigma_y");
-    checkSigmaPositivity(sigma_z, "sigma_z");
+    check_sigma_positivity(sigma_y, "sigma_y");
+    check_sigma_positivity(sigma_z, "sigma_z");
 
     for (int iy = 0; iy < nytrue_; ++iy) {
         for (int it = 0; it < nt(); ++it) {
@@ -195,7 +195,7 @@ void ExpData::set_observed_data_std_dev(
     std::vector<realtype> const& observedDataStdDev
 ) {
     check_data_dimension(observedDataStdDev, "observedDataStdDev");
-    checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
+    check_sigma_positivity(observedDataStdDev, "observedDataStdDev");
 
     if (observedDataStdDev.size() == static_cast<unsigned>(nt()) * nytrue_)
         observed_data_std_dev_ = observedDataStdDev;
@@ -204,7 +204,7 @@ void ExpData::set_observed_data_std_dev(
 }
 
 void ExpData::set_observed_data_std_dev(realtype const stdDev) {
-    checkSigmaPositivity(stdDev, "stdDev");
+    check_sigma_positivity(stdDev, "stdDev");
     std::ranges::fill(observed_data_std_dev_, stdDev);
 }
 
@@ -216,7 +216,7 @@ void ExpData::set_observed_data_std_dev(
             "Input observedDataStdDev did not match dimensions nt (%i), was %i",
             nt(), observedDataStdDev.size()
         );
-    checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
+    check_sigma_positivity(observedDataStdDev, "observedDataStdDev");
 
     for (int it = 0; it < nt(); ++it)
         observed_data_std_dev_.at(iy + it * nytrue_)
@@ -224,7 +224,7 @@ void ExpData::set_observed_data_std_dev(
 }
 
 void ExpData::set_observed_data_std_dev(realtype const stdDev, int const iy) {
-    checkSigmaPositivity(stdDev, "stdDev");
+    check_sigma_positivity(stdDev, "stdDev");
     for (int it = 0; it < nt(); ++it)
         observed_data_std_dev_.at(iy + it * nytrue_) = stdDev;
 }
@@ -289,7 +289,7 @@ void ExpData::set_observed_events_std_dev(
     std::vector<realtype> const& observedEventsStdDev
 ) {
     check_events_dimension(observedEventsStdDev, "observedEventsStdDev");
-    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
+    check_sigma_positivity(observedEventsStdDev, "observedEventsStdDev");
 
     if (observedEventsStdDev.size() == (unsigned)nmaxevent_ * nztrue_)
         observed_events_std_dev_ = observedEventsStdDev;
@@ -298,7 +298,7 @@ void ExpData::set_observed_events_std_dev(
 }
 
 void ExpData::set_observed_events_std_dev(realtype const stdDev) {
-    checkSigmaPositivity(stdDev, "stdDev");
+    check_sigma_positivity(stdDev, "stdDev");
     std::ranges::fill(observed_events_std_dev_, stdDev);
 }
 
@@ -311,7 +311,7 @@ void ExpData::set_observed_events_std_dev(
             "(%i), was %i",
             nmaxevent_, observedEventsStdDev.size()
         );
-    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
+    check_sigma_positivity(observedEventsStdDev, "observedEventsStdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
         observed_events_std_dev_.at(iz + ie * nztrue_)
@@ -319,7 +319,7 @@ void ExpData::set_observed_events_std_dev(
 }
 
 void ExpData::set_observed_events_std_dev(realtype const stdDev, int const iz) {
-    checkSigmaPositivity(stdDev, "stdDev");
+    check_sigma_positivity(stdDev, "stdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
         observed_events_std_dev_.at(iz + ie * nztrue_) = stdDev;
@@ -386,14 +386,14 @@ void ExpData::check_events_dimension(
         );
 }
 
-void checkSigmaPositivity(
+void check_sigma_positivity(
     std::vector<realtype> const& sigmaVector, char const* vectorName
 ) {
     for (auto&& sigma : sigmaVector)
-        checkSigmaPositivity(sigma, vectorName);
+        check_sigma_positivity(sigma, vectorName);
 }
 
-void checkSigmaPositivity(realtype const sigma, char const* sigmaName) {
+void check_sigma_positivity(realtype const sigma, char const* sigmaName) {
     if (sigma <= 0.0)
         throw AmiException(
             "Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma

@@ -3,14 +3,15 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
-      - python/sdist/amici/de_export.py
+      - python/sdist/amici/exporters/sundials/de_export.py
       - python/sdist/amici/de_model_components.py
       - python/sdist/amici/de_model.py
-      - python/sdist/amici/sbml_import.py
-      - python/sdist/amici/import_utils.py
+      - python/sdist/amici/importers/sbml/**
+      - python/sdist/amici/importers/utils.py
       - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuite.py
       - tests/sbml/conftest.py
@@ -28,7 +29,7 @@ jobs:
       matrix:
         cases: ["1-250", "251-500", "501-750", "751-1000",
                 "1000-1250", "1251-"]
-        python-version: [ "3.13" ]
+        python-version: [ "3.14" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -47,13 +48,13 @@ jobs:
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: amici-semantic-results-${{ matrix.cases }}
         path: tests/sbml/amici-semantic-results
 
     - name: Codecov SBMLSuite
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

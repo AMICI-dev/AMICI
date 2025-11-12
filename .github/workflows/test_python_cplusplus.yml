@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   merge_group:
   workflow_dispatch:
   pull_request:
@@ -16,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
 
     steps:
     - name: Cache
@@ -81,7 +82,7 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines.py
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -101,7 +102,7 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -125,7 +126,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -163,7 +164,7 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines_short.py
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -183,7 +184,7 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -302,7 +303,9 @@ jobs:
 
   macos_python:
     name: Tests MacOS Python
-    runs-on: macos-latest
+    # stick to macos-14 for now. tests on macos-15 take super long
+    #  https://github.com/AMICI-dev/AMICI/issues/2996
+    runs-on: macos-14
     env:
       PYTHONFAULTHANDLER: "1"
 

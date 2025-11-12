@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
@@ -44,13 +45,13 @@ jobs:
     - run: ./scripts/run-SBMLTestsuite.sh --jax ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: amici-semantic-results-jax-${{ matrix.cases }}
         path: tests/sbml/amici-semantic-results-jax
 
     - name: Codecov SBMLSuiteJax
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

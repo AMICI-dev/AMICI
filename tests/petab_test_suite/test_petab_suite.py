@@ -52,25 +52,30 @@ def _test_case(case, model_type, version, jax):
     yaml_file = case_dir / petabtests.problem_yaml_name(case)
     problem = petab.Problem.from_yaml(yaml_file)
 
+    if problem.mapping_df is not None:
+        pytest.skip(
+            "PEtab test suite cases with mapping_df are not supported yet."
+        )
+
     # compile amici model
     if case.startswith("0006") and not jax:
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_name = (
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
-    model_output_dir = f"amici_models/{model_name}" + ("_jax" if jax else "")
-    model = import_petab_problem(
+    imported = import_petab_problem(
         petab_problem=problem,
-        model_output_dir=model_output_dir,
         model_name=model_name,
         compile_=True,
         jax=jax,
     )
     if jax:
-        from amici.jax import JAXProblem, petab_simulate, run_simulations
+        from amici.jax import petab_simulate, run_simulations
 
         steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
-        jax_problem = JAXProblem(model, problem)
+        jax_problem = (
+            imported  # import_petab_problem returns JAXProblem when jax=True
+        )
         llh, ret = run_simulations(
             jax_problem, steady_state_event=steady_state_event
         )
@@ -84,6 +89,7 @@ def _test_case(case, model_type, version, jax):
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
     else:
+        model = imported  # import_petab_problem returns Model when jax=False
         solver = model.create_solver()
         solver.set_steady_state_tolerance_factor(1.0)
         problem_parameters = dict(
@@ -143,11 +149,12 @@ def _test_case(case, model_type, version, jax):
             "display.width",
             200,
         ):
-            logger.log(
-                logging.DEBUG,
-                f"x_ss: {model.get_state_ids()} "
-                f"{[rdata.x_ss for rdata in rdatas]}",
-            )
+            if not jax:
+                logger.log(
+                    logging.DEBUG,
+                    f"x_ss: {model.get_state_ids()} "
+                    f"{[rdata.x_ss for rdata in rdatas]}",
+                )
             logger.log(
                 logging.ERROR, f"Expected simulations:\n{gt_simulation_dfs}"
             )
@@ -203,12 +210,6 @@ def check_derivatives(
         petab_problem=problem,
         problem_parameters=problem_parameters,
     ):
-        # check_derivatives does currently not support parameters in ExpData
-        # set parameter scales before setting parameter values!
-        model.set_parameter_scale(edata.pscale)
-        model.set_parameters(edata.parameters)
-        edata.parameters = []
-        edata.pscale = amici.parameter_scaling_from_int_vector([])
         amici_check_derivatives(model, solver, edata)
 
 

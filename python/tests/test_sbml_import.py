@@ -1,4 +1,4 @@
-"""Tests related to amici.sbml_import"""
+"""Tests related to amici.importers.sbml"""
 
 import os
 import re
@@ -13,13 +13,13 @@ import pytest
 import sympy as sp
 from amici import import_model_module
 from amici.gradient_check import check_derivatives
-from amici.import_utils import (
+from amici.importers.sbml import SbmlImporter, SymbolId
+from amici.importers.utils import (
     MeasurementChannel as MC,
 )
-from amici.import_utils import (
+from amici.importers.utils import (
     symbol_with_assumptions,
 )
-from amici.sbml_import import SbmlImporter, SymbolId
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
@@ -50,7 +50,7 @@ def simple_sbml_model():
 
 def test_event_trigger_to_root_function():
     """Test that root functions for event triggers are generated correctly."""
-    from amici.sbml_import import _parse_event_trigger as to_trig
+    from amici.importers.sbml import _parse_event_trigger as to_trig
 
     a, b = sp.symbols("a b")
 
@@ -284,7 +284,7 @@ def test_presimulation(sbml_example_presimulation_module):
 def test_presimulation_events(tempdir):
     """Test that events are handled during presimulation."""
 
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_presim_events"
     antimony2amici(
@@ -374,10 +374,10 @@ def test_presimulation_events_and_sensitivities(tempdir):
     """Test that presimulation with adjoint sensitivities works
     and test that events are handled during presimulation."""
 
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_presim_events2"
-    antimony2amici(
+    model = antimony2amici(
         """
     some_time = time
     some_time' = 1
@@ -394,9 +394,6 @@ def test_presimulation_events_and_sensitivities(tempdir):
         output_dir=tempdir,
     )
 
-    model_module = import_model_module(model_name, tempdir)
-
-    model = model_module.get_model()
     model.set_timepoints([0, 1, 2])
     edata = amici.ExpData(model)
     edata.t_presim = 2
@@ -878,7 +875,7 @@ def test_hardcode_parameters():
 def test_constraints(tempdir):
     """Test non-negativity constraint handling."""
     from amici import Constraint
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     ant_model = """
     model test_non_negative_species
@@ -928,7 +925,7 @@ def test_constraints(tempdir):
 def test_import_same_model_name(tempdir):
     """Test for error when loading a model with the same extension name as an
     already loaded model."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     # create three versions of a toy model with different parameter values
     #  to detect which model was loaded
@@ -992,11 +989,12 @@ def test_import_same_model_name(tempdir):
     if sys.platform == "win32":
         return
 
-    antimony2amici(
-        ant_model_3,
-        model_name=module_name,
-        output_dir=outdir_2,
-    )
+    with pytest.raises(RuntimeError, match="in the same location"):
+        antimony2amici(
+            ant_model_3,
+            model_name=module_name,
+            output_dir=outdir_2,
+        )
 
     with pytest.raises(RuntimeError, match="in the same location"):
         import_model_module(module_name=module_name, module_path=outdir_2)
@@ -1038,7 +1036,7 @@ def test_regression_2642(tempdir):
 @skip_on_valgrind
 def test_regression_2700(tempdir):
     """Check comparison operators."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "regression_2700"
     antimony2amici(
@@ -1066,7 +1064,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
     FIXME: Test that Heavisides for Boolean / piecewise functions use a correct
     initial value. https://github.com/AMICI-dev/AMICI/issues/2724
     """
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_bool2float"
     antimony2amici(
@@ -1102,7 +1100,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
 def test_t0(tempdir):
     """Test that a custom initial time for the simulation is applied correctly
     during species initialization."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_t0"
     antimony2amici(
@@ -1128,7 +1126,7 @@ def test_t0(tempdir):
 @skip_on_valgrind
 def test_contains_periodic_subexpression():
     """Test that periodic subexpressions are detected."""
-    from amici.import_utils import contains_periodic_subexpression as cps
+    from amici.importers.utils import contains_periodic_subexpression as cps
 
     t = sp.Symbol("t")
 
@@ -1143,8 +1141,9 @@ def test_contains_periodic_subexpression():
 def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     """Check that dynamic expressions for initial assignments are only
     evaluated at t=t0."""
-    from amici.antimony_import import antimony2sbml
-    from amici.import_utils import amici_time_symbol
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import splines
+    from amici.importers.utils import amici_time_symbol
 
     ant_model = """
     x1' = 1
@@ -1162,7 +1161,7 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     sbml_document = sbml_reader.readSBMLFromString(sbml_str)
     sbml_model = sbml_document.getModel()
 
-    spline = amici.splines.CubicHermiteSpline(
+    spline = splines.CubicHermiteSpline(
         sbml_id="spline1",
         nodes=[0, 1, 2],
         values_at_nodes=[3, 4, 5],
@@ -1183,9 +1182,9 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     # "species", because differential state
     assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
 
-    assert "p0" in [str(p.get_id()) for p in de_model.parameters()]
-    assert "p1" not in [str(p.get_id()) for p in de_model.parameters()]
-    assert "p2" not in [str(p.get_id()) for p in de_model.parameters()]
+    assert "p0" in [p.get_id() for p in de_model.parameters()]
+    assert "p1" not in [p.get_id() for p in de_model.parameters()]
+    assert "p2" not in [p.get_id() for p in de_model.parameters()]
 
     assert list(de_model.sym("x_rdata")) == [
         symbol_with_assumptions("p2"),

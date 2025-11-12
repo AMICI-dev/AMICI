@@ -76,6 +76,56 @@ def _imported_from_setup() -> bool:
     return False
 
 
+def get_model_root_dir() -> Path:
+    """Get the default root directory for AMICI models.
+
+    Get the default root directory for AMICI models for the current AMICI
+    version.
+
+    :return:
+        The model root directory.
+        This defaults to `{base_dir}/{amici_version}`.
+        If the environment variable `AMICI_MODELS_ROOT` is set,
+        it is used as `base_dir`, otherwise `amici_models` in the current
+        working directory.
+    """
+    try:
+        base_dir = Path(os.environ["AMICI_MODELS_ROOT"])
+    except KeyError:
+        base_dir = Path("amici_models")
+
+    return base_dir / __version__
+
+
+def get_model_dir(model_id: str | None = None, jax: bool = False) -> Path:
+    """Get the default directory for the model with the given ID.
+
+    :param model_id:
+        The model ID.
+    :param jax:
+        Whether to get the model directory for a JAX model.
+        If `True`, a suffix `_jax` is appended to the `model_id`.
+    :return:
+        The model directory.
+        This defaults to `{root_dir}/{model_id}`, where `root_dir` is
+        determined via :func:`get_model_root_dir`.
+        If `model_id` is `None`, a temporary directory is created in
+        `{base_dir}/{amici_version}` and returned.
+    """
+    base_dir = get_model_root_dir()
+
+    suffix = "_jax" if jax else ""
+
+    if model_id is None:
+        import tempfile
+
+        # mkdtemp requires the parent directory to exist
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return Path(tempfile.mkdtemp(dir=base_dir, suffix=suffix))
+
+    return base_dir / (model_id + suffix)
+
+
 # Initialize AMICI paths
 #: absolute root path of the amici repository or Python package
 amici_path = _get_amici_path()
@@ -128,12 +178,11 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from typing import Protocol, runtime_checkable
 
-    from .de_export import DEExporter  # noqa: F401
-    from .import_utils import MeasurementChannel  # noqa: F401
-    from .sbml_import import (  # noqa: F401
+    from .importers.sbml import (  # noqa: F401
         SbmlImporter,
         assignment_rules_to_observables,
     )
+    from .importers.utils import MeasurementChannel  # noqa: F401
 
     try:
         from .jax import JAXModel

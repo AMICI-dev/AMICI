@@ -7,7 +7,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
-from amici.jax.petab import JAXProblem, run_simulations
+from amici.jax.petab import run_simulations
 from amici.petab.petab_import import import_petab_problem
 from amici.petab.simulations import LLH, SLLH, simulate_petab
 from beartype import beartype
@@ -83,12 +83,11 @@ def test_jax_llh(benchmark_problem):
         r_amici = simulate_amici()
     llh_amici = r_amici[LLH]
 
-    jax_model = import_petab_problem(
+    jax_problem = import_petab_problem(
         petab_problem,
         model_output_dir=benchmark_outdir / (problem_id + "_jax"),
         jax=True,
     )
-    jax_problem = JAXProblem(jax_model, petab_problem)
     if problem_parameters:
         jax_problem = eqx.tree_at(
             lambda x: x.parameters,

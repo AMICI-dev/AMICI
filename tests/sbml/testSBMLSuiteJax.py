@@ -170,7 +170,7 @@ def test_sbml_testsuite_case_jax(
             settings, rdata, results, wrapper, dummy, atol, rtol
         )
         write_result_file(simulated, test_id, result_path_jax)
-    except amici.sbml_import.SBMLException as err:
+    except amici.importers.sbml.SBMLException as err:
         pytest.skip(str(err))
     except NotImplementedError as err:
         if "The JAX backend does not support" in str(err):

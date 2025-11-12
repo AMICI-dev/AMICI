@@ -7,7 +7,7 @@ from typing import SupportsFloat
 import sympy as sp
 
 from .constants import SymbolId
-from .import_utils import (
+from .importers.utils import (
     RESERVED_SYMBOLS,
     ObservableTransformation,
     amici_time_symbol,
@@ -47,15 +47,15 @@ class ModelQuantity:
 
     def __init__(
         self,
-        identifier: sp.Symbol,
+        symbol: sp.Symbol,
         name: str,
         value: SupportsFloat | numbers.Number | sp.Expr,
     ):
         """
         Create a new ModelQuantity instance.
 
-        :param identifier:
-            unique identifier of the quantity
+        :param symbol:
+            Symbol of the quantity with unique identifier.
 
         :param name:
             individual name of the quantity (does not need to be unique)
@@ -64,18 +64,17 @@ class ModelQuantity:
             either formula, numeric value or initial value
         """
 
-        if not isinstance(identifier, sp.Symbol):
-            raise TypeError(
-                f"identifier must be sympy.Symbol, was {type(identifier)}"
-            )
+        if not isinstance(symbol, sp.Symbol):
+            raise TypeError(f"symbol must be sympy.Symbol, was {type(symbol)}")
 
-        if str(identifier) in RESERVED_SYMBOLS or (
-            hasattr(identifier, "name") and identifier.name in RESERVED_SYMBOLS
+        if str(symbol) in RESERVED_SYMBOLS or (
+            hasattr(symbol, "name") and symbol.name in RESERVED_SYMBOLS
         ):
             raise ValueError(
-                f'Cannot add model quantity with name "{name}", please rename.'
+                f'Cannot add model quantity with reserved name "{name}", '
+                "please rename."
             )
-        self._identifier: sp.Symbol = identifier
+        self._symbol: sp.Symbol = symbol
 
         if not isinstance(name, str):
             raise TypeError(f"name must be str, was {type(name)}")
@@ -91,16 +90,29 @@ class ModelQuantity:
         :return:
             string representation of the ModelQuantity
         """
-        return str(self._identifier)
+        return str(self._symbol)
 
-    def get_id(self) -> sp.Symbol:
+    def get_sym(self) -> sp.Symbol:
+        """
+        ModelQuantity symbol
+
+        :return:
+            Symbol of the ModelQuantity
+        """
+        return self._symbol
+
+    def get_id(self) -> str:
         """
         ModelQuantity identifier
 
         :return:
             identifier of the ModelQuantity
         """
-        return self._identifier
+        return (
+            self._symbol.name
+            if hasattr(self._symbol, "name")
+            else str(self._symbol)
+        )
 
     def get_name(self) -> str:
         """
@@ -139,7 +151,7 @@ class ConservationLaw(ModelQuantity):
 
     def __init__(
         self,
-        identifier: sp.Symbol,
+        symbol: sp.Symbol,
         name: str,
         value: sp.Expr,
         coefficients: dict[sp.Symbol, sp.Expr],
@@ -148,8 +160,8 @@ class ConservationLaw(ModelQuantity):
         """
         Create a new ConservationLaw instance.
 
-        :param identifier:
-            unique identifier of the ConservationLaw
+        :param symbol:
+            unique symbol of the ConservationLaw
 
         :param name:
             individual name of the ConservationLaw (does not need to be
@@ -161,26 +173,26 @@ class ConservationLaw(ModelQuantity):
             coefficients of the states in the sum
 
         :param state_id:
-            identifier of the state that this conservation law replaces
+            Symbol of the state that this conservation law replaces
         """
-        self._state_expr: sp.Symbol = identifier - (value - state_id)
+        self._state_expr: sp.Expr = symbol - (value - state_id)
         self._coefficients: dict[sp.Symbol, sp.Expr] = coefficients
         self._ncoeff: sp.Expr = coefficients[state_id]
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
 
-    def get_ncoeff(self, state_id) -> sp.Expr | int | float:
+    def get_ncoeff(self, state_sym: sp.Symbol) -> sp.Expr | int | float:
         """
         Computes the normalized coefficient a_i/a_j where i is the index of
         the provided state_id and j is the index of the state that is
         replaced by this conservation law. This can be used to compute both
         dtotal_cl/dx_rdata (=ncoeff) and dx_rdata/dx_solver (=-ncoeff).
 
-        :param state_id:
-            identifier of the state
+        :param state_sym:
+            Symbol of the state
 
         :return: normalized coefficient of the state
         """
-        return self._coefficients.get(state_id, 0.0) / self._ncoeff
+        return self._coefficients.get(state_sym, 0.0) / self._ncoeff
 
     def get_x_rdata(self):
         """
@@ -197,7 +209,7 @@ class AlgebraicEquation(ModelQuantity):
     An AlgebraicEquation defines an algebraic equation.
     """
 
-    def __init__(self, identifier: str, value: sp.Expr):
+    def __init__(self, symbol: sp.Symbol, value: sp.Expr):
         """
         Create a new AlgebraicEquation instance.
 
@@ -205,7 +217,7 @@ class AlgebraicEquation(ModelQuantity):
             Formula of the algebraic equation, the solution is given by
             ``formula == 0``
         """
-        super().__init__(sp.Symbol(identifier), identifier, value)
+        super().__init__(symbol, symbol.name, value)
 
     def get_free_symbols(self):
         return self._value.free_symbols
@@ -229,7 +241,7 @@ class State(ModelQuantity):
         :return: x_rdata expression
         """
         if self._conservation_law is None:
-            return self.get_id()
+            return self.get_sym()
         else:
             return self._conservation_law.get_x_rdata()
 
@@ -242,7 +254,7 @@ class State(ModelQuantity):
         :return: dx_rdata_dx_solver expression
         """
         if self._conservation_law is None:
-            return sp.Integer(self._identifier == state_id)
+            return sp.Integer(self._symbol == state_id)
         else:
             return -self._conservation_law.get_ncoeff(state_id)
 
@@ -261,12 +273,12 @@ class AlgebraicState(State):
     An AlgebraicState defines an entity that is algebraically determined
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, init: sp.Expr):
+    def __init__(self, symbol: sp.Symbol, name: str, init: sp.Expr):
         """
         Create a new AlgebraicState instance.
 
-        :param identifier:
-            unique identifier of the AlgebraicState
+        :param symbol:
+            unique symbol of the AlgebraicState
 
         :param name:
             individual name of the AlgebraicState (does not need to be unique)
@@ -274,9 +286,9 @@ class AlgebraicState(State):
         :param init:
             initial value of the AlgebraicState
         """
-        super().__init__(identifier, name, init)
+        super().__init__(symbol, name, init)
 
-    def has_conservation_law(self):
+    def has_conservation_law(self) -> bool:
         """
         Checks whether this state has a conservation law assigned.
 
@@ -288,7 +300,7 @@ class AlgebraicState(State):
         return self._value.free_symbols
 
     def get_x_rdata(self):
-        return self._identifier
+        return self._symbol
 
 
 class DifferentialState(State):
@@ -306,14 +318,14 @@ class DifferentialState(State):
     """
 
     def __init__(
-        self, identifier: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr
+        self, symbol: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr
     ):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
         by ``dt``
 
-        :param identifier:
-            unique identifier of the state
+        :param symbol:
+            unique symbol of the state
 
         :param name:
             individual name of the state (does not need to be unique)
@@ -324,7 +336,7 @@ class DifferentialState(State):
         :param dt:
             time derivative
         """
-        super().__init__(identifier, name, init)
+        super().__init__(symbol, name, init)
         self._dt = cast_to_sym(dt, "dt")
         self._conservation_law: ConservationLaw | None = None
 
@@ -401,7 +413,7 @@ class Observable(ModelQuantity):
 
     def __init__(
         self,
-        identifier: sp.Symbol,
+        symbol: sp.Symbol,
         name: str,
         value: sp.Expr,
         measurement_symbol: sp.Symbol | None = None,
@@ -411,8 +423,8 @@ class Observable(ModelQuantity):
         """
         Create a new Observable instance.
 
-        :param identifier:
-            unique identifier of the Observable
+        :param symbol:
+            unique symbol of the Observable
 
         :param name:
             individual name of the Observable (does not need to be unique)
@@ -424,7 +436,7 @@ class Observable(ModelQuantity):
             observable transformation, only applies when evaluating objective
             function or residuals
         """
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
         self._measurement_symbol = measurement_symbol
         self._regularization_symbol = None
         self.trafo = transformation
@@ -432,7 +444,7 @@ class Observable(ModelQuantity):
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
             self._measurement_symbol = generate_measurement_symbol(
-                self.get_id()
+                self.get_sym()
             )
 
         return self._measurement_symbol
@@ -440,7 +452,7 @@ class Observable(ModelQuantity):
     def get_regularization_symbol(self) -> sp.Symbol:
         if self._regularization_symbol is None:
             self._regularization_symbol = generate_regularization_symbol(
-                self.get_id()
+                self.get_sym()
             )
 
         return self._regularization_symbol
@@ -457,7 +469,7 @@ class EventObservable(Observable):
 
     def __init__(
         self,
-        identifier: sp.Symbol,
+        symbol: sp.Symbol,
         name: str,
         value: sp.Expr,
         event: sp.Symbol,
@@ -467,7 +479,7 @@ class EventObservable(Observable):
         """
         Create a new EventObservable instance.
 
-        :param identifier:
+        :param symbol:
             See :py:meth:`Observable.__init__`.
 
         :param name:
@@ -483,7 +495,7 @@ class EventObservable(Observable):
             Symbolic identifier of the corresponding event.
         """
         super().__init__(
-            identifier, name, value, measurement_symbol, transformation
+            symbol, name, value, measurement_symbol, transformation
         )
         self._event: sp.Symbol = event
 
@@ -503,12 +515,12 @@ class Sigma(ModelQuantity):
     abbreviated by ``sigma{y,z}``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: sp.Expr):
+    def __init__(self, symbol: sp.Symbol, name: str, value: sp.Expr):
         """
         Create a new Standard Deviation instance.
 
-        :param identifier:
-            unique identifier of the Standard Deviation
+        :param symbol:
+            unique symbol of the Standard Deviation
 
         :param name:
             individual name of the Standard Deviation (does not need to
@@ -521,7 +533,7 @@ class Sigma(ModelQuantity):
             raise RuntimeError(
                 "This class is meant to be sub-classed, not used directly."
             )
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
 
 
 class SigmaY(Sigma):
@@ -544,12 +556,12 @@ class Expression(ModelQuantity):
     Abbreviated by ``w``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: sp.Expr):
+    def __init__(self, symbol: sp.Symbol, name: str, value: sp.Expr):
         """
         Create a new Expression instance.
 
-        :param identifier:
-            unique identifier of the Expression
+        :param symbol:
+            unique symbol of the Expression
 
         :param name:
             individual name of the Expression (does not need to be unique)
@@ -557,7 +569,7 @@ class Expression(ModelQuantity):
         :param value:
             formula
         """
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
 
 
 class Parameter(ModelQuantity):
@@ -566,14 +578,12 @@ class Parameter(ModelQuantity):
     sensitivities may be computed, abbreviated by ``p``.
     """
 
-    def __init__(
-        self, identifier: sp.Symbol, name: str, value: numbers.Number
-    ):
+    def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
         """
         Create a new Expression instance.
 
-        :param identifier:
-            unique identifier of the Parameter
+        :param symbol:
+            unique symbol of the Parameter
 
         :param name:
             individual name of the Parameter (does not need to be
@@ -582,7 +592,7 @@ class Parameter(ModelQuantity):
         :param value:
             numeric value
         """
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
 
 
 class Constant(ModelQuantity):
@@ -591,14 +601,12 @@ class Constant(ModelQuantity):
     sensitivities cannot be computed, abbreviated by ``k``.
     """
 
-    def __init__(
-        self, identifier: sp.Symbol, name: str, value: numbers.Number
-    ):
+    def __init__(self, symbol: sp.Symbol, name: str, value: numbers.Number):
         """
         Create a new Expression instance.
 
-        :param identifier:
-            unique identifier of the Constant
+        :param symbol:
+            unique symbol of the Constant
 
         :param name:
             individual name of the Constant (does not need to be unique)
@@ -606,7 +614,7 @@ class Constant(ModelQuantity):
         :param value:
             numeric value
         """
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
 
 
 class NoiseParameter(ModelQuantity):
@@ -615,18 +623,18 @@ class NoiseParameter(ModelQuantity):
     specific manner, abbreviated by ``np``. Only used for jax models.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str):
+    def __init__(self, symbol: sp.Symbol, name: str):
         """
         Create a new Expression instance.
 
-        :param identifier:
-            unique identifier of the NoiseParameter
+        :param symbol:
+            unique symbol of the NoiseParameter
 
         :param name:
             individual name of the NoiseParameter (does not need to be
             unique)
         """
-        super().__init__(identifier, name, 0.0)
+        super().__init__(symbol, name, 0.0)
 
 
 class ObservableParameter(ModelQuantity):
@@ -635,18 +643,18 @@ class ObservableParameter(ModelQuantity):
     manner, abbreviated by ``op``. Only used for jax models.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str):
+    def __init__(self, symbol: sp.Symbol, name: str):
         """
         Create a new Expression instance.
 
-        :param identifier:
-            unique identifier of the ObservableParameter
+        :param symbol:
+            unique symbol of the ObservableParameter
 
         :param name:
             individual name of the ObservableParameter (does not need to be
             unique)
         """
-        super().__init__(identifier, name, 0.0)
+        super().__init__(symbol, name, 0.0)
 
 
 class LogLikelihood(ModelQuantity):
@@ -657,12 +665,12 @@ class LogLikelihood(ModelQuantity):
     instances evaluated at all timepoints, abbreviated by ``Jy``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: sp.Expr):
+    def __init__(self, symbol: sp.Symbol, name: str, value: sp.Expr):
         """
         Create a new Expression instance.
 
-        :param identifier:
-            unique identifier of the LogLikelihood
+        :param symbol:
+            unique symbol of the LogLikelihood
 
         :param name:
             individual name of the LogLikelihood (does not need to be
@@ -675,7 +683,7 @@ class LogLikelihood(ModelQuantity):
             raise RuntimeError(
                 "This class is meant to be sub-classed, not used directly."
             )
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
 
 
 class LogLikelihoodY(LogLikelihood):
@@ -707,7 +715,7 @@ class Event(ModelQuantity):
 
     def __init__(
         self,
-        identifier: sp.Symbol,
+        symbol: sp.Symbol,
         name: str,
         value: sp.Expr,
         use_values_from_trigger_time: bool,
@@ -718,8 +726,8 @@ class Event(ModelQuantity):
         """
         Create a new Event instance.
 
-        :param identifier:
-            unique identifier of the Event
+        :param symbol:
+            unique symbol of the Event
 
         :param name:
             individual name of the Event (does not need to be unique)
@@ -741,7 +749,7 @@ class Event(ModelQuantity):
             the time point at which the event triggered (True), or at the time
             point at which the event assignment is evaluated (False).
         """
-        super().__init__(identifier, name, value)
+        super().__init__(symbol, name, value)
         # add the Event specific components
         self._assignments = assignments if assignments is not None else {}
         self._initial_value = initial_value
@@ -783,7 +791,7 @@ class Event(ModelQuantity):
         if len(self._assignments) == 0:
             return None
 
-        x_to_x_old = dict(zip(x, x_old))
+        x_to_x_old = dict(zip(x, x_old, strict=True))
 
         def get_bolus(x_i: sp.Symbol) -> sp.Expr:
             """

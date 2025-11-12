@@ -5,8 +5,8 @@ This module provides all necessary functionality to specify an ordinary
 differential equation model and generate executable jax simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
-:py:func:`amici.pysb_import.pysb2jax`,
-:py:func:`amici.sbml_import.SbmlImporter.sbml2jax` and
+:py:func:`amici.importers.pysb.pysb2jax`,
+:py:func:`amici.importers.sbml.SbmlImporter.` and
 :py:func:`amici.petab_import.import_model`.
 """
 
@@ -21,14 +21,12 @@ import sympy as sp
 from amici import (
     amiciModulePath,
 )
-from amici._codegen.template import apply_template
-from amici.de_export import is_valid_identifier
 from amici.de_model import DEModel
-from amici.import_utils import (
-    strip_pysb,
-)
+from amici.exporters.sundials.de_export import is_valid_identifier
+from amici.exporters.template import apply_template
 from amici.jax.jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
 from amici.jax.model import JAXModel
+from amici.jax.nn import generate_equinox
 from amici.logging import get_logger, log_execution_time, set_log_level
 from amici.sympy_utils import (
     _custom_pow_eval_derivative,
@@ -44,7 +42,7 @@ def _jax_variable_assignments(
 ) -> dict:
     return {
         f"{sym_name.upper()}_SYMS": "".join(
-            str(strip_pysb(s)) + ", " for s in model.sym(sym_name)
+            f"{s.name}, " for s in model.sym(sym_name)
         )
         if model.sym(sym_name)
         else "_"
@@ -62,7 +60,7 @@ def _jax_variable_equations(
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
-                (str(strip_pysb(s)) for s in model.sym(eq_name)),
+                (s.name for s in model.sym(eq_name)),
                 model.eq(eq_name).subs(subs),
                 indent,
             )
@@ -77,7 +75,7 @@ def _jax_return_variables(
 ) -> dict:
     return {
         f"{eq_name.upper()}_RET": _jnp_array_str(
-            strip_pysb(s) for s in model.sym(eq_name)
+            s.name for s in model.sym(eq_name)
         )
         if model.sym(eq_name)
         else "jnp.array([])"
@@ -88,7 +86,7 @@ def _jax_return_variables(
 def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
     return {
         f"{sym_name.upper()}_IDS": "".join(
-            f'"{strip_pysb(s)}", ' for s in model.sym(sym_name)
+            f'"{s.name}", ' for s in model.sym(sym_name)
         )
         if model.sym(sym_name)
         else "tuple()"
@@ -123,6 +121,7 @@ class ODEExporter:
         outdir: Path | str | None = None,
         verbose: bool | int | None = False,
         model_name: str | None = "model",
+        hybridization: dict[str, dict] = None,
     ):
         """
         Generate AMICI jax files for the ODE provided to the constructor.
@@ -139,6 +138,10 @@ class ODEExporter:
 
         :param model_name:
             name of the model to be used during code generation
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
 
@@ -161,6 +164,8 @@ class ODEExporter:
 
         self.model: DEModel = ode_model
 
+        self.hybridization = hybridization if hybridization is not None else {}
+
         self._code_printer = AmiciJaxCodePrinter()
 
     @log_execution_time("generating jax code", logger)
@@ -173,6 +178,7 @@ class ODEExporter:
         ):
             self._prepare_model_folder()
             self._generate_jax_code()
+            self._generate_nn_code()
 
     def _prepare_model_folder(self) -> None:
         """
@@ -261,6 +267,14 @@ class ODEExporter:
                 # can flag conflicts in the future
                 "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
             },
+            "NET_IMPORTS": "\n".join(
+                f"{net} = _module_from_path('{net}', Path(__file__).parent / '{net}.py')"
+                for net in self.hybridization.keys()
+            ),
+            "NETS": ",\n".join(
+                f'"{net}": {net}.net(jr.PRNGKey(0))'
+                for net in self.hybridization.keys()
+            ),
         }
 
         apply_template(
@@ -268,6 +282,14 @@ class ODEExporter:
             self.model_path / "__init__.py",
             tpl_data,
         )
+
+    def _generate_nn_code(self) -> None:
+        for net_name, net in self.hybridization.items():
+            generate_equinox(
+                net["model"],
+                self.model_path / f"{net_name}.py",
+                net["frozen_layers"],
+            )
 
     def _implicit_roots(self) -> list[sp.Expr]:
         """Return root functions that require rootfinding."""

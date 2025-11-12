@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     branches:
       - main
@@ -20,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
@@ -53,7 +54,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@amici100
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@main
 
     - name: Download benchmark collection
       run: |
@@ -70,7 +71,7 @@ jobs:
           --cov-append \
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -84,7 +85,7 @@ jobs:
       run: |
           python3 tests/benchmark_models/evaluate_benchmark.py
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
         path: |
@@ -97,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
         extract_subexpressions: ["false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
@@ -148,7 +149,7 @@ jobs:
           --cov-append
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

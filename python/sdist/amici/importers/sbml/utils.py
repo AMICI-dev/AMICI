@@ -11,8 +11,6 @@ from typing import TYPE_CHECKING
 import sympy as sp
 
 if TYPE_CHECKING:
-    from typing import Any
-
     SbmlID = str | sp.Symbol
 
 import xml.dom.minidom
@@ -21,10 +19,8 @@ import libsbml
 from sympy.core.parameters import evaluate
 from sympy.printing.mathml import MathMLContentPrinter
 
-from .import_utils import (
+from amici.importers.utils import (
     SBMLException,
-    _check_unsupported_functions,
-    _parse_special_functions,
     amici_time_symbol,
     sbml_time_symbol,
 )
@@ -399,6 +395,7 @@ def pretty_xml(ugly_xml: str) -> str:
     return pretty_xml[pretty_xml.index("\n") + 1 :]
 
 
+# TODO: replace by sbmlmath.SBMLMathMLPrinter
 class MathMLSbmlPrinter(MathMLContentPrinter):
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
 
@@ -485,57 +482,3 @@ def set_sbml_math(obj: libsbml.SBase, expr, **kwargs) -> None:
             f"expression:\n{expr}\n"
             f"MathML:\n{pretty_xml(mathml)}"
         )
-
-
-# TODO: replace by `sbmlmath` functions
-def mathml2sympy(
-    mathml: str,
-    *,
-    evaluate: bool = False,
-    locals: dict[str, Any] | None = None,
-    expression_type: str = "mathml2sympy",
-) -> sp.Basic:
-    ast = libsbml.readMathMLFromString(mathml)
-    if ast is None:
-        raise ValueError(
-            f"libSBML could not parse MathML string:\n{pretty_xml(mathml)}"
-        )
-
-    formula = _parse_logical_operators(libsbml.formulaToL3String(ast))
-
-    if evaluate:
-        expr = sp.sympify(formula, locals=locals)
-    else:
-        with sp.core.parameters.evaluate(False):
-            expr = sp.sympify(formula, locals=locals)
-
-    expr = _parse_special_functions(expr)
-
-    if expression_type is not None:
-        _check_unsupported_functions(expr, expression_type)
-
-    return expr
-
-
-# TODO: remove after getting rid of `mathml2sympy`
-def _parse_logical_operators(
-    math_str: str | float | None,
-) -> str | float | None:
-    """
-    Parses a math string in order to replace logical operators by a form
-    parsable for sympy
-
-    :param math_str:
-        str with mathematical expression
-    :param math_str:
-        parsed math_str
-    """
-    if not isinstance(math_str, str):
-        return math_str
-
-    if " xor(" in math_str or " Xor(" in math_str:
-        raise SBMLException(
-            "Xor is currently not supported as logical operation."
-        )
-
-    return (math_str.replace("&&", "&")).replace("||", "|")

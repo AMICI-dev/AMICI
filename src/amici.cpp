@@ -240,8 +240,8 @@ std::vector<std::unique_ptr<ReturnData>> run_simulations(
             auto mySolver = std::unique_ptr<Solver>(solver.clone());
             auto myModel = std::unique_ptr<Model>(model.clone());
 
-            /* if we fail we need to write empty return datas for the python
-             interface */
+            // If we fail, we need to write empty ReturnDatas for the Python
+            // interface
             if (skipThrough) {
                 ConditionContext conditionContext(myModel.get(), edatas[i]);
                 results[i] = std::make_unique<ReturnData>(solver, model);

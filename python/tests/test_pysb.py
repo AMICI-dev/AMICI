@@ -17,8 +17,10 @@ import pysb.examples  # noqa: F811
 import pytest
 import sympy as sp
 from amici import ParameterScaling, parameter_scaling_from_int_vector
+from amici.de_model_components import Event
 from amici.gradient_check import check_derivatives
-from amici.pysb_import import pysb2amici
+from amici.importers.pysb import pysb2amici
+from amici.importers.utils import amici_time_symbol
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
 from pysb.simulator import ScipyOdeSimulator
@@ -343,17 +345,13 @@ def test_heavyside_and_special_symbols():
     )
 
     with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
-        pysb2amici(
+        amici_model = pysb2amici(
             model,
             outdir,
             verbose=True,
             observation_model=[amici.MeasurementChannel("a")],
         )
 
-        model_module = amici.import_model_module(
-            module_name=model.name, module_path=outdir
-        )
-        amici_model = model_module.get_model()
         assert amici_model.ne
 
 
@@ -395,3 +393,47 @@ def test_energy():
         check_derivatives(
             amici_model, solver, epsilon=1e-4, rtol=1e-2, atol=1e-2
         )
+
+
+@skip_on_valgrind
+def test_pysb_event(tempdir):
+    """Test adding events to PySB models."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_event_test")
+    a = pysb.Monomer("A")
+    pysb.Initial(a(), pysb.Parameter("a0"))
+    pysb.Rule("deg", a() >> None, pysb.Parameter("kk", 1.0))
+
+    events = [
+        Event(
+            # note that unlike for SBML import, we must omit the real=True here
+            symbol=sp.Symbol("event1"),
+            name="Event1",
+            value=amici_time_symbol - 5,
+            assignments={sp.Symbol("__s0"): sp.Symbol("__s0") + 1000},
+            use_values_from_trigger_time=False,
+        )
+    ]
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        verbose=True,
+        observation_model=[amici.MeasurementChannel("a")],
+        compute_conservation_laws=False,
+        _events=events,
+    )
+
+    model_module = amici.import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+    assert amici_model.ne
+    amici_model.set_timepoints([0, 4, 5])
+
+    np.testing.assert_allclose(
+        amici_model.simulate().x, np.array([[0.0], [0.0], [1000.0]])
+    )

@@ -102,6 +102,27 @@ def __deepcopy__(self, memo):
     # invoke copy constructor
     return type(self)(self)
 
+def __reduce__(self):
+    from amici.swig_wrappers import restore_edata
+
+    return (
+        restore_edata,
+        (
+            # ExpData ctor arguments
+            (
+                self.nytrue(),
+                self.nztrue(),
+                self.nmaxevent(),
+                self.get_timepoints(),
+                self.get_observed_data(),
+                self.get_observed_data_std_dev(),
+                self.get_observed_events(),
+                self.get_observed_events_std_dev(),
+            ),
+            dict(self)
+        ),
+        {}
+    )
 %}
 };
 %extend std::unique_ptr<amici::ExpData> {

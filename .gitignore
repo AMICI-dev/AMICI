@@ -38,6 +38,9 @@ models/model_calvetti/build/*
 
 amici_models/
 
+# PEtab SciML test suite (downloaded dynamically)
+tests/sciml/testsuite/
+
 simulate_model_*_hdf.m
 simulate_model_*.m
 
@@ -138,8 +141,6 @@ tests/sbml/sbml-test-suite/
 */sbml-semantic-test-cases/*
 tests/sbml/SBMLTestModels/
 tests/benchmark_models/test_bmc
-tests/petab_test_suite
-petab_test_suite
 */tests/BIOMD0000000529/*
 
 python/examples/example_steadystate/model_steadystate_scaled/*
@@ -196,3 +197,5 @@ debug/*
 tests/benchmark_models/cache_fiddy/*
 venv/*
 .coverage
+tests/sciml/models/*
+amici_models

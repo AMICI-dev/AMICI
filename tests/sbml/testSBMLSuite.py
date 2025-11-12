@@ -113,7 +113,7 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
                 rtol,
             )
 
-    except amici.sbml_import.SBMLException as err:
+    except amici.importers.sbml.SBMLException as err:
         pytest.skip(str(err))
     finally:
         if model_dir:

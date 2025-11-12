@@ -15,13 +15,6 @@ import numpy as np
 import sympy as sp
 from sympy import ImmutableDenseMatrix, MutableDenseMatrix
 
-from ._codegen.cxx_functions import (
-    nobody_functions,
-    sensi_functions,
-    sparse_functions,
-    var_in_function_signature,
-)
-from .cxxcodeprinter import csc_matrix
 from .de_model_components import (
     AlgebraicEquation,
     AlgebraicState,
@@ -31,6 +24,7 @@ from .de_model_components import (
     Event,
     EventObservable,
     Expression,
+    LogLikelihood,
     LogLikelihoodRZ,
     LogLikelihoodY,
     LogLikelihoodZ,
@@ -39,17 +33,24 @@ from .de_model_components import (
     Observable,
     ObservableParameter,
     Parameter,
+    Sigma,
     SigmaY,
     SigmaZ,
     State,
 )
-from .import_utils import (
+from .exporters.sundials.cxx_functions import (
+    nobody_functions,
+    sensi_functions,
+    sparse_functions,
+    var_in_function_signature,
+)
+from .exporters.sundials.cxxcodeprinter import csc_matrix
+from .importers.utils import (
     ObservableTransformation,
     SBMLException,
     _default_simplify,
     amici_time_symbol,
     smart_subs_dict,
-    strip_pysb,
     toposort_symbols,
     unique_preserve_order,
 )
@@ -62,7 +63,7 @@ from .sympy_utils import (
 )
 
 if TYPE_CHECKING:
-    from .splines import AbstractSpline
+    from amici.importers.sbml.splines import AbstractSpline
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -204,6 +205,7 @@ class DEModel:
         verbose: bool | int | None = False,
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
+        hybridisation: bool = False,
     ):
         """
         Create a new DEModel instance.
@@ -645,7 +647,7 @@ class DEModel:
         try:
             ix = next(
                 filter(
-                    lambda is_s: is_s[1].get_id() == state,
+                    lambda is_s: is_s[1].get_sym() == state,
                     enumerate(self._differential_states),
                 )
             )[0]
@@ -654,7 +656,7 @@ class DEModel:
                 f"Specified state {state} was not found in the model states."
             )
 
-        state_id = self._differential_states[ix].get_id()
+        state_id = self._differential_states[ix].get_sym()
 
         # \sum_{i≠j}(a_i * x_i)/a_j
         target_expression = (
@@ -701,7 +703,7 @@ class DEModel:
         self._splines.append(spline)
         self.add_component(
             Expression(
-                identifier=spline.sbml_id,
+                symbol=spline.sbml_id,
                 name=str(spline.sbml_id),
                 value=spline_expr,
             )
@@ -1133,22 +1135,18 @@ class DEModel:
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        str(strip_pysb(x.get_id())).replace(
-                            "observableParameter", ""
-                        )
+                        x.get_id().replace("observableParameter", "")
                     ),
                 )
             if name == "np":
                 components = sorted(
                     components,
                     key=lambda x: int(
-                        str(strip_pysb(x.get_id())).replace(
-                            "noiseParameter", ""
-                        )
+                        x.get_id().replace("noiseParameter", "")
                     ),
                 )
             self._syms[name] = sp.Matrix(
-                [comp.get_id() for comp in components]
+                [comp.get_sym() for comp in components]
             )
             if name == "y":
                 self._syms["my"] = sp.Matrix(
@@ -1165,7 +1163,7 @@ class DEModel:
         elif name == "x":
             self._syms[name] = sp.Matrix(
                 [
-                    state.get_id()
+                    state.get_sym()
                     for state in self.states()
                     if not state.has_conservation_law()
                 ]
@@ -1211,8 +1209,7 @@ class DEModel:
                 [
                     [
                         sp.Symbol(
-                            f"s{strip_pysb(tcl.get_id())}__"
-                            f"{strip_pysb(par.get_id())}",
+                            f"s{tcl.get_id()}__{par.get_id()}",
                             real=True,
                         )
                         for par in self._parameters
@@ -1309,7 +1306,7 @@ class DEModel:
         w_toposorted = toposort_symbols(
             dict(
                 zip(
-                    [expr.get_id() for expr in self._expressions],
+                    [expr.get_sym() for expr in self._expressions],
                     [expr.get_val() for expr in self._expressions],
                     strict=True,
                 )
@@ -1390,9 +1387,11 @@ class DEModel:
         )
 
         return [
-            free_symbols_dt.count(str(self._differential_states[idx].get_id()))
+            free_symbols_dt.count(
+                str(self._differential_states[idx].get_sym())
+            )
             + free_symbols_expr.count(
-                str(self._differential_states[idx].get_id())
+                str(self._differential_states[idx].get_sym())
             )
             for idx in idxs
         ]
@@ -1525,7 +1524,7 @@ class DEModel:
         elif name == "x_solver":
             self._eqs[name] = sp.Matrix(
                 [
-                    state.get_id()
+                    state.get_sym()
                     for state in self.states()
                     if not state.has_conservation_law()
                 ]
@@ -1701,7 +1700,7 @@ class DEModel:
             event_observables = [
                 sp.zeros(self.num_eventobs(), 1) for _ in self._events
             ]
-            event_ids = [e.get_id() for e in self._events]
+            event_ids = [e.get_sym() for e in self._events]
             z2event = [
                 event_ids.index(event_obs.get_event())
                 for event_obs in self._event_observables
@@ -2282,7 +2281,7 @@ class DEModel:
             list of state identifiers
         """
         return [
-            (state.get_id(), state.get_x_rdata())
+            (state.get_sym(), state.get_x_rdata())
             for state in self.states()
             if state.has_conservation_law()
         ]
@@ -2335,7 +2334,7 @@ class DEModel:
         if not isinstance(ic, sp.Basic):
             return False
         return any(
-            fp in (c.get_id() for c in self._constants)
+            fp in (c.get_sym() for c in self._constants)
             for fp in ic.free_symbols
         )
 
@@ -2446,21 +2445,23 @@ class DEModel:
             return None
 
         for root in roots:
-            if sp.simplify(root_found - root.get_val()).is_zero:
-                return root.get_id()
+            if (difference := (root_found - root.get_val())).is_zero or (
+                self._simplify and self._simplify(difference).is_zero
+            ):
+                return root.get_sym()
 
         # create an event for a new root function
         root_symstr = f"Heaviside_{len(roots)}"
         roots.append(
             Event(
-                identifier=sp.Symbol(root_symstr),
+                symbol=sp.Symbol(root_symstr),
                 name=root_symstr,
                 value=root_found,
                 assignments=None,
                 use_values_from_trigger_time=True,
             )
         )
-        return roots[-1].get_id()
+        return roots[-1].get_sym()
 
     def _collect_heaviside_roots(
         self,
@@ -2539,6 +2540,186 @@ class DEModel:
                 dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
 
         return dxdt
+
+    @property
+    def _components(self) -> list[ModelQuantity]:
+        """
+        Returns the components of the model
+
+        :return:
+            components of the model
+        """
+        return (
+            self._algebraic_states
+            + self._algebraic_equations
+            + self._conservation_laws
+            + self._constants
+            + self._differential_states
+            + self._event_observables
+            + self._events
+            + self._expressions
+            + self._log_likelihood_ys
+            + self._log_likelihood_zs
+            + self._log_likelihood_rzs
+            + self._observables
+            + self._parameters
+            + self._sigma_ys
+            + self._sigma_zs
+            + self._splines
+        )
+
+    def _process_hybridization(self, hybridization: dict) -> None:
+        """
+        Parses the hybridization information and updates the model accordingly
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
+        """
+        added_expressions = False
+        orig_obs = tuple([s.get_sym() for s in self._observables])
+        for net_id, net in hybridization.items():
+            if net["static"]:
+                continue  # do not integrate into ODEs, handle in amici.jax.petab
+            inputs = [
+                comp
+                for comp in self._components
+                if str(comp.get_sym()) in net["input_vars"]
+            ]
+            # sort inputs by order in input_vars
+            inputs = sorted(
+                inputs,
+                key=lambda comp: net["input_vars"].index(str(comp.get_sym())),
+            )
+            if len(inputs) != len(net["input_vars"]):
+                found_vars = {str(comp.get_sym()) for comp in inputs}
+                missing_vars = set(net["input_vars"]) - found_vars
+                raise ValueError(
+                    f"Could not find all input variables for neural network {net_id}. "
+                    f"Missing variables: {sorted(missing_vars)}"
+                )
+            for inp in inputs:
+                if isinstance(
+                    inp,
+                    Sigma
+                    | LogLikelihood
+                    | Event
+                    | ConservationLaw
+                    | Observable,
+                ):
+                    raise NotImplementedError(
+                        f"{inp.get_name()} ({type(inp)}) is not supported as neural network input."
+                    )
+
+            outputs = {
+                out_var: {"comp": comp, "ind": net["output_vars"][out_var]}
+                for comp in self._components
+                if (out_var := str(comp.get_sym())) in net["output_vars"]
+                # TODO: SYNTAX NEEDS to CHANGE
+                or (out_var := str(comp.get_sym()) + "_dot")
+                in net["output_vars"]
+            }
+            if len(outputs.keys()) != len(net["output_vars"]):
+                found_vars = set(outputs.keys())
+                missing_vars = set(net["output_vars"]) - found_vars
+                raise ValueError(
+                    f"Could not find all output variables for neural network {net_id}. "
+                    f"Missing variables: {sorted(missing_vars)}"
+                )
+
+            for out_var, parts in outputs.items():
+                comp = parts["comp"]
+                # remove output from model components
+                if isinstance(comp, Parameter):
+                    self._parameters.remove(comp)
+                elif isinstance(comp, Expression):
+                    self._expressions.remove(comp)
+                elif isinstance(comp, DifferentialState):
+                    pass
+                else:
+                    raise NotImplementedError(
+                        f"{comp.get_name()} ({type(comp)}) is not supported as neural network output."
+                    )
+
+                # generate dummy Function
+                out_val = sp.Function(net_id)(
+                    *[input.get_sym() for input in inputs], parts["ind"]
+                )
+
+                # add to the model
+                if isinstance(comp, DifferentialState):
+                    ix = self._differential_states.index(comp)
+                    # TODO: SYNTAX NEEDS to CHANGE
+                    if out_var.endswith("_dot"):
+                        self._differential_states[ix].set_dt(out_val)
+                    else:
+                        self._differential_states[ix].set_val(out_val)
+                else:
+                    self.add_component(
+                        Expression(
+                            symbol=comp.get_sym(),
+                            name=net_id,
+                            value=out_val,
+                        )
+                    )
+                    added_expressions = True
+
+            observables = {
+                ob_var: {"comp": comp, "ind": net["observable_vars"][ob_var]}
+                for comp in self._components
+                if (ob_var := str(comp.get_sym())) in net["observable_vars"]
+                # # TODO: SYNTAX NEEDS to CHANGE
+                # or (ob_var := str(comp.get_id()) + "_dot")
+                # in net["observable_vars"]
+            }
+            if len(observables.keys()) != len(net["observable_vars"]):
+                found_vars = set(observables.keys())
+                missing_vars = set(net["observable_vars"]) - found_vars
+                raise ValueError(
+                    f"Could not find all observable variables for neural network {net_id}. "
+                    f"Missing variables: {sorted(missing_vars)}"
+                )
+
+            for ob_var, parts in observables.items():
+                comp = parts["comp"]
+                if isinstance(comp, Observable):
+                    self._observables.remove(comp)
+                else:
+                    raise ValueError(
+                        f"{comp.get_name()} ({type(comp)}) is not an observable."
+                    )
+                out_val = sp.Function(net_id)(
+                    *[input.get_sym() for input in inputs], parts["ind"]
+                )
+                # add to the model
+                self.add_component(
+                    Observable(
+                        symbol=comp.get_sym(),
+                        name=net_id,
+                        value=out_val,
+                    )
+                )
+
+        new_order = [orig_obs.index(s.get_sym()) for s in self._observables]
+        self._observables = [self._observables[i] for i in new_order]
+
+        if added_expressions:
+            # toposort expressions
+            w_sorted = toposort_symbols(
+                dict(
+                    zip(
+                        self.sym("w"),
+                        self.eq("w"),
+                        strict=True,
+                    )
+                )
+            )
+            old_syms = tuple(self._syms["w"])
+            topo_expr_syms = tuple(w_sorted.keys())
+            new_order = [old_syms.index(s) for s in topo_expr_syms]
+            self._expressions = [self._expressions[i] for i in new_order]
+            self._syms["w"] = sp.Matrix(topo_expr_syms)
+            self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
 
     def get_explicit_roots(self) -> set[sp.Expr]:
         """
