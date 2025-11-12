@@ -670,12 +670,12 @@ def _add_expression(
             name == str(channel.sigma)
             for channel in observation_model.values()
         ):
-            component = SigmaY
+            component_type = SigmaY
         else:
-            component = Expression
-        ode_model.add_component(
-            component(sym, name, _parse_special_functions(expr))
-        )
+            component_type = Expression
+
+        component = component_type(sym, name, _parse_special_functions(expr))
+        ode_model.add_component(component)
 
     if name in observation_model:
         noise_dist = observation_model[name].noise_distribution

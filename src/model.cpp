@@ -1447,8 +1447,8 @@ void Model::get_event_time_sensitivity(
         fstau(
             &stau.at(ip), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), state_.total_cl.data(), sx.data(ip),
-            plist(ip), ie
+            state_.h.data(), derived_state_.w_.data(), dx.data(),
+            state_.total_cl.data(), sx.data(ip), plist(ip), ie
         );
     }
 }
@@ -1520,8 +1520,8 @@ void Model::add_adjoint_state_event_update(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, compute_x_pos(x),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), dx.data(), ie, xdot.data(), xdot_old.data(),
-        x_old.data(), xB.data(), state_.total_cl.data()
+        state_.h.data(), derived_state_.w_.data(), dx.data(), ie, xdot.data(),
+        xdot_old.data(), x_old.data(), xB.data(), state_.total_cl.data()
     );
 
     if (always_check_finite_) {
@@ -1546,7 +1546,8 @@ void Model::add_adjoint_quadrature_event_update(
         fdeltaqB(
             derived_state_.deltaqB_.data(), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), plist(ip), ie, xdot.data(),
+            state_.h.data(), derived_state_.w_.data(), dx.data(), plist(ip), ie,
+            xdot.data(),
             xdot_old.data(), x_old.data(), xB.data()
         );
 

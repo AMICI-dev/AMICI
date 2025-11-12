@@ -10,7 +10,7 @@
 namespace amici {
 namespace model_model_events_py {
 
-void root_model_events_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl){
+void root_model_events_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl){
     root[0] = x2 - x3;
     root[1] = x1 - x3;
     root[2] = p4 - t;

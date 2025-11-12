@@ -284,6 +284,8 @@ class DEModel:
         ] = {
             "sroot": {
                 "eq": "root",
+                # TODO?
+                # "chainvars": ["x", "w"],
                 "chainvars": ["x"],
                 "var": "p",
                 "dxdz_name": "sx",
@@ -1132,36 +1134,18 @@ class DEModel:
         and replaces the formulae of the found roots by identifiers of AMICI's
         Heaviside function implementation in the right-hand side
         """
-        # toposorted w_sym -> w_expr for substitution of 'w' in trigger function
-        #  do only once. `w` is not modified during this function.
-        w_toposorted = toposort_symbols(
-            dict(
-                zip(
-                    [expr.get_sym() for expr in self._expressions],
-                    [expr.get_val() for expr in self._expressions],
-                    strict=True,
-                )
-            )
-        )
-
         # Track all roots functions in the right-hand side
         roots = copy.deepcopy(self._events)
         for state in self._differential_states:
-            state.set_dt(
-                self._process_heavisides(state.get_dt(), roots, w_toposorted)
-            )
+            state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
         for expr in self._expressions:
-            expr.set_val(
-                self._process_heavisides(expr.get_val(), roots, w_toposorted)
-            )
+            expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
         # remove all possible Heavisides from roots, which may arise from
         # the substitution of `'w'` in `_collect_heaviside_roots`
         for root in roots:
-            root.set_val(
-                self._process_heavisides(root.get_val(), roots, w_toposorted)
-            )
+            root.set_val(self._process_heavisides(root.get_val(), roots))
 
         # Now add the found roots to the model components
         for root in roots:
@@ -1171,10 +1155,10 @@ class DEModel:
             # add roots of heaviside functions
             self.add_component(root)
 
-        # Substitute 'w' expressions into root expressions, to avoid rewriting
-        # 'root.cpp' and 'stau.cpp' headers to include 'w.h'.
-        for event in self.events():
-            event.set_val(event.get_val().subs(w_toposorted))
+        # # Substitute 'w' expressions into root expressions, to avoid rewriting
+        # # 'root.cpp' and 'stau.cpp' headers to include 'w.h'.
+        # for event in self.events():
+        #     event.set_val(event.get_val().subs(w_toposorted))
 
     def _reorder_events(self) -> None:
         """
@@ -1503,19 +1487,25 @@ class DEModel:
             self._eqs[name] = smart_jacobian(self.eq("root"), time_symbol)
 
         elif name == "drootdt_total":
+            # root(t, x(t), w(t, x(t)))
+            # drootdt_total = drootdt + drootdx * dxdt + drootdw * dwdt_total
+            # dwdt_total = dwdt + dwdx * dxdt
             self._eqs[name] = self.eq("drootdt")
-            # backsubstitution of optimized right-hand side terms into RHS
-            # calling subs() is costly. We can skip it if we don't have any
-            # state-dependent roots.
+
+            # TODO xdot depends on w
+            xdot = self.eq("xdot")
             if self.num_states_solver() and not smart_is_zero_matrix(
                 drootdx := self.eq("drootdx")
             ):
-                w_sorted = toposort_symbols(
-                    dict(zip(self.sym("w"), self.eq("w"), strict=True))
-                )
-                tmp_xdot = smart_subs_dict(self.eq("xdot"), w_sorted)
-                self._eqs[name] += smart_multiply(drootdx, tmp_xdot)
+                self._eqs[name] += smart_multiply(drootdx, xdot)
 
+            if not smart_is_zero_matrix(drootdw := self.eq("drootdw")):
+                dwdt = self.eq("dwdt")
+                dwdx = self.eq("dwdx")
+
+                dwdt_total = dwdt + smart_multiply(dwdx, xdot)
+                self._eqs[name] += smart_multiply(drootdw, dwdt_total)
+            ...
         elif name == "deltax":
             # fill boluses for Heaviside functions, as empty state updates
             # would cause problems when writing the function file later
@@ -1598,16 +1588,27 @@ class DEModel:
             ]
 
         elif name == "dtaudx":
+            # TODO drootdx + drootdw * dwdx
             self._eqs[name] = [
-                self.eq("drootdx")[ie, :] / self.eq("drootdt_total")[ie]
+                (
+                    self.eq("drootdx")[ie, :]
+                    + self.eq("drootdw")[ie, :] * self.eq("dwdx")
+                )
+                / self.eq("drootdt_total")[ie]
                 if not self.eq("drootdt_total")[ie].is_zero
                 else sp.zeros(*self.eq("drootdx")[ie, :].shape)
                 for ie in range(self.num_events())
             ]
 
         elif name == "dtaudp":
+            # TODO drootdp + drootdw * dwdp
+            #   currently handled implicitly by _total_derivative
             self._eqs[name] = [
-                self.eq("drootdp")[ie, :] / self.eq("drootdt_total")[ie]
+                (
+                    self.eq("drootdp")[ie, :]
+                    # + self.eq("drootdw")[ie, :] * self.eq("dwdp")
+                )
+                / self.eq("drootdt_total")[ie]
                 if not self.eq("drootdt_total")[ie].is_zero
                 else sp.zeros(*self.eq("drootdp")[ie, :].shape)
                 for ie in range(self.num_events())
@@ -1757,6 +1758,9 @@ class DEModel:
                 smart_jacobian(self.eq("w")[self.num_cons_law() :, :], x)
             )
 
+        elif name == "dwdt":
+            self._eqs[name] = smart_jacobian(self.eq("w"), time_symbol)
+
         elif name == "iroot":
             self._eqs[name] = sp.Matrix(
                 [
@@ -1896,6 +1900,8 @@ class DEModel:
             ("xdot", "x"): "w",  # has generic implementation in c++ code
             ("w", "w"): "tcl",  # dtcldw = 0
             ("w", "x"): "tcl",  # dtcldx = 0
+            ("root", "x"): "w",
+            ("root", "t"): "w",
         }
         # automatically detect chainrule
         chainvars = [
@@ -1945,7 +1951,9 @@ class DEModel:
                             "attach this model."
                         )
 
-        if name == "dydw" and not smart_is_zero_matrix(derivative):
+        elif name in ("dydw", "drootdw") and not smart_is_zero_matrix(
+            derivative
+        ):
             dwdw = self.eq("dwdw")
             # h(k) = d{eq}dw*dwdw^k* (k=1)
             h = smart_multiply(derivative, dwdw)
@@ -2242,6 +2250,8 @@ class DEModel:
         :returns:
             Whether the expression is time-dependent.
         """
+        # TODO: handle w-dependency
+
         # `expr.free_symbols` will be different to `self._states.keys()`, so
         # it's easier to compare as `str`.
         expr_syms = {str(sym) for sym in expr.free_symbols}
@@ -2276,9 +2286,6 @@ class DEModel:
             unique identifier for root, or ``None`` if the root is not
             time-dependent
         """
-        if not self._expr_is_time_dependent(root_found):
-            return None
-
         for root in roots:
             if (difference := (root_found - root.get_val())).is_zero or (
                 self._simplify and self._simplify(difference).is_zero
@@ -2296,6 +2303,12 @@ class DEModel:
                 use_values_from_trigger_time=True,
             )
         )
+
+        if not self._expr_is_time_dependent(root_found):
+            # Not time-dependent. Return None, but we still need to create
+            # the event above
+            return None
+
         return roots[-1].get_sym()
 
     def _collect_heaviside_roots(
@@ -2326,7 +2339,6 @@ class DEModel:
         self,
         dxdt: sp.Expr,
         roots: list[Event],
-        w_toposorted: dict[sp.Symbol, sp.Expr],
     ) -> sp.Expr:
         """
         Parses the RHS of a state variable, checks for Heaviside functions,
@@ -2338,8 +2350,6 @@ class DEModel:
             right-hand side of state variable
         :param roots:
             list of known root functions with identifier
-        :param w_toposorted:
-            `w` symbols->expressions sorted in topological order
         :returns:
             dxdt with Heaviside functions replaced by amici helper variables
         """
@@ -2348,15 +2358,11 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots((dxdt,))
-        # substitute 'w' symbols in the root expression by their equations,
+        # TODO remove: substitute 'w' symbols in the root expression by their equations,
         #  because currently,
-        #  1) root functions must not depend on 'w'
-        #  2) the check for time-dependence currently assumes only state
+        #    1) root functions must not depend on 'w'
+        # FIXME 2) the check for time-dependence currently assumes only state
         #     variables are implicitly time-dependent
-        tmp_roots_old = [
-            (a.subs(w_toposorted), b.subs(w_toposorted))
-            for a, b in tmp_roots_old
-        ]
         for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_root_new = self._get_unique_root(tmp_root_old, roots)
