@@ -29,7 +29,7 @@ def test_amici_petab_problem_pregenerate():
         {app.model.get_parameter_ids()[0]: 0.12345}, scaled_parameters=True
     )
     for edata in edatas:
-        assert edata.parameters[0] == 0.12345
+        assert edata.free_parameters[0] == 0.12345
 
 
 @skip_on_valgrind
@@ -54,10 +54,10 @@ def test_amici_petab_problem_on_demand():
     )
     # previously generated ExpDatas are not updated
     for edata in edatas:
-        assert edata.parameters[0] != 0.12345
+        assert edata.free_parameters[0] != 0.12345
     # but newly generated ExpDatas are
     for edata in app.get_edatas():
-        assert edata.parameters[0] == 0.12345
+        assert edata.free_parameters[0] == 0.12345
 
     some_sim_condition = (
         petab_problem.measurement_df.simulationConditionId.iloc[0]

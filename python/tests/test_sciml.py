@@ -386,7 +386,7 @@ class TestProcessHybridizationErrors:
         model = DEModel()
 
         # Add some parameters
-        model._parameters = [
+        model._free_parameters = [
             FreeParameter(sp.Symbol("p1"), "param1", sp.Float(1.0)),
             FreeParameter(sp.Symbol("p2"), "param2", sp.Float(2.0)),
         ]

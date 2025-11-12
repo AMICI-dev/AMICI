@@ -851,14 +851,14 @@ def test_hardcode_parameters():
     assert sbml_model.getParameter("p1").getValue() != 0
 
     ode_model = sbml_importer._build_ode_model()
-    assert str(ode_model.parameters()) == "[p1]"
+    assert str(ode_model.free_parameters()) == "[p1]"
     assert ode_model.differential_states()[0].get_dt().name == "p1"
 
     ode_model = sbml_importer._build_ode_model(
         fixed_parameters=[],
         hardcode_symbols=["p1"],
     )
-    assert str(ode_model.parameters()) == "[]"
+    assert str(ode_model.free_parameters()) == "[]"
     assert (
         ode_model.differential_states()[0].get_dt()
         == sbml_model.getParameter("p1").getValue()
@@ -1182,9 +1182,9 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     # "species", because differential state
     assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
 
-    assert "p0" in [p.get_id() for p in de_model.parameters()]
-    assert "p1" not in [p.get_id() for p in de_model.parameters()]
-    assert "p2" not in [p.get_id() for p in de_model.parameters()]
+    assert "p0" in [p.get_id() for p in de_model.free_parameters()]
+    assert "p1" not in [p.get_id() for p in de_model.free_parameters()]
+    assert "p2" not in [p.get_id() for p in de_model.free_parameters()]
 
     assert list(de_model.sym("x_rdata")) == [
         symbol_with_assumptions("p2"),
