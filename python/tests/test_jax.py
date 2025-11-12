@@ -98,7 +98,7 @@ def test_dimerization():
             outdir,
             verbose=True,
             observation_model=[MC("a_obs"), MC("b_obs")],
-            constant_parameters=["ksyn_a", "ksyn_b"],
+            fixed_parameters=["ksyn_a", "ksyn_b"],
         )
         pysb2jax(
             model,

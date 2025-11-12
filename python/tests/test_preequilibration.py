@@ -723,7 +723,7 @@ def test_preequilibration_t0(tempdir):
         ant_str,
         model_name=module_name,
         output_dir=tempdir,
-        constant_parameters=["preeq_indicator"],
+        fixed_parameters=["preeq_indicator"],
     )
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
@@ -786,7 +786,7 @@ def test_preequilibration_events(tempdir):
         ant_str,
         model_name=module_name,
         output_dir=tempdir,
-        constant_parameters=["is_preeq"],
+        fixed_parameters=["is_preeq"],
     )
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir

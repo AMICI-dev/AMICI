@@ -276,7 +276,7 @@ class SbmlImporter:
         self,
         model_name: str,
         output_dir: str | Path = None,
-        constant_parameters: Iterable[str] = None,
+        fixed_parameters: Iterable[str] = None,
         observation_model: list[MeasurementChannel] = None,
         verbose: int | bool = logging.ERROR,
         assume_pow_positivity: bool = False,
@@ -315,8 +315,8 @@ class SbmlImporter:
             Directory where the generated model package will be stored.
             Defaults to :func:`amici.get_model_dir`.
 
-        :param constant_parameters:
-            list of SBML Ids identifying constant parameters
+        :param fixed_parameters:
+            SBML Ids to be excluded from sensitivity analysis
 
         :param observation_model:
             The different measurement channels that make up the observation
@@ -386,7 +386,7 @@ class SbmlImporter:
         set_log_level(logger, verbose)
 
         ode_model = self._build_ode_model(
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
             observation_model=observation_model,
             verbose=verbose,
             compute_conservation_laws=compute_conservation_laws,
@@ -526,7 +526,7 @@ class SbmlImporter:
 
     def _build_ode_model(
         self,
-        constant_parameters: Iterable[str] = None,
+        fixed_parameters: Iterable[str] = None,
         observation_model: list[MeasurementChannel] = None,
         verbose: int | bool = logging.ERROR,
         compute_conservation_laws: bool = True,
@@ -539,12 +539,10 @@ class SbmlImporter:
 
         See :py:func:`sbml2amici` for parameters.
         """
-        constant_parameters = (
-            list(constant_parameters) if constant_parameters else []
-        )
+        fixed_parameters = list(fixed_parameters) if fixed_parameters else []
 
         hardcode_symbols = set(hardcode_symbols) if hardcode_symbols else {}
-        if invalid := (set(constant_parameters) & set(hardcode_symbols)):
+        if invalid := (set(fixed_parameters) & set(hardcode_symbols)):
             raise ValueError(
                 "The following parameters were selected as both constant "
                 f"and hard-coded which is not allowed: {invalid}"
@@ -552,7 +550,7 @@ class SbmlImporter:
 
         self._reset_symbols()
         self._process_sbml(
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
 
@@ -695,14 +693,14 @@ class SbmlImporter:
     @log_execution_time("importing SBML", logger)
     def _process_sbml(
         self,
-        constant_parameters: list[str] = None,
+        fixed_parameters: list[str] = None,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
 
-        :param constant_parameters:
-            SBML Ids identifying constant parameters
+        :param fixed_parameters:
+            SBML Ids to be excluded from sensitivity analysis
         :param hardcode_symbols:
             Parameter IDs to be replaced by their values in the generated model.
         """
@@ -711,7 +709,7 @@ class SbmlImporter:
         self.check_support()
         self._gather_locals(hardcode_symbols=hardcode_symbols)
         self._process_parameters(
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
         self._process_compartments()
@@ -1193,21 +1191,24 @@ class SbmlImporter:
     @log_execution_time("processing SBML parameters", logger)
     def _process_parameters(
         self,
-        constant_parameters: list[str] = None,
+        fixed_parameters: list[str] = None,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
         Get parameter information from SBML model.
 
-        :param constant_parameters:
-            SBML Ids identifying constant parameters
+        :param fixed_parameters:
+            SBML Ids to be excluded from sensitivity analysis
+
+        :param hardcode_symbols:
+            Parameter IDs to be replaced by their values in the generated model.
         """
 
-        if constant_parameters is None:
-            constant_parameters = []
+        if fixed_parameters is None:
+            fixed_parameters = []
 
         # Ensure specified constant parameters exist in the model
-        for parameter in constant_parameters:
+        for parameter in fixed_parameters:
             if not self.sbml.getParameter(parameter):
                 raise KeyError(
                     f"Cannot make {parameter} a constant parameter: "
@@ -1225,7 +1226,7 @@ class SbmlImporter:
         fixed_parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
-            if parameter.getId() in constant_parameters
+            if parameter.getId() in fixed_parameters
         ]
         for parameter in fixed_parameters:
             ia_math = par_id_to_ia.get(parameter.getId())
@@ -1244,7 +1245,7 @@ class SbmlImporter:
         parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
-            if parameter.getId() not in constant_parameters
+            if parameter.getId() not in fixed_parameters
             and (
                 (ia_math := par_id_to_ia.get(parameter.getId())) is None
                 or ia_math.is_Number

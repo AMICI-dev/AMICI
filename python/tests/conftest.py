@@ -32,7 +32,7 @@ def sbml_example_presimulation_module():
 
     sbml_importer = amici.SbmlImporter(MODEL_PRESIMULATION_XML)
 
-    constant_parameters = ["DRUG_0", "KIN_0"]
+    fixed_parameters = ["DRUG_0", "KIN_0"]
 
     observables = amici.assignment_rules_to_observables(
         sbml_importer.sbml,  # the libsbml model object
@@ -46,7 +46,7 @@ def sbml_example_presimulation_module():
             output_dir=outdir,
             verbose=False,
             observation_model=observables,
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
         )
 
         yield amici.import_model_module(
@@ -60,7 +60,7 @@ def pysb_example_presimulation_module():
     pysb = pytest.importorskip("pysb")
     from amici.importers.pysb import pysb2amici
 
-    constant_parameters = ["DRUG_0", "KIN_0"]
+    fixed_parameters = ["DRUG_0", "KIN_0"]
 
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
@@ -83,7 +83,7 @@ def pysb_example_presimulation_module():
             outdir,
             verbose=True,
             observation_model=[MeasurementChannel("pPROT_obs")],
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
         )
 
         yield amici.import_model_module(model.name, outdir)

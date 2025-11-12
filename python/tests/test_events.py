@@ -760,7 +760,7 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
     antimony2amici(
         ant_model,
         # test with constant parameters and non-constant parameters!
-        constant_parameters=["four"],
+        fixed_parameters=["four"],
         model_name=module_name,
         output_dir=tempdir,
     )
@@ -1213,7 +1213,7 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
         E2: at some_time >= 10 and time < 1, t0 = true:
             target2 = target2 + 1;
         """,
-        constant_parameters=["k1"],
+        fixed_parameters=["k1"],
         model_name=model_name,
         output_dir=tempdir,
     )

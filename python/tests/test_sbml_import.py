@@ -244,7 +244,7 @@ def model_steadystate_module():
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            constant_parameters=["k0"],
+            fixed_parameters=["k0"],
             observation_model=list(observables.values()),
         )
 
@@ -303,7 +303,7 @@ def test_presimulation_events(tempdir):
     at time >= -one and presim_indicator == 1: presim_target_1 = presim_target_1 + one
     at time >= one and presim_indicator == 0: mainsim_target = mainsim_target + 1
     """,
-        constant_parameters=["presim_indicator"],
+        fixed_parameters=["presim_indicator"],
         model_name=model_name,
         output_dir=tempdir,
     )
@@ -576,7 +576,7 @@ def model_test_likelihoods(tempdir):
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=tempdir,
-        constant_parameters=["k0"],
+        fixed_parameters=["k0"],
         observation_model=observation_model,
     )
 
@@ -664,7 +664,7 @@ def test_likelihoods_error():
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            constant_parameters=["k0"],
+            fixed_parameters=["k0"],
             observation_model=[
                 MC("o1", formula="x1", noise_distribution="nörmal")
             ],
@@ -855,7 +855,7 @@ def test_hardcode_parameters():
     assert ode_model.differential_states()[0].get_dt().name == "p1"
 
     ode_model = sbml_importer._build_ode_model(
-        constant_parameters=[],
+        fixed_parameters=[],
         hardcode_symbols=["p1"],
     )
     assert str(ode_model.parameters()) == "[]"
@@ -867,7 +867,7 @@ def test_hardcode_parameters():
     with pytest.raises(ValueError):
         sbml_importer._build_ode_model(
             # mutually exclusive
-            constant_parameters=["p1"],
+            fixed_parameters=["p1"],
             hardcode_symbols=["p1"],
         )
 

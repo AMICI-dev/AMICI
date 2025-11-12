@@ -30,7 +30,7 @@ def model_special_likelihoods():
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            constant_parameters=["k0"],
+            fixed_parameters=["k0"],
             observation_model=[
                 MC("o1", formula="100*10^x1", noise_distribution="binomial"),
                 MC(

@@ -150,7 +150,7 @@ def pysb2amici(
     model: pysb.Model,
     output_dir: str | Path | None = None,
     observation_model: list[MeasurementChannel] = None,
-    constant_parameters: list[str] = None,
+    fixed_parameters: list[str] = None,
     verbose: int | bool = False,
     assume_pow_positivity: bool = False,
     compiler: str = None,
@@ -196,9 +196,8 @@ def pysb2amici(
         ``MeasurementChannel.formula`` is expected to be
         ``None``. Event-observables are not supported.
 
-    :param constant_parameters:
-        list of :class:`pysb.core.Parameter` names that should be mapped as
-        fixed parameters
+    :param fixed_parameters:
+        list of :class:`pysb.core.Parameter` to be excluded from sensitivity analysis
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -248,15 +247,15 @@ def pysb2amici(
     """
     if observation_model is None:
         observation_model = []
-    if constant_parameters is None:
-        constant_parameters = []
+    if fixed_parameters is None:
+        fixed_parameters = []
 
     model_name = model_name or model.name
     output_dir = output_dir or amici.get_model_dir(model_name)
     set_log_level(logger, verbose)
     ode_model = ode_model_from_pysb_importer(
         model,
-        constant_parameters=constant_parameters,
+        fixed_parameters=fixed_parameters,
         observation_model=observation_model,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
@@ -300,7 +299,7 @@ def pysb2amici(
 @log_execution_time("creating ODE model", logger)
 def ode_model_from_pysb_importer(
     model: pysb.Model,
-    constant_parameters: list[str] = None,
+    fixed_parameters: list[str] = None,
     observation_model: list[MeasurementChannel] = None,
     compute_conservation_laws: bool = True,
     simplify: Callable = sp.powsimp,
@@ -319,7 +318,7 @@ def ode_model_from_pysb_importer(
     :param model:
         see :func:`amici.importers.pysb.pysb2amici`
 
-    :param constant_parameters:
+    :param fixed_parameters:
         see :func:`amici.importers.pysb.pysb2amici`
 
     :param observation_model:
@@ -356,8 +355,8 @@ def ode_model_from_pysb_importer(
         cache_simplify=cache_simplify,
     )
 
-    if constant_parameters is None:
-        constant_parameters = []
+    if fixed_parameters is None:
+        fixed_parameters = []
 
     if observation_model is None:
         observation_model = []
@@ -366,7 +365,7 @@ def ode_model_from_pysb_importer(
     pysb.bng.generate_equations(model, verbose=verbose)
 
     _process_pysb_species(model, ode)
-    _process_pysb_parameters(model, ode, constant_parameters, jax)
+    _process_pysb_parameters(model, ode, fixed_parameters, jax)
     if compute_conservation_laws:
         if events:
             raise NotImplementedError(
@@ -396,7 +395,7 @@ def ode_model_from_pysb_importer(
         for channel in observation_model.values()
     )
 
-    _process_stoichiometric_matrix(model, ode, constant_parameters)
+    _process_stoichiometric_matrix(model, ode, fixed_parameters)
 
     ode.generate_basic_variables()
 
@@ -405,7 +404,7 @@ def ode_model_from_pysb_importer(
 
 @log_execution_time("processing PySB stoich. matrix", logger)
 def _process_stoichiometric_matrix(
-    pysb_model: pysb.Model, ode_model: DEModel, constant_parameters: list[str]
+    pysb_model: pysb.Model, ode_model: DEModel, fixed_parameters: list[str]
 ) -> None:
     """
     Exploits the PySB stoichiometric matrix to generate xdot derivatives
@@ -416,8 +415,8 @@ def _process_stoichiometric_matrix(
     :param ode_model:
         DEModel instance
 
-    :param constant_parameters:
-        list of constant parameters
+    :param fixed_parameters:
+        list of model variables excluded from sensitivity analysis
     """
 
     x = ode_model.sym("x")
@@ -471,7 +470,7 @@ def _process_stoichiometric_matrix(
                 values = dflux_dw_dict
             # dp
             elif isinstance(fs, pysb.Parameter):
-                if fs.name in constant_parameters:
+                if fs.name in fixed_parameters:
                     continue
                 var = p
                 idx_cache = p_idx
@@ -537,7 +536,7 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
 def _process_pysb_parameters(
     pysb_model: pysb.Model,
     ode_model: DEModel,
-    constant_parameters: list[str],
+    fixed_parameters: list[str],
     jax: bool = False,
 ) -> None:
     """
@@ -547,8 +546,8 @@ def _process_pysb_parameters(
     :param pysb_model:
         pysb model
 
-    :param constant_parameters:
-        list of Parameters that should be constants
+    :param fixed_parameters:
+       model variables excluded from sensitivity analysis
 
     :param jax:
         if set to ``True``, the generated model will be compatible JAX export
@@ -558,7 +557,7 @@ def _process_pysb_parameters(
     """
     for par in pysb_model.parameters:
         args = [par, f"{par.name}"]
-        if par.name in constant_parameters:
+        if par.name in fixed_parameters:
             comp = FixedParameter
             args.append(par.value)
         elif jax and re.match(r"noiseParameter\d+", par.name):

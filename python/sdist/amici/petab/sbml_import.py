@@ -405,7 +405,7 @@ def import_model_sbml(
             model_name=model_name,
             output_dir=model_output_dir,
             observation_model=observation_model,
-            constant_parameters=fixed_parameters,
+            fixed_parameters=fixed_parameters,
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
             verbose=verbose,
             **kwargs,
