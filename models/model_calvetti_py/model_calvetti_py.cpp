@@ -5,7 +5,7 @@ namespace amici::model_model_calvetti_py {
 
 // clang-format off
 
-std::array<const char*, 0> parameter_names = {
+std::array<const char*, 0> free_parameter_names = {
     
 };
 
@@ -65,7 +65,7 @@ std::array<const char*, 17> expression_names = {
 "flux_r0", // w[16]
 };
 
-std::array<const char*, 0> parameter_ids = {
+std::array<const char*, 0> free_parameter_ids = {
     
 };
 

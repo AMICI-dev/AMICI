@@ -5,7 +5,7 @@ namespace amici::model_model_events_py {
 
 // clang-format off
 
-std::array<const char*, 4> parameter_names = {
+std::array<const char*, 4> free_parameter_names = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
@@ -37,7 +37,7 @@ std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 4> parameter_ids = {
+std::array<const char*, 4> free_parameter_ids = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]

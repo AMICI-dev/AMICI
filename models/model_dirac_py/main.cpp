@@ -38,7 +38,7 @@ int main() {
     solver->set_relative_tolerance(1e-8);
 
     // Run the simulation using default parameters set during model import
-    // (can be changed using model->setParameters() or model->setParameterBy*())
+    // (can be changed using model->set_free_parameters() or model->set_free_parameter_by*())
     auto rdata = run_simulation(*solver, nullptr, *model);
 
     // Print observable time course
@@ -69,7 +69,7 @@ int main() {
     // Print state sensitivities sx...
     // ... for the first timepoint...
     int i_time = 0;
-    // ... with respect to the first parameter
+    // ... with respect to the first free parameter
     int i_nplist = 0;
 
     // get identifiers from model

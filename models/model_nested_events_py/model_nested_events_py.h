@@ -20,7 +20,7 @@ extern std::array<const char*, 1> state_names;
 extern std::array<const char*, 1> observable_names;
 extern std::array<const ObservableScaling, 1> observable_scalings;
 extern std::array<const char*, 1> expression_names;
-extern std::array<const char*, 5> parameter_ids;
+extern std::array<const char*, 5> free_parameter_ids;
 extern std::array<const char*, 0> fixed_parameter_ids;
 extern std::array<const char*, 1> state_ids;
 extern std::array<const char*, 1> observable_ids;
@@ -144,7 +144,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
               },
               amici::SimulationParameters(
                   std::vector<realtype>{}, // fixedParameters
-                  std::vector<realtype>{0.10000000000000001, 1000.0, 2.0, 0.80000000000000004, 1.6000000000000001}        // dynamic parameters
+                  std::vector<realtype>{0.10000000000000001, 1000.0, 2.0, 0.80000000000000004, 1.6000000000000001}        // free parameters
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0},   // idlist
@@ -416,7 +416,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
     std::vector<std::string> get_free_parameter_names() const override {
@@ -473,7 +473,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
     std::vector<std::string> get_free_parameter_ids() const override {
@@ -552,7 +552,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "f005fac9e2de7c3c90be2ac55d4ad165471ed1e7";
+        return "40190b46b1b398e321314ded4169fe910b37c484";
     }
 
     bool has_quadratic_llh() const override {

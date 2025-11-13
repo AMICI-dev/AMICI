@@ -1,5 +1,6 @@
 """AMICI model package setup"""
 
+import importlib.metadata
 import os
 import sys
 from pathlib import Path
@@ -8,7 +9,6 @@ from amici import _get_amici_path
 from amici.custom_commands import AmiciBuildCMakeExtension
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
-import importlib.metadata
 
 
 def get_extension() -> CMakeExtension:

@@ -144,7 +144,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
               },
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
-                  std::vector<realtype>{TPL_PARAMETERS}        // dynamic parameters
+                  std::vector<realtype>{TPL_FREE_PARAMETERS}        // free parameters
               ),
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_ID},   // idlist
@@ -288,7 +288,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
     std::vector<std::string> get_free_parameter_names() const override {
@@ -345,7 +345,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
     std::vector<std::string> get_free_parameter_ids() const override {

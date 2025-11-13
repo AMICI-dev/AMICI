@@ -144,7 +144,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
               },
               amici::SimulationParameters(
                   std::vector<realtype>{0.90000000000000002}, // fixedParameters
-                  std::vector<realtype>{0.040000000000000001, 10000.0, 30000000.0}        // dynamic parameters
+                  std::vector<realtype>{0.040000000000000001, 10000.0, 30000000.0}        // free parameters
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0, 0.0},   // idlist
@@ -400,7 +400,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
     std::vector<std::string> get_free_parameter_names() const override {
@@ -457,7 +457,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
     std::vector<std::string> get_free_parameter_ids() const override {
@@ -536,7 +536,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "f005fac9e2de7c3c90be2ac55d4ad165471ed1e7";
+        return "40190b46b1b398e321314ded4169fe910b37c484";
     }
 
     bool has_quadratic_llh() const override {

@@ -5,8 +5,8 @@ namespace amici::model_TPL_MODELNAME {
 
 // clang-format off
 
-std::array<const char*, TPL_NP> parameter_names = {
-    TPL_PARAMETER_NAMES_INITIALIZER_LIST
+std::array<const char*, TPL_NP> free_parameter_names = {
+    TPL_FREE_PARAMETER_NAMES_INITIALIZER_LIST
 };
 
 std::array<const char*, TPL_NK> fixed_parameter_names = {
@@ -29,8 +29,8 @@ std::array<const char*, TPL_NW> expression_names = {
     TPL_EXPRESSION_NAMES_INITIALIZER_LIST
 };
 
-std::array<const char*, TPL_NP> parameter_ids = {
-    TPL_PARAMETER_IDS_INITIALIZER_LIST
+std::array<const char*, TPL_NP> free_parameter_ids = {
+    TPL_FREE_PARAMETER_IDS_INITIALIZER_LIST
 };
 
 std::array<const char*, TPL_NK> fixed_parameter_ids = {

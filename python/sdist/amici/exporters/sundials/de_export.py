@@ -1028,13 +1028,13 @@ class DEExporter:
             "NK": self.model.num_const(),
             "O2MODE": "amici::SecondOrderMode::none",
             # using code printer ensures proper handling of nan/inf
-            "PARAMETERS": self._code_printer.doprint(self.model.val("p"))[
+            "FREE_PARAMETERS": self._code_printer.doprint(self.model.val("p"))[
                 1:-1
             ],
             "FIXED_PARAMETERS": self._code_printer.doprint(
                 self.model.val("k")
             )[1:-1],
-            "PARAMETER_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
+            "FREE_PARAMETER_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "p"
             ),
             "STATE_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
@@ -1055,7 +1055,7 @@ class DEExporter:
             "EXPRESSION_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "w"
             ),
-            "PARAMETER_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
+            "FREE_PARAMETER_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
                 "p"
             ),
             "STATE_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(

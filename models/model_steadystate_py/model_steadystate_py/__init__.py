@@ -1,9 +1,10 @@
 """AMICI-generated module for model model_steadystate_py"""
 
 import sys
-from pathlib import Path
-import amici
 import warnings
+from pathlib import Path
+
+import amici
 
 # Ensure we are binary-compatible, see #556
 if "0.34.1" != amici.__version__:

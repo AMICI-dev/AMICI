@@ -5,7 +5,7 @@ namespace amici::model_model_jakstat_adjoint_py {
 
 // clang-format off
 
-std::array<const char*, 17> parameter_names = {
+std::array<const char*, 17> free_parameter_names = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
@@ -59,7 +59,7 @@ std::array<const char*, 2> expression_names = {
 "flux_r0", // w[1]
 };
 
-std::array<const char*, 17> parameter_ids = {
+std::array<const char*, 17> free_parameter_ids = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]

@@ -5,7 +5,7 @@ namespace amici::model_model_nested_events_py {
 
 // clang-format off
 
-std::array<const char*, 5> parameter_names = {
+std::array<const char*, 5> free_parameter_names = {
     "V_0", // p[0]
 "V_0_inject", // p[1]
 "t_0", // p[2]
@@ -33,7 +33,7 @@ std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 5> parameter_ids = {
+std::array<const char*, 5> free_parameter_ids = {
     "V_0", // p[0]
 "V_0_inject", // p[1]
 "t_0", // p[2]
