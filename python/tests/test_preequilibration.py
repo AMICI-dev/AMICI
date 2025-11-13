@@ -846,7 +846,7 @@ def test_preequilibration_events(tempdir):
         amici_model.set_parameter_list(
             [
                 i
-                for i, p in enumerate(amici_model.get_parameter_ids())
+                for i, p in enumerate(amici_model.get_free_parameter_ids())
                 if p != "trigger_time2"
             ]
         )

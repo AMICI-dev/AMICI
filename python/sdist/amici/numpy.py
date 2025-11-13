@@ -495,8 +495,8 @@ class ReturnDataView(SwigPtrView):
             ) or self._swigptr.observable_ids
         elif field in {"sllh"}:
             ids = (
-                model and model.get_parameter_ids()
-            ) or self._swigptr.parameter_ids
+                model and model.get_free_parameter_ids()
+            ) or self._swigptr.free_parameter_ids
         else:
             raise NotImplementedError(
                 f"Subsetting `{field}` by ID (`{entity_id}`) "

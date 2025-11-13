@@ -185,19 +185,19 @@ def fill_in_parameters_for_condition(
 
     # parameter list from mapping dict
     parameters = [
-        map_sim_var[par_id] for par_id in amici_model.get_parameter_ids()
+        map_sim_var[par_id] for par_id in amici_model.get_free_parameter_ids()
     ]
 
     # scales list from mapping dict
     scales = [
         petab_to_amici_scale(scale_map_sim_var[par_id])
-        for par_id in amici_model.get_parameter_ids()
+        for par_id in amici_model.get_free_parameter_ids()
     ]
 
     # plist
     plist = [
         ip
-        for ip, par_id in enumerate(amici_model.get_parameter_ids())
+        for ip, par_id in enumerate(amici_model.get_free_parameter_ids())
         if isinstance(parameter_mapping.map_sim_var[par_id], str)
     ]
 

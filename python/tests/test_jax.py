@@ -145,7 +145,7 @@ def _test_model(amici_module, jax_module, ts, p, k):
     check_fields_jax(
         rs_amici,
         jax_model,
-        amici_model.get_parameter_ids(),
+        amici_model.get_free_parameter_ids(),
         amici_model.get_fixed_parameter_ids(),
         edata,
         ["x", "y", "llh", "res", "x0"],
@@ -154,7 +154,7 @@ def _test_model(amici_module, jax_module, ts, p, k):
     check_fields_jax(
         rs_amici,
         jax_model,
-        amici_model.get_parameter_ids(),
+        amici_model.get_free_parameter_ids(),
         amici_model.get_fixed_parameter_ids(),
         edata,
         ["sllh", "sx0", "sx", "sres", "sy"],
@@ -165,7 +165,7 @@ def _test_model(amici_module, jax_module, ts, p, k):
 def check_fields_jax(
     rs_amici,
     jax_model,
-    parameter_ids,
+    free_parameter_ids,
     fixed_parameter_ids,
     edata,
     fields,
@@ -185,7 +185,7 @@ def check_fields_jax(
     ts_posteq = np.array([])
 
     par_dict = {
-        **dict(zip(parameter_ids, edata.free_parameters)),
+        **dict(zip(free_parameter_ids, edata.free_parameters)),
         **dict(zip(fixed_parameter_ids, edata.fixed_parameters)),
     }
 
@@ -229,7 +229,10 @@ def check_fields_jax(
                 )[0]
 
     amici_par_idx = np.array(
-        [jax_model.parameter_ids.index(par_id) for par_id in parameter_ids]
+        [
+            jax_model.parameter_ids.index(par_id)
+            for par_id in free_parameter_ids
+        ]
     )
 
     for field in fields:

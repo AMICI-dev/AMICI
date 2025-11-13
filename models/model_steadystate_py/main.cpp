@@ -74,13 +74,13 @@ int main() {
 
     // get identifiers from model
     auto state_ids = model->get_state_ids();
-    auto parameter_ids = model->get_parameter_ids();
+    auto parameter_ids = model->get_free_parameter_ids();
 
     std::cout << "State sensitivities for timepoint " << rdata->ts[i_time]
               << std::endl; // nt x nplist x nx
     for (int i_state = 0; i_state < rdata->nx_rdata; ++i_state) {
         std::cout << "\td(" << state_ids[i_state] << ")/d("
-                  << parameter_ids[model->plist(i_nplist)] << ") = ";
+                  << free_parameter_ids[model->plist(i_nplist)] << ") = ";
 
         // rdata->sx is a flat 3D array in row-major ordering
         std::cout << rdata->sx

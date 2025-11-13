@@ -476,9 +476,9 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @brief Get ids of the model parameters
      * @return the ids
      */
-    std::vector<std::string> get_parameter_ids() const override {
-        return std::vector<std::string>(parameter_ids.begin(),
-                                        parameter_ids.end());
+    std::vector<std::string> get_free_parameter_ids() const override {
+        return std::vector<std::string>(free_parameter_ids.begin(),
+                                        free_parameter_ids.end());
     }
 
     /**

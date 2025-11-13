@@ -140,8 +140,8 @@ def check_finite_difference(
             rtol=rtol,
             field=field,
             ip=ip,
-            parameter_id=model.get_parameter_ids()[ip]
-            if model.has_parameter_ids()
+            parameter_id=model.get_free_parameter_ids()[ip]
+            if model.has_free_parameter_ids()
             else None,
         )
 

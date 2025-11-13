@@ -329,7 +329,7 @@ def test_presimulation_events(tempdir):
     #  are not supported
     edata.plist = [
         ip
-        for ip, p in enumerate(model.get_parameter_ids())
+        for ip, p in enumerate(model.get_free_parameter_ids())
         if p != "t_initial_presim"
     ]
     solver.set_sensitivity_order(amici.SensitivityOrder.first)
@@ -719,7 +719,7 @@ def test_sympy_exp_monkeypatch(tempdir):
                 amici.ParameterScaling.none
                 if re.match(r"n[0-9]+$", par_id)
                 else amici.ParameterScaling.log10
-                for par_id in model.get_parameter_ids()
+                for par_id in model.get_free_parameter_ids()
             ]
         )
     )
@@ -782,8 +782,8 @@ def _test_set_parameters_by_dict(model_module):
     """Test setting parameter via id/name => value dicts"""
     model = model_module.get_model()
     old_parameter_values = model.get_parameters()
-    parameter_ids = model.get_parameter_ids()
-    change_par_id = parameter_ids[-1]
+    free_parameter_ids = model.get_free_parameter_ids()
+    change_par_id = free_parameter_ids[-1]
     new_par_val = 0.1234
     old_par_val = model.get_parameter_by_id(change_par_id)
 

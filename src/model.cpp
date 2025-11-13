@@ -529,13 +529,13 @@ std::vector<realtype> const& Model::get_parameters() const {
     return simulation_parameters_.free_parameters;
 }
 
-realtype Model::get_parameter_by_id(std::string const& par_id) const {
-    if (!has_parameter_ids())
+realtype Model::get_free_parameter_by_id(std::string const& par_id) const {
+    if (!has_free_parameter_ids())
         throw AmiException(
             "Could not access parameters by id as they are not set"
         );
     return get_value_by_id(
-        get_parameter_ids(), simulation_parameters_.free_parameters, par_id,
+        get_free_parameter_ids(), simulation_parameters_.free_parameters, par_id,
         "parameters", "id"
     );
 }
@@ -578,16 +578,16 @@ void Model::set_parameter_by_id(
     }
 }
 
-void Model::set_parameter_by_id(
+void Model::set_free_parameter_by_id(
     std::string const& par_id, realtype const value
 ) {
-    if (!has_parameter_ids())
+    if (!has_free_parameter_ids())
         throw AmiException(
             "Could not access parameters by id as they are not set"
         );
 
     set_value_by_id(
-        get_parameter_ids(), simulation_parameters_.free_parameters, value, par_id,
+        get_free_parameter_ids(), simulation_parameters_.free_parameters, value, par_id,
         "parameter", "id"
     );
     unscale_parameters(
@@ -596,15 +596,15 @@ void Model::set_parameter_by_id(
     );
 }
 
-int Model::set_parameters_by_id_regex(
+int Model::set_free_parameters_by_id_regex(
     std::string const& par_id_regex, realtype const value
 ) {
-    if (!has_parameter_ids())
+    if (!has_free_parameter_ids())
         throw AmiException(
             "Could not access parameters by id as they are not set"
         );
     int n_found = set_value_by_id_regex(
-        get_parameter_ids(), simulation_parameters_.free_parameters, value,
+        get_free_parameter_ids(), simulation_parameters_.free_parameters, value,
         par_id_regex, "parameter", "id"
     );
     unscale_parameters(
@@ -792,11 +792,11 @@ bool Model::has_expression_names() const {
 
 std::vector<std::string> Model::get_expression_names() const { return {}; }
 
-bool Model::has_parameter_ids() const {
-    return np() == 0 || !get_parameter_ids().empty();
+bool Model::has_free_parameter_ids() const {
+    return np() == 0 || !get_free_parameter_ids().empty();
 }
 
-std::vector<std::string> Model::get_parameter_ids() const { return {}; }
+std::vector<std::string> Model::get_free_parameter_ids() const { return {}; }
 
 bool Model::has_state_ids() const {
     return nx_rdata == 0 || !get_state_ids().empty();
@@ -1619,8 +1619,8 @@ int Model::check_finite(
         }
         break;
     case ModelQuantity::p:
-        if (has_parameter_ids()) {
-            element_id = get_parameter_ids()[flat_index];
+        if (has_free_parameter_ids()) {
+            element_id = get_free_parameter_ids()[flat_index];
         }
         break;
     default:
@@ -1695,8 +1695,8 @@ int Model::check_finite(
     case ModelQuantity::dsigmaydp:
         if (has_observable_ids())
             row_id += " " + get_observable_ids()[row];
-        if (has_parameter_ids())
-            col_id += " " + get_parameter_ids()[plist(gsl::narrow<int>(col))];
+        if (has_free_parameter_ids())
+            col_id += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dydx:
         if (has_observable_ids())
@@ -1707,8 +1707,8 @@ int Model::check_finite(
     case ModelQuantity::deltasx:
         if (has_state_ids())
             row_id += " " + get_state_ids_solver()[row];
-        if (has_parameter_ids())
-            col_id += " " + get_parameter_ids()[plist(gsl::narrow<int>(col))];
+        if (has_free_parameter_ids())
+            col_id += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dJydy:
     case ModelQuantity::dJydsigma:
@@ -1728,8 +1728,8 @@ int Model::check_finite(
     case ModelQuantity::dzdp:
     case ModelQuantity::drzdp:
     case ModelQuantity::dsigmazdp:
-        if (has_parameter_ids())
-            col_id += " " + get_parameter_ids()[plist(gsl::narrow<int>(col))];
+        if (has_free_parameter_ids())
+            col_id += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dsigmaydy:
         if (has_observable_ids()) {
@@ -1831,8 +1831,8 @@ int Model::check_finite(
     case ModelQuantity::dwdp:
         if (has_expression_ids())
             row_id += " " + get_expression_ids()[row];
-        if (has_parameter_ids())
-            col_id += " " + get_parameter_ids()[col];
+        if (has_free_parameter_ids())
+            col_id += " " + get_free_parameter_ids()[col];
         break;
     default:
         break;

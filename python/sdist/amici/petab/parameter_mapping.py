@@ -538,7 +538,7 @@ def create_parameter_mapping_for_condition(
     # merge_preeq_and_sim_pars_condition below may fail.
     # TODO: This can be done already in parameter mapping creation.
     if amici_model is not None:
-        variable_par_ids = amici_model.get_parameter_ids()
+        variable_par_ids = amici_model.get_free_parameter_ids()
         fixed_par_ids = amici_model.get_fixed_parameter_ids()
         condition_map_preeq_var, condition_map_preeq_fix = _subset_dict(
             condition_map_preeq, variable_par_ids, fixed_par_ids

@@ -20,7 +20,7 @@ extern std::array<const char*, 9> state_names;
 extern std::array<const char*, 3> observable_names;
 extern std::array<const ObservableScaling, 3> observable_scalings;
 extern std::array<const char*, 2> expression_names;
-extern std::array<const char*, 17> parameter_ids;
+extern std::array<const char*, 17> free_parameter_ids;
 extern std::array<const char*, 2> fixed_parameter_ids;
 extern std::array<const char*, 9> state_ids;
 extern std::array<const char*, 3> observable_ids;
@@ -476,9 +476,9 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @brief Get ids of the model parameters
      * @return the ids
      */
-    std::vector<std::string> get_parameter_ids() const override {
-        return std::vector<std::string>(parameter_ids.begin(),
-                                        parameter_ids.end());
+    std::vector<std::string> get_free_parameter_ids() const override {
+        return std::vector<std::string>(free_parameter_ids.begin(),
+                                        free_parameter_ids.end());
     }
 
     /**

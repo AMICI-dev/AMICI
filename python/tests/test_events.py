@@ -938,7 +938,7 @@ def test_event_priorities(tempdir):
     model.set_parameter_list(
         [
             ip
-            for ip, par in enumerate(model.get_parameter_ids())
+            for ip, par in enumerate(model.get_free_parameter_ids())
             if par != "two"
         ]
     )
@@ -1090,7 +1090,7 @@ def test_event_uses_values_from_trigger_time(tempdir):
             model.set_parameter_list(
                 [
                     ip
-                    for ip, par in enumerate(model.get_parameter_ids())
+                    for ip, par in enumerate(model.get_free_parameter_ids())
                     if par not in ["one"]
                 ]
             )
@@ -1101,7 +1101,7 @@ def test_event_uses_values_from_trigger_time(tempdir):
             model.set_parameter_list(
                 [
                     ip
-                    for ip, par in enumerate(model.get_parameter_ids())
+                    for ip, par in enumerate(model.get_free_parameter_ids())
                     if par not in ["one", "three"]
                 ]
             )

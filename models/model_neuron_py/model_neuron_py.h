@@ -20,7 +20,7 @@ extern std::array<const char*, 2> state_names;
 extern std::array<const char*, 1> observable_names;
 extern std::array<const ObservableScaling, 1> observable_scalings;
 extern std::array<const char*, 1> expression_names;
-extern std::array<const char*, 4> parameter_ids;
+extern std::array<const char*, 4> free_parameter_ids;
 extern std::array<const char*, 2> fixed_parameter_ids;
 extern std::array<const char*, 2> state_ids;
 extern std::array<const char*, 1> observable_ids;
@@ -498,9 +498,9 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @brief Get ids of the model parameters
      * @return the ids
      */
-    std::vector<std::string> get_parameter_ids() const override {
-        return std::vector<std::string>(parameter_ids.begin(),
-                                        parameter_ids.end());
+    std::vector<std::string> get_free_parameter_ids() const override {
+        return std::vector<std::string>(free_parameter_ids.begin(),
+                                        free_parameter_ids.end());
     }
 
     /**

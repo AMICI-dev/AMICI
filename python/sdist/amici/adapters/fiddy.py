@@ -111,7 +111,7 @@ def run_simulation_to_cached_functions(
     amici_model: amici.AmiciModel,
     *,
     cache: bool = True,
-    parameter_ids: list[str] = None,
+    free_parameter_ids: list[str] = None,
     amici_solver: amici.AmiciSolver = None,
     amici_edata: amici.AmiciExpData = None,
     derivative_variables: list[str] = None,
@@ -128,8 +128,8 @@ def run_simulation_to_cached_functions(
     :param derivative_variables:
         The variables that derivatives will be computed or approximated for.
         See the keys of `all_rdata_derivatives` for options.
-    :param parameter_ids:
-        The IDs that correspond to the values in the parameter vector that is
+    :param free_parameter_ids:
+        The IDs that correspond to the values in the free parameter vector that is
         simulated.
     :param cache:
         Whether to cache the function calls.
@@ -137,8 +137,8 @@ def run_simulation_to_cached_functions(
     """
     if amici_solver is None:
         amici_solver = amici_model.create_solver()
-    if parameter_ids is None:
-        parameter_ids = amici_model.get_parameter_ids()
+    if free_parameter_ids is None:
+        free_parameter_ids = amici_model.get_free_parameter_ids()
     if amici_edata is not None and amici_edata.free_parameters is not None:
         raise NotImplementedError(
             "Customization of parameter values inside AMICI ExpData."
@@ -152,7 +152,7 @@ def run_simulation_to_cached_functions(
     def run_amici_simulation(
         point: Type.POINT, order: SensitivityOrder
     ) -> ReturnData:
-        problem_parameters = dict(zip(parameter_ids, point, strict=True))
+        problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
         amici_model.set_parameter_by_id(problem_parameters)
         amici_solver.set_sensitivity_order(order)
         rdata = amici.run_simulation(
@@ -197,7 +197,10 @@ def run_simulation_to_cached_functions(
 
     # Get structure
     dummy_point = fiddy_array(
-        [amici_model.get_parameter_by_id(par_id) for par_id in parameter_ids]
+        [
+            amici_model.get_parameter_by_id(par_id)
+            for par_id in free_parameter_ids
+        ]
     )
     dummy_rdata = run_amici_simulation(
         point=dummy_point, order=SensitivityOrder.first
@@ -279,7 +282,7 @@ def reshape(
 def simulate_petab_to_cached_functions(
     petab_problem: petab.Problem,
     amici_model: amici.Model,
-    parameter_ids: list[str] = None,
+    free_parameter_ids: list[str] = None,
     cache: bool = True,
     precreate_edatas: bool = True,
     precreate_parameter_mapping: bool = True,
@@ -298,7 +301,7 @@ def simulate_petab_to_cached_functions(
     :param simulate_petab:
         A method to simulate PEtab problems with AMICI, e.g.
         `amici.petab_objective.simulate_petab`.
-    :param parameter_ids:
+    :param free_parameter_ids:
         The IDs of the parameters, in the order that parameter values will
         be supplied. Defaults to `petab_problem.parameter_df.index`.
     :param petab_problem:
@@ -319,8 +322,8 @@ def simulate_petab_to_cached_functions(
         * 1: A method to compute the function at a point.
         * 2: A method to compute the gradient at a point.
     """
-    if parameter_ids is None:
-        parameter_ids = list(petab_problem.parameter_df.index)
+    if free_parameter_ids is None:
+        free_parameter_ids = list(petab_problem.parameter_df.index)
 
     if simulate_petab is None:
         simulate_petab = amici.petab.simulations.simulate_petab
@@ -368,7 +371,7 @@ def simulate_petab_to_cached_functions(
     )
 
     def simulate_petab_full(point: Type.POINT, order: SensitivityOrder):
-        problem_parameters = dict(zip(parameter_ids, point, strict=True))
+        problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
         amici_solver.set_sensitivity_order(order)
         result = simulate_petab_partial(
             problem_parameters=problem_parameters,
@@ -388,7 +391,7 @@ def simulate_petab_to_cached_functions(
             raise RuntimeError("Simulation failed.")
 
         sllh = np.array(
-            [result[SLLH][parameter_id] for parameter_id in parameter_ids]
+            [result[SLLH][parameter_id] for parameter_id in free_parameter_ids]
         )
         return sllh
 
@@ -401,14 +404,14 @@ def simulate_petab_to_cached_functions(
 
 def simulate_petab_v2_to_cached_functions(
     petab_simulator: PetabSimulator,
-    parameter_ids: list[str] = None,
+    free_parameter_ids: list[str] = None,
     cache: bool = True,
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:
     r"""Create fiddy functions for PetabSimulator.
 
     :param petab_simulator:
         The PEtab simulator to use.
-    :param parameter_ids:
+    :param free_parameter_ids:
         The IDs of the parameters, in the order that parameter values will
         be supplied. Defaults to the estimated parameters of the PEtab problem.
     :param cache:
@@ -419,11 +422,11 @@ def simulate_petab_v2_to_cached_functions(
         * 1: A method to compute the function at a point.
         * 2: A method to compute the gradient at a point.
     """
-    if parameter_ids is None:
-        parameter_ids = list(petab_simulator._petab_problem.x_free_ids)
+    if free_parameter_ids is None:
+        free_parameter_ids = list(petab_simulator._petab_problem.x_free_ids)
 
     def simulate(point: Type.POINT, order: SensitivityOrder) -> dict:
-        problem_parameters = dict(zip(parameter_ids, point, strict=True))
+        problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
         petab_simulator.solver.set_sensitivity_order(order)
 
         result = petab_simulator.simulate(
@@ -443,7 +446,7 @@ def simulate_petab_v2_to_cached_functions(
             raise RuntimeError("Simulation failed.")
 
         sllh = np.array(
-            [result[SLLH][parameter_id] for parameter_id in parameter_ids]
+            [result[SLLH][parameter_id] for parameter_id in free_parameter_ids]
         )
         return sllh
 

@@ -130,7 +130,7 @@ def check_trajectories_with_adjoint_sensitivities(
             "asa": rdata_asa["sllh"],
             "fd": np.nan,
         },
-        index=list(amici_model.get_parameter_ids()),
+        index=list(amici_model.get_free_parameter_ids()),
     )
     df["abs_diff"] = df["fsa"] - df["asa"]
     df["rel_diff"] = df["abs_diff"] / df["fsa"]

@@ -642,13 +642,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @return Boolean indicating whether parameter IDs were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
-    virtual bool has_parameter_ids() const;
+    virtual bool has_free_parameter_ids() const;
 
     /**
      * @brief Get IDs of the model parameters.
      * @return Parameter IDs
      */
-    virtual std::vector<std::string> get_parameter_ids() const;
+    virtual std::vector<std::string> get_free_parameter_ids() const;
 
     /**
      * @brief Report whether the model has state IDs set.
