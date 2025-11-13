@@ -411,27 +411,27 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Get parameter vector.
      * @return The user-set parameters (see also `Model::getUnscaledParameters`)
      */
-    std::vector<realtype> const& get_parameters() const;
+    std::vector<realtype> const& get_free_parameters() const;
 
     /**
      * @brief Get value of first model parameter with the specified ID.
      * @param par_id Parameter ID
      * @return Parameter value
      */
-    realtype get_parameter_by_id(std::string const& par_id) const;
+    realtype get_free_parameter_by_id(std::string const& par_id) const;
 
     /**
      * @brief Get value of first model parameter with the specified name.
      * @param par_name Parameter name
      * @return Parameter value
      */
-    realtype get_parameter_by_name(std::string const& par_name) const;
+    realtype get_free_parameter_by_name(std::string const& par_name) const;
 
     /**
      * @brief Set the parameter vector.
      * @param p Vector of parameters
      */
-    void set_parameters(std::vector<realtype> const& p);
+    void set_free_parameters(std::vector<realtype> const& p);
 
     /**
      * @brief Set model parameters according to the parameter IDs and mapped
@@ -440,7 +440,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ignoreErrors Ignore errors such as parameter IDs in p which are
      * not model parameters
      */
-    void set_parameter_by_id(
+    void set_free_parameter_by_id(
         std::map<std::string, realtype> const& p, bool ignoreErrors = false
     );
 
@@ -449,7 +449,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param par_id Parameter ID
      * @param value Parameter value
      */
-    void set_parameter_by_id(std::string const& par_id, realtype value);
+    void set_free_parameter_by_id(std::string const& par_id, realtype value);
 
     /**
      * @brief Set all values of model parameters with IDs matching the specified
@@ -459,14 +459,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @return Number of parameter IDs that matched the regex
      */
     int
-    set_parameters_by_id_regex(std::string const& par_id_regex, realtype value);
+    set_free_parameters_by_id_regex(std::string const& par_id_regex, realtype value);
 
     /**
      * @brief Set value of first model parameter with the specified name.
      * @param par_name Parameter name
      * @param value Parameter value
      */
-    void set_parameter_by_name(std::string const& par_name, realtype value);
+    void set_free_parameter_by_name(std::string const& par_name, realtype value);
 
     /**
      * @brief Set model parameters according to the parameter name and mapped
@@ -475,7 +475,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ignoreErrors Ignore errors such as parameter names in p which are
      * not model parameters
      */
-    void set_parameter_by_name(
+    void set_free_parameter_by_name(
         std::map<std::string, realtype> const& p, bool ignoreErrors = false
     );
 
@@ -486,7 +486,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param value Parameter value
      * @return Number of fixed parameter names that matched the regex
      */
-    int set_parameters_by_name_regex(
+    int set_free_parameters_by_name_regex(
         std::string const& par_name_regex, realtype value
     );
 

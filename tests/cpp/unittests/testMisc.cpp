@@ -80,19 +80,19 @@ class ModelTest : public ::testing::Test {
 TEST_F(ModelTest, LinScaledParameterIsNotTransformed) {
     model.set_parameter_scale(ParameterScaling::none);
 
-    ASSERT_EQ(p[0], model.get_parameters()[0]);
+    ASSERT_EQ(p[0], model.get_free_parameters()[0]);
 }
 
 TEST_F(ModelTest, LogScaledParameterIsTransformed) {
     model.set_parameter_scale(ParameterScaling::ln);
 
-    ASSERT_NEAR(std::log(p[0]), model.get_parameters()[0], 1e-16);
+    ASSERT_NEAR(std::log(p[0]), model.get_free_parameters()[0], 1e-16);
 }
 
 TEST_F(ModelTest, Log10ScaledParameterIsTransformed) {
     model.set_parameter_scale(ParameterScaling::log10);
 
-    ASSERT_NEAR(std::log10(p[0]), model.get_parameters()[0], 1e-16);
+    ASSERT_NEAR(std::log10(p[0]), model.get_free_parameters()[0], 1e-16);
 }
 
 TEST_F(ModelTest, ParameterScaleTooShort) {
@@ -112,28 +112,28 @@ TEST_F(ModelTest, UnsortedTimepointsThrow) {
 }
 
 TEST_F(ModelTest, ParameterNameIdGetterSetter) {
-    model.set_parameter_by_id("p0", 3.0);
-    ASSERT_NEAR(model.get_parameter_by_id("p0"), 3.0, 1e-16);
-    ASSERT_THROW(model.get_parameter_by_id("p1"), AmiException);
+    model.set_free_parameter_by_id("p0", 3.0);
+    ASSERT_NEAR(model.get_free_parameter_by_id("p0"), 3.0, 1e-16);
+    ASSERT_THROW(model.get_free_parameter_by_id("p1"), AmiException);
     ASSERT_NEAR(
-        model.set_parameters_by_id_regex("p[\\d]+", 5.0), p.size(), 1e-16
+        model.set_free_parameters_by_id_regex("p[\\d]+", 5.0), p.size(), 1e-16
     );
-    for (auto const& ip : model.get_parameters())
+    for (auto const& ip : model.get_free_parameters())
         ASSERT_NEAR(ip, 5.0, 1e-16);
     ASSERT_THROW(
-        model.set_parameters_by_id_regex("k[\\d]+", 5.0), AmiException
+        model.set_free_parameters_by_id_regex("k[\\d]+", 5.0), AmiException
     );
 
-    model.set_parameter_by_name("p0", 3.0);
-    ASSERT_NEAR(model.get_parameter_by_name("p0"), 3.0, 1e-16);
-    ASSERT_THROW(model.get_parameter_by_name("p1"), AmiException);
+    model.set_free_parameter_by_name("p0", 3.0);
+    ASSERT_NEAR(model.get_free_parameter_by_name("p0"), 3.0, 1e-16);
+    ASSERT_THROW(model.get_free_parameter_by_name("p1"), AmiException);
     ASSERT_NEAR(
-        model.set_parameters_by_name_regex("p[\\d]+", 5.0), p.size(), 1e-16
+        model.set_free_parameters_by_name_regex("p[\\d]+", 5.0), p.size(), 1e-16
     );
-    for (auto const& ip : model.get_parameters())
+    for (auto const& ip : model.get_free_parameters())
         ASSERT_NEAR(ip, 5.0, 1e-16);
     ASSERT_THROW(
-        model.set_parameters_by_name_regex("k[\\d]+", 5.0), AmiException
+        model.set_free_parameters_by_name_regex("k[\\d]+", 5.0), AmiException
     );
 
     model.set_fixed_parameter_by_id("k0", 3.0);

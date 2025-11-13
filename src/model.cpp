@@ -525,7 +525,7 @@ std::vector<realtype> const& Model::get_unscaled_parameters() const {
     return state_.unscaled_parameters;
 }
 
-std::vector<realtype> const& Model::get_parameters() const {
+std::vector<realtype> const& Model::get_free_parameters() const {
     return simulation_parameters_.free_parameters;
 }
 
@@ -540,7 +540,7 @@ realtype Model::get_free_parameter_by_id(std::string const& par_id) const {
     );
 }
 
-realtype Model::get_parameter_by_name(std::string const& par_name) const {
+realtype Model::get_free_parameter_by_name(std::string const& par_name) const {
     if (!has_free_parameter_names())
         throw AmiException(
             "Could not access parameters by name as they are not set"
@@ -551,7 +551,7 @@ realtype Model::get_parameter_by_name(std::string const& par_name) const {
     );
 }
 
-void Model::set_parameters(std::vector<realtype> const& p) {
+void Model::set_free_parameters(std::vector<realtype> const& p) {
     if (p.size() != (unsigned)np())
         throw AmiException(
             "Dimension mismatch. Size of parameters does not "
@@ -565,12 +565,12 @@ void Model::set_parameters(std::vector<realtype> const& p) {
     );
 }
 
-void Model::set_parameter_by_id(
+void Model::set_free_parameter_by_id(
     std::map<std::string, realtype> const& p, bool const ignoreErrors
 ) {
     for (auto const& [parameter_id, value] : p) {
         try {
-            set_parameter_by_id(parameter_id, value);
+            set_free_parameter_by_id(parameter_id, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -614,7 +614,7 @@ int Model::set_free_parameters_by_id_regex(
     return n_found;
 }
 
-void Model::set_parameter_by_name(
+void Model::set_free_parameter_by_name(
     std::string const& par_name, realtype const value
 ) {
     if (!has_free_parameter_names())
@@ -632,12 +632,12 @@ void Model::set_parameter_by_name(
     );
 }
 
-void Model::set_parameter_by_name(
+void Model::set_free_parameter_by_name(
     std::map<std::string, realtype> const& p, bool ignoreErrors
 ) {
     for (auto const& [name, value] : p) {
         try {
-            set_parameter_by_name(name, value);
+            set_free_parameter_by_name(name, value);
         } catch (AmiException const&) {
             if (!ignoreErrors)
                 throw;
@@ -645,7 +645,7 @@ void Model::set_parameter_by_name(
     }
 }
 
-int Model::set_parameters_by_name_regex(
+int Model::set_free_parameters_by_name_regex(
     std::string const& par_name_regex, realtype value
 ) {
     if (!has_free_parameter_names())

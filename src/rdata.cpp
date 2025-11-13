@@ -696,7 +696,7 @@ void ReturnData::apply_chain_rule_factor_to_simulation_results(
     // to such parameters if they are log-scaled.
     std::vector<realtype> pcoefficient(nplist, 1.0);
 
-    std::vector<realtype> unscaledParameters = model.get_parameters();
+    std::vector<realtype> unscaledParameters = model.get_free_parameters();
     unscale_parameters(
         unscaledParameters, model.get_parameter_scale(), unscaledParameters
     );

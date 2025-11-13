@@ -410,7 +410,7 @@ ConditionContext::ConditionContext(
     Model* model, ExpData const* edata, FixedParameterContext fpc
 )
     : model_(model)
-    , original_parameters_(model->get_parameters())
+    , original_parameters_(model->get_free_parameters())
     , original_fixed_parameters_(model->get_fixed_parameters())
     , original_tstart_(model->t0())
     , original_tstart_preeq_(model->t0_preeq())
@@ -466,7 +466,7 @@ void ConditionContext::apply_condition(
                 " match ExpData (%zd).",
                 model_->np(), edata->free_parameters.size()
             );
-        model_->set_parameters(edata->free_parameters);
+        model_->set_free_parameters(edata->free_parameters);
     }
 
     if (!edata->x0.empty()) {
@@ -567,7 +567,7 @@ void ConditionContext::restore() {
     if (!original_sx0_.empty())
         model_->set_unscaled_initial_state_sensitivities(original_sx0_);
 
-    model_->set_parameters(original_parameters_);
+    model_->set_free_parameters(original_parameters_);
     model_->set_fixed_parameters(original_fixed_parameters_);
     model_->set_t0(original_tstart_);
     model_->set_t0_preeq(original_tstart_preeq_);

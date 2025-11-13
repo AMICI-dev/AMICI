@@ -52,9 +52,9 @@ TEST(ExampleJakstatAdjoint, SensitivityAdjointUnusedNanOutputs)
     // Set output parameter p[10] to NaN and remove respective measurements
     // -> gradient should still be finite
 
-    auto p = model->get_parameters();
+    auto p = model->get_free_parameters();
     p[10] = NAN;
-    model->set_parameter_by_id("offset_tSTAT", NAN);
+    model->set_free_parameter_by_id("offset_tSTAT", NAN);
 
     auto iy = 1;
     Expects(model->get_observable_ids()[iy] == "obs_tSTAT");
