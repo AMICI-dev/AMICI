@@ -153,7 +153,7 @@ def run_simulation_to_cached_functions(
         point: Type.POINT, order: SensitivityOrder
     ) -> ReturnData:
         problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
-        amici_model.set_parameter_by_id(problem_parameters)
+        amici_model.set_free_parameter_by_id(problem_parameters)
         amici_solver.set_sensitivity_order(order)
         rdata = amici.run_simulation(
             model=amici_model, solver=amici_solver, edata=amici_edata
@@ -198,7 +198,7 @@ def run_simulation_to_cached_functions(
     # Get structure
     dummy_point = fiddy_array(
         [
-            amici_model.get_parameter_by_id(par_id)
+            amici_model.get_free_parameter_by_id(par_id)
             for par_id in free_parameter_ids
         ]
     )

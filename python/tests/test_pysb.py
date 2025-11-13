@@ -59,7 +59,7 @@ def test_compare_to_sbml_import(
         # check equilibrium initial parameters
         assert np.isclose(
             sum(rdata["x_ss"][[0, 3, 4, 5]]),
-            model.get_parameter_by_name("PROT_0"),
+            model.get_free_parameter_by_name("PROT_0"),
             atol=1e-6,
             rtol=1e-6,
         ), f"{importer} preequilibration"

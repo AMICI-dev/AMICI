@@ -181,7 +181,7 @@ model_instance_settings = [
     ),
     "minimum_sigma_residuals",
     ("n_max_event", "set_n_max_event"),
-    "parameters",
+    "free_parameters",
     "reinitialization_state_idxs",
     "reinitialize_fixed_parameter_initial_states",
     "state_is_non_negative",
