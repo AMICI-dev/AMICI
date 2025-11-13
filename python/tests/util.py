@@ -143,11 +143,11 @@ def check_trajectories_with_adjoint_sensitivities(
     for i_par, par in enumerate(parameters):
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] += eps
-        amici_model.set_parameters(tmp_par)
+        amici_model.set_free_parameters(tmp_par)
         rdata_p = run_simulation(amici_model, solver=solver, edata=edata)
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] -= eps
-        amici_model.set_parameters(tmp_par)
+        amici_model.set_free_parameters(tmp_par)
         rdata_m = run_simulation(amici_model, solver=solver, edata=edata)
         sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
     df["fd"] = sllh_fd

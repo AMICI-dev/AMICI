@@ -239,7 +239,7 @@ def test_compare_to_pysb_simulation(example):
                                 ParameterScaling.log10
                                 if p > 0
                                 else ParameterScaling.none
-                                for p in model_pysb.get_parameters()
+                                for p in model_pysb.get_free_parameters()
                             ]
                         )
                     )

@@ -129,10 +129,10 @@ def _test_model(amici_module, jax_module, ts, p, k):
 
     jax_model = jax_module.Model()
 
-    amici_model.set_parameters(np.asarray(p, dtype=np.float64))
+    amici_model.set_free_parameters(np.asarray(p, dtype=np.float64))
     amici_model.set_fixed_parameters(np.asarray(k, dtype=np.float64))
     edata = amici.ExpData(sol_amici_ref, 1.0, 1.0)
-    edata.free_parameters = amici_model.get_parameters()
+    edata.free_parameters = amici_model.get_free_parameters()
     edata.fixed_parameters = amici_model.get_fixed_parameters()
     edata.pscale = amici_model.get_parameter_scale()
     amici_solver = amici_model.create_solver()

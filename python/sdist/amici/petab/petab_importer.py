@@ -681,7 +681,7 @@ class ExperimentManager:
         # create a new model instance from the model module from which
         #  we can get the default parameters
         model0 = model.module.get_model()
-        self._original_p = np.array(model0.get_parameters())
+        self._original_p = np.array(model0.get_free_parameters())
         self._original_k = np.array(model0.get_fixed_parameters())
 
     def create_edatas(self) -> list[amici.ExpData]:

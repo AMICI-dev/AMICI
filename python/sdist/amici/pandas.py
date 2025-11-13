@@ -421,7 +421,7 @@ def _fill_conditions_dict(
         if len(edata.free_parameters):
             datadict[par] = edata.free_parameters[i_par]
         else:
-            datadict[par] = model.get_parameters()[i_par]
+            datadict[par] = model.get_free_parameters()[i_par]
 
         if len(edata.pscale):
             datadict[par + "_scale"] = edata.pscale[i_par]

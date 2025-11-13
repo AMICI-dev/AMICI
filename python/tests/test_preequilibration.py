@@ -279,9 +279,11 @@ def test_parameter_in_expdata(preeq_fixture):
     model.set_parameter_list([i for i in reversed(model.get_parameter_list())])
 
     # set ExpData parameters
-    edata.free_parameters = model.get_parameters()
+    edata.free_parameters = model.get_free_parameters()
     # perturb model parameters
-    model.set_parameters(tuple(p * 2 for p in model.get_parameters()))
+    model.set_free_parameters(
+        tuple(p * 2 for p in model.get_free_parameters())
+    )
 
     # set ExpData pscale
     edata.pscale = model.get_parameter_scale()

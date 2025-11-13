@@ -28,7 +28,7 @@ def test_edata_sensi_unscaling(model_units_module):  # noqa: F811
     model = model_units_module.get_model()
     model.set_timepoints(np.linspace(0, 1, 3))
     model.set_parameter_scale(parameter_scales_log10)
-    model.set_parameters(parameters0)
+    model.set_free_parameters(parameters0)
 
     solver = model.create_solver()
     solver.set_sensitivity_order(amici.SensitivityOrder.first)

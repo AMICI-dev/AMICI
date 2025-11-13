@@ -339,10 +339,10 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         "set_fixed_parameter_by_name",
         "set_fixed_parameters_by_id_regex",
         "set_fixed_parameters_by_name_regex",
-        "set_parameter_by_id",
-        "set_parameter_by_name",
-        "set_parameters_by_id_regex",
-        "set_parameters_by_name_regex",
+        "set_free_parameter_by_id",
+        "set_free_parameter_by_name",
+        "set_free_parameters_by_id_regex",
+        "set_free_parameters_by_name_regex",
         "set_initial_state_sensitivities",
         "get_trigger_timepoints",
         "get_any_state_nonnegative",
@@ -605,7 +605,7 @@ def test_python_exceptions(sbml_example_presimulation_module):
     )
 
     # model throws, base catches, swig-exception handling is not involved
-    model.set_parameters([nan] * model.np())
+    model.set_free_parameters([nan] * model.np())
     model.set_timepoints([1])
     rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR

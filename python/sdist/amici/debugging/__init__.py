@@ -36,7 +36,7 @@ def get_model_for_preeq(model: amici.Model, edata: amici.ExpData):
     if edata.pscale:
         model.set_parameter_scale(edata.pscale)
     if edata.free_parameters:
-        model.set_parameters(edata.free_parameters)
+        model.set_free_parameters(edata.free_parameters)
     if edata.plist:
         model.set_parameter_list(edata.plist)
     model.set_initial_state(edata.x0)

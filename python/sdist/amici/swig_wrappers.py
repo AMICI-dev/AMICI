@@ -266,7 +266,7 @@ def _ids_and_names_to_rdata(
         "state",
         "observable",
         "expression",
-        "parameter",
+        "free_parameter",
         "fixed_parameter",
     ):
         for name_or_id in ("ids", "names"):
