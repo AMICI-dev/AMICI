@@ -14,7 +14,7 @@ class Solver;
 
 namespace model_TPL_MODELNAME {
 
-extern std::array<const char*, TPL_NP> parameter_names;
+extern std::array<const char*, TPL_NP> free_parameter_names;
 extern std::array<const char*, TPL_NK> fixed_parameter_names;
 extern std::array<const char*, TPL_NX_RDATA> state_names;
 extern std::array<const char*, TPL_NY> observable_names;
@@ -291,9 +291,9 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief Get names of the model parameters
      * @return the names
      */
-    std::vector<std::string> get_parameter_names() const override {
-        return std::vector<std::string>(parameter_names.begin(),
-                                        parameter_names.end());
+    std::vector<std::string> get_free_parameter_names() const override {
+        return std::vector<std::string>(free_parameter_names.begin(),
+                                        free_parameter_names.end());
     }
 
     /**

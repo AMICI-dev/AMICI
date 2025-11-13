@@ -795,7 +795,7 @@ def _test_set_parameters_by_dict(model_module):
     assert model.get_parameters() == old_parameter_values
 
     # Same for by-name
-    parameter_names = model.get_parameter_names()
+    parameter_names = model.get_free_parameter_names()
     change_par_name = parameter_names[-1]
     model.set_parameter_by_name({change_par_name: new_par_val})
     assert model.get_parameter_by_name(change_par_name) == new_par_val

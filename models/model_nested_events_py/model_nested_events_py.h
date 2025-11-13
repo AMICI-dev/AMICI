@@ -14,7 +14,7 @@ class Solver;
 
 namespace model_model_nested_events_py {
 
-extern std::array<const char*, 5> parameter_names;
+extern std::array<const char*, 5> free_parameter_names;
 extern std::array<const char*, 0> fixed_parameter_names;
 extern std::array<const char*, 1> state_names;
 extern std::array<const char*, 1> observable_names;
@@ -419,9 +419,9 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @brief Get names of the model parameters
      * @return the names
      */
-    std::vector<std::string> get_parameter_names() const override {
-        return std::vector<std::string>(parameter_names.begin(),
-                                        parameter_names.end());
+    std::vector<std::string> get_free_parameter_names() const override {
+        return std::vector<std::string>(free_parameter_names.begin(),
+                                        free_parameter_names.end());
     }
 
     /**

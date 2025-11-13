@@ -541,12 +541,12 @@ realtype Model::get_parameter_by_id(std::string const& par_id) const {
 }
 
 realtype Model::get_parameter_by_name(std::string const& par_name) const {
-    if (!has_parameter_names())
+    if (!has_free_parameter_names())
         throw AmiException(
             "Could not access parameters by name as they are not set"
         );
     return get_value_by_id(
-        get_parameter_names(), simulation_parameters_.free_parameters, par_name,
+        get_free_parameter_names(), simulation_parameters_.free_parameters, par_name,
         "parameters", "name"
     );
 }
@@ -617,13 +617,13 @@ int Model::set_parameters_by_id_regex(
 void Model::set_parameter_by_name(
     std::string const& par_name, realtype const value
 ) {
-    if (!has_parameter_names())
+    if (!has_free_parameter_names())
         throw AmiException(
             "Could not access parameters by name as they are not set"
         );
 
     set_value_by_id(
-        get_parameter_names(), simulation_parameters_.free_parameters, value,
+        get_free_parameter_names(), simulation_parameters_.free_parameters, value,
         par_name, "parameter", "name"
     );
     unscale_parameters(
@@ -648,13 +648,13 @@ void Model::set_parameter_by_name(
 int Model::set_parameters_by_name_regex(
     std::string const& par_name_regex, realtype value
 ) {
-    if (!has_parameter_names())
+    if (!has_free_parameter_names())
         throw AmiException(
             "Could not access parameters by name as they are not set"
         );
 
     int n_found = set_value_by_id_regex(
-        get_parameter_names(), simulation_parameters_.free_parameters, value,
+        get_free_parameter_names(), simulation_parameters_.free_parameters, value,
         par_name_regex, "parameter", "name"
     );
 
@@ -760,11 +760,11 @@ int Model::set_fixed_parameters_by_name_regex(
 
 std::string Model::get_name() const { return ""; }
 
-bool Model::has_parameter_names() const {
-    return np() == 0 || !get_parameter_names().empty();
+bool Model::has_free_parameter_names() const {
+    return np() == 0 || !get_free_parameter_names().empty();
 }
 
-std::vector<std::string> Model::get_parameter_names() const { return {}; }
+std::vector<std::string> Model::get_free_parameter_names() const { return {}; }
 
 bool Model::has_state_names() const {
     return nx_rdata == 0 || !get_state_names().empty();

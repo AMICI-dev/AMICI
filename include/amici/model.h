@@ -565,18 +565,18 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual std::string get_name() const;
 
     /**
-     * @brief Report whether the model has parameter names set.
+     * @brief Report whether the model has free parameter names set.
      *
-     * @return Boolean indicating whether parameter names were set. Also returns
+     * @return Boolean indicating whether freeparameter names were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
-    virtual bool has_parameter_names() const;
+    virtual bool has_free_parameter_names() const;
 
     /**
-     * @brief Get names of the model parameters.
+     * @brief Get names of the free model parameters.
      * @return The parameter names
      */
-    virtual std::vector<std::string> get_parameter_names() const;
+    virtual std::vector<std::string> get_free_parameter_names() const;
 
     /**
      * @brief Report whether the model has state names set.
