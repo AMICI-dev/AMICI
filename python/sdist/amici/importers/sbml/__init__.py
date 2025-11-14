@@ -5,6 +5,7 @@ This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <https://sbml.org/>`_.
 """
 
+import contextlib
 import copy
 import itertools as itt
 import logging
@@ -14,6 +15,7 @@ import re
 import warnings
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterable, Sequence
+from itertools import chain
 from pathlib import Path
 from typing import (
     Any,
@@ -30,7 +32,12 @@ import amici
 from amici import get_model_dir, has_clibs
 from amici.constants import SymbolId
 from amici.de_model import DEModel
-from amici.de_model_components import Expression, symbol_to_type
+from amici.de_model_components import (
+    DifferentialState,
+    Event,
+    Expression,
+    symbol_to_type,
+)
 from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
@@ -682,11 +689,13 @@ class SbmlImporter:
         if hybridization:
             ode_model._process_hybridization(hybridization)
 
+        ode_model.parse_events()
+        # substitute SBML-rateOf constructs
+        #  must be done after parse_events, but before generate_basic_variables
+        self._process_sbml_rate_of(ode_model)
+
         # fill in 'self._sym' based on prototypes and components in ode_model
         ode_model.generate_basic_variables()
-
-        # substitute SBML-rateOf constructs
-        ode_model._process_sbml_rate_of()
 
         return ode_model
 
@@ -3013,6 +3022,126 @@ class SbmlImporter:
                 return dxdt
 
             return dxdt / v
+
+    def _process_sbml_rate_of(self, de_model: DEModel) -> None:
+        """Substitute any SBML-rateOf constructs in the model equations"""
+        from sbmlmath import rate_of as rate_of_func
+
+        # DAE models in general are supported, but not if they include rateOf()
+        #  The is_ode check below will not trigger in case of a DAE model with
+        #  rateOf() only in algebraic equations, so we need to check for that.
+        for ae in de_model.algebraic_equations():
+            if ae.get_val().find(rate_of_func):
+                # Not implemented
+                raise SBMLException(
+                    "rateOf() is not supported in algebraic equations. "
+                    f"Used in: {ae.get_id()}: {ae.get_val()}"
+                )
+
+        sym_to_state_var: dict[sp.Symbol, DifferentialState] = {
+            state.get_sym(): state for state in de_model.differential_states()
+        }
+
+        is_ode = de_model.is_ode()
+
+        def get_rate(symbol: sp.Symbol):
+            """Get rate of change of the given symbol
+            (symbol is argument of rateOf)"""
+            if not is_ode:
+                # Not implemented for DAE models
+                #  sbml test case 01482
+                raise SBMLException(
+                    "rateOf() is only supported in ODE models."
+                )
+
+            if symbol.find(rate_of_func):
+                raise SBMLException("Nesting rateOf() is not allowed.")
+
+            # Replace all rateOf(some_state_var) by their respective
+            #  xdot equation
+            with contextlib.suppress(KeyError):
+                return sym_to_state_var[symbol].get_dt()
+
+            # For anything other than a state variable,
+            #  rateOf(.) is 0 or invalid
+            return sp.Integer(0)
+
+        def do_subs(expr, rate_ofs) -> sp.Expr:
+            """Substitute rateOf(...) in expr by appropriate expressions"""
+            expr = expr.subs(
+                {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+            )
+            if rate_ofs := expr.find(rate_of_func):
+                # recursively substitute until no rateOf remains
+                expr = do_subs(expr, rate_ofs)
+            return expr
+
+        # replace rateOf-instances in xdot
+        for state in de_model.differential_states():
+            if rate_ofs := state.get_dt().find(rate_of_func):
+                state.set_dt(do_subs(state.get_dt(), rate_ofs))
+
+        # replace rateOf-instances in expressions which we will need for
+        #  substitutions later
+        for expr in de_model.expressions():
+            if rate_ofs := expr.get_val().find(rate_of_func):
+                expr.set_val(do_subs(expr.get_val(), rate_ofs))
+
+        w_toposorted = de_model.toposort_expressions()
+
+        # replace rateOf-instances in x0
+        # indices of state variables whose x0 was modified
+        changed_indices = []
+        for i_state, state in enumerate(de_model.differential_states()):
+            new, replacement = state.get_val().replace(
+                rate_of_func, get_rate, map=True
+            )
+            if replacement:
+                state.set_val(new)
+                changed_indices.append(i_state)
+        if changed_indices:
+            # Replace any newly introduced state variables
+            #  by their x0 expressions.
+            subs = w_toposorted | toposort_symbols(
+                {
+                    state.get_x_rdata(): state.get_val()
+                    for state in de_model.differential_states()
+                }
+            )
+            states = de_model.differential_states()
+            for i_state in changed_indices:
+                states[i_state].set_val(
+                    smart_subs_dict(states[i_state].get_val(), subs)
+                )
+
+        for component in chain(
+            de_model.observables(),
+            de_model.events(),
+        ):
+            if rate_ofs := component.get_val().find(rate_of_func):
+                component.set_val(do_subs(component.get_val(), rate_ofs))
+
+            if isinstance(component, Event):
+                if rate_ofs:
+                    # currently, `root` cannot depend on `w`.
+                    #  this could be changed, but for now,
+                    #  we just flatten out w expressions
+                    component.set_val(
+                        smart_subs_dict(component.get_val(), w_toposorted)
+                    )
+
+                # for events, also substitute in state updates
+                for target, assignment in component._assignments.items():
+                    if rate_ofs := assignment.find(rate_of_func):
+                        new_assignment = do_subs(assignment, rate_ofs)
+                        # currently, deltax cannot depend on `w`.
+                        #  this could be changed, or we could use xdot
+                        #  symbols, but for now, we just flatten out w
+                        #  expressions
+                        new_assignment = smart_subs_dict(
+                            new_assignment, w_toposorted
+                        )
+                        component._assignments[target] = new_assignment
 
 
 def _check_lib_sbml_errors(
