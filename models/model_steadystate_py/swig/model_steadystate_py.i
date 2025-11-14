@@ -8,10 +8,11 @@ import sysconfig
 from pathlib import Path
 
 ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+extension_path = Path(__file__).parent / f'_model_steadystate_py{ext_suffix}'
 _model_steadystate_py = amici._module_from_path(
     'model_steadystate_py._model_steadystate_py' if __package__ or '.' in __name__
     else '_model_steadystate_py',
-    Path(__file__).parent / f'_model_steadystate_py{ext_suffix}',
+    extension_path,
 )
 
 def _get_import_time():
@@ -36,6 +37,28 @@ if t_imported < t_modified:
 
 %module(package="model_steadystate_py",moduleimport=MODULEIMPORT) model_steadystate_py
 
+// store swig version
+%constant int SWIG_VERSION_MAJOR = (SWIG_VERSION >> 16);
+%constant int SWIG_VERSION_MINOR = ((SWIG_VERSION >> 8) & 0xff);
+%constant int SWIG_VERSION_PATCH = (SWIG_VERSION & 0xff);
+
+%pythoncode %{
+# SWIG version used to build the model extension as `(major, minor, patch)`
+_SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
+
+if (amici_swig := amici.amici._SWIG_VERSION) != (model_swig := _SWIG_VERSION):
+    import warnings
+    warnings.warn(
+        f"SWIG version mismatch between amici ({amici_swig}) and model "
+        f"({model_swig}). This may lead to unexpected behavior. "
+        "In that case, please recompile the model with swig=="
+        f"{amici_swig[0]}.{amici_swig[1]}.{amici_swig[2]} or rebuild amici "
+        f"with swig=={model_swig[0]}.{model_swig[1]}.{model_swig[2]}.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+%}
+
 %pythoncode %{
 # the model-package __init__.py module (will be set during import)
 _model_module = None
@@ -56,7 +79,7 @@ using namespace amici;
 // store the time a module was imported
 %{
 #include <chrono>
-static std::chrono::time_point<std::chrono::system_clock> _module_import_time;
+static std::chrono::time_point<std::chrono::system_clock> _module_import_time = std::chrono::system_clock::now();
 
 static double _get_import_time() {
     auto epoch = _module_import_time.time_since_epoch();
@@ -67,7 +90,9 @@ static double _get_import_time() {
 static double _get_import_time();
 
 %init %{
-    _module_import_time = std::chrono::system_clock::now();
+    // NOTE: from SWIG 4.4.0 onwards, %init code is executed every time the
+    // module is executed - not only on first import
+    // This code ends up in `SWIG_mod_exec`.
 %}
 
 
