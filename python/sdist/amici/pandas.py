@@ -608,7 +608,7 @@ def _get_names_or_ids(
     """
     # check whether variable type permitted
     variable_options = [
-        "parameter",
+        "free_parameter",
         "fixed_parameter",
         "observable",
         "state",

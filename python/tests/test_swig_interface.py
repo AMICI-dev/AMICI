@@ -98,7 +98,7 @@ model_instance_settings0 = {
         10,
         20,
     ],
-    "parameters": [(10.0, 0.1, 0.1, 0.1, 0.1, 0.1), tuple([1.0] * 6)],
+    "free_parameters": [(10.0, 0.1, 0.1, 0.1, 0.1, 0.1), tuple([1.0] * 6)],
     # Skipped due to interdependency with `'InitialStateSensitivities'`.
     "parameter_list": None,
     # Skipped due to interdependency with `'InitialStateSensitivities'`.
