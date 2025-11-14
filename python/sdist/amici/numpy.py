@@ -90,7 +90,7 @@ class XArrayFactory:
             case "sy" | "ssigmay":
                 coords = {
                     "time": self._svp.ts,
-                    "parameter": [
+                    "free_parameter": [
                         self._svp.parameter_ids[i] for i in self._svp.plist
                     ],
                     "observable": list(self._svp.observable_ids),
@@ -102,39 +102,43 @@ class XArrayFactory:
                 }
             case "sx0":
                 coords = {
-                    "parameter": [
-                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    "free_parameter": [
+                        self._svp.free_parameter_ids[i]
+                        for i in self._svp.plist
                     ],
                     "state": list(self._svp.state_ids),
                 }
             case "sx":
                 coords = {
                     "time": self._svp.ts,
-                    "parameter": [
+                    "free_parameter": [
                         self._svp.parameter_ids[i] for i in self._svp.plist
                     ],
                     "state": list(self._svp.state_ids),
                 }
-                dims = ("time", "parameter", "state")
+                dims = ("time", "free_parameter", "state_variable")
             case "sllh":
                 coords = {
-                    "parameter": [
-                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    "free_parameter": [
+                        self._svp.free_parameter_ids[i]
+                        for i in self._svp.plist
                     ]
                 }
             case "FIM":
                 coords = {
-                    "parameter1": [
-                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    "free_parameter_1": [
+                        self._svp.free_parameter_ids[i]
+                        for i in self._svp.plist
                     ],
-                    "parameter2": [
-                        self._svp.parameter_ids[i] for i in self._svp.plist
+                    "free_parameter_2": [
+                        self._svp.free_parameter_ids[i]
+                        for i in self._svp.plist
                     ],
                 }
             case "J":
                 coords = {
-                    "state1": list(self._svp.state_ids_solver),
-                    "state2": list(self._svp.state_ids_solver),
+                    "state_variable_1": list(self._svp.state_ids_solver),
+                    "state_variable_2": list(self._svp.state_ids_solver),
                 }
             case _:
                 dims = tuple(f"dim_{i}" for i in range(data.ndim))
@@ -596,7 +600,7 @@ def _entity_type_from_id(
         ("state", "x"),
         ("observable", "y"),
         ("expression", "w"),
-        ("parameter", "p"),
+        ("free_parameter", "p"),
         ("fixed_parameter", "k"),
     ):
         if model:
