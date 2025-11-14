@@ -3129,6 +3129,7 @@ class SbmlImporter:
 
             if isinstance(component, Event):
                 if rate_ofs:
+                    # TODO: remove
                     # currently, `root` cannot depend on `w`.
                     #  this could be changed, but for now,
                     #  we just flatten out w expressions
