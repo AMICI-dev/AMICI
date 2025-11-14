@@ -569,7 +569,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Report whether the model has free parameter names set.
      *
-     * @return Boolean indicating whether freeparameter names were set. Also
+     * @return Boolean indicating whether free parameter names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
      */
     virtual bool has_free_parameter_names() const;
