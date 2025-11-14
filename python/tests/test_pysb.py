@@ -300,7 +300,7 @@ def test_names_and_ids(pysb_example_presimulation_module):
         "fixed_parameter_names": ("DRUG_0", "KIN_0"),
         "observable_ids": ("pPROT_obs",),
         "observable_names": ("pPROT_obs",),
-        "parameter_ids": (
+        "free_parameter_ids": (
             "PROT_0",
             "kon_prot_drug",
             "koff_prot_drug",
@@ -320,7 +320,7 @@ def test_names_and_ids(pysb_example_presimulation_module):
     }
     # Names and IDs are the same here
     expected["expression_names"] = expected["expression_ids"]
-    expected["parameter_names"] = expected["parameter_ids"]
+    expected["free_parameter_names"] = expected["free_parameter_ids"]
 
     for field_name, cur_expected in expected.items():
         actual = getattr(model_pysb, f"get_{field_name}")()
