@@ -181,7 +181,7 @@ model_instance_settings = [
     ),
     "minimum_sigma_residuals",
     ("n_max_event", "set_n_max_event"),
-    "parameters",
+    "free_parameters",
     "reinitialization_state_idxs",
     "reinitialize_fixed_parameter_initial_states",
     "state_is_non_negative",
@@ -266,7 +266,7 @@ def _ids_and_names_to_rdata(
         "state",
         "observable",
         "expression",
-        "parameter",
+        "free_parameter",
         "fixed_parameter",
     ):
         for name_or_id in ("ids", "names"):

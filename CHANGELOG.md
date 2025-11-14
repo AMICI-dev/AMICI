@@ -8,6 +8,20 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **BREAKING CHANGES**
 
+* The package has been reorganized. All importers have been moved to
+  `amici.importers` subpackages. For example, all functionality from
+  `amici.sbml_import` is now available in `amici.importers.sbml`.
+* The naming of free and fixed parameters has been harmonized across the API:
+  AMICI differentiates between parameters with respect to which a model
+  can compute sensitivities ("free parameters") and parameters with respect to
+  which no sensitivities can be computed ("fixed parameters").
+  "Free" and "fixed" are to be understood in the context of parameter
+  estimation, where free parameters are optimized,
+  while fixed parameters remain constant.
+  Free parameters were previously referred to as just "parameters", and
+  fixed parameters as "fixed parameters", "constant parameters",
+  or "constants". This has now been harmonized to "free" and "fixed" across the
+  API. E.g., `Model.setParameters()` is now `Model.set_free_parameters()`.
 * `ReturnDataView.posteq_numsteps` and `ReturnDataView.posteq_numsteps` now
   return a one-dimensional array of shape `(num_timepoints,)` instead of a
   two-dimensional array of shape `(1, num_timepoints)`.

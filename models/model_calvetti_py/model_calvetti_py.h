@@ -14,13 +14,13 @@ class Solver;
 
 namespace model_model_calvetti_py {
 
-extern std::array<const char*, 0> parameter_names;
+extern std::array<const char*, 0> free_parameter_names;
 extern std::array<const char*, 6> fixed_parameter_names;
 extern std::array<const char*, 6> state_names;
 extern std::array<const char*, 6> observable_names;
 extern std::array<const ObservableScaling, 6> observable_scalings;
 extern std::array<const char*, 17> expression_names;
-extern std::array<const char*, 0> parameter_ids;
+extern std::array<const char*, 0> free_parameter_ids;
 extern std::array<const char*, 6> fixed_parameter_ids;
 extern std::array<const char*, 6> state_ids;
 extern std::array<const char*, 6> observable_ids;
@@ -144,7 +144,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
               },
               amici::SimulationParameters(
                   std::vector<realtype>{0.28999999999999998, 0.73999999999999999, 0.44, 0.080000000000000002, 0.27000000000000002, 0.17999999999999999}, // fixedParameters
-                  std::vector<realtype>{}        // dynamic parameters
+                  std::vector<realtype>{}        // free parameters
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0, 1.0, 0.0, 0.0, 0.0},   // idlist
@@ -421,12 +421,12 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> get_parameter_names() const override {
-        return std::vector<std::string>(parameter_names.begin(),
-                                        parameter_names.end());
+    std::vector<std::string> get_free_parameter_names() const override {
+        return std::vector<std::string>(free_parameter_names.begin(),
+                                        free_parameter_names.end());
     }
 
     /**
@@ -478,12 +478,12 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> get_parameter_ids() const override {
-        return std::vector<std::string>(parameter_ids.begin(),
-                                        parameter_ids.end());
+    std::vector<std::string> get_free_parameter_ids() const override {
+        return std::vector<std::string>(free_parameter_ids.begin(),
+                                        free_parameter_ids.end());
     }
 
     /**
@@ -557,7 +557,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "b0b2684b4b67db9eadf5e47d4f87f8fe74dd9070";
+        return "40190b46b1b398e321314ded4169fe910b37c484";
     }
 
     bool has_quadratic_llh() const override {

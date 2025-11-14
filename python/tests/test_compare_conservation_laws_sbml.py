@@ -85,7 +85,7 @@ end"""
     model_name_cl = model_output_dir_cl = "model_constant_species_cl"
 
     # Define constants, observables, sigmas
-    constant_parameters = ["synthesis_substrate", "init_enzyme"]
+    fixed_parameters = ["synthesis_substrate", "init_enzyme"]
     observation_model = [
         MC("observable_product", formula="product", sigma=1.0, name=""),
         MC("observable_substrate", formula="substrate", sigma=1.0, name=""),
@@ -95,13 +95,13 @@ end"""
     sbml_importer.sbml2amici(
         model_name_cl,
         model_output_dir_cl,
-        constant_parameters=constant_parameters,
+        fixed_parameters=fixed_parameters,
         observation_model=observation_model,
     )
     sbml_importer.sbml2amici(
         model_name,
         model_output_dir,
-        constant_parameters=constant_parameters,
+        fixed_parameters=fixed_parameters,
         observation_model=observation_model,
         compute_conservation_laws=False,
     )

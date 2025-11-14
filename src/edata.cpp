@@ -32,13 +32,13 @@ ExpData::ExpData(
 
 ExpData::ExpData(
     int const nytrue, int const nztrue, int const nmaxevent,
-    std::vector<realtype> ts, std::vector<realtype> fixedParameters
+    std::vector<realtype> ts, std::vector<realtype> fixed_parameters
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
     , nztrue_(nztrue)
     , nmaxevent_(nmaxevent) {
-    this->fixed_parameters = std::move(fixedParameters);
+    this->fixed_parameters = std::move(fixed_parameters);
     apply_dimensions();
 }
 
@@ -410,7 +410,7 @@ ConditionContext::ConditionContext(
     Model* model, ExpData const* edata, FixedParameterContext fpc
 )
     : model_(model)
-    , original_parameters_(model->get_parameters())
+    , original_parameters_(model->get_free_parameters())
     , original_fixed_parameters_(model->get_fixed_parameters())
     , original_tstart_(model->t0())
     , original_tstart_preeq_(model->t0_preeq())
@@ -459,14 +459,14 @@ void ConditionContext::apply_condition(
 
     // this needs to be set in the model before handling initial state
     // sensitivities, which may be unscaled using model parameter values
-    if (!edata->parameters.empty()) {
-        if (edata->parameters.size() != (unsigned)model_->np())
+    if (!edata->free_parameters.empty()) {
+        if (edata->free_parameters.size() != (unsigned)model_->np())
             throw AmiException(
                 "Number of parameters (%d) in model does not"
                 " match ExpData (%zd).",
-                model_->np(), edata->parameters.size()
+                model_->np(), edata->free_parameters.size()
             );
-        model_->set_parameters(edata->parameters);
+        model_->set_free_parameters(edata->free_parameters);
     }
 
     if (!edata->x0.empty()) {
@@ -567,7 +567,7 @@ void ConditionContext::restore() {
     if (!original_sx0_.empty())
         model_->set_unscaled_initial_state_sensitivities(original_sx0_);
 
-    model_->set_parameters(original_parameters_);
+    model_->set_free_parameters(original_parameters_);
     model_->set_fixed_parameters(original_fixed_parameters_);
     model_->set_t0(original_tstart_);
     model_->set_t0_preeq(original_tstart_preeq_);

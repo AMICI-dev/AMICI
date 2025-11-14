@@ -5,7 +5,7 @@ namespace amici::model_model_neuron_py {
 
 // clang-format off
 
-std::array<const char*, 4> parameter_names = {
+std::array<const char*, 4> free_parameter_names = {
     "a", // p[0]
 "b", // p[1]
 "c", // p[2]
@@ -34,7 +34,7 @@ std::array<const char*, 1> expression_names = {
     "flux_r0", // w[0]
 };
 
-std::array<const char*, 4> parameter_ids = {
+std::array<const char*, 4> free_parameter_ids = {
     "a", // p[0]
 "b", // p[1]
 "c", // p[2]

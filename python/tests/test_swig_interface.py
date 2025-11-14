@@ -98,7 +98,7 @@ model_instance_settings0 = {
         10,
         20,
     ],
-    "parameters": [(10.0, 0.1, 0.1, 0.1, 0.1, 0.1), tuple([1.0] * 6)],
+    "free_parameters": [(10.0, 0.1, 0.1, 0.1, 0.1, 0.1), tuple([1.0] * 6)],
     # Skipped due to interdependency with `'InitialStateSensitivities'`.
     "parameter_list": None,
     # Skipped due to interdependency with `'InitialStateSensitivities'`.
@@ -322,10 +322,10 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         "get_observable_ids",
         "get_observable_names",
         "get_observable_scaling",
-        "get_parameter_by_id",
-        "get_parameter_by_name",
-        "get_parameter_ids",
-        "get_parameter_names",
+        "get_free_parameter_by_id",
+        "get_free_parameter_by_name",
+        "get_free_parameter_ids",
+        "get_free_parameter_names",
         "get_second_order_mode",
         "get_solver",
         "get_state_ids",
@@ -339,10 +339,10 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         "set_fixed_parameter_by_name",
         "set_fixed_parameters_by_id_regex",
         "set_fixed_parameters_by_name_regex",
-        "set_parameter_by_id",
-        "set_parameter_by_name",
-        "set_parameters_by_id_regex",
-        "set_parameters_by_name_regex",
+        "set_free_parameter_by_id",
+        "set_free_parameter_by_name",
+        "set_free_parameters_by_id_regex",
+        "set_free_parameters_by_name_regex",
         "set_initial_state_sensitivities",
         "get_trigger_timepoints",
         "get_any_state_nonnegative",
@@ -605,7 +605,7 @@ def test_python_exceptions(sbml_example_presimulation_module):
     )
 
     # model throws, base catches, swig-exception handling is not involved
-    model.set_parameters([nan] * model.np())
+    model.set_free_parameters([nan] * model.np())
     model.set_timepoints([1])
     rdata = amici.run_simulation(model, solver)
     assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR

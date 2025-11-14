@@ -272,9 +272,7 @@ def import_model_pysb(
             f"column: {x}"
         )
 
-    constant_parameters = (
-        get_fixed_parameters(petab_problem) + fixed_parameters
-    )
+    fixed_parameters = get_fixed_parameters(petab_problem) + fixed_parameters
 
     if petab_problem.observable_df is None:
         observation_model = []
@@ -311,7 +309,7 @@ def import_model_pysb(
             output_dir=model_output_dir,
             model_name=model_name,
             verbose=True,
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
             observation_model=observation_model,
             pysb_model_has_obs_and_noise=True,
             **kwargs,

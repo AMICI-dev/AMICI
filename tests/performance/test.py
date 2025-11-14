@@ -106,18 +106,18 @@ def prepare_simulation(arg, model, solver, edata):
         solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
         solver.set_sensitivity_order(amici.SensitivityOrder.first)
     elif arg == "forward_simulation_non_optimal_parameters":
-        tmp_par = model.get_parameters()
-        model.set_parameters([0.1 for _ in tmp_par])
+        tmp_par = model.get_free_parameters()
+        model.set_free_parameters([0.1 for _ in tmp_par])
         solver.set_sensitivity_method(amici.SensitivityMethod.none)
         solver.set_sensitivity_order(amici.SensitivityOrder.none)
     elif arg == "adjoint_sensitivities_non_optimal_parameters":
-        tmp_par = model.get_parameters()
-        model.set_parameters([0.1 for _ in tmp_par])
+        tmp_par = model.get_free_parameters()
+        model.set_free_parameters([0.1 for _ in tmp_par])
         solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
         solver.set_sensitivity_order(amici.SensitivityOrder.first)
     elif arg == "forward_steadystate_sensitivities_non_optimal_parameters":
-        tmp_par = model.get_parameters()
-        model.set_parameters([0.1 for _ in tmp_par])
+        tmp_par = model.get_free_parameters()
+        model.set_free_parameters([0.1 for _ in tmp_par])
         solver.set_sensitivity_method(amici.SensitivityMethod.forward)
         solver.set_sensitivity_order(amici.SensitivityOrder.first)
         model.set_steady_state_sensitivity_mode(
@@ -125,8 +125,8 @@ def prepare_simulation(arg, model, solver, edata):
         )
         edata.set_timepoints([float("inf")])
     elif arg == "adjoint_steadystate_sensitivities_non_optimal_parameters":
-        tmp_par = model.get_parameters()
-        model.set_parameters([0.1 for _ in tmp_par])
+        tmp_par = model.get_free_parameters()
+        model.set_free_parameters([0.1 for _ in tmp_par])
         solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
         solver.set_sensitivity_order(amici.SensitivityOrder.first)
         edata.set_timepoints([float("inf")])

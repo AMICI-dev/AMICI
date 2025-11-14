@@ -58,7 +58,8 @@ class ExpData : public SimulationParameters {
      * @param nztrue Number of event outputs
      * @param nmaxevent Maximal number of events to track
      * @param ts Timepoints (dimension: nt)
-     * @param fixed_parameters Model constants (dimension: nk)
+     * @param fixed_parameters Model variables excluded from sensitivity
+     * analysis (dimension: nk)
      */
     ExpData(
         int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,

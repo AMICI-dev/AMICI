@@ -147,7 +147,7 @@ class Model_Test : public Model {
         throw AmiException("not implemented");
     }
 
-    std::vector<std::string> get_parameter_names() const override {
+    std::vector<std::string> get_free_parameter_names() const override {
         return getVariableNames("p", np());
     }
 
@@ -163,7 +163,7 @@ class Model_Test : public Model {
         return getVariableNames("y", ny);
     }
 
-    std::vector<std::string> get_parameter_ids() const override {
+    std::vector<std::string> get_free_parameter_ids() const override {
         return getVariableNames("p", np());
     }
 

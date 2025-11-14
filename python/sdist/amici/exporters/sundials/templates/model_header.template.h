@@ -14,13 +14,13 @@ class Solver;
 
 namespace model_TPL_MODELNAME {
 
-extern std::array<const char*, TPL_NP> parameter_names;
+extern std::array<const char*, TPL_NP> free_parameter_names;
 extern std::array<const char*, TPL_NK> fixed_parameter_names;
 extern std::array<const char*, TPL_NX_RDATA> state_names;
 extern std::array<const char*, TPL_NY> observable_names;
 extern std::array<const ObservableScaling, TPL_NY> observable_scalings;
 extern std::array<const char*, TPL_NW> expression_names;
-extern std::array<const char*, TPL_NP> parameter_ids;
+extern std::array<const char*, TPL_NP> free_parameter_ids;
 extern std::array<const char*, TPL_NK> fixed_parameter_ids;
 extern std::array<const char*, TPL_NX_RDATA> state_ids;
 extern std::array<const char*, TPL_NY> observable_ids;
@@ -144,7 +144,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
               },
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
-                  std::vector<realtype>{TPL_PARAMETERS}        // dynamic parameters
+                  std::vector<realtype>{TPL_FREE_PARAMETERS}        // free parameters
               ),
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_ID},   // idlist
@@ -288,12 +288,12 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> get_parameter_names() const override {
-        return std::vector<std::string>(parameter_names.begin(),
-                                        parameter_names.end());
+    std::vector<std::string> get_free_parameter_names() const override {
+        return std::vector<std::string>(free_parameter_names.begin(),
+                                        free_parameter_names.end());
     }
 
     /**
@@ -345,12 +345,12 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> get_parameter_ids() const override {
-        return std::vector<std::string>(parameter_ids.begin(),
-                                        parameter_ids.end());
+    std::vector<std::string> get_free_parameter_ids() const override {
+        return std::vector<std::string>(free_parameter_ids.begin(),
+                                        free_parameter_ids.end());
     }
 
     /**

@@ -35,8 +35,10 @@ def verify_results(
     parameter_data = {}
 
     # collect parameters
-    for par in model.get_parameter_ids():
-        parameter_data[par] = rdata["ts"] * 0 + model.get_parameter_by_id(par)
+    for par in model.get_free_parameter_ids():
+        parameter_data[par] = rdata["ts"] * 0 + model.get_free_parameter_by_id(
+            par
+        )
 
     expression_data = {}
 

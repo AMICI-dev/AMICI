@@ -19,11 +19,12 @@ from .de_model_components import (
     AlgebraicEquation,
     AlgebraicState,
     ConservationLaw,
-    Constant,
     DifferentialState,
     Event,
     EventObservable,
     Expression,
+    FixedParameter,
+    FreeParameter,
     LogLikelihood,
     LogLikelihoodRZ,
     LogLikelihoodY,
@@ -32,7 +33,6 @@ from .de_model_components import (
     NoiseParameter,
     Observable,
     ObservableParameter,
-    Parameter,
     Sigma,
     SigmaY,
     SigmaZ,
@@ -83,98 +83,91 @@ class DEModel:
     sensitivity computation.
 
     :ivar _differential_states:
-        list of differential state variables
+        differential state variables
 
     :ivar _algebraic_states:
-        list of algebraic state variables
+        algebraic state variables
 
     :ivar _observables:
-        list of observables
+        observables
 
     :ivar _event_observables:
-        list of event observables
+        event observables
 
     :ivar _sigma_ys:
-        list of sigmas for observables
+        sigmas for observables
 
     :ivar _sigma_zs:
-        list of sigmas for event observables
+        sigmas for event observables
 
-    :ivar _parameters:
-        list of parameters
+    :ivar _free_parameters:
+        parameters included in sensitivity analysis
+
+    :ivar _fixed_parameters:
+        parameters excluded from sensitivity analysis
 
     :ivar _log_likelihood_ys:
-        list of loglikelihoods for observables
+        loglikelihoods for observables
 
     :ivar _log_likelihood_zs:
-        list of loglikelihoods for event observables
+        loglikelihoods for event observables
 
     :ivar _log_likelihood_rzs:
-        list of loglikelihoods for event observable regularizations
+        loglikelihoods for event observable regularizations
 
     :ivar _expressions:
-        list of expressions instances
+        expressions instances
 
     :ivar _conservation_laws:
-        list of conservation laws
+        conservation laws
 
     :ivar _symboldim_funs:
-        define functions that compute model dimensions, these
-        are functions as the underlying symbolic expressions have not been
-        populated at compile time
+        define functions that compute model dimensions, these are functions as the underlying symbolic expressions have
+        not been populated at compile time
 
     :ivar _eqs:
-        carries symbolic formulas of the symbolic variables of the model
+        symbolic formulas of the symbolic variables of the model
 
     :ivar _sparseeqs:
-        carries linear list of all symbolic formulas for sparsified
-        variables
+        linear list of all symbolic formulas for sparsified variables
 
     :ivar _vals:
-        carries numeric values of symbolic identifiers of the symbolic
-        variables of the model
+        numeric values of symbolic identifiers of the symbolic variables of the model
 
     :ivar _names:
-        carries the names of symbolic identifiers of the symbolic variables
-        of the model
+        the names of symbolic identifiers of the symbolic variables of the model
 
     :ivar _syms:
-        carries symbolic identifiers of the symbolic variables of the
-        model
+        symbolic identifiers of the symbolic variables of the model
 
     :ivar _sparsesyms:
-        carries linear list of all symbols for sparsified
-        variables
+        linear list of all symbols for sparsified variables
 
     :ivar _colptrs:
-        carries column pointers for sparsified variables. See
-        SUNMatrixContent_Sparse definition in ``sunmatrix/sunmatrix_sparse.h``
+        column pointers for sparsified variables. See SUNMatrixContent_Sparse definition in
+        ``sunmatrix/sunmatrix_sparse.h``
 
     :ivar _rowvals:
-        carries row values for sparsified variables. See
-        SUNMatrixContent_Sparse definition in ``sunmatrix/sunmatrix_sparse.h``
+        row values for sparsified variables. See SUNMatrixContent_Sparse definition in ``sunmatrix/sunmatrix_sparse.h``
 
     :ivar _equation_prototype:
-        defines the attribute from which an equation should be generated via
-        list comprehension (see :meth:`OEModel._generate_equation`)
+        attribute from which an equation should be generated via list comprehension
+        (see :meth:`OEModel._generate_equation`)
 
     :ivar _variable_prototype:
-        defines the attribute from which a variable should be generated via
-        list comprehension (see :meth:`DEModel._generate_symbol`)
+        attribute from which a variable should be generated via list comprehension
+        (see :meth:`DEModel._generate_symbol`)
 
     :ivar _value_prototype:
-        defines the attribute from which a value should be generated via
-        list comprehension (see :meth:`DEModel._generate_value`)
+        attribute from which a value should be generated via list comprehension (see :meth:`DEModel._generate_value`)
 
     :ivar _total_derivative_prototypes:
-        defines how a total derivative equation is computed for an equation,
-        key defines the name and values should be arguments for
-        :meth:`DEModel.totalDerivative`
+        defines how a total derivative equation is computed for an equation, key defines the name and values should be
+        arguments for :meth:`DEModel.totalDerivative`
 
     :ivar _lock_total_derivative:
-        add chainvariables to this set when computing total derivative from
-        a partial derivative call to enforce a partial derivative in the
-        next recursion. prevents infinite recursion
+        add chainvariables to this set when computing total derivative from a partial derivative call to enforce a
+        partial derivative in the next recursion. prevents infinite recursion
 
     :ivar _simplify:
         If not None, this function will be used to simplify symbolic
@@ -182,22 +175,19 @@ class DEModel:
         To apply multiple simplifications, wrap them in a lambda expression.
 
     :ivar _x0_fixedParameters_idx:
-        Index list of subset of states for which x0_fixedParameters was
-        computed
+        Index list of subset of states for which x0_fixedParameters was computed
 
     :ivar _w_recursion_depth:
         recursion depth in w, quantified as nilpotency of dwdw
 
     :ivar _has_quadratic_nllh:
-        whether all observables have a gaussian noise model, i.e. whether
-        res and FIM make sense.
+        whether all observables have a gaussian noise model, i.e. whether res and FIM make sense.
 
     :ivar _static_indices:
-        dict of lists of indices of static variables for different
-        model entities.
+        indices of static variables for different model entities.
 
     :ivar _z2event:
-        list of event indices for each event observable
+        event indices for each event observable
     """
 
     def __init__(
@@ -228,8 +218,8 @@ class DEModel:
         self._event_observables: list[EventObservable] = []
         self._sigma_ys: list[SigmaY] = []
         self._sigma_zs: list[SigmaZ] = []
-        self._parameters: list[Parameter] = []
-        self._constants: list[Constant] = []
+        self._free_parameters: list[FreeParameter] = []
+        self._fixed_parameters: list[FixedParameter] = []
         self._log_likelihood_ys: list[LogLikelihoodY] = []
         self._log_likelihood_zs: list[LogLikelihoodZ] = []
         self._log_likelihood_rzs: list[LogLikelihoodRZ] = []
@@ -278,8 +268,8 @@ class DEModel:
             "x_rdata": self.states,
             "y": self.observables,
             "z": self.event_observables,
-            "p": self.parameters,
-            "k": self.constants,
+            "p": self.free_parameters,
+            "k": self.fixed_parameters,
             "w": self.expressions,
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
@@ -288,8 +278,8 @@ class DEModel:
             "op": self.observable_parameters,
         }
         self._value_prototype: dict[str, Callable] = {
-            "p": self.parameters,
-            "k": self.constants,
+            "p": self.free_parameters,
+            "k": self.fixed_parameters,
         }
         self._total_derivative_prototypes: dict[
             str, dict[str, str | list[str]]
@@ -354,13 +344,13 @@ class DEModel:
         """Get all observables."""
         return self._observables
 
-    def parameters(self) -> list[Parameter]:
+    def free_parameters(self) -> list[FreeParameter]:
         """Get all parameters."""
-        return self._parameters
+        return self._free_parameters
 
-    def constants(self) -> list[Constant]:
+    def fixed_parameters(self) -> list[FixedParameter]:
         """Get all constants."""
-        return self._constants
+        return self._fixed_parameters
 
     def expressions(self) -> list[Expression]:
         """Get all expressions."""
@@ -589,8 +579,8 @@ class DEModel:
         if type(component) not in {
             Observable,
             Expression,
-            Parameter,
-            Constant,
+            FreeParameter,
+            FixedParameter,
             DifferentialState,
             AlgebraicState,
             AlgebraicEquation,
@@ -1212,7 +1202,7 @@ class DEModel:
                             f"s{tcl.get_id()}__{par.get_id()}",
                             real=True,
                         )
-                        for par in self._parameters
+                        for par in self._free_parameters
                     ]
                     if self.conservation_law_has_multispecies(tcl)
                     else [0] * self.num_par()
@@ -2334,7 +2324,7 @@ class DEModel:
         if not isinstance(ic, sp.Basic):
             return False
         return any(
-            fp in (c.get_sym() for c in self._constants)
+            fp in (c.get_sym() for c in self._fixed_parameters)
             for fp in ic.free_symbols
         )
 
@@ -2553,7 +2543,7 @@ class DEModel:
             self._algebraic_states
             + self._algebraic_equations
             + self._conservation_laws
-            + self._constants
+            + self._fixed_parameters
             + self._differential_states
             + self._event_observables
             + self._events
@@ -2562,7 +2552,7 @@ class DEModel:
             + self._log_likelihood_zs
             + self._log_likelihood_rzs
             + self._observables
-            + self._parameters
+            + self._free_parameters
             + self._sigma_ys
             + self._sigma_zs
             + self._splines
@@ -2630,8 +2620,8 @@ class DEModel:
             for out_var, parts in outputs.items():
                 comp = parts["comp"]
                 # remove output from model components
-                if isinstance(comp, Parameter):
-                    self._parameters.remove(comp)
+                if isinstance(comp, FreeParameter):
+                    self._free_parameters.remove(comp)
                 elif isinstance(comp, Expression):
                     self._expressions.remove(comp)
                 elif isinstance(comp, DifferentialState):

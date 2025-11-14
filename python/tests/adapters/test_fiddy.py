@@ -52,7 +52,7 @@ def test_run_amici_simulation_to_functions(problem_generator):
         ].index
     )
     parameter_indices = [
-        amici_model.get_parameter_ids().index(parameter_id)
+        amici_model.get_free_parameter_ids().index(parameter_id)
         for parameter_id in parameter_ids
     ]
 
@@ -61,7 +61,7 @@ def test_run_amici_simulation_to_functions(problem_generator):
         amici_derivative,
         structures,
     ) = run_simulation_to_cached_functions(
-        parameter_ids=parameter_ids,
+        free_parameter_ids=parameter_ids,
         amici_model=amici_model,
         amici_solver=amici_solver,
     )
@@ -131,7 +131,7 @@ def test_simulate_petab_to_functions(problem_generator, scaled_parameters):
         )
 
     amici_function, amici_derivative = simulate_petab_to_cached_functions(
-        parameter_ids=petab_problem.parameter_df.index,
+        free_parameter_ids=petab_problem.parameter_df.index,
         petab_problem=petab_problem,
         amici_model=amici_model,
         solver=amici_solver,
@@ -141,7 +141,7 @@ def test_simulate_petab_to_functions(problem_generator, scaled_parameters):
 
     expected_derivative = amici_derivative(point)
 
-    parameter_ids = list(
+    free_parameter_ids = list(
         petab_problem.parameter_df[
             petab_problem.parameter_df.estimate == 1
         ].index
@@ -156,7 +156,7 @@ def test_simulate_petab_to_functions(problem_generator, scaled_parameters):
         function=amici_function,
         point=point,
         sizes=[1e-10, 1e-5, 1e-3, 1e-1],
-        direction_ids=parameter_ids,
+        direction_ids=free_parameter_ids,
         method_ids=[MethodId.FORWARD, MethodId.BACKWARD, MethodId.CENTRAL],
         success_checker=Consistency(),
     )

@@ -253,7 +253,7 @@ def check_model(
     if petab_problem.parameter_df is None:
         return
 
-    amici_ids_free = set(amici_model.get_parameter_ids())
+    amici_ids_free = set(amici_model.get_free_parameter_ids())
     amici_ids = amici_ids_free | set(amici_model.get_fixed_parameter_ids())
 
     petab_ids_free = set(

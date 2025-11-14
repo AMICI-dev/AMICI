@@ -56,20 +56,20 @@ def _edata_repr(self: "ExpData"):
     if self.pscale:
         custom_simulation_settings.append(f"parameter scales")
     if self.fixed_parameters:
-        custom_simulation_settings.append(f"constants")
+        custom_simulation_settings.append(f"fixed parameters")
     if self.fixed_parameters_pre_equilibration:
         custom_simulation_settings.append(f"pre-equilibration condition")
     if self.t_presim:
         tmp = f"pre-simulation condition (t={self.t_presim})"
         if self.fixed_parameters_presimulation:
-            tmp += " with custom constants"
+            tmp += " with custom fixed parameters"
         custom_simulation_settings.append(tmp)
     if self.reinitialize_fixed_parameter_initial_states and self.reinitialization_state_idxs_sim:
         custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_sim)} reinitialized states (simulation)")
     if self.reinitialize_fixed_parameter_initial_states and self.reinitialization_state_idxs_presim:
         custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_presim)} reinitialized states (presimulation)")
-    if self.parameters:
-        custom_simulation_settings.append(f"parameters")
+    if self.free_parameters:
+        custom_simulation_settings.append(f"free parameters")
     if self.x0:
         custom_simulation_settings.append(f"initial states")
     if self.sx0:

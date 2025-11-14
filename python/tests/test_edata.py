@@ -28,19 +28,19 @@ def test_edata_sensi_unscaling(model_units_module):  # noqa: F811
     model = model_units_module.get_model()
     model.set_timepoints(np.linspace(0, 1, 3))
     model.set_parameter_scale(parameter_scales_log10)
-    model.set_parameters(parameters0)
+    model.set_free_parameters(parameters0)
 
     solver = model.create_solver()
     solver.set_sensitivity_order(amici.SensitivityOrder.first)
 
     edata0 = amici.ExpData(model)
     edata0.pscale = amici_parameter_scales_log10
-    edata0.parameters = parameters0
+    edata0.free_parameters = parameters0
     edata0.sx0 = sx0
 
     edata1 = amici.ExpData(model)
     edata1.pscale = amici_parameter_scales_log10
-    edata1.parameters = parameters1
+    edata1.free_parameters = parameters1
     edata1.sx0 = sx0
 
     rdata0 = amici.run_simulation(model, solver, edata0)

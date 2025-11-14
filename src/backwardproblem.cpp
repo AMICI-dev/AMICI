@@ -201,10 +201,10 @@ void EventHandlingBwdSimulator::handle_event_b(
             Expects(ws_->nroots_[ie] >= 0);
             for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
                 for (int iJ = 0; iJ < model_->nJ; ++iJ) {
-                    ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx
-                    )[iJ
-                      + (ix + ws_->nroots_[ie] * model_->nx_solver)
-                            * model_->nJ];
+                    ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx)
+                        [iJ
+                         + (ix + ws_->nroots_[ie] * model_->nx_solver)
+                               * model_->nJ];
                 }
             }
         }

@@ -23,7 +23,7 @@ class SymbolId(str, enum.Enum):
     SPECIES = "species"
     ALGEBRAIC_STATE = "algebraic_state"
     ALGEBRAIC_EQUATION = "algebraic_equation"
-    PARAMETER = "parameter"
+    FREE_PARAMETER = "free_parameter"
     FIXED_PARAMETER = "fixed_parameter"
     OBSERVABLE = "observable"
     EXPRESSION = "expression"

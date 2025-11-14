@@ -223,7 +223,7 @@ def test_pregenerated_model_py(sub_test, case):
         assert np.isnan(rdata.chi2)
 
     with pytest.raises(RuntimeError):
-        model.get_parameter_by_name("thisParameterDoesNotExist")
+        model.get_free_parameter_by_name("thisParameterDoesNotExist")
 
 
 def verify_simulation_results(

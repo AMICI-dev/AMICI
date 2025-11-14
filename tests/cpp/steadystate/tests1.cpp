@@ -29,7 +29,7 @@ TEST(ExampleSteadystate, ModelFromHDF5)
 
     for (int i = 0; i < model->np(); ++i) {
         ASSERT_EQ(pExp[i], model->get_unscaled_parameters()[i]);
-        ASSERT_EQ(log10(pExp[i]), model->get_parameters()[i]);
+        ASSERT_EQ(log10(pExp[i]), model->get_free_parameters()[i]);
     }
 }
 
@@ -98,9 +98,9 @@ TEST(ExampleSteadystate, Rethrow)
       NEW_OPTION_FILE, *solver, "/model_steadystate/nosensi/options");
 
     // p = NaN will raise amici::IntegrationFailure
-    auto p = model->get_parameters();
+    auto p = model->get_free_parameters();
     std::fill(p.begin(), p.end(), std::nan(""));
-    model->set_parameters(p);
+    model->set_free_parameters(p);
 
     // must not throw
     run_simulation(*solver, nullptr, *model);

@@ -394,7 +394,7 @@ class PetabImporter:
                 model_name=self._module_name,
                 output_dir=self.outdir,
                 observation_model=observation_model,
-                constant_parameters=fixed_parameters,
+                fixed_parameters=fixed_parameters,
                 allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
                 verbose=self._verbose,
                 compile=self._compile,
@@ -474,7 +474,7 @@ class PetabImporter:
                 model_name=self._module_name,
                 output_dir=self.outdir,
                 verbose=True,
-                constant_parameters=fixed_parameters,
+                fixed_parameters=fixed_parameters,
                 observation_model=observation_model,
                 pysb_model_has_obs_and_noise=True,
                 compile=self._compile,
@@ -660,15 +660,15 @@ class ExperimentManager:
         self._model: amici.Model = model
         self._petab_problem: v2.Problem = petab_problem
         self._state_ids: tuple[str, ...] = tuple(self._model.get_state_ids())
-        self._parameter_ids: tuple[str, ...] = tuple(
-            self._model.get_parameter_ids()
+        self._free_parameter_ids: tuple[str, ...] = tuple(
+            self._model.get_free_parameter_ids()
         )
         self._fixed_parameter_ids: tuple[str, ...] = tuple(
             self._model.get_fixed_parameter_ids()
         )
         # maps parameter IDs to parameter indices in the model
         self._pid_to_idx: dict[str, int] = {
-            id_: i for i, id_ in enumerate(self._parameter_ids)
+            id_: i for i, id_ in enumerate(self._free_parameter_ids)
         }
         self._fixed_pid_to_idx: dict[str, int] = {
             id_: i for i, id_ in enumerate(self._fixed_parameter_ids)
@@ -681,7 +681,7 @@ class ExperimentManager:
         # create a new model instance from the model module from which
         #  we can get the default parameters
         model0 = model.module.get_model()
-        self._original_p = np.array(model0.get_parameters())
+        self._original_p = np.array(model0.get_free_parameters())
         self._original_k = np.array(model0.get_fixed_parameters())
 
     def create_edatas(self) -> list[amici.ExpData]:
@@ -944,7 +944,7 @@ class ExperimentManager:
         placeholder_mappings = self._get_placeholder_mapping(experiment)
         estimated_par_ids = self._petab_problem.x_free_ids
         for model_par_idx, model_par_id in enumerate(
-            self._model.get_parameter_ids()
+            self._model.get_free_parameter_ids()
         ):
             if model_par_id in estimated_par_ids or (
                 (maps_to := placeholder_mappings.get(model_par_id)) is not None
@@ -1037,13 +1037,13 @@ class ExperimentManager:
                     apply_override(placeholder, override)
 
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
-        edata.parameters = par_vals
+        edata.free_parameters = par_vals
 
         if self._debug:
             logger.debug("ExperimentManager.apply_parameters:")
             logger.debug(
                 f"Parameters: "
-                f"{dict(zip(self._parameter_ids, map(float, par_vals)))}"
+                f"{dict(zip(self._free_parameter_ids, map(float, par_vals)))}"
             )
 
     @property
@@ -1226,7 +1226,7 @@ class PetabSimulator:
                     f"{rdata.id} were not computed."
                 )
 
-        parameter_ids = self._model.get_parameter_ids()
+        free_parameter_ids = self._model.get_free_parameter_ids()
 
         # still needs parameter mapping for placeholders
         for rdata in rdatas:
@@ -1237,7 +1237,9 @@ class PetabSimulator:
             for model_par_idx, sllh in zip(
                 rdata.plist, rdata.sllh, strict=True
             ):
-                model_par_id = problem_par_id = parameter_ids[model_par_idx]
+                model_par_id = problem_par_id = free_parameter_ids[
+                    model_par_idx
+                ]
                 if maps_to := placeholder_mappings.get(model_par_id):
                     problem_par_id = maps_to
 
@@ -1294,7 +1296,7 @@ class PetabSimulator:
         global_ix_map: dict[int, int] = {
             model_ix: self._petab_problem.x_free_ids.index(model_pid)
             for model_ix, model_pid in enumerate(
-                self._model.get_parameter_ids()
+                self._model.get_free_parameter_ids()
             )
             if model_pid in self._petab_problem.x_free_ids
         }
@@ -1316,9 +1318,9 @@ class PetabSimulator:
             )
             for model_pid, problem_pid in placeholder_mappings.items():
                 try:
-                    ix_map[self.model.get_parameter_ids().index(model_pid)] = (
-                        self._petab_problem.x_free_ids.index(problem_pid)
-                    )
+                    ix_map[
+                        self.model.get_free_parameter_ids().index(model_pid)
+                    ] = self._petab_problem.x_free_ids.index(problem_pid)
                 except ValueError:
                     # mapped-to parameter is not estimated
                     pass

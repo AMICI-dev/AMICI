@@ -244,7 +244,7 @@ def model_steadystate_module():
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            constant_parameters=["k0"],
+            fixed_parameters=["k0"],
             observation_model=list(observables.values()),
         )
 
@@ -303,7 +303,7 @@ def test_presimulation_events(tempdir):
     at time >= -one and presim_indicator == 1: presim_target_1 = presim_target_1 + one
     at time >= one and presim_indicator == 0: mainsim_target = mainsim_target + 1
     """,
-        constant_parameters=["presim_indicator"],
+        fixed_parameters=["presim_indicator"],
         model_name=model_name,
         output_dir=tempdir,
     )
@@ -329,7 +329,7 @@ def test_presimulation_events(tempdir):
     #  are not supported
     edata.plist = [
         ip
-        for ip, p in enumerate(model.get_parameter_ids())
+        for ip, p in enumerate(model.get_free_parameter_ids())
         if p != "t_initial_presim"
     ]
     solver.set_sensitivity_order(amici.SensitivityOrder.first)
@@ -576,7 +576,7 @@ def model_test_likelihoods(tempdir):
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=tempdir,
-        constant_parameters=["k0"],
+        fixed_parameters=["k0"],
         observation_model=observation_model,
     )
 
@@ -664,7 +664,7 @@ def test_likelihoods_error():
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            constant_parameters=["k0"],
+            fixed_parameters=["k0"],
             observation_model=[
                 MC("o1", formula="x1", noise_distribution="nörmal")
             ],
@@ -719,7 +719,7 @@ def test_sympy_exp_monkeypatch(tempdir):
                 amici.ParameterScaling.none
                 if re.match(r"n[0-9]+$", par_id)
                 else amici.ParameterScaling.log10
-                for par_id in model.get_parameter_ids()
+                for par_id in model.get_free_parameter_ids()
             ]
         )
     )
@@ -781,26 +781,26 @@ def custom_nllh(m, y, sigma):
 def _test_set_parameters_by_dict(model_module):
     """Test setting parameter via id/name => value dicts"""
     model = model_module.get_model()
-    old_parameter_values = model.get_parameters()
-    parameter_ids = model.get_parameter_ids()
-    change_par_id = parameter_ids[-1]
+    old_parameter_values = model.get_free_parameters()
+    free_parameter_ids = model.get_free_parameter_ids()
+    change_par_id = free_parameter_ids[-1]
     new_par_val = 0.1234
-    old_par_val = model.get_parameter_by_id(change_par_id)
+    old_par_val = model.get_free_parameter_by_id(change_par_id)
 
-    assert model.get_parameter_by_id(change_par_id) != new_par_val
-    model.set_parameter_by_id({change_par_id: new_par_val})
-    assert model.get_parameter_by_id(change_par_id) == new_par_val
+    assert model.get_free_parameter_by_id(change_par_id) != new_par_val
+    model.set_free_parameter_by_id({change_par_id: new_par_val})
+    assert model.get_free_parameter_by_id(change_par_id) == new_par_val
     # reset and check we are back to original
-    model.set_parameter_by_id(change_par_id, old_par_val)
-    assert model.get_parameters() == old_parameter_values
+    model.set_free_parameter_by_id(change_par_id, old_par_val)
+    assert model.get_free_parameters() == old_parameter_values
 
     # Same for by-name
-    parameter_names = model.get_parameter_names()
+    parameter_names = model.get_free_parameter_names()
     change_par_name = parameter_names[-1]
-    model.set_parameter_by_name({change_par_name: new_par_val})
-    assert model.get_parameter_by_name(change_par_name) == new_par_val
-    model.set_parameter_by_name(change_par_name, old_par_val)
-    assert model.get_parameters() == old_parameter_values
+    model.set_free_parameter_by_name({change_par_name: new_par_val})
+    assert model.get_free_parameter_by_name(change_par_name) == new_par_val
+    model.set_free_parameter_by_name(change_par_name, old_par_val)
+    assert model.get_free_parameters() == old_parameter_values
 
 
 @skip_on_valgrind
@@ -851,14 +851,14 @@ def test_hardcode_parameters():
     assert sbml_model.getParameter("p1").getValue() != 0
 
     ode_model = sbml_importer._build_ode_model()
-    assert str(ode_model.parameters()) == "[p1]"
+    assert str(ode_model.free_parameters()) == "[p1]"
     assert ode_model.differential_states()[0].get_dt().name == "p1"
 
     ode_model = sbml_importer._build_ode_model(
-        constant_parameters=[],
+        fixed_parameters=[],
         hardcode_symbols=["p1"],
     )
-    assert str(ode_model.parameters()) == "[]"
+    assert str(ode_model.free_parameters()) == "[]"
     assert (
         ode_model.differential_states()[0].get_dt()
         == sbml_model.getParameter("p1").getValue()
@@ -867,7 +867,7 @@ def test_hardcode_parameters():
     with pytest.raises(ValueError):
         sbml_importer._build_ode_model(
             # mutually exclusive
-            constant_parameters=["p1"],
+            fixed_parameters=["p1"],
             hardcode_symbols=["p1"],
         )
 
@@ -962,7 +962,7 @@ def test_import_same_model_name(tempdir):
     model_module_1 = import_model_module(
         module_name=module_name, module_path=outdir_1
     )
-    assert model_module_1.get_model().get_parameters()[0] == 1.0
+    assert model_module_1.get_model().get_free_parameters()[0] == 1.0
 
     # no error if the same model is loaded again without changes on disk
     model_module_1b = import_model_module(
@@ -971,13 +971,13 @@ def test_import_same_model_name(tempdir):
     # downside: the modules will compare as different
     assert (model_module_1 == model_module_1b) is False
     assert model_module_1.__file__ == model_module_1b.__file__
-    assert model_module_1b.get_model().get_parameters()[0] == 1.0
+    assert model_module_1b.get_model().get_free_parameters()[0] == 1.0
 
     model_module_2 = import_model_module(
         module_name=module_name, module_path=outdir_2
     )
-    assert model_module_1.get_model().get_parameters()[0] == 1.0
-    assert model_module_2.get_model().get_parameters()[0] == 2.0
+    assert model_module_1.get_model().get_free_parameters()[0] == 1.0
+    assert model_module_2.get_model().get_free_parameters()[0] == 2.0
 
     # import the third model, with the same name and location as the second
     #  model -- this is not supported, because there is some caching at
@@ -1000,14 +1000,14 @@ def test_import_same_model_name(tempdir):
         import_model_module(module_name=module_name, module_path=outdir_2)
 
     # this should not affect the previously loaded models
-    assert model_module_1.get_model().get_parameters()[0] == 1.0
-    assert model_module_2.get_model().get_parameters()[0] == 2.0
+    assert model_module_1.get_model().get_free_parameters()[0] == 1.0
+    assert model_module_2.get_model().get_free_parameters()[0] == 2.0
 
     # test that we can still import the model classically if we wanted to:
     with amici.set_path(outdir_1):
         import test_same_extension as model_module_1c  # noqa: F401
 
-        assert model_module_1c.get_model().get_parameters()[0] == 1.0
+        assert model_module_1c.get_model().get_free_parameters()[0] == 1.0
         assert model_module_1c.get_model().module is model_module_1c
 
 
@@ -1182,9 +1182,9 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
     # "species", because differential state
     assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
 
-    assert "p0" in [p.get_id() for p in de_model.parameters()]
-    assert "p1" not in [p.get_id() for p in de_model.parameters()]
-    assert "p2" not in [p.get_id() for p in de_model.parameters()]
+    assert "p0" in [p.get_id() for p in de_model.free_parameters()]
+    assert "p1" not in [p.get_id() for p in de_model.free_parameters()]
+    assert "p2" not in [p.get_id() for p in de_model.free_parameters()]
 
     assert list(de_model.sym("x_rdata")) == [
         symbol_with_assumptions("p2"),

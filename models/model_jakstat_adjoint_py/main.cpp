@@ -38,7 +38,7 @@ int main() {
     solver->set_relative_tolerance(1e-8);
 
     // Run the simulation using default parameters set during model import
-    // (can be changed using model->setParameters() or model->setParameterBy*())
+    // (can be changed using model->set_free_parameters() or model->set_free_parameter_by*())
     auto rdata = run_simulation(*solver, nullptr, *model);
 
     // Print observable time course
@@ -69,18 +69,18 @@ int main() {
     // Print state sensitivities sx...
     // ... for the first timepoint...
     int i_time = 0;
-    // ... with respect to the first parameter
+    // ... with respect to the first free parameter
     int i_nplist = 0;
 
     // get identifiers from model
     auto state_ids = model->get_state_ids();
-    auto parameter_ids = model->get_parameter_ids();
+    auto free_parameter_ids = model->get_free_parameter_ids();
 
     std::cout << "State sensitivities for timepoint " << rdata->ts[i_time]
               << std::endl; // nt x nplist x nx
     for (int i_state = 0; i_state < rdata->nx_rdata; ++i_state) {
         std::cout << "\td(" << state_ids[i_state] << ")/d("
-                  << parameter_ids[model->plist(i_nplist)] << ") = ";
+                  << free_parameter_ids[model->plist(i_nplist)] << ") = ";
 
         // rdata->sx is a flat 3D array in row-major ordering
         std::cout << rdata->sx

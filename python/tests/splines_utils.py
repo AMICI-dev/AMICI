@@ -444,7 +444,7 @@ def simulate_splines(
 
         # Return state/parameter ordering
         state_ids = amici_model.get_state_ids()
-        param_ids = amici_model.get_parameter_ids()
+        param_ids = amici_model.get_free_parameter_ids()
 
         return (
             initial_values,

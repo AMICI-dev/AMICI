@@ -443,7 +443,7 @@ def test_benchmark_gradient(
 
     amici_function, amici_derivative = simulate_petab_to_cached_functions(
         petab_problem=petab_problem,
-        parameter_ids=parameter_ids,
+        free_parameter_ids=parameter_ids,
         amici_model=amici_model,
         solver=amici_solver,
         scaled_parameters=scale,
@@ -782,7 +782,7 @@ def test_nominal_parameters_llh_v2(problem_id):
     parameter_ids = ps._petab_problem.x_free_ids
     amici_function, amici_derivative = simulate_petab_v2_to_cached_functions(
         ps,
-        parameter_ids=parameter_ids,
+        free_parameter_ids=parameter_ids,
         cache=False,
     )
     np.random.seed(cur_settings.rng_seed)

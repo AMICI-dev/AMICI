@@ -71,8 +71,7 @@ void EventHandlingSimulator::run(
     // and filter for timepoints that are within the simulation time range
     auto trigger_timepoints_tmp = model_->get_trigger_timepoints();
     auto trigger_timepoints = std::ranges::views::filter(
-        trigger_timepoints_tmp,
-        [this, timepoints](auto t) {
+        trigger_timepoints_tmp, [this, timepoints](auto t) {
             return t > ws_->sol.t && !timepoints.empty()
                    && t <= timepoints.at(timepoints.size() - 1);
         }
@@ -883,8 +882,8 @@ SteadyStateStatus SteadyStateProblem::find_steady_state_by_simulation(
                 && (model_->get_steady_state_sensitivity_mode()
                         == SteadyStateSensitivityMode::integrationOnly
                     || model_->get_steady_state_sensitivity_mode()
-                           == SteadyStateSensitivityMode::integrateIfNewtonFails
-                )) {
+                           == SteadyStateSensitivityMode::
+                               integrateIfNewtonFails)) {
                 // need FSA to compute sx0 for the pre/main simulation,
                 // or enable ASA for backward integration of pre-equibration
                 new_solver->set_sensitivity_method(
@@ -995,8 +994,9 @@ realtype SteadyStateProblem::get_wrms_fsa(WRMSComputer& wrms_computer_sx) {
 bool SteadyStateProblem::check_steady_state_success() const {
     // Did one of the attempts yield a steady state?
     return std::ranges::any_of(
-        steady_state_status_, [](SteadyStateStatus status
-                              ) { return status == SteadyStateStatus::success; }
+        steady_state_status_, [](SteadyStateStatus status) {
+            return status == SteadyStateStatus::success;
+        }
     );
 }
 

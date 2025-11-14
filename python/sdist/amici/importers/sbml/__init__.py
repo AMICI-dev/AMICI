@@ -276,7 +276,7 @@ class SbmlImporter:
         self,
         model_name: str,
         output_dir: str | Path = None,
-        constant_parameters: Iterable[str] = None,
+        fixed_parameters: Iterable[str] = None,
         observation_model: list[MeasurementChannel] = None,
         verbose: int | bool = logging.ERROR,
         assume_pow_positivity: bool = False,
@@ -315,8 +315,8 @@ class SbmlImporter:
             Directory where the generated model package will be stored.
             Defaults to :func:`amici.get_model_dir`.
 
-        :param constant_parameters:
-            list of SBML Ids identifying constant parameters
+        :param fixed_parameters:
+            SBML Ids to be excluded from sensitivity analysis
 
         :param observation_model:
             The different measurement channels that make up the observation
@@ -386,7 +386,7 @@ class SbmlImporter:
         set_log_level(logger, verbose)
 
         ode_model = self._build_ode_model(
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
             observation_model=observation_model,
             verbose=verbose,
             compute_conservation_laws=compute_conservation_laws,
@@ -526,7 +526,7 @@ class SbmlImporter:
 
     def _build_ode_model(
         self,
-        constant_parameters: Iterable[str] = None,
+        fixed_parameters: Iterable[str] = None,
         observation_model: list[MeasurementChannel] = None,
         verbose: int | bool = logging.ERROR,
         compute_conservation_laws: bool = True,
@@ -539,12 +539,10 @@ class SbmlImporter:
 
         See :py:func:`sbml2amici` for parameters.
         """
-        constant_parameters = (
-            list(constant_parameters) if constant_parameters else []
-        )
+        fixed_parameters = list(fixed_parameters) if fixed_parameters else []
 
         hardcode_symbols = set(hardcode_symbols) if hardcode_symbols else {}
-        if invalid := (set(constant_parameters) & set(hardcode_symbols)):
+        if invalid := (set(fixed_parameters) & set(hardcode_symbols)):
             raise ValueError(
                 "The following parameters were selected as both constant "
                 f"and hard-coded which is not allowed: {invalid}"
@@ -552,7 +550,7 @@ class SbmlImporter:
 
         self._reset_symbols()
         self._process_sbml(
-            constant_parameters=constant_parameters,
+            fixed_parameters=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
 
@@ -695,14 +693,14 @@ class SbmlImporter:
     @log_execution_time("importing SBML", logger)
     def _process_sbml(
         self,
-        constant_parameters: list[str] = None,
+        fixed_parameters: list[str] = None,
         hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
 
-        :param constant_parameters:
-            SBML Ids identifying constant parameters
+        :param fixed_parameters:
+            SBML Ids to be excluded from sensitivity analysis
         :param hardcode_symbols:
             Parameter IDs to be replaced by their values in the generated model.
         """
@@ -711,7 +709,7 @@ class SbmlImporter:
         self.check_support()
         self._gather_locals(hardcode_symbols=hardcode_symbols)
         self._process_parameters(
-            constant_parameters=constant_parameters,
+            fixed_parameter_ids=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
         self._process_compartments()
@@ -1102,12 +1100,12 @@ class SbmlImporter:
                 name = str(variable)
                 del self.compartments[variable]
 
-            elif variable in self.symbols[SymbolId.PARAMETER]:
+            elif variable in self.symbols[SymbolId.FREE_PARAMETER]:
                 init = self._sympify(
-                    self.symbols[SymbolId.PARAMETER][variable]["value"],
+                    self.symbols[SymbolId.FREE_PARAMETER][variable]["value"],
                 )
-                name = self.symbols[SymbolId.PARAMETER][variable]["name"]
-                del self.symbols[SymbolId.PARAMETER][variable]
+                name = self.symbols[SymbolId.FREE_PARAMETER][variable]["name"]
+                del self.symbols[SymbolId.FREE_PARAMETER][variable]
 
             # parameter with initial assignment, cannot use
             # self.initial_assignments as it is not filled at this
@@ -1193,21 +1191,24 @@ class SbmlImporter:
     @log_execution_time("processing SBML parameters", logger)
     def _process_parameters(
         self,
-        constant_parameters: list[str] = None,
-        hardcode_symbols: Sequence[str] = None,
+        fixed_parameter_ids: list[str] | None = None,
+        hardcode_symbols: Sequence[str] | None = None,
     ) -> None:
         """
         Get parameter information from SBML model.
 
-        :param constant_parameters:
-            SBML Ids identifying constant parameters
+        :param fixed_parameter_ids:
+            SBML Ids to be excluded from sensitivity analysis
+
+        :param hardcode_symbols:
+            Parameter IDs to be replaced by their values in the generated model.
         """
 
-        if constant_parameters is None:
-            constant_parameters = []
+        if fixed_parameter_ids is None:
+            fixed_parameter_ids = []
 
         # Ensure specified constant parameters exist in the model
-        for parameter in constant_parameters:
+        for parameter in fixed_parameter_ids:
             if not self.sbml.getParameter(parameter):
                 raise KeyError(
                     f"Cannot make {parameter} a constant parameter: "
@@ -1225,7 +1226,7 @@ class SbmlImporter:
         fixed_parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
-            if parameter.getId() in constant_parameters
+            if parameter.getId() in fixed_parameter_ids
         ]
         for parameter in fixed_parameters:
             ia_math = par_id_to_ia.get(parameter.getId())
@@ -1244,7 +1245,7 @@ class SbmlImporter:
         parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
-            if parameter.getId() not in constant_parameters
+            if parameter.getId() not in fixed_parameter_ids
             and (
                 (ia_math := par_id_to_ia.get(parameter.getId())) is None
                 or ia_math.is_Number
@@ -1254,7 +1255,7 @@ class SbmlImporter:
         ]
 
         loop_settings = {
-            SymbolId.PARAMETER: {"var": parameters, "name": "parameter"},
+            SymbolId.FREE_PARAMETER: {"var": parameters, "name": "parameter"},
             SymbolId.FIXED_PARAMETER: {
                 "var": fixed_parameters,
                 "name": "fixed_parameter",
@@ -1276,9 +1277,9 @@ class SbmlImporter:
 
         # Set of symbols in initial assignments that still allows handling them
         #  via amici expressions
-        syms_allowed_in_expr_ia = set(self.symbols[SymbolId.PARAMETER]) | set(
-            self.symbols[SymbolId.FIXED_PARAMETER]
-        )
+        syms_allowed_in_expr_ia = set(
+            self.symbols[SymbolId.FREE_PARAMETER]
+        ) | set(self.symbols[SymbolId.FIXED_PARAMETER])
 
         for par in self.sbml.getListOfParameters():
             if (
@@ -1416,7 +1417,7 @@ class SbmlImporter:
         # substitute symbols that must not occur in the definition of x0
         # allowed symbols: amici model parameters and time
         allowed_syms = (
-            set(self.symbols[SymbolId.PARAMETER])
+            set(self.symbols[SymbolId.FREE_PARAMETER])
             | set(self.symbols[SymbolId.FIXED_PARAMETER])
             | {sbml_time_symbol}
         )
@@ -1540,7 +1541,10 @@ class SbmlImporter:
                 symbol_id, source_symbols = next(
                     (
                         (symbol_id, self.symbols[symbol_id])
-                        for symbol_id in (SymbolId.PARAMETER, SymbolId.SPECIES)
+                        for symbol_id in (
+                            SymbolId.FREE_PARAMETER,
+                            SymbolId.SPECIES,
+                        )
                         if var in self.symbols[symbol_id]
                     ),
                 )
@@ -1661,7 +1665,7 @@ class SbmlImporter:
                 )
             parameter_def = None
             for symbol_id in {
-                SymbolId.PARAMETER,
+                SymbolId.FREE_PARAMETER,
                 SymbolId.FIXED_PARAMETER,
                 SymbolId.EXPRESSION,
             }:
@@ -2170,7 +2174,7 @@ class SbmlImporter:
                 self.symbols[SymbolId.SPECIES],
                 self.compartments,
                 self.symbols[SymbolId.EXPRESSION],
-                self.symbols[SymbolId.PARAMETER],
+                self.symbols[SymbolId.FREE_PARAMETER],
                 self.symbols[SymbolId.FIXED_PARAMETER],
             ):
                 continue

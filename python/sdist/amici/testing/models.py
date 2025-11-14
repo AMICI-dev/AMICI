@@ -115,7 +115,7 @@ def import_model_robertson(outdir: Path = None) -> Model:
 
     antimony2amici(
         robertson_ant,
-        constant_parameters=["k1"],
+        fixed_parameters=["k1"],
         observation_model=[
             MeasurementChannel(id_="obs_x1", formula="x1"),
             MeasurementChannel(id_="obs_x2", formula="1e4 * x2"),
@@ -138,7 +138,7 @@ def import_model_calvetti(outdir: Path = None) -> Model:
 
     antimony2amici(
         calvetti_ant,
-        constant_parameters=["V1ss", "R1ss", "V2ss", "R2ss", "V3ss", "R3ss"],
+        fixed_parameters=["V1ss", "R1ss", "V2ss", "R2ss", "V3ss", "R3ss"],
         observation_model=[
             MeasurementChannel(id_="obs_V1", formula="V1"),
             MeasurementChannel(id_="obs_V2", formula="V2"),
@@ -248,7 +248,7 @@ def import_model_neuron(outdir: Path = None) -> AmiciModel:
             MeasurementChannel(id_="y1", name="v", formula="v"),
             MeasurementChannel(id_="z1", event_id="event_1", formula="time"),
         ],
-        constant_parameters=constants,
+        fixed_parameters=constants,
         output_dir=outdir,
     )
     return model
@@ -325,7 +325,7 @@ def import_model_events(outdir: Path = None) -> AmiciModel:
             MeasurementChannel(id_="z1", event_id="event_1", formula="time"),
             MeasurementChannel(id_="z2", event_id="event_2", formula="time"),
         ],
-        constant_parameters=constants,
+        fixed_parameters=constants,
         output_dir=outdir,
     )
     return model
@@ -415,7 +415,7 @@ def import_model_jakstat(outdir: Path = None) -> AmiciModel:
     spline.add_to_sbml_model(sbml_model, auto_add=False)
 
     SbmlImporter(sbml_model).sbml2amici(
-        constant_parameters=["Omega_cyt", "Omega_nuc"],
+        fixed_parameters=["Omega_cyt", "Omega_nuc"],
         observation_model=[
             MeasurementChannel(
                 id_="obs_pSTAT",
@@ -507,7 +507,7 @@ def import_model_steadystate(outdir: Path = None) -> AmiciModel:
 
     antimony2amici(
         ant_str,
-        constant_parameters=["k1", "k2", "k3", "k4"],
+        fixed_parameters=["k1", "k2", "k3", "k4"],
         observation_model=[
             MeasurementChannel(id_="obs_x1", formula="x1"),
             MeasurementChannel(id_="obs_x2", formula="x2"),

@@ -760,7 +760,7 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
     antimony2amici(
         ant_model,
         # test with constant parameters and non-constant parameters!
-        constant_parameters=["four"],
+        fixed_parameters=["four"],
         model_name=module_name,
         output_dir=tempdir,
     )
@@ -938,7 +938,7 @@ def test_event_priorities(tempdir):
     model.set_parameter_list(
         [
             ip
-            for ip, par in enumerate(model.get_parameter_ids())
+            for ip, par in enumerate(model.get_free_parameter_ids())
             if par != "two"
         ]
     )
@@ -1090,7 +1090,7 @@ def test_event_uses_values_from_trigger_time(tempdir):
             model.set_parameter_list(
                 [
                     ip
-                    for ip, par in enumerate(model.get_parameter_ids())
+                    for ip, par in enumerate(model.get_free_parameter_ids())
                     if par not in ["one"]
                 ]
             )
@@ -1101,7 +1101,7 @@ def test_event_uses_values_from_trigger_time(tempdir):
             model.set_parameter_list(
                 [
                     ip
-                    for ip, par in enumerate(model.get_parameter_ids())
+                    for ip, par in enumerate(model.get_free_parameter_ids())
                     if par not in ["one", "three"]
                 ]
             )
@@ -1213,7 +1213,7 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
         E2: at some_time >= 10 and time < 1, t0 = true:
             target2 = target2 + 1;
         """,
-        constant_parameters=["k1"],
+        fixed_parameters=["k1"],
         model_name=model_name,
         output_dir=tempdir,
     )

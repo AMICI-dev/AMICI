@@ -240,7 +240,7 @@ def jax_sensitivity_check(
         sx = jax.jacfwd(simulate)(p)
         par_idx = [
             jax_model.parameter_ids.index(pid)
-            for pid in amici_model.get_parameter_ids()
+            for pid in amici_model.get_free_parameter_ids()
         ]
         sx = jnp.transpose(sx[:, :, par_idx], (0, 2, 1))
 

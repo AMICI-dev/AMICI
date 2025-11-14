@@ -284,7 +284,7 @@ def aggregate_sllh(
         Aggregated likelihood sensitivities.
     """
     accumulated_sllh = {}
-    model_parameter_ids = amici_model.get_parameter_ids()
+    model_free_parameter_ids = amici_model.get_free_parameter_ids()
 
     if petab_scale and petab_problem is None:
         raise ValueError(
@@ -316,7 +316,9 @@ def aggregate_sllh(
                 model_parameter_index = edata.plist[sllh_parameter_index]
             else:
                 model_parameter_index = amici_model.plist(sllh_parameter_index)
-            model_parameter_id = model_parameter_ids[model_parameter_index]
+            model_parameter_id = model_free_parameter_ids[
+                model_parameter_index
+            ]
             petab_parameter_id = condition_parameter_mapping.map_sim_var[
                 model_parameter_id
             ]

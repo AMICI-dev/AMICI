@@ -14,13 +14,13 @@ class Solver;
 
 namespace model_model_jakstat_adjoint_py {
 
-extern std::array<const char*, 17> parameter_names;
+extern std::array<const char*, 17> free_parameter_names;
 extern std::array<const char*, 2> fixed_parameter_names;
 extern std::array<const char*, 9> state_names;
 extern std::array<const char*, 3> observable_names;
 extern std::array<const ObservableScaling, 3> observable_scalings;
 extern std::array<const char*, 2> expression_names;
-extern std::array<const char*, 17> parameter_ids;
+extern std::array<const char*, 17> free_parameter_ids;
 extern std::array<const char*, 2> fixed_parameter_ids;
 extern std::array<const char*, 9> state_ids;
 extern std::array<const char*, 3> observable_ids;
@@ -144,7 +144,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
               },
               amici::SimulationParameters(
                   std::vector<realtype>{1.3999999999999999, 0.45000000000000001}, // fixedParameters
-                  std::vector<realtype>{3.9810717055349727, 1000.0, 0.11220184543019635, 0.98287887300003218, 1.0, 0.0015848931924611134, 0.54954087385762451, 0.84139514164519513, 0.38904514499428061, 9.9999999999999991e-6, 0.18197008586099833, 0.22908676527677729, 0.77624711662869172, 1.0641430182243161, 0.31622776601683794, 1.0, 0.31622776601683794}        // dynamic parameters
+                  std::vector<realtype>{3.9810717055349727, 1000.0, 0.11220184543019635, 0.98287887300003218, 1.0, 0.0015848931924611134, 0.54954087385762451, 0.84139514164519513, 0.38904514499428061, 9.9999999999999991e-6, 0.18197008586099833, 0.22908676527677729, 0.77624711662869172, 1.0641430182243161, 0.31622776601683794, 1.0, 0.31622776601683794}        // free parameters
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},   // idlist
@@ -416,12 +416,12 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> get_parameter_names() const override {
-        return std::vector<std::string>(parameter_names.begin(),
-                                        parameter_names.end());
+    std::vector<std::string> get_free_parameter_names() const override {
+        return std::vector<std::string>(free_parameter_names.begin(),
+                                        free_parameter_names.end());
     }
 
     /**
@@ -473,12 +473,12 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> get_parameter_ids() const override {
-        return std::vector<std::string>(parameter_ids.begin(),
-                                        parameter_ids.end());
+    std::vector<std::string> get_free_parameter_ids() const override {
+        return std::vector<std::string>(free_parameter_ids.begin(),
+                                        free_parameter_ids.end());
     }
 
     /**
@@ -552,7 +552,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "b0b2684b4b67db9eadf5e47d4f87f8fe74dd9070";
+        return "40190b46b1b398e321314ded4169fe910b37c484";
     }
 
     bool has_quadratic_llh() const override {

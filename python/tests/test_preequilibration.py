@@ -279,9 +279,11 @@ def test_parameter_in_expdata(preeq_fixture):
     model.set_parameter_list([i for i in reversed(model.get_parameter_list())])
 
     # set ExpData parameters
-    edata.parameters = model.get_parameters()
+    edata.free_parameters = model.get_free_parameters()
     # perturb model parameters
-    model.set_parameters(tuple(p * 2 for p in model.get_parameters()))
+    model.set_free_parameters(
+        tuple(p * 2 for p in model.get_free_parameters())
+    )
 
     # set ExpData pscale
     edata.pscale = model.get_parameter_scale()
@@ -723,7 +725,7 @@ def test_preequilibration_t0(tempdir):
         ant_str,
         model_name=module_name,
         output_dir=tempdir,
-        constant_parameters=["preeq_indicator"],
+        fixed_parameters=["preeq_indicator"],
     )
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
@@ -786,7 +788,7 @@ def test_preequilibration_events(tempdir):
         ant_str,
         model_name=module_name,
         output_dir=tempdir,
-        constant_parameters=["is_preeq"],
+        fixed_parameters=["is_preeq"],
     )
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
@@ -846,7 +848,7 @@ def test_preequilibration_events(tempdir):
         amici_model.set_parameter_list(
             [
                 i
-                for i, p in enumerate(amici_model.get_parameter_ids())
+                for i, p in enumerate(amici_model.get_free_parameter_ids())
                 if p != "trigger_time2"
             ]
         )

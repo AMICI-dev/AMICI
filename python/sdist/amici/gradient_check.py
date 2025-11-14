@@ -71,15 +71,15 @@ def check_finite_difference(
 
     # store original settings and apply new ones
     og_sensitivity_order = solver.get_sensitivity_order()
-    og_parameters = model.get_parameters()
+    og_parameters = model.get_free_parameters()
     og_plist = model.get_parameter_list()
     if edata:
         og_eplist = edata.plist
-        og_eparameters = edata.parameters
+        og_eparameters = edata.free_parameters
 
         edata.plist = plist
         # we always set parameters via the model below
-        edata.parameters = []
+        edata.free_parameters = []
         pscale = (
             edata.pscale if len(edata.pscale) else model.get_parameter_scale()
         )
@@ -88,7 +88,7 @@ def check_finite_difference(
         model.set_parameter_list(plist)
 
     model.set_parameter_scale(pscale)
-    model.set_parameters(p)
+    model.set_free_parameters(p)
 
     # simulation with gradient
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
@@ -110,13 +110,13 @@ def check_finite_difference(
         pb[ip] /= 1 + epsilon / 2
 
     # forward:
-    model.set_parameters(pf)
+    model.set_free_parameters(pf)
     rdataf = run_simulation(model, solver, edata)
     if rdataf["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdataf['status']}")
 
     # backward:
-    model.set_parameters(pb)
+    model.set_free_parameters(pb)
     rdatab = run_simulation(model, solver, edata)
     if rdatab["status"] != AMICI_SUCCESS:
         raise AssertionError(f"Simulation failed (status {rdatab['status']}")
@@ -140,17 +140,17 @@ def check_finite_difference(
             rtol=rtol,
             field=field,
             ip=ip,
-            parameter_id=model.get_parameter_ids()[ip]
-            if model.has_parameter_ids()
+            parameter_id=model.get_free_parameter_ids()[ip]
+            if model.has_free_parameter_ids()
             else None,
         )
 
     solver.set_sensitivity_order(og_sensitivity_order)
-    model.set_parameters(og_parameters)
+    model.set_free_parameters(og_parameters)
     model.set_parameter_list(og_plist)
     if edata:
         edata.plist = og_eplist
-        edata.parameters = og_eparameters
+        edata.free_parameters = og_eparameters
 
 
 def check_derivatives(
@@ -179,10 +179,10 @@ def check_derivatives(
         are zero
     :param skip_fields: list of fields to skip
     """
-    if edata and edata.parameters:
-        p = np.array(edata.parameters)
+    if edata and edata.free_parameters:
+        p = np.array(edata.free_parameters)
     else:
-        p = np.array(model.get_parameters())
+        p = np.array(model.get_free_parameters())
 
     og_sens_order = solver.get_sensitivity_order()
 

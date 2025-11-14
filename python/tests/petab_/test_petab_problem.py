@@ -26,10 +26,11 @@ def test_amici_petab_problem_pregenerate():
     # ensure parameter are updated
     edatas = app.get_edatas()
     app.set_parameters(
-        {app.model.get_parameter_ids()[0]: 0.12345}, scaled_parameters=True
+        {app.model.get_free_parameter_ids()[0]: 0.12345},
+        scaled_parameters=True,
     )
     for edata in edatas:
-        assert edata.parameters[0] == 0.12345
+        assert edata.free_parameters[0] == 0.12345
 
 
 @skip_on_valgrind
@@ -50,14 +51,15 @@ def test_amici_petab_problem_on_demand():
 
     # ensure parameter are updated
     app.set_parameters(
-        {app.model.get_parameter_ids()[0]: 0.12345}, scaled_parameters=True
+        {app.model.get_free_parameter_ids()[0]: 0.12345},
+        scaled_parameters=True,
     )
     # previously generated ExpDatas are not updated
     for edata in edatas:
-        assert edata.parameters[0] != 0.12345
+        assert edata.free_parameters[0] != 0.12345
     # but newly generated ExpDatas are
     for edata in app.get_edatas():
-        assert edata.parameters[0] == 0.12345
+        assert edata.free_parameters[0] == 0.12345
 
     some_sim_condition = (
         petab_problem.measurement_df.simulationConditionId.iloc[0]
@@ -83,7 +85,9 @@ def test_amici_petab_problem_pregenerate_equals_on_demand(tempdir):
         petab_problem, store_edatas=False, amici_model=amici_model
     )
 
-    parameter_update = {app_store_true.model.get_parameter_ids()[0]: 0.12345}
+    parameter_update = {
+        app_store_true.model.get_free_parameter_ids()[0]: 0.12345
+    }
     app_store_true.set_parameters(parameter_update, scaled_parameters=True)
     app_store_false.set_parameters(parameter_update, scaled_parameters=True)
 
