@@ -535,8 +535,8 @@ realtype Model::get_free_parameter_by_id(std::string const& par_id) const {
             "Could not access parameters by id as they are not set"
         );
     return get_value_by_id(
-        get_free_parameter_ids(), simulation_parameters_.free_parameters, par_id,
-        "parameters", "id"
+        get_free_parameter_ids(), simulation_parameters_.free_parameters,
+        par_id, "parameters", "id"
     );
 }
 
@@ -546,8 +546,8 @@ realtype Model::get_free_parameter_by_name(std::string const& par_name) const {
             "Could not access parameters by name as they are not set"
         );
     return get_value_by_id(
-        get_free_parameter_names(), simulation_parameters_.free_parameters, par_name,
-        "parameters", "name"
+        get_free_parameter_names(), simulation_parameters_.free_parameters,
+        par_name, "parameters", "name"
     );
 }
 
@@ -558,7 +558,9 @@ void Model::set_free_parameters(std::vector<realtype> const& p) {
             "match number of model parameters."
         );
     simulation_parameters_.free_parameters = p;
-    state_.unscaled_parameters.resize(simulation_parameters_.free_parameters.size());
+    state_.unscaled_parameters.resize(
+        simulation_parameters_.free_parameters.size()
+    );
     unscale_parameters(
         simulation_parameters_.free_parameters, simulation_parameters_.pscale,
         state_.unscaled_parameters
@@ -587,8 +589,8 @@ void Model::set_free_parameter_by_id(
         );
 
     set_value_by_id(
-        get_free_parameter_ids(), simulation_parameters_.free_parameters, value, par_id,
-        "parameter", "id"
+        get_free_parameter_ids(), simulation_parameters_.free_parameters, value,
+        par_id, "parameter", "id"
     );
     unscale_parameters(
         simulation_parameters_.free_parameters, simulation_parameters_.pscale,
@@ -623,8 +625,8 @@ void Model::set_free_parameter_by_name(
         );
 
     set_value_by_id(
-        get_free_parameter_names(), simulation_parameters_.free_parameters, value,
-        par_name, "parameter", "name"
+        get_free_parameter_names(), simulation_parameters_.free_parameters,
+        value, par_name, "parameter", "name"
     );
     unscale_parameters(
         simulation_parameters_.free_parameters, simulation_parameters_.pscale,
@@ -654,8 +656,8 @@ int Model::set_free_parameters_by_name_regex(
         );
 
     int n_found = set_value_by_id_regex(
-        get_free_parameter_names(), simulation_parameters_.free_parameters, value,
-        par_name_regex, "parameter", "name"
+        get_free_parameter_names(), simulation_parameters_.free_parameters,
+        value, par_name_regex, "parameter", "name"
     );
 
     unscale_parameters(
@@ -1696,7 +1698,8 @@ int Model::check_finite(
         if (has_observable_ids())
             row_id += " " + get_observable_ids()[row];
         if (has_free_parameter_ids())
-            col_id += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
+            col_id
+                += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dydx:
         if (has_observable_ids())
@@ -1708,7 +1711,8 @@ int Model::check_finite(
         if (has_state_ids())
             row_id += " " + get_state_ids_solver()[row];
         if (has_free_parameter_ids())
-            col_id += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
+            col_id
+                += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dJydy:
     case ModelQuantity::dJydsigma:
@@ -1729,7 +1733,8 @@ int Model::check_finite(
     case ModelQuantity::drzdp:
     case ModelQuantity::dsigmazdp:
         if (has_free_parameter_ids())
-            col_id += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
+            col_id
+                += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dsigmaydy:
         if (has_observable_ids()) {

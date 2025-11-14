@@ -23,16 +23,19 @@ class SimulationParameters {
 
     /**
      * @brief Constructor
-     * @param fixed_parameters Model parameters excluded from sensitivity analysis
+     * @param fixed_parameters Model parameters excluded from sensitivity
+     * analysis
      * @param free_parameters Model parameters included in sensitivity analysis
      */
     SimulationParameters(
-        std::vector<realtype> fixed_parameters, std::vector<realtype> free_parameters
+        std::vector<realtype> fixed_parameters,
+        std::vector<realtype> free_parameters
     )
         : fixed_parameters(std::move(fixed_parameters))
         , free_parameters(std::move(free_parameters))
-        , pscale(std::vector(this->free_parameters.size(), ParameterScaling::none)) {
-    }
+        , pscale(
+              std::vector(this->free_parameters.size(), ParameterScaling::none)
+          ) {}
 
 #ifndef SWIGPYTHON
     /*
@@ -49,33 +52,40 @@ class SimulationParameters {
      */
     /**
      * @brief Constructor
-     * @param fixed_parameters Model parameters excluded from sensitivity analysis
+     * @param fixed_parameters Model parameters excluded from sensitivity
+     * analysis
      * @param free_parameters Model parameters included in sensitivity analysis
      * @param plist Model parameter indices w.r.t. which sensitivities are to be
      * computed
      */
     SimulationParameters(
-        std::vector<realtype> fixed_parameters, std::vector<realtype> free_parameters,
-        std::vector<int> plist
+        std::vector<realtype> fixed_parameters,
+        std::vector<realtype> free_parameters, std::vector<int> plist
     )
         : fixed_parameters(std::move(fixed_parameters))
         , free_parameters(std::move(free_parameters))
-        , pscale(std::vector(this->free_parameters.size(), ParameterScaling::none))
+        , pscale(
+              std::vector(this->free_parameters.size(), ParameterScaling::none)
+          )
         , plist(std::move(plist)) {}
 
     /**
      * @brief Constructor
      * @param timepoints Timepoints for which simulation results are requested
-     * @param fixed_parameters Model parameters excluded from sensitivity analysis
+     * @param fixed_parameters Model parameters excluded from sensitivity
+     * analysis
      * @param free_parameters Model parameters included in sensitivity analysis
      */
     SimulationParameters(
-        std::vector<realtype> timepoints, std::vector<realtype> fixed_parameters,
+        std::vector<realtype> timepoints,
+        std::vector<realtype> fixed_parameters,
         std::vector<realtype> free_parameters
     )
         : fixed_parameters(std::move(fixed_parameters))
         , free_parameters(std::move(free_parameters))
-        , pscale(std::vector(this->free_parameters.size(), ParameterScaling::none))
+        , pscale(
+              std::vector(this->free_parameters.size(), ParameterScaling::none)
+          )
         , timepoints(std::move(timepoints)) {}
 #endif
 

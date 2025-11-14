@@ -458,15 +458,17 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param value Parameter value
      * @return Number of parameter IDs that matched the regex
      */
-    int
-    set_free_parameters_by_id_regex(std::string const& par_id_regex, realtype value);
+    int set_free_parameters_by_id_regex(
+        std::string const& par_id_regex, realtype value
+    );
 
     /**
      * @brief Set value of first model parameter with the specified name.
      * @param par_name Parameter name
      * @param value Parameter value
      */
-    void set_free_parameter_by_name(std::string const& par_name, realtype value);
+    void
+    set_free_parameter_by_name(std::string const& par_name, realtype value);
 
     /**
      * @brief Set model parameters according to the parameter name and mapped
@@ -567,8 +569,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Report whether the model has free parameter names set.
      *
-     * @return Boolean indicating whether freeparameter names were set. Also returns
-     * `true` if the number of corresponding variables is just zero.
+     * @return Boolean indicating whether freeparameter names were set. Also
+     * returns `true` if the number of corresponding variables is just zero.
      */
     virtual bool has_free_parameter_names() const;
 

@@ -465,8 +465,8 @@ void SUNMatrixWrapper::sparse_add(
     }
     set_indexptr(num_indexptrs(), nnz);
     if (capacity() == A.num_nonzeros() + B.num_nonzeros())
-        realloc(
-        ); // resize if necessary, will have correct size in future calls
+        // resize if necessary, will have correct size in future calls
+        realloc();
 }
 
 void SUNMatrixWrapper::sparse_sum(std::vector<SUNMatrixWrapper> const& mats) {
@@ -522,7 +522,8 @@ void SUNMatrixWrapper::sparse_sum(std::vector<SUNMatrixWrapper> const& mats) {
     }
     set_indexptr(num_indexptrs(), nnz);
     if (capacity() == max_total_nonzero)
-        realloc(); // resize if necessary
+        // resize if necessary
+        realloc();
 }
 
 sunindextype SUNMatrixWrapper::scatter(

@@ -34,8 +34,8 @@ SUNLinSolWrapper::SUNLinSolWrapper(SUNLinSolWrapper&& other) noexcept {
     std::swap(A_, other.A_);
 }
 
-SUNLinSolWrapper& SUNLinSolWrapper::operator=(SUNLinSolWrapper&& other
-) noexcept {
+SUNLinSolWrapper&
+SUNLinSolWrapper::operator=(SUNLinSolWrapper&& other) noexcept {
     std::swap(solver_, other.solver_);
     std::swap(A_, other.A_);
     return *this;
@@ -88,8 +88,8 @@ SUNNonLinSolWrapper::SUNNonLinSolWrapper(SUNNonLinSolWrapper&& other) noexcept {
     std::swap(solver, other.solver);
 }
 
-SUNNonLinSolWrapper& SUNNonLinSolWrapper::operator=(SUNNonLinSolWrapper&& other
-) noexcept {
+SUNNonLinSolWrapper&
+SUNNonLinSolWrapper::operator=(SUNNonLinSolWrapper&& other) noexcept {
     std::swap(solver, other.solver);
     return *this;
 }

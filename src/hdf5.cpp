@@ -1518,7 +1518,8 @@ void read_model_data_from_hdf5(
     }
 
     if (location_exists(file, datasetPath + "/theta")) {
-        model.set_free_parameters(get_double_1d_dataset(file, datasetPath + "/theta")
+        model.set_free_parameters(
+            get_double_1d_dataset(file, datasetPath + "/theta")
         );
     }
 
