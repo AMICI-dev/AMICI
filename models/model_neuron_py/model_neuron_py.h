@@ -566,7 +566,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return AMICI version string
      */
     std::string get_amici_version() const override {
-        return "0.34.1";
+        return "0.34.2";
     }
 
     /**

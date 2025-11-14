@@ -441,59 +441,6 @@ def process_docstring(app, what, name, obj, options, lines):
         )
 
 
-def fix_typehints(sig: str) -> str:
-    # cleanup types
-    if not isinstance(sig, str):
-        return sig
-
-    for old, new in typemaps.items():
-        sig = sig.replace(old, new)
-    sig = sig.replace("void", "None")
-    sig = sig.replace("amici::realtype", "float")
-    sig = sig.replace("std::string", "str")
-    sig = sig.replace("double", "float")
-    sig = sig.replace("long", "int")
-    sig = sig.replace("char const *", "str")
-    sig = sig.replace("amici::", "")
-    sig = sig.replace("sunindextype", "int")
-    sig = sig.replace("H5::H5File", "object")
-
-    # remove const / const&
-    sig = sig.replace(" const&? ", r" ")
-    sig = re.sub(r" const&?$", r"", sig)
-
-    # remove pass by reference
-    sig = re.sub(r" &(,|\))", r"\1", sig)
-    sig = re.sub(r" &$", r"", sig)
-
-    # turn gsl_spans and pointers into Iterables
-    sig = re.sub(r"([\w.]+) \*", r"Iterable[\1]", sig)
-    sig = re.sub(r"gsl::span< ([\w.]+) >", r"Iterable[\1]", sig)
-
-    # fix garbled output
-    sig = sig.replace(" >", "")
-    return sig
-
-
-def process_signature(
-    app, what: str, name: str, obj, options, signature, return_annotation
-):
-    if signature is None:
-        return
-
-    # only apply in the amici.amici module
-    split_name = name.split(".")
-    if len(split_name) < 2 or split_name[1] != "amici":
-        return
-
-    signature = fix_typehints(signature)
-    if hasattr(obj, "__annotations__"):
-        for ann in obj.__annotations__:
-            obj.__annotations__[ann] = fix_typehints(obj.__annotations__[ann])
-
-    return signature, return_annotation
-
-
 # this code fixes references in symlinked md files in documentation folder
 # link replacements must be in env.domains['std'].labels
 doclinks = {
@@ -600,7 +547,6 @@ def skip_member(app, what, name, obj, skip, options):
 
 def setup(app: "sphinx.application.Sphinx"):
     app.connect("autodoc-process-docstring", process_docstring, priority=0)
-    app.connect("autodoc-process-signature", process_signature, priority=0)
     app.connect("missing-reference", process_missing_ref, priority=0)
     app.connect("autodoc-skip-member", skip_member, priority=0)
     app.config.intersphinx_mapping = intersphinx_mapping

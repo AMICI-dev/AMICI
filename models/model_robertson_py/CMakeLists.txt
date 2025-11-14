@@ -4,6 +4,12 @@ cmake_policy(VERSION 3.22...3.31)
 
 project(model_robertson_py)
 
+message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
+message(STATUS "CMAKE_COMMAND: ${CMAKE_COMMAND}")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -30,7 +36,7 @@ if(DEFINED ENV{AMICI_LDFLAGS})
   link_libraries("$ENV{AMICI_LDFLAGS}")
 endif()
 
-find_package(Amici 0.34.1 REQUIRED HINTS
+find_package(Amici 0.34.2 REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 set_target_properties(Upstream::amici PROPERTIES

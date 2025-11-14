@@ -549,7 +549,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI version string
      */
     std::string get_amici_version() const override {
-        return "0.34.1";
+        return "0.34.2";
     }
 
     /**
