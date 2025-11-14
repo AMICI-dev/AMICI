@@ -8,6 +8,7 @@ import logging
 import re
 from collections.abc import Callable, Sequence
 from itertools import chain
+from operator import itemgetter
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -648,12 +649,12 @@ class DEModel:
 
     def num_events_solver(self) -> int:
         """
-        Number of Events.
+        Number of Events that rely on numerical root-finding.
 
         :return:
             number of event symbols (length of the root vector in AMICI)
         """
-        constant_syms = set(self.sym("k")) | set(self.sym("p"))
+        constant_syms = self._static_symbols(["k", "p", "w"])
         return sum(
             not event.has_explicit_trigger_times(constant_syms)
             for event in self.events()
@@ -940,6 +941,29 @@ class DEModel:
 
         raise NotImplementedError(name)
 
+    def _static_symbols(self, names: list[str]) -> set[sp.Symbol]:
+        """
+        Return the static symbols among the given model entities.
+
+        E.g., `static_symbols(["p", "w"])` returns all symbols in `p` and `w`
+        that do not depend on time, neither directly nor indirectly.
+        """
+        result = set()
+
+        for name in names:
+            if name in ("k", "p"):
+                result |= set(self.sym(name))
+            elif name == "w":
+                static_indices = self.static_indices("w")
+                if len(static_indices) == 1:
+                    result.add(self.sym("w")[static_indices[0]])
+                elif len(static_indices) > 1:
+                    result |= set(itemgetter(*static_indices)(self.sym("w")))
+            else:
+                raise ValueError(name)
+
+        return result
+
     def dynamic_indices(self, name: str) -> list[int]:
         """
         Return the indices of dynamic expressions in the given model entity.
@@ -1155,17 +1179,12 @@ class DEModel:
             # add roots of heaviside functions
             self.add_component(root)
 
-        # # Substitute 'w' expressions into root expressions, to avoid rewriting
-        # # 'root.cpp' and 'stau.cpp' headers to include 'w.h'.
-        # for event in self.events():
-        #     event.set_val(event.get_val().subs(w_toposorted))
-
     def _reorder_events(self) -> None:
         """
         Re-order events - first those that require root tracking,
         then the others.
         """
-        constant_syms = set(self.sym("k")) | set(self.sym("p"))
+        constant_syms = self._static_symbols(["k", "p", "w"])
         self._events = list(
             chain(
                 itertools.filterfalse(
@@ -2358,11 +2377,6 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots((dxdt,))
-        # TODO remove: substitute 'w' symbols in the root expression by their equations,
-        #  because currently,
-        #    1) root functions must not depend on 'w'
-        # FIXME 2) the check for time-dependence currently assumes only state
-        #     variables are implicitly time-dependent
         for tmp_root_old, tmp_x0_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_root_new = self._get_unique_root(tmp_root_old, roots)
