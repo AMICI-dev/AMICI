@@ -20,4 +20,3 @@ Various example notebooks.
    examples/example_jax/ExampleJax.ipynb
    examples/example_jax_petab/ExampleJaxPEtab.ipynb
    examples/example_splines/ExampleSplines.ipynb
-   examples/example_splines_swameye/ExampleSplinesSwameye2003.ipynb
