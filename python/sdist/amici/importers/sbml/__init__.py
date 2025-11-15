@@ -401,17 +401,23 @@ class SbmlImporter:
             DEExporter,
         )
 
-        exporter = DEExporter(
-            ode_model,
-            model_name=model_name,
-            outdir=output_dir,
-            verbose=verbose,
-            assume_pow_positivity=assume_pow_positivity,
-            compiler=compiler,
-            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
-            generate_sensitivity_code=generate_sensitivity_code,
-        )
-        exporter.generate_model_code()
+        try:
+            exporter = DEExporter(
+                ode_model,
+                model_name=model_name,
+                outdir=output_dir,
+                verbose=verbose,
+                assume_pow_positivity=assume_pow_positivity,
+                compiler=compiler,
+                allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+                generate_sensitivity_code=generate_sensitivity_code,
+            )
+            exporter.generate_model_code()
+        except NotImplementedError as e:
+            raise SBMLException(
+                "The SBML model contains features that are currently not "
+                "supported by the AMICI SBML importer."
+            ) from e
 
         if compile:
             if not has_clibs:

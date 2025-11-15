@@ -133,17 +133,22 @@ def check_finite_difference(
         else:
             raise NotImplementedError()
 
-        _check_close(
-            sensi,
-            fd,
-            atol=atol,
-            rtol=rtol,
-            field=field,
-            ip=ip,
-            parameter_id=model.get_free_parameter_ids()[ip]
-            if model.has_free_parameter_ids()
-            else None,
-        )
+        try:
+            _check_close(
+                sensi,
+                fd,
+                atol=atol,
+                rtol=rtol,
+                field=field,
+                ip=ip,
+                parameter_id=model.get_free_parameter_ids()[ip]
+                if model.has_free_parameter_ids()
+                else None,
+            )
+        except Exception as e:
+            sm = SensitivityMethod(solver.get_sensitivity_method())
+            e.add_note(f"Sensitivity method was {sm!r}")
+            raise e
 
     solver.set_sensitivity_order(og_sensitivity_order)
     model.set_free_parameters(og_parameters)
