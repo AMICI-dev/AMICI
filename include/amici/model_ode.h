@@ -316,11 +316,13 @@ class Model_ODE : public Model {
      * @param p parameter vector
      * @param k constants vector
      * @param h Heaviside vector
+     * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
      **/
     virtual void froot(
         realtype* root, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* tcl
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* tcl
     );
 
     /**
