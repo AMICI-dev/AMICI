@@ -9,6 +9,7 @@ import petabtests
 import pytest
 from _pytest.outcomes import Skipped
 from amici import (
+    AMICI_SUCCESS,
     SensitivityMethod,
     SensitivityOrder,
 )
@@ -78,6 +79,10 @@ def _test_case(case, model_type, version, jax):
     ret = ps.simulate(problem_parameters=problem_parameters)
 
     rdatas = ret[RDATAS]
+    for rdata in rdatas:
+        assert rdata.status == AMICI_SUCCESS, (
+            f"Simulation failed for {rdata.id}"
+        )
     chi2 = sum(rdata.chi2 for rdata in rdatas)
     llh = ret[LLH]
     simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)

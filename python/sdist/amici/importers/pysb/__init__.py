@@ -278,6 +278,7 @@ def pysb2amici(
         compiler=compiler,
         generate_sensitivity_code=generate_sensitivity_code,
     )
+    # TODO: remove with https://github.com/AMICI-dev/AMICI/issues/3035
     # Sympy code optimizations are incompatible with PySB objects, as
     #  `pysb.Observable` comes with its own `.match` which overrides
     #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.

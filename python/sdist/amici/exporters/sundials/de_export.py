@@ -285,7 +285,13 @@ class DEExporter:
 
             if func_info.generate_body:
                 dec = log_execution_time(f"writing {func_name}.cpp", logger)
-                dec(self._write_function_file)(func_name)
+                try:
+                    dec(self._write_function_file)(func_name)
+                except Exception as e:
+                    e.add_note(
+                        f"Error while generating function '{func_name}'"
+                    )
+                    raise
 
         for name in self.model.sym_names():
             # only generate for those that have nontrivial implementation,
