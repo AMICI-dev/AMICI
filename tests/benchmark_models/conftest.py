@@ -6,7 +6,7 @@ import benchmark_models_petab
 import petab.v1 as petab
 import pytest
 from amici import get_model_root_dir
-from amici.petab.petab_import import import_petab_problem
+from amici.importers.petab.v1 import import_petab_problem
 from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 
 script_dir = Path(__file__).parent.resolve()

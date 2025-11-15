@@ -14,8 +14,8 @@ from amici import (
     SensitivityOrder,
 )
 from amici.gradient_check import check_derivatives as amici_check_derivatives
+from amici.importers.petab import *
 from amici.logging import get_logger, set_log_level
-from amici.petab.petab_importer import *
 from petab import v2
 
 logger = get_logger(__name__, logging.DEBUG)

@@ -17,16 +17,16 @@ AMICI Python API
    amici.importers.pysb
    amici.importers.bngl
    amici.importers.antimony
-   amici.petab
-   amici.petab.conditions
-   amici.petab.import_helpers
-   amici.petab.parameter_mapping
-   amici.petab.petab_import
-   amici.petab.petab_importer
-   amici.petab.pysb_import
-   amici.petab.sbml_import
-   amici.petab.simulations
-   amici.petab.simulator
+   amici.importers.petab
+   amici.importers.petab.v1
+   amici.importers.petab.v1.conditions
+   amici.importers.petab.v1.import_helpers
+   amici.importers.petab.v1.parameter_mapping
+   amici.importers.petab.v1.petab_import
+   amici.importers.petab.v1.pysb_import
+   amici.importers.petab.v1.sbml_import
+   amici.importers.petab.v1.simulations
+   amici.importers.petab.v1.simulator
    amici.jax
    amici.exporters.sundials.de_export
    amici.de_model

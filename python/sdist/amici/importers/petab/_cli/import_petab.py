@@ -1,8 +1,7 @@
 import argparse
 
 import petab.v1 as petab
-
-from ..petab_import import import_model_sbml
+from amici.importers.petab.v1.petab_import import import_model_sbml
 
 
 def _parse_cli_args():

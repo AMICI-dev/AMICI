@@ -21,8 +21,8 @@ from petab.v1.C import (
 from petab.v1.models.pysb_model import PySBModel
 
 from amici import MeasurementChannel
+from amici.logging import get_logger, log_execution_time, set_log_level
 
-from ..logging import get_logger, log_execution_time, set_log_level
 from . import PREEQ_INDICATOR_ID
 from .import_helpers import (
     get_fixed_parameters,

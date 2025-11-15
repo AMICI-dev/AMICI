@@ -11,7 +11,7 @@ import amici
 import amici.exporters.sundials.de_export
 import amici.importers.sbml
 import petab.v1 as petab
-from amici.petab.petab_import import import_model_sbml
+from amici.importers.petab.v1.petab_import import import_model_sbml
 
 
 def parse_args():

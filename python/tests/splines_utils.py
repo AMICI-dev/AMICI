@@ -18,6 +18,14 @@ import pandas as pd
 import petab.v1 as petab
 import sympy as sp
 from amici.gradient_check import _check_results
+from amici.importers.petab.v1 import (
+    EDATAS,
+    LLH,
+    RDATAS,
+    SLLH,
+    import_petab_problem,
+    simulate_petab,
+)
 from amici.importers.sbml.splines import (
     AbstractSpline,
     CubicHermiteSpline,
@@ -32,8 +40,6 @@ from amici.importers.sbml.utils import (
     amici_time_symbol,
     create_sbml_model,
 )
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import EDATAS, LLH, RDATAS, SLLH, simulate_petab
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from petab.v1.models.sbml_model import SbmlModel
 

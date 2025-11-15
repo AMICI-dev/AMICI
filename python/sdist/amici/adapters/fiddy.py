@@ -18,15 +18,15 @@ from fiddy import CachedFunction, Type, fiddy_array
 from petab.v1.C import LIN, LOG, LOG10
 
 import amici
-import amici.petab.simulations
-from amici.petab.conditions import create_edatas
-from amici.petab.parameter_mapping import create_parameter_mapping
-from amici.petab.simulations import LLH, SLLH
+import amici.importers.petab.v1.simulations
+from amici.importers.petab import LLH, SLLH
+from amici.importers.petab.v1.conditions import create_edatas
+from amici.importers.petab.v1.parameter_mapping import create_parameter_mapping
 
 from .. import ReturnData, SensitivityOrder
 
 if TYPE_CHECKING:
-    from amici.petab.petab_importer import PetabSimulator
+    from amici.importers.petab import PetabSimulator
 
 __all__ = [
     "run_simulation_to_cached_functions",
@@ -326,7 +326,7 @@ def simulate_petab_to_cached_functions(
         free_parameter_ids = list(petab_problem.parameter_df.index)
 
     if simulate_petab is None:
-        simulate_petab = amici.petab.simulations.simulate_petab
+        simulate_petab = amici.importers.petab.v1.simulations.simulate_petab
 
     edatas = None
     if precreate_edatas:
