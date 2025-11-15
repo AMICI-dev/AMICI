@@ -101,8 +101,8 @@ sciml = [
 
 [project.scripts]
 # amici_import_petab.py is kept for backwards compatibility
-amici_import_petab = "amici.petab.cli.import_petab:_main"
-"amici_import_petab.py" = "amici.petab.cli.import_petab:_main"
+amici_import_petab = "amici.importers.petab._cli.import_petab:_main"
+"amici_import_petab.py" = "amici.importers.petab._cli.import_petab:_main"
 
 [project.urls]
 Homepage = "https://github.com/AMICI-dev/AMICI"
@@ -111,6 +111,8 @@ Repository = "https://github.com/AMICI-dev/AMICI.git"
 "Bug Tracker" = "https://github.com/AMICI-dev/AMICI/issues"
 
 # TODO: consider using setuptools_scm
+#  https://github.com/AMICI-dev/AMICI/issues/3016
+
 #[tool.setuptools_scm]
 ## https://setuptools-scm.readthedocs.io/en/latest/
 #root = "../.."

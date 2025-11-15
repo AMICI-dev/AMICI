@@ -73,7 +73,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
     p8: not fixed (rate rule target)
     p9: not fixed (assignment rule target)
     """
-    from amici.petab.sbml_import import (
+    from amici.importers.petab.v1.sbml_import import (
         _get_fixed_parameters_sbml as get_fixed_parameters,
     )
     from petab.v1.models.sbml_model import SbmlModel
@@ -116,7 +116,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
 
 @skip_on_valgrind
 def test_default_output_parameters(simple_sbml_model, tempdir):
-    from amici.petab.petab_import import import_model_sbml
+    from amici.importers.petab.v1.petab_import import import_model_sbml
     from petab.v1.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = simple_sbml_model

@@ -7,9 +7,13 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from amici.importers.petab.v1 import (
+    LLH,
+    SLLH,
+    import_petab_problem,
+    simulate_petab,
+)
 from amici.jax.petab import run_simulations
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import LLH, SLLH, simulate_petab
 from beartype import beartype
 from test_petab_benchmark import (
     benchmark_outdir,

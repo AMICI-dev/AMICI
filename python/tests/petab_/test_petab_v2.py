@@ -1,7 +1,7 @@
 import copy
 
 import amici
-from amici.petab.petab_importer import (
+from amici.importers.petab import (
     PetabImporter,
     flatten_timepoint_specific_output_overrides,
     has_timepoint_specific_overrides,

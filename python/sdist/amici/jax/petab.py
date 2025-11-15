@@ -21,12 +21,12 @@ import petab.v1 as petab
 from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
-from amici.jax.model import JAXModel, ReturnValue
-from amici.logging import get_logger
-from amici.petab.parameter_mapping import (
+from amici.importers.petab.v1.parameter_mapping import (
     ParameterMappingForCondition,
     create_parameter_mapping,
 )
+from amici.jax.model import JAXModel, ReturnValue
+from amici.logging import get_logger
 
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,

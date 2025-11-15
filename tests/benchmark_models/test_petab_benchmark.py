@@ -31,15 +31,15 @@ from amici.adapters.fiddy import (
     simulate_petab_to_cached_functions,
     simulate_petab_v2_to_cached_functions,
 )
-from amici.logging import get_logger
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import (
+from amici.importers.petab.v1 import (
     LLH,
     RDATAS,
     SLLH,
+    import_petab_problem,
     rdatas_to_measurement_df,
     simulate_petab,
 )
+from amici.logging import get_logger
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.success import Consistency
@@ -610,7 +610,7 @@ def test_nominal_parameters_llh_v2(problem_id):
 
     Also check that the simulation time is within the reference range.
     """
-    from amici.petab.petab_importer import (
+    from amici.importers.petab import (
         PetabImporter,
         flatten_timepoint_specific_output_overrides,
         has_timepoint_specific_overrides,

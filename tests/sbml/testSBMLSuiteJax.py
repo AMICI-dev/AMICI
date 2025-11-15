@@ -33,10 +33,10 @@ class DummyModel:
         self.jax_model = jax_model
         self.importer = importer
 
-    def get_parameter_ids(self):
+    def get_free_parameter_ids(self):
         return list(self.jax_model.parameter_ids)
 
-    def get_parameter_by_id(self, pid: str):
+    def get_free_parameter_by_id(self, pid: str):
         return float(
             self.jax_model.parameters[
                 list(self.jax_model.parameter_ids).index(pid)

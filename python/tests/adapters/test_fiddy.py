@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import amici
-import amici.petab.petab_import
-import amici.petab.simulations
+import amici.importers.petab.v1.petab_import
+import amici.importers.petab.v1.simulations
 import numpy as np
 import pytest
 from amici import SensitivityOrder, SteadyStateSensitivityMode
@@ -40,7 +40,9 @@ def lotka_volterra() -> tuple[v1.Problem, np.ndarray]:
 def test_run_amici_simulation_to_functions(problem_generator):
     petab_problem, point = problem_generator()
     timepoints = sorted(set(petab_problem.measurement_df.time))
-    amici_model = amici.petab.petab_import.import_petab_problem(petab_problem)
+    amici_model = amici.importers.petab.v1.petab_import.import_petab_problem(
+        petab_problem
+    )
     amici_model.set_timepoints(timepoints)
     amici_solver = amici_model.create_solver()
 
@@ -105,7 +107,9 @@ def test_run_amici_simulation_to_functions(problem_generator):
 @pytest.mark.parametrize("scaled_parameters", (False, True))
 def test_simulate_petab_to_functions(problem_generator, scaled_parameters):
     petab_problem, point = problem_generator()
-    amici_model = amici.petab.petab_import.import_petab_problem(petab_problem)
+    amici_model = amici.importers.petab.v1.petab_import.import_petab_problem(
+        petab_problem
+    )
     amici_solver = amici_model.create_solver()
 
     if amici_model.get_name() == "simple":

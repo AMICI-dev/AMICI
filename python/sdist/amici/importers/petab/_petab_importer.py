@@ -1,18 +1,4 @@
-"""PEtab v2 handling.
-
-Functionality for importing and simulating
-`PEtab v2 <https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html#>`__
-problems.
-
-The relevant classes are:
-
-* :class:`PetabImporter`: Import a PEtab problem as an AMICI model.
-* :class:`PetabSimulator`: Simulate PEtab problems with AMICI.
-* :class:`ExperimentManager`: Create :class:`amici.ExpData` objects for PEtab
-  experiments.
-
-See :doc:`/examples/example_petab/petab_v2` for example usage.
-"""
+"""PEtab v2 handling."""
 
 from __future__ import annotations
 
@@ -35,13 +21,13 @@ from petab.v2.converters import ExperimentsToSbmlConverter
 from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
+from amici import SensitivityOrder, get_model_dir
+from amici.de_model import DEModel
+from amici.importers.utils import MeasurementChannel, amici_time_symbol
+from amici.logging import get_logger
 
-from .. import SensitivityOrder, get_model_dir
-from ..de_model import DEModel
-from ..importers.utils import MeasurementChannel, amici_time_symbol
-from ..logging import get_logger
-from .sbml_import import _add_global_parameter
-from .simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
+from .v1.sbml_import import _add_global_parameter
+from .v1.simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
 
 if TYPE_CHECKING:
     import pysb
@@ -359,7 +345,7 @@ class PetabImporter:
             for change in self.petab_problem[condition_id].changes
         }
 
-        from amici.petab.sbml_import import show_model_info
+        from .v1.sbml_import import show_model_info
 
         show_model_info(self.petab_problem.model.sbml_model)
         sbml_importer = amici.SbmlImporter(

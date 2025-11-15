@@ -56,7 +56,7 @@ jobs:
       - name: Install python package
         run: scripts/installAmiciSource.sh
 
-      - name: Install petab
+      - name: Install Python dependencies
         run: |
           source ./venv/bin/activate \
             && pip3 install wheel pytest shyaml pytest-cov
@@ -65,14 +65,16 @@ jobs:
       - name: Download and install PEtab SciML
         run: |
           source ./venv/bin/activate \
-            && python -m pip install git+https://github.com/petab-dev/petab_sciml.git@main#subdirectory=src/python \
-
+            && python -m pip install git+https://github.com/petab-dev/petab_sciml.git@main#subdirectory=src/python
 
       - name: Install petab
+        # FIXME: Currently, an older version of petab that is required for
+        #  these tests, because petab-sciml is currently a mix of petab v1
+        #  and v2 functionality.
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@sciml \
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@sciml
 
       - name: Run PEtab SciML testsuite
         run: |

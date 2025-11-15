@@ -8,8 +8,7 @@ import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import SLLH, simulate_petab
+from amici.importers.petab.v1 import SLLH, import_petab_problem, simulate_petab
 from amici.testing import skip_on_valgrind
 
 # Absolute and relative tolerances for finite difference gradient checks.

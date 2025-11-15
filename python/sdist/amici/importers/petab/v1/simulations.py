@@ -15,9 +15,9 @@ import petab.v1 as petab
 from petab.v1.C import *  # noqa: F403
 
 import amici
+from amici import AmiciExpData, AmiciModel
+from amici.logging import get_logger, log_execution_time
 
-from .. import AmiciExpData, AmiciModel
-from ..logging import get_logger, log_execution_time
 from .conditions import (
     create_edatas,
     fill_in_parameters,
@@ -26,11 +26,6 @@ from .parameter_mapping import (
     ParameterMapping,
     create_parameter_mapping,
 )
-
-try:
-    import pysb
-except ImportError:
-    pysb = None
 
 logger = get_logger(__name__)
 
