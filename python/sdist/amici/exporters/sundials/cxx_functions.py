@@ -434,7 +434,7 @@ sensi_functions = [
     func_name
     for func_name, func_info in functions.items()
     if "const int ip" in func_info.arguments()
-]
+] + ["deltaxB", "dzdx", "drzdx"]
 
 #: list of sparse sensitivity functions
 sparse_sensi_functions = [
@@ -454,6 +454,7 @@ event_functions = [
 ]
 
 #: list of event sensitivity functions
+#  (really only those that take `ie` and `ip` as arguments)
 event_sensi_functions = [
     func_name
     for func_name, func_info in functions.items()
