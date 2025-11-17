@@ -105,6 +105,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   can now be specified via the `AMICI_MODELS_ROOT` environment variable.
   See `amici.get_model_dir` for details.
 
+**Fixes**
+
+* Fixed a bug that potentially results in incorrect handling of
+  discontinuities their location depends on a state variable
+  that is subject to an event assignment but otherwise constant.
 
 ## v0.X Series
 

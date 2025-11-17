@@ -2236,26 +2236,31 @@ class DEModel:
     def _expr_is_time_dependent(self, expr: sp.Expr) -> bool:
         """Determine whether an expression is time-dependent.
 
+        This function is solely for checking whether `expr` has a discontinuity
+        we need to track. Better report a false positive than miss a
+        time-dependence.
+
         :param expr:
             The expression.
 
         :returns:
             Whether the expression is time-dependent.
         """
-        # `expr.free_symbols` will be different to `self._states.keys()`, so
-        # it's easier to compare as `str`.
-        expr_syms = {str(sym) for sym in expr.free_symbols}
+        if not (free_syms := expr.free_symbols):
+            return False
 
-        # Check if the time variable is in the expression.
-        if amici_time_symbol.name in expr_syms:
-            return True
+        free_syms -= set(self.sym("p"))
 
-        # Check if any time-dependent states are in the expression.
-        state_syms = [str(sym) for sym in self.states()]
-        return any(
-            not self.state_is_constant(state_syms.index(state))
-            for state in expr_syms.intersection(state_syms)
-        )
+        if not free_syms:
+            return False
+
+        free_syms -= set(self.sym("k"))
+
+        # TODO(performance): handle static expressions,
+        #  handle constant state variables,
+        #  combine with other checks for time-dependence
+        #   after https://github.com/AMICI-dev/AMICI/pull/3031
+        return bool(free_syms)
 
     def _get_unique_root(
         self,
