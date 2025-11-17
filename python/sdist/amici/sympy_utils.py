@@ -4,6 +4,7 @@ import contextlib
 import logging
 import os
 from collections.abc import Callable
+from functools import wraps
 from itertools import starmap
 from typing import Any
 
@@ -60,6 +61,21 @@ def _monkeypatched(obj: object, name: str, patch: Any):
         yield object
     finally:
         setattr(obj, name, pre_patched_value)
+
+
+def _monkeypatch_sympy(func):
+    """
+    Decorator that temporarily monkeypatches sympy.Pow._eval_derivative.
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        with _monkeypatched(
+            sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
+        ):
+            return func(*args, **kwargs)
+
+    return wrapper
 
 
 @log_execution_time("running smart_jacobian", logger)
