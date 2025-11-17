@@ -1,11 +1,11 @@
 # Reference wall times (seconds) with some buffer
 create_sdist: 16
 install_sdist: 150
-petab_import: 2100
-install_model: 120
+petab_import: 720
+install_model: 60
 install_model_O0: 40
-install_model_O1: 90
-install_model_O2: 120
+install_model_O1: 45
+install_model_O2: 60
 forward_simulation: 2
 forward_sensitivities: 2
 adjoint_sensitivities: 2.5

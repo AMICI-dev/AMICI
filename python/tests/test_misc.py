@@ -84,7 +84,8 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
 
 @skip_on_valgrind
-def test_smart_subs_dict():
+@pytest.mark.parametrize("flatten_first", [True, False])
+def test_smart_subs_dict(flatten_first):
     expr_str = "c + d"
     subs_dict = {
         "c": "a + b",
@@ -98,8 +99,12 @@ def test_smart_subs_dict():
     expected_default = sp.sympify(expected_default_str)
     expected_reverse = sp.sympify(expected_reverse_str)
 
-    result_default = smart_subs_dict(expr_sym, subs_sym)
-    result_reverse = smart_subs_dict(expr_sym, subs_sym, reverse=False)
+    result_default = smart_subs_dict(
+        expr_sym, subs_sym, flatten_first=flatten_first
+    )
+    result_reverse = smart_subs_dict(
+        expr_sym, subs_sym, reverse=False, flatten_first=flatten_first
+    )
 
     assert sp.simplify(result_default - expected_default).is_zero
     assert sp.simplify(result_reverse - expected_reverse).is_zero
