@@ -64,7 +64,11 @@ from amici.importers.utils import (
     toposort_symbols,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
-from amici.sympy_utils import smart_is_zero_matrix, smart_multiply
+from amici.sympy_utils import (
+    _monkeypatch_sympy,
+    smart_is_zero_matrix,
+    smart_multiply,
+)
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
@@ -537,6 +541,7 @@ class SbmlImporter:
         )
         exporter.generate_model_code()
 
+    @_monkeypatch_sympy
     def _build_ode_model(
         self,
         fixed_parameters: Iterable[str] = None,

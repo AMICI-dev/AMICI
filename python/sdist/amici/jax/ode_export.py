@@ -29,8 +29,7 @@ from amici.jax.model import JAXModel
 from amici.jax.nn import generate_equinox
 from amici.logging import get_logger, log_execution_time, set_log_level
 from amici.sympy_utils import (
-    _custom_pow_eval_derivative,
-    _monkeypatched,
+    _monkeypatch_sympy,
 )
 
 #: python log manager
@@ -168,17 +167,15 @@ class ODEExporter:
 
         self._code_printer = AmiciJaxCodePrinter()
 
+    @_monkeypatch_sympy
     @log_execution_time("generating jax code", logger)
     def generate_model_code(self) -> None:
         """
         Generates the jax code for the loaded model
         """
-        with _monkeypatched(
-            sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
-        ):
-            self._prepare_model_folder()
-            self._generate_jax_code()
-            self._generate_nn_code()
+        self._prepare_model_folder()
+        self._generate_jax_code()
+        self._generate_nn_code()
 
     def _prepare_model_folder(self) -> None:
         """
