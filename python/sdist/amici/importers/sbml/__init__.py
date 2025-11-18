@@ -3094,11 +3094,20 @@ class SbmlImporter:
 
         # replace rateOf-instances in expressions which we will need for
         #  substitutions later
+        expressions_changed = False
         for expr in de_model.expressions():
             if rate_ofs := expr.get_val().find(rate_of_func):
                 expr.set_val(do_subs(expr.get_val(), rate_ofs))
+                expressions_changed = True
 
-        w_toposorted = de_model.toposort_expressions()
+        # get toposorted `w`, but only changed the order of expressions in the
+        #  model if any expression changed.
+        # (in principle, we could always reorder the expressions, but this
+        #  will require regenerating all test oracle for
+        #  `test_pregenerated_models.py`)
+        w_toposorted = de_model.toposort_expressions(
+            reorder=expressions_changed
+        )
 
         # replace rateOf-instances in x0
         # indices of state variables whose x0 was modified

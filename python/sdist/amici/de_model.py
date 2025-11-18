@@ -2588,27 +2588,19 @@ class DEModel:
         """
         return any(event.updates_state for event in self._events)
 
-    def toposort_expressions(self) -> dict[sp.Symbol, sp.Expr]:
+    def toposort_expressions(
+        self, reorder: bool = True
+    ) -> dict[sp.Symbol, sp.Expr]:
         """
         Sort expressions in topological order.
+
+        :param reorder:
+            Whether to reorder the internal expression list (``True``) or
+            just return the toposorted expressions (``False``).
 
         :return:
             dict of expression symbols to expressions in topological order
         """
-        # ensure no symbols or equations that depend on `w` have been generated
-        #  yet, otherwise the re-ordering might break dependencies
-        if (
-            generated := set(self._syms)
-            | set(self._eqs)
-            | set(self._sparsesyms)
-            | set(self._sparseeqs)
-        ) - {"w", "p", "k", "x", "x_rdata"}:
-            raise AssertionError(
-                "This function must be called before computing any "
-                "derivatives. The following symbols/equations are already "
-                f"generated: {generated}"
-            )
-
         # NOTE: elsewhere, conservations law expressions are expected to
         #  occur before any other w expressions, so we must maintain their
         #  position.
@@ -2626,6 +2618,23 @@ class DEModel:
             e.get_sym(): e.get_val()
             for e in self.expressions()[: self.num_cons_law()]
         } | w_toposorted
+
+        if not reorder:
+            return w_toposorted
+
+        # ensure no symbols or equations that depend on `w` have been generated
+        #  yet, otherwise the re-ordering might break dependencies
+        if (
+            generated := set(self._syms)
+            | set(self._eqs)
+            | set(self._sparsesyms)
+            | set(self._sparseeqs)
+        ) - {"w", "p", "k", "x", "x_rdata"}:
+            raise AssertionError(
+                "This function must be called before computing any "
+                "derivatives. The following symbols/equations are already "
+                f"generated: {generated}"
+            )
 
         old_syms = tuple(e.get_sym() for e in self.expressions())
         topo_expr_syms = tuple(w_toposorted)
