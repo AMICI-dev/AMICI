@@ -12,7 +12,7 @@ from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
 
-from amici.swig import fix_typehints
+from amici._installation.swig import fix_typehints
 
 
 class AmiciInstall(install):
