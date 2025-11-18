@@ -100,7 +100,7 @@ def test_csc_matrix_vector():
 
 @skip_on_valgrind
 def test_match_deriv():
-    from amici.de_model import DERIVATIVE_PATTERN as pat
+    from amici._symbolic.de_model import DERIVATIVE_PATTERN as pat
 
     def check(str, out1, out2):
         match = pat.match(str)

@@ -1,7 +1,7 @@
 """Tests related to the sympy_utils module."""
 
 import sympy as sp
-from amici.sympy_utils import (
+from amici._symbolic.sympy_utils import (
     _custom_pow_eval_derivative,
     _monkeypatched,
     _piecewise_to_minmax,

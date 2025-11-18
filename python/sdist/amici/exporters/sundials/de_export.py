@@ -24,20 +24,15 @@ from typing import (
 
 import sympy as sp
 
+from amici._symbolic import *
+
 from ... import (
     __commit__,
     __version__,
     get_model_dir,
 )
-from ...de_model import DEModel
-from ...de_model_components import *
 from ...importers.sbml import splines
 from ...logging import get_logger, log_execution_time, set_log_level
-from ...sympy_utils import (
-    _custom_pow_eval_derivative,
-    _monkeypatched,
-    smart_is_zero_matrix,
-)
 from ..template import apply_template
 from .compile import build_model_extension
 from .cxx_functions import (
@@ -236,16 +231,14 @@ class DEExporter:
         self.generate_sensitivity_code: bool = generate_sensitivity_code
         self.hybridisation = hybridization
 
+    @_monkeypatch_sympy
     @log_execution_time("generating cpp code", logger)
     def generate_model_code(self) -> None:
         """
         Generates the model code (Python package + C++ extension).
         """
-        with _monkeypatched(
-            sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
-        ):
-            self._prepare_model_folder()
-            self._generate_c_code()
+        self._prepare_model_folder()
+        self._generate_c_code()
 
     @log_execution_time("compiling cpp code", logger)
     def compile_model(self) -> None:

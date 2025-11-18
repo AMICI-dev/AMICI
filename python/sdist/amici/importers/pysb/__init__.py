@@ -23,8 +23,8 @@ import pysb.pattern
 import sympy as sp
 
 import amici
-from amici.de_model import DEModel
-from amici.de_model_components import (
+from amici._symbolic.de_model import DEModel
+from amici._symbolic.de_model_components import (
     DifferentialState,
     Event,
     Expression,
@@ -486,7 +486,7 @@ def _process_stoichiometric_matrix(
     dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
     dflux_dp = sp.ImmutableSparseMatrix(n_r, n_p, dflux_dp_dict)
 
-    # use dok format to convert numeric csc to sparse symbolic
+    # use dok format to convert numeric csc to sparse _symbolic
     S = sp.ImmutableSparseMatrix(
         n_x,
         n_r,  # don't use shape here as we are eliminating rows
@@ -649,7 +649,7 @@ def _add_expression(
         name of the expression
 
     :param expr:
-        symbolic expression that the symbol refers to
+        _symbolic expression that the symbol refers to
 
     :param pysb_model:
         see :py:func:`_process_pysb_expressions`
@@ -681,10 +681,10 @@ def _add_expression(
 
         y = sp.Symbol(name)
         trafo = noise_distribution_to_observable_transformation(noise_dist)
-        # note that this is a bit iffy since we are potentially using the same symbolic identifier in expressions (w)
+        # note that this is a bit iffy since we are potentially using the same _symbolic identifier in expressions (w)
         # and observables (y). This is not a problem as there currently are no model functions that use both. If this
         # changes, I would expect symbol redefinition warnings in CPP models and overwriting in JAX models, but as both
-        # symbols refer to the same symbolic entity, this should not be a problem (untested)
+        # symbols refer to the same _symbolic entity, this should not be a problem (untested)
         obs = Observable(
             y, name, _parse_special_functions(expr), transformation=trafo
         )
@@ -723,7 +723,7 @@ def _get_sigma(
     pysb_model: pysb.Model, obs_name: str, sigma_name: str | None
 ) -> sp.Symbol:
     """
-    Tries to extract standard deviation symbolic identifier and formula
+    Tries to extract standard deviation _symbolic identifier and formula
     for a given observable name from the pysb model and if no specification is
     available sets default values
 
@@ -738,7 +738,7 @@ def _get_sigma(
         sigma or ``None``.
 
     :return:
-        symbolic variable representing the standard deviation of the observable
+        _symbolic variable representing the standard deviation of the observable
     """
     if sigma_name is None:
         return sp.Symbol(f"sigma_{obs_name}")
@@ -933,7 +933,7 @@ def _compute_possible_indices(
                 )
                 # TODO: implement this, multiply species by the volume of
                 # their respective compartment and allow total_cl to depend
-                # on parameters + constants and update the respective symbolic
+                # on parameters + constants and update the respective _symbolic
                 # derivative accordingly
 
             prototype = dict()
@@ -1161,7 +1161,7 @@ def _is_in_cycle(
 def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
     """
     Computes unique target indices for conservation laws from possible
-    indices  such that expected fill in in symbolic derivatives is minimized
+    indices  such that expected fill in in _symbolic derivatives is minimized
 
     :param cl_prototypes:
         dict that contains possible indices and non-unique target indices

@@ -22,7 +22,7 @@ from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
 from amici import SensitivityOrder, get_model_dir
-from amici.de_model import DEModel
+from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
 
@@ -31,8 +31,6 @@ from .v1.simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
 
 if TYPE_CHECKING:
     import pysb
-
-    import amici.de_model_components
 
 __all__ = [
     "PetabImporter",
@@ -1926,7 +1924,7 @@ class ExperimentsToPySBConverter:
                     )
         #: The PEtab problem to convert. Not modified by this class.
         self._petab_problem = petab_problem
-        self._events: list[amici.de_model_components.Event] = []
+        self._events: list[Event] = []
         self._new_problem: v2.Problem | None = None
 
     @staticmethod
@@ -1936,7 +1934,7 @@ class ExperimentsToPySBConverter:
 
     def convert(
         self,
-    ) -> tuple[v2.Problem, list[amici.de_model_components.Event]]:
+    ) -> tuple[v2.Problem, list[Event]]:
         """Convert PEtab experiments to amici events and pysb initials.
 
         Generate events, add Initials, or convert Parameters to Expressions
@@ -1952,7 +1950,7 @@ class ExperimentsToPySBConverter:
             to be passed to `pysb2amici`.
         """
         self._new_problem = copy.deepcopy(self._petab_problem)
-        self._events: list[amici.de_model_components.Event] = []
+        self._events: list[Event] = []
 
         self._add_preequilibration_indicator()
 
@@ -2177,7 +2175,7 @@ class ExperimentsToPySBConverter:
             else:
                 raise AssertionError(change)
 
-        event = amici.de_model_components.Event(
+        event = Event(
             identifier=sp.Symbol(event_id),
             name=event_id,
             value=root_fun,

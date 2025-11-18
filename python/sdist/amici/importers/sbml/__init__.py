@@ -30,14 +30,20 @@ from sympy.matrices.dense import MutableDenseMatrix
 
 import amici
 from amici import get_model_dir, has_clibs
-from amici.constants import SymbolId
-from amici.de_model import DEModel
-from amici.de_model_components import (
+from amici._symbolic.de_model import DEModel
+from amici._symbolic.de_model_components import (
     DifferentialState,
     Event,
     Expression,
     symbol_to_type,
 )
+from amici._symbolic.sympy_utils import (
+    _monkeypatch_sympy,
+    _piecewise_to_minmax,
+    smart_is_zero_matrix,
+    smart_multiply,
+)
+from amici.constants import SymbolId
 from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
@@ -64,12 +70,6 @@ from amici.importers.utils import (
     toposort_symbols,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
-from amici.sympy_utils import (
-    _monkeypatch_sympy,
-    _piecewise_to_minmax,
-    smart_is_zero_matrix,
-    smart_multiply,
-)
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
@@ -91,7 +91,7 @@ class SbmlImporter:
         displayed
 
     :ivar symbols:
-        dict carrying symbolic definitions
+        dict carrying _symbolic definitions
 
     :ivar sbml_reader:
 
@@ -127,11 +127,11 @@ class SbmlImporter:
 
     :ivar species_assignment_rules:
         Assignment rules for species.
-        Key is symbolic identifier and value is assignment value
+        Key is _symbolic identifier and value is assignment value
 
     :ivar compartment_assignment_rules:
         Assignment rules for compartments.
-        Key is symbolic identifier and value is assignment value
+        Key is _symbolic identifier and value is assignment value
 
     :ivar parameter_assignment_rules:
         assignment rules for parameters, these parameters are not permissible
@@ -879,7 +879,7 @@ class SbmlImporter:
 
         This is later used during sympifications to avoid sympy builtins
         shadowing model entities as well as to avoid possibly costly
-        symbolic substitutions
+        _symbolic substitutions
         """
         self._gather_base_locals(hardcode_symbols=hardcode_symbols)
         self._gather_dependent_locals()
@@ -1291,7 +1291,7 @@ class SbmlImporter:
                 }
 
         # Parameters that need to be turned into expressions or species
-        #  so far, this concerns parameters with symbolic initial assignments
+        #  so far, this concerns parameters with _symbolic initial assignments
         #  (those have been skipped above) that are not rate rule targets
 
         # Set of symbols in initial assignments that still allows handling them
@@ -1824,7 +1824,7 @@ class SbmlImporter:
                 except TypeError:
                     raise SBMLException(
                         "Could not process event assignment for "
-                        f"{str(variable_sym)}. AMICI only allows symbolic "
+                        f"{str(variable_sym)}. AMICI only allows _symbolic "
                         "expressions as event assignments."
                     )
                 if variable_sym in concentration_species_by_compartment:
@@ -1898,7 +1898,7 @@ class SbmlImporter:
         observation_model: list[MeasurementChannel] = None,
     ) -> None:
         """
-        Perform symbolic computations required for observable and objective
+        Perform _symbolic computations required for observable and objective
         function evaluation.
 
         Add user-provided observables or make all species, and compartments
@@ -2084,7 +2084,7 @@ class SbmlImporter:
         event_reg: bool = False,
     ):
         """
-        Perform symbolic computations required for objective function
+        Perform _symbolic computations required for objective function
         evaluation.
 
         :param sigmas:
@@ -2255,7 +2255,7 @@ class SbmlImporter:
         replacing species by their initial values.
 
         :param sym_math:
-            symbolic expression
+            _symbolic expression
         :return:
             transformed expression
         """
@@ -2549,7 +2549,7 @@ class SbmlImporter:
                 compartment_size = self.compartments[symbol["compartment"]]
             all_compartment_sizes.append(compartment_size)
 
-        # iterate over list of conservation laws, create symbolic expressions,
+        # iterate over list of conservation laws, create _symbolic expressions,
         for target_state_model_idx, state_idxs, coefficients in raw_cls:
             if all_state_ids[target_state_model_idx] in eliminated_state_ids:
                 # constants state, already eliminated
@@ -2607,13 +2607,13 @@ class SbmlImporter:
         self, old: sp.Symbol, new: sp.Expr, replace_identifiers=False
     ) -> None:
         """
-        Replace 'old' by 'new' in all symbolic expressions.
+        Replace 'old' by 'new' in all _symbolic expressions.
 
         :param old:
-            symbolic variables to be replaced
+            _symbolic variables to be replaced
 
         :param new:
-            replacement symbolic variables
+            replacement _symbolic variables
         """
         fields = [
             "stoichiometric_matrix",
@@ -2918,7 +2918,7 @@ class SbmlImporter:
         :param ele:
             reactant or product
         :return:
-            symbolic variable that defines stoichiometry
+            _symbolic variable that defines stoichiometry
         """
         if ele.isSetId():
             sym = self._get_element_initial_assignment(ele.getId())
