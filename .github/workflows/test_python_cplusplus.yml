@@ -119,7 +119,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
-         -Dsonar.cfamily.compile-commands=${AMICI_DIR}/build/compile_commands.json \
+         -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
   ubuntu-python-tests:
@@ -203,7 +203,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
-         -Dsonar.cfamily.compile-commands=${AMICI_DIR}/build/compile_commands.json \
+         -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
 
