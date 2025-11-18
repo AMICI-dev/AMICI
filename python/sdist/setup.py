@@ -22,7 +22,7 @@ from setuptools import setup
 # package already for installation
 sys.path.insert(0, os.path.dirname(__file__))
 
-from amici.custom_commands import (
+from amici._installation.custom_commands import (
     AmiciBuildCMakeExtension,
     AmiciBuildPy,
     AmiciDevelop,
