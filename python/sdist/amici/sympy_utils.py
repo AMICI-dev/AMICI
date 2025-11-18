@@ -216,3 +216,19 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
                 "to a module-level function or disable parallelization by "
                 "setting `AMICI_IMPORT_NPROCS=1`."
             ) from e
+
+
+def _piecewise_to_minmax(
+    *expr_cond_pairs: tuple[tuple[sp.Basic, sp.Basic], ...],
+) -> sp.Basic:
+    """Replace min/max defined via Piecewise with plain Min/Max.
+
+    To be used in ``expr = expr.replace(sp.Piecewise, pw_to_minmax)``.
+    """
+    if len(expr_cond_pairs) == 2 and expr_cond_pairs[-1][1] == sp.true:
+        (expr1, cond1), (expr2, cond2) = expr_cond_pairs
+        if cond1.args == (expr1, expr2) and cond1.func in (sp.Lt, sp.Le):
+            return sp.Min(expr1, expr2)
+        elif cond1.args == (expr1, expr2) and cond1.func in (sp.Gt, sp.Ge):
+            return sp.Max(expr1, expr2)
+    return sp.Piecewise(*expr_cond_pairs)

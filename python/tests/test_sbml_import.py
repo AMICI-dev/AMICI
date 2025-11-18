@@ -13,6 +13,7 @@ import pytest
 import sympy as sp
 from amici import import_model_module
 from amici.gradient_check import check_derivatives
+from amici.importers.antimony import antimony2sbml
 from amici.importers.sbml import SbmlImporter, SymbolId
 from amici.importers.utils import (
     MeasurementChannel as MC,
@@ -1196,3 +1197,21 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
         symbol_with_assumptions("p0"),
         amici_time_symbol * 1.0 + 3.0,
     ]
+
+
+@skip_on_valgrind
+def test_minmax_piecewise_is_converted_to_minmax():
+    """Test that _piecewise_to_minmax is applied during SBML import."""
+    sbml_str = antimony2sbml("""
+        x' = piecewise(a, a > b, b)
+        y' = piecewise(a, a < b, b)
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    de_model = sbml_importer._build_ode_model()
+    # no events should be created for min/max
+    assert not de_model.events()
+    assert len(de_model.sym("h")) == 0
+    # min/max are present in the equations
+    xdot = de_model.eq("xdot")
+    assert xdot.has(sp.Min)
+    assert xdot.has(sp.Max)
