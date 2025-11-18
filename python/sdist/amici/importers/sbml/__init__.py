@@ -66,6 +66,7 @@ from amici.importers.utils import (
 from amici.logging import get_logger, log_execution_time, set_log_level
 from amici.sympy_utils import (
     _monkeypatch_sympy,
+    _piecewise_to_minmax,
     smart_is_zero_matrix,
     smart_multiply,
 )
@@ -2882,6 +2883,7 @@ class SbmlImporter:
         # piecewise to heavisides
         if piecewise_to_heaviside:
             try:
+                expr = expr.replace(sp.Piecewise, _piecewise_to_minmax)
                 expr = expr.replace(
                     sp.Piecewise,
                     lambda *args: _parse_piecewise_to_heaviside(args),
