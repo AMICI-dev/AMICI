@@ -144,7 +144,7 @@ functions = {
     "root": _FunctionInfo(
         "realtype *root, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *tcl"
+        "const realtype *w, const realtype *tcl"
     ),
     "dwdp": _FunctionInfo(
         "realtype *dwdp, const realtype t, const realtype *x, "
@@ -288,7 +288,7 @@ functions = {
     "stau": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *dx, "
+        "const realtype *w, const realtype *dx, "
         "const realtype *tcl, const realtype *sx, const int ip, "
         "const int ie"
     ),
@@ -313,7 +313,7 @@ functions = {
     "deltaxB": _FunctionInfo(
         "realtype *deltaxB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *dx, "
+        "const realtype *w, const realtype *dx, "
         "const int ie, const realtype *xdot, const realtype *xdot_old, "
         "const realtype *x_old, "
         "const realtype *xB, const realtype *tcl"
@@ -321,7 +321,7 @@ functions = {
     "deltaqB": _FunctionInfo(
         "realtype *deltaqB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *dx, "
+        "const realtype *w, const realtype *dx, "
         "const int ip, const int ie, const realtype *xdot, "
         "const realtype *xdot_old, const realtype *x_old, const realtype *xB"
     ),
@@ -408,7 +408,7 @@ functions = {
         "const realtype *p, const realtype *k, const realtype *h"
     ),
     "explicit_roots": _FunctionInfo(
-        "const realtype *p, const realtype *k",
+        "const realtype *p, const realtype *k, const realtype *w",
         return_type="std::vector<std::vector<realtype>>",
         default_return_value="{}",
         header=[

@@ -11,7 +11,7 @@
 namespace amici {
 namespace model_model_neuron_py {
 
-void stau_model_neuron_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie){
+void stau_model_neuron_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie){
     switch(ie) {
         case 0:
             switch(ip) {

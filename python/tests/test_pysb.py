@@ -328,7 +328,7 @@ def test_names_and_ids(pysb_example_presimulation_module):
 
 
 @skip_on_valgrind
-def test_heavyside_and_special_symbols():
+def test_heaviside_and_special_symbols():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
 

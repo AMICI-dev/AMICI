@@ -1042,6 +1042,10 @@ def test_regression_2700(tempdir):
     model_name = "regression_2700"
     antimony2amici(
         """
+    # we need some differential state, otherwise import will currently fail
+    x = 0
+    x' = 0
+
     a = 1
     # condition is always true, so `pp` should be 1
     pp := piecewise(1, a >= 1 && a <= 1, 0)

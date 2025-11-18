@@ -398,7 +398,6 @@ def ode_model_from_pysb_importer(
 
     _process_stoichiometric_matrix(model, ode, fixed_parameters)
 
-    ode.parse_events()
     ode.generate_basic_variables()
 
     return ode

@@ -299,6 +299,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param tcl total abundances for conservation laws
      * @param sx current state sensitivity
@@ -307,8 +308,9 @@ class AbstractModel {
      */
     virtual void fstau(
         realtype* stau, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx,
-        realtype const* tcl, realtype const* sx, int ip, int ie
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* dx, realtype const* tcl, realtype const* sx, int ip,
+        int ie
     );
 
     /**
@@ -542,6 +544,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param ie event index
      * @param xdot new model right hand side
@@ -552,9 +555,10 @@ class AbstractModel {
      */
     virtual void fdeltaxB(
         realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx, int ie,
-        realtype const* xdot, realtype const* xdot_old, realtype const* x_old,
-        realtype const* xB, realtype const* tcl
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* dx, int ie, realtype const* xdot,
+        realtype const* xdot_old, realtype const* x_old, realtype const* xB,
+        realtype const* tcl
     );
 
     /**
@@ -565,6 +569,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param ip sensitivity index
      * @param ie event index
@@ -575,9 +580,9 @@ class AbstractModel {
      */
     virtual void fdeltaqB(
         realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx, int ip,
-        int ie, realtype const* xdot, realtype const* xdot_old,
-        realtype const* x_old, realtype const* xB
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* dx, int ip, int ie, realtype const* xdot,
+        realtype const* xdot_old, realtype const* x_old, realtype const* xB
     );
 
     /**
@@ -1059,11 +1064,13 @@ class AbstractModel {
      * @brief Compute explicit roots of the model.
      * @param p parameter vector
      * @param k constant vector
+     * @param w vector with helper variables
      * @return A vector of length ne_solver, each containing a vector of
      * explicit roots for the corresponding event.
      */
     virtual std::vector<std::vector<realtype>> fexplicit_roots(
-        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k
+        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k,
+        [[maybe_unused]] realtype const* w
     ) = 0;
 };
 

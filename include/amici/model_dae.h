@@ -359,11 +359,13 @@ class Model_DAE : public Model {
      * @param p parameter vector
      * @param k constants vector
      * @param h Heaviside vector
+     * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
     virtual void froot(
         realtype* root, realtype t, realtype const* x, double const* p,
-        double const* k, realtype const* h, realtype const* dx
+        double const* k, realtype const* h, realtype const* w,
+        realtype const* dx
     );
 
     /**
@@ -444,7 +446,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
      */

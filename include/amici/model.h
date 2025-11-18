@@ -1591,7 +1591,8 @@ class Model : public AbstractModel, public ModelDimensions {
     }
 
     [[nodiscard]] std::vector<std::vector<realtype>> fexplicit_roots(
-        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k
+        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k,
+        [[maybe_unused]] realtype const* w
     ) override {
         if (ne != ne_solver) {
             throw AmiException(

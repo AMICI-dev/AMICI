@@ -84,11 +84,14 @@ void Model_ODE::froot(
     realtype const t, const_N_Vector x, gsl::span<realtype> root
 ) {
     auto const x_pos = compute_x_pos(x);
+    // TODO(performance) only dynamic expressions? consider storing a flag
+    //  for whether froot actually depends on `w`.
+    fw(t, N_VGetArrayPointerConst(x_pos));
     std::ranges::fill(root, 0.0);
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), state_.total_cl.data()
+        state_.h.data(), derived_state_.w_.data(), state_.total_cl.data()
     );
 }
 
@@ -206,7 +209,7 @@ void Model_ODE::fJSparse_rowvals(SUNMatrixWrapper& /*JSparse*/) {
 void Model_ODE::froot(
     realtype* /*root*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*tcl*/
+    realtype const* /*w*/, realtype const* /*tcl*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is not "

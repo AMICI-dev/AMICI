@@ -59,8 +59,8 @@ void AbstractModel::fdx0(AmiVector& /*x0*/, AmiVector& /*dx0*/) {
 void AbstractModel::fstau(
     realtype* /*stau*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/, realtype const* /*tcl*/, realtype const* /*sx*/,
-    int const /*ip*/, int const /*ie*/
+    realtype const* /*w*/, realtype const* /*dx*/, realtype const* /*tcl*/,
+    realtype const* /*sx*/, int const /*ip*/, int const /*ie*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -230,9 +230,9 @@ void AbstractModel::fdeltasx(
 void AbstractModel::fdeltaxB(
     realtype* /*deltaxB*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/, int const /*ie*/, realtype const* /*xdot*/,
-    realtype const* /*xdot_old*/, realtype const* /*x_old*/,
-    realtype const* /*xB*/, realtype const* /*tcl*/
+    realtype const* /*w*/, realtype const* /*dx*/, int const /*ie*/,
+    realtype const* /*xdot*/, realtype const* /*xdot_old*/,
+    realtype const* /*x_old*/, realtype const* /*xB*/, realtype const* /*tcl*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -244,8 +244,8 @@ void AbstractModel::fdeltaxB(
 void AbstractModel::fdeltaqB(
     realtype* /*deltaqB*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/, int const /*ip*/, int const /*ie*/,
-    realtype const* /*xdot*/, realtype const* /*xdot_old*/,
+    realtype const* /*w*/, realtype const* /*dx*/, int const /*ip*/,
+    int const /*ie*/, realtype const* /*xdot*/, realtype const* /*xdot_old*/,
     realtype const* /*x_old*/, realtype const* /*xB*/
 ) {
     throw AmiException(
