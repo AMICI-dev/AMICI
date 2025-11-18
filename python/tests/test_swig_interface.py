@@ -594,6 +594,15 @@ def test_rdataview(sbml_example_presimulation_module):
     assert (xr_x.coords["time"].data == rdata.ts).all()
     assert (xr_x.coords["state"].data == model.get_state_ids()).all()
 
+    # test that generating the xarrays does not fail, without checking
+    #  their content any further
+    for attr in dir(rdata.xr):
+        if not attr.startswith("_"):
+            try:
+                getattr(rdata.xr, attr)
+            except TypeError as e:
+                print(str(e))
+
 
 def test_python_exceptions(sbml_example_presimulation_module):
     """Test that C++ exceptions are correctly caught and re-raised in Python."""
