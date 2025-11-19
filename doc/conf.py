@@ -93,7 +93,7 @@ title = "AMICI Documentation"
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
-autodoc_mock_imports = ["_amici", "amici._amici"]
+autodoc_mock_imports = ["_amici", "amici._installation._amici"]
 for mod_name in autodoc_mock_imports:
     sys.modules[mod_name] = mock.MagicMock()
 
@@ -363,7 +363,7 @@ vector_types = {
     "BoolVector": ":class:`bool`",
     "DoubleVector": ":class:`float`",
     "StringVector": ":class:`str`",
-    "ExpDataPtrVector": ":class:`amici.amici.ExpData`",
+    "ExpDataPtrVector": ":class:`amici.sim.sundials.ExpData`",
 }
 
 # TODO: alias for forward type definition, remove after release of petab_sciml

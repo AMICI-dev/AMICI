@@ -8,14 +8,16 @@ import pandas as pd
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
-from amici import (
+from amici.importers.petab import *
+from amici.logging import get_logger, set_log_level
+from amici.sim.sundials import (
     AMICI_SUCCESS,
     SensitivityMethod,
     SensitivityOrder,
 )
-from amici.gradient_check import check_derivatives as amici_check_derivatives
-from amici.importers.petab import *
-from amici.logging import get_logger, set_log_level
+from amici.sim.sundials.gradient_check import (
+    check_derivatives as amici_check_derivatives,
+)
 from petab import v2
 
 logger = get_logger(__name__, logging.DEBUG)

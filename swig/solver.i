@@ -109,9 +109,8 @@ def _solver_reduce(self: "Solver"):
     reboots and will not work in distributed (MPI) settings.
     This requires that amici was compiled with HDF5 support.
     """
-    from amici.swig_wrappers import restore_solver
+    from amici.sim.sundials._swig_wrappers import restore_solver, write_solver_settings_to_hdf5
     from tempfile import NamedTemporaryFile
-    from amici import write_solver_settings_to_hdf5
     import os
     with NamedTemporaryFile(suffix=".h5", delete=False) as tmpfile:
         tmpfilename = tmpfile.name

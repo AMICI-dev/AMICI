@@ -127,7 +127,7 @@ def __deepcopy__(self, memo):
     return self.clone()
 
 def __reduce__(self):
-    from amici.swig_wrappers import restore_model, get_model_settings, file_checksum
+    from amici.sim.sundials._swig_wrappers import restore_model, get_model_settings, file_checksum
 
     return (
         restore_model,
@@ -202,7 +202,7 @@ def simulate(
         If `edata` is a sequence of :class:`ExpData` instances, a list of
         :class:`ReturnDataView` instances is returned.
     """
-    from .swig_wrappers import _Model__simulate
+    from amici.sim.sundials._swig_wrappers import _Model__simulate
 
     return _Model__simulate(
         self,
@@ -233,7 +233,7 @@ def __deepcopy__(self, memo):
     return self.clone()
 
 def __reduce__(self):
-    from amici.swig_wrappers import restore_model, get_model_settings, file_checksum
+    from amici.sim.sundials._swig_wrappers import restore_model, get_model_settings, file_checksum
 
     return (
         restore_model,
@@ -309,7 +309,7 @@ def simulate(
         If `edata` is a sequence of :class:`ExpData` instances, a list of
         :class:`ReturnDataView` instances is returned.
     """
-    from .swig_wrappers import _Model__simulate
+    from amici.sim.sundials._swig_wrappers import _Model__simulate
 
     return _Model__simulate(
         self,

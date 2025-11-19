@@ -72,7 +72,9 @@ class AmiciInstallLib(install_lib):
             os.environ.get("ENABLE_AMICI_DEBUGGING") == "TRUE"
             and sys.platform == "darwin"
         ):
-            search_dir = os.path.join(os.getcwd(), self.build_dir, "amici")
+            search_dir = os.path.join(
+                os.getcwd(), self.build_dir, "amici", "_installation"
+            )
             for file in os.listdir(search_dir):
                 if file.endswith(".so"):
                     subprocess.run(
@@ -167,7 +169,9 @@ class AmiciBuildCMakeExtension(BuildExtension):
         if not self.dry_run:
             # Fix SWIG-generated typehints
             build_dir = self.build_lib if self.inplace == 0 else os.getcwd()
-            swig_py_module_path = Path(build_dir, "amici", "amici.py")
+            swig_py_module_path = Path(
+                build_dir, "amici", "_installation", "amici.py"
+            )
             # this is class is used for the amici core extension, and any model
             #  extensions. if amici.py is present, this is the core extension.
             if swig_py_module_path.is_file():

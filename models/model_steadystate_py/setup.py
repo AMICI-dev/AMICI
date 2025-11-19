@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from amici import _get_amici_path
-from amici.custom_commands import AmiciBuildCMakeExtension
+from amici._installation.custom_commands import AmiciBuildCMakeExtension
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
 
@@ -15,7 +15,7 @@ def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
 
     # Build shared object
-    prefix_path = Path(_get_amici_path())
+    prefix_path = Path(_get_amici_path(), "_installation")
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
 
     # handle parallel building
@@ -38,7 +38,9 @@ def get_extension() -> CMakeExtension:
     amici_distribution = importlib.metadata.distribution("amici")
     amici_dir = Path(amici_distribution.locate_file(""))
     # this path is created during the amici build if scipy_openblas64 is used
-    openblas_cmake_dir = amici_dir / "lib" / "cmake" / "openblas"
+    openblas_cmake_dir = (
+        amici_dir / "_installation" / "lib" / "cmake" / "openblas"
+    )
     if openblas_cmake_dir.exists():
         cmake_prefix_path.append(str(openblas_cmake_dir))
 

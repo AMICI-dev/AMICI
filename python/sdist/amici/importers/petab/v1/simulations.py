@@ -4,6 +4,8 @@ Functionality related to running simulations or evaluating the objective
 function as defined by a PEtab problem.
 """
 
+from __future__ import annotations
+
 import copy
 import logging
 from collections.abc import Sequence
@@ -15,8 +17,16 @@ import petab.v1 as petab
 from petab.v1.C import *  # noqa: F403
 
 import amici
-from amici import AmiciExpData, AmiciModel
 from amici.logging import get_logger, log_execution_time
+from amici.sim.sundials import (
+    AMICI_SUCCESS,
+    AmiciExpData,
+    AmiciModel,
+    ReturnData,
+    ReturnDataView,
+    SensitivityOrder,
+    run_simulations,
+)
 
 from .conditions import (
     create_edatas,
@@ -58,7 +68,7 @@ __all__ = [
 def simulate_petab(
     petab_problem: petab.Problem,
     amici_model: AmiciModel,
-    solver: amici.Solver | None = None,
+    solver: amici.sim.sundials.Solver | None = None,
     problem_parameters: dict[str, float] | None = None,
     simulation_conditions: pd.DataFrame | dict = None,
     edatas: list[AmiciExpData] = None,
@@ -198,7 +208,7 @@ def simulate_petab(
     )
 
     # Simulate
-    rdatas = amici.run_simulations(
+    rdatas = run_simulations(
         amici_model,
         solver,
         edata_list=edatas,
@@ -210,7 +220,7 @@ def simulate_petab(
     llh = sum(rdata["llh"] for rdata in rdatas)
     # Compute total sllh
     sllh = None
-    if solver.get_sensitivity_order() != amici.SensitivityOrder.none:
+    if solver.get_sensitivity_order() != SensitivityOrder.none:
         sllh = aggregate_sllh(
             amici_model=amici_model,
             rdatas=rdatas,
@@ -251,7 +261,7 @@ def simulate_petab(
 
 def aggregate_sllh(
     amici_model: AmiciModel,
-    rdatas: Sequence[amici.ReturnDataView],
+    rdatas: Sequence[ReturnDataView],
     parameter_mapping: ParameterMapping | None,
     edatas: list[AmiciExpData],
     petab_scale: bool = True,
@@ -289,7 +299,7 @@ def aggregate_sllh(
     # Check for issues in all condition simulation results.
     for rdata in rdatas:
         # Condition failed during simulation.
-        if rdata.status != amici.AMICI_SUCCESS:
+        if rdata.status != AMICI_SUCCESS:
             return None
         # Condition simulation result does not provide SLLH.
         if rdata.sllh is None:
@@ -397,7 +407,7 @@ def rescale_sensitivity(
 
 
 def rdatas_to_measurement_df(
-    rdatas: Sequence[amici.ReturnData],
+    rdatas: Sequence[ReturnData],
     model: AmiciModel,
     measurement_df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -459,12 +469,12 @@ def rdatas_to_measurement_df(
 
 
 def rdatas_to_simulation_df(
-    rdatas: Sequence[amici.ReturnData],
+    rdatas: Sequence[ReturnData],
     model: AmiciModel,
     measurement_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Create a PEtab simulation dataframe from
-    :class:`amici.amici.ReturnData` s.
+    :class:`ReturnData` s.
 
     See :func:`rdatas_to_measurement_df` for details, only that model outputs
     will appear in column ``simulation`` instead of ``measurement``."""

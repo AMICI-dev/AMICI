@@ -9,8 +9,17 @@ import numpy as np
 import pytest
 from amici import MeasurementChannel as MC
 from amici import SbmlImporter
-from amici.gradient_check import check_derivatives
 from amici.importers.antimony import antimony2amici
+from amici.sim.sundials import (
+    ExpData,
+    SensitivityMethod,
+    SensitivityOrder,
+    get_data_observables_as_data_frame,
+    get_simulation_observables_as_data_frame,
+    run_simulation,
+    run_simulations,
+)
+from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
 from numpy.testing import (
@@ -54,13 +63,13 @@ def test_special_likelihoods(model_special_likelihoods):
     model = model_special_likelihoods.get_model()
     model.set_timepoints(np.linspace(0, 60, 10))
     solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     # Test in region with positive density
 
     # run model once to create an edata
-    rdata = amici.run_simulation(model, solver)
-    edata = amici.ExpData(rdata, 0.001, 0)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 0.001, 0)
 
     # make sure measurements are smaller for non-degenerate probability
     y = edata.get_observed_data()
@@ -73,19 +82,17 @@ def test_special_likelihoods(model_special_likelihoods):
     edata.set_observed_data_std_dev(sigmas)
 
     # and now run for real and also compute likelihood values
-    rdata = amici.run_simulations(model, solver, [edata])[0]
+    rdata = run_simulations(model, solver, [edata])[0]
 
     # check if the values make overall sense
     assert np.isfinite(rdata["llh"])
     assert np.all(np.isfinite(rdata["sllh"]))
     assert np.any(rdata["sllh"])
 
-    rdata_df = amici.get_simulation_observables_as_data_frame(
+    rdata_df = get_simulation_observables_as_data_frame(
         model, edata, rdata, by_id=True
     )
-    edata_df = amici.get_data_observables_as_data_frame(
-        model, edata, by_id=True
-    )
+    edata_df = get_data_observables_as_data_frame(model, edata, by_id=True)
 
     # check correct likelihood value
     llh_exp = -sum(
@@ -98,12 +105,12 @@ def test_special_likelihoods(model_special_likelihoods):
 
     # check gradient
     for sensi_method in [
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ]:
         solver = model.create_solver()
         solver.set_sensitivity_method(sensi_method)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         check_derivatives(
             model,
             solver,
@@ -115,8 +122,8 @@ def test_special_likelihoods(model_special_likelihoods):
 
     # Test for m > y, i.e. in region with 0 density
 
-    rdata = amici.run_simulation(model, solver)
-    edata = amici.ExpData(rdata, 0.001, 0)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 0.001, 0)
 
     # make sure measurements are smaller for non-degenerate probability
     y = edata.get_observed_data()
@@ -125,7 +132,7 @@ def test_special_likelihoods(model_special_likelihoods):
     edata.set_observed_data_std_dev(sigmas)
 
     # and now run for real and also compute likelihood values
-    rdata = amici.run_simulations(model, solver, [edata])[0]
+    rdata = run_simulations(model, solver, [edata])[0]
 
     # m > y -> outside binomial domain -> 0 density
     assert rdata["llh"] == -np.inf
@@ -191,7 +198,7 @@ def test_rateof(tempdir):
     t = np.linspace(0, 10, 11)
     amici_model.set_timepoints(t)
     amici_solver = amici_model.create_solver()
-    rdata = amici.run_simulation(amici_model, amici_solver)
+    rdata = run_simulation(amici_model, amici_solver)
 
     state_ids_solver = amici_model.get_state_ids_solver()
     i_S1 = state_ids_solver.index("S1")
@@ -244,7 +251,7 @@ def test_rateof_with_expression_dependent_rate(tempdir):
     t = np.linspace(0, 10, 11)
     amici_model.set_timepoints(t)
     amici_solver = amici_model.create_solver()
-    rdata = amici.run_simulation(amici_model, amici_solver)
+    rdata = run_simulation(amici_model, amici_solver)
 
     state_ids_solver = amici_model.get_state_ids_solver()
 

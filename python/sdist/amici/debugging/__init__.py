@@ -1,11 +1,15 @@
 """Functions for debugging AMICI simulation failures."""
 
+from __future__ import annotations
+
 import numpy as np
 
-import amici
+import amici.sim.sundials
 
 
-def get_model_for_preeq(model: amici.Model, edata: amici.ExpData):
+def get_model_for_preeq(
+    model: amici.sim.sundials.Model, edata: amici.sim.sundials.ExpData
+):
     """Get a model set-up to simulate the preequilibration condition as
     specified in `edata`.
 

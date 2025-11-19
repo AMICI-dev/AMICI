@@ -12,7 +12,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import amici
 import benchmark_models_petab
 import fiddy
 import numpy as np
@@ -20,13 +19,7 @@ import pandas as pd
 import petab.v1 as petab
 import pytest
 import yaml
-from amici import (
-    SensitivityMethod,
-    SensitivityOrder,
-    SteadyStateComputationMode,
-    SteadyStateSensitivityMode,
-    get_model_root_dir,
-)
+from amici import get_model_root_dir
 from amici.adapters.fiddy import (
     simulate_petab_to_cached_functions,
     simulate_petab_v2_to_cached_functions,
@@ -40,6 +33,13 @@ from amici.importers.petab.v1 import (
     simulate_petab,
 )
 from amici.logging import get_logger
+from amici.sim.sundials import (
+    AMICI_SUCCESS,
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
+)
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.success import Consistency
@@ -281,7 +281,7 @@ def test_nominal_parameters_llh(benchmark_problem):
     amici_solver.set_max_steps(10_000)
     if problem_id in ("Brannmark_JBC2010", "Isensee_JCB2018"):
         amici_model.set_steady_state_sensitivity_mode(
-            amici.SteadyStateSensitivityMode.integrationOnly
+            SteadyStateSensitivityMode.integrationOnly
         )
 
     times = dict()
@@ -324,7 +324,7 @@ def test_nominal_parameters_llh(benchmark_problem):
 
     pd.Series(times).to_csv(script_dir / f"{problem_id}_benchmark.csv")
     for rdata in rdatas:
-        assert rdata.status == amici.AMICI_SUCCESS, (
+        assert rdata.status == AMICI_SUCCESS, (
             f"Simulation failed for {rdata.id}"
         )
 

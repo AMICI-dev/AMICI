@@ -552,7 +552,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "3fb84cd5df12639f17b179d681e8ba4b5be8a160";
+        return "20b07e9a8c19bdb7bf94a562f61b3d08dc0299d0";
     }
 
     bool has_quadratic_llh() const override {

@@ -46,7 +46,7 @@ if t_imported < t_modified:
 # SWIG version used to build the model extension as `(major, minor, patch)`
 _SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
 
-if (amici_swig := amici.amici._SWIG_VERSION) != (model_swig := _SWIG_VERSION):
+if (amici_swig := amici.sim.sundials._SWIG_VERSION) != (model_swig := _SWIG_VERSION):
     import warnings
     warnings.warn(
         f"SWIG version mismatch between amici ({amici_swig}) and model "

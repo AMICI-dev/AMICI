@@ -22,8 +22,15 @@ import amici.importers.petab.v1.simulations
 from amici.importers.petab import LLH, SLLH
 from amici.importers.petab.v1.conditions import create_edatas
 from amici.importers.petab.v1.parameter_mapping import create_parameter_mapping
-
-from .. import ReturnData, SensitivityOrder
+from amici.sim.sundials import (
+    AmiciExpData,
+    AmiciModel,
+    AmiciSolver,
+    Model,
+    ReturnData,
+    SensitivityOrder,
+    run_simulation,
+)
 
 if TYPE_CHECKING:
     from amici.importers.petab import PetabSimulator
@@ -108,15 +115,15 @@ default_derivatives = {
 
 
 def run_simulation_to_cached_functions(
-    amici_model: amici.AmiciModel,
+    amici_model: AmiciModel,
     *,
     cache: bool = True,
     free_parameter_ids: list[str] = None,
-    amici_solver: amici.AmiciSolver = None,
-    amici_edata: amici.AmiciExpData = None,
+    amici_solver: AmiciSolver = None,
+    amici_edata: AmiciExpData = None,
     derivative_variables: list[str] = None,
 ):
-    """Convert `amici.run_simulation` to fiddy functions.
+    """Convert `run_simulation` to fiddy functions.
 
     :param amici_model:
         The AMICI model to simulate.
@@ -155,7 +162,7 @@ def run_simulation_to_cached_functions(
         problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
         amici_model.set_free_parameter_by_id(problem_parameters)
         amici_solver.set_sensitivity_order(order)
-        rdata = amici.run_simulation(
+        rdata = run_simulation(
             model=amici_model, solver=amici_solver, edata=amici_edata
         )
         return rdata
@@ -281,7 +288,7 @@ def reshape(
 
 def simulate_petab_to_cached_functions(
     petab_problem: petab.Problem,
-    amici_model: amici.Model,
+    amici_model: Model,
     free_parameter_ids: list[str] = None,
     cache: bool = True,
     precreate_edatas: bool = True,

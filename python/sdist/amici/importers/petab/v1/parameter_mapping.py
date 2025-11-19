@@ -39,9 +39,8 @@ from petab.v1.C import (
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
 
-import amici
-from amici import AmiciModel
 from amici.importers.sbml import get_species_initial
+from amici.sim.sundials import AmiciModel, ParameterScaling
 
 from . import PREEQ_INDICATOR_ID
 from .util import get_states_in_condition_table
@@ -194,21 +193,21 @@ class ParameterMapping(Sequence):
 def petab_to_amici_scale(petab_scale: str) -> int:
     """Convert petab scale id to amici scale id."""
     if petab_scale == LIN:
-        return amici.ParameterScaling_none
+        return ParameterScaling.none
     if petab_scale == LOG10:
-        return amici.ParameterScaling_log10
+        return ParameterScaling.log10
     if petab_scale == LOG:
-        return amici.ParameterScaling_ln
+        return ParameterScaling.ln
     raise ValueError(f"PEtab scale not recognized: {petab_scale}")
 
 
 def amici_to_petab_scale(amici_scale: int) -> str:
     """Convert amici scale id to petab scale id."""
-    if amici_scale == amici.ParameterScaling_none:
+    if amici_scale == ParameterScaling.none:
         return LIN
-    if amici_scale == amici.ParameterScaling_log10:
+    if amici_scale == ParameterScaling.log10:
         return LOG10
-    if amici_scale == amici.ParameterScaling_ln:
+    if amici_scale == ParameterScaling.ln:
         return LOG
     raise ValueError(f"AMICI scale not recognized: {amici_scale}")
 

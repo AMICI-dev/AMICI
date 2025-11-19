@@ -2,13 +2,17 @@
 
 import sys
 
-from . import (
-    CpuTimer,
-    __version__,
-    compiled_with_openmp,
-    has_clibs,
-    hdf5_enabled,
-)
+from . import __version__
+
+try:
+    from .sim.sundials import (
+        CpuTimer,
+        compiled_with_openmp,
+        has_clibs,
+        hdf5_enabled,
+    )
+except ImportError:
+    has_clibs = False
 
 
 def print_info():
@@ -20,14 +24,14 @@ def print_info():
     if has_clibs:
         features.append("extensions")
 
-    if compiled_with_openmp():
-        features.append("OpenMP")
+        if compiled_with_openmp():
+            features.append("OpenMP")
 
-    if hdf5_enabled:
-        features.append("HDF5")
+        if hdf5_enabled:
+            features.append("HDF5")
 
-    if CpuTimer.uses_thread_clock:
-        features.append("thread_clock")
+        if CpuTimer.uses_thread_clock:
+            features.append("thread_clock")
 
     print(
         f"AMICI ({sys.platform}) version {__version__} ({','.join(features)})"

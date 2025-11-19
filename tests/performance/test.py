@@ -12,6 +12,14 @@ import amici.exporters.sundials.de_export
 import amici.importers.sbml
 import petab.v1 as petab
 from amici.importers.petab.v1.petab_import import import_model_sbml
+from amici.sim.sundials import (
+    AMICI_SUCCESS,
+    ExpData,
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+    run_simulation,
+)
 
 
 def parse_args():
@@ -54,7 +62,7 @@ def check_results(rdata):
     ]
     for d in diagnostics:
         print(d, rdata[d])
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    assert rdata["status"] == AMICI_SUCCESS
 
 
 def run_import(model_name, model_dir: Path):
@@ -96,39 +104,39 @@ def compile_model(model_dir_source: Path, model_dir_compiled: Path):
 
 def prepare_simulation(arg, model, solver, edata):
     if arg == "forward_simulation":
-        solver.set_sensitivity_method(amici.SensitivityMethod.none)
-        solver.set_sensitivity_order(amici.SensitivityOrder.none)
+        solver.set_sensitivity_method(SensitivityMethod.none)
+        solver.set_sensitivity_order(SensitivityOrder.none)
     elif arg == "forward_sensitivities":
         model.set_parameter_list(list(range(100)))
-        solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        solver.set_sensitivity_order(SensitivityOrder.first)
     elif arg == "adjoint_sensitivities":
-        solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        solver.set_sensitivity_order(SensitivityOrder.first)
     elif arg == "forward_simulation_non_optimal_parameters":
         tmp_par = model.get_free_parameters()
         model.set_free_parameters([0.1 for _ in tmp_par])
-        solver.set_sensitivity_method(amici.SensitivityMethod.none)
-        solver.set_sensitivity_order(amici.SensitivityOrder.none)
+        solver.set_sensitivity_method(SensitivityMethod.none)
+        solver.set_sensitivity_order(SensitivityOrder.none)
     elif arg == "adjoint_sensitivities_non_optimal_parameters":
         tmp_par = model.get_free_parameters()
         model.set_free_parameters([0.1 for _ in tmp_par])
-        solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        solver.set_sensitivity_order(SensitivityOrder.first)
     elif arg == "forward_steadystate_sensitivities_non_optimal_parameters":
         tmp_par = model.get_free_parameters()
         model.set_free_parameters([0.1 for _ in tmp_par])
-        solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         model.set_steady_state_sensitivity_mode(
-            amici.SteadyStateSensitivityMode.newtonOnly
+            SteadyStateSensitivityMode.newtonOnly
         )
         edata.set_timepoints([float("inf")])
     elif arg == "adjoint_steadystate_sensitivities_non_optimal_parameters":
         tmp_par = model.get_free_parameters()
         model.set_free_parameters([0.1 for _ in tmp_par])
-        solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         edata.set_timepoints([float("inf")])
     else:
         print("Unknown argument:", arg)
@@ -158,14 +166,14 @@ def main():
         model = model_module.get_model()
         solver = model.create_solver()
         # TODO
-        edata = amici.ExpData(model)
+        edata = ExpData(model)
         edata.set_timepoints([1e8])
         edata.set_observed_data([1.0])
         edata.set_observed_data_std_dev([1.0])
 
     prepare_simulation(arg, model, solver, edata)
 
-    rdata = amici.run_simulation(model, solver, edata)
+    rdata = run_simulation(model, solver, edata)
 
     check_results(rdata)
 

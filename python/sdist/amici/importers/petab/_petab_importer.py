@@ -21,10 +21,11 @@ from petab.v2.converters import ExperimentsToSbmlConverter
 from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
-from amici import SensitivityOrder, get_model_dir
+from amici import get_model_dir
 from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
+from amici.sim.sundials import SensitivityOrder
 
 from .v1.sbml_import import _add_global_parameter
 from .v1.simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
@@ -694,6 +695,8 @@ class ExperimentManager:
         :return:
             The created `ExpData` object for the given experiment.
         """
+        from amici.sim.sundials import ExpData
+
         if isinstance(experiment, str):
             experiment = self._petab_problem[experiment]
 
@@ -703,7 +706,7 @@ class ExperimentManager:
                 f"for experiment {experiment.id}."
             )
 
-        edata = amici.ExpData(self._model)
+        edata = ExpData(self._model)
         edata.id = experiment.id
 
         self._set_constants(edata, experiment)
@@ -769,7 +772,7 @@ class ExperimentManager:
             edata.t_start = main_period.time
 
     def _set_timepoints_and_measurements(
-        self, edata: amici.ExpData, experiment: v2.core.Experiment
+        self, edata: amici.sim.sundials.ExpData, experiment: v2.core.Experiment
     ) -> None:
         """
         Set timepoints and measurements for the given experiment.
@@ -875,7 +878,9 @@ class ExperimentManager:
         return y, sigma_y
 
     def apply_parameters(
-        self, edata: amici.ExpData, problem_parameters: dict[str, float]
+        self,
+        edata: amici.sim.sundials.ExpData,
+        problem_parameters: dict[str, float],
     ) -> None:
         """Apply problem parameters.
 
@@ -1039,7 +1044,7 @@ class ExperimentManager:
         return self._petab_problem
 
     @property
-    def model(self) -> amici.Model:
+    def model(self) -> amici.sim.sundials.Model:
         """The AMICI model used by this ExperimentManager."""
         return self._model
 
@@ -1091,7 +1096,7 @@ class PetabSimulator:
     def __init__(
         self,
         em: ExperimentManager,
-        solver: amici.Solver | None = None,
+        solver: amici.sim.sundials.Solver | None = None,
         num_threads: int = 1,
         # TODO: allow selecting specific experiments?
         # TODO: store_edatas: bool
@@ -1118,12 +1123,12 @@ class PetabSimulator:
         self.num_threads = num_threads
 
     @property
-    def model(self) -> amici.Model:
+    def model(self) -> amici.sim.sundials.Model:
         """The AMICI model used by this simulator."""
         return self._model
 
     @property
-    def solver(self) -> amici.Solver:
+    def solver(self) -> amici.sim.sundials.Solver:
         """The AMICI solver used by this simulator."""
         return self._solver
 
@@ -1142,12 +1147,12 @@ class PetabSimulator:
             Dictionary of
 
             * the summed cost function value (``LLH``),
-            * list of :class:`amici.amici.ReturnData` (``RDATAS``)
+            * list of :class:`amici.sim.sundials.ReturnData` (``RDATAS``)
               for each experiment,
-            * list of :class:`amici.amici.ExpData` (``EDATAS``)
+            * list of :class:`amici.sim.sundials.ExpData` (``EDATAS``)
               for each experiment
 
-           Note that the returned :class:`amici.amici.ExpData` instances
+           Note that the returned :class:`amici.amiciamici.sim.sundials.ExpData` instances
            may be changed by subsequent calls to this function.
            Create a copy if needed.
         """
@@ -1168,7 +1173,7 @@ class PetabSimulator:
                 edata=edata, problem_parameters=problem_parameters
             )
 
-        rdatas = amici.run_simulations(
+        rdatas = amici.sim.sundials.run_simulations(
             self._model, self._solver, edatas, num_threads=self.num_threads
         )
 
@@ -1184,7 +1189,7 @@ class PetabSimulator:
         }
 
     def _aggregate_sllh(
-        self, rdatas: Sequence[amici.ReturnDataView]
+        self, rdatas: Sequence[amici.sim.sundials.ReturnDataView]
     ) -> dict[str, float] | None:
         """Aggregate the sensitivities of the log-likelihoods.
 
@@ -1201,7 +1206,7 @@ class PetabSimulator:
         # Check for issues in all condition simulation results.
         for rdata in rdatas:
             # Condition failed during simulation.
-            if rdata.status != amici.AMICI_SUCCESS:
+            if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
                 return None
             # Condition simulation result does not provide SLLH.
             if rdata.sllh is None:
@@ -1234,7 +1239,7 @@ class PetabSimulator:
 
     def _aggregate_s2llh(
         self,
-        rdatas: Sequence[amici.ReturnDataView],
+        rdatas: Sequence[amici.sim.sundials.ReturnDataView],
         use_fim: bool = True,
     ) -> np.ndarray | None:
         """Aggregate the Hessians from individual experiments.
@@ -1266,7 +1271,7 @@ class PetabSimulator:
         # Check for issues in all condition simulation results.
         for rdata in rdatas:
             # Condition failed during simulation.
-            if rdata.status != amici.AMICI_SUCCESS:
+            if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
                 return None
             # Condition simulation result does not provide FIM.
             if rdata.FIM is None:
@@ -1388,8 +1393,8 @@ def _set_default_experiment(
 
 
 def rdatas_to_measurement_df(
-    rdatas: Sequence[amici.ReturnData],
-    model: amici.AmiciModel,
+    rdatas: Sequence[amici.sim.sundials.ReturnData],
+    model: amici.sim.sundials.AmiciModel,
     petab_problem: v2.Problem,
 ) -> pd.DataFrame:
     """
@@ -1447,8 +1452,8 @@ def rdatas_to_measurement_df(
 
 
 def rdatas_to_simulation_df(
-    rdatas: Sequence[amici.ReturnData],
-    model: amici.AmiciModel,
+    rdatas: Sequence[amici.sim.sundials.ReturnData],
+    model: amici.sim.sundials.AmiciModel,
     petab_problem: v2.Problem,
 ) -> pd.DataFrame:
     """

@@ -7,7 +7,6 @@ AMICI Python API
    :toctree: generated
 
    amici
-   amici.amici
    amici.importers.utils
    amici.importers.sbml
    amici.importers.sbml.conserved_quantities_demartino
@@ -29,9 +28,8 @@ AMICI Python API
    amici.importers.petab.v1.simulator
    amici.jax
    amici.exporters.sundials.de_export
-   amici.plotting
-   amici.pandas
+   amici.sim.sundials
+   amici.sim.sundials.plotting
+   amici.sim.sundials.gradient_check
    amici.logging
-   amici.gradient_check
-   amici.numpy
    amici.adapters.fiddy

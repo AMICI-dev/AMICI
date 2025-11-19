@@ -1,20 +1,20 @@
-recursive-include amici/ThirdParty/SuiteSparse *
-recursive-include amici/ThirdParty/sundials *
-recursive-include amici/ThirdParty/gsl *.hpp
-recursive-include amici/cmake *
-recursive-include amici/include/amici *.h
-recursive-include amici/src *
-recursive-include amici/swig *
+recursive-include amici/_installation/ThirdParty/SuiteSparse *
+recursive-include amici/_installation/ThirdParty/sundials *
+recursive-include amici/_installation/ThirdParty/gsl *.hpp
+recursive-include amici/_installation/cmake *
+recursive-include amici/_installation/include/amici *.h
+recursive-include amici/_installation/src *
+recursive-include amici/_installation/swig *
 recursive-include amici/exporters/sundials/templates *
 include amici/*
 include version.txt
 include LICENSE.md
-exclude amici/*.so
-exclude amici/*.dll
+exclude amici/_installation/*.so
+exclude amici/_installation/*.dll
 prune **/build
 prune **/install
-prune amici/share
-prune amici/lib
-prune amici/ThirdParty/SuiteSparse/lib
-prune amici/ThirdParty/SuiteSparse/include
+prune amici/_installation/share
+prune amici/_installation/lib
+prune amici/_installation/ThirdParty/SuiteSparse/lib
+prune amici/_installation/ThirdParty/SuiteSparse/include
 prune __pycache__

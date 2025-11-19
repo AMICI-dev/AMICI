@@ -1,3 +1,9 @@
+# Build and install the AMICI Python package
+#
+# This file is not part of the AMICI Python package itself, but is included
+# in the main CMakeLists.txt to provide targets for building and installing
+# the AMICI Python package.
+
 if(DEFINED ENV{PYTHON_EXECUTABLE})
   set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
 endif()

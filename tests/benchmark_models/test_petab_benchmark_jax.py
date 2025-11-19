@@ -1,7 +1,6 @@
 import logging
 from functools import partial
 
-import amici
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -14,6 +13,7 @@ from amici.importers.petab.v1 import (
     simulate_petab,
 )
 from amici.jax.petab import run_simulations
+from amici.sim.sundials import SensitivityMethod, SensitivityOrder
 from beartype import beartype
 from test_petab_benchmark import (
     benchmark_outdir,
@@ -60,10 +60,8 @@ def test_jax_llh(benchmark_problem):
     if problem_id in problems_for_gradient_check:
         point = flat_petab_problem.x_nominal_free_scaled
         for _ in range(20):
-            amici_solver.set_sensitivity_method(
-                amici.SensitivityMethod.forward
-            )
-            amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
+            amici_solver.set_sensitivity_method(SensitivityMethod.forward)
+            amici_solver.set_sensitivity_order(SensitivityOrder.first)
             amici_model.set_steady_state_sensitivity_mode(
                 cur_settings.ss_sensitivity_mode
             )

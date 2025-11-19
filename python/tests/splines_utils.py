@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import sympy as sp
-from amici.gradient_check import _check_results
 from amici.importers.petab.v1 import (
     EDATAS,
     LLH,
@@ -40,6 +39,8 @@ from amici.importers.sbml.utils import (
     amici_time_symbol,
     create_sbml_model,
 )
+from amici.sim.sundials import run_simulation
+from amici.sim.sundials.gradient_check import _check_results
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from petab.v1.models.sbml_model import SbmlModel
 
@@ -304,7 +305,7 @@ def simulate_splines(
     use_adjoint: bool = False,
     skip_sensitivity: bool = False,
     petab_problem=None,
-    amici_model: amici.Model = None,
+    amici_model: amici.sim.sundials.Model = None,
     **kwargs,
 ):
     """
@@ -359,6 +360,8 @@ def simulate_splines(
     :param kwargs:
         passed to `create_petab_problem`
     """
+    from amici.sim.sundials import SensitivityMethod, SensitivityOrder
+
     # If no working directory is given, create a temporary one
     if folder is None:
         if keep_temporary:
@@ -421,11 +424,11 @@ def simulate_splines(
     solver.set_absolute_tolerance(atol)
     solver.set_max_steps(maxsteps)
     if not skip_sensitivity:
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         if use_adjoint:
-            solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
+            solver.set_sensitivity_method(SensitivityMethod.adjoint)
         else:
-            solver.set_sensitivity_method(amici.SensitivityMethod.forward)
+            solver.set_sensitivity_method(SensitivityMethod.forward)
 
     # Compute and set timepoints
     # NB not working, will always be equal to the observation times
@@ -740,7 +743,7 @@ def check_splines(
         for plist in parameter_lists:
             amici_model.set_parameter_list(plist)
             amici_model.set_timepoints(rdata.t)
-            rdata_partial = amici.run_simulation(amici_model, amici_solver)
+            rdata_partial = run_simulation(amici_model, amici_solver)
             assert rdata.sx[:, plist, :].shape == rdata_partial.sx.shape
             assert np.allclose(rdata.sx[:, plist, :], rdata_partial.sx)
 

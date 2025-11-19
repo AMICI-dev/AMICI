@@ -173,10 +173,9 @@ An example using Antimony to specify the Lotka-Volterra equations is shown below
     )
     amici_model = model_module.get_model()
     amici_model.set_timepoints(np.linspace(0, 100, 200))
-    amici_solver = amici_model.create_solver()
-    rdata = amici.run_simulation(amici_model, amici_solver)
+    rdata = amici_model.simulate()
 
-    from amici.plotting import plot_state_trajectories
+    from amici.sim.sundials.plotting import plot_state_trajectories
     plot_state_trajectories(rdata, model=amici_model)
 
 

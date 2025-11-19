@@ -8,23 +8,27 @@ import amici
 import pytest
 import sympy as sp
 from amici.importers.utils import smart_subs_dict
+from amici.sim.sundials import (
+    ParameterScaling,
+    parameter_scaling_from_int_vector,
+)
 from amici.testing import skip_on_valgrind
 
 
 def test_parameter_scaling_from_int_vector():
     """Ensure we can generate a ParameterScaling vector from Python"""
 
-    scale_vector = amici.parameter_scaling_from_int_vector(
+    scale_vector = parameter_scaling_from_int_vector(
         [
-            amici.ParameterScaling.log10,
-            amici.ParameterScaling.ln,
-            amici.ParameterScaling.none,
+            ParameterScaling.log10,
+            ParameterScaling.ln,
+            ParameterScaling.none,
         ]
     )
 
-    assert scale_vector[0] == amici.ParameterScaling.log10
-    assert scale_vector[1] == amici.ParameterScaling.ln
-    assert scale_vector[2] == amici.ParameterScaling.none
+    assert scale_vector[0] == ParameterScaling.log10
+    assert scale_vector[1] == ParameterScaling.ln
+    assert scale_vector[2] == ParameterScaling.none
 
 
 @skip_on_valgrind

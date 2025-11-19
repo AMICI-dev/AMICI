@@ -4,8 +4,19 @@ import warnings
 import amici
 import numpy as np
 import pytest
-from amici import ExpData, SteadyStateStatus
 from amici import MeasurementChannel as MC
+from amici.sim.sundials import (
+    AMICI_ERROR,
+    AMICI_SUCCESS,
+    ExpData,
+    SensitivityMethod,
+    SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
+    SteadyStateStatus,
+    get_model_settings,
+    run_simulation,
+    set_model_settings,
+)
 from amici.testing import skip_on_valgrind
 from numpy.testing import assert_allclose
 
@@ -124,10 +135,10 @@ def get_results(
     model,
     edata=None,
     sensi_order=0,
-    sensi_meth=amici.SensitivityMethod.forward,
-    sensi_meth_preeq=amici.SensitivityMethod.forward,
-    stst_mode=amici.SteadyStateComputationMode.integrateIfNewtonFails,
-    stst_sensi_mode=amici.SteadyStateSensitivityMode.newtonOnly,
+    sensi_meth=SensitivityMethod.forward,
+    sensi_meth_preeq=SensitivityMethod.forward,
+    stst_mode=SteadyStateComputationMode.integrateIfNewtonFails,
+    stst_sensi_mode=SteadyStateSensitivityMode.newtonOnly,
     reinitialize_states=False,
 ):
     # set model and data properties
@@ -147,7 +158,7 @@ def get_results(
         edata.reinitialize_fixed_parameter_initial_states = reinitialize_states
 
     # return simulation results
-    return amici.run_simulation(model, solver, edata)
+    return run_simulation(model, solver, edata)
 
 
 @skip_on_valgrind
@@ -167,9 +178,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     # ----- compare simulations wo edata, sensi = 0, states ------------------
     # run simulations
     rdata_cl = get_results(model_with_cl)
-    assert rdata_cl["status"] == amici.AMICI_SUCCESS
+    assert rdata_cl["status"] == AMICI_SUCCESS
     rdata = get_results(model_without_cl)
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    assert rdata["status"] == AMICI_SUCCESS
 
     # compare state trajectories
     assert_allclose(
@@ -183,9 +194,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
     # run simulations
     rdata_cl = get_results(model_with_cl, sensi_order=1)
-    assert rdata_cl["status"] == amici.AMICI_SUCCESS
+    assert rdata_cl["status"] == AMICI_SUCCESS
     rdata = get_results(model_without_cl, sensi_order=1)
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    assert rdata["status"] == AMICI_SUCCESS
 
     # compare state trajectories
     for field in ["x", "sx"]:
@@ -202,9 +213,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     # run simulations
     edata, _, _ = edata_fixture
     rdata_cl = get_results(model_with_cl, edata=edata)
-    assert rdata_cl["status"] == amici.AMICI_SUCCESS
+    assert rdata_cl["status"] == AMICI_SUCCESS
     rdata = get_results(model_without_cl, edata=edata)
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    assert rdata["status"] == AMICI_SUCCESS
 
     # compare preequilibrated states
     for field in ["x", "x_ss", "llh"]:
@@ -220,14 +231,14 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata, sensi_order=1)
-    assert rdata_cl["status"] == amici.AMICI_SUCCESS
+    assert rdata_cl["status"] == AMICI_SUCCESS
     rdata = get_results(
         model_without_cl,
         edata=edata,
         sensi_order=1,
-        stst_sensi_mode=amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
+        stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
     )
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    assert rdata["status"] == AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
     assert rdata["preeq_status"] == [
         SteadyStateStatus.failed_factorization,
@@ -254,12 +265,12 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state sensitivity computation if run wo CLs
     model_without_cl.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.newtonOnly
+        SteadyStateSensitivityMode.newtonOnly
     )
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
         rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
-        assert rdata["status"] == amici.AMICI_ERROR
+        assert rdata["status"] == AMICI_ERROR
 
 
 def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
@@ -275,8 +286,8 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 model_cl,
                 edata=edata,
                 sensi_order=1,
-                sensi_meth=amici.SensitivityMethod.forward,
-                sensi_meth_preeq=amici.SensitivityMethod.forward,
+                sensi_meth=SensitivityMethod.forward,
+                sensi_meth_preeq=SensitivityMethod.forward,
                 reinitialize_states=reinit,
             )
             # forward preequilibration, adjoint simulation
@@ -284,8 +295,8 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 model_cl,
                 edata=edata,
                 sensi_order=1,
-                sensi_meth=amici.SensitivityMethod.adjoint,
-                sensi_meth_preeq=amici.SensitivityMethod.forward,
+                sensi_meth=SensitivityMethod.adjoint,
+                sensi_meth_preeq=SensitivityMethod.forward,
                 reinitialize_states=reinit,
             )
             # adjoint preequilibration, adjoint simulation
@@ -293,14 +304,14 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 model_cl,
                 edata=edata,
                 sensi_order=1,
-                sensi_meth=amici.SensitivityMethod.adjoint,
-                sensi_meth_preeq=amici.SensitivityMethod.adjoint,
+                sensi_meth=SensitivityMethod.adjoint,
+                sensi_meth_preeq=SensitivityMethod.adjoint,
                 reinitialize_states=reinit,
             )
 
-            assert rff_cl.status == amici.AMICI_SUCCESS
-            assert rfa_cl.status == amici.AMICI_SUCCESS
-            assert raa_cl.status == amici.AMICI_SUCCESS
+            assert rff_cl.status == AMICI_SUCCESS
+            assert rfa_cl.status == AMICI_SUCCESS
+            assert raa_cl.status == AMICI_SUCCESS
 
             # assert all are close
             assert_allclose(
@@ -319,12 +330,12 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 model,
                 edata=edata,
                 sensi_order=1,
-                sensi_meth=amici.SensitivityMethod.adjoint,
-                sensi_meth_preeq=amici.SensitivityMethod.adjoint,
-                stst_sensi_mode=amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
+                sensi_meth=SensitivityMethod.adjoint,
+                sensi_meth_preeq=SensitivityMethod.adjoint,
+                stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
                 reinitialize_states=reinit,
             )
-            assert raa.status == amici.AMICI_SUCCESS
+            assert raa.status == AMICI_SUCCESS
 
             # assert gradients are close (quadrature tolerances are laxer)
             assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
@@ -332,8 +343,8 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
 
 @skip_on_valgrind
 def test_get_set_model_settings(models):
-    """test amici.(get|set)_model_settings cycles for models with and without
+    """test amici.sim.sundials.(get|set)_model_settings cycles for models with and without
     conservation laws"""
 
     for model in models:
-        amici.set_model_settings(model, amici.get_model_settings(model))
+        set_model_settings(model, get_model_settings(model))

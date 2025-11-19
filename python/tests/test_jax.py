@@ -12,9 +12,15 @@ import jax.random as jr
 import numpy as np
 import optimistix
 from amici import MeasurementChannel as MC
+from amici import import_model_module
 from amici.importers.petab.v1 import import_petab_problem
 from amici.importers.pysb import pysb2amici, pysb2jax
 from amici.jax import JAXProblem, ReturnValue, run_simulations
+from amici.sim.sundials import (
+    ExpData,
+    SensitivityMethod,
+    SensitivityOrder,
+)
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from beartype import beartype
 from numpy.testing import assert_allclose
@@ -45,10 +51,10 @@ def test_conversion():
         pysb2amici(model, outdir, verbose=True, observation_model=[MC("ab")])
         pysb2jax(model, outdir, verbose=True, observation_model=[MC("ab")])
 
-        amici_module = amici.import_model_module(
+        amici_module = import_model_module(
             module_name=model.name, module_path=outdir
         )
-        jax_module = amici.import_model_module(
+        jax_module = import_model_module(
             module_name=Path(outdir).stem, module_path=Path(outdir).parent
         )
 
@@ -106,10 +112,10 @@ def test_dimerization():
             observation_model=[MC("a_obs"), MC("b_obs")],
         )
 
-        amici_module = amici.import_model_module(
+        amici_module = import_model_module(
             module_name=model.name, module_path=outdir
         )
-        jax_module = amici.import_model_module(
+        jax_module = import_model_module(
             module_name=Path(outdir).stem, module_path=Path(outdir).parent
         )
 
@@ -123,24 +129,22 @@ def _test_model(amici_module, jax_module, ts, p, k):
     amici_model = amici_module.get_model()
 
     amici_model.set_timepoints(np.asarray(ts, dtype=np.float64))
-    sol_amici_ref = amici.run_simulation(
-        amici_model, amici_model.create_solver()
-    )
+    sol_amici_ref = amici_model.simulate()
 
     jax_model = jax_module.Model()
 
     amici_model.set_free_parameters(np.asarray(p, dtype=np.float64))
     amici_model.set_fixed_parameters(np.asarray(k, dtype=np.float64))
-    edata = amici.ExpData(sol_amici_ref, 1.0, 1.0)
+    edata = ExpData(sol_amici_ref, 1.0, 1.0)
     edata.free_parameters = amici_model.get_free_parameters()
     edata.fixed_parameters = amici_model.get_fixed_parameters()
     edata.pscale = amici_model.get_parameter_scale()
     amici_solver = amici_model.create_solver()
-    amici_solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-    amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    amici_solver.set_sensitivity_method(SensitivityMethod.forward)
+    amici_solver.set_sensitivity_order(SensitivityOrder.first)
     amici_solver.set_absolute_tolerance(ATOL_SIM)
     amici_solver.set_relative_tolerance(RTOL_SIM)
-    rs_amici = amici.run_simulations(amici_model, amici_solver, [edata])
+    rs_amici = amici_model.simulate(solver=amici_solver, edata=[edata])
 
     check_fields_jax(
         rs_amici,
@@ -158,7 +162,7 @@ def _test_model(amici_module, jax_module, ts, p, k):
         amici_model.get_fixed_parameter_ids(),
         edata,
         ["sllh", "sx0", "sx", "sres", "sy"],
-        sensi_order=amici.SensitivityOrder.first,
+        sensi_order=SensitivityOrder.first,
     )
 
 
@@ -169,7 +173,7 @@ def check_fields_jax(
     fixed_parameter_ids,
     edata,
     fields,
-    sensi_order=amici.SensitivityOrder.none,
+    sensi_order=SensitivityOrder.none,
 ):
     r_jax = dict()
     ts = np.array(edata.get_timepoints())
@@ -216,9 +220,9 @@ def check_fields_jax(
             "max_steps": 2**8,
             "ret": ReturnValue[output],
         }
-        if sensi_order == amici.SensitivityOrder.none:
+        if sensi_order == SensitivityOrder.none:
             r_jax[output] = fun(p, **okwargs)[0]
-        if sensi_order == amici.SensitivityOrder.first:
+        if sensi_order == SensitivityOrder.first:
             if output == "llh":
                 r_jax[f"s{output}"] = jax.grad(fun, has_aux=True)(p, **kwargs)[
                     0

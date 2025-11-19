@@ -1,9 +1,14 @@
 """Test amici.ReturnData(View)-related functionality"""
 
-import amici
 import numpy as np
 import pytest
-from amici.numpy import evaluate
+from amici.sim.sundials import (
+    AMICI_SUCCESS,
+    SensitivityMethod,
+    SensitivityOrder,
+    evaluate,
+    run_simulation,
+)
 from amici.testing import skip_on_valgrind
 from numpy.testing import assert_almost_equal, assert_array_equal
 
@@ -14,10 +19,10 @@ def rdata_by_id_fixture(sbml_example_presimulation_module):
     model = model_module.get_model()
     model.set_timepoints(np.linspace(0, 60, 61))
     solver = model.create_solver()
-    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
-    rdata = amici.run_simulation(model, solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
     return model, rdata
 
 

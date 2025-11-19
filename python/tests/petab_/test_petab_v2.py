@@ -1,12 +1,12 @@
 import copy
 
-import amici
 from amici.importers.petab import (
     PetabImporter,
     flatten_timepoint_specific_output_overrides,
     has_timepoint_specific_overrides,
     unflatten_simulation_df,
 )
+from amici.sim.sundials import SensitivityOrder
 from petab.v2 import C, Problem
 from petab.v2.models.sbml_model import SbmlModel
 
@@ -308,13 +308,13 @@ def test_petab_simulator_deepcopy_and_pickle():
 
     pi = PetabImporter(problem)
     ps = pi.create_simulator(force_import=False)
-    ps.solver.set_sensitivity_order(amici.SensitivityOrder.none)
+    ps.solver.set_sensitivity_order(SensitivityOrder.none)
 
     ps_copy = copy.deepcopy(ps)
 
     assert ps.simulate({"kk": 2})["llh"] == ps_copy.simulate({"kk": 2})["llh"]
 
-    ps.solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
     assert (
         ps.solver.get_sensitivity_order()
         != ps_copy.solver.get_sensitivity_order()

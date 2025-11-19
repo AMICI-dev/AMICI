@@ -3,12 +3,12 @@
 from functools import partial
 from pathlib import Path
 
-import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import pytest
 from amici.importers.petab.v1 import SLLH, import_petab_problem, simulate_petab
+from amici.sim.sundials import SensitivityOrder
 from amici.testing import skip_on_valgrind
 
 # Absolute and relative tolerances for finite difference gradient checks.
@@ -35,7 +35,7 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     amici_model = import_petab_problem(petab_problem)
     amici_solver = amici_model.create_solver()
 
-    amici_solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    amici_solver.set_sensitivity_order(SensitivityOrder.first)
     amici_solver.set_max_steps(int(1e5))
 
     problem_parameters = dict(

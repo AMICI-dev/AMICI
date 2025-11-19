@@ -5,6 +5,8 @@ This module provides all necessary functionality to import a model specified
 in the :class:`pysb.core.Model` format.
 """
 
+from __future__ import annotations
+
 import itertools
 import logging
 import os

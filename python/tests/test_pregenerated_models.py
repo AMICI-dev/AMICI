@@ -10,7 +10,16 @@ import amici
 import h5py
 import numpy as np
 import pytest
-from amici.gradient_check import _check_results, check_derivatives
+from amici.sim.sundials import (
+    ExpData,
+    RDataReporting,
+    SensitivityMethod,
+    SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
+    run_simulation,
+    run_simulations,
+)
+from amici.sim.sundials.gradient_check import _check_results, check_derivatives
 from amici.testing import skip_on_valgrind
 
 cpp_test_dir = Path(__file__).parents[2] / "tests" / "cpp"
@@ -38,6 +47,12 @@ def test_pregenerated_model_py(sub_test, case):
     NOTE: requires having run `make python-tests` in /build/ before to build
     the python modules for the test models.
     """
+    from amici.sim.sundials import (
+        read_exp_data_from_hdf5,
+        read_model_data_from_hdf5,
+        read_solver_settings_from_hdf5,
+    )
+
     expected_results = expected_results_py
     if case.startswith("sensi2"):
         model_name = sub_test + "_o2"
@@ -63,28 +78,28 @@ def test_pregenerated_model_py(sub_test, case):
     )
     model = test_model_module.get_model()
     solver = model.create_solver()
-    amici.read_model_data_from_hdf5(
+    read_model_data_from_hdf5(
         options_file, model.get(), f"/{sub_test}/{case}/options"
     )
     if model_name == "model_steadystate":
         model.set_steady_state_computation_mode(
-            amici.SteadyStateComputationMode.integrateIfNewtonFails
+            SteadyStateComputationMode.integrateIfNewtonFails
         )
         model.set_steady_state_sensitivity_mode(
-            amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+            SteadyStateSensitivityMode.integrateIfNewtonFails
         )
-    amici.read_solver_settings_from_hdf5(
+    read_solver_settings_from_hdf5(
         options_file, solver.get(), f"/{sub_test}/{case}/options"
     )
 
     edata = None
     if "data" in expected_results[sub_test][case].keys():
-        edata = amici.read_exp_data_from_hdf5(
+        edata = read_exp_data_from_hdf5(
             str(expected_results_file_py),
             f"/{sub_test}/{case}/data",
             model.get(),
         )
-    rdata = amici.run_simulation(model, solver, edata)
+    rdata = run_simulation(model, solver, edata)
 
     check_derivative_opts = dict()
 
@@ -128,7 +143,7 @@ def test_pregenerated_model_py(sub_test, case):
     )
 
     if model_name == "model_steadystate" and case == "sensiforwarderrorint":
-        edata = amici.amici.ExpData(model.get())
+        edata = amici._installation.amici.ExpData(model.get())
 
     # Test run_simulations: ensure running twice
     # with same ExpData yields same results
@@ -139,12 +154,12 @@ def test_pregenerated_model_py(sub_test, case):
             model_name == "model_robertson" and case == "sensiforwardSPBCG"
         )
     ):
-        if isinstance(edata, amici.amici.ExpData):
+        if isinstance(edata, ExpData):
             edatas = [edata, edata]
         else:
             edatas = [edata.get(), edata.get()]
 
-        rdatas = amici.run_simulations(
+        rdatas = run_simulations(
             model, solver, edatas, num_threads=2, failfast=False
         )
         verify_simulation_results(
@@ -159,14 +174,12 @@ def test_pregenerated_model_py(sub_test, case):
         )
 
     # test residuals mode
-    if solver.get_sensitivity_method() == amici.SensitivityMethod.adjoint:
+    if solver.get_sensitivity_method() == SensitivityMethod.adjoint:
         with pytest.raises(RuntimeError):
-            solver.set_return_data_reporting_mode(
-                amici.RDataReporting.residuals
-            )
+            solver.set_return_data_reporting_mode(RDataReporting.residuals)
     else:
-        solver.set_return_data_reporting_mode(amici.RDataReporting.residuals)
-        rdata = amici.run_simulation(model, solver, edata)
+        solver.set_return_data_reporting_mode(RDataReporting.residuals)
+        rdata = run_simulation(model, solver, edata)
         verify_simulation_results(
             rdata,
             expected_results[sub_test][case]["results"],
@@ -174,13 +187,13 @@ def test_pregenerated_model_py(sub_test, case):
             **verify_simulation_opts,
         )
         with pytest.raises(RuntimeError):
-            solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
+            solver.set_sensitivity_method(SensitivityMethod.adjoint)
 
     chi2_ref = rdata.chi2
 
     # test likelihood mode
-    solver.set_return_data_reporting_mode(amici.RDataReporting.likelihood)
-    rdata = amici.run_simulation(model, solver, edata)
+    solver.set_return_data_reporting_mode(RDataReporting.likelihood)
+    rdata = run_simulation(model, solver, edata)
     verify_simulation_results(
         rdata,
         expected_results[sub_test][case]["results"],
@@ -192,11 +205,11 @@ def test_pregenerated_model_py(sub_test, case):
 
     if (
         model_name == "model_jakstat_adjoint"
-        and solver.get_sensitivity_method() != amici.SensitivityMethod.adjoint
+        and solver.get_sensitivity_method() != SensitivityMethod.adjoint
     ):
         model.set_add_sigma_residuals(True)
-        solver.set_return_data_reporting_mode(amici.RDataReporting.full)
-        rdata = amici.run_simulation(model, solver, edata)
+        solver.set_return_data_reporting_mode(RDataReporting.full)
+        rdata = run_simulation(model, solver, edata)
         # check whether activation changes chi2
         assert chi2_ref != rdata.chi2
 
@@ -212,13 +225,13 @@ def test_pregenerated_model_py(sub_test, case):
         res_ref = rdata.res
 
         model.set_minimum_sigma_residuals(100)
-        rdata = amici.run_simulation(model, solver, edata)
+        rdata = run_simulation(model, solver, edata)
         # check whether changing the minimum changes res but not chi2
         assert np.isclose(chi2_ref, rdata.chi2)
         assert not np.allclose(res_ref, rdata.res)
 
         model.set_minimum_sigma_residuals(-10)
-        rdata = amici.run_simulation(model, solver, edata)
+        rdata = run_simulation(model, solver, edata)
         # check whether having a bad minimum results in nan chi2
         assert np.isnan(rdata.chi2)
 
@@ -233,7 +246,7 @@ def verify_simulation_results(
     compares all fields of the simulation results in rdata against the
     expectedResults using the provided tolerances
 
-    :param rdata: simulation results as returned by amici.runAmiciSimulation
+    :param rdata: simulation results
     :param expected_results: stored test results
     :param fields: subsetting of expected results to check
     :param atol: absolute tolerance

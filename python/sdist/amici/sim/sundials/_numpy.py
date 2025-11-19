@@ -18,8 +18,6 @@ import sympy as sp
 import xarray as xr
 from sympy.abc import _clash
 
-import amici
-
 from . import (
     ExpData,
     ExpDataPtr,
@@ -27,6 +25,7 @@ from . import (
     ReturnData,
     ReturnDataPtr,
     SteadyStateStatus,
+    simulation_status_to_str,
 )
 
 __all__ = [
@@ -319,7 +318,7 @@ class SwigPtrView(collections.abc.Mapping):
 
 class ReturnDataView(SwigPtrView):
     """
-    Interface class for C++ :class:`amici.ReturnData` objects that avoids
+    Interface class for C++ :class:`ReturnData` objects that avoids
     possibly costly copies of member data.
     """
 
@@ -391,7 +390,7 @@ class ReturnDataView(SwigPtrView):
         if not isinstance(rdata, (ReturnDataPtr | ReturnData)):
             raise TypeError(
                 f"Unsupported pointer {type(rdata)}, must be"
-                f"amici.ReturnDataPtr or amici.ReturnData!"
+                f"ReturnDataPtr or ReturnData!"
             )
         self._field_dimensions = {
             "ts": [rdata.nt],
@@ -467,7 +466,7 @@ class ReturnDataView(SwigPtrView):
         return super().__getitem__(item)
 
     def __repr__(self):
-        status = amici.simulation_status_to_str(self._swigptr.status)
+        status = simulation_status_to_str(self._swigptr.status)
         return f"<{self.__class__.__name__}(id={self._swigptr.id!r}, status={status})>"
 
     def by_id(
@@ -482,7 +481,7 @@ class ReturnDataView(SwigPtrView):
             optional if field would be one of ``{'x', 'y', 'w'}``
         :param model: The model from which this ReturnDataView was generated.
             This is optional if this ReturnData was generated with
-            ``solver.getReturnDataReportingMode() == amici.RDataReporting.full``.
+            ``solver.getReturnDataReportingMode() == RDataReporting.full``.
         """
         if field is None:
             field = _entity_type_from_id(entity_id, self, model)
@@ -538,7 +537,7 @@ class ExpDataView(SwigPtrView):
         """
         if not isinstance(edata, (ExpDataPtr | ExpData)):
             raise TypeError(
-                f"Unsupported pointer {type(edata)}, must be amici.ExpDataPtr!"
+                f"Unsupported pointer {type(edata)}, must be ExpDataPtr!"
             )
         self._field_dimensions = {
             "ts": [edata.nt()],
@@ -592,8 +591,8 @@ def _field_as_numpy(
 
 def _entity_type_from_id(
     entity_id: str,
-    rdata: amici.ReturnData | amici.ReturnDataView = None,
-    model: amici.Model = None,
+    rdata: ReturnData | ReturnDataView = None,
+    model: Model = None,
 ) -> Literal["x", "y", "w", "p", "k"]:
     """Guess the type of some entity by its ID."""
     for entity_type, symbol in (
@@ -608,9 +607,7 @@ def _entity_type_from_id(
                 return symbol
         else:
             if entity_id in getattr(
-                rdata
-                if isinstance(rdata, amici.ReturnData)
-                else rdata._swigptr,
+                rdata if isinstance(rdata, ReturnData) else rdata._swigptr,
                 f"{entity_type.lower()}_ids",
             ):
                 return symbol
