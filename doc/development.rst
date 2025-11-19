@@ -4,22 +4,6 @@ AMICI developer’s guide
 This document contains information for AMICI developers, not too
 relevant to regular users.
 
-Branches / releases
--------------------
-
-For AMICI, we mostly do `trunk-based development <https://trunkbaseddevelopment.com/>`__.
-All new contributions are merged into ``main`` after passing the test suite
-and code review. Releases are usually created directly from ``main``.
-New releases are created on GitHub and are automatically deployed to
-`Zenodo <https://doi.org/10.5281/zenodo.597928>`__ for
-archiving and to obtain a digital object identifier (DOI) to make them
-citable. Furthermore, our `CI pipeline <documentation/CI.md>`__ will
-automatically create and deploy a new release on
-`PyPI <https://pypi.org/project/amici/>`__.
-
-We try to keep a clean git history. Therefore, feature pull requests are
-squash-merged to ``main``.
-
 When starting to work on some issue
 -----------------------------------
 
@@ -131,11 +115,60 @@ C++
 -  For new code, we use `Google's C++ style guide <https://google.github.io/styleguide/cppguide.html>`__ as a reference.
 
 
-Matlab
-^^^^^^
+Branches / releases
+-------------------
 
-No new Matlab code should be added to AMICI
-(see `#2727 <https://github.com/AMICI-dev/AMICI/issues/2727>`__).
+For AMICI, we mostly do `trunk-based development <https://trunkbaseddevelopment.com/>`__.
+All new contributions are merged into ``main`` after passing the test suite
+and code review. Releases are usually created directly from ``main``.
+New releases are created on GitHub and are automatically deployed to
+`Zenodo <https://doi.org/10.5281/zenodo.597928>`__ for
+archiving and to obtain a digital object identifier (DOI) to make them
+citable. Furthermore, our `CI pipeline <documentation/CI.md>`__ will
+automatically create and deploy a new release on
+`PyPI <https://pypi.org/project/amici/>`__.
+
+We try to keep a clean git history. Therefore, feature pull requests are
+squash-merged to ``main``.
+
+Release process
+~~~~~~~~~~~~~~~
+
+Releases are created by the maintainer team.
+
+To create a new release, please follow these steps:
+
+1. Ensure that all changes intended for the new release are merged
+   into ``main``.
+
+2. Update ``CHANGELOG.md`` with a short description of the changes
+   included in the new release. Focus on user-relevant changes.
+
+3. Bump the version number in `version.txt` according to
+   `Semantic Versioning <https://semver.org/>`__.
+
+4. Regenerate the test models by running
+
+    ```shell
+    python -c "from amici.testing.models import import_test_models; import_test_models()"
+    ```
+
+    This ensures that the models can be imported with the new version.
+
+5. Create a new release on GitHub, using the new version number prefixed
+   by "v" (e.g., "v0.12.0"). Copy the relevant parts of
+   ``CHANGELOG.md`` into the release notes.
+
+6. After creating the release, our GitHub Actions pipeline will automatically
+   create and deploy the new release on Zenodo and PyPI.
+   Verify that this was successful.
+
+In rare cases, it might be necessary to create a hotfix release for a
+critical bug in an existing release. In this case, create a new branch
+from the respective tag, apply the fix (usually a backport from ``main``),
+and follow the same steps as above, starting from step 2.
+Merge the updated CHANGELOG and version bump back into ``main`` afterwards.
+
 
 Further topics
 --------------
