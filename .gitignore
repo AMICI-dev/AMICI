@@ -7,6 +7,7 @@ swig/python/build/*
 tests/cpp/build/*
 tests/cpp/build_xcode/*
 tests/cpp/Testing/*
+.cache/
 
 doc-venv/*
 fonts/*

@@ -17,7 +17,7 @@ import pysb.examples  # noqa: F811
 import pytest
 import sympy as sp
 from amici import ParameterScaling, parameter_scaling_from_int_vector
-from amici.de_model_components import Event
+from amici._symbolic.de_model_components import Event
 from amici.gradient_check import check_derivatives
 from amici.importers.pysb import pysb2amici
 from amici.importers.utils import amici_time_symbol

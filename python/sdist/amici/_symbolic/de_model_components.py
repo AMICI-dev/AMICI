@@ -6,8 +6,8 @@ from typing import SupportsFloat
 
 import sympy as sp
 
-from .constants import SymbolId
-from .importers.utils import (
+from amici.constants import SymbolId
+from amici.importers.utils import (
     RESERVED_SYMBOLS,
     ObservableTransformation,
     amici_time_symbol,

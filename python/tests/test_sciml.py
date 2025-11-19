@@ -375,8 +375,8 @@ class TestProcessHybridizationErrors:
     def mock_de_model(self):
         """Create a mock DEModel instance for testing."""
         import sympy as sp
-        from amici.de_model import DEModel
-        from amici.de_model_components import (
+        from amici._symbolic.de_model import DEModel
+        from amici._symbolic.de_model_components import (
             DifferentialState,
             Expression,
             FreeParameter,

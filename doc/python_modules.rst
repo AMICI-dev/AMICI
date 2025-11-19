@@ -29,8 +29,6 @@ AMICI Python API
    amici.importers.petab.v1.simulator
    amici.jax
    amici.exporters.sundials.de_export
-   amici.de_model
-   amici.de_model_components
    amici.plotting
    amici.pandas
    amici.logging

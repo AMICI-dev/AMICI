@@ -8,8 +8,7 @@ on:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
       - python/sdist/amici/exporters/sundials/de_export.py
-      - python/sdist/amici/de_model_components.py
-      - python/sdist/amici/de_model.py
+      - python/sdist/amici/_symbolic/**
       - python/sdist/amici/importers/sbml/**
       - python/sdist/amici/importers/utils.py
       - scripts/run-SBMLTestsuite.sh

@@ -16,6 +16,22 @@ import numpy as np
 import sympy as sp
 from sympy import ImmutableDenseMatrix, MutableDenseMatrix
 
+from amici.exporters.sundials.cxx_functions import (
+    nobody_functions,
+    sensi_functions,
+    sparse_functions,
+    var_in_function_signature,
+)
+from amici.exporters.sundials.cxxcodeprinter import csc_matrix
+from amici.importers.utils import (
+    ObservableTransformation,
+    _default_simplify,
+    amici_time_symbol,
+    toposort_symbols,
+    unique_preserve_order,
+)
+from amici.logging import get_logger, log_execution_time, set_log_level
+
 from .de_model_components import (
     AlgebraicEquation,
     AlgebraicState,
@@ -39,21 +55,6 @@ from .de_model_components import (
     SigmaZ,
     State,
 )
-from .exporters.sundials.cxx_functions import (
-    nobody_functions,
-    sensi_functions,
-    sparse_functions,
-    var_in_function_signature,
-)
-from .exporters.sundials.cxxcodeprinter import csc_matrix
-from .importers.utils import (
-    ObservableTransformation,
-    _default_simplify,
-    amici_time_symbol,
-    toposort_symbols,
-    unique_preserve_order,
-)
-from .logging import get_logger, log_execution_time, set_log_level
 from .sympy_utils import (
     _parallel_applyfunc,
     smart_is_zero_matrix,

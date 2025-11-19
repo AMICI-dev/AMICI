@@ -10,9 +10,18 @@ from typing import Any
 
 import sympy as sp
 
-from .logging import get_logger, log_execution_time
+from amici.logging import get_logger, log_execution_time
 
 logger = get_logger(__name__, logging.ERROR)
+
+__all__ = [
+    "smart_jacobian",
+    "smart_multiply",
+    "smart_is_zero_matrix",
+    "_monkeypatch_sympy",
+    "_parallel_applyfunc",
+    "_piecewise_to_minmax",
+]
 
 
 def _custom_pow_eval_derivative(self, s):
