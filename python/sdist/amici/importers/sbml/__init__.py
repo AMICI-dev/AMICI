@@ -5,6 +5,8 @@ This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <https://sbml.org/>`_.
 """
 
+from __future__ import annotations
+
 import contextlib
 import copy
 import itertools as itt
@@ -29,7 +31,7 @@ from sympy.logic.boolalg import Boolean, BooleanFalse, BooleanTrue
 from sympy.matrices.dense import MutableDenseMatrix
 
 import amici
-from amici import get_model_dir, has_clibs
+from amici import get_model_dir
 from amici._symbolic.de_model import DEModel
 from amici._symbolic.de_model_components import (
     DifferentialState,
@@ -432,6 +434,8 @@ class SbmlImporter:
             ) from e
 
         if compile:
+            from amici.sim.sundials import has_clibs
+
             if not has_clibs:
                 warnings.warn(
                     "AMICI C++ extensions have not been built. "

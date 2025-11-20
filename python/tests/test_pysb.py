@@ -16,11 +16,19 @@ import numpy as np
 import pysb.examples  # noqa: F811
 import pytest
 import sympy as sp
-from amici import ParameterScaling, parameter_scaling_from_int_vector
+from amici import MeasurementChannel, import_model_module
 from amici._symbolic.de_model_components import Event
-from amici.gradient_check import check_derivatives
 from amici.importers.pysb import pysb2amici
 from amici.importers.utils import amici_time_symbol
+from amici.sim.sundials import (
+    ExpData,
+    ParameterScaling,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+    parameter_scaling_from_int_vector,
+    run_simulation,
+)
+from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
 from pysb.simulator import ScipyOdeSimulator
@@ -189,13 +197,13 @@ def test_compare_to_pysb_simulation(example):
                     compute_conservation_laws=compute_conservation_laws,
                     observation_model=list(
                         map(
-                            amici.MeasurementChannel,
+                            MeasurementChannel,
                             pysb_model.observables.keys(),
                         )
                     ),
                 )
 
-                amici_model_module = amici.import_model_module(
+                amici_model_module = import_model_module(
                     pysb_model.name, outdir
                 )
                 model_pysb = amici_model_module.get_model()
@@ -205,7 +213,7 @@ def test_compare_to_pysb_simulation(example):
                 solver.set_max_steps(int(1e6))
                 solver.set_absolute_tolerance(atol)
                 solver.set_relative_tolerance(rtol)
-                rdata = amici.run_simulation(model_pysb, solver)
+                rdata = run_simulation(model_pysb, solver)
 
                 # check agreement of species simulations
                 assert np.isclose(
@@ -257,11 +265,11 @@ def get_data(model):
     solver = model.create_solver()
     model.set_timepoints(np.linspace(0, 60, 61))
     model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+        SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
-    rdata = amici.run_simulation(model, solver)
-    edata = amici.ExpData(rdata, 0.1, 0.0)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 0.1, 0.0)
     edata.t_presim = 2
     edata.fixed_parameters = [10, 2]
     edata.fixed_parameters_presimulation = [3, 2]
@@ -272,13 +280,13 @@ def get_data(model):
 
 def get_results(model, edata):
     solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
     edata.reinitialize_fixed_parameter_initial_states = True
     model.set_timepoints(np.linspace(0, 60, 61))
     model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+        SteadyStateSensitivityMode.integrateIfNewtonFails
     )
-    return amici.run_simulation(model, solver, edata)
+    return run_simulation(model, solver, edata)
 
 
 @skip_on_valgrind
@@ -349,7 +357,7 @@ def test_heaviside_and_special_symbols():
             model,
             outdir,
             verbose=True,
-            observation_model=[amici.MeasurementChannel("a")],
+            observation_model=[MeasurementChannel("a")],
         )
 
         assert amici_model.ne
@@ -381,7 +389,7 @@ def test_energy():
     with TemporaryDirectoryWinSafe(prefix=model_pysb.name) as outdir:
         pysb2amici(model_pysb, output_dir=outdir)
 
-        model_module = amici.import_model_module(
+        model_module = import_model_module(
             module_name=model_pysb.name, module_path=outdir
         )
         amici_model = model_module.get_model()
@@ -422,12 +430,12 @@ def test_pysb_event(tempdir):
         model,
         outdir,
         verbose=True,
-        observation_model=[amici.MeasurementChannel("a")],
+        observation_model=[MeasurementChannel("a")],
         compute_conservation_laws=False,
         _events=events,
     )
 
-    model_module = amici.import_model_module(
+    model_module = import_model_module(
         module_name=model.name, module_path=outdir
     )
     amici_model = model_module.get_model()

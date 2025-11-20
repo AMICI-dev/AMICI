@@ -1,5 +1,7 @@
 """PEtab conditions to AMICI ExpDatas."""
 
+from __future__ import annotations
+
 import logging
 import numbers
 import warnings
@@ -17,8 +19,11 @@ from petab.v1.C import (
     TIME,
 )
 
-import amici
-from amici import AmiciModel
+from amici.sim.sundials import (
+    AmiciModel,
+    ExpData,
+    parameter_scaling_from_int_vector,
+)
 
 from .parameter_mapping import (
     ParameterMapping,
@@ -36,7 +41,7 @@ SingleScaleMapping = dict[str, str]
 
 
 def fill_in_parameters(
-    edatas: list[amici.ExpData],
+    edatas: list[ExpData],
     problem_parameters: dict[str, numbers.Number],
     scaled_parameters: bool,
     parameter_mapping: ParameterMapping,
@@ -46,7 +51,7 @@ def fill_in_parameters(
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
     :param edatas:
-        List of experimental datas :class:`amici.amici.ExpData` with
+        List of experimental datas :class:`ExpData` with
         everything except parameters filled.
     :param problem_parameters:
         Problem parameters as parameterId=>value dict. Only
@@ -90,7 +95,7 @@ def fill_in_parameters(
 
 
 def fill_in_parameters_for_condition(
-    edata: amici.ExpData,
+    edata: ExpData,
     problem_parameters: dict[str, numbers.Number],
     scaled_parameters: bool,
     parameter_mapping: ParameterMappingForCondition,
@@ -205,7 +210,7 @@ def fill_in_parameters_for_condition(
         edata.free_parameters = np.asarray(parameters, dtype=float)
 
     if scales:
-        edata.pscale = amici.parameter_scaling_from_int_vector(scales)
+        edata.pscale = parameter_scaling_from_int_vector(scales)
 
     if plist:
         edata.plist = plist
@@ -237,8 +242,8 @@ def create_parameterized_edatas(
     parameter_mapping: ParameterMapping = None,
     simulation_conditions: pd.DataFrame | dict = None,
     warn_unused: bool = True,
-) -> list[amici.ExpData]:
-    """Create list of :class:amici.ExpData objects with parameters filled in.
+) -> list[ExpData]:
+    """Create list of :class:ExpData objects with parameters filled in.
 
     :param amici_model:
         AMICI Model assumed to be compatible with ``petab_problem``.
@@ -265,7 +270,7 @@ def create_parameterized_edatas(
         mapping.
 
     :return:
-        List with one :class:`amici.amici.ExpData` per simulation condition,
+        List with one :class:`ExpData` per simulation condition,
         with filled in timepoints, data and parameters.
     """
     # number of amici simulations will be number of unique
@@ -313,8 +318,8 @@ def create_edata_for_condition(
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
     observable_ids: list[str],
-) -> amici.ExpData:
-    """Get :class:`amici.amici.ExpData` for the given PEtab condition.
+) -> ExpData:
+    """Get :class:`ExpData` for the given PEtab condition.
 
     Sets timepoints, observed data and sigmas.
 
@@ -340,7 +345,7 @@ def create_edata_for_condition(
         )
 
     # create an ExpData object
-    edata = amici.ExpData(amici_model)
+    edata = ExpData(amici_model)
     edata.id = condition[SIMULATION_CONDITION_ID]
     if condition.get(PREEQUILIBRATION_CONDITION_ID):
         edata.id += "+" + condition.get(PREEQUILIBRATION_CONDITION_ID)
@@ -394,8 +399,8 @@ def create_edatas(
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
     simulation_conditions: pd.DataFrame | dict = None,
-) -> list[amici.ExpData]:
-    """Create list of :class:`amici.amici.ExpData` objects for PEtab problem.
+) -> list[ExpData]:
+    """Create list of :class:`ExpData` objects for PEtab problem.
 
     :param amici_model:
         AMICI model.
@@ -406,7 +411,7 @@ def create_edatas(
         save time if this has be obtained before.
 
     :return:
-        List with one :class:`amici.amici.ExpData` per simulation condition,
+        List with one :class:`ExpData` per simulation condition,
         with filled in timepoints and data, but without parameter values
         (see :func:`create_parameterized_edatas` or
         :func:`fill_in_parameters` for that).
@@ -431,7 +436,7 @@ def create_edatas(
 
     edatas = []
     for _, condition in simulation_conditions.iterrows():
-        # Create amici.ExpData for each simulation
+        # Create ExpData for each simulation
         if PREEQUILIBRATION_CONDITION_ID in condition:
             measurement_index = (
                 condition.get(SIMULATION_CONDITION_ID),

@@ -7,7 +7,9 @@ pysb = pytest.importorskip("pysb")
 
 from contextlib import suppress
 
+from amici import import_model_module
 from amici.importers.bngl import bngl2amici
+from amici.sim.sundials import run_simulation
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from pysb.importers.bngl import model_from_bngl
 from pysb.simulator import ScipyOdeSimulator
@@ -40,7 +42,6 @@ tests = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", tests)
 def test_compare_to_pysb_simulation(example):
-    import amici
     from amici.importers.utils import RESERVED_SYMBOLS, MeasurementChannel
 
     # allow "NULL" as model symbol
@@ -95,7 +96,7 @@ def test_compare_to_pysb_simulation(example):
         else:
             bngl2amici(model_file, outdir, **kwargs)
 
-        amici_model_module = amici.import_model_module(pysb_model.name, outdir)
+        amici_model_module = import_model_module(pysb_model.name, outdir)
 
         model_amici = amici_model_module.get_model()
 
@@ -105,7 +106,7 @@ def test_compare_to_pysb_simulation(example):
         solver.set_max_steps(10**6)
         solver.set_absolute_tolerance(atol)
         solver.set_relative_tolerance(rtol)
-        rdata = amici.run_simulation(model_amici, solver)
+        rdata = run_simulation(model_amici, solver)
 
         # check agreement of species simulation
         assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()

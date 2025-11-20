@@ -3,6 +3,8 @@
 Functions for PEtab import that are independent of the model format.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import re

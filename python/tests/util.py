@@ -4,19 +4,19 @@ import sys
 import tempfile
 from pathlib import Path
 
-import amici
 import numpy as np
 import pandas as pd
-from amici import (
+from amici import import_model_module
+from amici.importers.sbml import SbmlImporter
+from amici.sim.sundials import (
+    AMICI_SUCCESS,
     AmiciModel,
     ExpData,
-    SbmlImporter,
     SensitivityMethod,
     SensitivityOrder,
-    import_model_module,
     run_simulation,
 )
-from amici.gradient_check import _check_close
+from amici.sim.sundials.gradient_check import _check_close
 from numpy.testing import assert_allclose
 
 
@@ -99,7 +99,7 @@ def check_trajectories_with_adjoint_sensitivities(
     # First compute dummy experimental data to use adjoints
     solver = amici_model.create_solver()
     rdata = run_simulation(amici_model, solver=solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    assert rdata.status == AMICI_SUCCESS
     rng_seed = 42
     edata = ExpData(rdata, 1.0, 1.0, rng_seed)
 
@@ -109,7 +109,7 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.set_absolute_tolerance(1e-15)
     solver.set_relative_tolerance(1e-13)
     rdata_fsa = run_simulation(amici_model, solver=solver, edata=edata)
-    assert rdata_fsa.status == amici.AMICI_SUCCESS
+    assert rdata_fsa.status == AMICI_SUCCESS
 
     # ASA
     solver.set_sensitivity_method(SensitivityMethod.adjoint)
@@ -120,7 +120,7 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.set_absolute_tolerance_quadratures(1e-14)
     solver.set_relative_tolerance_quadratures(1e-8)
     rdata_asa = run_simulation(amici_model, solver=solver, edata=edata)
-    assert rdata_asa.status == amici.AMICI_SUCCESS
+    assert rdata_asa.status == AMICI_SUCCESS
 
     assert_allclose(rdata_fsa.x, rdata_asa.x, atol=1e-14, rtol=1e-10)
     assert_allclose(rdata_fsa.llh, rdata_asa.llh, atol=1e-14, rtol=1e-10)

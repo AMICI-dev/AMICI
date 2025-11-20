@@ -5,6 +5,7 @@ import random
 
 import amici
 import pytest
+from amici.sim.sundials import RDataReporting
 
 
 def _modify_solver_attrs(solver):
@@ -20,7 +21,7 @@ def _modify_solver_attrs(solver):
         elif attr == "set_stability_limit_flag":
             cval = 0
         elif attr == "set_return_data_reporting_mode":
-            cval = amici.RDataReporting.likelihood
+            cval = RDataReporting.likelihood
         elif attr == "set_max_time":
             # default value is the maximum, must not add to that
             cval = random.random()
@@ -35,10 +36,15 @@ def _modify_solver_attrs(solver):
 
 
 @pytest.mark.skipif(
-    not amici.hdf5_enabled, reason="AMICI was compiled without HDF5"
+    not amici.sim.sundials.hdf5_enabled,
+    reason="AMICI was compiled without HDF5",
 )
 def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
     """TestCase class for AMICI HDF5 I/O"""
+    from amici.sim.sundials import (
+        read_solver_settings_from_hdf5,
+        write_solver_settings_to_hdf5,
+    )
 
     model = sbml_example_presimulation_module.get_model()
     solver = model.create_solver()
@@ -46,7 +52,7 @@ def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
 
     hdf5file = "solverSettings.hdf5"
 
-    amici.write_solver_settings_to_hdf5(solver, hdf5file, "ssettings")
+    write_solver_settings_to_hdf5(solver, hdf5file, "ssettings")
 
     new_solver = model.create_solver()
 
@@ -60,7 +66,7 @@ def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
             != getattr(new_solver, attr.replace("set", "get"))()
         ), attr
 
-    amici.read_solver_settings_from_hdf5(hdf5file, new_solver, "ssettings")
+    read_solver_settings_from_hdf5(hdf5file, new_solver, "ssettings")
 
     # check that reading in settings worked
     for attr in dir(solver):

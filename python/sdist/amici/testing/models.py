@@ -7,12 +7,11 @@ from pathlib import Path
 import libsbml
 import sympy as sp
 
-from amici import AmiciModel, MeasurementChannel, SbmlImporter
+from amici import MeasurementChannel, SbmlImporter, import_model_module
+from amici.importers.antimony import antimony2amici, antimony2sbml
 from amici.importers.sbml.splines import CubicHermiteSpline
 from amici.importers.utils import amici_time_symbol
-
-from .. import Model, import_model_module
-from ..importers.antimony import antimony2amici, antimony2sbml
+from amici.sim.sundials import AmiciModel, Model
 
 model_dirac_ant = r"""
 p1 = 1;

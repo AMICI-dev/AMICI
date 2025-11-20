@@ -12,7 +12,6 @@ import numpy as np
 import pytest
 import sympy as sp
 from amici import import_model_module
-from amici.gradient_check import check_derivatives
 from amici.importers.antimony import antimony2sbml
 from amici.importers.sbml import SbmlImporter, SymbolId
 from amici.importers.utils import (
@@ -21,6 +20,29 @@ from amici.importers.utils import (
 from amici.importers.utils import (
     symbol_with_assumptions,
 )
+from amici.sim.sundials import (
+    AMICI_ERROR,
+    AMICI_SUCCESS,
+    Constraint,
+    ExpData,
+    ExpDataView,
+    ModelModule,
+    ParameterScaling,
+    ReturnDataView,
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+    get_data_observables_as_data_frame,
+    get_edata_from_data_frame,
+    get_expressions_as_dataframe,
+    get_residuals_as_data_frame,
+    get_simulation_observables_as_data_frame,
+    get_simulation_states_as_data_frame,
+    parameter_scaling_from_int_vector,
+    run_simulation,
+    run_simulations,
+)
+from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
@@ -114,6 +136,7 @@ def test_nosensi(tempdir):
         observation_model=None,
         compute_conservation_laws=False,
         generate_sensitivity_code=False,
+        verbose=True,
     )
 
     model_module = amici.import_model_module(
@@ -123,7 +146,7 @@ def test_nosensi(tempdir):
     model = model_module.get_model()
     model.set_timepoints(np.linspace(0, 60, 61))
     rdata = model.simulate(sensi_order="first", sensi_method="forward")
-    assert rdata.status == amici.AMICI_ERROR
+    assert rdata.status == AMICI_ERROR
 
 
 @pytest.fixture(scope="session")
@@ -175,7 +198,7 @@ def test_sbml2amici_observable_dependent_error(
     solver = model.create_solver()
 
     # generate artificial data
-    rdata = amici.run_simulation(model, solver)
+    rdata = run_simulation(model, solver)
     assert_allclose(
         rdata.sigmay[:, 0],
         0.1 + 0.05 * rdata.y[:, 0],
@@ -185,18 +208,18 @@ def test_sbml2amici_observable_dependent_error(
     assert_allclose(
         rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1], rtol=1.0e-5, atol=1.0e-8
     )
-    edata = amici.ExpData(rdata, 1.0, 0.0)
+    edata = ExpData(rdata, 1.0, 0.0)
     edata.set_observed_data_std_dev(np.nan)
 
     # check sensitivities
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
     # FSA
-    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-    rdata = amici.run_simulation(model, solver, edata)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
     assert np.any(rdata.ssigmay != 0.0)
     check_derivatives(model, solver, edata)
     # ASA
-    solver.set_sensitivity_method(amici.SensitivityMethod.adjoint)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
     check_derivatives(model, solver, edata)
 
 
@@ -211,8 +234,8 @@ def test_logging_works(observable_dependent_error_model, caplog):
     # this will prematurely stop the simulation
     solver.set_max_steps(1)
 
-    rdata = amici.run_simulation(model, solver)
-    assert rdata.status != amici.AMICI_SUCCESS
+    rdata = run_simulation(model, solver)
+    assert rdata.status != AMICI_SUCCESS
     assert "mxstep steps taken" in caplog.text
 
 
@@ -220,7 +243,7 @@ def test_logging_works(observable_dependent_error_model, caplog):
 def test_model_module_is_set(observable_dependent_error_model):
     model_module = observable_dependent_error_model
     assert model_module.get_model().module is model_module
-    assert isinstance(model_module.get_model().module, amici.ModelModule)
+    assert isinstance(model_module.get_model().module, ModelModule)
 
 
 @pytest.fixture(scope="session")
@@ -260,19 +283,17 @@ def test_presimulation(sbml_example_presimulation_module):
     solver = model.create_solver()
     model.set_timepoints(np.linspace(0, 60, 61))
     model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+        SteadyStateSensitivityMode.integrationOnly
     )
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
     model.set_reinitialize_fixed_parameter_initial_states(True)
 
-    rdata = amici.run_simulation(model, solver)
-    edata = amici.ExpData(rdata, 0.1, 0.0)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 0.1, 0.0)
     edata.fixed_parameters = [10, 2]
     edata.fixed_parameters_presimulation = [10, 2]
     edata.fixed_parameters_pre_equilibration = [3, 0]
-    assert isinstance(
-        amici.run_simulation(model, solver, edata), amici.ReturnDataView
-    )
+    assert isinstance(run_simulation(model, solver, edata), ReturnDataView)
 
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
@@ -313,15 +334,15 @@ def test_presimulation_events(tempdir):
 
     model = model_module.get_model()
     model.set_timepoints([0, 1, 2])
-    edata = amici.ExpData(model)
+    edata = ExpData(model)
     edata.t_presim = 2
     edata.fixed_parameters_presimulation = [1]
     edata.fixed_parameters = [0]
     solver = model.create_solver()
 
     # generate artificial data
-    rdata = amici.run_simulation(model, solver, edata)
-    edata_tmp = amici.ExpData(rdata, 1, 0)
+    rdata = run_simulation(model, solver, edata)
+    edata_tmp = ExpData(rdata, 1, 0)
     edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
     edata.set_observed_data(edata_tmp.get_observed_data())
     edata.set_observed_data_std_dev(edata_tmp.get_observed_data_std_dev())
@@ -333,18 +354,18 @@ def test_presimulation_events(tempdir):
         for ip, p in enumerate(model.get_free_parameter_ids())
         if p != "t_initial_presim"
     ]
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     for sensi_method in (
-        amici.SensitivityMethod.forward,
+        SensitivityMethod.forward,
         # FIXME: test with adjoints. currently there is some CVodeF issue
         #  that fails forward simulation with adjoint sensitivities
-        # amici.SensitivityMethod.adjoint,
+        # SensitivityMethod.adjoint,
     ):
         solver.set_sensitivity_method(sensi_method)
-        rdata = amici.run_simulation(model, solver, edata)
+        rdata = run_simulation(model, solver, edata)
 
-        assert rdata.status == amici.AMICI_SUCCESS
+        assert rdata.status == AMICI_SUCCESS
         assert_allclose(
             rdata.by_id("some_time"), np.array([0, 1, 2]) + 0.1, atol=1e-14
         )
@@ -396,27 +417,27 @@ def test_presimulation_events_and_sensitivities(tempdir):
     )
 
     model.set_timepoints([0, 1, 2])
-    edata = amici.ExpData(model)
+    edata = ExpData(model)
     edata.t_presim = 2
     solver = model.create_solver()
 
     # generate artificial data
-    rdata = amici.run_simulation(model, solver, edata)
-    edata_tmp = amici.ExpData(rdata, 1, 0)
+    rdata = run_simulation(model, solver, edata)
+    edata_tmp = ExpData(rdata, 1, 0)
     edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
     edata.set_observed_data(edata_tmp.get_observed_data())
     edata.set_observed_data_std_dev(edata_tmp.get_observed_data_std_dev())
 
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     for sensi_method in (
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ):
         solver.set_sensitivity_method(sensi_method)
-        rdata = amici.run_simulation(model, solver, edata)
+        rdata = run_simulation(model, solver, edata)
 
-        assert rdata.status == amici.AMICI_SUCCESS
+        assert rdata.status == AMICI_SUCCESS
         assert_allclose(
             rdata.by_id("some_time"), np.array([0, 1, 2]) + 1.1, atol=1e-14
         )
@@ -436,29 +457,29 @@ def test_steadystate_simulation(model_steadystate_module):
     model = model_steadystate_module.get_model()
     model.set_timepoints(np.linspace(0, 60, 60))
     solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
-    rdata = amici.run_simulation(model, solver)
-    edata = [amici.ExpData(rdata, 1, 0)]
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    edata = [ExpData(rdata, 1, 0)]
     edata[0].id = "some condition ID"
-    rdata = amici.run_simulations(model, solver, edata)
+    rdata = run_simulations(model, solver, edata)
 
-    assert rdata[0].status == amici.AMICI_SUCCESS
+    assert rdata[0].status == AMICI_SUCCESS
     assert rdata[0].id == edata[0].id
 
     # check roundtripping of DataFrame conversion
-    df_edata = amici.get_data_observables_as_data_frame(model, edata)
-    edata_reconstructed = amici.get_edata_from_data_frame(model, df_edata)
+    df_edata = get_data_observables_as_data_frame(model, edata)
+    edata_reconstructed = get_edata_from_data_frame(model, df_edata)
 
     assert_allclose(
-        amici.ExpDataView(edata[0])["observed_data"],
-        amici.ExpDataView(edata_reconstructed[0])["observed_data"],
+        ExpDataView(edata[0])["observed_data"],
+        ExpDataView(edata_reconstructed[0])["observed_data"],
         rtol=1.0e-5,
         atol=1.0e-8,
     )
 
     assert_allclose(
-        amici.ExpDataView(edata[0])["observed_data_std_dev"],
-        amici.ExpDataView(edata_reconstructed[0])["observed_data_std_dev"],
+        ExpDataView(edata[0])["observed_data_std_dev"],
+        ExpDataView(edata_reconstructed[0])["observed_data_std_dev"],
         rtol=1.0e-5,
         atol=1.0e-8,
     )
@@ -477,7 +498,7 @@ def test_steadystate_simulation(model_steadystate_module):
         edata_reconstructed[0].fixed_parameters_pre_equilibration
     )
 
-    df_state = amici.get_simulation_states_as_data_frame(model, edata, rdata)
+    df_state = get_simulation_states_as_data_frame(model, edata, rdata)
     assert_allclose(
         rdata[0]["x"],
         df_state[list(model.get_state_ids())].values,
@@ -485,18 +506,16 @@ def test_steadystate_simulation(model_steadystate_module):
         atol=1.0e-8,
     )
 
-    df_obs = amici.get_simulation_observables_as_data_frame(
-        model, edata, rdata
-    )
+    df_obs = get_simulation_observables_as_data_frame(model, edata, rdata)
     assert_allclose(
         rdata[0]["y"],
         df_obs[list(model.get_observable_ids())].values,
         rtol=1.0e-5,
         atol=1.0e-8,
     )
-    amici.get_residuals_as_data_frame(model, edata, rdata)
+    get_residuals_as_data_frame(model, edata, rdata)
 
-    df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
+    df_expr = get_expressions_as_dataframe(model, edata, rdata)
     assert_allclose(
         rdata[0]["w"],
         df_expr[list(model.get_expression_ids())].values,
@@ -519,19 +538,19 @@ def test_solver_reuse(model_steadystate_module):
     model = model_steadystate_module.get_model()
     model.set_timepoints(np.linspace(0, 60, 60))
     solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
-    rdata = amici.run_simulation(model, solver)
-    edata = amici.ExpData(rdata, 1, 0)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 1, 0)
 
     for sensi_method in (
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ):
         solver.set_sensitivity_method(sensi_method)
-        rdata1 = amici.run_simulation(model, solver, edata)
-        rdata2 = amici.run_simulation(model, solver, edata)
+        rdata1 = run_simulation(model, solver, edata)
+        rdata2 = run_simulation(model, solver, edata)
 
-        assert rdata1.status == amici.AMICI_SUCCESS
+        assert rdata1.status == AMICI_SUCCESS
 
         for attr in rdata1:
             if "time" in attr or attr == "messages":
@@ -592,16 +611,16 @@ def test_likelihoods(model_test_likelihoods):
     model = model_test_likelihoods.get_model()
     model.set_timepoints(np.linspace(0, 60, 60))
     solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     # run model once to create an edata
 
     rdata = model.simulate(solver=solver)
     sigmas = rdata["y"].max(axis=0) * 0.05
-    edata = amici.ExpData(rdata, sigmas, [])
+    edata = ExpData(rdata, sigmas, [])
     # just make all observables positive since some are logarithmic
     while min(edata.get_observed_data()) < 0:
-        edata = amici.ExpData(rdata, sigmas, [])
+        edata = ExpData(rdata, sigmas, [])
 
     # and now run for real and also compute likelihood values
     rdata = model.simulate(solver=solver, edata=[edata])[0]
@@ -611,12 +630,10 @@ def test_likelihoods(model_test_likelihoods):
     assert np.all(np.isfinite(rdata["sllh"]))
     assert np.any(rdata["sllh"])
 
-    rdata_df = amici.get_simulation_observables_as_data_frame(
+    rdata_df = get_simulation_observables_as_data_frame(
         model, edata, rdata, by_id=True
     )
-    edata_df = amici.get_data_observables_as_data_frame(
-        model, edata, by_id=True
-    )
+    edata_df = get_data_observables_as_data_frame(model, edata, by_id=True)
 
     # check correct likelihood value
     llh_exp = -sum(
@@ -634,12 +651,12 @@ def test_likelihoods(model_test_likelihoods):
 
     # check gradient
     for sensi_method in [
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ]:
         solver = model.create_solver()
         solver.set_sensitivity_method(sensi_method)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         solver.set_relative_tolerance(1e-12)
         solver.set_absolute_tolerance(1e-12)
         check_derivatives(
@@ -682,8 +699,8 @@ def test_units(model_units_module):
     model.set_timepoints(np.linspace(0, 1, 101))
     solver = model.create_solver()
 
-    rdata = amici.run_simulation(model, solver)
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    rdata = run_simulation(model, solver)
+    assert rdata["status"] == AMICI_SUCCESS
 
 
 @skip_on_valgrind
@@ -715,24 +732,24 @@ def test_sympy_exp_monkeypatch(tempdir):
     model.require_sensitivities_for_all_parameters()
     model.set_always_check_finite(True)
     model.set_parameter_scale(
-        amici.parameter_scaling_from_int_vector(
+        parameter_scaling_from_int_vector(
             [
-                amici.ParameterScaling.none
+                ParameterScaling.none
                 if re.match(r"n[0-9]+$", par_id)
-                else amici.ParameterScaling.log10
+                else ParameterScaling.log10
                 for par_id in model.get_free_parameter_ids()
             ]
         )
     )
 
     solver = model.create_solver()
-    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
-    rdata = amici.run_simulation(model, solver)
+    rdata = run_simulation(model, solver)
 
     # print sensitivity-related results
-    assert rdata.status == amici.AMICI_SUCCESS
+    assert rdata.status == AMICI_SUCCESS
     check_derivatives(model, solver, None, atol=1e-2, rtol=1e-2, epsilon=1e-3)
 
 
@@ -875,7 +892,6 @@ def test_hardcode_parameters():
 
 def test_constraints(tempdir):
     """Test non-negativity constraint handling."""
-    from amici import Constraint
     from amici.importers.antimony import antimony2amici
 
     ant_model = """
@@ -900,8 +916,8 @@ def test_constraints(tempdir):
     amici_model = model_module.get_model()
     amici_model.set_timepoints(np.linspace(0, 100, 200))
     amici_solver = amici_model.create_solver()
-    rdata = amici.run_simulation(amici_model, amici_solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    rdata = run_simulation(amici_model, amici_solver)
+    assert rdata.status == AMICI_SUCCESS
     # should be non-negative in theory, but is expected to become negative
     #  in practice
     assert np.any(rdata.x < 0)
@@ -910,8 +926,8 @@ def test_constraints(tempdir):
     amici_solver.set_constraints(
         [Constraint.non_negative, Constraint.non_negative]
     )
-    rdata = amici.run_simulation(amici_model, amici_solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    rdata = run_simulation(amici_model, amici_solver)
+    assert rdata.status == AMICI_SUCCESS
     assert np.all(rdata.x >= 0)
     assert np.all(
         np.sum(rdata.x, axis=1) - np.sum(rdata.x[0])
@@ -1027,7 +1043,7 @@ def test_regression_2642(tempdir):
     model = module.get_model()
     solver = model.create_solver()
     model.set_timepoints(np.linspace(0, 1, 3))
-    r = amici.run_simulation(model, solver)
+    r = run_simulation(model, solver)
     assert (
         len(np.unique(r.w[:, model.get_expression_ids().index("binding")]))
         == 1
@@ -1124,7 +1140,7 @@ def test_t0(tempdir):
     model.set_t0(2)
 
     solver = model.create_solver()
-    rdata = amici.run_simulation(model, solver)
+    rdata = run_simulation(model, solver)
     assert rdata.x == [[2.0]], rdata.x
 
 

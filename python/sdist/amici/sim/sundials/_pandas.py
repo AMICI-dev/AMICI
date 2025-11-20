@@ -5,6 +5,8 @@ This module contains convenience wrappers that allow for easy interconversion
 between C++ objects from :mod:`amici.amici` and pandas DataFrames
 """
 
+from __future__ import annotations
+
 import copy
 import math
 from typing import SupportsFloat
@@ -12,9 +14,16 @@ from typing import SupportsFloat
 import numpy as np
 import pandas as pd
 
-import amici
-
-from .numpy import ExpDataView
+from . import (
+    ExpData,
+    ExpDataPtr,
+    ExpDataView,
+    Model,
+    ModelPtr,
+    ParameterScaling,
+    ReturnDataView,
+    parameter_scaling_from_int_vector,
+)
 
 __all__ = [
     "get_expressions_as_dataframe",
@@ -25,22 +34,17 @@ __all__ = [
     "get_residuals_as_data_frame",
 ]
 
-ExpDatas = (
-    list[amici.amici.ExpData]
-    | list[amici.ExpDataPtr]
-    | amici.amici.ExpData
-    | amici.ExpDataPtr
-)
+ExpDatas = list[ExpData] | list[ExpDataPtr] | ExpData | ExpDataPtr
 
-ReturnDatas = list[amici.ReturnDataView] | amici.ReturnDataView
+ReturnDatas = list[ReturnDataView] | ReturnDataView
 
-AmiciModel = amici.ModelPtr | amici.Model
+AmiciModel = ModelPtr | Model
 
 
-def _process_edata_list(edata_list: ExpDatas) -> list[amici.amici.ExpData]:
+def _process_edata_list(edata_list: ExpDatas) -> list[ExpData]:
     """
-    Maps single instances of :class:`amici.amici.ExpData` to lists of
-    :class:`amici.amici.ExpData`
+    Maps single instances of :class:`ExpData` to lists of
+    :class:`ExpData`
 
     :param edata_list:
         list of instances or single instance
@@ -48,16 +52,16 @@ def _process_edata_list(edata_list: ExpDatas) -> list[amici.amici.ExpData]:
     :return:
         list of instance(s)
     """
-    if isinstance(edata_list, (amici.amici.ExpData | amici.ExpDataPtr)):
+    if isinstance(edata_list, (ExpData | ExpDataPtr)):
         return [edata_list]
     else:
         return edata_list
 
 
-def _process_rdata_list(rdata_list: ReturnDatas) -> list[amici.ReturnDataView]:
+def _process_rdata_list(rdata_list: ReturnDatas) -> list[ReturnDataView]:
     """
-    Maps single instances of :class:`amici.ReturnData` to lists of
-    :class:`amici.ReturnData`
+    Maps single instances of :class:`ReturnData` to lists of
+    :class:`ReturnData`
 
     :param rdata_list:
         list of instances or single instance
@@ -65,7 +69,7 @@ def _process_rdata_list(rdata_list: ReturnDatas) -> list[amici.ReturnDataView]:
     :return:
         list of instance(s)
     """
-    if isinstance(rdata_list, amici.ReturnDataView):
+    if isinstance(rdata_list, ReturnDataView):
         return [rdata_list]
     else:
         return rdata_list
@@ -122,7 +126,7 @@ def get_data_observables_as_data_frame(
 
 
 def get_simulation_observables_as_data_frame(
-    model: amici.Model,
+    model: Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
     by_id: bool | None = False,
@@ -180,7 +184,7 @@ def get_simulation_observables_as_data_frame(
 
 
 def get_simulation_states_as_data_frame(
-    model: amici.Model,
+    model: Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
     by_id: bool | None = False,
@@ -236,7 +240,7 @@ def get_simulation_states_as_data_frame(
 
 
 def get_expressions_as_dataframe(
-    model: amici.Model,
+    model: Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
     by_id: bool | None = False,
@@ -292,7 +296,7 @@ def get_expressions_as_dataframe(
 
 
 def get_residuals_as_data_frame(
-    model: amici.Model,
+    model: Model,
     edata_list: ExpDatas,
     rdata_list: ReturnDatas,
     by_id: bool | None = False,
@@ -365,7 +369,7 @@ def get_residuals_as_data_frame(
 def _fill_conditions_dict(
     datadict: dict[str, float],
     model: AmiciModel,
-    edata: amici.amici.ExpData,
+    edata: ExpData,
     by_id: bool,
 ) -> dict[str, float]:
     """
@@ -681,7 +685,7 @@ def construct_edata_from_data_frame(
     model: AmiciModel,
     condition: pd.Series,
     by_id: bool | None = False,
-) -> amici.amici.ExpData:
+) -> ExpData:
     """
     Constructs an ExpData instance according to the provided Model
     and DataFrame.
@@ -709,7 +713,7 @@ def construct_edata_from_data_frame(
         ExpData instance.
     """
     # initialize edata
-    edata = amici.ExpData(model.get())
+    edata = ExpData(model.get())
 
     # timepoints
     df = df.sort_values(by="time", ascending=True)
@@ -742,9 +746,9 @@ def construct_edata_from_data_frame(
         .values
     )
 
-    edata.pscale = amici.parameter_scaling_from_int_vector(
+    edata.pscale = parameter_scaling_from_int_vector(
         [
-            amici.ParameterScaling(condition[par + "_scale"].astype(int))
+            ParameterScaling(condition[par + "_scale"].astype(int))
             for par in list(
                 _get_names_or_ids(model, "free_parameter", by_id=by_id)
             )
@@ -802,7 +806,7 @@ def construct_edata_from_data_frame(
 
 def get_edata_from_data_frame(
     model: AmiciModel, df: pd.DataFrame, by_id: bool | None = False
-) -> list[amici.amici.ExpData]:
+) -> list[ExpData]:
     """
     Constructs a ExpData instances according to the provided Model and
     DataFrame.

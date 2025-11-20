@@ -12,10 +12,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-import amici
-
-from . import Model, ReturnDataView
-from .numpy import StrOrExpr, evaluate
+from . import ExpData, ExpDataView, Model, ReturnDataView
+from ._numpy import StrOrExpr, evaluate
 
 __all__ = [
     "plot_state_trajectories",
@@ -38,7 +36,7 @@ def plot_state_trajectories(
 
     :param rdata:
         AMICI simulation results as returned by
-        :func:`amici.amici.runAmiciSimulation`.
+        :func:`run_amici_simulation`.
     :param state_indices:
         Indices of state variables for which trajectories are to be plotted.
     :param ax:
@@ -94,14 +92,14 @@ def plot_observable_trajectories(
     model: Model = None,
     prefer_names: bool = True,
     marker=None,
-    edata: amici.ExpData | amici.ExpDataView = None,
+    edata: ExpData | ExpDataView = None,
 ) -> None:
     """
     Plot observable trajectories.
 
     :param rdata:
         AMICI simulation results as returned by
-        :func:`amici.amici.run_simulation`.
+        :func:`run_simulation`.
     :param observable_indices:
         Indices of observables for which trajectories are to be plotted.
     :param ax:
@@ -116,8 +114,8 @@ def plot_observable_trajectories(
     :param edata:
         Experimental data to be plotted (no event observables yet).
     """
-    if isinstance(edata, amici.amici.ExpData):
-        edata = amici.ExpDataView(edata)
+    if isinstance(edata, ExpData):
+        edata = ExpDataView(edata)
 
     if not ax:
         fig, ax = plt.subplots()

@@ -1,5 +1,7 @@
 """PEtab-problem based simulations."""
 
+from __future__ import annotations
+
 import copy
 
 import pandas as pd

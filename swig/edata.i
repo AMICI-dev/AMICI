@@ -19,7 +19,7 @@ using namespace amici;
     :returns: ExpData Instance
     """
     if args:
-        from amici.numpy import ReturnDataView
+        from amici.sim.sundials._numpy import ReturnDataView
 
         # Get the raw pointer if necessary
         if isinstance(args[0], (ExpData, ExpDataPtr, Model, ModelPtr)):
@@ -103,7 +103,7 @@ def __deepcopy__(self, memo):
     return type(self)(self)
 
 def __reduce__(self):
-    from amici.swig_wrappers import restore_edata
+    from amici.sim.sundials._swig_wrappers import restore_edata
 
     return (
         restore_edata,

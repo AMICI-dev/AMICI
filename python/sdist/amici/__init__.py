@@ -135,49 +135,15 @@ amiciSwigPath = os.path.join(amici_path, "swig")
 amiciSrcPath = os.path.join(amici_path, "src")
 #: absolute root path of the amici module
 amiciModulePath = os.path.dirname(__file__)
-#: boolean indicating if this is the full package with swig interface or
-#  the raw package without extension
-has_clibs: bool = any(
-    os.path.isfile(os.path.join(amici_path, wrapper))
-    for wrapper in ["amici.py", "amici_without_hdf5.py"]
-)
-#: boolean indicating if amici was compiled with hdf5 support
-hdf5_enabled: bool = False
+
 
 # Get version number from file
-with open(os.path.join(amici_path, "version.txt")) as f:
+with open(os.path.join(amici_path, "_installation", "version.txt")) as f:
     __version__ = f.read().strip()
 
 __commit__ = _get_commit_hash()
 
-# Import SWIG module and swig-dependent submodules if required and available
 if not _imported_from_setup():
-    if has_clibs:
-        # prevent segfaults under pytest
-        #  see also:
-        #  https://github.com/swig/swig/issues/2881
-        #  https://github.com/AMICI-dev/AMICI/issues/2565
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=DeprecationWarning,
-                message="builtin type .* has no __module__ attribute",
-            )
-            from . import amici
-
-        from .amici import *
-
-        # has to be done before importing readSolverSettingsFromHDF5
-        #  from .swig_wrappers
-        hdf5_enabled = "readSolverSettingsFromHDF5" in dir()
-        # These modules require the swig interface and other dependencies
-        from .numpy import ExpDataView, ReturnDataView  # noqa: F401
-        from .pandas import *
-        from .swig_wrappers import *
-
-    # These modules don't require the swig interface
-    from typing import Protocol, runtime_checkable
-
     from .importers.sbml import (  # noqa: F401
         SbmlImporter,
         assignment_rules_to_observables,
@@ -188,20 +154,6 @@ if not _imported_from_setup():
         from .jax import JAXModel
     except (ImportError, ModuleNotFoundError):
         JAXModel = object
-
-    @runtime_checkable
-    class ModelModule(Protocol):  # noqa: F811
-        """Type of AMICI-generated model modules.
-
-        To enable static type checking."""
-
-        def get_model(self) -> amici.Model:
-            """Create a model instance."""
-            ...
-
-    AmiciModel = amici.Model | amici.ModelPtr
-else:
-    ModelModule = ModuleType
 
 
 class add_path:
@@ -260,6 +212,9 @@ def _module_from_path(module_name: str, module_path: Path | str) -> ModuleType:
     module._self = module
     spec.loader.exec_module(module)
     return module
+
+
+ModelModule = ModuleType
 
 
 def import_model_module(

@@ -7,11 +7,11 @@ import amici.importers.petab.v1.petab_import
 import amici.importers.petab.v1.simulations
 import numpy as np
 import pytest
-from amici import SensitivityOrder, SteadyStateSensitivityMode
 from amici.adapters.fiddy import (
     run_simulation_to_cached_functions,
     simulate_petab_to_cached_functions,
 )
+from amici.sim.sundials import SensitivityOrder, SteadyStateSensitivityMode
 from fiddy import MethodId, Type, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.success import Consistency

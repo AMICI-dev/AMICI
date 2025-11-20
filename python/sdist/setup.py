@@ -6,7 +6,7 @@ All sources are compiled anew.
 This file expects to be run from within its directory.
 
 Non-python-package requirements:
-- swig>=3.0
+- swig>=4.0
 - Optional: hdf5 libraries and headers
 """
 
@@ -36,7 +36,7 @@ def get_extensions():
     """Get required C(++) extensions for build_ext"""
     # CMake prefix path for finding FindXXX.cmake to find SuiteSparse
     #  components
-    install_dir = Path(__file__).parent / "amici"
+    install_dir = Path(__file__).parent / "amici" / "sim" / "sundials"
     prefix_path = install_dir.absolute()
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
 
@@ -55,8 +55,8 @@ def get_extensions():
     # SuiteSparse
     suitesparse = CMakeExtension(
         name="SuiteSparse",
-        install_prefix="amici",
-        source_dir="amici/ThirdParty/SuiteSparse",
+        install_prefix="amici/_installation",
+        source_dir="amici/_installation/ThirdParty/SuiteSparse",
         cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
@@ -84,13 +84,13 @@ def get_extensions():
     #  to use artifacts from other extensions here. `${build_dir}` will
     #  be replaced by the actual path by `AmiciBuildCMakeExtension`
     #  before being passed to CMake.
-    cmake_prefix_path.append("${build_dir}/amici")
+    cmake_prefix_path.append("${build_dir}/amici/_installation")
 
     # SUNDIALS
     sundials = CMakeExtension(
         name="sundials",
-        install_prefix="amici",
-        source_dir="amici/ThirdParty/sundials",
+        install_prefix="amici/_installation",
+        source_dir="amici/_installation/ThirdParty/sundials",
         cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
@@ -113,20 +113,22 @@ def get_extensions():
     try:
         import scipy_openblas64  # noqa: F401
 
-        cmake_prefix_path.append("${build_dir}/amici/lib/cmake/openblas")
+        cmake_prefix_path.append(
+            "${build_dir}/amici/_installation/lib/cmake/openblas"
+        )
     except ImportError:
         pass
 
     # AMICI
     amici_ext = CMakeExtension(
         name="amici",
-        install_prefix="amici",
-        source_dir="amici",
+        install_prefix="amici/_installation",
+        source_dir="amici/_installation",
         cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-Werror=dev"
-            # Turn warnings in to errors on GitHub Actions,
+            # Turn warnings into errors on GitHub Actions,
             #  match original repo and forks with default name
             if os.environ.get("GITHUB_REPOSITORY", "").endswith("/AMICI")
             else "-Wno-error=dev",
@@ -152,12 +154,12 @@ def get_extensions():
             binary_dir = Path(binary_dir)
             shutil.copytree(
                 scipy_openblas64.get_lib_dir(),
-                binary_dir / "amici" / "lib",
+                binary_dir / "amici" / "_installation" / "lib",
                 dirs_exist_ok=True,
             )
             shutil.copytree(
                 scipy_openblas64.get_include_dir(),
-                binary_dir / "amici" / "include",
+                binary_dir / "amici" / "_installation" / "include",
                 dirs_exist_ok=True,
             )
         except ImportError:

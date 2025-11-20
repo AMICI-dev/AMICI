@@ -47,7 +47,7 @@ jobs:
       - name: Test import
         shell: bash -l {0}
         run: |
-          python -c "from amici import _amici; print(_amici)"
+          python -c "from amici._installation import _amici; print(_amici)"
           python -m amici
       - name: Run SBML import test
         shell: bash -l {0}

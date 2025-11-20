@@ -4,15 +4,12 @@
 import logging
 import sys
 
-import amici
 import diffrax
 import pandas as pd
 import petab.v1 as petab
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
-from amici import SteadyStateSensitivityMode
-from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.importers.petab.v1 import (
     import_petab_problem,
     rdatas_to_measurement_df,
@@ -20,6 +17,16 @@ from amici.importers.petab.v1 import (
 )
 from amici.importers.petab.v1.conditions import create_parameterized_edatas
 from amici.logging import get_logger, set_log_level
+from amici.sim.sundials import (
+    Model,
+    SensitivityMethod,
+    SensitivityOrder,
+    Solver,
+    SteadyStateSensitivityMode,
+)
+from amici.sim.sundials.gradient_check import (
+    check_derivatives as amici_check_derivatives,
+)
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -187,8 +194,8 @@ def _test_case(case, model_type, version, jax):
 
 def check_derivatives(
     problem: petab.Problem,
-    model: amici.Model,
-    solver: amici.Solver,
+    model: Model,
+    solver: Solver,
     problem_parameters: dict[str, float],
 ) -> None:
     """Check derivatives using finite differences for all experimental
@@ -200,8 +207,8 @@ def check_derivatives(
         solver: AMICI solver
         problem_parameters: Dictionary of problem parameters
     """
-    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
     model.set_steady_state_sensitivity_mode(

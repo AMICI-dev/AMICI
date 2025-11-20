@@ -155,13 +155,13 @@ python/tests/piecewise_test/*
 
 python/sdist/amici.egg-info/*
 python/sdist/amici/version.txt
-python/sdist/amici/amici.py
-python/sdist/amici/amici_wrap.cxx
-python/sdist/amici/amici_without_hdf5.py
-python/sdist/amici/amici_wrap_without_hdf5.cxx
-python/sdist/amici/include/
-python/sdist/amici/lib/
-python/sdist/amici/share/
+python/sdist/amici/_installation/amici.py
+python/sdist/amici/_installation/amici_wrap.cxx
+python/sdist/amici/_installation/amici_without_hdf5.py
+python/sdist/amici/_installation/amici_wrap_without_hdf5.cxx
+python/sdist/amici/_installation/include/
+python/sdist/amici/_installation/lib/
+python/sdist/amici/_installation/share/
 python/sdist/build/*
 python/sdist/amici/git_version.txt
 

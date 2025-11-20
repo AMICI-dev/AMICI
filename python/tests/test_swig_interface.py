@@ -12,7 +12,28 @@ import amici
 import numpy as np
 import pytest
 import xarray
-from amici import SteadyStateSensitivityMode
+from amici.sim.sundials import (
+    AMICI_FIRST_RHSFUNC_ERR,
+    CVodeSolver,
+    ExpData,
+    ExpDataPtr,
+    ExpDataView,
+    IDASolver,
+    ModelPtr,
+    ParameterScaling,
+    RDataReporting,
+    ReturnDataView,
+    SensitivityMethod,
+    SensitivityOrder,
+    SolverPtr,
+    SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
+    get_model_settings,
+    parameter_scaling_from_int_vector,
+    run_simulation,
+    run_simulations,
+    set_model_settings,
+)
 from amici.testing import skip_on_valgrind
 
 
@@ -112,12 +133,12 @@ model_instance_settings0 = {
     # `pysb_example_presimulation_module.getModel()`.
     "state_is_non_negative": None,
     "steady_state_computation_mode": [
-        amici.SteadyStateComputationMode.integrationOnly,
-        amici.SteadyStateComputationMode.integrateIfNewtonFails,
+        SteadyStateComputationMode.integrationOnly,
+        SteadyStateComputationMode.integrateIfNewtonFails,
     ],
     "steady_state_sensitivity_mode": [
-        amici.SteadyStateSensitivityMode.integrationOnly,
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
+        SteadyStateSensitivityMode.integrationOnly,
+        SteadyStateSensitivityMode.integrateIfNewtonFails,
     ],
     ("t0", "set_t0"): [
         0.0,
@@ -158,7 +179,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
 
     # All settings are tested.
     assert set(model_instance_settings0) == set(
-        amici.swig_wrappers.model_instance_settings
+        amici.sim.sundials._swig_wrappers.model_instance_settings
     )
 
     # Skip settings with interdependencies.
@@ -184,7 +205,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         assert getattr(model0, getter)() == custom
 
     # The grouped getter method works.
-    custom_settings = amici.get_model_settings(model0)
+    custom_settings = get_model_settings(model0)
     for name in model_instance_settings:
         assert custom_settings[name] == model_instance_settings[name][i_custom]
 
@@ -192,7 +213,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.get_model()
 
     # The new model has the default settings.
-    model_default_settings = amici.get_model_settings(model)
+    model_default_settings = get_model_settings(model)
     for name in model_instance_settings:
         if (
             name == "initial_state" and not model.has_custom_initial_state()
@@ -218,10 +239,10 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         for name, value in custom_settings.items()
         if model_instance_settings0[name] is not None
     }
-    amici.set_model_settings(model, custom_settings_not_none)
+    set_model_settings(model, custom_settings_not_none)
     assert all(
         same_or_nan(value, custom_settings_not_none[name])
-        for name, value in amici.get_model_settings(model).items()
+        for name, value in get_model_settings(model).items()
         if name in custom_settings_not_none
     )
 
@@ -266,7 +287,7 @@ def test_interdependent_settings(pysb_example_presimulation_module):
         }
     )
 
-    default_settings = amici.get_model_settings(model)
+    default_settings = get_model_settings(model)
     for original_setting, original_setting_value in original_settings.items():
         test_value = getter_transformers[original_setting](
             default_settings[original_setting],
@@ -278,15 +299,15 @@ def test_interdependent_settings(pysb_example_presimulation_module):
     for setting, expected_value in expected_settings.items():
         input_settings = {setting: copy.deepcopy(expected_value)}
 
-        amici.set_model_settings(model, input_settings)
-        output_settings = amici.get_model_settings(model)
+        set_model_settings(model, input_settings)
+        output_settings = get_model_settings(model)
         test_value = getter_transformers[setting](output_settings[setting])
         # The setter works.
         assert test_value == expected_value
 
         input_settings = {setting: output_settings[setting]}
-        amici.set_model_settings(model, input_settings)
-        output_settings = amici.get_model_settings(model)
+        set_model_settings(model, input_settings)
+        output_settings = get_model_settings(model)
         test_value = getter_transformers[setting](output_settings[setting])
         # (round-trip) The output of the getter can be used as input to the
         # setter, and does not change the value.
@@ -347,7 +368,7 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         "get_trigger_timepoints",
         "get_any_state_nonnegative",
     ]
-    from amici.swig_wrappers import model_instance_settings
+    from amici.sim.sundials._swig_wrappers import model_instance_settings
 
     handled = [
         name
@@ -387,7 +408,7 @@ def get_val(obj, attr):
 
 def get_mod_val(val, attr, obj):
     if attr == "get_return_data_reporting_mode":
-        return amici.RDataReporting.likelihood
+        return RDataReporting.likelihood
     elif attr == "get_parameter_list":
         return tuple(get_mod_val(val[0], "", obj) for _ in val)
     elif attr == "get_state_is_non_negative":
@@ -426,37 +447,37 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     # ensure no-custom-(s)x0 is restored
     assert not model.has_custom_initial_state()
     assert not model.has_custom_initial_state_sensitivities()
-    settings = amici.get_model_settings(model)
+    settings = get_model_settings(model)
     model.set_initial_state(model.get_initial_state())
     model.set_unscaled_initial_state_sensitivities(
         model.get_initial_state_sensitivities()
     )
-    amici.set_model_settings(model, settings)
+    set_model_settings(model, settings)
     assert not model.has_custom_initial_state()
     assert not model.has_custom_initial_state_sensitivities()
     # ensure everything was set correctly, and there wasn't any problem
     #  due to, e.g., interactions of different setters
-    assert_same(settings, amici.get_model_settings(model))
+    assert_same(settings, get_model_settings(model))
 
     # ensure custom (s)x0 is restored
     model.set_initial_state(model.get_initial_state())
-    model.set_parameter_scale(amici.ParameterScaling.log10)
+    model.set_parameter_scale(ParameterScaling.log10)
     sx0 = model.get_initial_state_sensitivities()
     model.set_unscaled_initial_state_sensitivities(sx0)
     assert model.has_custom_initial_state()
     assert model.has_custom_initial_state_sensitivities()
-    settings = amici.get_model_settings(model)
+    settings = get_model_settings(model)
     model2 = pysb_example_presimulation_module.get_model()
-    amici.set_model_settings(model2, settings)
+    set_model_settings(model2, settings)
     assert model2.has_custom_initial_state()
     assert model2.has_custom_initial_state_sensitivities()
     assert model2.get_initial_state_sensitivities() == sx0
-    assert_same(settings, amici.get_model_settings(model2))
+    assert_same(settings, get_model_settings(model2))
 
 
 def test_solver_repr():
-    for solver in (amici.CVodeSolver(), amici.IDASolver()):
-        solver_ptr = amici.SolverPtr(solver.this)
+    for solver in (CVodeSolver(), IDASolver()):
+        solver_ptr = SolverPtr(solver.this)
         for s in (solver, solver_ptr):
             assert "maxsteps" in str(s)
             assert "maxsteps" in repr(s)
@@ -467,8 +488,8 @@ def test_edata_repr():
     nz = 2
     ne = 3
     nt = 4
-    edata = amici.ExpData(ny, nz, ne, range(nt))
-    edata_ptr = amici.ExpDataPtr(edata.this)
+    edata = ExpData(ny, nz, ne, range(nt))
+    edata_ptr = ExpDataPtr(edata.this)
     expected_strs = (
         f"{nt}x{ny} time-resolved datapoints",
         f"{ne}x{nz} event-resolved datapoints",
@@ -482,8 +503,8 @@ def test_edata_repr():
 
 
 def test_edata_equality_operator():
-    e1 = amici.ExpData(1, 2, 3, [3])
-    e2 = amici.ExpData(1, 2, 3, [3])
+    e1 = ExpData(1, 2, 3, [3])
+    e2 = ExpData(1, 2, 3, [3])
     assert e1 == e2
     # check that comparison with other types works
     # this is not implemented by swig by default
@@ -491,7 +512,7 @@ def test_edata_equality_operator():
 
 
 def test_expdata_and_expdataview_are_deepcopyable():
-    edata1 = amici.ExpData(3, 2, 3, range(4))
+    edata1 = ExpData(3, 2, 3, range(4))
     edata1.set_observed_data(np.zeros((3, 4)).flatten())
 
     # ExpData
@@ -502,15 +523,15 @@ def test_expdata_and_expdataview_are_deepcopyable():
     assert edata1 != edata2
 
     # ExpDataView
-    ev1 = amici.ExpDataView(edata1)
+    ev1 = ExpDataView(edata1)
     ev2 = copy.deepcopy(ev1)
     assert ev2._swigptr.this != ev1._swigptr.this
     assert ev1 == ev2
 
 
 def test_solvers_are_deepcopyable():
-    for solver_type in (amici.CVodeSolver, amici.IDASolver):
-        for solver1 in (solver_type(), amici.SolverPtr(solver_type())):
+    for solver_type in (CVodeSolver, IDASolver):
+        for solver1 in (solver_type(), SolverPtr(solver_type())):
             solver2 = copy.deepcopy(solver1)
             assert solver1.this != solver2.this
             assert (
@@ -530,7 +551,7 @@ def test_model_is_deepcopyable(pysb_example_presimulation_module):
     model_module = pysb_example_presimulation_module
     for model1 in (
         model_module.get_model(),
-        amici.ModelPtr(model_module.get_model()),
+        ModelPtr(model_module.get_model()),
     ):
         model2 = copy.deepcopy(model1)
         assert model1.this != model2.this
@@ -544,8 +565,8 @@ def test_rdataview(sbml_example_presimulation_module):
     model_module = sbml_example_presimulation_module
     model = model_module.get_model()
     model.set_timepoints([1, 2, 3])
-    rdata = amici.run_simulation(model, model.create_solver())
-    assert isinstance(rdata, amici.ReturnDataView)
+    rdata = run_simulation(model, model.create_solver())
+    assert isinstance(rdata, ReturnDataView)
 
     # check that non-array attributes are looked up in the wrapped object
     assert rdata.ptr.ny == rdata.ny
@@ -576,9 +597,10 @@ def test_rdataview(sbml_example_presimulation_module):
 
 def test_python_exceptions(sbml_example_presimulation_module):
     """Test that C++ exceptions are correctly caught and re-raised in Python."""
+    from amici.sim.sundials import run_simulation
 
     # amici-base extension throws and its swig-wrapper catches
-    solver = amici.CVodeSolver()
+    solver = CVodeSolver()
     with pytest.raises(
         RuntimeError, match="maxsteps must be a positive number"
     ):
@@ -590,7 +612,7 @@ def test_python_exceptions(sbml_example_presimulation_module):
         model.set_steadystate_mask([1] * model.nx_solver * 2)
 
     # amici-base extension throws and its swig-wrapper catches
-    edata = amici.ExpData(1, 1, 1, [1])
+    edata = ExpData(1, 1, 1, [1])
     # too short sx0
     edata.sx0 = (1, 2)
     with pytest.raises(
@@ -598,32 +620,32 @@ def test_python_exceptions(sbml_example_presimulation_module):
         match=r"Number of initial conditions sensitivities \(36\) "
         r"in model does not match ExpData \(2\).",
     ):
-        amici.run_simulation(model, solver, edata)
+        run_simulation(model, solver, edata)
 
-    amici.run_simulations(
+    run_simulations(
         model, solver, [edata, edata], failfast=True, num_threads=1
     )
 
     # model throws, base catches, swig-exception handling is not involved
     model.set_free_parameters([nan] * model.np())
     model.set_timepoints([1])
-    rdata = amici.run_simulation(model, solver)
-    assert rdata.status == amici.AMICI_FIRST_RHSFUNC_ERR
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_FIRST_RHSFUNC_ERR
 
-    edata = amici.ExpData(1, 1, 1, [1])
-    rdatas = amici.run_simulations(
+    edata = ExpData(1, 1, 1, [1])
+    rdatas = run_simulations(
         model, solver, [edata, edata], failfast=True, num_threads=1
     )
-    assert rdatas[0].status == amici.AMICI_FIRST_RHSFUNC_ERR
+    assert rdatas[0].status == AMICI_FIRST_RHSFUNC_ERR
 
     # model throws, base catches, swig-exception handling is involved
-    from amici._amici import run_simulation
-
     with pytest.raises(
         RuntimeError, match="AMICI failed to integrate the forward problem"
     ):
         # rethrow=True
-        run_simulation(solver, None, model.get(), True)
+        amici._installation._amici.run_simulation(
+            solver, None, model.get(), True
+        )
 
 
 def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
@@ -632,37 +654,32 @@ def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
     solver = model.create_solver()
 
     solver.set_return_data_reporting_mode(
-        amici.RDataReporting.observables_likelihood
+        RDataReporting.observables_likelihood
     )
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     for sens_method in (
-        amici.SensitivityMethod.none,
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.none,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ):
         solver.set_sensitivity_method(sens_method)
-        rdata = amici.run_simulation(
-            model, solver, amici.ExpData(1, 1, 1, [1])
-        )
-        assert (
-            rdata.rdata_reporting
-            == amici.RDataReporting.observables_likelihood
-        )
+        rdata = run_simulation(model, solver, ExpData(1, 1, 1, [1]))
+        assert rdata.rdata_reporting == RDataReporting.observables_likelihood
 
         assert rdata.y.size > 0
         assert rdata.sigmay.size > 0
         assert rdata.J is None
 
         match solver.get_sensitivity_method():
-            case amici.SensitivityMethod.none:
+            case SensitivityMethod.none:
                 assert rdata.sllh is None
-            case amici.SensitivityMethod.forward:
+            case SensitivityMethod.forward:
                 assert rdata.sy.size > 0
                 assert rdata.ssigmay.size > 0
                 assert rdata.sllh.size > 0
                 assert not np.isnan(rdata.sllh).any()
-            case amici.SensitivityMethod.adjoint:
+            case SensitivityMethod.adjoint:
                 assert rdata.sy is None
                 assert rdata.ssigmay is None
                 assert rdata.sllh.size > 0
@@ -708,10 +725,10 @@ def test_pickle_edata():
     nz = 3
     ne = 4
     nt = 5
-    edata = amici.ExpData(ny, nz, ne, range(nt))
+    edata = ExpData(ny, nz, ne, range(nt))
     edata.set_observed_data(list(np.arange(ny * nt, dtype=float)))
-    edata.pscale = amici.parameter_scaling_from_int_vector(
-        [amici.ParameterScaling.log10] * 5
+    edata.pscale = parameter_scaling_from_int_vector(
+        [ParameterScaling.log10] * 5
     )
 
     edata_pickled = pickle.loads(pickle.dumps(edata))
@@ -719,18 +736,18 @@ def test_pickle_edata():
 
 
 @pytest.mark.skipif(
-    not amici.hdf5_enabled,
+    not amici.sim.sundials.hdf5_enabled,
     reason="AMICI build without HDF5 support",
 )
 def test_pickle_solver():
     for solver in (
-        amici.CVodeSolver(),
-        amici.IDASolver(),
-        amici.SolverPtr(amici.CVodeSolver()),
-        amici.SolverPtr(amici.IDASolver()),
+        CVodeSolver(),
+        IDASolver(),
+        SolverPtr(CVodeSolver()),
+        SolverPtr(IDASolver()),
     ):
         solver.set_max_steps(1234)
-        solver.set_sensitivity_order(amici.SensitivityOrder.first)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         solver_pickled = pickle.loads(pickle.dumps(solver))
         assert type(solver) is type(solver_pickled)
         assert solver.get_max_steps() == solver_pickled.get_max_steps()

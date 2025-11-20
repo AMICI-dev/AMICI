@@ -5,9 +5,23 @@ import itertools
 import amici
 import numpy as np
 import pytest
-from amici import SensitivityMethod, SensitivityOrder, SteadyStateStatus
 from amici.debugging import get_model_for_preeq
-from amici.gradient_check import check_derivatives
+from amici.sim.sundials import (
+    AMICI_ERROR,
+    AMICI_SUCCESS,
+    ExpData,
+    LogSeverity,
+    LogSeverity_debug,
+    ParameterScaling,
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
+    SteadyStateStatus,
+    parameter_scaling_from_int_vector,
+    run_simulation,
+)
+from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import (
     TemporaryDirectoryWinSafe as TemporaryDirectory,
 )
@@ -29,14 +43,14 @@ def preeq_fixture(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.get_model()
     model.set_reinitialize_fixed_parameter_initial_states(True)
     model.set_steady_state_computation_mode(
-        amici.SteadyStateComputationMode.integrateIfNewtonFails
+        SteadyStateComputationMode.integrateIfNewtonFails
     )
     model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+        SteadyStateSensitivityMode.integrateIfNewtonFails
     )
     solver = model.create_solver()
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
-    solver.set_sensitivity_method(amici.SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
 
     edata = get_data(model)
     edata.t_presim = 2
@@ -45,21 +59,21 @@ def preeq_fixture(pysb_example_presimulation_module):
     edata.fixed_parameters_pre_equilibration = [3, 0]
     edata.set_timepoints([1, 5])
 
-    edata_preeq = amici.ExpData(edata)
+    edata_preeq = ExpData(edata)
     edata_preeq.t_presim = 0
     edata_preeq.set_timepoints([np.inf])
     edata_preeq.fixed_parameters = edata.fixed_parameters_pre_equilibration
     edata_preeq.fixed_parameters_presimulation = ()
     edata_preeq.fixed_parameters_pre_equilibration = ()
 
-    edata_presim = amici.ExpData(edata)
+    edata_presim = ExpData(edata)
     edata_presim.t_presim = 0
     edata_presim.set_timepoints([edata.t_presim])
     edata_presim.fixed_parameters = edata.fixed_parameters_presimulation
     edata_presim.fixed_parameters_presimulation = ()
     edata_presim.fixed_parameters_pre_equilibration = ()
 
-    edata_sim = amici.ExpData(edata)
+    edata_sim = ExpData(edata)
     edata_sim.t_presim = 0
     edata_sim.set_timepoints(edata.get_timepoints())
     edata_sim.fixed_parameters = edata.fixed_parameters
@@ -67,17 +81,17 @@ def preeq_fixture(pysb_example_presimulation_module):
     edata_sim.fixed_parameters_pre_equilibration = ()
 
     pscales = [
-        amici.ParameterScaling.log10,
-        amici.ParameterScaling.ln,
-        amici.ParameterScaling.none,
-        amici.parameter_scaling_from_int_vector(
+        ParameterScaling.log10,
+        ParameterScaling.ln,
+        ParameterScaling.none,
+        parameter_scaling_from_int_vector(
             [
-                amici.ParameterScaling.log10,
-                amici.ParameterScaling.ln,
-                amici.ParameterScaling.none,
-                amici.ParameterScaling.log10,
-                amici.ParameterScaling.ln,
-                amici.ParameterScaling.none,
+                ParameterScaling.log10,
+                ParameterScaling.ln,
+                ParameterScaling.none,
+                ParameterScaling.log10,
+                ParameterScaling.ln,
+                ParameterScaling.none,
             ]
         ),
     ]
@@ -125,12 +139,12 @@ def test_manual_preequilibration(preeq_fixture):
         model.set_parameter_scale(pscale)
 
         # combined
-        rdata_auto = amici.run_simulation(model, solver, edata)
-        assert rdata_auto.status == amici.AMICI_SUCCESS
+        rdata_auto = run_simulation(model, solver, edata)
+        assert rdata_auto.status == AMICI_SUCCESS
 
         # manual preequilibration
-        rdata_preeq = amici.run_simulation(model, solver, edata_preeq)
-        assert rdata_preeq.status == amici.AMICI_SUCCESS
+        rdata_preeq = run_simulation(model, solver, edata_preeq)
+        assert rdata_preeq.status == AMICI_SUCCESS
 
         # manual reinitialization + presimulation
         x0 = rdata_preeq["x"][0, :]
@@ -141,8 +155,8 @@ def test_manual_preequilibration(preeq_fixture):
         sx0[:, 2] = 0
         model.set_initial_state(x0)
         model.set_initial_state_sensitivities(sx0.flatten())
-        rdata_presim = amici.run_simulation(model, solver, edata_presim)
-        assert rdata_presim.status == amici.AMICI_SUCCESS
+        rdata_presim = run_simulation(model, solver, edata_presim)
+        assert rdata_presim.status == AMICI_SUCCESS
 
         # manual reinitialization + simulation
         x0 = rdata_presim["x"][0, :]
@@ -153,8 +167,8 @@ def test_manual_preequilibration(preeq_fixture):
         sx0[:, 2] = 0
         model.set_initial_state(x0)
         model.set_initial_state_sensitivities(sx0.flatten())
-        rdata_sim = amici.run_simulation(model, solver, edata_sim)
-        assert rdata_sim.status == amici.AMICI_SUCCESS
+        rdata_sim = run_simulation(model, solver, edata_sim)
+        assert rdata_sim.status == AMICI_SUCCESS
 
         for variable in ["x", "sx"]:
             assert_allclose(
@@ -182,11 +196,11 @@ def test_parameter_reordering(preeq_fixture):
         plists,
     ) = preeq_fixture
 
-    rdata_ordered = amici.run_simulation(model, solver, edata)
+    rdata_ordered = run_simulation(model, solver, edata)
 
     for plist in plists:
         model.set_parameter_list(plist)
-        rdata_reordered = amici.run_simulation(model, solver, edata)
+        rdata_reordered = run_simulation(model, solver, edata)
 
         for ip, p_index in enumerate(plist):
             assert_allclose(
@@ -212,7 +226,7 @@ def test_data_replicates(preeq_fixture):
         plists,
     ) = preeq_fixture
 
-    sensi_meth = amici.SensitivityMethod.forward
+    sensi_meth = SensitivityMethod.forward
     solver.set_sensitivity_method(sensi_meth)
 
     # add infty timepoint
@@ -222,7 +236,7 @@ def test_data_replicates(preeq_fixture):
     edata.set_timepoints(sorted(ts))
     edata.set_observed_data(np.hstack([y, y[0]]))
     edata.set_observed_data_std_dev(np.hstack([stdy, stdy[0]]))
-    rdata_single = amici.run_simulation(model, solver, edata)
+    rdata_single = run_simulation(model, solver, edata)
 
     # duplicate data and timepoints
     y = edata.get_observed_data()
@@ -233,7 +247,7 @@ def test_data_replicates(preeq_fixture):
     edata.set_observed_data(np.hstack([y, y])[idx])
     edata.set_observed_data_std_dev(np.hstack([stdy, stdy])[idx])
 
-    rdata_double = amici.run_simulation(model, solver, edata)
+    rdata_double = run_simulation(model, solver, edata)
 
     for variable in ["llh", "sllh"]:
         assert_allclose(
@@ -259,7 +273,7 @@ def test_parameter_in_expdata(preeq_fixture):
         plists,
     ) = preeq_fixture
 
-    rdata = amici.run_simulation(model, solver, edata)
+    rdata = run_simulation(model, solver, edata)
 
     # get initial states will compute initial states if nothing is set,
     # this needs go first as we need unmodified model. Also set to
@@ -290,17 +304,17 @@ def test_parameter_in_expdata(preeq_fixture):
     # perturb model pscale, needs to be done after getting parameters,
     # otherwise we will mess up parameter value
     model.set_parameter_scale(
-        amici.parameter_scaling_from_int_vector(
+        parameter_scaling_from_int_vector(
             [
-                amici.ParameterScaling.log10
-                if scaling == amici.ParameterScaling.none
-                else amici.ParameterScaling.none
+                ParameterScaling.log10
+                if scaling == ParameterScaling.none
+                else ParameterScaling.none
                 for scaling in model.get_parameter_scale()
             ]
         )
     )
 
-    rdata_edata = amici.run_simulation(model, solver, edata)
+    rdata_edata = run_simulation(model, solver, edata)
     for variable in ["x", "sx"]:
         assert_allclose(
             rdata[variable][0, :],
@@ -340,13 +354,13 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
 
     rdatas = {}
     equil_meths = [
-        amici.SteadyStateSensitivityMode.newtonOnly,
-        amici.SteadyStateSensitivityMode.integrationOnly,
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
+        SteadyStateSensitivityMode.newtonOnly,
+        SteadyStateSensitivityMode.integrationOnly,
+        SteadyStateSensitivityMode.integrateIfNewtonFails,
     ]
     sensi_meths = [
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ]
     settings = itertools.product(equil_meths, sensi_meths)
 
@@ -358,10 +372,10 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
         solver.set_newton_max_steps(0)
 
         # add rdatas
-        rdatas[setting] = amici.run_simulation(model, solver, edata)
+        rdatas[setting] = run_simulation(model, solver, edata)
         # assert successful simulation
 
-        assert rdatas[setting]["status"] == amici.AMICI_SUCCESS
+        assert rdatas[setting]["status"] == AMICI_SUCCESS
 
     for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
@@ -407,8 +421,8 @@ def test_newton_solver_equilibration(preeq_fixture):
 
     rdatas = {}
     settings = [
-        amici.SteadyStateSensitivityMode.integrationOnly,
-        amici.SteadyStateSensitivityMode.newtonOnly,
+        SteadyStateSensitivityMode.integrationOnly,
+        SteadyStateSensitivityMode.newtonOnly,
     ]
 
     solver.set_newton_step_steady_state_check(True)
@@ -416,17 +430,17 @@ def test_newton_solver_equilibration(preeq_fixture):
 
     for equil_meth in settings:
         # set sensi method
-        sensi_meth = amici.SensitivityMethod.forward
+        sensi_meth = SensitivityMethod.forward
         solver.set_sensitivity_method(sensi_meth)
         model.set_steady_state_sensitivity_mode(equil_meth)
-        if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
+        if equil_meth == SteadyStateSensitivityMode.newtonOnly:
             solver.set_newton_max_steps(10)
 
         # add rdatas
-        rdatas[equil_meth] = amici.run_simulation(model, solver, edata)
+        rdatas[equil_meth] = run_simulation(model, solver, edata)
 
         # assert successful simulation
-        assert rdatas[equil_meth]["status"] == amici.AMICI_SUCCESS
+        assert rdatas[equil_meth]["status"] == AMICI_SUCCESS
 
     # assert correct results
     for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
@@ -466,7 +480,7 @@ def test_newton_steadystate_check(preeq_fixture):
     edata.set_observed_data_std_dev(np.hstack([stdy, stdy[0]]))
 
     # set sensi method
-    sensi_meth = amici.SensitivityMethod.forward
+    sensi_meth = SensitivityMethod.forward
     solver.set_sensitivity_method(sensi_meth)
 
     solver.set_newton_max_steps(100)
@@ -476,10 +490,10 @@ def test_newton_steadystate_check(preeq_fixture):
         solver.set_newton_step_steady_state_check(newton_check)
 
         # add rdatas
-        rdatas[newton_check] = amici.run_simulation(model, solver, edata)
+        rdatas[newton_check] = run_simulation(model, solver, edata)
 
         # assert successful simulation
-        assert rdatas[newton_check]["status"] == amici.AMICI_SUCCESS
+        assert rdatas[newton_check]["status"] == AMICI_SUCCESS
 
     # assert correct results
     for variable in ["x_ss", "llh", "sx0", "sx_ss", "sllh"]:
@@ -505,23 +519,23 @@ def test_steadystate_computation_mode(preeq_fixture):
         plists,
     ) = preeq_fixture
 
-    sensi_meth = amici.SensitivityMethod.forward
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
+    sensi_meth = SensitivityMethod.forward
+    solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method_pre_equilibration(sensi_meth)
     solver.set_newton_max_steps(10)
 
     rdatas = {}
     stst_computation_modes = [
-        amici.SteadyStateComputationMode.integrationOnly,
-        amici.SteadyStateComputationMode.newtonOnly,
+        SteadyStateComputationMode.integrationOnly,
+        SteadyStateComputationMode.newtonOnly,
     ]
     for mode in stst_computation_modes:
         model.set_steady_state_computation_mode(mode)
-        rdatas[mode] = amici.run_simulation(model, solver, edata)
+        rdatas[mode] = run_simulation(model, solver, edata)
 
         # assert successful simulation
-        assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
-    assert rdatas[amici.SteadyStateComputationMode.integrationOnly][
+        assert rdatas[mode]["status"] == AMICI_SUCCESS
+    assert rdatas[SteadyStateComputationMode.integrationOnly][
         "preeq_status"
     ] == [
         SteadyStateStatus.not_run,
@@ -530,24 +544,17 @@ def test_steadystate_computation_mode(preeq_fixture):
     ]
 
     assert (
-        rdatas[amici.SteadyStateComputationMode.integrationOnly][
-            "preeq_numsteps"
-        ][0]
+        rdatas[SteadyStateComputationMode.integrationOnly]["preeq_numsteps"][0]
         == 0
     )
 
-    assert rdatas[amici.SteadyStateComputationMode.newtonOnly][
-        "preeq_status"
-    ] == [
+    assert rdatas[SteadyStateComputationMode.newtonOnly]["preeq_status"] == [
         SteadyStateStatus.success,
         SteadyStateStatus.not_run,
         SteadyStateStatus.not_run,
     ]
     assert (
-        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][
-            0
-        ]
-        > 0
+        rdatas[SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][0] > 0
     )
 
     # assert correct results
@@ -573,27 +580,25 @@ def test_simulation_errors(preeq_fixture):
         plists,
     ) = preeq_fixture
 
-    solver.set_sensitivity_order(amici.SensitivityOrder.first)
-    solver.set_sensitivity_method_pre_equilibration(
-        amici.SensitivityMethod.forward
-    )
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.forward)
     model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+        SteadyStateSensitivityMode.integrationOnly
     )
     solver.set_max_steps(1)
 
     # exceeded maxsteps
     # preeq & posteq
     for e in [edata, edata_preeq]:
-        rdata = amici.run_simulation(model, solver, e)
-        assert rdata["status"] != amici.AMICI_SUCCESS
-        assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
+        rdata = run_simulation(model, solver, e)
+        assert rdata["status"] != AMICI_SUCCESS
+        assert rdata._swigptr.messages[0].severity == LogSeverity_debug
         assert rdata._swigptr.messages[0].identifier == "EQUILIBRATION_FAILURE"
         assert (
             "exceeded maximum number of integration steps"
             in rdata._swigptr.messages[0].message
         )
-        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_error
+        assert rdata._swigptr.messages[1].severity == LogSeverity.error
         assert rdata._swigptr.messages[1].identifier == "OTHER"
 
     # too long simulations
@@ -602,19 +607,19 @@ def test_simulation_errors(preeq_fixture):
     solver.set_absolute_tolerance_steady_state(0.0)
     # preeq & posteq
     for e in [edata_preeq, edata]:
-        rdata = amici.run_simulation(model, solver, e)
-        assert rdata["status"] != amici.AMICI_SUCCESS
+        rdata = run_simulation(model, solver, e)
+        assert rdata["status"] != AMICI_SUCCESS
         messages = []
         # remove repeated RHSFUNC_FAIL messages
         for message in rdata._swigptr.messages:
             if not messages or message.message != messages[-1].message:
                 messages.append(message)
-        assert messages[0].severity == amici.LogSeverity.debug
+        assert messages[0].severity == LogSeverity.debug
         assert messages[0].identifier.endswith(":RHSFUNC_FAIL")
-        assert messages[1].severity == amici.LogSeverity.debug
+        assert messages[1].severity == LogSeverity.debug
         assert messages[1].identifier == "EQUILIBRATION_FAILURE"
         assert "exceedingly long simulation time" in messages[1].message
-        assert messages[2].severity == amici.LogSeverity_error
+        assert messages[2].severity == LogSeverity.error
         assert messages[2].identifier == "OTHER"
 
 
@@ -630,12 +635,12 @@ def test_get_model_for_preeq(preeq_fixture):
         plists,
     ) = preeq_fixture
     model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+        SteadyStateSensitivityMode.integrationOnly
     )
     model_preeq = get_model_for_preeq(model, edata)
     # the exactly same settings are used, so results should match exactly
-    rdata1 = amici.run_simulation(model_preeq, solver)
-    rdata2 = amici.run_simulation(model, solver, edata_preeq)
+    rdata1 = run_simulation(model_preeq, solver)
+    rdata2 = run_simulation(model, solver, edata_preeq)
     assert_equal(
         rdata1.x,
         rdata2.x,
@@ -677,8 +682,8 @@ def test_partial_eq():
         amici_solver.set_relative_tolerance_steady_state(1e-12)
 
         # equilibration of `explodes` will fail
-        rdata = amici.run_simulation(amici_model, amici_solver)
-        assert rdata.status == amici.AMICI_ERROR
+        rdata = run_simulation(amici_model, amici_solver)
+        assert rdata.status == AMICI_ERROR
         assert rdata.messages[0].identifier == "EQUILIBRATION_FAILURE"
 
         # excluding `explodes` should enable equilibration
@@ -688,8 +693,8 @@ def test_partial_eq():
                 for state_id in amici_model.get_state_ids_solver()
             ]
         )
-        rdata = amici.run_simulation(amici_model, amici_solver)
-        assert rdata.status == amici.AMICI_SUCCESS
+        rdata = run_simulation(amici_model, amici_solver)
+        assert rdata.status == AMICI_SUCCESS
         assert_allclose(
             rdata.by_id("A"),
             0.5,
@@ -731,7 +736,7 @@ def test_preequilibration_t0(tempdir):
         module_name=module_name, module_path=tempdir
     )
     amici_model = model_module.get_model()
-    edata = amici.ExpData(amici_model)
+    edata = ExpData(amici_model)
     edata.set_timepoints([0.0, 10_000.0])
     edata.fixed_parameters_pre_equilibration = [1.0]
     edata.fixed_parameters = [0.0]
@@ -740,11 +745,11 @@ def test_preequilibration_t0(tempdir):
     amici_solver = amici_model.create_solver()
     amici_solver.set_relative_tolerance_steady_state(1e-5)
     amici_model.set_steady_state_computation_mode(
-        amici.SteadyStateComputationMode.integrationOnly
+        SteadyStateComputationMode.integrationOnly
     )
 
-    rdata = amici.run_simulation(amici_model, amici_solver, edata)
-    assert rdata.status == amici.AMICI_SUCCESS
+    rdata = run_simulation(amici_model, amici_solver, edata)
+    assert rdata.status == AMICI_SUCCESS
     assert set(rdata.by_id("t0_preeq")) == {-10_000.0}
     idx_time_integral = amici_model.get_state_ids().index("T")
     assert np.isclose(
@@ -803,7 +808,7 @@ def test_preequilibration_events(tempdir):
     amici_solver = amici_model.create_solver()
     amici_solver.set_newton_max_steps(10**5)
 
-    edata = amici.ExpData(amici_model)
+    edata = ExpData(amici_model)
     edata.set_timepoints([0, 11])
     edata.fixed_parameters_pre_equilibration = [1.0]
     edata.fixed_parameters = [0.0]
@@ -811,13 +816,13 @@ def test_preequilibration_events(tempdir):
     # Integration-only preequilibration should handle all events
     amici_model = model_module.get_model()
     amici_model.set_steady_state_sensitivity_mode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+        SteadyStateSensitivityMode.integrationOnly
     )
     amici_model.set_steady_state_computation_mode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+        SteadyStateSensitivityMode.integrationOnly
     )
-    rdata = amici.run_simulation(amici_model, amici_solver, edata)
-    assert rdata.status == amici.AMICI_SUCCESS
+    rdata = run_simulation(amici_model, amici_solver, edata)
+    assert rdata.status == AMICI_SUCCESS
     assert rdata.preeq_t > 1e-3  # verifies that integration was done
     assert rdata.x_ss[target1_idx] == 1
     assert rdata.x_ss[target2_idx] == 1
@@ -828,7 +833,7 @@ def test_preequilibration_events(tempdir):
     assert np.all(rdata.x[:, target3_idx] == [1, 1])
     assert np.all(rdata.x[:, target4_idx] == [1, 2])
 
-    edata = amici.ExpData(rdata, 1.0, 1.0, 1)
+    edata = ExpData(rdata, 1.0, 1.0, 1)
     edata.fixed_parameters_pre_equilibration = [1.0]
     edata.fixed_parameters = [0.0]
 
@@ -852,8 +857,8 @@ def test_preequilibration_events(tempdir):
                 if p != "trigger_time2"
             ]
         )
-        rdata = amici.run_simulation(amici_model, amici_solver, edata)
-        assert rdata.status == amici.AMICI_SUCCESS
+        rdata = run_simulation(amici_model, amici_solver, edata)
+        assert rdata.status == AMICI_SUCCESS
 
         check_derivatives(
             amici_model,

@@ -9,6 +9,8 @@ Use cases:
 - generate synthetic data
 """
 
+from __future__ import annotations
+
 import inspect
 import sys
 from collections.abc import Callable
@@ -16,7 +18,7 @@ from collections.abc import Callable
 import pandas as pd
 import petab.v1 as petab
 
-from amici import AmiciModel, SensitivityMethod
+from amici.sim.sundials import AmiciModel, SensitivityMethod
 
 from .petab_import import import_petab_problem
 from .simulations import RDATAS, rdatas_to_measurement_df, simulate_petab
