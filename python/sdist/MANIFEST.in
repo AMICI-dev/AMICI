@@ -8,11 +8,13 @@ recursive-include amici/_installation/swig *
 recursive-include amici/exporters/sundials/templates *
 include amici/*
 include amici/_installation/version.txt
+include amici/_installation/CMakeLists.txt
 exclude amici/_installation/*.so
 exclude amici/_installation/*.dll
 include LICENSE.md
 prune **/build
 prune **/install
+prune dist
 prune amici/_installation/share
 prune amici/_installation/lib
 prune amici/_installation/ThirdParty/SuiteSparse/lib
