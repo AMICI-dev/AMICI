@@ -65,6 +65,15 @@ class XArrayFactory:
         if data is None:
             return xr.DataArray(name=name)
 
+        if isinstance(data, float):
+            return xr.DataArray(data, name=name)
+
+        if not isinstance(data, np.ndarray):
+            raise TypeError(
+                f"Cannot create xarray DataArray for field {name} of type"
+                f" {type(data)}"
+            )
+
         dims = None
 
         match name:
@@ -90,7 +99,8 @@ class XArrayFactory:
                 coords = {
                     "time": self._svp.ts,
                     "free_parameter": [
-                        self._svp.parameter_ids[i] for i in self._svp.plist
+                        self._svp.free_parameter_ids[i]
+                        for i in self._svp.plist
                     ],
                     "observable": list(self._svp.observable_ids),
                 }
@@ -111,11 +121,12 @@ class XArrayFactory:
                 coords = {
                     "time": self._svp.ts,
                     "free_parameter": [
-                        self._svp.parameter_ids[i] for i in self._svp.plist
+                        self._svp.free_parameter_ids[i]
+                        for i in self._svp.plist
                     ],
                     "state": list(self._svp.state_ids),
                 }
-                dims = ("time", "free_parameter", "state_variable")
+                dims = ("time", "free_parameter", "state")
             case "sllh":
                 coords = {
                     "free_parameter": [
@@ -152,6 +163,15 @@ class XArrayFactory:
             name=name,
         )
         return arr
+
+    def __dir__(self):
+        return sorted(
+            set(
+                itertools.chain(
+                    dir(super()), self.__dict__, self._svp._field_names
+                )
+            )
+        )
 
 
 class SwigPtrView(collections.abc.Mapping):
