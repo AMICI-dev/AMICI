@@ -44,8 +44,8 @@ if(NOT "${PY_EXT_SUFFIX}" STREQUAL "")
 endif()
 
 
-swig_link_libraries(${SWIG_LIBRARY_NAME}
-    ${Python3_LIBRARIES}
+target_link_libraries(${SWIG_LIBRARY_NAME}
+    Python3::Module
     model)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.py
