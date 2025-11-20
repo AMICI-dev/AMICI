@@ -427,12 +427,13 @@ class DEExporter:
             if sym not in self.model.sym_names():
                 continue
 
+            if len(self.model.sym(sym)) == 0:
+                continue
+
             if sym in sparse_functions:
                 iszero = smart_is_zero_matrix(self.model.sparseeq(sym))
             elif sym in self.functions:
                 iszero = smart_is_zero_matrix(self.model.eq(sym))
-            elif len(self.model.sym(sym)) == 0:
-                continue
             else:
                 iszero = False
 

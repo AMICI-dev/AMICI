@@ -19,12 +19,12 @@ extern std::array<const char*, 4> fixed_parameter_names;
 extern std::array<const char*, 3> state_names;
 extern std::array<const char*, 3> observable_names;
 extern std::array<const ObservableScaling, 3> observable_scalings;
-extern std::array<const char*, 1> expression_names;
+extern std::array<const char*, 0> expression_names;
 extern std::array<const char*, 5> free_parameter_ids;
 extern std::array<const char*, 4> fixed_parameter_ids;
 extern std::array<const char*, 3> state_ids;
 extern std::array<const char*, 3> observable_ids;
-extern std::array<const char*, 1> expression_ids;
+extern std::array<const char*, 0> expression_ids;
 extern std::array<int, 3> state_idxs_solver;
 
 extern void Jy_model_steadystate_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
@@ -125,7 +125,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
                   .ne = 0,
                   .ne_solver = 0,
                   .nspl = 0,
-                  .nw = 1,
+                  .nw = 0,
                   .ndwdx = 0,
                   .ndwdp = 0,
                   .ndwdw = 0,

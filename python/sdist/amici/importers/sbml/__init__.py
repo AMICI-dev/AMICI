@@ -627,8 +627,12 @@ class SbmlImporter:
         ]
 
         # create dynamics without respecting conservation laws first
-        dxdt = smart_multiply(
-            self.stoichiometric_matrix, MutableDenseMatrix(fluxes)
+        dxdt = (
+            smart_multiply(
+                self.stoichiometric_matrix, MutableDenseMatrix(fluxes)
+            )
+            if len(self.stoichiometric_matrix)
+            else sp.zeros(self.stoichiometric_matrix.shape[0], 1)
         )
         # dxdt has algebraic states at the end
         assert dxdt.shape[0] - len(self.symbols[SymbolId.SPECIES]) == len(
@@ -1348,10 +1352,7 @@ class SbmlImporter:
         Get reactions from SBML model.
         """
         reactions = self.sbml.getListOfReactions()
-        # nr (number of reactions) should have a minimum length of 1. This is
-        # to ensure that, if there are no reactions, the stoichiometric matrix
-        # and flux vector multiply to a zero vector with dimensions (nx, 1).
-        nr = max(1, len(reactions))
+        nr = len(reactions)
         nx = len(self.symbols[SymbolId.SPECIES])
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
@@ -1364,7 +1365,7 @@ class SbmlImporter:
             if reaction.isSetId()
             else f"flux_r{reaction_idx}"
             for reaction_idx, reaction in enumerate(reactions)
-        ] or ["flux_r0"]
+        ]
 
         reaction_ids = [
             reaction.getId() for reaction in reactions if reaction.isSetId()
@@ -1588,14 +1589,21 @@ class SbmlImporter:
                 ):
                     # placeholder, needs to be determined in IC calculation
                     symbol["init"] = sp.Float(0.0)
-                self.stoichiometric_matrix = (
-                    self.stoichiometric_matrix.row_insert(
-                        self.stoichiometric_matrix.shape[0],
-                        sp.SparseMatrix(
-                            [[0] * self.stoichiometric_matrix.shape[1]]
-                        ),
+                if len(self.stoichiometric_matrix):
+                    self.stoichiometric_matrix = (
+                        self.stoichiometric_matrix.row_insert(
+                            self.stoichiometric_matrix.shape[0],
+                            sp.SparseMatrix(
+                                1, self.stoichiometric_matrix.shape[1], {}
+                            ),
+                        )
                     )
-                )
+                else:
+                    # we can't use Matrix.row_insert for (n, 0) matrices
+                    #  as this will ignore the previous number of rows
+                    self.stoichiometric_matrix = sp.SparseMatrix(
+                        self.stoichiometric_matrix.shape[0] + 1, 0, {}
+                    )
             elif var_ix != self.stoichiometric_matrix.shape[0] - 1:
                 # if not the last col, move it to the end
                 # as we reorder state variables
@@ -2357,9 +2365,10 @@ class SbmlImporter:
             species_solver = list(range(ode_model.num_states_rdata()))
 
         # prune out species from stoichiometry and
-        self.stoichiometric_matrix = self.stoichiometric_matrix[
-            species_solver, :
-        ]
+        if len(self.stoichiometric_matrix):
+            self.stoichiometric_matrix = self.stoichiometric_matrix[
+                species_solver, :
+            ]
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
@@ -2379,9 +2388,11 @@ class SbmlImporter:
             quantity (including the eliminated one)
             (2) coefficients for the species in (1)
         """
-        from .conserved_quantities_demartino import (
-            compute_moiety_conservation_laws,
-        )
+        if not len(self.stoichiometric_matrix) or not len(
+            self.symbols[SymbolId.SPECIES]
+        ):
+            # no species or no reactions -> no conservation laws
+            return []
 
         sm = self.stoichiometric_matrix[
             : len(self.symbols[SymbolId.SPECIES]), :
@@ -2404,6 +2415,10 @@ class SbmlImporter:
 
         if not _non_const_conservation_laws_supported(self.sbml):
             return []
+
+        from .conserved_quantities_demartino import (
+            compute_moiety_conservation_laws,
+        )
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list,
@@ -2453,6 +2468,12 @@ class SbmlImporter:
             quantity (including the eliminated one)
             (2) coefficients for the species in (1)
         """
+        if not len(self.stoichiometric_matrix) or not len(
+            self.symbols[SymbolId.SPECIES]
+        ):
+            # no species or no reactions -> no conservation laws
+            return []
+
         import numpy as np
         from numpy.linalg import matrix_rank
 

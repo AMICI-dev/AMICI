@@ -5,7 +5,6 @@
 #include "x.h"
 #include "p.h"
 #include "h.h"
-#include "w.h"
 #include "xdot.h"
 
 namespace amici {
