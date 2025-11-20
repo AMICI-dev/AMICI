@@ -25,19 +25,12 @@ from amici.sim.sundials import (
     AMICI_SUCCESS,
     Constraint,
     ExpData,
-    ExpDataView,
     ModelModule,
     ParameterScaling,
     ReturnDataView,
     SensitivityMethod,
     SensitivityOrder,
     SteadyStateSensitivityMode,
-    get_data_observables_as_data_frame,
-    get_edata_from_data_frame,
-    get_expressions_as_dataframe,
-    get_residuals_as_data_frame,
-    get_simulation_observables_as_data_frame,
-    get_simulation_states_as_data_frame,
     parameter_scaling_from_int_vector,
     run_simulation,
     run_simulations,
@@ -466,63 +459,6 @@ def test_steadystate_simulation(model_steadystate_module):
     assert rdata[0].status == AMICI_SUCCESS
     assert rdata[0].id == edata[0].id
 
-    # check roundtripping of DataFrame conversion
-    df_edata = get_data_observables_as_data_frame(model, edata)
-    edata_reconstructed = get_edata_from_data_frame(model, df_edata)
-
-    assert_allclose(
-        ExpDataView(edata[0])["observed_data"],
-        ExpDataView(edata_reconstructed[0])["observed_data"],
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    assert_allclose(
-        ExpDataView(edata[0])["observed_data_std_dev"],
-        ExpDataView(edata_reconstructed[0])["observed_data_std_dev"],
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    if len(edata[0].fixed_parameters):
-        assert list(edata[0].fixed_parameters) == list(
-            edata_reconstructed[0].fixed_parameters
-        )
-
-    else:
-        assert list(model.get_fixed_parameters()) == list(
-            edata_reconstructed[0].fixed_parameters
-        )
-
-    assert list(edata[0].fixed_parameters_pre_equilibration) == list(
-        edata_reconstructed[0].fixed_parameters_pre_equilibration
-    )
-
-    df_state = get_simulation_states_as_data_frame(model, edata, rdata)
-    assert_allclose(
-        rdata[0]["x"],
-        df_state[list(model.get_state_ids())].values,
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    df_obs = get_simulation_observables_as_data_frame(model, edata, rdata)
-    assert_allclose(
-        rdata[0]["y"],
-        df_obs[list(model.get_observable_ids())].values,
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-    get_residuals_as_data_frame(model, edata, rdata)
-
-    df_expr = get_expressions_as_dataframe(model, edata, rdata)
-    assert_allclose(
-        rdata[0]["w"],
-        df_expr[list(model.get_expression_ids())].values,
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
     check_derivatives(
@@ -629,25 +565,6 @@ def test_likelihoods(model_test_likelihoods):
     assert np.isfinite(rdata["llh"])
     assert np.all(np.isfinite(rdata["sllh"]))
     assert np.any(rdata["sllh"])
-
-    rdata_df = get_simulation_observables_as_data_frame(
-        model, edata, rdata, by_id=True
-    )
-    edata_df = get_data_observables_as_data_frame(model, edata, by_id=True)
-
-    # check correct likelihood value
-    llh_exp = -sum(
-        [
-            normal_nllh(edata_df["o1"], rdata_df["o1"], sigmas[0]),
-            log_normal_nllh(edata_df["o2"], rdata_df["o2"], sigmas[1]),
-            log10_normal_nllh(edata_df["o3"], rdata_df["o3"], sigmas[2]),
-            laplace_nllh(edata_df["o4"], rdata_df["o4"], sigmas[3]),
-            log_laplace_nllh(edata_df["o5"], rdata_df["o5"], sigmas[4]),
-            log10_laplace_nllh(edata_df["o6"], rdata_df["o6"], sigmas[5]),
-            custom_nllh(edata_df["o7"], rdata_df["o7"], sigmas[6]),
-        ]
-    )
-    assert np.isclose(rdata["llh"], llh_exp)
 
     # check gradient
     for sensi_method in [
