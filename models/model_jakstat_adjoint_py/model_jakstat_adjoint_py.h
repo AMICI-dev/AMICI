@@ -19,12 +19,12 @@ extern std::array<const char*, 2> fixed_parameter_names;
 extern std::array<const char*, 9> state_names;
 extern std::array<const char*, 3> observable_names;
 extern std::array<const ObservableScaling, 3> observable_scalings;
-extern std::array<const char*, 2> expression_names;
+extern std::array<const char*, 1> expression_names;
 extern std::array<const char*, 17> free_parameter_ids;
 extern std::array<const char*, 2> fixed_parameter_ids;
 extern std::array<const char*, 9> state_ids;
 extern std::array<const char*, 3> observable_ids;
-extern std::array<const char*, 2> expression_ids;
+extern std::array<const char*, 1> expression_ids;
 extern std::array<int, 9> state_idxs_solver;
 
 extern void Jy_model_jakstat_adjoint_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
@@ -125,7 +125,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
                   .ne = 0,
                   .ne_solver = 0,
                   .nspl = 1,
-                  .nw = 2,
+                  .nw = 1,
                   .ndwdx = 0,
                   .ndwdp = 5,
                   .ndwdw = 0,
@@ -552,7 +552,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "3fb84cd5df12639f17b179d681e8ba4b5be8a160";
+        return "20b07e9a8c19bdb7bf94a562f61b3d08dc0299d0";
     }
 
     bool has_quadratic_llh() const override {

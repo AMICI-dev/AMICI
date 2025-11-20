@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from amici import _get_amici_path
-from amici.custom_commands import AmiciBuildCMakeExtension
+from amici._installation.custom_commands import AmiciBuildCMakeExtension
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
 

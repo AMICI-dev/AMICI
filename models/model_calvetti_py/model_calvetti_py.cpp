@@ -45,7 +45,7 @@ ObservableScaling::lin, // y[4]
 ObservableScaling::lin, // y[5]
 };
 
-std::array<const char*, 17> expression_names = {
+std::array<const char*, 16> expression_names = {
     "C1ss", // w[0]
 "C2ss", // w[1]
 "C3ss", // w[2]
@@ -62,7 +62,6 @@ std::array<const char*, 17> expression_names = {
 "rate_of_V1", // w[13]
 "rate_of_V2", // w[14]
 "rate_of_V3", // w[15]
-"flux_r0", // w[16]
 };
 
 std::array<const char*, 0> free_parameter_ids = {
@@ -96,7 +95,7 @@ std::array<const char*, 6> observable_ids = {
 "obs_f2", // y[5]
 };
 
-std::array<const char*, 17> expression_ids = {
+std::array<const char*, 16> expression_ids = {
     "C1ss", // w[0]
 "C2ss", // w[1]
 "C3ss", // w[2]
@@ -113,7 +112,6 @@ std::array<const char*, 17> expression_ids = {
 "rate_of_V1", // w[13]
 "rate_of_V2", // w[14]
 "rate_of_V3", // w[15]
-"flux_r0", // w[16]
 };
 
 std::array<int, 6> state_idxs_solver = {

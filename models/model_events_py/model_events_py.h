@@ -19,12 +19,12 @@ extern std::array<const char*, 4> fixed_parameter_names;
 extern std::array<const char*, 3> state_names;
 extern std::array<const char*, 1> observable_names;
 extern std::array<const ObservableScaling, 1> observable_scalings;
-extern std::array<const char*, 1> expression_names;
+extern std::array<const char*, 0> expression_names;
 extern std::array<const char*, 4> free_parameter_ids;
 extern std::array<const char*, 4> fixed_parameter_ids;
 extern std::array<const char*, 3> state_ids;
 extern std::array<const char*, 1> observable_ids;
-extern std::array<const char*, 1> expression_ids;
+extern std::array<const char*, 0> expression_ids;
 extern std::array<int, 3> state_idxs_solver;
 
 extern void Jy_model_events_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
@@ -125,7 +125,7 @@ class Model_model_events_py : public amici::Model_ODE {
                   .ne = 6,
                   .ne_solver = 2,
                   .nspl = 0,
-                  .nw = 1,
+                  .nw = 0,
                   .ndwdx = 0,
                   .ndwdp = 0,
                   .ndwdw = 0,
@@ -579,7 +579,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "3fb84cd5df12639f17b179d681e8ba4b5be8a160";
+        return "20b07e9a8c19bdb7bf94a562f61b3d08dc0299d0";
     }
 
     bool has_quadratic_llh() const override {

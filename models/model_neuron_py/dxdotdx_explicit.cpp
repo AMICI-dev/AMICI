@@ -49,7 +49,6 @@ void dxdotdx_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &dxdotdx_explicit
 #include "p.h"
 #include "k.h"
 #include "h.h"
-#include "w.h"
 #include "dxdotdx_explicit.h"
 
 namespace amici {

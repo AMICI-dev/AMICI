@@ -88,7 +88,6 @@ sigmay.h
 stau.cpp 
 stau.h 
 sx.h 
-w.h 
 wrapfunctions.cpp 
 wrapfunctions.h 
 x.h 

@@ -48,7 +48,6 @@ void dxdotdp_explicit_rowvals_model_dirac_py(SUNMatrixWrapper &dxdotdp_explicit)
 #include "x.h"
 #include "p.h"
 #include "h.h"
-#include "w.h"
 #include "dxdotdp_explicit.h"
 
 namespace amici {
