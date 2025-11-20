@@ -49,7 +49,6 @@ void dxdotdp_explicit_rowvals_model_events_py(SUNMatrixWrapper &dxdotdp_explicit
 #include "p.h"
 #include "k.h"
 #include "h.h"
-#include "w.h"
 #include "dxdotdp_explicit.h"
 
 namespace amici {

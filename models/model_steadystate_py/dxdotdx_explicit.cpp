@@ -48,7 +48,6 @@ void dxdotdx_explicit_rowvals_model_steadystate_py(SUNMatrixWrapper &dxdotdx_exp
 #include "x.h"
 #include "p.h"
 #include "k.h"
-#include "w.h"
 #include "dxdotdx_explicit.h"
 
 namespace amici {

@@ -104,7 +104,6 @@ stau.h
 sx.h 
 sx0.cpp 
 sx0_fixedParameters.cpp 
-w.h 
 wrapfunctions.cpp 
 wrapfunctions.h 
 x.h 

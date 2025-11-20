@@ -19,12 +19,12 @@ extern std::array<const char*, 2> fixed_parameter_names;
 extern std::array<const char*, 2> state_names;
 extern std::array<const char*, 1> observable_names;
 extern std::array<const ObservableScaling, 1> observable_scalings;
-extern std::array<const char*, 1> expression_names;
+extern std::array<const char*, 0> expression_names;
 extern std::array<const char*, 4> free_parameter_ids;
 extern std::array<const char*, 2> fixed_parameter_ids;
 extern std::array<const char*, 2> state_ids;
 extern std::array<const char*, 1> observable_ids;
-extern std::array<const char*, 1> expression_ids;
+extern std::array<const char*, 0> expression_ids;
 extern std::array<int, 2> state_idxs_solver;
 
 extern void Jy_model_neuron_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
@@ -125,7 +125,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
                   .ne = 1,
                   .ne_solver = 1,
                   .nspl = 0,
-                  .nw = 1,
+                  .nw = 0,
                   .ndwdx = 0,
                   .ndwdp = 0,
                   .ndwdw = 0,
@@ -574,7 +574,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "63f2e78a186ee722a79b0da2797e0c116ec81065";
+        return "c4a395b6462dc1f26ad1472e6b2fa71fe0d54382";
     }
 
     bool has_quadratic_llh() const override {

@@ -6,7 +6,6 @@
 #include "p.h"
 #include "k.h"
 #include "h.h"
-#include "w.h"
 #include "xdot.h"
 
 namespace amici {

@@ -33,8 +33,8 @@ ObservableScaling::lin, // y[1]
 ObservableScaling::lin, // y[2]
 };
 
-std::array<const char*, 1> expression_names = {
-    "flux_r0", // w[0]
+std::array<const char*, 0> expression_names = {
+    
 };
 
 std::array<const char*, 3> free_parameter_ids = {
@@ -59,8 +59,8 @@ std::array<const char*, 3> observable_ids = {
 "obs_x3", // y[2]
 };
 
-std::array<const char*, 1> expression_ids = {
-    "flux_r0", // w[0]
+std::array<const char*, 0> expression_ids = {
+    
 };
 
 std::array<int, 3> state_idxs_solver = {

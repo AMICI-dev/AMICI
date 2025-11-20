@@ -49,7 +49,6 @@ void dxdotdp_explicit_rowvals_model_robertson_py(SUNMatrixWrapper &dxdotdp_expli
 #include "p.h"
 #include "k.h"
 #include "dx.h"
-#include "w.h"
 #include "dxdotdp_explicit.h"
 
 namespace amici {

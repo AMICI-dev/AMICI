@@ -14,4 +14,3 @@
 #define rate_of_V1 w[13]
 #define rate_of_V2 w[14]
 #define rate_of_V3 w[15]
-#define flux_r0 w[16]
