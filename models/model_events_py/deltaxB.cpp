@@ -6,7 +6,6 @@
 #include "p.h"
 #include "k.h"
 #include "h.h"
-#include "w.h"
 #include "xdot.h"
 #include "xdot_old.h"
 #include "x_old.h"

@@ -48,7 +48,6 @@ void dxdotdx_explicit_rowvals_model_nested_events_py(SUNMatrixWrapper &dxdotdx_e
 #include "x.h"
 #include "p.h"
 #include "h.h"
-#include "w.h"
 #include "dxdotdx_explicit.h"
 
 namespace amici {

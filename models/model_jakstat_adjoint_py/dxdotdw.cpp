@@ -7,8 +7,8 @@
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-static constexpr std::array<sunindextype, 3> dxdotdw_colptrs_model_jakstat_adjoint_py_ = {
-    0, 2, 2
+static constexpr std::array<sunindextype, 2> dxdotdw_colptrs_model_jakstat_adjoint_py_ = {
+    0, 2
 };
 
 void dxdotdw_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &dxdotdw){

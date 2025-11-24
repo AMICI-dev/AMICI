@@ -82,7 +82,6 @@ p.h
 sigmay.cpp 
 sigmay.h 
 sx0_fixedParameters.cpp 
-w.h 
 wrapfunctions.cpp 
 wrapfunctions.h 
 x.h 

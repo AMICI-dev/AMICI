@@ -7,8 +7,8 @@
 namespace amici {
 namespace model_model_calvetti_py {
 
-static constexpr std::array<sunindextype, 18> dxdotdw_colptrs_model_calvetti_py_ = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 7, 7
+static constexpr std::array<sunindextype, 17> dxdotdw_colptrs_model_calvetti_py_ = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 7
 };
 
 void dxdotdw_colptrs_model_calvetti_py(SUNMatrixWrapper &dxdotdw){

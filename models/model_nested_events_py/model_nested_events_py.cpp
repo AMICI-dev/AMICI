@@ -29,8 +29,8 @@ std::array<const ObservableScaling, 1> observable_scalings = {
     ObservableScaling::lin, // y[0]
 };
 
-std::array<const char*, 1> expression_names = {
-    "flux_r0", // w[0]
+std::array<const char*, 0> expression_names = {
+    
 };
 
 std::array<const char*, 5> free_parameter_ids = {
@@ -53,8 +53,8 @@ std::array<const char*, 1> observable_ids = {
     "obs_Virus", // y[0]
 };
 
-std::array<const char*, 1> expression_ids = {
-    "flux_r0", // w[0]
+std::array<const char*, 0> expression_ids = {
+    
 };
 
 std::array<int, 1> state_idxs_solver = {
