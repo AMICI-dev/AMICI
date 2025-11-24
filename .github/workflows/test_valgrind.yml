@@ -37,14 +37,14 @@ jobs:
 
     - name: Checkout code (scheduled)
       if: github.event_name == 'schedule'
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         ref: main
         lfs: true
 
     - name: Checkout code (manual, push, pull request)
       if: github.event_name != 'schedule'
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         lfs: true
 
@@ -89,7 +89,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         lfs: true
     - run: git fetch --prune --unshallow

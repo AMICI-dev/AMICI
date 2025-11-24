@@ -20,7 +20,7 @@ jobs:
       with:
         python-version: '3.13'
         freethreaded: true
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 20
     - name: Install apt dependencies
