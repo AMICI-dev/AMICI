@@ -2,7 +2,7 @@
 import sys
 
 import numpy as np
-from amici import (
+from amici.sim.sundials import (
     SensitivityOrder,
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,

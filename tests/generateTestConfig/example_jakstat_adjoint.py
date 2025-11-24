@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import os
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -16,10 +16,9 @@ class ExampleJakStatAdjoint(AmiciExample):
         self.numP = 17
         self.numK = 2
 
-        curPath = os.path.dirname(os.path.realpath(__file__))
         dataPath = (
-            curPath
-            + "/../../matlab/examples/example_jakstat_adjoint/pnas_data_original.xls"
+            Path(__file__).parent
+            / "example_jakstat_adjoint_pnas_data_original.xls"
         )
         xls = pd.ExcelFile(dataPath).parse()
         self.modelOptions["ts"] = xls.time
