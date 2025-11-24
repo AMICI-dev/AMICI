@@ -1,4 +1,4 @@
-name: PEtab
+name: PEtab SciML
 on:
   push:
     branches:
@@ -87,6 +87,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: coverage_petab_sciml.xml
+          files: coverage_petab_sciml.xml
           flags: petab_sciml
           fail_ci_if_error: true
