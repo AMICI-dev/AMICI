@@ -19,7 +19,7 @@ import sympy as sp
 from amici import MeasurementChannel, import_model_module
 from amici._symbolic.de_model_components import Event
 from amici.importers.pysb import pysb2amici
-from amici.importers.utils import amici_time_symbol
+from amici.importers.utils import amici_time_symbol, symbol_with_assumptions
 from amici.sim.sundials import (
     ExpData,
     ParameterScaling,
@@ -417,10 +417,15 @@ def test_pysb_event(tempdir):
     events = [
         Event(
             # note that unlike for SBML import, we must omit the real=True here
-            symbol=sp.Symbol("event1"),
+            symbol=symbol_with_assumptions("event1"),
             name="Event1",
             value=amici_time_symbol - 5,
-            assignments={sp.Symbol("__s0"): sp.Symbol("__s0") + 1000},
+            assignments={
+                symbol_with_assumptions("__s0"): symbol_with_assumptions(
+                    "__s0"
+                )
+                + 1000
+            },
             use_values_from_trigger_time=False,
         )
     ]

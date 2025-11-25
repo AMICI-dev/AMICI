@@ -78,9 +78,20 @@ __all__ = [
 class DEModel:
     """
     Defines a Differential Equation as set of ModelQuantities.
+
     This class provides general purpose interfaces to compute arbitrary
     symbolic derivatives that are necessary for model simulation or
     sensitivity computation.
+
+    All occurrences of a symbolic variable with a given name must use the same
+    assumptions (e.g. real, positive, etc.) throughout the model. Mixing
+    different assumptions for the same variable name will result in incorrect
+    derivatives and potentially other errors.
+
+    All symbols in the model are expected to be of type sympy.Symbol. If any
+    subtypes are used, they must behave identically to sympy.Symbol in all
+    relevant aspects (e.g. hashing, equality testing, etc.). In particular,
+    `str(symbol)` is expected to return the same value as `symbol.name`.
 
     :ivar _differential_states:
         differential state variables

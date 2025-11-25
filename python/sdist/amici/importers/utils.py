@@ -1014,3 +1014,17 @@ def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
         if sp.periodicity(subexpr, symbol) is not None:
             return True
     return False
+
+
+def _expr_to_amici(expr: sp.Basic | sp.MatrixBase):
+    """Convert the given sympy expression to an AMICI-compatible expression.
+
+    Replaces all symbols by plain sympy symbols with the expected assumptions.
+
+    :param expr: The sympy expression to convert.
+    :return: The AMICI-compatible sympy expression.
+    """
+    replacements = {
+        s: symbol_with_assumptions(s.name) for s in expr.free_symbols
+    }
+    return expr.xreplace(replacements)
