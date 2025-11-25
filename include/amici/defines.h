@@ -93,6 +93,7 @@ constexpr int AMICI_SINGULAR_JACOBIAN=     -9987;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
 constexpr int AMICI_NOT_RUN=               -1001;
+constexpr int AMICI_T_OVERFLOW=            -1002;
 constexpr int AMICI_SUCCESS=                   0;
 constexpr int AMICI_DATA_RETURN=               1;
 constexpr int AMICI_ROOT_RETURN=               2;
