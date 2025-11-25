@@ -1,17 +1,18 @@
 """Tests for pre- and post-equilibration"""
 
+import inspect
 import itertools
 
 import amici
 import numpy as np
 import pytest
 from amici.debugging import get_model_for_preeq
+from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     AMICI_ERROR,
     AMICI_SUCCESS,
     ExpData,
     LogSeverity,
-    LogSeverity_debug,
     ParameterScaling,
     SensitivityMethod,
     SensitivityOrder,
@@ -592,7 +593,7 @@ def test_simulation_errors(preeq_fixture):
     for e in [edata, edata_preeq]:
         rdata = run_simulation(model, solver, e)
         assert rdata["status"] != AMICI_SUCCESS
-        assert rdata._swigptr.messages[0].severity == LogSeverity_debug
+        assert rdata._swigptr.messages[0].severity == LogSeverity.debug
         assert rdata._swigptr.messages[0].identifier == "EQUILIBRATION_FAILURE"
         assert (
             "exceeded maximum number of integration steps"
@@ -601,26 +602,51 @@ def test_simulation_errors(preeq_fixture):
         assert rdata._swigptr.messages[1].severity == LogSeverity.error
         assert rdata._swigptr.messages[1].identifier == "OTHER"
 
-    # too long simulations
-    solver.set_max_steps(int(1e4))
-    solver.set_relative_tolerance_steady_state(0.0)
-    solver.set_absolute_tolerance_steady_state(0.0)
-    # preeq & posteq
-    for e in [edata_preeq, edata]:
-        rdata = run_simulation(model, solver, e)
-        assert rdata["status"] != AMICI_SUCCESS
-        messages = []
-        # remove repeated RHSFUNC_FAIL messages
-        for message in rdata._swigptr.messages:
-            if not messages or message.message != messages[-1].message:
-                messages.append(message)
-        assert messages[0].severity == LogSeverity.debug
-        assert messages[0].identifier.endswith(":RHSFUNC_FAIL")
-        assert messages[1].severity == LogSeverity.debug
-        assert messages[1].identifier == "EQUILIBRATION_FAILURE"
-        assert "exceedingly long simulation time" in messages[1].message
-        assert messages[2].severity == LogSeverity.error
-        assert messages[2].identifier == "OTHER"
+
+def test_t_overflow():
+    """Test that equilibration fails with an informative error message
+    upon time overflow."""
+    module_name = inspect.stack()[0].function
+    ant_str = f"""
+    model {module_name}
+        # Constant increase so the solver will take large steps;
+        #  small enough to let `t` to overflow before `x`.
+        dxx_dt = 1e-16
+        xx' = dxx_dt
+        xx = 0
+    end
+    """
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        model = antimony2amici(
+            ant_str,
+            model_name=module_name,
+            output_dir=outdir,
+            fixed_parameters=["dxx_dt"],
+        )
+        model.set_steady_state_computation_mode(
+            SteadyStateComputationMode.integrationOnly
+        )
+
+        # require simulation until forever
+        solver = model.create_solver()
+        solver.set_relative_tolerance_steady_state(0)
+        solver.set_absolute_tolerance_steady_state(0)
+
+        edata_preeq = ExpData(model)
+        edata_preeq.set_timepoints([np.inf])
+        edata_preeq.fixed_parameters_pre_equilibration = [1e-16]
+        edata_posteq = ExpData(model)
+        edata_posteq.set_timepoints([float("inf")])
+
+        for edata in (edata_preeq, edata_posteq):
+            rdata = run_simulation(model, solver, edata=edata)
+            assert rdata.status == AMICI_ERROR
+            for msg in rdata.messages:
+                if "exceedingly long simulation time" in msg.message:
+                    assert msg.identifier == "EQUILIBRATION_FAILURE"
+                    break
+            else:
+                assert False, list(rdata.messages)
 
 
 def test_get_model_for_preeq(preeq_fixture):

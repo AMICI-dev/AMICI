@@ -59,6 +59,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_UNREC_SRHSFUNC_ERR, "AMICI_UNREC_SRHSFUNC_ERR"},
     {AMICI_RTFUNC_FAIL, "AMICI_RTFUNC_FAIL"},
     {AMICI_LINESEARCH_FAIL, "AMICI_LINESEARCH_FAIL"},
+    {AMICI_T_OVERFLOW, "AMICI_T_OVERFLOW"},
 };
 
 std::unique_ptr<ReturnData> run_simulation(

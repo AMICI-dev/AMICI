@@ -1178,14 +1178,6 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void* user_data) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
 
-    if (t > 1e200
-        && !model->check_finite(gsl::make_span(x), ModelQuantity::xdot, t)) {
-        /* when t is large (typically ~1e300), CVODES may pass all NaN x
-           to fxdot from which we typically cannot recover. To save time
-           on normal execution, we do not always want to check finiteness
-           of x, but only do so when t is large and we expect problems. */
-        return AMICI_UNRECOVERABLE_ERROR;
-    }
 
     model->fxdot(t, x, xdot);
     return model->check_finite(gsl::make_span(xdot), ModelQuantity::xdot, t);

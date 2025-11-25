@@ -5,6 +5,7 @@
 #include "amici/model.h"
 
 #include <sundials/sundials_context.h>
+#include <gsl/gsl-lite.hpp>
 
 #include <cstdio>
 #include <filesystem>
@@ -138,6 +139,8 @@ void Solver::apply_max_num_steps_B() const {
 }
 
 int Solver::run(realtype const tout) const {
+    gsl_ExpectsDebug(std::isfinite(tout));
+
     set_stop_time(tout);
     CpuTimer const cpu_timer;
     int status = AMICI_SUCCESS;
@@ -157,6 +160,8 @@ int Solver::run(realtype const tout) const {
 }
 
 int Solver::step(realtype const tout) const {
+    gsl_ExpectsDebug(std::isfinite(tout));
+
     int status = AMICI_SUCCESS;
 
     apply_max_num_steps();
@@ -173,6 +178,8 @@ int Solver::step(realtype const tout) const {
 }
 
 void Solver::run_b(realtype const tout) const {
+    gsl_ExpectsDebug(std::isfinite(tout));
+
     CpuTimer cpu_timer;
 
     apply_max_num_steps_B();

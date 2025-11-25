@@ -197,6 +197,12 @@ void EventHandlingSimulator::run_steady_state(
         auto tout = std::isfinite(next_t_event)
                         ? next_t_event
                         : std::max(ws_->sol.t, 1.0) * 10;
+
+        if(!std::isfinite(tout)) {
+            // tout overflowed
+            throw IntegrationFailure(AMICI_T_OVERFLOW, tout);
+        }
+
         auto status = solver_->step(tout);
         solver_->write_solution(ws_->sol);
 
@@ -914,7 +920,7 @@ SteadyStateStatus SteadyStateProblem::find_steady_state_by_simulation(
                     ex.time
                 );
             return SteadyStateStatus::failed_convergence;
-        case AMICI_RHSFUNC_FAIL:
+        case amici::AMICI_T_OVERFLOW:
             if (model_->get_logger())
                 model_->get_logger()->log(
                     LogSeverity::debug, "EQUILIBRATION_FAILURE",
