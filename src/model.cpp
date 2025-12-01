@@ -1177,7 +1177,7 @@ void Model::add_observable_objective(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (edata.is_set_measurements(it, iyt)) {
+        if (edata.is_set_measurement(it, iyt)) {
             std::ranges::fill(nllh, 0.0);
             fJy(nllh.data(), iyt, state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.y_.data(),
