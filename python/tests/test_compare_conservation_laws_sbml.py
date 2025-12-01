@@ -27,14 +27,14 @@ def edata_fixture():
     edata_pre = ExpData(
         2, 0, 0, np.array([0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0])
     )
-    edata_pre.set_observed_data([1.5] * 16)
+    edata_pre.set_measurements([1.5] * 16)
     edata_pre.fixed_parameters = np.array([5.0, 20.0])
     edata_pre.fixed_parameters_pre_equilibration = np.array([0.0, 10.0])
     edata_pre.reinitialize_fixed_parameter_initial_states = True
 
     # edata for postequilibration
     edata_post = ExpData(2, 0, 0, np.array([float("inf")] * 3))
-    edata_post.set_observed_data([0.75] * 6)
+    edata_post.set_measurements([0.75] * 6)
     edata_post.fixed_parameters = np.array([7.5, 30.0])
 
     # edata with both equilibrations
@@ -46,7 +46,7 @@ def edata_fixture():
             [0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 4.0, float("inf"), float("inf")]
         ),
     )
-    edata_full.set_observed_data([3.14] * 18)
+    edata_full.set_measurements([3.14] * 18)
     edata_full.fixed_parameters = np.array([1.0, 2.0])
     edata_full.fixed_parameters_pre_equilibration = np.array([3.0, 4.0])
     edata_full.reinitialize_fixed_parameter_initial_states = True

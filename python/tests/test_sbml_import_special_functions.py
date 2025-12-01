@@ -72,14 +72,14 @@ def test_special_likelihoods(model_special_likelihoods):
     edata = ExpData(rdata, 0.001, 0)
 
     # make sure measurements are smaller for non-degenerate probability
-    y = edata.get_observed_data()
+    y = edata.get_measurements()
     y = tuple(val * np.random.uniform(0, 1) for val in y)
-    edata.set_observed_data(y)
+    edata.set_measurements(y)
 
     # set sigmas
     sigma = 0.2
     sigmas = sigma * np.ones(len(y))
-    edata.set_observed_data_std_dev(sigmas)
+    edata.set_measurement_error(sigmas)
 
     # and now run for real and also compute likelihood values
     rdata = run_simulations(model, solver, [edata])[0]
@@ -126,10 +126,10 @@ def test_special_likelihoods(model_special_likelihoods):
     edata = ExpData(rdata, 0.001, 0)
 
     # make sure measurements are smaller for non-degenerate probability
-    y = edata.get_observed_data()
+    y = edata.get_measurements()
     y = tuple(val * np.random.uniform(0.5, 3) for val in y)
-    edata.set_observed_data(y)
-    edata.set_observed_data_std_dev(sigmas)
+    edata.set_measurements(y)
+    edata.set_measurement_error(sigmas)
 
     # and now run for real and also compute likelihood values
     rdata = run_simulations(model, solver, [edata])[0]

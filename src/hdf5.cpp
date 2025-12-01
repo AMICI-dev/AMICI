@@ -127,7 +127,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
         if (location_exists(file, hdf5Root + "/Y")) {
             auto const my = get_double_2d_dataset(file, hdf5Root + "/Y", m, n);
             check_measurement_dimensions_compatible(m, n, model);
-            edata->set_observed_data(my);
+            edata->set_measurements(my);
         } else {
             throw AmiException(
                 "Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str()
@@ -138,7 +138,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
             auto const sigmay
                 = get_double_2d_dataset(file, hdf5Root + "/Sigma_Y", m, n);
             check_measurement_dimensions_compatible(m, n, model);
-            edata->set_observed_data_std_dev(sigmay);
+            edata->set_measurement_error(sigmay);
         } else {
             throw AmiException(
                 "Missing %s/Sigma_Y in %s", hdf5Root.c_str(),
@@ -151,7 +151,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
         if (location_exists(file, hdf5Root + "/Z")) {
             auto const mz = get_double_2d_dataset(file, hdf5Root + "/Z", m, n);
             check_event_dimensions_compatible(m, n, model);
-            edata->set_observed_events(mz);
+            edata->set_event_measurements(mz);
         } else {
             throw AmiException(
                 "Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str()
@@ -162,7 +162,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
             auto sigmaz
                 = get_double_2d_dataset(file, hdf5Root + "/Sigma_Z", m, n);
             check_event_dimensions_compatible(m, n, model);
-            edata->set_observed_events_std_dev(sigmaz);
+            edata->set_event_measurement_error(sigmaz);
         } else {
             throw AmiException(
                 "Missing %s/Sigma_Z in %s", hdf5Root.c_str(),
@@ -293,25 +293,25 @@ void write_exp_data_to_hdf5(
         file.getId(), hdf5Location.c_str(), "t_presim", &edata.t_presim, 1
     );
 
-    if (!edata.get_observed_data().empty())
+    if (!edata.get_measurements().empty())
         create_and_write_double_2d_dataset(
-            file, hdf5Location + "/Y", edata.get_observed_data(), edata.nt(),
+            file, hdf5Location + "/Y", edata.get_measurements(), edata.nt(),
             edata.nytrue()
         );
-    if (!edata.get_observed_data_std_dev().empty())
+    if (!edata.get_measurement_error().empty())
         create_and_write_double_2d_dataset(
-            file, hdf5Location + "/Sigma_Y", edata.get_observed_data_std_dev(),
+            file, hdf5Location + "/Sigma_Y", edata.get_measurement_error(),
             edata.nt(), edata.nytrue()
         );
-    if (!edata.get_observed_events().empty())
+    if (!edata.get_event_measurements().empty())
         create_and_write_double_2d_dataset(
-            file, hdf5Location + "/Z", edata.get_observed_events(),
+            file, hdf5Location + "/Z", edata.get_event_measurements(),
             edata.nmaxevent(), edata.nztrue()
         );
-    if (!edata.get_observed_events_std_dev().empty())
+    if (!edata.get_event_measurement_error().empty())
         create_and_write_double_2d_dataset(
             file, hdf5Location + "/Sigma_Z",
-            edata.get_observed_events_std_dev(), edata.nmaxevent(),
+            edata.get_event_measurement_error(), edata.nmaxevent(),
             edata.nztrue()
         );
 

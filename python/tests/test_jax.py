@@ -177,7 +177,7 @@ def check_fields_jax(
 ):
     r_jax = dict()
     ts = np.array(edata.get_timepoints())
-    my = np.array(edata.get_observed_data()).reshape(len(ts), -1)
+    my = np.array(edata.get_measurements()).reshape(len(ts), -1)
     ts = np.repeat(ts.reshape(-1, 1), my.shape[1], axis=1)
     iys = np.repeat(np.arange(my.shape[1]).reshape(1, -1), len(ts), axis=0)
     my = my.flatten()

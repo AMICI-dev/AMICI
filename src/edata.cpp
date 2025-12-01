@@ -44,20 +44,20 @@ ExpData::ExpData(
 
 ExpData::ExpData(
     int const nytrue, int const nztrue, int const nmaxevent,
-    std::vector<realtype> ts, std::vector<realtype> const& observedData,
-    std::vector<realtype> const& observedDataStdDev,
-    std::vector<realtype> const& observedEvents,
-    std::vector<realtype> const& observedEventsStdDev
+    std::vector<realtype> ts, std::vector<realtype> const& my,
+    std::vector<realtype> const& sigma_y,
+    std::vector<realtype> const& mz,
+    std::vector<realtype> const& sigma_z
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
     , nztrue_(nztrue)
     , nmaxevent_(nmaxevent) {
     apply_dimensions();
-    set_observed_data(observedData);
-    set_observed_data_std_dev(observedDataStdDev);
-    set_observed_events(observedEvents);
-    set_observed_events_std_dev(observedEventsStdDev);
+    set_measurements(my);
+    set_measurement_error(sigma_y);
+    set_event_measurements(mz);
+    set_event_measurement_error(sigma_z);
 }
 
 ExpData::ExpData(Model const& model)
@@ -112,9 +112,9 @@ ExpData::ExpData(
                         ? sigma_y.at(iy)
                         : sigma_y.at(iy + nytrue_ * it);
             std::normal_distribution<> e{0, sigma};
-            observed_data_.at(iy + nytrue_ * it)
+            measurements_.at(iy + nytrue_ * it)
                 = rdata.y.at(iy + rdata.ny * it) + e(gen);
-            observed_data_std_dev_.at(iy + nytrue_ * it) = sigma;
+            measurement_error_.at(iy + nytrue_ * it) = sigma;
         }
     }
 
@@ -124,9 +124,9 @@ ExpData::ExpData(
                         ? sigma_z.at(iz)
                         : sigma_z.at(iz + nztrue_ * ie);
             std::normal_distribution<> e{0, sigma};
-            observed_events_.at(iz + rdata.nztrue * ie)
+            event_measurements.at(iz + rdata.nztrue * ie)
                 = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            observed_events_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
+            event_measurementserror_.at(iz + rdata.nztrue * ie) = sigma;
         }
     }
 
@@ -153,201 +153,201 @@ realtype ExpData::get_timepoint(int const it) const {
     return timepoints.at(it);
 }
 
-void ExpData::set_observed_data(std::vector<realtype> const& observedData) {
-    check_data_dimension(observedData, "observedData");
+void ExpData::set_measurements(std::vector<realtype> const& measurements) {
+    check_data_dimension(measurements, "measurements");
 
-    if (observedData.size() == static_cast<unsigned>(nt()) * nytrue_)
-        observed_data_ = observedData;
-    else if (observedData.empty())
-        observed_data_.clear();
+    if (measurements.size() == static_cast<unsigned>(nt()) * nytrue_)
+        measurements_ = measurements;
+    else if (measurements.empty())
+        measurements_.clear();
 }
 
-void ExpData::set_observed_data(
-    std::vector<realtype> const& observedData, int iy
+void ExpData::set_measurements(
+    std::vector<realtype> const& measurements, int iy
 ) {
-    if (observedData.size() != static_cast<unsigned>(nt()))
+    if (measurements.size() != static_cast<unsigned>(nt()))
         throw AmiException(
-            "Input observedData did not match dimensions nt (%i), was %i", nt(),
-            observedData.size()
+            "Input measurements did not match dimensions nt (%i), was %i", nt(),
+            measurements.size()
         );
 
     for (int it = 0; it < nt(); ++it)
-        observed_data_.at(iy + it * nytrue_) = observedData.at(it);
+        measurements_.at(iy + it * nytrue_) = measurements.at(it);
 }
 
-bool ExpData::is_set_observed_data(int const it, int const iy) const {
-    return !observed_data_.empty()
-           && !isnan(observed_data_.at(it * nytrue_ + iy));
+bool ExpData::is_set_measurements(int const it, int const iy) const {
+    return !measurements_.empty()
+           && !isnan(measurements_.at(it * nytrue_ + iy));
 }
 
-std::vector<realtype> const& ExpData::get_observed_data() const {
-    return observed_data_;
+std::vector<realtype> const& ExpData::get_measurements() const {
+    return measurements_;
 }
 
-realtype const* ExpData::get_observed_data_ptr(int const it) const {
-    if (!observed_data_.empty())
-        return &observed_data_.at(it * nytrue_);
+realtype const* ExpData::get_measurements_ptr(int const it) const {
+    if (!measurements_.empty())
+        return &measurements_.at(it * nytrue_);
 
     return nullptr;
 }
 
-void ExpData::set_observed_data_std_dev(
-    std::vector<realtype> const& observedDataStdDev
+void ExpData::set_measurement_error(
+    std::vector<realtype> const& sigma_y
 ) {
-    check_data_dimension(observedDataStdDev, "observedDataStdDev");
-    check_sigma_positivity(observedDataStdDev, "observedDataStdDev");
+    check_data_dimension(sigma_y, "sigma_y");
+    check_sigma_positivity(sigma_y, "sigma_y");
 
-    if (observedDataStdDev.size() == static_cast<unsigned>(nt()) * nytrue_)
-        observed_data_std_dev_ = observedDataStdDev;
-    else if (observedDataStdDev.empty())
-        observed_data_std_dev_.clear();
+    if (sigma_y.size() == static_cast<unsigned>(nt()) * nytrue_)
+        measurement_error_ = sigma_y;
+    else if (sigma_y.empty())
+        measurement_error_.clear();
 }
 
-void ExpData::set_observed_data_std_dev(realtype const stdDev) {
-    check_sigma_positivity(stdDev, "stdDev");
-    std::ranges::fill(observed_data_std_dev_, stdDev);
+void ExpData::set_measurement_error(realtype const sigma) {
+    check_sigma_positivity(sigma, "sigma");
+    std::ranges::fill(measurement_error_, sigma);
 }
 
-void ExpData::set_observed_data_std_dev(
-    std::vector<realtype> const& observedDataStdDev, int const iy
+void ExpData::set_measurement_error(
+    std::vector<realtype> const& sigma_y, int const iy
 ) {
-    if (observedDataStdDev.size() != static_cast<unsigned>(nt()))
+    if (sigma_y.size() != static_cast<unsigned>(nt()))
         throw AmiException(
-            "Input observedDataStdDev did not match dimensions nt (%i), was %i",
-            nt(), observedDataStdDev.size()
+            "Input sigma_y did not match dimensions nt (%i), was %i",
+            nt(), sigma_y.size()
         );
-    check_sigma_positivity(observedDataStdDev, "observedDataStdDev");
+    check_sigma_positivity(sigma_y, "sigma_y");
 
     for (int it = 0; it < nt(); ++it)
-        observed_data_std_dev_.at(iy + it * nytrue_)
-            = observedDataStdDev.at(it);
+        measurement_error_.at(iy + it * nytrue_)
+            = sigma_y.at(it);
 }
 
-void ExpData::set_observed_data_std_dev(realtype const stdDev, int const iy) {
-    check_sigma_positivity(stdDev, "stdDev");
+void ExpData::set_measurement_error(realtype const sigma, int const iy) {
+    check_sigma_positivity(sigma, "sigma");
     for (int it = 0; it < nt(); ++it)
-        observed_data_std_dev_.at(iy + it * nytrue_) = stdDev;
+        measurement_error_.at(iy + it * nytrue_) = sigma;
 }
 
-bool ExpData::is_set_observed_data_std_dev(int const it, int const iy) const {
-    return !observed_data_std_dev_.empty()
-           && !isnan(observed_data_std_dev_.at(it * nytrue_ + iy));
+bool ExpData::is_set_measurement_error(int const it, int const iy) const {
+    return !measurement_error_.empty()
+           && !isnan(measurement_error_.at(it * nytrue_ + iy));
 }
 
-std::vector<realtype> const& ExpData::get_observed_data_std_dev() const {
-    return observed_data_std_dev_;
+std::vector<realtype> const& ExpData::get_measurement_error() const {
+    return measurement_error_;
 }
 
-realtype const* ExpData::get_observed_data_std_dev_ptr(int const it) const {
-    if (!observed_data_std_dev_.empty())
-        return &observed_data_std_dev_.at(it * nytrue_);
+realtype const* ExpData::get_measurement_error_ptr(int const it) const {
+    if (!measurement_error_.empty())
+        return &measurement_error_.at(it * nytrue_);
 
     return nullptr;
 }
 
-void ExpData::set_observed_events(std::vector<realtype> const& observedEvents) {
-    check_events_dimension(observedEvents, "observedEvents");
+void ExpData::set_event_measurements(std::vector<realtype> const& event_measurements) {
+    check_events_dimension(event_measurements, "event_measurements");
 
-    if (observedEvents.size() == static_cast<unsigned>(nmaxevent_) * nztrue_)
-        observed_events_ = observedEvents;
-    else if (observedEvents.empty())
-        observed_events_.clear();
+    if (event_measurements.size() == static_cast<unsigned>(nmaxevent_) * nztrue_)
+        event_measurements_ = event_measurements;
+    else if (event_measurements.empty())
+        event_measurements_.clear();
 }
 
-void ExpData::set_observed_events(
-    std::vector<realtype> const& observedEvents, int const iz
+void ExpData::set_event_measurements(
+    std::vector<realtype> const& event_measurements, int const iz
 ) {
-    if (observedEvents.size() != static_cast<unsigned>(nmaxevent_)) {
+    if (event_measurements.size() != static_cast<unsigned>(nmaxevent_)) {
         throw AmiException(
-            "Input observedEvents did not match dimensions nmaxevent (%i), was "
+            "Input event_measurements did not match dimensions nmaxevent (%i), was "
             "%i",
-            nmaxevent_, observedEvents.size()
+            nmaxevent_, event_measurements.size()
         );
     }
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observed_events_.at(iz + ie * nztrue_) = observedEvents.at(ie);
+        event_measurements_.at(iz + ie * nztrue_) = event_measurements.at(ie);
 }
 
-bool ExpData::is_set_observed_events(int const ie, int const iz) const {
-    return !observed_events_.empty()
-           && !isnan(observed_events_.at(ie * nztrue_ + iz));
+bool ExpData::is_set_event_measurements(int const ie, int const iz) const {
+    return !event_measurements_.empty()
+           && !isnan(event_measurements_.at(ie * nztrue_ + iz));
 }
 
-std::vector<realtype> const& ExpData::get_observed_events() const {
-    return observed_events_;
+std::vector<realtype> const& ExpData::get_event_measurements() const {
+    return event_measurements_;
 }
 
-realtype const* ExpData::get_observed_events_ptr(int const ie) const {
-    if (!observed_events_.empty())
-        return &observed_events_.at(ie * nztrue_);
+realtype const* ExpData::get_event_measurements_ptr(int const ie) const {
+    if (!event_measurements_.empty())
+        return &event_measurements_.at(ie * nztrue_);
 
     return nullptr;
 }
 
-void ExpData::set_observed_events_std_dev(
-    std::vector<realtype> const& observedEventsStdDev
+void ExpData::set_event_measurement_error(
+    std::vector<realtype> const& sigma_z
 ) {
-    check_events_dimension(observedEventsStdDev, "observedEventsStdDev");
-    check_sigma_positivity(observedEventsStdDev, "observedEventsStdDev");
+    check_events_dimension(sigma_z, "sigma_z");
+    check_sigma_positivity(sigma_z, "sigma_z");
 
-    if (observedEventsStdDev.size() == (unsigned)nmaxevent_ * nztrue_)
-        observed_events_std_dev_ = observedEventsStdDev;
-    else if (observedEventsStdDev.empty())
-        observed_events_std_dev_.clear();
+    if (sigma_z.size() == (unsigned)nmaxevent_ * nztrue_)
+        event_measurement_error_ = sigma_z;
+    else if (sigma_z.empty())
+        event_measurement_error_.clear();
 }
 
-void ExpData::set_observed_events_std_dev(realtype const stdDev) {
-    check_sigma_positivity(stdDev, "stdDev");
-    std::ranges::fill(observed_events_std_dev_, stdDev);
+void ExpData::set_event_measurement_error(realtype const sigma) {
+    check_sigma_positivity(sigma, "sigma");
+    std::ranges::fill(event_measurement_error_, sigma);
 }
 
-void ExpData::set_observed_events_std_dev(
-    std::vector<realtype> const& observedEventsStdDev, int const iz
+void ExpData::set_event_measurement_error(
+    std::vector<realtype> const& sigma_z, int const iz
 ) {
-    if (observedEventsStdDev.size() != (unsigned)nmaxevent_)
+    if (sigma_z.size() != (unsigned)nmaxevent_)
         throw AmiException(
-            "Input observedEventsStdDev did not match dimensions nmaxevent "
+            "Input sigma_z did not match dimensions nmaxevent "
             "(%i), was %i",
-            nmaxevent_, observedEventsStdDev.size()
+            nmaxevent_, sigma_z.size()
         );
-    check_sigma_positivity(observedEventsStdDev, "observedEventsStdDev");
+    check_sigma_positivity(sigma_z, "sigma_z");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observed_events_std_dev_.at(iz + ie * nztrue_)
-            = observedEventsStdDev.at(ie);
+        event_measurement_error_.at(iz + ie * nztrue_)
+            = sigma_z.at(ie);
 }
 
-void ExpData::set_observed_events_std_dev(realtype const stdDev, int const iz) {
-    check_sigma_positivity(stdDev, "stdDev");
+void ExpData::set_event_measurement_error(realtype const sigma, int const iz) {
+    check_sigma_positivity(sigma, "sigma");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observed_events_std_dev_.at(iz + ie * nztrue_) = stdDev;
+        event_measurement_error_.at(iz + ie * nztrue_) = sigma;
 }
 
-bool ExpData::is_set_observed_events_std_dev(int const ie, int const iz) const {
-    if (!observed_events_std_dev_.empty()) // avoid out of bound memory access
-        return !isnan(observed_events_std_dev_.at(ie * nztrue_ + iz));
+bool ExpData::is_set_event_measurement_error(int const ie, int const iz) const {
+    if (!event_measurement_error_.empty()) // avoid out of bound memory access
+        return !isnan(event_measurement_error_.at(ie * nztrue_ + iz));
 
     return false;
 }
 
-std::vector<realtype> const& ExpData::get_observed_events_std_dev() const {
-    return observed_events_std_dev_;
+std::vector<realtype> const& ExpData::get_event_measurement_error() const {
+    return event_measurement_error_;
 }
 
-realtype const* ExpData::get_observed_events_std_dev_ptr(int const ie) const {
-    if (!observed_events_std_dev_.empty())
-        return &observed_events_std_dev_.at(ie * nztrue_);
+realtype const* ExpData::get_event_measurement_error_ptr(int const ie) const {
+    if (!event_measurement_error_.empty())
+        return &event_measurement_error_.at(ie * nztrue_);
 
     return nullptr;
 }
 
 void ExpData::clear_observations() {
-    std::ranges::fill(observed_data_, get_nan());
-    std::ranges::fill(observed_data_std_dev_, get_nan());
-    std::ranges::fill(observed_events_, get_nan());
-    std::ranges::fill(observed_events_std_dev_, get_nan());
+    std::ranges::fill(measurements_, get_nan());
+    std::ranges::fill(measurement_error_, get_nan());
+    std::ranges::fill(event_measurements_, get_nan());
+    std::ranges::fill(event_measurement_error_, get_nan());
 }
 
 void ExpData::apply_dimensions() {
@@ -356,13 +356,13 @@ void ExpData::apply_dimensions() {
 }
 
 void ExpData::apply_data_dimension() {
-    observed_data_.resize(nt() * nytrue_, get_nan());
-    observed_data_std_dev_.resize(nt() * nytrue_, get_nan());
+    measurements_.resize(nt() * nytrue_, get_nan());
+    measurement_error_.resize(nt() * nytrue_, get_nan());
 }
 
 void ExpData::apply_event_dimension() {
-    observed_events_.resize(nmaxevent_ * nztrue_, get_nan());
-    observed_events_std_dev_.resize(nmaxevent_ * nztrue_, get_nan());
+    event_measurements.resize(nmaxevent_ * nztrue_, get_nan());
+    event_measurement_error_.resize(nmaxevent_ * nztrue_, get_nan());
 }
 
 void ExpData::check_data_dimension(

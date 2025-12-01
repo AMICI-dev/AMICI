@@ -231,22 +231,22 @@ def test_data_replicates(preeq_fixture):
     solver.set_sensitivity_method(sensi_meth)
 
     # add infty timepoint
-    y = edata.get_observed_data()
-    stdy = edata.get_observed_data_std_dev()
+    y = edata.get_measurements()
+    stdy = edata.get_measurement_error()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
-    edata.set_observed_data(np.hstack([y, y[0]]))
-    edata.set_observed_data_std_dev(np.hstack([stdy, stdy[0]]))
+    edata.set_measurements(np.hstack([y, y[0]]))
+    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
     rdata_single = run_simulation(model, solver, edata)
 
     # duplicate data and timepoints
-    y = edata.get_observed_data()
-    stdy = edata.get_observed_data_std_dev()
+    y = edata.get_measurements()
+    stdy = edata.get_measurement_error()
     ts = np.hstack([*edata.get_timepoints(), *edata.get_timepoints()])
     idx = np.argsort(ts)
     edata.set_timepoints(sorted(ts))
-    edata.set_observed_data(np.hstack([y, y])[idx])
-    edata.set_observed_data_std_dev(np.hstack([stdy, stdy])[idx])
+    edata.set_measurements(np.hstack([y, y])[idx])
+    edata.set_measurement_error(np.hstack([stdy, stdy])[idx])
 
     rdata_double = run_simulation(model, solver, edata)
 
@@ -346,12 +346,12 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
     edata.fixed_parameters_presimulation = ()
 
     # add infty timepoint
-    y = edata.get_observed_data()
-    stdy = edata.get_observed_data_std_dev()
+    y = edata.get_measurements()
+    stdy = edata.get_measurement_error()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
-    edata.set_observed_data(np.hstack([y, y[0]]))
-    edata.set_observed_data_std_dev(np.hstack([stdy, stdy[0]]))
+    edata.set_measurements(np.hstack([y, y[0]]))
+    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
     equil_meths = [
@@ -413,12 +413,12 @@ def test_newton_solver_equilibration(preeq_fixture):
     edata.fixed_parameters_presimulation = ()
 
     # add infty timepoint
-    y = edata.get_observed_data()
-    stdy = edata.get_observed_data_std_dev()
+    y = edata.get_measurements()
+    stdy = edata.get_measurement_error()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
-    edata.set_observed_data(np.hstack([y, y[0]]))
-    edata.set_observed_data_std_dev(np.hstack([stdy, stdy[0]]))
+    edata.set_measurements(np.hstack([y, y[0]]))
+    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
     settings = [
@@ -473,12 +473,12 @@ def test_newton_steadystate_check(preeq_fixture):
     edata.fixed_parameters_presimulation = ()
 
     # add infty timepoint
-    y = edata.get_observed_data()
-    stdy = edata.get_observed_data_std_dev()
+    y = edata.get_measurements()
+    stdy = edata.get_measurement_error()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
-    edata.set_observed_data(np.hstack([y, y[0]]))
-    edata.set_observed_data_std_dev(np.hstack([stdy, stdy[0]]))
+    edata.set_measurements(np.hstack([y, y[0]]))
+    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
 
     # set sensi method
     sensi_meth = SensitivityMethod.forward

@@ -73,20 +73,20 @@ class ExpData : public SimulationParameters {
      * @param nztrue Number of event outputs
      * @param nmaxevent Maximal number of events to track
      * @param ts Timepoints (dimension: nt)
-     * @param observed_data observed data (dimension: nt x nytrue, row-major)
-     * @param observed_data_std_dev standard deviation of observed data
+     * @param my measurements (dimension: nt x nytrue, row-major)
+     * @param sigma_y standard deviation of measurements
      * (dimension: nt x nytrue, row-major)
-     * @param observed_events observed events
+     * @param mz event measurements
      * (dimension: nmaxevents x nztrue, row-major)
-     * @param observed_events_std_dev standard deviation of observed
-     * events/roots (dimension: nmaxevents x nztrue, row-major)
+     * @param sigmaz standard deviation of event measurements
+     * (dimension: nmaxevents x nztrue, row-major)
      */
     ExpData(
         int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-        std::vector<realtype> const& observed_data,
-        std::vector<realtype> const& observed_data_std_dev,
-        std::vector<realtype> const& observed_events,
-        std::vector<realtype> const& observed_events_std_dev
+        std::vector<realtype> const& my,
+        std::vector<realtype> const& sigma_y,
+        std::vector<realtype> const& mz,
+        std::vector<realtype> const& sigma_z
     );
 
     /**
@@ -196,17 +196,17 @@ class ExpData : public SimulationParameters {
     /**
      * @brief Set all measurements.
      *
-     * @param observed_data observed data (dimension: nt x nytrue, row-major)
+     * @param measurements observed data (dimension: nt x nytrue, row-major)
      */
-    void set_observed_data(std::vector<realtype> const& observed_data);
+    void set_measurements(std::vector<realtype> const& measurements);
 
     /**
      * @brief Set measurements for a given observable index
      *
-     * @param observed_data observed data (dimension: nt)
+     * @param measurements observed data (dimension: nt)
      * @param iy observed data index
      */
-    void set_observed_data(std::vector<realtype> const& observed_data, int iy);
+    void set_measurements(std::vector<realtype> const& measurements, int iy);
 
     /**
      * @brief Whether there is a measurement for the given time- and observable-
@@ -217,14 +217,14 @@ class ExpData : public SimulationParameters {
      *
      * @return boolean specifying if data was set
      */
-    bool is_set_observed_data(int it, int iy) const;
+    bool is_set_measurements(int it, int iy) const;
 
     /**
      * @brief Get all measurements.
      *
      * @return observed data (dimension: nt x nytrue, row-major)
      */
-    std::vector<realtype> const& get_observed_data() const;
+    std::vector<realtype> const& get_measurements() const;
 
     /**
      * @brief Get measurements for a given timepoint index.
@@ -233,45 +233,41 @@ class ExpData : public SimulationParameters {
      *
      * @return pointer to observed data at index (dimension: nytrue)
      */
-    realtype const* get_observed_data_ptr(int it) const;
+    realtype const* get_measurements_ptr(int it) const;
 
     /**
      * @brief Set standard deviations for measurements.
      *
-     * @param observed_data_std_dev standard deviation of observed data
+     * @param measurement_error standard deviation of observed data
      * (dimension: nt x nytrue, row-major)
      */
-    void set_observed_data_std_dev(
-        std::vector<realtype> const& observed_data_std_dev
-    );
+    void set_measurement_error(std::vector<realtype> const& measurement_error);
 
     /**
      * @brief Set identical standard deviation for all measurements.
      *
-     * @param stdDev standard deviation (dimension: scalar)
+     * @param sigma standard deviation (dimension: scalar)
      */
-    void set_observed_data_std_dev(realtype stdDev);
+    void set_measurement_error(realtype sigma);
 
     /**
      * @brief Set standard deviations of observed data for a
      * specific observable index.
      *
-     * @param observedDataStdDev standard deviation of observed data (dimension:
+     * @param sigma standard deviation of observed data (dimension:
      * nt)
      * @param iy observed data index
      */
-    void set_observed_data_std_dev(
-        std::vector<realtype> const& observedDataStdDev, int iy
-    );
+    void set_measurement_error(std::vector<realtype> const& sigma, int iy);
 
     /**
      * @brief Set all standard deviation for a given observable index to the
      * input value.
      *
-     * @param stdDev standard deviation (dimension: scalar)
+     * @param sigma standard deviation (dimension: scalar)
      * @param iy observed data index
      */
-    void set_observed_data_std_dev(realtype stdDev, int iy);
+    void set_measurement_error(realtype sigma, int iy);
 
     /**
      * @brief Whether standard deviation for a measurement at
@@ -281,14 +277,14 @@ class ExpData : public SimulationParameters {
      * @param iy observable index
      * @return boolean specifying if standard deviation of data was set
      */
-    bool is_set_observed_data_std_dev(int it, int iy) const;
+    bool is_set_measurement_error(int it, int iy) const;
 
     /**
      * @brief Get measurement standard deviations.
      *
      * @return standard deviation of observed data
      */
-    std::vector<realtype> const& get_observed_data_std_dev() const;
+    std::vector<realtype> const& get_measurement_error() const;
 
     /**
      * @brief Get pointer to measurement standard deviations.
@@ -296,7 +292,7 @@ class ExpData : public SimulationParameters {
      * @param it timepoint index
      * @return pointer to standard deviation of observed data at index
      */
-    realtype const* get_observed_data_std_dev_ptr(int it) const;
+    realtype const* get_measurement_error_ptr(int it) const;
 
     /**
      * @brief Set observed event data.
@@ -304,7 +300,7 @@ class ExpData : public SimulationParameters {
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void set_observed_events(std::vector<realtype> const& observedEvents);
+    void set_event_measurements(std::vector<realtype> const& observedEvents);
 
     /**
      * @brief Set observed event data for specific event observable.
@@ -313,7 +309,7 @@ class ExpData : public SimulationParameters {
      * @param iz observed event data index
      */
     void
-    set_observed_events(std::vector<realtype> const& observedEvents, int iz);
+    set_event_measurements(std::vector<realtype> const& observedEvents, int iz);
 
     /**
      * @brief Check whether event data at specified indices has been set.
@@ -322,14 +318,14 @@ class ExpData : public SimulationParameters {
      * @param iz event observable index
      * @return boolean specifying if data was set
      */
-    bool is_set_observed_events(int ie, int iz) const;
+    bool is_set_event_measurements(int ie, int iz) const;
 
     /**
      * @brief Get observed event data.
      *
      * @return observed event data
      */
-    std::vector<realtype> const& get_observed_events() const;
+    std::vector<realtype> const& get_event_measurements() const;
 
     /**
      * @brief Get pointer to observed data at ie-th occurrence.
@@ -338,42 +334,38 @@ class ExpData : public SimulationParameters {
      *
      * @return pointer to observed event data at ie-th occurrence
      */
-    realtype const* get_observed_events_ptr(int ie) const;
+    realtype const* get_event_measurements_ptr(int ie) const;
 
     /**
      * @brief Set standard deviation of observed event data.
      *
-     * @param observedEventsStdDev standard deviation of observed event data
+     * @param sigma standard deviation of observed event data
      */
-    void set_observed_events_std_dev(
-        std::vector<realtype> const& observedEventsStdDev
-    );
+    void set_event_measurement_error(std::vector<realtype> const& sigma);
 
     /**
      * @brief Set standard deviation of observed event data.
      *
-     * @param stdDev standard deviation (dimension: scalar)
+     * @param sigma standard deviation (dimension: scalar)
      */
-    void set_observed_events_std_dev(realtype stdDev);
+    void set_event_measurement_error(realtype sigma);
 
     /**
      * @brief Set standard deviation of observed data for a specific observable.
      *
-     * @param observedEventsStdDev standard deviation of observed data
+     * @param sigma standard deviation of observed data
      * (dimension: nmaxevent)
      * @param iz observed data index
      */
-    void set_observed_events_std_dev(
-        std::vector<realtype> const& observedEventsStdDev, int iz
-    );
+    void set_event_measurement_error(std::vector<realtype> const& sigma, int iz);
 
     /**
      * @brief Set all standard deviations of a specific event-observable.
      *
-     * @param stdDev standard deviation (dimension: scalar)
+     * @param sigma standard deviation (dimension: scalar)
      * @param iz observed data index
      */
-    void set_observed_events_std_dev(realtype stdDev, int iz);
+    void set_event_measurement_error(realtype sigma, int iz);
 
     /**
      * @brief Check whether standard deviation of event data
@@ -383,14 +375,14 @@ class ExpData : public SimulationParameters {
      * @param iz event observable index
      * @return boolean specifying if standard deviation of event data was set
      */
-    bool is_set_observed_events_std_dev(int ie, int iz) const;
+    bool is_set_event_measurement_error(int ie, int iz) const;
 
     /**
      * @brief Get standard deviation of observed event data.
      *
      * @return standard deviation of observed event data
      */
-    std::vector<realtype> const& get_observed_events_std_dev() const;
+    std::vector<realtype> const& get_event_measurement_error() const;
 
     /**
      * @brief Get pointer to standard deviation of
@@ -401,7 +393,7 @@ class ExpData : public SimulationParameters {
      * @return pointer to standard deviation of observed event data at ie-th
      * occurrence
      */
-    realtype const* get_observed_events_std_dev_ptr(int ie) const;
+    realtype const* get_event_measurement_error_ptr(int ie) const;
 
     /**
      * @brief Set all observations and their standard deviations to NaN.
@@ -463,24 +455,24 @@ class ExpData : public SimulationParameters {
     int nmaxevent_{0};
 
     /** @brief observed data (dimension: nt x nytrue, row-major) */
-    std::vector<realtype> observed_data_;
+    std::vector<realtype> measurements_;
 
     /**
      * @brief standard deviation of observed data (dimension: nt x nytrue,
      * row-major)
      */
-    std::vector<realtype> observed_data_std_dev_;
+    std::vector<realtype> measurement_error_;
 
     /**
      * @brief observed events (dimension: nmaxevents x nztrue, row-major)
      */
-    std::vector<realtype> observed_events_;
+    std::vector<realtype> event_measurements_;
 
     /**
      * @brief standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
      */
-    std::vector<realtype> observed_events_std_dev_;
+    std::vector<realtype> event_measurement_error_;
 };
 
 /**
@@ -494,11 +486,11 @@ inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
                == *dynamic_cast<SimulationParameters const*>(&rhs)
            && lhs.id == rhs.id && lhs.nytrue_ == rhs.nytrue_
            && lhs.nztrue_ == rhs.nztrue_ && lhs.nmaxevent_ == rhs.nmaxevent_
-           && is_equal(lhs.observed_data_, rhs.observed_data_)
-           && is_equal(lhs.observed_data_std_dev_, rhs.observed_data_std_dev_)
-           && is_equal(lhs.observed_events_, rhs.observed_events_)
+           && is_equal(lhs.measurements_, rhs.measurements_)
+           && is_equal(lhs.measurement_error_, rhs.measurement_error_)
+           && is_equal(lhs.event_measurements_, rhs.event_measurements_)
            && is_equal(
-               lhs.observed_events_std_dev_, rhs.observed_events_std_dev_
+               lhs.event_measurement_error_, rhs.event_measurement_error_
            );
 }
 

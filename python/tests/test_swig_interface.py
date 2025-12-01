@@ -513,7 +513,7 @@ def test_edata_equality_operator():
 
 def test_expdata_and_expdataview_are_deepcopyable():
     edata1 = ExpData(3, 2, 3, range(4))
-    edata1.set_observed_data(np.zeros((3, 4)).flatten())
+    edata1.set_measurements(np.zeros((3, 4)).flatten())
 
     # ExpData
     edata2 = copy.deepcopy(edata1)
@@ -735,7 +735,7 @@ def test_pickle_edata():
     ne = 4
     nt = 5
     edata = ExpData(ny, nz, ne, range(nt))
-    edata.set_observed_data(list(np.arange(ny * nt, dtype=float)))
+    edata.set_measurements(list(np.arange(ny * nt, dtype=float)))
     edata.pscale = parameter_scaling_from_int_vector(
         [ParameterScaling.log10] * 5
     )
