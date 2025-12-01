@@ -78,7 +78,7 @@ class ExpData : public SimulationParameters {
      * (dimension: nt x nytrue, row-major)
      * @param mz event measurements
      * (dimension: nmaxevents x nztrue, row-major)
-     * @param sigmaz standard deviation of event measurements
+     * @param sigma_z standard deviation of event measurements
      * (dimension: nmaxevents x nztrue, row-major)
      */
     ExpData(
