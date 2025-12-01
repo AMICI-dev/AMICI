@@ -186,6 +186,7 @@ def solve(
     root_cond_fn: Callable,
     delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
+    t_eps: jt.Float = 1e-6,
 ) -> tuple[jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict]:
     """
     Simulate the ODE system for the specified timepoints.
@@ -267,7 +268,7 @@ def solve(
             max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
             adjoint,
             root_cond_fns,
-            [True] * len(root_cond_fns),
+            [None] * len(root_cond_fns),
             diffrax.SaveAt(
                 subs=[
                     diffrax.SubSaveAt(
@@ -307,7 +308,25 @@ def solve(
         after_event = sol.ts[1] < ts
         hs = jnp.where(after_event[:, None], h_next[None, :], hs)
 
-        return ys, t0_next, y0_next, hs, h_next, stats
+        # Advance state to stop retriggering event immediately
+        t_resume = t0_next + t_eps
+        small_step = diffrax.diffeqsolve(
+            term,
+            solver,
+            t0_next,
+            t0_next + t_eps,
+            dt0=None,
+            y0=y0_next,
+            stepsize_controller=controller,
+            args=(p, tcl, h),
+            saveat=diffrax.SaveAt(t1=True),
+            event=None,
+        )
+
+        t_resume = small_step.ts[-1]
+        y_resume = small_step.ys[-1]
+
+        return ys, t_resume, y_resume, hs, h_next, stats
 
     # run the loop until we have reached the end of the time points
     ys, _, _, hs, _, stats = eqxi.while_loop(

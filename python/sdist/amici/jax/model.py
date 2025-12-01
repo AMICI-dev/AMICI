@@ -412,6 +412,7 @@ class JAXModel(eqx.Module):
         x_solver: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        root_finder: AbstractRootFinder,
     ) -> jt.Float[jt.Array, "ne"]:
         """
         Initialise the heaviside variables.
