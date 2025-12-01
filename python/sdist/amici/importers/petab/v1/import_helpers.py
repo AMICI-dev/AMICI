@@ -17,6 +17,7 @@ from petab.v1.C import (
     CONDITION_NAME,
     ESTIMATE,
     NOISE_DISTRIBUTION,
+    # NOISE_DISTRIBUTION_PARAMETERS, # TODO
     NOISE_FORMULA,
     OBSERVABLE_FORMULA,
     OBSERVABLE_NAME,
@@ -67,6 +68,7 @@ def get_observation_model(
         formula_noise_sym = formula_noise_sym.subs(
             formula_obs_sym, sp.Symbol(oid)
         )
+        noise_distribution = petab_noise_distribution_to_amici(observable)
         observation_model.append(
             MeasurementChannel(
                 id_=oid,
@@ -74,16 +76,15 @@ def get_observation_model(
                 formula=formula_obs,
                 # FIXME: get rid of the string conversion here
                 sigma=str(formula_noise_sym),
-                noise_distribution=petab_noise_distribution_to_amici(
-                    observable
-                ),
+                noise_distribution_type=noise_distribution['type'],
+                noise_distribution_parameters=noise_distribution['parameters'],
             )
         )
 
     return observation_model
 
 
-def petab_noise_distribution_to_amici(observable_row) -> str:
+def petab_noise_distribution_to_amici(observable_row) -> dict:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
@@ -111,7 +112,15 @@ def petab_noise_distribution_to_amici(observable_row) -> str:
         amici_val += observable_row[NOISE_DISTRIBUTION]
     else:
         amici_val += "normal"
-    return amici_val
+
+    NOISE_DISTRIBUTION_PARAMETERS = "noiseDistributionParameters" # TODO
+    if (NOISE_DISTRIBUTION_PARAMETERS in observable_row
+        and isinstance(observable_row[NOISE_DISTRIBUTION_PARAMETERS], str)
+        and observable_row[NOISE_DISTRIBUTION_PARAMETERS]
+    ):
+        return {'type': amici_val,
+                'parameters': observable_row[NOISE_DISTRIBUTION_PARAMETERS].split(';')}
+    return {'type': amici_val, 'parameters': []}
 
 
 def petab_scale_to_amici_scale(scale_str: str) -> int:

@@ -95,7 +95,7 @@ class MeasurementChannel:
         name: str | None = None,
         formula: str | sp.Expr | None = None,
         noise_distribution_type: str | Callable[[str], str] | None = None,
-        noise_distribution_parameters: str | None = None,
+        noise_distribution_parameters: list | None = None,
         sigma: str | sp.Expr | float | None = None,
         event_id: str | None = None,
     ):
@@ -187,6 +187,7 @@ sigma='sigma1', event_id=None)
         self.name = name
         self.formula = formula
         self.noise_distribution_type = noise_distribution_type or "normal"
+        self.noise_distribution_parameters = noise_distribution_parameters or []
         self.sigma = sigma
         self.event_id = event_id
 
@@ -194,7 +195,7 @@ sigma='sigma1', event_id=None)
         return (
             f"{self.__class__.__name__}(id_={self.id!r}, name={self.name!r}, "
             f"formula={self.formula!r}, noise_distribution="
-            f"{self.noise_distribution!r}, sigma={self.sigma!r}, "
+            f"{self.noise_distribution_type!r}, sigma={self.sigma!r}, "
             f"event_id={self.event_id!r})"
         )
 
