@@ -185,7 +185,7 @@ class ExpData : public SimulationParameters {
     std::vector<realtype> const& get_timepoints() const;
 
     /**
-     * @brief Get timepoint for the given index
+     * @brief Get timepoint for a specific index.
      *
      * @param it timepoint index
      *
@@ -196,93 +196,88 @@ class ExpData : public SimulationParameters {
     /**
      * @brief Set all measurements.
      *
-     * @param measurements observed data (dimension: nt x nytrue, row-major)
+     * @param my measurements (dimension: nt x nytrue, row-major)
      */
-    void set_measurements(std::vector<realtype> const& measurements);
+    void set_measurements(std::vector<realtype> const& my);
 
     /**
-     * @brief Set measurements for a given observable index
+     * @brief Set measurements for a specific observable.
      *
-     * @param measurements observed data (dimension: nt)
-     * @param iy observed data index
+     * @param my measurements (dimension: nt)
+     * @param iy observable index
      */
-    void set_measurements(std::vector<realtype> const& measurements, int iy);
+    void set_measurements(std::vector<realtype> const& my, int iy);
 
     /**
-     * @brief Whether there is a measurement for the given time- and observable-
-     * index.
+     * @brief Check whether a measurement is defined at the given indices.
      *
      * @param it time index
      * @param iy observable index
      *
-     * @return boolean specifying if data was set
+     * @return true if a value is set for the specified indices; otherwise false
      */
     bool is_set_measurement(int it, int iy) const;
 
     /**
      * @brief Get all measurements.
      *
-     * @return observed data (dimension: nt x nytrue, row-major)
+     * @return measurements (dimension: nt x nytrue, row-major)
      */
     std::vector<realtype> const& get_measurements() const;
 
     /**
-     * @brief Get measurements for a given timepoint index.
+     * @brief Get measurements for a specific timepoint.
      *
      * @param it timepoint index
      *
-     * @return pointer to observed data at index (dimension: nytrue)
+     * @return pointer to measurements at index (dimension: nytrue)
      */
     realtype const* get_measurements_ptr(int it) const;
 
     /**
-     * @brief Set noise scales for measurements.
+     * @brief Set noise scales for all measurements.
      *
-     * @param sigma noise scales of observed data
-     * (dimension: nt x nytrue, row-major)
+     * @param sigma noise scales (dimension: nt x nytrue, row-major)
      */
     void set_noise_scales(std::vector<realtype> const& sigma);
 
     /**
-     * @brief Set identical noise scale for all measurements.
+     * @brief Set identical noise scales for all measurements.
      *
      * @param sigma noise scale (dimension: scalar)
      */
     void set_noise_scales(realtype sigma);
 
     /**
-     * @brief Set noise scales of observed data for a
-     * specific observable index.
+     * @brief Set measurement noise scales of for a observable.
      *
-     * @param sigma noise scale of observed data (dimension:
-     * nt)
-     * @param iy observed data index
+     * @param sigma noise scales (dimension: nt)
+     * @param iy observable index
      */
     void set_noise_scales(std::vector<realtype> const& sigma, int iy);
 
     /**
-     * @brief Set all noise scale for a given observable index to the
+     * @brief Set all noise scales for a specific observable to the
      * input value.
      *
      * @param sigma noise scale (dimension: scalar)
-     * @param iy observed data index
+     * @param iy observable index
      */
     void set_noise_scales(realtype sigma, int iy);
 
     /**
-     * @brief Whether noise scale for a measurement at
-     * specified timepoint- and observable index has been set.
+     * @brief Check whether a noise scale is defined at the given indices.
      *
      * @param it time index
      * @param iy observable index
-     * @return boolean specifying if noise scale of data was set
+     * @return true if a value is set for the specified indices; otherwise false
      */
     bool is_set_noise_scale(int it, int iy) const;
 
     /**
      * @brief Get measurement noise scales.
      *
-     * @return noise scale of observed data
+     * @return noise scales of measurements
      */
     std::vector<realtype> const& get_noise_scales() const;
 
@@ -290,90 +285,89 @@ class ExpData : public SimulationParameters {
      * @brief Get pointer to measurement noise scales.
      *
      * @param it timepoint index
-     * @return pointer to noise scale of observed data at index
+     * @return pointer to noise scales of measurements at index
      */
     realtype const* get_noise_scales_ptr(int it) const;
 
     /**
-     * @brief Set observed event data.
+     * @brief Set event measurements.
      *
-     * @param observedEvents observed data (dimension: nmaxevent x nztrue,
+     * @param mz event measurements (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void set_event_measurements(std::vector<realtype> const& observedEvents);
+    void set_event_measurements(std::vector<realtype> const& mz);
 
     /**
-     * @brief Set observed event data for specific event observable.
+     * @brief Set event measurements for a specific event observable.
      *
-     * @param observedEvents observed data (dimension: nmaxevent)
-     * @param iz observed event data index
+     * @param mz event measurements (dimension: nmaxevent)
+     * @param iz event observable index
      */
     void
-    set_event_measurements(std::vector<realtype> const& observedEvents, int iz);
+    set_event_measurements(std::vector<realtype> const& mz, int iz);
 
     /**
-     * @brief Check whether event data at specified indices has been set.
+     * @brief Check whether an event measurement is defined at the given indices.
      *
      * @param ie event index
      * @param iz event observable index
-     * @return boolean specifying if data was set
+     * @return true if a value is set for the specified indices; otherwise false
      */
     bool is_set_event_measurement(int ie, int iz) const;
 
     /**
-     * @brief Get observed event data.
+     * @brief Get all event measurements.
      *
-     * @return observed event data
+     * @return event measurements
      */
     std::vector<realtype> const& get_event_measurements() const;
 
     /**
-     * @brief Get pointer to observed data at ie-th occurrence.
+     * @brief Get pointer to event measurements at ie-th occurrence.
      *
      * @param ie event occurrence
      *
-     * @return pointer to observed event data at ie-th occurrence
+     * @return pointer to event measurements at ie-th occurrence
      */
     realtype const* get_event_measurements_ptr(int ie) const;
 
     /**
-     * @brief Set noise scales of observed event data.
+     * @brief Set noise scales of event measurements.
      *
-     * @param sigma noise scales of observed event data
+     * @param sigma noise scales of event measurements
      */
     void set_event_noise_scales(std::vector<realtype> const& sigma);
 
     /**
-     * @brief Set noise scales of observed event data.
+     * @brief Set noise scales of all event measurements.
      *
      * @param sigma noise scale (dimension: scalar)
      */
-    void set_event_noise_scale(realtype sigma);
+    void set_event_noise_scales(realtype sigma);
 
     /**
-     * @brief Set noise scales of observed data for a specific observable.
+     * @brief Set noise scales for a specific event observable.
      *
      * @param sigma noise scales of observed data
      * (dimension: nmaxevent)
-     * @param iz observed data index
+     * @param iz event observable index
      */
     void set_event_noise_scales(std::vector<realtype> const& sigma, int iz);
 
     /**
-     * @brief Set all noise scales of a specific event-observable.
+     * @brief Set all noise scales for a specific event observable.
      *
      * @param sigma noise scale (dimension: scalar)
-     * @param iz observed data index
+     * @param iz event observable index
      */
     void set_event_noise_scales(realtype sigma, int iz);
 
     /**
-     * @brief Check whether noise scale of event data
-     * at specified indices has been set.
+     * @brief Check whether an event noise scale is defined at the given indices.
      *
-     * @param ie event index
+     * @param ie event occurence
      * @param iz event observable index
-     * @return boolean specifying if noise scale of event data was set
+     * @return true if a value is set for the specified indices; otherwise false
      */
     bool is_set_event_noise_scale(int ie, int iz) const;
 
