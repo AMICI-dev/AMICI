@@ -126,23 +126,16 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_IROOT_EQ
 
         return TPL_IROOT_RET
+    
+    def _delta_x(self, y, p):
+        TPL_X_SYMS = y
+        TPL_P_SYMS = p
 
-    def _root_cond_fn_event(self, ie, t, y, args, **_):
-        """
-        Root condition function for a specific event index.
-        """
-        __, __, h = args
-        rval = self._root_cond_fn(t, y, args, **_)
-        # only allow root triggers where trigger function is negative (heaviside == 0)
-        masked_rval = jnp.where(h == 0.0, rval, 1.0)
-        return masked_rval.at[ie].get()
+        TPL_X_OLD_EQ
+        
+        TPL_DELTAX_EQ
 
-    def _root_cond_fns(self):
-        """Return root condition functions for discontinuities."""
-        return [
-            eqx.Partial(self._root_cond_fn_event, ie)
-            for ie in range(self.n_events)
-        ]
+        return TPL_DELTAX_RET
 
     @property
     def n_events(self):

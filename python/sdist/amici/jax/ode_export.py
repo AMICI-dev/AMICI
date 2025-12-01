@@ -144,11 +144,6 @@ class ODEExporter:
         """
         set_log_level(logger, verbose)
 
-        if ode_model.has_event_assignments():
-            raise NotImplementedError(
-                "The JAX backend does not support models with event assignments."
-            )
-
         if ode_model.has_algebraic_states():
             raise NotImplementedError(
                 "The JAX backend does not support models with algebraic states."
@@ -201,6 +196,8 @@ class ODEExporter:
             "x_rdata",
             "total_cl",
             "iroot",
+            "deltax",
+            "x_old",
         )
         sym_names = (
             "p",
@@ -215,6 +212,7 @@ class ODEExporter:
             "sigmay",
             "x_rdata",
             "iroot",
+            "x_old",
         )
 
         indent = 8
