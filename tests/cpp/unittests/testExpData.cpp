@@ -125,7 +125,7 @@ TEST_F(ExpDataTest, MeasurementCtor) {
         y, edata.get_measurements(), TEST_ATOL, TEST_RTOL, "observedData"
     );
     checkEqualArray(
-        y_std, edata.get_measurements_error(), TEST_ATOL, TEST_RTOL,
+        y_std, edata.get_measurement_error(), TEST_ATOL, TEST_RTOL,
         "observedDataStdDev"
     );
     checkEqualArray(
