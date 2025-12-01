@@ -124,9 +124,9 @@ ExpData::ExpData(
                         ? sigma_z.at(iz)
                         : sigma_z.at(iz + nztrue_ * ie);
             std::normal_distribution<> e{0, sigma};
-            event_measurements.at(iz + rdata.nztrue * ie)
+            event_measurements_.at(iz + rdata.nztrue * ie)
                 = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            event_measurementserror_.at(iz + rdata.nztrue * ie) = sigma;
+            event_measurement_error_.at(iz + rdata.nztrue * ie) = sigma;
         }
     }
 
@@ -361,7 +361,7 @@ void ExpData::apply_data_dimension() {
 }
 
 void ExpData::apply_event_dimension() {
-    event_measurements.resize(nmaxevent_ * nztrue_, get_nan());
+    event_measurements_.resize(nmaxevent_ * nztrue_, get_nan());
     event_measurement_error_.resize(nmaxevent_ * nztrue_, get_nan());
 }
 
