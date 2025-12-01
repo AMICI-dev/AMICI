@@ -202,7 +202,7 @@ def test_sbml2amici_observable_dependent_error(
         rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1], rtol=1.0e-5, atol=1.0e-8
     )
     edata = ExpData(rdata, 1.0, 0.0)
-    edata.set_measurement_error(np.nan)
+    edata.set_noise_scale(np.nan)
 
     # check sensitivities
     solver.set_sensitivity_order(SensitivityOrder.first)
@@ -338,7 +338,7 @@ def test_presimulation_events(tempdir):
     edata_tmp = ExpData(rdata, 1, 0)
     edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
     edata.set_measurements(edata_tmp.get_measurements())
-    edata.set_measurement_error(edata_tmp.get_measurement_error())
+    edata.set_noise_scale(edata_tmp.get_noise_scale())
 
     # sensitivities w.r.t. t_initial_presim (trigger time of an initial event)
     #  are not supported
@@ -419,7 +419,7 @@ def test_presimulation_events_and_sensitivities(tempdir):
     edata_tmp = ExpData(rdata, 1, 0)
     edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
     edata.set_measurements(edata_tmp.get_measurements())
-    edata.set_measurement_error(edata_tmp.get_measurement_error())
+    edata.set_noise_scale(edata_tmp.get_noise_scale())
 
     solver.set_sensitivity_order(SensitivityOrder.first)
 

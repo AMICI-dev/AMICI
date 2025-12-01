@@ -390,7 +390,7 @@ def create_edata_for_condition(
         observable_ids=observable_ids,
     )
     edata.set_measurements(y.flatten())
-    edata.set_measurement_error(sigma_y.flatten())
+    edata.set_noise_scale(sigma_y.flatten())
 
     return edata
 

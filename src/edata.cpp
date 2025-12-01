@@ -55,9 +55,9 @@ ExpData::ExpData(
     , nmaxevent_(nmaxevent) {
     apply_dimensions();
     set_measurements(my);
-    set_measurement_error(sigma_y);
+    set_noise_scale(sigma_y);
     set_event_measurements(mz);
-    set_event_measurement_error(sigma_z);
+    set_event_noise_scale(sigma_z);
 }
 
 ExpData::ExpData(Model const& model)
@@ -114,7 +114,7 @@ ExpData::ExpData(
             std::normal_distribution<> e{0, sigma};
             measurements_.at(iy + nytrue_ * it)
                 = rdata.y.at(iy + rdata.ny * it) + e(gen);
-            measurement_error_.at(iy + nytrue_ * it) = sigma;
+            noise_scale_.at(iy + nytrue_ * it) = sigma;
         }
     }
 
@@ -126,7 +126,7 @@ ExpData::ExpData(
             std::normal_distribution<> e{0, sigma};
             event_measurements_.at(iz + rdata.nztrue * ie)
                 = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            event_measurement_error_.at(iz + rdata.nztrue * ie) = sigma;
+            event_noise_scale_.at(iz + rdata.nztrue * ie) = sigma;
         }
     }
 
@@ -191,24 +191,24 @@ realtype const* ExpData::get_measurements_ptr(int const it) const {
     return nullptr;
 }
 
-void ExpData::set_measurement_error(
+void ExpData::set_noise_scale(
     std::vector<realtype> const& sigma_y
 ) {
     check_data_dimension(sigma_y, "sigma_y");
     check_sigma_positivity(sigma_y, "sigma_y");
 
     if (sigma_y.size() == static_cast<unsigned>(nt()) * nytrue_)
-        measurement_error_ = sigma_y;
+        noise_scale_ = sigma_y;
     else if (sigma_y.empty())
-        measurement_error_.clear();
+        noise_scale_.clear();
 }
 
-void ExpData::set_measurement_error(realtype const sigma) {
+void ExpData::set_noise_scale(realtype const sigma) {
     check_sigma_positivity(sigma, "sigma");
-    std::ranges::fill(measurement_error_, sigma);
+    std::ranges::fill(noise_scale_, sigma);
 }
 
-void ExpData::set_measurement_error(
+void ExpData::set_noise_scale(
     std::vector<realtype> const& sigma_y, int const iy
 ) {
     if (sigma_y.size() != static_cast<unsigned>(nt()))
@@ -219,28 +219,28 @@ void ExpData::set_measurement_error(
     check_sigma_positivity(sigma_y, "sigma_y");
 
     for (int it = 0; it < nt(); ++it)
-        measurement_error_.at(iy + it * nytrue_)
+        noise_scale_.at(iy + it * nytrue_)
             = sigma_y.at(it);
 }
 
-void ExpData::set_measurement_error(realtype const sigma, int const iy) {
+void ExpData::set_noise_scale(realtype const sigma, int const iy) {
     check_sigma_positivity(sigma, "sigma");
     for (int it = 0; it < nt(); ++it)
-        measurement_error_.at(iy + it * nytrue_) = sigma;
+        noise_scale_.at(iy + it * nytrue_) = sigma;
 }
 
-bool ExpData::is_set_measurement_error(int const it, int const iy) const {
-    return !measurement_error_.empty()
-           && !isnan(measurement_error_.at(it * nytrue_ + iy));
+bool ExpData::is_set_noise_scale(int const it, int const iy) const {
+    return !noise_scale_.empty()
+           && !isnan(noise_scale_.at(it * nytrue_ + iy));
 }
 
-std::vector<realtype> const& ExpData::get_measurement_error() const {
-    return measurement_error_;
+std::vector<realtype> const& ExpData::get_noise_scale() const {
+    return noise_scale_;
 }
 
-realtype const* ExpData::get_measurement_error_ptr(int const it) const {
-    if (!measurement_error_.empty())
-        return &measurement_error_.at(it * nytrue_);
+realtype const* ExpData::get_noise_scale_ptr(int const it) const {
+    if (!noise_scale_.empty())
+        return &noise_scale_.at(it * nytrue_);
 
     return nullptr;
 }
@@ -285,24 +285,24 @@ realtype const* ExpData::get_event_measurements_ptr(int const ie) const {
     return nullptr;
 }
 
-void ExpData::set_event_measurement_error(
+void ExpData::set_event_noise_scale(
     std::vector<realtype> const& sigma_z
 ) {
     check_events_dimension(sigma_z, "sigma_z");
     check_sigma_positivity(sigma_z, "sigma_z");
 
     if (sigma_z.size() == (unsigned)nmaxevent_ * nztrue_)
-        event_measurement_error_ = sigma_z;
+        event_noise_scale_ = sigma_z;
     else if (sigma_z.empty())
-        event_measurement_error_.clear();
+        event_noise_scale_.clear();
 }
 
-void ExpData::set_event_measurement_error(realtype const sigma) {
+void ExpData::set_event_noise_scale(realtype const sigma) {
     check_sigma_positivity(sigma, "sigma");
-    std::ranges::fill(event_measurement_error_, sigma);
+    std::ranges::fill(event_noise_scale_, sigma);
 }
 
-void ExpData::set_event_measurement_error(
+void ExpData::set_event_noise_scale(
     std::vector<realtype> const& sigma_z, int const iz
 ) {
     if (sigma_z.size() != (unsigned)nmaxevent_)
@@ -314,40 +314,40 @@ void ExpData::set_event_measurement_error(
     check_sigma_positivity(sigma_z, "sigma_z");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        event_measurement_error_.at(iz + ie * nztrue_)
+        event_noise_scale_.at(iz + ie * nztrue_)
             = sigma_z.at(ie);
 }
 
-void ExpData::set_event_measurement_error(realtype const sigma, int const iz) {
+void ExpData::set_event_noise_scale(realtype const sigma, int const iz) {
     check_sigma_positivity(sigma, "sigma");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        event_measurement_error_.at(iz + ie * nztrue_) = sigma;
+        event_noise_scale_.at(iz + ie * nztrue_) = sigma;
 }
 
-bool ExpData::is_set_event_measurement_error(int const ie, int const iz) const {
-    if (!event_measurement_error_.empty()) // avoid out of bound memory access
-        return !isnan(event_measurement_error_.at(ie * nztrue_ + iz));
+bool ExpData::is_set_event_noise_scale(int const ie, int const iz) const {
+    if (!event_noise_scale_.empty()) // avoid out of bound memory access
+        return !isnan(event_noise_scale_.at(ie * nztrue_ + iz));
 
     return false;
 }
 
-std::vector<realtype> const& ExpData::get_event_measurement_error() const {
-    return event_measurement_error_;
+std::vector<realtype> const& ExpData::get_event_noise_scale() const {
+    return event_noise_scale_;
 }
 
-realtype const* ExpData::get_event_measurement_error_ptr(int const ie) const {
-    if (!event_measurement_error_.empty())
-        return &event_measurement_error_.at(ie * nztrue_);
+realtype const* ExpData::get_event_noise_scale_ptr(int const ie) const {
+    if (!event_noise_scale_.empty())
+        return &event_noise_scale_.at(ie * nztrue_);
 
     return nullptr;
 }
 
 void ExpData::clear_observations() {
     std::ranges::fill(measurements_, get_nan());
-    std::ranges::fill(measurement_error_, get_nan());
+    std::ranges::fill(noise_scale_, get_nan());
     std::ranges::fill(event_measurements_, get_nan());
-    std::ranges::fill(event_measurement_error_, get_nan());
+    std::ranges::fill(event_noise_scale_, get_nan());
 }
 
 void ExpData::apply_dimensions() {
@@ -357,12 +357,12 @@ void ExpData::apply_dimensions() {
 
 void ExpData::apply_data_dimension() {
     measurements_.resize(nt() * nytrue_, get_nan());
-    measurement_error_.resize(nt() * nytrue_, get_nan());
+    noise_scale_.resize(nt() * nytrue_, get_nan());
 }
 
 void ExpData::apply_event_dimension() {
     event_measurements_.resize(nmaxevent_ * nztrue_, get_nan());
-    event_measurement_error_.resize(nmaxevent_ * nztrue_, get_nan());
+    event_noise_scale_.resize(nmaxevent_ * nztrue_, get_nan());
 }
 
 void ExpData::check_data_dimension(

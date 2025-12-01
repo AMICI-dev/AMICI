@@ -79,7 +79,7 @@ def test_special_likelihoods(model_special_likelihoods):
     # set sigmas
     sigma = 0.2
     sigmas = sigma * np.ones(len(y))
-    edata.set_measurement_error(sigmas)
+    edata.set_noise_scale(sigmas)
 
     # and now run for real and also compute likelihood values
     rdata = run_simulations(model, solver, [edata])[0]
@@ -129,7 +129,7 @@ def test_special_likelihoods(model_special_likelihoods):
     y = edata.get_measurements()
     y = tuple(val * np.random.uniform(0.5, 3) for val in y)
     edata.set_measurements(y)
-    edata.set_measurement_error(sigmas)
+    edata.set_noise_scale(sigmas)
 
     # and now run for real and also compute likelihood values
     rdata = run_simulations(model, solver, [edata])[0]

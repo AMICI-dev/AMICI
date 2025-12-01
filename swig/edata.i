@@ -8,7 +8,7 @@ using namespace amici;
 
 %ignore ConditionContext;
 %ignore get_measurements_ptr;
-%ignore get_measurement_error_ptr;
+%ignore get_noise_scale_ptr;
 
 %feature("pythonprepend") amici::ExpData::ExpData %{
     """
@@ -37,7 +37,7 @@ def _edata_repr(self: "ExpData"):
         iy in range(self.nytrue())
     )
     n_sigma_y = sum(
-        self.is_set_measurement_error(it, iy)
+        self.is_set_noise_scale(it, iy)
         for it in range(self.nt())
         for iy in range(self.nytrue())
     )
@@ -47,7 +47,7 @@ def _edata_repr(self: "ExpData"):
         for iz in range(self.nztrue())
     )
     n_sigma_z = sum(
-        self.is_set_event_measurement_error(ie, iz)
+        self.is_set_event_noise_scale(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
@@ -115,9 +115,9 @@ def __reduce__(self):
                 self.nmaxevent(),
                 self.get_timepoints(),
                 self.get_measurements(),
-                self.get_measurement_error(),
+                self.get_noise_scale(),
                 self.get_event_measurements(),
-                self.get_event_measurement_error(),
+                self.get_event_noise_scale(),
             ),
             dict(self)
         ),

@@ -169,7 +169,7 @@ def main():
         edata = ExpData(model)
         edata.set_timepoints([1e8])
         edata.set_measurements([1.0])
-        edata.set_measurement_error([1.0])
+        edata.set_noise_scale([1.0])
 
     prepare_simulation(arg, model, solver, edata)
 

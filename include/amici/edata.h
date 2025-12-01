@@ -74,11 +74,11 @@ class ExpData : public SimulationParameters {
      * @param nmaxevent Maximal number of events to track
      * @param ts Timepoints (dimension: nt)
      * @param my measurements (dimension: nt x nytrue, row-major)
-     * @param sigma_y standard deviation of measurements
+     * @param sigma_y noise scale of measurements
      * (dimension: nt x nytrue, row-major)
      * @param mz event measurements
      * (dimension: nmaxevents x nztrue, row-major)
-     * @param sigma_z standard deviation of event measurements
+     * @param sigma_z noise scale of event measurements
      * (dimension: nmaxevents x nztrue, row-major)
      */
     ExpData(
@@ -101,8 +101,8 @@ class ExpData : public SimulationParameters {
      * distributed noise according to specified sigmas.
      *
      * @param rdata return data pointer with stored simulation results
-     * @param sigma_y scalar standard deviations for all observables
-     * @param sigma_z scalar standard deviations for all event observables
+     * @param sigma_y scalar noise scales for all observables
+     * @param sigma_z scalar noise scales for all event observables
      * @param seed Seed for the random number generator. If a negative number
      * is passed, a random seed is used.
      */
@@ -116,9 +116,9 @@ class ExpData : public SimulationParameters {
      * distributed noise according to specified sigmas.
      *
      * @param rdata return data pointer with stored simulation results
-     * @param sigma_y vector of standard deviations for observables
+     * @param sigma_y vector of noise scales for observables
      * (dimension: nytrue or nt x nytrue, row-major)
-     * @param sigma_z vector of standard deviations for event observables
+     * @param sigma_z vector of noise scales for event observables
      * (dimension: nztrue or nmaxevent x nztrue, row-major)
      * @param seed Seed for the random number generator. If a negative number
      * is passed, a random seed is used.
@@ -236,63 +236,63 @@ class ExpData : public SimulationParameters {
     realtype const* get_measurements_ptr(int it) const;
 
     /**
-     * @brief Set standard deviations for measurements.
+     * @brief Set noise scales for measurements.
      *
-     * @param measurement_error standard deviation of observed data
+     * @param noise_scale noise scale of observed data
      * (dimension: nt x nytrue, row-major)
      */
-    void set_measurement_error(std::vector<realtype> const& measurement_error);
+    void set_noise_scale(std::vector<realtype> const& noise_scale);
 
     /**
-     * @brief Set identical standard deviation for all measurements.
+     * @brief Set identical noise scale for all measurements.
      *
-     * @param sigma standard deviation (dimension: scalar)
+     * @param sigma noise scale (dimension: scalar)
      */
-    void set_measurement_error(realtype sigma);
+    void set_noise_scale(realtype sigma);
 
     /**
-     * @brief Set standard deviations of observed data for a
+     * @brief Set noise scales of observed data for a
      * specific observable index.
      *
-     * @param sigma standard deviation of observed data (dimension:
+     * @param sigma noise scale of observed data (dimension:
      * nt)
      * @param iy observed data index
      */
-    void set_measurement_error(std::vector<realtype> const& sigma, int iy);
+    void set_noise_scale(std::vector<realtype> const& sigma, int iy);
 
     /**
-     * @brief Set all standard deviation for a given observable index to the
+     * @brief Set all noise scale for a given observable index to the
      * input value.
      *
-     * @param sigma standard deviation (dimension: scalar)
+     * @param sigma noise scale (dimension: scalar)
      * @param iy observed data index
      */
-    void set_measurement_error(realtype sigma, int iy);
+    void set_noise_scale(realtype sigma, int iy);
 
     /**
-     * @brief Whether standard deviation for a measurement at
+     * @brief Whether noise scale for a measurement at
      * specified timepoint- and observable index has been set.
      *
      * @param it time index
      * @param iy observable index
-     * @return boolean specifying if standard deviation of data was set
+     * @return boolean specifying if noise scale of data was set
      */
-    bool is_set_measurement_error(int it, int iy) const;
+    bool is_set_noise_scale(int it, int iy) const;
 
     /**
-     * @brief Get measurement standard deviations.
+     * @brief Get measurement noise scales.
      *
-     * @return standard deviation of observed data
+     * @return noise scale of observed data
      */
-    std::vector<realtype> const& get_measurement_error() const;
+    std::vector<realtype> const& get_noise_scale() const;
 
     /**
-     * @brief Get pointer to measurement standard deviations.
+     * @brief Get pointer to measurement noise scales.
      *
      * @param it timepoint index
-     * @return pointer to standard deviation of observed data at index
+     * @return pointer to noise scale of observed data at index
      */
-    realtype const* get_measurement_error_ptr(int it) const;
+    realtype const* get_noise_scale_ptr(int it) const;
 
     /**
      * @brief Set observed event data.
@@ -337,66 +337,66 @@ class ExpData : public SimulationParameters {
     realtype const* get_event_measurements_ptr(int ie) const;
 
     /**
-     * @brief Set standard deviation of observed event data.
+     * @brief Set noise scale of observed event data.
      *
-     * @param sigma standard deviation of observed event data
+     * @param sigma noise scale of observed event data
      */
-    void set_event_measurement_error(std::vector<realtype> const& sigma);
+    void set_event_noise_scale(std::vector<realtype> const& sigma);
 
     /**
-     * @brief Set standard deviation of observed event data.
+     * @brief Set noise scale of observed event data.
      *
-     * @param sigma standard deviation (dimension: scalar)
+     * @param sigma noise scale (dimension: scalar)
      */
-    void set_event_measurement_error(realtype sigma);
+    void set_event_noise_scale(realtype sigma);
 
     /**
-     * @brief Set standard deviation of observed data for a specific observable.
+     * @brief Set noise scale of observed data for a specific observable.
      *
-     * @param sigma standard deviation of observed data
+     * @param sigma noise scale of observed data
      * (dimension: nmaxevent)
      * @param iz observed data index
      */
-    void set_event_measurement_error(std::vector<realtype> const& sigma, int iz);
+    void set_event_noise_scale(std::vector<realtype> const& sigma, int iz);
 
     /**
-     * @brief Set all standard deviations of a specific event-observable.
+     * @brief Set all noise scales of a specific event-observable.
      *
-     * @param sigma standard deviation (dimension: scalar)
+     * @param sigma noise scale (dimension: scalar)
      * @param iz observed data index
      */
-    void set_event_measurement_error(realtype sigma, int iz);
+    void set_event_noise_scale(realtype sigma, int iz);
 
     /**
-     * @brief Check whether standard deviation of event data
+     * @brief Check whether noise scale of event data
      * at specified indices has been set.
      *
      * @param ie event index
      * @param iz event observable index
-     * @return boolean specifying if standard deviation of event data was set
+     * @return boolean specifying if noise scale of event data was set
      */
-    bool is_set_event_measurement_error(int ie, int iz) const;
+    bool is_set_event_noise_scale(int ie, int iz) const;
 
     /**
-     * @brief Get standard deviation of observed event data.
+     * @brief Get noise scale of observed event data.
      *
-     * @return standard deviation of observed event data
+     * @return noise scale of observed event data
      */
-    std::vector<realtype> const& get_event_measurement_error() const;
+    std::vector<realtype> const& get_event_noise_scale() const;
 
     /**
-     * @brief Get pointer to standard deviation of
+     * @brief Get pointer to noise scale of
      * observed event data at ie-th occurrence.
      *
      * @param ie event occurrence
      *
-     * @return pointer to standard deviation of observed event data at ie-th
+     * @return pointer to noise scale of observed event data at ie-th
      * occurrence
      */
-    realtype const* get_event_measurement_error_ptr(int ie) const;
+    realtype const* get_event_noise_scale_ptr(int ie) const;
 
     /**
-     * @brief Set all observations and their standard deviations to NaN.
+     * @brief Set all observations and their noise scales to NaN.
      *
      * Useful, e.g., after calling ExpData::setTimepoints.
      */
@@ -458,10 +458,10 @@ class ExpData : public SimulationParameters {
     std::vector<realtype> measurements_;
 
     /**
-     * @brief standard deviation of observed data (dimension: nt x nytrue,
+     * @brief noise scale of observed data (dimension: nt x nytrue,
      * row-major)
      */
-    std::vector<realtype> measurement_error_;
+    std::vector<realtype> noise_scale_;
 
     /**
      * @brief observed events (dimension: nmaxevents x nztrue, row-major)
@@ -469,10 +469,10 @@ class ExpData : public SimulationParameters {
     std::vector<realtype> event_measurements_;
 
     /**
-     * @brief standard deviation of observed events/roots
+     * @brief noise scale of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
      */
-    std::vector<realtype> event_measurement_error_;
+    std::vector<realtype> event_noise_scale_;
 };
 
 /**
@@ -487,10 +487,10 @@ inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
            && lhs.id == rhs.id && lhs.nytrue_ == rhs.nytrue_
            && lhs.nztrue_ == rhs.nztrue_ && lhs.nmaxevent_ == rhs.nmaxevent_
            && is_equal(lhs.measurements_, rhs.measurements_)
-           && is_equal(lhs.measurement_error_, rhs.measurement_error_)
+           && is_equal(lhs.noise_scale_, rhs.noise_scale_)
            && is_equal(lhs.event_measurements_, rhs.event_measurements_)
            && is_equal(
-               lhs.event_measurement_error_, rhs.event_measurement_error_
+               lhs.event_noise_scale_, rhs.event_noise_scale_
            );
 }
 

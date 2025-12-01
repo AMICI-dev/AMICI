@@ -232,21 +232,21 @@ def test_data_replicates(preeq_fixture):
 
     # add infty timepoint
     y = edata.get_measurements()
-    stdy = edata.get_measurement_error()
+    stdy = edata.get_noise_scale()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
     edata.set_measurements(np.hstack([y, y[0]]))
-    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
+    edata.set_noise_scale(np.hstack([stdy, stdy[0]]))
     rdata_single = run_simulation(model, solver, edata)
 
     # duplicate data and timepoints
     y = edata.get_measurements()
-    stdy = edata.get_measurement_error()
+    stdy = edata.get_noise_scale()
     ts = np.hstack([*edata.get_timepoints(), *edata.get_timepoints()])
     idx = np.argsort(ts)
     edata.set_timepoints(sorted(ts))
     edata.set_measurements(np.hstack([y, y])[idx])
-    edata.set_measurement_error(np.hstack([stdy, stdy])[idx])
+    edata.set_noise_scale(np.hstack([stdy, stdy])[idx])
 
     rdata_double = run_simulation(model, solver, edata)
 
@@ -347,11 +347,11 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
 
     # add infty timepoint
     y = edata.get_measurements()
-    stdy = edata.get_measurement_error()
+    stdy = edata.get_noise_scale()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
     edata.set_measurements(np.hstack([y, y[0]]))
-    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
+    edata.set_noise_scale(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
     equil_meths = [
@@ -414,11 +414,11 @@ def test_newton_solver_equilibration(preeq_fixture):
 
     # add infty timepoint
     y = edata.get_measurements()
-    stdy = edata.get_measurement_error()
+    stdy = edata.get_noise_scale()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
     edata.set_measurements(np.hstack([y, y[0]]))
-    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
+    edata.set_noise_scale(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
     settings = [
@@ -474,11 +474,11 @@ def test_newton_steadystate_check(preeq_fixture):
 
     # add infty timepoint
     y = edata.get_measurements()
-    stdy = edata.get_measurement_error()
+    stdy = edata.get_noise_scale()
     ts = np.hstack([*edata.get_timepoints(), np.inf])
     edata.set_timepoints(sorted(ts))
     edata.set_measurements(np.hstack([y, y[0]]))
-    edata.set_measurement_error(np.hstack([stdy, stdy[0]]))
+    edata.set_noise_scale(np.hstack([stdy, stdy[0]]))
 
     # set sensi method
     sensi_meth = SensitivityMethod.forward

@@ -2128,11 +2128,11 @@ void Model::fsigmay(int const it, ExpData const* edata) {
     );
 
     if (edata) {
-        auto sigmay_edata = edata->get_measurement_error_ptr(it);
+        auto sigmay_edata = edata->get_noise_scale_ptr(it);
         /* extract the value for the standard deviation from ExpData,
          * if the data value is NaN, use the parameter value */
         for (int iytrue = 0; iytrue < nytrue; iytrue++) {
-            if (edata->is_set_measurement_error(it, iytrue))
+            if (edata->is_set_noise_scale(it, iytrue))
                 derived_state_.sigmay_.at(iytrue) = sigmay_edata[iytrue];
 
             /* TODO: when moving second order code to cpp, verify
@@ -2174,7 +2174,7 @@ void Model::fdsigmaydp(int const it, ExpData const* edata) {
     // to zero
     if (edata) {
         for (int iy = 0; iy < nytrue; iy++) {
-            if (!edata->is_set_measurement_error(it, iy))
+            if (!edata->is_set_noise_scale(it, iy))
                 continue;
             for (int ip = 0; ip < nplist(); ip++) {
                 derived_state_.dsigmaydp_.at(ip * ny + iy) = 0.0;
@@ -2206,7 +2206,7 @@ void Model::fdsigmaydy(int const it, ExpData const* edata) {
     // to zero
     if (edata) {
         for (int isigmay = 0; isigmay < nytrue; ++isigmay) {
-            if (!edata->is_set_measurement_error(it, isigmay))
+            if (!edata->is_set_noise_scale(it, isigmay))
                 continue;
             for (int iy = 0; iy < nytrue; ++iy) {
                 derived_state_.dsigmaydy_.at(isigmay * ny + iy) = 0.0;
@@ -2491,9 +2491,9 @@ void Model::fsigmaz(
     if (edata) {
         for (int iztrue = 0; iztrue < nztrue; iztrue++) {
             if (z2event_.at(iztrue) == ie) {
-                if (edata->is_set_event_measurement_error(nroots, iztrue)) {
+                if (edata->is_set_event_noise_scale(nroots, iztrue)) {
                     auto sigmaz_edata
-                        = edata->get_event_measurement_error_ptr(nroots);
+                        = edata->get_event_noise_scale_ptr(nroots);
                     derived_state_.sigmaz_.at(iztrue) = sigmaz_edata[iztrue];
                 }
 
@@ -2534,7 +2534,7 @@ void Model::fdsigmazdp(
     if (edata) {
         for (int iz = 0; iz < nztrue; iz++) {
             if (z2event_.at(iz) == ie
-                && !edata->is_set_event_measurement_error(nroots, iz)) {
+                && !edata->is_set_event_noise_scale(nroots, iz)) {
                 for (int ip = 0; ip < nplist(); ip++)
                     derived_state_.dsigmazdp_.at(iz + nz * ip) = 0;
             }
