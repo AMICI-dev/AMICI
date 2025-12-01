@@ -33,6 +33,7 @@ def eq(
     term: diffrax.ODETerm,
     root_cond_fns: list[Callable],
     root_cond_fn: Callable,
+    delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
     max_steps: jnp.int_,
 ) -> tuple[jt.Float[jt.Array, "nxs"], jt.Float[jt.Array, "ne"], dict]:
@@ -61,6 +62,8 @@ def eq(
         list of individual root condition functions for discontinuities
     :param root_cond_fn:
         root condition function for all discontinuities
+    :param delta_x:
+        function to compute state changes at events
     :param known_discs:
         known discontinuities, used to clip the step size controller
     :param max_steps:
@@ -138,17 +141,14 @@ def eq(
 
         y0_next, t0_next, h_next, stats = _handle_event(
             t0_next,
-            jnp.inf,
             y0_next,
             p,
             tcl,
             h,
-            solver,
-            controller,
             root_finder,
-            diffrax.DirectAdjoint(),
             term,
             root_cond_fn,
+            delta_x,
             stats,
         )
 
@@ -186,7 +186,9 @@ def solve(
     term: diffrax.ODETerm,
     root_cond_fns: list[Callable],
     root_cond_fn: Callable,
+    delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
+    t_eps: jt.Float = 1e-6,
 ) -> tuple[jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict]:
     """
     Simulate the ODE system for the specified timepoints.
@@ -213,6 +215,8 @@ def solve(
         list of individual root condition functions for discontinuities
     :param root_cond_fn:
         root condition function for all discontinuities
+    :param delta_x:
+        function to compute state changes at events
     :param known_discs:
         known discontinuities, used to clip the step size controller
     :return:
@@ -254,7 +258,7 @@ def solve(
 
     def body_fn(carry):
         ys, t_start, y0, hs, h, stats = carry
-        sol, idx, stats = _run_segment(
+        sol, _, stats = _run_segment(
             t_start,
             ts[-1],
             y0,
@@ -267,7 +271,7 @@ def solve(
             max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
             adjoint,
             root_cond_fns,
-            [True] * len(root_cond_fns),
+            [None] * len(root_cond_fns),
             diffrax.SaveAt(
                 subs=[
                     diffrax.SubSaveAt(
@@ -297,24 +301,39 @@ def solve(
 
         y0_next, t0_next, h_next, stats = _handle_event(
             t0_next,
-            ts_next,
             y0_next,
             p,
             tcl,
             h,
-            solver,
-            controller,
             root_finder,
-            adjoint,
             term,
             root_cond_fn,
+            delta_x,
             stats,
         )
 
-        was_event = jnp.isin(ts, sol.ts[1])
-        hs = jnp.where(was_event[:, None], h_next[None, :], hs)
+        after_event = sol.ts[1] < ts
+        hs = jnp.where(after_event[:, None], h_next[None, :], hs)
 
-        return ys, t0_next, y0_next, hs, h_next, stats
+        # Advance state to stop retriggering event immediately
+        t_resume = t0_next + t_eps
+        small_step = diffrax.diffeqsolve(
+            term,
+            solver,
+            t0_next,
+            t0_next + t_eps,
+            dt0=None,
+            y0=y0_next,
+            stepsize_controller=controller,
+            args=(p, tcl, h),
+            saveat=diffrax.SaveAt(t1=True),
+            event=None,
+        )
+
+        t_resume = small_step.ts[-1]
+        y_resume = small_step.ys[-1]
+
+        return ys, t_resume, y_resume, hs, h_next, stats
 
     # run the loop until we have reached the end of the time points
     ys, _, _, hs, _, stats = eqxi.while_loop(
@@ -429,17 +448,14 @@ def _run_segment(
 
 def _handle_event(
     t0_next: float,
-    t_max: float,
     y0_next: jt.Float[jt.Array, "nxs"],
     p: jt.Float[jt.Array, "np"],
     tcl: jt.Float[jt.Array, "ncl"],
     h: jt.Float[jt.Array, "ne"],
-    solver: diffrax.AbstractSolver,
-    controller: diffrax.AbstractStepSizeController,
     root_finder: AbstractRootFinder,
-    adjoint: diffrax.AbstractAdjoint,
     term: diffrax.ODETerm,
     root_cond_fn: Callable,
+    delta_x: Callable,
     stats: dict,
 ):
     args = (p, tcl, h)
@@ -457,11 +473,23 @@ def _handle_event(
     )
     roots_dir = jnp.sign(droot_dt)  # direction of the root condition function
 
-    h_next = h + jnp.where(
+    overall_dir = jnp.sign(jnp.sum(h * roots_dir))
+    h_next = h - (overall_dir * jnp.where(
         roots_found,
         roots_dir,
         jnp.zeros_like(h),
-    )  # update heaviside variables based on the root condition function
+    ))  # update heaviside variables based on the root condition function
+
+    mask = jnp.array(
+        [
+            jnp.logical_and(roots_found, roots_dir > 0.0)
+            for _ in range(y0_next.shape[0])
+        ]
+    ).T
+    delx = delta_x(y0_next, p)
+    ups_mat = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
+    y0_up = jnp.where(mask, ups_mat, 0.0)
+    y0_next = y0_next + jnp.sum(y0_up, axis=0)
 
     if os.getenv("JAX_DEBUG") == "1":
         jax.debug.print(
