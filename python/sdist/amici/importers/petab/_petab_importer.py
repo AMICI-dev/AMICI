@@ -810,7 +810,7 @@ class ExperimentManager:
             observable_ids=self._model.get_observable_ids(),
         )
         edata.set_measurements(y.flatten())
-        edata.set_noise_scale(sigma_y.flatten())
+        edata.set_noise_scales(sigma_y.flatten())
 
     def _get_measurements_and_sigmas(
         self,

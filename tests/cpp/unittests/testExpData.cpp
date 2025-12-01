@@ -125,14 +125,14 @@ TEST_F(ExpDataTest, MeasurementCtor) {
         y, edata.get_measurements(), TEST_ATOL, TEST_RTOL, "observedData"
     );
     checkEqualArray(
-        y_std, edata.get_noise_scale(), TEST_ATOL, TEST_RTOL,
+        y_std, edata.get_noise_scales(), TEST_ATOL, TEST_RTOL,
         "observedDataStdDev"
     );
     checkEqualArray(
         z, edata.get_event_measurements(), TEST_ATOL, TEST_RTOL, "observedEvents"
     );
     checkEqualArray(
-        z_std, edata.get_event_noise_scale(), TEST_ATOL, TEST_RTOL,
+        z_std, edata.get_event_noise_scales(), TEST_ATOL, TEST_RTOL,
         "observedEventsStdDev"
     );
 
@@ -150,8 +150,8 @@ TEST_F(ExpDataTest, MeasurementCtor) {
         TEST_RTOL, "observedData"
     );
     checkEqualArray(
-        edata_copy.get_noise_scale(),
-        edata.get_noise_scale(), TEST_ATOL, TEST_RTOL,
+        edata_copy.get_noise_scales(),
+        edata.get_noise_scales(), TEST_ATOL, TEST_RTOL,
         "observedDataStdDev"
     );
     checkEqualArray(
@@ -159,8 +159,8 @@ TEST_F(ExpDataTest, MeasurementCtor) {
         TEST_ATOL, TEST_RTOL, "observedEvents"
     );
     checkEqualArray(
-        edata_copy.get_event_noise_scale(),
-        edata.get_event_noise_scale(), TEST_ATOL, TEST_RTOL,
+        edata_copy.get_event_noise_scales(),
+        edata.get_event_noise_scales(), TEST_ATOL, TEST_RTOL,
         "observedEventsStdDev"
     );
 }
@@ -218,9 +218,9 @@ TEST_F(ExpDataTest, DimensionChecks) {
     std::vector<realtype> bad_z_std(nz * nmaxevent + 1, 0.1);
 
     ASSERT_THROW(edata.set_measurements(bad_y), AmiException);
-    ASSERT_THROW(edata.set_noise_scale(bad_y_std), AmiException);
+    ASSERT_THROW(edata.set_noise_scales(bad_y_std), AmiException);
     ASSERT_THROW(edata.set_event_measurements(bad_z), AmiException);
-    ASSERT_THROW(edata.set_event_noise_scale(bad_y_std), AmiException);
+    ASSERT_THROW(edata.set_event_noise_scales(bad_y_std), AmiException);
 
     std::vector<realtype> bad_single_y(edata.nt() + 1, 0.0);
     std::vector<realtype> bad_single_y_std(edata.nt() + 1, 0.1);
@@ -229,11 +229,11 @@ TEST_F(ExpDataTest, DimensionChecks) {
 
     ASSERT_THROW(edata.set_measurements(bad_single_y, 0), AmiException);
     ASSERT_THROW(
-        edata.set_noise_scale(bad_single_y_std, 0), AmiException
+        edata.set_noise_scales(bad_single_y_std, 0), AmiException
     );
     ASSERT_THROW(edata.set_event_measurements(bad_single_z, 0), AmiException);
     ASSERT_THROW(
-        edata.set_event_noise_scale(bad_single_y_std, 0), AmiException
+        edata.set_event_noise_scales(bad_single_y_std, 0), AmiException
     );
 
     ASSERT_THROW(
@@ -253,18 +253,18 @@ TEST_F(ExpDataTest, SettersGetters) {
     checkEqualArray(
         edata.get_measurements(), y, TEST_ATOL, TEST_RTOL, "ObservedData"
     );
-    edata.set_noise_scale(y_std);
+    edata.set_noise_scales(y_std);
     checkEqualArray(
-        edata.get_noise_scale(), y_std, TEST_ATOL, TEST_RTOL,
+        edata.get_noise_scales(), y_std, TEST_ATOL, TEST_RTOL,
         "ObservedDataStdDev"
     );
     edata.set_event_measurements(z);
     checkEqualArray(
         edata.get_event_measurements(), z, TEST_ATOL, TEST_RTOL, "ObservedEvents"
     );
-    edata.set_event_noise_scale(z_std);
+    edata.set_event_noise_scales(z_std);
     checkEqualArray(
-        edata.get_event_noise_scale(), z_std, TEST_ATOL, TEST_RTOL,
+        edata.get_event_noise_scales(), z_std, TEST_ATOL, TEST_RTOL,
         "ObservedEventsStdDev"
     );
 
@@ -273,15 +273,15 @@ TEST_F(ExpDataTest, SettersGetters) {
 
     for (int iy = 0; iy < ny; ++iy) {
         edata.set_measurements(single_y, iy);
-        edata.set_noise_scale(single_y_std, iy);
+        edata.set_noise_scales(single_y_std, iy);
     }
     ASSERT_THROW(edata.set_measurements(single_y, ny), std::exception);
     ASSERT_THROW(edata.set_measurements(single_y, -1), std::exception);
     ASSERT_THROW(
-        edata.set_noise_scale(single_y_std, ny), std::exception
+        edata.set_noise_scales(single_y_std, ny), std::exception
     );
     ASSERT_THROW(
-        edata.set_noise_scale(single_y_std, -1), std::exception
+        edata.set_noise_scales(single_y_std, -1), std::exception
     );
 
     std::vector<realtype> single_z(edata.nmaxevent(), 0.0);
@@ -289,40 +289,40 @@ TEST_F(ExpDataTest, SettersGetters) {
 
     for (int iz = 0; iz < nz; ++iz) {
         edata.set_event_measurements(single_z, iz);
-        edata.set_event_noise_scale(single_z_std, iz);
+        edata.set_event_noise_scales(single_z_std, iz);
     }
 
     ASSERT_THROW(edata.set_event_measurements(single_z, nz), std::exception);
     ASSERT_THROW(edata.set_event_measurements(single_z, -1), std::exception);
     ASSERT_THROW(
-        edata.set_event_noise_scale(single_z_std, nz), std::exception
+        edata.set_event_noise_scales(single_z_std, nz), std::exception
     );
     ASSERT_THROW(
-        edata.set_event_noise_scale(single_z_std, -1), std::exception
+        edata.set_event_noise_scales(single_z_std, -1), std::exception
     );
 
     ASSERT_TRUE(edata.get_measurements_ptr(0));
-    ASSERT_TRUE(edata.get_noise_scale_ptr(0));
+    ASSERT_TRUE(edata.get_noise_scales_ptr(0));
     ASSERT_TRUE(edata.get_event_measurements_ptr(0));
-    ASSERT_TRUE(edata.get_event_noise_scale_ptr(0));
+    ASSERT_TRUE(edata.get_event_noise_scales_ptr(0));
 
     std::vector<realtype> empty(0, 0.0);
 
     edata.set_measurements(empty);
-    edata.set_noise_scale(empty);
+    edata.set_noise_scales(empty);
     edata.set_event_measurements(empty);
-    edata.set_event_noise_scale(empty);
+    edata.set_event_noise_scales(empty);
 
     ASSERT_TRUE(!edata.get_measurements_ptr(0));
-    ASSERT_TRUE(!edata.get_noise_scale_ptr(0));
+    ASSERT_TRUE(!edata.get_noise_scales_ptr(0));
     ASSERT_TRUE(!edata.get_event_measurements_ptr(0));
-    ASSERT_TRUE(!edata.get_event_noise_scale_ptr(0));
+    ASSERT_TRUE(!edata.get_event_noise_scales_ptr(0));
 
     checkEqualArray(
         edata.get_measurements(), empty, TEST_ATOL, TEST_RTOL, "ObservedData"
     );
     checkEqualArray(
-        edata.get_noise_scale(), empty, TEST_ATOL, TEST_RTOL,
+        edata.get_noise_scales(), empty, TEST_ATOL, TEST_RTOL,
         "ObservedDataStdDev"
     );
     checkEqualArray(
@@ -330,7 +330,7 @@ TEST_F(ExpDataTest, SettersGetters) {
         "ObservedEvents"
     );
     checkEqualArray(
-        edata.get_event_noise_scale(), empty, TEST_ATOL, TEST_RTOL,
+        edata.get_event_noise_scales(), empty, TEST_ATOL, TEST_RTOL,
         "ObservedEventsStdDev"
     );
 }

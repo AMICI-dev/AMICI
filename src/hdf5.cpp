@@ -138,7 +138,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
             auto const sigmay
                 = get_double_2d_dataset(file, hdf5Root + "/Sigma_Y", m, n);
             check_measurement_dimensions_compatible(m, n, model);
-            edata->set_noise_scale(sigmay);
+            edata->set_noise_scales(sigmay);
         } else {
             throw AmiException(
                 "Missing %s/Sigma_Y in %s", hdf5Root.c_str(),
@@ -162,7 +162,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
             auto sigmaz
                 = get_double_2d_dataset(file, hdf5Root + "/Sigma_Z", m, n);
             check_event_dimensions_compatible(m, n, model);
-            edata->set_event_noise_scale(sigmaz);
+            edata->set_event_noise_scales(sigmaz);
         } else {
             throw AmiException(
                 "Missing %s/Sigma_Z in %s", hdf5Root.c_str(),
@@ -298,9 +298,9 @@ void write_exp_data_to_hdf5(
             file, hdf5Location + "/Y", edata.get_measurements(), edata.nt(),
             edata.nytrue()
         );
-    if (!edata.get_noise_scale().empty())
+    if (!edata.get_noise_scales().empty())
         create_and_write_double_2d_dataset(
-            file, hdf5Location + "/Sigma_Y", edata.get_noise_scale(),
+            file, hdf5Location + "/Sigma_Y", edata.get_noise_scales(),
             edata.nt(), edata.nytrue()
         );
     if (!edata.get_event_measurements().empty())
@@ -308,10 +308,10 @@ void write_exp_data_to_hdf5(
             file, hdf5Location + "/Z", edata.get_event_measurements(),
             edata.nmaxevent(), edata.nztrue()
         );
-    if (!edata.get_event_noise_scale().empty())
+    if (!edata.get_event_noise_scales().empty())
         create_and_write_double_2d_dataset(
             file, hdf5Location + "/Sigma_Z",
-            edata.get_event_noise_scale(), edata.nmaxevent(),
+            edata.get_event_noise_scales(), edata.nmaxevent(),
             edata.nztrue()
         );
 

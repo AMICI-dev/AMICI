@@ -95,7 +95,7 @@ TEST(ExampleJakstatAdjoint, SensitivityReplicates)
         }
     }
     edata.set_measurements(d);
-    edata.set_noise_scale(1.0);
+    edata.set_noise_scales(1.0);
 
     solver->set_sensitivity_order(amici::SensitivityOrder::none);
     auto rdata1 = run_simulation(*solver, &edata, *model);
@@ -114,7 +114,7 @@ TEST(ExampleJakstatAdjoint, SensitivityReplicates)
         }
     }
     edata.set_measurements(d);
-    edata.set_noise_scale(1.0);
+    edata.set_noise_scales(1.0);
 
     solver->set_sensitivity_order(amici::SensitivityOrder::first);
     solver->set_sensitivity_method(amici::SensitivityMethod::forward);

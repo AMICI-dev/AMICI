@@ -1351,7 +1351,7 @@ void Model::add_event_objective(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurements(nroots, iztrue)) {
+        if (edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJz(nllh.data(), iztrue, state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.z_.data(),
@@ -1371,7 +1371,7 @@ void Model::add_event_objective_regularization(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurements(nroots, iztrue)) {
+        if (edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJrz(
                 nllh.data(), iztrue, state_.unscaled_parameters.data(),
@@ -2128,7 +2128,7 @@ void Model::fsigmay(int const it, ExpData const* edata) {
     );
 
     if (edata) {
-        auto sigmay_edata = edata->get_noise_scale_ptr(it);
+        auto sigmay_edata = edata->get_noise_scales_ptr(it);
         /* extract the value for the standard deviation from ExpData,
          * if the data value is NaN, use the parameter value */
         for (int iytrue = 0; iytrue < nytrue; iytrue++) {
@@ -2141,7 +2141,7 @@ void Model::fsigmay(int const it, ExpData const* edata) {
             for (int iJ = 1; iJ < nJ; iJ++)
                 derived_state_.sigmay_.at(iytrue + iJ * nytrue) = 0;
 
-            if (edata->is_set_measurements(it, iytrue)) {
+            if (edata->is_set_measurement(it, iytrue)) {
                 std::string obs_id = has_observable_ids()
                                          ? get_observable_ids().at(iytrue)
                                          : std::to_string(iytrue);
@@ -2238,7 +2238,7 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
         fdJydy_colptrs(derived_state_.dJydy_.at(iyt), iyt);
         fdJydy_rowvals(derived_state_.dJydy_.at(iyt), iyt);
 
-        if (!edata.is_set_measurements(it, iyt))
+        if (!edata.is_set_measurement(it, iyt))
             continue;
 
         // get dJydy slice (ny) for current timepoint and observable
@@ -2291,7 +2291,7 @@ void Model::fdJydsigma(int const it, AmiVector const& x, ExpData const& edata) {
     fsigmay(it, &edata);
 
     for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (edata.is_set_measurements(it, iyt)) {
+        if (edata.is_set_measurement(it, iyt)) {
             // get dJydsigma slice (ny) for current timepoint and observable
             fdJydsigma(
                 &derived_state_.dJydsigma_.at(iyt * ny * nJ), iyt,
@@ -2329,7 +2329,7 @@ void Model::fdJydp(int const it, AmiVector const& x, ExpData const& edata) {
     set_nan_to_zero(derived_state_.dJydsigma_);
     set_nan_to_zero(derived_state_.dsigmaydp_);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (!edata.is_set_measurements(it, iyt))
+        if (!edata.is_set_measurement(it, iyt))
             continue;
 
         // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
@@ -2366,7 +2366,7 @@ void Model::fdJydx(int const it, AmiVector const& x, ExpData const& edata) {
     // dydx :     ny x nx_solver
     // dJydx:     nJ x nx_solver x nt
     for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (!edata.is_set_measurements(it, iyt))
+        if (!edata.is_set_measurement(it, iyt))
             continue;
         // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
         //         slice                                       slice
@@ -2493,7 +2493,7 @@ void Model::fsigmaz(
             if (z2event_.at(iztrue) == ie) {
                 if (edata->is_set_event_noise_scale(nroots, iztrue)) {
                     auto sigmaz_edata
-                        = edata->get_event_noise_scale_ptr(nroots);
+                        = edata->get_event_noise_scales_ptr(nroots);
                     derived_state_.sigmaz_.at(iztrue) = sigmaz_edata[iztrue];
                 }
 
@@ -2503,7 +2503,7 @@ void Model::fsigmaz(
                 for (int iJ = 1; iJ < nJ; iJ++)
                     derived_state_.sigmaz_.at(iztrue + iJ * nztrue) = 0;
 
-                if (edata->is_set_event_measurements(nroots, iztrue))
+                if (edata->is_set_event_measurement(nroots, iztrue))
                     check_sigma_positivity(
                         derived_state_.sigmaz_.at(iztrue), "sigmaz"
                     );
@@ -2561,7 +2561,7 @@ void Model::fdJzdz(
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurements(nroots, iztrue)) {
+        if (edata.is_set_event_measurement(nroots, iztrue)) {
             fdJzdz(
                 &derived_state_.dJzdz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
@@ -2594,7 +2594,7 @@ void Model::fdJzdsigma(
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurements(nroots, iztrue)) {
+        if (edata.is_set_event_measurement(nroots, iztrue)) {
             fdJzdsigma(
                 &derived_state_.dJzdsigma_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
@@ -2641,7 +2641,7 @@ void Model::fdJzdp(
     set_nan_to_zero(derived_state_.dJzdsigma_);
     set_nan_to_zero(derived_state_.dJrzdsigma_);
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.is_set_event_measurements(nroots, izt))
+        if (!edata.is_set_event_measurement(nroots, izt))
             continue;
 
         if (t < edata.get_timepoint(edata.nt() - 1)) {
@@ -2705,7 +2705,7 @@ void Model::fdJzdx(
     set_nan_to_zero(derived_state_.drzdx_);
 
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.is_set_event_measurements(nroots, izt))
+        if (!edata.is_set_event_measurement(nroots, izt))
             continue;
 
         if (t < edata.get_timepoint(edata.nt() - 1)) {
@@ -2743,7 +2743,7 @@ void Model::fdJrzdz(
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurements(nroots, iztrue)) {
+        if (edata.is_set_event_measurement(nroots, iztrue)) {
             fdJrzdz(
                 &derived_state_.dJrzdz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
@@ -2775,7 +2775,7 @@ void Model::fdJrzdsigma(
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurements(nroots, iztrue)) {
+        if (edata.is_set_event_measurement(nroots, iztrue)) {
             fdJrzdsigma(
                 &derived_state_.dJrzdsigma_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),

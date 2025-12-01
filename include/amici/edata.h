@@ -217,7 +217,7 @@ class ExpData : public SimulationParameters {
      *
      * @return boolean specifying if data was set
      */
-    bool is_set_measurements(int it, int iy) const;
+    bool is_set_measurement(int it, int iy) const;
 
     /**
      * @brief Get all measurements.
@@ -238,17 +238,17 @@ class ExpData : public SimulationParameters {
     /**
      * @brief Set noise scales for measurements.
      *
-     * @param noise_scale noise scale of observed data
+     * @param sigma noise scales of observed data
      * (dimension: nt x nytrue, row-major)
      */
-    void set_noise_scale(std::vector<realtype> const& noise_scale);
+    void set_noise_scales(std::vector<realtype> const& sigma);
 
     /**
      * @brief Set identical noise scale for all measurements.
      *
      * @param sigma noise scale (dimension: scalar)
      */
-    void set_noise_scale(realtype sigma);
+    void set_noise_scales(realtype sigma);
 
     /**
      * @brief Set noise scales of observed data for a
@@ -258,7 +258,7 @@ class ExpData : public SimulationParameters {
      * nt)
      * @param iy observed data index
      */
-    void set_noise_scale(std::vector<realtype> const& sigma, int iy);
+    void set_noise_scales(std::vector<realtype> const& sigma, int iy);
 
     /**
      * @brief Set all noise scale for a given observable index to the
@@ -267,7 +267,7 @@ class ExpData : public SimulationParameters {
      * @param sigma noise scale (dimension: scalar)
      * @param iy observed data index
      */
-    void set_noise_scale(realtype sigma, int iy);
+    void set_noise_scales(realtype sigma, int iy);
 
     /**
      * @brief Whether noise scale for a measurement at
@@ -284,7 +284,7 @@ class ExpData : public SimulationParameters {
      *
      * @return noise scale of observed data
      */
-    std::vector<realtype> const& get_noise_scale() const;
+    std::vector<realtype> const& get_noise_scales() const;
 
     /**
      * @brief Get pointer to measurement noise scales.
@@ -292,7 +292,7 @@ class ExpData : public SimulationParameters {
      * @param it timepoint index
      * @return pointer to noise scale of observed data at index
      */
-    realtype const* get_noise_scale_ptr(int it) const;
+    realtype const* get_noise_scales_ptr(int it) const;
 
     /**
      * @brief Set observed event data.
@@ -318,7 +318,7 @@ class ExpData : public SimulationParameters {
      * @param iz event observable index
      * @return boolean specifying if data was set
      */
-    bool is_set_event_measurements(int ie, int iz) const;
+    bool is_set_event_measurement(int ie, int iz) const;
 
     /**
      * @brief Get observed event data.
@@ -337,27 +337,27 @@ class ExpData : public SimulationParameters {
     realtype const* get_event_measurements_ptr(int ie) const;
 
     /**
-     * @brief Set noise scale of observed event data.
+     * @brief Set noise scales of observed event data.
      *
-     * @param sigma noise scale of observed event data
+     * @param sigma noise scales of observed event data
      */
-    void set_event_noise_scale(std::vector<realtype> const& sigma);
+    void set_event_noise_scales(std::vector<realtype> const& sigma);
 
     /**
-     * @brief Set noise scale of observed event data.
+     * @brief Set noise scales of observed event data.
      *
      * @param sigma noise scale (dimension: scalar)
      */
     void set_event_noise_scale(realtype sigma);
 
     /**
-     * @brief Set noise scale of observed data for a specific observable.
+     * @brief Set noise scales of observed data for a specific observable.
      *
-     * @param sigma noise scale of observed data
+     * @param sigma noise scales of observed data
      * (dimension: nmaxevent)
      * @param iz observed data index
      */
-    void set_event_noise_scale(std::vector<realtype> const& sigma, int iz);
+    void set_event_noise_scales(std::vector<realtype> const& sigma, int iz);
 
     /**
      * @brief Set all noise scales of a specific event-observable.
@@ -365,7 +365,7 @@ class ExpData : public SimulationParameters {
      * @param sigma noise scale (dimension: scalar)
      * @param iz observed data index
      */
-    void set_event_noise_scale(realtype sigma, int iz);
+    void set_event_noise_scales(realtype sigma, int iz);
 
     /**
      * @brief Check whether noise scale of event data
@@ -382,7 +382,7 @@ class ExpData : public SimulationParameters {
      *
      * @return noise scale of observed event data
      */
-    std::vector<realtype> const& get_event_noise_scale() const;
+    std::vector<realtype> const& get_event_noise_scales() const;
 
     /**
      * @brief Get pointer to noise scale of
@@ -393,7 +393,7 @@ class ExpData : public SimulationParameters {
      * @return pointer to noise scale of observed event data at ie-th
      * occurrence
      */
-    realtype const* get_event_noise_scale_ptr(int ie) const;
+    realtype const* get_event_noise_scales_ptr(int ie) const;
 
     /**
      * @brief Set all observations and their noise scales to NaN.
@@ -409,23 +409,23 @@ class ExpData : public SimulationParameters {
 
   protected:
     /**
-     * @brief resizes observedData, observedDataStdDev, observedEvents and
-     * observedEventsStdDev
+     * @brief resizes measurements_, noise_scales_, event_measurements_ and
+     * event_noise_scales_
      */
     void apply_dimensions();
 
     /**
-     * @brief resizes observedData and observedDataStdDev
+     * @brief resizes measurements_ and noise_scales_
      */
     void apply_data_dimension();
 
     /**
-     * @brief resizes observedEvents and observedEventsStdDev
+     * @brief resizes event_measurements_ and event_noise_scales_
      */
     void apply_event_dimension();
 
     /**
-     * @brief checker for dimensions of input observedData or observedDataStdDev
+     * @brief checker for dimensions of input measurements_ or noise_scales_
      *
      * @param input vector input to be checked
      * @param fieldname name of the input
@@ -435,8 +435,8 @@ class ExpData : public SimulationParameters {
     ) const;
 
     /**
-     * @brief checker for dimensions of input observedEvents or
-     * observedEventsStdDev
+     * @brief checker for dimensions of input event_measurements_ or
+     * event_noise_scales_
      *
      * @param input vector input to be checked
      * @param fieldname name of the input
@@ -461,7 +461,7 @@ class ExpData : public SimulationParameters {
      * @brief noise scale of observed data (dimension: nt x nytrue,
      * row-major)
      */
-    std::vector<realtype> noise_scale_;
+    std::vector<realtype> noise_scales_;
 
     /**
      * @brief observed events (dimension: nmaxevents x nztrue, row-major)
@@ -472,7 +472,7 @@ class ExpData : public SimulationParameters {
      * @brief noise scale of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
      */
-    std::vector<realtype> event_noise_scale_;
+    std::vector<realtype> event_noise_scales_;
 };
 
 /**
@@ -487,10 +487,10 @@ inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
            && lhs.id == rhs.id && lhs.nytrue_ == rhs.nytrue_
            && lhs.nztrue_ == rhs.nztrue_ && lhs.nmaxevent_ == rhs.nmaxevent_
            && is_equal(lhs.measurements_, rhs.measurements_)
-           && is_equal(lhs.noise_scale_, rhs.noise_scale_)
+           && is_equal(lhs.noise_scales_, rhs.noise_scales_)
            && is_equal(lhs.event_measurements_, rhs.event_measurements_)
            && is_equal(
-               lhs.event_noise_scale_, rhs.event_noise_scale_
+               lhs.event_noise_scales_, rhs.event_noise_scales_
            );
 }
 

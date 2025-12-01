@@ -541,9 +541,9 @@ class ExpDataView(SwigPtrView):
     _field_names = [
         "ts",
         "measurements",
-        "noise_scale",
+        "noise_scales",
         "event_measurements",
-        "event_noise_scale",
+        "event_noise_scales",
         "fixed_parameters",
         "fixed_parameters_pre_equilibration",
         "fixed_parameters_presimulation",
@@ -563,10 +563,10 @@ class ExpDataView(SwigPtrView):
             "ts": [edata.nt()],
             # observables
             "measurements": [edata.nt(), edata.nytrue()],
-            "noise_scale": [edata.nt(), edata.nytrue()],
+            "noise_scales": [edata.nt(), edata.nytrue()],
             # event observables
             "event_measurements": [edata.nmaxevent(), edata.nztrue()],
-            "event_noise_scale": [edata.nmaxevent(), edata.nztrue()],
+            "event_noise_scales": [edata.nmaxevent(), edata.nztrue()],
             # fixed parameters
             "fixed_parameters": [len(edata.fixed_parameters)],
             "fixed_parameters_pre_equilibration": [
@@ -578,9 +578,9 @@ class ExpDataView(SwigPtrView):
         }
         edata.ts = edata.timepoints
         edata.measurements = edata.get_measurements()
-        edata.noise_scale = edata.get_noise_scale()
+        edata.noise_scales = edata.get_noise_scales()
         edata.event_measurements = edata.get_event_measurements()
-        edata.event_noise_scale = edata.get_event_noise_scale()
+        edata.event_noise_scales = edata.get_event_noise_scales()
         super().__init__(edata)
 
 

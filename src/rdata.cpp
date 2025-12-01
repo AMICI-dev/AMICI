@@ -953,7 +953,7 @@ void ReturnData::fres(
     auto observedData = edata.get_measurements_ptr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt = iy + it * edata.nytrue();
-        if (!edata.is_set_measurements(it, iy))
+        if (!edata.is_set_measurement(it, iy))
             continue;
 
         res.at(iyt) = amici::fres(
@@ -974,7 +974,7 @@ void ReturnData::fchi2(int const it, ExpData const& edata) {
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * nytrue;
         chi2 += pow(res.at(iyt_true), 2);
-        if (sigma_res && edata.is_set_measurements(it, iy))
+        if (sigma_res && edata.is_set_measurement(it, iy))
             chi2 += pow(res.at(iyt_true + nt * nytrue), 2) - sigma_offset;
     }
 }
@@ -1018,7 +1018,7 @@ void ReturnData::fsres(
 
     auto observedData = edata.get_measurements_ptr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
-        if (!edata.is_set_measurements(it, iy))
+        if (!edata.is_set_measurement(it, iy))
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
             int idx = (iy + it * edata.nytrue()) * nplist + ip;
@@ -1114,7 +1114,7 @@ void ReturnData::fFIM(
     auto observedData = edata.get_measurements_ptr(it);
 
     for (int iy = 0; iy < nytrue; ++iy) {
-        if (!edata.is_set_measurements(it, iy))
+        if (!edata.is_set_measurement(it, iy))
             continue;
         auto y = y_it.at(iy);
         auto m = observedData[iy];
