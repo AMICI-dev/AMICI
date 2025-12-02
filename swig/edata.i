@@ -7,8 +7,8 @@ using namespace amici;
 %}
 
 %ignore ConditionContext;
-%ignore get_observed_data_ptr;
-%ignore get_observed_data_std_dev_ptr;
+%ignore get_measurements_ptr;
+%ignore get_noise_scales_ptr;
 
 %feature("pythonprepend") amici::ExpData::ExpData %{
     """
@@ -32,22 +32,22 @@ using namespace amici;
 %pythoncode %{
 def _edata_repr(self: "ExpData"):
     n_data_y = sum(
-        self.is_set_observed_data(it, iy)
+        self.is_set_measurement(it, iy)
         for it in range(self.nt()) for
         iy in range(self.nytrue())
     )
     n_sigma_y = sum(
-        self.is_set_observed_data_std_dev(it, iy)
+        self.is_set_noise_scale(it, iy)
         for it in range(self.nt())
         for iy in range(self.nytrue())
     )
     n_data_z = sum(
-        self.is_set_observed_events(ie, iz)
+        self.is_set_event_measurement(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
     n_sigma_z = sum(
-        self.is_set_observed_events_std_dev(ie, iz)
+        self.is_set_event_noise_scale(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
@@ -114,10 +114,10 @@ def __reduce__(self):
                 self.nztrue(),
                 self.nmaxevent(),
                 self.get_timepoints(),
-                self.get_observed_data(),
-                self.get_observed_data_std_dev(),
-                self.get_observed_events(),
-                self.get_observed_events_std_dev(),
+                self.get_measurements(),
+                self.get_noise_scales(),
+                self.get_event_measurements(),
+                self.get_event_noise_scales(),
             ),
             dict(self)
         ),

@@ -809,8 +809,8 @@ class ExperimentManager:
             timepoints_w_reps=timepoints_w_reps,
             observable_ids=self._model.get_observable_ids(),
         )
-        edata.set_observed_data(y.flatten())
-        edata.set_observed_data_std_dev(sigma_y.flatten())
+        edata.set_measurements(y.flatten())
+        edata.set_noise_scales(sigma_y.flatten())
 
     def _get_measurements_and_sigmas(
         self,

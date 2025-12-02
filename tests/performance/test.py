@@ -168,8 +168,8 @@ def main():
         # TODO
         edata = ExpData(model)
         edata.set_timepoints([1e8])
-        edata.set_observed_data([1.0])
-        edata.set_observed_data_std_dev([1.0])
+        edata.set_measurements([1.0])
+        edata.set_noise_scales([1.0])
 
     prepare_simulation(arg, model, solver, edata)
 

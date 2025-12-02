@@ -112,10 +112,8 @@ def get_data_observables_as_data_frame(
             for i_obs, obs in enumerate(
                 _get_names_or_ids(model, "observable", by_id=by_id)
             ):
-                datadict[obs] = npdata["observed_data"][i_time, i_obs]
-                datadict[obs + "_std"] = npdata["observed_data_std_dev"][
-                    i_time, i_obs
-                ]
+                datadict[obs] = npdata["measurements"][i_time, i_obs]
+                datadict[obs + "_std"] = npdata["noise_scales"][i_time, i_obs]
 
             # add conditions
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
@@ -795,9 +793,9 @@ def construct_edata_from_data_frame(
         _get_names_or_ids(model, "observable", by_id=by_id)
     ):
         if obs in df.keys():
-            edata.set_observed_data(df[obs].values.astype(float), obs_index)
+            edata.set_measurements(df[obs].values.astype(float), obs_index)
         if obs + "_std" in df.keys():
-            edata.set_observed_data_std_dev(
+            edata.set_noise_scales(
                 df[obs + "_std"].values.astype(float), obs_index
             )
 

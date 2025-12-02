@@ -202,7 +202,7 @@ def test_sbml2amici_observable_dependent_error(
         rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1], rtol=1.0e-5, atol=1.0e-8
     )
     edata = ExpData(rdata, 1.0, 0.0)
-    edata.set_observed_data_std_dev(np.nan)
+    edata.set_noise_scales(np.nan)
 
     # check sensitivities
     solver.set_sensitivity_order(SensitivityOrder.first)
@@ -337,8 +337,8 @@ def test_presimulation_events(tempdir):
     rdata = run_simulation(model, solver, edata)
     edata_tmp = ExpData(rdata, 1, 0)
     edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
-    edata.set_observed_data(edata_tmp.get_observed_data())
-    edata.set_observed_data_std_dev(edata_tmp.get_observed_data_std_dev())
+    edata.set_measurements(edata_tmp.get_measurements())
+    edata.set_noise_scales(edata_tmp.get_noise_scales())
 
     # sensitivities w.r.t. t_initial_presim (trigger time of an initial event)
     #  are not supported
@@ -418,8 +418,8 @@ def test_presimulation_events_and_sensitivities(tempdir):
     rdata = run_simulation(model, solver, edata)
     edata_tmp = ExpData(rdata, 1, 0)
     edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
-    edata.set_observed_data(edata_tmp.get_observed_data())
-    edata.set_observed_data_std_dev(edata_tmp.get_observed_data_std_dev())
+    edata.set_measurements(edata_tmp.get_measurements())
+    edata.set_noise_scales(edata_tmp.get_noise_scales())
 
     solver.set_sensitivity_order(SensitivityOrder.first)
 
@@ -555,7 +555,7 @@ def test_likelihoods(model_test_likelihoods):
     sigmas = rdata["y"].max(axis=0) * 0.05
     edata = ExpData(rdata, sigmas, [])
     # just make all observables positive since some are logarithmic
-    while min(edata.get_observed_data()) < 0:
+    while min(edata.get_measurements()) < 0:
         edata = ExpData(rdata, sigmas, [])
 
     # and now run for real and also compute likelihood values

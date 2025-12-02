@@ -152,14 +152,14 @@ def plot_observable_trajectories(
         if edata is not None:
             ax.plot(
                 edata.ts,
-                edata.observed_data[:, iy],
+                edata.measurements[:, iy],
                 "x",
                 label=f"exp. {label}",
                 color=l.get_color(),
             )
             ax.errorbar(
                 edata.ts,
-                edata.observed_data[:, iy],
+                edata.measurements[:, iy],
                 yerr=rdata.sigmay[:, iy],
                 fmt="none",
                 color=l.get_color(),

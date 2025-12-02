@@ -58,11 +58,11 @@ TEST(ExampleJakstatAdjoint, SensitivityAdjointUnusedNanOutputs)
 
     auto iy = 1;
     Expects(model->get_observable_ids()[iy] == "obs_tSTAT");
-    auto d = edata->get_observed_data();
+    auto d = edata->get_measurements();
     for (int it = 0; it < edata->nt(); ++it) {
         d[it * edata->nytrue() + iy] = NAN;
     }
-    edata->set_observed_data(d);
+    edata->set_measurements(d);
 
     auto rdata = run_simulation(*solver, edata.get(), *model);
 
@@ -84,7 +84,7 @@ TEST(ExampleJakstatAdjoint, SensitivityReplicates)
 
     // No replicate, no sensi
     edata.set_timepoints({ 10.0 });
-    auto d = edata.get_observed_data();
+    auto d = edata.get_measurements();
     for (int it = 0; it < edata.nt(); ++it) {
         for (int iy = 0; iy < edata.nytrue(); ++iy) {
             if (iy == 0) {
@@ -94,8 +94,8 @@ TEST(ExampleJakstatAdjoint, SensitivityReplicates)
             }
         }
     }
-    edata.set_observed_data(d);
-    edata.set_observed_data_std_dev(1.0);
+    edata.set_measurements(d);
+    edata.set_noise_scales(1.0);
 
     solver->set_sensitivity_order(amici::SensitivityOrder::none);
     auto rdata1 = run_simulation(*solver, &edata, *model);
@@ -103,7 +103,7 @@ TEST(ExampleJakstatAdjoint, SensitivityReplicates)
 
     // forward + replicates
     edata.set_timepoints({ 10.0, 10.0 });
-    d = edata.get_observed_data();
+    d = edata.get_measurements();
     for (int it = 0; it < edata.nt(); ++it) {
         for (int iy = 0; iy < edata.nytrue(); ++iy) {
             if (iy == 0) {
@@ -113,8 +113,8 @@ TEST(ExampleJakstatAdjoint, SensitivityReplicates)
             }
         }
     }
-    edata.set_observed_data(d);
-    edata.set_observed_data_std_dev(1.0);
+    edata.set_measurements(d);
+    edata.set_noise_scales(1.0);
 
     solver->set_sensitivity_order(amici::SensitivityOrder::first);
     solver->set_sensitivity_method(amici::SensitivityMethod::forward);
