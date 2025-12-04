@@ -23,6 +23,7 @@ class FinalStateStorer;
 struct Discontinuity {
     /**
      * @brief Constructor.
+     *
      * @param time
      * @param root_info
      * @param x_pre
@@ -92,6 +93,7 @@ struct Discontinuity {
 /**
  * @brief Compute the number of roots for each root function from a vector of
  * discontinuities.
+ *
  * @param discs Encountered discontinuities.
  * @param ne Number of root functions (ne).
  * @param nmaxevents Maximum number of events to track (nmaxevents).
@@ -107,6 +109,7 @@ compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
 struct FwdSimWorkspace {
     /**
      * @brief Constructor
+     *
      * @param model The model for which to set up the workspace.
      * @param solver The solver for which to set up this workspace.
      */
@@ -200,6 +203,7 @@ class EventHandlingSimulator {
   public:
     /**
      * @brief EventHandlingSimulator
+     *
      * @param model The model to simulate.
      * @param solver The solver to use for the simulation.
      * @param ws The workspace to use for the simulation.
@@ -262,6 +266,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Returns maximal event index for which the timepoint is available
+     *
      * @return index
      */
     [[nodiscard]] int get_root_counter() const {
@@ -270,6 +275,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Returns maximal event index for which simulations are available
+     *
      * @return index
      */
     [[nodiscard]] int get_event_counter() const {
@@ -278,6 +284,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Creates a carbon copy of the current simulation state variables
+     *
      * @return state
      */
     SimulationState get_simulation_state();
@@ -319,6 +326,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Check for, and if applicable, handle any secondary events
+     *
      * @return the number of secondary events found
      */
     int detect_secondary_events();
@@ -410,6 +418,7 @@ class SteadyStateProblem {
 
     /**
      * @brief Return state at steady state
+     *
      * @return x
      */
     [[nodiscard]] AmiVector const& get_state() const {
@@ -418,6 +427,7 @@ class SteadyStateProblem {
 
     /**
      * @brief Return state sensitivity at steady state
+     *
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& get_state_sensitivity() const {
@@ -426,12 +436,14 @@ class SteadyStateProblem {
 
     /**
      * @brief Get the CPU time taken to solve the forward problem.
+     *
      * @return The CPU time in milliseconds.
      */
     [[nodiscard]] double get_cpu_time() const { return cpu_time_; }
 
     /**
      * @brief Get the steady state computation status.
+     *
      * @return Execution status of the different approaches
      * [newton, simulation, newton].
      */
@@ -442,6 +454,7 @@ class SteadyStateProblem {
 
     /**
      * @brief Get model time at which steady state was found through simulation.
+     *
      * @return Time at which steady state was found (model time units).
      */
     [[nodiscard]] realtype get_steady_state_time() const {
@@ -450,12 +463,14 @@ class SteadyStateProblem {
 
     /**
      * @brief Get the weighted root mean square of the residuals.
+     *
      * @return The weighted root-mean-square of the residuals.
      */
     [[nodiscard]] realtype get_residual_norm() const { return wrms_; }
 
     /**
      * @brief Get the number of steps taken to find the steady state.
+     *
      * @return Number of steps taken to find the steady state as
      * [newton, simulation, newton].
      */
@@ -466,18 +481,21 @@ class SteadyStateProblem {
     /**
      * @brief Check, whether any approach to find the steady state was
      * successful.
+     *
      * @return Whether any approach to find the steady state was successful.
      */
     [[nodiscard]] bool check_steady_state_success() const;
 
     /**
      * @brief Get the pre-equilibration solver.
+     *
      * @return The preequilibration solver.
      */
     [[nodiscard]] Solver const* get_solver() const { return solver_; }
 
     /**
-     * @brief Get the preequilibration result.
+     * @brief Get the pre-equilibration result.
+     *
      * @return
      */
     [[nodiscard]] PeriodResult const& get_result() const {
@@ -497,6 +515,7 @@ class SteadyStateProblem {
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
+     *
      * @param newton_retry Flag indicating whether Newton's method is being
      * relaunched.
      */
@@ -504,6 +523,7 @@ class SteadyStateProblem {
 
     /**
      * @brief Try to determine the steady state by using forward simulation.
+     *
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
@@ -512,7 +532,8 @@ class SteadyStateProblem {
     SteadyStateStatus find_steady_state_by_simulation(int it, realtype t0);
 
     /**
-     * @brief Store state and throw an exception if equilibration failed
+     * @brief Store state and throw an exception if equilibration failed.
+     *
      * @param tried_newton_1 Whether any Newton step was attempted before
      * simulation
      * @param tried_simulation Whether simulation was attempted
@@ -524,7 +545,8 @@ class SteadyStateProblem {
     ) const;
 
     /**
-     * @brief Checks convergence for state sensitivities
+     * @brief Checks convergence for state sensitivities.
+     *
      * @param wrms_computer_sx WRMSComputer instance for state sensitivities
      * @return weighted root mean squared residuals of the RHS
      */
@@ -533,7 +555,6 @@ class SteadyStateProblem {
     /**
      * @brief Launch simulation if Newton solver or linear system solve
      * fail or are disabled.
-     * simulation.
      */
     void run_steadystate_simulation_fwd();
 
@@ -632,6 +653,7 @@ class ForwardProblem {
   public:
     /**
      * @brief Constructor
+     *
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
@@ -658,6 +680,7 @@ class ForwardProblem {
     /**
      * @brief Computes adjoint updates dJydx according to the provided model
      * and ExpData.
+     *
      * @param model Model instance
      * @param edata experimental data
      * @return dJydx
@@ -667,6 +690,7 @@ class ForwardProblem {
 
     /**
      * @brief Accessor for sx
+     *
      * @return sx
      */
     [[nodiscard]] AmiVectorArray const& get_state_sensitivity() const {
@@ -675,6 +699,7 @@ class ForwardProblem {
 
     /**
      * @brief Get information on the discontinuities encountered so far.
+     *
      * @return The vector of discontinuities.
      */
     [[nodiscard]] std::vector<Discontinuity> const&
@@ -684,6 +709,7 @@ class ForwardProblem {
 
     /**
      * @brief Accessor for dJzdx
+     *
      * @return dJzdx
      */
     [[nodiscard]] std::vector<realtype> const& get_dJzdx() const {
@@ -692,12 +718,14 @@ class ForwardProblem {
 
     /**
      * @brief Accessor for it
+     *
      * @return it
      */
     [[nodiscard]] int get_current_time_iteration() const { return it_; }
 
     /**
      * @brief Returns final time point for which simulations are available
+     *
      * @return time point
      */
     [[nodiscard]] realtype get_final_time() const {
@@ -706,6 +734,7 @@ class ForwardProblem {
 
     /**
      * @brief Returns maximal event index for which simulations are available
+     *
      * @return index
      */
     [[nodiscard]] int get_event_counter() const {
@@ -715,6 +744,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified timepoint index
+     *
      * @param it timepoint index
      * @return state
      */
@@ -733,6 +763,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified event index
+     *
      * @param iroot event index
      * @return SimulationState
      */
@@ -744,6 +775,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * initial timepoint
+     *
      * @return SimulationState
      */
     [[nodiscard]] SimulationState const& get_initial_simulation_state() const {
@@ -753,6 +785,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * final timepoint (or when the simulation failed)
+     *
      * @return SimulationState
      */
     [[nodiscard]] SimulationState const& get_final_simulation_state() const {
@@ -761,6 +794,7 @@ class ForwardProblem {
 
     /**
      * @brief Return the preequilibration SteadyStateProblem.
+     *
      * @return The preequilibration SteadyStateProblem, if any.
      */
     [[nodiscard]] SteadyStateProblem* get_preeq_problem() {
@@ -771,6 +805,7 @@ class ForwardProblem {
 
     /**
      * @brief Return the preequilibration SteadyStateProblem.
+     *
      * @return The preequilibration SteadyStateProblem, if any.
      */
     [[nodiscard]] SteadyStateProblem const* get_preeq_problem() const {
@@ -781,6 +816,7 @@ class ForwardProblem {
 
     /**
      * @brief Return the postequilibration SteadyStateProblem.
+     *
      * @return The postequilibration SteadyStateProblem, if any.
      */
     [[nodiscard]] SteadyStateProblem* get_posteq_problem() {
@@ -791,6 +827,7 @@ class ForwardProblem {
 
     /**
      * @brief Return the postequilibration SteadyStateProblem.
+     *
      * @return The postequilibration SteadyStateProblem, if any.
      */
     [[nodiscard]] SteadyStateProblem const* get_posteq_problem() const {
@@ -801,6 +838,7 @@ class ForwardProblem {
 
     /**
      * @brief Get the presimulation results.
+     *
      * @return Presimulation results.
      */
     PeriodResult const& get_presimulation_result() const {
@@ -809,6 +847,7 @@ class ForwardProblem {
 
     /**
      * @brief Whether pre-equilibration was performed successfully.
+     *
      * @return
      */
     bool was_preequilibrated() const { return preequilibrated_; }
@@ -894,6 +933,7 @@ class FinalStateStorer : public ContextManager {
   public:
     /**
      * @brief constructor, attaches problem pointer
+     *
      * @param fwd problem from which the simulation state is to be stored
      */
     explicit FinalStateStorer(ForwardProblem* fwd)

@@ -34,6 +34,7 @@ class CVodeSolver : public Solver {
 
     /**
      * @brief Clone this instance
+     *
      * @return The clone
      */
     Solver* clone() const override;
@@ -114,6 +115,7 @@ class CVodeSolver : public Solver {
 
     /**
      * @brief Post-processing of the solver memory after a discontinuity
+     *
      * @param cv_mem pointer to CVODES solver memory object
      * @param t pointer to integration time
      * @param yout  new state vector
@@ -152,6 +154,7 @@ class CVodeSolver : public Solver {
     /**
      * @brief reset_state reset the CVODES solver to restart integration after a
      * rhs discontinuity.
+     *
      * @param cv_mem pointer to CVODES solver memory object
      * @param y0 new state vector
      */
@@ -203,6 +206,7 @@ class CVodeSolver : public Solver {
 
     /**
      * @brief Serialize amici::CVodeSolver to boost archive
+     *
      * @param ar Archive
      * @param s Solver instance to serialize
      */
@@ -212,6 +216,7 @@ class CVodeSolver : public Solver {
 
     /**
      * @brief Equality operator
+     *
      * @param a
      * @param b
      * @return Whether a and b are equal

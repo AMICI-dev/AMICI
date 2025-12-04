@@ -41,6 +41,7 @@ std::vector<std::unique_ptr<ReturnData>> run_simulations(
 /**
  * @brief Get the string representation of the given simulation status code
  * (see ReturnData::status).
+ *
  * @param status Status code
  * @return Name of the variable representing this status code.
  */

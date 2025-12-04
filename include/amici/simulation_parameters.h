@@ -16,6 +16,7 @@ class SimulationParameters {
 
     /**
      * @brief Constructor
+     *
      * @param timepoints Timepoints for which simulation results are requested
      */
     explicit SimulationParameters(std::vector<realtype> timepoints)
@@ -23,6 +24,7 @@ class SimulationParameters {
 
     /**
      * @brief Constructor
+     *
      * @param fixed_parameters Model parameters excluded from sensitivity
      * analysis
      * @param free_parameters Model parameters included in sensitivity analysis
@@ -52,6 +54,7 @@ class SimulationParameters {
      */
     /**
      * @brief Constructor
+     *
      * @param fixed_parameters Model parameters excluded from sensitivity
      * analysis
      * @param free_parameters Model parameters included in sensitivity analysis
@@ -71,6 +74,7 @@ class SimulationParameters {
 
     /**
      * @brief Constructor
+     *
      * @param timepoints Timepoints for which simulation results are requested
      * @param fixed_parameters Model parameters excluded from sensitivity
      * analysis

@@ -46,6 +46,7 @@ class AmiVector {
      * Using N_VMake_Serial ensures that the N_Vector
      * module does not try to deallocate the data vector
      * when calling N_VDestroy_Serial
+     *
      * @param length number of elements in vector
      * @param sunctx SUNDIALS context
      */
@@ -58,6 +59,7 @@ class AmiVector {
      *
      * Moves data from std::vector and constructs an nvec that points to the
      * data
+     *
      * @param rvec vector from which the data will be moved
      * @param sunctx SUNDIALS context
      */
@@ -67,8 +69,9 @@ class AmiVector {
               gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
           )) {}
 
-    /** Copy data from gsl::span and constructs a vector
-     * @brief constructor from gsl::span,
+    /**
+     * @brief Copy data from gsl::span and construct a vector
+     *
      * @param rvec vector from which the data will be copied
      * @param sunctx SUNDIALS context
      */
@@ -79,6 +82,7 @@ class AmiVector {
 
     /**
      * @brief copy constructor
+     *
      * @param vold vector from which the data will be copied
      */
     AmiVector(AmiVector const& vold)
@@ -94,6 +98,7 @@ class AmiVector {
 
     /**
      * @brief Copy from N_Vector
+     *
      * @param vold vector from which the data will be copied
      */
     AmiVector(N_Vector const& vold)
@@ -106,6 +111,7 @@ class AmiVector {
 
     /**
      * @brief move constructor
+     *
      * @param other vector from which the data will be moved
      */
     AmiVector(AmiVector&& other) noexcept
@@ -120,6 +126,7 @@ class AmiVector {
 
     /**
      * @brief copy assignment operator
+     *
      * @param other right hand side
      * @return left hand side
      */
@@ -127,6 +134,7 @@ class AmiVector {
 
     /**
      * @brief operator *= (element-wise multiplication)
+     *
      * @param multiplier multiplier
      * @return result
      */
@@ -140,6 +148,7 @@ class AmiVector {
 
     /**
      * @brief operator /= (element-wise division)
+     *
      * @param divisor divisor
      * @return result
      */
@@ -154,6 +163,7 @@ class AmiVector {
     /**
      * @brief Returns an iterator that points to the first element of the
      * vector.
+     *
      * @return iterator that points to the first element
      */
     auto begin() { return vec_.begin(); }
@@ -161,42 +171,49 @@ class AmiVector {
     /**
      * @brief Returns an iterator that points to one element after the last
      * element of the vector.
+     *
      * @return iterator that points to one element after the last element
      */
     auto end() { return vec_.end(); }
 
     /**
      * @brief data accessor
+     *
      * @return pointer to data array
      */
     realtype* data();
 
     /**
      * @brief const data accessor
+     *
      * @return const pointer to data array
      */
     [[nodiscard]] realtype const* data() const;
 
     /**
      * @brief N_Vector accessor
+     *
      * @return N_Vector
      */
     N_Vector get_nvector();
 
     /**
      * @brief N_Vector accessor
+     *
      * @return N_Vector
      */
     [[nodiscard]] const_N_Vector get_nvector() const;
 
     /**
      * @brief Vector accessor
+     *
      * @return Vector
      */
     [[nodiscard]] std::vector<realtype> const& get_vector() const;
 
     /**
      * @brief returns the length of the vector
+     *
      * @return length
      */
     [[nodiscard]] int size() const;
@@ -213,12 +230,14 @@ class AmiVector {
 
     /**
      * @brief sets all data elements to a specific value
+     *
      * @param val value for data elements
      */
     void set(realtype val);
 
     /**
      * @brief accessor to data elements of the vector
+     *
      * @param pos index of element
      * @return element
      */
@@ -226,6 +245,7 @@ class AmiVector {
 
     /**
      * @brief accessor to data elements of the vector
+     *
      * @param pos index of element
      * @return element
      */
@@ -233,6 +253,7 @@ class AmiVector {
 
     /**
      * @brief accessor to data elements of the vector
+     *
      * @param pos index of element
      * @return element
      */
@@ -240,6 +261,7 @@ class AmiVector {
 
     /**
      * @brief accessor to data elements of the vector
+     *
      * @param pos index of element
      * @return element
      */
@@ -247,6 +269,7 @@ class AmiVector {
 
     /**
      * @brief copies data from another AmiVector
+     *
      * @param other data source
      */
     void copy(AmiVector const& other);
@@ -258,6 +281,7 @@ class AmiVector {
 
     /**
      * @brief Serialize AmiVector (see boost::serialization::serialize)
+     *
      * @param ar Archive to serialize to
      * @param v Data to serialize
      * @param version Version number
@@ -269,6 +293,7 @@ class AmiVector {
 
     /**
      * @brief Get SUNContext
+     *
      * @return The current SUNContext or nullptr, if this AmiVector is empty
      */
     [[nodiscard]] SUNContext get_ctx() const {
@@ -297,6 +322,7 @@ class AmiVector {
 
     /**
      * @brief reconstructs nvec such that data pointer points to vec data array
+     *
      * @param sunctx SUNDIALS context
      */
     void synchronise_nvector(SUNContext sunctx);
@@ -304,6 +330,7 @@ class AmiVector {
 
 /**
  * @brief Output formatter for AmiVector.
+ *
  * @param os output stream
  * @param v AmiVector to output
  * @return os
@@ -332,12 +359,14 @@ class AmiVectorArray {
     AmiVectorArray() = default;
 
     /**
+     * @brief empty constructor
+     *
      * Creates an std::vector<realype> and attaches the
      * data pointer to a newly created N_VectorArray
      * using CloneVectorArrayEmpty ensures that the N_Vector
      * module does not try to deallocate the data vector
      * when calling N_VDestroyVectorArray_Serial
-     * @brief empty constructor
+     *
      * @param length_inner length of vectors
      * @param length_outer number of vectors
      * @param sunctx SUNDIALS context
@@ -348,6 +377,7 @@ class AmiVectorArray {
 
     /**
      * @brief copy constructor
+     *
      * @param vaold object to copy from
      */
     AmiVectorArray(AmiVectorArray const& vaold);
@@ -356,6 +386,7 @@ class AmiVectorArray {
 
     /**
      * @brief copy assignment operator
+     *
      * @param other right hand side
      * @return left hand side
      */
@@ -363,6 +394,7 @@ class AmiVectorArray {
 
     /**
      * @brief accessor to data of AmiVector elements
+     *
      * @param pos index of AmiVector
      * @return pointer to data array
      */
@@ -370,6 +402,7 @@ class AmiVectorArray {
 
     /**
      * @brief const accessor to data of AmiVector elements
+     *
      * @param pos index of AmiVector
      * @return const pointer to data array
      */
@@ -377,6 +410,7 @@ class AmiVectorArray {
 
     /**
      * @brief accessor to elements of AmiVector elements
+     *
      * @param ipos inner index in AmiVector
      * @param jpos outer index in AmiVectorArray
      * @return element
@@ -385,6 +419,7 @@ class AmiVectorArray {
 
     /**
      * @brief const accessor to elements of AmiVector elements
+     *
      * @param ipos inner index in AmiVector
      * @param jpos outer index in AmiVectorArray
      * @return element
@@ -393,12 +428,14 @@ class AmiVectorArray {
 
     /**
      * @brief accessor to NVectorArray
+     *
      * @return N_VectorArray
      */
     N_Vector* get_nvector_array();
 
     /**
      * @brief accessor to NVector element
+     *
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
@@ -406,6 +443,7 @@ class AmiVectorArray {
 
     /**
      * @brief const accessor to NVector element
+     *
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
@@ -413,6 +451,7 @@ class AmiVectorArray {
 
     /**
      * @brief accessor to AmiVector elements
+     *
      * @param pos index of AmiVector
      * @return AmiVector
      */
@@ -420,6 +459,7 @@ class AmiVectorArray {
 
     /**
      * @brief const accessor to AmiVector elements
+     *
      * @param pos index of AmiVector
      * @return const AmiVector
      */
@@ -427,6 +467,7 @@ class AmiVectorArray {
 
     /**
      * @brief length of AmiVectorArray
+     *
      * @return length
      */
     int size() const;
@@ -438,6 +479,7 @@ class AmiVectorArray {
 
     /**
      * @brief flattens the AmiVectorArray to a vector in row-major format
+     *
      * @param vec vector into which the AmiVectorArray will be flattened. Must
      * have length equal to number of elements.
      */
@@ -445,6 +487,7 @@ class AmiVectorArray {
 
     /**
      * @brief copies data from another AmiVectorArray
+     *
      * @param other data source
      */
     void copy(AmiVectorArray const& other);
@@ -476,6 +519,7 @@ class AmiVectorArray {
 
 /**
  * @brief Output formatter for AmiVectorArray.
+ *
  * @param os output stream
  * @param arr AmiVectorArray to output
  * @return os
@@ -493,6 +537,7 @@ inline std::ostream& operator<<(std::ostream& os, AmiVectorArray const& arr) {
 
 /**
  * @brief Computes z = a*x + b*y
+ *
  * @param a coefficient for x
  * @param x a vector
  * @param b coefficient for y
@@ -511,6 +556,7 @@ inline void linear_sum(
 
 /**
  * @brief Compute dot product of x and y
+ *
  * @param x vector
  * @param y vector
  * @return dot product of x and y
@@ -527,6 +573,7 @@ inline realtype dot_prod(AmiVector const& x, AmiVector const& y) {
 namespace gsl {
 /**
  * @brief Create span from N_Vector
+ *
  * @param nv
  * @return
  */
@@ -536,6 +583,7 @@ inline span<amici::realtype> make_span(N_Vector nv) {
 
 /**
  * @brief Create span from AmiVector
+ *
  * @param av
  *
  */

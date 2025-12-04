@@ -25,6 +25,7 @@ class AbstractSpline {
 
     /**
      * @brief Common constructor for `AbstractSpline` instances.
+     *
      * @param nodes the nodes defining the position at which the value of
      * the spline is known
      * (if `equidistant_spacing` is true, it must contain only the first and
@@ -52,6 +53,7 @@ class AbstractSpline {
     /**
      * @brief Compute the coefficients for all polynomial segments of
      * the derivatives of this spline with respect to the parameters
+     *
      * @param nplist number of parameters
      * @param spline_offset offset of this spline inside `dvaluesdp`
      * and `dslopesdp`
@@ -69,6 +71,7 @@ class AbstractSpline {
 
     /**
      * @brief Get the value of this spline at a given point
+     *
      * @param t point at which the spline is to be evaluated
      * @return value of the spline at `t`
      */
@@ -77,6 +80,7 @@ class AbstractSpline {
     /**
      * @brief Get the value of this spline at a given point
      * in the scale in which interpolation is carried out (e.g., log-scale)
+     *
      * @param t point at which the spline is to be evaluated
      * @return scaled value of the spline at `t`
      */
@@ -84,6 +88,7 @@ class AbstractSpline {
 
     /**
      * @brief Get the value of this spline at a given node
+     *
      * @param i index of the node at which the spline is to be evaluated
      * @return value of the spline at the `i`-th node
      */
@@ -100,6 +105,7 @@ class AbstractSpline {
     /**
      * @brief Get the derivative of this spline with respect to a given
      * parameter at a given point
+     *
      * @param t point at which the sensitivity is to be evaluated
      * @param ip index of the parameter
      * @return sensitivity of the spline with respect to the `ip`th parameter
@@ -110,6 +116,7 @@ class AbstractSpline {
     /**
      * @brief Get the derivative of this spline with respect to a given
      * parameter at a given point
+     *
      * @param t point at which the sensitivity is to be evaluated
      * @param ip index of the parameter
      * @param value value of the spline at the given time point.
@@ -125,6 +132,7 @@ class AbstractSpline {
      * @brief Get the derivative of this spline with respect to a given
      * parameter at a given point
      * in the scale in which interpolation is carried out (e.g., log-scale)
+     *
      * @param t point at which the sensitivity is to be evaluated
      * @param ip index of the parameter
      * @return scaled sensitivity of the spline with respect to the `ip`th
@@ -143,6 +151,7 @@ class AbstractSpline {
     /**
      * @brief Compute the limit of the value of the sensitivity
      * as the evaluation point tends to positive infinity.
+     *
      * @param nplist number of parameters
      * @param spline_offset offset of this spline inside `dspline_valuesdp`
      * and `dspline_slopesdp`
@@ -160,6 +169,7 @@ class AbstractSpline {
     /**
      * @brief Get the limit value of the spline
      * as the evaluation point tends to positive infinity.
+     *
      * @return limit value
      */
     [[nodiscard]] realtype get_final_value() const;
@@ -168,6 +178,7 @@ class AbstractSpline {
      * @brief Get the limit value of the spline
      * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
+     *
      * @return limit value
      */
     [[nodiscard]] realtype get_final_value_scaled() const;
@@ -176,6 +187,7 @@ class AbstractSpline {
      * @brief Get the limit value of the sensitivity
      * with respect to the given parameter
      * as the evaluation point tends to positive infinity.
+     *
      * @param ip parameter index
      * @return limit value
      */
@@ -186,6 +198,7 @@ class AbstractSpline {
      * with respect to the given parameter
      * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
+     *
      * @param ip parameter index
      * @return limit value
      */
@@ -193,18 +206,21 @@ class AbstractSpline {
 
     /**
      * @brief Whether nodes are uniformly spaced
+     *
      * @return boolean flag
      */
     [[nodiscard]] bool get_equidistant_spacing() const;
 
     /**
      * @brief Whether spline interpolation is carried out in log-space
+     *
      * @return boolean flag
      */
     [[nodiscard]] bool get_logarithmic_parametrization() const;
 
     /**
      * @brief The number of interpolation nodes for this spline
+     *
      * @return number of nodes
      */
     [[nodiscard]] int n_nodes() const {
@@ -247,6 +263,7 @@ class AbstractSpline {
      * @brief Set the limit value of the spline
      * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
+     *
      * @param finalValue final value
      */
     void set_final_value_scaled(realtype finalValue);
@@ -255,6 +272,7 @@ class AbstractSpline {
      * @brief Set the limit value of the sensitivity
      * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
+     *
      * @param finalSensitivity final value of the sensitivity
      * for each parameter
      */
@@ -288,6 +306,7 @@ class HermiteSpline : public AbstractSpline {
 
     /**
      * @brief Construct a `HermiteSpline`.
+     *
      * @param nodes the nodes defining the position at which the value of
      * the spline is known
      * (if `equidistant_spacing` is true, it must contain only the first and
@@ -335,6 +354,7 @@ class HermiteSpline : public AbstractSpline {
 
     /**
      * @brief Get the derivative of the spline at a given node
+     *
      * @param i index of the node at which the spline is to be evaluated
      * @return value of the derivative at the `i`-th node
      */
@@ -343,6 +363,7 @@ class HermiteSpline : public AbstractSpline {
     /**
      * @brief Get the derivative of the spline at a given node
      * in the scale in which interpolation is carried out (e.g., log-scale)
+     *
      * @param i index of the node at which the spline is to be evaluated
      * @return scaled value of the derivative at the `i`-th node
      */
@@ -354,6 +375,7 @@ class HermiteSpline : public AbstractSpline {
     /**
      * @brief Whether derivatives of this spline are computed
      * by finite differences
+     *
      * @return boolean flag
      */
     [[nodiscard]] bool get_node_derivative_by_fd() const {

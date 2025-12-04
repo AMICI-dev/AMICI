@@ -471,6 +471,7 @@ class ExpData : public SimulationParameters {
 
 /**
  * @brief Equality operator
+ *
  * @param lhs some object
  * @param rhs another object
  * @return `true`, if both arguments are equal; `false` otherwise.
@@ -541,6 +542,7 @@ class ConditionContext : public ContextManager {
 
     /**
      * @brief Restore original settings on constructor-supplied amici::Model.
+     *
      * Will be called during destruction. Explicit call is generally not
      * necessary.
      */

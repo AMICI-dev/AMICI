@@ -25,6 +25,7 @@ class WRMSComputer {
   public:
     /**
      * @brief Constructor.
+     *
      * @param n The length of the vectors for which to compute the WRMS.
      * @param sunctx A SUNDIALS context for the NVector.
      * @param atol Absolute tolerance to compute error weights.
@@ -43,6 +44,7 @@ class WRMSComputer {
 
     /**
      * @brief Compute the weighted root-mean-square of the residuals.
+     *
      * @param x Vector to compute the WRMS for.
      * @param x_ref The reference vector from which to compute the error
      * weights.
@@ -94,6 +96,7 @@ class NewtonsMethod {
     /**
      * @brief Run the Newton solver iterations and checks for convergence
      * to steady state.
+     *
      * @param xdot Time derivative of the state vector `state.x`.
      * @param state SimulationState instance containing the current state.
      * @param wrms_computer WRMSComputer instance to compute the WRMS norm.
@@ -104,6 +107,7 @@ class NewtonsMethod {
     /**
      * @brief Compute the Newton step for the current state_.x and xdot and
      * store it in delta_.
+     *
      * @param xdot Time derivative of the state vector `state.x`.
      * @param state SimulationState instance containing the current state.
      */
@@ -111,18 +115,21 @@ class NewtonsMethod {
 
     /**
      * @brief Get the last Newton step.
+     *
      * @return Newton step
      */
     [[nodiscard]] AmiVector const& get_delta() const { return delta_; }
 
     /**
      * @brief Get the number of steps taken in the current iteration.
+     *
      * @return Number of steps taken.
      */
     [[nodiscard]] int get_num_steps() const { return i_step_; }
 
     /**
      * @brief Get the current WRMS norm.
+     *
      * @return The current WRMS norm.
      */
     [[nodiscard]] realtype get_wrms() const { return wrms_; }
@@ -143,6 +150,7 @@ class NewtonsMethod {
 
     /**
      * @brief Compute the weighted root-mean-square of the residuals.
+     *
      * @param xdot
      * @param state
      * @param wrms_computer

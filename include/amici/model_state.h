@@ -77,6 +77,7 @@ struct ModelStateDerived {
 
     /**
      * @brief Constructor from model dimensions.
+     *
      * @param dim Model dimensions
      */
     explicit ModelStateDerived(ModelDimensions const& dim);
@@ -477,6 +478,7 @@ struct SolutionState {
 
     /**
      * @brief Constructor.
+     *
      * @param t_ Current timepoint.
      * @param nx_solver Number of solver state variables.
      * @param nplist Number of parameter w.r.t. which to compute sensitivities.

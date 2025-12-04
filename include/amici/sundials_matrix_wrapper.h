@@ -29,6 +29,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Create sparse matrix. See SUNSparseMatrix in sunmatrix_sparse.h
+     *
      * @param M Number of rows
      * @param N Number of columns
      * @param NNZ Number of nonzeros
@@ -42,6 +43,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Create dense matrix. See SUNDenseMatrix in sunmatrix_dense.h
+     *
      * @param M Number of rows
      * @param N Number of columns
      * @param sunctx SUNDIALS context
@@ -50,6 +52,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
+     *
      * @param M Number of rows and columns
      * @param ubw Upper bandwidth
      * @param lbw Lower bandwidth
@@ -60,9 +63,11 @@ class SUNMatrixWrapper {
     );
 
     /**
-     * @brief Create sparse matrix from dense or banded matrix. See
-     * SUNSparseFromDenseMatrix and SUNSparseFromBandMatrix in
+     * @brief Create sparse matrix from dense or banded matrix.
+     *
+     * See SUNSparseFromDenseMatrix and SUNSparseFromBandMatrix in
      * sunmatrix_sparse.h
+     *
      * @param A Wrapper for dense matrix
      * @param droptol tolerance for dropping entries
      * @param sparsetype Sparse type
@@ -73,6 +78,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Wrap existing SUNMatrix
+     *
      * @param mat
      */
     explicit SUNMatrixWrapper(SUNMatrix mat);
@@ -86,18 +92,21 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Copy constructor
+     *
      * @param other
      */
     SUNMatrixWrapper(SUNMatrixWrapper const& other);
 
     /**
      * @brief Move constructor
+     *
      * @param other
      */
     SUNMatrixWrapper(SUNMatrixWrapper&& other);
 
     /**
      * @brief Copy assignment
+     *
      * @param other
      * @return
      */
@@ -105,6 +114,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Move assignment
+     *
      * @param other
      * @return
      */
@@ -112,6 +122,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Reallocate space for sparse matrix according to specified nnz
+     *
      * @param nnz new number of nonzero entries
      */
     void reallocate(sunindextype nnz);
@@ -124,6 +135,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the wrapped SUNMatrix
+     *
      * @return raw SunMatrix object
      * @note Even though the returned matrix_ pointer is const qualified,
      * matrix_->content will not be const. This is a shortcoming in the
@@ -135,6 +147,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the number of rows
+     *
      * @return number of rows
      */
     sunindextype rows() const {
@@ -149,6 +162,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the number of columns
+     *
      * @return number of columns
      */
     sunindextype columns() const {
@@ -164,6 +178,7 @@ class SUNMatrixWrapper {
     /**
      * @brief Get the number of specified non-zero elements (sparse matrices
      * only)
+     *
      * @note value will be 0 before indexptrs are set.
      * @return number of nonzero entries
      */
@@ -172,30 +187,35 @@ class SUNMatrixWrapper {
     /**
      * @brief Get the number of indexptrs that can be specified (sparse matrices
      * only)
+     *
      * @return number of indexptrs
      */
     sunindextype num_indexptrs() const;
 
     /**
      * @brief Get the number of allocated data elements
+     *
      * @return number of allocated entries
      */
     sunindextype capacity() const;
 
     /**
      * @brief Get  raw data of a sparse matrix
+     *
      * @return pointer to first data entry
      */
     realtype* data();
 
     /**
      * @brief Get const raw data of a sparse matrix
+     *
      * @return pointer to first data entry
      */
     realtype const* data() const;
 
     /**
      * @brief Get data of a sparse matrix
+     *
      * @param idx data index
      * @return idx-th data entry
      */
@@ -209,6 +229,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get data entry for a dense matrix
+     *
      * @param irow row
      * @param icol col
      * @return A(irow,icol)
@@ -223,6 +244,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Set data entry for a sparse matrix
+     *
      * @param idx data index
      * @param data data for idx-th entry
      */
@@ -236,6 +258,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Set data entry for a dense matrix
+     *
      * @param irow row
      * @param icol col
      * @param data data for idx-th entry
@@ -252,6 +275,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the index value of a sparse matrix
+     *
      * @param idx data index
      * @return row (CSC) or column (CSR) for idx-th data entry
      */
@@ -265,6 +289,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Set the index value of a sparse matrix
+     *
      * @param idx data index
      * @param val row (CSC) or column (CSR) for idx-th data entry
      */
@@ -278,6 +303,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Set the index values of a sparse matrix
+     *
      * @param vals rows (CSC) or columns (CSR) for data entries
      */
     void set_indexvals(gsl::span<sunindextype const> const vals) {
@@ -290,6 +316,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the index pointer of a sparse matrix
+     *
      * @param ptr_idx pointer index
      * @return index where the ptr_idx-th column (CSC) or row (CSR) starts
      */
@@ -303,6 +330,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Set the index pointer of a sparse matrix
+     *
      * @param ptr_idx pointer index
      * @param ptr data-index where the ptr_idx-th column (CSC) or row (CSR)
      * starts
@@ -320,6 +348,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Set the index pointers of a sparse matrix
+     *
      * @param ptrs starting data-indices where the columns (CSC) or rows (CSR)
      * start
      */
@@ -334,18 +363,21 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the type of sparse matrix
+     *
      * @return matrix type
      */
     int sparsetype() const;
 
     /**
      * @brief multiply with a scalar (in-place)
+     *
      * @param a scalar value to multiply matrix
      */
     void scale(realtype a);
 
     /**
      * @brief N_Vector interface for multiply
+     *
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param alpha scalar coefficient for matrix
@@ -354,6 +386,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief AmiVector interface for multiply
+     *
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param alpha scalar coefficient for matrix
@@ -366,6 +399,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Perform matrix vector multiplication c += alpha * A*b
+     *
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param alpha scalar coefficient
@@ -376,6 +410,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
+     *
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param cols int vector for column reordering
@@ -387,6 +422,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
+     *
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param cols int vector for column reordering
@@ -399,6 +435,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Perform matrix matrix multiplication C = A * B for sparse A, B, C
+     *
      * @param C output matrix,
      * @param B multiplication matrix
      * @note will overwrite existing data, indexptrs, indexvals for C, but will
@@ -408,6 +445,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Perform sparse matrix matrix addition C = alpha * A +  beta * B
+     *
      * @param A addition matrix
      * @param alpha scalar A
      * @param B addition matrix
@@ -422,6 +460,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Perform matrix-matrix addition A = sum(mats(0)...mats(len(mats)))
+     *
      * @param mats vector of sparse matrices
      * @note will overwrite existing data, indexptrs, indexvals for A, but will
      * use preallocated space for these vars
@@ -492,6 +531,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get matrix id
+     *
      * @return SUNMatrix_ID
      */
     [[nodiscard]] SUNMatrix_ID matrix_id() const { return id_; }
@@ -504,6 +544,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get SUNDIALS context
+     *
      * @return SUNDIALS context or nullptr if the matrix is empty
      */
     [[nodiscard]] SUNContext get_ctx() const;
@@ -593,6 +634,7 @@ class SUNMatrixWrapper {
 
 /**
  * @brief Output formatter for SUNMatrixWrapper.
+ *
  * @param os output stream
  * @param mat SUNMatrixWrapper to output
  * @return os
@@ -623,6 +665,7 @@ inline std::ostream& operator<<(std::ostream& os, SUNMatrixWrapper const& mat) {
 
 /**
  * @brief Convert a flat index to a pair of row/column indices.
+ *
  * @param i flat index
  * @param m referred to matrix
  * @return row index, column index
@@ -635,6 +678,7 @@ auto unravel_index(sunindextype i, SUNMatrix m)
 namespace gsl {
 /**
  * @brief Create span from SUNMatrix
+ *
  * @param m SUNMatrix
  * @return Created span
  */

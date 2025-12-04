@@ -31,6 +31,7 @@ class IDASolver : public Solver {
 
     /**
      * @brief Clone this instance
+     *
      * @return The clone
      */
     Solver* clone() const override;
@@ -112,6 +113,7 @@ class IDASolver : public Solver {
   protected:
     /**
      * @brief Postprocessing of the solver memory after a discontinuity
+     *
      * @param ida_mem pointer to IDAS solver memory object
      * @param t pointer to integration time
      * @param yout new state vector
@@ -153,6 +155,7 @@ class IDASolver : public Solver {
     /**
      * @brief reset_state reset the IDAS solver to restart integration after a
      * rhs discontinuity.
+     *
      * @param ida_mem pointer to IDAS solver memory object
      * @param yy0 new state vector
      * @param yp0 new state derivative vector

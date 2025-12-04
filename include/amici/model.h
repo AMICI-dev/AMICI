@@ -106,6 +106,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Constructor with model dimensions.
+     *
      * @param model_dimensions Model dimensions
      * @param simulation_parameters Simulation parameters
      * @param o2mode Second order sensitivity mode
@@ -125,6 +126,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Copy assignment is disabled until const members are removed.
+     *
      * @param other Object to copy from
      * @return
      */
@@ -132,12 +134,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Clone this instance.
+     *
      * @return The clone
      */
     [[nodiscard]] virtual Model* clone() const = 0;
 
     /**
      * @brief Serialize Model (see `boost::serialization::serialize`).
+     *
      * @param ar Archive to serialize to
      * @param m Data to serialize
      * @param version Version number
@@ -149,6 +153,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Check equality of data members.
+     *
      * @param a First model instance
      * @param b Second model instance
      * @return Equality
@@ -216,6 +221,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize model properties.
+     *
      * @param t Timepoint
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
@@ -234,6 +240,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Re-initialize model properties after changing simulation context.
+     *
      * @param t Timepoint
      * @param x Reference to state variables
      * @param sx Reference to state variable sensitivities
@@ -246,6 +253,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize model properties.
+     *
      * @param xB Adjoint state variables
      * @param dxB Time derivative of adjoint states (DAE only)
      * @param xQB Adjoint quadratures
@@ -257,6 +265,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize model state.
+     *
      * @param t Initial timepoint
      * @param x State vector to be initialized (size: nx_solver).
      */
@@ -264,6 +273,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Initialize initial state sensitivities.
+     *
      * @param t Initial timepoint.
      * @param sx Reference to state variable sensitivities
      * @param x Reference to state variables
@@ -323,24 +333,28 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
+     *
      * @return Length of sensitivity index vector
      */
     int nplist() const;
 
     /**
      * @brief Get total number of model parameters.
+     *
      * @return Length of parameter vector
      */
     int np() const;
 
     /**
-     * @brief Get number of constants
-     * @return Length of constant vector
+     * @brief Get number of fixed parameters.
+     *
+     * @return Number of fixed parameters.
      */
     int nk() const;
 
     /**
      * @brief Get number of conservation laws.
+     *
      * @return Number of conservation laws (i.e., difference between `nx_rdata`
      * and `nx_solver`).
      */
@@ -348,36 +362,42 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get number of solver states subject to reinitialization.
+     *
      * @return Model member `nx_solver_reinit`
      */
     int nx_reinit() const;
 
     /**
      * @brief Get fixed parameters.
+     *
      * @return Pointer to constants array
      */
     double const* k() const;
 
     /**
      * @brief Get maximum number of events that may occur for each type.
+     *
      * @return Maximum number of events that may occur for each type
      */
     int n_max_event() const;
 
     /**
      * @brief Set maximum number of events that may occur for each type.
+     *
      * @param nmaxevent Maximum number of events that may occur for each type
      */
     void set_n_max_event(int nmaxevent);
 
     /**
      * @brief Get number of timepoints.
+     *
      * @return Number of timepoints
      */
     int nt() const;
 
     /**
      * @brief Get parameter scale for each parameter.
+     *
      * @return Vector of parameter scales
      */
     std::vector<ParameterScaling> const& get_parameter_scale() const;
@@ -403,18 +423,21 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get parameters with transformation according to parameter scale
      * applied.
+     *
      * @return Unscaled parameters
      */
     std::vector<realtype> const& get_unscaled_parameters() const;
 
     /**
      * @brief Get parameter vector.
+     *
      * @return The user-set parameters (see also `Model::getUnscaledParameters`)
      */
     std::vector<realtype> const& get_free_parameters() const;
 
     /**
      * @brief Get value of first model parameter with the specified ID.
+     *
      * @param par_id Parameter ID
      * @return Parameter value
      */
@@ -422,6 +445,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get value of first model parameter with the specified name.
+     *
      * @param par_name Parameter name
      * @return Parameter value
      */
@@ -429,6 +453,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set the parameter vector.
+     *
      * @param p Vector of parameters
      */
     void set_free_parameters(std::vector<realtype> const& p);
@@ -436,6 +461,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set model parameters according to the parameter IDs and mapped
      * values.
+     *
      * @param p Map of parameters IDs and values
      * @param ignoreErrors Ignore errors such as parameter IDs in p which are
      * not model parameters
@@ -446,6 +472,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set value of first model parameter with the specified ID.
+     *
      * @param par_id Parameter ID
      * @param value Parameter value
      */
@@ -454,6 +481,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set all values of model parameters with IDs matching the specified
      * regular expression.
+     *
      * @param par_id_regex Parameter ID regex
      * @param value Parameter value
      * @return Number of parameter IDs that matched the regex
@@ -464,6 +492,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set value of first model parameter with the specified name.
+     *
      * @param par_name Parameter name
      * @param value Parameter value
      */
@@ -473,6 +502,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set model parameters according to the parameter name and mapped
      * values.
+     *
      * @param p Map of parameters names and values
      * @param ignoreErrors Ignore errors such as parameter names in p which are
      * not model parameters
@@ -484,6 +514,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set all values of all model parameters with names matching the
      * specified regex.
+     *
      * @param par_name_regex Parameter name regex
      * @param value Parameter value
      * @return Number of fixed parameter names that matched the regex
@@ -494,6 +525,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get values of fixed parameters.
+     *
      * @return Vector of fixed parameters with same ordering as in
      * Model::getFixedParameterIds
      */
@@ -501,6 +533,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get value of fixed parameter with the specified ID.
+     *
      * @param par_id Parameter ID
      * @return Parameter value
      */
@@ -519,12 +552,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set values for constants.
+     *
      * @param k Vector of fixed parameters
      */
     void set_fixed_parameters(std::vector<realtype> const& k);
 
     /**
      * @brief Set value of first fixed parameter with the specified ID.
+     *
      * @param par_id Fixed parameter id
      * @param value Fixed parameter value
      */
@@ -533,6 +568,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set values of all fixed parameters with the ID matching the
      * specified regex.
+     *
      * @param par_id_regex Fixed parameter name regex
      * @param value Fixed parameter value
      * @return Number of fixed parameter IDs that matched the regex
@@ -543,6 +579,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set value of first fixed parameter with the specified name.
+     *
      * @param par_name Fixed parameter ID
      * @param value Fixed parameter value
      */
@@ -552,6 +589,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set value of all fixed parameters with name matching the specified
      * regex.
+     *
      * @param par_name_regex Fixed parameter name regex
      * @param value Fixed parameter value
      * @return Number of fixed parameter names that matched the regex
@@ -562,6 +600,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the model name.
+     *
      * @return Model name
      */
     virtual std::string get_name() const;
@@ -576,6 +615,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get names of the free model parameters.
+     *
      * @return The parameter names
      */
     virtual std::vector<std::string> get_free_parameter_names() const;
@@ -590,18 +630,21 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get names of the model states.
+     *
      * @return State names
      */
     virtual std::vector<std::string> get_state_names() const;
 
     /**
      * @brief Get names of the solver states.
+     *
      * @return State names
      */
     virtual std::vector<std::string> get_state_names_solver() const;
 
     /**
      * @brief Report whether the model has fixed parameter names set.
+     *
      * @return Boolean indicating whether fixed parameter names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
      */
@@ -609,12 +652,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get names of the fixed model parameters.
+     *
      * @return Fixed parameter names
      */
     virtual std::vector<std::string> get_fixed_parameter_names() const;
 
     /**
      * @brief Report whether the model has observable names set.
+     *
      * @return Boolean indicating whether observable names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
      */
@@ -622,12 +667,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get names of the observables.
+     *
      * @return Observable names
      */
     virtual std::vector<std::string> get_observable_names() const;
 
     /**
      * @brief Report whether the model has expression names set.
+     *
      * @return Boolean indicating whether expression names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
      */
@@ -635,12 +682,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get names of the expressions.
+     *
      * @return Expression names
      */
     virtual std::vector<std::string> get_expression_names() const;
 
     /**
      * @brief Report whether the model has parameter IDs set.
+     *
      * @return Boolean indicating whether parameter IDs were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
@@ -648,12 +697,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the model parameters.
+     *
      * @return Parameter IDs
      */
     virtual std::vector<std::string> get_free_parameter_ids() const;
 
     /**
      * @brief Report whether the model has state IDs set.
+     *
      * @return Boolean indicating whether state IDs were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
@@ -661,18 +712,21 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the model states.
+     *
      * @return State IDs
      */
     virtual std::vector<std::string> get_state_ids() const;
 
     /**
      * @brief Get IDs of the solver states.
+     *
      * @return State IDs
      */
     virtual std::vector<std::string> get_state_ids_solver() const;
 
     /**
      * @brief Report whether the model has fixed parameter IDs set.
+     *
      * @return Boolean indicating whether fixed parameter IDs were set. Also
      * returns `true` if the number of corresponding variables is just zero.
      */
@@ -680,12 +734,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the fixed model parameters.
+     *
      * @return Fixed parameter IDs
      */
     virtual std::vector<std::string> get_fixed_parameter_ids() const;
 
     /**
      * @brief Report whether the model has observable IDs set.
+     *
      * @return Boolean indicating whether observable ids were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
@@ -693,12 +749,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the observables.
+     *
      * @return Observable IDs
      */
     virtual std::vector<std::string> get_observable_ids() const;
 
     /**
      * @brief Report whether the model has expression IDs set.
+     *
      * @return Boolean indicating whether expression ids were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
@@ -706,6 +764,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the expression.
+     *
      * @return Expression IDs
      */
     virtual std::vector<std::string> get_expression_ids() const;
@@ -713,18 +772,21 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Checks whether the defined noise model is Gaussian, i.e., the nllh
      * is quadratic
+     *
      * @return boolean flag
      */
     virtual bool has_quadratic_llh() const;
 
     /**
      * @brief Get the timepoint vector.
+     *
      * @return Timepoint vector
      */
     std::vector<realtype> const& get_timepoints() const;
 
     /**
      * @brief Get simulation timepoint for time index `it`.
+     *
      * @param it Time index
      * @return Timepoint
      */
@@ -732,12 +794,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set the timepoint vector.
+     *
      * @param ts New timepoint vector
      */
     void set_timepoints(std::vector<realtype> const& ts);
 
     /**
      * @brief Get simulation start time.
+     *
      * @return Simulation start time
      */
     double t0() const;
@@ -756,6 +820,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial time to use for pre-equilibration.
+     *
      * @return Initial time, or NAN to use the model's t0.
      */
     double t0_preeq() const;
@@ -771,6 +836,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get flags indicating whether states should be treated as
      * non-negative.
+     *
      * @return Vector of flags
      */
     std::vector<bool> const& get_state_is_non_negative() const;
@@ -778,6 +844,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set flags indicating whether states should be treated as
      * non-negative.
+     *
      * @param stateIsNonNegative Vector of flags
      */
     void set_state_is_non_negative(std::vector<bool> const& stateIsNonNegative);
@@ -790,12 +857,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the current model state.
+     *
      * @return Current model state
      */
     ModelState const& get_model_state() const { return state_; }
 
     /**
      * @brief Set the current model state.
+     *
      * @param state Model state
      */
     void set_model_state(ModelState const& state) {
@@ -813,9 +882,11 @@ class Model : public AbstractModel, public ModelDimensions {
     }
 
     /**
-     * @brief Sets the estimated lower boundary for sigma_y. When
-     * :meth:`setAddSigmaResiduals` is activated, this lower boundary must
+     * @brief Sets the estimated lower boundary for sigma_y.
+     *
+     * When :meth:`setAddSigmaResiduals` is activated, this lower boundary must
      * ensure that log(sigma) + min_sigma > 0.
+     *
      * @param min_sigma lower boundary
      */
     void set_minimum_sigma_residuals(double const min_sigma) {
@@ -824,6 +895,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Gets the specified estimated lower boundary for sigma_y.
+     *
      * @return lower boundary
      */
     [[nodiscard]] realtype get_minimum_sigma_residuals() const {
@@ -849,18 +921,21 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Checks whether residuals should be added to account for parameter
      * dependent sigma.
+     *
      * @return sigma_res
      */
     bool get_add_sigma_residuals() const { return sigma_res_; }
 
     /**
      * @brief Get the list of parameters for which sensitivities are computed.
+     *
      * @return List of parameter indices
      */
     std::vector<int> const& get_parameter_list() const;
 
     /**
      * @brief Get entry in parameter list by index.
+     *
      * @param pos Index in sensitivity parameter list
      * @return Index in parameter list
      */
@@ -878,6 +953,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial state.
+     *
      * @param t0 Custom t0 for which to get initial states.
      * @return Initial state vector, before any events are executed.
      */
@@ -885,6 +961,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial state for Model::t0()`.
+     *
      * @return Initial state vector, before any events are executed.
      */
     std::vector<realtype> get_initial_state() {
@@ -893,18 +970,21 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set the pre-event initial state.
+     *
      * @param x0 Initial state vector
      */
     void set_initial_state(std::vector<realtype> const& x0);
 
     /**
      * @brief Return whether custom initial state have been set.
+     *
      * @return `true` if has custom initial state, otherwise `false`
      */
     [[nodiscard]] bool has_custom_initial_state() const;
 
     /**
      * @brief Get the initial state sensitivities.
+     *
      * @return vector of initial state sensitivities
      */
     std::vector<realtype> get_initial_state_sensitivities() {
@@ -913,6 +993,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial states sensitivities.
+     *
      * @param t0 Custom t0 for which to get initial states.
      * @return vector of initial state sensitivities
      */
@@ -920,6 +1001,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set the initial state sensitivities.
+     *
      * @param sx0 vector of initial state sensitivities with chain rule applied.
      * This could be a slice of ReturnData::sx or ReturnData::sx0
      */
@@ -927,6 +1009,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Return whether custom initial state sensitivities have been set.
+     *
      * @return `true` if has custom initial state sensitivities, otherwise
      * `false`.
      */
@@ -934,6 +1017,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set the initial state sensitivities.
+     *
      * @param sx0 Vector of initial state sensitivities without chain rule
      * applied. This could be the read-in from a `model.sx0data` saved to HDF5.
      */
@@ -943,6 +1027,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set the mode how steady state is computed in the steady state
      * simulation.
+     *
      * @param mode Steady state computation mode
      */
     void set_steady_state_computation_mode(SteadyStateComputationMode mode);
@@ -950,6 +1035,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Gets the mode how steady state is computed in the steadystate
      * simulation.
+     *
      * @return Mode
      */
     SteadyStateComputationMode get_steady_state_computation_mode() const;
@@ -957,6 +1043,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set the mode how sensitivities are computed in the steady-state
      * simulation.
+     *
      * @param mode Steady-state sensitivity mode
      */
     void set_steady_state_sensitivity_mode(SteadyStateSensitivityMode mode);
@@ -964,6 +1051,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Gets the mode how sensitivities are computed in the steady-state
      * simulation.
+     *
      * @return Mode
      */
     [[nodiscard]] SteadyStateSensitivityMode
@@ -972,6 +1060,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set whether initial states depending on fixed parameters are to be
      * reinitialized after preequilibration and presimulation.
+     *
      * @param flag Fixed parameters reinitialized?
      */
     void set_reinitialize_fixed_parameter_initial_states(bool flag);
@@ -979,6 +1068,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get whether initial states depending on fixedParameters are to be
      * reinitialized after preequilibration and presimulation.
+     *
      * @return flag `true` / `false`
      */
     [[nodiscard]] bool get_reinitialize_fixed_parameter_initial_states() const;
@@ -993,6 +1083,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get time-resolved `w`.
+     *
      * @param w Buffer (shape `nw`)
      * @param t Current timepoint
      * @param x Current state
@@ -1001,6 +1092,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get time-resolved observables.
+     *
      * @param y Buffer (shape `ny`)
      * @param t Current timepoint
      * @param x Current state
@@ -1009,6 +1101,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get scaling type for observable
+     *
      * @param iy observable index
      * @return scaling type
      */
@@ -1020,6 +1113,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative \f$ sy = dydx * sx + dydp\f$
      * (only for forward sensitivities).
+     *
      * @param sy buffer (shape `ny` x `nplist`, row-major)
      * @param t Timpoint
      * @param x State variables
@@ -1032,6 +1126,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get time-resolved observable standard deviations
+     *
      * @param sigmay Buffer (shape `ny`)
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
@@ -1059,6 +1154,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add time-resolved measurement negative log-likelihood \f$ Jy \f$.
+     *
      * @param Jy Buffer (shape 1)
      * @param it Timepoint index
      * @param x State variables
@@ -1118,6 +1214,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get event-resolved observables.
+     *
      * @param z Output buffer (shape `nz`)
      * @param ie Event index
      * @param t Timepoint
@@ -1153,6 +1250,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get regularization for event-resolved observables.
+     *
      * @param rz Output buffer (shape `nz`)
      * @param ie Event index
      * @param t Timepoint
@@ -1180,6 +1278,7 @@ class Model : public AbstractModel, public ModelDimensions {
     );
     /**
      * @brief Get event-resolved observable standard deviations.
+     *
      * @param sigmaz Output buffer (shape `nz`)
      * @param ie Event index
      * @param nroots Event occurrence
@@ -1212,6 +1311,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add event-resolved observable negative log-likelihood.
+     *
      * @param Jz Output buffer (shape 1)
      * @param ie Event index
      * @param nroots Event occurrence
@@ -1226,6 +1326,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add event-resolved observable negative log-likelihood.
+     *
      * @param Jrz Output buffer (shape 1)
      * @param ie Event index
      * @param nroots Event occurrence
@@ -1316,6 +1417,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Update state variables after event.
+     *
      * @param x Current state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
@@ -1332,6 +1434,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Update state sensitivity after event.
+     *
      * @param sx Current state sensitivity (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
@@ -1352,6 +1455,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Update adjoint state after event.
+     *
      * @param xB Current adjoint state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
@@ -1369,6 +1473,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Update adjoint quadratures after event.
+     *
      * @param xQB Current quadrature state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
@@ -1440,6 +1545,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set whether the result of every call to `Model::f*` should be
      * checked for finiteness.
+     *
      * @param alwaysCheck
      */
     void set_always_check_finite(bool alwaysCheck);
@@ -1447,12 +1553,14 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get setting of whether the result of every call to `Model::f*`
      * should be checked for finiteness.
+     *
      * @return that
      */
     [[nodiscard]] bool get_always_check_finite() const;
 
     /**
      * @brief Compute/get pre-event initial state.
+     *
      * @param t Timepoint.
      * @param x Output buffer (size: nx_solver).
      */
@@ -1461,6 +1569,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Set only those initial states that are specified via
      * fixed parameters.
+     *
      * @param t Timepoint.
      * @param x Output buffer.
      */
@@ -1468,6 +1577,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute/get initial value for initial state sensitivities.
+     *
      * @param t Timepoint.
      * @param sx Output buffer for state sensitivities
      * @param x State variables
@@ -1477,6 +1587,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get only those initial states sensitivities that are affected
      * from `amici::Model::fx0_fixedParameters`.
+     *
      * @param t Timepoint
      * @param sx Output buffer for state sensitivities
      * @param x State variables
@@ -1494,6 +1605,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Expand conservation law for states.
+     *
      * @param x_rdata Output buffer for state variables with conservation laws
      * expanded (stored in `amici::ReturnData`).
      * @param x_solver State variables with conservation laws applied
@@ -1503,6 +1615,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Expand conservation law for state sensitivities.
+     *
      * @param sx_rdata Output buffer for state variables sensitivities with
      * conservation laws expanded
      * (stored in `amici::ReturnData` shape `nplist` x `nx`, row-major).
@@ -1518,14 +1631,16 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set indices of states to be reinitialized based on provided
-     * constants / fixed parameters
+     * fixed parameters
+     *
      * @param idxs Array of state indices
      */
     void set_reinitialization_state_idxs(std::vector<int> const& idxs);
 
     /**
      * @brief Return indices of states to be reinitialized based on provided
-     * constants / fixed parameters
+     * fixed parameters
+     *
      * @return Those indices.
      */
     [[nodiscard]] std::vector<int> const&
@@ -1533,6 +1648,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief getter for dxdotdp
+     *
      * @return dxdotdp
      */
     [[nodiscard]] SUNMatrixWrapper const& get_dxdotdp_full() const;
@@ -1574,6 +1690,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get event object for event index.
+     *
      * @param ie event index
      * @return The corresponding Event object.
      */
@@ -1584,6 +1701,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Whether there is at least one state variable for which
      * non-negativity is to be enforced.
+     *
      * @return Vector of all events.
      */
     [[nodiscard]] bool get_any_state_nonnegative() const {
@@ -1605,12 +1723,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get flag array for DAE equations
+     *
      * @return Flag array for DAE equations
      */
     std::vector<realtype> const& get_id_list() const { return id_list_; }
 
     /**
      * @brief Get second-order sensitivity mode.
+     *
      * @return Flag indicating whether for `SensitivityOrder::second`
      * directional or full second order derivative will be computed
      */
@@ -1618,12 +1738,14 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the logger.
+     *
      * @return Logger pointer or nullptr.
      */
     Logger* get_logger() const { return logger_; }
 
     /**
      * @brief Set the logger.
+     *
      * @param logger Logger pointer or nullptr.
      */
     void set_logger(Logger* logger) { logger_ = logger; }
@@ -1631,6 +1753,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get map of trigger timepoints to event indices for events that
      * don't require root-finding.
+     *
      * @return Map of trigger timepoints to event indices
      */
     std::map<realtype, std::vector<int>> const& get_explicit_roots() const {
@@ -1641,6 +1764,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Write part of a slice to a buffer according to indices specified
      * in z2event.
+     *
      * @param slice Input data slice
      * @param buffer Output data slice
      * @param ie Event index
@@ -1652,6 +1776,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Write part of a sensitivity slice to a buffer according to
      * indices specified in z2event.
+     *
      * @param slice source data slice
      * @param buffer output data slice
      * @param ie event index
@@ -1663,6 +1788,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Separate first and second order objective sensitivity information
      * and write them into the respective buffers.
+     *
      * @param dLLhdp Data with mangled first- and second-order information
      * @param sllh First order buffer
      * @param s2llh Second order buffer
@@ -1674,6 +1800,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Verify that the provided buffers have the expected size.
+     *
      * @param sllh first order buffer
      * @param s2llh second order buffer
      */
@@ -1688,6 +1815,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute observables / measurements.
+     *
      * @param t Current timepoint
      * @param x Current state
      */
@@ -1696,6 +1824,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of observables \f$ y \f$ w.r.t. model
      * parameters `p`.
+     *
      * @param t Current timepoint
      * @param x Current state
      */
@@ -1704,6 +1833,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of observables \f$ y \f$ w.r.t. state
      * variables `x`.
+     *
      * @param t Current timepoint
      * @param x Current state
      */
@@ -1711,6 +1841,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute standard deviation of measurements.
+     *
      * @param it Timepoint index
      * @param edata Experimental data
      */
@@ -1719,6 +1850,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of standard deviation of measurements
      * w.r.t. model parameters.
+     *
      * @param it Timepoint index
      * @param edata pointer to `amici::ExpData` data instance holding sigma
      * values
@@ -1728,6 +1860,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of standard deviation of measurements
      * w.r.t. model outputs.
+     *
      * @param it Timepoint index
      * @param edata pointer to `amici::ExpData` data instance holding sigma
      * values
@@ -1737,6 +1870,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of time-resolved measurement negative
      * log-likelihood \f$ Jy \f$.
+     *
      * @param it timepoint index
      * @param x state variables
      * @param edata Pointer to experimental data
@@ -1746,6 +1880,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
      * Jy w.r.t. standard deviation sigma.
+     *
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1755,6 +1890,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of time-resolved measurement negative
      * log-likelihood \f$ Jy \f$ w.r.t. parameters for the given timepoint.
+     *
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1764,6 +1900,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
      * \f$ Jy \f$ w.r.t. state variables.
+     *
      * @param it Timepoint index
      * @param x State variables
      * @param edata Pointer to experimental data instance
@@ -1772,6 +1909,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute event-resolved output.
+     *
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1781,6 +1919,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of event-resolved output `z` w.r.t.
      * model parameters `p`
+     *
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1790,6 +1929,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of event-resolved output `z` w.r.t.
      * model states `x`.
+     *
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1810,6 +1950,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of event-resolved root output w.r.t. model
      * parameters `p`.
+     *
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1819,6 +1960,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of event-resolved measurements \f$ rz \f$
      * w.r.t. model states `x`.
+     *
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1827,6 +1969,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute standard deviation of events.
+     *
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1837,6 +1980,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of standard deviation of events measurements
      * w.r.t. model parameters `p`.
+     *
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Current timepoint
@@ -1847,6 +1991,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of event measurement negative
      * log-likelihood \f$ Jz \f$.
+     *
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1860,6 +2005,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of event measurement negative log-likelihood
      * \f$ Jz \f$ w.r.t. standard deviation sigmaz.
+     *
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1873,6 +2019,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of event-resolved measurement negative
      * log-likelihood Jz w.r.t. parameters.
+     *
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1886,6 +2033,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of event-resolved measurement negative
      * log-likelihood Jz w.r.t. state variables.
+     *
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1899,6 +2047,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute partial derivative of event measurement negative
      * log-likelihood J.
+     *
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1912,6 +2061,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Compute sensitivity of event measurement negative log-likelihood
      * Jz w.r.t. standard deviation sigmaz
+     *
      * @param ie event index
      * @param nroots event index
      * @param t current timepoint
@@ -1924,18 +2074,21 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Spline functions
+     *
      * @param t timepoint
      */
     void fspl(realtype t);
 
     /**
      * @brief Parametric derivatives of splines functions
+     *
      * @param t timepoint
      */
     void fsspl(realtype t);
 
     /**
      * @brief Compute recurring terms in xdot.
+     *
      * @param t Timepoint
      * @param x Array with the states
      * @param include_static Whether to (re-)evaluate only dynamic expressions
@@ -1947,6 +2100,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute parameter derivative for recurring terms in xdot.
+     *
      * @param t Timepoint
      * @param x Array with the states
      * @param include_static Whether to (re-)evaluate only dynamic expressions
@@ -1958,6 +2112,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute state derivative for recurring terms in xdot.
+     *
      * @param t Timepoint
      * @param x Array with the states
      * @param include_static Whether to (re-)evaluate only dynamic expressions
@@ -1969,6 +2124,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute self derivative for recurring terms in xdot.
+     *
      * @param t Timepoint
      * @param x Array with the states
      * @param include_static Whether to (re-)evaluate only dynamic expressions

@@ -62,6 +62,7 @@ void amici_dgemm(
 
 /**
  * @brief Compute y = a*x + y
+ *
  * @param n         number of elements in y
  * @param alpha     scalar coefficient of x
  * @param x         vector of length n*incx
