@@ -60,6 +60,7 @@ gsl::span<T const> slice(std::vector<T> const& data, int index, unsigned size) {
 /**
  * @brief local helper to check whether the provided buffer has the expected
  * size
+ *
  * @param buffer buffer to which values are to be written
  * @param expected_size expected size of the buffer
  */
@@ -80,6 +81,7 @@ void check_buffer_size(
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (span)
+ *
  * @param slice computed value
  * @param buffer buffer to which values are to be written
  */
@@ -92,6 +94,7 @@ void write_slice(gsl::span<T const> const slice, gsl::span<T> buffer) {
 /**
  * @brief local helper function to add the computed slice to provided buffer
  * (span)
+ *
  * @param slice computed value
  * @param buffer buffer to which values are to be added
  */
@@ -107,6 +110,7 @@ void add_slice(gsl::span<T const> const slice, gsl::span<T> buffer) {
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (vector)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
@@ -120,6 +124,7 @@ void write_slice(std::vector<T> const& s, std::vector<T>& b) {
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (vector/span)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
@@ -130,6 +135,7 @@ template <class T> void write_slice(std::vector<T> const& s, gsl::span<T> b) {
 /**
  * @brief local helper function to add the computed slice to provided buffer
  * (vector/span)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
@@ -140,6 +146,7 @@ template <class T> void add_slice(std::vector<T> const& s, gsl::span<T> b) {
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (AmiVector/span)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
@@ -171,6 +178,7 @@ double unscale_parameter(double scaledParameter, ParameterScaling scaling);
 
 /**
  * @brief Apply parameter scaling according to `scaling`
+ *
  * @param unscaledParameter
  * @param scaling parameter scaling
  * @return Scaled parameter
@@ -179,6 +187,7 @@ double scale_parameter(double unscaledParameter, ParameterScaling scaling);
 
 /**
  * @brief Apply parameter scaling according to `scaling`
+ *
  * @param bufferUnscaled
  * @param pscale parameter scaling
  * @param bufferScaled destination
@@ -190,6 +199,7 @@ void scale_parameters(
 
 /**
  * @brief Returns the current backtrace as std::string
+ *
  * @param maxFrames Number of frames to include
  * @param first_frame Index of first frame to include
  * @return Backtrace
@@ -198,6 +208,7 @@ std::string get_backtrace_string(int maxFrames, int first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
+ *
  * @param err_type error type
  * @return Error type as string
  */
@@ -205,6 +216,7 @@ std::string regex_error_to_string(std::regex_constants::error_type err_type);
 
 /**
  * @brief Format printf-style arguments to std::string
+ *
  * @param fmt Format string
  * @param ap Argument list pointer
  * @return Formatted String
@@ -225,6 +237,7 @@ class ContextManager {
 /**
  * @brief Convert a flat index to a pair of row/column indices,
  * assuming row-major order.
+ *
  * @param flat_idx flat index
  * @param num_cols number of columns of referred to matrix
  * @return row index, column index
@@ -235,6 +248,7 @@ auto unravel_index(size_t flat_idx, size_t num_cols)
 /**
  * @brief Check if two spans are equal, treating NaNs in the same position as
  * equal.
+ *
  * @param a
  * @param b
  * @return Whether the contents of the two spans are equal.
@@ -289,6 +303,7 @@ class CpuTimer {
 
     /**
      * @brief Get elapsed CPU time in seconds since initialization or last reset
+     *
      * @return CPU time in seconds
      */
     [[nodiscard]] double elapsed_seconds() const {
@@ -298,6 +313,7 @@ class CpuTimer {
     /**
      * @brief Get elapsed CPU time in milliseconds since initialization or last
      * reset
+     *
      * @return CPU time in milliseconds
      */
     [[nodiscard]] double elapsed_milliseconds() const {
@@ -331,6 +347,7 @@ class CpuTimer {
 
     /**
      * @brief Get elapsed CPU time in seconds since initialization or last reset
+     *
      * @return CPU time in seconds
      */
     double elapsed_seconds() const {
@@ -340,6 +357,7 @@ class CpuTimer {
     /**
      * @brief Get elapsed CPU time in milliseconds since initialization or last
      * reset
+     *
      * @return CPU time in milliseconds
      */
     double elapsed_milliseconds() const {

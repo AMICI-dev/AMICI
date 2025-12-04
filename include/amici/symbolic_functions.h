@@ -22,7 +22,7 @@ double log(double x);
 double dirac(double x);
 
 /**
- * The Heaviside function.
+ * @brief The Heaviside function.
  *
  * @param x argument
  * @param x0 value at x==0

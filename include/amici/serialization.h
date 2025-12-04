@@ -31,6 +31,7 @@ namespace serialization {
 
 /**
  * @brief Serialize a raw array to a boost archive
+ *
  * @param ar archive
  * @param p Pointer to array
  * @param size Size of p
@@ -52,6 +53,7 @@ void archive_vector(Archive& ar, T** p, int size) {
 #ifndef EXHALE_DOXYGEN_SHOULD_SKIP_THIS
 /**
  * @brief Serialize amici::Solver to boost archive
+ *
  * @param ar Archive
  * @param s Solver instance to serialize
  */
@@ -99,6 +101,7 @@ void serialize(Archive& ar, amici::Solver& s, unsigned int const /*version*/) {
 
 /**
  * @brief Serialize std::chrono::duration to boost archive
+ *
  * @param ar Archive
  * @param d Duration
  */
@@ -119,6 +122,7 @@ void serialize(
 
 /**
  * @brief Serialize amici::CVodeSolver to boost archive
+ *
  * @param ar Archive
  * @param s Solver instance to serialize
  */
@@ -131,6 +135,7 @@ void serialize(
 
 /**
  * @brief Serialize amici::Model to boost archive
+ *
  * @param ar Archive
  * @param m Model instance to serialize
  */
@@ -159,6 +164,7 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
 
 /**
  * @brief Serialize amici::SimulationParameters to boost archive
+ *
  * @param ar Archive
  * @param s amici::SimulationParameters instance to serialize
  */
@@ -198,6 +204,7 @@ void serialize(
 
 /**
  * @brief Serialize amici::ReturnData to boost archive
+ *
  * @param ar Archive
  * @param r ReturnData instance to serialize
  */
@@ -268,6 +275,7 @@ void serialize(
 
 /**
  * @brief Serialize amici::ModelDimensions to boost archive
+ *
  * @param ar Archive
  * @param m ModelDimensions instance to serialize
  */

@@ -41,6 +41,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Constructor
+     *
      * @param ts_ see amici::SimulationParameters::ts
      * @param model_dimensions_ Model dimensions
      * @param nmaxevent_ see amici::ModelDimensions::nmaxevent
@@ -69,6 +70,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
+     *
      * @param solver solver instance
      * @param model model instance
      */
@@ -79,6 +81,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
+     *
      * @param fwd simulated forward problem, pass `nullptr` to ignore
      * @param bwd simulated backward problem, pass `nullptr` to ignore
      * @param model matching model instance
@@ -497,6 +500,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
+     *
      * @param ar Archive to serialize to
      * @param r Data to serialize
      * @param version Version number
@@ -536,6 +540,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief initializes storage for likelihood reporting mode
+     *
      * @param quadratic_llh whether model defines a quadratic nllh and computing
      * res, sres and FIM makes sense.
      */
@@ -543,6 +548,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief initializes storage for observables + likelihood reporting mode
+     *
      * @param quadratic_llh whether model defines a quadratic nllh and computing
      * res, sres and FIM makes sense.
      */
@@ -550,24 +556,28 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief initializes storage for residual reporting mode
+     *
      * @param enable_res whether residuals are to be computed
      */
     void initialize_residual_reporting(bool enable_res);
 
     /**
      * @brief initializes storage for full reporting mode
+     *
      * @param enable_fim whether FIM Hessian approximation is to be computed
      */
     void initialize_full_reporting(bool enable_fim);
 
     /**
      * @brief initialize values for chi2 and llh and derivatives
+     *
      * @param enable_chi2 whether chi2 values are to be computed
      */
     void initialize_objective_function(bool enable_chi2);
 
     /**
      * @brief extracts data from a pre-equilibration SteadystateProblem
+     *
      * @param preeq SteadystateProblem for pre-equilibration
      * @param preeq_bwd SteadyStateBackwardProblem from pre-equilibration
      * @param model Model instance to compute return values
@@ -579,6 +589,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief extracts data from a post-equilibration SteadystateProblem
+     *
      * @param posteq SteadystateProblem for post-equilibration
      * @param posteq_bwd SteadyStateBackwardProblem from post-equilibration
      * @param model Model instance to compute return values
@@ -592,6 +603,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief extracts results from forward problem
+     *
      * @param fwd forward problem
      * @param model model that was used for forward simulation
      * @param edata ExpData instance containing observable data
@@ -602,6 +614,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief extracts results from backward problem
+     *
      * @param fwd forward problem
      * @param bwd backward problem
      * @param preeq SteadyStateProblem for preequilibration
@@ -616,6 +629,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief extracts results from solver
+     *
      * @param solver solver that was used for forward/backward simulation
      */
     void process_solver(Solver const& solver);
@@ -623,6 +637,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final
      * timepoint
+     *
      * @param problem forward problem or steadystate problem
      * @param model model that was used for forward/backward simulation
      */
@@ -652,6 +667,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Residual function
+     *
      * @param it time index
      * @param model model that was used for forward/backward simulation
      * @param sol Solution state the timepoint `it`
@@ -662,6 +678,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Chi-squared function
+     *
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
@@ -669,6 +686,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Residual sensitivity function
+     *
      * @param it time index
      * @param model model that was used for forward/backward simulation
      * @param sol solution state the timepoint `it`
@@ -679,6 +697,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Fisher information matrix function
+     *
      * @param it time index
      * @param model model that was used for forward/backward simulation
      * @param sol Solution state the timepoint `it`
@@ -690,6 +709,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Set likelihood, state variables, outputs and respective
      * sensitivities to NaN (typically after integration failure)
+     *
      * @param it_start time index at which to start invalidating
      */
     void invalidate(int it_start);
@@ -709,12 +729,14 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief applies the chain rule to account for parameter transformation in
      * the sensitivities of simulation results
+     *
      * @param model Model from which the ReturnData was obtained
      */
     void apply_chain_rule_factor_to_simulation_results(Model const& model);
 
     /**
      * @brief Checks whether forward sensitivity analysis is performed
+     *
      * @return boolean indicator
      */
     [[nodiscard]] bool computing_fsa() const {
@@ -727,6 +749,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Extracts output information for data-points, expects that
      * the model state was set appropriately
+     *
      * @param it timepoint index
      * @param model model that was used in forward solve
      * @param sol solution state the timepoint `it`
@@ -739,6 +762,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Extracts data information for forward sensitivity analysis,
      * expects that the model state was set appropriately
+     *
      * @param it index of current timepoint
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
@@ -751,6 +775,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Extracts output information for events, expects that the model
      * state was set appropriately
+     *
      * @param rootidx information about which roots fired
      * (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
@@ -765,6 +790,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Extracts event information for forward sensitivity analysis,
      * expects the model state was set appropriately
+     *
      * @param ie index of event type
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
@@ -777,6 +803,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Updates contribution to likelihood from quadratures (xQB),
      * if preequilibration was run in adjoint mode
+     *
      * @param model model that was used for forward/backward simulation
      * @param sx0 State sensitivities at pre-equilibration steady state
      * @param xB Adjoint state from pre-equilibration.
@@ -792,6 +819,7 @@ class ReturnData : public ModelDimensions {
      * @brief Updates contribution to likelihood for initial state sensitivities
      * (llhS0), if no preequilibration was run or if forward sensitivities were
      * used
+     *
      * @param model model that was used for forward/backward simulation
      * @param sol Solution state the timepoint `it`
      * @param llhS0 contribution to likelihood for initial state sensitivities

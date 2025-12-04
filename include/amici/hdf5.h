@@ -64,6 +64,7 @@ void write_solver_settings_to_hdf5(
 
 /**
  * @brief Write solver options to HDF5 file.
+ *
  * @param file File to read from
  * @param solver Solver to write options from
  * @param hdf5Location Path inside the HDF5 file
@@ -75,6 +76,7 @@ void write_solver_settings_to_hdf5(
 
 /**
  * @brief Read solver options from HDF5 file.
+ *
  * @param hdffile Name of HDF5 file
  * @param solver Solver to set options on
  * @param datasetPath Path inside the HDF5 file
@@ -85,6 +87,7 @@ void read_solver_settings_from_hdf5(
 
 /**
  * @brief Read model data from HDF5 file.
+ *
  * @param hdffile Name of HDF5 file
  * @param model Model to set data on
  * @param datasetPath Path inside the HDF5 file
@@ -95,6 +98,7 @@ void read_model_data_from_hdf5(
 
 /**
  * @brief Read model data from HDF5 file.
+ *
  * @param file HDF5 file handle to read from
  * @param model Model to set data on
  * @param datasetPath Path inside the HDF5 file
@@ -105,6 +109,7 @@ void read_model_data_from_hdf5(
 
 /**
  * @brief Write ReturnData to HDF5 file.
+ *
  * @param rdata Data to write
  * @param file HDF5 file to write to
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
@@ -117,6 +122,7 @@ void write_return_data_to_hdf5(
 
 /**
  * @brief Write ReturnData to HDF5 file.
+ *
  * @param rdata Data to write
  * @param hdf5Filename Filename of HDF5 file
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
@@ -129,6 +135,7 @@ void write_return_data_to_hdf5(
 
 /**
  * @brief Write ReturnData diagnosis data to HDF5 file.
+ *
  * @param rdata Data to write
  * @param file HDF5 file to write to
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
@@ -140,6 +147,7 @@ void write_return_data_diagnosis(
 
 /**
  * @brief Write log message to HDF5 file
+ *
  * @param file HDF5 file to write to
  * @param logItems Log items to write
  * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
@@ -151,6 +159,7 @@ void write_log_items_to_hdf5(
 
 /**
  * @brief Create the given group and possibly parents.
+ *
  * @param file HDF5 file to write to
  * @param groupPath Path to the group to be created
  * @param recursively Create intermediary groups
@@ -162,6 +171,7 @@ void create_group(
 
 /**
  * @brief Read AMICI ExpData data from HDF5 file.
+ *
  * @param hdf5Filename Name of HDF5 file
  * @param hdf5Root Path inside the HDF5 file to object having ExpData
  * @param model The model for which data is to be read
@@ -175,6 +185,7 @@ std::unique_ptr<ExpData> read_exp_data_from_hdf5(
 
 /**
  * @brief Write AMICI experimental data to HDF5 file.
+ *
  * @param edata The experimental data which is to be written
  * @param file HDF5 file
  * @param hdf5Location Path inside the HDF5 file
@@ -187,6 +198,7 @@ void write_exp_data_to_hdf5(
 
 /**
  * @brief Write AMICI experimental data to HDF5 file.
+ *
  * @param edata The experimental data which is to be written
  * @param filepath Name of HDF5 file
  * @param hdf5Location Path inside the HDF5 file
@@ -199,6 +211,7 @@ void write_exp_data_to_hdf5(
 /**
  * @brief Check whether an attribute with the given name exists
  * on the given dataset.
+ *
  * @param file The HDF5 file object
  * @param optionsObject Dataset of which attributes should be checked
  * @param attributeName Name of the attribute of interest
@@ -212,6 +225,7 @@ bool attribute_exists(
 /**
  * @brief Check whether an attribute with the given name exists
  * on the given object.
+ *
  * @param object An HDF5 object
  * @param attributeName Name of the attribute of interest
  * @return `true` if attribute exists, `false` otherwise
@@ -222,6 +236,7 @@ bool attribute_exists(
 
 /**
  * @brief Create and write to 1-dimensional native integer dataset.
+ *
  * @param file HDF5 file object
  * @param datasetName Name of dataset to create
  * @param buffer Data to write to dataset
@@ -233,6 +248,7 @@ void create_and_write_int_1d_dataset(
 
 /**
  * @brief Create and write to 2-dimensional native integer dataset.
+ *
  * @param file HDF5 file object
  * @param datasetName Name of dataset to create
  * @param buffer Flattened data to write to dataset (assuming row-major)
@@ -246,6 +262,7 @@ void create_and_write_int_2d_dataset(
 
 /**
  * @brief Create and write to 1-dimensional native double dataset.
+ *
  * @param file HDF5 file object
  * @param datasetName Name of dataset to create
  * @param buffer Data to write to dataset
@@ -257,6 +274,7 @@ void create_and_write_double_1d_dataset(
 
 /**
  * @brief Create and write to 2-dimensional native double dataset.
+ *
  * @param file HDF5 file object
  * @param datasetName Name of dataset to create
  * @param buffer Flattened data to write to dataset (assuming row-major)
@@ -271,6 +289,7 @@ void create_and_write_double_2d_dataset(
 
 /**
  * @brief Create and write to 3-dimensional native double dataset.
+ *
  * @param file HDF5 file object
  * @param datasetName Name of dataset to create
  * @param buffer Flattened data to write to dataset (assuming row-major)
@@ -286,6 +305,7 @@ void create_and_write_double_3d_dataset(
 
 /**
  * @brief Read string attribute from HDF5 object.
+ *
  * @param file HDF5 file
  * @param optionsObject Object to read attribute from
  * @param attributeName Name of attribute to read
@@ -298,6 +318,7 @@ std::string get_string_attribute(
 
 /**
  * @brief Read scalar native double attribute from HDF5 object.
+ *
  * @param file HDF5 file
  * @param optionsObject Object to read attribute from
  * @param attributeName Name of attribute to read
@@ -310,6 +331,7 @@ double get_double_scalar_attribute(
 
 /**
  * @brief Read scalar native integer attribute from HDF5 object.
+ *
  * @param file HDF5 file
  * @param optionsObject Object to read attribute from
  * @param attributeName Name of attribute to read
@@ -323,6 +345,7 @@ int get_int_scalar_attribute(
 
 /**
  * @brief Read 1-dimensional native integer dataset from HDF5 file.
+ *
  * @param file HDF5 file object
  * @param name Name of dataset to read
  * @return Data read
@@ -332,6 +355,7 @@ get_int_1d_dataset(const H5::H5File& file, std::string const& name);
 
 /**
  * @brief Read 1-dimensional native double dataset from HDF5 file.
+ *
  * @param file HDF5 file object
  * @param name Name of dataset to read
  * @return Data read
@@ -342,6 +366,7 @@ get_double_1d_dataset(const H5::H5File& file, std::string const& name);
 
 /**
  * @brief Read 2-dimensional native double dataset from HDF5 file.
+ *
  * @param file HDF5 file object
  * @param name Name of dataset to read
  * @param m Number of rows in the dataset
@@ -355,6 +380,7 @@ std::vector<double> get_double_2d_dataset(
 
 /**
  * @brief Read 3-dimensional native double dataset from HDF5 file.
+ *
  * @param file HDF5 file object
  * @param name Name of dataset to read
  * @param m Length of first dimension in dataset
@@ -371,6 +397,7 @@ std::vector<double> get_double_3d_dataset(
 /**
  * @brief Check if the given location (group, link or dataset) exists in the
  * given file.
+ *
  * @param filename HDF5 filename
  * @param location Location to test for
  * @return `true` if exists, `false` otherwise
@@ -380,6 +407,7 @@ bool location_exists(std::string const& filename, std::string const& location);
 /**
  * @brief Check if the given location (group, link or dataset) exists in the
  * given file.
+ *
  * @param file HDF5 file object
  * @param location Location to test for
  * @return `true` if exists, `false` otherwise

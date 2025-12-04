@@ -28,6 +28,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Constructor with model dimensions
+     *
      * @param model_dimensions Model dimensions
      * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
@@ -61,6 +62,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Jacobian of xdot with respect to states x
+     *
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -79,6 +81,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Jacobian of xBdot with respect to adjoint state xB
+     *
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -98,6 +101,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief J in sparse form (for sparse solvers from the SuiteSparse Package)
+     *
      * @param t timepoint
      * @param cj scalar in Jacobian (inverse stepsize)
      * @param x Vector with the states
@@ -118,6 +122,7 @@ class Model_DAE : public Model {
     /**
      * @brief JB in sparse form (for sparse solvers from the SuiteSparse
      * Package)
+     *
      * @param t timepoint
      * @param cj scalar in Jacobian
      * @param x Vector with the states
@@ -133,6 +138,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Diagonal of the Jacobian (for preconditioning)
+     *
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param cj scaling factor, inverse of the step size
@@ -152,6 +158,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Matrix vector product of J with a vector v (for iterative solvers)
+     *
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -167,6 +174,7 @@ class Model_DAE : public Model {
     /**
      * @brief Matrix vector product of JB with a vector v (for iterative
      *solvers)
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -189,6 +197,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Event trigger function for events
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -205,6 +214,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Residual function of the DAE
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -214,6 +224,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Right hand side of differential equation for adjoint state xB
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -228,6 +239,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Right hand side of integral equation for quadrature states qB
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -247,6 +259,7 @@ class Model_DAE : public Model {
     /**
      * @brief Implementation of fxBdot for steady state case at the N_Vector
      * level
+     *
      * @param t timepoint
      * @param xB Vector with the adjoint state
      * @param dxB Vector with the adjoint derivative states
@@ -258,6 +271,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Implementation of fqBdot for steady state at the N_Vector level
+     *
      * @param t timepoint
      * @param xB Vector with the adjoint states
      * @param dxB Vector with the adjoint derivative states
@@ -276,6 +290,7 @@ class Model_DAE : public Model {
     /**
      * @brief Computes the sparse backward Jacobian for steadystate integration
      * and writes it to the model member
+     *
      * @param t timepoint
      * @param cj scalar in Jacobian
      * @param x Vector with the states
@@ -291,6 +306,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Sensitivity of dx/dt wrt model parameters p
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -309,6 +325,7 @@ class Model_DAE : public Model {
     /**
      * @brief Right hand side of differential equation for state sensitivities
      * sx
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -324,6 +341,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Mass matrix for DAE systems
+     *
      * @param t timepoint
      * @param x Vector with the states
      */
@@ -334,6 +352,7 @@ class Model_DAE : public Model {
   protected:
     /**
      * @brief Model specific implementation for fJSparse
+     *
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -353,6 +372,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation for froot
+     *
      * @param root values of the trigger function
      * @param t timepoint
      * @param x Vector with the states
@@ -370,6 +390,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation for fxdot
+     *
      * @param xdot residual function
      * @param t timepoint
      * @param x Vector with the states
@@ -387,6 +408,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdp
+     *
      * @param dxdotdp partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -406,7 +428,6 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule
-     * (Py)
      *
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
@@ -439,7 +460,6 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule
-     * (Py)
      *
      * @param dxdotdx_explicit partial derivative xdot wrt x
      * @param t timepoint
@@ -472,6 +492,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdw, data part
+     *
      * @param dxdotdw partial derivative xdot wrt w
      * @param t timepoint
      * @param x Vector with the states
@@ -489,18 +510,21 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdw, colptrs part
+     *
      * @param dxdotdw sparse matrix to which colptrs will be written
      */
     virtual void fdxdotdw_colptrs(SUNMatrixWrapper& dxdotdw);
 
     /**
      * @brief Model specific implementation of fdxdotdw, rowvals part
+     *
      * @param dxdotdw sparse matrix to which rowvals will be written
      */
     virtual void fdxdotdw_rowvals(SUNMatrixWrapper& dxdotdw);
 
     /**
      * @brief Sensitivity of dx/dt wrt model parameters w
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -509,6 +533,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fM
+     *
      * @param M mass matrix
      * @param t timepoint
      * @param x Vector with the states

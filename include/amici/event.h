@@ -29,6 +29,7 @@ class Event {
   public:
     /**
      * @brief Event constructor
+     *
      * @param id ID of the event
      * @param use_values_from_trigger_time Whether the event assignment is
      * evaluated using the state from the time point at which the event
@@ -48,18 +49,21 @@ class Event {
 
     /**
      * @brief Get the ID of the event
+     *
      * @return The ID of the event.
      */
     std::string const& get_id() const { return id_; }
 
     /**
      * @brief Get the initial value of the root function
+     *
      * @return The value of the root function at t_0.
      */
     bool get_initial_value() const { return initial_value_; }
 
     /**
      * @brief Get the priority of the event assignments
+     *
      * @return The priority of the event assignments, or NAN if undefined.
      */
     realtype get_priority() const { return priority_; }
@@ -138,18 +142,21 @@ class EventQueue {
 
     /**
      * @brief Check if the queue is empty
+     *
      * @return True if the queue is empty, false otherwise
      */
     bool empty() const { return pending_events_.empty(); }
 
     /**
      * @brief Push an event to the queue
+     *
      * @param event The event to push
      */
     void push(PendingEvent event) { pending_events_.push_back(event); }
 
     /**
      * @brief Get the next event to handle and remove it from the queue
+     *
      * @return The next event to handle
      * @throws std::runtime_error if there are no pending events
      */
@@ -167,7 +174,7 @@ class EventQueue {
         });
 
         // If there is any undefined (NaN) priority, the order of all
-        // simulataneously executed events is undefined. We just proceed
+        // simultaneously executed events is undefined. We just proceed
         // with the first one in the list.
         if (std::any_of(
                 pending_events_.begin(), pending_events_.end(),

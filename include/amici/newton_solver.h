@@ -50,6 +50,7 @@ struct DEStateView {
 
     /**
      * @brief Construct a DEStateView from a SolutionState reference.
+     *
      * @param sol
      */
     DEStateView(SolutionState& sol)
@@ -113,8 +114,8 @@ class NewtonSolver {
     void prepare_linear_system(Model& model, DEStateView const& state);
 
     /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the
-     * linear solver
+     * @brief Writes the Jacobian (JB) for the Newton iteration and passes it to
+     * the linear solver.
      *
      * @param model the model instance
      * @param state current simulation state
