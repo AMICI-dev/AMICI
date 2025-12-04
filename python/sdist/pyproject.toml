@@ -24,7 +24,6 @@ dependencies = [
     "numpy; python_version>='3.13'",
     "python-libsbml",
     "pandas>=2.0.2",
-    "pyarrow",
     "sbmlmath>=0.4.0",
     "toposort",
     "setuptools>=48",
