@@ -11,7 +11,8 @@ import warnings
 from types import ModuleType
 from typing import Protocol, runtime_checkable
 
-from ... import amici_path
+import amici
+from amici import amici_path, import_model_module
 
 #: boolean indicating if this is the full package with swig interface or
 #  the raw package without extension
@@ -21,6 +22,11 @@ has_clibs: bool = any(
 )
 #: boolean indicating if amici was compiled with hdf5 support
 hdf5_enabled: bool = False
+
+__all__ = [
+    "import_model_module",
+    "ModelModule",
+]
 
 if has_clibs:
     # Import SWIG module and swig-dependent submodules
@@ -37,7 +43,7 @@ if has_clibs:
             message="builtin type .* has no __module__ attribute",
         )
         # The swig-generated Python module
-        from amici._installation import amici
+        from amici._installation import amici as amici_swig_py
 
     # TODO: selective import to avoid loading unneeded symbols
     from amici._installation.amici import *
@@ -61,10 +67,25 @@ if has_clibs:
 
         To enable static type checking."""
 
-        def get_model(self) -> amici.Model:
+        def get_model(self) -> amici_swig_py.Model:
             """Create a model instance."""
             ...
 
-    AmiciModel = amici.Model | amici.ModelPtr
+    AmiciModel = amici_swig_py.Model | amici_swig_py.ModelPtr
+
+    from . import _swig_wrappers
+
+    __all__ += [
+        *amici._installation.amici.__all__,
+        "ExpDataView",
+        "ReturnDataView",
+        "evaluate",
+        "ModelModule",
+        *_swig_wrappers.__all__,
+        "AmiciModel",
+    ]
+
+    # expose the swig module itself
+    amici = amici_swig_py
 else:
     ModelModule = ModuleType

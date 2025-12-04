@@ -406,7 +406,7 @@ from collections.abc import Sequence
 import numpy as np
 if TYPE_CHECKING:
     import numpy
-    from .numpy import ReturnDataView
+    from amici.sim.sundials import ReturnDataView
 %}
 
 %pythoncode %{
