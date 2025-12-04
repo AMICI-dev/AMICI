@@ -12,10 +12,9 @@ from amici import SbmlImporter
 from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     ExpData,
+    ExpDataView,
     SensitivityMethod,
     SensitivityOrder,
-    get_data_observables_as_data_frame,
-    get_simulation_observables_as_data_frame,
     run_simulation,
     run_simulations,
 )
@@ -82,23 +81,25 @@ def test_special_likelihoods(model_special_likelihoods):
     edata.set_noise_scales(sigmas)
 
     # and now run for real and also compute likelihood values
-    rdata = run_simulations(model, solver, [edata])[0]
+    rdata = run_simulation(model, solver, edata)
 
     # check if the values make overall sense
     assert np.isfinite(rdata["llh"])
     assert np.all(np.isfinite(rdata["sllh"]))
     assert np.any(rdata["sllh"])
 
-    rdata_df = get_simulation_observables_as_data_frame(
-        model, edata, rdata, by_id=True
-    )
-    edata_df = get_data_observables_as_data_frame(model, edata, by_id=True)
-
     # check correct likelihood value
+    obs1_idx = model.get_observable_ids().index("o1")
+    obs2_idx = model.get_observable_ids().index("o2")
+    edata_v = ExpDataView(edata)
     llh_exp = -sum(
         [
-            binomial_nllh(edata_df["o1"], rdata_df["o1"], sigma),
-            negative_binomial_nllh(edata_df["o2"], rdata_df["o2"], sigma),
+            binomial_nllh(
+                edata_v.measurements[:, obs1_idx], rdata.y[:, obs1_idx], sigma
+            ),
+            negative_binomial_nllh(
+                edata_v.measurements[:, obs2_idx], rdata.y[:, obs2_idx], sigma
+            ),
         ]
     )
     assert np.isclose(rdata["llh"], llh_exp)
