@@ -50,7 +50,6 @@ if has_clibs:
     from ._numpy import ExpDataView as ExpDataView
     from ._numpy import ReturnDataView as ReturnDataView
     from ._numpy import evaluate as evaluate
-    from ._pandas import *
 
     # Import after import of the swig module as this is supposed to
     #  shadow some swig symbols
