@@ -2629,29 +2629,30 @@ class DEModel:
         if added_expressions:
             self.toposort_expressions()
 
-    def get_explicit_roots(self) -> set[sp.Expr]:
+    def get_explicit_roots(self) -> list[sp.Expr]:
         """
         Returns explicit formulas for all discontinuities (events)
         that can be precomputed
 
         :return:
-            set of symbolic roots
+            list of symbolic roots
         """
-        return {root for e in self._events for root in e.get_trigger_times()}
+        return [root for e in self._events for root in e.get_trigger_times()]
 
-    def get_implicit_roots(self) -> set[sp.Expr]:
+    def get_implicit_roots(self) -> list[sp.Expr]:
         """
         Returns implicit equations for all discontinuities (events)
         that have to be located via rootfinding
 
         :return:
-            set of symbolic roots
+            list of symbolic roots
         """
-        return {
+        return [
             e.get_val()
             for e in self._events
             if not e.has_explicit_trigger_times()
-        }
+        ]
+    
     def has_algebraic_states(self) -> bool:
         """
         Checks whether the model has algebraic states
@@ -2686,7 +2687,8 @@ class DEModel:
         :return:
             boolean indicating if event assignments with implicit triggers are present
         """
-        return any(event.updates_state and not event.has_explicit_trigger_times() for event in self._events)
+        allowed_syms = set(self.sym("p"))
+        return any(event.updates_state and not event.has_explicit_trigger_times(allowed_syms) for event in self._events)
 
     def toposort_expressions(
         self, reorder: bool = True

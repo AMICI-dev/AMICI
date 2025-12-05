@@ -77,7 +77,7 @@ def _jax_return_variables(
         f"{eq_name.upper()}_RET": _jnp_array_str(
             s.name for s in model.sym(eq_name)
         )
-        if model.sym(eq_name)
+        if model.sym(eq_name) and sp.Matrix(model.eq(eq_name)).shape[0]
         else "jnp.array([])"
         for eq_name in eq_names
     }
@@ -284,6 +284,8 @@ class ODEExporter:
                 for net in self.hybridization.keys()
             ),
         }
+
+        breakpoint()
 
         apply_template(
             Path(amiciModulePath) / "jax" / "jax.template.py",
