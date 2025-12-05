@@ -639,7 +639,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fns(),
                 self._root_cond_fn,
                 self._delta_x,
-                self._known_discs(p, x_solver),
+                self._known_discs(p),
             )
             x_solver = x_dyn[-1, :]
         else:
@@ -662,7 +662,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fns(),
                 self._root_cond_fn,
                 self._delta_x,
-                self._known_discs(p, x_solver),
+                self._known_discs(p),
                 max_steps,
             )
         else:
@@ -899,7 +899,7 @@ class JAXModel(eqx.Module):
             self._root_cond_fns(),
             self._root_cond_fn,
             self._delta_x,
-            self._known_discs(p, current_x),
+            self._known_discs(p),
             max_steps,
         )
 
