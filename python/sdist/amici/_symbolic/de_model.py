@@ -2640,13 +2640,13 @@ class DEModel:
         """
         return [root for e in self._events for root in e.get_trigger_times()]
 
-    def get_implicit_roots(self) -> set[sp.Expr]:
+    def get_implicit_roots(self) -> list[sp.Expr]:
         """
         Returns implicit equations for all discontinuities (events)
         that have to be located via rootfinding
 
         :return:
-            set of symbolic roots
+            list of symbolic roots
         """
         return [
             e.get_val()
