@@ -109,8 +109,9 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_JY_RET.at[iy].get()
 
-    def _known_discs(self, p):
+    def _known_discs(self, p, y):
         TPL_P_SYMS = p
+        TPL_X_SYMS = y
 
         return TPL_ROOTS
 
