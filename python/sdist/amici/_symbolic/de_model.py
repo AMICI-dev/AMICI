@@ -1142,6 +1142,8 @@ class DEModel:
                 ]
             )
             return
+        elif name == "deltax":
+            length = sp.Matrix(self.eq(name)).shape[0]
         else:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix(
