@@ -1592,7 +1592,7 @@ class DEModel:
                 else:
                     event_eqs.append(state_update)
 
-            self._eqs[name] = sp.Matrix(event_eqs)
+            self._eqs[name] = event_eqs
 
         elif name == "x_old":
             self._eqs[name] = sp.Matrix(
@@ -2639,20 +2639,19 @@ class DEModel:
         """
         return {root for e in self._events for root in e.get_trigger_times()}
 
-    def get_implicit_roots(self) -> list[sp.Expr]:
+    def get_implicit_roots(self) -> set[sp.Expr]:
         """
         Returns implicit equations for all discontinuities (events)
         that have to be located via rootfinding
 
         :return:
-            list of symbolic roots
+            set of symbolic roots
         """
-        return [
+        return {
             e.get_val()
             for e in self._events
             if not e.has_explicit_trigger_times()
-        ]
-
+        }
     def has_algebraic_states(self) -> bool:
         """
         Checks whether the model has algebraic states
@@ -2679,6 +2678,15 @@ class DEModel:
             boolean indicating if priority events are present
         """
         return any(event.get_priority() is not None for event in self._events)
+    
+    def has_implicit_event_assignments(self) -> bool:
+        """
+        Checks whether the model has event assignments with implicit triggers
+
+        :return:
+            boolean indicating if event assignments with implicit triggers are present
+        """
+        return any(event.updates_state and not event.has_explicit_trigger_times() for event in self._events)
 
     def toposort_expressions(
         self, reorder: bool = True

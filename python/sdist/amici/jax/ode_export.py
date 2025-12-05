@@ -153,6 +153,11 @@ class ODEExporter:
             raise NotImplementedError(
                 "The JAX backend does not support event priorities."
             )
+        
+        if ode_model.has_implicit_event_assignments():
+            raise NotImplementedError(
+                "The JAX backend does not support event assignments with implicit triggers."
+            )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
