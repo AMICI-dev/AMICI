@@ -149,6 +149,11 @@ class ODEExporter:
                 "The JAX backend does not support models with algebraic states."
             )
 
+        if ode_model.has_priority_events():
+            raise NotImplementedError(
+                "The JAX backend does not support event priorities."
+            )
+
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 
         self.model_path: Path = Path()
@@ -195,6 +200,7 @@ class ODEExporter:
             "x_solver",
             "x_rdata",
             "total_cl",
+            "eroot",
             "iroot",
             "deltax",
             "x_old",
@@ -250,12 +256,13 @@ class ODEExporter:
             "P_VALUES": _jnp_array_str(self.model.val("p")),
             "ROOTS": _jnp_array_str(
                 {
-                    root
+                    _parse_trigger_root(root)
                     for e in self.model._events
                     for root in e.get_trigger_times()
                 }
             ),
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
+            "N_EEVENTS": str(len(self.model.get_explicit_roots())),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we
@@ -331,3 +338,13 @@ class ODEExporter:
             )
 
         self.model_name = model_name
+
+def _parse_trigger_root(root: sp.Expr) -> str:
+    """Convert a trigger root expression into a string representation.
+
+    :param root: The trigger root expression.
+    :return: A string representation of the trigger root.
+    """
+    if root.is_number:
+        return float(root)
+    return str(root).replace(" ", "")
