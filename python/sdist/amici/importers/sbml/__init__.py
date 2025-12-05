@@ -1907,6 +1907,10 @@ class SbmlImporter:
             }
 
             if self.jax:
+                if not initial_value:
+                    raise NotImplementedError(
+                        "The JAX backend does not support events with False initialValue."
+                    )
                 # Add a negative event for JAX models to handle
                 neg_event_id = event_id + "_negative"
                 neg_event_sym = sp.Symbol(neg_event_id)
