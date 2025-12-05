@@ -289,8 +289,6 @@ class ODEExporter:
             ),
         }
 
-        breakpoint()
-
         apply_template(
             Path(amiciModulePath) / "jax" / "jax.template.py",
             self.model_path / "__init__.py",
