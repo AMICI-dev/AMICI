@@ -60,7 +60,8 @@ def _jax_variable_equations(
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
                 (s.name for s in model.sym(eq_name)),
-                model.eq(eq_name).subs(subs),
+                # sp.Matrix to support event assignments which are lists
+                sp.Matrix(model.eq(eq_name)).subs(subs), 
                 indent,
             )
         )[indent:]  # remove indent for first line
