@@ -372,6 +372,7 @@ def test_time_dependent_discontinuity(tmp_path):
         diffrax.ODETerm(model._xdot),
         model._root_cond_fns(),
         model._root_cond_fn,
+        model._delta_x,
         model._known_discs(p),
     )
 
@@ -422,6 +423,7 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
         diffrax.ODETerm(model._xdot),
         model._root_cond_fns(),
         model._root_cond_fn,
+        model._delta_x,
         model._known_discs(p),
         1000,
     )
