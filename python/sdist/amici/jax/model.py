@@ -15,6 +15,8 @@ import jax.numpy as jnp
 import jaxtyping as jt
 from optimistix import AbstractRootFinder
 
+import os
+
 from ._simulation import eq, solve
 
 
@@ -268,22 +270,6 @@ class JAXModel(eqx.Module):
         ...
 
     @abstractmethod
-    def _root_cond_fns(
-        self,
-    ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
-        """Return condition functions for implicit discontinuities.
-
-        These functions are passed to :class:`diffrax.Event` and must evaluate
-        to zero when a discontinuity is triggered.
-
-        :param p:
-            model parameters
-        :return:
-            tuple of callable root functions
-        """
-        ...
-
-    @abstractmethod
     def _root_cond_fn(
         self,
         t: jt.Float[jt.Scalar, ""],
@@ -305,6 +291,20 @@ class JAXModel(eqx.Module):
             tuple of parameters, total values for conservation laws and heaviside variables
         :return:
             root condition values
+        """
+        ...
+
+    @abstractmethod
+    def _delta_x(
+        self, y: jt.Float[jt.Array, "nxs"]
+    ) -> jt.Float[jt.Array, "nxs"]:
+        """
+        Compute the state vector changes at discontinuities.
+
+        :param y:
+            state vector
+        :return:
+            changes in the state vector at discontinuities
         """
         ...
 
@@ -361,6 +361,50 @@ class JAXModel(eqx.Module):
             Expression ids
         """
         ...
+
+    def _root_cond_fn_event(
+            self,
+            ie: int,
+            t: float,
+            y: jt.Float[jt.Array, "nxs"],
+            args: tuple,
+            **_
+        ):
+        """
+        Root condition function for a specific event index.
+
+        :param ie: 
+            event index
+        :param t: 
+            time point
+        :param y: 
+            state vector
+        :param args: 
+            tuple of arguments required for _root_cond_fn
+        :return: 
+            mask of root condition value for the specified event index
+        """
+        __, __, h = args
+        rval = self._root_cond_fn(t, y, args, **_)
+        # only allow root triggers where trigger function is negative (heaviside == 0)
+        masked_rval = jnp.where(h == 0.0, rval, 1.0)
+        return masked_rval.at[ie].get()
+
+    def _root_cond_fns(self) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
+        """Return condition functions for implicit discontinuities.
+
+        These functions are passed to :class:`diffrax.Event` and must evaluate
+        to zero when a discontinuity is triggered.
+
+        :param p:
+            model parameters
+        :return:
+            iterable of callable root functions
+        """
+        return [
+            eqx.Partial(self._root_cond_fn_event, ie)
+            for ie in range(self.n_events)
+        ]
 
     def _initialise_heaviside_variables(
         self,
@@ -594,6 +638,7 @@ class JAXModel(eqx.Module):
                 diffrax.ODETerm(self._xdot),
                 self._root_cond_fns(),
                 self._root_cond_fn,
+                self._delta_x,
                 self._known_discs(p),
             )
             x_solver = x_dyn[-1, :]
@@ -616,6 +661,7 @@ class JAXModel(eqx.Module):
                 diffrax.ODETerm(self._xdot),
                 self._root_cond_fns(),
                 self._root_cond_fn,
+                self._delta_x,
                 self._known_discs(p),
                 max_steps,
             )
@@ -852,6 +898,7 @@ class JAXModel(eqx.Module):
             diffrax.ODETerm(self._xdot),
             self._root_cond_fns(),
             self._root_cond_fn,
+            self._delta_x,
             self._known_discs(p),
             max_steps,
         )

@@ -348,7 +348,7 @@ class PetabImporter:
 
         show_model_info(self.petab_problem.model.sbml_model)
         sbml_importer = amici.SbmlImporter(
-            self.petab_problem.model.sbml_model,
+            self.petab_problem.model.sbml_model, jax=self._jax
         )
 
         self._check_placeholders()
