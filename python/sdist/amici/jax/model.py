@@ -386,15 +386,6 @@ class JAXModel(eqx.Module):
         """
         __, __, h = args
         rval = self._root_cond_fn(t, y, args, **_)
-
-        if os.getenv("JAX_DEBUG") == "1":
-            jax.debug.print(
-                "rval: {}, ie: {}, h[ie]: {}, t: {}",
-                rval,
-                ie,
-                h[ie],
-                t,
-            )
         # only allow root triggers where trigger function is negative (heaviside == 0)
         masked_rval = jnp.where(h == 0.0, rval, 1.0)
         return masked_rval.at[ie].get()
@@ -421,7 +412,6 @@ class JAXModel(eqx.Module):
         x_solver: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        root_finder: AbstractRootFinder,
     ) -> jt.Float[jt.Array, "ne"]:
         """
         Initialise the heaviside variables.
@@ -438,13 +428,9 @@ class JAXModel(eqx.Module):
             heaviside variables
         """
         h0 = jnp.zeros((self.n_events,))  # dummy values
-        # QUERY: should roots_dir be accounted for here, as in _handle_event? 
-        rootvals = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
-        roots_found = jnp.isclose(
-            rootvals, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
-        )
+        roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
-            roots_found > 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
+            roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
         )
 
     def _x_rdatas(
@@ -634,7 +620,7 @@ class JAXModel(eqx.Module):
             x = jnp.where(mask_reinit, x_reinit, x)
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
-        h = self._initialise_heaviside_variables(t0, x_solver, p, tcl, root_finder)
+        h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
 
         # Dynamic simulation
         if ts_dyn.shape[0]:
@@ -653,7 +639,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fns(),
                 self._root_cond_fn,
                 self._delta_x,
-                self._known_discs(p),
+                self._known_discs(p, x_solver),
             )
             x_solver = x_dyn[-1, :]
         else:
@@ -676,7 +662,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fns(),
                 self._root_cond_fn,
                 self._delta_x,
-                self._known_discs(p),
+                self._known_discs(p, x_solver),
                 max_steps,
             )
         else:
@@ -913,7 +899,7 @@ class JAXModel(eqx.Module):
             self._root_cond_fns(),
             self._root_cond_fn,
             self._delta_x,
-            self._known_discs(p),
+            self._known_discs(p, current_x),
             max_steps,
         )
 

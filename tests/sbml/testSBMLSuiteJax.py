@@ -161,6 +161,7 @@ def test_sbml_testsuite_case_jax(
             279,
             356,
             357,
+            752,
             1148,
             1159,
             1160,

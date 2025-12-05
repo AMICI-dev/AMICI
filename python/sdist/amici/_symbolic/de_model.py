@@ -2639,19 +2639,19 @@ class DEModel:
         """
         return {root for e in self._events for root in e.get_trigger_times()}
 
-    def get_implicit_roots(self) -> set[sp.Expr]:
+    def get_implicit_roots(self) -> list[sp.Expr]:
         """
         Returns implicit equations for all discontinuities (events)
         that have to be located via rootfinding
 
         :return:
-            set of symbolic roots
+            list of symbolic roots
         """
-        return {
+        return [
             e.get_val()
             for e in self._events
             if not e.has_explicit_trigger_times()
-        }
+        ]
 
     def has_algebraic_states(self) -> bool:
         """
@@ -2670,6 +2670,15 @@ class DEModel:
             boolean indicating if event assignments are present
         """
         return any(event.updates_state for event in self._events)
+    
+    def has_priority_events(self) -> bool:
+        """
+        Checks whether the model has events with priorities defined
+
+        :return:
+            boolean indicating if priority events are present
+        """
+        return any(event.get_priority() is not None for event in self._events)
 
     def toposort_expressions(
         self, reorder: bool = True

@@ -188,7 +188,7 @@ def solve(
     root_cond_fn: Callable,
     delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
-    t_eps: jt.Float = 1e-6,
+    t_eps: jt.Float = 1e-5,
 ) -> tuple[jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict]:
     """
     Simulate the ODE system for the specified timepoints.
@@ -473,7 +473,7 @@ def _handle_event(
     )
     roots_dir = jnp.sign(droot_dt)  # direction of the root condition function
 
-    overall_dir = jnp.sign(jnp.sum(h * roots_dir))
+    overall_dir = jnp.sign(jnp.sum(jnp.where(roots_found, h * roots_dir, 0.0)))
     h_next = h - (overall_dir * jnp.where(
         roots_found,
         roots_dir,
@@ -486,9 +486,10 @@ def _handle_event(
             for _ in range(y0_next.shape[0])
         ]
     ).T
-    delx = delta_x(y0_next, p)
-    ups_mat = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
-    y0_up = jnp.where(mask, ups_mat, 0.0)
+    delx = delta_x(y0_next, p, t0_next)
+    if y0_next.size:
+        delx = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
+    y0_up = jnp.where(mask, delx, 0.0)
     y0_next = y0_next + jnp.sum(y0_up, axis=0)
 
     if os.getenv("JAX_DEBUG") == "1":

@@ -109,8 +109,9 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_JY_RET.at[iy].get()
 
-    def _known_discs(self, p):
+    def _known_discs(self, p, y):
         TPL_P_SYMS = p
+        TPL_X_SYMS = y
 
         return TPL_ROOTS
 
@@ -124,10 +125,11 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_W_SYMS = self._w(t, y, p, tcl, h)
 
         TPL_IROOT_EQ
+        TPL_EROOT_EQ
 
-        return TPL_IROOT_RET
+        return jnp.hstack((TPL_IROOT_RET, TPL_EROOT_RET))
     
-    def _delta_x(self, y, p):
+    def _delta_x(self, y, p, t):
         TPL_X_SYMS = y
         TPL_P_SYMS = p
 
@@ -139,7 +141,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     @property
     def n_events(self):
-        return TPL_N_IEVENTS
+        return TPL_N_IEVENTS + TPL_N_EEVENTS
 
     @property
     def observable_ids(self):
