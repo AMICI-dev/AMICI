@@ -412,7 +412,6 @@ class JAXModel(eqx.Module):
         x_solver: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
-        root_finder: AbstractRootFinder,
     ) -> jt.Float[jt.Array, "ne"]:
         """
         Initialise the heaviside variables.
@@ -657,7 +656,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fns(),
                 self._root_cond_fn,
                 self._delta_x,
-                self._known_discs(p),
+                self._known_discs(p, x_solver),
             )
             x_solver = x_dyn[-1, :]
         else:
@@ -680,7 +679,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fns(),
                 self._root_cond_fn,
                 self._delta_x,
-                self._known_discs(p),
+                self._known_discs(p, x_solver),
                 max_steps,
             )
         else:
@@ -927,7 +926,7 @@ class JAXModel(eqx.Module):
             self._root_cond_fns(),
             self._root_cond_fn,
             self._delta_x,
-            self._known_discs(p),
+            self._known_discs(p, current_x),
             max_steps,
         )
 

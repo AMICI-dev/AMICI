@@ -186,7 +186,7 @@ def solve(
     root_cond_fn: Callable,
     delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
-    t_eps: jt.Float = 1e-6,
+    t_eps: jt.Float = 1e-5,
 ) -> tuple[jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict]:
     """
     Simulate the ODE system for the specified timepoints.
