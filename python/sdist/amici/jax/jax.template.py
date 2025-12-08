@@ -128,15 +128,20 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return jnp.hstack((TPL_IROOT_RET, TPL_EROOT_RET))
     
-    def _delta_x(self, y, p, t):
+    def _delta_x(self, y, p, tcl):
         TPL_X_SYMS = y
         TPL_P_SYMS = p
+        TPL_TCL_SYMS = tcl
 
         TPL_X_OLD_EQ
         
         TPL_DELTAX_EQ
 
         return TPL_DELTAX_RET
+    
+    @property
+    def event_initial_values(self):
+        return TPL_EVENT_INITIAL_VALUES
 
     @property
     def n_events(self):

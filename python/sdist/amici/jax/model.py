@@ -17,7 +17,7 @@ from optimistix import AbstractRootFinder
 
 import os
 
-from ._simulation import eq, solve
+from ._simulation import eq, solve, _handle_event
 
 
 class ReturnValue(enum.Enum):
@@ -427,10 +427,12 @@ class JAXModel(eqx.Module):
         :return:
             heaviside variables
         """
-        h0 = jnp.zeros((self.n_events,))  # dummy values
+        h0 = self.event_initial_values.astype(float)  # dummy values
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
-            roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
+            jnp.logical_and(roots_found >= 0.0, h0 == 1.0), 
+            jnp.ones_like(h0), 
+            jnp.zeros_like(h0)
         )
 
     def _x_rdatas(
@@ -621,6 +623,19 @@ class JAXModel(eqx.Module):
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
         h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
+
+        x_solver, _, h, _ = _handle_event(
+            t0,
+            x_solver,
+            p, 
+            tcl,
+            h,
+            root_finder,
+            diffrax.ODETerm(self._xdot),
+            self._root_cond_fn,
+            self._delta_x,
+            {},
+        )
 
         # Dynamic simulation
         if ts_dyn.shape[0]:

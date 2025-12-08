@@ -485,7 +485,7 @@ def _handle_event(
             for _ in range(y0_next.shape[0])
         ]
     ).T
-    delx = delta_x(y0_next, p, t0_next)
+    delx = delta_x(y0_next, p, tcl)
     if y0_next.size:
         delx = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
     y0_up = jnp.where(mask, delx, 0.0)
