@@ -17,10 +17,7 @@ import petab.v1 as petab
 from fiddy import CachedFunction, Type, fiddy_array
 from petab.v1.C import LIN, LOG, LOG10
 
-import amici
-import amici.importers.petab.v1.simulations
 from amici.importers.petab import LLH, SLLH
-from amici.importers.petab.v1.conditions import create_edatas
 from amici.importers.petab.v1.parameter_mapping import create_parameter_mapping
 from amici.sim.sundials import (
     AmiciExpData,
@@ -31,6 +28,7 @@ from amici.sim.sundials import (
     SensitivityOrder,
     run_simulation,
 )
+from amici.sim.sundials.petab.v1._conditions import create_edatas
 
 if TYPE_CHECKING:
     from amici.importers.petab import PetabSimulator
@@ -297,7 +295,7 @@ def simulate_petab_to_cached_functions(
     **kwargs,
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:
     """
-    Convert :func:`amici.petab.simulations.simulate_petab`
+    Convert :func:`amici.sim.sundials.petab.v1.simulate_petab`
     (PEtab v1 simulations) to fiddy functions.
 
     Note that all gradients are provided on linear scale. The correction from
@@ -333,7 +331,7 @@ def simulate_petab_to_cached_functions(
         free_parameter_ids = list(petab_problem.parameter_df.index)
 
     if simulate_petab is None:
-        simulate_petab = amici.importers.petab.v1.simulations.simulate_petab
+        from amici.sim.sundials.petab.v1._simulations import simulate_petab
 
     edatas = None
     if precreate_edatas:

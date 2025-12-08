@@ -4,7 +4,7 @@ from pathlib import Path
 
 import amici
 import amici.importers.petab.v1.petab_import
-import amici.importers.petab.v1.simulations
+import amici.sim.sundials.petab.v1._simulations
 import numpy as np
 import pytest
 from amici.adapters.fiddy import (

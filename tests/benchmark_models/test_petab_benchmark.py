@@ -25,12 +25,7 @@ from amici.adapters.fiddy import (
     simulate_petab_v2_to_cached_functions,
 )
 from amici.importers.petab.v1 import (
-    LLH,
-    RDATAS,
-    SLLH,
     import_petab_problem,
-    rdatas_to_measurement_df,
-    simulate_petab,
 )
 from amici.logging import get_logger
 from amici.sim.sundials import (
@@ -39,6 +34,13 @@ from amici.sim.sundials import (
     SensitivityOrder,
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,
+)
+from amici.sim.sundials.petab.v1 import (
+    LLH,
+    RDATAS,
+    SLLH,
+    rdatas_to_measurement_df,
+    simulate_petab,
 )
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck

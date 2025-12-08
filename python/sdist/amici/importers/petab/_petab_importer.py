@@ -26,9 +26,17 @@ from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
 from amici.sim.sundials import SensitivityOrder
+from amici.sim.sundials.petab.v1._simulations import (
+    EDATAS,
+    LLH,
+    RDATAS,
+    RES,
+    S2LLH,
+    SLLH,
+    SRES,
+)
 
 from .v1.sbml_import import _add_global_parameter
-from .v1.simulations import EDATAS, LLH, RDATAS, RES, S2LLH, SLLH, SRES
 
 if TYPE_CHECKING:
     import pysb

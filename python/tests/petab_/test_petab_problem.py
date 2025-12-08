@@ -1,5 +1,5 @@
 from amici.importers.petab.v1 import import_petab_problem
-from amici.importers.petab.v1.petab_problem import PetabProblem
+from amici.sim.sundials.petab.v1._petab_problem import PetabProblem
 from amici.testing import skip_on_valgrind
 from benchmark_models_petab import get_problem
 

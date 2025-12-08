@@ -6,7 +6,7 @@ from pathlib import Path
 import petab.v1 as petab
 import petabtests
 import pytest
-from amici.importers.petab.v1.simulator import PetabSimulator
+from amici.sim.sundials.petab.v1 import PetabSimulator
 from amici.testing import skip_on_valgrind
 
 

@@ -18,10 +18,10 @@ from collections.abc import Callable
 import pandas as pd
 import petab.v1 as petab
 
+from amici.importers.petab.v1.petab_import import import_petab_problem
 from amici.sim.sundials import AmiciModel, SensitivityMethod
 
-from .petab_import import import_petab_problem
-from .simulations import RDATAS, rdatas_to_measurement_df, simulate_petab
+from ._simulations import RDATAS, rdatas_to_measurement_df, simulate_petab
 
 AMICI_MODEL = "amici_model"
 AMICI_SOLVER = "solver"

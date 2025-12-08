@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
+"""Run PEtab v1 test suite (https://github.com/PEtab-dev/petab_test_suite)"""
 
 import logging
 import sys
@@ -12,10 +12,7 @@ import pytest
 from _pytest.outcomes import Skipped
 from amici.importers.petab.v1 import (
     import_petab_problem,
-    rdatas_to_measurement_df,
-    simulate_petab,
 )
-from amici.importers.petab.v1.conditions import create_parameterized_edatas
 from amici.logging import get_logger, set_log_level
 from amici.sim.sundials import (
     Model,
@@ -26,6 +23,11 @@ from amici.sim.sundials import (
 )
 from amici.sim.sundials.gradient_check import (
     check_derivatives as amici_check_derivatives,
+)
+from amici.sim.sundials.petab.v1 import (
+    create_parameterized_edatas,
+    rdatas_to_measurement_df,
+    simulate_petab,
 )
 
 logger = get_logger(__name__, logging.DEBUG)
