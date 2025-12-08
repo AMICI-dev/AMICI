@@ -77,13 +77,13 @@ Biology.”</span> <em>Npj Systems Biology and Applications</em> 11 (1).
 <a
 href="https://doi.org/10.1038/s41540-025-00550-w">https://doi.org/10.1038/s41540-025-00550-w</a>.
 </div>
-<div id="ref-SmithMal2025" class="csl-entry" role="listitem">
-Smith, Lucian, Rahuman S. Malik-Sheriff, Tung V. N. Nguyen, Henning
+<div id="ref-SmithMal2025a" class="csl-entry" role="listitem">
+Smith, Lucian P., Rahuman S. Malik-Sheriff, Tung V. N. Nguyen, Henning
 Hermjakob, Jonathan Karr, Bilal Shaikh, Logan Drescher, et al. 2025.
-<span>“Using <span>SED-ML</span> for Reproducible Curation: Verifying
-<span>BioModels</span> Across Multiple Simulation Engines.”</span>
-<em>bioRxiv</em>. <a
-href="https://doi.org/10.1101/2025.01.16.633337">https://doi.org/10.1101/2025.01.16.633337</a>.
+<span>“Verification and Reproducible Curation of the
+<span>BioModels</span> Repository.”</span> <em>PLOS Computational
+Biology</em> 21 (12): 1–18. <a
+href="https://doi.org/10.1371/journal.pcbi.1013239">https://doi.org/10.1371/journal.pcbi.1013239</a>.
 </div>
 <div id="ref-SundqvistPod2025" class="csl-entry" role="listitem">
 Sundqvist, Nicolas, Henrik Podéus, Sebastian Sten, Maria Engström,
