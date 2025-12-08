@@ -89,7 +89,7 @@ setup(
     author_email="model-author-todo",
     ext_modules=[MODEL_EXT],
     packages=find_namespace_packages(),
-    install_requires=["amici==0.34.2"],
+    install_requires=["amici==1.0.0.dev"],
     python_requires=">=3.11",
     package_data={},
     zip_safe=False,
