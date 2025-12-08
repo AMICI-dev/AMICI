@@ -473,10 +473,9 @@ def _handle_event(
     )
     roots_dir = jnp.sign(droot_dt)  # direction of the root condition function
 
-    overall_dir = jnp.sign(jnp.sum(jnp.where(roots_found, h * roots_dir, 0.0)))
-    h_next = h - (overall_dir * jnp.where(
+    h_next = h - (jnp.where(
         roots_found,
-        roots_dir,
+        h * roots_dir,
         jnp.zeros_like(h),
     ))  # update heaviside variables based on the root condition function
 
