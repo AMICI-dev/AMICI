@@ -1896,10 +1896,6 @@ class SbmlImporter:
             }
 
             if self.jax:
-                if not initial_value:
-                    raise NotImplementedError(
-                        "The JAX backend does not support events with False initialValue."
-                    )
                 # Add a negative event for JAX models to handle
                 # TODO: remove once condition function directions can be 
                 # traced through diffrax solve

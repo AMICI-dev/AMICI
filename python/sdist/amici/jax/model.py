@@ -639,6 +639,19 @@ class JAXModel(eqx.Module):
             {},
         )
 
+        x_solver, _, h, _ = _handle_event(
+            t0,
+            x_solver,
+            p, 
+            tcl,
+            h,
+            root_finder,
+            diffrax.ODETerm(self._xdot),
+            self._root_cond_fn,
+            self._delta_x,
+            {},
+        )
+
         # Dynamic simulation
         if ts_dyn.shape[0]:
             x_dyn, h_dyn, stats_dyn = solve(
