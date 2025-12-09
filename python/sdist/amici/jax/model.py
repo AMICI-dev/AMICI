@@ -940,11 +940,12 @@ class JAXModel(eqx.Module):
         delta_x: Callable,
         stats: dict,
     ):
-        h = self.event_initial_values
+        rf0 = self.event_initial_values - 0.5
+        h = jnp.heaviside(rf0, 0.0)
         args = (p, tcl, h)
         rfx = root_cond_fn(t0_next, y0_next, args)
-        roots_dir = jnp.sign(rfx - h)
-        roots_found = (rfx - h) == 0.0
+        roots_dir = jnp.sign(rfx - rf0)
+        roots_found = jnp.sign(rfx) != jnp.sign(rf0)
 
         y0_next, h_next = _apply_event_assignments(
             roots_found,
@@ -958,12 +959,12 @@ class JAXModel(eqx.Module):
 
         if os.getenv("JAX_DEBUG") == "1":
             jax.debug.print(
-                "h: {}, rfx: {}, roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                "h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}",
                 h,
+                rf0,
                 rfx,
                 roots_found,
                 roots_dir,
-                h,
                 h_next,
             )
 

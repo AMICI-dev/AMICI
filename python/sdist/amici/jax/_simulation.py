@@ -139,7 +139,7 @@ def eq(
         )
         t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
 
-        y0_next, t0_next, h_next, stats = _handle_event(
+        y0_next, h_next, stats = _handle_event(
             t0_next,
             y0_next,
             p,
@@ -295,11 +295,8 @@ def solve(
         y0_next = sol.ys[1][
             -1
         ]  # next initial state is the last state of the current segment
-        ts_next = jnp.where(
-            ts > t0_next, ts, ts[-1]
-        ).min()  # timepoint of next datapoint, don't step over that
 
-        y0_next, t0_next, h_next, stats = _handle_event(
+        y0_next, h_next, stats = _handle_event(
             t0_next,
             y0_next,
             p,
@@ -315,7 +312,26 @@ def solve(
         after_event = sol.ts[1] < ts
         hs = jnp.where(after_event[:, None], h_next[None, :], hs)
 
-        return ys, t0_next, y0_next, hs, h_next, stats
+        # TODO: file issue on diffrax where integration goes the wrong way after 
+        # event trigger - causing event to trigger over and over again
+        t_resume = t0_next + t_eps
+        small_step = diffrax.diffeqsolve(
+            term,
+            solver,
+            t0_next,
+            t0_next + t_eps,
+            dt0=None,
+            y0=y0_next,
+            stepsize_controller=controller,
+            args=(p, tcl, h),
+            saveat=diffrax.SaveAt(t1=True),
+            event=None,
+        )
+
+        t_resume = small_step.ts[-1]
+        y_resume = small_step.ys[-1]
+
+        return ys, t_resume, y_resume, hs, h_next, stats
 
     # run the loop until we have reached the end of the time points
     ys, _, _, hs, _, stats = eqxi.while_loop(
@@ -475,7 +491,7 @@ def _handle_event(
             h_next,
         )
 
-    return y0_next, t0_next, h_next, stats
+    return y0_next, h_next, stats
 
 def _apply_event_assignments(
     roots_found,
