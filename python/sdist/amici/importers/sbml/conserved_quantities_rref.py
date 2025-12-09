@@ -4,6 +4,8 @@ from typing import Literal
 
 import numpy as np
 
+__all__ = ["nullspace_by_rref", "rref"]
+
 
 def rref(
     mat: np.array, round_ndigits: Literal[False] | int | None = None

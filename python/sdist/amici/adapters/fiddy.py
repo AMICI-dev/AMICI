@@ -2,7 +2,10 @@
 Adapters for using AMICI with the `fiddy <https://github.com/ICB-DCM/fiddy/>`__
 package for finite difference checks.
 
-NOTE: Like fiddy, this module is experimental and subject to change.
+
+.. note::
+
+    Like fiddy, this module is experimental and subject to change.
 """
 
 from __future__ import annotations

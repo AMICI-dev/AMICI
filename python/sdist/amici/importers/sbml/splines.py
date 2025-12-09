@@ -53,6 +53,12 @@ from .utils import (
     sbml_mathml,
 )
 
+__all__ = [
+    "UniformGrid",
+    "AbstractSpline",
+    "CubicHermiteSpline",
+]
+
 logger = get_logger(__name__, logging.WARNING)
 
 
