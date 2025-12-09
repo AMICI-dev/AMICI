@@ -18,18 +18,16 @@ AMICI Python API
    amici.importers.antimony
    amici.importers.petab
    amici.importers.petab.v1
-   amici.importers.petab.v1.conditions
    amici.importers.petab.v1.import_helpers
    amici.importers.petab.v1.parameter_mapping
    amici.importers.petab.v1.petab_import
    amici.importers.petab.v1.pysb_import
    amici.importers.petab.v1.sbml_import
-   amici.importers.petab.v1.simulations
-   amici.importers.petab.v1.simulator
    amici.jax
    amici.exporters.sundials.de_export
    amici.sim.sundials
    amici.sim.sundials.plotting
    amici.sim.sundials.gradient_check
+   amici.sim.sundials.petab.v1
    amici.logging
    amici.adapters.fiddy

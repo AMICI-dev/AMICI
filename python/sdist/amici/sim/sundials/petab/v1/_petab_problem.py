@@ -9,9 +9,11 @@ import petab.v1 as petab
 from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
 import amici
-
-from .conditions import create_edatas, fill_in_parameters
-from .parameter_mapping import create_parameter_mapping
+from amici.importers.petab.v1.parameter_mapping import create_parameter_mapping
+from amici.sim.sundials.petab.v1._conditions import (
+    create_edatas,
+    fill_in_parameters,
+)
 
 
 class PetabProblem:
@@ -50,7 +52,7 @@ class PetabProblem:
         if amici_model is not None:
             self._amici_model = amici_model
         else:
-            from .petab_import import import_petab_problem
+            from amici.importers.petab.v1 import import_petab_problem
 
             self._amici_model = import_petab_problem(petab_problem)
 

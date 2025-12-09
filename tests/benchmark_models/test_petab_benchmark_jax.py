@@ -7,13 +7,15 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 from amici.importers.petab.v1 import (
-    LLH,
-    SLLH,
     import_petab_problem,
-    simulate_petab,
 )
 from amici.jax.petab import run_simulations
 from amici.sim.sundials import SensitivityMethod, SensitivityOrder
+from amici.sim.sundials.petab.v1 import (
+    LLH,
+    SLLH,
+    simulate_petab,
+)
 from beartype import beartype
 from test_petab_benchmark import (
     benchmark_outdir,
