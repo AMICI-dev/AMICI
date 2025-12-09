@@ -549,7 +549,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI version string
      */
     std::string get_amici_version() const override {
-        return "0.34.2";
+        return "1.0.0.dev";
     }
 
     /**
@@ -557,7 +557,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "c4a395b6462dc1f26ad1472e6b2fa71fe0d54382";
+        return "a8dfd6e0963f32c1ce4647a652e93a271b14a053";
     }
 
     bool has_quadratic_llh() const override {

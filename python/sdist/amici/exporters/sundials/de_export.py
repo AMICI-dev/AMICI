@@ -1235,7 +1235,9 @@ class DEExporter:
         template_data = {
             "MODELNAME": self.model_name,
             "SOURCES": sources,
-            "AMICI_VERSION": __version__,
+            # Use major.minor.patch for find_package compatibility.
+            # CMake version only has number components, no ".dev", ".post", ...
+            "AMICI_VERSION": ".".join(__version__.split(".")[:3]),
         }
         apply_template(
             MODEL_CMAKE_TEMPLATE_FILE,

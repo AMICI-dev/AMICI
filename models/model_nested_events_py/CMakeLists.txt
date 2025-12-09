@@ -36,7 +36,7 @@ if(DEFINED ENV{AMICI_LDFLAGS})
   link_libraries("$ENV{AMICI_LDFLAGS}")
 endif()
 
-find_package(Amici 0.34.2 REQUIRED HINTS
+find_package(Amici 1.0.0 REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 set_target_properties(Upstream::amici PROPERTIES

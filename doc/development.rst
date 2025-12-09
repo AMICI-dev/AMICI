@@ -163,6 +163,14 @@ To create a new release, please follow these steps:
    create and deploy the new release on Zenodo and PyPI.
    Verify that this was successful.
 
+7. Bump the version number in `version.txt` back to a development
+   version (e.g., after release "1.1.0", set the version to "1.2.0-dev")
+   and commit this change to ``main``.
+   This ensures that documentation at https://amici.readthedocs.io/en/latest/
+   will show the correct development version and won't be confused with the
+   latest release, and that models imported with a development version
+   will be marked as such.
+
 In rare cases, it might be necessary to create a hotfix release for a
 critical bug in an existing release. In this case, create a new branch
 from the respective tag, apply the fix (usually a backport from ``main``),
