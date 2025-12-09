@@ -53,6 +53,7 @@ if has_clibs:
     #  from .swig_wrappers
     hdf5_enabled = "read_solver_settings_from_hdf5" in dir()
     # These modules require the swig interface and other dependencies
+    from ._debugging import get_model_for_preeq
     from ._numpy import ExpDataView as ExpDataView
     from ._numpy import ReturnDataView as ReturnDataView
     from ._numpy import evaluate as evaluate
@@ -83,6 +84,7 @@ if has_clibs:
         "ModelModule",
         *_swig_wrappers.__all__,
         "AmiciModel",
+        "get_model_for_preeq",
     ]
 
     # expose the swig module itself

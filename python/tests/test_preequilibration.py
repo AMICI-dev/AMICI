@@ -6,7 +6,6 @@ import itertools
 import amici
 import numpy as np
 import pytest
-from amici.debugging import get_model_for_preeq
 from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     AMICI_ERROR,
@@ -19,6 +18,7 @@ from amici.sim.sundials import (
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,
     SteadyStateStatus,
+    get_model_for_preeq,
     parameter_scaling_from_int_vector,
     run_simulation,
 )
