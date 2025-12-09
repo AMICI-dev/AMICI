@@ -17,7 +17,7 @@ from optimistix import AbstractRootFinder
 
 import os
 
-from ._simulation import eq, solve, _handle_event
+from ._simulation import eq, solve, _apply_event_assignments
 
 
 class ReturnValue(enum.Enum):
@@ -627,16 +627,12 @@ class JAXModel(eqx.Module):
             x = jnp.where(mask_reinit, x_reinit, x)
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
-        h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
 
-        x_solver, _, _, _ = _handle_event(
+        x_solver, _, h, _ = self._handle_t0_event(
             t0,
             x_solver,
             p, 
             tcl,
-            h,
-            root_finder,
-            diffrax.ODETerm(self._xdot),
             self._root_cond_fn,
             self._delta_x,
             {},
@@ -902,10 +898,19 @@ class JAXModel(eqx.Module):
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
-        h = self._initialise_heaviside_variables(
-            t0, self._x_solver(x0), p, tcl
-        )
+
         current_x = self._x_solver(x0)
+
+        current_x, _, h, _ = self._handle_t0_event(
+            t0,
+            self._x_solver(x0),
+            p,
+            tcl,
+            self._root_cond_fn,
+            self._delta_x,
+            {},
+        )
+
         current_x, _, stats_preeq = eq(
             p,
             tcl,
@@ -925,6 +930,44 @@ class JAXModel(eqx.Module):
 
         return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
 
+    def _handle_t0_event(
+        self,
+        t0_next: float,
+        y0_next: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        root_cond_fn: Callable,
+        delta_x: Callable,
+        stats: dict,
+    ):
+        h = self.event_initial_values
+        args = (p, tcl, h)
+        rfx = root_cond_fn(t0_next, y0_next, args)
+        roots_dir = jnp.sign(rfx - h)
+        roots_found = (rfx - h) == 0.0
+
+        y0_next, h_next = _apply_event_assignments(
+            roots_found,
+            roots_dir,
+            y0_next,
+            p,
+            tcl,
+            h,
+            delta_x,
+        )
+
+        if os.getenv("JAX_DEBUG") == "1":
+            jax.debug.print(
+                "h: {}, rfx: {}, roots_found: {}, roots_dir: {}, h: {}, h_next: {}",
+                h,
+                rfx,
+                roots_found,
+                roots_dir,
+                h,
+                h_next,
+            )
+
+        return y0_next, t0_next, h_next, stats
 
 def safe_log(x: jnp.float_) -> jnp.float_:
     """
