@@ -427,7 +427,12 @@ class JAXModel(eqx.Module):
         :return:
             heaviside variables
         """
-        h0 = self.event_initial_values.astype(float)  # dummy values
+        h0 = self.event_initial_values.astype(float)
+        if os.getenv("JAX_DEBUG") == "1":
+                jax.debug.print(
+                    "h0: {}",
+                    h0,
+                )
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
             jnp.logical_and(roots_found >= 0.0, h0 == 1.0), 
@@ -624,7 +629,7 @@ class JAXModel(eqx.Module):
         tcl = self._tcl(x, p)
         h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
 
-        x_solver, _, h, _ = _handle_event(
+        x_solver, _, _, _ = _handle_event(
             t0,
             x_solver,
             p, 
