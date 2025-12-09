@@ -1,5 +1,4 @@
 import logging
-import math
 import os
 import re
 from _collections import OrderedDict
@@ -431,72 +430,6 @@ def show_model_info(sbml_model: "libsbml.Model"):
         "Global parameters: " + str(len(sbml_model.getListOfParameters()))
     )
     logger.info(f"Reactions: {len(sbml_model.getListOfReactions())}")
-
-
-# TODO - remove?!
-def species_to_parameters(
-    species_ids: list[str], sbml_model: "libsbml.Model"
-) -> list[str]:
-    """
-    Turn a SBML species into parameters and replace species references
-    inside the model instance.
-
-    :param species_ids:
-        list of SBML species ID to convert to parameters with the same ID as
-        the replaced species.
-
-    :param sbml_model:
-        SBML model to modify
-
-    :return:
-        list of IDs of species which have been converted to parameters
-    """
-    transformables = []
-
-    for species_id in species_ids:
-        species = sbml_model.getSpecies(species_id)
-
-        if species.getHasOnlySubstanceUnits():
-            logger.warning(
-                f"Ignoring {species.getId()} which has only substance units."
-                " Conversion not yet implemented."
-            )
-            continue
-
-        if math.isnan(species.getInitialConcentration()):
-            logger.warning(
-                f"Ignoring {species.getId()} which has no initial "
-                "concentration. Amount conversion not yet implemented."
-            )
-            continue
-
-        transformables.append(species_id)
-
-    # Must not remove species while iterating over getListOfSpecies()
-    for species_id in transformables:
-        species = sbml_model.removeSpecies(species_id)
-        par = sbml_model.createParameter()
-        par.setId(species.getId())
-        par.setName(species.getName())
-        par.setConstant(True)
-        par.setValue(species.getInitialConcentration())
-        par.setUnits(species.getUnits())
-
-    # Remove from reactants and products
-    for reaction in sbml_model.getListOfReactions():
-        for species_id in transformables:
-            # loop, since removeX only removes one instance
-            while reaction.removeReactant(species_id):
-                # remove from reactants
-                pass
-            while reaction.removeProduct(species_id):
-                # remove from products
-                pass
-            while reaction.removeModifier(species_id):
-                # remove from modifiers
-                pass
-
-    return transformables
 
 
 def _add_global_parameter(
