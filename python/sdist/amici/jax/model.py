@@ -639,7 +639,7 @@ class JAXModel(eqx.Module):
             {},
         )
 
-        x_solver, _, h, _ = _handle_event(
+        x_solver, _, _, _ = _handle_event(
             t0,
             x_solver,
             p, 
