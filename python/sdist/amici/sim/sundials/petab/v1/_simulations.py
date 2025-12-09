@@ -60,6 +60,8 @@ __all__ = [
     "SRES",
     "RDATAS",
     "EDATAS",
+    "rdatas_to_measurement_df",
+    "rdatas_to_simulation_df",
 ]
 
 

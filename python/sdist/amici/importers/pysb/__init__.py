@@ -14,9 +14,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import (
-    Any,
-)
+from typing import Any
 
 import numpy as np
 import pysb

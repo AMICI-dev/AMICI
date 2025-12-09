@@ -491,7 +491,7 @@ class ReturnDataView(SwigPtrView):
 
     def by_id(
         self, entity_id: str, field: str = None, model: Model = None
-    ) -> np.array:
+    ) -> np.ndarray:
         """
         Get the value of a given field for a named entity.
 
@@ -635,7 +635,7 @@ def _entity_type_from_id(
     raise KeyError(f"Unknown symbol {entity_id}.")
 
 
-def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
+def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.ndarray:
     """Evaluate a symbolic expression based on the given simulation outputs.
 
     :param expr:
