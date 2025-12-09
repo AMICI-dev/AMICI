@@ -481,7 +481,7 @@ def _handle_event(
 
     mask = jnp.array(
         [
-            jnp.logical_and(roots_found, roots_dir > 0.0)
+            (roots_found & (roots_dir > 0.0) & (h == 0.0))
             for _ in range(y0_next.shape[0])
         ]
     ).T
