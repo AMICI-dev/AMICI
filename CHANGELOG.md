@@ -62,6 +62,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
     modules.
   * The `force_compile` argument to `import_petab_problem` has been removed.
     See the `compile_` argument.
+* Removals without deprecation:
+  * `amici.sbml_import.species_to_parameters` has been removed.
+
 
 **Features**
 
