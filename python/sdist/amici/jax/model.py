@@ -639,14 +639,11 @@ class JAXModel(eqx.Module):
             {},
         )
 
-        x_solver, _, _, _ = _handle_event(
+        x_solver, _, h, _ = self._handle_t0_event(
             t0,
             x_solver,
             p, 
             tcl,
-            h,
-            root_finder,
-            diffrax.ODETerm(self._xdot),
             self._root_cond_fn,
             self._delta_x,
             {},
