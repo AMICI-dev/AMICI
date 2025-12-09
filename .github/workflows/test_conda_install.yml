@@ -51,8 +51,6 @@ jobs:
           python -m amici
       - name: Run SBML import test
         shell: bash -l {0}
-        # FIXME
-        continue-on-error: true
         run: |
           cd python/tests
           pytest test_sbml_import.py::test_steadystate_simulation -sv

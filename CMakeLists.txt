@@ -124,7 +124,7 @@ endif()
 include(GNUInstallDirs)
 
 include(AmiciFindBLAS)
-find_package(OpenMP)
+find_package(OpenMP COMPONENTS CXX)
 find_package(Boost COMPONENTS chrono)
 
 if(ENABLE_HDF5)
@@ -284,7 +284,7 @@ target_link_libraries(
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
          $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
-         $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
+         $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE
     BLAS::BLAS
