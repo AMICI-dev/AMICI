@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 107.
+List of publications using AMICI. Total number is 108.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -15,6 +15,14 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2025</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 data-entry-spacing="0" role="list">
+<div id="ref-CallenbachDor2025" class="csl-entry" role="listitem">
+Callenbach, Aaron, Domagoj Dorešić, Robert Düster, Vanessa Nakonecnij,
+Erika Dudkin, Matthias Geyer, and Jan Hasenauer. 2025.
+<span>“Quantitative Modeling of <span>P-TEFb</span> Mediated
+<span>CTD</span> Phosphorylation Identifies Local Cooperativity.”</span>
+<em>bioRxiv</em>. <a
+href="https://doi.org/10.64898/2025.11.29.690978">https://doi.org/10.64898/2025.11.29.690978</a>.
+</div>
 <div id="ref-ErnstBan2025" class="csl-entry" role="listitem">
 Ernst, Ariane, Anastasia Bankowski, Meida Jusyte, Toluwani Okunola, Tino
 Petrov, Alexander M. Walter, and Stefanie Winkelmann. 2025.
