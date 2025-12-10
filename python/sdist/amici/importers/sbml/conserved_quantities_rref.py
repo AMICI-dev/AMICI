@@ -1,15 +1,13 @@
 """Find conserved quantities deterministically"""
 
-from typing import Literal
-
 import numpy as np
 
 __all__ = ["nullspace_by_rref", "rref"]
 
 
 def rref(
-    mat: np.array, round_ndigits: Literal[False] | int | None = None
-) -> np.array:
+    mat: np.ndarray, round_ndigits: bool | int | None = None
+) -> np.ndarray:
     """
     Bring matrix ``mat`` to reduced row echelon form
 
@@ -69,7 +67,7 @@ def rref(
     return mat
 
 
-def pivots(mat: np.array) -> list[int]:
+def pivots(mat: np.ndarray) -> list[int]:
     """Get indices of pivot columns in ``mat``, assumed to be in reduced row
     echelon form"""
     pivot_cols = []
@@ -83,7 +81,7 @@ def pivots(mat: np.array) -> list[int]:
     return pivot_cols
 
 
-def nullspace_by_rref(mat: np.array) -> np.array:
+def nullspace_by_rref(mat: np.ndarray) -> np.ndarray:
     """Compute basis of the nullspace of ``mat`` based on the reduced row
     echelon form"""
     rref_mat = rref(mat)

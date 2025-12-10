@@ -1,4 +1,8 @@
-from ._conditions import create_edatas, create_parameterized_edatas
+from ._conditions import (
+    create_edatas,
+    create_parameterized_edatas,
+    fill_in_parameters,
+)
 from ._petab_problem import PetabProblem
 from ._simulations import (
     EDATAS,
@@ -31,4 +35,5 @@ __all__ = [
     "PetabSimulator",
     "create_edatas",
     "create_parameterized_edatas",
+    "fill_in_parameters",
 ]

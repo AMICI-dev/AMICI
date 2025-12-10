@@ -82,7 +82,6 @@ __all__ = [
 
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
-
 default_symbols = {symbol: {} for symbol in SymbolId}
 
 ConservationLaw = dict[str, str | sp.Expr]

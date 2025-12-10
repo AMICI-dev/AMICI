@@ -15,7 +15,7 @@ from . import (
     ExpData,
     Model,
     ParameterScaling,
-    ReturnData,
+    ReturnDataView,
     SensitivityMethod,
     SensitivityOrder,
     Solver,
@@ -272,8 +272,8 @@ def check_derivatives(
 
 
 def _check_close(
-    result: np.array,
-    expected: np.array,
+    result: np.ndarray,
+    expected: np.ndarray,
     atol: float,
     rtol: float,
     field: str,
@@ -342,7 +342,11 @@ def _check_close(
 
 
 def _check_results(
-    rdata: ReturnData, field: str, expected: np.array, atol: float, rtol: float
+    rdata: ReturnDataView,
+    field: str,
+    expected: np.ndarray,
+    atol: float,
+    rtol: float,
 ) -> None:
     """
     Checks whether rdata[field] agrees with expected according to provided

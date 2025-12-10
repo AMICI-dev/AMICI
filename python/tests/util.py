@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from amici import import_model_module
 from amici.importers.sbml import SbmlImporter
 from amici.sim.sundials import (
     AMICI_SUCCESS,
@@ -14,6 +13,7 @@ from amici.sim.sundials import (
     ExpData,
     SensitivityMethod,
     SensitivityOrder,
+    import_model_module,
     run_simulation,
 )
 from amici.sim.sundials.gradient_check import _check_close

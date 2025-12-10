@@ -1,8 +1,11 @@
 """Test models used by AMICI."""
 
+from __future__ import annotations
+
 import sys
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import libsbml
 import sympy as sp
@@ -11,7 +14,9 @@ from amici import MeasurementChannel, SbmlImporter, import_model_module
 from amici.importers.antimony import antimony2amici, antimony2sbml
 from amici.importers.sbml.splines import CubicHermiteSpline
 from amici.importers.utils import amici_time_symbol
-from amici.sim.sundials import AmiciModel, Model
+
+if TYPE_CHECKING:
+    from amici.sim.sundials import AmiciModel, Model
 
 model_dirac_ant = r"""
 p1 = 1;
