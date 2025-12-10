@@ -40,7 +40,7 @@ def plot_state_trajectories(
     :param state_indices:
         Indices of state variables for which trajectories are to be plotted.
     :param ax:
-        :class:`matplotlib.pyplot.Axes` instance to plot into.
+        :class:`matplotlib.axes.Axes` instance to plot into.
     :param model:
         The model *rdata* was generated from.
     :param prefer_names:
@@ -103,7 +103,7 @@ def plot_observable_trajectories(
     :param observable_indices:
         Indices of observables for which trajectories are to be plotted.
     :param ax:
-        :class:`matplotlib.pyplot.Axes` instance to plot into.
+        :class:`matplotlib.axes.Axes` instance to plot into.
     :param model:
         The model *rdata* was generated from.
     :param prefer_names:

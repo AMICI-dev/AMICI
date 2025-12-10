@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import amici
+import amici.sim.sundials as asd
 import libsbml as sbml
 import numpy as np
 import pandas as pd
@@ -12,10 +12,10 @@ from numpy.testing import assert_allclose
 
 def verify_results(
     settings,
-    rdata: amici.ReturnData,
+    rdata: asd.ReturnData,
     expected,
     wrapper,
-    model: amici.Model,
+    model: asd.Model,
     atol,
     rtol,
 ):
@@ -201,7 +201,7 @@ def get_amount_and_variables(settings):
 
 
 def apply_settings(
-    settings, solver: amici.Solver, model: amici.Model, test_id: str
+    settings, solver: asd.Solver, model: asd.Model, test_id: str
 ):
     """Apply model and solver settings as specified in the test case"""
     # start/duration/steps may be empty

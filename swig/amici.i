@@ -282,7 +282,7 @@ def __repr__(self):
 "Swig-Generated class, which, in contrast to other Vector
 classes, does not allow for simple interoperability with common
 Python types, but must be created using
-:func:`amici.amici.parameter_scaling_from_int_vector`";
+:func:`parameter_scaling_from_int_vector`";
 %{
 namespace amici {
 std::vector<amici::ParameterScaling> parameter_scaling_from_int_vector(std::vector<int> const& int_vec) {

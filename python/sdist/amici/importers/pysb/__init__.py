@@ -89,7 +89,7 @@ def pysb2jax(
         simulations.
 
     :param model:
-        pysb model, :attr:`pysb.Model.name` will determine the name of the
+        pysb model, :attr:`pysb.core.Model.name` will determine the name of the
         generated module
 
     :param output_dir:
@@ -98,12 +98,12 @@ def pysb2jax(
     :param observation_model:
         The different measurement channels that make up the observation
         model, see also :class:`amici.importers.utils.MeasurementChannel`.
-        The ID is expected to be the name of a :class:`pysb.Expression` or
-        :class:`pysb.Observable` in the provided model that should be mapped to
-        an observable.
-        ``sigma`` is expected to be the name of a :class:`pysb.Expression` to
-        be mapped to the scale parameter of the noise distribution.
-        ``MeasurementChannel.formula`` is expected to be
+        The ID is expected to be the name of a :class:`pysb.core.Expression` or
+        :class:`pysb.core.Observable` in the provided model that should be
+        mapped to an observable.
+        ``sigma`` is expected to be the name of a :class:`pysb.core.Expression`
+        to be mapped to the scale parameter of the noise distribution.
+        :attr:`MeasurementChannel.formula` is expected to be
         ``None``. Event-observables are not supported.
 
     :param verbose: verbosity level for logging, True/False default to
@@ -124,11 +124,12 @@ def pysb2jax(
         https://github.com/AMICI-dev/AMICI/pull/1672
 
     :param model_name:
-        Name for the generated model module. If None, :attr:`pysb.Model.name`
-        will be used.
+        Name for the generated model module.
+        If None, :attr:`pysb.core.Model.name` will be used.
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra observables and noise variables added
+        If set to ``True``, the pysb model is expected to have extra
+        observables and noise variables added.
     """
     model_name = model_name or model.name
 
@@ -199,15 +200,16 @@ def pysb2amici(
         The different measurement channels that make up the observation
         model, see also :class:`amici.importers.utils.MeasurementChannel`.
         The ID is expected to be the name of a :class:`pysb.core.Expression` or
-        :class:`pysb.Observable` in the provided model that should be mapped to
-        an observable.
-        ``sigma`` is expected to be the name of a :class:`pysb.Expression` to
-        be mapped to the scale parameter of the noise distribution.
-        ``MeasurementChannel.formula`` is expected to be
+        :class:`pysb.core.Observable` in the provided model that should be
+        mapped to an observable.
+        ``sigma`` is expected to be the name of a :class:`pysb.core.Expression`
+        to be mapped to the scale parameter of the noise distribution.
+        :attr:`MeasurementChannel.formula` is expected to be
         ``None``. Event-observables are not supported.
 
     :param fixed_parameters:
-        list of :class:`pysb.core.Parameter` to be excluded from sensitivity analysis
+        list of :class:`pysb.core.Parameter` to be excluded from sensitivity
+        analysis.
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -244,8 +246,8 @@ def pysb2amici(
         generated
 
     :param model_name:
-        Name for the generated model module. If None, :attr:`pysb.Model.name`
-        will be used.
+        Name for the generated model module.
+        If None, :attr:`pysb.core.Model.name` will be used.
 
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra
@@ -323,7 +325,7 @@ def ode_model_from_pysb_importer(
     _events: list[Event] = None,
 ) -> DEModel:
     """
-    Creates an :class:`amici.DEModel` instance from a :class:`pysb.Model`
+    Creates an :class:`DEModel` instance from a :class:`pysb.core.Model`
     instance.
 
     :param model:

@@ -10,7 +10,6 @@ from typing import Any
 
 import numpy as np
 import sympy as sp
-from petab import v1 as v1
 from petab import v2 as v2
 from petab.v2 import ExperimentPeriod
 
@@ -41,7 +40,7 @@ class ExperimentManager:
     Handles the creation of :class:`ExpData` objects for a given model and
     PEtab problem.
 
-    The assumption is that we have a set of :class:`amici.ExpData` objects,
+    The assumption is that we have a set of :class:`ExpData` objects,
     one for each PEtab experiment.
     Those are updated based on a set of global parameters (PEtab
     problem parameters, as opposed to model parameters for a single experiment

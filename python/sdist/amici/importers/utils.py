@@ -183,7 +183,7 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
             Expression representing the scale parameter of the noise
             distribution. This can be a numeric value, a sympy expression,
             or an expression string that will be passed to
-            :func:`sympy.sympify`.
+            :func:`sympy.core.sympify.sympify`.
         :param event_id:
             Identifier of the associated event for event-resolved observables.
             `None` for time-resolved observables.

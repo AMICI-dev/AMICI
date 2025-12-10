@@ -177,7 +177,7 @@ def simulate(
     """Simulate model with given solver and experimental data.
 
     :param solver:
-        Solver to use for simulation. Defaults to :meth:`Model.get_solver`.
+        Solver to use for simulation. Defaults to :meth:`Model.create_solver`.
     :param edata:
         Experimental data to use for simulation.
         A single :class:`ExpData` instance or a sequence of such instances.

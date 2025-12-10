@@ -884,8 +884,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Sets the estimated lower boundary for sigma_y.
      *
-     * When :meth:`setAddSigmaResiduals` is activated, this lower boundary must
-     * ensure that log(sigma) + min_sigma > 0.
+     * When :meth:`set_add_sigma_residuals` is activated, this lower boundary
+     * must ensure that log(sigma) + min_sigma > 0.
      *
      * @param min_sigma lower boundary
      */

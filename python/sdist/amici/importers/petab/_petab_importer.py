@@ -634,7 +634,7 @@ def rdatas_to_measurement_df(
     ``rdatas`` and own information.
 
     :param rdatas:
-        A sequence of :class:`amici.ReturnData`.
+        A sequence of :class:`amici.sim.sundials.ReturnData`.
     :param model:
         AMICI model used to generate ``rdatas``.
     :param petab_problem:
@@ -693,7 +693,7 @@ def rdatas_to_simulation_df(
     ``rdatas`` and own information.
 
     :param rdatas:
-        A sequence of :class:`amici.ReturnData`.
+        A sequence of :class:`amici.sim.sundials.ReturnData`.
     :param model:
         AMICI model used to generate ``rdatas``.
     :param petab_problem:

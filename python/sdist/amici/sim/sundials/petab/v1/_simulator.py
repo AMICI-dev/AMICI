@@ -45,8 +45,8 @@ class PetabSimulator(petab.simulate.Simulator):
         Additional keyword arguments can be supplied to specify arguments for
         the AMICI PEtab import, simulate, and export methods. See the
         docstrings for the respective methods for argument options:
-        - :py:func:`amici.petab_import.import_petab_problem`, and
-        - :py:func:`amici.petab_objective.simulate_petab`.
+        - :py:func:`import_petab_problem`, and
+        - :py:func:`simulate_petab`.
 
         Note that some arguments are expected to have already been specified
         in the Simulator constructor (including the PEtab problem).

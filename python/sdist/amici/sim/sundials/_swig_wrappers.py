@@ -139,7 +139,7 @@ def read_solver_settings_from_hdf5(
     file: str, solver: AmiciSolver, location: str | None = "solverSettings"
 ) -> None:
     """
-    Convenience wrapper for :py:func:`amici.read_solver_settings_from_hdf5`
+    Apply solver settings from an HDF5 file to a Solver instance.
 
     :param file: hdf5 filename
     :param solver: Solver instance to which settings will be transferred
@@ -154,10 +154,9 @@ def write_solver_settings_to_hdf5(
     location: str | None = "solverSettings",
 ) -> None:
     """
-    Convenience wrapper for :py:func:`amici.amici.writeSolverSettingsToHDF5`
+    Write solver settings from a Solver instance to an HDF5 file.
 
-    :param file: hdf5 filename, can also be an object created by
-        :py:func:`amici.amici.createOrOpenForWriting`
+    :param file: hdf5 filename
     :param solver: Solver instance from which settings will be stored
     :param location: location of solver settings in hdf5 file
     """
