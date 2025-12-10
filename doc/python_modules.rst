@@ -18,5 +18,6 @@ AMICI Python API
    amici.sim.sundials
    amici.sim.sundials.plotting
    amici.sim.sundials.gradient_check
+   amici.sim.sundials.petab
    amici.sim.sundials.petab.v1
    amici.adapters.fiddy

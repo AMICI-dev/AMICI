@@ -38,27 +38,28 @@ if TYPE_CHECKING:
 __all__ = [
     "run_simulation_to_cached_functions",
     "simulate_petab_to_cached_functions",
+    "simulate_petab_v2_to_cached_functions",
 ]
 
 LOG_E_10 = np.log(10)
 
 
-def transform_gradient_lin_to_lin(gradient_value, _):
+def _transform_gradient_lin_to_lin(gradient_value, _):
     return gradient_value
 
 
-def transform_gradient_lin_to_log(gradient_value, parameter_value):
+def _transform_gradient_lin_to_log(gradient_value, parameter_value):
     return gradient_value * parameter_value
 
 
-def transform_gradient_lin_to_log10(gradient_value, parameter_value):
+def _transform_gradient_lin_to_log10(gradient_value, parameter_value):
     return gradient_value * (parameter_value * LOG_E_10)
 
 
 transforms = {
-    LIN: transform_gradient_lin_to_lin,
-    LOG: transform_gradient_lin_to_log,
-    LOG10: transform_gradient_lin_to_log10,
+    LIN: _transform_gradient_lin_to_lin,
+    LOG: _transform_gradient_lin_to_log,
+    LOG10: _transform_gradient_lin_to_log10,
 }
 
 
@@ -93,18 +94,11 @@ derivative_parameter_dimension = {
 }
 
 
-def rdata_array_transpose(array: np.ndarray, variable: str) -> tuple[int]:
+def _rdata_array_transpose(array: np.ndarray, variable: str) -> tuple[int]:
     if array.size == 0:
         return array
     original_parameter_dimension = derivative_parameter_dimension[variable]
     return np.moveaxis(array, original_parameter_dimension, -1)
-
-
-def fiddy_array_transpose(array: np.ndarray, variable: str) -> tuple[int]:
-    if array.size == 0:
-        return array
-    original_parameter_dimension = derivative_parameter_dimension[variable]
-    return np.moveaxis(array, -1, original_parameter_dimension)
 
 
 default_derivatives = {
@@ -181,7 +175,7 @@ def run_simulation_to_cached_functions(
     def derivative(point: Type.POINT, return_dict: bool = False):
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.first)
         outputs = {
-            variable: rdata_array_transpose(
+            variable: _rdata_array_transpose(
                 array=fiddy_array(getattr(rdata, derivative_variable)),
                 variable=derivative_variable,
             )
@@ -242,48 +236,6 @@ def run_simulation_to_cached_functions(
 
 # (start, stop, shape)
 TYPE_STRUCTURE = tuple[int, int, tuple[int, ...]]
-
-
-def flatten(arrays: dict[str, Type.ARRAY]) -> Type.ARRAY:
-    flattened_value = np.concatenate([array.flat for array in arrays.values()])
-    return flattened_value
-
-
-def reshape(
-    array: Type.ARRAY,
-    structure: TYPE_STRUCTURE,
-    sensitivities: bool = False,
-) -> dict[str, Type.ARRAY]:
-    reshaped = {}
-    for variable, (start, stop, shape) in structure.items():
-        # array is currently "flattened" w.r.t. fiddy dimensions
-        # hence, if sensis, reshape w.r.t. fiddy dimensions
-        if sensitivities and (
-            dimension0 := derivative_parameter_dimension.get(
-                "s" + variable, False
-            )
-        ):
-            shape = [
-                size
-                for dimension, size in enumerate(shape)
-                if dimension != dimension0
-            ] + [shape[dimension0]]
-
-        array = array[start:stop]
-        if array.size != 0:
-            array = array.reshape(shape)
-
-        # now reshape to AMICI dimensions
-        if sensitivities and (
-            derivative_parameter_dimension.get(f"s{variable}", False)
-        ):
-            array = fiddy_array_transpose(
-                array=array,
-                variable=f"s{variable}",
-            )
-        reshaped[variable] = array
-
-    return reshaped
 
 
 def simulate_petab_to_cached_functions(

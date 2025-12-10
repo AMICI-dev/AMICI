@@ -332,7 +332,7 @@ def import_model_sbml(
         sbml_model,
         discard_annotations=discard_sbml_annotations,
     )
-    sbml_model = sbml_importer.sbml
+    sbml_model = sbml_importer.sbml_model
 
     allow_n_noise_pars = (
         not petab.lint.observable_table_has_nontrivial_noise_formula(

@@ -180,15 +180,16 @@ def pysb2amici(
     .. warning::
         **PySB models with Compartments**
 
-        When importing a PySB model with ``pysb.Compartment``\ s, BioNetGen
-        scales reaction fluxes with the compartment size. Instead of using the
+        When importing a PySB model with ``pysb.core.Compartment``\ s,
+        BioNetGen scales reaction fluxes with the compartment size.
+        Instead of using the
         respective symbols, the compartment size Parameter or Expression is
         evaluated when generating equations. This may lead to unexpected
         results if the compartment size parameter is changed for AMICI
         simulations.
 
     :param model:
-        pysb model, :attr:`pysb.Model.name` will determine the name of the
+        pysb model, :attr:`pysb.core.Model.name` will determine the name of the
         generated module
 
     :param output_dir:
@@ -197,7 +198,7 @@ def pysb2amici(
     :param observation_model:
         The different measurement channels that make up the observation
         model, see also :class:`amici.importers.utils.MeasurementChannel`.
-        The ID is expected to be the name of a :class:`pysb.Expression` or
+        The ID is expected to be the name of a :class:`pysb.core.Expression` or
         :class:`pysb.Observable` in the provided model that should be mapped to
         an observable.
         ``sigma`` is expected to be the name of a :class:`pysb.Expression` to

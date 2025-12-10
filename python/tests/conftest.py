@@ -35,7 +35,7 @@ def sbml_example_presimulation_module():
     fixed_parameters = ["DRUG_0", "KIN_0"]
 
     observables = amici.assignment_rules_to_observables(
-        sbml_importer.sbml,  # the libsbml model object
+        sbml_importer.sbml_model,  # the libsbml model object
         filter_function=lambda variable: variable.getName() == "pPROT_obs",
     )
     module_name = "test_model_presimulation"

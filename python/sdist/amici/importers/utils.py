@@ -35,6 +35,11 @@ except ImportError:
 
 
 class SBMLException(Exception):
+    """Exception for SBML related errors.
+
+    Raised, for example, for unsupported SBML features.
+    """
+
     pass
 
 
@@ -87,6 +92,41 @@ class MeasurementChannel:
     a simulation) or event-resolved (i.e., defined at specific events during
     a simulation). Event-resolved observables are associated with a specific
     event via the `event_id` attribute.
+
+    Example usage:
+
+    >>> # Time-resolved observable
+    >>> mc1 = MeasurementChannel(
+    ...     id_="obs1",
+    ...     name="Observable 1",
+    ...     formula="k1 * x1 + k2",
+    ...     noise_distribution="log-normal",
+    ...     sigma="sigma1"
+    ... )
+    >>> mc1  # doctest: +NORMALIZE_WHITESPACE
+    MeasurementChannel(id_='obs1', name='Observable 1', \
+formula='k1 * x1 + k2', noise_distribution='log-normal', \
+sigma='sigma1', event_id=None)
+    >>> mc1.is_time_resolved
+    True
+    >>> mc1.is_event_resolved
+    False
+    >>> # Event-resolved observable
+    >>> mc2 = MeasurementChannel(
+    ...     id_="obs2",
+    ...     name="Observable 2",
+    ...     formula="x3",
+    ...     noise_distribution="log-normal",
+    ...     sigma="sigma1",
+    ...     event_id="event1"
+    ... )
+    >>> mc2  # doctest: +NORMALIZE_WHITESPACE
+    MeasurementChannel(id_='obs2', name='Observable 2', formula='x3', \
+noise_distribution='log-normal', sigma='sigma1', event_id='event1')
+    >>> mc2.is_event_resolved
+    True
+    >>> mc2.is_time_resolved
+    False
     """
 
     def __init__(
@@ -147,40 +187,6 @@ class MeasurementChannel:
         :param event_id:
             Identifier of the associated event for event-resolved observables.
             `None` for time-resolved observables.
-
-        Example usage:
-        >>> # Time-resolved observable
-        >>> mc1 = MeasurementChannel(
-        ...     id_="obs1",
-        ...     name="Observable 1",
-        ...     formula="k1 * x1 + k2",
-        ...     noise_distribution="log-normal",
-        ...     sigma="sigma1"
-        ... )
-        >>> mc1  # doctest: +NORMALIZE_WHITESPACE
-        MeasurementChannel(id_='obs1', name='Observable 1', \
-formula='k1 * x1 + k2', noise_distribution='log-normal', \
-sigma='sigma1', event_id=None)
-        >>> mc1.is_time_resolved
-        True
-        >>> mc1.is_event_resolved
-        False
-        >>> # Event-resolved observable
-        >>> mc2 = MeasurementChannel(
-        ...     id_="obs2",
-        ...     name="Observable 2",
-        ...     formula="x3",
-        ...     noise_distribution="log-normal",
-        ...     sigma="sigma1",
-        ...     event_id="event1"
-        ... )
-        >>> mc2  # doctest: +NORMALIZE_WHITESPACE
-        MeasurementChannel(id_='obs2', name='Observable 2', formula='x3', \
- noise_distribution='log-normal', sigma='sigma1', event_id='event1')
-        >>> mc2.is_event_resolved
-        True
-        >>> mc2.is_time_resolved
-        False
         """
         self.id = id_
         self.name = name

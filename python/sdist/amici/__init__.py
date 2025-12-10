@@ -1,6 +1,5 @@
 """
-The AMICI Python module provides functionality for importing SBML or PySB
-models and turning them into C++ Python extensions.
+Top-level module.
 """
 
 import contextlib
@@ -226,7 +225,7 @@ def import_model_module(
     module_name: str, module_path: Path | str
 ) -> ModelModule:
     """
-    Import Python module of an AMICI model
+    Import Python module of an AMICI model.
 
     :param module_name:
         Name of the python package of the model

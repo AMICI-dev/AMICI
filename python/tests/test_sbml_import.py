@@ -245,7 +245,7 @@ def model_steadystate_module():
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     observables = amici.assignment_rules_to_observables(
-        sbml_importer.sbml,
+        sbml_importer.sbml_model,
         filter_function=lambda variable: variable.getId().startswith(
             "observable_"
         )
@@ -1116,9 +1116,13 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
         compute_conservation_laws=compute_conservation_laws,
     )
     # "species", because the initial assignment expression is time-dependent
-    assert symbol_with_assumptions("p2") in si.symbols[SymbolId.SPECIES].keys()
+    assert (
+        symbol_with_assumptions("p2") in si._symbols[SymbolId.SPECIES].keys()
+    )
     # "species", because differential state
-    assert symbol_with_assumptions("x1") in si.symbols[SymbolId.SPECIES].keys()
+    assert (
+        symbol_with_assumptions("x1") in si._symbols[SymbolId.SPECIES].keys()
+    )
 
     assert "p0" in [p.get_id() for p in de_model.free_parameters()]
     assert "p1" not in [p.get_id() for p in de_model.free_parameters()]

@@ -62,7 +62,8 @@ __all__ = [
 logger = get_logger(__name__, logging.WARNING)
 
 
-def sympify_noeval(x):
+def _sympify_noeval(x):
+    """Sympify without evaluating the expression."""
     with evaluate(False):
         return sp.sympify(x)
 
@@ -315,7 +316,7 @@ class AbstractSpline(ABC):
         if evaluate_at is None:
             evaluate_at = amici_time_symbol
         else:
-            evaluate_at = sympify_noeval(evaluate_at)
+            evaluate_at = _sympify_noeval(evaluate_at)
             if not isinstance(evaluate_at, sp.Basic):
                 # It may still be e.g. a list!
                 raise ValueError(f"Invalid evaluate_at = {evaluate_at}!")
@@ -331,9 +332,9 @@ class AbstractSpline(ABC):
             )
 
         if not isinstance(nodes, UniformGrid):
-            nodes = np.asarray([sympify_noeval(x) for x in nodes])
+            nodes = np.asarray([_sympify_noeval(x) for x in nodes])
         values_at_nodes = np.asarray(
-            [sympify_noeval(y) for y in values_at_nodes]
+            [_sympify_noeval(y) for y in values_at_nodes]
         )
 
         if len(nodes) != len(values_at_nodes):
@@ -576,10 +577,10 @@ class AbstractSpline(ABC):
         # If found, they should be checked for here
         # until (if at all) they are accounted for.
         fixed_parameters: list[sp.Symbol] = list(
-            importer.symbols[SymbolId.FIXED_PARAMETER].keys()
+            importer._symbols[SymbolId.FIXED_PARAMETER].keys()
         )
         species: list[sp.Symbol] = list(
-            importer.symbols[SymbolId.SPECIES].keys()
+            importer._symbols[SymbolId.SPECIES].keys()
         )
 
         for x in self.nodes:
@@ -595,7 +596,7 @@ class AbstractSpline(ABC):
                 )
 
         fixed_parameters_values = [
-            importer.symbols[SymbolId.FIXED_PARAMETER][fp]["value"]
+            importer._symbols[SymbolId.FIXED_PARAMETER][fp]["value"]
             for fp in fixed_parameters
         ]
         subs = dict(
@@ -1361,7 +1362,7 @@ class AbstractSpline(ABC):
     def parameters(self, importer: sbml.SbmlImporter) -> set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
         return self._parameters().intersection(
-            set(importer.symbols[SymbolId.FREE_PARAMETER].keys())
+            set(importer._symbols[SymbolId.FREE_PARAMETER].keys())
         )
 
     def _parameters(self) -> set[sp.Symbol]:
@@ -1485,7 +1486,7 @@ class AbstractSpline(ABC):
         return ax
 
 
-def spline_user_functions(
+def _spline_user_functions(
     splines: list[AbstractSpline],
     p_index: dict[sp.Symbol, int],
 ) -> dict[str, list[tuple[Callable[..., bool], Callable[..., str]]]]:
@@ -1579,9 +1580,9 @@ class CubicHermiteSpline(AbstractSpline):
         """
 
         if not isinstance(nodes, UniformGrid):
-            nodes = np.asarray([sympify_noeval(x) for x in nodes])
+            nodes = np.asarray([_sympify_noeval(x) for x in nodes])
         values_at_nodes = np.asarray(
-            [sympify_noeval(y) for y in values_at_nodes]
+            [_sympify_noeval(y) for y in values_at_nodes]
         )
 
         if len(nodes) != len(values_at_nodes):
@@ -1610,7 +1611,7 @@ class CubicHermiteSpline(AbstractSpline):
             self._derivatives_by_fd = True
         else:
             derivatives_at_nodes = np.asarray(
-                [sympify_noeval(d) for d in derivatives_at_nodes]
+                [_sympify_noeval(d) for d in derivatives_at_nodes]
             )
             self._derivatives_by_fd = False
 
@@ -1671,7 +1672,7 @@ class CubicHermiteSpline(AbstractSpline):
         """
         # TODO this is very much a draft
 
-        species: list[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES])
+        species: list[sp.Symbol] = list(importer._symbols[SymbolId.SPECIES])
         for d in self.derivatives_at_nodes:
             if len(d.free_symbols.intersection(species)) != 0:
                 raise ValueError(

@@ -154,7 +154,7 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
     )
     assert (
         1.0
-        == sbml_importer.sbml.getParameter(
+        == sbml_importer.sbml_model.getParameter(
             "observableParameter1_obs1"
         ).getValue()
     )

@@ -207,7 +207,11 @@ autodoc_default_options = {
     "inherited-members": True,
     "undoc-members": True,
     "ignore-module-all": False,
+    "imported-members": True,
 }
+
+# autosummary
+autosummary_ignore_module_all = False
 
 # sphinx-autodoc-typehints
 typehints_fully_qualified = True
@@ -469,6 +473,13 @@ def process_missing_ref(app, env, node, contnode):
 
 
 def skip_member(app, what, name, obj, skip, options):
+    """Decide whether to skip a member during autodoc processing.
+
+    > Emitted when autodoc has to decide whether a member should be included in
+    > the documentation.
+    > The member is excluded if a handler returns True.
+    > It is included if the handler returns False.
+    """
     ignored_names = {
         "AbstractModel",
         "CVodeSolver",
@@ -476,29 +487,7 @@ def skip_member(app, what, name, obj, skip, options):
         "Model_ODE",
         "Model_DAE",
         "ConditionContext",
-        "checkSigmaPositivity",
-        "createGroup",
         "equals",
-        "printErrMsgIdAndTxt",
-        "wrapErrHandlerFn",
-        "printWarnMsgIdAndTxt",
-        "AmiciApplication",
-        "writeReturnData",
-        "writeReturnDataDiagnosis",
-        "attributeExists",
-        "locationExists",
-        "createAndWriteDouble1DDataset",
-        "createAndWriteDouble2DDataset",
-        "createAndWriteDouble3DDataset",
-        "createAndWriteInt1DDataset",
-        "createAndWriteInt2DDataset",
-        "createAndWriteInt3DDataset",
-        "getDoubleDataset1D",
-        "getDoubleDataset2D",
-        "getDoubleDataset3D",
-        "getIntDataset1D",
-        "getIntScalarAttribute",
-        "getDoubleScalarAttribute",
         "stdVec2ndarray",
         "SwigPyIterator",
         "thisown",
@@ -506,6 +495,16 @@ def skip_member(app, what, name, obj, skip, options):
 
     if name in ignored_names:
         return True
+
+    # skip, unless in __all__
+    # (we want to include imported members, but only the exported ones.
+    #  autodoc does not provide this functionality out of the box)
+    module_name = app.env.temp_data.get("autodoc:module")
+    if module_name and what == "module":
+        module_obj = sys.modules.get(module_name)
+        if module_obj is not None and hasattr(module_obj, "__all__"):
+            if name not in getattr(module_obj, "__all__", []):
+                return True
 
     if name.startswith("_") and name != "__init__":
         return True

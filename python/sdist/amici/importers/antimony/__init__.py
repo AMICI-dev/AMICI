@@ -51,9 +51,10 @@ def antimony2sbml(ant_model: str | Path) -> str:
 def antimony2amici(ant_model: str | Path, *args, **kwargs):
     """Convert Antimony model to AMICI model.
 
-    Converts the Antimony model provided as string of file to SBML and then imports it into AMICI.
+    Converts the Antimony model provided as string or file to SBML and then
+    imports it into AMICI.
 
-    For documentation see :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+    For documentation see :meth:`amici.importers.sbml.SbmlImporter.sbml2amici`.
     """
     from amici.importers.sbml import SbmlImporter
 

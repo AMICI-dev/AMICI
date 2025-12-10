@@ -27,7 +27,7 @@ def verify_results(
         rdata["y"],
         columns=[
             obs["name"]
-            for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()
+            for obs in wrapper._symbols[SymbolId.OBSERVABLE].values()
         ],
     )
     simulated["time"] = rdata["ts"]
@@ -81,8 +81,8 @@ def verify_results(
     concentration_species = [
         str(state_id)
         for state_id, state in {
-            **wrapper.symbols[SymbolId.SPECIES],
-            **wrapper.symbols[SymbolId.ALGEBRAIC_STATE],
+            **wrapper._symbols[SymbolId.SPECIES],
+            **wrapper._symbols[SymbolId.ALGEBRAIC_STATE],
         }.items()
         if str(state_id) in requested_concentrations
         and state.get("amount", False)
@@ -145,7 +145,7 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        s = wrapper.sbml.getElementBySId(species)
+        s = wrapper.sbml_model.getElementBySId(species)
         # Skip species that are marked to only have substance units since
         # they are already simulated as amounts
         if not isinstance(s, sbml.Species):
