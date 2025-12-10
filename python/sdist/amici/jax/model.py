@@ -639,16 +639,6 @@ class JAXModel(eqx.Module):
             {},
         )
 
-        x_solver, _, h, _ = self._handle_t0_event(
-            t0,
-            x_solver,
-            p, 
-            tcl,
-            self._root_cond_fn,
-            self._delta_x,
-            {},
-        )
-
         # Dynamic simulation
         if ts_dyn.shape[0]:
             x_dyn, h_dyn, stats_dyn = solve(
