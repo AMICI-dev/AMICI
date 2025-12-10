@@ -18,6 +18,7 @@ from amici.sim.sundials import (
 from amici.sim.sundials.gradient_check import (
     check_derivatives as amici_check_derivatives,
 )
+from amici.sim.sundials.petab import LLH, RDATAS, PetabSimulator
 from petab import v2
 
 logger = get_logger(__name__, logging.DEBUG)

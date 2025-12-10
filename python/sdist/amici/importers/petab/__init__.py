@@ -8,9 +8,6 @@ For importing and simulating
 problems, the relevant classes are:
 
 * :class:`PetabImporter`: Import a PEtab problem as an AMICI model.
-* :class:`PetabSimulator`: Simulate PEtab problems with AMICI.
-* :class:`ExperimentManager`: Create :class:`amici.ExpData` objects for PEtab
-  experiments.
 
 See :doc:`/examples/example_petab/petab_v2` for example usage.
 Note that the PEtab v2 API is still under development and may change in future
