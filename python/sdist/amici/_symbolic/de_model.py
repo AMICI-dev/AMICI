@@ -2691,6 +2691,16 @@ class DEModel:
         """
         allowed_syms = set(self.sym("p"))
         return any(event.updates_state and not event.has_explicit_trigger_times(allowed_syms) for event in self._events)
+    
+    def has_only_time_dependent_event_assignments(self) -> bool:
+        """
+        Checks whether the model has only time dependent event assignments
+
+        :return:
+            boolean indicating if solely event assignments with explicit time dependent 
+            triggers are present
+        """
+        return all(len(event.get_trigger_times()) > 0 for event in self._events)
 
     def toposort_expressions(
         self, reorder: bool = True
