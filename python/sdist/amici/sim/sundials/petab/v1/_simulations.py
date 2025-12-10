@@ -97,8 +97,8 @@ def simulate_petab(
         ``nominalValues`` will be used. To be provided as dict, mapping PEtab
         problem parameters to SBML IDs.
     :param simulation_conditions:
-        Result of :py:func:`petab.get_simulation_conditions`. Can be provided
-        to save time if this has be obtained before.
+        Result of :py:func:`petab.v1.get_simulation_conditions`.
+        Can be provided to save time if this has be obtained before.
         Not required if ``edatas`` and ``parameter_mapping`` are provided.
     :param edatas:
         Experimental data. Parameters are inserted in-place for simulation.
@@ -113,7 +113,7 @@ def simulate_petab(
         If `parameter_mapping` is provided, this must match the value of
         `scaled_parameters` used to generate the mapping.
     :param log_level:
-        Log level, see :mod:`amici.logging` module.
+        Log level, see :mod:`logging` module.
     :param num_threads:
         Number of threads to use for simulating multiple conditions
         (only used if compiled with OpenMP).
@@ -128,12 +128,12 @@ def simulate_petab(
         Dictionary of
 
         * cost function value (``LLH``),
-        * list of :class:`amici.amici.ReturnData` (``RDATAS``),
-        * list of :class:`amici.amici.ExpData` (``EDATAS``),
+        * list of :class:`ReturnData` (``RDATAS``),
+        * list of :class:`ExpData` (``EDATAS``),
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see
-        :meth:`petab.Problem.get_simulation_conditions_from_measurement_df`.
+        :meth:`petab.v1.Problem.get_simulation_conditions_from_measurement_df`.
     """
     logger.setLevel(log_level)
 
@@ -418,7 +418,7 @@ def rdatas_to_measurement_df(
 
     :param rdatas:
         A sequence of rdatas with the ordering of
-        :func:`petab.get_simulation_conditions`.
+        :func:`petab.v1.get_simulation_conditions`.
 
     :param model:
         AMICI model used to generate ``rdatas``.

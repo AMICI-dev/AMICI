@@ -21,7 +21,7 @@ def get_model_for_preeq(
     During preequilibration, event-handling is disabled. However, when
     simulating the returned model, event-handling will be enabled.
     For events triggered at fixed timepoints, this can be avoided by setting
-    :meth:`t0 <amici.Model.setT0>` to a timepoints after the last trigger
+    :meth:`t0 <amici.Model.set_t0>` to a timepoints after the last trigger
     timepoint.
 
     :param model:
