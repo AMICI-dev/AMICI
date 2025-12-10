@@ -218,7 +218,7 @@ class DEExporter:
         # include/amici/model.h for details)
         self.model: DEModel = de_model
         self._code_printer.known_functions.update(
-            splines.spline_user_functions(
+            splines._spline_user_functions(
                 self.model._splines, self._get_index("p")
             )
         )
