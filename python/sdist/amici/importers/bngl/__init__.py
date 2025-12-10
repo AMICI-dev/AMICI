@@ -9,6 +9,8 @@ from pysb.importers.bngl import model_from_bngl
 
 from ..pysb import pysb2amici
 
+__all__ = ["bngl2amici"]
+
 
 def bngl2amici(bngl_model: str, *args, **kwargs) -> None:
     r"""

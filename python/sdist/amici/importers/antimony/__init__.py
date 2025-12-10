@@ -6,6 +6,8 @@ https://tellurium.readthedocs.io/en/latest/antimony.html
 
 from pathlib import Path
 
+__all__ = ["antimony2sbml", "antimony2amici"]
+
 
 def antimony2sbml(ant_model: str | Path) -> str:
     """Convert Antimony model to SBML.

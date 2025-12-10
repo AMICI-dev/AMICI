@@ -18,7 +18,7 @@ try:
     import exhale_multiproject_monkeypatch  # noqa: F401
 except ModuleNotFoundError:
     # for unclear reasons, the import of exhale_multiproject_monkeypatch
-    #  fails on some systems, because the the location of the editable install
+    #  fails on some systems, because the location of the editable install
     #  is not automatically added to sys.path ¯\_(ツ)_/¯
     import json
     from importlib.metadata import Distribution
@@ -206,6 +206,7 @@ autodoc_default_options = {
     "special-members": "__init__",
     "inherited-members": True,
     "undoc-members": True,
+    "ignore-module-all": False,
 }
 
 # sphinx-autodoc-typehints

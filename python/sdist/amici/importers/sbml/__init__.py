@@ -73,6 +73,13 @@ from amici.importers.utils import (
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
 
+__all__ = [
+    "SbmlImporter",
+    "SBMLException",
+    "MeasurementChannel",
+    "assignment_rules_to_observables",
+]
+
 SymbolicFormula = dict[sp.Symbol, sp.Expr]
 
 

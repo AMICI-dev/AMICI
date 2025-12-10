@@ -1,7 +1,4 @@
 """
-AMICI
------
-
 The AMICI Python module provides functionality for importing SBML or PySB
 models and turning them into C++ Python extensions.
 """
@@ -17,6 +14,14 @@ from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 from typing import Any
+
+__all__ = [
+    "import_model_module",
+    "AmiciVersionError",
+    "get_model_root_dir",
+    "get_model_dir",
+    "__version__",
+]
 
 
 def _get_amici_path():

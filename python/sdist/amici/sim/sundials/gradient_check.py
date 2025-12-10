@@ -22,6 +22,8 @@ from . import (
     run_simulation,
 )
 
+__all__ = ["check_finite_difference"]
+
 
 def check_finite_difference(
     x0: Sequence[float],

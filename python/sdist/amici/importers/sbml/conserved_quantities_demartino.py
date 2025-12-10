@@ -6,6 +6,8 @@ from collections.abc import MutableSequence, Sequence
 
 from amici.logging import get_logger
 
+__all__ = ["compute_moiety_conservation_laws"]
+
 logger = get_logger(__name__, logging.ERROR)
 
 # increase recursion limit for recursive quicksort
