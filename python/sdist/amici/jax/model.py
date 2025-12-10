@@ -633,6 +633,7 @@ class JAXModel(eqx.Module):
             x_solver,
             p, 
             tcl,
+            root_finder,
             self._root_cond_fn,
             self._delta_x,
             {},
@@ -906,6 +907,7 @@ class JAXModel(eqx.Module):
             self._x_solver(x0),
             p,
             tcl,
+            root_finder,
             self._root_cond_fn,
             self._delta_x,
             {},
@@ -936,6 +938,7 @@ class JAXModel(eqx.Module):
         y0_next: jt.Float[jt.Array, "nxs"],
         p: jt.Float[jt.Array, "np"],
         tcl: jt.Float[jt.Array, "ncl"],
+        root_finder: AbstractRootFinder,
         root_cond_fn: Callable,
         delta_x: Callable,
         stats: dict,
@@ -955,6 +958,23 @@ class JAXModel(eqx.Module):
             tcl,
             h,
             delta_x,
+        )
+
+        roots_zero = jnp.isclose(
+            rfx, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
+        )
+        droot_dt = (
+            # ∂root_cond_fn/∂t
+                jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y0_next, args)
+                +
+                # ∂root_cond_fn/∂y * ∂y/∂t
+                jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y0_next, args)
+                @ self._xdot(t0_next, y0_next, args)
+        )
+        h_next = jnp.where(
+            roots_zero,
+            droot_dt >= 0.0,
+            h_next,
         )
 
         if os.getenv("JAX_DEBUG") == "1":
