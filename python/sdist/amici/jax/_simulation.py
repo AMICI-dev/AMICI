@@ -508,16 +508,11 @@ def _apply_event_assignments(
         h,
     )  # update heaviside variables based on the root condition function
 
-    mask = jnp.array(
-        [
-            (roots_found & (roots_dir > 0.0) & (h == 0.0))
-            for _ in range(y0_next.shape[0])
-        ]
-    ).T
+    mask = roots_found & (roots_dir > 0.0) & (h == 0.0)
     delx = delta_x(y0_next, p, tcl)
     if y0_next.size:
         delx = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
-    y0_up = jnp.where(mask, delx, 0.0)
+    y0_up = jnp.where(mask[None, :], delx, 0.0)
     y0_next = y0_next + jnp.sum(y0_up, axis=0)
 
     return y0_next, h_next
