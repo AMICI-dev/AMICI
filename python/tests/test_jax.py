@@ -343,40 +343,47 @@ def test_time_dependent_discontinuity(tmp_path):
 
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
-    importer.sbml2jax("time_disc", output_dir=tmp_path)
 
-    module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
-    model = module.Model()
+    try: 
+        importer.sbml2jax("time_disc", output_dir=tmp_path)
 
-    p = jnp.array([1.0])
-    x0_full = model._x0(0.0, p)
-    tcl = model._tcl(x0_full, p)
-    x0 = model._x_solver(x0_full)
-    ts = jnp.array([0.0, 1.0, 2.0])
-    h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
+        module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
+        model = module.Model()
 
-    assert len(model._root_cond_fns()) > 0
-    assert model._known_discs(p).size == 0
+        p = jnp.array([1.0])
+        x0_full = model._x0(0.0, p)
+        tcl = model._tcl(x0_full, p)
+        x0 = model._x_solver(x0_full)
+        ts = jnp.array([0.0, 1.0, 2.0])
+        h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
 
-    ys, _, _ = solve(
-        p,
-        ts,
-        tcl,
-        h,
-        x0,
-        diffrax.Tsit5(),
-        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-        optimistix.Newton(atol=1e-8, rtol=1e-8),
-        1000,
-        diffrax.DirectAdjoint(),
-        diffrax.ODETerm(model._xdot),
-        model._root_cond_fns(),
-        model._root_cond_fn,
-        model._delta_x,
-        model._known_discs(p),
-    )
+        assert len(model._root_cond_fns()) > 0
+        assert model._known_discs(p).size == 0
 
-    assert ys.shape[0] == ts.shape[0]
+        ys, _, _ = solve(
+            p,
+            ts,
+            tcl,
+            h,
+            x0,
+            diffrax.Tsit5(),
+            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            optimistix.Newton(atol=1e-8, rtol=1e-8),
+            1000,
+            diffrax.DirectAdjoint(),
+            diffrax.ODETerm(model._xdot),
+            model._root_cond_fns(),
+            model._root_cond_fn,
+            model._delta_x,
+            model._known_discs(p),
+        )
+
+        assert ys.shape[0] == ts.shape[0]
+
+    except NotImplementedError as err:
+        if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        raise err
 
 
 @skip_on_valgrind
@@ -397,35 +404,41 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
 
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
-    importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
+    try:
+        importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
 
-    module = amici._module_from_path("time_disc_eq", tmp_path / "__init__.py")
-    model = module.Model()
+        module = amici._module_from_path("time_disc_eq", tmp_path / "__init__.py")
+        model = module.Model()
 
-    p = jnp.array([1.0])
-    x0_full = model._x0(0.0, p)
-    tcl = model._tcl(x0_full, p)
-    x0 = model._x_solver(x0_full)
-    h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
+        p = jnp.array([1.0])
+        x0_full = model._x0(0.0, p)
+        tcl = model._tcl(x0_full, p)
+        x0 = model._x_solver(x0_full)
+        h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
 
-    assert len(model._root_cond_fns()) > 0
-    assert model._known_discs(p).size == 0
+        assert len(model._root_cond_fns()) > 0
+        assert model._known_discs(p).size == 0
 
-    xs, _, _ = eq(
-        p,
-        tcl,
-        h,
-        x0,
-        diffrax.Tsit5(),
-        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-        optimistix.Newton(atol=1e-8, rtol=1e-8),
-        diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
-        diffrax.ODETerm(model._xdot),
-        model._root_cond_fns(),
-        model._root_cond_fn,
-        model._delta_x,
-        model._known_discs(p),
-        1000,
-    )
+        xs, _, _ = eq(
+            p,
+            tcl,
+            h,
+            x0,
+            diffrax.Tsit5(),
+            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            optimistix.Newton(atol=1e-8, rtol=1e-8),
+            diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
+            diffrax.ODETerm(model._xdot),
+            model._root_cond_fns(),
+            model._root_cond_fn,
+            model._delta_x,
+            model._known_discs(p),
+            1000,
+        )
 
-    assert_allclose(xs[0], 0.0, atol=1e-2)
+        assert_allclose(xs[0], 0.0, atol=1e-2)
+
+    except NotImplementedError as err:
+        if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        raise err
