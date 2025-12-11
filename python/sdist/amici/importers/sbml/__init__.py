@@ -1886,7 +1886,7 @@ class SbmlImporter:
                 # Add a negative event for JAX models to handle
                 neg_event_id = event_id + "_negative"
                 neg_event_sym = sp.Symbol(neg_event_id)
-                self.symbols[SymbolId.EVENT][neg_event_sym] = {
+                self._symbols[SymbolId.EVENT][neg_event_sym] = {
                     "name": neg_event_id,
                     "value": -trigger,
                     "assignments": None,
