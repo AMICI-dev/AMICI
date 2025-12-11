@@ -325,7 +325,10 @@ class SbmlImporter:
             extension, e.g. ``/usr/bin/clang``.
 
         :param allow_reinit_fixpar_initcond:
-            See :class:`amici.de_export.DEExporter`.
+            Indicates whether reinitialization of initial states depending on
+            fixed parameters is allowed for this model.
+            Must be enabled if initial states are to be reset after
+            pre-equilibration.
 
         :param compile:
             If ``True``, compile the generated Python package,
@@ -349,10 +352,14 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            See :attr:`amici.DEModel._simplify`.
+            If not ``None``, this function will be used to simplify symbolic
+            derivative expressions. Receives sympy expressions as only argument.
+            To apply multiple simplifications, wrap them in a lambda expression.
 
         :param cache_simplify:
-            See :meth:`amici.DEModel.__init__`.
+            Whether to cache calls to the simplify method.
+            Note that there are possible issues with PySB models:
+            https://github.com/AMICI-dev/AMICI/pull/1672
 
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
@@ -486,10 +493,14 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`amici.DEModel._simplify`
+            If not ``None``, this function will be used to simplify symbolic
+            derivative expressions. Receives sympy expressions as only argument.
+            To apply multiple simplifications, wrap them in a lambda expression.
 
         :param cache_simplify:
-            see :meth:`amici.DEModel.__init__`
+            Whether to cache calls to the simplify method.
+            Note that there are possible issues with PySB models:
+            https://github.com/AMICI-dev/AMICI/pull/1672
 
         :param hybridization:
             dict representation of the hybridization information in the PEtab YAML file, see
@@ -2763,7 +2774,7 @@ class SbmlImporter:
         :param var_or_math:
             A math expression to sympify:
 
-            * a string (see `sympy.sympify`)
+            * a string (see :func:`sympy.core.sympify.sympify`)
             * a number
             * a libSBML ASTNode
             * a libSBML object that has a ``getMath()`` function

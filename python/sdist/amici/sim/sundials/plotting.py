@@ -36,7 +36,7 @@ def plot_state_trajectories(
 
     :param rdata:
         AMICI simulation results as returned by
-        :func:`run_amici_simulation`.
+        :func:`amici.sim.sundials.run_simulation`.
     :param state_indices:
         Indices of state variables for which trajectories are to be plotted.
     :param ax:
@@ -99,7 +99,7 @@ def plot_observable_trajectories(
 
     :param rdata:
         AMICI simulation results as returned by
-        :func:`run_simulation`.
+        :func:`amici.sim.sundials.run_simulation`.
     :param observable_indices:
         Indices of observables for which trajectories are to be plotted.
     :param ax:

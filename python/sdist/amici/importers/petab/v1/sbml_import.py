@@ -256,8 +256,10 @@ def import_model_sbml(
         Print/log extra information.
 
     :param allow_reinit_fixpar_initcond:
-        See :class:`amici.de_export.ODEExporter`. Must be enabled if initial
-        states are to be reset after preequilibration.
+        Indicates whether reinitialization of initial states depending on
+        fixed parameters is allowed for this model.
+        Must be enabled if initial states are to be reset after
+        pre-equilibration.
 
     :param validate:
         Whether to validate the PEtab problem

@@ -36,7 +36,7 @@ Solution Jump Discontinuities
 
 SUNDIALS by itself does not support solution jump discontinuities. We
 implement support by accessing private SUNDIALS API in
-:cpp:func:`amici::Solver::reset_tate`,
+:cpp:func:`amici::Solver::reset_state`,
 :cpp:func:`amici::Solver::reinit_post_process` and
 :cpp:func:`amici::Solver::reinit_post_process_b`. These functions reset interval
 variables to initial values to simulate a fresh integration start, but

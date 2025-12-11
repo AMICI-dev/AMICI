@@ -6,7 +6,7 @@ equation model and generate executable C++ simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
 :py:func:`amici.importers.pysb.pysb2amici`,
-:py:func:`amici.importers.sbml.SbmlImporter.sbml2amici` and
+:py:meth:`amici.importers.sbml.SbmlImporter.sbml2amici` and
 :py:func:`amici.petab_import.import_model`.
 """
 
@@ -120,8 +120,8 @@ class DEExporter:
         path to the generated swig files
 
     :ivar allow_reinit_fixpar_initcond:
-        indicates whether reinitialization of
-        initial states depending on fixedParameters is allowed for this model
+        Indicates whether reinitialization of initial states depending on
+         fixed parameters is allowed for this model.
 
     :ivar _build_hints:
         If the given model uses special functions, this set contains hints for
