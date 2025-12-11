@@ -184,7 +184,7 @@ def check_derivatives(
 
     for edata in edatas:
         petab_simulator.exp_man.apply_parameters(edata, problem_parameters)
-        amici_check_derivatives(model, solver, edata)
+        amici_check_derivatives(model, solver=solver, edata=edata)
 
     # TODO check aggregated sensitivities over all conditions
 

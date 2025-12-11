@@ -41,6 +41,7 @@ logger = get_logger(__name__, logging.WARNING)
 def import_petab_problem(
     petab_problem: petab.Problem,
     model_output_dir: str | Path | None = None,
+    *,
     model_name: str = None,
     compile_: bool = None,
     non_estimated_parameters_as_constants=True,

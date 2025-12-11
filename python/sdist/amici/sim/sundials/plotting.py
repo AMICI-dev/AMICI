@@ -25,6 +25,7 @@ __all__ = [
 
 def plot_state_trajectories(
     rdata: ReturnDataView,
+    *,
     state_indices: Sequence[int] | None = None,
     ax: Axes | None = None,
     model: Model = None,
@@ -87,6 +88,7 @@ def plot_state_trajectories(
 
 def plot_observable_trajectories(
     rdata: ReturnDataView,
+    *,
     observable_indices: Iterable[int] | None = None,
     ax: Axes | None = None,
     model: Model = None,

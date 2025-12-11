@@ -240,6 +240,7 @@ TYPE_STRUCTURE = tuple[int, int, tuple[int, ...]]
 
 def simulate_petab_to_cached_functions(
     petab_problem: petab.Problem,
+    *,
     amici_model: Model,
     free_parameter_ids: list[str] = None,
     cache: bool = True,
@@ -363,6 +364,7 @@ def simulate_petab_to_cached_functions(
 
 def simulate_petab_v2_to_cached_functions(
     petab_simulator: PetabSimulator,
+    *,
     free_parameter_ids: list[str] = None,
     cache: bool = True,
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:

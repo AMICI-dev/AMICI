@@ -26,6 +26,7 @@ __all__ = ["check_finite_difference"]
 
 
 def check_finite_difference(
+    *,
     x0: Sequence[float],
     model: Model,
     solver: Solver,
@@ -162,6 +163,7 @@ def check_finite_difference(
 
 def check_derivatives(
     model: Model,
+    *,
     solver: Solver,
     edata: ExpData | None = None,
     atol: float | None = 1e-4,
@@ -259,12 +261,12 @@ def check_derivatives(
         if pval == 0.0 and skip_zero_pars:
             continue
         check_finite_difference(
-            p,
-            model,
-            solver,
-            edata,
-            ip,
-            fields,
+            x0=p,
+            model=model,
+            solver=solver,
+            edata=edata,
+            ip=ip,
+            fields=fields,
             atol=atol,
             rtol=rtol,
             epsilon=epsilon,

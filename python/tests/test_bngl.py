@@ -87,14 +87,18 @@ def test_compare_to_pysb_simulation(example):
     with TemporaryDirectoryWinSafe(prefix=pysb_model.name) as outdir:
         if not cl:
             with pytest.raises(ValueError, match="Conservation laws"):
-                bngl2amici(model_file, outdir, compute_conservation_laws=True)
+                bngl2amici(
+                    model_file,
+                    output_dir=outdir,
+                    compute_conservation_laws=True,
+                )
 
         if example in ["empty_compartments_block", "motor"]:
             with pytest.raises(ValueError, match="Cannot add"):
-                bngl2amici(model_file, outdir, **kwargs)
+                bngl2amici(model_file, output_dir=outdir, **kwargs)
             return
         else:
-            bngl2amici(model_file, outdir, **kwargs)
+            bngl2amici(model_file, output_dir=outdir, **kwargs)
 
         amici_model_module = import_model_module(pysb_model.name, outdir)
 

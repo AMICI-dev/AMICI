@@ -66,6 +66,7 @@ logger = get_logger(__name__, logging.ERROR)
 def pysb2jax(
     model: pysb.Model,
     output_dir: str | Path | None = None,
+    *,
     observation_model: list[MeasurementChannel] = None,
     verbose: int | bool = False,
     compute_conservation_laws: bool = True,
@@ -163,6 +164,7 @@ def pysb2jax(
 def pysb2amici(
     model: pysb.Model,
     output_dir: str | Path | None = None,
+    *,
     observation_model: list[MeasurementChannel] = None,
     fixed_parameters: list[str] = None,
     verbose: int | bool = False,

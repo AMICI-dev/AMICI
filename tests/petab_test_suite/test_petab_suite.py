@@ -111,7 +111,7 @@ def _test_case(case, model_type, version, jax):
         # simulate
         ret = simulate_petab(
             problem,
-            model,
+            amici_model=model,
             problem_parameters=problem_parameters,
             solver=solver,
             log_level=logging.DEBUG,
@@ -222,7 +222,7 @@ def check_derivatives(
         petab_problem=problem,
         problem_parameters=problem_parameters,
     ):
-        amici_check_derivatives(model, solver, edata)
+        amici_check_derivatives(model, solver=solver, edata=edata)
 
 
 def run():
