@@ -23,25 +23,10 @@ Note that this functionality will be deprecated once the PEtab v2 import is
 stable.
 """
 
-from ._v2 import ExperimentManager, PetabSimulator
-from .v1 import (
-    EDATAS,
-    LLH,
-    RDATAS,
-    RES,
-    S2LLH,
-    SLLH,
-    SRES,
-)
+from ._v2 import ExperimentManager, PetabSimulationResult, PetabSimulator
 
 __all__ = [
     "PetabSimulator",
     "ExperimentManager",
-    "EDATAS",
-    "LLH",
-    "RDATAS",
-    "RES",
-    "S2LLH",
-    "SLLH",
-    "SRES",
+    "PetabSimulationResult",
 ]

@@ -33,7 +33,7 @@ from amici.sim.sundials import (
 from amici.sim.sundials.petab.v1 import LLH, SLLH, create_edatas
 
 if TYPE_CHECKING:
-    from amici.sim.sundials.petab import PetabSimulator
+    from amici.sim.sundials.petab import PetabSimulationResult, PetabSimulator
 
 __all__ = [
     "run_simulation_to_cached_functions",
@@ -386,7 +386,9 @@ def simulate_petab_v2_to_cached_functions(
     if free_parameter_ids is None:
         free_parameter_ids = list(petab_simulator._petab_problem.x_free_ids)
 
-    def simulate(point: Type.POINT, order: SensitivityOrder) -> dict:
+    def simulate(
+        point: Type.POINT, order: SensitivityOrder
+    ) -> PetabSimulationResult:
         problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
         petab_simulator.solver.set_sensitivity_order(order)
 
@@ -397,17 +399,17 @@ def simulate_petab_v2_to_cached_functions(
 
     def function(point: Type.POINT) -> np.ndarray:
         output = simulate(point, order=SensitivityOrder.none)
-        result = output[LLH]
+        result = output.llh
         return np.array(result)
 
     def derivative(point: Type.POINT) -> Type.POINT:
         result = simulate(point, order=SensitivityOrder.first)
 
-        if result[SLLH] is None:
+        if result.sllh is None:
             raise RuntimeError("Simulation failed.")
 
         sllh = np.array(
-            [result[SLLH][parameter_id] for parameter_id in free_parameter_ids]
+            [result.sllh[parameter_id] for parameter_id in free_parameter_ids]
         )
         return sllh
 
