@@ -15,7 +15,9 @@ import jax.numpy as jnp
 import jaxtyping as jt
 from optimistix import AbstractRootFinder
 
-from ._simulation import eq, solve
+import os
+
+from ._simulation import eq, solve, _apply_event_assignments
 
 
 class ReturnValue(enum.Enum):
@@ -268,22 +270,6 @@ class JAXModel(eqx.Module):
         ...
 
     @abstractmethod
-    def _root_cond_fns(
-        self,
-    ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
-        """Return condition functions for implicit discontinuities.
-
-        These functions are passed to :class:`diffrax.Event` and must evaluate
-        to zero when a discontinuity is triggered.
-
-        :param p:
-            model parameters
-        :return:
-            tuple of callable root functions
-        """
-        ...
-
-    @abstractmethod
     def _root_cond_fn(
         self,
         t: jt.Float[jt.Scalar, ""],
@@ -305,6 +291,20 @@ class JAXModel(eqx.Module):
             tuple of parameters, total values for conservation laws and heaviside variables
         :return:
             root condition values
+        """
+        ...
+
+    @abstractmethod
+    def _delta_x(
+        self, y: jt.Float[jt.Array, "nxs"]
+    ) -> jt.Float[jt.Array, "nxs"]:
+        """
+        Compute the state vector changes at discontinuities.
+
+        :param y:
+            state vector
+        :return:
+            changes in the state vector at discontinuities
         """
         ...
 
@@ -362,6 +362,50 @@ class JAXModel(eqx.Module):
         """
         ...
 
+    def _root_cond_fn_event(
+            self,
+            ie: int,
+            t: float,
+            y: jt.Float[jt.Array, "nxs"],
+            args: tuple,
+            **_
+        ):
+        """
+        Root condition function for a specific event index.
+
+        :param ie: 
+            event index
+        :param t: 
+            time point
+        :param y: 
+            state vector
+        :param args: 
+            tuple of arguments required for _root_cond_fn
+        :return: 
+            mask of root condition value for the specified event index
+        """
+        __, __, h = args
+        rval = self._root_cond_fn(t, y, args, **_)
+        # only allow root triggers where trigger function is negative (heaviside == 0)
+        masked_rval = jnp.where(h == 0.0, rval, 1.0)
+        return masked_rval.at[ie].get()
+
+    def _root_cond_fns(self) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
+        """Return condition functions for implicit discontinuities.
+
+        These functions are passed to :class:`diffrax.Event` and must evaluate
+        to zero when a discontinuity is triggered.
+
+        :param p:
+            model parameters
+        :return:
+            iterable of callable root functions
+        """
+        return [
+            eqx.Partial(self._root_cond_fn_event, ie)
+            for ie in range(self.n_events)
+        ]
+
     def _initialise_heaviside_variables(
         self,
         t0: jt.Float[jt.Scalar, ""],
@@ -383,10 +427,17 @@ class JAXModel(eqx.Module):
         :return:
             heaviside variables
         """
-        h0 = jnp.zeros((self.n_events,))  # dummy values
+        h0 = self.event_initial_values.astype(float)
+        if os.getenv("JAX_DEBUG") == "1":
+                jax.debug.print(
+                    "h0: {}",
+                    h0,
+                )
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
-            roots_found >= 0.0, jnp.ones_like(h0), jnp.zeros_like(h0)
+            jnp.logical_and(roots_found >= 0.0, h0 == 1.0), 
+            jnp.ones_like(h0), 
+            jnp.zeros_like(h0)
         )
 
     def _x_rdatas(
@@ -576,7 +627,17 @@ class JAXModel(eqx.Module):
             x = jnp.where(mask_reinit, x_reinit, x)
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
-        h = self._initialise_heaviside_variables(t0, x_solver, p, tcl)
+
+        x_solver, _, h, _ = self._handle_t0_event(
+            t0,
+            x_solver,
+            p, 
+            tcl,
+            root_finder,
+            self._root_cond_fn,
+            self._delta_x,
+            {},
+        )
 
         # Dynamic simulation
         if ts_dyn.shape[0]:
@@ -594,6 +655,7 @@ class JAXModel(eqx.Module):
                 diffrax.ODETerm(self._xdot),
                 self._root_cond_fns(),
                 self._root_cond_fn,
+                self._delta_x,
                 self._known_discs(p),
             )
             x_solver = x_dyn[-1, :]
@@ -616,6 +678,7 @@ class JAXModel(eqx.Module):
                 diffrax.ODETerm(self._xdot),
                 self._root_cond_fns(),
                 self._root_cond_fn,
+                self._delta_x,
                 self._known_discs(p),
                 max_steps,
             )
@@ -836,10 +899,20 @@ class JAXModel(eqx.Module):
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)
-        h = self._initialise_heaviside_variables(
-            t0, self._x_solver(x0), p, tcl
-        )
+
         current_x = self._x_solver(x0)
+
+        current_x, _, h, _ = self._handle_t0_event(
+            t0,
+            self._x_solver(x0),
+            p,
+            tcl,
+            root_finder,
+            self._root_cond_fn,
+            self._delta_x,
+            {},
+        )
+
         current_x, _, stats_preeq = eq(
             p,
             tcl,
@@ -852,12 +925,70 @@ class JAXModel(eqx.Module):
             diffrax.ODETerm(self._xdot),
             self._root_cond_fns(),
             self._root_cond_fn,
+            self._delta_x,
             self._known_discs(p),
             max_steps,
         )
 
         return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
 
+    def _handle_t0_event(
+        self,
+        t0_next: float,
+        y0_next: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        root_finder: AbstractRootFinder,
+        root_cond_fn: Callable,
+        delta_x: Callable,
+        stats: dict,
+    ):
+        rf0 = self.event_initial_values - 0.5
+        h = jnp.heaviside(rf0, 0.0)
+        args = (p, tcl, h)
+        rfx = root_cond_fn(t0_next, y0_next, args)
+        roots_dir = jnp.sign(rfx - rf0)
+        roots_found = jnp.sign(rfx) != jnp.sign(rf0)
+
+        y0_next, h_next = _apply_event_assignments(
+            roots_found,
+            roots_dir,
+            y0_next,
+            p,
+            tcl,
+            h,
+            delta_x,
+        )
+
+        roots_zero = jnp.isclose(
+            rfx, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
+        )
+        droot_dt = (
+            # ∂root_cond_fn/∂t
+                jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y0_next, args)
+                +
+                # ∂root_cond_fn/∂y * ∂y/∂t
+                jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y0_next, args)
+                @ self._xdot(t0_next, y0_next, args)
+        )
+        h_next = jnp.where(
+            roots_zero,
+            droot_dt >= 0.0,
+            h_next,
+        )
+
+        if os.getenv("JAX_DEBUG") == "1":
+            jax.debug.print(
+                "h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}",
+                h,
+                rf0,
+                rfx,
+                roots_found,
+                roots_dir,
+                h_next,
+            )
+
+        return y0_next, t0_next, h_next, stats
 
 def safe_log(x: jnp.float_) -> jnp.float_:
     """

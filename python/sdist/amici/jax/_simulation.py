@@ -33,6 +33,7 @@ def eq(
     term: diffrax.ODETerm,
     root_cond_fns: list[Callable],
     root_cond_fn: Callable,
+    delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
     max_steps: jnp.int_,
 ) -> tuple[jt.Float[jt.Array, "nxs"], jt.Float[jt.Array, "ne"], dict]:
@@ -61,6 +62,8 @@ def eq(
         list of individual root condition functions for discontinuities
     :param root_cond_fn:
         root condition function for all discontinuities
+    :param delta_x:
+        function to compute state changes at events
     :param known_discs:
         known discontinuities, used to clip the step size controller
     :param max_steps:
@@ -86,7 +89,6 @@ def eq(
             [None],
             diffrax.SaveAt(t1=True),
             term,
-            known_discs,
             dict(**STARTING_STATS),
         )
         y1 = jnp.where(
@@ -123,7 +125,6 @@ def eq(
             [None] + [True] * len(root_cond_fns),
             diffrax.SaveAt(t1=True),
             term,
-            known_discs,
             stats,
         )
         y0_next = jnp.where(
@@ -136,19 +137,16 @@ def eq(
         )
         t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
 
-        y0_next, t0_next, h_next, stats = _handle_event(
+        y0_next, h_next, stats = _handle_event(
             t0_next,
-            jnp.inf,
             y0_next,
             p,
             tcl,
             h,
-            solver,
-            controller,
             root_finder,
-            diffrax.DirectAdjoint(),
             term,
             root_cond_fn,
+            delta_x,
             stats,
         )
 
@@ -186,6 +184,7 @@ def solve(
     term: diffrax.ODETerm,
     root_cond_fns: list[Callable],
     root_cond_fn: Callable,
+    delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
 ) -> tuple[jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict]:
     """
@@ -213,6 +212,8 @@ def solve(
         list of individual root condition functions for discontinuities
     :param root_cond_fn:
         root condition function for all discontinuities
+    :param delta_x:
+        function to compute state changes at events
     :param known_discs:
         known discontinuities, used to clip the step size controller
     :return:
@@ -237,7 +238,6 @@ def solve(
             [],
             diffrax.SaveAt(ts=ts),
             term,
-            known_discs,
             dict(**STARTING_STATS),
         )
         return sol.ys, jnp.repeat(h[None, :], sol.ys.shape[0]), stats
@@ -254,7 +254,7 @@ def solve(
 
     def body_fn(carry):
         ys, t_start, y0, hs, h, stats = carry
-        sol, idx, stats = _run_segment(
+        sol, _, stats = _run_segment(
             t_start,
             ts[-1],
             y0,
@@ -277,7 +277,6 @@ def solve(
                 ]
             ),
             term,
-            known_discs,
             stats,
         )
         # update the solution for all timepoints in the simulated segment
@@ -291,28 +290,22 @@ def solve(
         y0_next = sol.ys[1][
             -1
         ]  # next initial state is the last state of the current segment
-        ts_next = jnp.where(
-            ts > t0_next, ts, ts[-1]
-        ).min()  # timepoint of next datapoint, don't step over that
 
-        y0_next, t0_next, h_next, stats = _handle_event(
+        y0_next, h_next, stats = _handle_event(
             t0_next,
-            ts_next,
             y0_next,
             p,
             tcl,
             h,
-            solver,
-            controller,
             root_finder,
-            adjoint,
             term,
             root_cond_fn,
+            delta_x,
             stats,
         )
 
-        was_event = jnp.isin(ts, sol.ts[1])
-        hs = jnp.where(was_event[:, None], h_next[None, :], hs)
+        after_event = sol.ts[1] < ts
+        hs = jnp.where(after_event[:, None], h_next[None, :], hs)
 
         return ys, t0_next, y0_next, hs, h_next, stats
 
@@ -351,7 +344,6 @@ def _run_segment(
     cond_dirs: list[None | bool],
     saveat: diffrax.SaveAt,
     term: diffrax.ODETerm,
-    known_discs: jt.Float[jt.Array, "*nediscs"],
     stats: dict,
 ) -> tuple[diffrax.Solution, int, dict]:
     """Solve a single integration segment and return triggered event index, start time for the next segment,
@@ -371,16 +363,6 @@ def _run_segment(
         )
         if cond_fns
         else None
-    )
-
-    # manage events with explicit discontinuities
-    controller = (
-        diffrax.ClipStepSizeController(
-            controller,
-            jump_ts=known_discs,
-        )
-        if known_discs.size
-        else controller
     )
 
     sol = diffrax.diffeqsolve(
@@ -429,17 +411,14 @@ def _run_segment(
 
 def _handle_event(
     t0_next: float,
-    t_max: float,
     y0_next: jt.Float[jt.Array, "nxs"],
     p: jt.Float[jt.Array, "np"],
     tcl: jt.Float[jt.Array, "ncl"],
     h: jt.Float[jt.Array, "ne"],
-    solver: diffrax.AbstractSolver,
-    controller: diffrax.AbstractStepSizeController,
     root_finder: AbstractRootFinder,
-    adjoint: diffrax.AbstractAdjoint,
     term: diffrax.ODETerm,
     root_cond_fn: Callable,
+    delta_x: Callable,
     stats: dict,
 ):
     args = (p, tcl, h)
@@ -457,11 +436,15 @@ def _handle_event(
     )
     roots_dir = jnp.sign(droot_dt)  # direction of the root condition function
 
-    h_next = h + jnp.where(
+    y0_next, h_next = _apply_event_assignments(
         roots_found,
         roots_dir,
-        jnp.zeros_like(h),
-    )  # update heaviside variables based on the root condition function
+        y0_next,
+        p,
+        tcl,
+        h,
+        delta_x,
+    )
 
     if os.getenv("JAX_DEBUG") == "1":
         jax.debug.print(
@@ -472,4 +455,34 @@ def _handle_event(
             h,
             h_next,
         )
-    return y0_next, t0_next, h_next, stats
+
+    return y0_next, h_next, stats
+
+def _apply_event_assignments(
+    roots_found,
+    roots_dir,
+    y0_next,
+    p,
+    tcl,
+    h,
+    delta_x,
+):
+    h_next = jnp.where(
+        roots_found,
+        jnp.logical_not(h),
+        h,
+    )  # update heaviside variables based on the root condition function
+
+    mask = jnp.array(
+        [
+            (roots_found & (roots_dir > 0.0) & (h == 0.0))
+            for _ in range(y0_next.shape[0])
+        ]
+    ).T
+    delx = delta_x(y0_next, p, tcl)
+    if y0_next.size:
+        delx = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
+    y0_up = jnp.where(mask, delx, 0.0)
+    y0_next = y0_next + jnp.sum(y0_up, axis=0)
+
+    return y0_next, h_next
