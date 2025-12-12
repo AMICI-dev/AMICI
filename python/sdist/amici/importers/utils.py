@@ -132,6 +132,7 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
     def __init__(
         self,
         id_: str,
+        *,
         name: str | None = None,
         formula: str | sp.Expr | None = None,
         noise_distribution: str | Callable[[str], str] | None = None,

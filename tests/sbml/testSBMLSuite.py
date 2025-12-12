@@ -111,7 +111,7 @@ def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
 
         # check sensitivities for selected models
         if epsilon := sensitivity_check_cases.get(test_id):
-            check_derivatives(model, solver, epsilon=epsilon)
+            check_derivatives(model, solver=solver, epsilon=epsilon)
             jax_sensitivity_check(
                 current_test_path,
                 test_id,

@@ -519,6 +519,7 @@ class PetabSimulator:
     def __init__(
         self,
         em: ExperimentManager,
+        *,
         solver: amici.sim.sundials.Solver | None = None,
         num_threads: int = 1,
         # TODO: allow selecting specific experiments?

@@ -9,6 +9,7 @@ using namespace amici;
 %ignore ConditionContext;
 %ignore get_measurements_ptr;
 %ignore get_noise_scales_ptr;
+%ignore check_sigma_positivity;
 
 %feature("pythonprepend") amici::ExpData::ExpData %{
     """

@@ -97,6 +97,7 @@ class SbmlImporter:
     def __init__(
         self,
         sbml_source: str | Path | libsbml.Model,
+        *,
         show_sbml_warnings: bool = False,
         from_file: bool = True,
         discard_annotations: bool = False,
@@ -261,6 +262,7 @@ class SbmlImporter:
         self,
         model_name: str,
         output_dir: str | Path = None,
+        *,
         fixed_parameters: Iterable[str] = None,
         observation_model: list[MeasurementChannel] = None,
         verbose: int | bool = logging.ERROR,

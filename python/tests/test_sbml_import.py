@@ -210,10 +210,10 @@ def test_sbml2amici_observable_dependent_error(
     solver.set_sensitivity_method(SensitivityMethod.forward)
     rdata = run_simulation(model, solver, edata)
     assert np.any(rdata.ssigmay != 0.0)
-    check_derivatives(model, solver, edata)
+    check_derivatives(model, solver=solver, edata=edata)
     # ASA
     solver.set_sensitivity_method(SensitivityMethod.adjoint)
-    check_derivatives(model, solver, edata)
+    check_derivatives(model, solver=solver, edata=edata)
 
 
 @skip_on_valgrind
@@ -290,7 +290,7 @@ def test_presimulation(sbml_example_presimulation_module):
 
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
-    check_derivatives(model, solver, edata, epsilon=1e-4)
+    check_derivatives(model, solver=solver, edata=edata, epsilon=1e-4)
 
 
 @pytest.mark.filterwarnings(
@@ -374,7 +374,7 @@ def test_presimulation_events(tempdir):
 
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,
@@ -438,7 +438,7 @@ def test_presimulation_events_and_sensitivities(tempdir):
         model.require_sensitivities_for_all_parameters()
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,
@@ -462,7 +462,12 @@ def test_steadystate_simulation(model_steadystate_module):
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
     check_derivatives(
-        model, solver, edata[0], atol=1e-3, rtol=1e-3, epsilon=1e-4
+        model,
+        solver=solver,
+        edata=edata[0],
+        atol=1e-3,
+        rtol=1e-3,
+        epsilon=1e-4,
     )
 
     # Run some additional tests which need a working Model,
@@ -578,8 +583,8 @@ def test_likelihoods(model_test_likelihoods):
         solver.set_absolute_tolerance(1e-12)
         check_derivatives(
             model,
-            solver,
-            edata,
+            solver=solver,
+            edata=edata,
             atol=1e-2,
             rtol=1e-2,
             epsilon=1e-5,
@@ -667,7 +672,7 @@ def test_sympy_exp_monkeypatch(tempdir):
 
     # print sensitivity-related results
     assert rdata.status == AMICI_SUCCESS
-    check_derivatives(model, solver, None, atol=1e-2, rtol=1e-2, epsilon=1e-3)
+    check_derivatives(model, solver=solver, atol=1e-2, rtol=1e-2, epsilon=1e-3)
 
 
 def normal_nllh(m, y, sigma):

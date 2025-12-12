@@ -888,7 +888,7 @@ def test_preequilibration_events(tempdir):
 
         check_derivatives(
             amici_model,
-            amici_solver,
+            solver=amici_solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,

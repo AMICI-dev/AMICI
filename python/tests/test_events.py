@@ -797,7 +797,7 @@ def test_handling_of_fixed_time_point_event_triggers(tempdir):
     ):
         amici_solver.set_sensitivity_method(sens_meth)
         amici_solver.set_sensitivity_order(SensitivityOrder.first)
-        check_derivatives(amici_model, amici_solver, edata=edata)
+        check_derivatives(amici_model, solver=amici_solver, edata=edata)
 
 
 @skip_on_valgrind
@@ -951,7 +951,7 @@ def test_event_priorities(tempdir):
 
     check_derivatives(
         model,
-        solver,
+        solver=solver,
         edata=edata,
         atol=1e-6,
         rtol=1e-6,
@@ -966,7 +966,7 @@ def test_event_priorities(tempdir):
     # model.requireSensitivitiesForAllParameters()
     # check_derivatives(
     #     model,
-    #     solver,
+    #     solver=solver,
     #     edata=edata,
     #     atol=1e-6,
     #     rtol=1e-6,
@@ -1115,7 +1115,7 @@ def test_event_uses_values_from_trigger_time(tempdir):
         solver.set_sensitivity_method(sens_method)
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,
@@ -1182,7 +1182,7 @@ def test_posteq_events_are_handled(tempdir):
 
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-12,
             rtol=1e-7,
@@ -1350,7 +1350,7 @@ def test_event_with_w_dependent_trigger(tempdir):
         solver.set_sensitivity_method(sens_method)
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,

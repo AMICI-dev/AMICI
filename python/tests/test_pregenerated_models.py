@@ -118,8 +118,8 @@ def test_pregenerated_model_py(sub_test, case):
     ):
         check_derivatives(
             model,
-            solver,
-            edata,
+            solver=solver,
+            edata=edata,
             **check_derivative_opts,
         )
 
@@ -219,7 +219,9 @@ def test_pregenerated_model_py(sub_test, case):
             and solver.get_sensitivity_order()
             and len(model.get_parameter_list())
         ):
-            check_derivatives(model, solver, edata, **check_derivative_opts)
+            check_derivatives(
+                model, solver=solver, edata=edata, **check_derivative_opts
+            )
 
         chi2_ref = rdata.chi2
         res_ref = rdata.res
