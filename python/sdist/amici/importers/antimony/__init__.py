@@ -6,7 +6,13 @@ https://tellurium.readthedocs.io/en/latest/antimony.html
 
 from pathlib import Path
 
-__all__ = ["antimony2sbml", "antimony2amici"]
+from ..utils import MeasurementChannel
+
+__all__ = [
+    "antimony2sbml",
+    "antimony2amici",
+    "MeasurementChannel",
+]
 
 
 def antimony2sbml(ant_model: str | Path) -> str:

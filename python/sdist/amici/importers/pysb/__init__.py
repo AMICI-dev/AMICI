@@ -54,6 +54,7 @@ __all__ = [
     "pysb_model_from_path",
     "pysb2amici",
     "pysb2jax",
+    "MeasurementChannel",
 ]
 
 CL_Prototype = dict[str, dict[str, Any]]
@@ -89,11 +90,12 @@ def pysb2jax(
         simulations.
 
     :param model:
-        pysb model, :attr:`pysb.core.Model.name` will determine the name of the
-        generated module
+        PySB model, :class:`model.name <pysb.core.Model>` will determine the
+        name of the generated module.
 
     :param output_dir:
-        see :meth:`amici.de_export.ODEExporter.set_paths`
+        The directory where the generated model code is stored.
+        Will be created if it does not exist.
 
     :param observation_model:
         The different measurement channels that make up the observation
@@ -113,13 +115,15 @@ def pysb2jax(
         if set to ``True``, conservation laws are automatically computed and
         applied such that the state-jacobian of the ODE right-hand-side has
         full rank. This option should be set to ``True`` when using the Newton
-        algorithm to compute steadystates
+        algorithm to compute steady states.
 
     :param simplify:
-        see :attr:`amici.DEModel._simplify`
+        If not ``None``, this function will be used to simplify symbolic
+        derivative expressions. Receives sympy expressions as only argument.
+        To apply multiple simplifications, wrap them in a lambda expression.
 
     :param cache_simplify:
-        see :func:`amici.DEModel.__init__`
+        Whether to cache calls to the simplify method.
         Note that there are possible issues with PySB models:
         https://github.com/AMICI-dev/AMICI/pull/1672
 
@@ -190,11 +194,12 @@ def pysb2amici(
         simulations.
 
     :param model:
-        pysb model, :attr:`pysb.core.Model.name` will determine the name of the
-        generated module
+        PySB model, :class:`model.name <pysb.core.Model>` will determine the
+        name of the generated module.
 
     :param output_dir:
-        see :meth:`amici.de_export.ODEExporter.set_paths`
+        The directory where the generated model code is stored.
+        Will be created if it does not exist.
 
     :param observation_model:
         The different measurement channels that make up the observation
@@ -234,12 +239,14 @@ def pysb2amici(
         just generate the source code.
 
     :param simplify:
-        see :attr:`amici.DEModel._simplify`
+        If not ``None``, this function will be used to simplify symbolic
+        derivative expressions. Receives sympy expressions as only argument.
+        To apply multiple simplifications, wrap them in a lambda expression.
 
     :param cache_simplify:
-            see :func:`amici.DEModel.__init__`
-            Note that there are possible issues with PySB models:
-            https://github.com/AMICI-dev/AMICI/pull/1672
+        Whether to cache calls to the simplify method.
+        Note that there are possible issues with PySB models:
+        https://github.com/AMICI-dev/AMICI/pull/1672
 
     :param generate_sensitivity_code:
         if set to ``False``, code for sensitivity computation will not be
@@ -341,12 +348,14 @@ def ode_model_from_pysb_importer(
         see :func:`amici.importers.pysb.pysb2amici`
 
     :param simplify:
-            see :attr:`amici.DEModel._simplify`
+        If not ``None``, this function will be used to simplify symbolic
+        derivative expressions. Receives sympy expressions as only argument.
+        To apply multiple simplifications, wrap them in a lambda expression.
 
     :param cache_simplify:
-            see :func:`amici.DEModel.__init__`
-            Note that there are possible issues with PySB models:
-            https://github.com/AMICI-dev/AMICI/pull/1672
+        Whether to cache calls to the simplify method.
+        Note that there are possible issues with PySB models:
+        https://github.com/AMICI-dev/AMICI/pull/1672
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -1599,7 +1608,8 @@ def _get_changed_stoichiometries(
 
 
 def pysb_model_from_path(pysb_model_file: str | Path) -> pysb.Model:
-    """Load a pysb model module and return the :class:`pysb.Model` instance
+    """
+    Load a PySB model module and return the :class:`pysb.core.Model` instance.
 
     :param pysb_model_file: Full or relative path to the PySB model module
     :return: The pysb Model instance

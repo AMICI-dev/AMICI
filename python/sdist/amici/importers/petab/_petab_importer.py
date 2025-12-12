@@ -582,8 +582,11 @@ class PetabImporter:
             self.outdir,
         )
 
-    def create_model(self) -> amici.Model:
-        """Create a :class:`amici.Model` instance from the imported model."""
+    def create_model(self) -> amici.sim.sundials.Model:
+        """
+        Create a :class:`amici.sim.sundials.Model` instance from the imported
+        model.
+        """
         return self.import_module().get_model()
 
     def create_simulator(

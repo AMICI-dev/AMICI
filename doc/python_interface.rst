@@ -217,7 +217,7 @@ variables control various behaviours during model import and compilation:
      - ``AMICI_IMPORT_NPROCS=4``
    * - ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS``
      - Compute conservation laws for non-constant species. SBML-import only.
-       See :py:func:`amici.sbml_import.SbmlImporter.sbml2amici`.
+       See :py:meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
      -
 
 

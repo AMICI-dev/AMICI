@@ -135,7 +135,8 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/devdocs/", None),
     "sympy": ("https://docs.sympy.org/latest/", None),
     "python": ("https://docs.python.org/3", None),
-    "jax": ["https://jax.readthedocs.io/en/latest/", None],
+    "jax": ("https://jax.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 
 # Add notebooks prolog with binder links
@@ -341,6 +342,21 @@ texinfo_documents = [
         "Miscellaneous",
     ),
 ]
+
+
+# Avoid issues with classes exported from multiple modules, until we have
+#  a better solution.
+#   WARNING: duplicate object description of XXX, other instance in YYY,
+#   use :no-index: for one of them
+import amici.importers.antimony
+import amici.importers.bngl
+import amici.importers.pysb
+import amici.importers.sbml
+
+amici.importers.sbml.__all__.remove("MeasurementChannel")
+amici.importers.pysb.__all__.remove("MeasurementChannel")
+amici.importers.antimony.__all__.remove("MeasurementChannel")
+amici.importers.bngl.__all__.remove("MeasurementChannel")
 
 # Custom processing routines for docstrings and signatures
 
