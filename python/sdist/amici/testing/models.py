@@ -110,12 +110,12 @@ end
 """
 
 
-def import_model_robertson(outdir: Path = None) -> Model:
+def import_model_robertson(output_dir: Path = None) -> Model:
     """Import the Robertson model."""
     model_name = "model_robertson_py"
 
-    if outdir is None:
-        outdir = model_name
+    if output_dir is None:
+        output_dir = model_name
 
     antimony2amici(
         robertson_ant,
@@ -126,19 +126,19 @@ def import_model_robertson(outdir: Path = None) -> Model:
             MeasurementChannel(id_="obs_x3", formula="x3"),
         ],
         model_name=model_name,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
-    model_module = import_model_module(model_name, outdir)
+    model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
 
     return model
 
 
-def import_model_calvetti(outdir: Path = None) -> Model:
+def import_model_calvetti(output_dir: Path = None) -> Model:
     model_name = "model_calvetti_py"
 
-    if outdir is None:
-        outdir = model_name
+    if output_dir is None:
+        output_dir = model_name
 
     antimony2amici(
         calvetti_ant,
@@ -152,10 +152,10 @@ def import_model_calvetti(outdir: Path = None) -> Model:
             MeasurementChannel(id_="obs_f2", formula="f2"),
         ],
         model_name=model_name,
-        output_dir=outdir,
+        output_dir=output_dir,
         hardcode_symbols=["p1"],
     )
-    model_module = import_model_module(model_name, outdir)
+    model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
 
     assert model.get_fixed_parameter_ids() == (
@@ -170,26 +170,26 @@ def import_model_calvetti(outdir: Path = None) -> Model:
     return model
 
 
-def import_model_dirac(outdir: Path = None) -> Model:
+def import_model_dirac(output_dir: Path = None) -> Model:
     """Import the Dirac model."""
     model_name = "model_dirac_py"
 
-    if outdir is None:
-        outdir = model_name
+    if output_dir is None:
+        output_dir = model_name
 
     antimony2amici(
         model_dirac_ant,
         observation_model=[MeasurementChannel(id_="obs_x2", formula="x2")],
         model_name=model_name,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
-    model_module = import_model_module(model_name, outdir)
+    model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
 
     return model
 
 
-def import_model_neuron(outdir: Path = None) -> AmiciModel:
+def import_model_neuron(output_dir: Path = None) -> AmiciModel:
     """Python implementation of the neuron model (Hodgkin-Huxley).
 
     ODEs
@@ -253,12 +253,12 @@ def import_model_neuron(outdir: Path = None) -> AmiciModel:
             MeasurementChannel(id_="z1", event_id="event_1", formula="time"),
         ],
         fixed_parameters=constants,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
     return model
 
 
-def import_model_events(outdir: Path = None) -> AmiciModel:
+def import_model_events(output_dir: Path = None) -> AmiciModel:
     """Python implementation of the events model.
 
     ODEs
@@ -330,15 +330,15 @@ def import_model_events(outdir: Path = None) -> AmiciModel:
             MeasurementChannel(id_="z2", event_id="event_2", formula="time"),
         ],
         fixed_parameters=constants,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
     return model
 
 
-def import_model_jakstat(outdir: Path = None) -> AmiciModel:
+def import_model_jakstat(output_dir: Path = None) -> AmiciModel:
     model_name = "model_jakstat_adjoint_py"
-    if outdir is None:
-        outdir = model_name
+    if output_dir is None:
+        output_dir = model_name
 
     # Create basic SBML model without spline
     ant_str = r"""
@@ -436,17 +436,17 @@ def import_model_jakstat(outdir: Path = None) -> AmiciModel:
             ),
         ],
         model_name=model_name,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
-    model_module = import_model_module(model_name, outdir)
+    model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
     return model
 
 
-def import_model_nested_events(outdir: Path = None) -> AmiciModel:
+def import_model_nested_events(output_dir: Path = None) -> AmiciModel:
     model_name = "model_nested_events_py"
-    if outdir is None:
-        outdir = model_name
+    if output_dir is None:
+        output_dir = model_name
 
     ant_str = r"""
     model nested_events
@@ -473,17 +473,17 @@ def import_model_nested_events(outdir: Path = None) -> AmiciModel:
             MeasurementChannel(id_="obs_Virus", formula="Virus"),
         ],
         model_name=model_name,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
-    model_module = import_model_module(model_name, outdir)
+    model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
     return model
 
 
-def import_model_steadystate(outdir: Path = None) -> AmiciModel:
+def import_model_steadystate(output_dir: Path = None) -> AmiciModel:
     model_name = "model_steadystate_py"
-    if outdir is None:
-        outdir = model_name
+    if output_dir is None:
+        output_dir = model_name
 
     ant_str = r"""
     model model_steadystate
@@ -518,9 +518,9 @@ def import_model_steadystate(outdir: Path = None) -> AmiciModel:
             MeasurementChannel(id_="obs_x3", formula="x3"),
         ],
         model_name=model_name,
-        output_dir=outdir,
+        output_dir=output_dir,
     )
-    model_module = import_model_module(model_name, outdir)
+    model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
     return model
 
@@ -533,21 +533,21 @@ def import_test_models():
 
     print(f"Generating test models in {out_root}...")
     print("Importing model_dirac_py...")
-    import_model_dirac(outdir=out_root / "model_dirac_py")
+    import_model_dirac(output_dir=out_root / "model_dirac_py")
     print("Importing model_events_py...")
-    import_model_events(outdir=out_root / "model_events_py")
+    import_model_events(output_dir=out_root / "model_events_py")
     print("Importing model_neuron_py...")
-    import_model_neuron(outdir=out_root / "model_neuron_py")
+    import_model_neuron(output_dir=out_root / "model_neuron_py")
     print("Importing model_calvetti_py...")
-    import_model_calvetti(outdir=out_root / "model_calvetti_py")
+    import_model_calvetti(output_dir=out_root / "model_calvetti_py")
     print("Importing model_robertson_py...")
-    import_model_robertson(outdir=out_root / "model_robertson_py")
+    import_model_robertson(output_dir=out_root / "model_robertson_py")
     print("Importing model_jakstat_adjoint_py...")
-    import_model_jakstat(outdir=out_root / "model_jakstat_adjoint_py")
+    import_model_jakstat(output_dir=out_root / "model_jakstat_adjoint_py")
     print("Importing model_nested_events_py...")
-    import_model_nested_events(outdir=out_root / "model_nested_events_py")
+    import_model_nested_events(output_dir=out_root / "model_nested_events_py")
     print("Importing model_steadystate_py...")
-    import_model_steadystate(outdir=out_root / "model_steadystate_py")
+    import_model_steadystate(output_dir=out_root / "model_steadystate_py")
 
 
 def create_sbml_model(

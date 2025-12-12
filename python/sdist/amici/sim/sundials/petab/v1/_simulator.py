@@ -26,7 +26,7 @@ from ._simulations import RDATAS, rdatas_to_measurement_df, simulate_petab
 AMICI_MODEL = "amici_model"
 AMICI_SOLVER = "solver"
 MODEL_NAME = "model_name"
-MODEL_OUTPUT_DIR = "model_output_dir"
+OUTPUT_DIR = "output_dir"
 
 PETAB_PROBLEM = "petab_problem"
 
@@ -77,8 +77,8 @@ class PetabSimulator(petab.simulate.Simulator):
                     # cached, it can cause issues during import.
                     while kwargs[MODEL_NAME] in sys.modules:
                         kwargs[MODEL_NAME] += str(self.rng.integers(10))
-                if MODEL_OUTPUT_DIR not in kwargs:
-                    kwargs[MODEL_OUTPUT_DIR] = self.working_dir
+                if OUTPUT_DIR not in kwargs:
+                    kwargs[OUTPUT_DIR] = self.working_dir
                 self.amici_model = _subset_call(import_petab_problem, kwargs)
             kwargs[AMICI_MODEL] = self.amici_model
         self.amici_model = kwargs[AMICI_MODEL]

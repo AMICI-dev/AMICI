@@ -399,7 +399,7 @@ class SbmlImporter:
             exporter = DEExporter(
                 ode_model,
                 model_name=model_name,
-                outdir=output_dir,
+                output_dir=output_dir,
                 verbose=verbose,
                 assume_pow_positivity=assume_pow_positivity,
                 compiler=compiler,
@@ -524,7 +524,7 @@ class SbmlImporter:
         exporter = ODEExporter(
             ode_model,
             model_name=model_name,
-            outdir=output_dir,
+            output_dir=output_dir,
             verbose=verbose,
             hybridization=hybridization,
         )

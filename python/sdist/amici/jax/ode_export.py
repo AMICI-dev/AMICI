@@ -117,7 +117,7 @@ class ODEExporter:
     def __init__(
         self,
         ode_model: DEModel,
-        outdir: Path | str | None = None,
+        output_dir: Path | str | None = None,
         verbose: bool | int | None = False,
         model_name: str | None = "model",
         hybridization: dict[str, dict] = None,
@@ -128,7 +128,7 @@ class ODEExporter:
         :param ode_model:
             DE model definition
 
-        :param outdir:
+        :param output_dir:
             see :meth:`amici.de_export.DEExporter.set_paths`
 
         :param verbose:
@@ -159,7 +159,7 @@ class ODEExporter:
         self.model_path: Path = Path()
 
         self.set_name(model_name)
-        self.set_paths(outdir)
+        self.set_paths(output_dir)
 
         self.model: DEModel = ode_model
 

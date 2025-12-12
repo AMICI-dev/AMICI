@@ -198,7 +198,7 @@ def test_ude(test):
         petab_problem = Problem.from_yaml(petab_yaml)
         jax_problem = import_petab_problem(
             petab_problem,
-            model_output_dir=Path(__file__).parent / "models" / test,
+            output_dir=Path(__file__).parent / "models" / test,
             compile_=True,
             jax=True,
         )

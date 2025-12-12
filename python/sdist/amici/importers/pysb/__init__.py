@@ -154,7 +154,7 @@ def pysb2jax(
 
     exporter = ODEExporter(
         ode_model,
-        outdir=output_dir,
+        output_dir=output_dir,
         model_name=model_name,
         verbose=verbose,
     )
@@ -292,7 +292,7 @@ def pysb2amici(
 
     exporter = DEExporter(
         ode_model,
-        outdir=output_dir,
+        output_dir=output_dir,
         model_name=model_name,
         verbose=verbose,
         assume_pow_positivity=assume_pow_positivity,

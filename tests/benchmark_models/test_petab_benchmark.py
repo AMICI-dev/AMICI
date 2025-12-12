@@ -431,7 +431,7 @@ def test_benchmark_gradient(
     # Setup AMICI objects.
     amici_model = import_petab_problem(
         petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
+        output_dir=benchmark_outdir / problem_id,
     )
     amici_solver = amici_model.create_solver()
     amici_solver.set_absolute_tolerance(cur_settings.atol_sim)
@@ -643,7 +643,7 @@ def test_nominal_parameters_llh_v2(problem_id):
         pytest.skip("Excluded from log-likelihood check.")
 
     benchmark_outdir = get_model_root_dir() / "test_bmc_v2"
-    model_output_dir = benchmark_outdir / problem_id
+    output_dir = benchmark_outdir / problem_id
 
     try:
         # Load PEtab v1 problem. This will be upgraded to v2 automatically.
@@ -664,7 +664,7 @@ def test_nominal_parameters_llh_v2(problem_id):
     pi = PetabImporter(
         petab_problem=problem,
         module_name=f"{problem_id}_v2",
-        outdir=model_output_dir,
+        output_dir=output_dir,
         compile_=True,
         jax=jax,
     )

@@ -76,7 +76,7 @@ def test_amici_petab_problem_pregenerate_equals_on_demand(tempdir):
     independent of the `store_edatas` parameter."""
     # any example is fine
     petab_problem = get_problem("Boehm_JProteomeRes2014")
-    amici_model = import_petab_problem(petab_problem, model_output_dir=tempdir)
+    amici_model = import_petab_problem(petab_problem, output_dir=tempdir)
 
     app_store_true = PetabProblem(
         petab_problem, store_edatas=True, amici_model=amici_model

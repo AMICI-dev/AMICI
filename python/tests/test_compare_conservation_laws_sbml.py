@@ -92,8 +92,8 @@ end"""
     )
 
     # Name of the model that will also be the name of the python module
-    model_name = model_output_dir = "model_constant_species"
-    model_name_cl = model_output_dir_cl = "model_constant_species_cl"
+    model_name = output_dir = "model_constant_species"
+    model_name_cl = output_dir_cl = "model_constant_species_cl"
 
     # Define constants, observables, sigmas
     fixed_parameters = ["synthesis_substrate", "init_enzyme"]
@@ -105,13 +105,13 @@ end"""
     # wrap models with and without conservations laws
     sbml_importer.sbml2amici(
         model_name_cl,
-        model_output_dir_cl,
+        output_dir_cl,
         fixed_parameters=fixed_parameters,
         observation_model=observation_model,
     )
     sbml_importer.sbml2amici(
         model_name,
-        model_output_dir,
+        output_dir,
         fixed_parameters=fixed_parameters,
         observation_model=observation_model,
         compute_conservation_laws=False,
