@@ -45,6 +45,11 @@ def test_jax_llh(benchmark_problem):
             "Skipping Oliveira_NatCommun2021 due to non-supported events in JAX."
         )
 
+    if problem_id == "SalazarCavazos_MBoC2020":
+        pytest.skip(
+            "Skipping SalazarCavazos_MBoC2020 due to non-supported events in JAX."
+        )
+
     amici_solver = amici_model.create_solver()
     cur_settings = settings[problem_id]
     amici_solver.set_absolute_tolerance(1e-8)

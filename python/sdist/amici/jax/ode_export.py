@@ -149,11 +149,6 @@ class ODEExporter:
             raise NotImplementedError(
                 "The JAX backend does not support models with algebraic states."
             )
-        
-        if not ode_model.has_only_time_dependent_event_assignments():
-            raise NotImplementedError(
-                "The JAX backend does not support event assignments with explicit non-time dependent triggers."
-            )
 
         if ode_model.has_priority_events():
             raise NotImplementedError(
