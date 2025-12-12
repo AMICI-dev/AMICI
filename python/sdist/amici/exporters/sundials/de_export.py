@@ -145,7 +145,7 @@ class DEExporter:
     def __init__(
         self,
         de_model: DEModel,
-        outdir: Path | str | None = None,
+        output_dir: Path | str | None = None,
         verbose: bool | int | None = False,
         assume_pow_positivity: bool | None = False,
         compiler: str | None = None,
@@ -160,7 +160,7 @@ class DEExporter:
         :param de_model:
             DE model definition
 
-        :param outdir:
+        :param output_dir:
             see :meth:`amici.de_export.DEExporter.set_paths`
 
         :param verbose:
@@ -208,7 +208,7 @@ class DEExporter:
             )
 
         self.set_name(model_name)
-        self.set_paths(outdir)
+        self.set_paths(output_dir)
 
         self._code_printer = AmiciCxxCodePrinter()
         for fun in CUSTOM_FUNCTIONS:

@@ -94,7 +94,7 @@ class PetabImporter:
         module_name: str = None,
         # TODO: model_id for selecting the model in multi-model problems
         # model_id: str = None,
-        outdir: str | Path = None,
+        output_dir: str | Path = None,
         jax: bool = False,
         output_parameter_defaults: dict[str, float] | None = None,
         verbose: int | bool = logging.INFO,
@@ -107,7 +107,7 @@ class PetabImporter:
         :param compile_: Whether to compile the model extension after import.
         :param validate: Whether to validate the PEtab problem before import.
         :param module_name: The name of model module to generate.
-        :param outdir:
+        :param output_dir:
             The output directory where the model files are written to.
         :param jax: Whether to generate a JAX model instead of a
             SUNDIALS model. Currently, only ``False`` is supported.
@@ -178,8 +178,8 @@ class PetabImporter:
                 "was specified in the PEtab problem."
             )
 
-        self._outdir: Path | None = (
-            None if outdir is None else Path(outdir).absolute()
+        self._output_dir: Path | None = (
+            None if output_dir is None else Path(output_dir).absolute()
         )
         self._jax = jax
         self._non_estimated_parameters_as_constants: bool = (
@@ -281,11 +281,11 @@ class PetabImporter:
         return self._model_id
 
     @property
-    def outdir(self) -> Path:
+    def output_dir(self) -> Path:
         """The output directory where the model files are written to."""
-        if self._outdir is None:
-            self._outdir = get_model_dir(self._module_name, jax=self._jax)
-        return self._outdir
+        if self._output_dir is None:
+            self._output_dir = get_model_dir(self._module_name, jax=self._jax)
+        return self._output_dir
 
     def _do_import_sbml(self):
         """Import the model.
@@ -309,7 +309,7 @@ class PetabImporter:
 
         logger.info(
             f"Module name is '{self._module_name}'.\n"
-            f"Writing model code to '{self.outdir}'."
+            f"Writing model code to '{self.output_dir}'."
         )
 
         observation_model = self._get_observation_model()
@@ -354,7 +354,7 @@ class PetabImporter:
         if self._jax:
             sbml_importer.sbml2jax(
                 model_name=self._module_name,
-                output_dir=self.outdir,
+                output_dir=self.output_dir,
                 observation_model=observation_model,
                 verbose=self._verbose,
                 # **kwargs,
@@ -365,7 +365,7 @@ class PetabImporter:
             allow_reinit_fixpar_initcond = True
             sbml_importer.sbml2amici(
                 model_name=self._module_name,
-                output_dir=self.outdir,
+                output_dir=self.output_dir,
                 observation_model=observation_model,
                 fixed_parameters=fixed_parameters,
                 allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
@@ -398,7 +398,7 @@ class PetabImporter:
 
         logger.info(
             f"Module name is '{self._module_name}'.\n"
-            f"Writing model code to '{self.outdir}'."
+            f"Writing model code to '{self.output_dir}'."
         )
 
         observation_model = self._get_observation_model()
@@ -433,7 +433,7 @@ class PetabImporter:
             pysb2jax(
                 model=pysb_model,
                 model_name=self._module_name,
-                output_dir=self.outdir,
+                output_dir=self.output_dir,
                 observation_model=observation_model,
                 verbose=self._verbose,
                 pysb_model_has_obs_and_noise=True,
@@ -445,7 +445,7 @@ class PetabImporter:
             pysb2amici(
                 model=pysb_model,
                 model_name=self._module_name,
-                output_dir=self.outdir,
+                output_dir=self.output_dir,
                 verbose=True,
                 fixed_parameters=fixed_parameters,
                 observation_model=observation_model,
@@ -571,7 +571,7 @@ class PetabImporter:
             Whether to force re-import even if the model module already exists.
         :return: The imported model module.
         """
-        if not self.outdir.is_dir() or force_import:
+        if not self.output_dir.is_dir() or force_import:
             if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
                 self._do_import_sbml()
             else:
@@ -579,7 +579,7 @@ class PetabImporter:
 
         return amici.import_model_module(
             self._module_name,
-            self.outdir,
+            self.output_dir,
         )
 
     def create_model(self) -> amici.sim.sundials.Model:

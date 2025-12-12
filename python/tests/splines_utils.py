@@ -416,7 +416,7 @@ def simulate_splines(
         amici_model = import_petab_problem(
             petab_problem,
             discard_sbml_annotations=discard_annotations,
-            model_output_dir=os.path.join(folder, f"amici_models_{model_id}"),
+            output_dir=os.path.join(folder, f"amici_models_{model_id}"),
             model_name=f"splinetest_{model_id}",
         )
 

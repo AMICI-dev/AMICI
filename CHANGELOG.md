@@ -64,7 +64,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
     See the `compile_` argument.
 * Removals without deprecation:
   * `amici.sbml_import.species_to_parameters` has been removed.
-
+* Model output directory keyword arguments have been harmonized:
+  What was previously `model_output_dir`, `output_dir`, `outdir` is now
+  consistently called `output_dir` across the API.
 
 **Features**
 

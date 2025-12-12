@@ -31,6 +31,6 @@ def benchmark_problem(request):
 
     amici_model = import_petab_problem(
         flat_petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
+        output_dir=benchmark_outdir / problem_id,
     )
     return problem_id, flat_petab_problem, petab_problem, amici_model

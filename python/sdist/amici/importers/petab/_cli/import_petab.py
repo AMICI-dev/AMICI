@@ -26,7 +26,7 @@ def _parse_cli_args():
     parser.add_argument(
         "-o",
         "--output-dir",
-        dest="model_output_dir",
+        dest="output_dir",
         help="Name of the model directory to create",
     )
     parser.add_argument(
@@ -96,7 +96,7 @@ def _main():
     import_model_sbml(
         model_name=args.model_name,
         petab_problem=pp,
-        model_output_dir=args.model_output_dir,
+        output_dir=args.output_dir,
         compile=args.compile,
         generate_sensitivity_code=args.generate_sensitivity_code,
         verbose=args.verbose,

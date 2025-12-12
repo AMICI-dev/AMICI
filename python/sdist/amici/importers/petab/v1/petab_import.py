@@ -40,21 +40,21 @@ logger = get_logger(__name__, logging.WARNING)
 
 def import_petab_problem(
     petab_problem: petab.Problem,
-    model_output_dir: str | Path | None = None,
+    output_dir: str | Path | None = None,
     *,
     model_name: str = None,
     compile_: bool = None,
     non_estimated_parameters_as_constants=True,
     jax=False,
     **kwargs,
-) -> "amici.Model | amici.jax.JAXProblem":
+) -> "amici.sim.sundials.Model | amici.jax.JAXProblem":
     """
     Create an AMICI model for a PEtab problem.
 
     :param petab_problem:
         A petab problem containing all relevant information on the model.
 
-    :param model_output_dir:
+    :param output_dir:
         Directory to write the model code to. It will be created if it doesn't
         exist. Defaults to :func:`amici.get_model_dir`.
 
@@ -95,34 +95,33 @@ def import_petab_problem(
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB and model_name is None:
         model_name = petab_problem.pysb_model.name
-    elif model_name is None and model_output_dir:
-        model_name = _create_model_name(model_output_dir)
+    elif model_name is None and output_dir:
+        model_name = _create_model_name(output_dir)
 
     # generate folder and model name if necessary
-    if model_output_dir is None:
-        model_output_dir = amici.get_model_dir(model_name, jax=jax).absolute()
+    if output_dir is None:
+        output_dir = amici.get_model_dir(model_name, jax=jax).absolute()
     else:
-        model_output_dir = Path(model_output_dir).absolute()
+        output_dir = Path(output_dir).absolute()
 
-    model_output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # check if compilation necessary
     if compile_ or (
-        compile_ is None
-        and not _can_import_model(model_name, model_output_dir, jax)
+        compile_ is None and not _can_import_model(model_name, output_dir, jax)
     ):
         # check if folder exists
-        if os.listdir(model_output_dir) and not compile_:
+        if os.listdir(output_dir) and not compile_:
             raise ValueError(
-                f"Cannot compile to {model_output_dir}: not empty. "
+                f"Cannot compile to {output_dir}: not empty. "
                 "Please assign a different target or set `compile_` to `True`."
             )
 
         # remove folder if exists
-        if not jax and os.path.exists(model_output_dir):
-            shutil.rmtree(model_output_dir)
+        if not jax and os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
 
-        logger.info(f"Compiling model {model_name} to {model_output_dir}.")
+        logger.info(f"Compiling model {model_name} to {output_dir}.")
 
         if "sciml" in petab_problem.extensions_config:
             from petab_sciml.standard import NNModelStandard
@@ -235,7 +234,7 @@ def import_petab_problem(
             import_model_pysb(
                 petab_problem,
                 model_name=model_name,
-                model_output_dir=model_output_dir,
+                output_dir=output_dir,
                 jax=jax,
                 **kwargs,
             )
@@ -243,7 +242,7 @@ def import_petab_problem(
             import_model_sbml(
                 petab_problem=petab_problem,
                 model_name=model_name,
-                model_output_dir=model_output_dir,
+                output_dir=output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
                 hybridization=hybridization,
                 jax=jax,
@@ -252,7 +251,7 @@ def import_petab_problem(
 
     # import model
     model_module = amici.import_model_module(
-        *_get_package_name_and_path(model_name, model_output_dir, jax=jax)
+        *_get_package_name_and_path(model_name, output_dir, jax=jax)
     )
 
     if jax:
@@ -261,8 +260,7 @@ def import_petab_problem(
         model = model_module.Model()
 
         logger.info(
-            f"Successfully loaded jax model {model_name} "
-            f"from {model_output_dir}."
+            f"Successfully loaded jax model {model_name} from {output_dir}."
         )
 
         # Create and return JAXProblem
@@ -272,9 +270,7 @@ def import_petab_problem(
     model = model_module.get_model()
     check_model(amici_model=model, petab_problem=petab_problem)
 
-    logger.info(
-        f"Successfully loaded model {model_name} from {model_output_dir}."
-    )
+    logger.info(f"Successfully loaded model {model_name} from {output_dir}.")
 
     return model
 
