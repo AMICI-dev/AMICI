@@ -23,6 +23,8 @@ from test_petab_benchmark import (
     settings,
 )
 
+import diffrax
+
 jax.config.update("jax_enable_x64", True)
 
 
@@ -115,7 +117,14 @@ def test_jax_llh(benchmark_problem):
         beartype(run_simulations)(jax_problem)
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True
-        )(jax_problem)
+        )(
+            jax_problem, 
+            max_steps = 2 * 10**5, 
+            controller=diffrax.PIDController(
+                atol=cur_settings.atol_sim,
+                rtol=cur_settings.rtol_sim,
+            )
+        )
     else:
         llh_jax, _ = beartype(run_simulations)(jax_problem)
 
