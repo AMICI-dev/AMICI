@@ -114,15 +114,23 @@ def test_jax_llh(benchmark_problem):
         )
 
     if problem_id in problems_for_gradient_check:
+        if problem_id == "Weber_BMC2015":
+            atol = cur_settings.atol_sim
+            rtol = cur_settings.rtol_sim
+            max_steps = 2 * 10**5
+        else:
+            atol = 1e-8
+            rtol = 1e-8
+            max_steps = 1024
         beartype(run_simulations)(jax_problem)
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True
         )(
             jax_problem, 
-            max_steps = 2 * 10**5, 
+            max_steps=max_steps,
             controller=diffrax.PIDController(
-                atol=cur_settings.atol_sim,
-                rtol=cur_settings.rtol_sim,
+                atol=atol,
+                rtol=rtol,
             )
         )
     else:
