@@ -38,7 +38,6 @@ from amici.sim.sundials import (
 from amici.sim.sundials.petab.v1 import (
     LLH,
     RDATAS,
-    SLLH,
     rdatas_to_measurement_df,
     simulate_petab,
 )
@@ -680,13 +679,11 @@ def test_nominal_parameters_llh_v2(problem_id):
             SteadyStateSensitivityMode.integrationOnly
         )
     problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
-    ret = ps.simulate(problem_parameters=problem_parameters)
+    res = ps.simulate(problem_parameters=problem_parameters)
 
-    rdatas = ret[RDATAS]
-    # chi2 = sum(rdata["chi2"] for rdata in rdatas)
-    llh = ret[LLH]
-
-    simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
+    simulation_df = rdatas_to_simulation_df(
+        res.rdatas, ps.model, pi.petab_problem
+    )
     if was_flattened:
         simulation_df = unflatten_simulation_df(simulation_df, problem)
     print("v2 simulations:")
@@ -729,7 +726,7 @@ def test_nominal_parameters_llh_v2(problem_id):
         print("max rel diff:", simulation_df_bm["rel_diff"].max())
 
     # check llh
-    compare_to_reference(problem_id, llh)
+    compare_to_reference(problem_id, res.llh)
 
     # check gradient
     if problem_id not in problems_for_gradient_check:
@@ -740,11 +737,9 @@ def test_nominal_parameters_llh_v2(problem_id):
     ps.solver.set_sensitivity_order(SensitivityOrder.first)
     ps.solver.set_sensitivity_method(SensitivityMethod.forward)
     ps.model.set_always_check_finite(True)
-    result = ps.simulate(
-        problem_parameters=problem_parameters,
-    )
-    assert result[SLLH] is not None
-    actual_sens_pars = set(result[SLLH].keys())
+    result = ps.simulate(problem_parameters=problem_parameters)
+    assert result.sllh is not None
+    actual_sens_pars = set(result.sllh.keys())
     expected_sens_pars = set(problem.x_free_ids)
     assert actual_sens_pars == expected_sens_pars
 
