@@ -21,7 +21,6 @@ from amici._installation.amici import (
     AmiciExpDataVector,
     AmiciModel,
     AmiciSolver,
-    RDataReporting,
     SensitivityMethod,
     SensitivityOrder,
     Solver,
@@ -82,8 +81,6 @@ def run_simulation(
         _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
     )
     _log_simulation(rdata)
-    if solver.get_return_data_reporting_mode() == RDataReporting.full:
-        _ids_and_names_to_rdata(rdata, model)
     return ReturnDataView(rdata)
 
 
@@ -129,8 +126,6 @@ def run_simulations(
     )
     for rdata in rdata_ptr_list:
         _log_simulation(rdata)
-        if solver.get_return_data_reporting_mode() == RDataReporting.full:
-            _ids_and_names_to_rdata(rdata, model)
 
     return [ReturnDataView(r) for r in rdata_ptr_list]
 
@@ -267,29 +262,6 @@ def _log_simulation(rdata: amici_swig.ReturnData):
             amici_severity_to_logging[msg.severity],
             f"{condition}[{msg.identifier}] {msg.message}",
         )
-
-
-def _ids_and_names_to_rdata(
-    rdata: amici_swig.ReturnData, model: amici_swig.Model
-):
-    """Copy entity IDs and names from a Model to ReturnData."""
-    for entity_type in (
-        "state",
-        "observable",
-        "expression",
-        "free_parameter",
-        "fixed_parameter",
-    ):
-        for name_or_id in ("ids", "names"):
-            names_or_ids = getattr(model, f"get_{entity_type}_{name_or_id}")()
-            setattr(
-                rdata,
-                f"{entity_type.lower()}_{name_or_id.lower()}",
-                names_or_ids,
-            )
-
-    rdata.state_ids_solver = model.get_state_ids_solver()
-    rdata.state_names_solver = model.get_state_names_solver()
 
 
 @contextlib.contextmanager

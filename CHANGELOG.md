@@ -109,6 +109,10 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * The default directory for model import changed, and a base directory
   can now be specified via the `AMICI_MODELS_ROOT` environment variable.
   See `amici.get_model_dir` for details.
+* IDs and names of model entities are now not only accessible via `Model`, but
+  also via `ReturnData`
+  (`ReturnData.{free_parameter_ids,observable_ids,...}`,
+  `ReturnData.{free_parameter_names,observable_names,...}`).
 
 **Fixes**
 
