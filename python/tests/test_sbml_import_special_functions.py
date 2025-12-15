@@ -114,8 +114,8 @@ def test_special_likelihoods(model_special_likelihoods):
         solver.set_sensitivity_order(SensitivityOrder.first)
         check_derivatives(
             model,
-            solver,
-            edata,
+            solver=solver,
+            edata=edata,
             atol=1e-4,
             rtol=1e-3,
             check_least_squares=False,

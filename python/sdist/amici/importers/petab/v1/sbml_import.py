@@ -226,7 +226,7 @@ def _workaround_observable_parameters(
 def import_model_sbml(
     petab_problem: petab.Problem = None,
     model_name: str | None = None,
-    model_output_dir: str | Path | None = None,
+    output_dir: str | Path | None = None,
     verbose: bool | int | None = True,
     allow_reinit_fixpar_initcond: bool = True,
     validate: bool = True,
@@ -248,7 +248,7 @@ def import_model_sbml(
         this defaults to the file name without extension, otherwise
         the SBML model ID will be used.
 
-    :param model_output_dir:
+    :param output_dir:
         Directory to write the model code to. Will be created if doesn't
         exist. Defaults to current directory.
 
@@ -256,8 +256,10 @@ def import_model_sbml(
         Print/log extra information.
 
     :param allow_reinit_fixpar_initcond:
-        See :class:`amici.de_export.ODEExporter`. Must be enabled if initial
-        states are to be reset after preequilibration.
+        Indicates whether reinitialization of initial states depending on
+        fixed parameters is allowed for this model.
+        Must be enabled if initial states are to be reset after
+        pre-equilibration.
 
     :param validate:
         Whether to validate the PEtab problem
@@ -312,14 +314,13 @@ def import_model_sbml(
                 "ID was specified in the SBML model."
             )
 
-    if model_output_dir is None:
-        model_output_dir = os.path.join(
+    if output_dir is None:
+        output_dir = os.path.join(
             os.getcwd(), f"{model_name}-amici{amici.__version__}"
         )
 
     logger.info(
-        f"Model name is '{model_name}'.\n"
-        f"Writing model code to '{model_output_dir}'."
+        f"Model name is '{model_name}'.\nWriting model code to '{output_dir}'."
     )
 
     # Create a copy, because it will be modified by SbmlImporter
@@ -389,7 +390,7 @@ def import_model_sbml(
     if jax:
         sbml_importer.sbml2jax(
             model_name=model_name,
-            output_dir=model_output_dir,
+            output_dir=output_dir,
             observation_model=observation_model,
             verbose=verbose,
             hybridization=hybridization,
@@ -403,7 +404,7 @@ def import_model_sbml(
             )
         sbml_importer.sbml2amici(
             model_name=model_name,
-            output_dir=model_output_dir,
+            output_dir=output_dir,
             observation_model=observation_model,
             fixed_parameters=fixed_parameters,
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
@@ -416,7 +417,7 @@ def import_model_sbml(
         amici._get_default_argument(sbml_importer.sbml2amici, "compile"),
     ):
         # check that the model extension was compiled successfully
-        model_module = amici.import_model_module(model_name, model_output_dir)
+        model_module = amici.import_model_module(model_name, output_dir)
         model = model_module.get_model()
         check_model(amici_model=model, petab_problem=petab_problem)
 

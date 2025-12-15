@@ -14,6 +14,7 @@ AMICI Python API
    amici.importers.antimony
    amici.importers.petab
    amici.importers.petab.v1
+   amici.importers.utils
    amici.jax
    amici.sim.sundials
    amici.sim.sundials.plotting

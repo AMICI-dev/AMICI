@@ -181,7 +181,7 @@ class DEModel:
         partial derivative in the next recursion. prevents infinite recursion
 
     :ivar _simplify:
-        If not None, this function will be used to simplify symbolic
+        If not ``None``, this function will be used to simplify symbolic
         derivative expressions. Receives sympy expressions as only argument.
         To apply multiple simplifications, wrap them in a lambda expression.
 
@@ -219,8 +219,7 @@ class DEModel:
             see :meth:`DEModel._simplify`
 
         :param cache_simplify:
-            Whether to cache calls to the simplify method. Can e.g. decrease
-            import times for models with events.
+            Whether to cache calls to the simplify method.
         """
         self._differential_states: list[DifferentialState] = []
         self._algebraic_states: list[AlgebraicState] = []

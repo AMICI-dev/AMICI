@@ -6,7 +6,7 @@ equation model and generate executable C++ simulation code.
 The user generally won't have to directly call any function from this module
 as this will be done by
 :py:func:`amici.importers.pysb.pysb2amici`,
-:py:func:`amici.importers.sbml.SbmlImporter.sbml2amici` and
+:py:meth:`amici.importers.sbml.SbmlImporter.sbml2amici` and
 :py:func:`amici.petab_import.import_model`.
 """
 
@@ -120,8 +120,8 @@ class DEExporter:
         path to the generated swig files
 
     :ivar allow_reinit_fixpar_initcond:
-        indicates whether reinitialization of
-        initial states depending on fixedParameters is allowed for this model
+        Indicates whether reinitialization of initial states depending on
+         fixed parameters is allowed for this model.
 
     :ivar _build_hints:
         If the given model uses special functions, this set contains hints for
@@ -145,7 +145,7 @@ class DEExporter:
     def __init__(
         self,
         de_model: DEModel,
-        outdir: Path | str | None = None,
+        output_dir: Path | str | None = None,
         verbose: bool | int | None = False,
         assume_pow_positivity: bool | None = False,
         compiler: str | None = None,
@@ -160,7 +160,7 @@ class DEExporter:
         :param de_model:
             DE model definition
 
-        :param outdir:
+        :param output_dir:
             see :meth:`amici.de_export.DEExporter.set_paths`
 
         :param verbose:
@@ -208,7 +208,7 @@ class DEExporter:
             )
 
         self.set_name(model_name)
-        self.set_paths(outdir)
+        self.set_paths(output_dir)
 
         self._code_printer = AmiciCxxCodePrinter()
         for fun in CUSTOM_FUNCTIONS:

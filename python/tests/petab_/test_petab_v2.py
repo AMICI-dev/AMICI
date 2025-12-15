@@ -312,7 +312,7 @@ def test_petab_simulator_deepcopy_and_pickle():
 
     ps_copy = copy.deepcopy(ps)
 
-    assert ps.simulate({"kk": 2})["llh"] == ps_copy.simulate({"kk": 2})["llh"]
+    assert ps.simulate({"kk": 2}).llh == ps_copy.simulate({"kk": 2}).llh
 
     ps.solver.set_sensitivity_order(SensitivityOrder.first)
     assert (
@@ -323,6 +323,4 @@ def test_petab_simulator_deepcopy_and_pickle():
     import pickle
 
     ps_pickle = pickle.loads(pickle.dumps(ps))
-    assert (
-        ps.simulate({"kk": 2})["llh"] == ps_pickle.simulate({"kk": 2})["llh"]
-    )
+    assert ps.simulate({"kk": 2}).llh == ps_pickle.simulate({"kk": 2}).llh

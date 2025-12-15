@@ -302,7 +302,7 @@ class Solver {
      * @brief Get the relative tolerances for the forward problem
      *
      * Same tolerance is used for the backward problem if not specified
-     * differently via setRelativeToleranceASA.
+     * differently via \ref Solver::set_relative_tolerance_b.
      *
      * @return relative tolerances
      */
@@ -312,7 +312,7 @@ class Solver {
      * @brief Sets the relative tolerances for the forward problem
      *
      * Same tolerance is used for the backward problem if not specified
-     * differently via setRelativeToleranceASA.
+     * differently via \ref Solver::set_relative_tolerance_b.
      *
      * @param rtol relative tolerance (non-negative number)
      */
@@ -322,7 +322,7 @@ class Solver {
      * @brief Get the absolute tolerances for the forward problem
      *
      * Same tolerance is used for the backward problem if not specified
-     * differently via setAbsoluteToleranceASA.
+     * differently via \ref Solver::set_absolute_tolerance_b.
      *
      * @return absolute tolerances
      */
@@ -332,7 +332,7 @@ class Solver {
      * @brief Sets the absolute tolerances for the forward problem
      *
      * Same tolerance is used for the backward problem if not specified
-     * differently via setAbsoluteToleranceASA.
+     * differently via \ref Solver::set_absolute_tolerance_b.
      *
      * @param atol absolute tolerance (non-negative number)
      */
@@ -482,7 +482,7 @@ class Solver {
      *
      * Steady state sensitivity simulation tolerances are the product of the
      * sensitivity simulation tolerances and this factor, unless manually set
-     * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
+     * with `set_{absolute,relative}_tolerance_steady_state_sensi()`.
      *
      * @return steady state simulation tolerance factor
      */
@@ -493,7 +493,7 @@ class Solver {
      *
      * Steady state sensitivity simulation tolerances are the product of the
      * sensitivity simulation tolerances and this factor, unless manually set
-     * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
+     * with `set_{absolute,relative}_tolerance_steady_state_sensi()`.
      *
      * @param factor tolerance factor (non-negative number)
      */
@@ -960,49 +960,56 @@ class Solver {
     void store_diagnosis_b(int which) const;
 
     /**
-     * @brief Accessor ns
+     * @brief Number of integration steps for the forward problem
+     * (dimension: nt).
      *
      * @return ns
      */
     std::vector<int> const& get_num_steps() const { return ns_; }
 
     /**
-     * @brief Accessor nsB
+     * @brief Number of integration steps for the backward problem
+     * (dimension: nt).
      *
      * @return nsB
      */
     std::vector<int> const& get_num_steps_b() const { return nsB_; }
 
     /**
-     * @brief Accessor nrhs
+     * @brief Number of right hand side evaluations for the forward problem
+     * (dimension: nt)
      *
      * @return nrhs
      */
     std::vector<int> const& get_num_rhs_evals() const { return nrhs_; }
 
     /**
-     * @brief Accessor nrhsB
+     * @brief Number of right hand side evaluations for the backward problem
+     * (dimension: nt)
      *
      * @return nrhsB
      */
     std::vector<int> const& get_num_rhs_evals_b() const { return nrhsB_; }
 
     /**
-     * @brief Accessor netf
+     * @brief Number of error test failures during the forward simulation
+     * (dimension: nt)
      *
      * @return netf
      */
     std::vector<int> const& get_num_err_test_fails() const { return netf_; }
 
     /**
-     * @brief Accessor netfB
+     * @brief Number of error test failures during the backward simulation
+     * (dimension: nt)
      *
      * @return netfB
      */
     std::vector<int> const& get_num_err_test_fails_b() const { return netfB_; }
 
     /**
-     * @brief Accessor nnlscf
+     * @brief Number of non-linear solver convergence failures during the
+     * forward simulation (dimension: nt).
      *
      * @return nnlscf
      */
@@ -1011,7 +1018,8 @@ class Solver {
     }
 
     /**
-     * @brief Accessor nnlscfB
+     * @brief Number of non-linear solver convergence failures during the
+     * backward simulation (dimension: nt).
      *
      * @return nnlscfB
      */
@@ -1185,7 +1193,7 @@ class Solver {
      * @brief Solves the forward problem until a predefined timepoint
      *
      * @param tout timepoint until which simulation should be performed
-     * @param itask task identifier, can be CV_NORMAL or CV_ONE_STEP
+     * @param itask task identifier, can be \c CV_NORMAL or \c CV_ONE_STEP
      * @return status flag indicating success of execution
      */
     virtual int solve(realtype tout, int itask) const = 0;
@@ -1195,7 +1203,7 @@ class Solver {
      * (adjoint only)
      *
      * @param tout timepoint until which simulation should be performed
-     * @param itask task identifier, can be CV_NORMAL or CV_ONE_STEP
+     * @param itask task identifier, can be \c CV_NORMAL or \c CV_ONE_STEP
      * @param ncheckPtr pointer to a number that counts the internal
      * checkpoints
      * @return status flag indicating success of execution
@@ -1203,16 +1211,16 @@ class Solver {
     virtual int solve_f(realtype tout, int itask, int* ncheckPtr) const = 0;
 
     /**
-     * @brief reinit_post_process_f postprocessing of the solver memory after a
-     * discontinuity in the forward problem
+     * @brief Postprocess the solver memory after a discontinuity in the
+     * forward problem
      *
      * @param tnext next timepoint (defines integration direction)
      */
     virtual void reinit_post_process_f(realtype tnext) const = 0;
 
     /**
-     * @brief reinit_post_process_b postprocessing of the solver memory after a
-     * discontinuity in the backward problem
+     * @brief Postprocess the solver memory after a discontinuity in the
+     * backward problem
      *
      * @param tnext next timepoint (defines integration direction)
      */
@@ -2156,13 +2164,15 @@ class Solver {
     mutable std::vector<int> netfB_;
 
     /**
-     * number of linear solver convergence failures forward problem (dimension:
-     * nt) */
+     * number of non-linear solver convergence failures forward problem
+     * (dimension: nt)
+     */
     mutable std::vector<int> nnlscf_;
 
     /**
-     * number of linear solver convergence failures backward problem (dimension:
-     * nt) */
+     * number of non-linear solver convergence failures backward problem
+     * (dimension: nt)
+     */
     mutable std::vector<int> nnlscfB_;
 
     /** employed order forward problem (dimension: nt) */

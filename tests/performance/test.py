@@ -86,7 +86,7 @@ def run_import(model_name, model_dir: Path):
     amici.importers.sbml.logger.setLevel(logging.DEBUG)
     import_model_sbml(
         model_name=model_name,
-        model_output_dir=model_dir,
+        output_dir=model_dir,
         petab_problem=pp,
         compile=False,
         verbose=True,

@@ -253,7 +253,7 @@ def test_compare_to_pysb_simulation(example):
                     )
                     check_derivatives(
                         model_pysb,
-                        solver,
+                        solver=solver,
                         epsilon=epsilon,
                         rtol=1e-2,
                         atol=1e-2,
@@ -399,7 +399,7 @@ def test_energy():
         solver.set_absolute_tolerance(1e-14)
 
         check_derivatives(
-            amici_model, solver, epsilon=1e-4, rtol=1e-2, atol=1e-2
+            amici_model, solver=solver, epsilon=1e-4, rtol=1e-2, atol=1e-2
         )
 
 

@@ -910,7 +910,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * C} \f$ will be added. This enables least-squares optimization for
      * variables with Gaussian noise assumption and parameter dependent standard
      * deviation sigma. The constant \f$ C \f$ can be set via
-     * :meth:`setMinimumSigmaResiduals`.
+     * :meth:`set_minimum_sigma_residuals`.
      *
      * @param sigma_res if true, additional residuals are added
      */

@@ -6,7 +6,7 @@ import logging
 import numbers
 from collections import Counter
 from collections.abc import Sequence
-from typing import Any
+from dataclasses import dataclass, field
 
 import numpy as np
 import sympy as sp
@@ -16,21 +16,13 @@ from petab.v2 import ExperimentPeriod
 import amici
 from amici.logging import get_logger
 from amici.sim.sundials import SensitivityOrder
-from amici.sim.sundials.petab.v1._simulations import (
-    EDATAS,
-    LLH,
-    RDATAS,
-    RES,
-    S2LLH,
-    SLLH,
-    SRES,
-)
 
 logger = get_logger(__name__, log_level=logging.INFO)
 
 __all__ = [
     "PetabSimulator",
     "ExperimentManager",
+    "PetabSimulationResult",
 ]
 
 
@@ -508,6 +500,55 @@ class ExperimentManager:
         return mapping
 
 
+@dataclass
+class PetabSimulationResult:
+    """
+    Container for results of a PEtab simulation.
+
+    Holds the per-experiment AMICI data objects and aggregated metrics
+    produced by :class:`PetabSimulator.simulate`.
+    """
+
+    #: List of :class:`amici.sim.sundials.ExpData` instances, one per
+    #: simulated experiment. These objects may be modified by subsequent
+    #: operations.
+    edatas: list[amici.sim.sundials.ExpData] = field(default_factory=list)
+    #: List of :class:`amici.sim.sundials.ReturnDataView` instances,
+    #: one per simulated experiment containing simulation outputs.
+    rdatas: list[amici.sim.sundials.ReturnDataView] = field(
+        default_factory=list
+    )
+    #: Aggregated first-order sensitivities of the log-likelihood with
+    #: respect to PEtab problem parameters. Mapping from parameter ID
+    #: to sensitivity value, or ``None`` if sensitivities were not computed.
+    sllh: dict[str, float] | None = None
+    #: Aggregated second-order sensitivities (Hessian or FIM-based)
+    #: as a 2D :class:`numpy.ndarray` in the order of
+    #: ``Problem.x_free_ids``. ``None`` if second-order sensitivities
+    #: were not computed.
+    s2llh: np.ndarray | None = None
+    #: Sensitivities of the residuals (if computed) as a
+    #: :class:`numpy.ndarray`, or ``None`` when not computed.
+    sres: np.ndarray | None = None
+
+    @property
+    def llh(self) -> float:
+        """The total log-likelihood across all experiments."""
+        return sum(rdata.llh for rdata in self.rdatas)
+
+    def res(self) -> np.ndarray | None:
+        """
+        Concatenated residuals.
+
+        :returns: Concatenated residuals from all experiments as a 1D
+            :class:`numpy.ndarray`, or ``None`` if not available.
+        """
+        if any(rdata.res is None for rdata in self.rdatas):
+            return None
+
+        return np.hstack([rdata.res for rdata in self.rdatas])
+
+
 class PetabSimulator:
     """
     Simulator for PEtab2 problems.
@@ -519,6 +560,7 @@ class PetabSimulator:
     def __init__(
         self,
         em: ExperimentManager,
+        *,
         solver: amici.sim.sundials.Solver | None = None,
         num_threads: int = 1,
         # TODO: allow selecting specific experiments?
@@ -562,22 +604,19 @@ class PetabSimulator:
 
     def simulate(
         self, problem_parameters: dict[str, float] = None
-    ) -> dict[str, Any]:
+    ) -> PetabSimulationResult:
         # TODO params: dict|np.ndarray|None?
         """Simulate all experiments of the given PEtab problem.
 
         :return:
-            Dictionary of
+            A :class:`PetabSimulationResult` instance containing the
+            per-experiment data objects and aggregated results.
 
-            * the summed cost function value (``LLH``),
-            * list of :class:`amici.sim.sundials.ReturnData` (``RDATAS``)
-              for each experiment,
-            * list of :class:`amici.sim.sundials.ExpData` (``EDATAS``)
-              for each experiment
+            Note that the returned :class:`amici.sim.sundials.ExpData`
+            instances may be changed by subsequent calls to this function.
+            Create a copy if needed.
 
-           Note that the returned :class:`amici.amiciamici.sim.sundials.ExpData` instances
-           may be changed by subsequent calls to this function.
-           Create a copy if needed.
+            Aggregated residual sensitivities are not implemented yet.
         """
         if problem_parameters is None:
             # use default parameters, i.e., nominal values for all parameters
@@ -600,16 +639,14 @@ class PetabSimulator:
             self._model, self._solver, edatas, num_threads=self.num_threads
         )
 
-        return {
-            EDATAS: edatas,
-            RDATAS: rdatas,
-            LLH: sum(rdata.llh for rdata in rdatas),
-            SLLH: self._aggregate_sllh(rdatas),
-            S2LLH: self._aggregate_s2llh(rdatas, use_fim=True),
-            RES: np.hstack([rdata.res for rdata in rdatas]),
+        return PetabSimulationResult(
+            edatas=edatas,
+            rdatas=rdatas,
+            sllh=self._aggregate_sllh(rdatas),
+            s2llh=self._aggregate_s2llh(rdatas, use_fim=True),
             # TODO: implement residual sensitivity aggregation
-            SRES: None,
-        }
+            sres=None,
+        )
 
     def _aggregate_sllh(
         self, rdatas: Sequence[amici.sim.sundials.ReturnDataView]

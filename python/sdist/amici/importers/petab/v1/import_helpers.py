@@ -136,7 +136,7 @@ def _create_model_name(folder: str | Path) -> str:
 
 
 def _can_import_model(
-    model_name: str, model_output_dir: str | Path, jax: bool = False
+    model_name: str, output_dir: str | Path, jax: bool = False
 ) -> bool:
     """
     Check whether a module of that name can already be imported.
@@ -144,7 +144,7 @@ def _can_import_model(
     # try to import (in particular checks version)
     try:
         model_module = amici.import_model_module(
-            *_get_package_name_and_path(model_name, model_output_dir, jax)
+            *_get_package_name_and_path(model_name, output_dir, jax)
         )
     except ModuleNotFoundError:
         return False
@@ -277,21 +277,21 @@ def check_model(
 
 
 def _get_package_name_and_path(
-    model_name: str, model_output_dir: str | Path, jax: bool = False
+    model_name: str, output_dir: str | Path, jax: bool = False
 ) -> tuple[str, Path]:
     """
     Get the package name and path for the generated model module.
 
     :param model_name:
         Name of the model
-    :param model_output_dir:
+    :param output_dir:
         Target directory for the generated model module
     :param jax:
         Whether to generate the paths for a JAX or CPP model
     :return:
     """
     if jax:
-        outdir = Path(model_output_dir)
+        outdir = Path(output_dir)
         return outdir.stem, outdir.parent
     else:
-        return model_name, Path(model_output_dir)
+        return model_name, Path(output_dir)

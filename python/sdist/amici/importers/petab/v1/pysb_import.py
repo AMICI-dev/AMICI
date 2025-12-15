@@ -195,7 +195,7 @@ def _add_initialization_variables(
 @log_execution_time("Importing PEtab model", logger)
 def import_model_pysb(
     petab_problem: petab.Problem,
-    model_output_dir: str | Path | None = None,
+    output_dir: str | Path | None = None,
     verbose: bool | int | None = True,
     model_name: str | None = None,
     jax: bool = False,
@@ -207,7 +207,7 @@ def import_model_pysb(
     :param petab_problem:
         PySB PEtab problem
 
-    :param model_output_dir:
+    :param output_dir:
         Directory to write the model code to. Will be created if doesn't
         exist. Defaults to current directory.
 
@@ -293,7 +293,7 @@ def import_model_pysb(
 
         pysb2jax(
             model=pysb_model,
-            output_dir=model_output_dir,
+            output_dir=output_dir,
             model_name=model_name,
             verbose=True,
             observation_model=observation_model,
@@ -306,7 +306,7 @@ def import_model_pysb(
 
         pysb2amici(
             model=pysb_model,
-            output_dir=model_output_dir,
+            output_dir=output_dir,
             model_name=model_name,
             verbose=True,
             fixed_parameters=fixed_parameters,

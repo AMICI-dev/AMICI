@@ -68,6 +68,7 @@ __all__ = [
 @log_execution_time("Simulating PEtab model", logger)
 def simulate_petab(
     petab_problem: petab.Problem,
+    *,
     amici_model: AmiciModel,
     solver: amici.sim.sundials.Solver | None = None,
     problem_parameters: dict[str, float] | None = None,

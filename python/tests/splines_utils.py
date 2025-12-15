@@ -416,7 +416,7 @@ def simulate_splines(
         amici_model = import_petab_problem(
             petab_problem,
             discard_sbml_annotations=discard_annotations,
-            model_output_dir=os.path.join(folder, f"amici_models_{model_id}"),
+            output_dir=os.path.join(folder, f"amici_models_{model_id}"),
             model_name=f"splinetest_{model_id}",
         )
 
@@ -443,7 +443,12 @@ def simulate_splines(
 
     if benchmark is False:
         # Simulate PEtab problem
-        res = simulate_petab(petab_problem, amici_model, solver, params_str)
+        res = simulate_petab(
+            petab_problem,
+            amici_model=amici_model,
+            solver=solver,
+            problem_parameters=params_str,
+        )
         llh, rdatas, edatas = res[LLH], res[RDATAS], res[EDATAS]
         assert len(rdatas) == 1
         llh = float(llh)
@@ -477,7 +482,12 @@ def simulate_splines(
     runtimes = []
     for _ in range(int(benchmark)):
         t0 = time.perf_counter()
-        simulate_petab(petab_problem, amici_model, solver, params_str)
+        simulate_petab(
+            petab_problem,
+            amici_model=amici_model,
+            solver=solver,
+            problem_parameters=params_str,
+        )
         t_elapsed = time.perf_counter() - t0
         runtimes.append(t_elapsed)
 

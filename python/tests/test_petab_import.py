@@ -150,7 +150,7 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
         petab_problem=petab_problem,
         output_parameter_defaults={"observableParameter1_obs1": 1.0},
         compile=False,
-        model_output_dir=tempdir,
+        output_dir=tempdir,
     )
     assert (
         1.0
@@ -164,5 +164,5 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
             petab_problem=petab_problem,
             output_parameter_defaults={"nonExistentParameter": 1.0},
             compile=False,
-            model_output_dir=tempdir,
+            output_dir=tempdir,
         )
