@@ -55,7 +55,7 @@ jobs:
         AMICI_IMPORT_NPROCS=2 check_time.sh petab_import python tests/performance/test.py import
 
     - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: model_performance_test
         path: model_performance_test
