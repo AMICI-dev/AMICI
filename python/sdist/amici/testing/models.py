@@ -165,7 +165,7 @@ def import_model_calvetti(output_dir: Path = None) -> Model:
         "R2ss",
         "V3ss",
         "R3ss",
-    )
+    ), model.get_fixed_parameter_ids()
 
     return model
 

@@ -54,6 +54,7 @@ class TypeHintFixer(ast.NodeTransformer):
         "std::allocator< amici::ParameterScaling > > const &": ast.Name(
             "ParameterScalingVector"
         ),
+        "std::span< std::string_view const >": ast.Name("Sequence[str]"),
     }
 
     def __init__(self):

@@ -1040,6 +1040,9 @@ class DEExporter:
             "STATE_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "x_rdata"
             ),
+            "STATE_NAMES_SOLVER_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
+                "x_solver"
+            ),
             "FIXED_PARAMETER_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "k"
             ),
@@ -1060,6 +1063,9 @@ class DEExporter:
             ),
             "STATE_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
                 "x_rdata"
+            ),
+            "STATE_IDS_SOLVER_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
+                "x_solver"
             ),
             "FIXED_PARAMETER_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
                 "k"
@@ -1198,9 +1204,19 @@ class DEExporter:
         :return:
             Template initializer list of names
         """
+        if name == "x_solver":
+            # The current x_solver symbols are different from the names we
+            #  want here
+            names = [
+                state.get_name()
+                for state in self.model.states()
+                if not state.has_conservation_law()
+            ]
+        else:
+            names = self.model.name(name)
+
         return "\n".join(
-            f'"{symbol}", // {name}[{idx}]'
-            for idx, symbol in enumerate(self.model.name(name))
+            f'"{symbol}", // {name}[{idx}]' for idx, symbol in enumerate(names)
         )
 
     def _get_symbol_id_initializer_list(self, name: str) -> str:
@@ -1214,9 +1230,20 @@ class DEExporter:
         :return:
             Template initializer list of ids
         """
+        if name == "x_solver":
+            # The current x_solver symbols are different from the ones we
+            #  want here
+            syms = [
+                state.get_sym()
+                for state in self.model.states()
+                if not state.has_conservation_law()
+            ]
+        else:
+            syms = self.model.sym(name)
+
         return "\n".join(
             f'"{self._code_printer.doprint(symbol)}", // {name}[{idx}]'
-            for idx, symbol in enumerate(self.model.sym(name))
+            for idx, symbol in enumerate(syms)
         )
 
     def _write_c_make_file(self):

@@ -6,8 +6,10 @@
 
 #include <H5Cpp.h>
 
+#include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace amici {
 
@@ -27,7 +29,8 @@ class ExpData;
  * @param length number of variables
  * @return default names/ids
  */
-std::vector<std::string> getVariableNames(std::string const& name, int length);
+std::span<std::string_view const>
+getVariableNames(std::string const& name, int length);
 
 /**
  * @brief The Model_Test class is a model-unspecific implementation
@@ -147,35 +150,37 @@ class Model_Test : public Model {
         throw AmiException("not implemented");
     }
 
-    std::vector<std::string> get_free_parameter_names() const override {
+    std::span<std::string_view const>
+    get_free_parameter_names() const override {
         return getVariableNames("p", np());
     }
 
-    std::vector<std::string> get_state_names() const override {
+    std::span<std::string_view const> get_state_names() const override {
         return getVariableNames("x", nx_rdata);
     }
 
-    std::vector<std::string> get_fixed_parameter_names() const override {
+    std::span<std::string_view const>
+    get_fixed_parameter_names() const override {
         return getVariableNames("k", nk());
     }
 
-    std::vector<std::string> get_observable_names() const override {
+    std::span<std::string_view const> get_observable_names() const override {
         return getVariableNames("y", ny);
     }
 
-    std::vector<std::string> get_free_parameter_ids() const override {
+    std::span<std::string_view const> get_free_parameter_ids() const override {
         return getVariableNames("p", np());
     }
 
-    std::vector<std::string> get_state_ids() const override {
+    std::span<std::string_view const> get_state_ids() const override {
         return getVariableNames("x", nx_rdata);
     }
 
-    std::vector<std::string> get_fixed_parameter_ids() const override {
+    std::span<std::string_view const> get_fixed_parameter_ids() const override {
         return getVariableNames("k", nk());
     }
 
-    std::vector<std::string> get_observable_ids() const override {
+    std::span<std::string_view const> get_observable_ids() const override {
         return getVariableNames("y", ny);
     }
 };

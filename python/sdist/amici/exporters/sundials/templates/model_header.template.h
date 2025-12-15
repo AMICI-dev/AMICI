@@ -14,17 +14,19 @@ class Solver;
 
 namespace model_TPL_MODELNAME {
 
-extern std::array<const char*, TPL_NP> free_parameter_names;
-extern std::array<const char*, TPL_NK> fixed_parameter_names;
-extern std::array<const char*, TPL_NX_RDATA> state_names;
-extern std::array<const char*, TPL_NY> observable_names;
+extern const std::array<std::string_view const, TPL_NP> free_parameter_names;
+extern const std::array<std::string_view const, TPL_NK> fixed_parameter_names;
+extern const std::array<std::string_view const, TPL_NX_RDATA> state_names;
+extern const std::array<std::string_view const, TPL_NX_SOLVER> state_names_solver;
+extern const std::array<std::string_view const, TPL_NY> observable_names;
 extern std::array<const ObservableScaling, TPL_NY> observable_scalings;
-extern std::array<const char*, TPL_NW> expression_names;
-extern std::array<const char*, TPL_NP> free_parameter_ids;
-extern std::array<const char*, TPL_NK> fixed_parameter_ids;
-extern std::array<const char*, TPL_NX_RDATA> state_ids;
-extern std::array<const char*, TPL_NY> observable_ids;
-extern std::array<const char*, TPL_NW> expression_ids;
+extern const std::array<std::string_view const, TPL_NW> expression_names;
+extern const std::array<std::string_view const, TPL_NP> free_parameter_ids;
+extern const std::array<std::string_view const, TPL_NK> fixed_parameter_ids;
+extern const std::array<std::string_view const, TPL_NX_RDATA> state_ids;
+extern const std::array<std::string_view const, TPL_NX_SOLVER> state_ids_solver;
+extern const std::array<std::string_view const, TPL_NY> observable_ids;
+extern const std::array<std::string_view const, TPL_NW> expression_ids;
 extern std::array<int, TPL_NX_SOLVER> state_idxs_solver;
 
 TPL_JY_DEF
@@ -291,114 +293,96 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
      * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> get_free_parameter_names() const override {
-        return std::vector<std::string>(free_parameter_names.begin(),
-                                        free_parameter_names.end());
+    std::span<std::string_view const> get_free_parameter_names() const override {
+        return free_parameter_names;
     }
 
     /**
      * @brief Get names of the model states
      * @return the names
      */
-    std::vector<std::string> get_state_names() const override {
-        return std::vector<std::string>(state_names.begin(), state_names.end());
+    std::span<std::string_view const> get_state_names() const override {
+        return state_names;
     }
 
     /**
      * @brief Get names of the solver states
      * @return the names
      */
-    std::vector<std::string> get_state_names_solver() const override {
-        std::vector<std::string> result;
-        result.reserve(state_idxs_solver.size());
-        for(auto const idx: state_idxs_solver) {
-            result.push_back(state_names[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_names_solver() const override {
+        return state_names_solver;
     }
 
     /**
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    std::vector<std::string> get_fixed_parameter_names() const override {
-        return std::vector<std::string>(fixed_parameter_names.begin(),
-                                        fixed_parameter_names.end());
+    std::span<std::string_view const> get_fixed_parameter_names() const override {
+        return fixed_parameter_names;
     }
 
     /**
      * @brief Get names of the observables
      * @return the names
      */
-    std::vector<std::string> get_observable_names() const override {
-        return std::vector<std::string>(observable_names.begin(),
-                                        observable_names.end());
+    std::span<std::string_view const> get_observable_names() const override {
+        return observable_names;
     }
 
     /**
      * @brief Get names of model expressions
      * @return Expression names
      */
-    std::vector<std::string> get_expression_names() const override {
-        return std::vector<std::string>(expression_names.begin(),
-                                        expression_names.end());
+    std::span<std::string_view const> get_expression_names() const override {
+        return expression_names;
     }
 
     /**
      * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> get_free_parameter_ids() const override {
-        return std::vector<std::string>(free_parameter_ids.begin(),
-                                        free_parameter_ids.end());
+    std::span<std::string_view const> get_free_parameter_ids() const override {
+        return free_parameter_ids;
     }
 
     /**
      * @brief Get ids of the model states
      * @return the ids
      */
-    std::vector<std::string> get_state_ids() const override {
-        return std::vector<std::string>(state_ids.begin(), state_ids.end());
+    std::span<std::string_view const> get_state_ids() const override {
+        return state_ids;
     }
 
     /**
      * @brief Get ids of the solver states
      * @return the ids
      */
-    std::vector<std::string> get_state_ids_solver() const override {
-        std::vector<std::string> result;
-        result.reserve(state_idxs_solver.size());
-        for(auto idx: state_idxs_solver) {
-            result.push_back(state_ids[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_ids_solver() const override {
+        return state_ids_solver;
     }
 
     /**
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    std::vector<std::string> get_fixed_parameter_ids() const override {
-        return std::vector<std::string>(fixed_parameter_ids.begin(),
-                                        fixed_parameter_ids.end());
+    std::span<std::string_view const> get_fixed_parameter_ids() const override {
+        return fixed_parameter_ids;
     }
 
     /**
      * @brief Get ids of the observables
      * @return the ids
      */
-    std::vector<std::string> get_observable_ids() const override {
-        return std::vector<std::string>(observable_ids.begin(),
-                                        observable_ids.end());
+    std::span<std::string_view const> get_observable_ids() const override {
+        return observable_ids;
     }
 
     /**
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    std::vector<std::string> get_expression_ids() const override {
-        return std::vector<std::string>(expression_ids.begin(),
-                                        expression_ids.end());
+    std::span<std::string_view const> get_expression_ids() const override {
+        return expression_ids;
     }
 
     /**

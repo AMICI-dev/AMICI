@@ -53,6 +53,32 @@ nonstandard type conversions.
 %typemap(doctype) size_t "int";
 
 
+// Typemap to support returning std::span<const std::string_view>
+// as Python tuple
+// Currently, the strings are copied; if performance becomes an issue,
+// we can see if we can return views into existing memory.
+// At least for the model entity IDs/names, there is no risk of dangling
+// pointers as long as the shared object is not unloaded.
+%include <std_string.i>
+
+%typemap(out) std::span<const std::string_view> {
+    PyObject *tuple = PyTuple_New((Py_ssize_t)$1.size());
+    if (!tuple) {
+        SWIG_exception_fail(SWIG_RuntimeError, "could not allocate tuple");
+    }
+    for (size_t i = 0; i < $1.size(); ++i) {
+        const std::string_view &sv = $1.data()[i];
+        PyObject *sobj = PyUnicode_DecodeUTF8(sv.data(), (Py_ssize_t)sv.size(), "strict");
+        if (!sobj) {
+            Py_DECREF(tuple);
+            SWIG_exception_fail(SWIG_RuntimeError, "failed to decode string_view as UTF-8");
+        }
+        PyTuple_SET_ITEM(tuple, (Py_ssize_t)i, sobj); // takes ownership of sobj
+    }
+    $result = tuple;
+}
+
+
 %include <exception.i>
 %exception {
     try {
