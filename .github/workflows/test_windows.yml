@@ -65,7 +65,7 @@ jobs:
       shell: bash
 
     - name: Cache Pooch Directory
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}

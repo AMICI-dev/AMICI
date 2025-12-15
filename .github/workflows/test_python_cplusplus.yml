@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cache/pooch
@@ -137,7 +137,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cache/pooch
@@ -222,7 +222,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cache/pooch
@@ -292,7 +292,7 @@ jobs:
         echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
 
     - name: Cache Pooch Directory
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
@@ -315,7 +315,7 @@ jobs:
 
     steps:
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/Library/Caches/pooch
@@ -352,7 +352,7 @@ jobs:
         echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
 
     - name: Cache Pooch Directory
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
