@@ -194,24 +194,24 @@ def run():
     n_skipped = 0
     n_total = 0
     version = "v2.0.0"
-    jax = False
 
-    cases = list(petabtests.get_cases("sbml", version=version))
-    n_total += len(cases)
-    for case in cases:
-        try:
-            test_case(case, "sbml", version=version, jax=jax)
-            n_success += 1
-        except Skipped:
-            n_skipped += 1
-        except Exception as e:
-            # run all despite failures
-            logger.error(f"Case {case} failed.")
-            logger.exception(e)
+    for jax in (False, True):
+        cases = list(petabtests.get_cases("sbml", version=version))
+        n_total += len(cases)
+        for case in cases:
+            try:
+                test_case(case, "sbml", version=version, jax=jax)
+                n_success += 1
+            except Skipped:
+                n_skipped += 1
+            except Exception as e:
+                # run all despite failures
+                logger.error(f"Case {case} failed.")
+                logger.exception(e)
 
-    logger.info(f"{n_success} / {n_total} successful, {n_skipped} skipped")
-    if n_success != len(cases):
-        sys.exit(1)
+        logger.info(f"{n_success} / {n_total} successful, {n_skipped} skipped")
+        if n_success != len(cases):
+            sys.exit(1)
 
 
 if __name__ == "__main__":
