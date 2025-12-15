@@ -209,7 +209,6 @@ class ODEExporter:
             "eroot",
             "iroot",
             "deltax",
-            "x_old",
         )
         sym_names = (
             "p",
@@ -262,7 +261,7 @@ class ODEExporter:
             "P_VALUES": _jnp_array_str(self.model.val("p")),
             "ROOTS": _jnp_array_str(
                 {
-                    _parse_trigger_root(root)
+                    _print_trigger_root(root)
                     for e in self.model._events
                     for root in e.get_trigger_times()
                 }
@@ -350,7 +349,7 @@ class ODEExporter:
 
         self.model_name = model_name
 
-def _parse_trigger_root(root: sp.Expr) -> str:
+def _print_trigger_root(root: sp.Expr) -> str:
     """Convert a trigger root expression into a string representation.
 
     :param root: The trigger root expression.

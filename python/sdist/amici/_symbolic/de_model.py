@@ -1596,11 +1596,6 @@ class DEModel:
 
             self._eqs[name] = event_eqs
 
-        elif name == "x_old":
-            self._eqs[name] = sp.Matrix(
-                [state.get_x_rdata() for state in self.states()]
-            )
-
         elif name == "z":
             event_observables = [
                 sp.zeros(self.num_eventobs(), 1) for _ in self._events

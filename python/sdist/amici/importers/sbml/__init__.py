@@ -1884,6 +1884,8 @@ class SbmlImporter:
 
             if self.jax:
                 # Add a negative event for JAX models to handle
+                # TODO: remove once condition function directions can be 
+                # traced through diffrax solve
                 neg_event_id = event_id + "_negative"
                 neg_event_sym = sp.Symbol(neg_event_id)
                 self._symbols[SymbolId.EVENT][neg_event_sym] = {

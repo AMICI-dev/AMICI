@@ -37,19 +37,11 @@ def test_jax_llh(benchmark_problem):
     problem_id, flat_petab_problem, petab_problem, amici_model = (
         benchmark_problem
     )
-    if problem_id == "Smith_BMCSystBiol2013":
-        pytest.skip(
-            "Skipping Smith_BMCSystBiol2013 due to non-supported events in JAX."
-        )
 
-    if problem_id == "Oliveira_NatCommun2021":
+    to_skip = ["Smith_BMCSystBiol2013", "Oliveira_NatCommun2021", "SalazarCavazos_MBoC2020"]
+    if problem_id in to_skip:
         pytest.skip(
-            "Skipping Oliveira_NatCommun2021 due to non-supported events in JAX."
-        )
-
-    if problem_id == "SalazarCavazos_MBoC2020":
-        pytest.skip(
-            "Skipping SalazarCavazos_MBoC2020 due to non-supported events in JAX."
+            f"Skipping {problem_id} due to non-supported events in JAX."
         )
 
     amici_solver = amici_model.create_solver()
