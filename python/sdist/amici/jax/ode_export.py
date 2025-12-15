@@ -60,7 +60,8 @@ def _jax_variable_equations(
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
                 (s.name for s in model.sym(eq_name)),
-                model.eq(eq_name).subs(subs),
+                # sp.Matrix to support event assignments which are lists
+                sp.Matrix(model.eq(eq_name)).subs(subs), 
                 indent,
             )
         )[indent:]  # remove indent for first line
@@ -76,7 +77,7 @@ def _jax_return_variables(
         f"{eq_name.upper()}_RET": _jnp_array_str(
             s.name for s in model.sym(eq_name)
         )
-        if model.sym(eq_name)
+        if model.sym(eq_name) and sp.Matrix(model.eq(eq_name)).shape[0]
         else "jnp.array([])"
         for eq_name in eq_names
     }
@@ -144,14 +145,19 @@ class ODEExporter:
         """
         set_log_level(logger, verbose)
 
-        if ode_model.has_event_assignments():
-            raise NotImplementedError(
-                "The JAX backend does not support models with event assignments."
-            )
-
         if ode_model.has_algebraic_states():
             raise NotImplementedError(
                 "The JAX backend does not support models with algebraic states."
+            )
+
+        if ode_model.has_priority_events():
+            raise NotImplementedError(
+                "The JAX backend does not support event priorities."
+            )
+        
+        if ode_model.has_implicit_event_assignments():
+            raise NotImplementedError(
+                "The JAX backend does not support event assignments with implicit triggers."
             )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
@@ -200,7 +206,9 @@ class ODEExporter:
             "x_solver",
             "x_rdata",
             "total_cl",
+            "eroot",
             "iroot",
+            "deltax",
         )
         sym_names = (
             "p",
@@ -215,6 +223,7 @@ class ODEExporter:
             "sigmay",
             "x_rdata",
             "iroot",
+            "x_old",
         )
 
         indent = 8
@@ -252,12 +261,18 @@ class ODEExporter:
             "P_VALUES": _jnp_array_str(self.model.val("p")),
             "ROOTS": _jnp_array_str(
                 {
-                    root
+                    _print_trigger_root(root)
                     for e in self.model._events
                     for root in e.get_trigger_times()
                 }
             ),
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
+            "N_EEVENTS": str(len(self.model.get_explicit_roots())),
+            "EVENT_INITIAL_VALUES": _jnp_array_str(
+                [
+                    e.get_initial_value() for e in self.model._events
+                ]
+            ),
             **{
                 "MODEL_NAME": self.model_name,
                 # keep track of the API version that the model was generated with so we
@@ -333,3 +348,13 @@ class ODEExporter:
             )
 
         self.model_name = model_name
+
+def _print_trigger_root(root: sp.Expr) -> str:
+    """Convert a trigger root expression into a string representation.
+
+    :param root: The trigger root expression.
+    :return: A string representation of the trigger root.
+    """
+    if root.is_number:
+        return float(root)
+    return str(root).replace(" ", "")

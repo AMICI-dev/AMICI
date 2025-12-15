@@ -101,6 +101,7 @@ class SbmlImporter:
         show_sbml_warnings: bool = False,
         from_file: bool = True,
         discard_annotations: bool = False,
+        jax: bool = False,
     ) -> None:
         """
         Initialize.
@@ -188,6 +189,7 @@ class SbmlImporter:
             ignore_units=True,
             evaluate=True,
         )
+        self.jax = jax
 
     @log_execution_time("loading SBML", logger)
     def _process_document(self) -> None:
@@ -1892,6 +1894,21 @@ class SbmlImporter:
                 "use_values_from_trigger_time": use_trig_val,
                 "priority": self._sympify(event.getPriority()),
             }
+
+            if self.jax:
+                # Add a negative event for JAX models to handle
+                # TODO: remove once condition function directions can be 
+                # traced through diffrax solve
+                neg_event_id = event_id + "_negative"
+                neg_event_sym = sp.Symbol(neg_event_id)
+                self._symbols[SymbolId.EVENT][neg_event_sym] = {
+                    "name": neg_event_id,
+                    "value": -trigger,
+                    "assignments": None,
+                    "initial_value": not initial_value,
+                    "use_values_from_trigger_time": use_trig_val,
+                    "priority": self._sympify(event.getPriority()),
+                }
 
     @log_execution_time("processing observation model", logger)
     def _process_observation_model(

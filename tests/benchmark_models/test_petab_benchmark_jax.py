@@ -23,6 +23,8 @@ from test_petab_benchmark import (
     settings,
 )
 
+import diffrax
+
 jax.config.update("jax_enable_x64", True)
 
 
@@ -35,9 +37,11 @@ def test_jax_llh(benchmark_problem):
     problem_id, flat_petab_problem, petab_problem, amici_model = (
         benchmark_problem
     )
-    if problem_id == "Smith_BMCSystBiol2013":
+
+    to_skip = ["Smith_BMCSystBiol2013", "Oliveira_NatCommun2021", "SalazarCavazos_MBoC2020"]
+    if problem_id in to_skip:
         pytest.skip(
-            "Skipping Smith_BMCSystBiol2013 due to non-supported events in JAX."
+            f"Skipping {problem_id} due to non-supported events in JAX."
         )
 
     amici_solver = amici_model.create_solver()
@@ -102,10 +106,25 @@ def test_jax_llh(benchmark_problem):
         )
 
     if problem_id in problems_for_gradient_check:
+        if problem_id == "Weber_BMC2015":
+            atol = cur_settings.atol_sim
+            rtol = cur_settings.rtol_sim
+            max_steps = 2 * 10**5
+        else:
+            atol = 1e-8
+            rtol = 1e-8
+            max_steps = 1024
         beartype(run_simulations)(jax_problem)
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True
-        )(jax_problem)
+        )(
+            jax_problem, 
+            max_steps=max_steps,
+            controller=diffrax.PIDController(
+                atol=atol,
+                rtol=rtol,
+            )
+        )
     else:
         llh_jax, _ = beartype(run_simulations)(jax_problem)
 

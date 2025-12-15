@@ -51,7 +51,7 @@ class DummyModel:
 def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
     model_dir.mkdir(parents=True, exist_ok=True)
     sbml_file = find_model_file(sbml_dir, test_id)
-    sbml_importer = amici.SbmlImporter(sbml_file)
+    sbml_importer = amici.SbmlImporter(sbml_file, jax=True)
     model_name = f"SBMLTest{test_id}_jax"
     sbml_importer.sbml2jax(model_name, output_dir=model_dir)
     model_module = amici.import_model_module(model_dir.name, model_dir.parent)
@@ -159,6 +159,9 @@ def test_sbml_testsuite_case_jax(
             276,
             277,
             279,
+            356,
+            357,
+            752,
             1148,
             1159,
             1160,

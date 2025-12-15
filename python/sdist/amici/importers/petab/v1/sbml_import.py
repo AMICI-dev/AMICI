@@ -332,6 +332,7 @@ def import_model_sbml(
     sbml_importer = amici.SbmlImporter(
         sbml_model,
         discard_annotations=discard_sbml_annotations,
+        jax=jax,
     )
     sbml_model = sbml_importer.sbml_model
 
