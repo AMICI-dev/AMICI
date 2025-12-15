@@ -26,6 +26,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
+import petab.v2 as petabv2
 import sympy as sp
 from petab.v1.C import *  # noqa: F403
 from petab.v1.C import (
@@ -41,6 +42,7 @@ from sympy.abc import _clash
 
 from amici.importers.sbml import get_species_initial
 from amici.sim.sundials import AmiciModel, ParameterScaling
+from amici.sim.jax import reformat_for_v2
 
 from . import PREEQ_INDICATOR_ID
 from .util import get_states_in_condition_table
@@ -355,7 +357,7 @@ def create_parameter_mapping(
             converter_config = (
                 libsbml.SBMLLocalParameterConverter().getDefaultProperties()
             )
-            petab_problem.sbml_document.convert(converter_config)
+            petab_problem.model.sbml_document.convert(converter_config)
         else:
             logger.debug(
                 "No petab_problem.sbml_document is set. Cannot "
@@ -380,10 +382,15 @@ def create_parameter_mapping(
         else petab_problem.mapping_df
     )
 
+    # Do some reformatting if V2 problem
+    measurement_df = reformat_for_v2(petab_problem)
+
+    breakpoint()
+
     prelim_parameter_mapping = (
         petab.get_optimization_to_simulation_parameter_mapping(
             condition_df=petab_problem.condition_df,
-            measurement_df=petab_problem.measurement_df,
+            measurement_df=measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
             mapping_df=mapping,
