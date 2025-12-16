@@ -12,7 +12,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from . import ExpData, ExpDataView, Model, ReturnDataView
+from . import ExpData, ExpDataView, ReturnDataView
 from ._numpy import StrOrExpr, evaluate
 
 __all__ = [
@@ -28,7 +28,6 @@ def plot_state_trajectories(
     *,
     state_indices: Sequence[int] | None = None,
     ax: Axes | None = None,
-    model: Model = None,
     prefer_names: bool = True,
     marker=None,
 ) -> None:
@@ -42,10 +41,9 @@ def plot_state_trajectories(
         Indices of state variables for which trajectories are to be plotted.
     :param ax:
         :class:`matplotlib.axes.Axes` instance to plot into.
-    :param model:
-        The model *rdata* was generated from.
     :param prefer_names:
-        Whether state names should be preferred over IDs, if available.
+        Whether state variable names should be preferred over IDs,
+        if available.
     :param marker:
         Point marker for plotting (see
         `matplotlib documentation <https://matplotlib.org/stable/api/markers_api.html>`_).
@@ -60,18 +58,13 @@ def plot_state_trajectories(
         #  otherwise nothing will be shown
         marker = "o" if len(rdata.t) == 1 else None
 
-    if model is None and rdata.ptr.state_ids is None:
+    labels = None
+    if prefer_names:
+        labels = np.asarray(rdata.state_names)[list(state_indices)]
+    if (labels is None or not labels.size) and (state_ids := rdata.state_ids):
+        labels = np.asarray(state_ids)[list(state_indices)]
+    if labels is None or not labels.size:
         labels = [f"$x_{{{ix}}}$" for ix in state_indices]
-    elif model is not None and prefer_names:
-        labels = np.asarray(model.get_state_names())[list(state_indices)]
-        labels = [
-            l if l else model.get_state_ids()[ix]
-            for ix, l in enumerate(labels)
-        ]
-    elif model is not None:
-        labels = np.asarray(model.get_state_ids())[list(state_indices)]
-    else:
-        labels = np.asarray(rdata.ptr.state_ids)[list(state_indices)]
 
     for ix, label in zip(state_indices, labels, strict=True):
         ax.plot(rdata["t"], rdata["x"][:, ix], marker=marker, label=label)
@@ -91,7 +84,6 @@ def plot_observable_trajectories(
     *,
     observable_indices: Iterable[int] | None = None,
     ax: Axes | None = None,
-    model: Model = None,
     prefer_names: bool = True,
     marker=None,
     edata: ExpData | ExpDataView = None,
@@ -106,8 +98,6 @@ def plot_observable_trajectories(
         Indices of observables for which trajectories are to be plotted.
     :param ax:
         :class:`matplotlib.axes.Axes` instance to plot into.
-    :param model:
-        The model *rdata* was generated from.
     :param prefer_names:
         Whether observable names should be preferred over IDs, if available.
     :param marker:
@@ -129,22 +119,15 @@ def plot_observable_trajectories(
         #  otherwise nothing will be shown
         marker = "o" if len(rdata.t) == 1 else None
 
-    if model is None and rdata.ptr.observable_ids is None:
-        labels = [f"$y_{{{iy}}}$" for iy in observable_indices]
-    elif model is not None and prefer_names:
-        labels = np.asarray(model.get_observable_names())[
-            list(observable_indices)
-        ]
-        labels = [
-            l if l else model.get_observable_ids()[ix]
-            for ix, l in enumerate(labels)
-        ]
-    elif model is not None:
-        labels = np.asarray(model.get_observable_ids())[
-            list(observable_indices)
-        ]
-    else:
-        labels = np.asarray(rdata.ptr.observable_ids)[list(observable_indices)]
+    labels = None
+    if prefer_names:
+        labels = np.asarray(rdata.observable_names)[list(observable_indices)]
+    if (labels is None or not labels.size) and (
+        observable_ids := rdata.observable_ids
+    ):
+        labels = np.asarray(observable_ids)[list(observable_indices)]
+    if labels is None or not labels.size:
+        labels = [f"$y_{{{ix}}}$" for ix in observable_indices]
 
     for iy, label in zip(observable_indices, labels, strict=True):
         (l,) = ax.plot(
@@ -181,8 +164,8 @@ def plot_jacobian(rdata: ReturnDataView):
     """Plot Jacobian as heatmap."""
     df = pd.DataFrame(
         data=rdata.J,
-        index=rdata.ptr.state_ids_solver,
-        columns=rdata.ptr.state_ids_solver,
+        index=rdata.state_ids_solver,
+        columns=rdata.state_ids_solver,
     )
     sns.heatmap(df, center=0.0)
     plt.title("Jacobian")

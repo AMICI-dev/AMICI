@@ -35,22 +35,16 @@ def test_rdata_by_id(rdata_by_id_fixture):
         rdata.by_id(model.get_state_ids()[1], "x"), rdata.x[:, 1]
     )
     assert_array_equal(
-        rdata.by_id(model.get_state_ids()[1], "x", model), rdata.x[:, 1]
+        rdata.by_id(model.get_observable_ids()[0], "y"), rdata.y[:, 0]
     )
-
-    assert_array_equal(
-        rdata.by_id(model.get_observable_ids()[0], "y", model), rdata.y[:, 0]
-    )
-
     assert_array_equal(
         rdata.by_id(model.get_expression_ids()[1]), rdata.w[:, 1]
     )
     assert_array_equal(
-        rdata.by_id(model.get_expression_ids()[1], "w", model), rdata.w[:, 1]
+        rdata.by_id(model.get_expression_ids()[1], "w"), rdata.w[:, 1]
     )
-
     assert_array_equal(
-        rdata.by_id(model.get_state_ids()[1], "sx", model), rdata.sx[:, :, 1]
+        rdata.by_id(model.get_state_ids()[1], "sx"), rdata.sx[:, :, 1]
     )
 
 
