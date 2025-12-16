@@ -604,6 +604,23 @@ def test_rdataview(sbml_example_presimulation_module):
                 print(str(e))
 
 
+def test_rdata_ids(sbml_example_presimulation_module):
+    """Test that rdata IDs are correctly set."""
+    model_module = sbml_example_presimulation_module
+    model = model_module.get_model()
+
+    model.set_timepoints([0, 1, 2])
+    rdata = model.simulate()
+
+    assert isinstance(rdata.free_parameter_ids, tuple)
+    assert rdata.free_parameter_ids == model.get_free_parameter_ids()
+    assert rdata.fixed_parameter_ids == model.get_fixed_parameter_ids()
+    assert rdata.state_ids == model.get_state_ids()
+    assert rdata.state_ids_solver == model.get_state_ids_solver()
+    assert rdata.observable_ids == model.get_observable_ids()
+    assert rdata.expression_ids == model.get_expression_ids()
+
+
 def test_python_exceptions(sbml_example_presimulation_module):
     """Test that C++ exceptions are correctly caught and re-raised in Python."""
     from amici.sim.sundials import run_simulation

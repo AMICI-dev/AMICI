@@ -9,6 +9,8 @@
 #include "amici/vector.h"
 
 #include <vector>
+#include <span>
+#include <string_view>
 
 namespace amici {
 class ReturnData;
@@ -28,7 +30,7 @@ void serialize(Archive& ar, amici::ReturnData& r, unsigned int version);
 namespace amici {
 
 /**
- * @brief Stores all data to be returned by amici::runAmiciSimulation.
+ * @brief Stores all data to be returned by amici::run_simulation.
  *
  * NOTE: multi-dimensional arrays are stored in row-major order (C-style)
  */
@@ -57,6 +59,18 @@ class ReturnData : public ModelDimensions {
      * @param sigma_res_ indicates whether additional residuals are to be added
      * for each sigma
      * @param sigma_offset_ offset to ensure real-valuedness of sigma residuals
+     * @param free_parameter_ids_ IDs of the free parameters
+     * @param free_parameter_names_ Names of the free parameters
+     * @param fixed_parameter_ids_ IDs of the fixed parameters
+     * @param fixed_parameter_names_ Names of the fixed parameters
+     * @param state_ids_ IDs of state variables
+     * @param state_names_ Names of state variables
+     * @param state_ids_solver_ IDs of solver state variables
+     * @param state_names_solver_ Names of solver state variables
+     * @param observable_ids_ IDs of observables
+     * @param observable_names_ Names of observables
+     * @param expression_ids_ IDs of expressions
+     * @param expression_names_ Names of expressions
      */
     ReturnData(
         std::vector<realtype> ts_, ModelDimensions const& model_dimensions_,
@@ -64,7 +78,19 @@ class ReturnData : public ModelDimensions {
         std::vector<ParameterScaling> pscale_, SecondOrderMode o2mode_,
         SensitivityOrder sensi_, SensitivityMethod sensi_meth_,
         RDataReporting rdrm_, bool quadratic_llh_, bool sigma_res_,
-        realtype sigma_offset_
+        realtype sigma_offset_,
+        std::span<std::string_view const> free_parameter_ids_,
+        std::span<std::string_view const> free_parameter_names_,
+        std::span<std::string_view const> fixed_parameter_ids_,
+        std::span<std::string_view const> fixed_parameter_names_,
+        std::span<std::string_view const> state_ids_,
+        std::span<std::string_view const> state_names_,
+        std::span<std::string_view const> state_ids_solver_,
+        std::span<std::string_view const> state_names_solver_,
+        std::span<std::string_view const> observable_ids_,
+        std::span<std::string_view const> observable_names_,
+        std::span<std::string_view const> expression_ids_,
+        std::span<std::string_view const> expression_names_
     );
 
     /**
@@ -112,7 +138,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nx_solver` x `nx_solver`, row-major) evaluated at `t_last`.
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIdsSolver()`.
+     * `state_ids_solver()`.
      */
     std::vector<realtype> J;
 
@@ -124,7 +150,7 @@ class ReturnData : public ModelDimensions {
      * at timepoints `ReturnData::ts` (shape `nt` x `nw`, row major).
      *
      * The corresponding expression IDs can be obtained from
-     * `Model::getExpressionIds()`.
+     * `expression_ids`.
      */
     std::vector<realtype> w;
 
@@ -171,7 +197,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `nx_rdata`, row-major).
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> x;
 
@@ -184,7 +210,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `nplist` x `nx_rdata`, row-major).
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> sx;
 
@@ -195,7 +221,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `ny`, row-major).
      *
      * The corresponding observable IDs can be obtained from
-     * `Model::getObservableIds()`.
+     * `observable_ids`.
      */
     std::vector<realtype> y;
 
@@ -211,7 +237,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `nplist` x `ny`, row-major).
      *
      * The corresponding observable IDs can be obtained from
-     * `Model::getObservableIds()`.
+     * `observable_ids`.
      */
     std::vector<realtype> sy;
 
@@ -412,7 +438,7 @@ class ReturnData : public ModelDimensions {
      * @brief Initial state of the main simulation (shape `nx_rdata`).
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> x0;
 
@@ -422,7 +448,7 @@ class ReturnData : public ModelDimensions {
      * The values of the state variables at the pre-equilibration steady state
      * (shape `nx_rdata`).
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> x_ss;
 
@@ -526,9 +552,45 @@ class ReturnData : public ModelDimensions {
      * @brief Indices of the parameters w.r.t. which sensitivities were
      * computed.
      *
-     * The indices refer to parameter IDs in Model::getParameterIds().
+     * The indices refer to parameter IDs in `free_parameter_ids`.
      */
     std::vector<int> plist;
+
+    /** IDs of the free parameters */
+    std::span<std::string_view const> free_parameter_ids;
+
+    /** Names of the free parameters */
+    std::span<std::string_view const> free_parameter_names;
+
+    /** IDs of the fixed parameters */
+    std::span<std::string_view const> fixed_parameter_ids;
+
+    /** Names of the fixed parameters */
+    std::span<std::string_view const> fixed_parameter_names;
+
+    /** IDs of state variables */
+    std::span<std::string_view const> state_ids;
+
+    /** Names of state variables */
+    std::span<std::string_view const> state_names;
+
+    /** IDs of solver state variables */
+    std::span<std::string_view const> state_ids_solver;
+
+    /** Names of solver state variables */
+    std::span<std::string_view const> state_names_solver;
+
+    /** IDs of observables */
+    std::span<std::string_view const> observable_ids;
+
+    /** Names of observables */
+    std::span<std::string_view const> observable_names;
+
+    /** IDs of expressions */
+    std::span<std::string_view const> expression_ids;
+
+    /** Names of expressions */
+    std::span<std::string_view const> expression_names;
 
   protected:
     /** offset for sigma_residuals */

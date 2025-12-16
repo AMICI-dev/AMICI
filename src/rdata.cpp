@@ -25,7 +25,13 @@ ReturnData::ReturnData(Solver const& solver, Model const& model)
           model.get_second_order_mode(), solver.get_sensitivity_order(),
           solver.get_sensitivity_method(),
           solver.get_return_data_reporting_mode(), model.has_quadratic_llh(),
-          model.get_add_sigma_residuals(), model.get_minimum_sigma_residuals()
+          model.get_add_sigma_residuals(), model.get_minimum_sigma_residuals(),
+          model.get_free_parameter_ids(), model.get_free_parameter_names(),
+          model.get_fixed_parameter_ids(), model.get_fixed_parameter_names(),
+          model.get_state_ids(), model.get_state_names(),
+          model.get_state_ids_solver(), model.get_state_names_solver(),
+          model.get_observable_ids(), model.get_observable_names(),
+          model.get_expression_ids(), model.get_expression_names()
       ) {}
 
 ReturnData::ReturnData(
@@ -34,7 +40,19 @@ ReturnData::ReturnData(
     std::vector<ParameterScaling> pscale_, SecondOrderMode o2mode_,
     SensitivityOrder sensi_, SensitivityMethod sensi_meth_,
     RDataReporting rdrm_, bool quadratic_llh_, bool sigma_res_,
-    realtype sigma_offset_
+    realtype sigma_offset_,
+    std::span<std::string_view const> free_parameter_ids_,
+    std::span<std::string_view const> free_parameter_names_,
+    std::span<std::string_view const> fixed_parameter_ids_,
+    std::span<std::string_view const> fixed_parameter_names_,
+    std::span<std::string_view const> state_ids_,
+    std::span<std::string_view const> state_names_,
+    std::span<std::string_view const> state_ids_solver_,
+    std::span<std::string_view const> state_names_solver_,
+    std::span<std::string_view const> observable_ids_,
+    std::span<std::string_view const> observable_names_,
+    std::span<std::string_view const> expression_ids_,
+    std::span<std::string_view const> expression_names_
 )
     : ModelDimensions(model_dimensions_)
     , ts(std::move(ts_))
@@ -49,6 +67,18 @@ ReturnData::ReturnData(
     , rdata_reporting(rdrm_)
     , sigma_res(sigma_res_)
     , plist(plist_)
+    , free_parameter_ids(free_parameter_ids_)
+    , free_parameter_names(free_parameter_names_)
+    , fixed_parameter_ids(fixed_parameter_ids_)
+    , fixed_parameter_names(fixed_parameter_names_)
+    , state_ids(state_ids_)
+    , state_names(state_names_)
+    , state_ids_solver(state_ids_solver_)
+    , state_names_solver(state_names_solver_)
+    , observable_ids(observable_ids_)
+    , observable_names(observable_names_)
+    , expression_ids(expression_ids_)
+    , expression_names(expression_names_)
     , sigma_offset(sigma_offset_)
     , nroots_(ne) {
     model_dimensions_.validate();

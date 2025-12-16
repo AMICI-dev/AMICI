@@ -24,10 +24,10 @@ extern std::unique_ptr<amici::Model> get_model();
 } // namespace generic_model
 
 std::map<std::string, std::vector<std::string_view>> var_names {
-    {"p", {"p0", "p1", "p2", "p3", "p4"}},
-    {"k", {"k0", "k1", "k2"}},
+    {"p", {"p0", "p1", "p2", "p3", "p4", "p5"}},
+    {"k", {"k0", "k1", "k2", "k3", "k4", "p5"}},
     {"x", {"x0", "x1", "x2", "x3", "x4", "x5"}},
-    {"y", {"y0", "y1", "y2"}}
+    {"y", {"y0", "y1", "y2", "y3", "y4", "y5"}}
 };
 
 std::span<std::string_view const> getVariableNames(std::string const& name, int length) {
