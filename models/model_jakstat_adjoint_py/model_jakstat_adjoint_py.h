@@ -14,17 +14,19 @@ class Solver;
 
 namespace model_model_jakstat_adjoint_py {
 
-extern std::array<const char*, 17> free_parameter_names;
-extern std::array<const char*, 2> fixed_parameter_names;
-extern std::array<const char*, 9> state_names;
-extern std::array<const char*, 3> observable_names;
+extern const std::array<std::string_view const, 17> free_parameter_names;
+extern const std::array<std::string_view const, 2> fixed_parameter_names;
+extern const std::array<std::string_view const, 9> state_names;
+extern const std::array<std::string_view const, 9> state_names_solver;
+extern const std::array<std::string_view const, 3> observable_names;
 extern std::array<const ObservableScaling, 3> observable_scalings;
-extern std::array<const char*, 1> expression_names;
-extern std::array<const char*, 17> free_parameter_ids;
-extern std::array<const char*, 2> fixed_parameter_ids;
-extern std::array<const char*, 9> state_ids;
-extern std::array<const char*, 3> observable_ids;
-extern std::array<const char*, 1> expression_ids;
+extern const std::array<std::string_view const, 1> expression_names;
+extern const std::array<std::string_view const, 17> free_parameter_ids;
+extern const std::array<std::string_view const, 2> fixed_parameter_ids;
+extern const std::array<std::string_view const, 9> state_ids;
+extern const std::array<std::string_view const, 9> state_ids_solver;
+extern const std::array<std::string_view const, 3> observable_ids;
+extern const std::array<std::string_view const, 1> expression_ids;
 extern std::array<int, 9> state_idxs_solver;
 
 extern void Jy_model_jakstat_adjoint_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
@@ -419,114 +421,96 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> get_free_parameter_names() const override {
-        return std::vector<std::string>(free_parameter_names.begin(),
-                                        free_parameter_names.end());
+    std::span<std::string_view const> get_free_parameter_names() const override {
+        return free_parameter_names;
     }
 
     /**
      * @brief Get names of the model states
      * @return the names
      */
-    std::vector<std::string> get_state_names() const override {
-        return std::vector<std::string>(state_names.begin(), state_names.end());
+    std::span<std::string_view const> get_state_names() const override {
+        return state_names;
     }
 
     /**
      * @brief Get names of the solver states
      * @return the names
      */
-    std::vector<std::string> get_state_names_solver() const override {
-        std::vector<std::string> result;
-        result.reserve(state_idxs_solver.size());
-        for(auto const idx: state_idxs_solver) {
-            result.push_back(state_names[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_names_solver() const override {
+        return state_names_solver;
     }
 
     /**
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    std::vector<std::string> get_fixed_parameter_names() const override {
-        return std::vector<std::string>(fixed_parameter_names.begin(),
-                                        fixed_parameter_names.end());
+    std::span<std::string_view const> get_fixed_parameter_names() const override {
+        return fixed_parameter_names;
     }
 
     /**
      * @brief Get names of the observables
      * @return the names
      */
-    std::vector<std::string> get_observable_names() const override {
-        return std::vector<std::string>(observable_names.begin(),
-                                        observable_names.end());
+    std::span<std::string_view const> get_observable_names() const override {
+        return observable_names;
     }
 
     /**
      * @brief Get names of model expressions
      * @return Expression names
      */
-    std::vector<std::string> get_expression_names() const override {
-        return std::vector<std::string>(expression_names.begin(),
-                                        expression_names.end());
+    std::span<std::string_view const> get_expression_names() const override {
+        return expression_names;
     }
 
     /**
      * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> get_free_parameter_ids() const override {
-        return std::vector<std::string>(free_parameter_ids.begin(),
-                                        free_parameter_ids.end());
+    std::span<std::string_view const> get_free_parameter_ids() const override {
+        return free_parameter_ids;
     }
 
     /**
      * @brief Get ids of the model states
      * @return the ids
      */
-    std::vector<std::string> get_state_ids() const override {
-        return std::vector<std::string>(state_ids.begin(), state_ids.end());
+    std::span<std::string_view const> get_state_ids() const override {
+        return state_ids;
     }
 
     /**
      * @brief Get ids of the solver states
      * @return the ids
      */
-    std::vector<std::string> get_state_ids_solver() const override {
-        std::vector<std::string> result;
-        result.reserve(state_idxs_solver.size());
-        for(auto idx: state_idxs_solver) {
-            result.push_back(state_ids[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_ids_solver() const override {
+        return state_ids_solver;
     }
 
     /**
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    std::vector<std::string> get_fixed_parameter_ids() const override {
-        return std::vector<std::string>(fixed_parameter_ids.begin(),
-                                        fixed_parameter_ids.end());
+    std::span<std::string_view const> get_fixed_parameter_ids() const override {
+        return fixed_parameter_ids;
     }
 
     /**
      * @brief Get ids of the observables
      * @return the ids
      */
-    std::vector<std::string> get_observable_ids() const override {
-        return std::vector<std::string>(observable_ids.begin(),
-                                        observable_ids.end());
+    std::span<std::string_view const> get_observable_ids() const override {
+        return observable_ids;
     }
 
     /**
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    std::vector<std::string> get_expression_ids() const override {
-        return std::vector<std::string>(expression_ids.begin(),
-                                        expression_ids.end());
+    std::span<std::string_view const> get_expression_ids() const override {
+        return expression_ids;
     }
 
     /**
@@ -552,7 +536,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "a8dfd6e0963f32c1ce4647a652e93a271b14a053";
+        return "2b036e909775bc4645c617839fb23d3ed5f07421";
     }
 
     bool has_quadratic_llh() const override {

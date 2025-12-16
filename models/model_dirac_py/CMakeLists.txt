@@ -2,6 +2,11 @@
 cmake_minimum_required(VERSION 3.22)
 cmake_policy(VERSION 3.22...3.31)
 
+# We aren't using C++20 modules, so disable scanning for them to avoid
+# clang-scan-deps-notfound errors.
+# See also https://discourse.cmake.org/t/cmake-3-28-cmake-cxx-compiler-clang-scan-deps-notfound-not-found/9244/3
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 project(model_dirac_py)
 
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")

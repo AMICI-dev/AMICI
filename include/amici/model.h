@@ -11,6 +11,8 @@
 #include "amici/sundials_matrix_wrapper.h"
 
 #include <map>
+#include <span>
+#include <string_view>
 #include <vector>
 
 namespace amici {
@@ -618,7 +620,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return The parameter names
      */
-    virtual std::vector<std::string> get_free_parameter_names() const;
+    virtual std::span<std::string_view const> get_free_parameter_names() const;
 
     /**
      * @brief Report whether the model has state names set.
@@ -633,14 +635,14 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return State names
      */
-    virtual std::vector<std::string> get_state_names() const;
+    virtual std::span<std::string_view const> get_state_names() const;
 
     /**
      * @brief Get names of the solver states.
      *
      * @return State names
      */
-    virtual std::vector<std::string> get_state_names_solver() const;
+    virtual std::span<std::string_view const> get_state_names_solver() const;
 
     /**
      * @brief Report whether the model has fixed parameter names set.
@@ -655,7 +657,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Fixed parameter names
      */
-    virtual std::vector<std::string> get_fixed_parameter_names() const;
+    virtual std::span<std::string_view const> get_fixed_parameter_names() const;
 
     /**
      * @brief Report whether the model has observable names set.
@@ -670,7 +672,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Observable names
      */
-    virtual std::vector<std::string> get_observable_names() const;
+    virtual std::span<std::string_view const> get_observable_names() const;
 
     /**
      * @brief Report whether the model has expression names set.
@@ -685,7 +687,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Expression names
      */
-    virtual std::vector<std::string> get_expression_names() const;
+    virtual std::span<std::string_view const> get_expression_names() const;
 
     /**
      * @brief Report whether the model has parameter IDs set.
@@ -700,7 +702,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Parameter IDs
      */
-    virtual std::vector<std::string> get_free_parameter_ids() const;
+    virtual std::span<std::string_view const> get_free_parameter_ids() const;
 
     /**
      * @brief Report whether the model has state IDs set.
@@ -715,14 +717,14 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return State IDs
      */
-    virtual std::vector<std::string> get_state_ids() const;
+    virtual std::span<std::string_view const> get_state_ids() const;
 
     /**
      * @brief Get IDs of the solver states.
      *
      * @return State IDs
      */
-    virtual std::vector<std::string> get_state_ids_solver() const;
+    virtual std::span<std::string_view const> get_state_ids_solver() const;
 
     /**
      * @brief Report whether the model has fixed parameter IDs set.
@@ -737,7 +739,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Fixed parameter IDs
      */
-    virtual std::vector<std::string> get_fixed_parameter_ids() const;
+    virtual std::span<std::string_view const> get_fixed_parameter_ids() const;
 
     /**
      * @brief Report whether the model has observable IDs set.
@@ -752,7 +754,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Observable IDs
      */
-    virtual std::vector<std::string> get_observable_ids() const;
+    virtual std::span<std::string_view const> get_observable_ids() const;
 
     /**
      * @brief Report whether the model has expression IDs set.
@@ -767,7 +769,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @return Expression IDs
      */
-    virtual std::vector<std::string> get_expression_ids() const;
+    virtual std::span<std::string_view const> get_expression_ids() const;
 
     /**
      * @brief Checks whether the defined noise model is Gaussian, i.e., the nllh

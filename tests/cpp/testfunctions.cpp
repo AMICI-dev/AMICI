@@ -9,7 +9,10 @@
 #include <unistd.h>
 #include <iostream>
 #include <format>
-
+#include <span>
+#include <string_view>
+#include <map>
+#include <vector>
 #include "gtest/gtest.h"
 
 namespace amici {
@@ -20,13 +23,30 @@ extern std::unique_ptr<amici::Model> get_model();
 
 } // namespace generic_model
 
-std::vector<std::string> getVariableNames(std::string const& name, int length) {
-    std::vector<std::string> names;
-    names.reserve(length);
-    for (int i = 0; i < length; ++i) {
-        names.push_back(name + std::to_string(i));
+std::map<std::string, std::vector<std::string_view>> var_names {
+    {"p", {"p0", "p1", "p2", "p3", "p4"}},
+    {"k", {"k0", "k1", "k2"}},
+    {"x", {"x0", "x1", "x2", "x3", "x4", "x5"}},
+    {"y", {"y0", "y1", "y2"}}
+};
+
+std::span<std::string_view const> getVariableNames(std::string const& name, int length) {
+    auto it = var_names.find(name);
+    if(it != var_names.end()) {
+        if((int)it->second.size() >= length) {
+            return std::span<std::string_view const>(it->second.data(), length);
+        } else {
+            // need to add more names to var_names above.
+            // this is a bit ugly, but we can't generate this dynamically, as
+            // we are only passing around references.
+            throw std::runtime_error(
+                "Variable names for " + name + " with length "
+                + std::to_string(length)
+                + " not available. Update tests/cpp/testfunctions.cpp:var_names."
+            );
+        }
     }
-    return names;
+    throw std::runtime_error("Variable names for " + name + " with length " + std::to_string(length) + " not found.");
 }
 
 void simulateVerifyWrite(const std::string& path)

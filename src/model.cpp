@@ -86,7 +86,7 @@ static void set_nan_to_zero(std::vector<realtype>& vec) {
 
 /**
  * @brief local helper function to get parameters
- * @param ids vector of name/ids of (fixed)Parameters
+ * @param ids span of name/ids of (fixed)Parameters
  * @param values values of the (fixed)Parameters
  * @param id name/id to look for in the vector
  * @param variable_name string indicating what variable we are looking at
@@ -94,8 +94,9 @@ static void set_nan_to_zero(std::vector<realtype>& vec) {
  * @return value of the selected parameter
  */
 static realtype get_value_by_id(
-    std::vector<std::string> const& ids, std::vector<realtype> const& values,
-    std::string const& id, char const* variable_name, char const* id_name
+    std::span<std::string_view const> const& ids,
+    std::vector<realtype> const& values, std::string const& id,
+    char const* variable_name, char const* id_name
 ) {
     auto it = std::ranges::find(ids, id);
     if (it != ids.end())
@@ -108,7 +109,7 @@ static realtype get_value_by_id(
 
 /**
  * @brief local helper function to set parameters
- * @param ids vector of names/ids of (fixed)Parameters
+ * @param ids span of names/ids of (fixed)Parameters
  * @param values values of the (fixed)Parameters
  * @param value for the selected parameter
  * @param id name/id to look for in the vector
@@ -116,7 +117,7 @@ static realtype get_value_by_id(
  * @param id_name string indicating whether name or id was specified
  */
 static void set_value_by_id(
-    std::vector<std::string> const& ids, std::vector<realtype>& values,
+    std::span<std::string_view const> const& ids, std::vector<realtype>& values,
     realtype const value, std::string const& id, char const* variable_name,
     char const* id_name
 ) {
@@ -131,7 +132,7 @@ static void set_value_by_id(
 
 /**
  * @brief local helper function to set parameters via regex
- * @param ids vector of names/ids of (fixed)Parameters
+ * @param ids span of names/ids of (fixed)Parameters
  * @param values values of the (fixed)Parameters
  * @param value for the selected parameter
  * @param regex string according to which names/ids are to be matched
@@ -141,15 +142,16 @@ static void set_value_by_id(
  */
 
 static int set_value_by_id_regex(
-    std::vector<std::string> const& ids, std::vector<realtype>& values,
+    std::span<std::string_view const> const& ids, std::vector<realtype>& values,
     realtype value, std::string const& regex, char const* variable_name,
     char const* id_name
 ) {
     try {
         std::regex pattern(regex);
         int n_found = 0;
+        std::match_results<std::string_view::const_iterator> m;
         for (auto const& id : ids) {
-            if (std::regex_match(id, pattern)) {
+            if (std::regex_match(id.begin(), id.end(), m, pattern)) {
                 values.at(&id - &ids[0]) = value;
                 ++n_found;
             }
@@ -769,65 +771,85 @@ bool Model::has_free_parameter_names() const {
     return np() == 0 || !get_free_parameter_names().empty();
 }
 
-std::vector<std::string> Model::get_free_parameter_names() const { return {}; }
+std::span<std::string_view const> Model::get_free_parameter_names() const {
+    return {};
+}
 
 bool Model::has_state_names() const {
     return nx_rdata == 0 || !get_state_names().empty();
 }
 
-std::vector<std::string> Model::get_state_names() const { return {}; }
+std::span<std::string_view const> Model::get_state_names() const { return {}; }
 
-std::vector<std::string> Model::get_state_names_solver() const { return {}; }
+std::span<std::string_view const> Model::get_state_names_solver() const {
+    return {};
+}
 
 bool Model::has_fixed_parameter_names() const {
     return nk() == 0 || !get_fixed_parameter_names().empty();
 }
 
-std::vector<std::string> Model::get_fixed_parameter_names() const { return {}; }
+std::span<std::string_view const> Model::get_fixed_parameter_names() const {
+    return {};
+}
 
 bool Model::has_observable_names() const {
     return ny == 0 || !get_observable_names().empty();
 }
 
-std::vector<std::string> Model::get_observable_names() const { return {}; }
+std::span<std::string_view const> Model::get_observable_names() const {
+    return {};
+}
 
 bool Model::has_expression_names() const {
     return ny == 0 || !get_expression_names().empty();
 }
 
-std::vector<std::string> Model::get_expression_names() const { return {}; }
+std::span<std::string_view const> Model::get_expression_names() const {
+    return {};
+}
 
 bool Model::has_free_parameter_ids() const {
     return np() == 0 || !get_free_parameter_ids().empty();
 }
 
-std::vector<std::string> Model::get_free_parameter_ids() const { return {}; }
+std::span<std::string_view const> Model::get_free_parameter_ids() const {
+    return {};
+}
 
 bool Model::has_state_ids() const {
     return nx_rdata == 0 || !get_state_ids().empty();
 }
 
-std::vector<std::string> Model::get_state_ids() const { return {}; }
+std::span<std::string_view const> Model::get_state_ids() const { return {}; }
 
-std::vector<std::string> Model::get_state_ids_solver() const { return {}; }
+std::span<std::string_view const> Model::get_state_ids_solver() const {
+    return {};
+}
 
 bool Model::has_fixed_parameter_ids() const {
     return nk() == 0 || !get_fixed_parameter_ids().empty();
 }
 
-std::vector<std::string> Model::get_fixed_parameter_ids() const { return {}; }
+std::span<std::string_view const> Model::get_fixed_parameter_ids() const {
+    return {};
+}
 
 bool Model::has_observable_ids() const {
     return ny == 0 || !get_observable_ids().empty();
 }
 
-std::vector<std::string> Model::get_observable_ids() const { return {}; }
+std::span<std::string_view const> Model::get_observable_ids() const {
+    return {};
+}
 
 bool Model::has_expression_ids() const {
     return ny == 0 || !get_expression_ids().empty();
 }
 
-std::vector<std::string> Model::get_expression_ids() const { return {}; }
+std::span<std::string_view const> Model::get_expression_ids() const {
+    return {};
+}
 
 bool Model::has_quadratic_llh() const { return true; }
 
@@ -1700,28 +1722,30 @@ int Model::check_finite(
     case ModelQuantity::dydp:
     case ModelQuantity::dsigmaydp:
         if (has_observable_ids())
-            row_id += " " + get_observable_ids()[row];
+            row_id.append(" ").append(get_observable_ids()[row]);
         if (has_free_parameter_ids())
-            col_id
-                += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
+            col_id.append(" ").append(
+                get_free_parameter_ids()[plist(gsl::narrow<int>(col))]
+            );
         break;
     case ModelQuantity::dydx:
         if (has_observable_ids())
-            row_id += " " + get_observable_ids()[row];
+            row_id.append(" ").append(get_observable_ids()[row]);
         if (has_state_ids())
-            col_id += " " + get_state_ids_solver()[col];
+            col_id.append(" ").append(get_state_ids_solver()[col]);
         break;
     case ModelQuantity::deltasx:
         if (has_state_ids())
-            row_id += " " + get_state_ids_solver()[row];
+            row_id.append(" ").append(get_state_ids_solver()[row]);
         if (has_free_parameter_ids())
-            col_id
-                += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
+            col_id.append(" ").append(
+                get_free_parameter_ids()[plist(gsl::narrow<int>(col))]
+            );
         break;
     case ModelQuantity::dJydy:
     case ModelQuantity::dJydsigma:
         if (has_observable_ids())
-            col_id += " " + get_observable_ids()[col];
+            col_id.append(" ").append(get_observable_ids()[col]);
         break;
     case ModelQuantity::dJydx:
     case ModelQuantity::dJzdx:
@@ -1729,7 +1753,7 @@ int Model::check_finite(
     case ModelQuantity::dzdx:
     case ModelQuantity::drzdx:
         if (has_state_ids())
-            col_id += " " + get_state_ids_solver()[col];
+            col_id.append(" ").append(get_state_ids_solver()[col]);
         break;
     case ModelQuantity::deltaqB:
     case ModelQuantity::sz:
@@ -1737,14 +1761,15 @@ int Model::check_finite(
     case ModelQuantity::drzdp:
     case ModelQuantity::dsigmazdp:
         if (has_free_parameter_ids())
-            col_id
-                += " " + get_free_parameter_ids()[plist(gsl::narrow<int>(col))];
+            col_id.append(" ").append(
+                get_free_parameter_ids()[plist(gsl::narrow<int>(col))]
+            );
         break;
     case ModelQuantity::dsigmaydy:
         if (has_observable_ids()) {
             auto obs_ids = get_observable_ids();
-            row_id += " " + obs_ids[row];
-            col_id += " " + obs_ids[col];
+            row_id.append(" ").append(obs_ids[row]);
+            col_id.append(" ").append(obs_ids[col]);
         }
         break;
     default:
@@ -1820,28 +1845,28 @@ int Model::check_finite(
     case ModelQuantity::JB:
         if (has_state_ids()) {
             auto state_ids = get_state_ids_solver();
-            row_id += " " + state_ids[row];
-            col_id += " " + state_ids[col];
+            row_id.append(" ").append(state_ids[row]);
+            col_id.append(" ").append(state_ids[col]);
         }
         break;
     case ModelQuantity::dwdx:
         if (has_expression_ids())
-            row_id += " " + get_expression_ids()[row];
+            row_id.append(" ").append(get_expression_ids()[row]);
         if (has_state_ids())
-            col_id += " " + get_state_ids_solver()[col];
+            col_id.append(" ").append(get_state_ids_solver()[col]);
         break;
     case ModelQuantity::dwdw:
         if (has_expression_ids()) {
             auto expr_ids = get_expression_ids();
-            row_id += " " + expr_ids[row];
-            col_id += " " + expr_ids[col];
+            row_id.append(" ").append(expr_ids[row]);
+            col_id.append(" ").append(expr_ids[col]);
         }
         break;
     case ModelQuantity::dwdp:
         if (has_expression_ids())
-            row_id += " " + get_expression_ids()[row];
+            row_id.append(" ").append(get_expression_ids()[row]);
         if (has_free_parameter_ids())
-            col_id += " " + get_free_parameter_ids()[col];
+            col_id.append(" ").append(get_free_parameter_ids()[col]);
         break;
     default:
         break;
@@ -2142,9 +2167,10 @@ void Model::fsigmay(int const it, ExpData const* edata) {
                 derived_state_.sigmay_.at(iytrue + iJ * nytrue) = 0;
 
             if (edata->is_set_measurement(it, iytrue)) {
-                std::string obs_id = has_observable_ids()
-                                         ? get_observable_ids().at(iytrue)
-                                         : std::to_string(iytrue);
+                std::string obs_id
+                    = has_observable_ids()
+                          ? std::string(get_observable_ids()[iytrue])
+                          : std::to_string(iytrue);
                 std::stringstream ss;
                 ss << "sigmay (" << obs_id << ", ExpData::id=" << edata->id
                    << ", t=" << get_timepoint(it) << ")";

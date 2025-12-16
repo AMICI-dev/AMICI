@@ -1,15 +1,16 @@
 #include <amici/defines.h>
 #include <array>
+#include <string_view>
 
 namespace amici::model_model_calvetti_py {
 
 // clang-format off
 
-std::array<const char*, 0> free_parameter_names = {
+extern const std::array<std::string_view const, 0> free_parameter_names = {
     
 };
 
-std::array<const char*, 6> fixed_parameter_names = {
+extern const std::array<std::string_view const, 6> fixed_parameter_names = {
     "V1ss", // k[0]
 "R1ss", // k[1]
 "V2ss", // k[2]
@@ -18,7 +19,7 @@ std::array<const char*, 6> fixed_parameter_names = {
 "R3ss", // k[5]
 };
 
-std::array<const char*, 6> state_names = {
+extern const std::array<std::string_view const, 6> state_names = {
     "V1", // x_rdata[0]
 "V2", // x_rdata[1]
 "V3", // x_rdata[2]
@@ -27,7 +28,16 @@ std::array<const char*, 6> state_names = {
 "f3", // x_rdata[5]
 };
 
-std::array<const char*, 6> observable_names = {
+extern const std::array<std::string_view const, 6> state_names_solver = {
+    "V1", // x_solver[0]
+"V2", // x_solver[1]
+"V3", // x_solver[2]
+"f1", // x_solver[3]
+"f2", // x_solver[4]
+"f3", // x_solver[5]
+};
+
+extern const std::array<std::string_view const, 6> observable_names = {
     "y0", // y[0]
 "y1", // y[1]
 "y2", // y[2]
@@ -45,7 +55,7 @@ ObservableScaling::lin, // y[4]
 ObservableScaling::lin, // y[5]
 };
 
-std::array<const char*, 16> expression_names = {
+extern const std::array<std::string_view const, 16> expression_names = {
     "C1ss", // w[0]
 "C2ss", // w[1]
 "C3ss", // w[2]
@@ -64,11 +74,11 @@ std::array<const char*, 16> expression_names = {
 "rate_of_V3", // w[15]
 };
 
-std::array<const char*, 0> free_parameter_ids = {
+extern const std::array<std::string_view const, 0> free_parameter_ids = {
     
 };
 
-std::array<const char*, 6> fixed_parameter_ids = {
+extern const std::array<std::string_view const, 6> fixed_parameter_ids = {
     "V1ss", // k[0]
 "R1ss", // k[1]
 "V2ss", // k[2]
@@ -77,7 +87,7 @@ std::array<const char*, 6> fixed_parameter_ids = {
 "R3ss", // k[5]
 };
 
-std::array<const char*, 6> state_ids = {
+extern const std::array<std::string_view const, 6> state_ids = {
     "V1", // x_rdata[0]
 "V2", // x_rdata[1]
 "V3", // x_rdata[2]
@@ -86,7 +96,16 @@ std::array<const char*, 6> state_ids = {
 "f3", // x_rdata[5]
 };
 
-std::array<const char*, 6> observable_ids = {
+extern const std::array<std::string_view const, 6> state_ids_solver = {
+    "V1", // x_solver[0]
+"V2", // x_solver[1]
+"V3", // x_solver[2]
+"f1", // x_solver[3]
+"f2", // x_solver[4]
+"f3", // x_solver[5]
+};
+
+extern const std::array<std::string_view const, 6> observable_ids = {
     "obs_V1", // y[0]
 "obs_V2", // y[1]
 "obs_V3", // y[2]
@@ -95,7 +114,7 @@ std::array<const char*, 6> observable_ids = {
 "obs_f2", // y[5]
 };
 
-std::array<const char*, 16> expression_ids = {
+extern const std::array<std::string_view const, 16> expression_ids = {
     "C1ss", // w[0]
 "C2ss", // w[1]
 "C3ss", // w[2]
