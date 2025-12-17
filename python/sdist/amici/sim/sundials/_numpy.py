@@ -21,7 +21,6 @@ from sympy.abc import _clash
 from . import (
     ExpData,
     ExpDataPtr,
-    Model,
     ReturnData,
     ReturnDataPtr,
     SteadyStateStatus,
@@ -490,36 +489,29 @@ class ReturnDataView(SwigPtrView):
         return f"<{self.__class__.__name__}(id={self._swigptr.id!r}, status={status})>"
 
     def by_id(
-        self, entity_id: str, field: str = None, model: Model = None
+        self,
+        entity_id: str,
+        field: str = None,
     ) -> np.ndarray:
         """
         Get the value of a given field for a named entity.
 
         :param entity_id: The ID of the model entity that is to be extracted
-            from ``field`` (e.g. a state ID).
+            from ``field`` (e.g. a state variable ID).
         :param field: The requested field, e.g. 'x' for model states. This is
             optional if field would be one of ``{'x', 'y', 'w'}``
-        :param model: The model from which this ReturnDataView was generated.
-            This is optional if this ReturnData was generated with
-            ``solver.getReturnDataReportingMode() == RDataReporting.full``.
         """
         if field is None:
-            field = _entity_type_from_id(entity_id, self, model)
+            field = _entity_type_from_id(entity_id, self)
 
         if field in {"x", "x0", "x_ss", "sx", "sx0", "sx_ss"}:
-            ids = (model and model.get_state_ids()) or self._swigptr.state_ids
+            ids = self._swigptr.state_ids
         elif field in {"w"}:
-            ids = (
-                model and model.get_expression_ids()
-            ) or self._swigptr.expression_ids
+            ids = self._swigptr.expression_ids
         elif field in {"y", "sy", "sigmay"}:
-            ids = (
-                model and model.get_observable_ids()
-            ) or self._swigptr.observable_ids
+            ids = self._swigptr.observable_ids
         elif field in {"sllh"}:
-            ids = (
-                model and model.get_free_parameter_ids()
-            ) or self._swigptr.free_parameter_ids
+            ids = self._swigptr.free_parameter_ids
         else:
             raise NotImplementedError(
                 f"Subsetting `{field}` by ID (`{entity_id}`) "
@@ -612,7 +604,6 @@ def _field_as_numpy(
 def _entity_type_from_id(
     entity_id: str,
     rdata: ReturnData | ReturnDataView = None,
-    model: Model = None,
 ) -> Literal["x", "y", "w", "p", "k"]:
     """Guess the type of some entity by its ID."""
     for entity_type, symbol in (
@@ -622,15 +613,11 @@ def _entity_type_from_id(
         ("free_parameter", "p"),
         ("fixed_parameter", "k"),
     ):
-        if model:
-            if entity_id in getattr(model, f"get_{entity_type}_ids")():
-                return symbol
-        else:
-            if entity_id in getattr(
-                rdata if isinstance(rdata, ReturnData) else rdata._swigptr,
-                f"{entity_type.lower()}_ids",
-            ):
-                return symbol
+        if entity_id in getattr(
+            rdata if isinstance(rdata, ReturnData) else rdata._swigptr,
+            f"{entity_type.lower()}_ids",
+        ):
+            return symbol
 
     raise KeyError(f"Unknown symbol {entity_id}.")
 

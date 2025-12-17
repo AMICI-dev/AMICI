@@ -67,6 +67,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * Model output directory keyword arguments have been harmonized:
   What was previously `model_output_dir`, `output_dir`, `outdir` is now
   consistently called `output_dir` across the API.
+* Plotting functions have been moved from `amici.plotting` to
+  `amici.sim.sundials.plotting`. The `model` argument has been removed.
 
 **Features**
 
