@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 108.
+List of publications using AMICI. Total number is 109.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -101,6 +101,13 @@ Dominate <span class="nocase">BOLD-fMRI</span> Responses.”</span>
 <em>Computers in Biology and Medicine</em> 197: 111014.
 https://doi.org/<a
 href="https://doi.org/10.1016/j.compbiomed.2025.111014">https://doi.org/10.1016/j.compbiomed.2025.111014</a>.
+</div>
+<div id="ref-VanhoeferKoe2025" class="csl-entry" role="listitem">
+Vanhoefer, Jakob, Antonia Körner, Domagoj Doresic, Jan Hasenauer, and
+Dilan Pathirana. 2025. <span>“Scalable Branch-and-Bound Model Selection
+with Non-Monotonic Criteria Including <span>AIC</span>, <span>BIC</span>
+and <span class="nocase">Mallows’s Cp</span>.”</span> <a
+href="https://arxiv.org/abs/2512.12221">https://arxiv.org/abs/2512.12221</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2024</h1>
