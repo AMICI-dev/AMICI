@@ -42,7 +42,7 @@ from sympy.abc import _clash
 
 from amici.importers.sbml import get_species_initial
 from amici.sim.sundials import AmiciModel, ParameterScaling
-from amici.sim.jax import reformat_for_v2
+from amici.sim.jax import reformat_for_v2, fixup_v2_parameter_mapping
 
 from . import PREEQ_INDICATOR_ID
 from .util import get_states_in_condition_table
@@ -383,13 +383,13 @@ def create_parameter_mapping(
     )
 
     # Do some reformatting if V2 problem
-    measurement_df = reformat_for_v2(petab_problem)
-
-    breakpoint()
+    measurement_df, condition_df = reformat_for_v2(petab_problem) if isinstance(
+        petab_problem, petabv2.Problem
+    ) else (petab_problem.measurement_df, petab_problem.condition_df)
 
     prelim_parameter_mapping = (
         petab.get_optimization_to_simulation_parameter_mapping(
-            condition_df=petab_problem.condition_df,
+            condition_df=condition_df,
             measurement_df=measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
@@ -407,6 +407,11 @@ def create_parameter_mapping(
     for (_, condition), prelim_mapping_for_condition in zip(
         simulation_conditions.iterrows(), prelim_parameter_mapping, strict=True
     ):
+        if isinstance(petab_problem, petabv2.Problem):
+            prelim_mapping_for_condition = fixup_v2_parameter_mapping(
+                prelim_mapping_for_condition, petab_problem
+            )
+
         mapping_for_condition = create_parameter_mapping_for_condition(
             prelim_mapping_for_condition,
             condition,

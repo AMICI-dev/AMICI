@@ -598,6 +598,7 @@ class JAXModel(eqx.Module):
         init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
+        h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
@@ -636,6 +637,7 @@ class JAXModel(eqx.Module):
             root_finder,
             self._root_cond_fn,
             self._delta_x,
+            h_mask,
             {},
         )
 
@@ -647,6 +649,7 @@ class JAXModel(eqx.Module):
                 tcl,
                 h,
                 x_solver,
+                h_mask,
                 solver,
                 controller,
                 root_finder,
@@ -671,6 +674,7 @@ class JAXModel(eqx.Module):
                 tcl,
                 h,
                 x_solver,
+                h_mask,
                 solver,
                 controller,
                 root_finder,
@@ -776,6 +780,7 @@ class JAXModel(eqx.Module):
         init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
+        h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
@@ -828,6 +833,9 @@ class JAXModel(eqx.Module):
         :param ts_mask:
             mask to remove (padded) time points. If `True`, the corresponding time point is used for the evaluation of
             the output. Only applied if ret is ReturnValue.llh, ReturnValue.nllhs, ReturnValue.res, or ReturnValue.chi2.
+        :param h_mask:
+            mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it 
+            it marked as 1.0.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
         :return:
@@ -854,6 +862,7 @@ class JAXModel(eqx.Module):
             init_override,
             init_override_mask,
             ts_mask,
+            h_mask,
             ret,
         )
 
@@ -863,6 +872,7 @@ class JAXModel(eqx.Module):
         p: jt.Float[jt.Array, "np"] | None,
         x_reinit: jt.Float[jt.Array, "*nx"],
         mask_reinit: jt.Bool[jt.Array, "*nx"],
+        h_mask: jt.Bool[jt.Array, "ne"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -910,6 +920,7 @@ class JAXModel(eqx.Module):
             root_finder,
             self._root_cond_fn,
             self._delta_x,
+            h_mask,
             {},
         )
 
@@ -941,10 +952,12 @@ class JAXModel(eqx.Module):
         root_finder: AbstractRootFinder,
         root_cond_fn: Callable,
         delta_x: Callable,
+        h_mask: jt.Bool[jt.Array, "ne"],
         stats: dict,
     ):
+        y0 = y0_next.copy()
         rf0 = self.event_initial_values - 0.5
-        h = jnp.heaviside(rf0, 0.0)
+        h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
         args = (p, tcl, h)
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)
@@ -979,13 +992,15 @@ class JAXModel(eqx.Module):
 
         if os.getenv("JAX_DEBUG") == "1":
             jax.debug.print(
-                "h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}",
+                "h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}, y0_next: {}, y0: {}",
                 h,
                 rf0,
                 rfx,
                 roots_found,
                 roots_dir,
                 h_next,
+                y0_next,
+                y0,
             )
 
         return y0_next, t0_next, h_next, stats

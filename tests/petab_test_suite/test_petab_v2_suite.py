@@ -4,6 +4,7 @@
 import logging
 import sys
 
+import diffrax
 import pandas as pd
 import petabtests
 import pytest
@@ -18,8 +19,12 @@ from amici.sim.sundials import (
 from amici.sim.sundials.gradient_check import (
     check_derivatives as amici_check_derivatives,
 )
-from amici.sim.sundials.petab import PetabSimulator
+from amici.sim.sundials.petab import LLH, RDATAS, PetabSimulator
+from amici.importers.petab.v1 import (
+    import_petab_problem,
+)
 from petab import v2
+import petab.v1 as petab
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -66,28 +71,51 @@ def _test_case(case, model_type, version, jax):
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
 
-    pi = PetabImporter(
-        petab_problem=problem,
-        module_name=model_name,
-        compile_=True,
-        jax=jax,
-    )
 
-    ps = pi.create_simulator(
-        force_import=True,
-    )
-    ps.solver.set_steady_state_tolerance_factor(1.0)
+    if jax:
+        from amici.jax import petab_simulate, run_simulations
 
-    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
-    res = ps.simulate(problem_parameters=problem_parameters)
-    rdatas = res.rdatas
-    for rdata in rdatas:
-        assert rdata.status == AMICI_SUCCESS, (
-            f"Simulation failed for {rdata.id}"
+        steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
+
+        jax_problem = import_petab_problem(
+            petab_problem=problem,
+            model_name=model_name,
+            compile_=True,
+            jax=jax,
         )
-    chi2 = sum(rdata.chi2 for rdata in rdatas)
-    llh = res.llh
-    simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
+        llh, ret = run_simulations(
+            jax_problem, steady_state_event=steady_state_event
+        )
+        chi2, _ = run_simulations(
+            jax_problem, ret="chi2", steady_state_event=steady_state_event
+        )
+        simulation_df = petab_simulate(
+            jax_problem, steady_state_event=steady_state_event
+        )
+    else:
+        pi = PetabImporter(
+            petab_problem=problem,
+            module_name=model_name,
+            compile_=True,
+            jax=jax,
+        )
+
+        ps = pi.create_simulator(
+            force_import=True,
+        )
+        ps.solver.set_steady_state_tolerance_factor(1.0)
+
+        problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
+        ret = ps.simulate(problem_parameters=problem_parameters)
+
+        rdatas = ret[RDATAS]
+        for rdata in rdatas:
+            assert rdata.status == AMICI_SUCCESS, (
+                f"Simulation failed for {rdata.id}"
+            )
+        chi2 = sum(rdata.chi2 for rdata in rdatas)
+        llh = ret[LLH]
+        simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
 
     solution = petabtests.load_solution(case, model_type, version=version)
     gt_chi2 = solution[petabtests.CHI2]
@@ -195,7 +223,8 @@ def run():
     n_total = 0
     version = "v2.0.0"
 
-    for jax in (False, True):
+    # for jax in (False, True):
+    for jax in (True):
         cases = list(petabtests.get_cases("sbml", version=version))
         n_total += len(cases)
         for case in cases:

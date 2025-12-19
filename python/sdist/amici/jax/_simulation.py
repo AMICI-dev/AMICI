@@ -26,6 +26,7 @@ def eq(
     tcl: jt.Float[jt.Array, "ncl"],
     h0: jt.Float[jt.Array, "ne"],
     x0: jt.Float[jt.Array, "nxs"],
+    h_mask: jt.Bool[jt.Array, "ne"],
     solver: diffrax.AbstractSolver,
     controller: diffrax.AbstractStepSizeController,
     root_finder: AbstractRootFinder,
@@ -147,6 +148,7 @@ def eq(
             term,
             root_cond_fn,
             delta_x,
+            h_mask,
             stats,
         )
 
@@ -176,6 +178,7 @@ def solve(
     tcl: jt.Float[jt.Array, "ncl"],
     h: jt.Float[jt.Array, "ne"],
     x0: jt.Float[jt.Array, "nxs"],
+    h_mask: jt.Bool[jt.Array, "ne"],
     solver: diffrax.AbstractSolver,
     controller: diffrax.AbstractStepSizeController,
     root_finder: AbstractRootFinder,
@@ -301,6 +304,7 @@ def solve(
             term,
             root_cond_fn,
             delta_x,
+            h_mask,
             stats,
         )
 
@@ -419,6 +423,7 @@ def _handle_event(
     term: diffrax.ODETerm,
     root_cond_fn: Callable,
     delta_x: Callable,
+    h_mask: jt.Bool[jt.Array, "ne"],
     stats: dict,
 ):
     args = (p, tcl, h)
@@ -445,6 +450,8 @@ def _handle_event(
         h,
         delta_x,
     )
+
+    h_next = jnp.where(h_mask, h_next, h)
 
     if os.getenv("JAX_DEBUG") == "1":
         jax.debug.print(
