@@ -3,10 +3,12 @@ import os
 import re
 from _collections import OrderedDict
 from itertools import chain
+import pandas as pd
 from pathlib import Path
 
 import libsbml
 import petab.v1 as petab
+import petab.v2 as petabv2
 import sympy as sp
 from petab.v1.models import MODEL_TYPE_SBML
 from sympy.abc import _clash
@@ -304,7 +306,10 @@ def import_model_sbml(
 
     if validate:
         logger.info("Validating PEtab problem ...")
-        petab.lint_problem(petab_problem)
+        if isinstance(petab_problem, petabv2.Problem):
+            petabv2.lint_problem(petab_problem)
+        else:
+            petab.lint_problem(petab_problem)
 
     # Model name from SBML ID or filename
     if model_name is None:
