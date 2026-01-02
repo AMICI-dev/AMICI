@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 109.
+List of publications using AMICI. Total number is 110.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -15,6 +15,12 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2025</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 data-entry-spacing="0" role="list">
+<div id="ref-ArrudaBra2025" class="csl-entry" role="listitem">
+Arruda, Jonas, Niels Bracher, Ullrich Köthe, Jan Hasenauer, and Stefan
+T. Radev. 2025. <span>“Diffusion Models in Simulation-Based Inference: A
+Tutorial Review.”</span> <a
+href="https://arxiv.org/abs/2512.20685">https://arxiv.org/abs/2512.20685</a>.
+</div>
 <div id="ref-CallenbachDor2025" class="csl-entry" role="listitem">
 Callenbach, Aaron, Domagoj Dorešić, Robert Düster, Vanessa Nakonecnij,
 Erika Dudkin, Matthias Geyer, and Jan Hasenauer. 2025.
