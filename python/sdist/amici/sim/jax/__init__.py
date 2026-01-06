@@ -1,5 +1,6 @@
 """Functionality for simulating JAX-based AMICI models."""
 
+import copy
 import petab.v1 as petabv1
 import petab.v2 as petabv2
 
@@ -28,29 +29,36 @@ def add_events_to_sbml(petab_problem: petabv2.Problem):
 
             for condition_id in period.condition_ids:
                 cond = petab_problem.condition_df.set_index(petabv2.C.CONDITION_ID)
-                target_id = cond.at[condition_id, petabv2.C.TARGET_ID]
-                target_value = cond.at[condition_id, petabv2.C.TARGET_VALUE]
+                target_ids = cond.loc[[condition_id], petabv2.C.TARGET_ID]
+                target_values = cond.loc[[condition_id], petabv2.C.TARGET_VALUE]
 
-                if not jnp.issubdtype(type(target_value), jnp.number):
-                    continue
+                for target_id, target_value in zip(target_ids, target_values):
+                    if not jnp.issubdtype(type(target_value), jnp.number):
+                        # target value is a parameter and target is a species?
+                        # add to model as a parameter?
+                        if target_id not in [c.id for c in petab_problem.model.sbml_model.getListOfSpecies()]:
+                            continue
+                        else:
+                            _add_target_value_as_parameter(petab_problem, target_value)
 
-                # Don't handle compartment size as event?
-                if target_id in [
-                    c.id for c in petab_problem.model.sbml_model.getListOfCompartments()
-                ]:
-                    for comp in petab_problem.model.sbml_model.getListOfCompartments():
-                        if comp.id == target_id:
-                            comp.setSize(float(target_value))
-                    continue
-                
-                assignment = ev.createEventAssignment()
-                assignment.setVariable(target_id)
-                assignment_expr = libsbml.parseL3Formula(str(target_value))
-                assignment.setMath(assignment_expr)
+                    # Don't handle compartment size as event?
+                    if target_id in [
+                        c.id for c in petab_problem.model.sbml_model.getListOfCompartments()
+                    ]:
+                        for comp in petab_problem.model.sbml_model.getListOfCompartments():
+                            if comp.id == target_id:
+                                comp.setSize(float(target_value))
+                        continue
+                    
+                    assignment = ev.createEventAssignment()
+                    assignment.setVariable(target_id)
+                    assignment_expr = libsbml.parseL3Formula(str(target_value))
+                    _check_and_create_expr_elements(petab_problem, assignment_expr)
+                    assignment.setMath(assignment_expr)
 
-                _set_assignment_entities_false(
-                    petab_problem.model.sbml_model, target_id
-                )
+                    _set_assignment_entities_false(
+                        petab_problem.model.sbml_model, target_id
+                    )
 
     return petab_problem
 
@@ -63,6 +71,44 @@ def _set_assignment_entities_false(sbml_model, target_id: str):
     for species in sbml_model.getListOfSpecies():
         if species.id == target_id:
             species.setConstant(False)
+
+def _add_target_value_as_parameter(
+    petab_problem: petabv2.Problem,
+    target_value: str,
+):
+    """Add a target value as a parameter to the SBML model."""
+    
+    sbml_model = petab_problem.model.sbml_model
+    if target_value not in petab_problem.parameter_df.index:
+        # try to parse as assignment expression?
+        assignment_expr = libsbml.parseL3Formula(str(target_value))
+        _check_and_create_expr_elements(petab_problem, assignment_expr)
+        return
+    
+    param_row = petab_problem.parameter_df.loc[target_value]
+    if param_row.any():
+        param = sbml_model.createParameter()
+        param.setId(target_value)
+        param.setConstant(False)
+        param.setValue(param_row[petabv2.C.NOMINAL_VALUE])
+
+def _check_and_create_expr_elements(
+    petab_problem: petabv2.Problem,
+    expr,
+):
+    """Check and create elements in an SBML expression recursively."""
+    sbml_model = petab_problem.model.sbml_model
+    param_ids = [p.id for p in sbml_model.getListOfParameters()]
+    for i in range(expr.getNumChildren()):
+        child = expr.getChild(i)
+        if child.isName():
+            name = child.getName()
+            param_row = petab_problem.parameter_df.loc[name]
+            if name not in param_ids and param_row.any():
+                param = sbml_model.createParameter()
+                param.setId(name)
+                param.setConstant(False)
+                param.setValue(param_row[petabv2.C.NOMINAL_VALUE])
 
 def reformat_petab_v2_to_v1(petab_problem: petabv2.Problem) -> petabv1.Problem:
     """Reformat a PEtab v2 problem to PEtab v1 format.
@@ -226,11 +272,77 @@ def fixup_v2_parameter_mapping(prelim_mapping_for_condition, petab_problem):
                 condition_map_sim[p] = _try_float(params_list[i])
 
     return (
+        copy.deepcopy(condition_map_sim),
         condition_map_sim,
-        condition_map_sim,
-        condition_scale_map_sim,
+        copy.deepcopy(condition_scale_map_sim),
         condition_scale_map_sim,
     )
+
+def get_states_in_condition_table_v2(
+    petab_problem,
+    condition: dict | pd.Series = None,
+) -> dict[str, tuple[float | str | None, float | str | None]]:
+    """Get states and their initial condition as specified in the condition table.
+
+    Returns: Dictionary: ``stateId -> (initial condition simulation)``
+    """
+    states = {
+        target_id: (target_value, None)
+        if condition_id == condition[petabv1.SIMULATION_CONDITION_ID]
+        else (None, None)
+        for condition_id, target_id, target_value in zip(
+            petab_problem.condition_df[petabv2.C.CONDITION_ID],
+            petab_problem.condition_df[petabv2.C.TARGET_ID],
+            petab_problem.condition_df[petabv2.C.TARGET_VALUE],
+        )
+    }
+
+    return states
+
+def _set_initial_state_v2(
+    petab_problem: petabv1.Problem,
+    init_par_id: str,
+    par_map: petabv1.ParMappingDict,
+    scale_map: petabv1.ScaleMappingDict,
+    value: str | float,
+    fill_fixed_parameters: bool = True,
+) -> None:
+    """
+    Update the initial value for a model entity in the parameter mapping
+    according to the PEtab conditions table.
+
+    :param petab_problem: The PEtab problem
+    :param condition_id: The current condition ID
+    :param element_id: Element for which to set the initial value
+    :param init_par_id: The parameter ID that refers to the initial value
+    :param par_map: Parameter value mapping
+    :param scale_map: Parameter scale mapping
+    :param value: The initial value for `element_id` in `condition_id`
+    :param fill_fixed_parameters:
+        Whether to fill in nominal values for fixed parameters
+        (estimate=0 in the parameters table).
+    """
+    value = petabv1.to_float_if_float(value)
+
+    if pd.isna(value):
+        return
+
+    par_map[init_par_id] = value
+    if isinstance(value, float):
+        # numeric initial state
+        scale_map[init_par_id] = petabv1.LIN
+    else:
+        if (
+            fill_fixed_parameters
+            and petab_problem.parameter_df is not None
+            and value in petab_problem.parameter_df.index
+            and petab_problem.parameter_df.loc[value, petabv1.ESTIMATE] == 'false'
+        ):
+            par_map[init_par_id] = petab_problem.parameter_df.loc[
+                value, petabv1.NOMINAL_VALUE
+            ]
+        scale_map[init_par_id] = petabv1.LIN
+
 
 def _try_float(value):
     try:
