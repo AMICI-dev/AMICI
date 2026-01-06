@@ -911,6 +911,8 @@ class JAXProblem(eqx.Module):
         """
         if self._petab_problem.mapping_df is None:
             return []
+        if self._petab_problem.mapping_df[petabv1.MODEL_ENTITY_ID].isnull().all():
+            return []
         return self._petab_problem.mapping_df[
             self._petab_problem.mapping_df[petabv1.MODEL_ENTITY_ID]
             .str.split(".")
@@ -1078,6 +1080,10 @@ class JAXProblem(eqx.Module):
         :return:
             Parameters for the simulation condition.
         """
+        # Rather than precomputing parameter mappings - just put all the logic here
+        # Draw from set_constants and apply_parameters in sundials code
+        # Then hopefully we shouldn't need create_parameter_mapping function in 
+        # parameter_mapping.py at all
         mapping = self._parameter_mappings[simulation_condition]
 
         p = jnp.array(
@@ -1224,6 +1230,7 @@ class JAXProblem(eqx.Module):
 
     def _prepare_conditions(
         self,
+        experiments: list[petabv2.Experiment],
         conditions: list[str],
         op_numeric: np.ndarray | None = None,
         op_mask: np.ndarray | None = None,
@@ -1271,7 +1278,7 @@ class JAXProblem(eqx.Module):
             return jnp.arange(experiment_ind * 2, experiment_ind * 2 + (num_periods * 2))
 
         h_mask = jnp.stack(
-            [jnp.isin(jnp.arange(self.model.n_events), _experiment_event_inds(i)) for i, _ in enumerate(conditions)]
+            [jnp.isin(jnp.arange(self.model.n_events), _experiment_event_inds(i)) for i, _ in enumerate(experiments)]
         )
 
         if self.parameters.size:
@@ -1297,6 +1304,7 @@ class JAXProblem(eqx.Module):
         else:
             unscaled_parameters = jnp.zeros((*self._ts_masks.shape[:2], 0))
 
+        # placeholder values from sundials code may be needed here 
         if op_numeric is not None and op_numeric.size:
             op_array = jnp.where(
                 op_mask,
@@ -1436,6 +1444,7 @@ class JAXProblem(eqx.Module):
 
     def run_simulations(
         self,
+        experiments: list[petabv2.Experiment],
         simulation_conditions: list[str],
         preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
@@ -1472,6 +1481,7 @@ class JAXProblem(eqx.Module):
         """
         p_array, mask_reinit_array, x_reinit_array, op_array, np_array, h_mask = (
             self._prepare_conditions(
+                experiments,
                 simulation_conditions,
                 self._op_numeric,
                 self._op_mask,
@@ -1662,6 +1672,7 @@ def run_simulations(
     if simulation_conditions is None:
         simulation_conditions = problem.get_all_simulation_conditions()
 
+    experiments = problem._petab_problem.experiments
     dynamic_conditions = [sc[0] for sc in simulation_conditions]
     preequilibration_conditions = list(
         {sc[1] for sc in simulation_conditions if len(sc) > 1}
@@ -1673,6 +1684,8 @@ def run_simulations(
         "simulation_conditions": simulation_conditions,
     }
 
+    # This needs to stay - preeq is not an event - it is special 
+    # And we may be able to therefore use the preeq indicators from EventsToSbmlConverter
     if preequilibration_conditions:
         preeqs, preresults = problem.run_preequilibrations(
             preequilibration_conditions,
@@ -1697,6 +1710,7 @@ def run_simulations(
             ]
         )
         output, results = problem.run_simulations(
+            experiments,
             dynamic_conditions,
             preeq_array,
             solver,

@@ -97,6 +97,7 @@ def _test_case(case, model_type, version, jax):
         simulation_df = petab_simulate(
             jax_problem, steady_state_event=steady_state_event
         )
+        breakpoint()
         simulation_df.rename(
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
