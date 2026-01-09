@@ -50,6 +50,8 @@ def test_case(case, model_type, version, jax):
                 f"implemented: {e}"
             )
             pytest.skip(str(e))
+        elif "run_simulations does not support PEtab v1" in str(e):
+            pytest.skip(str(e))
         else:
             raise e
 
@@ -97,7 +99,6 @@ def _test_case(case, model_type, version, jax):
         simulation_df = petab_simulate(
             jax_problem, steady_state_event=steady_state_event
         )
-        breakpoint()
         simulation_df.rename(
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
