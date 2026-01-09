@@ -576,7 +576,7 @@ class PetabImporter:
 
         if self._jax:
             return amici.import_model_module(
-                Path(self.outdir).stem, Path(self.outdir).parent
+                Path(self.output_dir).stem, Path(self.output_dir).parent
             )
 
         return amici.import_model_module(
