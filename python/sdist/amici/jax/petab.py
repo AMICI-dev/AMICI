@@ -1759,6 +1759,11 @@ def run_simulations(
     :return:
         Overall output value and condition specific results and statistics.
     """
+    if isinstance(problem, HybridProblem) or isinstance(problem._petab_problem, petabv1.Problem):
+        raise TypeError(
+            "run_simulations does not support PEtab v1 problems. Upgrade the problem to PEtab v2."
+        )
+
     if isinstance(ret, str):
         ret = ReturnValue[ret]
 
