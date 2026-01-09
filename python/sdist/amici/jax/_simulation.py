@@ -174,6 +174,7 @@ def eq(
 
 def solve(
     p: jt.Float[jt.Array, "np"],
+    t0: jnp.float_,
     ts: jt.Float[jt.Array, "nt_dyn"],
     tcl: jt.Float[jt.Array, "ncl"],
     h: jt.Float[jt.Array, "ne"],
@@ -195,6 +196,8 @@ def solve(
 
     :param p:
         parameters
+    :param t0:
+        initial time point
     :param ts:
         time points at which solutions are evaluated
     :param tcl:
@@ -226,7 +229,7 @@ def solve(
     if not root_cond_fns:
         # no events, we can just run a single segment
         sol, _, stats = _run_segment(
-            0.0,
+            t0,
             ts[-1],
             x0,
             p,
@@ -319,7 +322,7 @@ def solve(
         body_fn,
         (
             jnp.zeros((ts.shape[0], x0.shape[0]), dtype=x0.dtype) + x0,
-            0.0,
+            t0,
             x0,
             jnp.zeros((ts.shape[0], h.shape[0]), dtype=h.dtype),
             h,

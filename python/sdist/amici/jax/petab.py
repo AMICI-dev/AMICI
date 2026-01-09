@@ -29,7 +29,9 @@ from amici.importers.petab.v1.parameter_mapping import (
 )
 from amici.jax.model import JAXModel, ReturnValue
 from amici.logging import get_logger
-from amici.sim.jax import get_simulation_conditions_v2, _build_simulation_df_v2
+from amici.sim.jax import (
+    add_default_experiment_names_to_v2_problem, get_simulation_conditions_v2, _build_simulation_df_v2, _try_float
+)
 
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,
@@ -162,6 +164,7 @@ class JAXProblem(eqx.Module):
             PEtab problem to simulate.
         """
         if isinstance(petab_problem, petabv2.Problem):
+            petab_problem = add_default_experiment_names_to_v2_problem(petab_problem)
             scs = get_simulation_conditions_v2(petab_problem)
             self.simulation_conditions = scs.simulationConditionId
         else:
@@ -171,7 +174,10 @@ class JAXProblem(eqx.Module):
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
-        self._parameter_mappings = self._get_parameter_mappings(scs)
+        if isinstance(petab_problem, petabv1.Problem):
+            self._parameter_mappings = self._get_parameter_mappings(scs)
+        else:
+            self._parameter_mappings = None
         (
             self._ts_dyn,
             self._ts_posteq,
@@ -327,6 +333,11 @@ class JAXProblem(eqx.Module):
                     )
 
         for _, simulation_condition in simulation_conditions.iterrows():
+            if "preequilibration" in simulation_condition[
+                petabv1.SIMULATION_CONDITION_ID
+            ]:
+                continue
+
             if isinstance(self._petab_problem, HybridV2Problem):
                 query = " & ".join(
                     [
@@ -1070,40 +1081,102 @@ class JAXProblem(eqx.Module):
         return self.get_petab_parameter_by_id(pval)
 
     def load_model_parameters(
-        self, simulation_condition: str
+        self, experiment: petabv2.Experiment, is_preeq: bool
     ) -> jt.Float[jt.Array, "np"]:
         """
-        Load parameters for a simulation condition.
+        Load parameters for an experiment.
 
-        :param simulation_condition:
-            Simulation condition to load parameters for.
+        :param experiment:
+            Experiment to load parameters for.
+        :param is_preeq:
+            Whether to load preequilibration or simulation parameters.
         :return:
-            Parameters for the simulation condition.
+            Parameters for the experiment.
         """
-        # Rather than precomputing parameter mappings - just put all the logic here
-        # Draw from set_constants and apply_parameters in sundials code
-        # Then hopefully we shouldn't need create_parameter_mapping function in 
-        # parameter_mapping.py at all
-        mapping = self._parameter_mappings[simulation_condition]
-
         p = jnp.array(
             [
-                self._map_model_parameter_value(
-                    mapping, pname, simulation_condition
+                self._map_experiment_model_parameter_value(
+                    pname, ind, experiment, is_preeq
                 )
-                for pname in self.model.parameter_ids
+                for ind, pname in enumerate(self.model.parameter_ids)
             ]
         )
         pscale = tuple(
             [
                 petabv1.LIN
-                if self._petab_problem.mapping_df is not None
-                and pname in self._petab_problem.mapping_df.index
-                else mapping.scale_map_sim_var[pname]
-                for pname in self.model.parameter_ids
+                for _ in self.model.parameter_ids
             ]
         )
+
         return self._unscale(p, pscale)
+    
+    def _map_experiment_model_parameter_value(
+        self, pname: str, p_index: int, experiment: petabv2.Experiment, is_preeq: bool
+    ):
+        """
+        Get values for the given parameter `pname` from the relevant petab tables.
+
+        :param pname: PEtab parameter id
+        :param p_index: Index of the parameter in the model's parameter list
+        :param experiment: PEtab experiment
+        :param is_preeq: Whether to get preequilibration or simulation parameter value
+        :return: Value of the parameter
+        """
+        for p in experiment.periods:
+            if is_preeq:
+                if p.time >= 0.0:
+                    continue
+                else:
+                    condition_ids = p.condition_ids
+                    break
+            else:
+                if p.time < 0.0:
+                    continue
+                else:
+                    condition_ids = p.condition_ids
+                    break
+
+        init_val = self.model.parameters[p_index]
+        if pname in self._petab_problem.parameter_df.index:
+            return self._petab_problem.parameter_df.loc[
+                pname, petabv1.NOMINAL_VALUE
+            ]
+        elif pname in self._petab_problem.condition_df[petabv2.C.TARGET_ID].values:
+            target_row = self._petab_problem.condition_df[
+                (self._petab_problem.condition_df[petabv2.C.TARGET_ID] == pname) & 
+                (self._petab_problem.condition_df[petabv2.C.CONDITION_ID].isin(condition_ids))
+            ]
+            if not target_row.empty:
+                target_value = target_row.iloc[0][petabv2.C.TARGET_VALUE]
+                return target_value
+        else:
+            for placeholder_col, param_col in (
+                (petabv2.C.OBSERVABLE_PLACEHOLDERS, petabv2.C.OBSERVABLE_PARAMETERS),
+                (petabv2.C.NOISE_PLACEHOLDERS, petabv2.C.NOISE_PARAMETERS),
+            ):
+                placeholders = self._petab_problem.observable_df[
+                    placeholder_col
+                ].unique()
+
+                for placeholders in placeholders:
+                    placeholder_list = placeholders.split(";")
+                    params_list = self._petab_problem.measurement_df[param_col][0].split(";")
+                    for i, p in enumerate(placeholder_list):
+                        if p == pname:
+                            val = self._find_val(params_list[i])
+                            return val
+        return init_val
+
+    def _find_val(self, param_entry: str):
+        val_float = _try_float(param_entry)
+        if isinstance(val_float, float):
+            return val_float
+        elif param_entry in self._petab_problem.parameter_df.index:
+            return self._petab_problem.parameter_df.loc[
+                param_entry, petabv1.NOMINAL_VALUE
+            ]
+        else:
+            return param_entry # and hope I guess? 
 
     def _state_needs_reinitialisation(
         self,
@@ -1228,10 +1301,11 @@ class JAXProblem(eqx.Module):
         """
         return eqx.tree_at(lambda p: p.parameters, self, p)
 
-    def _prepare_conditions(
+    def _prepare_experiments(
         self,
         experiments: list[petabv2.Experiment],
         conditions: list[str],
+        is_preeq: bool,
         op_numeric: np.ndarray | None = None,
         op_mask: np.ndarray | None = None,
         op_indices: np.ndarray | None = None,
@@ -1246,10 +1320,14 @@ class JAXProblem(eqx.Module):
         jt.Float[jt.Array, "nc nt nnp"],  # noqa: F821, F722
     ]:
         """
-        Prepare conditions for simulation.
+        Prepare experiments for simulation.
 
+        :param experiments:
+            Experiments to prepare simulation arrays for.
         :param conditions:
             Simulation conditions to prepare.
+        :param is_preeq:
+            Whether to load preequilibration or simulation parameters.
         :param op_numeric:
             Numeric values for observable parameter overrides. If None, no overrides are used.
         :param op_mask:
@@ -1267,7 +1345,7 @@ class JAXProblem(eqx.Module):
             noise parameters.
         """
         p_array = jnp.stack(
-            [self.load_model_parameters(sc) for sc in conditions]
+            [self.load_model_parameters(exp, is_preeq) for exp in experiments]
         )
 
         # experiments by total number of events - each experiment needs to mask out the events that aren't
@@ -1280,6 +1358,10 @@ class JAXProblem(eqx.Module):
         h_mask = jnp.stack(
             [jnp.isin(jnp.arange(self.model.n_events), _experiment_event_inds(i)) for i, _ in enumerate(experiments)]
         )
+
+        t_zeros = jnp.stack([
+            exp.periods[0].time if exp.periods[0].time >= 0.0 else 0.0 for exp in experiments
+        ])
 
         if self.parameters.size:
             if isinstance(self._petab_problem, HybridV2Problem):
@@ -1339,7 +1421,7 @@ class JAXProblem(eqx.Module):
                 for sc, p in zip(conditions, p_array)
             ]
         )
-        return p_array, mask_reinit_array, x_reinit_array, op_array, np_array, h_mask
+        return p_array, mask_reinit_array, x_reinit_array, op_array, np_array, h_mask, t_zeros
 
     @eqx.filter_vmap(
         in_axes={
@@ -1371,13 +1453,14 @@ class JAXProblem(eqx.Module):
         max_steps: jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),  # noqa: F821, F722
         ts_mask: np.ndarray = np.array([]),
+        t_zeros: jnp.float_ = 0.0,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jnp.float_, dict]:
         """
-        Run a simulation for a given simulation condition.
+        Run a simulation for a given simulation experiment.
 
         :param p:
-            Parameters for the simulation condition
+            Parameters for the simulation experiment
         :param ts_dyn:
             (Padded) dynamic time points
         :param ts_posteq:
@@ -1410,6 +1493,8 @@ class JAXProblem(eqx.Module):
             be initialised to the model default values.
         :param ts_mask:
             padding mask, see :meth:`JAXModel.simulate_condition` for details.
+        :param t_zeros:
+            simulation start time for the current experiment.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
         :return:
@@ -1431,6 +1516,7 @@ class JAXProblem(eqx.Module):
             init_override_mask=jax.lax.stop_gradient(init_override_mask),
             ts_mask=jax.lax.stop_gradient(jnp.array(ts_mask)),
             h_mask=jax.lax.stop_gradient(jnp.array(h_mask)),
+            t_zero=t_zeros,
             solver=solver,
             controller=controller,
             root_finder=root_finder,
@@ -1445,7 +1531,6 @@ class JAXProblem(eqx.Module):
     def run_simulations(
         self,
         experiments: list[petabv2.Experiment],
-        simulation_conditions: list[str],
         preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
@@ -1457,10 +1542,10 @@ class JAXProblem(eqx.Module):
         ret: ReturnValue = ReturnValue.llh,
     ):
         """
-        Run simulations for a list of simulation conditions.
+        Run simulations for a list of simulation experiments.
 
-        :param simulation_conditions:
-            List of simulation conditions to run simulations for.
+        :param experiments:
+            Experiments to run simulations for.
         :param preeq_array:
             Matrix of pre-equilibrated states for the simulation conditions. Ordering must match the simulation
             conditions. If no pre-equilibration is available for a condition, the corresponding row must be empty.
@@ -1479,10 +1564,15 @@ class JAXProblem(eqx.Module):
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
         """
-        p_array, mask_reinit_array, x_reinit_array, op_array, np_array, h_mask = (
-            self._prepare_conditions(
+        simulation_conditions = [cid for exp in experiments for p in exp.periods for cid in p.condition_ids]
+        dynamic_conditions = list(sc for sc in simulation_conditions if "preequilibration" not in sc)
+        dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
+
+        p_array, mask_reinit_array, x_reinit_array, op_array, np_array, h_mask, t_zeros = (
+            self._prepare_experiments(
                 experiments,
-                simulation_conditions,
+                dynamic_conditions,
+                False,
                 self._op_numeric,
                 self._op_mask,
                 self._op_indices,
@@ -1497,27 +1587,25 @@ class JAXProblem(eqx.Module):
                 jnp.array(
                     [
                         p
-                        in set(self._parameter_mappings[sc].map_sim_var.keys())
+                        in set(self.model.parameter_ids)
                         for p in self.model.state_ids
                     ]
                 )
-                for sc in simulation_conditions
+                for _ in experiments
             ]
         )
         init_override = jnp.stack(
             [
                 jnp.array(
                     [
-                        self._eval_nn(
-                            self._parameter_mappings[sc].map_sim_var[p], sc
-                        )
+                        self._eval_nn(p, exp.periods[-1].condition_ids[0]) # TODO: Add mapping of p to eval_nn?
                         if p
-                        in set(self._parameter_mappings[sc].map_sim_var.keys())
+                        in set(self.model.parameter_ids)
                         else 1.0
                         for p in self.model.state_ids
                     ]
                 )
-                for sc in simulation_conditions
+                for exp in experiments
             ]
         )
 
@@ -1542,6 +1630,7 @@ class JAXProblem(eqx.Module):
             max_steps,
             preeq_array,
             self._ts_masks,
+            t_zeros,
             ret,
         )
 
@@ -1566,10 +1655,10 @@ class JAXProblem(eqx.Module):
         max_steps: jnp.int_,
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:  # noqa: F821
         """
-        Run a pre-equilibration simulation for a given simulation condition.
+        Run a pre-equilibration simulation for a given simulation experiment.
 
         :param p:
-            Parameters for the simulation condition
+            Parameters for the simulation experiment
         :param mask_reinit:
             Mask for states that need reinitialisation
         :param x_reinit:
@@ -1600,7 +1689,7 @@ class JAXProblem(eqx.Module):
 
     def run_preequilibrations(
         self,
-        simulation_conditions: list[str],
+        experiments: list[petabv2.Experiment],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -1609,8 +1698,13 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        p_array, mask_reinit_array, x_reinit_array, _, _, h_mask = (
-            self._prepare_conditions(simulation_conditions, None, None)
+        simulation_conditions = [cid for exp in experiments for p in exp.periods for cid in p.condition_ids]
+        preequilibration_conditions = list(
+            {sc for sc in simulation_conditions if "preequilibration" in sc}
+        )
+
+        p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
+            self._prepare_experiments(experiments, preequilibration_conditions, True, None, None)
         )
         return self.run_preequilibration(
             p_array,
@@ -1627,7 +1721,7 @@ class JAXProblem(eqx.Module):
 
 def run_simulations(
     problem: JAXProblem,
-    simulation_conditions: Iterable[tuple[str, ...]] | None = None,
+    simulation_experiments: Iterable[str] | None = None,
     solver: diffrax.AbstractSolver = diffrax.Kvaerno5(),
     controller: diffrax.AbstractStepSizeController = diffrax.PIDController(
         **DEFAULT_CONTROLLER_SETTINGS
@@ -1646,10 +1740,9 @@ def run_simulations(
 
     :param problem:
         Problem to run simulations for.
-    :param simulation_conditions:
-        Simulation conditions to run simulations for. This is a series of tuples, where each tuple contains the
-        simulation condition or the pre-equilibration condition followed by the simulation condition. Default is to run
-        simulations for all conditions.
+    :param simulation_experiments:
+        Simulation experiments to run simulations for. This is an iterable of experiment ids. 
+        Default is to run simulations for all experiments.
     :param solver:
         ODE solver to use for simulation.
     :param controller:
@@ -1669,50 +1762,46 @@ def run_simulations(
     if isinstance(ret, str):
         ret = ReturnValue[ret]
 
-    if simulation_conditions is None:
-        simulation_conditions = problem.get_all_simulation_conditions()
+    if simulation_experiments is None:
+        experiments = problem._petab_problem.experiments
+    else:
+        experiments = [exp for exp in problem._petab_problem.experiments if exp.id in simulation_experiments]
 
-    experiments = problem._petab_problem.experiments
-    dynamic_conditions = [sc[0] for sc in simulation_conditions]
-    preequilibration_conditions = list(
-        {sc[1] for sc in simulation_conditions if len(sc) > 1}
-    )
-
+    simulation_conditions = [cid for exp in experiments for p in exp.periods for cid in p.condition_ids]
+    dynamic_conditions = list(sc for sc in simulation_conditions if "preequilibration" not in sc)
+    dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
     conditions = {
         "dynamic_conditions": dynamic_conditions,
-        "preequilibration_conditions": preequilibration_conditions,
-        "simulation_conditions": simulation_conditions,
     }
 
-    # This needs to stay - preeq is not an event - it is special 
-    # And we may be able to therefore use the preeq indicators from EventsToSbmlConverter
-    if preequilibration_conditions:
+    has_preeq = any(exp.periods[0].time < 0.0 for exp in experiments)
+    has_dynamic = any(exp.periods[-1].time >= 0.0 for exp in experiments)
+
+    if has_preeq:
         preeqs, preresults = problem.run_preequilibrations(
-            preequilibration_conditions,
+            experiments,
             solver,
             controller,
             root_finder,
             steady_state_event,
             max_steps,
         )
+        preeqs_array = preeqs
     else:
         preresults = {
             "stats_preeq": None,
         }
-
-    if dynamic_conditions:
-        preeq_array = jnp.stack(
+        preeqs_array = jnp.stack(
             [
-                preeqs[preequilibration_conditions.index(sc[1]), :]
-                if len(sc) > 1
-                else jnp.array([])
-                for sc in simulation_conditions
+                jnp.array([])
+                for _ in experiments
             ]
         )
+
+    if has_dynamic:
         output, results = problem.run_simulations(
             experiments,
-            dynamic_conditions,
-            preeq_array,
+            preeqs_array,
             solver,
             controller,
             root_finder,

@@ -599,6 +599,7 @@ class JAXModel(eqx.Module):
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
+        t_zero: jnp.float_ = 0.0,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
@@ -606,9 +607,18 @@ class JAXModel(eqx.Module):
 
         See :meth:`simulate_condition` for full documentation.
         """
-        t0 = 0.0
+        t0 = t_zero
         if p is None:
             p = self.parameters
+
+        if os.getenv("JAX_DEBUG") == "1":
+            jax.debug.print(
+                "x_reinit: {}, x_preeq: {}, x_def: {}. p: {}",
+                x_reinit,
+                x_preeq,
+                self._x0(t0, p),
+                p,
+            )
 
         if x_preeq.shape[0]:
             x = x_preeq
@@ -626,6 +636,7 @@ class JAXModel(eqx.Module):
         # Re-initialization
         if x_reinit.shape[0]:
             x = jnp.where(mask_reinit, x_reinit, x)
+
         x_solver = self._x_solver(x)
         tcl = self._tcl(x, p)
 
@@ -645,6 +656,7 @@ class JAXModel(eqx.Module):
         if ts_dyn.shape[0]:
             x_dyn, h_dyn, stats_dyn = solve(
                 p,
+                t0,
                 ts_dyn,
                 tcl,
                 h,
@@ -781,6 +793,7 @@ class JAXModel(eqx.Module):
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
         h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
+        t_zero: jnp.float_ = 0.0,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
@@ -863,6 +876,7 @@ class JAXModel(eqx.Module):
             init_override_mask,
             ts_mask,
             h_mask,
+            t_zero,
             ret,
         )
 
@@ -929,6 +943,7 @@ class JAXModel(eqx.Module):
             tcl,
             h,
             current_x,
+            h_mask,
             solver,
             controller,
             root_finder,
@@ -992,7 +1007,7 @@ class JAXModel(eqx.Module):
 
         if os.getenv("JAX_DEBUG") == "1":
             jax.debug.print(
-                "h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}, y0_next: {}, y0: {}",
+                "handle_t0_event h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}, y0_next: {}, y0: {}",
                 h,
                 rf0,
                 rfx,
