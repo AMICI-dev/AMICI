@@ -150,20 +150,20 @@ class ODEExporter:
                 "The JAX backend does not support models with algebraic states."
             )
         
-        if not ode_model.has_only_time_dependent_event_assignments():
-            raise NotImplementedError(
-                "The JAX backend does not support event assignments with explicit non-time dependent triggers."
-            )
+        # if not ode_model.has_only_time_dependent_event_assignments():
+        #     raise NotImplementedError(
+        #         "The JAX backend does not support event assignments with explicit non-time dependent triggers."
+        #     )
 
         if ode_model.has_priority_events():
             raise NotImplementedError(
                 "The JAX backend does not support event priorities."
             )
         
-        if ode_model.has_implicit_event_assignments():
-            raise NotImplementedError(
-                "The JAX backend does not support event assignments with implicit triggers."
-            )
+        # if ode_model.has_implicit_event_assignments():
+        #     raise NotImplementedError(
+        #         "The JAX backend does not support event assignments with implicit triggers."
+        #     )
 
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
 

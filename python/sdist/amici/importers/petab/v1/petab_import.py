@@ -13,12 +13,10 @@ from pathlib import Path
 
 import pandas as pd
 import petab.v1 as petab
-import petab.v2 as petabv2
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
 from amici.logging import get_logger
-from amici.sim.jax import reformat_petab_v2_to_v1, add_events_to_sbml
 
 from .import_helpers import (
     _can_import_model,
@@ -88,10 +86,6 @@ def import_petab_problem(
     :return:
         The imported model (if ``jax=False``) or JAX problem (if ``jax=True``).
     """
-    if isinstance(petab_problem, petabv2.Problem):
-        petab_problem = add_events_to_sbml(petab_problem)
-        petab_problem = reformat_petab_v2_to_v1(petab_problem)
-
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
         raise NotImplementedError(
             "Unsupported model type " + petab_problem.model.type_id

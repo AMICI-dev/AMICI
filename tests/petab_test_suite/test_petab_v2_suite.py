@@ -77,12 +77,17 @@ def _test_case(case, model_type, version, jax):
 
         steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
 
-        jax_problem = import_petab_problem(
+        pi = PetabImporter(
             petab_problem=problem,
-            model_name=model_name,
+            module_name=model_name,
             compile_=True,
             jax=jax,
         )
+
+        jax_problem = pi.create_simulator(
+            force_import=True,
+        )
+
         llh, ret = run_simulations(
             jax_problem, steady_state_event=steady_state_event
         )

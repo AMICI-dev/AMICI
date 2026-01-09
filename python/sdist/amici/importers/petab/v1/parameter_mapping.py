@@ -26,7 +26,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
-import petab.v2 as petabv2
 import sympy as sp
 from petab.v1.C import *  # noqa: F403
 from petab.v1.C import (
@@ -42,9 +41,6 @@ from sympy.abc import _clash
 
 from amici.importers.sbml import get_species_initial
 from amici.sim.sundials import AmiciModel, ParameterScaling
-from amici.sim.jax import (
-    _set_initial_state_v2, get_states_in_condition_table_v2, reformat_for_v2, fixup_v2_parameter_mapping
-)
 
 from . import PREEQ_INDICATOR_ID
 from .util import get_states_in_condition_table
@@ -384,15 +380,10 @@ def create_parameter_mapping(
         else petab_problem.mapping_df
     )
 
-    # Do some reformatting if V2 problem
-    measurement_df, condition_df = reformat_for_v2(petab_problem) if isinstance(
-        petab_problem, petabv2.Problem
-    ) else (petab_problem.measurement_df, petab_problem.condition_df)
-
     prelim_parameter_mapping = (
         petab.get_optimization_to_simulation_parameter_mapping(
-            condition_df=condition_df,
-            measurement_df=measurement_df,
+            condition_df=petab_problem.condition_df,
+            measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
             mapping_df=mapping,
@@ -409,11 +400,6 @@ def create_parameter_mapping(
     for (_, condition), prelim_mapping_for_condition in zip(
         simulation_conditions.iterrows(), prelim_parameter_mapping, strict=True
     ):
-        if isinstance(petab_problem, petabv2.Problem):
-            prelim_mapping_for_condition = fixup_v2_parameter_mapping(
-                prelim_mapping_for_condition, petab_problem
-            )
-
         mapping_for_condition = create_parameter_mapping_for_condition(
             prelim_mapping_for_condition,
             condition,
@@ -488,14 +474,9 @@ def create_parameter_mapping_for_condition(
     # ExpData.x0, but in the case of pre-equilibration this would not allow for
     # resetting initial states.
 
-    if isinstance(petab_problem, petabv2.Problem):
-        states_in_condition_table = get_states_in_condition_table_v2(
-            petab_problem, condition
-        )
-    else:
-        states_in_condition_table = get_states_in_condition_table(
-            petab_problem, condition
-        )
+    states_in_condition_table = get_states_in_condition_table(
+        petab_problem, condition
+    )
 
     if states_in_condition_table:
         # set indicator fixed parameter for preeq
@@ -536,26 +517,16 @@ def create_parameter_mapping_for_condition(
             # for simulation
             condition_id = condition[SIMULATION_CONDITION_ID]
             init_par_id = f"initial_{element_id}_sim"
-            if isinstance(petab_problem, petabv2.Problem):
-                _set_initial_state_v2(
-                    petab_problem,
-                    init_par_id,
-                    condition_map_sim,
-                    condition_scale_map_sim,
-                    value,
-                    fill_fixed_parameters=fill_fixed_parameters,
-                )
-            else:
-                _set_initial_state(
-                    petab_problem,
-                    condition_id,
-                    element_id,
-                    init_par_id,
-                    condition_map_sim,
-                    condition_scale_map_sim,
-                    value,
-                    fill_fixed_parameters=fill_fixed_parameters,
-                )
+            _set_initial_state(
+                petab_problem,
+                condition_id,
+                element_id,
+                init_par_id,
+                condition_map_sim,
+                condition_scale_map_sim,
+                value,
+                fill_fixed_parameters=fill_fixed_parameters,
+            )
                 # set dummy value as above
             if condition_map_preeq:
                 condition_map_preeq[init_par_id] = 0.0
@@ -609,17 +580,14 @@ def create_parameter_mapping_for_condition(
     )
     logger.debug(f"Variable parameters simulation: {condition_map_sim_var}")
 
-    if isinstance(petab_problem, petabv2.Problem):
-        pass
-    else:
-        petab.merge_preeq_and_sim_pars_condition(
-            condition_map_preeq_var,
-            condition_map_sim_var,
-            condition_scale_map_preeq_var,
-            condition_scale_map_sim_var,
-            condition,
-        )
-        logger.debug(f"Merged: {condition_map_sim_var}")
+    petab.merge_preeq_and_sim_pars_condition(
+        condition_map_preeq_var,
+        condition_map_sim_var,
+        condition_scale_map_preeq_var,
+        condition_scale_map_sim_var,
+        condition,
+    )
+    logger.debug(f"Merged: {condition_map_sim_var}")
 
     if "sciml" in petab_problem.extensions_config:
         hybridizations = [
