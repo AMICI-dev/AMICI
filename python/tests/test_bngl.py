@@ -49,8 +49,8 @@ def test_compare_to_pysb_simulation(example):
     with suppress(ValueError):
         RESERVED_SYMBOLS.remove("NULL")
 
-    atol = 1e-8
-    rtol = 1e-8
+    atol = 1e-12
+    rtol = 1e-10
 
     model_file = os.path.join(
         os.path.dirname(__file__),
