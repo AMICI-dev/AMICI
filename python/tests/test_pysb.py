@@ -57,29 +57,32 @@ def test_compare_to_sbml_import(
         [rdata_sbml, rdata_pysb], [model_sbml, model_pysb], ["sbml", "pysb"]
     ):
         # check equilibrium fixed parameters
-        assert np.isclose(
+        assert_allclose(
             [sum(rdata["x_ss"][[1, 3]]), sum(rdata["x_ss"][[2, 4]])],
             edata.fixed_parameters_pre_equilibration,
             atol=1e-6,
             rtol=1e-6,
-        ).all(), f"{importer} preequilibration"
+            err_msg=f"{importer} preequilibration",
+        )
 
         # check equilibrium initial parameters
-        assert np.isclose(
+        assert_allclose(
             sum(rdata["x_ss"][[0, 3, 4, 5]]),
             model.get_free_parameter_by_name("PROT_0"),
             atol=1e-6,
             rtol=1e-6,
-        ), f"{importer} preequilibration"
+            err_msg=f"{importer} preequilibration",
+        )
 
         # check reinitialization with fixed parameter after
         # presimulation
-        assert np.isclose(
+        assert_allclose(
             [rdata["x0"][1], rdata["x0"][2]],
             edata.fixed_parameters,
             atol=1e-6,
             rtol=1e-6,
-        ).all(), f"{importer} presimulation"
+            err_msg=f"{importer} presimulation",
+        )
 
     skip_attrs = [
         "ptr",
@@ -216,9 +219,7 @@ def test_compare_to_pysb_simulation(example):
                 rdata = run_simulation(model_pysb, solver)
 
                 # check agreement of species simulations
-                assert np.isclose(
-                    rdata["x"], pysb_simres.species, 1e-4, 1e-4
-                ).all()
+                assert_allclose(rdata["x"], pysb_simres.species, 1e-4, 1e-4)
 
                 if example not in [
                     "fricker_2010_apoptosis",
