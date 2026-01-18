@@ -149,8 +149,8 @@ custom_models = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
-    atol = 1e-8
-    rtol = 1e-8
+    atol = 1e-12
+    rtol = 1e-10
 
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(
