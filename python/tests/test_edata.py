@@ -10,6 +10,7 @@ from amici.sim.sundials import (
     run_simulation,
 )
 from amici.testing import skip_on_valgrind
+from numpy.testing import assert_allclose
 
 
 @skip_on_valgrind
@@ -51,5 +52,5 @@ def test_edata_sensi_unscaling(model_units_module):  # noqa: F811
     rdata1 = run_simulation(model, solver, edata1)
 
     # The initial state sensitivities are as specified.
-    assert np.isclose(rdata0.sx0.flatten(), sx0).all()
-    assert np.isclose(rdata1.sx0.flatten(), sx0).all()
+    assert_allclose(rdata0.sx0.flatten(), sx0)
+    assert_allclose(rdata1.sx0.flatten(), sx0)

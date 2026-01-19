@@ -11,6 +11,7 @@ from amici import import_model_module
 from amici.importers.bngl import bngl2amici
 from amici.sim.sundials import run_simulation
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from numpy.testing import assert_allclose
 from pysb.importers.bngl import model_from_bngl
 from pysb.simulator import ScipyOdeSimulator
 
@@ -113,4 +114,4 @@ def test_compare_to_pysb_simulation(example):
         rdata = run_simulation(model_amici, solver)
 
         # check agreement of species simulation
-        assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()
+        assert_allclose(rdata.x, pysb_simres.species, 1e-4, 1e-4)

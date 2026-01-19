@@ -15,6 +15,7 @@ from amici.sim.sundials import SensitivityOrder, SteadyStateSensitivityMode
 from fiddy import MethodId, Type, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.success import Consistency
+from numpy.testing import assert_allclose
 from petab import v1
 
 # Absolute and relative tolerances for finite difference gradient checks.
@@ -85,13 +86,13 @@ def test_run_amici_simulation_to_functions(problem_generator):
     test_derivative = derivative.value
 
     # The test derivative is close to the expected derivative.
-    assert np.isclose(
+    assert_allclose(
         test_derivative,
         expected_derivative,
         rtol=1e-1,
         atol=1e-1,
         equal_nan=True,
-    ).all()
+    )
 
     # Same as above assert.
     check = NumpyIsCloseDerivativeCheck(
