@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 
 import sympy as sp
+import numpy as np
 
 from amici import (
     amiciModulePath,
@@ -149,15 +150,15 @@ class ODEExporter:
             raise NotImplementedError(
                 "The JAX backend does not support models with algebraic states."
             )
-        
-        # if not ode_model.has_only_time_dependent_event_assignments():
-        #     raise NotImplementedError(
-        #         "The JAX backend does not support event assignments with explicit non-time dependent triggers."
-        #     )
 
         if ode_model.has_priority_events():
             raise NotImplementedError(
                 "The JAX backend does not support event priorities."
+            )
+        
+        if ode_model.has_simultaneous_events():
+            raise NotImplementedError(
+                "The JAX backend does not support simultaneous events because event priorities are not supported."
             )
         
         # if ode_model.has_implicit_event_assignments():
@@ -222,6 +223,7 @@ class ODEExporter:
             "x",
             "tcl",
             "ih",
+            "allh",
             "w",
             "my",
             "y",

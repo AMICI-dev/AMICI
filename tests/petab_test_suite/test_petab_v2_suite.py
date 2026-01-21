@@ -21,11 +21,14 @@ from amici.sim.sundials.gradient_check import (
 )
 from amici.sim.sundials.petab import PetabSimulator
 from petab import v2
+import jax
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
 stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
+
+jax.config.update("jax_enable_x64", True)
 
 
 @pytest.mark.filterwarnings(
@@ -84,7 +87,7 @@ def _test_case(case, model_type, version, jax):
             force_import=True,
         )
 
-        llh, ret = run_simulations(
+        llh, _ = run_simulations(
             jax_problem, steady_state_event=steady_state_event
         )
         chi2, _ = run_simulations(

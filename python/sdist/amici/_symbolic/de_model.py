@@ -1141,6 +1141,14 @@ class DEModel:
                 ]
             )
             return
+        elif name == "allh":
+            self._syms[name] = sp.Matrix(
+                [
+                    sym
+                    for sym, _ in zip(self.sym("h"), self._events)
+                ]
+            )
+            return
         elif name == "deltax":
             length = sp.Matrix(self.eq(name)).shape[0]
         else:
@@ -1594,11 +1602,6 @@ class DEModel:
                     event_eqs.append(state_update)
 
             self._eqs[name] = event_eqs
-
-        elif name == "x_old":
-            self._eqs[name] = sp.Matrix(
-                [state.get_x_rdata() for state in self.states()]
-            )
 
         elif name == "z":
             event_observables = [
@@ -2680,6 +2683,39 @@ class DEModel:
             boolean indicating if priority events are present
         """
         return any(event.get_priority() is not None for event in self._events)
+    
+    def has_simultaneous_events(self) -> bool:
+        """
+        Checks whether the model has events that can be triggered simultaneously
+        by checking for duplicate event triggering expressions that depend on time.
+
+        :return:
+            boolean indicating if simultaneous events are present
+        """
+        t_exprs = []
+        for event in self._events:
+            if "negative" in event._name:
+                continue
+            trigger = event.get_val()
+            t_args = self._args_containing_t(trigger)
+            t_exprs.append(t_args)
+
+        t_exprs = list(itertools.chain(*t_exprs))
+
+        return len(t_exprs) != len(set(t_exprs))
+
+    
+    def _args_containing_t(self, expr):
+        t = sp.Symbol("t", real=True)
+        hits = []
+        for node in sp.preorder_traversal(expr):
+            if isinstance(node, sp.Min):
+                hits.extend([arg for arg in node.args if arg.has(t) and arg != t])
+            elif node.is_Atom:
+                continue
+            elif node.has(t):
+                hits.extend([node])
+        return list(set(hits))
     
     def has_implicit_event_assignments(self) -> bool:
         """

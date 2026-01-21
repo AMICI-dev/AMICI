@@ -383,6 +383,15 @@ class JAXProblem(eqx.Module):
                         for oid in m[petabv1.OBSERVABLE_ID].values
                     ]
                 )
+            elif petabv2.C.NOISE_DISTRIBUTION in self._petab_problem.observable_df:
+                iy_trafos = np.array(
+                    [
+                        SCALE_TO_INT[petabv1.LOG] if self._petab_problem.observable_df.loc[
+                            oid, petabv2.C.NOISE_DISTRIBUTION
+                        ] == petabv2.C.LOG_NORMAL else SCALE_TO_INT[petabv1.LIN]
+                        for oid in m[petabv1.OBSERVABLE_ID].values
+                    ]
+                )
             else:
                 iy_trafos = np.zeros_like(iys)
 
@@ -1122,6 +1131,7 @@ class JAXProblem(eqx.Module):
         :param is_preeq: Whether to get preequilibration or simulation parameter value
         :return: Value of the parameter
         """
+        condition_ids = []
         for p in experiment.periods:
             if is_preeq:
                 if p.time >= 0.0:
@@ -1348,15 +1358,16 @@ class JAXProblem(eqx.Module):
             [self.load_model_parameters(exp, is_preeq) for exp in experiments]
         )
 
-        # experiments by total number of events - each experiment needs to mask out the events that aren't
-        # relevant for that experiment 
-        # TODO: remove the duplication if we get rid of the JAX-specific negative event duplication in SbmlImporter
-        def _experiment_event_inds(experiment_ind):
-            num_periods = len(self._petab_problem.experiments[experiment_ind].periods)
-            return jnp.arange(experiment_ind * 2, experiment_ind * 2 + (num_periods * 2))
+        exp_ids = [exp.id for exp in experiments]
+        all_exp_ids = [exp.id for exp in self._petab_problem.experiments]
 
         h_mask = jnp.stack(
-            [jnp.isin(jnp.arange(self.model.n_events), _experiment_event_inds(i)) for i, _ in enumerate(experiments)]
+            [
+                jnp.ones(self.model.n_events) 
+                if (exp_id in exp_ids) 
+                else jnp.zeros(self.model.n_events)
+                for exp_id in all_exp_ids
+            ]
         )
 
         t_zeros = jnp.stack([
@@ -1452,6 +1463,7 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),  # noqa: F821, F722
+        h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),  # noqa: F821, F722
         ts_mask: np.ndarray = np.array([]),
         t_zeros: jnp.float_ = 0.0,
         ret: ReturnValue = ReturnValue.llh,
@@ -1510,6 +1522,7 @@ class JAXProblem(eqx.Module):
             nps=nps,
             ops=ops,
             x_preeq=x_preeq,
+            h_preeq=h_preeq,
             mask_reinit=jax.lax.stop_gradient(mask_reinit),
             x_reinit=x_reinit,
             init_override=init_override,
@@ -1532,6 +1545,7 @@ class JAXProblem(eqx.Module):
         self,
         experiments: list[petabv2.Experiment],
         preeq_array: jt.Float[jt.Array, "ncond *nx"],  # noqa: F821, F722
+        h_preeqs: jt.Bool[jt.Array, "ncond *ne"],  # noqa: F821
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -1629,6 +1643,7 @@ class JAXProblem(eqx.Module):
             steady_state_event,
             max_steps,
             preeq_array,
+            h_preeqs,
             self._ts_masks,
             t_zeros,
             ret,
@@ -1780,10 +1795,9 @@ def run_simulations(
     }
 
     has_preeq = any(exp.periods[0].time < 0.0 for exp in experiments)
-    has_dynamic = any(exp.periods[-1].time >= 0.0 for exp in experiments)
 
     if has_preeq:
-        preeqs, preresults = problem.run_preequilibrations(
+        preeqs, preresults, h_preeqs = problem.run_preequilibrations(
             experiments,
             solver,
             controller,
@@ -1802,27 +1816,24 @@ def run_simulations(
                 for _ in experiments
             ]
         )
-
-    if has_dynamic:
-        output, results = problem.run_simulations(
-            experiments,
-            preeqs_array,
-            solver,
-            controller,
-            root_finder,
-            steady_state_event,
-            max_steps,
-            ret,
+        h_preeqs = jnp.stack(
+            [
+                jnp.array([])
+                for _ in experiments
+            ]
         )
-    else:
-        output = jnp.array(0.0)
-        results = {
-            "llh": jnp.array([]),
-            "stats_dyn": None,
-            "stats_posteq": None,
-            "ts": jnp.array([]),
-            "x": jnp.array([]),
-        }
+
+    output, results = problem.run_simulations(
+        experiments,
+        preeqs_array,
+        h_preeqs,
+        solver,
+        controller,
+        root_finder,
+        steady_state_event,
+        max_steps,
+        ret,
+    )
 
     if ret in (ReturnValue.llh, ReturnValue.chi2):
         if os.getenv("JAX_DEBUG") == "1":
