@@ -593,6 +593,7 @@ class JAXModel(eqx.Module):
         ],
         max_steps: int | jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        h_preeq: jt.Float[jt.Array, "*ne"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
@@ -649,6 +650,7 @@ class JAXModel(eqx.Module):
             self._root_cond_fn,
             self._delta_x,
             h_mask,
+            h_preeq,
             {},
         )
 
@@ -672,6 +674,7 @@ class JAXModel(eqx.Module):
                 self._root_cond_fn,
                 self._delta_x,
                 self._known_discs(p),
+                self.observable_ids,
             )
             x_solver = x_dyn[-1, :]
         else:
@@ -787,6 +790,7 @@ class JAXModel(eqx.Module):
         ],
         max_steps: int | jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),
         mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
         x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
@@ -870,6 +874,7 @@ class JAXModel(eqx.Module):
             steady_state_event,
             max_steps,
             x_preeq,
+            h_preeq,
             mask_reinit,
             x_reinit,
             init_override,
@@ -935,10 +940,11 @@ class JAXModel(eqx.Module):
             self._root_cond_fn,
             self._delta_x,
             h_mask,
+            jnp.array([]),
             {},
         )
 
-        current_x, _, stats_preeq = eq(
+        current_x, h, stats_preeq = eq(
             p,
             tcl,
             h,
@@ -956,7 +962,7 @@ class JAXModel(eqx.Module):
             max_steps,
         )
 
-        return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq)
+        return self._x_rdata(current_x, tcl), dict(stats_preeq=stats_preeq), h
 
     def _handle_t0_event(
         self,
@@ -968,11 +974,17 @@ class JAXModel(eqx.Module):
         root_cond_fn: Callable,
         delta_x: Callable,
         h_mask: jt.Bool[jt.Array, "ne"],
+        h_preeq: jt.Bool[jt.Array, "ne"],
         stats: dict,
     ):
         y0 = y0_next.copy()
         rf0 = self.event_initial_values - 0.5
-        h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
+        
+        if h_preeq.shape[0]:
+            # return immediately because preequilibration is equivalent to handling t0 event?
+            return y0, t0_next, h_preeq, stats
+        else:    
+            h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
         args = (p, tcl, h)
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)

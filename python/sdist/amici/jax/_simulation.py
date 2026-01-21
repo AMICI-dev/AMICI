@@ -109,56 +109,76 @@ def eq(
         )
 
     def body_fn(carry):
-        t_start, y0, h, event_index, stats = carry
-        sol, event_index, stats = _run_segment(
-            t_start,
-            jnp.inf,
-            y0,
-            p,
-            tcl,
-            h,
-            solver,
-            controller,
-            root_finder,
-            max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
-            diffrax.DirectAdjoint(),
-            [steady_state_event] + root_cond_fns,
-            [None] + [True] * len(root_cond_fns),
-            diffrax.SaveAt(t1=True),
-            term,
-            stats,
-        )
-        y0_next = jnp.where(
-            jnp.logical_or(
-                diffrax.is_successful(sol.result),
-                diffrax.is_event(sol.result),
-            ),
-            sol.ys[-1],
-            jnp.inf * jnp.ones_like(sol.ys[-1]),
-        )
-        t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
+        t_start, y0, h, _, _ = carry
 
-        y0_next, h_next, stats = _handle_event(
-            t0_next,
-            y0_next,
-            p,
-            tcl,
-            h,
-            root_finder,
-            term,
-            root_cond_fn,
-            delta_x,
-            h_mask,
-            stats,
+        # skip the solve if already at steady state
+        # TODO: remove once https://github.com/patrick-kidger/diffrax/issues/720 is resolved?
+        at_steady_state = steady_state_event(
+            t_start, 
+            y0, 
+            (p,tcl,h), 
+            terms=term, 
+            solver=solver, 
+            stepsize_controller=controller
         )
 
-        return (
-            t0_next,
-            y0_next,
-            h_next,
-            event_index,
-            dict(**STARTING_STATS),
-        )
+        def at_steady_state_fn(carry):
+            return carry
+
+        def not_at_steady_state_fn(carry):
+            t_start, y0, h, event_index, stats = carry
+
+            sol, event_index, stats = _run_segment(
+                t_start,
+                jnp.inf,
+                y0,
+                p,
+                tcl,
+                h,
+                solver,
+                controller,
+                root_finder,
+                max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
+                diffrax.DirectAdjoint(),
+                [steady_state_event] + root_cond_fns,
+                [None] + [True] * len(root_cond_fns),
+                diffrax.SaveAt(t1=True),
+                term,
+                stats,
+            )
+            y0_next = jnp.where(
+                jnp.logical_or(
+                    diffrax.is_successful(sol.result),
+                    diffrax.is_event(sol.result),
+                ),
+                sol.ys[-1],
+                jnp.inf * jnp.ones_like(sol.ys[-1]),
+            )
+            t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
+
+            y0_next, h_next, stats = _handle_event(
+                t0_next,
+                y0_next,
+                p,
+                tcl,
+                h,
+                root_finder,
+                term,
+                root_cond_fn,
+                delta_x,
+                h_mask,
+                stats,
+            )
+
+            return (
+                t0_next,
+                y0_next,
+                h_next,
+                event_index,
+                dict(**STARTING_STATS),
+            )
+        
+        return jax.lax.cond(at_steady_state, at_steady_state_fn, not_at_steady_state_fn, carry)
 
     # run the loop until no event is triggered (which will also be the case if we run out of steps)
     _, y1, h, _, stats = eqxi.while_loop(
@@ -190,6 +210,7 @@ def solve(
     root_cond_fn: Callable,
     delta_x: Callable,
     known_discs: jt.Float[jt.Array, "*nediscs"],
+    observable_ids: list[str],
 ) -> tuple[jt.Float[jt.Array, "nt nxs"], jt.Float[jt.Array, "nt ne"], dict]:
     """
     Simulate the ODE system for the specified timepoints.
@@ -222,6 +243,8 @@ def solve(
         function to compute state changes at events
     :param known_discs:
         known discontinuities, used to clip the step size controller
+    :param observable_ids:
+        list of observable IDs
     :return:
         solution+heaviside variables at time points ts and statistics
     """
@@ -317,7 +340,7 @@ def solve(
         return ys, t0_next, y0_next, hs, h_next, stats
 
     # run the loop until we have reached the end of the time points
-    ys, _, _, hs, _, stats = eqxi.while_loop(
+    ys, t0_next, y0_next, hs, _, stats = eqxi.while_loop(
         cond_fn,
         body_fn,
         (
@@ -331,6 +354,12 @@ def solve(
         kind="bounded",
         max_steps=2**6,
     )
+
+    mask = ts == t0_next
+    n_obs = len(observable_ids)
+    y0_obs = y0_next[None, -n_obs:]
+    updated_last = jnp.where(mask[:, None], y0_obs, ys[:, -n_obs:])
+    ys = ys.at[:, -n_obs:].set(updated_last)
 
     return ys, hs, stats
 
@@ -360,7 +389,6 @@ def _run_segment(
     triggered during the integration. ``None`` indicates that the solver
     reached ``t_end`` without any event firing.
     """
-
     # combine all discontinuity conditions into a single diffrax.Event
     event = (
         diffrax.Event(
@@ -466,7 +494,51 @@ def _handle_event(
             h_next,
         )
 
+    y0_next = _check_cascading_events(
+        t0_next,
+        y0_next,
+        rootvals,
+        p,
+        tcl,
+        h_next,
+        root_finder,
+        term,
+        root_cond_fn,
+        delta_x,
+        h_mask,
+    )
+
     return y0_next, h_next, stats
+
+def _check_cascading_events(
+    t0_next: float,
+    y0_next: jt.Float[jt.Array, "nxs"],
+    rootval_prev: jt.Float[jt.Array, "nroots"],
+    p: jt.Float[jt.Array, "np"],
+    tcl: jt.Float[jt.Array, "ncl"],
+    h: jt.Float[jt.Array, "ne"],
+    root_finder: AbstractRootFinder,
+    term: diffrax.ODETerm,
+    root_cond_fn: Callable,
+    delta_x: Callable,
+    h_mask: jt.Bool[jt.Array, "ne"],
+):
+    args = (p, tcl, h)
+    rootvals = root_cond_fn(t0_next, y0_next, args)
+    root_vals_changed_sign = jnp.sign(rootvals) != jnp.sign(rootval_prev)
+    roots_dir = jnp.sign(jnp.sign(rootvals) - jnp.sign(rootval_prev))
+
+    y0_next, _ = _apply_event_assignments(
+        root_vals_changed_sign,
+        roots_dir,
+        y0_next,
+        p,
+        tcl,
+        h,
+        delta_x,
+    )
+
+    return y0_next
 
 def _apply_event_assignments(
     roots_found,
