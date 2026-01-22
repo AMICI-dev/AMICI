@@ -612,6 +612,9 @@ class JAXModel(eqx.Module):
         if p is None:
             p = self.parameters
 
+        if not h_mask.shape[0]:
+            h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
+
         if os.getenv("JAX_DEBUG") == "1":
             jax.debug.print(
                 "x_reinit: {}, x_preeq: {}, x_def: {}. p: {}",
@@ -923,6 +926,9 @@ class JAXModel(eqx.Module):
         t0 = 0.0
         if p is None:
             p = self.parameters
+
+        if not h_mask.shape[0]:
+            h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
 
         x0 = self._x0(t0, p)
         if x_reinit.shape[0]:
