@@ -96,21 +96,21 @@ def test_jax_llh(benchmark_problem):
         r_amici = simulate_amici()
     llh_amici = r_amici[LLH]
 
-    jax_problem = import_petab_problem(
-        petab_problem,
-        output_dir=benchmark_outdir / (problem_id + "_jax"),
-        jax=True,
-    )
-    if problem_parameters:
-        jax_problem = eqx.tree_at(
-            lambda x: x.parameters,
-            jax_problem,
-            jnp.array(
-                [problem_parameters[pid] for pid in jax_problem.parameter_ids]
-            ),
-        )
-
     try:
+        jax_problem = import_petab_problem(
+            petab_problem,
+            output_dir=benchmark_outdir / (problem_id + "_jax"),
+            jax=True,
+        )
+        if problem_parameters:
+            jax_problem = eqx.tree_at(
+                lambda x: x.parameters,
+                jax_problem,
+                jnp.array(
+                    [problem_parameters[pid] for pid in jax_problem.parameter_ids]
+                ),
+            )
+
         if problem_id in problems_for_gradient_check:
             if problem_id == "Weber_BMC2015":
                 atol = cur_settings.atol_sim
@@ -154,6 +154,6 @@ def test_jax_llh(benchmark_problem):
     except (NotImplementedError, TypeError) as err:
         if "run_simulations does not support PEtab v1 problems" in str(err):
             pytest.skip(str(err))
-        if "The JAX backend does not support simultaneous events" in str(err):
+        elif "The JAX backend does not support simultaneous events" in str(err):
             pytest.skip(str(err))
         raise err
