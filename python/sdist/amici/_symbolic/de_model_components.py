@@ -875,6 +875,15 @@ class Event(ModelQuantity):
         time points at which the event triggers.
         """
         return set(self._t_root)
+    
+    def _implicit_symbols(self):
+        symbols = [str(s) for s in list(self.get_val().free_symbols)]
+        implicit_symbols = []
+        for s in symbols:
+            if (s.startswith("_petab_") and "indicator" in s) or s == "t":
+                continue
+            implicit_symbols.append(s)
+        return len(implicit_symbols) > 0
 
     @property
     def uses_values_from_trigger_time(self) -> bool:
