@@ -110,43 +110,48 @@ def test_jax_llh(benchmark_problem):
             ),
         )
 
-    if problem_id in problems_for_gradient_check:
-        if problem_id == "Weber_BMC2015":
-            atol = cur_settings.atol_sim
-            rtol = cur_settings.rtol_sim
-            max_steps = 2 * 10**5
-        else:
-            atol = 1e-8
-            rtol = 1e-8
-            max_steps = 1024
-        beartype(run_simulations)(jax_problem)
-        (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
-            run_simulations, has_aux=True
-        )(
-            jax_problem, 
-            max_steps=max_steps,
-            controller=diffrax.PIDController(
-                atol=atol,
-                rtol=rtol,
+    try:
+        if problem_id in problems_for_gradient_check:
+            if problem_id == "Weber_BMC2015":
+                atol = cur_settings.atol_sim
+                rtol = cur_settings.rtol_sim
+                max_steps = 2 * 10**5
+            else:
+                atol = 1e-8
+                rtol = 1e-8
+                max_steps = 1024
+            beartype(run_simulations)(jax_problem)
+            (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
+                run_simulations, has_aux=True
+            )(
+                jax_problem, 
+                max_steps=max_steps,
+                controller=diffrax.PIDController(
+                    atol=atol,
+                    rtol=rtol,
+                )
             )
-        )
-    else:
-        llh_jax, _ = beartype(run_simulations)(jax_problem)
+        else:
+            llh_jax, _ = beartype(run_simulations)(jax_problem)
 
-    np.testing.assert_allclose(
-        llh_jax,
-        llh_amici,
-        rtol=1e-3,
-        atol=1e-3,
-        err_msg=f"LLH mismatch for {problem_id}",
-    )
-
-    if problem_id in problems_for_gradient_check:
-        sllh_amici = r_amici[SLLH]
         np.testing.assert_allclose(
-            sllh_jax.parameters,
-            np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
-            rtol=1e-2,
-            atol=1e-2,
-            err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
+            llh_jax,
+            llh_amici,
+            rtol=1e-3,
+            atol=1e-3,
+            err_msg=f"LLH mismatch for {problem_id}",
         )
+
+        if problem_id in problems_for_gradient_check:
+            sllh_amici = r_amici[SLLH]
+            np.testing.assert_allclose(
+                sllh_jax.parameters,
+                np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
+                rtol=1e-2,
+                atol=1e-2,
+                err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
+            )
+    except TypeError as err:
+        if "run_simulations does not support PEtab v1 problems" in str(err):
+            pytest.skip(str(err))
+        raise err

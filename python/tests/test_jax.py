@@ -438,7 +438,9 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
 
         assert_allclose(xs[0], 0.0, atol=1e-2)
 
-    except NotImplementedError as err:
+    except (TypeError, NotImplementedError) as err:
         if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        elif "run_simulations does not support PEtab v1 problems" in str(err):
             pytest.skip(str(err))
         raise err

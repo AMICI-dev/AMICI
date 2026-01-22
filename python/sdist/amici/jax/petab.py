@@ -166,7 +166,7 @@ class JAXProblem(eqx.Module):
         if isinstance(petab_problem, petabv2.Problem):
             petab_problem = add_default_experiment_names_to_v2_problem(petab_problem)
             scs = get_simulation_conditions_v2(petab_problem)
-            self.simulation_conditions = scs.simulationConditionId
+            self.simulation_conditions = scs.simulationConditionId.to_list()
         else:
             scs = petab_problem.get_simulation_conditions_from_measurement_df()
             self.simulation_conditions = tuple(tuple(sc) for sc in scs.values)

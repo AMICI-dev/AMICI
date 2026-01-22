@@ -73,6 +73,7 @@ def _test_case(case, model_type, version, jax):
 
     if jax:
         from amici.jax import petab_simulate, run_simulations
+        from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
         steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
 
@@ -87,14 +88,31 @@ def _test_case(case, model_type, version, jax):
             force_import=True,
         )
 
+        if case.startswith("0016"):
+            controller = diffrax.PIDController(
+                **DEFAULT_CONTROLLER_SETTINGS,
+                dtmax=0.5
+            )
+        else:
+            controller = diffrax.PIDController(
+                **DEFAULT_CONTROLLER_SETTINGS
+            )
+
         llh, _ = run_simulations(
-            jax_problem, steady_state_event=steady_state_event
+            jax_problem, 
+            steady_state_event=steady_state_event, 
+            controller=controller,
         )
         chi2, _ = run_simulations(
-            jax_problem, ret="chi2", steady_state_event=steady_state_event
+            jax_problem, 
+            ret="chi2", 
+            steady_state_event=steady_state_event, 
+            controller=controller,
         )
         simulation_df = petab_simulate(
-            jax_problem, steady_state_event=steady_state_event
+            jax_problem, 
+            steady_state_event=steady_state_event, 
+            controller=controller,
         )
     else:
         pi = PetabImporter(
