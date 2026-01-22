@@ -1,14 +1,14 @@
 name: PEtab SciML
-on:
-  push:
-    branches:
-      - main
-      - 'release*'
-  pull_request:
-    branches:
-      - main
-  merge_group:
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#       - 'release*'
+#   pull_request:
+#     branches:
+#       - main
+#   merge_group:
+#   workflow_dispatch:
 
 jobs:
   build:
