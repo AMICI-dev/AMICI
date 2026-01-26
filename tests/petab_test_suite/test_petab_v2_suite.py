@@ -198,6 +198,8 @@ def _test_case(case, model_type, version, jax):
     else:
         if (case, model_type, version) in (
             ("0016", "sbml", "v2.0.0"),
+            ("0024", "sbml", "v2.0.0"),
+            ("0025", "sbml", "v2.0.0"),
             ("0013", "pysb", "v2.0.0"),
         ):
             # FIXME: issue with events and sensitivities

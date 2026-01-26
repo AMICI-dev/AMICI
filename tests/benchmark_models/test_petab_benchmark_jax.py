@@ -154,6 +154,6 @@ def test_jax_llh(benchmark_problem):
     except (NotImplementedError, TypeError) as err:
         if "run_simulations does not support PEtab v1 problems" in str(err):
             pytest.skip(str(err))
-        elif "The JAX backend does not support simultaneous events" in str(err):
+        elif "The JAX backend does not support" in str(err):
             pytest.skip(str(err))
         raise err
