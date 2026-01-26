@@ -245,8 +245,7 @@ def run():
     n_total = 0
     version = "v2.0.0"
 
-    # for jax in (False, True):
-    for jax in (True):
+    for jax in (False, True):
         cases = list(petabtests.get_cases("sbml", version=version))
         n_total += len(cases)
         for case in cases:

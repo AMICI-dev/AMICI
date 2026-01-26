@@ -117,27 +117,6 @@ def _conditions_to_experiment_map(experiment_df: pd.DataFrame) -> dict[str, str]
     }
     return condition_to_experiment
 
-# def get_states_in_condition_table_v2(
-#     petab_problem,
-#     condition: dict | pd.Series = None,
-# ) -> dict[str, tuple[float | str | None, float | str | None]]:
-#     """Get states and their initial condition as specified in the condition table.
-
-#     Returns: Dictionary: ``stateId -> (initial condition simulation)``
-#     """
-#     states = {
-#         target_id: (target_value, None)
-#         if condition_id == condition[petabv1.SIMULATION_CONDITION_ID]
-#         else (None, None)
-#         for condition_id, target_id, target_value in zip(
-#             petab_problem.condition_df[petabv2.C.CONDITION_ID],
-#             petab_problem.condition_df[petabv2.C.TARGET_ID],
-#             petab_problem.condition_df[petabv2.C.TARGET_VALUE],
-#         )
-#     }
-
-#     return states
-
 def _try_float(value):
     try:
         return float(value)

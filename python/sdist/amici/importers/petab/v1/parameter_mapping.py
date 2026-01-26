@@ -474,11 +474,9 @@ def create_parameter_mapping_for_condition(
     # ExpData.x0, but in the case of pre-equilibration this would not allow for
     # resetting initial states.
 
-    states_in_condition_table = get_states_in_condition_table(
+    if states_in_condition_table := get_states_in_condition_table(
         petab_problem, condition
-    )
-
-    if states_in_condition_table:
+    ):
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
         # that it was not added by the user with a different meaning...)
@@ -527,7 +525,7 @@ def create_parameter_mapping_for_condition(
                 value,
                 fill_fixed_parameters=fill_fixed_parameters,
             )
-                # set dummy value as above
+            # set dummy value as above
             if condition_map_preeq:
                 condition_map_preeq[init_par_id] = 0.0
                 condition_scale_map_preeq[init_par_id] = LIN

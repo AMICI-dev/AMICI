@@ -2720,6 +2720,7 @@ class DEModel:
     def has_implicit_event_assignments(self) -> bool:
         """
         Checks whether the model has event assignments with implicit triggers
+        (i.e. triggers that are not time based).
 
         :return:
             boolean indicating if event assignments with implicit triggers are present
