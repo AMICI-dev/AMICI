@@ -615,15 +615,6 @@ class JAXModel(eqx.Module):
         if not h_mask.shape[0]:
             h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
 
-        if os.getenv("JAX_DEBUG") == "1":
-            jax.debug.print(
-                "x_reinit: {}, x_preeq: {}, x_def: {}. p: {}",
-                x_reinit,
-                x_preeq,
-                self._x0(t0, p),
-                p,
-            )
-
         if x_preeq.shape[0]:
             x = x_preeq
         elif init_override.shape[0]:
@@ -913,6 +904,9 @@ class JAXModel(eqx.Module):
             re-initialized state vector. If not provided, the state vector is not re-initialized.
         :param mask_reinit:
             mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
+        :param h_mask:
+            mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it 
+            it marked as 1.0.
         :param solver:
             ODE solver
         :param controller:
@@ -1025,15 +1019,13 @@ class JAXModel(eqx.Module):
 
         if os.getenv("JAX_DEBUG") == "1":
             jax.debug.print(
-                "handle_t0_event h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}, y0_next: {}, y0: {}",
+                "h: {}, rf0: {}, rfx: {}, roots_found: {}, roots_dir: {}, h_next: {}",
                 h,
                 rf0,
                 rfx,
                 roots_found,
                 roots_dir,
                 h_next,
-                y0_next,
-                y0,
             )
 
         return y0_next, t0_next, h_next, stats

@@ -1491,6 +1491,8 @@ class JAXProblem(eqx.Module):
             Mask for states that need reinitialisation
         :param x_reinit:
             Reinitialisation values for states
+        :param h_mask:
+            Mask for the events that are part of the current experiment
         :param solver:
             ODE solver to use for simulation
         :param controller:
@@ -1503,6 +1505,8 @@ class JAXProblem(eqx.Module):
         :param x_preeq:
             Pre-equilibration state. Can be empty if no pre-equilibration is available, in which case the states will
             be initialised to the model default values.
+        :param h_preeq:
+            Pre-equilibration event mask. Can be empty if no pre-equilibration is available
         :param ts_mask:
             padding mask, see :meth:`JAXModel.simulate_condition` for details.
         :param t_zeros:
@@ -1563,6 +1567,9 @@ class JAXProblem(eqx.Module):
         :param preeq_array:
             Matrix of pre-equilibrated states for the simulation conditions. Ordering must match the simulation
             conditions. If no pre-equilibration is available for a condition, the corresponding row must be empty.
+        :param h_preeqs:
+            Matrix of pre-equilibration event heaviside variables indicating whether an event condition is false or
+            true after preequilibration.
         :param solver:
             ODE solver to use for simulation.
         :param controller:
@@ -1678,6 +1685,8 @@ class JAXProblem(eqx.Module):
             Mask for states that need reinitialisation
         :param x_reinit:
             Reinitialisation values for states
+        :param h_mask:
+            Mask for the events that are part of the current experiment
         :param solver:
             ODE solver to use for simulation
         :param controller:

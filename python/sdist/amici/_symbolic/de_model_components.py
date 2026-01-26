@@ -877,6 +877,9 @@ class Event(ModelQuantity):
         return set(self._t_root)
     
     def _implicit_symbols(self):
+        """Get implicit symbols in the event trigger function.
+        That is, all symbols except time and petab indicator variables.
+        """
         symbols = [str(s) for s in list(self.get_val().free_symbols)]
         implicit_symbols = []
         for s in symbols:
