@@ -716,6 +716,7 @@ class Event(ModelQuantity):
         assignments: dict[sp.Symbol, sp.Expr] | None = None,
         initial_value: bool | None = True,
         priority: sp.Basic | None = None,
+        is_negative_event: bool = False,
     ):
         """
         Create a new Event instance.
@@ -737,6 +738,11 @@ class Event(ModelQuantity):
             `False`, events may trigger at ``t==t0``, otherwise not.
 
         :param priority: The priority of the event assignment.
+
+        :param is_negative_event:
+            Whether this event is a "negative" event, i.e., an event that is 
+            added to mirror an existing event with inverted trigger condition
+            to avoid immediate retriggering of the original event (JAX simulations).
 
         :param use_values_from_trigger_time:
             Whether the event assignment is evaluated using the state from
@@ -770,6 +776,8 @@ class Event(ModelQuantity):
             except NotImplementedError:
                 # the trigger can't be solved for `t`
                 pass
+
+        self._is_negative_event = is_negative_event
 
     def get_state_update(
         self, x: sp.Matrix, x_old: sp.Matrix

@@ -156,11 +156,6 @@ class ODEExporter:
                 "The JAX backend does not support event priorities."
             )
         
-        if ode_model.has_simultaneous_events():
-            raise NotImplementedError(
-                "The JAX backend does not support simultaneous events because event priorities are not supported."
-            )
-        
         if ode_model.has_implicit_event_assignments():
             raise NotImplementedError(
                 "The JAX backend does not support event assignments with implicit triggers."

@@ -561,10 +561,22 @@ def _apply_event_assignments(
             for _ in range(y0_next.shape[0])
         ]
     ).T
-    delx = delta_x(y0_next, p, tcl)
-    if y0_next.size:
-        delx = delx.reshape(delx.size // y0_next.shape[0], y0_next.shape[0],)
-    y0_up = jnp.where(mask, delx, 0.0)
-    y0_next = y0_next + jnp.sum(y0_up, axis=0)
+
+    # apply one event at a time 
+    if h_next.shape[0]:
+        n_pairs = h_next.shape[0] // 2
+        inds_seq = jnp.arange(n_pairs)
+
+        def body(y, e):
+            inds = jnp.array([e * 2, e * 2 + 1])
+            delx = delta_x(y, p, tcl)
+            if y.size:
+                delx = delx.reshape(delx.size // y.shape[0], y.shape[0])
+            keep = jnp.zeros_like(mask).at[inds, :].set(True)
+            updated_mask = jnp.where(keep, mask, False)
+            y = y + jnp.sum(jnp.where(updated_mask, delx, 0.0), axis=0)
+            return y, None
+
+        y0_next, _ = jax.lax.scan(body, y0_next, inds_seq)
 
     return y0_next, h_next
