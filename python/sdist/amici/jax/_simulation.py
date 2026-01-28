@@ -563,7 +563,7 @@ def _apply_event_assignments(
     ).T
 
     # apply one event at a time 
-    if h_next.shape[0]:
+    if h_next.shape[0] and y0_next.shape[0]:
         n_pairs = h_next.shape[0] // 2
         inds_seq = jnp.arange(n_pairs)
 

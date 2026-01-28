@@ -368,10 +368,12 @@ def test_time_dependent_discontinuity(tmp_path):
 
         ys, _, _ = solve(
             p,
+            ts[0],
             ts,
             tcl,
             h,
             x0,
+            jnp.ones_like(h),
             diffrax.Tsit5(),
             diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
             optimistix.Newton(atol=1e-8, rtol=1e-8),
@@ -382,6 +384,7 @@ def test_time_dependent_discontinuity(tmp_path):
             model._root_cond_fn,
             model._delta_x,
             model._known_discs(p),
+            model.observable_ids,
         )
 
         assert ys.shape[0] == ts.shape[0]
@@ -430,6 +433,7 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
             tcl,
             h,
             x0,
+            jnp.ones_like(h),
             diffrax.Tsit5(),
             diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
             optimistix.Newton(atol=1e-8, rtol=1e-8),
