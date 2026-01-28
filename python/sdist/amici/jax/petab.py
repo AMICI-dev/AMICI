@@ -286,8 +286,8 @@ class JAXProblem(eqx.Module):
         for col in [petab.OBSERVABLE_PARAMETERS, petab.NOISE_PARAMETERS]:
             n_pars[col] = 0
             if col in self._petab_problem.measurement_df:
-                if np.issubdtype(
-                    self._petab_problem.measurement_df[col].dtype, np.number
+                if pd.api.types.is_numeric_dtype(
+                    self._petab_problem.measurement_df[col].dtype
                 ):
                     n_pars[col] = 1 - int(
                         self._petab_problem.measurement_df[col].isna().all()
@@ -363,7 +363,7 @@ class JAXProblem(eqx.Module):
                     mat_numeric = jnp.ones((len(m), n_pars[col]))
                     par_mask = np.zeros_like(mat_numeric, dtype=bool)
                     par_index = np.zeros_like(mat_numeric, dtype=int)
-                elif np.issubdtype(m[col].dtype, np.number):
+                elif pd.api.types.is_numeric_dtype(m[col].dtype):
                     mat_numeric = np.expand_dims(m[col].values, axis=1)
                     par_mask = np.zeros_like(mat_numeric, dtype=bool)
                     par_index = np.zeros_like(mat_numeric, dtype=int)
