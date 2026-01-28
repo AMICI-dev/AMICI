@@ -1908,6 +1908,7 @@ class SbmlImporter:
                     "initial_value": not initial_value,
                     "use_values_from_trigger_time": use_trig_val,
                     "priority": self._sympify(event.getPriority()),
+                    "is_negative_event": True,
                 }
 
     @log_execution_time("processing observation model", logger)

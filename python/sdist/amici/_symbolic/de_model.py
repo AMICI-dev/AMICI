@@ -2684,39 +2684,6 @@ class DEModel:
         """
         return any(event.get_priority() is not None for event in self._events)
     
-    def has_simultaneous_events(self) -> bool:
-        """
-        Checks whether the model has events that can be triggered simultaneously
-        by checking for duplicate event triggering expressions that depend on time.
-
-        :return:
-            boolean indicating if simultaneous events are present
-        """
-        t_exprs = []
-        for event in self._events:
-            if "negative" in event._name:
-                continue
-            trigger = event.get_val()
-            t_args = self._args_containing_t(trigger)
-            t_exprs.append(t_args)
-
-        t_exprs = list(itertools.chain(*t_exprs))
-
-        return len(t_exprs) != len(set(t_exprs))
-
-    
-    def _args_containing_t(self, expr):
-        t = sp.Symbol("t", real=True)
-        hits = []
-        for node in sp.preorder_traversal(expr):
-            if isinstance(node, sp.Min):
-                hits.extend([arg for arg in node.args if arg.has(t) and arg != t])
-            elif node.is_Atom:
-                continue
-            elif node.has(t):
-                hits.extend([node])
-        return list(set(hits))
-    
     def has_implicit_event_assignments(self) -> bool:
         """
         Checks whether the model has event assignments with implicit triggers
