@@ -389,7 +389,7 @@ def ode_model_from_pysb_importer(
     pysb.bng.generate_equations(model, verbose=verbose)
 
     _process_pysb_species(model, ode)
-    _process_pysb_parameters(model, ode, fixed_parameters, jax)
+    _process_pysb_parameters(model, ode, fixed_parameters)
     if compute_conservation_laws:
         if _events:
             raise NotImplementedError(
@@ -570,7 +570,6 @@ def _process_pysb_parameters(
     pysb_model: pysb.Model,
     ode_model: DEModel,
     fixed_parameters: list[str],
-    jax: bool = False,
 ) -> None:
     """
     Converts pysb parameters into Parameters or Constants and adds them to
@@ -582,9 +581,6 @@ def _process_pysb_parameters(
     :param fixed_parameters:
        model variables excluded from sensitivity analysis
 
-    :param jax:
-        if set to ``True``, the generated model will be compatible JAX export
-
     :param ode_model:
         DEModel instance
     """
@@ -593,10 +589,6 @@ def _process_pysb_parameters(
         if par.name in fixed_parameters:
             comp = FixedParameter
             args.append(par.value)
-        elif jax and re.match(r"noiseParameter\d+", par.name):
-            comp = NoiseParameter
-        elif jax and re.match(r"observableParameter\d+", par.name):
-            comp = ObservableParameter
         else:
             comp = FreeParameter
             args.append(par.value)
