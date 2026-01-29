@@ -355,7 +355,7 @@ def create_parameter_mapping(
             converter_config = (
                 libsbml.SBMLLocalParameterConverter().getDefaultProperties()
             )
-            petab_problem.sbml_document.convert(converter_config)
+            petab_problem.model.sbml_document.convert(converter_config)
         else:
             logger.debug(
                 "No petab_problem.sbml_document is set. Cannot "

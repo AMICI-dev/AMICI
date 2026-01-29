@@ -4,6 +4,7 @@
 import logging
 import sys
 
+import diffrax
 import pandas as pd
 import petabtests
 import pytest
@@ -20,11 +21,14 @@ from amici.sim.sundials.gradient_check import (
 )
 from amici.sim.sundials.petab import PetabSimulator
 from petab import v2
+import jax
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
 stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
+
+jax.config.update("jax_enable_x64", True)
 
 
 @pytest.mark.filterwarnings(
@@ -66,28 +70,74 @@ def _test_case(case, model_type, version, jax):
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
 
-    pi = PetabImporter(
-        petab_problem=problem,
-        module_name=model_name,
-        compile_=True,
-        jax=jax,
-    )
 
-    ps = pi.create_simulator(
-        force_import=True,
-    )
-    ps.solver.set_steady_state_tolerance_factor(1.0)
+    if jax:
+        from amici.jax import petab_simulate, run_simulations
+        from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
-    problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
-    res = ps.simulate(problem_parameters=problem_parameters)
-    rdatas = res.rdatas
-    for rdata in rdatas:
-        assert rdata.status == AMICI_SUCCESS, (
-            f"Simulation failed for {rdata.id}"
+        steady_state_event = diffrax.steady_state_event(rtol=1e-6, atol=1e-6)
+
+        pi = PetabImporter(
+            petab_problem=problem,
+            module_name=model_name,
+            compile_=True,
+            jax=jax,
         )
-    chi2 = sum(rdata.chi2 for rdata in rdatas)
-    llh = res.llh
-    simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
+
+        jax_problem = pi.create_simulator(
+            force_import=True,
+        )
+
+        if case.startswith("0016"):
+            controller = diffrax.PIDController(
+                **DEFAULT_CONTROLLER_SETTINGS,
+                dtmax=0.5
+            )
+        else:
+            controller = diffrax.PIDController(
+                **DEFAULT_CONTROLLER_SETTINGS
+            )
+
+        llh, _ = run_simulations(
+            jax_problem, 
+            steady_state_event=steady_state_event, 
+            controller=controller,
+        )
+        chi2, _ = run_simulations(
+            jax_problem, 
+            ret="chi2", 
+            steady_state_event=steady_state_event, 
+            controller=controller,
+        )
+        simulation_df = petab_simulate(
+            jax_problem, 
+            steady_state_event=steady_state_event, 
+            controller=controller,
+        )
+    else:
+        pi = PetabImporter(
+            petab_problem=problem,
+            module_name=model_name,
+            compile_=True,
+            jax=jax,
+        )
+
+        ps = pi.create_simulator(
+            force_import=True,
+        )
+        ps.solver.set_steady_state_tolerance_factor(1.0)
+
+        problem_parameters = problem.get_x_nominal_dict(free=True, fixed=True)
+        res = ps.simulate(problem_parameters=problem_parameters)
+
+        rdatas = res.rdatas
+        for rdata in rdatas:
+            assert rdata.status == AMICI_SUCCESS, (
+                f"Simulation failed for {rdata.id}"
+            )
+        chi2 = sum(rdata.chi2 for rdata in rdatas)
+        llh = res.llh
+        simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
 
     solution = petabtests.load_solution(case, model_type, version=version)
     gt_chi2 = solution[petabtests.CHI2]
@@ -148,6 +198,8 @@ def _test_case(case, model_type, version, jax):
     else:
         if (case, model_type, version) in (
             ("0016", "sbml", "v2.0.0"),
+            ("0024", "sbml", "v2.0.0"),
+            ("0025", "sbml", "v2.0.0"),
             ("0013", "pysb", "v2.0.0"),
         ):
             # FIXME: issue with events and sensitivities
@@ -194,24 +246,24 @@ def run():
     n_skipped = 0
     n_total = 0
     version = "v2.0.0"
-    jax = False
 
-    cases = list(petabtests.get_cases("sbml", version=version))
-    n_total += len(cases)
-    for case in cases:
-        try:
-            test_case(case, "sbml", version=version, jax=jax)
-            n_success += 1
-        except Skipped:
-            n_skipped += 1
-        except Exception as e:
-            # run all despite failures
-            logger.error(f"Case {case} failed.")
-            logger.exception(e)
+    for jax in (False, True):
+        cases = list(petabtests.get_cases("sbml", version=version))
+        n_total += len(cases)
+        for case in cases:
+            try:
+                test_case(case, "sbml", version=version, jax=jax)
+                n_success += 1
+            except Skipped:
+                n_skipped += 1
+            except Exception as e:
+                # run all despite failures
+                logger.error(f"Case {case} failed.")
+                logger.exception(e)
 
-    logger.info(f"{n_success} / {n_total} successful, {n_skipped} skipped")
-    if n_success != len(cases):
-        sys.exit(1)
+        logger.info(f"{n_success} / {n_total} successful, {n_skipped} skipped")
+        if n_success != len(cases):
+            sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,7 @@ from amici import get_model_dir
 from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
+from amici.jax.petab import JAXProblem
 
 from .v1.sbml_import import _add_global_parameter
 
@@ -150,10 +151,6 @@ class PetabImporter:
             raise NotImplementedError(
                 "PEtab v2 importer currently only supports SBML and PySB "
                 f"models. Got {self.petab_problem.model.type_id!r}."
-            )
-        if jax:
-            raise NotImplementedError(
-                "PEtab v2 importer currently does not support JAX. "
             )
 
         if self._debug:
@@ -577,6 +574,11 @@ class PetabImporter:
             else:
                 self._do_import_pysb()
 
+        if self._jax:
+            return amici.import_model_module(
+                Path(self.output_dir).stem, Path(self.output_dir).parent
+            )
+
         return amici.import_model_module(
             self._module_name,
             self.output_dir,
@@ -601,6 +603,11 @@ class PetabImporter:
         """
         from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
 
+        if self._jax:
+            model_module = self.import_module(force_import=force_import)
+            model = model_module.Model()
+            return JAXProblem(model, self.petab_problem)
+        
         model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)
         return PetabSimulator(em=em)

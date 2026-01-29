@@ -1141,6 +1141,14 @@ class DEModel:
                 ]
             )
             return
+        elif name == "allh":
+            self._syms[name] = sp.Matrix(
+                [
+                    sym
+                    for sym, _ in zip(self.sym("h"), self._events)
+                ]
+            )
+            return
         elif name == "deltax":
             length = sp.Matrix(self.eq(name)).shape[0]
         else:
@@ -2679,11 +2687,12 @@ class DEModel:
     def has_implicit_event_assignments(self) -> bool:
         """
         Checks whether the model has event assignments with implicit triggers
+        (i.e. triggers that are not time based).
 
         :return:
             boolean indicating if event assignments with implicit triggers are present
         """
-        return any(event.updates_state and not event.has_explicit_trigger_times({}) for event in self._events)
+        return any(event.updates_state and event._implicit_symbols() for event in self._events)
 
     def toposort_expressions(
         self, reorder: bool = True

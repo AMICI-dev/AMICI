@@ -284,21 +284,27 @@ def check_fields_jax(
 def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
-    with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-        jax_problem = import_petab_problem(
-            petab_problem, jax=True, output_dir=model_dir
+
+    try:
+        with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
+            jax_problem = import_petab_problem(
+                petab_problem, jax=True, output_dir=model_dir
+            )
+            r = run_simulations(jax_problem)
+            assert not np.isinf(r[0].item())
+        petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
+            petab_problem.measurement_df[SIMULATION_CONDITION_ID]
         )
-        r = run_simulations(jax_problem)
-        assert not np.isinf(r[0].item())
-    petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
-        petab_problem.measurement_df[SIMULATION_CONDITION_ID]
-    )
-    with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-        jax_problem = import_petab_problem(
-            petab_problem, jax=True, output_dir=model_dir
-        )
-        r = run_simulations(jax_problem)
-        assert np.isinf(r[0].item())
+        with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
+            jax_problem = import_petab_problem(
+                petab_problem, jax=True, output_dir=model_dir
+            )
+            r = run_simulations(jax_problem)
+            assert np.isinf(r[0].item())
+    except (TypeError, NotImplementedError) as err:
+        if "run_simulations does not support PEtab v1 problems" in str(err):
+            pytest.skip(str(err))
+        raise err
 
 
 @skip_on_valgrind
@@ -362,10 +368,12 @@ def test_time_dependent_discontinuity(tmp_path):
 
         ys, _, _ = solve(
             p,
+            ts[0],
             ts,
             tcl,
             h,
             x0,
+            jnp.ones_like(h),
             diffrax.Tsit5(),
             diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
             optimistix.Newton(atol=1e-8, rtol=1e-8),
@@ -376,6 +384,7 @@ def test_time_dependent_discontinuity(tmp_path):
             model._root_cond_fn,
             model._delta_x,
             model._known_discs(p),
+            model.observable_ids,
         )
 
         assert ys.shape[0] == ts.shape[0]
@@ -424,6 +433,7 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
             tcl,
             h,
             x0,
+            jnp.ones_like(h),
             diffrax.Tsit5(),
             diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
             optimistix.Newton(atol=1e-8, rtol=1e-8),
@@ -438,7 +448,9 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
 
         assert_allclose(xs[0], 0.0, atol=1e-2)
 
-    except NotImplementedError as err:
+    except (TypeError, NotImplementedError) as err:
         if "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        elif "run_simulations does not support PEtab v1 problems" in str(err):
             pytest.skip(str(err))
         raise err

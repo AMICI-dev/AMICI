@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 
 import sympy as sp
+import numpy as np
 
 from amici import (
     amiciModulePath,
@@ -217,6 +218,7 @@ class ODEExporter:
             "x",
             "tcl",
             "ih",
+            "allh",
             "w",
             "my",
             "y",
