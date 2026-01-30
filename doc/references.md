@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 107.
+List of publications using AMICI. Total number is 110.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -15,6 +15,20 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2025</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 data-entry-spacing="0" role="list">
+<div id="ref-ArrudaBra2025" class="csl-entry" role="listitem">
+Arruda, Jonas, Niels Bracher, Ullrich Köthe, Jan Hasenauer, and Stefan
+T. Radev. 2025. <span>“Diffusion Models in Simulation-Based Inference: A
+Tutorial Review.”</span> <a
+href="https://arxiv.org/abs/2512.20685">https://arxiv.org/abs/2512.20685</a>.
+</div>
+<div id="ref-CallenbachDor2025" class="csl-entry" role="listitem">
+Callenbach, Aaron, Domagoj Dorešić, Robert Düster, Vanessa Nakonecnij,
+Erika Dudkin, Matthias Geyer, and Jan Hasenauer. 2025.
+<span>“Quantitative Modeling of <span>P-TEFb</span> Mediated
+<span>CTD</span> Phosphorylation Identifies Local Cooperativity.”</span>
+<em>bioRxiv</em>. <a
+href="https://doi.org/10.64898/2025.11.29.690978">https://doi.org/10.64898/2025.11.29.690978</a>.
+</div>
 <div id="ref-ErnstBan2025" class="csl-entry" role="listitem">
 Ernst, Ariane, Anastasia Bankowski, Meida Jusyte, Toluwani Okunola, Tino
 Petrov, Alexander M. Walter, and Stefanie Winkelmann. 2025.
@@ -77,13 +91,13 @@ Biology.”</span> <em>Npj Systems Biology and Applications</em> 11 (1).
 <a
 href="https://doi.org/10.1038/s41540-025-00550-w">https://doi.org/10.1038/s41540-025-00550-w</a>.
 </div>
-<div id="ref-SmithMal2025" class="csl-entry" role="listitem">
-Smith, Lucian, Rahuman S. Malik-Sheriff, Tung V. N. Nguyen, Henning
+<div id="ref-SmithMal2025a" class="csl-entry" role="listitem">
+Smith, Lucian P., Rahuman S. Malik-Sheriff, Tung V. N. Nguyen, Henning
 Hermjakob, Jonathan Karr, Bilal Shaikh, Logan Drescher, et al. 2025.
-<span>“Using <span>SED-ML</span> for Reproducible Curation: Verifying
-<span>BioModels</span> Across Multiple Simulation Engines.”</span>
-<em>bioRxiv</em>. <a
-href="https://doi.org/10.1101/2025.01.16.633337">https://doi.org/10.1101/2025.01.16.633337</a>.
+<span>“Verification and Reproducible Curation of the
+<span>BioModels</span> Repository.”</span> <em>PLOS Computational
+Biology</em> 21 (12): 1–18. <a
+href="https://doi.org/10.1371/journal.pcbi.1013239">https://doi.org/10.1371/journal.pcbi.1013239</a>.
 </div>
 <div id="ref-SundqvistPod2025" class="csl-entry" role="listitem">
 Sundqvist, Nicolas, Henrik Podéus, Sebastian Sten, Maria Engström,
@@ -93,6 +107,13 @@ Dominate <span class="nocase">BOLD-fMRI</span> Responses.”</span>
 <em>Computers in Biology and Medicine</em> 197: 111014.
 https://doi.org/<a
 href="https://doi.org/10.1016/j.compbiomed.2025.111014">https://doi.org/10.1016/j.compbiomed.2025.111014</a>.
+</div>
+<div id="ref-VanhoeferKoe2025" class="csl-entry" role="listitem">
+Vanhoefer, Jakob, Antonia Körner, Domagoj Doresic, Jan Hasenauer, and
+Dilan Pathirana. 2025. <span>“Scalable Branch-and-Bound Model Selection
+with Non-Monotonic Criteria Including <span>AIC</span>, <span>BIC</span>
+and <span class="nocase">Mallows’s Cp</span>.”</span> <a
+href="https://arxiv.org/abs/2512.12221">https://arxiv.org/abs/2512.12221</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2024</h1>
