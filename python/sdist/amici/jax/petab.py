@@ -163,21 +163,14 @@ class JAXProblem(eqx.Module):
         :param petab_problem:
             PEtab problem to simulate.
         """
-        if isinstance(petab_problem, petabv2.Problem):
-            petab_problem = add_default_experiment_names_to_v2_problem(petab_problem)
-            scs = get_simulation_conditions_v2(petab_problem)
-            self.simulation_conditions = scs.simulationConditionId.to_list()
-        else:
-            scs = petab_problem.get_simulation_conditions_from_measurement_df()
-            self.simulation_conditions = tuple(tuple(sc) for sc in scs.values)
+        petab_problem = add_default_experiment_names_to_v2_problem(petab_problem)
+        scs = get_simulation_conditions_v2(petab_problem)
+        self.simulation_conditions = scs.simulationConditionId.to_list()
         self._petab_problem = _get_hybrid_petab_problem(petab_problem)
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
-        if isinstance(petab_problem, petabv1.Problem):
-            self._parameter_mappings = self._get_parameter_mappings(scs)
-        else:
-            self._parameter_mappings = None
+        self._parameter_mappings = None
         (
             self._ts_dyn,
             self._ts_posteq,
@@ -1132,15 +1125,15 @@ class JAXProblem(eqx.Module):
         :return: Value of the parameter
         """
         condition_ids = []
-        for p in experiment.periods:
+        for p in experiment.sorted_periods:
             if is_preeq:
-                if p.time >= 0.0:
+                if not p.is_preequilibration:
                     continue
                 else:
                     condition_ids = p.condition_ids
                     break
             else:
-                if p.time < 0.0:
+                if p.is_preequilibration:
                     continue
                 else:
                     condition_ids = p.condition_ids
