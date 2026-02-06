@@ -1141,14 +1141,6 @@ class DEModel:
                 ]
             )
             return
-        elif name == "allh":
-            self._syms[name] = sp.Matrix(
-                [
-                    sym
-                    for sym, _ in zip(self.sym("h"), self._events)
-                ]
-            )
-            return
         elif name == "deltax":
             length = sp.Matrix(self.eq(name)).shape[0]
         else:

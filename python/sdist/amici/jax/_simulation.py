@@ -109,76 +109,57 @@ def eq(
         )
 
     def body_fn(carry):
-        t_start, y0, h, _, _ = carry
+        t_start, y0, h, event_index, stats = carry
 
-        # skip the solve if already at steady state
-        # TODO: remove once https://github.com/patrick-kidger/diffrax/issues/720 is resolved?
-        at_steady_state = steady_state_event(
-            t_start, 
-            y0, 
-            (p,tcl,h), 
-            terms=term, 
-            solver=solver, 
-            stepsize_controller=controller
+        sol, event_index, stats = _run_segment(
+            t_start,
+            jnp.inf,
+            y0,
+            p,
+            tcl,
+            h,
+            solver,
+            controller,
+            root_finder,
+            max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
+            diffrax.DirectAdjoint(),
+            [steady_state_event] + root_cond_fns,
+            [None] + [True] * len(root_cond_fns),
+            diffrax.SaveAt(t1=True),
+            term,
+            stats,
+        )
+        y0_next = jnp.where(
+            jnp.logical_or(
+                diffrax.is_successful(sol.result),
+                diffrax.is_event(sol.result),
+            ),
+            sol.ys[-1],
+            jnp.inf * jnp.ones_like(sol.ys[-1]),
+        )
+        t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
+
+        y0_next, h_next, stats = _handle_event(
+            t0_next,
+            y0_next,
+            p,
+            tcl,
+            h,
+            root_finder,
+            term,
+            root_cond_fn,
+            delta_x,
+            h_mask,
+            stats,
         )
 
-        def at_steady_state_fn(carry):
-            return carry
-
-        def not_at_steady_state_fn(carry):
-            t_start, y0, h, event_index, stats = carry
-
-            sol, event_index, stats = _run_segment(
-                t_start,
-                jnp.inf,
-                y0,
-                p,
-                tcl,
-                h,
-                solver,
-                controller,
-                root_finder,
-                max_steps,  # TODO: figure out how to pass `max_steps - stats['num_steps']` here
-                diffrax.DirectAdjoint(),
-                [steady_state_event] + root_cond_fns,
-                [None] + [True] * len(root_cond_fns),
-                diffrax.SaveAt(t1=True),
-                term,
-                stats,
-            )
-            y0_next = jnp.where(
-                jnp.logical_or(
-                    diffrax.is_successful(sol.result),
-                    diffrax.is_event(sol.result),
-                ),
-                sol.ys[-1],
-                jnp.inf * jnp.ones_like(sol.ys[-1]),
-            )
-            t0_next = jnp.where(jnp.isfinite(sol.ts), sol.ts, -jnp.inf).max()
-
-            y0_next, h_next, stats = _handle_event(
-                t0_next,
-                y0_next,
-                p,
-                tcl,
-                h,
-                root_finder,
-                term,
-                root_cond_fn,
-                delta_x,
-                h_mask,
-                stats,
-            )
-
-            return (
-                t0_next,
-                y0_next,
-                h_next,
-                event_index,
-                dict(**STARTING_STATS),
-            )
-        
-        return jax.lax.cond(at_steady_state, at_steady_state_fn, not_at_steady_state_fn, carry)
+        return (
+            t0_next,
+            y0_next,
+            h_next,
+            event_index,
+            dict(**STARTING_STATS),
+        )
 
     # run the loop until no event is triggered (which will also be the case if we run out of steps)
     _, y1, h, _, stats = eqxi.while_loop(
