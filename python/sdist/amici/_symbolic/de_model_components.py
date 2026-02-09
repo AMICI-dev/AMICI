@@ -863,8 +863,12 @@ class Event(ModelQuantity):
         """
         if allowed_symbols is None:
             return len(self._t_root) > 0
+        
+        if len(self._t_root) == 0:
+            t = self.get_val()
+            return t.is_Number or t.free_symbols.issubset(allowed_symbols)
 
-        return len(self._t_root) > 0 and all(
+        return all(
             t.is_Number or t.free_symbols.issubset(allowed_symbols)
             for t in self._t_root
         )
@@ -883,18 +887,6 @@ class Event(ModelQuantity):
         time points at which the event triggers.
         """
         return set(self._t_root)
-    
-    def _implicit_symbols(self):
-        """Get implicit symbols in the event trigger function.
-        That is, all symbols except time and petab indicator variables.
-        """
-        symbols = [str(s) for s in list(self.get_val().free_symbols)]
-        implicit_symbols = []
-        for s in symbols:
-            if (s.startswith("_petab_") and "indicator" in s) or s == "t":
-                continue
-            implicit_symbols.append(s)
-        return len(implicit_symbols) > 0
 
     @property
     def uses_values_from_trigger_time(self) -> bool:

@@ -21,14 +21,14 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
         self.nns = {TPL_NETS}
-        self.parameters = TPL_P_VALUES
+        self.parameters = TPL_ALL_P_VALUES
         super().__init__()
 
     def _xdot(self, t, x, args):
         p, tcl, h = args
 
         TPL_X_SYMS = x
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
         TPL_TCL_SYMS = tcl
         TPL_H_SYMS = h
         TPL_W_SYMS = self._w(t, x, p, tcl, h)
@@ -39,7 +39,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     def _w(self, t, x, p, tcl, h):
         TPL_X_SYMS = x
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
         TPL_TCL_SYMS = tcl
         TPL_H_SYMS = h
 
@@ -48,7 +48,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return TPL_W_RET
 
     def _x0(self, t, p):
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
 
         TPL_X0_EQ
 
@@ -71,7 +71,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     def _tcl(self, x, p):
         TPL_X_RDATA_SYMS = x
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
 
         TPL_TOTAL_CL_EQ
 
@@ -79,7 +79,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     def _y(self, t, x, p, tcl, h, op):
         TPL_X_SYMS = x
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
         TPL_W_SYMS = self._w(t, x, p, tcl, h)
         TPL_OP_SYMS = op
 
@@ -88,7 +88,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return TPL_Y_RET
 
     def _sigmay(self, y, p, np):
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
 
         TPL_Y_SYMS = y
         TPL_NP_SYMS = np
@@ -110,7 +110,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         return TPL_JY_RET.at[iy].get()
 
     def _known_discs(self, p):
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
 
         return TPL_ROOTS
 
@@ -118,7 +118,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         p, tcl, h = args
 
         TPL_X_SYMS = y
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
         TPL_TCL_SYMS = tcl
         TPL_H_SYMS = h
         TPL_W_SYMS = self._w(t, y, p, tcl, h)
@@ -130,7 +130,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     
     def _delta_x(self, y, p, tcl):
         TPL_X_SYMS = y
-        TPL_P_SYMS = p
+        TPL_ALL_P_SYMS = p
         TPL_TCL_SYMS = tcl
         # FIXME: workaround until state from event time is properly passed
         TPL_X_OLD_SYMS = y
@@ -157,7 +157,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
     @property
     def parameter_ids(self):
-        return TPL_P_IDS
+        return TPL_ALL_P_IDS
 
     @property
     def expression_ids(self):

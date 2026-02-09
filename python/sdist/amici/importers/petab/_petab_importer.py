@@ -353,6 +353,7 @@ class PetabImporter:
                 model_name=self._module_name,
                 output_dir=self.output_dir,
                 observation_model=observation_model,
+                fixed_parameters=fixed_parameters,
                 verbose=self._verbose,
                 # **kwargs,
             )

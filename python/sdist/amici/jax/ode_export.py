@@ -213,6 +213,7 @@ class ODEExporter:
         )
         sym_names = (
             "p",
+            "k",
             "np",
             "op",
             "x",
@@ -261,6 +262,9 @@ class ODEExporter:
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
             "P_VALUES": _jnp_array_str(self.model.val("p")),
+            "ALL_P_VALUES": _jnp_array_str(self.model.val("p") + self.model.val("k")),
+            "ALL_P_IDS": "".join(f'"{s.name}", ' for s in self._get_all_p_syms()),
+            "ALL_P_SYMS": "".join(f"{s.name}, " for s in self._get_all_p_syms()),
             "ROOTS": _jnp_array_str(
                 {
                     _print_trigger_root(root)
@@ -296,6 +300,9 @@ class ODEExporter:
             self.model_path / "__init__.py",
             tpl_data,
         )
+
+    def _get_all_p_syms(self) -> list[sp.Symbol]:
+        return list(self.model.sym("p")) + list(self.model.sym("k"))
 
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridization.items():
