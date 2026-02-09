@@ -5,6 +5,7 @@ import logging
 import sys
 
 import diffrax
+import jax
 import pandas as pd
 import petabtests
 import pytest
@@ -21,7 +22,6 @@ from amici.sim.sundials.gradient_check import (
 )
 from amici.sim.sundials.petab import PetabSimulator
 from petab import v2
-import jax
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -70,7 +70,6 @@ def _test_case(case, model_type, version, jax):
         f"petab_{model_type}_test_case_{case}_{version.replace('.', '_')}"
     )
 
-
     if jax:
         from amici.jax import petab_simulate, run_simulations
         from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
@@ -90,28 +89,25 @@ def _test_case(case, model_type, version, jax):
 
         if case.startswith("0016"):
             controller = diffrax.PIDController(
-                **DEFAULT_CONTROLLER_SETTINGS,
-                dtmax=0.5
+                **DEFAULT_CONTROLLER_SETTINGS, dtmax=0.5
             )
         else:
-            controller = diffrax.PIDController(
-                **DEFAULT_CONTROLLER_SETTINGS
-            )
+            controller = diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS)
 
         llh, _ = run_simulations(
-            jax_problem, 
-            steady_state_event=steady_state_event, 
+            jax_problem,
+            steady_state_event=steady_state_event,
             controller=controller,
         )
         chi2, _ = run_simulations(
-            jax_problem, 
-            ret="chi2", 
-            steady_state_event=steady_state_event, 
+            jax_problem,
+            ret="chi2",
+            steady_state_event=steady_state_event,
             controller=controller,
         )
         simulation_df = petab_simulate(
-            jax_problem, 
-            steady_state_event=steady_state_event, 
+            jax_problem,
+            steady_state_event=steady_state_event,
             controller=controller,
         )
     else:
@@ -137,7 +133,9 @@ def _test_case(case, model_type, version, jax):
             )
         chi2 = sum(rdata.chi2 for rdata in rdatas)
         llh = res.llh
-        simulation_df = rdatas_to_simulation_df(rdatas, ps.model, pi.petab_problem)
+        simulation_df = rdatas_to_simulation_df(
+            rdatas, ps.model, pi.petab_problem
+        )
 
     solution = petabtests.load_solution(case, model_type, version=version)
     gt_chi2 = solution[petabtests.CHI2]
@@ -198,13 +196,13 @@ def _test_case(case, model_type, version, jax):
     else:
         if (case, model_type, version) in (
             ("0016", "sbml", "v2.0.0"),
-            ("0024", "sbml", "v2.0.0"),
-            ("0025", "sbml", "v2.0.0"),
             ("0013", "pysb", "v2.0.0"),
         ):
             # FIXME: issue with events and sensitivities
             ...
-        else:
+        elif ps.model.nx_solver > 0:
+            # sensitivity calculation is currently only supported for models
+            #  with state variables
             check_derivatives(ps, problem_parameters)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
@@ -247,12 +245,12 @@ def run():
     n_total = 0
     version = "v2.0.0"
 
-    for jax in (False, True):
+    for jax_ in (False, True):
         cases = list(petabtests.get_cases("sbml", version=version))
         n_total += len(cases)
         for case in cases:
             try:
-                test_case(case, "sbml", version=version, jax=jax)
+                test_case(case, "sbml", version=version, jax=jax_)
                 n_success += 1
             except Skipped:
                 n_skipped += 1
