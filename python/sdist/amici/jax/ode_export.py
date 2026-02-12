@@ -263,8 +263,10 @@ class ODEExporter:
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
             "P_VALUES": _jnp_array_str(self.model.val("p")),
             "ALL_P_VALUES": _jnp_array_str(self.model.val("p") + self.model.val("k")),
-            "ALL_P_IDS": "".join(f'"{s.name}", ' for s in self._get_all_p_syms()),
-            "ALL_P_SYMS": "".join(f"{s.name}, " for s in self._get_all_p_syms()),
+            "ALL_P_IDS": "".join(f'"{s.name}", ' for s in self._get_all_p_syms())
+                if self._get_all_p_syms() else "tuple()",
+            "ALL_P_SYMS": "".join(f"{s.name}, " for s in self._get_all_p_syms())
+                if self._get_all_p_syms() else "_",
             "ROOTS": _jnp_array_str(
                 {
                     _print_trigger_root(root)
