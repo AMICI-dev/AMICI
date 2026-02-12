@@ -50,7 +50,7 @@ def test_case(case, model_type, version, jax):
                 f"implemented: {e}"
             )
             pytest.skip(str(e))
-        elif "run_simulations does not support PEtab v1" in str(e):
+        elif "JAXProblem does not support PEtab v1" in str(e):
             pytest.skip(str(e))
         else:
             raise e
