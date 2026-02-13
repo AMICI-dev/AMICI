@@ -15,7 +15,11 @@ from petab.v2 import ExperimentPeriod
 
 import amici
 from amici.logging import get_logger
-from amici.sim.sundials import SensitivityOrder
+from amici.sim.sundials import (
+    RDataReporting,
+    SensitivityMethod,
+    SensitivityOrder,
+)
 
 logger = get_logger(__name__, log_level=logging.INFO)
 
@@ -719,7 +723,13 @@ class PetabSimulator:
             or `None` if sensitivities were not computed.
         """
         # TODO: add tests
-        if self._solver.get_sensitivity_order() < SensitivityOrder.first:
+        if (
+            self._solver.get_sensitivity_order() < SensitivityOrder.first
+            or self._solver.get_sensitivity_method()
+            != SensitivityMethod.forward
+            or self._solver.get_return_data_reporting_mode()
+            == RDataReporting.residuals
+        ):
             return None
 
         if not use_fim:
