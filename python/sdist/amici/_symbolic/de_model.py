@@ -2686,7 +2686,7 @@ class DEModel:
         """
         fixed_symbols = set([k._symbol for k in self._fixed_parameters])
         allowed_symbols = fixed_symbols | {amici_time_symbol}
-        return any(event.updates_state and not event.has_explicit_trigger_times(allowed_symbols) for event in self._events)
+        return any(event.updates_state and event.has_implicit_triggers(allowed_symbols) for event in self._events)
 
     def toposort_expressions(
         self, reorder: bool = True

@@ -864,14 +864,18 @@ class Event(ModelQuantity):
         if allowed_symbols is None:
             return len(self._t_root) > 0
         
-        if len(self._t_root) == 0:
-            t = self.get_val()
-            return t.is_Number or t.free_symbols.issubset(allowed_symbols)
-
-        return all(
+        return len(self._t_root) > 0 and all(
             t.is_Number or t.free_symbols.issubset(allowed_symbols)
             for t in self._t_root
         )
+    
+    def has_implicit_triggers(
+        self, allowed_symbols: set[sp.Symbol] | None = None
+    ) -> bool:
+        """Check whether the event has implicit triggers.
+        """
+        t = self.get_val()
+        return not t.free_symbols.issubset(allowed_symbols)
 
     def get_trigger_times(self) -> set[sp.Expr]:
         """Get the time points at which the event triggers.
