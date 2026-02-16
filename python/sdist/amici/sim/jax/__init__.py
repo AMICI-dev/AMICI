@@ -1,6 +1,5 @@
 """Functionality for simulating JAX-based AMICI models."""
 
-import petab.v1 as petabv1
 import petab.v2 as petabv2
 
 import pandas as pd
@@ -57,7 +56,6 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
             experiment_df[petabv2.C.EXPERIMENT_ID] == exp_id
         ][petabv2.C.CONDITION_ID].unique()
 
-    experiment_df = experiment_df.rename(columns={"conditionId": "simulationConditionId"})
     experiment_df = experiment_df.drop(columns=[petabv2.C.TIME])
     return experiment_df
 
@@ -85,15 +83,15 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
         df_sc = pd.DataFrame(
             {
                 petabv2.C.MODEL_ID: [float("nan")] * len(t),
-                petabv1.OBSERVABLE_ID: obs,
+                petabv2.C.OBSERVABLE_ID: obs,
                 petabv2.C.EXPERIMENT_ID: [experiment_id] * len(t),
-                petabv1.TIME: t[problem._ts_masks[ic, :]],
-                petabv1.SIMULATION: y[ic, problem._ts_masks[ic, :]],
+                petabv2.C.TIME: t[problem._ts_masks[ic, :]],
+                petabv2.C.SIMULATION: y[ic, problem._ts_masks[ic, :]],
             },
             index=problem._petab_measurement_indices[ic, :],
         )
         if (
-            petabv1.OBSERVABLE_PARAMETERS
+            petabv2.C.OBSERVABLE_PARAMETERS
             in problem._petab_problem.measurement_df
         ):                
             df_sc[petabv2.C.OBSERVABLE_PARAMETERS] = (
@@ -101,7 +99,7 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
                     f"{petabv2.C.EXPERIMENT_ID} == '{experiment_id}'"
                 )[petabv2.C.OBSERVABLE_PARAMETERS]
             )
-        if petabv1.NOISE_PARAMETERS in problem._petab_problem.measurement_df:
+        if petabv2.C.NOISE_PARAMETERS in problem._petab_problem.measurement_df:
             df_sc[petabv2.C.NOISE_PARAMETERS] = (
                 problem._petab_problem.measurement_df.query(
                     f"{petabv2.C.EXPERIMENT_ID} == '{experiment_id}'"

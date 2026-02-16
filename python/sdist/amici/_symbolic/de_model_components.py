@@ -869,7 +869,7 @@ class Event(ModelQuantity):
             for t in self._t_root
         )
     
-    def has_implicit_triggers(
+    def _has_implicit_triggers(
         self, allowed_symbols: set[sp.Symbol] | None = None
     ) -> bool:
         """Check whether the event has implicit triggers.
