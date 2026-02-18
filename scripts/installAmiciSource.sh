@@ -36,8 +36,8 @@ python -m pip install --upgrade pip wheel
 # we need to install all build-system.requires manually, because of
 #  --no-build-isolation below.
 #  The latter is necessary for code coverage to work.
-python -m pip install --upgrade pip 'setuptools<82.0.0' cmake_build_extension==0.6.0 numpy petab swig
-python -m pip install git+https://github.com/pysb/pysb@master --no-build-isolation # for SPM with compartments
+python -m pip install --upgrade pip setuptools cmake_build_extension==0.6.0 numpy petab swig
+python -m pip install git+https://github.com/pysb/pysb@master # for SPM with compartments
 python -m pip install git+https://github.com/patrick-kidger/diffrax@main # for events with direction
 python -m pip install 'optax<0.2.7' # for jax petab notebook
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
