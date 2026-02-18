@@ -33,9 +33,6 @@ from amici.sim.jax import (
     add_default_experiment_names_to_v2_problem, get_simulation_conditions_v2, _build_simulation_df_v2, _try_float
 )
 
-import time
-import tracemalloc
-
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,
     "rtol": 1e-8,
@@ -232,41 +229,6 @@ class JAXProblem(eqx.Module):
         problem = cls(model, petab_problem)
         with open(directory / "parameters.pkl", "rb") as f:
             return eqx.tree_deserialise_leaves(f, problem)
-
-    # def _get_parameter_mappings(
-    #     self, simulation_conditions: pd.DataFrame
-    # ) -> dict[str, ParameterMappingForCondition]:
-    #     """
-    #     Create parameter mappings for the provided simulation conditions.
-
-    #     :param simulation_conditions:
-    #         Simulation conditions to create parameter mappings for. Same format as returned by
-    #         :meth:`petabv1.Problem.get_simulation_conditions_from_measurement_df`.
-    #     :return:
-    #         Dictionary mapping simulation conditions to parameter mappings.
-    #     """
-    #     scs = list(set(simulation_conditions.conditionId))
-    #     petab_problem = copy.deepcopy(self._petab_problem)
-    #     # remove observable and noise parameters from measurement dataframe as we are mapping them elsewhere
-    #     petab_problem.measurement_df.drop(
-    #         columns=[petabv2.C.OBSERVABLE_PARAMETERS, petabv2.C.NOISE_PARAMETERS],
-    #         inplace=True,
-    #         errors="ignore",
-    #     )
-    #     mappings = create_parameter_mapping(
-    #         petab_problem=petab_problem,
-    #         simulation_conditions=[
-    #             {petabv2.C.SIMULATION_CONDITION_ID: sc} for sc in scs
-    #         ],
-    #         scaled_parameters=False,
-    #         allow_timepoint_specific_numeric_noise_parameters=True,
-    #     )
-    #     # fill in dummy variables
-    #     for mapping in mappings:
-    #         for sim_var, value in mapping.map_sim_var.items():
-    #             if isinstance(value, Number) and not np.isfinite(value):
-    #                 mapping.map_sim_var[sim_var] = 1.0
-    #     return dict(zip(scs, mappings, strict=True))
 
     def _get_measurements(
         self, simulation_conditions: pd.DataFrame
