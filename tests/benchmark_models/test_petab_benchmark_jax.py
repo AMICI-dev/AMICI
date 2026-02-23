@@ -113,7 +113,7 @@ def test_jax_llh(benchmark_problem):
         if problem_id == "Weber_BMC2015":
             atol = cur_settings.atol_sim
             rtol = cur_settings.rtol_sim
-            max_steps = 2 * 10**5
+            max_steps = 4 * 10**7
         else:
             atol = 1e-8
             rtol = 1e-8
