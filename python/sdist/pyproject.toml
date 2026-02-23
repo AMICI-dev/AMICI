@@ -60,7 +60,7 @@ classifiers = [
 #  HTTPError: 400 Bad Request from https://upload.pypi.org/legacy/
 #  Invalid value for requires_dist. Error: Can't have direct dependency: ...
 petab = ["petab>=0.7.0"]
-pysb = ["pysb>=1.13.1"]
+pysb = ["pysb>=1.17.0"]
 test = [
     "fiddy>=0.0.3",
     "h5py!=3.15",
