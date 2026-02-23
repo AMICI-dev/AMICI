@@ -9,7 +9,7 @@ setuptools>=67.7.2
 git+https://github.com/jmuhlich/pysb@22d69a350b472f33d85ba64ffb10b190483c1c98
 # For forward type definition in generate_equinox
 matplotlib>=3.7.1
-optax
+optax==0.2.6
 nbsphinx
 nbformat
 myst-parser
