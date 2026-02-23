@@ -204,7 +204,7 @@ def check_fields_jax(
         "iy_trafos": jnp.array(iy_trafos),
         "x_preeq": jnp.array([]),
         "solver": diffrax.Kvaerno5(),
-        "controller": diffrax.PIDController(atol=ATOL_SIM, rtol=RTOL_SIM),
+        "controller": diffrax.PIDController(atol=1e-8, rtol=1e-8),
         "root_finder": optimistix.Newton(atol=ATOL_SIM, rtol=RTOL_SIM),
         "adjoint": diffrax.RecursiveCheckpointAdjoint(),
         "steady_state_event": diffrax.steady_state_event(),
