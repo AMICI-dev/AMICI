@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 110.
+List of publications using AMICI. Total number is 111.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -12,6 +12,17 @@ If you applied AMICI in your work and your publication is missing, please let us
 }
 </style>
 
+<h1 class="unnumbered" id="section">2026</h1>
+<div id="refs" class="references csl-bib-body hanging-indent"
+data-entry-spacing="0" role="list">
+<div id="ref-LakrisenkoIse2026" class="csl-entry" role="listitem">
+Lakrisenko, Polina, Jörg Isensee, Tim Hucho, Daniel Weindl, and Jan
+Hasenauer. 2026. <span>“A Mechanistic Model of Protein Kinase
+<span>A</span> Dynamics Under Pro- and Anti-Nociceptive Inputs.”</span>
+<em>bioRxiv</em>. <a
+href="https://doi.org/10.64898/2026.02.12.705506">https://doi.org/10.64898/2026.02.12.705506</a>.
+</div>
+</div>
 <h1 class="unnumbered" id="section">2025</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 data-entry-spacing="0" role="list">
