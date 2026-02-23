@@ -1550,7 +1550,7 @@ def run_simulations(
     steady_state_event: Callable[
         ..., diffrax._custom_types.BoolScalarLike
     ] = diffrax.steady_state_event(),
-    max_steps: int = 2**10,
+    max_steps: int = 2**13,
     ret: ReturnValue | str = ReturnValue.llh,
 ):
     """
@@ -1653,7 +1653,7 @@ def petab_simulate(
     steady_state_event: Callable[
         ..., diffrax._custom_types.BoolScalarLike
     ] = diffrax.steady_state_event(),
-    max_steps: int = 2**10,
+    max_steps: int = 2**13,
 ):
     """
     Run simulations for a problem and return the results as a petab simulation dataframe.

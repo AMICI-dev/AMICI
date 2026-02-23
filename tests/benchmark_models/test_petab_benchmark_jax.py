@@ -10,7 +10,7 @@ import pytest
 from amici.importers.petab.v1 import (
     import_petab_problem,
 )
-from amici.jax.petab import run_simulations
+from amici.jax.petab import run_simulations, DEFAULT_CONTROLLER_SETTINGS
 from amici.sim.sundials import SensitivityMethod, SensitivityOrder
 from amici.sim.sundials.petab.v1 import (
     LLH,
@@ -113,11 +113,11 @@ def test_jax_llh(benchmark_problem):
         if problem_id == "Weber_BMC2015":
             atol = cur_settings.atol_sim
             rtol = cur_settings.rtol_sim
-            max_steps = 2 * 10**5
+            max_steps = 4 * 10**7
         else:
             atol = 1e-8
             rtol = 1e-8
-            max_steps = 1024
+            max_steps = 2 * 10**5
         beartype(run_simulations)(jax_problem)
         (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
             run_simulations, has_aux=True
@@ -130,7 +130,10 @@ def test_jax_llh(benchmark_problem):
             ),
         )
     else:
-        llh_jax, _ = beartype(run_simulations)(jax_problem)
+        llh_jax, _ = beartype(run_simulations)(
+            jax_problem,
+            max_steps=2 * 10**5,
+        )
 
     np.testing.assert_allclose(
         llh_jax,
