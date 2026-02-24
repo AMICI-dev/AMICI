@@ -10,7 +10,7 @@ import pytest
 from amici.importers.petab.v1 import (
     import_petab_problem,
 )
-from amici.jax.petab import run_simulations, DEFAULT_CONTROLLER_SETTINGS
+from amici.jax.petab import run_simulations
 from amici.sim.sundials import SensitivityMethod, SensitivityOrder
 from amici.sim.sundials.petab.v1 import (
     LLH,
@@ -111,7 +111,10 @@ def test_jax_llh(benchmark_problem):
                 lambda x: x.parameters,
                 jax_problem,
                 jnp.array(
-                    [problem_parameters[pid] for pid in jax_problem.parameter_ids]
+                    [
+                        problem_parameters[pid]
+                        for pid in jax_problem.parameter_ids
+                    ]
                 ),
             )
 
@@ -153,7 +156,9 @@ def test_jax_llh(benchmark_problem):
             sllh_amici = r_amici[SLLH]
             np.testing.assert_allclose(
                 sllh_jax.parameters,
-                np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
+                np.array(
+                    [sllh_amici[pid] for pid in jax_problem.parameter_ids]
+                ),
                 rtol=1e-2,
                 atol=1e-2,
                 err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",

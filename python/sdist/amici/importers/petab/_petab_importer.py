@@ -23,8 +23,8 @@ import amici
 from amici import get_model_dir
 from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
-from amici.logging import get_logger
 from amici.jax.petab import JAXProblem
+from amici.logging import get_logger
 
 from .v1.sbml_import import _add_global_parameter
 
@@ -608,7 +608,7 @@ class PetabImporter:
             model_module = self.import_module(force_import=force_import)
             model = model_module.Model()
             return JAXProblem(model, self.petab_problem)
-        
+
         model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)
         return PetabSimulator(em=em)

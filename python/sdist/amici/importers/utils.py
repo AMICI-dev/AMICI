@@ -71,7 +71,7 @@ setattr(
 annotation_namespace = "https://github.com/AMICI-dev/AMICI"
 
 
-class ObservableTransformation(str, enum.Enum):
+class ObservableTransformation(enum.StrEnum):
     """
     Different modes of observable transformation.
     """

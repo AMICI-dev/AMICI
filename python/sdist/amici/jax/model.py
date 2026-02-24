@@ -3,6 +3,7 @@
 # ruff: noqa: F821 F722
 
 import enum
+import os
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import field
@@ -15,9 +16,7 @@ import jax.numpy as jnp
 import jaxtyping as jt
 from optimistix import AbstractRootFinder
 
-import os
-
-from ._simulation import eq, solve, _apply_event_assignments
+from ._simulation import _apply_event_assignments, eq, solve
 
 
 class ReturnValue(enum.Enum):
@@ -363,25 +362,20 @@ class JAXModel(eqx.Module):
         ...
 
     def _root_cond_fn_event(
-            self,
-            ie: int,
-            t: float,
-            y: jt.Float[jt.Array, "nxs"],
-            args: tuple,
-            **_
-        ):
+        self, ie: int, t: float, y: jt.Float[jt.Array, "nxs"], args: tuple, **_
+    ):
         """
         Root condition function for a specific event index.
 
-        :param ie: 
+        :param ie:
             event index
-        :param t: 
+        :param t:
             time point
-        :param y: 
+        :param y:
             state vector
-        :param args: 
+        :param args:
             tuple of arguments required for _root_cond_fn
-        :return: 
+        :return:
             mask of root condition value for the specified event index
         """
         __, __, h = args
@@ -390,7 +384,9 @@ class JAXModel(eqx.Module):
         masked_rval = jnp.where(h == 0.0, rval, 1.0)
         return masked_rval.at[ie].get()
 
-    def _root_cond_fns(self) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
+    def _root_cond_fns(
+        self,
+    ) -> list[Callable[[float, jt.Float[jt.Array, "nxs"], tuple], jt.Float]]:
         """Return condition functions for implicit discontinuities.
 
         These functions are passed to :class:`diffrax.Event` and must evaluate
@@ -429,15 +425,15 @@ class JAXModel(eqx.Module):
         """
         h0 = self.event_initial_values.astype(float)
         if os.getenv("JAX_DEBUG") == "1":
-                jax.debug.print(
-                    "h0: {}",
-                    h0,
-                )
+            jax.debug.print(
+                "h0: {}",
+                h0,
+            )
         roots_found = self._root_cond_fn(t0, x_solver, (p, tcl, h0))
         return jnp.where(
-            jnp.logical_and(roots_found >= 0.0, h0 == 1.0), 
-            jnp.ones_like(h0), 
-            jnp.zeros_like(h0)
+            jnp.logical_and(roots_found >= 0.0, h0 == 1.0),
+            jnp.ones_like(h0),
+            jnp.zeros_like(h0),
         )
 
     def _x_rdatas(
@@ -526,9 +522,9 @@ class JAXModel(eqx.Module):
             observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, h, iy, op: self._y(t, x, p, tcl, h, op)
-            .at[iy]
-            .get(),
+            lambda t, x, p, tcl, h, iy, op: (
+                self._y(t, x, p, tcl, h, op).at[iy].get()
+            ),
             in_axes=(0, 0, None, None, 0, 0, 0),
         )(ts, xs, p, tcl, hs, iys, ops)
 
@@ -566,11 +562,9 @@ class JAXModel(eqx.Module):
             standard deviations of the observables
         """
         return jax.vmap(
-            lambda t, x, p, tcl, h, iy, op, np: self._sigmay(
-                self._y(t, x, p, tcl, h, op), p, np
-            )
-            .at[iy]
-            .get(),
+            lambda t, x, p, tcl, h, iy, op, np: (
+                self._sigmay(self._y(t, x, p, tcl, h, op), p, np).at[iy].get()
+            ),
             in_axes=(0, 0, None, None, 0, 0, 0, 0),
         )(ts, xs, p, tcl, hs, iys, ops, nps)
 
@@ -638,7 +632,7 @@ class JAXModel(eqx.Module):
         x_solver, _, h, _ = self._handle_t0_event(
             t0,
             x_solver,
-            p, 
+            p,
             tcl,
             root_finder,
             self._root_cond_fn,
@@ -740,12 +734,14 @@ class JAXModel(eqx.Module):
             output = tcl
         elif ret in (ReturnValue.res, ReturnValue.chi2):
             obs_trafo = jax.vmap(
-                lambda y, iy_trafo: jnp.array(
-                    # needs to follow order in amici.jax.petab.SCALE_TO_INT
-                    [y, safe_log(y), safe_log(y) / jnp.log(10)]
-                )
-                .at[iy_trafo]
-                .get(),
+                lambda y, iy_trafo: (
+                    jnp.array(
+                        # needs to follow order in amici.jax.petab.SCALE_TO_INT
+                        [y, safe_log(y), safe_log(y) / jnp.log(10)]
+                    )
+                    .at[iy_trafo]
+                    .get()
+                ),
             )
             ys_obj = obs_trafo(
                 self._ys(ts, x, p, tcl, hs, iys, ops), iy_trafos
@@ -845,7 +841,7 @@ class JAXModel(eqx.Module):
             mask to remove (padded) time points. If `True`, the corresponding time point is used for the evaluation of
             the output. Only applied if ret is ReturnValue.llh, ReturnValue.nllhs, ReturnValue.res, or ReturnValue.chi2.
         :param h_mask:
-            mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it 
+            mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it
             it marked as 1.0.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
@@ -905,7 +901,7 @@ class JAXModel(eqx.Module):
         :param mask_reinit:
             mask for re-initialization. If `True`, the corresponding state variable is re-initialized.
         :param h_mask:
-            mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it 
+            mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it
             it marked as 1.0.
         :param solver:
             ODE solver
@@ -979,11 +975,11 @@ class JAXModel(eqx.Module):
     ):
         y0 = y0_next.copy()
         rf0 = self.event_initial_values - 0.5
-        
+
         if h_preeq.shape[0]:
             # return immediately because preequilibration is equivalent to handling t0 event?
             return y0, t0_next, h_preeq, stats
-        else:    
+        else:
             h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
         args = (p, tcl, h)
         rfx = root_cond_fn(t0_next, y0_next, args)
@@ -1005,11 +1001,11 @@ class JAXModel(eqx.Module):
         )
         droot_dt = (
             # ∂root_cond_fn/∂t
-                jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y0_next, args)
-                +
-                # ∂root_cond_fn/∂y * ∂y/∂t
-                jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y0_next, args)
-                @ self._xdot(t0_next, y0_next, args)
+            jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y0_next, args)
+            +
+            # ∂root_cond_fn/∂y * ∂y/∂t
+            jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y0_next, args)
+            @ self._xdot(t0_next, y0_next, args)
         )
         h_next = jnp.where(
             roots_zero,
@@ -1029,6 +1025,7 @@ class JAXModel(eqx.Module):
             )
 
         return y0_next, t0_next, h_next, stats
+
 
 def safe_log(x: jnp.float_) -> jnp.float_:
     """

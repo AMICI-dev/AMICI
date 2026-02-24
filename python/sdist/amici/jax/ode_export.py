@@ -17,7 +17,6 @@ import os
 from pathlib import Path
 
 import sympy as sp
-import numpy as np
 
 from amici import (
     amiciModulePath,
@@ -62,7 +61,7 @@ def _jax_variable_equations(
             code_printer._get_sym_lines(
                 (s.name for s in model.sym(eq_name)),
                 # sp.Matrix to support event assignments which are lists
-                sp.Matrix(model.eq(eq_name)).subs(subs), 
+                sp.Matrix(model.eq(eq_name)).subs(subs),
                 indent,
             )
         )[indent:]  # remove indent for first line
@@ -155,7 +154,7 @@ class ODEExporter:
             raise NotImplementedError(
                 "The JAX backend does not support event priorities."
             )
-        
+
         if ode_model.has_implicit_event_assignments():
             raise NotImplementedError(
                 "The JAX backend does not support event assignments with implicit triggers."
@@ -262,11 +261,19 @@ class ODEExporter:
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
             "P_VALUES": _jnp_array_str(self.model.val("p")),
-            "ALL_P_VALUES": _jnp_array_str(self.model.val("p") + self.model.val("k")),
-            "ALL_P_IDS": "".join(f'"{s.name}", ' for s in self._get_all_p_syms())
-                if self._get_all_p_syms() else "tuple()",
-            "ALL_P_SYMS": "".join(f"{s.name}, " for s in self._get_all_p_syms())
-                if self._get_all_p_syms() else "_",
+            "ALL_P_VALUES": _jnp_array_str(
+                self.model.val("p") + self.model.val("k")
+            ),
+            "ALL_P_IDS": "".join(
+                f'"{s.name}", ' for s in self._get_all_p_syms()
+            )
+            if self._get_all_p_syms()
+            else "tuple()",
+            "ALL_P_SYMS": "".join(
+                f"{s.name}, " for s in self._get_all_p_syms()
+            )
+            if self._get_all_p_syms()
+            else "_",
             "ROOTS": _jnp_array_str(
                 {
                     _print_trigger_root(root)
@@ -277,9 +284,7 @@ class ODEExporter:
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
             "N_EEVENTS": str(len(self.model.get_explicit_roots())),
             "EVENT_INITIAL_VALUES": _jnp_array_str(
-                [
-                    e.get_initial_value() for e in self.model._events
-                ]
+                [e.get_initial_value() for e in self.model._events]
             ),
             **{
                 "MODEL_NAME": self.model_name,
@@ -359,6 +364,7 @@ class ODEExporter:
             )
 
         self.model_name = model_name
+
 
 def _print_trigger_root(root: sp.Expr) -> str:
     """Convert a trigger root expression into a string representation.

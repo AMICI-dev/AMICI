@@ -2648,7 +2648,7 @@ class DEModel:
             for e in self._events
             if not e.has_explicit_trigger_times()
         ]
-    
+
     def has_algebraic_states(self) -> bool:
         """
         Checks whether the model has algebraic states
@@ -2666,7 +2666,7 @@ class DEModel:
             boolean indicating if event assignments are present
         """
         return any(event.updates_state for event in self._events)
-    
+
     def has_priority_events(self) -> bool:
         """
         Checks whether the model has events with priorities defined
@@ -2675,7 +2675,7 @@ class DEModel:
             boolean indicating if priority events are present
         """
         return any(event.get_priority() is not None for event in self._events)
-    
+
     def has_implicit_event_assignments(self) -> bool:
         """
         Checks whether the model has event assignments with implicit triggers
@@ -2686,9 +2686,13 @@ class DEModel:
         """
         fixed_symbols = set([k._symbol for k in self._fixed_parameters])
         allowed_symbols = fixed_symbols | {amici_time_symbol}
-        # TODO: update to use has_explicit_trigger_times once 
+        # TODO: update to use has_explicit_trigger_times once
         # https://github.com/AMICI-dev/AMICI/issues/3126 is resolved
-        return any(event.updates_state and event._has_implicit_triggers(allowed_symbols) for event in self._events)
+        return any(
+            event.updates_state
+            and event._has_implicit_triggers(allowed_symbols)
+            for event in self._events
+        )
 
     def toposort_expressions(
         self, reorder: bool = True

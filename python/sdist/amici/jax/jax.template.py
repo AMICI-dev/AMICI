@@ -127,18 +127,18 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_EROOT_EQ
 
         return jnp.hstack((TPL_IROOT_RET, TPL_EROOT_RET))
-    
+
     def _delta_x(self, y, p, tcl):
         TPL_X_SYMS = y
         TPL_ALL_P_SYMS = p
         TPL_TCL_SYMS = tcl
         # FIXME: workaround until state from event time is properly passed
         TPL_X_OLD_SYMS = y
-        
+
         TPL_DELTAX_EQ
 
         return TPL_DELTAX_RET
-    
+
     @property
     def event_initial_values(self):
         return TPL_EVENT_INITIAL_VALUES

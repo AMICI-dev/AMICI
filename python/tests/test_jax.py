@@ -355,7 +355,7 @@ def test_time_dependent_discontinuity(tmp_path):
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
 
-    try: 
+    try:
         importer.sbml2jax("time_disc", output_dir=tmp_path)
 
         module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
@@ -366,7 +366,9 @@ def test_time_dependent_discontinuity(tmp_path):
         tcl = model._tcl(x0_full, p)
         x0 = model._x_solver(x0_full)
         ts = jnp.array([0.0, 1.0, 2.0])
-        h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
+        h = model._initialise_heaviside_variables(
+            0.0, model._x_solver(x0), p, tcl
+        )
 
         assert len(model._root_cond_fns()) > 0
         assert model._known_discs(p).size == 0
@@ -421,14 +423,18 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     try:
         importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
 
-        module = amici._module_from_path("time_disc_eq", tmp_path / "__init__.py")
+        module = amici._module_from_path(
+            "time_disc_eq", tmp_path / "__init__.py"
+        )
         model = module.Model()
 
         p = jnp.array([1.0])
         x0_full = model._x0(0.0, p)
         tcl = model._tcl(x0_full, p)
         x0 = model._x_solver(x0_full)
-        h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
+        h = model._initialise_heaviside_variables(
+            0.0, model._x_solver(x0), p, tcl
+        )
 
         assert len(model._root_cond_fns()) > 0
         assert model._known_discs(p).size == 0

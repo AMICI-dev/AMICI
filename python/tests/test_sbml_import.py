@@ -246,10 +246,10 @@ def model_steadystate_module():
 
     observables = amici.assignment_rules_to_observables(
         sbml_importer.sbml_model,
-        filter_function=lambda variable: variable.getId().startswith(
-            "observable_"
-        )
-        and not variable.getId().endswith("_sigma"),
+        filter_function=lambda variable: (
+            variable.getId().startswith("observable_")
+            and not variable.getId().endswith("_sigma")
+        ),
         as_dict=True,
     )
     observables[
@@ -529,7 +529,9 @@ def model_test_likelihoods(tempdir):
         MC(
             "o7",
             formula="x1",
-            noise_distribution=lambda str_symbol: f"Abs({str_symbol} - m{str_symbol}) / sigma{str_symbol}",
+            noise_distribution=lambda str_symbol: (
+                f"Abs({str_symbol} - m{str_symbol}) / sigma{str_symbol}"
+            ),
         ),
     ]
 

@@ -740,7 +740,7 @@ class Event(ModelQuantity):
         :param priority: The priority of the event assignment.
 
         :param is_negative_event:
-            Whether this event is a "negative" event, i.e., an event that is 
+            Whether this event is a "negative" event, i.e., an event that is
             added to mirror an existing event with inverted trigger condition
             to avoid immediate retriggering of the original event (JAX simulations).
 
@@ -863,17 +863,16 @@ class Event(ModelQuantity):
         """
         if allowed_symbols is None:
             return len(self._t_root) > 0
-        
+
         return len(self._t_root) > 0 and all(
             t.is_Number or t.free_symbols.issubset(allowed_symbols)
             for t in self._t_root
         )
-    
+
     def _has_implicit_triggers(
         self, allowed_symbols: set[sp.Symbol] | None = None
     ) -> bool:
-        """Check whether the event has implicit triggers.
-        """
+        """Check whether the event has implicit triggers."""
         t = self.get_val()
         return not t.free_symbols.issubset(allowed_symbols)
 

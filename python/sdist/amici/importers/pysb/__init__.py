@@ -10,7 +10,6 @@ from __future__ import annotations
 import itertools
 import logging
 import os
-import re
 import sys
 from collections.abc import Callable, Iterable
 from pathlib import Path
@@ -31,9 +30,7 @@ from amici._symbolic.de_model_components import (
     FixedParameter,
     FreeParameter,
     LogLikelihoodY,
-    NoiseParameter,
     Observable,
-    ObservableParameter,
     SigmaY,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level

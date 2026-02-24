@@ -1511,10 +1511,9 @@ def _spline_user_functions(
         "AmiciSplineSensitivity": [
             (
                 lambda *args: True,
-                lambda spline_id,
-                x,
-                param_id,
-                *p: f"sspl_{spline_ids.index(spline_id)}_{p_index[param_id]}",
+                lambda spline_id, x, param_id, *p: (
+                    f"sspl_{spline_ids.index(spline_id)}_{p_index[param_id]}"
+                ),
             )
         ],
     }

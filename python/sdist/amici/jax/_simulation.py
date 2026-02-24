@@ -491,6 +491,7 @@ def _handle_event(
 
     return y0_next, h_next, stats
 
+
 def _check_cascading_events(
     t0_next: float,
     y0_next: jt.Float[jt.Array, "nxs"],
@@ -521,6 +522,7 @@ def _check_cascading_events(
 
     return y0_next
 
+
 def _apply_event_assignments(
     roots_found,
     roots_dir,
@@ -543,7 +545,7 @@ def _apply_event_assignments(
         ]
     ).T
 
-    # apply one event at a time 
+    # apply one event at a time
     if h_next.shape[0] and y0_next.shape[0]:
         n_pairs = h_next.shape[0] // 2
         inds_seq = jnp.arange(n_pairs)

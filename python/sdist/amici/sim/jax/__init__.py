@@ -1,9 +1,9 @@
 """Functionality for simulating JAX-based AMICI models."""
 
+import jax.numpy as jnp
+import pandas as pd
 import petab.v2 as petabv2
 
-import pandas as pd
-import jax.numpy as jnp
 
 def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
     """Add default experiment names to PEtab v2 problem.
@@ -17,18 +17,26 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
     petab_problem.visualization_df = None
 
     if petab_problem.condition_df is None:
-        default_condition = petabv2.core.Condition(id="__default__", changes=[], conditionId="__default__")
+        default_condition = petabv2.core.Condition(
+            id="__default__", changes=[], conditionId="__default__"
+        )
         petab_problem.condition_tables[0].elements = [default_condition]
 
-    if petab_problem.experiment_df is None or petab_problem.experiment_df.empty:
-        condition_ids = petab_problem.condition_df[petabv2.C.CONDITION_ID].values
-        condition_ids = [c for c in condition_ids if "preequilibration" not in c]
+    if (
+        petab_problem.experiment_df is None
+        or petab_problem.experiment_df.empty
+    ):
+        condition_ids = petab_problem.condition_df[
+            petabv2.C.CONDITION_ID
+        ].values
+        condition_ids = [
+            c for c in condition_ids if "preequilibration" not in c
+        ]
         default_experiment = petabv2.core.Experiment(
             id="__default__",
             periods=[
                 petabv2.core.ExperimentPeriod(
-                    time=0.0, 
-                    condition_ids=condition_ids
+                    time=0.0, condition_ids=condition_ids
                 )
             ],
         )
@@ -42,6 +50,7 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
         petab_problem.measurement_tables = measurement_tables
 
     return petab_problem
+
 
 def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     """Get simulation conditions from PEtab v2 measurement DataFrame.
@@ -58,6 +67,7 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
 
     experiment_df = experiment_df.drop(columns=[petabv2.C.TIME])
     return experiment_df
+
 
 def _build_simulation_df_v2(problem, y, dyn_conditions):
     """Build petab simulation DataFrame of similation results from a PEtab v2 problem."""
@@ -93,7 +103,7 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
         if (
             petabv2.C.OBSERVABLE_PARAMETERS
             in problem._petab_problem.measurement_df
-        ):                
+        ):
             df_sc[petabv2.C.OBSERVABLE_PARAMETERS] = (
                 problem._petab_problem.measurement_df.query(
                     f"{petabv2.C.EXPERIMENT_ID} == '{experiment_id}'"
@@ -108,12 +118,15 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
         dfs.append(df_sc)
     return pd.concat(dfs).sort_index()
 
-def _conditions_to_experiment_map(experiment_df: pd.DataFrame) -> dict[str, str]:
+
+def _conditions_to_experiment_map(
+    experiment_df: pd.DataFrame,
+) -> dict[str, str]:
     condition_to_experiment = {
-        row.conditionId: row.experimentId
-        for row in experiment_df.itertuples()
+        row.conditionId: row.experimentId for row in experiment_df.itertuples()
     }
     return condition_to_experiment
+
 
 def _try_float(value):
     try:

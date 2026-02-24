@@ -8,7 +8,7 @@ constants that are used in multiple other modules
 import enum
 
 
-class SymbolId(str, enum.Enum):
+class SymbolId(enum.StrEnum):
     """
     Defines the different fields in the symbol dict to which sbml entities
     get parsed to.
