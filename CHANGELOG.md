@@ -8,9 +8,26 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **BREAKING CHANGES**
 
-* The package has been reorganized. All importers have been moved to
-  `amici.importers` subpackages. For example, all functionality from
-  `amici.sbml_import` is now available in `amici.importers.sbml`.
+*Removed functionality*
+
+The following functionality has been removed without replacement:
+
+* The complete MATLAB interface has been removed.
+* `amici.sbml_import.species_to_parameters` has been removed.
+
+*API changes*
+
+* For a more consistent API, all function names are now `snake_case` instead of
+  `camelCase`.
+* The package has been reorganized.
+  * All importers have been moved to `amici.importers` subpackages.
+    For example, all functionality from `amici.sbml_import` is now available in
+    `amici.importers.sbml`.
+  * All simulation-related functionality has been moved to `amici.sim.sundials`
+    for the SUNDIALS interface, and `amici.sim.jax` for the JAX interface.
+  * A number of functions and modules have been made private
+    (i.e., their name starts with `_` or they are excluded from `__all__`),
+    as they are not intended for public use and may change without deprecation.
 * The naming of free and fixed parameters has been harmonized across the API:
   AMICI differentiates between parameters with respect to which a model
   can compute sensitivities ("free parameters") and parameters with respect to
@@ -37,21 +54,16 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * `assignmentRules2observables` has been renamed to
   `assignment_rules_to_observables` and now returns `list[MeasurementChannel]`
   to be passed to the import functions.
-* `assignmentRules2observables` has been renamed to
-  `assignment_rules_to_observables` and now returns `list[MeasurementChannel]`
-  to be passed to the import functions.
 * `AmiVector::getLength` and `AmiVectorArray::getLength` have been renamed to
   `size` to be more consistent with STL containers.
 * `amici.petab.petab_import.import_model` has been removed.
-  Use `amici.petab.petab_import.import_model_sbml` instead.
-  (The former was just an alias for the latter.)
-* For a more consistent API, all function names are now snake_case instead of
-  camelCase.
-* `Model.getSolver` has been renamed to `Model.create_solver`.
+  Use `amici.importers.petab.v1.import_petab_problem` instead.
+* `Model.getSolver` has been renamed to `Model.create_solver`,
+  emphasizing that a new `Solver` instance is created on each call.
 * `amici.runAmiciSimulation` and `amici.runAmiciSimulations` have been renamed
-   to `amici.run_simulation` and `amici.run_simulations`.
+   to `amici.sim.sundials.run_simulation` and
+  `amici.sim.sundials.run_simulations`, respectively.
 * The following deprecated functionality has been removed:
-  * The complete MATLAB interface has been removed.
   * `NonlinearSolverIteration::functional` has been removed,
     use `NonlinearSolverIteration::fixedpoint` instead.
   * The deprecated argument `log_as_log10` to `SbmlImporter.sbml2amici` and
@@ -62,8 +74,6 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
     modules.
   * The `force_compile` argument to `import_petab_problem` has been removed.
     See the `compile_` argument.
-* Removals without deprecation:
-  * `amici.sbml_import.species_to_parameters` has been removed.
 * Model output directory keyword arguments have been harmonized:
   What was previously `model_output_dir`, `output_dir`, `outdir` is now
   consistently called `output_dir` across the API.
@@ -72,14 +82,24 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Features**
 
-* Experimental support for the PEtab data format v2.0.0 (draft, see
-  https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html)
-  for SBML- and PySB-based problems (see `amici.petab.petab_importer`). The API is subject to change.
+* Support for the PEtab data format v2.0.0
+  ([draft](https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html))
+  for the JAX and SUNDIALS interfaces.
 
-  * Current limitations for PySB-based PEtab problems:
-    * Only species and `pysb.Expression` are supported as condition table
-      targets.
+  See `amici.importers.petab.PetabImporter` and examples for
+  [JAX](https://amici.readthedocs.io/en/latest/examples/example_jax_petab/ExampleJaxPEtab.html)
+  and [SUNDIALS](https://amici.readthedocs.io/en/latest/examples/example_petab/petab_v2.html).
 
+  For JAX-based models, the interface can be considered stable;
+  for SUNDIALS-based models, the API may still change.
+
+  SBML- and PySB-based PEtab problems are currently supported.
+  For PySB-based PEtab problems, only species and `pysb.Expression` are
+  supported as condition table targets (i.e., no parameters yet).
+
+  PEtab v1 import for SUNDIALS-based models is still available via
+  `amici.importers.petab.v1`. Once PEtab v2 import has been stabilized,
+  PEtab v1 import for SUNDIALS-based models will be removed.
 * Many relevant `ReturnData` fields are now available as `xarray.DataArray`
   via `ReturnData.xr.{x,y,w,x0,sx,...}`.
   `DataArray`s include the identifiers and are often more convenient than the
@@ -87,32 +107,35 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   results, and conversion to DataFrames.
 * `Model.simulate()` has been added as a convenience function to run
   simulations without having to create a `Solver` object explicitly.
-  This is a wrapper for both `amici.run_simulation` and
-  `amici.run_simulations`, depending on the type of the `edata` argument.
+  This is a wrapper for both `amici.sim.sundials.run_simulation` and
+  `amici.sim.sundials.run_simulations`,
+  depending on the type of the `edata` argument.
   It also supports passing some `Solver` options as keyword arguments.
-* Improved `pickle` support for `amici.{Model,ModelPtr,Solver,ExpData`.
+  This is intended for interactive use; for better full control and
+  performance, it is still recommended to create a `Solver` object and call
+  `amici.sim.sundials.{run_simulation,run_simulations}` directly.
+* Improved `pickle` support for
+  `amici.sim.sundials.{Model,ModelPtr,Solver,ExpData}`.
   Note that AMICI's pickling support is only intended for short-term storage
   or inter-process communication.
   Reading pickled objects after updating AMICI or the model code will almost
   certainly fail.
-  * `amici.Model`and `amici.ModelPtr` now support sufficient pickling for use
-    in multi-processing contexts. This works only if the amici-generated model
+  * `Model`and `ModelPtr` now support sufficient pickling for use
+    in multiprocessing contexts. This works only if the amici-generated model
     package exists in the same file system location and does not change until
     unpickling.
-  * `amici.Solver` is now picklable if amici was built with HDF5 support.
+  * `Solver` is now picklable if amici was built with HDF5 support.
     This only works on shared file systems, as the solver state is stored in a
     temporary HDF5 file.
-  * `amici.ExpData` is now picklable.
-* Implemented support for the [PEtab SciML](https://github.com/PEtab-dev/petab_sciml)
-  extension for the JAX interface.
+  * `ExpData` is now picklable.
 * The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
   return an instance of the generated model class if called with `compile=True`
   (default).
 * The default directory for model import changed, and a base directory
   can now be specified via the `AMICI_MODELS_ROOT` environment variable.
   See `amici.get_model_dir` for details.
-* IDs and names of model entities are now not only accessible via `Model`, but
-  also via `ReturnData`
+* IDs and names of model entities are now not only accessible via
+  `amici.sim.sundials.Model`, but also via `amici.sim.sundials.ReturnData`
   (`ReturnData.{free_parameter_ids,observable_ids,...}`,
   `ReturnData.{free_parameter_names,observable_names,...}`).
 
