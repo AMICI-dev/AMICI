@@ -558,10 +558,10 @@ def test_likelihoods(model_test_likelihoods):
 
     rdata = model.simulate(solver=solver)
     sigmas = rdata["y"].max(axis=0) * 0.05
-    edata = ExpData(rdata, sigmas, [])
+    edata = ExpData(rdata, sigmas, [], 1)
     # just make all observables positive since some are logarithmic
     while min(edata.get_measurements()) < 0:
-        edata = ExpData(rdata, sigmas, [])
+        edata = ExpData(rdata, sigmas, [], 1)
 
     # and now run for real and also compute likelihood values
     rdata = model.simulate(solver=solver, edata=[edata])[0]
