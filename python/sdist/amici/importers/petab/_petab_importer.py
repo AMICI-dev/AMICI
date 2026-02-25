@@ -26,7 +26,7 @@ from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
 from amici.sim.jax.petab import JAXProblem
 
-from .v1.sbml_import import _add_global_parameter
+from .v1._sbml_import import _add_global_parameter
 
 if TYPE_CHECKING:
     import pysb
@@ -329,7 +329,7 @@ class PetabImporter:
             for change in self.petab_problem[condition_id].changes
         }
 
-        from .v1.sbml_import import show_model_info
+        from .v1._sbml_import import show_model_info
 
         show_model_info(self.petab_problem.model.sbml_model)
         sbml_importer = amici.SbmlImporter(

@@ -4,7 +4,7 @@
 #  preequilibration
 PREEQ_INDICATOR_ID = "preequilibration_indicator"
 
-from .petab_import import import_petab_problem
+from ._petab_import import import_petab_problem
 
 __all__ = [
     "import_petab_problem",

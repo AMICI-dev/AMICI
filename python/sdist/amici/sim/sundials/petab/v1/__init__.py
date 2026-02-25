@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ._conditions import (
     create_edatas,
     create_parameterized_edatas,

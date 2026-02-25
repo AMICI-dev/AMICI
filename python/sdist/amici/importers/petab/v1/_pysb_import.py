@@ -24,11 +24,11 @@ from amici import MeasurementChannel
 from amici.logging import get_logger, log_execution_time, set_log_level
 
 from . import PREEQ_INDICATOR_ID
-from .import_helpers import (
+from ._import_helpers import (
     get_fixed_parameters,
     petab_noise_distribution_to_amici,
 )
-from .util import get_states_in_condition_table
+from ._util import get_states_in_condition_table
 
 logger = get_logger(__name__, logging.WARNING)
 

@@ -22,10 +22,8 @@ import petab.v2 as petabv2
 from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
-from amici.importers.petab.v1.parameter_mapping import (
-    ParameterMappingForCondition,
-)
 from amici.logging import get_logger
+from amici.sim._parameter_mapping import ParameterMappingForCondition
 from amici.sim.jax.model import JAXModel, ReturnValue
 
 DEFAULT_CONTROLLER_SETTINGS = {

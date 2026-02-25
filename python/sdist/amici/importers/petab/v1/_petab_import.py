@@ -18,16 +18,16 @@ from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 import amici
 from amici.logging import get_logger
 
-from .import_helpers import (
+from ._import_helpers import (
     _can_import_model,
     _create_model_name,
     _get_package_name_and_path,
     check_model,
 )
-from .sbml_import import import_model_sbml
+from ._sbml_import import import_model_sbml
 
 try:
-    from .pysb_import import import_model_pysb
+    from ._pysb_import import import_model_pysb
 except ModuleNotFoundError:
     # pysb not available
     import_model_pysb = None

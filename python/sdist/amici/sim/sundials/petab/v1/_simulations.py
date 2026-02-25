@@ -17,11 +17,8 @@ import petab.v1 as petab
 from petab.v1.C import *  # noqa: F403
 
 import amici
-from amici.importers.petab.v1.parameter_mapping import (
-    ParameterMapping,
-    create_parameter_mapping,
-)
 from amici.logging import get_logger, log_execution_time
+from amici.sim._parameter_mapping import ParameterMapping
 from amici.sim.sundials import (
     AMICI_SUCCESS,
     AmiciExpData,
@@ -34,6 +31,9 @@ from amici.sim.sundials import (
 from amici.sim.sundials.petab.v1._conditions import (
     create_edatas,
     fill_in_parameters,
+)
+from amici.sim.sundials.petab.v1._parameter_mapping import (
+    create_parameter_mapping,
 )
 
 logger = get_logger(__name__)

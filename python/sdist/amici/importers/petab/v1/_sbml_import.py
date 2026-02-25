@@ -16,12 +16,12 @@ from amici import MeasurementChannel
 from amici.logging import log_execution_time, set_log_level
 
 from . import PREEQ_INDICATOR_ID
-from .import_helpers import (
+from ._import_helpers import (
     check_model,
     get_fixed_parameters,
     get_observation_model,
 )
-from .util import get_states_in_condition_table
+from ._util import get_states_in_condition_table
 
 logger = logging.getLogger(__name__)
 

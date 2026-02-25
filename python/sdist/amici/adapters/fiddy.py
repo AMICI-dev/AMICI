@@ -20,7 +20,6 @@ import petab.v1 as petab
 from fiddy import CachedFunction, Type, fiddy_array
 from petab.v1.C import LIN, LOG, LOG10
 
-from amici.importers.petab.v1.parameter_mapping import create_parameter_mapping
 from amici.sim.sundials import (
     AmiciExpData,
     AmiciModel,
@@ -31,6 +30,9 @@ from amici.sim.sundials import (
     run_simulation,
 )
 from amici.sim.sundials.petab.v1 import LLH, SLLH, create_edatas
+from amici.sim.sundials.petab.v1._parameter_mapping import (
+    create_parameter_mapping,
+)
 
 if TYPE_CHECKING:
     from amici.sim.sundials.petab import PetabSimulationResult, PetabSimulator

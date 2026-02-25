@@ -19,18 +19,20 @@ from petab.v1.C import (
     TIME,
 )
 
-from amici.importers.petab.v1.parameter_mapping import (
+from amici.importers.petab.v1._util import get_states_in_condition_table
+from amici.sim._parameter_mapping import (
     ParameterMapping,
     ParameterMappingForCondition,
-    petab_to_amici_scale,
-    scale_parameters_dict,
-    unscale_parameters_dict,
 )
-from amici.importers.petab.v1.util import get_states_in_condition_table
 from amici.sim.sundials import (
     AmiciModel,
     ExpData,
     parameter_scaling_from_int_vector,
+)
+from amici.sim.sundials.petab.v1._parameter_scaling import (
+    petab_to_amici_scale,
+    scale_parameters_dict,
+    unscale_parameters_dict,
 )
 
 logger = logging.getLogger(__name__)
@@ -283,7 +285,7 @@ def create_parameterized_edatas(
 
     # Get parameter mapping
     if parameter_mapping is None:
-        from amici.importers.petab.v1.parameter_mapping import (
+        from amici.sim.sundials.petab.v1._parameter_mapping import (
             create_parameter_mapping,
         )
 
