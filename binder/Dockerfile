@@ -30,7 +30,10 @@ ENV PATH="${VENV_PATH}/bin:${PATH}"
 #    ${NB_USER}
 # On ubuntu>=24.04 images there is ubuntu(1000)
 #  see https://bugs.launchpad.net/cloud-images/+bug/2005129
-RUN usermod -l ${NB_USER} ubuntu
+RUN usermod -l ${NB_USER} ubuntu && \
+    mv /home/ubuntu ${HOME} && \
+    usermod -d ${HOME} ${NB_USER} && \
+    chown -R ${NB_UID}:${NB_UID} ${HOME}
 USER ${NB_USER}
 RUN python3 -m venv ${VENV_PATH} && \
     ${VENV_PATH}/bin/pip install --upgrade build wheel setuptools pip && \
