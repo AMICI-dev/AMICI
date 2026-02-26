@@ -238,7 +238,7 @@ settings["Weber_BMC2015"] = GradientCheckSettings(
     rtol_sim=1e-12,
     atol_check=1e-6,
     rtol_check=1e-2,
-    rng_seed=1,
+    rng_seed=2,
 )
 settings["Zheng_PNAS2012"] = GradientCheckSettings(
     rng_seed=1,
