@@ -18,9 +18,9 @@ RUN apt-get update && apt-get install -y \
 # BEGIN BINDER
 ARG NB_USER=jovyan
 ARG NB_UID=1000
-ENV USER ${NB_USER}
-ENV NB_UID ${NB_UID}
-ENV HOME /home/${NB_USER}
+ENV USER=${NB_USER}
+ENV NB_UID=${NB_UID}
+ENV HOME=/home/${NB_USER}
 ENV VENV_PATH=${HOME}/venv
 ENV PATH="${VENV_PATH}/bin:${PATH}"
 # If there is no default 1000 user:
