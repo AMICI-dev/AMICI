@@ -5,7 +5,6 @@ FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y \
     g++ \
     git \
-    libatlas-base-dev \
     libboost-serialization-dev \
     libboost-chrono-dev \
     libhdf5-serial-dev \
@@ -23,10 +22,14 @@ ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
 ENV PATH="${PATH}:$HOME/.local/bin"
-RUN adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER}
+# If there is no default 1000 user:
+#RUN adduser --disabled-password \
+#    --gecos "Default user" \
+#    --uid ${NB_UID} \
+#    ${NB_USER}
+# On ubuntu>=24.04 images there is ubuntu(1000)
+#  see https://bugs.launchpad.net/cloud-images/+bug/2005129
+RUN usermod -l ${NB_USER} ubuntu
 USER ${NB_USER}
 RUN python3 -m pip install --upgrade build wheel setuptools pip && \
     python3 -m pip install --no-cache-dir notebook jupyterlab jupyterhub jax[cpu] antimony
