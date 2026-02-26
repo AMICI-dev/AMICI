@@ -49,7 +49,8 @@ USER ${NB_USER}
 # END BINDER
 
 WORKDIR ${HOME}
-RUN . ./.profile && ${VENV_PATH}/bin/pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb,vis] && \
+RUN . ./.profile && ${VENV_PATH}/bin/python3 -m build --sdist python/sdist && \
+    ${VENV_PATH}/bin/pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb,vis] && \
     ${VENV_PATH}/bin/pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
     scripts/buildBNGL.sh
 
