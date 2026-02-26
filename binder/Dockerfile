@@ -21,7 +21,8 @@ ARG NB_UID=1000
 ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
-ENV PATH="${PATH}:$HOME/.local/bin"
+ENV VENV_PATH=${HOME}/venv
+ENV PATH="${VENV_PATH}/bin:${PATH}"
 # If there is no default 1000 user:
 #RUN adduser --disabled-password \
 #    --gecos "Default user" \
@@ -31,8 +32,9 @@ ENV PATH="${PATH}:$HOME/.local/bin"
 #  see https://bugs.launchpad.net/cloud-images/+bug/2005129
 RUN usermod -l ${NB_USER} ubuntu
 USER ${NB_USER}
-RUN python3 -m pip install --upgrade build wheel setuptools pip && \
-    python3 -m pip install --no-cache-dir notebook jupyterlab jupyterhub jax[cpu] antimony
+RUN python3 -m venv ${VENV_PATH} && \
+    ${VENV_PATH}/bin/pip install --upgrade build wheel setuptools pip && \
+    ${VENV_PATH}/bin/pip install --no-cache-dir notebook jupyterlab jupyterhub jax[cpu] antimony
 # END BINDER
 
 # BEGIN BINDER
@@ -44,9 +46,8 @@ USER ${NB_USER}
 # END BINDER
 
 WORKDIR ${HOME}
-RUN . ./.profile && python3 -m build --sdist python/sdist && \
-    python3 -m pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb,vis] && \
-    python3 -m pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
+RUN . ./.profile && ${VENV_PATH}/bin/pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb,vis] && \
+    ${VENV_PATH}/bin/pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
     scripts/buildBNGL.sh
 
 ENV BNGPATH="${HOME}/ThirdParty/BioNetGen-2.7.0"
