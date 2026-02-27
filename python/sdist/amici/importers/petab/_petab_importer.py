@@ -24,7 +24,6 @@ from amici import get_model_dir
 from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
-from amici.sim.jax.petab import JAXProblem
 
 from .v1._sbml_import import _add_global_parameter
 
@@ -594,7 +593,7 @@ class PetabImporter:
 
     def create_simulator(
         self, force_import: bool = False
-    ) -> amici.sim.sundials.petab.PetabSimulator:
+    ) -> amici.sim.sundials.petab.PetabSimulator | amici.sim.jax.JAXProblem:
         """
         Create a PEtab simulator for the imported model.
 
@@ -607,6 +606,9 @@ class PetabImporter:
         if self._jax:
             model_module = self.import_module(force_import=force_import)
             model = model_module.Model()
+
+            from amici.sim.jax.petab import JAXProblem
+
             return JAXProblem(model, self.petab_problem)
 
         model = self.import_module(force_import=force_import).get_model()

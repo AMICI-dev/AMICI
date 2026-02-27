@@ -4,7 +4,15 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v1.X Series
 
-### v1.0.0 (unreleased)
+### v1.0.1
+
+**Fixes**
+
+* Fixed an issue that resulted in failure to import the `PetabImporter` if
+  the jax-dependencies weren't installed.
+
+
+### v1.0.0
 
 **BREAKING CHANGES**
 
@@ -39,7 +47,7 @@ The following functionality has been removed without replacement:
   fixed parameters as "fixed parameters", "constant parameters",
   or "constants". This has now been harmonized to "free" and "fixed" across the
   API. E.g., `Model.setParameters()` is now `Model.set_free_parameters()`.
-* `ReturnDataView.posteq_numsteps` and `ReturnDataView.posteq_numsteps` now
+* `ReturnDataView.posteq_numsteps` and `ReturnDataView.preeq_numsteps` now
   return a one-dimensional array of shape `(num_timepoints,)` instead of a
   two-dimensional array of shape `(1, num_timepoints)`.
 * `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now

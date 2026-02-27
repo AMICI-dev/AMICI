@@ -10,7 +10,6 @@ from pathlib import Path
 
 import diffrax
 import equinox as eqx
-import h5py
 import jax.lax
 import jax.numpy as jnp
 import jaxtyping as jt
@@ -593,6 +592,9 @@ class JAXProblem(eqx.Module):
             "array_files", []
         )
 
+        import h5py
+
+        # TODO(performance): Avoid opening each file multiple times
         return {
             file_spec.split("_")[0]: h5py.File(file_spec, "r")["parameters"][
                 file_spec.split("_")[0]
@@ -615,6 +617,9 @@ class JAXProblem(eqx.Module):
             "array_files", []
         )
 
+        import h5py
+
+        # TODO(performance): Avoid opening each file multiple times
         return {
             file_spec.split("_")[0]: h5py.File(file_spec, "r")["inputs"]
             for file_spec in array_files
