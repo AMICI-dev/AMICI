@@ -21,10 +21,4 @@ Most PEtab v1 problems can be also imported using the PEtab v2 import by
 passing a :class:`petab.v1.Problem` instance to the PEtab v2 import functions.
 """
 
-# FIXME: for some tests (petab-sciml, maybe petab-v1-pysb) we still rely on an
-#   old PEtab version on which the petab v2 import does not work.
-#   Once those tests are updated, we can remove this try-except block.
-try:
-    from ._petab_importer import *  # noqa: F403, F401
-except ImportError:
-    pass
+from ._petab_importer import *  # noqa: F403, F401
