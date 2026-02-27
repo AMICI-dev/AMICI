@@ -277,13 +277,14 @@ struct ModelStateDerived {
     SUNMatrixWrapper dtotal_cldx_rdata;
 
     /**
-     * Temporary storage of `dxdotdp` data across functions, Matlab only
+     * Temporary storage of `dxdotdp` data across functions
      * (dimension: `nplist` x `nx_solver` , row-major)
      */
     AmiVectorArray dxdotdp;
 
-    /** Sparse observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
+    /**
+     * Sparse observable derivative of data likelihood
+     * (dimension `nytrue`, `nJ` x `ny`, row-major)
      */
     std::vector<SUNMatrixWrapper> dJydy_;
 

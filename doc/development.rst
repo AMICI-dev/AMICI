@@ -50,9 +50,12 @@ process described below:
 
    -  Run ``scripts/buildAll.sh && scripts/run-cpp-tests.sh``.
 
-   -  If you made changes to the Matlab or C++ code and have a Matlab
-      license, please also run ``tests/cpp/wrapTestModels.m`` and
-      ``tests/testModels.m``
+   -  If you made changes related to code generation or version number, run
+
+      .. code-block:: shell
+
+         python -c "from amici.testing.models import import_test_models; import_test_models()"
+
 
    -  If you made changes to the Python or C++ code, run
       ``make python-tests`` in ``build``
@@ -149,9 +152,9 @@ To create a new release, please follow these steps:
 
 4. Regenerate the test models by running
 
-    ```shell
-    python -c "from amici.testing.models import import_test_models; import_test_models()"
-    ```
+   .. code-block:: shell
+
+      python -c "from amici.testing.models import import_test_models; import_test_models()"
 
     This ensures that the models can be imported with the new version.
 
