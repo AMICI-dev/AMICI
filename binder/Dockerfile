@@ -52,7 +52,7 @@ WORKDIR ${HOME}
 RUN . ./.profile && ${VENV_PATH}/bin/python3 -m build --sdist python/sdist && \
     ${VENV_PATH}/bin/pip install git+https://github.com/pysb/pysb@master && \
     ${VENV_PATH}/bin/pip install -U sympy && \
-    ${VENV_PATH}/bin/pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,vis] && \
+    ${VENV_PATH}/bin/pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,vis,jax] && \
     ${VENV_PATH}/bin/pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
     scripts/buildBNGL.sh
 
