@@ -1358,8 +1358,9 @@ class DEModel:
         :param name:
             name of the symbolic variable
         """
-        # replacement ensures that we don't have to adapt name in abstract
-        # model and keep backwards compatibility with matlab
+        # replacement ensures that we don't have to adapt name in
+        # amici::AbstractModel and keep backwards compatibility with matlab
+        # TODO(cleanup): Change in amici::AbstractModel and remove
         match_deriv = DERIVATIVE_PATTERN.match(
             re.sub(r"dJ(y|z|rz)dsigma", r"dJ\1dsigma\1", name)
             .replace("sigmarz", "sigmaz")

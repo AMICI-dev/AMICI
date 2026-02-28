@@ -17,9 +17,11 @@ assignees: ''
 
 **AMICI version and system environment**
  - OS and version: [e.g. Ubuntu, iOS, Windows]
- - AMICI interface: [e.g. Python, Matlab, C++]
+ - AMICI interface: [e.g. Python, C++]
+ - Simulator type: [e.g. SUNDIALS, diffrax]
  - AMICI version:
- - Additional information: Compiler name and version used, Python/Matlab version, ...
+ - Additional information:
+   Compiler name and version used, Python version, ...
 
 **How to fix**
 Do you know how to resolve the problem?
