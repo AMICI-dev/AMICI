@@ -29,7 +29,7 @@ jobs:
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies
 
-    - run: pip3 install petab shyaml build
+    - run: pip3 install petab shyaml build scipy
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
     - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
