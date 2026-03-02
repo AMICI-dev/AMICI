@@ -5,7 +5,6 @@ import equinox as eqx  # noqa: F401
 import jax.numpy as jnp
 import jax.random as jr  # noqa: F401
 import jaxtyping as jt  # noqa: F401
-from interpax import interp1d  # noqa: F401
 from jax.numpy import inf as oo  # noqa: F401
 from jax.numpy import nan as nan  # noqa: F401
 
