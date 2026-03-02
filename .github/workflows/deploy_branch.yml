@@ -28,7 +28,7 @@ jobs:
         scripts/buildSdist.sh
 
     - name: "Upload artifact: sdist"
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: sdist
         path: python/sdist/dist/amici-*.gz
