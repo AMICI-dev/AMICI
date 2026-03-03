@@ -5,12 +5,14 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import amici
 import amici.exporters.sundials.de_export
 import amici.importers.sbml
 import petab.v1 as petab
+import yaml
 from amici.importers.petab.v1._petab_import import import_model_sbml
 from amici.sim.sundials import (
     AMICI_SUCCESS,
@@ -20,6 +22,10 @@ from amici.sim.sundials import (
     SteadyStateSensitivityMode,
     run_simulation,
 )
+
+reference_times_file = Path(__file__).parent / "reference.yml"
+with open(reference_times_file) as f:
+    reference_times: dict[str, float] = yaml.safe_load(f)
 
 
 def parse_args():
@@ -153,11 +159,15 @@ def main():
     model_dir_compiled = Path(f"model_performance_test_{suffix}")
     model_name = "model_performance_test"
 
-    if arg == "import":
+    start_time = time.time()
+
+    if arg == "petab_import":
         run_import(model_name, model_dir_source)
+        check_time(arg, time.time() - start_time)
         return
-    elif arg == "compile":
+    elif arg == "install_model":
         compile_model(model_dir_source, model_dir_compiled)
+        check_time(f"{arg}{suffix}", time.time() - start_time)
         return
     else:
         model_module = amici.import_model_module(
@@ -176,6 +186,21 @@ def main():
     rdata = run_simulation(model, solver, edata)
 
     check_results(rdata)
+    check_time(arg, time.time() - start_time)
+
+
+def check_time(task: str, time: float):
+    reference_time = reference_times[task]
+    if time <= reference_time:
+        print(
+            f"Time for task {task} is {time:.2f}s, "
+            f"which is within the reference time of {reference_time:.2f}s."
+        )
+    else:
+        raise AssertionError(
+            f"Time for task {task} is {time:.2f}s, "
+            f"which exceeds the reference time of {reference_time:.2f}s."
+        )
 
 
 if __name__ == "__main__":
