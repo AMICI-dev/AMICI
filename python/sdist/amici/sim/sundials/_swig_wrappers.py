@@ -30,7 +30,7 @@ from amici.logging import get_logger
 
 from . import ReturnDataView
 
-logger = get_logger(__name__, log_level=logging.DEBUG)
+logger = get_logger(__name__, log_level=None)
 
 
 __all__ = [
