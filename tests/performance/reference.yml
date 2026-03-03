@@ -6,9 +6,9 @@ install_model: 60
 install_model_O0: 40
 install_model_O1: 45
 install_model_O2: 60
-forward_simulation: 0.5
-forward_sensitivities: 0.2
-adjoint_sensitivities: 0.1
+forward_simulation: 1
+forward_sensitivities: 1
+adjoint_sensitivities: 1
 forward_simulation_non_optimal_parameters: 1
 adjoint_sensitivities_non_optimal_parameters: 2
 forward_steadystate_sensitivities_non_optimal_parameters: 3
