@@ -1,8 +1,5 @@
 name: Performance Test
 on:
-  push:
-    branches:
-      - fix_performance_test
   merge_group:
   workflow_dispatch:
 
