@@ -56,7 +56,7 @@ def run_simulation(
 
     :param solver:
         Solver instance, must be generated from
-        :py:meth:`amici.amici.Model.create_solver`
+        :py:meth:`amici.sim.sundials.Model.create_solver`
 
     :param edata:
         ExpData instance (optional)
@@ -92,10 +92,13 @@ def run_simulations(
     num_threads: int = 1,
 ) -> list[ReturnDataView]:
     """
-    Convenience wrapper for loops of amici.runAmiciSimulation
+    Run simulations for multiple experimental conditions.
+
+    Convenience wrapper for loops of :func:`amici.sim.sundials.run_simulation`.
 
     :param model: Model instance
-    :param solver: Solver instance, must be generated from Model.getSolver()
+    :param solver: Solver instance, must be generated from
+        :py:meth:`amici.sim.sundials.Model.create_solver`
     :param edata_list: list of ExpData instances
     :param failfast: returns as soon as an integration failure is encountered
     :param num_threads: number of threads to use (only used if compiled

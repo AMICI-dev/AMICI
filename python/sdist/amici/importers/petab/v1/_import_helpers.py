@@ -248,7 +248,7 @@ def get_fixed_parameters(
 
 
 def check_model(
-    amici_model: amici.Model,
+    amici_model: amici.sim.sundials.Model,
     petab_problem: petab.Problem,
 ) -> None:
     """Check that the model is consistent with the PEtab problem."""
