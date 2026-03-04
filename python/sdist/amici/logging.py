@@ -118,7 +118,9 @@ def _setup_logger(
     return log
 
 
-def set_log_level(logger: logging.Logger, log_level: int | bool) -> None:
+def set_log_level(
+    logger: logging.Logger, log_level: int | bool | None
+) -> None:
     if log_level is not None and log_level is not False:
         if isinstance(log_level, bool):
             log_level = logging.DEBUG
@@ -139,33 +141,33 @@ def get_logger(
     **kwargs,
 ) -> logging.Logger:
     """
-    Returns (if extistant) or creates an AMICI logger
+    Returns (if exists) or creates an AMICI logger
 
     If the AMICI base logger has already been set up, this method will
     return it or any of its descendant loggers without overriding the
     settings - i.e. any values supplied as kwargs will be ignored.
 
     :param logger_name:
-        Get a logger for a specific namespace, typically __name__
-        for code outside of classes or self.__module__ inside a class
+        Get a logger for a specific namespace, typically ``__name__``
+        for code outside of classes or ``self.__module__`` inside a class
 
     :param log_level:
         Override the default or preset log level for the requested logger.
-        None or False uses the default or preset value. True evaluates to
-        logging.DEBUG. Any integer is used directly.
+        ``None`` or ``False`` uses the default or preset value. ``True`` evaluates to
+        ``logging.DEBUG``. Any integer is used directly.
 
     :param console_output:
-        Set up a default console log handler if True (default). Only used when
+        Set up a default console log handler if ``True`` (default). Only used when
         the AMICI logger hasn't been set up yet.
 
     :param file_output:
         Supply a filename to copy all log output to that file, or set to
-        False to disable (default). Only used when the AMICI logger hasn't
+        ``False`` to disable (default). Only used when the AMICI logger hasn't
         been set up yet.
 
     :param capture_warnings:
         Capture warnings from Python's warnings module if True (default).
-        Only used when the AMICI logger hasn't been set up yet..
+        Only used when the AMICI logger hasn't been set up yet.
 
     :return:
         A logging.Logger object with the requested name

@@ -6,6 +6,7 @@ using :term:`SUNDIALS` solvers such as :term:`CVODES` and :term:`IDAS` and
 for analyzing the simulation results.
 """
 
+import logging
 import os
 import warnings
 from types import ModuleType
@@ -13,6 +14,10 @@ from typing import Protocol, runtime_checkable
 
 import amici
 from amici import amici_path, import_model_module
+from amici.logging import get_logger
+
+logger = get_logger(__name__, log_level=logging.DEBUG)
+
 
 #: boolean indicating if this is the full package with swig interface or
 #  the raw package without extension

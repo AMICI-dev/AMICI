@@ -1,5 +1,6 @@
 """Tests related to amici.importers.sbml"""
 
+import logging
 import os
 import re
 import sys
@@ -229,7 +230,22 @@ def test_logging_works(observable_dependent_error_model, caplog):
 
     rdata = run_simulation(model, solver)
     assert rdata.status != AMICI_SUCCESS
+    # this is a DEBUG level message and should be there by default
     assert "mxstep steps taken" in caplog.text
+
+    caplog.clear()
+
+    # ensure that we can control amici.sim.sundials._swig_wrappers logging
+    #  via the public amici.sim.sundials logger
+    logger = logging.getLogger("amici.sim.sundials")
+    old_lvl = logger.level
+    try:
+        logger.setLevel(logging.WARNING)
+        rdata = run_simulation(model, solver)
+        assert rdata.status != AMICI_SUCCESS
+        assert "mxstep steps taken" not in caplog.text
+    finally:
+        logger.setLevel(old_lvl)
 
 
 @skip_on_valgrind
