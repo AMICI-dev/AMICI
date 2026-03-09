@@ -131,16 +131,16 @@ struct ModelDimensions {
      */
     std::vector<int> ndJydy;
 
-    /** Number of nonzero elements in the \f$ x \f$ derivative of \f$ x_rdata
+    /** Number of nonzero elements in the \f$ x \f$ derivative of \f$ x\_rdata
      * \f$ */
     int ndxrdatadxsolver{0};
 
-    /** Number of nonzero elements in the \f$ tcl\f$ derivative of \f$ x_rdata
+    /** Number of nonzero elements in the \f$ tcl\f$ derivative of \f$ x\_rdata
      * \f$ */
     int ndxrdatadtcl{0};
 
-    /** Number of nonzero elements in the \f$ x_rdata\f$ derivative of
-     *  \f$ total_cl \f$ */
+    /** Number of nonzero elements in the \f$ x\_rdata\f$ derivative of
+     *  \f$ total\_cl \f$ */
     int ndtotal_cldx_rdata{0};
 
     /** Number of nonzero entries in Jacobian */
