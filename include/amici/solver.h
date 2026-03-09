@@ -432,7 +432,8 @@ class Solver {
      *
      * Steady state simulation tolerances are the product of the simulation
      * tolerances and this factor, unless manually set with
-     * `set(Absolute/Relative)ToleranceSteadyState()`.
+     * `set_relative_tolerance_steady_state()` /
+     * `set_absolute_tolerance_steady_state()`.
      *
      * @return steady state simulation tolerance factor
      */
@@ -443,7 +444,8 @@ class Solver {
      *
      * Steady state simulation tolerances are the product of the simulation
      * tolerances and this factor, unless manually set with
-     * `set(Absolute/Relative)ToleranceSteadyState()`.
+     * `set_relative_tolerance_steady_state()` /
+     * `set_absolute_tolerance_steady_state()`.
      *
      * @param factor tolerance factor (non-negative number)
      */
@@ -640,17 +642,17 @@ class Solver {
      * @brief Gets KLU / SuperLUMT state ordering mode
      *
      * @return State-ordering as integer according to
-     * SUNLinSolKLU::StateOrdering or SUNLinSolSuperLUMT::StateOrdering (which
-     * differ).
+     * `SUNLinSolKLU::StateOrdering` or `SUNLinSolSuperLUMT::StateOrdering`
+     * (which differ).
      */
     int get_state_ordering() const;
 
     /**
      * @brief Sets KLU / SuperLUMT state ordering mode
      *
-     * This only applies when linsol is set to LinearSolver::KLU or
-     * LinearSolver::SuperLUMT. Mind the difference between
-     * SUNLinSolKLU::StateOrdering and SUNLinSolSuperLUMT::StateOrdering.
+     * This only applies when the linear solver is set to `LinearSolver::KLU`
+     * or `LinearSolver::SuperLUMT`. Mind the difference between
+     * `SUNLinSolKLU::StateOrdering` and `SUNLinSolSuperLUMT::StateOrdering`.
      *
      * @param ordering state ordering
      */
@@ -900,21 +902,21 @@ class Solver {
     /**
      * @brief number of state variables with which the solver was initialized
      *
-     * @return x.getLength()
+     * @return Number of solver state variables.
      */
     int nx() const;
 
     /**
      * @brief number of parameters with which the solver was initialized
      *
-     * @return sx.getLength()
+     * @return Number of parameters w.r.t. which sensitivities are computed.
      */
     int nplist() const;
 
     /**
      * @brief number of quadratures with which the solver was initialized
      *
-     * @return xQB.getLength()
+     * @return Number of quadratures with which the solver was initialized.
      */
     int nquad() const;
 

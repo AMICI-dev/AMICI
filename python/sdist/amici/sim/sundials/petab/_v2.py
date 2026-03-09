@@ -57,7 +57,8 @@ class ExperimentManager:
         :param model: The AMICI model to use.
         :param petab_problem: The PEtab problem to use.
             This is expected to be the output of
-            :class:`petab.v2.ExperimentsToSbmlConverter` or an equivalent problem.
+            :class:`petab.v2.converters.ExperimentsToSbmlConverter` or an
+            equivalent problem.
             This object must not be modified after the creation of this
             :class:`ExperimentManager` instance.
         """
