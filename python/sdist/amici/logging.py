@@ -119,20 +119,34 @@ def _setup_logger(
 
 
 def set_log_level(
-    logger: logging.Logger, log_level: int | bool | None
+    logger: logging.Logger,
+    log_level: int | bool | None,
+    log_change: bool = True,
 ) -> None:
+    """
+    Set the log level for a logger.
+
+    :param logger: The logger for which to set the log level.
+    :param log_level: The log level to set.
+        If ``None`` or ``False``, the log level will not be changed.
+        If ``True``, the log level will be set to ``logging.DEBUG``.
+        If an integer, it will be used directly as the log level.
+    :param log_change:
+        If ``True`` (default), a debug message will be logged if the log level
+        is changed.
+    """
     if log_level is not None and log_level is not False:
         if isinstance(log_level, bool):
             log_level = logging.DEBUG
         elif not isinstance(log_level, int):
             raise ValueError("log_level must be a boolean, integer or None")
 
-        if logger.getEffectiveLevel() != log_level:
-            logger.debug(
-                f"Changing log_level from {logger.getEffectiveLevel()} "
-                f"to {log_level}"
-            )
+        if (old_level := logger.getEffectiveLevel()) != log_level:
             logger.setLevel(log_level)
+            if log_change:
+                logger.debug(
+                    f"Changed log_level from {old_level} to {log_level}"
+                )
 
 
 def get_logger(
@@ -181,9 +195,10 @@ def get_logger(
             stacklevel=2,
         )
 
+    logger_existed = logger_name in logging.Logger.manager.loggerDict.keys()
     logger = logging.getLogger(logger_name)
 
-    set_log_level(logger, log_level)
+    set_log_level(logger, log_level, log_change=logger_existed)
 
     return logger
 
