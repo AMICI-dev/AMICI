@@ -555,7 +555,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI version string
      */
     std::string get_amici_version() const override {
-        return "1.0.1.dev";
+        return "1.0.1";
     }
 
     /**
@@ -563,7 +563,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "39afcefa103c861d4efecc0d15196bab302eba69";
+        return "33affbfd8bca2bd5e82a10cc6b764a63e292cc6f";
     }
 
     bool has_quadratic_llh() const override {

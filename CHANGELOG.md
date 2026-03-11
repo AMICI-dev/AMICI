@@ -12,6 +12,10 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   the jax-dependencies weren't installed.
 * Fixed a pandas>=3.0 compatibility issue in the PEtab importer which resulted
   in incorrect selection of fixed parameters.
+* Fixed logger configuration for simulation warnings/errors, such that users
+  can adjust the log level or simulations with, e.g.,
+  `logging.getLogger("amici.sim.sundials").setLevel(logging.ERROR)`
+* Fixed various broken links and outdated function names in the documentation.
 
 ### v1.0.0
 
