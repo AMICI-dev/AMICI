@@ -1165,3 +1165,14 @@
    fun:__pyx_tp_dealloc_4h5py_8_objects_ObjectID
    ...
 }
+
+{
+   SWIG (probably libsbml-5.21.1)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:_ZL13SWIG_mod_execP7_object
+   fun:PyModule_ExecDef
+   ...
+}
