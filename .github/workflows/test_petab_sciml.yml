@@ -1,14 +1,14 @@
 name: PEtab SciML
-# on:
-#   push:
-#     branches:
-#       - main
-#       - 'release*'
-#   pull_request:
-#     branches:
-#       - main
-#   merge_group:
-#   workflow_dispatch:
+on:
+  push:
+    branches:
+      - main
+      - 'release*'
+  pull_request:
+    branches:
+      - main
+  merge_group:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -74,7 +74,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@sciml
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@44c8062ce1b87a74a0ba1bd2551de0cdc2a13ff1
 
       - name: Run PEtab SciML testsuite
         run: |

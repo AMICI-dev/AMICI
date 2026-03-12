@@ -2499,7 +2499,7 @@ class DEModel:
         added_expressions = False
         orig_obs = tuple([s.get_sym() for s in self._observables])
         for net_id, net in hybridization.items():
-            if net["static"]:
+            if net["pre_initialization"]:
                 # do not integrate into ODEs, handle in amici.sim.jax.petab
                 continue
             inputs = [
@@ -2553,6 +2553,8 @@ class DEModel:
                 # remove output from model components
                 if isinstance(comp, FreeParameter):
                     self._free_parameters.remove(comp)
+                elif isinstance(comp, FixedParameter):
+                    self._fixed_parameters.remove(comp)
                 elif isinstance(comp, Expression):
                     self._expressions.remove(comp)
                 elif isinstance(comp, DifferentialState):

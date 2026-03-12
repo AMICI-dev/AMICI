@@ -85,20 +85,22 @@ class HybridV2Problem(petabv2.Problem):
     extensions_config: dict
 
     def __init__(self, petab_problem: petabv2.Problem):
-        if not hasattr(petab_problem, "extensions_config"):
-            self.extensions_config = {}
         self.__dict__.update(petab_problem.__dict__)
+        if not hasattr(petab_problem.config, "extensions"):
+            self.extensions_config = {}
+        else:
+            self.extensions_config = petab_problem.config.extensions
         self.hybridization_df = _get_hybridization_df(petab_problem)
 
 
 def _get_hybridization_df(petab_problem):
-    if not hasattr(petab_problem, "extensions_config"):
+    if not hasattr(petab_problem.config, "extensions"):
         return None
 
-    if "sciml" in petab_problem.extensions_config:
+    if "sciml" in petab_problem.config.extensions:
         hybridizations = [
             pd.read_csv(hf, sep="\t", index_col=0)
-            for hf in petab_problem.extensions_config["sciml"][
+            for hf in petab_problem.config.extensions["sciml"][
                 "hybridization_files"
             ]
         ]
@@ -683,33 +685,35 @@ class JAXProblem(eqx.Module):
         :param par_arrays:
             Parameter arrays loaded from files
         """
-        for pname, row in self._petab_problem.parameter_df.iterrows():
-            net = pname.split("_")[0]
-            if net not in model.nns:
-                continue
+        for table in self._petab_problem.parameter_tables:
+            for parameter in table.elements:
+                pname = parameter.id
+                net = pname.split("_")[0]
+                if net not in model.nns:
+                    continue
 
-            nn = model_pars[net]
-            scalar = True
+                nn = model_pars[net]
+                scalar = True
 
-            # Determine value source (scalar from PEtab or array from file)
-            if np.isnan(row[petabv2.C.NOMINAL_VALUE]):
-                value = par_arrays[net]
-                scalar = False
-            else:
-                value = float(row[petabv2.C.NOMINAL_VALUE])
-
-            # Parse parameter name and set values
-            to_set = self._parse_parameter_name(pname, model_pars)
-
-            for layer, attribute in to_set:
-                if scalar:
-                    nn[layer][attribute] = value * jnp.ones_like(
-                        getattr(model.nns[net].layers[layer], attribute)
-                    )
+                # Determine value source (scalar from PEtab or array from file)
+                if parameter.nominal_value == "array":
+                    value = par_arrays[net]
+                    scalar = False
                 else:
-                    nn[layer][attribute] = jnp.array(
-                        value[layer][attribute][:]
-                    )
+                    value = float(parameter.nominal_value)
+
+                # Parse parameter name and set values
+                to_set = self._parse_parameter_name(pname, model_pars)
+
+                for layer, attribute in to_set:
+                    if scalar:
+                        nn[layer][attribute] = value * jnp.ones_like(
+                            getattr(model.nns[net].layers[layer], attribute)
+                        )
+                    else:
+                        nn[layer][attribute] = jnp.array(
+                            value[layer][attribute][:]
+                        )
 
     def _set_model_parameters(
         self, model: JAXModel, model_pars: dict
@@ -882,9 +886,12 @@ class JAXProblem(eqx.Module):
         :return:
             PEtab parameter ids
         """
-        return self._petab_problem.parameter_df[
-            petabv2.C.ESTIMATE
-        ].index.tolist()
+        return [
+            p.id
+            for pt in self._petab_problem.parameter_tables
+            for p in pt.elements
+            if p.estimate and p.nominal_value != "array"
+        ]
 
     @property
     def nn_output_ids(self) -> list[str]:
@@ -1072,7 +1079,7 @@ class JAXProblem(eqx.Module):
         :return:
             Parameters for the experiment.
         """
-        p = jnp.array(
+        p = jnp.stack(
             [
                 self._map_experiment_model_parameter_value(
                     pname, ind, experiment, is_preeq
@@ -1117,18 +1124,20 @@ class JAXProblem(eqx.Module):
 
         init_val = self.model.parameters[p_index]
         params_nominals = {
-            p.id: p.nominal_value for p in self._petab_problem.parameters
+            p.id: jnp.asarray(p.nominal_value, dtype=self.model.parameters.dtype)
+            for p in self._petab_problem.parameters
+            if p.nominal_value != "array"
         }
         targets_map = {
-            ch.target_id: ch.target_value
+            ch.target_id: jnp.asarray(ch.target_value, dtype=self.model.parameters.dtype)
             for c in self._petab_problem.conditions
             for ch in c.changes
             if c.id in condition_ids
         }
         if pname in params_nominals:
-            return params_nominals[pname]
+            return jnp.asarray(params_nominals[pname], dtype=self.model.parameters.dtype)
         elif pname in targets_map:
-            return float(targets_map[pname])
+            return jnp.asarray(float(targets_map[pname]), dtype=self.model.parameters.dtype)
         else:
             for placeholder_attr, param_attr in (
                 ("observable_placeholders", "observable_parameters"),
@@ -1154,7 +1163,7 @@ class JAXProblem(eqx.Module):
     def _find_val(self, param_entry: str, params_nominals: dict):
         val_float = _try_float(param_entry)
         if isinstance(val_float, float):
-            return val_float
+            return jnp.asarray(val_float, dtype=self.model.parameters.dtype)
         elif param_entry in params_nominals:
             return params_nominals[param_entry]
         else:
@@ -2079,7 +2088,7 @@ def _conditions_to_experiment_map(
 
 def _try_float(value):
     try:
-        return float(value)
+        return jnp.asarray(float(value), dtype=jnp.float64)
     except Exception as e:
         msg = str(e).lower()
         if isinstance(e, ValueError) and "could not convert" in msg:
