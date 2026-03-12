@@ -351,8 +351,8 @@ def create_edata_for_condition(
     # create an ExpData object
     edata = ExpData(amici_model)
     edata.id = condition[SIMULATION_CONDITION_ID]
-    if condition.get(PREEQUILIBRATION_CONDITION_ID):
-        edata.id += "+" + condition.get(PREEQUILIBRATION_CONDITION_ID)
+    if not pd.isna(preeq_id := condition.get(PREEQUILIBRATION_CONDITION_ID)):
+        edata.id += f"+{preeq_id}"
     ##########################################################################
     # enable initial parameters reinitialization
 
@@ -444,7 +444,11 @@ def create_edatas(
         if PREEQUILIBRATION_CONDITION_ID in condition:
             measurement_index = (
                 condition.get(SIMULATION_CONDITION_ID),
-                condition.get(PREEQUILIBRATION_CONDITION_ID) or "",
+                preeq_id
+                if not pd.isna(
+                    preeq_id := condition.get(PREEQUILIBRATION_CONDITION_ID)
+                )
+                else "",
             )
         else:
             measurement_index = (condition.get(SIMULATION_CONDITION_ID),)
