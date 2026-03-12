@@ -172,7 +172,7 @@ jobs:
           git clone https://github.com/PEtab-dev/petab_test_suite \
             && source ./venv/bin/activate \
             && cd petab_test_suite \
-            && git checkout 9542847fb99bcbdffc236e2ef45ba90580a210fa \
+            && git checkout a1935c4d197c3b72dfaf85b9c28268314f4e6ef2 \
             && pip3 install -e .
 
 # TODO: once there is a PEtab v2 benchmark collection
@@ -186,7 +186,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@44c8062ce1b87a74a0ba1bd2551de0cdc2a13ff1 \
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
             && python3 -m pip install git+https://github.com/pysb/pysb@master \
             && python3 -m pip install sympy>=1.12.1
 
