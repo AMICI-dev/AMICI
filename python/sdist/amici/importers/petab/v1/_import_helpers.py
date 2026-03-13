@@ -225,7 +225,7 @@ def get_fixed_parameters(
             # TODO: could check if the final overriding parameter is estimated
             #  or not, but for now, we skip the parameter if there is any kind
             #  of overriding
-            if condition_df[p].dtype != "O"
+            if not pd.api.types.is_string_dtype(condition_df[p].dtype)
             # p is a parameter
             and not petab_problem.model.is_state_variable(p)
         )

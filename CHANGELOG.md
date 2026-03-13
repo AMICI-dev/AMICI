@@ -10,7 +10,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 * Fixed an issue that resulted in failure to import the `PetabImporter` if
   the jax-dependencies weren't installed.
-
+* Fixed a pandas>=3.0 compatibility issue in the PEtab importer which resulted
+  in incorrect selection of fixed parameters.
 
 ### v1.0.0
 
