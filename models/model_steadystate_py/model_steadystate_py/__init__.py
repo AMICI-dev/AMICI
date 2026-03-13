@@ -7,13 +7,13 @@ from pathlib import Path
 import amici
 
 # Ensure we are binary-compatible, see #556
-if "1.0.1.dev" != amici.__version__:
+if "1.0.1" != amici.__version__:
     raise amici.AmiciVersionError(
         f"Cannot use model `model_steadystate_py` in {Path(__file__).parent}, "
-        "generated with amici==1.0.1.dev, "
+        "generated with amici==1.0.1, "
         f"together with amici=={amici.__version__} "
         "which is currently installed. To use this model, install "
-        "amici==1.0.1.dev or re-import the model with the amici "
+        "amici==1.0.1 or re-import the model with the amici "
         "version currently installed."
     )
 
