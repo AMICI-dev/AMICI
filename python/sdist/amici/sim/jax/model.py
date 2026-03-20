@@ -52,6 +52,8 @@ class JAXModel(eqx.Module):
     jax_py_file: Path
     nns: dict
     parameters: jnp.ndarray = field(default_factory=lambda: jnp.array([]))
+    _array_inputs: dict = field(default_factory=dict)
+    _array_input_index: jnp.int32 = field(default_factory=lambda: jnp.int32(0))
 
     def __init__(self):
         if self.api_version != self.MODEL_API_VERSION:

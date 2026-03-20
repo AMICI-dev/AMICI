@@ -184,9 +184,8 @@ def test_ml_model_import(test):
 
 @pytest.mark.parametrize("test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")]))
 def test_sciml_problem_import(test):
-    # test_dir = ude_cases_dir / test
-    # HACK!!
-    test_dir = Path("/workspace/petab_sciml_testsuite/test_cases/sciml_problem_import") / test
+    test_dir = ude_cases_dir / test
+
     with open(test_dir / "petab" / "problem.yaml") as f:
         petab_yaml = safe_load(f)
     with open(test_dir / "solutions.yaml") as f:
@@ -196,12 +195,23 @@ def test_sciml_problem_import(test):
         # HACK!! Again!! Around "array" in parameters table
         petab_problem = _v2_sciml_problem_helper(petab_yaml, test_dir / "petab")
 
+        if test in ("003",):
+            with pytest.raises(NotImplementedError):
+                pi = PetabImporter(
+                    petab_problem=petab_problem,
+                    module_name="hybrid" + test,
+                    compile_=True,
+                    jax=jax,
+                    validate=False,  # And again...around "array" in parameters table
+                )
+            return
+
         pi = PetabImporter(
             petab_problem=petab_problem,
             module_name="hybrid" + test,
             compile_=True,
             jax=jax,
-            validate=False, # And again...around "array" in parameters table
+            validate=False,  # And again...around "array" in parameters table
         )
 
         jax_problem = pi.create_simulator(
@@ -209,13 +219,31 @@ def test_sciml_problem_import(test):
         )
 
     # llh
-    llh, r = run_simulations(jax_problem)
-    np.testing.assert_allclose(
-        llh,
-        solutions["llh"],
-        atol=solutions["tol_llh"],
-        rtol=solutions["tol_llh"],
-    )
+    llh, _ = run_simulations(jax_problem)
+    if test in (
+        "032",
+        "033",
+        "034",
+    ):
+        configs = {
+            "032": {},
+            "033": {"layer1_weight_std": 2.0, "layer1_bias_std": 2.0},
+            "034": {"layer1_weight_std": 2.0},
+        }
+        logposterior = llh + _model_logprior(jax_problem, **configs[test])
+        np.testing.assert_allclose(
+            logposterior,
+            solutions["log_posterior"],
+            atol=solutions["tol_log_posterior"],
+            rtol=solutions["tol_log_posterior"],
+        )
+    else:
+        np.testing.assert_allclose(
+            llh,
+            solutions["llh"],
+            atol=solutions["tol_llh"],
+            rtol=solutions["tol_llh"],
+        )
     simulations = pd.concat(
         [
             pd.read_csv(test_dir / simulation, sep="\t")
@@ -296,6 +324,7 @@ def test_sciml_problem_import(test):
                             rtol=solutions["tol_grad"],
                         )
 
+
 def _v2_sciml_problem_helper(yaml_config, base_path):
     config = v2.ProblemConfig(**yaml_config)
 
@@ -303,6 +332,8 @@ def _v2_sciml_problem_helper(yaml_config, base_path):
     for f in config.parameter_files:
         df = pd.read_csv(f, sep="\t")
         df.nominalValue = df.nominalValue.apply(_try_float)
+        if "priorParameters" in df.columns:
+            df.priorParameters = df.priorParameters.apply(_process_prior_params)
         parameters = [
             v2.Parameter.model_construct(**row.to_dict())
             for _, row in df.reset_index().iterrows()
@@ -320,37 +351,38 @@ def _v2_sciml_problem_helper(yaml_config, base_path):
     ]
 
     measurement_tables = (
-        [
-            v2.MeasurementTable.from_tsv(f, base_path)
-            for f in config.measurement_files
-        ]
+        [v2.MeasurementTable.from_tsv(f, base_path) for f in config.measurement_files]
         if config.measurement_files
         else None
     )
 
-    condition_tables = (
-        [
-            v2.ConditionTable.from_tsv(f, base_path)
-            for f in config.condition_files
-        ]
-        if config.condition_files
-        else None
-    )
-
     experiment_tables = (
-        [
-            v2.ExperimentTable.from_tsv(f, base_path)
-            for f in config.experiment_files
-        ]
+        [v2.ExperimentTable.from_tsv(f, base_path) for f in config.experiment_files]
         if config.experiment_files
         else None
     )
 
-    observable_tables = (
-        [
-            v2.ObservableTable.from_tsv(f, base_path)
-            for f in config.observable_files
+    condition_tables = (
+        [v2.ConditionTable.from_tsv(f, base_path) for f in config.condition_files]
+        if config.condition_files
+        else None
+    )
+
+    if condition_tables is None:
+        cond_ids = [
+            cid
+            for exp_table in experiment_tables
+            for exp in exp_table.elements
+            for p in exp.periods
+            for cid in p.condition_ids
         ]
+        condition_tables = [
+            v2.ConditionTable(elements=[v2.Condition(id=cid, changes=[])])
+            for cid in set(cond_ids)
+        ]
+
+    observable_tables = (
+        [v2.ObservableTable.from_tsv(f, base_path) for f in config.observable_files]
         if config.observable_files
         else None
     )
@@ -370,4 +402,64 @@ def _v2_sciml_problem_helper(yaml_config, base_path):
         measurement_tables=measurement_tables,
         parameter_tables=parameter_tables,
         mapping_tables=mapping_tables,
+    )
+
+
+def _process_prior_params(prior_params):
+    if isinstance(prior_params, float):
+        return prior_params
+    else:
+        return [float(param) for param in prior_params.split(";")]
+
+
+def _normal_logpdf(x: jnp.ndarray, mean: float, std: float) -> jnp.ndarray:
+    var = std**2
+    return jnp.sum(-0.5 * jnp.log(2.0 * jnp.pi * var) - 0.5 * ((x - mean) ** 2) / var)
+
+
+def _uniform_logpdf(x: jnp.ndarray, low: float, high: float) -> jnp.ndarray:
+    return jnp.sum(
+        jnp.where(
+            (x >= low) & (x <= high),
+            -jnp.log(high - low),
+            -jnp.inf,
+        )
+    )
+
+
+def _tree_array_lognormprior(tree, mean: float, std: float) -> jnp.ndarray:
+    arrays, _ = eqx.partition(tree, eqx.is_inexact_array)
+    leaves = jax.tree_util.tree_leaves(arrays)
+
+    total = jnp.array(0.0)
+    for leaf in leaves:
+        if leaf is not None:
+            total = total + _normal_logpdf(leaf, mean, std)
+    return total
+
+
+def _tree_array_loguniformprior(tree, low: float, high: float) -> jnp.ndarray:
+    arrays, _ = eqx.partition(tree, eqx.is_inexact_array)
+    leaves = jax.tree_util.tree_leaves(arrays)
+
+    total = jnp.array(0.0)
+    for leaf in leaves:
+        if leaf is not None:
+            total = total + _uniform_logpdf(leaf, low, high)
+    return total
+
+
+def _model_logprior(model, layer1_bias_std=1.0, layer1_weight_std=1.0) -> jnp.ndarray:
+    mech = model.parameters
+    layer1_bias = model.model.nns["net1"].layers["layer1"].bias
+    layer1_weight = model.model.nns["net1"].layers["layer1"].weight
+    rest = eqx.tree_at(
+        lambda m: m["net1"].layers["layer1"], model.model.nns, replace=None
+    )
+
+    return (
+        _tree_array_loguniformprior(mech, low=0.0, high=15.0)
+        + _tree_array_lognormprior(layer1_bias, mean=0.0, std=layer1_bias_std)
+        + _tree_array_lognormprior(layer1_weight, mean=0.0, std=layer1_weight_std)
+        + _tree_array_lognormprior(rest, mean=0.0, std=1.0)
     )

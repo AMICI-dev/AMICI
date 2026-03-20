@@ -33,11 +33,11 @@ jobs:
         with:
           fetch-depth: 20
 
-      # todo, update after https://github.com/sebapersson/petab_sciml_testsuite/issues/14 is merged
+      # todo, update branch to main after https://github.com/PEtab-dev/petab_sciml_testsuite/pull/30 is merged
       - name: Download PEtab SciML test suite
         run: |
-          git clone --depth 1 --branch main \
-            https://github.com/FFroehlich/petab_sciml_testsuite \
+          git clone --depth 1 --branch bes/petabv2_fixes \
+            https://github.com/PEtab-dev/petab_sciml_testsuite.git \
             tests/sciml/testsuite
 
       - name: Install apt dependencies

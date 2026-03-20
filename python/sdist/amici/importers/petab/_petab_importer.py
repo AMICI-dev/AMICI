@@ -217,6 +217,21 @@ class PetabImporter:
         #  no arbitrary list of periods.
         exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
         # This will always create a copy of the problem.
+        if self._jax:
+            self._unconverted_problem = exp_event_conv._original_problem
+            condition_targets = set([
+                change.target_id
+                for condition in self.petab_problem.conditions
+                for change in condition.changes
+            ])
+            mapping_petab_ids = set([
+                mapping.petab_id for mapping in self.petab_problem.mappings
+            ])
+            if condition_targets.intersection(mapping_petab_ids):
+                raise NotImplementedError(
+                    "The JAX backend does not currently support PEtab problems where network" \
+                    "parameters appear in the conditions table. "
+                )
         self.petab_problem = exp_event_conv.convert()
         for experiment in self.petab_problem.experiments:
             if len(experiment.periods) > 2:
@@ -349,7 +364,7 @@ class PetabImporter:
 
         # Create Python module from SBML model
         if self._jax:
-            if self.petab_problem.config.extensions["sciml"]:
+            if self.petab_problem.config.extensions.get("sciml"):
                 hybridization = self._build_hybridization()
             else:
                 hybridization = None
@@ -597,6 +612,38 @@ class PetabImporter:
                     self.petab_problem.observable_df.index,
                 )
             )
+            # Build a mapping from petab entity IDs to HDF5 files for array inputs
+            array_files = config.get("array_files", [])
+            array_input_files = {}
+            for file_spec in array_files:
+                import h5py
+
+                with h5py.File(file_spec, "r") as hf:
+                    if "inputs" in hf:
+                        for petab_id in hf["inputs"]:
+                            array_input_files[petab_id] = str(
+                                Path(file_spec).resolve()
+                            )
+
+            condition_id_mapping = {}
+            if self._unconverted_problem is not None:
+                for orig_exp, conv_exp in zip(
+                    self._unconverted_problem.experiments,
+                    self.petab_problem.experiments,
+                ):
+                    condition_id_mapping[orig_exp.id] = {
+                        "original": [
+                            cid
+                            for p in orig_exp.periods
+                            for cid in p.condition_ids
+                        ],
+                        "converted": [
+                            cid
+                            for p in conv_exp.periods
+                            for cid in p.condition_ids
+                        ],
+                    }
+
             hybridization = {
                 net_id: {
                     "model": NNModelStandard.load_data(
@@ -616,6 +663,22 @@ class PetabImporter:
                         if model_id.split(".")[1].startswith("input")
                         and petab_id in input_mapping.keys()
                     ],
+                    "array_inputs": {
+                        petab_id: array_input_files[petab_id]
+                        for petab_id, model_id in self.petab_problem.mapping_df.loc[
+                            self.petab_problem.mapping_df[v2.C.MODEL_ENTITY_ID]
+                            .str.split(".")
+                            .str[0]
+                            == net_id,
+                            v2.C.MODEL_ENTITY_ID,
+                        ]
+                        .to_dict()
+                        .items()
+                        if model_id.split(".")[1].startswith("input")
+                        and petab_id in input_mapping.keys()
+                        and input_mapping[petab_id] == "array"
+                        and petab_id in array_input_files
+                    },
                     "output_vars": {
                         output_mapping[petab_id]: _get_net_index(model_id)
                         for petab_id, model_id in self.petab_problem.mapping_df.loc[
@@ -631,7 +694,11 @@ class PetabImporter:
                         and petab_id in output_mapping.keys()
                     },
                     "observable_vars": {
-                        observable_mapping[petab_id]: _get_net_index(model_id)
+                        obs_id: {
+                            "index": _get_net_index(model_id),
+                            "formula": formula,
+                            "petab_id": petab_id,
+                        }
                         for petab_id, model_id in self.petab_problem.mapping_df.loc[
                             self.petab_problem.mapping_df[v2.C.MODEL_ENTITY_ID]
                             .str.split(".")
@@ -642,7 +709,10 @@ class PetabImporter:
                         .to_dict()
                         .items()
                         if model_id.split(".")[1].startswith("output")
-                        and petab_id in observable_mapping.keys()
+                        for formula, obs_id in observable_mapping.items()
+                        if re.search(
+                            r'\b' + re.escape(petab_id) + r'\b', formula
+                        )
                     },
                     "frozen_layers": dict(
                         [
@@ -662,6 +732,7 @@ class PetabImporter:
                             ]
                         ]
                     ),
+                    "condition_id_mapping": condition_id_mapping,
                     **net_config,
                 }
                 for net_id, net_config in config["neural_nets"].items()
@@ -723,7 +794,13 @@ class PetabImporter:
 
             from amici.sim.jax.petab import JAXProblem
 
-            return JAXProblem(model, self.petab_problem)
+            return JAXProblem(
+                model,
+                self.petab_problem,
+                unconverted_problem=getattr(
+                    self, "_unconverted_problem", None
+                ),
+            )
 
         model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)

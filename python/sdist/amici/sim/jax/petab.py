@@ -135,7 +135,7 @@ class JAXProblem(eqx.Module):
     parameters: jnp.ndarray
     model: JAXModel
     simulation_conditions: tuple[tuple[str, ...], ...]
-    _parameter_mappings: dict[str, ParameterMappingForCondition]
+    _parameter_mappings: dict[str, ...]
     _ts_dyn: np.ndarray
     _ts_posteq: np.ndarray
     _my: np.ndarray
@@ -150,9 +150,13 @@ class JAXProblem(eqx.Module):
     _np_indices: np.ndarray
     _petab_measurement_indices: np.ndarray
     _petab_problem: petabv1.Problem | HybridProblem | petabv2.Problem
+    _unconverted_problem: petabv2.Problem | None
 
     def __init__(
-        self, model: JAXModel, petab_problem: petabv1.Problem | petabv2.Problem
+        self,
+        model: JAXModel,
+        petab_problem: petabv1.Problem | petabv2.Problem,
+        unconverted_problem: petabv2.Problem | None = None,
     ):
         """
         Initialize a JAXProblem instance with a model and a PEtab problem.
@@ -172,10 +176,11 @@ class JAXProblem(eqx.Module):
         scs = get_simulation_conditions_v2(petab_problem)
         self.simulation_conditions = scs.conditionId.to_list()
         self._petab_problem = _get_hybrid_petab_problem(petab_problem)
+        self._unconverted_problem = unconverted_problem
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
-        self._parameter_mappings = None
+        self._parameter_mappings = self._get_parameter_mappings()
         (
             self._ts_dyn,
             self._ts_posteq,
@@ -543,6 +548,25 @@ class JAXProblem(eqx.Module):
             np_indices,
         )
 
+    def _get_parameter_mappings(self) -> dict[str, ...]:
+        targets_map = {
+            c.id: {
+                ch.target_id: jnp.asarray(
+                    ch.target_value, dtype=self.model.parameters.dtype
+                )
+            }
+            for c in self._petab_problem.conditions
+            for ch in c.changes
+        }
+
+        hybrid_map = (
+            self._petab_problem.hybridization_df["targetValue"].to_dict()
+            if self._petab_problem.hybridization_df is not None
+            else {}
+        )
+
+        return {"targets_map": targets_map, "hybrid_map": hybrid_map}
+
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
         if isinstance(self._petab_problem, HybridV2Problem):
             simulation_conditions = get_simulation_conditions_v2(
@@ -764,7 +788,12 @@ class JAXProblem(eqx.Module):
         if len(nn_input_arrays) == 0:
             return model
 
+        array_inputs = self._petab_problem.hybridization_df[
+            self._petab_problem.hybridization_df["targetValue"] == "array"
+        ].index.tolist()
+
         for net_id in model_pars:
+            net_id_inputs = array_inputs + model.nns[net_id].inputs
             input_array = {
                 input: {
                     k: jnp.array(
@@ -775,7 +804,8 @@ class JAXProblem(eqx.Module):
                     )
                     for k, arr in nn_input_arrays[net_id][input].items()
                 }
-                for input in model.nns[net_id].inputs
+                for input in net_id_inputs
+                if input in nn_input_arrays[net_id]
             }
             model = eqx.tree_at(
                 lambda model: model.nns[net_id].inputs, model, input_array
@@ -944,10 +974,14 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
-    def _eval_nn(self, output_par: str, condition_id: str):
-        net_id = self._petab_problem.mapping_df.loc[
+    def _eval_nn(self, output_par: str, condition_ids: list[str]):
+        entity_id = self._petab_problem.mapping_df.loc[
             output_par, petabv2.C.MODEL_ENTITY_ID
-        ].split(".")[0]
+        ]
+
+        net_id = entity_id.split(".")[0]
+        ind = int(re.search(r"\[\d+\]\[(\d+)\]", entity_id).group(1))
+
         nn = self.model.nns[net_id]
 
         def _is_net_input(model_id):
@@ -965,85 +999,133 @@ class JAXProblem(eqx.Module):
             .to_dict()
         )
 
-        condition_input_map = (
-            dict(
-                [
-                    (
-                        petab_id,
-                        self._petab_problem.parameter_df.loc[
-                            self._petab_problem.condition_df.loc[
-                                condition_id, petab_id
-                            ],
-                            petabv2.C.NOMINAL_VALUE,
-                        ],
-                    )
-                    if self._petab_problem.condition_df.loc[
-                        condition_id, petab_id
-                    ]
-                    in self._petab_problem.parameter_df.index
-                    else (
-                        petab_id,
-                        np.float64(
-                            self._petab_problem.condition_df.loc[
-                                condition_id, petab_id
-                            ]
-                        ),
-                    )
-                    for petab_id in model_id_map.values()
-                ]
-            )
-            if not self._petab_problem.condition_df.empty
-            else {}
-        )
-
-        hybridization_parameter_map = {
-            petab_id: self._petab_problem.hybridization_df.loc[
-                petab_id, "targetValue"
-            ]
-            for petab_id in model_id_map.values()
-            if petab_id in set(self._petab_problem.hybridization_df.index)
+        parameters_map = {
+            p.id: p.nominal_value
+            for pt in self._petab_problem.parameter_tables
+            for p in pt.elements
         }
 
-        # handle conditions
-        if len(condition_input_map) > 0:
-            net_input = jnp.array(
-                [
-                    condition_input_map[petab_id]
-                    for _, petab_id in model_id_map.items()
-                ]
-            )
-            return nn.forward(net_input).squeeze()
-
-        # handle array inputs
-        if isinstance(self.model.nns[net_id].inputs, dict):
-            net_input = jnp.array(
-                [
-                    self.model.nns[net_id].inputs[petab_id][condition_id]
-                    if condition_id in self.model.nns[net_id].inputs[petab_id]
-                    else self.model.nns[net_id].inputs[petab_id]["0"]
-                    for _, petab_id in model_id_map.items()
-                ]
-            )
-            return nn.forward(net_input).squeeze()
-
-        net_input = jnp.array(
-            [
-                jax.lax.stop_gradient(self.model.nns[net_id][model_id])
-                if model_id in self.model.nns[net_id].inputs
-                else self.get_petab_parameter_by_id(petab_id)
-                if petab_id in self.parameter_ids
-                else self._petab_problem.parameter_df.loc[
-                    petab_id, petabv2.C.NOMINAL_VALUE
-                ]
-                if petab_id in set(self._petab_problem.parameter_df.index)
-                else self._petab_problem.parameter_df.loc[
-                    hybridization_parameter_map[petab_id],
-                    petabv2.C.NOMINAL_VALUE,
-                ]
-                for model_id, petab_id in model_id_map.items()
-            ]
+        parameters_map.update(
+            {
+                pid: nominal_value
+                for pid, nominal_value in zip(
+                    self.parameter_ids, self.parameters
+                )
+            }
         )
-        return nn.forward(net_input).squeeze()
+
+        parameters_map.update(
+            {
+                pid: val
+                for pid, val in zip(
+                    self.model.state_ids,
+                    self.model._x0(self._ts_dyn[0][0], self.model.parameters),
+                )
+            }
+        )
+
+        condition_input_map = {
+            pid: nominal_value
+            for pid, nominal_value in parameters_map.items()
+            if pid in model_id_map.values()
+        }
+
+        hybridization_parameter_map = self._parameter_mappings["hybrid_map"]
+
+        hybrid_parameters = {
+            param: target
+            for param, target in hybridization_parameter_map.items()
+            if param in model_id_map.values()
+        }
+
+        hybrid_input_map = {
+            pid: parameters_map[target]
+            for pid, target in hybrid_parameters.items()
+            if target in parameters_map
+        }
+
+        condition_input_map.update(hybrid_input_map)
+
+        # Map converted condition IDs back to original condition IDs
+        # for looking up array inputs keyed by the original IDs
+        original_condition_id = condition_ids[0]
+        if self._unconverted_problem is not None:
+            for orig_exp, conv_exp in zip(
+                self._unconverted_problem.experiments,
+                self._petab_problem.experiments,
+            ):
+                for orig_period, conv_period in zip(
+                    orig_exp.sorted_periods, conv_exp.sorted_periods
+                ):
+                    if condition_ids[0] in conv_period.condition_ids and len(
+                        orig_period.condition_ids
+                    ):
+                        original_condition_id = orig_period.condition_ids[0]
+                        break
+                else:
+                    continue
+                break
+
+        indexed_values: list[tuple[int, int | None, object]] = []
+        for model_id, petab_id in model_id_map.items():
+            if petab_id in condition_input_map:
+                val = condition_input_map[petab_id]
+            elif (
+                petab_id in getattr(self.model.nns[net_id], "inputs", {})
+                and original_condition_id
+                in self.model.nns[net_id].inputs[petab_id]
+            ):
+                val = self.model.nns[net_id].inputs[petab_id][
+                    original_condition_id
+                ]
+            elif (
+                petab_id in getattr(self.model.nns[net_id], "inputs", {})
+                and "0" in self.model.nns[net_id].inputs[petab_id]
+            ):
+                val = self.model.nns[net_id].inputs[petab_id]["0"]
+            else:
+                val = self.model.nns[net_id].inputs[petab_id]["0"]
+
+            idx_strs = re.findall(r"\[(\d+)\]", model_id.split(".inputs")[1])
+            outer_idx = int(idx_strs[0])
+            inner_idx = int(idx_strs[1]) if len(idx_strs) > 1 else None
+            indexed_values.append((outer_idx, inner_idx, val))
+
+        groups: dict[int, list[tuple[int | None, object]]] = {}
+        for outer_idx, inner_idx, val in indexed_values:
+            groups.setdefault(outer_idx, []).append((inner_idx, val))
+
+        def _build_group(entries):
+            if len(entries) == 1 and entries[0][0] is None:
+                return jnp.asarray(entries[0][1])
+            sorted_entries = sorted(
+                entries, key=lambda e: e[0] if e[0] is not None else 0
+            )
+            return jnp.array([v for _, v in sorted_entries])
+
+        if len(groups) == 1:
+            net_input = _build_group(groups[next(iter(groups))])
+        else:
+            net_input = [_build_group(groups[i]) for i in sorted(groups)]
+
+        # net_input = jnp.array(
+        #     [
+        #         jax.lax.stop_gradient(self.model.nns[net_id][model_id])
+        #         if model_id in self.model.nns[net_id].inputs
+        #         else self.get_petab_parameter_by_id(petab_id)
+        #         if petab_id in self.parameter_ids
+        #         else self._petab_problem.parameter_df.loc[
+        #             petab_id, petabv2.C.NOMINAL_VALUE
+        #         ]
+        #         if petab_id in set(self._petab_problem.parameter_df.index)
+        #         else self._petab_problem.parameter_df.loc[
+        #             hybridization_parameter_map[petab_id],
+        #             petabv2.C.NOMINAL_VALUE,
+        #         ]
+        #         for model_id, petab_id in model_id_map.items()
+        #     ]
+        # )
+        return nn.forward(net_input)[ind].squeeze()
 
     def _map_model_parameter_value(
         self,
@@ -1122,22 +1204,32 @@ class JAXProblem(eqx.Module):
                     condition_ids = p.condition_ids
                     break
 
-        init_val = self.model.parameters[p_index]
-        params_nominals = {
-            p.id: jnp.asarray(p.nominal_value, dtype=self.model.parameters.dtype)
-            for p in self._petab_problem.parameters
-            if p.nominal_value != "array"
+        if pname in self.parameter_ids:
+            init_val = self.parameters[self.parameter_ids.index(pname)]
+        else:
+            init_val = self.model.parameters[p_index]
+
+        targets_filtered = {
+            param: value
+            for condition, target in self._parameter_mappings[
+                "targets_map"
+            ].items()
+            for param, value in target.items()
+            if condition in condition_ids
         }
-        targets_map = {
-            ch.target_id: jnp.asarray(ch.target_value, dtype=self.model.parameters.dtype)
-            for c in self._petab_problem.conditions
-            for ch in c.changes
-            if c.id in condition_ids
-        }
-        if pname in params_nominals:
-            return jnp.asarray(params_nominals[pname], dtype=self.model.parameters.dtype)
-        elif pname in targets_map:
-            return jnp.asarray(float(targets_map[pname]), dtype=self.model.parameters.dtype)
+
+        if pname in targets_filtered:
+            return jnp.asarray(
+                targets_filtered[pname], dtype=self.model.parameters.dtype
+            )
+        elif pname in self._parameter_mappings["hybrid_map"]:
+            return jnp.asarray(
+                self._eval_nn(
+                    self._parameter_mappings["hybrid_map"][pname],
+                    condition_ids,
+                ),
+                dtype=self.model.parameters.dtype,
+            )
         else:
             for placeholder_attr, param_attr in (
                 ("observable_placeholders", "observable_parameters"),
@@ -1154,20 +1246,21 @@ class JAXProblem(eqx.Module):
                     )
                     for i, p in enumerate(placeholders):
                         if str(p) == pname:
-                            val = self._find_val(
-                                str(params_list[i]), params_nominals
-                            )
+                            val = self._find_val(str(params_list[i]))
                             return val
-        return init_val
+        return jnp.asarray(init_val, dtype=self.model.parameters.dtype)
 
-    def _find_val(self, param_entry: str, params_nominals: dict):
+    def _find_val(self, param_entry: str):
         val_float = _try_float(param_entry)
         if isinstance(val_float, float):
             return jnp.asarray(val_float, dtype=self.model.parameters.dtype)
-        elif param_entry in params_nominals:
-            return params_nominals[param_entry]
+        elif param_entry in self.parameter_ids:
+            return jnp.asarray(
+                self.parameters[self.parameter_ids.index(param_entry)],
+                dtype=self.model.parameters.dtype,
+            )
         else:
-            return param_entry
+            return jnp.asarray(param_entry, dtype=self.model.parameters.dtype)
 
     def _state_needs_reinitialisation(
         self,
@@ -1185,6 +1278,9 @@ class JAXProblem(eqx.Module):
             True if state needs reinitialisation, False otherwise
         """
         if state_id in self.nn_output_ids:
+            return True
+
+        if state_id in self._parameter_mappings["hybrid_map"]:
             return True
 
         if state_id not in self._petab_problem.condition_df:
@@ -1215,7 +1311,13 @@ class JAXProblem(eqx.Module):
             reinitialisation value for the state
         """
         if state_id in self.nn_output_ids:
-            return self._eval_nn(state_id)
+            return self._eval_nn(state_id, [simulation_condition])
+
+        if state_id in self._parameter_mappings["hybrid_map"]:
+            return self._eval_nn(
+                self._parameter_mappings["hybrid_map"][state_id],
+                [simulation_condition],
+            )
 
         if state_id not in self._petab_problem.condition_df:
             # no reinitialisation, return dummy value
@@ -1264,7 +1366,7 @@ class JAXProblem(eqx.Module):
         if not any(
             x_id in self._petab_problem.condition_df
             or hasattr(self, "nn_output_ids")
-            and x_id in self.nn_output_ids
+            and x_id in self._parameter_mappings["hybrid_map"]
             for x_id in self.model.state_ids
         ):
             return jnp.array([]), jnp.array([])
@@ -1460,6 +1562,7 @@ class JAXProblem(eqx.Module):
         h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),  # noqa: F821, F722
         ts_mask: np.ndarray = np.array([]),
         t_zeros: jnp.float_ = 0.0,
+        experiment_index: jnp.int32 = jnp.int32(0),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jnp.float_, dict]:
         """
@@ -1510,7 +1613,10 @@ class JAXProblem(eqx.Module):
         :return:
             Tuple of output value and simulation statistics
         """
-        return self.model.simulate_condition(
+        model = eqx.tree_at(
+            lambda m: m._array_input_index, self.model, experiment_index
+        )
+        return model.simulate_condition(
             p=p,
             ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
             ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),
@@ -1660,6 +1766,7 @@ class JAXProblem(eqx.Module):
             h_preeqs,
             self._ts_masks,
             t_zeros,
+            jnp.arange(len(experiments), dtype=jnp.int32),
             ret,
         )
 

@@ -16,6 +16,7 @@ import logging
 import os
 from pathlib import Path
 
+import numpy as np
 import sympy as sp
 
 from amici._symbolic.de_model import DEModel
@@ -247,6 +248,10 @@ class ODEExporter:
         )
         subs = subs_heaviside | subs_observables
 
+        # Collect array input data from hybridization (loaded from HDF5 at
+        # code-gen time and embedded as constants in the generated module).
+        array_inputs_init = self._generate_array_inputs_init()
+
         tpl_data = {
             # assign named variable using corresponding algebraic formula (function body)
             **_jax_variable_equations(
@@ -298,6 +303,7 @@ class ODEExporter:
                 f'"{net}": {net}.net(jr.PRNGKey(0))'
                 for net in self.hybridization.keys()
             ),
+            "ARRAY_INPUTS_INIT": array_inputs_init,
         }
 
         apply_template(
@@ -305,6 +311,43 @@ class ODEExporter:
             self.model_path / "__init__.py",
             tpl_data,
         )
+
+    def _generate_array_inputs_init(self) -> str:
+        """Generate code to initialize array inputs from HDF5 data.
+
+        Reads array data from HDF5 files at code-generation time and
+        embeds them as jnp.array constants in the generated model code.
+
+        :return:
+            Python code string for initializing self._array_inputs
+        """
+        array_entries = []
+        for net_id, net in self.hybridization.items():
+            if net.get("pre_initialization", False):
+                continue
+            for petab_id, hdf5_path in net.get("array_inputs", {}).items():
+                import h5py
+
+                with h5py.File(hdf5_path, "r") as f:
+                    group = f["inputs"][petab_id]
+                    keys = sorted(group.keys())
+                    # Always stack with experiment dimension first
+                    # so indexing by _array_input_index works uniformly
+                    data = np.stack([group[k][:] for k in keys])
+                    rows = []
+                    for row in data:
+                        rows.append(
+                            "[" + ", ".join(str(float(v)) for v in row) + "]"
+                        )
+                    data_str = ", ".join(rows)
+
+                array_entries.append(f"'{petab_id}': jnp.array([{data_str}])")
+
+        if not array_entries:
+            return "self._array_inputs = {}"
+
+        entries_str = ", ".join(array_entries)
+        return f"self._array_inputs = {{{entries_str}}}"
 
     def _get_all_p_syms(self) -> list[sp.Symbol]:
         return list(self.model.sym("p")) + list(self.model.sym("k"))
