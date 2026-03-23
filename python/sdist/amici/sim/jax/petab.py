@@ -1204,8 +1204,13 @@ class JAXProblem(eqx.Module):
                     condition_ids = p.condition_ids
                     break
 
+        _petab_param_map = {
+            p.id: p.nominal_value for p in self._petab_problem.parameters
+        }
         if pname in self.parameter_ids:
             init_val = self.parameters[self.parameter_ids.index(pname)]
+        elif pname in _petab_param_map:
+            init_val = _petab_param_map[pname]
         else:
             init_val = self.model.parameters[p_index]
 
