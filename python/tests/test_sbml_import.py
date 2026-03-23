@@ -946,14 +946,14 @@ def test_import_same_model_name(tempdir):
     if sys.platform == "win32":
         return
 
-    with pytest.raises(RuntimeError, match="in the same location"):
+    with pytest.warns(Warning, match="in the same location"):
         antimony2amici(
             ant_model_3,
             model_name=module_name,
             output_dir=outdir_2,
         )
 
-    with pytest.raises(RuntimeError, match="in the same location"):
+    with pytest.warns(Warning, match="in the same location"):
         import_model_module(module_name=module_name, module_path=outdir_2)
 
     # this should not affect the previously loaded models
