@@ -22,7 +22,6 @@ from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
 from amici.logging import get_logger
-from amici.sim._parameter_mapping import ParameterMappingForCondition
 from amici.sim.jax.model import JAXModel, ReturnValue
 
 DEFAULT_CONTROLLER_SETTINGS = {
@@ -813,29 +812,6 @@ class JAXProblem(eqx.Module):
 
         return model
 
-    def _create_scaled_parameter_array(self) -> jt.Float[jt.Array, "np"]:
-        """
-        Create array of scaled nominal parameter values for estimation.
-
-        :return:
-            JAX array of scaled parameter values
-        """
-        return jnp.array(
-            [
-                petabv2.scale(
-                    float(
-                        self._petab_problem.parameter_df.loc[
-                            pval, petabv2.C.NOMINAL_VALUE
-                        ]
-                    ),
-                    self._petab_problem.parameter_df.loc[
-                        pval, petabv2.PARAMETER_SCALE
-                    ],
-                )
-                for pval in self.parameter_ids
-            ]
-        )
-
     def _initialize_model_with_nominal_values(
         self, model: JAXModel
     ) -> tuple[jt.Float[jt.Array, "np"], JAXModel]:
@@ -871,42 +847,16 @@ class JAXProblem(eqx.Module):
         model = self._set_input_arrays(model, nn_input_arrays, model_pars)
 
         # Create scaled parameter array
-        if isinstance(self._petab_problem, HybridV2Problem):
-            param_map = {
-                p.id: p.nominal_value for p in self._petab_problem.parameters
-            }
-            parameter_array = jnp.array(
-                [float(param_map[pval]) for pval in self.parameter_ids]
-            )
-        else:
-            parameter_array = self._create_scaled_parameter_array()
+        # if isinstance(self._petab_problem, HybridV2Problem):
+        param_map = {
+            p.id: p.nominal_value for p in self._petab_problem.parameters
+        }
+        parameter_array = jnp.array(
+            [float(param_map[pval]) for pval in self.parameter_ids]
+        )
 
         return parameter_array, model
 
-    def _get_inputs(self) -> dict:
-        if self._petab_problem.mapping_df is None:
-            return {}
-        inputs = {net: {} for net in self.model.nns.keys()}
-        for petab_id, row in self._petab_problem.mapping_df.iterrows():
-            if (filepath := Path(petab_id)).is_file():
-                data_flat = pd.read_csv(filepath, sep="\t").sort_values(
-                    by="ix"
-                )
-                shape = tuple(
-                    np.stack(
-                        data_flat["ix"]
-                        .astype(str)
-                        .str.split(";")
-                        .apply(np.array)
-                    )
-                    .astype(int)
-                    .max(axis=0)
-                    + 1
-                )
-                inputs[row["netId"]][row[petabv2.C.MODEL_ENTITY_ID]] = (
-                    data_flat["value"].values.reshape(shape)
-                )
-        return inputs
 
     @property
     def parameter_ids(self) -> list[str]:
@@ -1073,26 +1023,6 @@ class JAXProblem(eqx.Module):
 
         return nn.forward(net_input)[ind].squeeze()
 
-    def _map_model_parameter_value(
-        self,
-        mapping: ParameterMappingForCondition,
-        pname: str,
-        condition_id: str,
-    ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
-        pval = mapping.map_sim_var[pname]
-        if hasattr(self, "nn_output_ids") and pval in self.nn_output_ids:
-            nn_output = self._eval_nn(pval, condition_id)
-            if nn_output.size > 1:
-                entityId = self._petab_problem.mapping_df.loc[
-                    pval, petabv2.C.MODEL_ENTITY_ID
-                ]
-                ind = int(re.search(r"\[\d+\]\[(\d+)\]", entityId).group(1))
-                return nn_output[ind]
-            else:
-                return nn_output
-        if isinstance(pval, Number):
-            return pval
-        return self.get_petab_parameter_by_id(pval)
 
     def load_model_parameters(
         self, experiment: petabv2.Experiment, is_preeq: bool
