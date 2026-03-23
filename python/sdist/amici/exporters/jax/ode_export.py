@@ -248,8 +248,6 @@ class ODEExporter:
         )
         subs = subs_heaviside | subs_observables
 
-        # Collect array input data from hybridization (loaded from HDF5 at
-        # code-gen time and embedded as constants in the generated module).
         array_inputs_init = self._generate_array_inputs_init()
 
         tpl_data = {
@@ -322,7 +320,7 @@ class ODEExporter:
             Python code string for initializing self._array_inputs
         """
         array_entries = []
-        for net_id, net in self.hybridization.items():
+        for _, net in self.hybridization.items():
             if net.get("pre_initialization", False):
                 continue
             for petab_id, hdf5_path in net.get("array_inputs", {}).items():
@@ -331,8 +329,7 @@ class ODEExporter:
                 with h5py.File(hdf5_path, "r") as f:
                     group = f["inputs"][petab_id]
                     keys = sorted(group.keys())
-                    # Always stack with experiment dimension first
-                    # so indexing by _array_input_index works uniformly
+                    # Stack with experiment dimension first
                     data = np.stack([group[k][:] for k in keys])
                     rows = []
                     for row in data:

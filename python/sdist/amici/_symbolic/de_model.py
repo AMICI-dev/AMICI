@@ -2502,31 +2502,25 @@ class DEModel:
             if net["pre_initialization"]:
                 # do not integrate into ODEs, handle in amici.sim.jax.petab
                 continue
-            # Map component symbol strings to components for fast lookup
             comp_by_sym = {str(comp.get_sym()): comp for comp in self._components}
             sym_locals = {s: comp.get_sym() for s, comp in comp_by_sym.items()}
 
-            # Process each input_var in order: direct symbol match, or parse
-            # as a symbolic expression built from existing model components.
             inputs = []
             unresolved_vars = []
             for input_var in net["input_vars"]:
                 if input_var in comp_by_sym:
                     inputs.append(comp_by_sym[input_var])
                 else:
-                    # Try to parse as a symbolic expression of model components
                     try:
                         expr = sp.sympify(input_var, locals=sym_locals)
                     except (sp.SympifyError, Exception):
                         unresolved_vars.append(input_var)
                         continue
 
-                    # Reject if the expression contains symbols not in the model
                     if {str(s) for s in expr.free_symbols} - set(comp_by_sym):
                         unresolved_vars.append(input_var)
                         continue
 
-                    # Create a new Expression component for the parsed expression
                     expr_sym = sp.Symbol(
                         f"_nn_{net_id}_input_{len(inputs)}", real=True
                     )
@@ -2542,9 +2536,6 @@ class DEModel:
             if len(inputs) != len(net["input_vars"]):
                 missing_vars = set(unresolved_vars)
                 if missing_vars == set(["array"]):
-                    # Handle array inputs: create symbolic placeholders for
-                    # each array input slot. These will be resolved at code
-                    # generation time to load data from HDF5 files.
                     array_inputs = net.get("array_inputs", {})
                     petab_ids = list(array_inputs.keys())
                     for i, input_var in enumerate(net["input_vars"]):
@@ -2555,13 +2546,6 @@ class DEModel:
                                     f"array_inputs info provided in hybridization."
                                 )
                             petab_id = petab_ids.pop(0)
-                            # Create a special symbol for the array input.
-                            # The naming convention _nn_array_{petab_id} is
-                            # recognized by the code printer to generate
-                            # self._array_inputs['{petab_id}'] references.
-                            # This is NOT added as a model Expression since
-                            # it does not need its own equation — the code
-                            # printer inlines the reference directly.
                             array_sym = sp.Symbol(
                                 f"_nn_array_{petab_id}", real=True
                             )
@@ -2675,7 +2659,6 @@ class DEModel:
                 if formula == petab_id:
                     out_val = nn_call
                 else:
-                    # Substitute the NN call into the formula expression
                     out_val = sp.sympify(
                         formula,
                         locals={**sym_locals, petab_id: nn_call},
