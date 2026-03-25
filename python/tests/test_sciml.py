@@ -14,6 +14,7 @@ from amici.exporters.jax.nn import (
     _process_activation_call,
     _process_layer_call,
 )
+from amici.importers.utils import symbol_with_assumptions
 
 
 class TestFormatFunctionCall:
@@ -304,7 +305,9 @@ class TestGenerateForward:
         node.args = ["x"]
         node.kwargs = {}
 
-        result = _generate_forward(node, indent=4, frozen_layers={}, layer_type="")
+        result = _generate_forward(
+            node, indent=4, frozen_layers={}, layer_type=""
+        )
         assert result == "    act1 = jax.nn.relu(x)"
 
     def test_call_module_with_frozen_layer(self):
@@ -385,26 +388,52 @@ class TestProcessHybridizationErrors:
 
         # Add some parameters
         model._free_parameters = [
-            FreeParameter(sp.Symbol("p1"), "param1", sp.Float(1.0)),
-            FreeParameter(sp.Symbol("p2"), "param2", sp.Float(2.0)),
+            FreeParameter(
+                symbol_with_assumptions("p1"), "param1", sp.Float(1.0)
+            ),
+            FreeParameter(
+                symbol_with_assumptions("p2"), "param2", sp.Float(2.0)
+            ),
         ]
 
         # Add some expressions
         model._expressions = [
-            Expression(sp.Symbol("expr1"), "expression1", sp.Float(0.5)),
-            Expression(sp.Symbol("expr2"), "expression2", sp.Float(0.7)),
+            Expression(
+                symbol_with_assumptions("expr1"), "expression1", sp.Float(0.5)
+            ),
+            Expression(
+                symbol_with_assumptions("expr2"), "expression2", sp.Float(0.7)
+            ),
         ]
 
         # Add some differential states
         model._differential_states = [
-            DifferentialState(sp.Symbol("x1"), "state1", sp.Float(0.0), sp.Float(0.1)),
-            DifferentialState(sp.Symbol("x2"), "state2", sp.Float(0.0), sp.Float(0.2)),
+            DifferentialState(
+                symbol_with_assumptions("x1"),
+                "state1",
+                sp.Float(0.0),
+                sp.Float(0.1),
+            ),
+            DifferentialState(
+                symbol_with_assumptions("x2"),
+                "state2",
+                sp.Float(0.0),
+                sp.Float(0.2),
+            ),
         ]
 
         # Add some observables
         model._observables = [
-            Observable(sp.Symbol("obs1"), "observable1", sp.Symbol("x1")),
-            Observable(sp.Symbol("obs2"), "observable2", sp.Symbol("x2")),
+            Observable(
+                symbol_with_assumptions("obs1"),
+                "observable1",
+                symbol_with_assumptions("x1"),
+            ),
+            Observable(
+                symbol_with_assumptions("obs2"),
+                "observable2",
+                symbol_with_assumptions("x2"),
+            ),
         ]
 
         return model

@@ -613,8 +613,7 @@ class PetabImporter:
         config = self.petab_problem.config.extensions["sciml"]
         # TODO: only accept YAML format for now
         hybridizations = [
-            pd.read_csv(hf, sep="\t")
-            for hf in config["hybridization_files"]
+            pd.read_csv(hf, sep="\t") for hf in config["hybridization_files"]
         ]
         hybridization_table = pd.concat(hybridizations)
 
@@ -668,12 +667,7 @@ class PetabImporter:
                     ],
                 }
 
-        non_estimated_param_ids = {
-            p.id
-            for pt in self.petab_problem.parameter_tables
-            for p in pt.elements
-            if not p.estimate
-        }
+        non_estimated_param_ids = set(self.petab_problem.x_fixed_ids)
 
         hybridization = {}
         for net_id, net_config in config["neural_nets"].items():
@@ -718,9 +712,7 @@ class PetabImporter:
                     }
                     for petab_id, model_id in output_mappings
                     for formula, obs_id in observable_mapping.items()
-                    if re.search(
-                        r"\b" + re.escape(petab_id) + r"\b", formula
-                    )
+                    if re.search(r"\b" + re.escape(petab_id) + r"\b", formula)
                 },
                 "frozen_layers": dict(
                     _get_frozen_layers(model_id)

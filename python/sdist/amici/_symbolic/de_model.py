@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import sympy as sp
+from petab.math.sympify import sympify_petab
 from sympy import ImmutableDenseMatrix, MutableDenseMatrix
 
 from amici.exporters.sundials.cxx_functions import (
@@ -27,6 +28,7 @@ from amici.importers.utils import (
     ObservableTransformation,
     _default_simplify,
     amici_time_symbol,
+    symbol_with_assumptions,
     toposort_symbols,
     unique_preserve_order,
 )
@@ -2521,8 +2523,8 @@ class DEModel:
                         unresolved_vars.append(input_var)
                         continue
 
-                    expr_sym = sp.Symbol(
-                        f"_nn_{net_id}_input_{len(inputs)}", real=True
+                    expr_sym = symbol_with_assumptions(
+                        f"_nn_{net_id}_input_{len(inputs)}"
                     )
                     new_expr_comp = Expression(
                         symbol=expr_sym,
@@ -2535,7 +2537,7 @@ class DEModel:
 
             if len(inputs) != len(net["input_vars"]):
                 missing_vars = set(unresolved_vars)
-                if missing_vars == {'array'}:
+                if missing_vars == {"array"}:
                     array_inputs = net.get("array_inputs", {})
                     petab_ids = list(array_inputs.keys())
                     for i, input_var in enumerate(net["input_vars"]):
@@ -2546,8 +2548,8 @@ class DEModel:
                                     f"array_inputs info provided in hybridization."
                                 )
                             petab_id = petab_ids.pop(0)
-                            array_sym = sp.Symbol(
-                                f"_nn_array_{petab_id}", real=True
+                            array_sym = symbol_with_assumptions(
+                                f"_nn_array_{petab_id}"
                             )
                             array_comp = Expression(
                                 symbol=array_sym,
@@ -2659,9 +2661,8 @@ class DEModel:
                 if formula == petab_id:
                     out_val = nn_call
                 else:
-                    out_val = sp.sympify(
-                        formula,
-                        locals={**sym_locals, petab_id: nn_call},
+                    out_val = sympify_petab(formula).subs(
+                        symbol_with_assumptions(petab_id), nn_call
                     )
                 # add to the model
                 self.add_component(

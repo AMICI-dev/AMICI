@@ -847,16 +847,12 @@ class JAXProblem(eqx.Module):
         model = self._set_input_arrays(model, nn_input_arrays, model_pars)
 
         # Create scaled parameter array
-        # if isinstance(self._petab_problem, HybridV2Problem):
-        param_map = {
-            p.id: p.nominal_value for p in self._petab_problem.parameters
-        }
+        param_map = self._petab_problem.get_x_nominal_dict()
         parameter_array = jnp.array(
             [float(param_map[pval]) for pval in self.parameter_ids]
         )
 
         return parameter_array, model
-
 
     @property
     def parameter_ids(self) -> list[str]:
@@ -949,7 +945,9 @@ class JAXProblem(eqx.Module):
         net_id = entity_id.split(".")[0]
         ind = int(re.search(r"\[\d+\]\[(\d+)\]", entity_id).group(1))
         nn = self.model.nns[net_id]
-        original_condition_id = self._resolve_original_condition_id(condition_id)
+        original_condition_id = self._resolve_original_condition_id(
+            condition_id
+        )
 
         def _is_net_input(model_id):
             comps = model_id.split(".")
@@ -967,20 +965,20 @@ class JAXProblem(eqx.Module):
         )
         petab_ids = set(model_id_map.values())
 
-        parameters_map = {
-            p.id: p.nominal_value
-            for pt in self._petab_problem.parameter_tables
-            for p in pt.elements
-        }
+        parameters_map = self._petab_problem.get_x_nominal_dict()
         parameters_map.update(zip(self.parameter_ids, self.parameters))
 
         condition_input_map = {
-            pid: parameters_map[pid] for pid in petab_ids if pid in parameters_map
+            pid: parameters_map[pid]
+            for pid in petab_ids
+            if pid in parameters_map
         }
         condition_input_map.update(
             {
                 pid: parameters_map[target]
-                for pid, target in self._parameter_mappings["hybrid_map"].items()
+                for pid, target in self._parameter_mappings[
+                    "hybrid_map"
+                ].items()
                 if pid in petab_ids and target in parameters_map
             }
         )
@@ -996,7 +994,10 @@ class JAXProblem(eqx.Module):
         for model_id, petab_id in model_id_map.items():
             if petab_id in condition_input_map:
                 val = condition_input_map[petab_id]
-            elif petab_id in nn_inputs and original_condition_id in nn_inputs[petab_id]:
+            elif (
+                petab_id in nn_inputs
+                and original_condition_id in nn_inputs[petab_id]
+            ):
                 val = nn_inputs[petab_id][original_condition_id]
             else:
                 val = nn_inputs[petab_id]["0"]
@@ -1022,7 +1023,6 @@ class JAXProblem(eqx.Module):
             net_input = [_slot_to_array(input_slots[k]) for k in sorted_slots]
 
         return nn.forward(net_input)[ind].squeeze()
-
 
     def load_model_parameters(
         self, experiment: petabv2.Experiment, is_preeq: bool
@@ -1637,7 +1637,7 @@ class JAXProblem(eqx.Module):
             h_preeqs,
             self._ts_masks,
             t_zeros,
-            jnp.arange(len(experiments), dtype=jnp.int32),
+            jnp.arange(len(experiments)),
             ret,
         )
 
@@ -2066,7 +2066,7 @@ def _conditions_to_experiment_map(
 
 def _try_float(value):
     try:
-        return jnp.asarray(float(value), dtype=jnp.float64)
+        return jnp.asarray(float(value))
     except Exception as e:
         msg = str(e).lower()
         if isinstance(e, ValueError) and "could not convert" in msg:
