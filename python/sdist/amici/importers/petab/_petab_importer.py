@@ -229,7 +229,7 @@ class PetabImporter:
             }
             if condition_targets.intersection(mapping_petab_ids):
                 raise NotImplementedError(
-                    "The JAX backend does not currently support PEtab problems where network"
+                    "The JAX backend does not currently support PEtab problems where network "
                     "parameters appear in the conditions table. "
                 )
         self.petab_problem = exp_event_conv.convert()

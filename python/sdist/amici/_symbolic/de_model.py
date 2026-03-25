@@ -2502,7 +2502,7 @@ class DEModel:
             if net["pre_initialization"]:
                 # do not integrate into ODEs, handle in amici.sim.jax.petab
                 continue
-            comp_by_sym = {str(comp.get_sym()): comp for comp in self._components}
+            comp_by_sym = {comp.get_id(): comp for comp in self._components}
             sym_locals = {s: comp.get_sym() for s, comp in comp_by_sym.items()}
 
             inputs = []
@@ -2535,7 +2535,7 @@ class DEModel:
 
             if len(inputs) != len(net["input_vars"]):
                 missing_vars = set(unresolved_vars)
-                if missing_vars == set(["array"]):
+                if missing_vars == {'array'}:
                     array_inputs = net.get("array_inputs", {})
                     petab_ids = list(array_inputs.keys())
                     for i, input_var in enumerate(net["input_vars"]):

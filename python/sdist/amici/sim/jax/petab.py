@@ -148,7 +148,7 @@ class JAXProblem(eqx.Module):
     _np_mask: np.ndarray
     _np_indices: np.ndarray
     _petab_measurement_indices: np.ndarray
-    _petab_problem: petabv1.Problem | HybridProblem | petabv2.Problem
+    _petab_problem: HybridProblem | petabv2.Problem
     _unconverted_problem: petabv2.Problem | None
 
     def __init__(
