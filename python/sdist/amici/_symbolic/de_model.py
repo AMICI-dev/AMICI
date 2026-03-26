@@ -2660,9 +2660,10 @@ class DEModel:
                 if formula == petab_id:
                     out_val = nn_call
                 else:
-                    out_val = sp.sympify(
-                        formula,
-                        locals={**sym_locals, petab_id: nn_call},
+                    from petab.math.sympify import sympify_petab
+
+                    out_val = sympify_petab(formula).subs(
+                        symbol_with_assumptions(petab_id), nn_call
                     )
                 # add to the model
                 self.add_component(
