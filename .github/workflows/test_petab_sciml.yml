@@ -1,14 +1,14 @@
 name: PEtab SciML
-# on:
-#   push:
-#     branches:
-#       - main
-#       - 'release*'
-#   pull_request:
-#     branches:
-#       - main
-#   merge_group:
-#   workflow_dispatch:
+on:
+  push:
+    branches:
+      - main
+      - 'release*'
+  pull_request:
+    branches:
+      - main
+  merge_group:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -33,11 +33,10 @@ jobs:
         with:
           fetch-depth: 20
 
-      # todo, update after https://github.com/sebapersson/petab_sciml_testsuite/issues/14 is merged
       - name: Download PEtab SciML test suite
         run: |
           git clone --depth 1 --branch main \
-            https://github.com/FFroehlich/petab_sciml_testsuite \
+            https://github.com/PEtab-dev/petab_sciml_testsuite.git \
             tests/sciml/testsuite
 
       - name: Install apt dependencies
@@ -74,7 +73,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@sciml
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main
 
       - name: Run PEtab SciML testsuite
         run: |

@@ -11,11 +11,12 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 import pandas as pd
-import petab.v1 as petab
 import pytest
 from amici.exporters.jax import generate_equinox
-from amici.importers.petab.v1 import import_petab_problem
+from amici.importers.petab import *
 from amici.sim.jax import petab_simulate, run_simulations
+from amici.sim.jax.petab import _try_float
+from petab import v1, v2
 from petab_sciml import NNModelStandard
 from yaml import safe_load
 
@@ -39,16 +40,14 @@ jax.config.update("jax_enable_x64", True)
 # pip install git+https://github.com/sebapersson/petab_sciml@add_standard#egg=petab_sciml\&subdirectory=src/python
 
 cases_dir = Path(__file__).parent / "testsuite" / "test_cases"
-net_cases_dir = cases_dir / "net_import"
+net_cases_dir = cases_dir / "ml_model_import"
 ude_cases_dir = cases_dir / "sciml_problem_import"
 initialization_cases_dir = cases_dir / "initialization"
 
 
 def _reshape_flat_array(array_flat):
     array_flat["ix"] = array_flat["ix"].astype(str)
-    ix_cols = [
-        f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))
-    ]
+    ix_cols = [f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))]
     if len(ix_cols) == 1:
         array_flat[ix_cols[0]] = array_flat["ix"].apply(int)
     else:
@@ -62,10 +61,8 @@ def _reshape_flat_array(array_flat):
     return array
 
 
-@pytest.mark.parametrize(
-    "test", sorted(d.stem for d in net_cases_dir.glob("[0-9]*"))
-)
-def test_net(test):
+@pytest.mark.parametrize("test", sorted(d.stem for d in net_cases_dir.glob("[0-9]*")))
+def test_ml_model_import(test):
     test_dir = net_cases_dir / test
     with open(test_dir / "solutions.yaml") as f:
         solutions = safe_load(f)
@@ -94,6 +91,7 @@ def test_net(test):
         "046",
         "047",
         "048",
+        "052",
     ):
         with pytest.raises(NotImplementedError):
             generate_equinox(ml_model, module_dir)
@@ -103,17 +101,29 @@ def test_net(test):
         ml_model.nn_model_id, module_dir
     ).net
 
+    if test == "053":
+        input_files = [
+            (i1, i2)
+            for i1, i2 in zip(solutions["net_input_arg0"], solutions["net_input_arg1"])
+        ]
+    else:
+        input_files = solutions["net_input"]
+
     for input_file, par_file, output_file in zip(
-        solutions["net_input"],
-        solutions.get("net_ps", solutions["net_input"]),
+        input_files,
+        solutions.get("net_ps", input_files),
         solutions["net_output"],
     ):
-        input = h5py.File(test_dir / input_file, "r")["inputs"]["input0"][
-            "data"
-        ][:]
-        output = h5py.File(test_dir / output_file, "r")["outputs"]["output0"][
-            "data"
-        ][:]
+        if test == "053":
+            input = tuple(
+                [
+                    h5py.File(test_dir / in_file, "r")["inputs"]["input0"]["data"][:]
+                    for in_file in input_file
+                ]
+            )
+        else:
+            input = h5py.File(test_dir / input_file, "r")["inputs"]["input0"]["data"][:]
+        output = h5py.File(test_dir / output_file, "r")["outputs"]["output0"]["data"][:]
 
         if "net_ps" in solutions:
             par = h5py.File(test_dir / par_file, "r")
@@ -124,14 +134,10 @@ def test_net(test):
                     and hasattr(net.layers[layer], "weight")
                     and net.layers[layer].weight is not None
                 ):
-                    w = par["parameters"][ml_model.nn_model_id][layer][
-                        "weight"
-                    ][:]
+                    w = par["parameters"][ml_model.nn_model_id][layer]["weight"][:]
                     if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
                         # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-                        w = np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(
-                            0, 1
-                        )
+                        w = np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(0, 1)
                     assert w.shape == net.layers[layer].weight.shape
                     net = eqx.tree_at(
                         lambda x: x.layers[layer].weight,
@@ -143,9 +149,7 @@ def test_net(test):
                     and hasattr(net.layers[layer], "bias")
                     and net.layers[layer].bias is not None
                 ):
-                    b = par["parameters"][ml_model.nn_model_id][layer]["bias"][
-                        :
-                    ]
+                    b = par["parameters"][ml_model.nn_model_id][layer]["bias"][:]
                     if isinstance(
                         net.layers[layer],
                         eqx.nn.Conv | eqx.nn.ConvTranspose,
@@ -178,36 +182,68 @@ def test_net(test):
             )
 
 
-@pytest.mark.parametrize(
-    "test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")])
-)
-def test_ude(test):
+@pytest.mark.parametrize("test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")]))
+def test_sciml_problem_import(test):
     test_dir = ude_cases_dir / test
+
     with open(test_dir / "petab" / "problem.yaml") as f:
         petab_yaml = safe_load(f)
     with open(test_dir / "solutions.yaml") as f:
         solutions = safe_load(f)
 
     with change_directory(test_dir / "petab"):
-        from petab.v2 import Problem
+        # HACK!! Again!! Around "array" in parameters table
+        petab_problem = _v2_sciml_problem_helper(petab_yaml, test_dir / "petab")
 
-        petab_yaml["format_version"] = "2.0.0"  # TODO: fixme
-        petab_problem = Problem.from_yaml(petab_yaml)
-        jax_problem = import_petab_problem(
-            petab_problem,
-            output_dir=Path(__file__).parent / "models" / test,
+        if test in ("003",):
+            with pytest.raises(NotImplementedError):
+                pi = PetabImporter(
+                    petab_problem=petab_problem,
+                    module_name="hybrid" + test,
+                    compile_=True,
+                    jax=jax,
+                    validate=False,  # And again...around "array" in parameters table
+                )
+            return
+
+        pi = PetabImporter(
+            petab_problem=petab_problem,
+            module_name="hybrid" + test,
             compile_=True,
-            jax=True,
+            jax=jax,
+            validate=False,  # And again...around "array" in parameters table
+        )
+
+        jax_problem = pi.create_simulator(
+            force_import=True,
         )
 
     # llh
-    llh, r = run_simulations(jax_problem)
-    np.testing.assert_allclose(
-        llh,
-        solutions["llh"],
-        atol=solutions["tol_llh"],
-        rtol=solutions["tol_llh"],
-    )
+    llh, _ = run_simulations(jax_problem)
+    if test in (
+        "032",
+        "033",
+        "034",
+    ):
+        configs = {
+            "032": {},
+            "033": {"layer1_weight_std": 2.0, "layer1_bias_std": 2.0},
+            "034": {"layer1_weight_std": 2.0},
+        }
+        logposterior = llh + _model_logprior(jax_problem, **configs[test])
+        np.testing.assert_allclose(
+            logposterior,
+            solutions["log_posterior"],
+            atol=solutions["tol_log_posterior"],
+            rtol=solutions["tol_log_posterior"],
+        )
+    else:
+        np.testing.assert_allclose(
+            llh,
+            solutions["llh"],
+            atol=solutions["tol_llh"],
+            rtol=solutions["tol_llh"],
+        )
     simulations = pd.concat(
         [
             pd.read_csv(test_dir / simulation, sep="\t")
@@ -216,18 +252,18 @@ def test_ude(test):
     )
 
     # simulations
-    sort_by = [petab.OBSERVABLE_ID, petab.TIME, petab.SIMULATION_CONDITION_ID]
+    sort_by = [v2.C.OBSERVABLE_ID, v2.C.TIME, v2.C.EXPERIMENT_ID]
     actual = petab_simulate(jax_problem).sort_values(by=sort_by)
     expected = simulations.sort_values(by=sort_by)
     np.testing.assert_allclose(
-        actual[petab.SIMULATION].values,
-        expected[petab.SIMULATION].values,
+        actual[v2.C.SIMULATION].values,
+        expected[v2.C.SIMULATION].values,
         atol=solutions["tol_simulations"],
         rtol=solutions["tol_simulations"],
     )
 
     # gradient
-    sllh, _ = eqx.filter_grad(run_simulations, has_aux=True)(
+    sllh, aux = eqx.filter_grad(run_simulations, has_aux=True)(
         jax_problem,
         solver=diffrax.Kvaerno5(),
         controller=diffrax.PIDController(atol=1e-14, rtol=1e-14),
@@ -237,7 +273,7 @@ def test_ude(test):
         actual_dict = {}
         if component == "mech":
             expected = pd.read_csv(test_dir / file, sep="\t").set_index(
-                petab.PARAMETER_ID
+                v2.C.PARAMETER_ID
             )
 
             for ip in expected.index:
@@ -249,18 +285,14 @@ def test_ude(test):
             np.testing.assert_allclose(
                 actual,
                 expected["value"].values,
-                atol=solutions["tol_grad_llh"],
-                rtol=solutions["tol_grad_llh"],
+                atol=solutions["tol_grad"],
+                rtol=solutions["tol_grad"],
             )
         else:
             expected = h5py.File(test_dir / file, "r")
-            for layer_name, layer in jax_problem.model.nns[
-                component
-            ].layers.items():
+            for layer_name, layer in jax_problem.model.nns[component].layers.items():
                 for attribute in dir(layer):
-                    if not isinstance(
-                        getattr(layer, attribute), jax.numpy.ndarray
-                    ):
+                    if not isinstance(getattr(layer, attribute), jax.numpy.ndarray):
                         continue
                     actual = getattr(
                         sllh.model.nns[component].layers[layer_name], attribute
@@ -275,9 +307,7 @@ def test_ude(test):
                         )
                     if (
                         np.squeeze(
-                            expected["parameters"][component][layer_name][
-                                attribute
-                            ][:]
+                            expected["parameters"][component][layer_name][attribute][:]
                         ).size
                         == 0
                     ):
@@ -290,6 +320,146 @@ def test_ude(test):
                                     attribute
                                 ][:]
                             ),
-                            atol=solutions["tol_grad_llh"],
-                            rtol=solutions["tol_grad_llh"],
+                            atol=solutions["tol_grad"],
+                            rtol=solutions["tol_grad"],
                         )
+
+
+def _v2_sciml_problem_helper(yaml_config, base_path):
+    config = v2.ProblemConfig(**yaml_config)
+
+    parameter_tables = []
+    for f in config.parameter_files:
+        df = pd.read_csv(f, sep="\t")
+        df.nominalValue = df.nominalValue.apply(_try_float)
+        if "priorParameters" in df.columns:
+            df.priorParameters = df.priorParameters.apply(_process_prior_params)
+        parameters = [
+            v2.Parameter.model_construct(**row.to_dict())
+            for _, row in df.reset_index().iterrows()
+        ]
+        parameter_tables.append(v2.ParameterTable(elements=parameters))
+
+    models = [
+        v1.models.model.model_factory(
+            model_info.location,
+            base_path=base_path,
+            model_language=model_info.language,
+            model_id=model_id,
+        )
+        for model_id, model_info in (config.model_files or {}).items()
+    ]
+
+    measurement_tables = (
+        [v2.MeasurementTable.from_tsv(f, base_path) for f in config.measurement_files]
+        if config.measurement_files
+        else None
+    )
+
+    experiment_tables = (
+        [v2.ExperimentTable.from_tsv(f, base_path) for f in config.experiment_files]
+        if config.experiment_files
+        else None
+    )
+
+    condition_tables = (
+        [v2.ConditionTable.from_tsv(f, base_path) for f in config.condition_files]
+        if config.condition_files
+        else None
+    )
+
+    if condition_tables is None:
+        cond_ids = [
+            cid
+            for exp_table in experiment_tables
+            for exp in exp_table.elements
+            for p in exp.periods
+            for cid in p.condition_ids
+        ]
+        condition_tables = [
+            v2.ConditionTable(elements=[v2.Condition(id=cid, changes=[])])
+            for cid in set(cond_ids)
+        ]
+
+    observable_tables = (
+        [v2.ObservableTable.from_tsv(f, base_path) for f in config.observable_files]
+        if config.observable_files
+        else None
+    )
+
+    mapping_tables = (
+        [v2.MappingTable.from_tsv(f, base_path) for f in config.mapping_files]
+        if config.mapping_files
+        else None
+    )
+
+    return v2.Problem(
+        config=config,
+        models=models,
+        condition_tables=condition_tables,
+        experiment_tables=experiment_tables,
+        observable_tables=observable_tables,
+        measurement_tables=measurement_tables,
+        parameter_tables=parameter_tables,
+        mapping_tables=mapping_tables,
+    )
+
+
+def _process_prior_params(prior_params):
+    if isinstance(prior_params, float):
+        return prior_params
+    else:
+        return [float(param) for param in prior_params.split(";")]
+
+
+def _normal_logpdf(x: jnp.ndarray, mean: float, std: float) -> jnp.ndarray:
+    var = std**2
+    return jnp.sum(-0.5 * jnp.log(2.0 * jnp.pi * var) - 0.5 * ((x - mean) ** 2) / var)
+
+
+def _uniform_logpdf(x: jnp.ndarray, low: float, high: float) -> jnp.ndarray:
+    return jnp.sum(
+        jnp.where(
+            (x >= low) & (x <= high),
+            -jnp.log(high - low),
+            -jnp.inf,
+        )
+    )
+
+
+def _tree_array_lognormprior(tree, mean: float, std: float) -> jnp.ndarray:
+    arrays, _ = eqx.partition(tree, eqx.is_inexact_array)
+    leaves = jax.tree_util.tree_leaves(arrays)
+
+    total = jnp.array(0.0)
+    for leaf in leaves:
+        if leaf is not None:
+            total = total + _normal_logpdf(leaf, mean, std)
+    return total
+
+
+def _tree_array_loguniformprior(tree, low: float, high: float) -> jnp.ndarray:
+    arrays, _ = eqx.partition(tree, eqx.is_inexact_array)
+    leaves = jax.tree_util.tree_leaves(arrays)
+
+    total = jnp.array(0.0)
+    for leaf in leaves:
+        if leaf is not None:
+            total = total + _uniform_logpdf(leaf, low, high)
+    return total
+
+
+def _model_logprior(model, layer1_bias_std=1.0, layer1_weight_std=1.0) -> jnp.ndarray:
+    mech = model.parameters
+    layer1_bias = model.model.nns["net1"].layers["layer1"].bias
+    layer1_weight = model.model.nns["net1"].layers["layer1"].weight
+    rest = eqx.tree_at(
+        lambda m: m["net1"].layers["layer1"], model.model.nns, replace=None
+    )
+
+    return (
+        _tree_array_loguniformprior(mech, low=0.0, high=15.0)
+        + _tree_array_lognormprior(layer1_bias, mean=0.0, std=layer1_bias_std)
+        + _tree_array_lognormprior(layer1_weight, mean=0.0, std=layer1_weight_std)
+        + _tree_array_lognormprior(rest, mean=0.0, std=1.0)
+    )

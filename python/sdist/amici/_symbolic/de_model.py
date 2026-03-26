@@ -27,6 +27,7 @@ from amici.importers.utils import (
     ObservableTransformation,
     _default_simplify,
     amici_time_symbol,
+    symbol_with_assumptions,
     toposort_symbols,
     unique_preserve_order,
 )
@@ -2499,26 +2500,67 @@ class DEModel:
         added_expressions = False
         orig_obs = tuple([s.get_sym() for s in self._observables])
         for net_id, net in hybridization.items():
-            if net["static"]:
+            if net["pre_initialization"]:
                 # do not integrate into ODEs, handle in amici.sim.jax.petab
                 continue
-            inputs = [
-                comp
-                for comp in self._components
-                if str(comp.get_sym()) in net["input_vars"]
-            ]
-            # sort inputs by order in input_vars
-            inputs = sorted(
-                inputs,
-                key=lambda comp: net["input_vars"].index(str(comp.get_sym())),
-            )
+            comp_by_sym = {comp.get_id(): comp for comp in self._components}
+            sym_locals = {s: comp.get_sym() for s, comp in comp_by_sym.items()}
+
+            inputs = []
+            unresolved_vars = []
+            for input_var in net["input_vars"]:
+                if input_var in comp_by_sym:
+                    inputs.append(comp_by_sym[input_var])
+                else:
+                    try:
+                        expr = sp.sympify(input_var, locals=sym_locals)
+                    except (sp.SympifyError, Exception):
+                        unresolved_vars.append(input_var)
+                        continue
+
+                    if {str(s) for s in expr.free_symbols} - set(comp_by_sym):
+                        unresolved_vars.append(input_var)
+                        continue
+
+                    expr_sym = symbol_with_assumptions(
+                        f"_nn_{net_id}_input_{len(inputs)}"
+                    )
+                    new_expr_comp = Expression(
+                        symbol=expr_sym,
+                        name=f"{net_id}_input_{len(inputs)}",
+                        value=expr,
+                    )
+                    self.add_component(new_expr_comp)
+                    added_expressions = True
+                    inputs.append(new_expr_comp)
+
             if len(inputs) != len(net["input_vars"]):
-                found_vars = {str(comp.get_sym()) for comp in inputs}
-                missing_vars = set(net["input_vars"]) - found_vars
-                raise ValueError(
-                    f"Could not find all input variables for neural network {net_id}. "
-                    f"Missing variables: {sorted(missing_vars)}"
-                )
+                missing_vars = set(unresolved_vars)
+                if missing_vars == {"array"}:
+                    array_inputs = net.get("array_inputs", {})
+                    petab_ids = list(array_inputs.keys())
+                    for i, input_var in enumerate(net["input_vars"]):
+                        if input_var == "array":
+                            if not petab_ids:
+                                raise ValueError(
+                                    f"Array input specified for {net_id} but no "
+                                    f"array_inputs info provided in hybridization."
+                                )
+                            petab_id = petab_ids.pop(0)
+                            array_sym = symbol_with_assumptions(
+                                f"_nn_array_{petab_id}"
+                            )
+                            array_comp = Expression(
+                                symbol=array_sym,
+                                name=f"{net_id}_array_{petab_id}",
+                                value=sp.Integer(0),
+                            )
+                            inputs.insert(i, array_comp)
+                else:
+                    raise ValueError(
+                        f"Could not find all input variables for neural network {net_id}. "
+                        f"Missing variables: {sorted(missing_vars)}"
+                    )
             for inp in inputs:
                 if isinstance(
                     inp,
@@ -2547,12 +2589,13 @@ class DEModel:
                     f"Could not find all output variables for neural network {net_id}. "
                     f"Missing variables: {sorted(missing_vars)}"
                 )
-
             for out_var, parts in outputs.items():
                 comp = parts["comp"]
                 # remove output from model components
                 if isinstance(comp, FreeParameter):
                     self._free_parameters.remove(comp)
+                elif isinstance(comp, FixedParameter):
+                    self._fixed_parameters.remove(comp)
                 elif isinstance(comp, Expression):
                     self._expressions.remove(comp)
                 elif isinstance(comp, DifferentialState):
@@ -2586,7 +2629,7 @@ class DEModel:
                     added_expressions = True
 
             observables = {
-                ob_var: {"comp": comp, "ind": net["observable_vars"][ob_var]}
+                ob_var: {"comp": comp, **net["observable_vars"][ob_var]}
                 for comp in self._components
                 if (ob_var := str(comp.get_sym())) in net["observable_vars"]
                 # # TODO: SYNTAX NEEDS to CHANGE
@@ -2609,9 +2652,19 @@ class DEModel:
                     raise ValueError(
                         f"{comp.get_name()} ({type(comp)}) is not an observable."
                     )
-                out_val = sp.Function(net_id)(
-                    *[input.get_sym() for input in inputs], parts["ind"]
+                nn_call = sp.Function(net_id)(
+                    *[input.get_sym() for input in inputs], parts["index"]
                 )
+                formula = parts["formula"]
+                petab_id = parts["petab_id"]
+                if formula == petab_id:
+                    out_val = nn_call
+                else:
+                    from petab.math.sympify import sympify_petab
+
+                    out_val = sympify_petab(formula).subs(
+                        symbol_with_assumptions(petab_id), nn_call
+                    )
                 # add to the model
                 self.add_component(
                     Observable(

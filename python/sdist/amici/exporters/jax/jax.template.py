@@ -21,6 +21,8 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         self.jax_py_file = Path(__file__).resolve()
         self.nns = {TPL_NETS}
         self.parameters = TPL_ALL_P_VALUES
+        TPL_ARRAY_INPUTS_INIT
+        self._array_input_index = jnp.int32(0)
         super().__init__()
 
     def _xdot(self, t, x, args):

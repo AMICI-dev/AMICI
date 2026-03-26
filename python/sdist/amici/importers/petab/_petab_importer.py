@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import logging
 import numbers
+import re
 from collections.abc import Sequence
 from pathlib import Path
 from pprint import pprint
@@ -216,6 +217,21 @@ class PetabImporter:
         #  no arbitrary list of periods.
         exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
         # This will always create a copy of the problem.
+        if self._jax:
+            self._unconverted_problem = exp_event_conv._original_problem
+            condition_targets = {
+                change.target_id
+                for condition in self.petab_problem.conditions
+                for change in condition.changes
+            }
+            mapping_petab_ids = {
+                mapping.petab_id for mapping in self.petab_problem.mappings
+            }
+            if condition_targets.intersection(mapping_petab_ids):
+                raise NotImplementedError(
+                    "The JAX backend does not currently support PEtab problems where network "
+                    "parameters appear in the conditions table. "
+                )
         self.petab_problem = exp_event_conv.convert()
         for experiment in self.petab_problem.experiments:
             if len(experiment.periods) > 2:
@@ -348,12 +364,17 @@ class PetabImporter:
 
         # Create Python module from SBML model
         if self._jax:
+            if self.petab_problem.config.extensions.get("sciml"):
+                hybridization = self._build_hybridization()
+            else:
+                hybridization = None
             sbml_importer.sbml2jax(
                 model_name=self._module_name,
                 output_dir=self.output_dir,
                 observation_model=observation_model,
                 fixed_parameters=fixed_parameters,
                 verbose=self._verbose,
+                hybridization=hybridization,
                 # **kwargs,
             )
             return sbml_importer
@@ -561,6 +582,149 @@ class PetabImporter:
             for observable in self.petab_problem.observables or []
         ]
 
+    def _get_net_mappings(self, net_id: str):
+        """Get (petab_id, model_id) pairs for all mappings belonging to ``net_id``."""
+        return (
+            self.petab_problem.mapping_df.loc[
+                self.petab_problem.mapping_df[v2.C.MODEL_ENTITY_ID]
+                .str.split(".")
+                .str[0]
+                == net_id,
+                v2.C.MODEL_ENTITY_ID,
+            ]
+            .to_dict()
+            .items()
+        )
+
+    def _build_hybridization(self) -> dict[str, dict]:
+        if "sciml" not in self.petab_problem.config.extensions:
+            return None
+
+        if (
+            not self._jax
+            or self.petab_problem.model.type_id != MODEL_TYPE_SBML
+        ):
+            raise NotImplementedError(
+                "petab_sciml extension is currently only supported for sbml models"
+            )
+
+        from petab_sciml.standard import NNModelStandard
+
+        config = self.petab_problem.config.extensions["sciml"]
+        # TODO: only accept YAML format for now
+        hybridizations = [
+            pd.read_csv(hf, sep="\t") for hf in config["hybridization_files"]
+        ]
+        hybridization_table = pd.concat(hybridizations)
+
+        input_hybridization = dict(
+            zip(
+                hybridization_table["targetId"],
+                hybridization_table["targetValue"],
+            )
+        )
+        output_hybridization = dict(
+            zip(
+                hybridization_table["targetValue"],
+                hybridization_table["targetId"],
+            )
+        )
+        observable_mapping = dict(
+            zip(
+                self.petab_problem.observable_df["observableFormula"],
+                self.petab_problem.observable_df.index,
+            )
+        )
+        # Build a mapping from petab entity IDs to HDF5 files for array inputs
+        array_files = config.get("array_files", [])
+        array_input_files = {}
+        for file_spec in array_files:
+            import h5py
+
+            with h5py.File(file_spec, "r") as hf:
+                if "inputs" in hf:
+                    for petab_id in hf["inputs"]:
+                        array_input_files[petab_id] = str(
+                            Path(file_spec).resolve()
+                        )
+
+        condition_id_mapping = {}
+        if self._unconverted_problem is not None:
+            for orig_exp, conv_exp in zip(
+                self._unconverted_problem.experiments,
+                self.petab_problem.experiments,
+            ):
+                condition_id_mapping[orig_exp.id] = {
+                    "original": [
+                        cid
+                        for p in orig_exp.periods
+                        for cid in p.condition_ids
+                    ],
+                    "converted": [
+                        cid
+                        for p in conv_exp.periods
+                        for cid in p.condition_ids
+                    ],
+                }
+
+        non_estimated_param_ids = set(self.petab_problem.x_fixed_ids)
+
+        hybridization = {}
+        for net_id, net_config in config["neural_nets"].items():
+            net_mappings = list(self._get_net_mappings(net_id))
+            input_mappings = [
+                (pid, mid)
+                for pid, mid in net_mappings
+                if mid.split(".")[1].startswith("input")
+            ]
+            output_mappings = [
+                (pid, mid)
+                for pid, mid in net_mappings
+                if mid.split(".")[1].startswith("output")
+            ]
+
+            hybridization[net_id] = {
+                "model": NNModelStandard.load_data(
+                    Path(net_config["location"])
+                ),
+                "input_vars": [
+                    input_hybridization[petab_id]
+                    for petab_id, _ in input_mappings
+                    if petab_id in input_hybridization
+                ],
+                "array_inputs": {
+                    petab_id: array_input_files[petab_id]
+                    for petab_id, _ in input_mappings
+                    if petab_id in input_hybridization
+                    and input_hybridization[petab_id] == "array"
+                    and petab_id in array_input_files
+                },
+                "output_vars": {
+                    output_hybridization[petab_id]: _get_net_index(model_id)
+                    for petab_id, model_id in output_mappings
+                    if petab_id in output_hybridization
+                },
+                "observable_vars": {
+                    obs_id: {
+                        "index": _get_net_index(model_id),
+                        "formula": formula,
+                        "petab_id": petab_id,
+                    }
+                    for petab_id, model_id in output_mappings
+                    for formula, obs_id in observable_mapping.items()
+                    if re.search(r"\b" + re.escape(petab_id) + r"\b", formula)
+                },
+                "frozen_layers": dict(
+                    _get_frozen_layers(model_id)
+                    for petab_id, model_id in net_mappings
+                    if petab_id in non_estimated_param_ids
+                ),
+                "condition_id_mapping": condition_id_mapping,
+                **net_config,
+            }
+
+        return hybridization
+
     def import_module(self, force_import: bool = False) -> amici.ModelModule:
         """Import the generated model module.
 
@@ -609,11 +773,31 @@ class PetabImporter:
 
             from amici.sim.jax.petab import JAXProblem
 
-            return JAXProblem(model, self.petab_problem)
+            return JAXProblem(
+                model,
+                self.petab_problem,
+                unconverted_problem=getattr(
+                    self, "_unconverted_problem", None
+                ),
+            )
 
         model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)
         return PetabSimulator(em=em)
+
+
+def _get_frozen_layers(model_id):
+    layers = re.findall(r"\[(.*?)\]", model_id)
+    array_attr = model_id.split(".")[-1]
+    layer_id = layers[0] if len(layers) else None
+    array_attr = array_attr if array_attr in ("weight", "bias") else None
+    return layer_id, array_attr
+
+
+def _get_net_index(model_id: str):
+    matches = re.findall(r"\[(\d+)\]", model_id)
+    if matches:
+        return int(matches[-1])
 
 
 def _set_default_experiment(

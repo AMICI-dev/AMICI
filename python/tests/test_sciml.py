@@ -14,6 +14,7 @@ from amici.exporters.jax.nn import (
     _process_activation_call,
     _process_layer_call,
 )
+from amici.importers.utils import symbol_with_assumptions
 
 
 class TestFormatFunctionCall:
@@ -229,7 +230,7 @@ class TestProcessActivationCall:
         node.kwargs = {}
 
         fun_str = _process_activation_call(node)
-        assert fun_str == "amici.export.jax.tanhshrink"
+        assert fun_str == "amici.exporters.jax.tanhshrink"
 
     def test_hardtanh_valid_params(self):
         """Test hardtanh with valid default parameters."""
@@ -387,30 +388,52 @@ class TestProcessHybridizationErrors:
 
         # Add some parameters
         model._free_parameters = [
-            FreeParameter(sp.Symbol("p1"), "param1", sp.Float(1.0)),
-            FreeParameter(sp.Symbol("p2"), "param2", sp.Float(2.0)),
+            FreeParameter(
+                symbol_with_assumptions("p1"), "param1", sp.Float(1.0)
+            ),
+            FreeParameter(
+                symbol_with_assumptions("p2"), "param2", sp.Float(2.0)
+            ),
         ]
 
         # Add some expressions
         model._expressions = [
-            Expression(sp.Symbol("expr1"), "expression1", sp.Float(0.5)),
-            Expression(sp.Symbol("expr2"), "expression2", sp.Float(0.7)),
+            Expression(
+                symbol_with_assumptions("expr1"), "expression1", sp.Float(0.5)
+            ),
+            Expression(
+                symbol_with_assumptions("expr2"), "expression2", sp.Float(0.7)
+            ),
         ]
 
         # Add some differential states
         model._differential_states = [
             DifferentialState(
-                sp.Symbol("x1"), "state1", sp.Float(0.0), sp.Float(0.1)
+                symbol_with_assumptions("x1"),
+                "state1",
+                sp.Float(0.0),
+                sp.Float(0.1),
             ),
             DifferentialState(
-                sp.Symbol("x2"), "state2", sp.Float(0.0), sp.Float(0.2)
+                symbol_with_assumptions("x2"),
+                "state2",
+                sp.Float(0.0),
+                sp.Float(0.2),
             ),
         ]
 
         # Add some observables
         model._observables = [
-            Observable(sp.Symbol("obs1"), "observable1", sp.Symbol("x1")),
-            Observable(sp.Symbol("obs2"), "observable2", sp.Symbol("x2")),
+            Observable(
+                symbol_with_assumptions("obs1"),
+                "observable1",
+                symbol_with_assumptions("x1"),
+            ),
+            Observable(
+                symbol_with_assumptions("obs2"),
+                "observable2",
+                symbol_with_assumptions("x2"),
+            ),
         ]
 
         return model
@@ -419,7 +442,7 @@ class TestProcessHybridizationErrors:
         """Test error message for missing input variables."""
         hybridization = {
             "neural_net1": {
-                "static": False,
+                "pre_initialization": False,
                 "input_vars": [
                     "p1",
                     "p2",
@@ -445,7 +468,7 @@ class TestProcessHybridizationErrors:
         """Test error message for missing output variables."""
         hybridization = {
             "neural_net2": {
-                "static": False,
+                "pre_initialization": False,
                 "input_vars": ["p1", "p2"],
                 "output_vars": {
                     "expr1": 0,
@@ -472,10 +495,21 @@ class TestProcessHybridizationErrors:
         """Test error message for missing observable variables."""
         hybridization = {
             "neural_net3": {
-                "static": False,
+                "pre_initialization": False,
                 "input_vars": ["p1"],
                 "output_vars": {"expr1": 0},
-                "observable_vars": {"obs1": 0, "obs_missing": 1},
+                "observable_vars": {
+                    "obs1": {
+                        "index": 0,
+                        "formula": "net1_output1",
+                        "petab_id": "net1_output1",
+                    },
+                    "obs_missing": {
+                        "index": 1,
+                        "formula": "net1_output2",
+                        "petab_id": "net1_output2",
+                    },
+                },
             }
         }
 
@@ -494,10 +528,16 @@ class TestProcessHybridizationErrors:
         """Test that valid hybridization doesn't raise errors."""
         hybridization = {
             "valid_net": {
-                "static": False,
+                "pre_initialization": False,
                 "input_vars": ["p1", "p2"],
                 "output_vars": {"expr1": 0},
-                "observable_vars": {"obs1": 0},
+                "observable_vars": {
+                    "obs1": {
+                        "index": 0,
+                        "formula": "net1_output1",
+                        "petab_id": "net1_output1",
+                    }
+                },
             }
         }
 

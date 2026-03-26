@@ -44,10 +44,43 @@ class AmiciJaxCodePrinter(NumPyPrinter):
         return f"safe_div({self.doprint(numer)}, {self.doprint(denom)})"
 
     def _print_Function(self, expr: sp.Expr) -> str:
-        if isinstance(expr.func, UndefinedFunction):
-            return f"self.nns['{expr.func.__name__}'].forward(jnp.array([{', '.join(self.doprint(a) for a in expr.args[:-1])}]))[{expr.args[-1]}]"
-        else:
+        if not isinstance(expr.func, UndefinedFunction):
             return super()._print_Function(expr)
+
+        nn_name = expr.func.__name__
+        input_args = expr.args[:-1]
+        output_idx = expr.args[-1]
+        forward_arg = self._build_nn_forward_arg(input_args)
+        return f"self.nns['{nn_name}'].forward({forward_arg})[{output_idx}]"
+
+    def _build_nn_forward_arg(self, input_args) -> str:
+        array_prefix = "_nn_array_"
+        if not any(
+            hasattr(a, "name") and a.name.startswith(array_prefix)
+            for a in input_args
+        ):
+            return f"jnp.array([{', '.join(self.doprint(a) for a in input_args)}])"
+
+        groups = self._group_nn_inputs(input_args, array_prefix)
+        return groups[0] if len(groups) == 1 else f"[{', '.join(groups)}]"
+
+    def _group_nn_inputs(self, input_args, array_prefix: str) -> list[str]:
+        groups = []
+        scalar_group = []
+        for a in input_args:
+            if hasattr(a, "name") and a.name.startswith(array_prefix):
+                if scalar_group:
+                    groups.append(f"jnp.array([{', '.join(scalar_group)}])")
+                    scalar_group = []
+                petab_id = a.name[len(array_prefix) :]
+                groups.append(
+                    f"self._array_inputs['{petab_id}'][self._array_input_index]"
+                )
+            else:
+                scalar_group.append(self.doprint(a))
+        if scalar_group:
+            groups.append(f"jnp.array([{', '.join(scalar_group)}])")
+        return groups
 
     def _print_Max(self, expr: sp.Expr) -> str:
         """
