@@ -4,7 +4,17 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v1.X Series
 
-### v1.0.1
+### v1.0.2 (unreleased)
+
+**Fixes**
+
+* Demote the module import mtime check during sundials model import to a
+  warning, as it can lead to false positives in some environments
+  (e.g., when using network file systems with not synchronized clocks).
+  If you encounter this warning, and you are sure that the model was not
+  modified since the last import, you can safely ignore it.
+
+### v1.0.1 (2026-03-13)
 
 **Fixes**
 
@@ -17,7 +27,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   `logging.getLogger("amici.sim.sundials").setLevel(logging.ERROR)`
 * Fixed various broken links and outdated function names in the documentation.
 
-### v1.0.0
+### v1.0.0 (2026-02-26)
 
 **BREAKING CHANGES**
 
