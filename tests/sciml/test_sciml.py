@@ -47,7 +47,9 @@ initialization_cases_dir = cases_dir / "initialization"
 
 def _reshape_flat_array(array_flat):
     array_flat["ix"] = array_flat["ix"].astype(str)
-    ix_cols = [f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))]
+    ix_cols = [
+        f"ix_{i}" for i in range(len(array_flat["ix"].values[0].split(";")))
+    ]
     if len(ix_cols) == 1:
         array_flat[ix_cols[0]] = array_flat["ix"].apply(int)
     else:
@@ -61,7 +63,9 @@ def _reshape_flat_array(array_flat):
     return array
 
 
-@pytest.mark.parametrize("test", sorted(d.stem for d in net_cases_dir.glob("[0-9]*")))
+@pytest.mark.parametrize(
+    "test", sorted(d.stem for d in net_cases_dir.glob("[0-9]*"))
+)
 def test_ml_model_import(test):
     test_dir = net_cases_dir / test
     with open(test_dir / "solutions.yaml") as f:
@@ -104,7 +108,9 @@ def test_ml_model_import(test):
     if test == "053":
         input_files = [
             (i1, i2)
-            for i1, i2 in zip(solutions["net_input_arg0"], solutions["net_input_arg1"])
+            for i1, i2 in zip(
+                solutions["net_input_arg0"], solutions["net_input_arg1"]
+            )
         ]
     else:
         input_files = solutions["net_input"]
@@ -117,13 +123,19 @@ def test_ml_model_import(test):
         if test == "053":
             input = tuple(
                 [
-                    h5py.File(test_dir / in_file, "r")["inputs"]["input0"]["data"][:]
+                    h5py.File(test_dir / in_file, "r")["inputs"]["input0"][
+                        "data"
+                    ][:]
                     for in_file in input_file
                 ]
             )
         else:
-            input = h5py.File(test_dir / input_file, "r")["inputs"]["input0"]["data"][:]
-        output = h5py.File(test_dir / output_file, "r")["outputs"]["output0"]["data"][:]
+            input = h5py.File(test_dir / input_file, "r")["inputs"]["input0"][
+                "data"
+            ][:]
+        output = h5py.File(test_dir / output_file, "r")["outputs"]["output0"][
+            "data"
+        ][:]
 
         if "net_ps" in solutions:
             par = h5py.File(test_dir / par_file, "r")
@@ -134,10 +146,14 @@ def test_ml_model_import(test):
                     and hasattr(net.layers[layer], "weight")
                     and net.layers[layer].weight is not None
                 ):
-                    w = par["parameters"][ml_model.nn_model_id][layer]["weight"][:]
+                    w = par["parameters"][ml_model.nn_model_id][layer][
+                        "weight"
+                    ][:]
                     if isinstance(net.layers[layer], eqx.nn.ConvTranspose):
                         # see FAQ in https://docs.kidger.site/equinox/api/nn/conv/#equinox.nn.ConvTranspose
-                        w = np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(0, 1)
+                        w = np.flip(w, axis=tuple(range(2, w.ndim))).swapaxes(
+                            0, 1
+                        )
                     assert w.shape == net.layers[layer].weight.shape
                     net = eqx.tree_at(
                         lambda x: x.layers[layer].weight,
@@ -149,7 +165,9 @@ def test_ml_model_import(test):
                     and hasattr(net.layers[layer], "bias")
                     and net.layers[layer].bias is not None
                 ):
-                    b = par["parameters"][ml_model.nn_model_id][layer]["bias"][:]
+                    b = par["parameters"][ml_model.nn_model_id][layer]["bias"][
+                        :
+                    ]
                     if isinstance(
                         net.layers[layer],
                         eqx.nn.Conv | eqx.nn.ConvTranspose,
@@ -182,7 +200,9 @@ def test_ml_model_import(test):
             )
 
 
-@pytest.mark.parametrize("test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")]))
+@pytest.mark.parametrize(
+    "test", sorted([d.stem for d in ude_cases_dir.glob("[0-9]*")])
+)
 def test_sciml_problem_import(test):
     test_dir = ude_cases_dir / test
 
@@ -193,7 +213,9 @@ def test_sciml_problem_import(test):
 
     with change_directory(test_dir / "petab"):
         # HACK!! Again!! Around "array" in parameters table
-        petab_problem = _v2_sciml_problem_helper(petab_yaml, test_dir / "petab")
+        petab_problem = _v2_sciml_problem_helper(
+            petab_yaml, test_dir / "petab"
+        )
 
         if test in ("003",):
             with pytest.raises(NotImplementedError):
@@ -290,9 +312,13 @@ def test_sciml_problem_import(test):
             )
         else:
             expected = h5py.File(test_dir / file, "r")
-            for layer_name, layer in jax_problem.model.nns[component].layers.items():
+            for layer_name, layer in jax_problem.model.nns[
+                component
+            ].layers.items():
                 for attribute in dir(layer):
-                    if not isinstance(getattr(layer, attribute), jax.numpy.ndarray):
+                    if not isinstance(
+                        getattr(layer, attribute), jax.numpy.ndarray
+                    ):
                         continue
                     actual = getattr(
                         sllh.model.nns[component].layers[layer_name], attribute
@@ -307,7 +333,9 @@ def test_sciml_problem_import(test):
                         )
                     if (
                         np.squeeze(
-                            expected["parameters"][component][layer_name][attribute][:]
+                            expected["parameters"][component][layer_name][
+                                attribute
+                            ][:]
                         ).size
                         == 0
                     ):
@@ -333,7 +361,9 @@ def _v2_sciml_problem_helper(yaml_config, base_path):
         df = pd.read_csv(f, sep="\t")
         df.nominalValue = df.nominalValue.apply(_try_float)
         if "priorParameters" in df.columns:
-            df.priorParameters = df.priorParameters.apply(_process_prior_params)
+            df.priorParameters = df.priorParameters.apply(
+                _process_prior_params
+            )
         parameters = [
             v2.Parameter.model_construct(**row.to_dict())
             for _, row in df.reset_index().iterrows()
@@ -351,19 +381,28 @@ def _v2_sciml_problem_helper(yaml_config, base_path):
     ]
 
     measurement_tables = (
-        [v2.MeasurementTable.from_tsv(f, base_path) for f in config.measurement_files]
+        [
+            v2.MeasurementTable.from_tsv(f, base_path)
+            for f in config.measurement_files
+        ]
         if config.measurement_files
         else None
     )
 
     experiment_tables = (
-        [v2.ExperimentTable.from_tsv(f, base_path) for f in config.experiment_files]
+        [
+            v2.ExperimentTable.from_tsv(f, base_path)
+            for f in config.experiment_files
+        ]
         if config.experiment_files
         else None
     )
 
     condition_tables = (
-        [v2.ConditionTable.from_tsv(f, base_path) for f in config.condition_files]
+        [
+            v2.ConditionTable.from_tsv(f, base_path)
+            for f in config.condition_files
+        ]
         if config.condition_files
         else None
     )
@@ -382,7 +421,10 @@ def _v2_sciml_problem_helper(yaml_config, base_path):
         ]
 
     observable_tables = (
-        [v2.ObservableTable.from_tsv(f, base_path) for f in config.observable_files]
+        [
+            v2.ObservableTable.from_tsv(f, base_path)
+            for f in config.observable_files
+        ]
         if config.observable_files
         else None
     )
@@ -414,7 +456,9 @@ def _process_prior_params(prior_params):
 
 def _normal_logpdf(x: jnp.ndarray, mean: float, std: float) -> jnp.ndarray:
     var = std**2
-    return jnp.sum(-0.5 * jnp.log(2.0 * jnp.pi * var) - 0.5 * ((x - mean) ** 2) / var)
+    return jnp.sum(
+        -0.5 * jnp.log(2.0 * jnp.pi * var) - 0.5 * ((x - mean) ** 2) / var
+    )
 
 
 def _uniform_logpdf(x: jnp.ndarray, low: float, high: float) -> jnp.ndarray:
@@ -449,7 +493,9 @@ def _tree_array_loguniformprior(tree, low: float, high: float) -> jnp.ndarray:
     return total
 
 
-def _model_logprior(model, layer1_bias_std=1.0, layer1_weight_std=1.0) -> jnp.ndarray:
+def _model_logprior(
+    model, layer1_bias_std=1.0, layer1_weight_std=1.0
+) -> jnp.ndarray:
     mech = model.parameters
     layer1_bias = model.model.nns["net1"].layers["layer1"].bias
     layer1_weight = model.model.nns["net1"].layers["layer1"].weight
@@ -460,6 +506,8 @@ def _model_logprior(model, layer1_bias_std=1.0, layer1_weight_std=1.0) -> jnp.nd
     return (
         _tree_array_loguniformprior(mech, low=0.0, high=15.0)
         + _tree_array_lognormprior(layer1_bias, mean=0.0, std=layer1_bias_std)
-        + _tree_array_lognormprior(layer1_weight, mean=0.0, std=layer1_weight_std)
+        + _tree_array_lognormprior(
+            layer1_weight, mean=0.0, std=layer1_weight_std
+        )
         + _tree_array_lognormprior(rest, mean=0.0, std=1.0)
     )
