@@ -52,7 +52,7 @@ jobs:
 
     - name: Codecov SBMLSuiteJax
       if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage_SBMLSuite_jax.xml
