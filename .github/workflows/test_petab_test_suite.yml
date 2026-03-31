@@ -109,8 +109,8 @@ jobs:
             tests/petab_test_suite/test_petab_suite.py
 
       - name: Codecov
-        if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-        uses: codecov/codecov-action@v5
+        if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
@@ -202,7 +202,7 @@ jobs:
 
       - name: Codecov
         if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
