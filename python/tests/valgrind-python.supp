@@ -1137,6 +1137,17 @@
 }
 
 {
+   pydantic_core-2.46.0
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:*/pydantic_core/_pydantic_core.cpython-*
+   ...
+   fun:PyModule_ExecDef
+   ...
+}
+
+{
    libsbml
    Memcheck:Leak
    match-leak-kinds: definite
