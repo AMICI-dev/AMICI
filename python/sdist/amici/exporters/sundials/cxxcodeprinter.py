@@ -33,15 +33,20 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
     optimizations: Iterable[Optimization] = ()
 
-    def __init__(self):
+    def __init__(self, extract_cse: bool | None = None):
         """Create code printer"""
         super().__init__()
 
         # extract common subexpressions in matrix functions?
-        self.extract_cse = os.getenv("AMICI_EXTRACT_CSE", "0").lower() in (
-            "1",
-            "on",
-            "true",
+        self.extract_cse = (
+            os.getenv("AMICI_EXTRACT_CSE", "0").lower()
+            in (
+                "1",
+                "on",
+                "true",
+            )
+            if extract_cse is None
+            else extract_cse
         )
 
         # Floating-point optimizations
@@ -133,6 +138,27 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :return:
             C++ code as list of lines
         """
+        if self.extract_cse:
+            res = self._get_sym_lines_symbols(
+                symbols=sp.Matrix(
+                    [
+                        sp.Symbol(f"{variable}[{index}]")
+                        for index in range(len(equations))
+                    ]
+                ),
+                equations=equations,
+                variable=variable,
+                indent_level=indent_level,
+            )
+            # make compound statement so that extracted subexpressions are
+            #  scoped locally and can be used in switch-cases
+            indent = " " * indent_level
+            return [
+                f"{indent}{{",
+                *(f"{indent}{l}" for l in res),
+                f"{indent}}}",
+            ]
+
         return [
             " " * indent_level + f"{variable}[{index}] = {self.doprint(math)};"
             for index, math in enumerate(equations)
