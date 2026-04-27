@@ -120,7 +120,11 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         return "std::numeric_limits<double>::infinity()"
 
     def _get_sym_lines_array(
-        self, equations: sp.Matrix, variable: str, indent_level: int
+        self,
+        equations: sp.Matrix,
+        variable: str,
+        indent_level: int,
+        indices: Sequence[int] | None = None,
     ) -> list[str]:
         """
         Generate C++ code for assigning symbolic terms in symbols to C++ array
@@ -128,27 +132,29 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         :param equations:
             vectors of symbolic expressions
-
         :param variable:
             name of the C++ array to assign to
-
         :param indent_level:
             indentation level (number of leading blanks)
+        :param indices:
+            List of custom indices corresponding to entries in `equations`.
+            If `None`, the indices will be 0..(N-1).
 
         :return:
             C++ code as list of lines
         """
+        if indices is None:
+            indices = range(len(equations))
+
         if self.extract_cse:
             res = self._get_sym_lines_symbols(
                 symbols=sp.Matrix(
-                    [
-                        sp.Symbol(f"{variable}[{index}]")
-                        for index in range(len(equations))
-                    ]
+                    [sp.Symbol(f"{variable}[{index}]") for index in indices]
                 ),
                 equations=equations,
                 variable=variable,
                 indent_level=indent_level,
+                indices=indices,
             )
             # make compound statement so that extracted subexpressions are
             #  scoped locally and can be used in switch-cases
@@ -161,7 +167,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         return [
             " " * indent_level + f"{variable}[{index}] = {self.doprint(math)};"
-            for index, math in enumerate(equations)
+            for index, math in zip(indices, equations, strict=True)
             if math not in [0, 0.0]
         ]
 
