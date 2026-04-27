@@ -60,3 +60,26 @@ jobs:
         files: coverage_SBMLSuite.xml
         flags: sbmlsuite
         fail_ci_if_error: true
+
+  collect:
+    name: Collect and combine artifacts
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Download all artifacts from workflow
+        uses: actions/download-artifact@v4
+        with:
+          # omit `name` to download all artifacts uploaded by previous jobs
+          path: combined
+          merge-multiple: true
+
+      - name: Show combined files
+        run: |
+          echo "Combined files:" && ls -l combined || true
+          echo "Number of files:" && find combined -type f | wc -l
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: amici-semantic-results-combined
+          path: combined
