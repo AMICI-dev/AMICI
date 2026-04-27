@@ -45,11 +45,6 @@ from utils import (
 )
 
 
-@pytest.fixture(scope="session")
-def result_path() -> Path:
-    return Path(__file__).parent / "amici-semantic-results"
-
-
 def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
     model_dir = None
 

@@ -45,6 +45,7 @@ jobs:
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
+    - run: mv tests/sbml/amici-semantic-results/tags.json tests/sbml/amici-semantic-results/tags_${{ matrix.cases }}.json
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v7
@@ -66,12 +67,26 @@ jobs:
     runs-on: ubuntu-24.04
     needs: build
     steps:
-      - name: Download all artifacts from workflow
-        uses: actions/download-artifact@v4
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          # omit `name` to download all artifacts uploaded by previous jobs
+          python-version: "3.13"
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Download all artifacts from workflow
+        uses: actions/download-artifact@v8
+        with:
+          pattern: amici-semantic-results-*
           path: combined
           merge-multiple: true
+
+      - name: Consolidate tags
+        run: |
+          python tests/sbml/consolidate_tags.py
+          rm combined/tags_*.json
 
       - name: Show combined files
         run: |

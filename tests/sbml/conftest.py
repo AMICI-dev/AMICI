@@ -1,5 +1,6 @@
 """Pytest configuration for SBML test suite"""
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -17,10 +18,19 @@ if str(script_dir) not in sys.path:
 
 # stores passed SBML semantic test suite IDs
 passed_ids = []
+# test tags we encountered
+encountered_tags: set[str] = set()
 
 SBML_SEMANTIC_CASES_DIR = (
     Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
 )
+
+RESULT_PATH = Path(__file__).parent / "amici-semantic-results"
+
+
+@pytest.fixture(scope="session")
+def result_path() -> Path:
+    return RESULT_PATH
 
 
 @pytest.fixture
@@ -119,18 +129,35 @@ def write_passed_tags(passed_ids, out=sys.stdout):
     )
     out.write("  " + "\n  ".join(sorted(passed_test_tags)))
 
+    with open(RESULT_PATH / "tags.json", "w") as f:
+        json.dump(
+            {
+                "passed": sorted(passed_test_tags | passed_component_tags),
+                "all": sorted(encountered_tags),
+            },
+            f,
+            indent=2,
+        )
+
 
 def pytest_runtest_logreport(report: "TestReport") -> None:
     """Collect test case IDs of passed SBML semantic test suite cases"""
     if (
         report.when == "call"
-        and report.outcome == "passed"
         and "::test_sbml_testsuite_case[" in report.nodeid
     ):
         test_case_id = re.sub(
             r"^.*::test_sbml_testsuite_case\[(\d+)].*$", r"\1", report.nodeid
         )
-        passed_ids.append(test_case_id)
+
+        global encountered_tags
+
+        component_tags, test_tags = get_tags_for_test(test_case_id)
+        encountered_tags |= component_tags
+        encountered_tags |= test_tags
+
+        if report.outcome == "passed":
+            passed_ids.append(test_case_id)
 
 
 def get_tags_for_test(test_id: str) -> tuple[set[str], set[str]]:
