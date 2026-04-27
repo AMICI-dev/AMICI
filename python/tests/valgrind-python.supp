@@ -1187,3 +1187,12 @@
    fun:PyModule_ExecDef
    ...
 }
+
+{
+   Matplotlib 3.10.9
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZL14PyFT2Font_initN8pybind116objectElSt8optionalISt6vectorIP9PyFT2FontSaIS4_EEEi.lto_priv.0
+   ...
+}
