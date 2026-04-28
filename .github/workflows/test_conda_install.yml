@@ -31,7 +31,7 @@ jobs:
       - name: Install AMICI
         shell: bash -l {0}
         run: |
-          pip3 install -v ./python/sdist
+          pip3 install -v ./python/sdist[test]
       - name: Show environment
         shell: bash -l {0}
         run: |
@@ -39,11 +39,6 @@ jobs:
           which cmake
           which ninja
           ls -l /Users/runner/miniconda3/envs/amici/bin || true
-      - name: Install test dependencies
-        shell: bash -l {0}
-        run: |
-          # Install test extras (pytest, scipy, etc.)
-          pip3 install pytest pytest-cov scipy h5py antimony
       - name: Test import
         shell: bash -l {0}
         run: |
