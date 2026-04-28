@@ -680,9 +680,14 @@ class DEExporter:
                                 f"if(std::find("
                                 "reinitialization_state_idxs.cbegin(), "
                                 f"reinitialization_state_idxs.cend(), {index}) != "
-                                "reinitialization_state_idxs.cend())",
-                                f"    {function}[{index}] = "
-                                f"{self._code_printer.doprint(formula)};",
+                                "reinitialization_state_idxs.cend()) {",
+                                *self._code_printer._get_sym_lines_array(
+                                    equations=sp.Matrix([formula]),
+                                    indices=[index],
+                                    variable=function,
+                                    indent_level=4,
+                                ),
+                                "}",
                             ]
                         )
                 cases[ipar] = expressions
