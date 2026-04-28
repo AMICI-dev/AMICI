@@ -8,15 +8,10 @@ fails with something like
 
 ::
 
-   amici/src/cblas.cpp:16:13: fatal error: cblas.h: No such file or directory
-   #include <cblas.h>
-            ^~~~~~~~~
-   compilation terminated.
-   error: command 'x86_64-linux-gnu-gcc' failed with exit status 1
+    error: no member named 'fill' in namespace 'std::ranges'
 
-**A**: You will have to install a CBLAS-compatible BLAS library and/or
-set ``BLAS_CFLAGS`` as described in the
-:ref:`installation guide <amici_python_installation>`.
+**A**: Try a more recent compiler. This error is caused by an older compiler
+not supporting C++20 features used in the AMICI codebase.
 
 --------------
 
