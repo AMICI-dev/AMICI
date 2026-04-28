@@ -20,6 +20,8 @@ if str(script_dir) not in sys.path:
 passed_ids = []
 # test tags we encountered
 encountered_tags: set[str] = set()
+# failed tests with error message
+failed_or_skipped_ids: dict[str, str] = dict()
 
 SBML_SEMANTIC_CASES_DIR = (
     Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
@@ -105,7 +107,7 @@ def pytest_sessionfinish(session, exitstatus):
     # parse test names to get passed case IDs (don't know any better way to
     # access fixture values)
     passed_ids = [format_test_id(_) for _ in passed_ids]
-    if passed_ids:
+    if passed_ids or failed_or_skipped_ids:
         write_passed_tags(passed_ids, terminalreporter)
     terminalreporter.ensure_newline()
 
@@ -120,20 +122,30 @@ def write_passed_tags(passed_ids, out=sys.stdout):
         passed_component_tags |= cur_component_tags
         passed_test_tags |= cur_test_tags
 
-    out.write(
-        "\nAt least one test with the following component tags has passed:\n"
-    )
-    out.write("  " + "\n  ".join(sorted(passed_component_tags)))
-    out.write(
-        "\n\nAt least one test with the following test tags has passed:\n"
-    )
-    out.write("  " + "\n  ".join(sorted(passed_test_tags)))
+    if passed_component_tags:
+        out.write(
+            "\nAt least one test with the following component tags has passed:\n"
+        )
+        out.write("  " + "\n  ".join(sorted(passed_component_tags)))
 
-    with open(RESULT_PATH / "tags.json", "w") as f:
+    if passed_test_tags:
+        out.write(
+            "\n\nAt least one test with the following test tags has passed:\n"
+        )
+        out.write("  " + "\n  ".join(sorted(passed_test_tags)))
+
+    with open(RESULT_PATH / "results.json", "w") as f:
         json.dump(
             {
-                "passed": sorted(passed_test_tags | passed_component_tags),
-                "all": sorted(encountered_tags),
+                "supported_tags": sorted(
+                    passed_test_tags | passed_component_tags
+                ),
+                "encountered_tags": sorted(encountered_tags),
+                "passed_tests": sorted(passed_ids),
+                "failed_or_skipped": {
+                    k: failed_or_skipped_ids[k]
+                    for k in sorted(failed_or_skipped_ids)
+                },
             },
             f,
             indent=2,
@@ -158,6 +170,8 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
 
         if report.outcome == "passed":
             passed_ids.append(test_case_id)
+        else:
+            failed_or_skipped_ids[test_case_id] = report.longreprtext
 
 
 def get_tags_for_test(test_id: str) -> tuple[set[str], set[str]]:
