@@ -181,7 +181,13 @@ def write_result_file(
 
     result_path.mkdir(parents=True, exist_ok=True)
     filename = result_path / f"{test_id}.csv"
-    simulated.to_csv(filename, index=False)
+    (
+        simulated
+        # see https://github.com/sbmlteam/sbml-test-suite/blob/473e119dd57226c3a7a729d598f9007f06f781c3/cases/semantic/README.md?plain=1#L211-L215
+        .replace({np.nan: "NaN", np.inf: "INF", -np.inf: "-INF"}).to_csv(
+            filename, index=False
+        )
+    )
 
 
 def get_amount_and_variables(settings):
