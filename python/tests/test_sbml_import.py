@@ -41,6 +41,7 @@ from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
 from numpy.testing import assert_allclose, assert_array_equal
+from requests import HTTPError
 
 
 def simple_sbml_model():
@@ -649,16 +650,31 @@ def test_units(model_units_module):
 )
 def test_sympy_exp_monkeypatch(tempdir):
     """
-    This model contains a removeable discontinuity at t=0 that requires
+    This model contains a removable discontinuity at t=0 that requires
     monkeypatching sympy.Pow._eval_derivative in order to be able to compute
     non-nan sensitivities
     """
     import pooch
 
-    model_file = pooch.retrieve(
-        url="https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?filename=BIOMD0000000529_url.xml",
-        known_hash="md5:c6e0b298397485b93d7acfab80b21fd4",
-    )
+    downloader = pooch.HTTPDownloader(headers={"User-Agent": "Mozilla/5.0"})
+
+    try:
+        model_file = pooch.retrieve(
+            url="https://www.biomodels.org/model/download/BIOMD0000000529.2?filename=BIOMD0000000529_url.xml",
+            known_hash="md5:c6e0b298397485b93d7acfab80b21fd4",
+            downloader=downloader,
+        )
+    except HTTPError as e:
+        # When running on GHA, we might be subject to some rate limiting
+        #  or similar. In that case, skip instead of failing.
+        if (
+            "GITHUB_ACTIONS" in os.environ
+            and e.response is not None
+            and e.response.status_code in {403, 429, 503}
+        ):
+            pytest.skip(f"BioModels temporarily unavailable/rate-limited: {e}")
+        raise
+
     importer = amici.SbmlImporter(model_file)
     module_name = "BIOMD0000000529"
 
