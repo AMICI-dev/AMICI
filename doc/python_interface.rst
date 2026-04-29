@@ -26,72 +26,70 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 1273 out of the 1821 (~70%) test cases** from
+Python-AMICI currently **passes 1290 out of the 1823 (~71%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
 
 The following SBML test suite tags are currently supported
-(i.e., at least one test case with the respective test passes;
+(i.e., at least one test case with the respective tag passes;
 `tag descriptions <https://github.com/sbmlteam/sbml-test-suite/blob/master/docs/tags-documentation/all-tags.txt>`_):
 
-**Component tags:**
-
-* AlgebraicRule
-* AssignmentRule
-* comp
-* Compartment
-* CSymbolAvogadro
-* CSymbolRateOf
-* CSymbolTime
-* Deletion
-* EventNoDelay
-* ExternalModelDefinition
-* FunctionDefinition
-* InitialAssignment
-* ModelDefinition
-* Parameter
-* Port
-* RateRule
-* Reaction
-* ReplacedBy
-* ReplacedElement
-* SBaseRef
-* Species
-* Submodel
-
-**Test tags:**
-
 * 0D-Compartment
+* AlgebraicRule
 * Amount
 * AssignedConstantStoichiometry
 * AssignedVariableStoichiometry
+* AssignmentRule
 * BoolNumericSwap
 * BoundaryCondition
-* comp
+* CSymbolAvogadro
+* CSymbolRateOf
+* CSymbolTime
+* Compartment
 * Concentration
 * ConstantSpecies
 * ConversionFactor
 * ConversionFactors
 * DefaultValue
+* Deletion
+* EventIsPersistent
+* EventNoDelay
+* EventPriority
 * EventT0Firing
+* EventUsesAssignmentTimeValues
+* EventUsesTriggerTimeValues
 * ExtentConversionFactor
+* ExternalModelDefinition
+* FunctionDefinition
 * HasOnlySubstanceUnits
+* InitialAssignment
 * InitialValueReassigned
 * L3v2MathML
 * LocalParameters
+* ModelDefinition
 * MultiCompartment
 * NoMathML
 * NonConstantCompartment
 * NonConstantParameter
 * NonUnityCompartment
 * NonUnityStoichiometry
+* Parameter
+* Port
+* RateRule
+* Reaction
+* ReplacedBy
+* ReplacedElement
 * ReversibleReaction
+* SBaseRef
+* Species
 * SpeciesReferenceInMath
+* Submodel
 * SubmodelOutput
 * TimeConversionFactor
 * UncommonMathML
 * VolumeConcentrationRates
+* comp
 
 Additional support may be added in the future. However, the following features are
 unlikely to be supported:

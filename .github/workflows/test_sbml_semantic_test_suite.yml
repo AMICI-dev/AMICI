@@ -45,6 +45,7 @@ jobs:
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
+    - run: mv tests/sbml/amici-semantic-results/results.json tests/sbml/amici-semantic-results/results_${{ matrix.cases }}.json
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v7
@@ -60,3 +61,41 @@ jobs:
         files: coverage_SBMLSuite.xml
         flags: sbmlsuite
         fail_ci_if_error: true
+
+  collect:
+    name: Collect and combine artifacts
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Download all artifacts from workflow
+        uses: actions/download-artifact@v8
+        with:
+          pattern: amici-semantic-results-*
+          path: combined
+          merge-multiple: true
+
+      - name: Consolidate results
+        run: |
+          python tests/sbml/consolidate_results.py
+          # Cleanup individual files after consolidation
+          rm combined/results_*.json
+
+      - name: Show combined files
+        run: |
+          echo "Combined files:" && ls -l combined || true
+          echo "Number of files:" && find combined -type f | wc -l
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: amici-semantic-results-combined
+          path: combined
