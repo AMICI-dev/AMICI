@@ -92,6 +92,13 @@ jobs:
           tests/benchmark_models/computation_times.csv
           tests/benchmark_models/computation_times.png
 
+    - name: Upload model code
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: amici_models
+        path: amici_models/
+
   jax:
     name: Benchmark Collection JAX
     runs-on: ubuntu-24.04
