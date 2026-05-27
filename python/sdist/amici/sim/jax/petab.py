@@ -650,13 +650,19 @@ class JAXProblem(eqx.Module):
 
         import h5py
 
+        net_ids = list(
+            self._petab_problem.extensions_config["sciml"][
+                "neural_nets"
+            ].keys()
+        )
+
         # TODO(performance): Avoid opening each file multiple times
         return {
-            file_spec.name.split("_")[0]: h5py.File(file_spec, "r")[
-                "parameters"
-            ][file_spec.name.split("_")[0]]
+            net_id: h5py.File(file_spec, "r")["parameters"][net_id]
             for file_spec in array_files
+            for net_id in net_ids
             if "parameters" in h5py.File(file_spec, "r").keys()
+            and net_id in h5py.File(file_spec, "r")["parameters"].keys()
         }
 
     def _load_input_arrays_from_files(self) -> dict:
@@ -675,10 +681,17 @@ class JAXProblem(eqx.Module):
 
         import h5py
 
+        net_ids = list(
+            self._petab_problem.extensions_config["sciml"][
+                "neural_nets"
+            ].keys()
+        )
+
         # TODO(performance): Avoid opening each file multiple times
         return {
-            file_spec.name.split("_")[0]: h5py.File(file_spec, "r")["inputs"]
+            net_id: h5py.File(file_spec, "r")["inputs"]
             for file_spec in array_files
+            for net_id in net_ids
             if "inputs" in h5py.File(file_spec, "r").keys()
         }
 
