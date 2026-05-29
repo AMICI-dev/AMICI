@@ -333,7 +333,6 @@ class JAXProblem(eqx.Module):
                     if k != petabv2.C.CONDITION_ID
                 ]
             )
-
             m = self._petab_problem.measurement_df.query(query).sort_values(
                 by=petabv2.C.TIME
             )
