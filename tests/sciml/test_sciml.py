@@ -263,10 +263,7 @@ def test_sciml_problem_import(test):
         solutions = safe_load(f)
 
     with change_directory(test_dir / "petab"):
-        # HACK!! Again!! Around "array" in parameters table
-        petab_problem = _v2_sciml_problem_helper(
-            petab_yaml, test_dir / "petab"
-        )
+        petab_problem = v2.Problem.from_yaml(petab_yaml)
 
         if test in ("003",):
             with pytest.raises(NotImplementedError):
