@@ -615,7 +615,7 @@ class PetabImporter:
         config = self.petab_problem.config.extensions["sciml"]
         # TODO: only accept YAML format for now
         hybridizations = [
-            pd.read_csv(hf, sep="\t") for hf in config["hybridization_files"]
+            pd.read_csv(hf, sep="\t") for hf in config.hybridization_files
         ]
         hybridization_table = pd.concat(hybridizations)
 
@@ -638,7 +638,7 @@ class PetabImporter:
             )
         )
         # Build a mapping from petab entity IDs to HDF5 files for array inputs
-        array_files = config.get("array_files", [])
+        array_files = config.array_files
         array_input_files = {}
         for file_spec in array_files:
             import h5py
@@ -726,7 +726,7 @@ class PetabImporter:
                     if petab_id in non_estimated_param_ids
                 ),
                 "condition_id_mapping": condition_id_mapping,
-                **net_config,
+                **dict(net_config),
             }
 
         return hybridization
