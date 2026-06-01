@@ -64,6 +64,53 @@ def _reshape_flat_array(array_flat):
 
 
 @pytest.mark.parametrize(
+    "test", sorted([d.stem for d in initialization_cases_dir.glob("[0-9]*")])
+)
+def test_initialization(test):
+    test_dir = initialization_cases_dir / test
+
+    with open(test_dir / "solutions.yaml") as f:
+        solutions = safe_load(f)
+
+    with open(test_dir / "petab" / "problem.yaml") as f:
+        petab_yaml = safe_load(f)
+
+    with change_directory(test_dir / "petab"):
+        petab_problem = _v2_sciml_problem_helper(
+            petab_yaml, test_dir / "petab"
+        )
+
+        pi = PetabImporter(
+            petab_problem=petab_problem,
+            module_name="init" + test,
+            compile_=True,
+            jax=jax,
+            validate=False,
+        )
+
+        jax_problem = pi.create_simulator(force_import=True)
+
+    tol = solutions["tol"]
+
+    for net_id, ref_file in solutions["parameter_files"].items():
+        nn = jax_problem.model.nns[net_id]
+        with h5py.File(test_dir / ref_file, "r") as expected:
+            for layer_name in nn.layers.keys():
+                for attribute in ("weight", "bias"):
+                    actual = getattr(nn.layers[layer_name], attribute)
+                    np.testing.assert_allclose(
+                        np.squeeze(actual),
+                        np.squeeze(
+                            expected["parameters"][net_id][layer_name][
+                                attribute
+                            ][:]
+                        ),
+                        atol=tol,
+                        rtol=tol,
+                    )
+
+
+@pytest.mark.parametrize(
     "test", sorted(d.stem for d in net_cases_dir.glob("[0-9]*"))
 )
 def test_ml_model_import(test):
