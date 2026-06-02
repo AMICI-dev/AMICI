@@ -207,6 +207,7 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     kwarg_ignore = {
         "Dropout1d": ("inplace",),
         "Dropout2d": ("inplace",),
+        "LayerNorm": ("bias",),
     }
     # construct argument string for layer instantiation
     kwargs = [

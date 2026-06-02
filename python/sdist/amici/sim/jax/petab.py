@@ -708,8 +708,25 @@ class JAXProblem(eqx.Module):
         :param par_arrays:
             Parameter arrays loaded from files
         """
+        mapping_df = self._petab_problem.mapping_df
+
+        def _lookup_mid(pname: str) -> str:
+            if mapping_df is not None and pname in mapping_df.index:
+                return mapping_df.loc[pname, petabv2.C.MODEL_ENTITY_ID]
+            return ""
+
         for table in self._petab_problem.parameter_tables:
-            for parameter in table.elements:
+            # Array-indexed params (e.g. net.parameters[layer]) must be processed
+            # after scalar params to avoid overwriting a full-layer assignment.
+            def _sort_key(p):
+                model_id = str(_lookup_mid(p.id))
+                if "parameters[" not in model_id:
+                    return 0
+                return model_id.count(".") + model_id.count("[")
+
+            sorted_params = sorted(table.elements, key=_sort_key)
+
+            for parameter in sorted_params:
                 pname = parameter.id
                 net = pname.split("_")[0]
                 if net not in model.nns:
@@ -718,15 +735,19 @@ class JAXProblem(eqx.Module):
                 nn = model_pars[net]
                 scalar = True
 
-                # Determine value source (scalar from PEtab or array from file)
                 if parameter.nominal_value == "array":
                     value = par_arrays[net]
                     scalar = False
                 else:
                     value = float(parameter.nominal_value)
 
-                # Parse parameter name and set values
-                to_set = self._parse_parameter_name(pname, model_pars)
+                model_entity_id = _lookup_mid(pname)
+                if model_entity_id != "" and "parameters[" in str(
+                    model_entity_id
+                ):
+                    to_set = _parse_model_entity_id(model_entity_id, nn)
+                else:
+                    to_set = self._parse_parameter_name(pname, model_pars)
 
                 for layer, attribute in to_set:
                     if scalar:
@@ -2062,6 +2083,49 @@ def _conditions_to_experiment_map(
         row.conditionId: row.experimentId for row in experiment_df.itertuples()
     }
     return condition_to_experiment
+
+
+def _parse_model_entity_id(
+    model_entity_id: str, nn: dict
+) -> list[tuple[str, str]]:
+    """Parse a PEtab SciML model entity ID to find which NN layers/attributes to set.
+
+    Handles ``net.parameters[layer]`` (all attributes of that layer),
+    ``net.parameters[layer].weight`` (only that attribute), and
+    ``net.parameters`` (all layers, fallback).
+
+    :param model_entity_id:
+        Model entity ID from the mapping table.
+    :param nn:
+        NN parameter dict for the net (``model_pars[net_id]``).
+    :return:
+        List of ``(layer_name, attribute)`` tuples to set.
+    """
+    to_set: list[tuple[str, str]] = []
+    match = re.search(r"\[([^\]]+)\]", model_entity_id)
+    if not match:
+        return [
+            (layer_name, attr)
+            for layer_name, layer in nn.items()
+            for attr in layer.keys()
+        ]
+    layer_name = match.group(1)
+    if layer_name not in nn:
+        return to_set
+    layer = nn[layer_name]
+    after_bracket = model_entity_id[match.end() :]
+    if after_bracket.startswith("."):
+        attribute = after_bracket[1:]
+        if attribute in layer:
+            to_set.append((layer_name, attribute))
+        else:
+            logger.warning(
+                f"Attribute '{attribute}' not found in layer '{layer_name}' "
+                f"while parsing model entity ID '{model_entity_id}'"
+            )
+    else:
+        to_set.extend([(layer_name, attr) for attr in layer.keys()])
+    return to_set
 
 
 def _try_float(value):
