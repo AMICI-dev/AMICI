@@ -710,18 +710,21 @@ class JAXProblem(eqx.Module):
         """
         mapping_df = self._petab_problem.mapping_df
 
-        def _lookup_mid(pname: str) -> str | None:
+        def _lookup_mid(pname: str) -> str:
             if mapping_df is not None and pname in mapping_df.index:
                 return mapping_df.loc[pname, petabv2.C.MODEL_ENTITY_ID]
-            return None
+            return ""
 
         for table in self._petab_problem.parameter_tables:
             # Array-indexed params (e.g. net.parameters[layer]) must be processed
             # after scalar params to avoid overwriting a full-layer assignment.
-            sorted_params = sorted(
-                table.elements,
-                key=lambda p: "parameters[" in str(_lookup_mid(p.id) or ""),
-            )
+            def _sort_key(p):
+                model_id = str(_lookup_mid(p.id))
+                if "parameters[" not in model_id:
+                    return 0
+                return model_id.count(".") + model_id.count("[")
+
+            sorted_params = sorted(table.elements, key=_sort_key)
 
             for parameter in sorted_params:
                 pname = parameter.id
@@ -739,7 +742,7 @@ class JAXProblem(eqx.Module):
                     value = float(parameter.nominal_value)
 
                 model_entity_id = _lookup_mid(pname)
-                if model_entity_id is not None and "parameters[" in str(
+                if model_entity_id != "" and "parameters[" in str(
                     model_entity_id
                 ):
                     to_set = _parse_model_entity_id(model_entity_id, nn)
