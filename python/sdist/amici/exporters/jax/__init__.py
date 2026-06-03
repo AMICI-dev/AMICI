@@ -6,9 +6,10 @@ Please note that this module is experimental, the API may substantially change
 in the future. Use at your own risk and do not expect backward compatibility.
 """
 
-from .nn import Flatten, cat, generate_equinox, tanhshrink
+from .nn import BatchNorm, Flatten, cat, generate_equinox, tanhshrink
 
 __all__ = [
+    "BatchNorm",
     "Flatten",
     "generate_equinox",
     "tanhshrink",

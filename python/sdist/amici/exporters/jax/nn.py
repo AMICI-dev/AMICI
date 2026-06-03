@@ -7,6 +7,105 @@ from amici import amiciModulePath
 from amici.exporters.template import apply_template
 
 
+class BatchNorm(eqx.Module):
+    """Custom implementation of PyTorch BatchNorm1d/2d/3d for Equinox.
+
+    Computes batch normalisation using statistics computed from the current
+    input batch.  Unlike PyTorch's eval-mode BatchNorm, running statistics are
+    **not** used: JAX's functional model cannot carry mutable state across
+    calls, so batch statistics are always computed from the input.
+
+    The ``inference`` flag is present for interface compatibility with
+    :func:`equinox.nn.inference_mode` (which sets it to ``True``) but does
+    **not** alter the normalisation computation.
+
+    Supports inputs of shape ``(N, C)``, ``(N, C, L)``, ``(N, C, H, W)``,
+    or ``(N, C, D, H, W)``.
+
+    Parameters
+    ----------
+    num_features : int
+        Number of features/channels ``C``.
+    eps : float, optional
+        Value added to the denominator for numerical stability.
+        Default: ``1e-5``.
+    momentum : float, optional
+        Accepted for API compatibility; not used.  Default: ``0.1``.
+    affine : bool, optional
+        If ``True``, learnable ``weight`` and ``bias`` parameters are
+        included.  Default: ``True``.
+    bias : bool, optional
+        If ``True`` and ``affine=True``, a learnable bias term is included.
+        Default: ``True``.
+    """
+
+    weight: jnp.ndarray | None
+    bias: jnp.ndarray | None
+    eps: float
+    momentum: float
+    num_features: int
+    inference: bool
+
+    def __init__(
+        self,
+        num_features: int,
+        eps: float = 1e-5,
+        momentum: float = 0.1,
+        affine: bool = True,
+        bias: bool = True,
+    ):
+        self.num_features = num_features
+        self.eps = eps
+        self.momentum = momentum
+        self.inference = False
+        self.weight = jnp.ones(num_features) if affine else None
+        self.bias = jnp.zeros(num_features) if (affine and bias) else None
+
+    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+        """Apply batch normalisation to ``x``.
+
+        Parameters
+        ----------
+        x : jnp.ndarray
+            Input array of shape ``(N, C)``, ``(N, C, L)``,
+            ``(N, C, H, W)``, or ``(N, C, D, H, W)``.
+
+        Returns
+        -------
+        jnp.ndarray
+            Normalised array of the same shape as ``x``.
+        """
+        n_spatial = x.ndim - 2  # 0 for (N, C), >=1 for spatial inputs
+        reduce_axes = (0,) + tuple(range(2, x.ndim)) if n_spatial > 0 else (0,)
+        mean = jnp.mean(x, axis=reduce_axes)
+        var = jnp.var(x, axis=reduce_axes)
+
+        if n_spatial > 0:
+            broadcast_shape = (self.num_features,) + (1,) * n_spatial
+            mean = mean.reshape(broadcast_shape)
+            var = var.reshape(broadcast_shape)
+
+        x_norm = (x - mean) / jnp.sqrt(var + self.eps)
+
+        if self.weight is not None:
+            w = (
+                self.weight.reshape((self.num_features,) + (1,) * n_spatial)
+                if n_spatial > 0
+                else self.weight
+            )
+            x_norm = x_norm * w
+
+        if self.bias is not None:
+            b = (
+                self.bias.reshape((self.num_features,) + (1,) * n_spatial)
+                if n_spatial > 0
+                else self.bias
+            )
+            x_norm = x_norm + b
+
+        return x_norm
+
+
 class Flatten(eqx.Module):
     """Custom implementation of a `torch.flatten` layer for Equinox."""
 
@@ -168,8 +267,8 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
         string defining the layer in equinox syntax
     """
     if layer.layer_type.startswith(
-        ("BatchNorm", "AlphaDropout", "InstanceNorm")
-    ):
+        "AlphaDropout"
+    ) or layer.layer_type.startswith("InstanceNorm"):
         raise NotImplementedError(
             f"{layer.layer_type} layers currently not supported"
         )
@@ -182,6 +281,9 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
 
     # mapping of layer names in sciml yaml format to equinox/custom amici implementations
     layer_map = {
+        "BatchNorm1d": "amici.exporters.jax.BatchNorm",
+        "BatchNorm2d": "amici.exporters.jax.BatchNorm",
+        "BatchNorm3d": "amici.exporters.jax.BatchNorm",
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
         "Flatten": "amici.exporters.jax.Flatten",
@@ -208,6 +310,9 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
         "Dropout1d": ("inplace",),
         "Dropout2d": ("inplace",),
         "LayerNorm": ("bias",),
+        "BatchNorm1d": ("track_running_stats",),
+        "BatchNorm2d": ("track_running_stats",),
+        "BatchNorm3d": ("track_running_stats",),
     }
     # construct argument string for layer instantiation
     kwargs = [
