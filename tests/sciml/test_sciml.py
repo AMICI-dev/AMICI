@@ -135,9 +135,6 @@ def test_ml_model_import(test):
         "020",
         "021",
         "022",
-        "046",
-        "047",
-        "048",
         "052",
     ):
         with pytest.raises(NotImplementedError):

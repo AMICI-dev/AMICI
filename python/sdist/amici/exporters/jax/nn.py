@@ -11,16 +11,10 @@ class BatchNorm(eqx.Module):
     """Custom implementation of PyTorch BatchNorm1d/2d/3d for Equinox.
 
     Computes batch normalisation using statistics computed from the current
-    input batch.  Unlike PyTorch's eval-mode BatchNorm, running statistics are
-    **not** used: JAX's functional model cannot carry mutable state across
-    calls, so batch statistics are always computed from the input.
+    input batch.
 
-    The ``inference`` flag is present for interface compatibility with
-    :func:`equinox.nn.inference_mode` (which sets it to ``True``) but does
-    **not** alter the normalisation computation.
-
-    Supports inputs of shape ``(N, C)``, ``(N, C, L)``, ``(N, C, H, W)``,
-    or ``(N, C, D, H, W)``.
+    **Note**: Unlike PyTorch's eval-mode BatchNorm, running statistics are
+    **not** supported.
 
     Parameters
     ----------
@@ -29,8 +23,6 @@ class BatchNorm(eqx.Module):
     eps : float, optional
         Value added to the denominator for numerical stability.
         Default: ``1e-5``.
-    momentum : float, optional
-        Accepted for API compatibility; not used.  Default: ``0.1``.
     affine : bool, optional
         If ``True``, learnable ``weight`` and ``bias`` parameters are
         included.  Default: ``True``.
@@ -42,22 +34,17 @@ class BatchNorm(eqx.Module):
     weight: jnp.ndarray | None
     bias: jnp.ndarray | None
     eps: float
-    momentum: float
     num_features: int
-    inference: bool
 
     def __init__(
         self,
         num_features: int,
         eps: float = 1e-5,
-        momentum: float = 0.1,
         affine: bool = True,
         bias: bool = True,
     ):
         self.num_features = num_features
         self.eps = eps
-        self.momentum = momentum
-        self.inference = False
         self.weight = jnp.ones(num_features) if affine else None
         self.bias = jnp.zeros(num_features) if (affine and bias) else None
 
@@ -77,13 +64,8 @@ class BatchNorm(eqx.Module):
         """
         n_spatial = x.ndim - 2  # 0 for (N, C), >=1 for spatial inputs
         reduce_axes = (0,) + tuple(range(2, x.ndim)) if n_spatial > 0 else (0,)
-        mean = jnp.mean(x, axis=reduce_axes)
-        var = jnp.var(x, axis=reduce_axes)
-
-        if n_spatial > 0:
-            broadcast_shape = (self.num_features,) + (1,) * n_spatial
-            mean = mean.reshape(broadcast_shape)
-            var = var.reshape(broadcast_shape)
+        mean = jnp.mean(x, axis=reduce_axes, keepdims=True)
+        var = jnp.var(x, axis=reduce_axes, keepdims=True)
 
         x_norm = (x - mean) / jnp.sqrt(var + self.eps)
 
@@ -102,6 +84,99 @@ class BatchNorm(eqx.Module):
                 else self.bias
             )
             x_norm = x_norm + b
+
+        return x_norm
+
+
+class InstanceNorm(eqx.Module):
+    """Custom implementation of PyTorch InstanceNorm1d/2d/3d for Equinox.
+
+    Applies Instance Normalisation over a batched input with optional learnable
+    affine parameters.  Statistics are computed per instance per channel.
+
+    **Note**: Unlike PyTorch's eval-mode InstanceNorm, running statistics are
+    **not** supported.
+
+    Parameters
+    ----------
+    num_features : int
+        Number of features/channels ``C``.
+    eps : float, optional
+        Value added to the denominator for numerical stability.
+        Default: ``1e-5``.
+    affine : bool, optional
+        If ``True``, learnable ``weight`` and ``bias`` parameters are included,
+        initialised to ones and zeros respectively.
+        Default: ``False``.
+    bias : bool, optional
+        If ``True`` and ``affine=True``, a learnable bias term is included.
+        Default: ``True``.
+    """
+
+    weight: jnp.ndarray | None
+    bias: jnp.ndarray | None
+    eps: float
+    num_features: int
+
+    def __init__(
+        self,
+        num_features: int,
+        eps: float = 1e-5,
+        affine: bool = False,
+        bias: bool = True,
+    ):
+        self.num_features = num_features
+        self.eps = eps
+        self.weight = jnp.ones(num_features) if affine else None
+        self.bias = jnp.zeros(num_features) if (affine and bias) else None
+
+    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+        """Apply instance normalisation to ``x``.
+
+        Parameters
+        ----------
+        x : jnp.ndarray
+            Batched input of shape ``(N, C, *)`` or unbatched ``(C, *)``.
+
+        Returns
+        -------
+        jnp.ndarray
+            Normalised array of the same shape as ``x``.
+        """
+        is_batched = x.ndim >= 3
+
+        if is_batched:
+            n_spatial = x.ndim - 2
+            reduce_axes = tuple(range(2, x.ndim))
+            mean = jnp.mean(x, axis=reduce_axes, keepdims=True)
+            var = jnp.var(x, axis=reduce_axes, keepdims=True)
+            x_norm = (x - mean) / jnp.sqrt(var + self.eps)
+
+            if self.weight is not None:
+                w = self.weight.reshape(
+                    (1, self.num_features) + (1,) * n_spatial
+                )
+                x_norm = x_norm * w
+            if self.bias is not None:
+                b = self.bias.reshape(
+                    (1, self.num_features) + (1,) * n_spatial
+                )
+                x_norm = x_norm + b
+        else:
+            n_spatial = x.ndim - 1
+            reduce_axes = tuple(range(1, x.ndim))
+            mean = jnp.mean(x, axis=reduce_axes, keepdims=True)
+            var = jnp.var(x, axis=reduce_axes, keepdims=True)
+            x_norm = (x - mean) / jnp.sqrt(var + self.eps)
+
+            if self.weight is not None:
+                w = self.weight.reshape(
+                    (self.num_features,) + (1,) * n_spatial
+                )
+                x_norm = x_norm * w
+            if self.bias is not None:
+                b = self.bias.reshape((self.num_features,) + (1,) * n_spatial)
+                x_norm = x_norm + b
 
         return x_norm
 
@@ -266,9 +341,7 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     :return:
         string defining the layer in equinox syntax
     """
-    if layer.layer_type.startswith(
-        "AlphaDropout"
-    ) or layer.layer_type.startswith("InstanceNorm"):
+    if layer.layer_type.startswith("AlphaDropout"):
         raise NotImplementedError(
             f"{layer.layer_type} layers currently not supported"
         )
@@ -284,6 +357,9 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
         "BatchNorm1d": "amici.exporters.jax.BatchNorm",
         "BatchNorm2d": "amici.exporters.jax.BatchNorm",
         "BatchNorm3d": "amici.exporters.jax.BatchNorm",
+        "InstanceNorm1d": "amici.exporters.jax.InstanceNorm",
+        "InstanceNorm2d": "amici.exporters.jax.InstanceNorm",
+        "InstanceNorm3d": "amici.exporters.jax.InstanceNorm",
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
         "Flatten": "amici.exporters.jax.Flatten",
@@ -310,9 +386,12 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
         "Dropout1d": ("inplace",),
         "Dropout2d": ("inplace",),
         "LayerNorm": ("bias",),
-        "BatchNorm1d": ("track_running_stats",),
-        "BatchNorm2d": ("track_running_stats",),
-        "BatchNorm3d": ("track_running_stats",),
+        "BatchNorm1d": ("track_running_stats", "momentum"),
+        "BatchNorm2d": ("track_running_stats", "momentum"),
+        "BatchNorm3d": ("track_running_stats", "momentum"),
+        "InstanceNorm1d": ("track_running_stats", "momentum"),
+        "InstanceNorm2d": ("track_running_stats", "momentum"),
+        "InstanceNorm3d": ("track_running_stats", "momentum"),
     }
     # construct argument string for layer instantiation
     kwargs = [
