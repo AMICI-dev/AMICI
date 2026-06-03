@@ -6,7 +6,7 @@ import contextlib
 import importlib
 import importlib.util
 import os
-import re
+import subprocess
 import sys
 import warnings
 from collections.abc import Callable
@@ -35,23 +35,28 @@ def _get_amici_path():
 
 
 def _get_commit_hash():
-    """Get commit hash from file"""
-    basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
-    commitfile = next(
-        (
-            file
-            for file in [
-                os.path.join(basedir, ".git", "FETCH_HEAD"),
-                os.path.join(basedir, ".git", "ORIG_HEAD"),
-            ]
-            if os.path.isfile(file)
-        ),
-        None,
-    )
+    """Get commit hash via git
 
-    if commitfile:
-        with open(commitfile) as f:
-            return str(re.search(r"^([\w]*)", f.read().strip()).group())
+    Only trusted if ``basedir`` itself is the root of the discovered
+    repository -- otherwise git's upward directory search could pick up
+    an unrelated ancestor repository (e.g. a venv installed inside some
+    other git-tracked directory) and return its commit hash instead.
+    """
+    basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel", "HEAD"],
+            cwd=basedir,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            toplevel, commit_hash = result.stdout.strip().split("\n")
+            if os.path.realpath(toplevel) == os.path.realpath(basedir):
+                return commit_hash
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
     return "unknown"
 
 
