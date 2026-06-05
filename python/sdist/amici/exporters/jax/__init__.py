@@ -7,7 +7,9 @@ in the future. Use at your own risk and do not expect backward compatibility.
 """
 
 from .nn import (
+    AlphaDropout,
     BatchNorm,
+    Bilinear,
     Flatten,
     InstanceNorm,
     cat,
@@ -16,7 +18,9 @@ from .nn import (
 )
 
 __all__ = [
+    "AlphaDropout",
     "BatchNorm",
+    "Bilinear",
     "Flatten",
     "InstanceNorm",
     "generate_equinox",

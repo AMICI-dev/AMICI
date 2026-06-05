@@ -11,10 +11,12 @@ import pytest
 from amici.exporters.jax.nn import (
     _format_function_call,
     _generate_forward,
+    _generate_layer,
     _process_activation_call,
     _process_layer_call,
 )
 from amici.importers.utils import symbol_with_assumptions
+from petab_sciml import Layer
 
 
 class TestFormatFunctionCall:
@@ -74,6 +76,155 @@ class TestFormatFunctionCall:
             indent=0,
         )
         assert result == "x = func(a, b=2)"
+
+
+class TestGenerateLayerCall:
+    def test_flatten(self):
+        """Test generation for Flatten layer."""
+        flatten = Layer(
+            layer_id="flat",
+            layer_type="Flatten",
+            args={},
+        )
+
+        layer_str = _generate_layer(flatten, indent=4, ilayer=0)
+
+        assert "amici.exporters.jax.Flatten" in layer_str
+
+    def test_batchnorm(self):
+        """Test generation for BatchNorm layer."""
+        batchnorm = Layer(
+            layer_id="bn1",
+            layer_type="BatchNorm1d",
+            args={
+                "num_features": 64,
+                "eps": 1e-5,
+                "momentum": 0.1,
+                "affine": True,
+                "track_running_stats": True,
+            },
+        )
+
+        layer_str = _generate_layer(batchnorm, indent=4, ilayer=0)
+
+        assert "amici.exporters.jax.BatchNorm" in layer_str
+        assert "track_running_stats" not in layer_str
+        assert "momentum" not in layer_str
+        assert "num_features" in layer_str
+        assert "eps" in layer_str
+        assert "affine" in layer_str
+
+    def test_instancenorm(self):
+        """Test generation for InstanceNorm layer."""
+        instancenorm = Layer(
+            layer_id="in1",
+            layer_type="InstanceNorm1d",
+            args={
+                "num_features": 64,
+                "eps": 1e-5,
+                "momentum": 0.1,
+                "affine": True,
+                "track_running_stats": True,
+            },
+        )
+
+        layer_str = _generate_layer(instancenorm, indent=4, ilayer=0)
+
+        assert "amici.exporters.jax.InstanceNorm" in layer_str
+        assert "track_running_stats" not in layer_str
+        assert "momentum" not in layer_str
+        assert "num_features" in layer_str
+        assert "eps" in layer_str
+        assert "affine" in layer_str
+
+    def test_dropout(self):
+        """Test generation for Dropout layer."""
+        dropout = Layer(
+            layer_id="drop",
+            layer_type="Dropout1d",
+            args={},
+        )
+
+        layer_str = _generate_layer(dropout, indent=4, ilayer=0)
+
+        assert "eqx.nn.Dropout" in layer_str
+        assert "inplace" not in layer_str
+
+    def test_dropout2d(self):
+        """Test generation for Dropout2d layer."""
+        dropout2d = Layer(
+            layer_id="drop2d",
+            layer_type="Dropout2d",
+            args={},
+        )
+
+        layer_str = _generate_layer(dropout2d, indent=4, ilayer=0)
+
+        assert "eqx.nn.Dropout" in layer_str
+        assert "inplace" not in layer_str
+
+    def test_alphadropout(self):
+        """Test generation for AlphaDropout layer."""
+        alphadropout = Layer(
+            layer_id="adrop",
+            layer_type="AlphaDropout",
+            args={"p": 0.5, "inplace": False},
+        )
+
+        layer_str = _generate_layer(alphadropout, indent=4, ilayer=0)
+
+        assert "amici.exporters.jax.AlphaDropout" in layer_str
+        assert "p=0.5" in layer_str
+        assert "inplace" not in layer_str
+
+    def test_bilinear(self):
+        """Test generation for Bilinear layer."""
+        bilinear = Layer(
+            layer_id="bil",
+            layer_type="Bilinear",
+            args={
+                "in1_features": 128,
+                "in2_features": 64,
+                "out_features": 32,
+                "bias": True,
+            },
+        )
+
+        layer_str = _generate_layer(bilinear, indent=4, ilayer=0)
+
+        assert "amici.exporters.jax.Bilinear" in layer_str
+        assert "in1_features" in layer_str
+        assert "in2_features" in layer_str
+        assert "out_features" in layer_str
+        assert "bias" in layer_str
+
+    def test_maxpool_not_implemented(self):
+        """Test that MaxPool layer with dilation raises NotImplementedError."""
+        maxpool = Layer(
+            layer_id="mp",
+            layer_type="MaxPool2d",
+            args={"dilation": 1},
+        )
+
+        with pytest.raises(
+            NotImplementedError,
+            match="MaxPool layers with dilation not supported",
+        ):
+            _generate_layer(maxpool, indent=4, ilayer=0)
+
+    def test_dropout_not_implemented(self):
+        """Test that Dropout layer with inplace raises NotImplementedError."""
+        dropout = Layer(
+            layer_id="drop",
+            layer_type="Dropout1d",
+            args={"inplace": True},
+        )
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Dropout layers with inplace not supported",
+        ):
+            _generate_layer(dropout, indent=4, ilayer=0)
 
 
 class TestProcessLayerCall:
@@ -191,6 +342,97 @@ class TestProcessLayerCall:
 
         assert "jax.vmap" not in fun_str
         assert fun_str == "self.layers['dropout']"
+
+    def test_batchnorm1d(self):
+        """Test process BatchNorm1d layer."""
+        node = Mock()
+        node.target = "bn1"
+        node.name = "bn1"
+        node.args = ["x"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="BatchNorm1d", frozen_layers={}
+        )
+
+        assert "self.layers['bn1']" in fun_str
+
+    def test_batchnorm2d(self):
+        """Test process BatchNorm2d layer."""
+        node = Mock()
+        node.target = "bn2"
+        node.name = "bn2"
+        node.args = ["x"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="BatchNorm2d", frozen_layers={}
+        )
+
+        assert "self.layers['bn2']" in fun_str
+
+    def test_instancenorm1d(self):
+        """Test process InstanceNorm1d layer."""
+        node = Mock()
+        node.target = "in1"
+        node.name = "in1"
+        node.args = ["x"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="InstanceNorm1d", frozen_layers={}
+        )
+
+        assert "self.layers['in1']" in fun_str
+
+    def test_instancenorm2d(self):
+        """Test process InstanceNorm2d layer."""
+        node = Mock()
+        node.target = "in2"
+        node.name = "in2"
+        node.args = ["x"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="InstanceNorm2d", frozen_layers={}
+        )
+
+        assert "self.layers['in2']" in fun_str
+
+    def test_alphadropout(self):
+        """Test process AlphaDropout layer."""
+        node = Mock()
+        node.target = "adrop"
+        node.name = "adrop"
+        node.args = ["x"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="AlphaDropout", frozen_layers={}
+        )
+
+        assert "self.layers['adrop']" in fun_str
+
+    def test_bilinear(self):
+        """Test process Bilinear layer."""
+        node = Mock()
+        node.target = "bil"
+        node.name = "bil"
+        node.args = ["x1", "x2"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="Bilinear", frozen_layers={}
+        )
+
+        assert "self.layers['bil']" in fun_str
+
+    def test_flatten(self):
+        """Test process Flatten layer."""
+        node = Mock()
+        node.target = "flat"
+        node.name = "flat"
+        node.args = ["x"]
+
+        fun_str, tree_string = _process_layer_call(
+            node, layer_type="Flatten", frozen_layers={}
+        )
+
+        assert "self.layers['flat']" in fun_str
 
 
 class TestProcessActivationCall:
@@ -365,6 +607,20 @@ class TestGenerateForward:
 
         result = _generate_forward(
             node, indent=4, frozen_layers={}, layer_type="Dropout1d"
+        )
+        assert "key=key" in result
+
+    def test_alphadropout_layer_adds_key(self):
+        """Test that AlphaDropout layers get key parameter added."""
+        node = Mock()
+        node.op = "call_module"
+        node.name = "aldrop1"
+        node.target = "aldropout1"
+        node.args = ["x"]
+        node.kwargs = {}
+
+        result = _generate_forward(
+            node, indent=4, frozen_layers={}, layer_type="AlphaDropout"
         )
         assert "key=key" in result
 

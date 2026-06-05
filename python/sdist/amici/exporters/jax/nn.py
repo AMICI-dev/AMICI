@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 
 from amici import amiciModulePath
@@ -181,6 +182,151 @@ class InstanceNorm(eqx.Module):
         return x_norm
 
 
+class AlphaDropout(eqx.Module):
+    """Custom implementation of PyTorch AlphaDropout for Equinox.
+
+    Applies Alpha Dropout over the input, maintaining the self-normalizing
+    property for inputs with zero mean and unit standard deviation.
+
+    During training, randomly masks elements of the input with probability
+    ``p``, replacing dropped elements with the saturated negative SELU value
+    ``alpha' = -scale * alpha ≈ -1.7581``, then applies an affine
+    transformation to restore zero mean and unit standard deviation.
+
+    **Note**: ``inplace`` mode is not supported.
+
+    Parameters
+    ----------
+    p : float, optional
+        Probability of an element being dropped. Default: ``0.5``.
+    inference : bool, optional
+        If ``True``, acts as an identity function (eval mode).
+    """
+
+    p: float
+    inference: bool
+
+    def __init__(self, p: float = 0.5, inference: bool = False):
+        self.p = p
+        self.inference = inference
+
+    def __call__(self, x: jnp.ndarray, *, key=None) -> jnp.ndarray:
+        """Apply Alpha Dropout to ``x``.
+
+        Parameters
+        ----------
+        x : jnp.ndarray
+            Input array of any shape.
+        key : jax.random.PRNGKey, optional
+            Random key required during training. Ignored in inference mode.
+
+        Returns
+        -------
+        jnp.ndarray
+            Output array of the same shape as ``x``.
+        """
+        if self.inference or self.p == 0.0:
+            return x
+
+        if key is None:
+            raise RuntimeError(
+                "Dropout requires a key when running in non-deterministic mode."
+            )
+
+        # alpha' = -scale * alpha (saturated negative SELU value)
+        alpha_prime = -1.0507009873554805 * 1.6732632423543772
+        keep_prob = 1.0 - self.p
+
+        # Bernoulli mask: True = keep original, False = replace with alpha'
+        mask = jax.random.bernoulli(key, keep_prob, x.shape)
+        x_dropped = jnp.where(mask, x, alpha_prime)
+
+        # Affine transform to restore zero mean and unit variance:
+        #   E[x_dropped]   = p * alpha'
+        #   Var[x_dropped] = keep_prob * (1 + p * alpha'^2)
+        a = (keep_prob * (1.0 + self.p * alpha_prime**2)) ** (-0.5)
+        b = -a * self.p * alpha_prime
+
+        return a * x_dropped + b
+
+
+class Bilinear(eqx.Module):
+    """Custom implementation of PyTorch Bilinear for Equinox.
+
+    Applies a bilinear transformation to the incoming data:
+    ``y = x1^T A x2 + b``.
+
+    Parameters
+    ----------
+    in1_features : int
+        Size of each first input sample.
+    in2_features : int
+        Size of each second input sample.
+    out_features : int
+        Size of each output sample.
+    bias : bool, optional
+        If ``False``, the layer will not learn an additive bias.
+        Default: ``True``.
+    key : jax.random.PRNGKey
+        Random key used to initialise ``weight`` and ``bias``.
+    """
+
+    weight: jnp.ndarray
+    bias: jnp.ndarray | None
+    in1_features: int
+    in2_features: int
+    out_features: int
+
+    def __init__(
+        self,
+        in1_features: int,
+        in2_features: int,
+        out_features: int,
+        bias: bool = True,
+        *,
+        key: "jax.random.PRNGKey",
+    ):
+        import math
+
+        self.in1_features = in1_features
+        self.in2_features = in2_features
+        self.out_features = out_features
+        k = 1.0 / math.sqrt(in1_features)
+        w_key, b_key = jax.random.split(key)
+        self.weight = jax.random.uniform(
+            w_key,
+            (out_features, in1_features, in2_features),
+            minval=-k,
+            maxval=k,
+        )
+        self.bias = (
+            jax.random.uniform(b_key, (out_features,), minval=-k, maxval=k)
+            if bias
+            else None
+        )
+
+    def __call__(self, x1: jnp.ndarray, x2: jnp.ndarray) -> jnp.ndarray:
+        """Apply bilinear transformation: ``y = x1^T A x2 + b``.
+
+        Parameters
+        ----------
+        x1 : jnp.ndarray
+            First input of shape ``(*, in1_features)``.
+        x2 : jnp.ndarray
+            Second input of shape ``(*, in2_features)``.
+
+        Returns
+        -------
+        jnp.ndarray
+            Output of shape ``(*, out_features)``.
+        """
+        # y_o = sum_i sum_j x1_i * W_oij * x2_j  (per batch element)
+        out = jnp.einsum("...i,oij,...j->...o", x1, self.weight, x2)
+        if self.bias is not None:
+            out = out + self.bias
+        return out
+
+
 class Flatten(eqx.Module):
     """Custom implementation of a `torch.flatten` layer for Equinox."""
 
@@ -341,17 +487,18 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     :return:
         string defining the layer in equinox syntax
     """
-    if layer.layer_type.startswith("AlphaDropout"):
-        raise NotImplementedError(
-            f"{layer.layer_type} layers currently not supported"
-        )
-    if layer.layer_type.startswith("MaxPool") and "dilation" in layer.args:
+    if (
+        layer.layer_type.startswith("MaxPool")
+        and layer.args["dilation"]
+        and layer.args["dilation"]
+    ):
         raise NotImplementedError("MaxPool layers with dilation not supported")
-    if layer.layer_type.startswith("Dropout") and "inplace" in layer.args:
+    if (
+        layer.layer_type.startswith("Dropout")
+        and "inplace" in layer.args
+        and layer.args["inplace"]
+    ):
         raise NotImplementedError("Dropout layers with inplace not supported")
-    if layer.layer_type == "Bilinear":
-        raise NotImplementedError("Bilinear layers not supported")
-
     # mapping of layer names in sciml yaml format to equinox/custom amici implementations
     layer_map = {
         "BatchNorm1d": "amici.exporters.jax.BatchNorm",
@@ -360,6 +507,8 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
         "InstanceNorm1d": "amici.exporters.jax.InstanceNorm",
         "InstanceNorm2d": "amici.exporters.jax.InstanceNorm",
         "InstanceNorm3d": "amici.exporters.jax.InstanceNorm",
+        "AlphaDropout": "amici.exporters.jax.AlphaDropout",
+        "Bilinear": "amici.exporters.jax.Bilinear",
         "Dropout1d": "eqx.nn.Dropout",
         "Dropout2d": "eqx.nn.Dropout",
         "Flatten": "amici.exporters.jax.Flatten",
@@ -383,6 +532,8 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     }
     # list of keyword arguments to ignore when generating layer, as they are not supported in equinox (see above)
     kwarg_ignore = {
+        "AlphaDropout": ("inplace",),
+        "Dropout": ("inplace",),
         "Dropout1d": ("inplace",),
         "Dropout2d": ("inplace",),
         "LayerNorm": ("bias",),
@@ -401,6 +552,7 @@ def _generate_layer(layer: "Layer", indent: int, ilayer: int) -> str:  # noqa: F
     ]
     # add key for initialization
     if layer.layer_type in (
+        "Bilinear",
         "Linear",
         "Conv1d",
         "Conv2d",
@@ -588,7 +740,7 @@ def _generate_forward(
     ]
 
     # Add key parameter for Dropout layers
-    if layer_type.startswith("Dropout"):
+    if layer_type.startswith("Dropout") or layer_type == "AlphaDropout":
         kwargs += ["key=key"]
 
     # Format the function call
