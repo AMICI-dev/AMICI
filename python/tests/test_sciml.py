@@ -16,7 +16,6 @@ from amici.exporters.jax.nn import (
     _process_layer_call,
 )
 from amici.importers.utils import symbol_with_assumptions
-from petab_sciml import Layer
 
 
 class TestFormatFunctionCall:
@@ -81,11 +80,10 @@ class TestFormatFunctionCall:
 class TestGenerateLayerCall:
     def test_flatten(self):
         """Test generation for Flatten layer."""
-        flatten = Layer(
-            layer_id="flat",
-            layer_type="Flatten",
-            args={},
-        )
+        flatten = Mock()
+        flatten.layer_id = "flat"
+        flatten.layer_type = "Flatten"
+        flatten.args = {}
 
         layer_str = _generate_layer(flatten, indent=4, ilayer=0)
 
@@ -93,17 +91,16 @@ class TestGenerateLayerCall:
 
     def test_batchnorm(self):
         """Test generation for BatchNorm layer."""
-        batchnorm = Layer(
-            layer_id="bn1",
-            layer_type="BatchNorm1d",
-            args={
-                "num_features": 64,
-                "eps": 1e-5,
-                "momentum": 0.1,
-                "affine": True,
-                "track_running_stats": True,
-            },
-        )
+        batchnorm = Mock()
+        batchnorm.layer_id = "bn1"
+        batchnorm.layer_type = "BatchNorm1d"
+        batchnorm.args = {
+            "num_features": 64,
+            "eps": 1e-5,
+            "momentum": 0.1,
+            "affine": True,
+            "track_running_stats": True,
+        }
 
         layer_str = _generate_layer(batchnorm, indent=4, ilayer=0)
 
@@ -116,17 +113,16 @@ class TestGenerateLayerCall:
 
     def test_instancenorm(self):
         """Test generation for InstanceNorm layer."""
-        instancenorm = Layer(
-            layer_id="in1",
-            layer_type="InstanceNorm1d",
-            args={
-                "num_features": 64,
-                "eps": 1e-5,
-                "momentum": 0.1,
-                "affine": True,
-                "track_running_stats": True,
-            },
-        )
+        instancenorm = Mock()
+        instancenorm.layer_id = "in1"
+        instancenorm.layer_type = "InstanceNorm1d"
+        instancenorm.args = {
+            "num_features": 64,
+            "eps": 1e-5,
+            "momentum": 0.1,
+            "affine": True,
+            "track_running_stats": True,
+        }
 
         layer_str = _generate_layer(instancenorm, indent=4, ilayer=0)
 
@@ -139,11 +135,10 @@ class TestGenerateLayerCall:
 
     def test_dropout(self):
         """Test generation for Dropout layer."""
-        dropout = Layer(
-            layer_id="drop",
-            layer_type="Dropout1d",
-            args={},
-        )
+        dropout = Mock()
+        dropout.layer_id = "drop"
+        dropout.layer_type = "Dropout1d"
+        dropout.args = {}
 
         layer_str = _generate_layer(dropout, indent=4, ilayer=0)
 
@@ -152,11 +147,10 @@ class TestGenerateLayerCall:
 
     def test_dropout2d(self):
         """Test generation for Dropout2d layer."""
-        dropout2d = Layer(
-            layer_id="drop2d",
-            layer_type="Dropout2d",
-            args={},
-        )
+        dropout2d = Mock()
+        dropout2d.layer_id = "drop2d"
+        dropout2d.layer_type = "Dropout2d"
+        dropout2d.args = {}
 
         layer_str = _generate_layer(dropout2d, indent=4, ilayer=0)
 
@@ -165,11 +159,10 @@ class TestGenerateLayerCall:
 
     def test_alphadropout(self):
         """Test generation for AlphaDropout layer."""
-        alphadropout = Layer(
-            layer_id="adrop",
-            layer_type="AlphaDropout",
-            args={"p": 0.5, "inplace": False},
-        )
+        alphadropout = Mock()
+        alphadropout.layer_id = "adrop"
+        alphadropout.layer_type = "AlphaDropout"
+        alphadropout.args = {"p": 0.5, "inplace": False}
 
         layer_str = _generate_layer(alphadropout, indent=4, ilayer=0)
 
@@ -179,16 +172,15 @@ class TestGenerateLayerCall:
 
     def test_bilinear(self):
         """Test generation for Bilinear layer."""
-        bilinear = Layer(
-            layer_id="bil",
-            layer_type="Bilinear",
-            args={
-                "in1_features": 128,
-                "in2_features": 64,
-                "out_features": 32,
-                "bias": True,
-            },
-        )
+        bilinear = Mock()
+        bilinear.layer_id = "bil"
+        bilinear.layer_type = "Bilinear"
+        bilinear.args = {
+            "in1_features": 128,
+            "in2_features": 64,
+            "out_features": 32,
+            "bias": True,
+        }
 
         layer_str = _generate_layer(bilinear, indent=4, ilayer=0)
 
@@ -200,11 +192,10 @@ class TestGenerateLayerCall:
 
     def test_maxpool_not_implemented(self):
         """Test that MaxPool layer with dilation raises NotImplementedError."""
-        maxpool = Layer(
-            layer_id="mp",
-            layer_type="MaxPool2d",
-            args={"dilation": 1},
-        )
+        maxpool = Mock()
+        maxpool.layer_id = "mp"
+        maxpool.layer_type = "MaxPool2d"
+        maxpool.args = {"dilation": 1}
 
         with pytest.raises(
             NotImplementedError,
@@ -214,11 +205,10 @@ class TestGenerateLayerCall:
 
     def test_dropout_not_implemented(self):
         """Test that Dropout layer with inplace raises NotImplementedError."""
-        dropout = Layer(
-            layer_id="drop",
-            layer_type="Dropout1d",
-            args={"inplace": True},
-        )
+        dropout = Mock()
+        dropout.layer_id = "drop"
+        dropout.layer_type = "Dropout1d"
+        dropout.args = {"inplace": True}
 
         with pytest.raises(
             NotImplementedError,
