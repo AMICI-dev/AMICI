@@ -511,7 +511,9 @@ class PetabImporter:
                         f"Observable {observable_id} has multiple "
                         "timepoint-specific mappings for observable "
                         "parameters. "
-                        "This is not supported by AMICI."
+                        "This is not supported by AMICI. "
+                        "Use `flatten_timepoint_specific_output_overrides` "
+                        "on the PEtab problem before importing into amici."
                     )
             for observable_id, overrides in noise_overrides.items():
                 if len(overrides) > 1:
@@ -1084,6 +1086,7 @@ def flatten_timepoint_specific_output_overrides(
                 strict=True,
             )
         )
+        subs[old_id] = new_id
         observable.noise_formula = observable.noise_formula.subs(subs)
 
         return observable
