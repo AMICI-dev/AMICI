@@ -1,0 +1,5 @@
+parameterId	parameterScale	lowerBound	upperBound	nominalValue	estimate
+alpha	lin	0.0	15.0	1.3	true
+delta	lin	0.0	15.0	1.8	true
+beta	lin	0.0	15.0	0.9	true
+net1_ps	lin	-inf	inf	array	true
