@@ -1,12 +1,16 @@
 """Tests for SBML/SciML functionality, including JAX neural network code generation."""
 
+import importlib.util
+import os
+from contextlib import contextmanager
+from pathlib import Path
 from unittest.mock import Mock
 
-import pytest
-
-pytest.importorskip("jax")
-pytest.importorskip("equinox")
-
+import equinox as eqx
+import jax
+import jax.numpy as jnp
+import numpy as np
+import pandas as pd
 import pytest
 from amici.exporters.jax.nn import (
     _format_function_call,
@@ -15,7 +19,37 @@ from amici.exporters.jax.nn import (
     _process_activation_call,
     _process_layer_call,
 )
+from amici.importers.petab import *
+from amici.importers.petab import PetabImporter
 from amici.importers.utils import symbol_with_assumptions
+from amici.sim.jax import petab_simulate, run_simulations
+from petab import v2
+from yaml import safe_load
+
+# TODO: remove once sciml linter is released in libpetab
+_sciml_helpers_spec = importlib.util.spec_from_file_location(
+    "sciml_helpers",
+    Path(__file__).parents[2] / "tests" / "sciml" / "sciml_helpers.py",
+)
+_sciml_helpers_mod = importlib.util.module_from_spec(_sciml_helpers_spec)
+_sciml_helpers_spec.loader.exec_module(_sciml_helpers_mod)
+_v2_sciml_problem_helper = _sciml_helpers_mod._v2_sciml_problem_helper
+
+
+@contextmanager
+def change_directory(destination):
+    # Save the current working directory
+    original_directory = os.getcwd()
+    try:
+        # Change to the new directory
+        os.chdir(destination)
+        yield
+    finally:
+        # Change back to the original directory
+        os.chdir(original_directory)
+
+
+jax.config.update("jax_enable_x64", True)
 
 
 class TestFormatFunctionCall:
@@ -789,3 +823,121 @@ class TestProcessHybridizationErrors:
 
         # Should not raise any errors
         mock_de_model._process_hybridization(hybridization)
+
+
+class TestEquinoxImport:
+    """Test that an Equinox model can be imported and used in a PEtab problem."""
+
+    def test_equinox_model_import(self):
+        """Test that the Equinox model is correctly imported and can be called."""
+
+        test_dir = (
+            Path(__file__).parent / "sciml_test_problems" / "equinox_import"
+        )
+        with open(test_dir / "petab" / "problem.yaml") as f:
+            petab_yaml = safe_load(f)
+
+        with open(test_dir / "solutions.yaml") as f:
+            solutions = safe_load(f)
+
+        with change_directory(test_dir / "petab"):
+            petab_problem = _v2_sciml_problem_helper(
+                petab_yaml, str(test_dir / "petab")
+            )
+
+            pi = PetabImporter(
+                petab_problem=petab_problem,
+                module_name="sciml_test",
+                compile_=True,
+                jax=True,
+                validate=False,  # And again...around "array" in parameters table
+            )
+
+            jax_problem = pi.create_simulator(
+                force_import=True,
+            )
+
+        llh, _ = run_simulations(jax_problem)
+
+        np.testing.assert_allclose(
+            llh,
+            solutions["llh"],
+            atol=solutions["tol_llh"],
+            rtol=solutions["tol_llh"],
+        )
+        simulations = pd.concat(
+            [
+                pd.read_csv(test_dir / simulation, sep="\t")
+                for simulation in solutions["simulation_files"]
+            ]
+        )
+
+        # simulations
+        sort_by = [v2.C.OBSERVABLE_ID, v2.C.TIME, v2.C.EXPERIMENT_ID]
+        actual = petab_simulate(jax_problem).sort_values(by=sort_by)
+        expected = simulations.sort_values(by=sort_by)
+        np.testing.assert_allclose(
+            actual[v2.C.SIMULATION].values,
+            expected[v2.C.SIMULATION].values,
+            atol=solutions["tol_simulations"],
+            rtol=solutions["tol_simulations"],
+        )
+
+
+def _normal_logpdf(x: jnp.ndarray, mean: float, std: float) -> jnp.ndarray:
+    var = std**2
+    return jnp.sum(
+        -0.5 * jnp.log(2.0 * jnp.pi * var) - 0.5 * ((x - mean) ** 2) / var
+    )
+
+
+def _uniform_logpdf(x: jnp.ndarray, low: float, high: float) -> jnp.ndarray:
+    return jnp.sum(
+        jnp.where(
+            (x >= low) & (x <= high),
+            -jnp.log(high - low),
+            -jnp.inf,
+        )
+    )
+
+
+def _tree_array_lognormprior(tree, mean: float, std: float) -> jnp.ndarray:
+    arrays, _ = eqx.partition(tree, eqx.is_inexact_array)
+    leaves = jax.tree_util.tree_leaves(arrays)
+
+    total = jnp.array(0.0)
+    for leaf in leaves:
+        if leaf is not None:
+            total = total + _normal_logpdf(leaf, mean, std)
+    return total
+
+
+def _tree_array_loguniformprior(tree, low: float, high: float) -> jnp.ndarray:
+    arrays, _ = eqx.partition(tree, eqx.is_inexact_array)
+    leaves = jax.tree_util.tree_leaves(arrays)
+
+    total = jnp.array(0.0)
+    for leaf in leaves:
+        if leaf is not None:
+            total = total + _uniform_logpdf(leaf, low, high)
+    return total
+
+
+def _model_logprior(
+    model, layer1_bias_std=1.0, layer1_weight_std=1.0
+) -> jnp.ndarray:
+    mech = model.parameters
+    layer1_bias = model.model.nns["net1"].layers["layer1"].bias
+    layer1_weight = model.model.nns["net1"].layers["layer1"].weight
+    rest = eqx.tree_at(
+        lambda m: m["net1"].layers["layer1"], model.model.nns, replace=None
+    )
+
+    return (
+        _tree_array_loguniformprior(mech, low=0.0, high=15.0)
+        + _tree_array_lognormprior(layer1_bias, mean=0.0, std=layer1_bias_std)
+        + _tree_array_lognormprior(
+            layer1_weight, mean=0.0, std=layer1_weight_std
+        )
+        + _tree_array_lognormprior(rest, mean=0.0, std=1.0)
+    )

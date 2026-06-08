@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import copyfile
 
 import equinox as eqx
 import jax
@@ -374,7 +375,7 @@ def cat(tensors, axis: int = 0):
 
 
 def generate_equinox(
-    nn_model: "NNModel",  # noqa: F821
+    nn_model: "NNModel | str",  # noqa: F821
     filename: Path | str,
     frozen_layers: dict[str, bool] | None = None,
 ) -> None:
@@ -390,6 +391,10 @@ def generate_equinox(
     """
     # TODO: move to top level import and replace forward type definitions
     from petab_sciml import Layer
+
+    if isinstance(nn_model, Path):
+        copyfile(nn_model, filename)
+        return
 
     if frozen_layers is None:
         frozen_layers = {}
