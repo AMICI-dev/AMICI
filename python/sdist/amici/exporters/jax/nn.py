@@ -392,6 +392,8 @@ def generate_equinox(
     # TODO: move to top level import and replace forward type definitions
     from petab_sciml import Layer
 
+    filename.parent.mkdir(parents=True, exist_ok=True)
+
     if isinstance(nn_model, Path):
         copyfile(nn_model, filename)
         return
@@ -457,8 +459,6 @@ def generate_equinox(
         ),
         "N_LAYERS": len(nn_model.layers),
     }
-
-    filename.parent.mkdir(parents=True, exist_ok=True)
 
     apply_template(
         Path(amiciModulePath) / "exporters" / "jax" / "nn.template.py",
