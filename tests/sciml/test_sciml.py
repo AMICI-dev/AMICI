@@ -128,21 +128,8 @@ def test_ml_model_import(test):
     outdir = Path(__file__).parent / "models" / test
     module_dir = outdir / f"{ml_model.nn_model_id}.py"
     if test in (
-        "002",
         "009",
         "018",
-        "019",
-        "020",
-        "021",
-        "022",
-        "042",
-        "043",
-        "044",
-        "045",
-        "046",
-        "047",
-        "048",
-        "052",
     ):
         with pytest.raises(NotImplementedError):
             generate_equinox(ml_model, module_dir)
@@ -152,7 +139,7 @@ def test_ml_model_import(test):
         ml_model.nn_model_id, module_dir
     ).net
 
-    if test == "053":
+    if test in ("052", "053"):
         input_files = [
             (i1, i2)
             for i1, i2 in zip(
@@ -167,7 +154,7 @@ def test_ml_model_import(test):
         solutions.get("net_ps", input_files),
         solutions["net_output"],
     ):
-        if test == "053":
+        if test in ("052", "053"):
             input = tuple(
                 [
                     h5py.File(test_dir / in_file, "r")["inputs"]["input0"][
@@ -234,17 +221,34 @@ def test_ml_model_import(test):
                         net,
                         jnp.array(b),
                     )
-            net = eqx.nn.inference_mode(net)
 
-            if test == "net_004_alt":
-                return  # skipping, no support for non-cross-correlation in equinox
+            if test in ("019", "020", "021", "022"):
+                iters = solutions.get("dropout", 40000)
+                res = net.forward(
+                    input, key=jr.PRNGKey(np.random.randint(0, 2**31))
+                )
+                for _ in range(iters):
+                    res += net.forward(
+                        input, key=jr.PRNGKey(np.random.randint(0, 2**31))
+                    )
+                np.testing.assert_allclose(
+                    res / iters,
+                    output,
+                    atol=2e-2,
+                    rtol=2e-2,
+                )
+            else:
+                net = eqx.nn.inference_mode(net)
 
-            np.testing.assert_allclose(
-                net.forward(input),
-                output,
-                atol=1e-3,
-                rtol=1e-3,
-            )
+                if test == "net_004_alt":
+                    return  # skipping, no support for non-cross-correlation in equinox
+
+                np.testing.assert_allclose(
+                    net.forward(input),
+                    output,
+                    atol=1e-3,
+                    rtol=1e-3,
+                )
 
 
 @pytest.mark.parametrize(
