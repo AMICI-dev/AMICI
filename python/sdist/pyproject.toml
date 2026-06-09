@@ -15,11 +15,10 @@ build-backend = "setuptools.build_meta"
 name = "amici"
 dynamic = ["version"]
 description = "Advanced multi-language Interface to CVODES and IDAS"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "cmake-build-extension==0.6.0",
     "sympy>=1.12.1",
-    "numpy>=1.23.2; python_version=='3.11'",
     "numpy>=1.26.2; python_version=='3.12'",
     "numpy; python_version>='3.13'",
     "python-libsbml",
