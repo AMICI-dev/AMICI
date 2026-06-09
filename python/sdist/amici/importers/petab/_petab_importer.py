@@ -686,7 +686,7 @@ class PetabImporter:
             ]
 
             model = (
-                Path(net_config["location"])
+                Path(net_config["location"]).resolve()
                 if net_config["format"] == "equinox"
                 else NNModelStandard.load_data(Path(net_config["location"]))
             )
