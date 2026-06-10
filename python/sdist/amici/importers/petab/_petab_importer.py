@@ -672,7 +672,7 @@ class PetabImporter:
         non_estimated_param_ids = set(self.petab_problem.x_fixed_ids)
 
         hybridization = {}
-        for net_id, net_config in config["neural_networks"].items():
+        for net_id, net_config in config.neural_nets.items():
             net_mappings = list(self._get_net_mappings(net_id))
             input_mappings = [
                 (pid, mid)
