@@ -46,15 +46,14 @@ def test_benchmark(test):
             solutions = safe_load(f)
 
         with change_directory(test_dir):
-            # HACK!! Again!! Around "array" in parameters table
-            petab_problem = _v2_sciml_problem_helper(petab_yaml, test_dir)
+            petab_problem = v2.Problem.from_yaml(petab_yaml)
 
             pi = PetabImporter(
                 petab_problem=petab_problem,
                 module_name="hybrid" + test,
                 compile_=True,
                 jax=jax,
-                validate=False,  # And again...around "array" in parameters table
+                validate=False,
             )
 
             jax_problem = pi.create_simulator(

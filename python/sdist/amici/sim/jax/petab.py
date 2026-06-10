@@ -651,9 +651,7 @@ class JAXProblem(eqx.Module):
         import h5py
 
         net_ids = list(
-            self._petab_problem.extensions_config["sciml"][
-                "neural_nets"
-            ].keys()
+            self._petab_problem.config.extensions["sciml"].neural_nets.keys()
         )
 
         # TODO(performance): Avoid opening each file multiple times
@@ -682,9 +680,7 @@ class JAXProblem(eqx.Module):
         import h5py
 
         net_ids = list(
-            self._petab_problem.extensions_config["sciml"][
-                "neural_nets"
-            ].keys()
+            self._petab_problem.config.extensions["sciml"].neural_nets.keys()
         )
 
         # TODO(performance): Avoid opening each file multiple times
