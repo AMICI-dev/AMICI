@@ -19,8 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - python-version: '3.11'
-            experimental: false
           - python-version: '3.12'
             experimental: false
           - python-version: '3.13'
@@ -66,11 +64,6 @@ jobs:
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
-
-    # https://github.com/sbmlteam/python-libsbml/issues/40
-    - name: No -Werror
-      if: matrix.python-version == '3.11'
-      run: sed -ri "s/    error//" pytest.ini
 
     - name: Python tests
       run: |
