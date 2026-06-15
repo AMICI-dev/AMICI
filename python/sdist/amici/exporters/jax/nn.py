@@ -375,7 +375,7 @@ def cat(tensors, axis: int = 0):
 
 
 def generate_equinox(
-    nn_model: "NNModel | str",  # noqa: F821
+    nn_model: "NNModel | Path | str",  # noqa: F821
     filename: Path | str,
     frozen_layers: dict[str, bool] | None = None,
 ) -> None:
@@ -393,6 +393,9 @@ def generate_equinox(
     from petab_sciml import Layer
 
     filename.parent.mkdir(parents=True, exist_ok=True)
+
+    if isinstance(nn_model, str):
+        nn_model = Path(nn_model)
 
     if isinstance(nn_model, Path):
         copyfile(nn_model, filename)
