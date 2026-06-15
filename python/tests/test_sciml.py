@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 pytest.importorskip("equinox")
+pytest.importorskip("petab_sciml")
 
 from amici.exporters.jax.nn import (
     _format_function_call,
