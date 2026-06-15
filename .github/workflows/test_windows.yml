@@ -54,7 +54,7 @@ jobs:
     - name: Install sdist
       working-directory: python/sdist
       shell: bash
-      run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab,test]
+      run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab,test,jax]
 
     - run: python -m amici
 
