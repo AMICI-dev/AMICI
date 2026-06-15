@@ -3,6 +3,7 @@ from pathlib import Path
 import amici
 import pytest
 
+pytest.importorskip("pysb")
 pytest.importorskip("jax")
 import diffrax
 import jax
