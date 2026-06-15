@@ -1,0 +1,372 @@
+"""JAX regression test suite.
+
+Each test exercises one (model, operation) pair and records:
+- llh + solver step counts (deterministic, primary regression signal)
+- wall-clock execution time (secondary, soft signal)
+
+Results are written to jax_regression_results.json when --results-dir is
+passed.  No pass/fail comparison against a committed baseline is done here;
+comparison runs via compare_jax_results.py in the CI workflow.
+"""
+
+import diffrax
+import equinox as eqx
+import jax
+import jax.numpy as jnp
+import pytest
+
+pytest.importorskip("jax")
+
+
+from tests.performance._utils import measure_exec_time
+
+# ── Tier 1 test cases (synthetic models) ──────────────────────────────────
+
+TIER1_FWD_CASES = [
+    "LinearDecay",
+    "Robertson",
+    "LotkaVolterra",
+    "ConservationLaw",
+    "SingleEvent",
+    "MultiEvent",
+]
+
+# ── Helper: build simulate_condition_unjitted kwargs for each model ─────────
+
+
+def _sim_kwargs(model, solver_kwargs) -> dict:
+    """Return keyword arguments for simulate_condition_unjitted."""
+    import tests.performance.synthetic_models.conservation_law as cl
+    import tests.performance.synthetic_models.linear_decay as ld
+    import tests.performance.synthetic_models.lotka_volterra as lv
+    import tests.performance.synthetic_models.multi_event as me
+    import tests.performance.synthetic_models.robertson as rob
+    import tests.performance.synthetic_models.single_event as se
+
+    _MAP = {
+        "LinearDecay": (
+            ld.TS_DYN,
+            ld.MY,
+            ld.IYS,
+            ld.IY_TRAFOS,
+            ld.OPS,
+            ld.NPS,
+        ),
+        "Robertson": (
+            rob.TS_DYN,
+            rob.MY,
+            rob.IYS,
+            rob.IY_TRAFOS,
+            rob.OPS,
+            rob.NPS,
+        ),
+        "LotkaVolterra": (
+            lv.TS_DYN,
+            lv.MY,
+            lv.IYS,
+            lv.IY_TRAFOS,
+            lv.OPS,
+            lv.NPS,
+        ),
+        "ConservationLaw": (
+            cl.TS_DYN,
+            cl.MY,
+            cl.IYS,
+            cl.IY_TRAFOS,
+            cl.OPS,
+            cl.NPS,
+        ),
+        "SingleEvent": (
+            se.TS_DYN,
+            se.MY,
+            se.IYS,
+            se.IY_TRAFOS,
+            se.OPS,
+            se.NPS,
+        ),
+        "MultiEvent": (me.TS_DYN, me.MY, me.IYS, me.IY_TRAFOS, me.OPS, me.NPS),
+    }
+
+    model_name = type(model).__name__
+    ts_dyn, my, iys, iy_trafos, ops, nps = _MAP[model_name]
+
+    return dict(
+        ts_dyn=ts_dyn,
+        ts_posteq=jnp.array([]),
+        my=my,
+        iys=iys,
+        iy_trafos=iy_trafos,
+        ops=ops,
+        nps=nps,
+        **solver_kwargs,
+    )
+
+
+def _extract_stats(stats: dict) -> dict:
+    """Pull step counts out of the stats dict returned by simulate_condition."""
+    out = {}
+    for key in ("stats_dyn", "stats_posteq"):
+        s = stats.get(key)
+        if s is None:
+            out[key] = None
+        else:
+            out[key] = {
+                k: int(v)
+                for k, v in s.items()
+                if k
+                in ("num_accepted_steps", "num_rejected_steps", "num_steps")
+            }
+    return out
+
+
+# ── Tier 1: forward simulation ─────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("model_id", TIER1_FWD_CASES)
+def test_tier1_fwd_sim(
+    model_id, tier1_models, solver_kwargs, results_collector
+):
+    model = tier1_models[model_id]
+    p = model.parameters
+    kwargs = _sim_kwargs(model, solver_kwargs)
+
+    # Deterministic run (unjitted, for exact step counts)
+    llh, stats = model.simulate_condition_unjitted(p, **kwargs)
+
+    # Timing (JIT-compiled path)
+    sim_fn = model.simulate_condition
+    t_first, t_exec = measure_exec_time(sim_fn, p, **kwargs)
+
+    results_collector.add(
+        model_id,
+        "fwd_sim",
+        {
+            "llh": float(llh),
+            **_extract_stats(stats),
+            "t_first_s": t_first,
+            "t_exec_s": t_exec,
+        },
+    )
+
+
+# ── Tier 1: adjoint (gradient) ────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("model_id", TIER1_FWD_CASES)
+def test_tier1_adj(model_id, tier1_models, solver_kwargs, results_collector):
+    model = tier1_models[model_id]
+    p = model.parameters
+    kwargs = _sim_kwargs(model, solver_kwargs)
+
+    def _fn(p):
+        return model.simulate_condition(p, **kwargs)
+
+    t_first, t_exec = measure_exec_time(
+        eqx.filter_value_and_grad(_fn, has_aux=True), p
+    )
+
+    results_collector.add(
+        model_id,
+        "adj",
+        {"t_first_s": t_first, "t_exec_s": t_exec},
+    )
+
+
+# ── Tier 1: forward sensitivities (small models only) ─────────────────────
+
+
+@pytest.mark.parametrize(
+    "model_id", ["LinearDecay", "ConservationLaw", "SingleEvent"]
+)
+def test_tier1_fwd_sens(
+    model_id, tier1_models, solver_kwargs, results_collector
+):
+    model = tier1_models[model_id]
+    p = model.parameters
+    # Forward sensitivity requires DirectAdjoint
+    kwargs = {
+        **_sim_kwargs(model, solver_kwargs),
+        "adjoint": diffrax.DirectAdjoint(),
+    }
+
+    def _fn(p):
+        return model.simulate_condition(p, **kwargs)
+
+    t_first, t_exec = measure_exec_time(jax.jacfwd(_fn, has_aux=True), p)
+
+    results_collector.add(
+        model_id,
+        "fwd_sens",
+        {"t_first_s": t_first, "t_exec_s": t_exec},
+    )
+
+
+# ── Tier 1: pre-equilibration ─────────────────────────────────────────────
+
+
+def test_tier1_preeq(tier1_models, solver_kwargs, results_collector):
+
+    model = tier1_models["Equilibration"]
+    p = model.parameters
+
+    preeq_kwargs = dict(
+        x_reinit=jnp.array([]),
+        mask_reinit=jnp.array([]),
+        h_mask=jnp.ones(model.n_events, dtype=jnp.bool_),
+        solver=solver_kwargs["solver"],
+        controller=solver_kwargs["controller"],
+        root_finder=solver_kwargs["root_finder"],
+        steady_state_event=solver_kwargs["steady_state_event"],
+        max_steps=solver_kwargs["max_steps"],
+    )
+
+    # Deterministic run
+    x_preeq, stats_dict, _h = model.preequilibrate_condition(p, **preeq_kwargs)
+    stats_preeq = stats_dict.get("stats_preeq")
+
+    # Timing
+    t_first, t_exec = measure_exec_time(
+        model.preequilibrate_condition, p, **preeq_kwargs
+    )
+
+    step_counts = None
+    if stats_preeq is not None:
+        step_counts = {
+            k: int(v)
+            for k, v in stats_preeq.items()
+            if k in ("num_accepted_steps", "num_rejected_steps", "num_steps")
+        }
+
+    results_collector.add(
+        "Equilibration",
+        "preeq",
+        {
+            "stats_preeq": step_counts,
+            "x_preeq": [float(v) for v in x_preeq],
+            "t_first_s": t_first,
+            "t_exec_s": t_exec,
+        },
+    )
+
+
+# ── Tier 1: post-equilibration ─────────────────────────────────────────────
+
+
+def test_tier1_posteq(tier1_models, solver_kwargs, results_collector):
+    import tests.performance.synthetic_models.equilibration as eq_mod
+
+    model = tier1_models["Equilibration"]
+    p = model.parameters
+
+    kwargs = dict(
+        ts_dyn=eq_mod.TS_DYN_POSTEQ,
+        ts_posteq=eq_mod.TS_POSTEQ,
+        my=eq_mod.MY_POSTEQ,
+        iys=eq_mod.IYS_POSTEQ,
+        iy_trafos=eq_mod.IY_TRAFOS_POSTEQ,
+        ops=eq_mod.OPS_POSTEQ,
+        nps=eq_mod.NPS_POSTEQ,
+        **solver_kwargs,
+    )
+
+    # Deterministic run
+    llh, stats = model.simulate_condition_unjitted(p, **kwargs)
+
+    # Timing
+    t_first, t_exec = measure_exec_time(model.simulate_condition, p, **kwargs)
+
+    results_collector.add(
+        "Equilibration",
+        "posteq",
+        {
+            "llh": float(llh),
+            **_extract_stats(stats),
+            "t_first_s": t_first,
+            "t_exec_s": t_exec,
+        },
+    )
+
+
+# ── Tier 2: Boehm benchmark model via PEtab ───────────────────────────────
+
+
+@pytest.fixture(scope="session")
+def boehm_jax_problem(tmp_path_factory):
+    """Import the Boehm PEtab model with JAX backend (session-scoped, cached)."""
+    bmp = pytest.importorskip("benchmark_models_petab")
+    from amici.importers.petab.v1 import import_petab_problem
+
+    petab_problem = bmp.get_problem("Boehm_JProteomeRes2014")
+    out_dir = tmp_path_factory.mktemp("boehm_jax")
+    return import_petab_problem(petab_problem, output_dir=out_dir, jax=True)
+
+
+@pytest.fixture(scope="session")
+def brannmark_jax_problem(tmp_path_factory):
+    """Import the Brannmark PEtab model with JAX backend (session-scoped)."""
+    bmp = pytest.importorskip("benchmark_models_petab")
+    from amici.importers.petab.v1 import import_petab_problem
+
+    petab_problem = bmp.get_problem("Brannmark_JBC2010")
+    out_dir = tmp_path_factory.mktemp("brannmark_jax")
+    return import_petab_problem(petab_problem, output_dir=out_dir, jax=True)
+
+
+def _run_tier2(jax_problem, model_id, results_collector, solver_kwargs):
+    """Shared helper for Tier 2 run_simulations tests."""
+    from amici.sim.jax.petab import run_simulations
+
+    def _fn(problem):
+        return run_simulations(
+            problem,
+            solver=solver_kwargs["solver"],
+            controller=solver_kwargs["controller"],
+            max_steps=solver_kwargs["max_steps"],
+        )
+
+    # Deterministic run
+    llh, aux = _fn(jax_problem)
+
+    # Adjoint timing
+    def _adj_fn(problem):
+        return run_simulations(
+            problem,
+            solver=solver_kwargs["solver"],
+            controller=solver_kwargs["controller"],
+            max_steps=solver_kwargs["max_steps"],
+        )
+
+    t_first_fwd, t_exec_fwd = measure_exec_time(_fn, jax_problem)
+    t_first_adj, t_exec_adj = measure_exec_time(
+        eqx.filter_value_and_grad(_adj_fn, has_aux=True), jax_problem
+    )
+
+    results_collector.add(
+        model_id,
+        "run_simulations",
+        {
+            "llh": float(llh),
+            "fwd": {"t_first_s": t_first_fwd, "t_exec_s": t_exec_fwd},
+            "adj": {"t_first_s": t_first_adj, "t_exec_s": t_exec_adj},
+        },
+    )
+
+
+def test_tier2_boehm(boehm_jax_problem, results_collector, solver_kwargs):
+    _run_tier2(
+        boehm_jax_problem,
+        "Boehm_JProteomeRes2014",
+        results_collector,
+        solver_kwargs,
+    )
+
+
+def test_tier2_brannmark(
+    brannmark_jax_problem, results_collector, solver_kwargs
+):
+    _run_tier2(
+        brannmark_jax_problem,
+        "Brannmark_JBC2010",
+        results_collector,
+        solver_kwargs,
+    )
