@@ -856,8 +856,9 @@ class TestEquinoxImport:
 
             assert isinstance(hybridization["net1"]["model"], Path)
 
+            model_file_str = str(hybridization["net1"]["model"])
             generate_equinox(
-                hybridization["net1"]["model"],
+                model_file_str,
                 pi.output_dir / "net1.py",
                 hybridization["net1"]["frozen_layers"],
             )
