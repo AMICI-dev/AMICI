@@ -380,10 +380,11 @@ def generate_equinox(
     frozen_layers: dict[str, bool] | None = None,
 ) -> None:
     """
-    Generate Equinox model file from petab_sciml neural network object.
+    Generate Equinox model file from petab_sciml neural network object or copy from
+    existing file if a path is provided.
 
     :param nn_model:
-        Neural network model in petab_sciml format
+        Neural network model in petab_sciml format or path to existing Equinox model file
     :param filename:
         output filename for generated Equinox model
     :param frozen_layers:
