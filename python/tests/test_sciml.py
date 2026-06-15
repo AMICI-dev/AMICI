@@ -6,9 +6,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import Mock
 
+import jax
+import numpy as np
 import pytest
 
-pytest.importorskip("jax")
 pytest.importorskip("equinox")
 
 from amici.exporters.jax.nn import (
@@ -22,7 +23,10 @@ from amici.exporters.jax.nn import (
 from amici.importers.petab import *
 from amici.importers.petab import PetabImporter
 from amici.importers.utils import symbol_with_assumptions
+from amici.sim.jax import run_simulations
 from yaml import safe_load
+
+jax.config.update("jax_enable_x64", True)
 
 # TODO: remove once sciml linter is released in libpetab
 _sciml_helpers_spec = importlib.util.spec_from_file_location(
@@ -832,6 +836,9 @@ class TestEquinoxImport:
         with open(test_dir / "petab" / "problem.yaml") as f:
             petab_yaml = safe_load(f)
 
+        with open(test_dir / "solutions.yaml") as f:
+            solutions = safe_load(f)
+
         with change_directory(test_dir / "petab"):
             petab_problem = _v2_sciml_problem_helper(
                 petab_yaml, str(test_dir / "petab")
@@ -855,3 +862,16 @@ class TestEquinoxImport:
             )
 
             assert os.path.isfile(pi.output_dir / "net1.py")
+
+            jax_problem = pi.create_simulator(
+                force_import=True,
+            )
+
+        llh, _ = run_simulations(jax_problem)
+
+        np.testing.assert_allclose(
+            llh,
+            solutions["llh"],
+            atol=solutions["tol_llh"],
+            rtol=solutions["tol_llh"],
+        )
