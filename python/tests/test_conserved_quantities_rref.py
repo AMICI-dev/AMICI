@@ -12,8 +12,10 @@ from amici.testing import skip_on_valgrind
 def random_matrix_generator(min_dim, max_dim, count):
     """Generate random 2D square matrix"""
     rng = np.random.default_rng(12345)
-    for rows, cols in rng.integers(min_dim, max_dim, [count, 2]):
-        yield np.random.rand(rows, cols)
+    return [
+        np.random.rand(rows, cols)
+        for rows, cols in rng.integers(min_dim, max_dim, [count, 2])
+    ]
 
 
 @skip_on_valgrind
