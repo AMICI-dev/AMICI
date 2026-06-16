@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import copyfile
 
 import equinox as eqx
 import jax
@@ -374,15 +375,16 @@ def cat(tensors, axis: int = 0):
 
 
 def generate_equinox(
-    nn_model: "NNModel",  # noqa: F821
+    nn_model: "NNModel | Path | str",  # noqa: F821
     filename: Path | str,
     frozen_layers: dict[str, bool] | None = None,
 ) -> None:
     """
-    Generate Equinox model file from petab_sciml neural network object.
+    Generate Equinox model file from petab_sciml neural network object or copy from
+    existing file if a path is provided.
 
     :param nn_model:
-        Neural network model in petab_sciml format
+        Neural network model in petab_sciml format or path to existing Equinox model file
     :param filename:
         output filename for generated Equinox model
     :param frozen_layers:
@@ -390,6 +392,15 @@ def generate_equinox(
     """
     # TODO: move to top level import and replace forward type definitions
     from petab_sciml import Layer
+
+    filename.parent.mkdir(parents=True, exist_ok=True)
+
+    if isinstance(nn_model, str):
+        nn_model = Path(nn_model)
+
+    if isinstance(nn_model, Path):
+        copyfile(nn_model, filename)
+        return
 
     if frozen_layers is None:
         frozen_layers = {}
@@ -452,8 +463,6 @@ def generate_equinox(
         ),
         "N_LAYERS": len(nn_model.layers),
     }
-
-    filename.parent.mkdir(parents=True, exist_ok=True)
 
     apply_template(
         Path(amiciModulePath) / "exporters" / "jax" / "nn.template.py",

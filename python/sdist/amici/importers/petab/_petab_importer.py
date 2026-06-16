@@ -685,10 +685,14 @@ class PetabImporter:
                 if mid.split(".")[1].startswith("output")
             ]
 
+            model = (
+                Path(net_config["location"]).resolve()
+                if net_config["format"] == "equinox"
+                else NNModelStandard.load_data(Path(net_config["location"]))
+            )
+
             hybridization[net_id] = {
-                "model": NNModelStandard.load_data(
-                    Path(net_config["location"])
-                ),
+                "model": model,
                 "input_vars": [
                     input_hybridization[petab_id]
                     for petab_id, _ in input_mappings
