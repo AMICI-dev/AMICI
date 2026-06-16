@@ -17,7 +17,7 @@ def random_matrix_generator(min_dim, max_dim, count):
 
 
 @skip_on_valgrind
-@pytest.mark.parametrize("mat", random_matrix_generator(0, 10, 200))
+@pytest.mark.parametrize("mat", tuple(random_matrix_generator(0, 10, 200)))
 def test_rref(mat):
     """Create some random matrices and compare output of ``rref`` and
     ``pivots`` to that of sympy"""
@@ -30,7 +30,7 @@ def test_rref(mat):
 
 
 @skip_on_valgrind
-@pytest.mark.parametrize("mat", random_matrix_generator(0, 50, 50))
+@pytest.mark.parametrize("mat", tuple(random_matrix_generator(0, 50, 50)))
 def test_nullspace_by_rref(mat):
     """Test ``nullspace_by_rref`` on a number of random matrices and compare
     to sympy results"""
