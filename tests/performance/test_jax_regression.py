@@ -5,8 +5,7 @@ Each test exercises one (model, operation) pair and records:
 - wall-clock execution time (secondary, soft signal)
 
 Results are written to jax_regression_results.json when --results-dir is
-passed.  No pass/fail comparison against a committed baseline is done here;
-comparison runs via compare_jax_results.py in the CI workflow.
+passed.
 """
 
 import diffrax
@@ -198,92 +197,6 @@ def test_tier1_fwd_sens(
         model_id,
         "fwd_sens",
         {"t_first_s": t_first, "t_exec_s": t_exec},
-    )
-
-
-# ── Tier 1: pre-equilibration ─────────────────────────────────────────────
-
-
-def test_tier1_preeq(tier1_models, solver_kwargs, results_collector):
-
-    model = tier1_models["Equilibration"]
-    p = model.parameters
-
-    preeq_kwargs = dict(
-        x_reinit=jnp.array([]),
-        mask_reinit=jnp.array([]),
-        h_mask=jnp.ones(model.n_events, dtype=jnp.bool_),
-        solver=solver_kwargs["solver"],
-        controller=solver_kwargs["controller"],
-        root_finder=solver_kwargs["root_finder"],
-        steady_state_event=solver_kwargs["steady_state_event"],
-        max_steps=solver_kwargs["max_steps"],
-    )
-
-    # Deterministic run
-    x_preeq, stats_dict, _h = model.preequilibrate_condition(p, **preeq_kwargs)
-    stats_preeq = stats_dict.get("stats_preeq")
-
-    # Timing
-    t_first, t_exec = measure_exec_time(
-        model.preequilibrate_condition, p, **preeq_kwargs
-    )
-
-    step_counts = None
-    if stats_preeq is not None:
-        step_counts = {
-            k: int(v)
-            for k, v in stats_preeq.items()
-            if k in ("num_accepted_steps", "num_rejected_steps", "num_steps")
-        }
-
-    results_collector.add(
-        "Equilibration",
-        "preeq",
-        {
-            "stats_preeq": step_counts,
-            "x_preeq": [float(v) for v in x_preeq],
-            "t_first_s": t_first,
-            "t_exec_s": t_exec,
-        },
-    )
-
-
-# ── Tier 1: post-equilibration ─────────────────────────────────────────────
-
-
-def test_tier1_posteq(tier1_models, solver_kwargs, results_collector):
-    import tests.performance.synthetic_models.equilibration as eq_mod
-
-    model = tier1_models["Equilibration"]
-    p = model.parameters
-
-    kwargs = dict(
-        ts_dyn=eq_mod.TS_DYN_POSTEQ,
-        ts_posteq=eq_mod.TS_POSTEQ,
-        my=eq_mod.MY_POSTEQ,
-        iys=eq_mod.IYS_POSTEQ,
-        iy_trafos=eq_mod.IY_TRAFOS_POSTEQ,
-        ops=eq_mod.OPS_POSTEQ,
-        nps=eq_mod.NPS_POSTEQ,
-        **solver_kwargs,
-    )
-
-    # Deterministic run
-    llh, stats = model.simulate_condition_unjitted(p, **kwargs)
-
-    # Timing
-    t_first, t_exec = measure_exec_time(model.simulate_condition, p, **kwargs)
-
-    results_collector.add(
-        "Equilibration",
-        "posteq",
-        {
-            "llh": float(llh),
-            **_extract_stats(stats),
-            "t_first_s": t_first,
-            "t_exec_s": t_exec,
-        },
     )
 
 

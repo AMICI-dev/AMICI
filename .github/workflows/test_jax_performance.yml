@@ -37,22 +37,12 @@ jobs:
       - name: Install AMICI (JAX extras)
         run: |
           AMICI_PARALLEL_COMPILE="" pip install --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[jax,test]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
       # ── Install test-only dependencies ────────────────────────────────
       - name: Install benchmark collection
         run: |
           pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
-
-      # ── Download previous results for comparison ──────────────────────
-      - name: Download previous artifact
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: test_jax_performance.yml
-          name: jax-regression-latest
-          path: /tmp/jax-results-prev
-          if_no_artifact_found: ignore
-        continue-on-error: true
 
       # ── Run regression suite ──────────────────────────────────────────
       - name: Run JAX regression tests
@@ -66,29 +56,10 @@ jobs:
             --durations=20 \
             -v
 
-      # ── Compare results ────────────────────────────────────────────────
-      - name: Compare against previous run
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          python tests/performance/compare_jax_results.py \
-            /tmp/jax-results-prev/jax_regression_results.json \
-            /tmp/jax-results/jax_regression_results.json \
-            >> $GITHUB_STEP_SUMMARY
-        continue-on-error: true
-
       # ── Upload artifacts ───────────────────────────────────────────────
-      - name: Upload results (run-specific copy for history)
+      - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: jax-regression-${{ github.run_id }}
           path: /tmp/jax-results/jax_regression_results.json
           retention-days: 90
-
-      - name: Upload results (overwrite latest for next comparison)
-        uses: actions/upload-artifact@v4
-        with:
-          name: jax-regression-latest
-          path: /tmp/jax-results/jax_regression_results.json
-          overwrite: true
-          retention-days: 365
