@@ -90,7 +90,7 @@ def pytest_generate_tests(metafunc):
             # Run selected tests
             last_id = int(list(get_all_semantic_case_ids())[-1])
             test_numbers = sorted(set(parse_selection(cases, last_id)))
-            test_ids = map(format_test_id, test_numbers)
+            test_ids = list(map(format_test_id, test_numbers))
         else:
             # Run all tests
             test_ids = get_all_semantic_case_ids()
