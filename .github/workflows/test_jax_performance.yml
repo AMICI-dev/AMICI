@@ -42,11 +42,6 @@ jobs:
           AMICI_PARALLEL_COMPILE="" pip install --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
-      # ── Install test-only dependencies ────────────────────────────────
-      - name: Install benchmark collection
-        run: |
-          pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
-
       # ── Run regression suite ──────────────────────────────────────────
       - name: Run JAX regression tests
         env:

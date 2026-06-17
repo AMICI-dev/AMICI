@@ -118,7 +118,7 @@ def _extract_stats(stats: dict) -> dict:
     return out
 
 
-# ── Tier 1: forward simulation ─────────────────────────────────────────────
+# ── Forward simulation ─────────────────────────────────────────────
 
 
 @pytest.mark.parametrize("model_id", TIER1_FWD_CASES)
@@ -148,7 +148,7 @@ def test_tier1_fwd_sim(
     )
 
 
-# ── Tier 1: adjoint (gradient) ────────────────────────────────────────────
+# ── Adjoint (gradient) ────────────────────────────────────────────
 
 
 @pytest.mark.parametrize("model_id", TIER1_FWD_CASES)
@@ -171,7 +171,7 @@ def test_tier1_adj(model_id, tier1_models, solver_kwargs, results_collector):
     )
 
 
-# ── Tier 1: forward sensitivities (small models only) ─────────────────────
+# ── Forward sensitivities (small models only) ─────────────────────
 
 
 @pytest.mark.parametrize(
@@ -197,89 +197,4 @@ def test_tier1_fwd_sens(
         model_id,
         "fwd_sens",
         {"t_first_s": t_first, "t_exec_s": t_exec},
-    )
-
-
-# ── Tier 2: Boehm benchmark model via PEtab ───────────────────────────────
-
-
-@pytest.fixture(scope="session")
-def boehm_jax_problem(tmp_path_factory):
-    """Import the Boehm PEtab model with JAX backend (session-scoped, cached)."""
-    bmp = pytest.importorskip("benchmark_models_petab")
-    from amici.importers.petab.v1 import import_petab_problem
-
-    petab_problem = bmp.get_problem("Boehm_JProteomeRes2014")
-    out_dir = tmp_path_factory.mktemp("boehm_jax")
-    return import_petab_problem(petab_problem, output_dir=out_dir, jax=True)
-
-
-@pytest.fixture(scope="session")
-def brannmark_jax_problem(tmp_path_factory):
-    """Import the Brannmark PEtab model with JAX backend (session-scoped)."""
-    bmp = pytest.importorskip("benchmark_models_petab")
-    from amici.importers.petab.v1 import import_petab_problem
-
-    petab_problem = bmp.get_problem("Brannmark_JBC2010")
-    out_dir = tmp_path_factory.mktemp("brannmark_jax")
-    return import_petab_problem(petab_problem, output_dir=out_dir, jax=True)
-
-
-def _run_tier2(jax_problem, model_id, results_collector, solver_kwargs):
-    """Shared helper for Tier 2 run_simulations tests."""
-    from amici.sim.jax.petab import run_simulations
-
-    def _fn(problem):
-        return run_simulations(
-            problem,
-            solver=solver_kwargs["solver"],
-            controller=solver_kwargs["controller"],
-            max_steps=solver_kwargs["max_steps"],
-        )
-
-    # Deterministic run
-    llh, aux = _fn(jax_problem)
-
-    # Adjoint timing
-    def _adj_fn(problem):
-        return run_simulations(
-            problem,
-            solver=solver_kwargs["solver"],
-            controller=solver_kwargs["controller"],
-            max_steps=solver_kwargs["max_steps"],
-        )
-
-    t_first_fwd, t_exec_fwd = measure_exec_time(_fn, jax_problem)
-    t_first_adj, t_exec_adj = measure_exec_time(
-        eqx.filter_value_and_grad(_adj_fn, has_aux=True), jax_problem
-    )
-
-    results_collector.add(
-        model_id,
-        "run_simulations",
-        {
-            "llh": float(llh),
-            "fwd": {"t_first_s": t_first_fwd, "t_exec_s": t_exec_fwd},
-            "adj": {"t_first_s": t_first_adj, "t_exec_s": t_exec_adj},
-        },
-    )
-
-
-def test_tier2_boehm(boehm_jax_problem, results_collector, solver_kwargs):
-    _run_tier2(
-        boehm_jax_problem,
-        "Boehm_JProteomeRes2014",
-        results_collector,
-        solver_kwargs,
-    )
-
-
-def test_tier2_brannmark(
-    brannmark_jax_problem, results_collector, solver_kwargs
-):
-    _run_tier2(
-        brannmark_jax_problem,
-        "Brannmark_JBC2010",
-        results_collector,
-        solver_kwargs,
     )

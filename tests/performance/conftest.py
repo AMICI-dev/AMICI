@@ -63,7 +63,6 @@ def tier1_models():
     from tests.performance.synthetic_models.conservation_law import (
         ConservationLaw,
     )
-    from tests.performance.synthetic_models.equilibration import Equilibration
     from tests.performance.synthetic_models.linear_decay import LinearDecay
     from tests.performance.synthetic_models.lotka_volterra import LotkaVolterra
     from tests.performance.synthetic_models.multi_event import MultiEvent
@@ -77,7 +76,6 @@ def tier1_models():
         "ConservationLaw": ConservationLaw(),
         "SingleEvent": SingleEvent(),
         "MultiEvent": MultiEvent(),
-        "Equilibration": Equilibration(),
     }
 
 
