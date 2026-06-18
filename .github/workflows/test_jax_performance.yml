@@ -1,0 +1,63 @@
+name: JAX Performance Regression
+
+on:
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * 1'    # weekly, Monday 03:00 UTC
+  workflow_dispatch:          # allow manual runs
+
+jobs:
+  jax-regression:
+    name: JAX regression suite
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install apt dependencies
+        uses: ./.github/actions/install-apt-dependencies
+
+      - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+
+      # ── Install AMICI with JAX extras ─────────────────────────────────
+      - name: Create AMICI sdist
+        run: pip install build && cd python/sdist && python3 -m build --sdist
+
+      - name: Install AMICI (JAX extras)
+        run: |
+          AMICI_PARALLEL_COMPILE="" pip install --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
+
+      # ── Run regression suite ──────────────────────────────────────────
+      - name: Run JAX regression tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          mkdir -p /tmp/jax-results
+          pytest tests/performance/test_jax_regression.py \
+            --results-dir /tmp/jax-results \
+            --tb=short \
+            --durations=20 \
+            -v
+
+      # ── Upload artifacts ───────────────────────────────────────────────
+      - name: Upload results
+        uses: actions/upload-artifact@v7
+        with:
+          name: jax-regression-${{ github.run_id }}
+          path: /tmp/jax-results/jax_regression_results.json
+          retention-days: 90
