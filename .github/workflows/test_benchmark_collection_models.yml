@@ -58,7 +58,7 @@ jobs:
 
     - name: Download benchmark collection
       run: |
-        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
+        pip install -e 'git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab'
 
     - name: Run tests
       env:
@@ -136,7 +136,7 @@ jobs:
 
     - name: Download benchmark collection
       run: |
-        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
+        pip install -e 'git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab'
 
     - name: Run JAX tests
       env:
