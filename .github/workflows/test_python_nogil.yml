@@ -15,10 +15,10 @@ jobs:
       AMICI_PARALLEL_COMPILE: ""
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - name: Set up Python 3.13 free-threaded
+    - name: Set up free-threaded Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.13'
+        python-version: '3.14'
         freethreaded: true
     - uses: actions/checkout@v7
       with:
