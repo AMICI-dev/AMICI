@@ -6,10 +6,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import Mock
 
+import jax
 import numpy as np
 import pytest
 
-pytest.importorskip("jax")
 pytest.importorskip("equinox")
 pytest.importorskip("petab_sciml")
 
