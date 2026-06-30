@@ -70,49 +70,6 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
-# # IDEA: Implement this class in petab-sciml instead?
-# class HybridProblem(petabv1.Problem):
-#     hybridization_df: pd.DataFrame
-
-#     def __init__(self, petab_problem: petabv1.Problem):
-#         self.__dict__.update(petab_problem.__dict__)
-#         self.hybridization_df = _get_hybridization_df(petab_problem)
-
-
-# class HybridV2Problem(petabv2.Problem):
-#     hybridization_df: pd.DataFrame
-#     extensions_config: dict
-
-#     def __init__(self, petab_problem: petabv2.Problem):
-#         self.__dict__.update(petab_problem.__dict__)
-#         if not hasattr(petab_problem.config, "extensions"):
-#             self.extensions_config = {}
-#         else:
-#             self.extensions_config = petab_problem.config.extensions
-#         self.hybridization_df = _get_hybridization_df(petab_problem)
-
-
-# def _get_hybridization_df(petab_problem):
-#     if not hasattr(petab_problem.config, "extensions"):
-#         return None
-
-#     if "sciml" in petab_problem.config.extensions:
-#         hybridizations = [
-#             pd.read_csv(hf, sep="\t", index_col=0)
-#             for hf in petab_problem.config.extensions["sciml"].hybridization_files
-#         ]
-#         hybridization_df = pd.concat(hybridizations)
-#         return hybridization_df
-
-
-# def _get_hybrid_petab_problem(
-#     petab_problem: petabv1.Problem | petabv2.Problem,
-# ):
-#     if isinstance(petab_problem, petabv2.Problem):
-#         return HybridV2Problem(petab_problem)
-#     return HybridProblem(petab_problem)
-
-
 class JAXProblem(eqx.Module):
     """
     PEtab problem wrapper for JAX models.
@@ -309,7 +266,6 @@ class JAXProblem(eqx.Module):
             ):
                 continue
 
-            # if isinstance(self._petab_problem, HybridV2Problem):
             query = " & ".join(
                 [
                     f"{k} == '{v}'" if isinstance(v, str) else f"{k} == {v}"
@@ -317,10 +273,7 @@ class JAXProblem(eqx.Module):
                     if k != petabv2.C.CONDITION_ID
                 ]
             )
-            # else:
-            #     query = " & ".join(
-            #         [f"{k} == '{v}'" for k, v in simulation_condition.items()]
-            #     )
+
             m = self._petab_problem.measurement_df.query(query).sort_values(
                 by=petabv2.C.TIME
             )
@@ -555,9 +508,10 @@ class JAXProblem(eqx.Module):
         }
 
         hybrid_map = {}
-        sciml_ext = self._petab_problem.extensions.sciml
-        if sciml_ext is not None:
-            hybridization_df = sciml_ext.hybridization_df
+        if self._petab_problem.config.extensions.get("sciml"):
+            hybridization_df = (
+                self._petab_problem.extensions.sciml.hybridization_df
+            )
             hybrid_map = (
                 hybridization_df.set_index("targetId")["targetValue"]
                 .astype(str)
@@ -567,7 +521,6 @@ class JAXProblem(eqx.Module):
         return {"targets_map": targets_map, "hybrid_map": hybrid_map}
 
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
-        # if isinstance(self._petab_problem, HybridV2Problem):
         simulation_conditions = get_simulation_conditions_v2(
             self._petab_problem
         )
@@ -575,11 +528,6 @@ class JAXProblem(eqx.Module):
             tuple([row.conditionId])
             for _, row in simulation_conditions.iterrows()
         )
-        # else:
-        #     simulation_conditions = self._petab_problem.get_simulation_conditions_from_measurement_df()
-        #     return tuple(
-        #         tuple(row) for _, row in simulation_conditions.iterrows()
-        #     )
 
     def _initialize_model_parameters(self, model: JAXModel) -> dict:
         """
@@ -1969,9 +1917,6 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
     Args:
         petab_problem: PEtab v2 problem to modify.
     """
-    # if not hasattr(petab_problem, "extensions_config"):
-    #     petab_problem.extensions_config = {}
-
     petab_problem.visualization_df = None
 
     if petab_problem.condition_df is None:

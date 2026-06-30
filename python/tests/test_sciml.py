@@ -1,6 +1,5 @@
 """Tests for SBML/SciML functionality, including JAX neural network code generation."""
 
-import importlib.util
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -9,6 +8,7 @@ from unittest.mock import Mock
 import jax
 import numpy as np
 import pytest
+from petab import v2
 
 pytest.importorskip("equinox")
 pytest.importorskip("petab_sciml")
@@ -28,15 +28,6 @@ from amici.sim.jax import run_simulations
 from yaml import safe_load
 
 jax.config.update("jax_enable_x64", True)
-
-# TODO: remove once sciml linter is released in libpetab
-_sciml_helpers_spec = importlib.util.spec_from_file_location(
-    "sciml_helpers",
-    Path(__file__).parents[2] / "tests" / "sciml" / "sciml_helpers.py",
-)
-_sciml_helpers_mod = importlib.util.module_from_spec(_sciml_helpers_spec)
-_sciml_helpers_spec.loader.exec_module(_sciml_helpers_mod)
-_v2_sciml_problem_helper = _sciml_helpers_mod._v2_sciml_problem_helper
 
 
 @contextmanager
@@ -841,16 +832,13 @@ class TestEquinoxImport:
             solutions = safe_load(f)
 
         with change_directory(test_dir / "petab"):
-            petab_problem = _v2_sciml_problem_helper(
-                petab_yaml, str(test_dir / "petab")
-            )
+            petab_problem = v2.Problem.from_yaml(petab_yaml)
 
             pi = PetabImporter(
                 petab_problem=petab_problem,
                 module_name="sciml_test",
                 compile_=True,
                 jax=True,
-                validate=False,  # And again...around "array" in parameters table
             )
             hybridization = pi._build_hybridization()
 
