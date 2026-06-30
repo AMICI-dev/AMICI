@@ -615,7 +615,7 @@ class PetabImporter:
         config = self.petab_problem.config.extensions["sciml"]
         # TODO: only accept YAML format for now
         hybridizations = [
-            pd.read_csv(hf, sep="\t") for hf in config["hybridization_files"]
+            pd.read_csv(hf, sep="\t") for hf in config.hybridization_files
         ]
         hybridization_table = pd.concat(hybridizations)
 
@@ -638,7 +638,7 @@ class PetabImporter:
             )
         )
         # Build a mapping from petab entity IDs to HDF5 files for array inputs
-        array_files = config.get("array_files", [])
+        array_files = config.array_files
         array_input_files = {}
         for file_spec in array_files:
             import h5py
@@ -672,7 +672,7 @@ class PetabImporter:
         non_estimated_param_ids = set(self.petab_problem.x_fixed_ids)
 
         hybridization = {}
-        for net_id, net_config in config["neural_networks"].items():
+        for net_id, net_config in config.neural_networks.items():
             net_mappings = list(self._get_net_mappings(net_id))
             input_mappings = [
                 (pid, mid)
@@ -686,9 +686,9 @@ class PetabImporter:
             ]
 
             model = (
-                Path(net_config["location"]).resolve()
-                if net_config["format"] == "equinox"
-                else NNModelStandard.load_data(Path(net_config["location"]))
+                Path(net_config.location).resolve()
+                if net_config.format == "equinox"
+                else NNModelStandard.load_data(Path(net_config.location))
             )
 
             hybridization[net_id] = {
@@ -726,7 +726,7 @@ class PetabImporter:
                     if petab_id in non_estimated_param_ids
                 ),
                 "condition_id_mapping": condition_id_mapping,
-                **net_config,
+                **dict(net_config),
             }
 
         return hybridization
