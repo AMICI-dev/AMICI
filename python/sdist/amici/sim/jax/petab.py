@@ -555,15 +555,14 @@ class JAXProblem(eqx.Module):
         }
 
         hybrid_map = {}
-        if self._petab_problem.config.extensions:
-            sciml_config = self._petab_problem.config.extensions.get("sciml")
-            if sciml_config is not None:
-                hybridization_df = self._petab_problem.hybridization_df
-                hybrid_map = (
-                    hybridization_df.set_index("targetId")["targetValue"]
-                    .astype(str)
-                    .to_dict()
-                )
+        sciml_ext = self._petab_problem.extensions.sciml
+        if sciml_ext is not None:
+            hybridization_df = sciml_ext.hybridization_df
+            hybrid_map = (
+                hybridization_df.set_index("targetId")["targetValue"]
+                .astype(str)
+                .to_dict()
+            )
 
         return {"targets_map": targets_map, "hybrid_map": hybrid_map}
 
@@ -809,8 +808,11 @@ class JAXProblem(eqx.Module):
         if len(nn_input_arrays) == 0:
             return model
 
-        array_inputs = self._petab_problem.hybridization_df[
-            self._petab_problem.hybridization_df["targetValue"] == "array"
+        array_inputs = self._petab_problem.extensions.sciml.hybridization_df[
+            self._petab_problem.extensions.sciml.hybridization_df[
+                "targetValue"
+            ]
+            == "array"
         ].index.tolist()
 
         for net_id in model_pars:
