@@ -287,7 +287,15 @@ class PetabImporter:
 
         pysb.bng.generate_equations(self.petab_problem.model.model)
 
-        # Convert PEtab v2 experiments/conditions to events
+        # Convert PEtab v2 experiments/conditions to events. Unlike for SBML
+        #  (see `_preprocess_sbml`), this is not skipped for the JAX backend:
+        #  PySB condition-table targets are frequently pysb.Observable
+        #  names that alias an underlying pysb.Initial/Expression rather
+        #  than a state or free parameter directly, and applying those
+        #  requires the same model-rewriting this converter already does.
+        #  JAXProblem's native per-period parameter/state resolution has no
+        #  equivalent for that, so PySB models keep going through event
+        #  conversion for both backends.
         converter = ExperimentsToPySBConverter(self.petab_problem)
         self.petab_problem, self._events = converter.convert()
 

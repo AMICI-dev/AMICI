@@ -1442,12 +1442,10 @@ class JAXProblem(eqx.Module):
             # model parameter, return value
             return p[self.model.parameter_ids.index(xval)]
         if xval in self.parameter_ids:
-            # estimated PEtab parameter, return unscaled value
+            # estimated PEtab parameter, return unscaled value. PEtab v2
+            # has no parameterScale column -- all parameters are linear.
             return jax_unscale(
-                self.get_petab_parameter_by_id(xval),
-                self._petab_problem.parameter_df.loc[
-                    xval, petabv2.PARAMETER_SCALE
-                ],
+                self.get_petab_parameter_by_id(xval), petabv2.C.LIN
             )
         # only remaining option is nominal value for PEtab parameter
         # that is not estimated, return nominal value
@@ -1654,12 +1652,7 @@ class JAXProblem(eqx.Module):
             else:
                 unscaled_parameters = jnp.stack(
                     [
-                        jax_unscale(
-                            self.parameters[ip],
-                            self._petab_problem.parameter_df.loc[
-                                p_id, petabv2.C.PARAMETER_SCALE
-                            ],
-                        )
+                        jax_unscale(self.parameters[ip], petabv2.C.LIN)
                         for ip, p_id in enumerate(self.parameter_ids)
                     ]
                 )
@@ -2123,15 +2116,12 @@ def run_simulations(
         ]
 
     preeq_condition_ids = _get_preequilibration_condition_ids(experiments)
-    simulation_conditions = [
-        cid
+    dynamic_conditions = [
+        _dynamic_period_label(exp, period, preeq_condition_ids)
         for exp in experiments
-        for p in exp.sorted_periods
-        for cid in p.condition_ids
+        for period in exp.sorted_periods
+        if not period.is_preequilibration
     ]
-    dynamic_conditions = list(
-        sc for sc in simulation_conditions if sc not in preeq_condition_ids
-    )
     dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
     conditions = {
         "dynamic_conditions": dynamic_conditions,
@@ -2336,13 +2326,42 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     return experiment_df
 
 
+def _dynamic_period_label(
+    experiment: petabv2.Experiment,
+    period: petabv2.ExperimentPeriod,
+    preeq_condition_ids: set[str],
+) -> str:
+    """Label identifying a non-pre-equilibration ``period`` for the purposes
+    of building/looking up the ``dynamic_conditions`` list used by
+    :func:`run_simulations`/:func:`_build_simulation_df_v2`.
+
+    Each period contributes exactly one label -- even if it has several
+    simultaneous condition ids (e.g. an indicator-condition encoding, where
+    a period may carry both an experiment-indicator and a
+    pre-equilibration-toggle condition id) -- since a period is always one
+    simulation leg/row-group, regardless of how many condition ids describe
+    it. The first non-pre-equilibration condition id is used; periods
+    without any condition table changes at all (e.g. a period that only
+    fixes a non-zero start time, with all parameters/states left at their
+    default) have no condition id to key off, so synthesize one unique to
+    this ``(experiment, period)`` pair.
+    """
+    cids = [
+        cid for cid in period.condition_ids if cid not in preeq_condition_ids
+    ]
+    if cids:
+        return cids[0]
+    return f"__no_condition__{experiment.id}__{period.time}"
+
+
 def _dynamic_condition_index_map(
     experiments: list[petabv2.Experiment],
 ) -> dict[str, tuple[int, int]]:
-    """Map each non-pre-equilibration condition id to the
-    ``(experiment_index, period_index)`` position of the period it belongs
-    to, matching the traversal/de-duplication order used to build
-    ``dynamic_conditions`` in :func:`run_simulations`.
+    """Map each non-pre-equilibration period's label (see
+    :func:`_dynamic_period_label`) to the ``(experiment_index,
+    period_index)`` position of the period it belongs to, matching the
+    traversal/de-duplication order used to build ``dynamic_conditions`` in
+    :func:`run_simulations`.
 
     :param experiments:
         Experiments to build the mapping for, in the same order as used to
@@ -2356,9 +2375,8 @@ def _dynamic_condition_index_map(
         for period in exp.sorted_periods:
             if period.is_preequilibration:
                 continue
-            for cid in period.condition_ids:
-                if cid not in preeq_ids:
-                    positions.setdefault(cid, (exp_idx, period_idx))
+            label = _dynamic_period_label(exp, period, preeq_ids)
+            positions.setdefault(label, (exp_idx, period_idx))
             period_idx += 1
     return positions
 
