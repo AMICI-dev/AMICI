@@ -393,6 +393,9 @@ def test_steady_state_event_no_recompile_across_conditions(
 
     conditions = [1.0, 2.5, 0.3]  # numeric-only differences between calls
 
+    # Avoid order-dependent failures if prior tests already compiled these methods.
+    jax.clear_caches()
+
     def patch_trace_counter(target, name):
         # eqx.debug.assert_max_traces/get_num_traces track calls to a plain
         # callable; since it isn't itself a descriptor, dispatch to it
