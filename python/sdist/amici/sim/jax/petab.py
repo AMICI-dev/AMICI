@@ -7,6 +7,7 @@ import shutil
 from collections.abc import Callable, Iterable, Sized
 from numbers import Number
 from pathlib import Path
+from typing import NamedTuple
 
 import diffrax
 import equinox as eqx
@@ -70,15 +71,35 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
-def _override_placeholder(
-    n_rows: int, n_pars: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """All-numeric-one override triple, used for an absent/empty override
-    column, or for a synthetic/padding measurement row."""
-    mat_numeric = np.ones((n_rows, n_pars))
-    par_mask = np.zeros_like(mat_numeric, dtype=bool)
-    par_index = np.zeros_like(mat_numeric, dtype=int)
-    return mat_numeric, par_mask, par_index
+class OverrideColumn(NamedTuple):
+    """Numeric values, free-parameter mask, and free-parameter indices for
+    one observable/noise parameter override column (each of shape
+    ``(n_rows, n_pars)``). Recombine via
+    ``jnp.where(mask, p[index], numeric)``.
+    """
+
+    numeric: np.ndarray
+    mask: np.ndarray
+    index: np.ndarray
+
+    @classmethod
+    def placeholder(cls, n_rows: int, n_pars: int) -> "OverrideColumn":
+        """All-numeric-one column, used for an absent/empty override
+        column, or for a synthetic/padding measurement row."""
+        numeric = np.ones((n_rows, n_pars))
+        return cls(
+            numeric,
+            np.zeros_like(numeric, dtype=bool),
+            np.zeros_like(numeric, dtype=int),
+        )
+
+    @classmethod
+    def concatenate(cls, *columns: "OverrideColumn") -> "OverrideColumn":
+        return cls(
+            np.concatenate([c.numeric for c in columns]),
+            np.concatenate([c.mask for c in columns]),
+            np.concatenate([c.index for c in columns]),
+        )
 
 
 def _resolve_override_symbol(value, parameter_df: pd.DataFrame):
@@ -119,10 +140,9 @@ def _split_override_column(
 
 def _override_triple_from_matrix(
     mat: np.ndarray, parameter_ids: tuple[str, ...]
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Split a raw (numeric-or-parameter-id) override matrix into numeric
-    values, a free-parameter mask, and free-parameter indices, so that the
-    two can be recombined via ``jnp.where(mask, p[index], numeric)``."""
+) -> OverrideColumn:
+    """Split a raw (numeric-or-parameter-id) override matrix into an
+    :class:`OverrideColumn`."""
     par_index = np.vectorize(
         lambda x: parameter_ids.index(x) if x in parameter_ids else -1
     )(mat)
@@ -135,7 +155,7 @@ def _override_triple_from_matrix(
     mat[par_mask] = 0.0
     mat = mat.astype(float)
     par_index[~par_mask] = 0
-    return mat, par_mask, par_index
+    return OverrideColumn(mat, par_mask, par_index)
 
 
 def _column_overrides(
@@ -144,7 +164,7 @@ def _column_overrides(
     n_pars: int,
     petab_problem: petabv2.Problem,
     parameter_ids: tuple[str, ...],
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> OverrideColumn:
     """Numeric values, non-numeric mask and parameter indices for one
     observable/noise parameter override column of the rows in ``m``.
 
@@ -155,16 +175,142 @@ def _column_overrides(
     pydantic serialization warnings.
     """
     if col not in m or m[col].isna().all() or (m[col] == "").all():
-        return _override_placeholder(len(m), n_pars)
+        return OverrideColumn.placeholder(len(m), n_pars)
     if pd.api.types.is_numeric_dtype(m[col].dtype):
         mat_numeric = np.expand_dims(m[col].values, axis=1)
-        return (
+        return OverrideColumn(
             mat_numeric,
             np.zeros_like(mat_numeric, dtype=bool),
             np.zeros_like(mat_numeric, dtype=int),
         )
     mat = _split_override_column(m[col], n_pars, petab_problem.parameter_df)
     return _override_triple_from_matrix(mat, parameter_ids)
+
+
+def _get_overrides(
+    m: pd.DataFrame,
+    n_pars: dict[str, int],
+    petab_problem: petabv2.Problem,
+    parameter_ids: tuple[str, ...],
+) -> dict[str, OverrideColumn]:
+    """Numeric values, non-numeric mask and parameter indices for
+    observable/noise parameter overrides of the rows in ``m``."""
+    return {
+        col: _column_overrides(m, col, n_pars[col], petab_problem, parameter_ids)
+        for col in (petabv2.C.OBSERVABLE_PARAMETERS, petabv2.C.NOISE_PARAMETERS)
+    }
+
+
+def _get_iy_trafos(
+    iys: np.ndarray, petab_problem: petabv2.Problem
+) -> np.ndarray:
+    """Observable transformation index (see ``SCALE_TO_INT``) for each
+    observable index in ``iys``."""
+    if petabv2.C.NOISE_DISTRIBUTION in petab_problem.observable_df:
+        return np.array(
+            [
+                SCALE_TO_INT[petabv2.C.LOG]
+                if obs.noise_distribution == petabv2.C.LOG_NORMAL
+                else SCALE_TO_INT[petabv2.C.LIN]
+                for obs in petab_problem.observables
+            ]
+        )
+    return np.zeros_like(iys)
+
+
+class _PeriodMeasurements(NamedTuple):
+    """One experiment period's bucketed measurement data, as built by
+    :meth:`JAXProblem._get_measurements` and consumed by its
+    padding/stacking step."""
+
+    ts_dyn: np.ndarray
+    ts_posteq: np.ndarray
+    my: np.ndarray
+    iys: np.ndarray
+    iy_trafos: np.ndarray
+    op_overrides: OverrideColumn
+    noise_overrides: OverrideColumn
+    valid: np.ndarray
+
+
+def _masked_placeholder_period(
+    t: float, n_pars: dict[str, int]
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    dict[str, OverrideColumn],
+]:
+    """A single masked, zero-information timepoint at time ``t``.
+
+    Used both for a real period that has no actual measurements in its
+    time window (e.g. a pure post-equilibration period), and for a padding
+    period that doesn't exist for a given experiment -- in both cases the
+    only requirement is a valid, non-backward-in-time, fully-masked-out
+    entry so downstream padding/chaining has something to work with.
+
+    :return:
+        Tuple of ``(ts_dyn, dyn_valid, my, iys, iy_trafos, overrides)``.
+    """
+    return (
+        np.array([t]),
+        np.array([False]),
+        np.array([0.0]),
+        np.array([0]),
+        np.array([0]),
+        {
+            col: OverrideColumn.placeholder(1, n_pars[col])
+            for col in (petabv2.C.OBSERVABLE_PARAMETERS, petabv2.C.NOISE_PARAMETERS)
+        },
+    )
+
+
+def _pad_measurement(
+    x_dyn: np.ndarray, x_peq: np.ndarray, n_ts_dyn: int, n_ts_posteq: int
+) -> np.ndarray:
+    """Right-pad ``x_dyn``/``x_peq`` (edge mode: repeat the last value) to
+    ``n_ts_dyn``/``n_ts_posteq`` along the first axis, then concatenate."""
+    pad_width_dyn = tuple(
+        [(0, n_ts_dyn - len(x_dyn))] + [(0, 0)] * (x_dyn.ndim - 1)
+    )
+    pad_width_peq = tuple(
+        [(0, n_ts_posteq - len(x_peq))] + [(0, 0)] * (x_peq.ndim - 1)
+    )
+    return np.concatenate(
+        (
+            np.pad(x_dyn, pad_width_dyn, mode="edge")
+            if len(x_dyn)
+            else np.zeros((n_ts_dyn, *x_dyn.shape[1:]), dtype=x_dyn.dtype),
+            np.pad(x_peq, pad_width_peq, mode="edge")
+            if len(x_peq)
+            else np.zeros(
+                (n_ts_posteq, *x_peq.shape[1:]), dtype=x_peq.dtype
+            ),
+        )
+    )
+
+
+def _pad_and_stack(
+    measurements: dict[tuple[str, int], _PeriodMeasurements],
+    extractor: Callable[[_PeriodMeasurements], np.ndarray],
+    n_ts_dyn: int,
+    n_ts_posteq: int,
+) -> np.ndarray:
+    """Apply ``extractor`` to every bucketed period, split each result at
+    its own dynamic/post-equilibrium boundary, pad, and stack."""
+    return np.stack(
+        [
+            _pad_measurement(
+                extractor(mv)[: len(mv.ts_dyn)],
+                extractor(mv)[len(mv.ts_dyn) :],
+                n_ts_dyn,
+                n_ts_posteq,
+            )
+            for mv in measurements.values()
+        ]
+    )
 
 
 # IDEA: Implement this class in petab-sciml instead?
@@ -385,7 +531,7 @@ class JAXProblem(eqx.Module):
              - non-numeric mask for noise parameter overrides
              - parameter indices (problem parameters) for noise parameter overrides
         """
-        measurements = dict()
+        measurements: dict[tuple[str, int], _PeriodMeasurements] = {}
         petab_indices = dict()
 
         n_pars = dict()
@@ -414,42 +560,6 @@ class JAXProblem(eqx.Module):
                         )
                         .max()
                     )
-
-        def get_overrides(m: pd.DataFrame) -> dict[str, tuple]:
-            """Numeric values, non-numeric mask and parameter indices for
-            observable/noise parameter overrides of the rows in ``m``."""
-            return {
-                col: _column_overrides(
-                    m,
-                    col,
-                    n_pars[col],
-                    self._petab_problem,
-                    self.parameter_ids,
-                )
-                for col in (
-                    petabv2.C.OBSERVABLE_PARAMETERS,
-                    petabv2.C.NOISE_PARAMETERS,
-                )
-            }
-
-        def placeholder_row(col: str) -> tuple:
-            """A single dummy override row for a synthetic/padding entry."""
-            return _override_placeholder(1, n_pars[col])
-
-        def get_iy_trafos(iys: np.ndarray) -> np.ndarray:
-            if (
-                petabv2.C.NOISE_DISTRIBUTION
-                in self._petab_problem.observable_df
-            ):
-                return np.array(
-                    [
-                        SCALE_TO_INT[petabv2.C.LOG]
-                        if obs.noise_distribution == petabv2.C.LOG_NORMAL
-                        else SCALE_TO_INT[petabv2.C.LIN]
-                        for obs in self._petab_problem.observables
-                    ]
-                )
-            return np.zeros_like(iys)
 
         dyn_periods_by_exp = {
             exp.id: [
@@ -481,8 +591,17 @@ class JAXProblem(eqx.Module):
             last_period_time = dyn_periods[-1].time if dyn_periods else 0.0
 
             for i_period in range(max_periods):
-                is_real = i_period < len(dyn_periods)
-                if is_real:
+                if i_period >= len(dyn_periods):
+                    # Padding slot: this experiment has no period here at
+                    # all. A single masked, zero-duration integration step
+                    # that leaves the carried-over state unchanged.
+                    ts_dyn, dyn_valid, my, iys, iy_trafos, overrides = (
+                        _masked_placeholder_period(last_period_time, n_pars)
+                    )
+                    ts_posteq = np.array([])
+                    posteq_valid = np.array([])
+                    index = [-1]
+                else:
                     is_own_last = i_period == len(dyn_periods) - 1
                     t_lo = dyn_periods[i_period].time
                     t_hi = (
@@ -505,8 +624,12 @@ class JAXProblem(eqx.Module):
                             for oid in m[petabv2.C.OBSERVABLE_ID].values
                         ]
                     )
-                    iy_trafos_real = get_iy_trafos(iys_real)
-                    overrides_real = get_overrides(m)
+                    iy_trafos_real = _get_iy_trafos(
+                        iys_real, self._petab_problem
+                    )
+                    overrides_real = _get_overrides(
+                        m, n_pars, self._petab_problem, self.parameter_ids
+                    )
                     index_dyn = list(m.index)
 
                     if is_own_last:
@@ -514,11 +637,7 @@ class JAXProblem(eqx.Module):
                         m_posteq = m_full[posteq_mask]
                         ts_posteq = m_posteq[petabv2.C.TIME].values
                         index_posteq = list(m_posteq.index)
-                    else:
-                        ts_posteq = np.array([])
-                        index_posteq = []
 
-                    if is_own_last:
                         # No further period to hand off to within this
                         # experiment's own chain; padding slots (if any)
                         # after this one are pure no-ops.
@@ -536,17 +655,19 @@ class JAXProblem(eqx.Module):
                             # a valid (masked), non-backward-in-time entry
                             # so that padding never produces a time point
                             # before this period's start.
-                            ts_dyn = np.array([t_lo])
-                            dyn_valid = np.array([False])
-                            my = np.array([0.0])
-                            iys = np.array([0])
-                            iy_trafos = np.array([0])
-                            overrides = {
-                                col: placeholder_row(col)
-                                for col in overrides_real
-                            }
+                            (
+                                ts_dyn,
+                                dyn_valid,
+                                my,
+                                iys,
+                                iy_trafos,
+                                overrides,
+                            ) = _masked_placeholder_period(t_lo, n_pars)
                             index_dyn_full = [-1]
                     else:
+                        ts_posteq = np.array([])
+                        index_posteq = []
+
                         # Append a synthetic, masked boundary time point at
                         # the start of the next period so that the ODE
                         # state is always available at exactly the period
@@ -559,139 +680,119 @@ class JAXProblem(eqx.Module):
                         my = np.append(my_real, 0.0)
                         iys = np.append(iys_real, 0)
                         iy_trafos = np.append(iy_trafos_real, 0)
-                        placeholders = {
-                            col: placeholder_row(col)
-                            for col in overrides_real
-                        }
                         overrides = {
-                            col: tuple(
-                                np.concatenate(
-                                    [overrides_real[col][j], placeholders[col][j]]
-                                )
-                                for j in range(3)
+                            col: OverrideColumn.concatenate(
+                                overrides_real[col],
+                                OverrideColumn.placeholder(1, n_pars[col]),
                             )
                             for col in overrides_real
                         }
                         index_dyn_full = [*index_dyn, -1]
 
-                    posteq_valid = np.ones(len(ts_posteq), dtype=bool)
                     index = [*index_dyn_full, *index_posteq]
-                else:
-                    # Padding slot: this experiment has no period here at
-                    # all. A single masked, zero-duration integration step
-                    # that leaves the carried-over state unchanged.
-                    ts_dyn = np.array([last_period_time])
-                    dyn_valid = np.array([False])
-                    my = np.array([0.0])
-                    iys = np.array([0])
-                    iy_trafos = np.array([0])
-                    overrides = {
-                        col: placeholder_row(col)
-                        for col in [
-                            petabv2.C.OBSERVABLE_PARAMETERS,
-                            petabv2.C.NOISE_PARAMETERS,
-                        ]
-                    }
-                    ts_posteq = np.array([])
-                    posteq_valid = np.array([])
-                    index = [-1]
+                    posteq_valid = np.ones(len(ts_posteq), dtype=bool)
 
                 valid = np.concatenate([dyn_valid, posteq_valid]).astype(
                     bool
                 )
 
-                measurements[(exp.id, i_period)] = (
-                    ts_dyn,  # 0
-                    ts_posteq,  # 1
-                    my,  # 2
-                    iys,  # 3
-                    iy_trafos,  # 4
-                    overrides[petabv2.C.OBSERVABLE_PARAMETERS][0],  # 5
-                    overrides[petabv2.C.OBSERVABLE_PARAMETERS][1],  # 6
-                    overrides[petabv2.C.OBSERVABLE_PARAMETERS][2],  # 7
-                    overrides[petabv2.C.NOISE_PARAMETERS][0],  # 8
-                    overrides[petabv2.C.NOISE_PARAMETERS][1],  # 9
-                    overrides[petabv2.C.NOISE_PARAMETERS][2],  # 10
-                    valid,  # 11
+                measurements[(exp.id, i_period)] = _PeriodMeasurements(
+                    ts_dyn=ts_dyn,
+                    ts_posteq=ts_posteq,
+                    my=my,
+                    iys=iys,
+                    iy_trafos=iy_trafos,
+                    op_overrides=overrides[petabv2.C.OBSERVABLE_PARAMETERS],
+                    noise_overrides=overrides[petabv2.C.NOISE_PARAMETERS],
+                    valid=valid,
                 )
                 petab_indices[(exp.id, i_period)] = tuple(index)
 
         # compute maximum lengths
-        n_ts_dyn = max(len(mv[0]) for mv in measurements.values())
-        n_ts_posteq = max(len(mv[1]) for mv in measurements.values())
+        n_ts_dyn = max(len(mv.ts_dyn) for mv in measurements.values())
+        n_ts_posteq = max(len(mv.ts_posteq) for mv in measurements.values())
 
         # pad with last value and stack
         ts_dyn = np.stack(
             [
-                np.pad(mv[0], (0, n_ts_dyn - len(mv[0])), mode="edge")
-                if len(mv[0])
-                else np.zeros(n_ts_dyn, dtype=mv[0].dtype)
+                np.pad(mv.ts_dyn, (0, n_ts_dyn - len(mv.ts_dyn)), mode="edge")
+                if len(mv.ts_dyn)
+                else np.zeros(n_ts_dyn, dtype=mv.ts_dyn.dtype)
                 for mv in measurements.values()
             ]
         )
         ts_posteq = np.stack(
             [
-                np.pad(mv[1], (0, n_ts_posteq - len(mv[1])), mode="edge")
-                if len(mv[1])
-                else np.zeros(n_ts_posteq, dtype=mv[1].dtype)
+                np.pad(
+                    mv.ts_posteq,
+                    (0, n_ts_posteq - len(mv.ts_posteq)),
+                    mode="edge",
+                )
+                if len(mv.ts_posteq)
+                else np.zeros(n_ts_posteq, dtype=mv.ts_posteq.dtype)
                 for mv in measurements.values()
             ]
         )
 
-        def pad_measurement(x_dyn, x_peq):
-            # only pad first axis
-            pad_width_dyn = tuple(
-                [(0, n_ts_dyn - len(x_dyn))] + [(0, 0)] * (x_dyn.ndim - 1)
-            )
-            pad_width_peq = tuple(
-                [(0, n_ts_posteq - len(x_peq))] + [(0, 0)] * (x_peq.ndim - 1)
-            )
-            return np.concatenate(
-                (
-                    np.pad(x_dyn, pad_width_dyn, mode="edge")
-                    if len(x_dyn)
-                    else np.zeros(
-                        (n_ts_dyn, *x_dyn.shape[1:]), dtype=x_dyn.dtype
-                    ),
-                    np.pad(x_peq, pad_width_peq, mode="edge")
-                    if len(x_peq)
-                    else np.zeros(
-                        (n_ts_posteq, *x_peq.shape[1:]), dtype=x_peq.dtype
-                    ),
-                )
-            )
-
-        def pad_and_stack(output_index: int):
-            return np.stack(
-                [
-                    pad_measurement(
-                        mv[output_index][: len(mv[0])],
-                        mv[output_index][len(mv[0]) :],
-                    )
-                    for mv in measurements.values()
-                ]
-            )
-
-        my = pad_and_stack(2)
-        iys = pad_and_stack(3)
-        iy_trafos = pad_and_stack(4)
-        op_numeric = pad_and_stack(5)
-        op_mask = pad_and_stack(6)
-        op_indices = pad_and_stack(7)
-        np_numeric = pad_and_stack(8)
-        np_mask = pad_and_stack(9)
-        np_indices = pad_and_stack(10)
+        my = _pad_and_stack(
+            measurements, lambda mv: mv.my, n_ts_dyn, n_ts_posteq
+        )
+        iys = _pad_and_stack(
+            measurements, lambda mv: mv.iys, n_ts_dyn, n_ts_posteq
+        )
+        iy_trafos = _pad_and_stack(
+            measurements, lambda mv: mv.iy_trafos, n_ts_dyn, n_ts_posteq
+        )
+        op_numeric = _pad_and_stack(
+            measurements,
+            lambda mv: mv.op_overrides.numeric,
+            n_ts_dyn,
+            n_ts_posteq,
+        )
+        op_mask = _pad_and_stack(
+            measurements,
+            lambda mv: mv.op_overrides.mask,
+            n_ts_dyn,
+            n_ts_posteq,
+        )
+        op_indices = _pad_and_stack(
+            measurements,
+            lambda mv: mv.op_overrides.index,
+            n_ts_dyn,
+            n_ts_posteq,
+        )
+        np_numeric = _pad_and_stack(
+            measurements,
+            lambda mv: mv.noise_overrides.numeric,
+            n_ts_dyn,
+            n_ts_posteq,
+        )
+        np_mask = _pad_and_stack(
+            measurements,
+            lambda mv: mv.noise_overrides.mask,
+            n_ts_dyn,
+            n_ts_posteq,
+        )
+        np_indices = _pad_and_stack(
+            measurements,
+            lambda mv: mv.noise_overrides.index,
+            n_ts_dyn,
+            n_ts_posteq,
+        )
+        # mask padding must stay `False` (not repeat the last real mask
+        # value), so this is stacked directly rather than via
+        # `_pad_and_stack` (which pads in "edge" mode).
         ts_masks = np.stack(
             [
                 np.concatenate(
                     (
                         np.pad(
-                            mv[11][: len(mv[0])],
-                            (0, n_ts_dyn - len(mv[0])),
+                            mv.valid[: len(mv.ts_dyn)],
+                            (0, n_ts_dyn - len(mv.ts_dyn)),
                         ),
                         np.pad(
-                            mv[11][len(mv[0]) :],
-                            (0, n_ts_posteq - len(mv[1])),
+                            mv.valid[len(mv.ts_dyn) :],
+                            (0, n_ts_posteq - len(mv.ts_posteq)),
                         ),
                     )
                 )
@@ -700,9 +801,11 @@ class JAXProblem(eqx.Module):
         ).astype(bool)
         petab_indices = np.stack(
             [
-                pad_measurement(
-                    np.array(idx[: len(mv[0])]),
-                    np.array(idx[len(mv[0]) :]),
+                _pad_measurement(
+                    np.array(idx[: len(mv.ts_dyn)]),
+                    np.array(idx[len(mv.ts_dyn) :]),
+                    n_ts_dyn,
+                    n_ts_posteq,
                 )
                 for mv, idx in zip(
                     measurements.values(), petab_indices.values()
@@ -711,25 +814,27 @@ class JAXProblem(eqx.Module):
         )
 
         n_exp = len(experiments)
-
-        def reshape(arr: np.ndarray) -> np.ndarray:
-            return arr.reshape(n_exp, max_periods, *arr.shape[1:])
-
+        outputs = (
+            ts_dyn,
+            ts_posteq,
+            my,
+            iys,
+            iy_trafos,
+            ts_masks,
+            petab_indices,
+            op_numeric,
+            op_mask,
+            op_indices,
+            np_numeric,
+            np_mask,
+            np_indices,
+        )
         return (
             max_periods,
-            reshape(ts_dyn),
-            reshape(ts_posteq),
-            reshape(my),
-            reshape(iys),
-            reshape(iy_trafos),
-            reshape(ts_masks),
-            reshape(petab_indices),
-            reshape(op_numeric),
-            reshape(op_mask),
-            reshape(op_indices),
-            reshape(np_numeric),
-            reshape(np_mask),
-            reshape(np_indices),
+            *(
+                arr.reshape(n_exp, max_periods, *arr.shape[1:])
+                for arr in outputs
+            ),
         )
 
     def _get_parameter_mappings(self) -> dict[str, ...]:
