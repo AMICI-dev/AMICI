@@ -229,14 +229,11 @@ class ODEExporter:
 
         indent = 8
 
-        # replaces Heaviside variables with corresponding functions
-        subs_heaviside = dict(
-            zip(
-                self.model.sym("eh"),
-                [sp.Heaviside(x) for x in self.model.eq("eroot")],
-                strict=True,
-            )
-        )
+        # Explicit (time-triggered) Heaviside variables are kept as tracked
+        # heaviside variables (like implicit ones) rather than being inlined as
+        # symbolic Heaviside functions of time. This keeps the vector field
+        # smooth within each integration segment; the variables are toggled at
+        # the (root-found, known-discontinuity-clipped) event times.
 
         # replaces observables with a generic my variable
         subs_observables = dict(
@@ -246,7 +243,7 @@ class ODEExporter:
                 strict=True,
             )
         )
-        subs = subs_heaviside | subs_observables
+        subs = subs_observables
 
         array_inputs_init = self._generate_array_inputs_init()
 

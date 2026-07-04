@@ -72,6 +72,14 @@ def eq(
     :return:
         steady state solution, heaviside variables, and statistics
     """
+    # force the solver to step exactly onto known (explicit) discontinuities so
+    # the discontinuous vector field is integrated accurately instead of relying
+    # solely on root finding
+    if known_discs.shape[0]:
+        controller = diffrax.ClipStepSizeController(
+            controller, jump_ts=jnp.sort(known_discs)
+        )
+
     # if there are no events, we can avoid expensive looping and just run a single segment
     if not root_cond_fns:
         sol, _, stats = _run_segment(
@@ -229,6 +237,14 @@ def solve(
     :return:
         solution+heaviside variables at time points ts and statistics
     """
+    # force the solver to step exactly onto known (explicit) discontinuities so
+    # the discontinuous vector field is integrated accurately instead of relying
+    # solely on root finding
+    if known_discs.shape[0]:
+        controller = diffrax.ClipStepSizeController(
+            controller, jump_ts=jnp.sort(known_discs)
+        )
+
     # if there are no events, we can avoid expensive looping and just run a single segment
     if not root_cond_fns:
         # no events, we can just run a single segment
@@ -545,13 +561,20 @@ def _apply_event_assignments(
         ]
     ).T
 
-    # apply one event at a time
+    # apply one root at a time. Each root independently represents one
+    # potential state transition (e.g. one direction of a persisted
+    # Heaviside variable, or one standalone event), gated by its own
+    # `mask` entry -- roots need not come in pairs, e.g. a plain event
+    # with an assignment but no associated Heaviside contributes a
+    # single root. Iterating one at a time (rather than fixed windows of
+    # two) also preserves cascading effects, since `delta_x` is
+    # recomputed from the latest `y` at each step.
     if h_next.shape[0] and y0_next.shape[0]:
-        n_pairs = h_next.shape[0] // 2
-        inds_seq = jnp.arange(n_pairs)
+        n_roots = h_next.shape[0]
+        inds_seq = jnp.arange(n_roots)
 
         def body(y, e):
-            inds = jnp.array([e * 2, e * 2 + 1])
+            inds = jnp.array([e])
             delx = delta_x(y, p, tcl)
             if y.size:
                 delx = delx.reshape(delx.size // y.shape[0], y.shape[0])
