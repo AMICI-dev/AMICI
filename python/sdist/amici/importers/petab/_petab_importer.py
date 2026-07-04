@@ -231,6 +231,23 @@ class PetabImporter:
                     "The JAX backend does not currently support PEtab problems where network "
                     "parameters appear in the conditions table. "
                 )
+            # Condition-table changes are applied directly in Python at
+            #  simulation time (see JAXProblem), by either overriding a
+            #  model parameter or reinitialising a species state. Any other
+            #  target (e.g. a compartment size) has no such mechanism here.
+            sbml_model = self.petab_problem.model.sbml_model
+            unsupported_targets = {
+                target_id
+                for target_id in condition_targets
+                if sbml_model.getSpecies(target_id) is None
+                and sbml_model.getParameter(target_id) is None
+            }
+            if unsupported_targets:
+                raise NotImplementedError(
+                    "The JAX backend only supports condition table changes "
+                    "that target a species or a parameter. Got change(s) "
+                    f"targeting: {sorted(unsupported_targets)}."
+                )
         else:
             # Convert petab experiments to events, because so far, the
             #  sundials backend only supports preequilibration/presimulation/
@@ -343,8 +360,13 @@ class PetabImporter:
         #  only ever the indicator variables introduced by the
         #  experiments-to-event conversion above. For the JAX backend, which
         #  keeps the original condition table, this may also contain state
-        #  (species) targets, which must NOT be treated as fixed parameters
-        #  since they are handled via state reinitialisation instead.
+        #  targets (species, or rate-/assignment-rule-governed parameters),
+        #  which must NOT be treated as fixed parameters since they are
+        #  handled via state reinitialisation instead. Compartment targets
+        #  are also excluded here, but are unsupported for the JAX backend
+        #  entirely (see the NotImplementedError raised in
+        #  `_preprocess_sbml`) since AMICI does not support making a
+        #  compartment a runtime-settable fixed parameter either way.
         fixed_parameters = {
             change.target_id
             for experiment in self.petab_problem.experiments

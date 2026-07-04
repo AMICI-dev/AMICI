@@ -2291,9 +2291,11 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
         petab_problem.experiment_df is None
         or petab_problem.experiment_df.empty
     ):
-        condition_ids = petab_problem.condition_df[
-            petabv2.C.CONDITION_ID
-        ].values
+        # NOTE: `condition_df` is long-format (one row per condition
+        #  *change*), so a condition with no changes (e.g. the just-created
+        #  default condition) would not appear in it at all. Read condition
+        #  ids from the `Condition` objects directly instead.
+        condition_ids = [c.id for c in petab_problem.conditions]
         condition_ids = [
             c for c in condition_ids if "preequilibration" not in c
         ]
@@ -2334,36 +2336,69 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     return experiment_df
 
 
+def _dynamic_condition_index_map(
+    experiments: list[petabv2.Experiment],
+) -> dict[str, tuple[int, int]]:
+    """Map each non-pre-equilibration condition id to the
+    ``(experiment_index, period_index)`` position of the period it belongs
+    to, matching the traversal/de-duplication order used to build
+    ``dynamic_conditions`` in :func:`run_simulations`.
+
+    :param experiments:
+        Experiments to build the mapping for, in the same order as used to
+        build :attr:`JAXProblem._ts_dyn` etc. (i.e.
+        ``problem._petab_problem.experiments``).
+    """
+    preeq_ids = _get_preequilibration_condition_ids(experiments)
+    positions: dict[str, tuple[int, int]] = {}
+    for exp_idx, exp in enumerate(experiments):
+        period_idx = 0
+        for period in exp.sorted_periods:
+            if period.is_preequilibration:
+                continue
+            for cid in period.condition_ids:
+                if cid not in preeq_ids:
+                    positions.setdefault(cid, (exp_idx, period_idx))
+            period_idx += 1
+    return positions
+
+
 def _build_simulation_df_v2(problem, y, dyn_conditions):
     """Build petab simulation DataFrame of similation results from a PEtab v2 problem."""
+    experiments = problem._petab_problem.experiments
+    position_map = _dynamic_condition_index_map(experiments)
+    nt_per_period = problem._ts_masks.shape[-1]
+
     dfs = []
-    for ic, sc in enumerate(dyn_conditions):
-        experiment_id = _conditions_to_experiment_map(
-            problem._petab_problem.experiment_df
-        )[sc]
+    for sc in dyn_conditions:
+        exp_idx, period_idx = position_map[sc]
+        experiment_id = experiments[exp_idx].id
 
         if experiment_id == "__default__":
             experiment_id = jnp.nan
 
+        mask = problem._ts_masks[exp_idx, period_idx, :]
         obs = [
             problem.model.observable_ids[io]
-            for io in problem._iys[ic, problem._ts_masks[ic, :]]
+            for io in problem._iys[exp_idx, period_idx, mask]
         ]
-        t = jnp.concat(
+        t = jnp.concatenate(
             (
-                problem._ts_dyn[ic, :],
-                problem._ts_posteq[ic, :],
+                problem._ts_dyn[exp_idx, period_idx, :],
+                problem._ts_posteq[exp_idx, period_idx, :],
             )
         )
+        y_period = y[exp_idx].reshape(-1, nt_per_period)[period_idx, :]
+        n_real = int(mask.sum())
         df_sc = pd.DataFrame(
             {
-                petabv2.C.MODEL_ID: [float("nan")] * len(t),
+                petabv2.C.MODEL_ID: [float("nan")] * n_real,
                 petabv2.C.OBSERVABLE_ID: obs,
-                petabv2.C.EXPERIMENT_ID: [experiment_id] * len(t),
-                petabv2.C.TIME: t[problem._ts_masks[ic, :]],
-                petabv2.C.SIMULATION: y[ic, problem._ts_masks[ic, :]],
+                petabv2.C.EXPERIMENT_ID: [experiment_id] * n_real,
+                petabv2.C.TIME: t[mask],
+                petabv2.C.SIMULATION: y_period[mask],
             },
-            index=problem._petab_measurement_indices[ic, :],
+            index=problem._petab_measurement_indices[exp_idx, period_idx, mask],
         )
         if (
             petabv2.C.OBSERVABLE_PARAMETERS
