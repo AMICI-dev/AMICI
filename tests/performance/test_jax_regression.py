@@ -89,14 +89,17 @@ def _sim_kwargs(model, solver_kwargs) -> dict:
     model_name = type(model).__name__
     ts_dyn, my, iys, iy_trafos, ops, nps = _MAP[model_name]
 
+    # `simulate_condition`/`simulate_condition_unjitted` chain one ODE
+    # integration per experiment period; add a leading period axis of
+    # size 1 since these synthetic models are all single-period.
     return dict(
-        ts_dyn=ts_dyn,
-        ts_posteq=jnp.array([]),
-        my=my,
-        iys=iys,
-        iy_trafos=iy_trafos,
-        ops=ops,
-        nps=nps,
+        ts_dyn=ts_dyn[None, :],
+        ts_posteq=jnp.zeros((1, 0)),
+        my=my[None, :],
+        iys=iys[None, :],
+        iy_trafos=iy_trafos[None, :],
+        ops=ops[None, :, :],
+        nps=nps[None, :, :],
         **solver_kwargs,
     )
 
@@ -106,6 +109,11 @@ def _extract_stats(stats: dict) -> dict:
     out = {}
     for key in ("stats_dyn", "stats_posteq"):
         s = stats.get(key)
+        # `stats_dyn` is a list with one entry per experiment period (see
+        # JAXModel._simulate_period); these synthetic models are all
+        # single-period, so use the (only) entry.
+        if isinstance(s, list):
+            s = next((entry for entry in reversed(s) if entry is not None), None)
         if s is None:
             out[key] = None
         else:
@@ -126,7 +134,8 @@ def test_tier1_fwd_sim(
     model_id, tier1_models, solver_kwargs, results_collector
 ):
     model = tier1_models[model_id]
-    p = model.parameters
+    # add a leading period axis of size 1 (single-period simulation)
+    p = model.parameters[None, :]
     kwargs = _sim_kwargs(model, solver_kwargs)
 
     # Deterministic run (unjitted, for exact step counts)
@@ -154,7 +163,8 @@ def test_tier1_fwd_sim(
 @pytest.mark.parametrize("model_id", TIER1_FWD_CASES)
 def test_tier1_adj(model_id, tier1_models, solver_kwargs, results_collector):
     model = tier1_models[model_id]
-    p = model.parameters
+    # add a leading period axis of size 1 (single-period simulation)
+    p = model.parameters[None, :]
     kwargs = _sim_kwargs(model, solver_kwargs)
 
     def _fn(p):
@@ -181,7 +191,8 @@ def test_tier1_fwd_sens(
     model_id, tier1_models, solver_kwargs, results_collector
 ):
     model = tier1_models[model_id]
-    p = model.parameters
+    # add a leading period axis of size 1 (single-period simulation)
+    p = model.parameters[None, :]
     # Forward sensitivity requires DirectAdjoint
     kwargs = {
         **_sim_kwargs(model, solver_kwargs),

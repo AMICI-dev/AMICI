@@ -212,13 +212,12 @@ class PetabImporter:
         if not isinstance(self.petab_problem.model, SbmlModel):
             raise ValueError("The PEtab problem must contain an SBML model.")
 
-        # Convert petab experiments to events, because so far,
-        #  AMICI only supports preequilibration/presimulation/simulation, but
-        #  no arbitrary list of periods.
-        exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
-        # This will always create a copy of the problem.
         if self._jax:
-            self._unconverted_problem = exp_event_conv._original_problem
+            # The JAX backend natively chains one ODE integration per
+            #  experiment period (see amici.sim.jax.petab), so there is no
+            #  need to convert experiments with more than two periods into
+            #  SBML events. The condition table is left untouched.
+            self._unconverted_problem = None
             condition_targets = {
                 change.target_id
                 for condition in self.petab_problem.conditions
@@ -232,13 +231,19 @@ class PetabImporter:
                     "The JAX backend does not currently support PEtab problems where network "
                     "parameters appear in the conditions table. "
                 )
-        self.petab_problem = exp_event_conv.convert()
-        for experiment in self.petab_problem.experiments:
-            if len(experiment.periods) > 2:
-                # This should never happen due to the conversion above
-                raise NotImplementedError(
-                    "AMICI currently does not support more than two periods."
-                )
+        else:
+            # Convert petab experiments to events, because so far, the
+            #  sundials backend only supports preequilibration/presimulation/
+            #  simulation, but no arbitrary list of periods.
+            exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
+            # This will always create a copy of the problem.
+            self.petab_problem = exp_event_conv.convert()
+            for experiment in self.petab_problem.experiments:
+                if len(experiment.periods) > 2:
+                    # This should never happen due to the conversion above
+                    raise NotImplementedError(
+                        "AMICI currently does not support more than two periods."
+                    )
 
         if self._debug:
             print("PetabImpoter._preprocess_sbml: petab_problem:")
@@ -333,15 +338,22 @@ class PetabImporter:
             output_parameter_defaults=self._output_parameter_defaults,
         )
 
-        # All indicator variables, i.e., all remaining targets after
-        #  experiments-to-event in the PEtab problem must be converted
-        #  to fixed parameters
+        # All condition-table targets that are not estimated must be
+        #  converted to fixed parameters. For the sundials backend, these are
+        #  only ever the indicator variables introduced by the
+        #  experiments-to-event conversion above. For the JAX backend, which
+        #  keeps the original condition table, this may also contain state
+        #  (species) targets, which must NOT be treated as fixed parameters
+        #  since they are handled via state reinitialisation instead.
         fixed_parameters = {
             change.target_id
             for experiment in self.petab_problem.experiments
             for period in experiment.periods
             for condition_id in period.condition_ids
             for change in self.petab_problem[condition_id].changes
+            if not self.petab_problem.model.is_state_variable(
+                change.target_id
+            )
         }
 
         from .v1._sbml_import import show_model_info
@@ -771,8 +783,6 @@ class PetabImporter:
             Whether to force re-import even if the model module already exists.
         :return: The created PEtab simulator.
         """
-        from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
-
         if self._jax:
             model_module = self.import_module(force_import=force_import)
             model = model_module.Model()
@@ -786,6 +796,8 @@ class PetabImporter:
                     self, "_unconverted_problem", None
                 ),
             )
+
+        from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
 
         model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)

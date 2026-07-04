@@ -1,0 +1,227 @@
+"""Tests for the JAX PEtab v2 simulator's native N-period chaining.
+
+These exercise PEtab v2 experiments with more than two periods (pre-
+equilibration + several sequential dosing/condition-switching periods),
+which the JAX backend now simulates by chaining one ODE integration per
+period directly, instead of collapsing them into SBML events at import
+time (see ``amici.sim.jax.petab.JAXProblem``).
+"""
+
+import jax
+import numpy as np
+import pytest
+from petab.v2 import C, Problem, ProblemConfig
+from petab.v2.models.sbml_model import SbmlModel
+
+from amici.importers.petab import PetabImporter
+from amici.sim.jax import ReturnValue, run_simulations
+
+jax.config.update("jax_enable_x64", True)
+
+
+def _linear_decay_problem() -> Problem:
+    """A single-species linear-decay model (dx/dt = -k*x)."""
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony("xx = 1; xx' = -kk*xx;")
+    problem.add_observable("obs1", "xx", noise_formula="1")
+    return problem
+
+
+def _import_jax(problem: Problem, module_name: str, tmp_path):
+    pi = PetabImporter(
+        petab_problem=problem,
+        module_name=module_name,
+        output_dir=tmp_path / module_name,
+        compile_=True,
+        jax=True,
+        verbose=False,
+    )
+    return pi.create_simulator(force_import=True)
+
+
+def test_three_period_chain_matches_analytical_solution(tmp_path):
+    """A pre-equilibration followed by three sequential dosing periods,
+    with measurements split across the 2nd and 3rd periods, must match a
+    closed-form (segment-wise exponential decay) reference solution."""
+    problem = _linear_decay_problem()
+    problem.add_condition("cond_preeq", kk=0.5)
+    # period 1: t in [0, 2), k=0.3, dosed to xx=3.0 at t=0
+    problem.add_condition("cond_p1", kk=0.3, xx=3.0)
+    # period 2: t in [2, 4), k=0.6, no reinit (state carries over from p1)
+    problem.add_condition("cond_p2", kk=0.6)
+    # period 3: t >= 4, k=0.2, dosed again to xx=1.5
+    problem.add_condition("cond_p3", kk=0.2, xx=1.5)
+    problem.add_experiment(
+        "exp1",
+        C.TIME_PREEQUILIBRATION,
+        "cond_preeq",
+        0.0,
+        "cond_p1",
+        2.0,
+        "cond_p2",
+        4.0,
+        "cond_p3",
+    )
+    measurement_times = (0.5, 1.5, 2.5, 3.5, 4.5, 5.5)
+    for t in measurement_times:
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp1"
+        )
+
+    jax_problem = _import_jax(problem, "test_three_period_chain", tmp_path)
+    assert jax_problem._max_periods == 3
+
+    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
+    ts_mask = np.asarray(jax_problem._ts_masks)[0].reshape(-1)
+    actual = np.asarray(x)[0].reshape(-1)[ts_mask]
+
+    x2 = 3.0 * np.exp(-0.3 * 2.0)
+
+    def analytical(t):
+        if t < 2.0:
+            return 3.0 * np.exp(-0.3 * t)
+        if t < 4.0:
+            return x2 * np.exp(-0.6 * (t - 2.0))
+        return 1.5 * np.exp(-0.2 * (t - 4.0))
+
+    expected = np.array([analytical(t) for t in measurement_times])
+    np.testing.assert_allclose(actual, expected, rtol=1e-4)
+
+    llh, _ = run_simulations(jax_problem, ret=ReturnValue.llh)
+    assert np.isfinite(llh)
+
+
+def test_two_period_preequilibration_matches_analytical_solution(tmp_path):
+    """Regression check for the common (already-supported) pre-equilibration
+    + one main period case, now driven through the same native-chaining
+    code path as N>2-period experiments (P=2 special case)."""
+    problem = _linear_decay_problem()
+    problem.add_condition("cond_preeq", kk=0.5)
+    problem.add_condition("cond_main", kk=0.7, xx=2.0)
+    problem.add_experiment(
+        "exp1", C.TIME_PREEQUILIBRATION, "cond_preeq", 0.0, "cond_main"
+    )
+    ts = (0.0, 1.0, 2.0, 3.0)
+    for t in ts:
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp1"
+        )
+
+    jax_problem = _import_jax(problem, "test_two_period_preeq", tmp_path)
+    assert jax_problem._max_periods == 1
+
+    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
+    expected = 2.0 * np.exp(-0.7 * np.array(ts))
+    np.testing.assert_allclose(
+        np.asarray(x)[0, :, 0], expected, rtol=1e-4
+    )
+
+
+def test_single_period_matches_analytical_solution(tmp_path):
+    """Regression check for the simplest (no pre-equilibration, single
+    period) case, P=1 with no chaining at all."""
+    problem = _linear_decay_problem()
+    problem.add_condition("cond1", kk=0.7)
+    problem.add_experiment("exp1", 0.0, "cond1")
+    ts = (0.0, 1.0, 2.0, 3.0)
+    for t in ts:
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp1"
+        )
+
+    jax_problem = _import_jax(problem, "test_single_period", tmp_path)
+
+    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
+    # model's default initial value (xx=1) applies, no reinit here
+    expected = 1.0 * np.exp(-0.7 * np.array(ts))
+    np.testing.assert_allclose(
+        np.asarray(x)[0, :, 0], expected, rtol=1e-4
+    )
+
+
+def test_gradient_through_multiperiod_chain_matches_finite_differences(
+    tmp_path,
+):
+    """Gradients of the log-likelihood w.r.t. an estimated parameter that
+    is referenced from a non-first period's condition table must flow
+    correctly through the chained periods."""
+    problem = _linear_decay_problem()
+    problem.add_parameter(
+        "k_free", nominal_value=0.3, estimate=True, lb=0.01, ub=2
+    )
+    problem.add_condition("cond_preeq", kk=0.5)
+    problem.add_condition("cond_p1", kk="k_free", xx=3.0)
+    problem.add_condition("cond_p2", kk=0.6)
+    problem.add_condition("cond_p3", kk=0.2, xx=1.5)
+    problem.add_experiment(
+        "exp1",
+        C.TIME_PREEQUILIBRATION,
+        "cond_preeq",
+        0.0,
+        "cond_p1",
+        2.0,
+        "cond_p2",
+        4.0,
+        "cond_p3",
+    )
+    for t in (0.5, 1.5, 2.5, 3.5, 4.5, 5.5):
+        problem.add_measurement(
+            "obs1", time=t, measurement=1.0, experiment_id="exp1"
+        )
+
+    jax_problem = _import_jax(problem, "test_multiperiod_gradient", tmp_path)
+
+    def llh_fn(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    grad = jax.grad(llh_fn)(p0)
+
+    eps = 1e-5
+    fd = np.array(
+        [
+            (
+                llh_fn(p0.at[i].add(eps)) - llh_fn(p0.at[i].add(-eps))
+            )
+            / (2 * eps)
+            for i in range(len(p0))
+        ]
+    )
+    np.testing.assert_allclose(np.asarray(grad), fd, rtol=1e-3, atol=1e-4)
+
+
+@pytest.mark.parametrize("jax_flag", [True])
+def test_petab_importer_skips_event_conversion_for_jax(tmp_path, jax_flag):
+    """The JAX backend must not run ExperimentsToSbmlConverter (the
+    experiments-to-events conversion), even for experiments with more than
+    two periods, since it now chains periods natively."""
+    problem = _linear_decay_problem()
+    problem.add_condition("cond_preeq", kk=0.5)
+    problem.add_condition("cond_p1", kk=0.3, xx=3.0)
+    problem.add_condition("cond_p2", kk=0.6)
+    problem.add_condition("cond_p3", kk=0.2, xx=1.5)
+    problem.add_experiment(
+        "exp1",
+        C.TIME_PREEQUILIBRATION,
+        "cond_preeq",
+        0.0,
+        "cond_p1",
+        2.0,
+        "cond_p2",
+        4.0,
+        "cond_p3",
+    )
+    problem.add_measurement("obs1", time=0.5, measurement=0.0, experiment_id="exp1")
+
+    pi = PetabImporter(
+        petab_problem=problem,
+        module_name="test_no_event_conversion",
+        output_dir=tmp_path / "test_no_event_conversion",
+        compile_=True,
+        jax=jax_flag,
+        verbose=False,
+    )
+    # experiment periods are untouched (still 4: preeq + 3 dosing periods)
+    assert len(pi.petab_problem.experiments[0].periods) == 4
+    assert pi._unconverted_problem is None

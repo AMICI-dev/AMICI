@@ -250,7 +250,11 @@ def solve(
             term,
             dict(**STARTING_STATS),
         )
-        return sol.ys, jnp.repeat(h[None, :], sol.ys.shape[0]), stats
+        return (
+            sol.ys,
+            jnp.repeat(h[None, :], sol.ys.shape[0], axis=0),
+            stats,
+        )
 
     def cond_fn(carry):
         _, t_start, y0, _, _, stats = carry

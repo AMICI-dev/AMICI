@@ -439,7 +439,9 @@ class JAXModel(eqx.Module):
         )
 
     def _x_rdatas(
-        self, x: jt.Float[jt.Array, "nt nxs"], tcl: jt.Float[jt.Array, "ncl"]
+        self,
+        x: jt.Float[jt.Array, "nt nxs"],
+        tcl: jt.Float[jt.Array, "nt ncl"],
     ) -> jt.Float[jt.Array, "nt nx"]:
         """
         Compute the full state vector from the reduced state vector and conservation laws.
@@ -447,18 +449,19 @@ class JAXModel(eqx.Module):
         :param x:
             reduced state vector
         :param tcl:
-            total values for conservation laws
+            total values for conservation laws, per time point (conservation
+            laws may change across period boundaries as parameters change)
         :return:
             full state vector
         """
-        return jax.vmap(self._x_rdata, in_axes=(0, None))(x, tcl)
+        return jax.vmap(self._x_rdata, in_axes=(0, 0))(x, tcl)
 
     def _nllhs(
         self,
         ts: jt.Float[jt.Array, "nt nx"],
         xs: jt.Float[jt.Array, "nt nxs"],
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
+        p: jt.Float[jt.Array, "nt np"],
+        tcl: jt.Float[jt.Array, "nt ncl"],
         hs: jt.Float[jt.Array, "nt ne"],
         mys: jt.Float[jt.Array, "nt"],
         iys: jt.Int[jt.Array, "nt"],
@@ -473,9 +476,10 @@ class JAXModel(eqx.Module):
         :param xs:
             state vectors
         :param p:
-            parameters
+            parameters, per time point (parameters may differ across period
+            boundaries)
         :param tcl:
-            total values for conservation laws
+            total values for conservation laws, per time point
         :param h:
             heaviside variables
         :param mys:
@@ -489,7 +493,7 @@ class JAXModel(eqx.Module):
         :return:
             negative log-likelihoods of the observables
         """
-        return jax.vmap(self._nllh, in_axes=(0, 0, None, None, 0, 0, 0, 0, 0))(
+        return jax.vmap(self._nllh, in_axes=(0, 0, 0, 0, 0, 0, 0, 0, 0))(
             ts, xs, p, tcl, hs, mys, iys, ops, nps
         )
 
@@ -497,8 +501,8 @@ class JAXModel(eqx.Module):
         self,
         ts: jt.Float[jt.Array, "nt"],
         xs: jt.Float[jt.Array, "nt nxs"],
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
+        p: jt.Float[jt.Array, "nt np"],
+        tcl: jt.Float[jt.Array, "nt ncl"],
         hs: jt.Float[jt.Array, "nt ne"],
         iys: jt.Float[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
@@ -511,9 +515,10 @@ class JAXModel(eqx.Module):
         :param xs:
             state vectors
         :param p:
-            parameters
+            parameters, per time point (parameters may differ across period
+            boundaries)
         :param tcl:
-            total values for conservation laws
+            total values for conservation laws, per time point
         :param h:
             heaviside variables
         :param iys:
@@ -527,15 +532,15 @@ class JAXModel(eqx.Module):
             lambda t, x, p, tcl, h, iy, op: (
                 self._y(t, x, p, tcl, h, op).at[iy].get()
             ),
-            in_axes=(0, 0, None, None, 0, 0, 0),
+            in_axes=(0, 0, 0, 0, 0, 0, 0),
         )(ts, xs, p, tcl, hs, iys, ops)
 
     def _sigmays(
         self,
         ts: jt.Float[jt.Array, "nt"],
         xs: jt.Float[jt.Array, "nt nxs"],
-        p: jt.Float[jt.Array, "np"],
-        tcl: jt.Float[jt.Array, "ncl"],
+        p: jt.Float[jt.Array, "nt np"],
+        tcl: jt.Float[jt.Array, "nt ncl"],
         hs: jt.Float[jt.Array, "nt ne"],
         iys: jt.Int[jt.Array, "nt"],
         ops: jt.Float[jt.Array, "nt *nop"],
@@ -549,9 +554,10 @@ class JAXModel(eqx.Module):
         :param xs:
             state vectors
         :param p:
-            parameters
+            parameters, per time point (parameters may differ across period
+            boundaries)
         :param tcl:
-            total values for conservation laws
+            total values for conservation laws, per time point
         :param h:
             heaviside variables
         :param iys:
@@ -567,19 +573,20 @@ class JAXModel(eqx.Module):
             lambda t, x, p, tcl, h, iy, op, np: (
                 self._sigmay(self._y(t, x, p, tcl, h, op), p, np).at[iy].get()
             ),
-            in_axes=(0, 0, None, None, 0, 0, 0, 0),
+            in_axes=(0, 0, 0, 0, 0, 0, 0, 0),
         )(ts, xs, p, tcl, hs, iys, ops, nps)
 
-    def simulate_condition_unjitted(
+    def _simulate_period(
         self,
-        p: jt.Float[jt.Array, "np"] | None,
+        p: jt.Float[jt.Array, "np"],
+        t0: jnp.float_,
         ts_dyn: jt.Float[jt.Array, "nt_dyn"],
         ts_posteq: jt.Float[jt.Array, "nt_posteq"],
-        my: jt.Float[jt.Array, "nt"],
-        iys: jt.Int[jt.Array, "nt"],
-        iy_trafos: jt.Int[jt.Array, "nt"],
-        ops: jt.Float[jt.Array, "nt *nop"],
-        nps: jt.Float[jt.Array, "nt *nnp"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Bool[jt.Array, "ne"],
+        h_mask: jt.Bool[jt.Array, "ne"],
+        x_solver: jt.Float[jt.Array, "nxs"],
+        is_final: bool,
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -588,63 +595,21 @@ class JAXModel(eqx.Module):
             ..., diffrax._custom_types.BoolScalarLike
         ],
         max_steps: int | jnp.int_,
-        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        h_preeq: jt.Float[jt.Array, "*ne"] = jnp.array([]),
-        mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
-        x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
-        ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
-        h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
-        t_zero: jnp.float_ = 0.0,
-        ret: ReturnValue = ReturnValue.llh,
-    ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
+    ):
         """
-        Unjitted version of simulate_condition.
+        Simulate a single experiment period, starting from ``x_solver``/``h``
+        at time ``t0`` with parameters ``p``/``tcl``.
 
-        See :meth:`simulate_condition` for full documentation.
+        Only the final period of an experiment (``is_final=True``) is
+        post-equilibrated; earlier periods only integrate up to (and
+        including) the synthetic hand-off time point appended to
+        ``ts_dyn`` by :meth:`amici.sim.jax.petab.JAXProblem._get_measurements`.
+
+        :return:
+            Tuple of (state trajectory, heaviside trajectory, ending reduced
+            state, ending heaviside state, dynamic simulation statistics,
+            post-equilibration statistics).
         """
-        t0 = t_zero
-        if p is None:
-            p = self.parameters
-
-        if not h_mask.shape[0]:
-            h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
-
-        if x_preeq.shape[0]:
-            x = x_preeq
-        elif init_override.shape[0]:
-            x_def = self._x0(t0, p)
-            x = jnp.squeeze(
-                jnp.where(init_override_mask, init_override, x_def)
-            )
-        else:
-            x = self._x0(t0, p)
-
-        if not ts_mask.shape[0]:
-            ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
-
-        # Re-initialization
-        if x_reinit.shape[0]:
-            x = jnp.where(mask_reinit, x_reinit, x)
-
-        x_solver = self._x_solver(x)
-        tcl = self._tcl(x, p)
-
-        x_solver, _, h, _ = self._handle_t0_event(
-            t0,
-            x_solver,
-            p,
-            tcl,
-            root_finder,
-            self._root_cond_fn,
-            self._delta_x,
-            h_mask,
-            h_preeq,
-            {},
-        )
-
-        # Dynamic simulation
         if ts_dyn.shape[0]:
             x_dyn, h_dyn, stats_dyn = solve(
                 p,
@@ -667,13 +632,16 @@ class JAXModel(eqx.Module):
                 self.observable_ids,
             )
             x_solver = x_dyn[-1, :]
+            h = h_dyn[-1, :]
         else:
             x_dyn = jnp.repeat(x_solver[None, :], ts_dyn.shape[0], axis=0)
             h_dyn = jnp.repeat(h[None, :], ts_dyn.shape[0], axis=0)
             stats_dyn = None
 
-        # Post-equilibration
-        if ts_posteq.shape[0]:
+        # Post-equilibration (only ever meaningful for the final period of
+        # an experiment; earlier periods just hand off state to the next
+        # period).
+        if is_final and ts_posteq.shape[0]:
             x_solver, h, stats_posteq = eq(
                 p,
                 tcl,
@@ -702,9 +670,161 @@ class JAXModel(eqx.Module):
             hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
         else:
             hs = jnp.zeros((ts.shape[0], h.shape[0]))
-        x = jnp.concatenate((x_dyn, x_posteq), axis=0)
+        xs = jnp.concatenate((x_dyn, x_posteq), axis=0)
 
-        nllhs = self._nllhs(ts, x, p, tcl, hs, my, iys, ops, nps)
+        return ts, xs, hs, x_solver, h, stats_dyn, stats_posteq
+
+    def simulate_condition_unjitted(
+        self,
+        p: jt.Float[jt.Array, "P np"],
+        ts_dyn: jt.Float[jt.Array, "P nt_dyn"],
+        ts_posteq: jt.Float[jt.Array, "P nt_posteq"],
+        my: jt.Float[jt.Array, "P nt"],
+        iys: jt.Int[jt.Array, "P nt"],
+        iy_trafos: jt.Int[jt.Array, "P nt"],
+        ops: jt.Float[jt.Array, "P nt *nop"],
+        nps: jt.Float[jt.Array, "P nt *nnp"],
+        solver: diffrax.AbstractSolver,
+        controller: diffrax.AbstractStepSizeController,
+        root_finder: AbstractRootFinder,
+        adjoint: diffrax.AbstractAdjoint,
+        steady_state_event: Callable[
+            ..., diffrax._custom_types.BoolScalarLike
+        ],
+        max_steps: int | jnp.int_,
+        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        h_preeq: jt.Float[jt.Array, "*ne"] = jnp.array([]),
+        mask_reinit: jt.Bool[jt.Array, "P *nx"] = jnp.array([]),
+        x_reinit: jt.Float[jt.Array, "P *nx"] = jnp.array([]),
+        init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
+        ts_mask: jt.Bool[jt.Array, "P nt"] = jnp.array([]),
+        h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
+        t_zero: jt.Float[jt.Array, "P"] = jnp.array([0.0]),
+        ret: ReturnValue = ReturnValue.llh,
+    ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
+        """
+        Unjitted version of simulate_condition.
+
+        Chains one ODE integration per experiment period (the leading axis,
+        of static size ``P``, of ``p``/``ts_dyn``/``ts_posteq``/``my``/
+        ``iys``/``iy_trafos``/``ops``/``nps``/``mask_reinit``/``x_reinit``/
+        ``ts_mask``/``t_zero``), carrying the ODE state and heaviside/event
+        state from the end of one period into the start of the next, in
+        lieu of encoding period transitions as model events. ``P == 1``
+        reduces to a single, non-chained simulation.
+
+        See :meth:`simulate_condition` for full documentation.
+        """
+        n_periods = p.shape[0]
+
+        if not h_mask.shape[0]:
+            h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
+
+        if not ts_mask.shape[0]:
+            ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
+
+        has_reinit = x_reinit.shape[-1] > 0
+
+        t0_0 = t_zero[0]
+        if x_preeq.shape[0]:
+            x = x_preeq
+        elif init_override.shape[0]:
+            x_def = self._x0(t0_0, p[0])
+            x = jnp.where(init_override_mask, init_override, x_def)
+        else:
+            x = self._x0(t0_0, p[0])
+
+        h = h_preeq
+        x_solver = None
+        tcl_prev = None
+
+        ts_list = []
+        x_list = []
+        h_list = []
+        tcl_list = []
+        p_list = []
+        stats_dyn_list = []
+        stats_posteq_final = None
+
+        for i in range(n_periods):
+            p_i = p[i]
+            t0_i = t_zero[i]
+
+            if i == 0:
+                x_i_full = x
+            else:
+                # carry reduced state from the end of the previous period
+                # back to full state space
+                x_i_full = self._x_rdata(x_solver, tcl_prev)
+
+            if has_reinit:
+                x_i_full = jnp.where(mask_reinit[i], x_reinit[i], x_i_full)
+
+            x_solver = self._x_solver(x_i_full)
+            tcl_i = self._tcl(x_i_full, p_i)
+
+            x_solver, _, h, _ = self._handle_t0_event(
+                t0_i,
+                x_solver,
+                p_i,
+                tcl_i,
+                root_finder,
+                self._root_cond_fn,
+                self._delta_x,
+                h_mask,
+                h,
+                {},
+            )
+
+            is_final = i == n_periods - 1
+            ts_i, xs_i, hs_i, x_solver, h, stats_dyn_i, stats_posteq_i = (
+                self._simulate_period(
+                    p_i,
+                    t0_i,
+                    ts_dyn[i],
+                    ts_posteq[i],
+                    tcl_i,
+                    h,
+                    h_mask,
+                    x_solver,
+                    is_final,
+                    solver,
+                    controller,
+                    root_finder,
+                    adjoint,
+                    steady_state_event,
+                    max_steps,
+                )
+            )
+            if is_final:
+                stats_posteq_final = stats_posteq_i
+
+            ts_list.append(ts_i)
+            x_list.append(xs_i)
+            h_list.append(hs_i)
+            tcl_list.append(jnp.repeat(tcl_i[None, :], ts_i.shape[0], axis=0))
+            p_list.append(jnp.repeat(p_i[None, :], ts_i.shape[0], axis=0))
+            stats_dyn_list.append(stats_dyn_i)
+
+            tcl_prev = tcl_i
+
+        ts = jnp.concatenate(ts_list, axis=0)
+        x = jnp.concatenate(x_list, axis=0)
+        hs = jnp.concatenate(h_list, axis=0)
+        tcls = jnp.concatenate(tcl_list, axis=0)
+        ps = jnp.concatenate(p_list, axis=0)
+
+        my = my.reshape(-1)
+        iys = iys.reshape(-1)
+        iy_trafos = iy_trafos.reshape(-1)
+        # avoid `-1` in reshape: it errors on a `math.prod(...) == 0`
+        # trailing shape (e.g. no observable/noise parameter overrides)
+        ops = ops.reshape(ops.shape[0] * ops.shape[1], *ops.shape[2:])
+        nps = nps.reshape(nps.shape[0] * nps.shape[1], *nps.shape[2:])
+        ts_mask = ts_mask.reshape(-1)
+
+        nllhs = self._nllhs(ts, x, ps, tcls, hs, my, iys, ops, nps)
         nllhs = jnp.where(ts_mask, nllhs, 0.0)
         llh = -jnp.sum(nllhs)
 
@@ -713,27 +833,27 @@ class JAXModel(eqx.Module):
             x=x,
             hs=hs,
             llh=llh,
-            stats_dyn=stats_dyn,
-            stats_posteq=stats_posteq,
+            stats_dyn=stats_dyn_list,
+            stats_posteq=stats_posteq_final,
         )
         if ret == ReturnValue.llh:
             output = llh
         elif ret == ReturnValue.nllhs:
             output = nllhs
         elif ret == ReturnValue.x:
-            output = self._x_rdatas(x, tcl)
+            output = self._x_rdatas(x, tcls)
         elif ret == ReturnValue.x_solver:
             output = x
         elif ret == ReturnValue.y:
-            output = self._ys(ts, x, p, tcl, hs, iys, ops)
+            output = self._ys(ts, x, ps, tcls, hs, iys, ops)
         elif ret == ReturnValue.sigmay:
-            output = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
+            output = self._sigmays(ts, x, ps, tcls, hs, iys, ops, nps)
         elif ret == ReturnValue.x0:
-            output = self._x_rdata(x[0, :], tcl)
+            output = self._x_rdata(x[0, :], tcls[0])
         elif ret == ReturnValue.x0_solver:
             output = x[0, :]
         elif ret == ReturnValue.tcl:
-            output = tcl
+            output = tcls[0]
         elif ret in (ReturnValue.res, ReturnValue.chi2):
             obs_trafo = jax.vmap(
                 lambda y, iy_trafo: (
@@ -746,11 +866,11 @@ class JAXModel(eqx.Module):
                 ),
             )
             ys_obj = obs_trafo(
-                self._ys(ts, x, p, tcl, hs, iys, ops), iy_trafos
+                self._ys(ts, x, ps, tcls, hs, iys, ops), iy_trafos
             )
             m_obj = obs_trafo(my, iy_trafos)
             if ret == ReturnValue.chi2:
-                sigma_obj = self._sigmays(ts, x, p, tcl, hs, iys, ops, nps)
+                sigma_obj = self._sigmays(ts, x, ps, tcls, hs, iys, ops, nps)
                 chi2 = jnp.square((m_obj - ys_obj) / sigma_obj)
                 chi2 = jnp.where(ts_mask, chi2, 0.0)
                 output = jnp.sum(chi2)
@@ -765,14 +885,14 @@ class JAXModel(eqx.Module):
     @eqx.filter_jit
     def simulate_condition(
         self,
-        p: jt.Float[jt.Array, "np"] | None,
-        ts_dyn: jt.Float[jt.Array, "nt_dyn"],
-        ts_posteq: jt.Float[jt.Array, "nt_posteq"],
-        my: jt.Float[jt.Array, "nt"],
-        iys: jt.Int[jt.Array, "nt"],
-        iy_trafos: jt.Int[jt.Array, "nt"],
-        ops: jt.Float[jt.Array, "nt *nop"],
-        nps: jt.Float[jt.Array, "nt *nnp"],
+        p: jt.Float[jt.Array, "P np"],
+        ts_dyn: jt.Float[jt.Array, "P nt_dyn"],
+        ts_posteq: jt.Float[jt.Array, "P nt_posteq"],
+        my: jt.Float[jt.Array, "P nt"],
+        iys: jt.Int[jt.Array, "P nt"],
+        iy_trafos: jt.Int[jt.Array, "P nt"],
+        ops: jt.Float[jt.Array, "P nt *nop"],
+        nps: jt.Float[jt.Array, "P nt *nnp"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -783,13 +903,13 @@ class JAXModel(eqx.Module):
         max_steps: int | jnp.int_,
         x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),
-        mask_reinit: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
-        x_reinit: jt.Float[jt.Array, "*nx"] = jnp.array([]),
+        mask_reinit: jt.Bool[jt.Array, "P *nx"] = jnp.array([]),
+        x_reinit: jt.Float[jt.Array, "P *nx"] = jnp.array([]),
         init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
         init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
-        ts_mask: jt.Bool[jt.Array, "nt"] = jnp.array([]),
+        ts_mask: jt.Bool[jt.Array, "P nt"] = jnp.array([]),
         h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
-        t_zero: jnp.float_ = 0.0,
+        t_zero: jt.Float[jt.Array, "P"] = jnp.array([0.0]),
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
@@ -798,9 +918,15 @@ class JAXModel(eqx.Module):
         This is the JIT-compiled version for optimal performance. For runtime type checking
         with beartype, use :meth:`simulate_condition_unjitted` instead.
 
+        Chains one ODE integration per experiment period (the leading axis,
+        of static size ``P``, of ``p``/``ts_dyn``/``ts_posteq``/``my``/
+        ``iys``/``iy_trafos``/``ops``/``nps``/``mask_reinit``/``x_reinit``/
+        ``ts_mask``/``t_zero``); ``P == 1`` reduces to a single, non-chained
+        simulation.
+
         :param p:
-            parameters for simulation ordered according to ids in :ivar parameter_ids:. If ``None``,
-            the values stored in :attr:`parameters` are used.
+            parameters for simulation ordered according to ids in :ivar parameter_ids:, one row per
+            experiment period.
         :param ts_dyn:
             time points for dynamic simulation. Sorted in monotonically increasing order but duplicate time points are
             allowed to facilitate the evaluation of multiple observables at specific time points.

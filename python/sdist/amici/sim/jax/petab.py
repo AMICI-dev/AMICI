@@ -135,6 +135,7 @@ class JAXProblem(eqx.Module):
     model: JAXModel
     simulation_conditions: tuple[tuple[str, ...], ...]
     _parameter_mappings: dict[str, ...]
+    _max_periods: int
     _ts_dyn: np.ndarray
     _ts_posteq: np.ndarray
     _my: np.ndarray
@@ -181,6 +182,7 @@ class JAXProblem(eqx.Module):
         )
         self._parameter_mappings = self._get_parameter_mappings()
         (
+            self._max_periods,
             self._ts_dyn,
             self._ts_posteq,
             self._my,
@@ -194,7 +196,7 @@ class JAXProblem(eqx.Module):
             self._np_numeric,
             self._np_mask,
             self._np_indices,
-        ) = self._get_measurements(scs)
+        ) = self._get_measurements(self._petab_problem.experiments)
 
     def save(self, directory: Path):
         """
@@ -236,8 +238,9 @@ class JAXProblem(eqx.Module):
             return eqx.tree_deserialise_leaves(f, problem)
 
     def _get_measurements(
-        self, simulation_conditions: pd.DataFrame
+        self, experiments: list[petabv2.Experiment]
     ) -> tuple[
+        int,
         np.ndarray,
         np.ndarray,
         np.ndarray,
@@ -253,11 +256,21 @@ class JAXProblem(eqx.Module):
         np.ndarray,
     ]:
         """
-        Get measurements for the model based on the provided simulation conditions.
+        Get measurements for the model, bucketed per experiment and per
+        (non-pre-equilibration) period, and padded to a common shape
+        ``(n_experiments, max_periods, n_timepoints, ...)`` suitable for
+        :func:`eqx.filter_vmap` over experiments with an inner per-period
+        chain (see :meth:`run_simulation`).
 
-        :param simulation_conditions:
-            Simulation conditions to create parameter mappings for. Same format as returned by
-            :meth:`petabv1.Problem.get_simulation_conditions_from_measurement_df`.
+        Periods beyond an experiment's own real period count, and (for
+        non-terminal real periods) one synthetic time point at the start of
+        the following period, are added so that state can always be handed
+        off at exactly the period boundary; those entries are marked
+        ``False`` in the returned mask and never contribute to the
+        log-likelihood.
+
+        :param experiments:
+            Experiments to build measurement arrays for.
         :return:
             tuple of padded
              - dynamic time points
@@ -266,7 +279,8 @@ class JAXProblem(eqx.Module):
              - observable indices
              - observable transformations indices
              - measurement masks
-             - data indices (index in petab measurement dataframe).
+             - data indices (index in petab measurement dataframe, -1 for
+               synthetic/padding entries).
              - numeric values for observable parameter overrides
              - non-numeric mask for observable parameter overrides
              - parameter indices (problem parameters) for observable parameter overrides
@@ -304,81 +318,28 @@ class JAXProblem(eqx.Module):
                         .max()
                     )
 
-        for _, simulation_condition in simulation_conditions.iterrows():
+        def get_parameter_override(x):
             if (
-                "preequilibration"
-                in simulation_condition[petabv2.C.CONDITION_ID]
-            ):
-                continue
-
-            if isinstance(self._petab_problem, HybridV2Problem):
-                query = " & ".join(
-                    [
-                        f"{k} == '{v}'"
-                        if isinstance(v, str)
-                        else f"{k} == {v}"
-                        for k, v in simulation_condition.items()
-                        if k != petabv2.C.CONDITION_ID
-                    ]
-                )
-            else:
-                query = " & ".join(
-                    [f"{k} == '{v}'" for k, v in simulation_condition.items()]
-                )
-            m = self._petab_problem.measurement_df.query(query).sort_values(
-                by=petabv2.C.TIME
-            )
-
-            ts = m[petabv2.C.TIME]
-            ts_dyn = ts[np.isfinite(ts)]
-            ts_posteq = ts[np.logical_not(np.isfinite(ts))]
-            index = pd.concat([ts_dyn, ts_posteq]).index
-            ts_dyn = ts_dyn.values
-            ts_posteq = ts_posteq.values
-            my = m[petabv2.C.MEASUREMENT].values
-            iys = np.array(
-                [
-                    self.model.observable_ids.index(oid)
-                    for oid in m[petabv2.C.OBSERVABLE_ID].values
+                x in self._petab_problem.parameter_df.index
+                and not self._petab_problem.parameter_df.loc[
+                    x, petabv2.C.ESTIMATE
                 ]
-            )
-            if (
-                petabv2.C.NOISE_DISTRIBUTION
-                in self._petab_problem.observable_df
             ):
-                iy_trafos = np.array(
-                    [
-                        SCALE_TO_INT[petabv2.C.LOG]
-                        if obs.noise_distribution == petabv2.C.LOG_NORMAL
-                        else SCALE_TO_INT[petabv2.C.LIN]
-                        for obs in self._petab_problem.observables
-                    ]
-                )
-            else:
-                iy_trafos = np.zeros_like(iys)
+                return self._petab_problem.parameter_df.loc[
+                    x, petabv2.C.NOMINAL_VALUE
+                ]
+            return x
 
-            parameter_overrides_par_indices = dict()
-            parameter_overrides_numeric_vals = dict()
-            parameter_overrides_mask = dict()
-
-            def get_parameter_override(x):
-                if (
-                    x in self._petab_problem.parameter_df.index
-                    and not self._petab_problem.parameter_df.loc[
-                        x, petabv2.C.ESTIMATE
-                    ]
-                ):
-                    return self._petab_problem.parameter_df.loc[
-                        x, petabv2.C.NOMINAL_VALUE
-                    ]
-                return x
-
+        def get_overrides(m: pd.DataFrame) -> dict[str, tuple]:
+            """Numeric values, non-numeric mask and parameter indices for
+            observable/noise parameter overrides of the rows in ``m``."""
+            overrides = {}
             for col in [
                 petabv2.C.OBSERVABLE_PARAMETERS,
                 petabv2.C.NOISE_PARAMETERS,
             ]:
                 if col not in m or m[col].isna().all() or all(m[col] == ""):
-                    mat_numeric = jnp.ones((len(m), n_pars[col]))
+                    mat_numeric = np.ones((len(m), n_pars[col]))
                     par_mask = np.zeros_like(mat_numeric, dtype=bool)
                     par_index = np.zeros_like(mat_numeric, dtype=int)
                 elif pd.api.types.is_numeric_dtype(m[col].dtype):
@@ -424,32 +385,199 @@ class JAXProblem(eqx.Module):
                     # replace dummy index with some valid index
                     par_index[~par_mask] = 0
 
-                parameter_overrides_numeric_vals[col] = mat_numeric
-                parameter_overrides_mask[col] = par_mask
-                parameter_overrides_par_indices[col] = par_index
+                overrides[col] = (mat_numeric, par_mask, par_index)
+            return overrides
 
-            measurements[tuple(simulation_condition)] = (
-                ts_dyn,  # 0
-                ts_posteq,  # 1
-                my,  # 2
-                iys,  # 3
-                iy_trafos,  # 4
-                parameter_overrides_numeric_vals[
-                    petabv2.C.OBSERVABLE_PARAMETERS
-                ],  # 5
-                parameter_overrides_mask[petabv2.C.OBSERVABLE_PARAMETERS],  # 6
-                parameter_overrides_par_indices[
-                    petabv2.C.OBSERVABLE_PARAMETERS
-                ],  # 7
-                parameter_overrides_numeric_vals[
-                    petabv2.C.NOISE_PARAMETERS
-                ],  # 8
-                parameter_overrides_mask[petabv2.C.NOISE_PARAMETERS],  # 9
-                parameter_overrides_par_indices[
-                    petabv2.C.NOISE_PARAMETERS
-                ],  # 10
+        def placeholder_row(col: str) -> tuple:
+            """A single dummy override row for a synthetic/padding entry."""
+            return (
+                np.ones((1, n_pars[col])),
+                np.zeros((1, n_pars[col]), dtype=bool),
+                np.zeros((1, n_pars[col]), dtype=int),
             )
-            petab_indices[tuple(simulation_condition)] = tuple(index.tolist())
+
+        def get_iy_trafos(iys: np.ndarray) -> np.ndarray:
+            if (
+                petabv2.C.NOISE_DISTRIBUTION
+                in self._petab_problem.observable_df
+            ):
+                return np.array(
+                    [
+                        SCALE_TO_INT[petabv2.C.LOG]
+                        if obs.noise_distribution == petabv2.C.LOG_NORMAL
+                        else SCALE_TO_INT[petabv2.C.LIN]
+                        for obs in self._petab_problem.observables
+                    ]
+                )
+            return np.zeros_like(iys)
+
+        dyn_periods_by_exp = {
+            exp.id: [
+                period
+                for period in exp.sorted_periods
+                if not period.is_preequilibration
+            ]
+            for exp in experiments
+        }
+        max_periods = max(
+            (len(periods) for periods in dyn_periods_by_exp.values()),
+            default=1,
+        )
+        max_periods = max(max_periods, 1)
+
+        for exp in experiments:
+            dyn_periods = dyn_periods_by_exp[exp.id]
+
+            # All measurements for this experiment. Periods are
+            # distinguished by time window below since PEtab v2
+            # measurements reference an experiment, not an individual
+            # condition/period.
+            if isinstance(self._petab_problem, HybridV2Problem):
+                query = f"{petabv2.C.EXPERIMENT_ID} == '{exp.id}'"
+            else:
+                query = f"{petabv2.C.EXPERIMENT_ID} == '{exp.id}'"
+            m_full = self._petab_problem.measurement_df.query(
+                query
+            ).sort_values(by=petabv2.C.TIME)
+            m_full_times = m_full[petabv2.C.TIME].to_numpy()
+
+            last_period_time = dyn_periods[-1].time if dyn_periods else 0.0
+
+            for i_period in range(max_periods):
+                is_real = i_period < len(dyn_periods)
+                if is_real:
+                    is_own_last = i_period == len(dyn_periods) - 1
+                    t_lo = dyn_periods[i_period].time
+                    t_hi = (
+                        np.inf
+                        if is_own_last
+                        else dyn_periods[i_period + 1].time
+                    )
+                    in_window = (
+                        (m_full_times >= t_lo)
+                        & (m_full_times < t_hi)
+                        & np.isfinite(m_full_times)
+                    )
+                    m = m_full[in_window]
+
+                    ts_dyn_real = m[petabv2.C.TIME].values
+                    my_real = m[petabv2.C.MEASUREMENT].values
+                    iys_real = np.array(
+                        [
+                            self.model.observable_ids.index(oid)
+                            for oid in m[petabv2.C.OBSERVABLE_ID].values
+                        ]
+                    )
+                    iy_trafos_real = get_iy_trafos(iys_real)
+                    overrides_real = get_overrides(m)
+                    index_dyn = list(m.index)
+
+                    if is_own_last:
+                        posteq_mask = np.isfinite(m_full_times) == False  # noqa: E712
+                        m_posteq = m_full[posteq_mask]
+                        ts_posteq = m_posteq[petabv2.C.TIME].values
+                        index_posteq = list(m_posteq.index)
+                    else:
+                        ts_posteq = np.array([])
+                        index_posteq = []
+
+                    if is_own_last:
+                        # No further period to hand off to within this
+                        # experiment's own chain; padding slots (if any)
+                        # after this one are pure no-ops.
+                        if len(ts_dyn_real):
+                            ts_dyn = ts_dyn_real
+                            dyn_valid = np.ones(len(ts_dyn_real), dtype=bool)
+                            my = my_real
+                            iys = iys_real
+                            iy_trafos = iy_trafos_real
+                            overrides = overrides_real
+                            index_dyn_full = index_dyn
+                        else:
+                            # No real dyn measurements in this period (e.g.
+                            # a pure post-equilibration period): still need
+                            # a valid (masked), non-backward-in-time entry
+                            # so that padding never produces a time point
+                            # before this period's start.
+                            ts_dyn = np.array([t_lo])
+                            dyn_valid = np.array([False])
+                            my = np.array([0.0])
+                            iys = np.array([0])
+                            iy_trafos = np.array([0])
+                            overrides = {
+                                col: placeholder_row(col)
+                                for col in overrides_real
+                            }
+                            index_dyn_full = [-1]
+                    else:
+                        # Append a synthetic, masked boundary time point at
+                        # the start of the next period so that the ODE
+                        # state is always available at exactly the period
+                        # boundary, regardless of whether there is a real
+                        # measurement there.
+                        ts_dyn = np.append(ts_dyn_real, t_hi)
+                        dyn_valid = np.append(
+                            np.ones(len(ts_dyn_real), dtype=bool), False
+                        )
+                        my = np.append(my_real, 0.0)
+                        iys = np.append(iys_real, 0)
+                        iy_trafos = np.append(iy_trafos_real, 0)
+                        placeholders = {
+                            col: placeholder_row(col)
+                            for col in overrides_real
+                        }
+                        overrides = {
+                            col: tuple(
+                                np.concatenate(
+                                    [overrides_real[col][j], placeholders[col][j]]
+                                )
+                                for j in range(3)
+                            )
+                            for col in overrides_real
+                        }
+                        index_dyn_full = [*index_dyn, -1]
+
+                    posteq_valid = np.ones(len(ts_posteq), dtype=bool)
+                    index = [*index_dyn_full, *index_posteq]
+                else:
+                    # Padding slot: this experiment has no period here at
+                    # all. A single masked, zero-duration integration step
+                    # that leaves the carried-over state unchanged.
+                    ts_dyn = np.array([last_period_time])
+                    dyn_valid = np.array([False])
+                    my = np.array([0.0])
+                    iys = np.array([0])
+                    iy_trafos = np.array([0])
+                    overrides = {
+                        col: placeholder_row(col)
+                        for col in [
+                            petabv2.C.OBSERVABLE_PARAMETERS,
+                            petabv2.C.NOISE_PARAMETERS,
+                        ]
+                    }
+                    ts_posteq = np.array([])
+                    posteq_valid = np.array([])
+                    index = [-1]
+
+                valid = np.concatenate([dyn_valid, posteq_valid]).astype(
+                    bool
+                )
+
+                measurements[(exp.id, i_period)] = (
+                    ts_dyn,  # 0
+                    ts_posteq,  # 1
+                    my,  # 2
+                    iys,  # 3
+                    iy_trafos,  # 4
+                    overrides[petabv2.C.OBSERVABLE_PARAMETERS][0],  # 5
+                    overrides[petabv2.C.OBSERVABLE_PARAMETERS][1],  # 6
+                    overrides[petabv2.C.OBSERVABLE_PARAMETERS][2],  # 7
+                    overrides[petabv2.C.NOISE_PARAMETERS][0],  # 8
+                    overrides[petabv2.C.NOISE_PARAMETERS][1],  # 9
+                    overrides[petabv2.C.NOISE_PARAMETERS][2],  # 10
+                    valid,  # 11
+                )
+                petab_indices[(exp.id, i_period)] = tuple(index)
 
         # compute maximum lengths
         n_ts_dyn = max(len(mv[0]) for mv in measurements.values())
@@ -459,12 +587,16 @@ class JAXProblem(eqx.Module):
         ts_dyn = np.stack(
             [
                 np.pad(mv[0], (0, n_ts_dyn - len(mv[0])), mode="edge")
+                if len(mv[0])
+                else np.zeros(n_ts_dyn, dtype=mv[0].dtype)
                 for mv in measurements.values()
             ]
         )
         ts_posteq = np.stack(
             [
                 np.pad(mv[1], (0, n_ts_posteq - len(mv[1])), mode="edge")
+                if len(mv[1])
+                else np.zeros(n_ts_posteq, dtype=mv[1].dtype)
                 for mv in measurements.values()
             ]
         )
@@ -479,8 +611,16 @@ class JAXProblem(eqx.Module):
             )
             return np.concatenate(
                 (
-                    np.pad(x_dyn, pad_width_dyn, mode="edge"),
-                    np.pad(x_peq, pad_width_peq, mode="edge"),
+                    np.pad(x_dyn, pad_width_dyn, mode="edge")
+                    if len(x_dyn)
+                    else np.zeros(
+                        (n_ts_dyn, *x_dyn.shape[1:]), dtype=x_dyn.dtype
+                    ),
+                    np.pad(x_peq, pad_width_peq, mode="edge")
+                    if len(x_peq)
+                    else np.zeros(
+                        (n_ts_posteq, *x_peq.shape[1:]), dtype=x_peq.dtype
+                    ),
                 )
             )
 
@@ -509,10 +649,12 @@ class JAXProblem(eqx.Module):
                 np.concatenate(
                     (
                         np.pad(
-                            np.ones_like(mv[0]), (0, n_ts_dyn - len(mv[0]))
+                            mv[11][: len(mv[0])],
+                            (0, n_ts_dyn - len(mv[0])),
                         ),
                         np.pad(
-                            np.ones_like(mv[1]), (0, n_ts_posteq - len(mv[1]))
+                            mv[11][len(mv[0]) :],
+                            (0, n_ts_posteq - len(mv[1])),
                         ),
                     )
                 )
@@ -531,31 +673,35 @@ class JAXProblem(eqx.Module):
             ]
         )
 
+        n_exp = len(experiments)
+
+        def reshape(arr: np.ndarray) -> np.ndarray:
+            return arr.reshape(n_exp, max_periods, *arr.shape[1:])
+
         return (
-            ts_dyn,
-            ts_posteq,
-            my,
-            iys,
-            iy_trafos,
-            ts_masks,
-            petab_indices,
-            op_numeric,
-            op_mask,
-            op_indices,
-            np_numeric,
-            np_mask,
-            np_indices,
+            max_periods,
+            reshape(ts_dyn),
+            reshape(ts_posteq),
+            reshape(my),
+            reshape(iys),
+            reshape(iy_trafos),
+            reshape(ts_masks),
+            reshape(petab_indices),
+            reshape(op_numeric),
+            reshape(op_mask),
+            reshape(op_indices),
+            reshape(np_numeric),
+            reshape(np_mask),
+            reshape(np_indices),
         )
 
     def _get_parameter_mappings(self) -> dict[str, ...]:
         targets_map = {
             c.id: {
-                ch.target_id: jnp.asarray(
-                    ch.target_value, dtype=self.model.parameters.dtype
-                )
+                ch.target_id: _resolve_petab_change_value(ch.target_value)
+                for ch in c.changes
             }
             for c in self._petab_problem.conditions
-            for ch in c.changes
         }
 
         hybrid_map = (
@@ -565,6 +711,32 @@ class JAXProblem(eqx.Module):
         )
 
         return {"targets_map": targets_map, "hybrid_map": hybrid_map}
+
+    def _resolve_parameter_reference(
+        self, value: float | str
+    ) -> jt.Float[jt.Scalar, ""]:  # noqa: F722
+        """
+        Resolve a value from ``targets_map`` (see :meth:`_get_parameter_mappings`)
+        to a JAX scalar. Numeric values pass through; a parameter id
+        resolves to that parameter's current (estimated) or nominal
+        (fixed) value. Symbolic references to estimated parameters keep
+        their dependence on :attr:`parameters` so gradients flow through
+        correctly.
+
+        :param value:
+            A numeric literal or PEtab parameter id, as returned by
+            :func:`_resolve_petab_change_value`.
+        """
+        if isinstance(value, str):
+            if value in self.parameter_ids:
+                return self.parameters[self.parameter_ids.index(value)]
+            return jnp.asarray(
+                self._petab_problem.parameter_df.loc[
+                    value, petabv2.C.NOMINAL_VALUE
+                ],
+                dtype=self.model.parameters.dtype,
+            )
+        return jnp.asarray(value, dtype=self.model.parameters.dtype)
 
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
         if isinstance(self._petab_problem, HybridV2Problem):
@@ -1045,8 +1217,21 @@ class JAXProblem(eqx.Module):
 
         return nn.forward(net_input)[ind].squeeze()
 
+    def _dynamic_periods(
+        self, experiment: petabv2.Experiment
+    ) -> list[petabv2.ExperimentPeriod]:
+        """Non-pre-equilibration periods of ``experiment``, in time order."""
+        return [
+            period
+            for period in experiment.sorted_periods
+            if not period.is_preequilibration
+        ]
+
     def load_model_parameters(
-        self, experiment: petabv2.Experiment, is_preeq: bool
+        self,
+        experiment: petabv2.Experiment,
+        is_preeq: bool,
+        period_index: int | None = None,
     ) -> jt.Float[jt.Array, "np"]:
         """
         Load parameters for an experiment.
@@ -1055,13 +1240,19 @@ class JAXProblem(eqx.Module):
             Experiment to load parameters for.
         :param is_preeq:
             Whether to load preequilibration or simulation parameters.
+        :param period_index:
+            Index (within :meth:`_dynamic_periods`) of the period to load
+            simulation parameters for. Ignored if ``is_preeq`` is ``True``.
+            Indices beyond the experiment's own period count are clamped to
+            its last real period (used for padding periods, which are never
+            actually integrated).
         :return:
             Parameters for the experiment.
         """
         p = jnp.stack(
             [
                 self._map_experiment_model_parameter_value(
-                    pname, ind, experiment, is_preeq
+                    pname, ind, experiment, is_preeq, period_index
                 )
                 for ind, pname in enumerate(self.model.parameter_ids)
             ]
@@ -1076,6 +1267,7 @@ class JAXProblem(eqx.Module):
         p_index: int,
         experiment: petabv2.Experiment,
         is_preeq: bool,
+        period_index: int | None = None,
     ):
         """
         Get values for the given parameter `pname` from the relevant petab tables.
@@ -1084,14 +1276,20 @@ class JAXProblem(eqx.Module):
         :param p_index: Index of the parameter in the model's parameter list
         :param experiment: PEtab experiment
         :param is_preeq: Whether to get preequilibration or simulation parameter value
+        :param period_index: see :meth:`load_model_parameters`
         :return: Value of the parameter
         """
-        # Find the first period matching the requested phase (preeq vs. sim)
-        condition_ids = []
-        for period in experiment.sorted_periods:
-            if period.is_preequilibration == is_preeq:
-                condition_ids = period.condition_ids
-                break
+        if period_index is not None:
+            dyn_periods = self._dynamic_periods(experiment)
+            clamped_index = min(period_index, len(dyn_periods) - 1)
+            condition_ids = dyn_periods[clamped_index].condition_ids
+        else:
+            # Find the first period matching the requested phase (preeq vs. sim)
+            condition_ids = []
+            for period in experiment.sorted_periods:
+                if period.is_preequilibration == is_preeq:
+                    condition_ids = period.condition_ids
+                    break
 
         _petab_param_map = {
             param.id: param.nominal_value
@@ -1114,9 +1312,7 @@ class JAXProblem(eqx.Module):
         }
 
         if pname in targets_filtered:
-            return jnp.asarray(
-                targets_filtered[pname], dtype=self.model.parameters.dtype
-            )
+            return self._resolve_parameter_reference(targets_filtered[pname])
         elif pname in self._parameter_mappings["hybrid_map"]:
             return jnp.asarray(
                 self._eval_nn(
@@ -1154,16 +1350,46 @@ class JAXProblem(eqx.Module):
         else:
             return jnp.asarray(param_entry, dtype=self.model.parameters.dtype)
 
+    def _first_condition_value(
+        self, condition_ids: list[str], state_id: str
+    ):
+        """
+        Find the value assigned to ``state_id`` by the first of
+        ``condition_ids`` (applied simultaneously, e.g. for one experiment
+        period) that actually sets it.
+
+        Numeric values are returned as plain Python ``float``s; a
+        reference to a single other parameter is returned as that
+        parameter's id (``str``). Compound symbolic expressions are not
+        supported.
+
+        :param condition_ids:
+            Condition IDs to check, in priority order.
+        :param state_id:
+            State (or parameter) id to look up.
+        :return:
+            The assigned value, or ``None`` if none of ``condition_ids``
+            sets ``state_id``.
+        """
+        for condition_id in condition_ids:
+            for change in self._petab_problem[condition_id].changes:
+                if change.target_id != state_id:
+                    continue
+                return _resolve_petab_change_value(change.target_value)
+        return None
+
     def _state_needs_reinitialisation(
         self,
-        simulation_condition: str,
+        condition_ids: list[str],
         state_id: str,
     ) -> bool:
         """
-        Check if a state needs reinitialisation for a simulation condition.
+        Check if a state needs reinitialisation for the given (simultaneous)
+        conditions.
 
-        :param simulation_condition:
-            simulation condition to check reinitialisation for
+        :param condition_ids:
+            condition ids (e.g. of one experiment period) to check
+            reinitialisation for
         :param state_id:
             state id to check reinitialisation for
         :return:
@@ -1175,26 +1401,20 @@ class JAXProblem(eqx.Module):
         if state_id in self._parameter_mappings["hybrid_map"]:
             return True
 
-        if state_id not in self._petab_problem.condition_df:
-            return False
-        xval = self._petab_problem.condition_df.loc[
-            simulation_condition, state_id
-        ]
-        if isinstance(xval, Number) and np.isnan(xval):
-            return False
-        return True
+        return self._first_condition_value(condition_ids, state_id) is not None
 
     def _state_reinitialisation_value(
         self,
-        simulation_condition: str,
+        condition_ids: list[str],
         state_id: str,
         p: jt.Float[jt.Array, "np"],
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
 
-        :param simulation_condition:
-            simulation condition to get reinitialisation value for
+        :param condition_ids:
+            condition ids (e.g. of one experiment period) to get the
+            reinitialisation value for
         :param state_id:
             state id to get reinitialisation value for
         :param p:
@@ -1203,21 +1423,16 @@ class JAXProblem(eqx.Module):
             reinitialisation value for the state
         """
         if state_id in self.nn_output_ids:
-            return self._eval_nn(state_id, simulation_condition)
+            return self._eval_nn(state_id, condition_ids[0])
 
         if state_id in self._parameter_mappings["hybrid_map"]:
             return self._eval_nn(
                 self._parameter_mappings["hybrid_map"][state_id],
-                simulation_condition,
+                condition_ids[0],
             )
 
-        if state_id not in self._petab_problem.condition_df:
-            # no reinitialisation, return dummy value
-            return 0.0
-        xval = self._petab_problem.condition_df.loc[
-            simulation_condition, state_id
-        ]
-        if isinstance(xval, Number) and np.isnan(xval):
+        xval = self._first_condition_value(condition_ids, state_id)
+        if xval is None:
             # no reinitialisation, return dummy value
             return 0.0
         if isinstance(xval, Number):
@@ -1242,38 +1457,55 @@ class JAXProblem(eqx.Module):
 
     def load_reinitialisation(
         self,
-        simulation_condition: str,
+        condition_ids: list[str] | str,
         p: jt.Float[jt.Array, "np"],
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
-        Load reinitialisation values and mask for the state vector for a simulation condition.
+        Load reinitialisation values and mask for the state vector for the
+        given (simultaneous) conditions.
 
-        :param simulation_condition:
-            Simulation condition to load reinitialisation for.
+        :param condition_ids:
+            Condition id(s) (e.g. of one experiment period) to load
+            reinitialisation for. A bare string is treated as a
+            single-element list. An empty list means no reinitialisation
+            (e.g. for a padding period).
         :param p:
             Parameters for the simulation condition.
         :return:
             Tuple of reinitialisation masm and value for states.
         """
-        if not any(
-            x_id in self._petab_problem.condition_df
+        if isinstance(condition_ids, str):
+            condition_ids = [condition_ids]
+
+        all_condition_targets = {
+            change.target_id
+            for condition in self._petab_problem.conditions
+            for change in condition.changes
+        }
+        has_reinitialisable_states = any(
+            x_id in all_condition_targets
             or hasattr(self, "nn_output_ids")
             and x_id in self._parameter_mappings["hybrid_map"]
             for x_id in self.model.state_ids
-        ):
+        )
+        if not has_reinitialisable_states:
             return jnp.array([]), jnp.array([])
+
+        if not condition_ids:
+            # padding period: no reinitialisation, but still return
+            # full-shaped, all-False/all-zero arrays for stacking
+            nx = len(self.model.state_ids)
+            return jnp.zeros(nx, dtype=bool), jnp.zeros(nx)
 
         mask = jnp.array(
             [
-                self._state_needs_reinitialisation(simulation_condition, x_id)
+                self._state_needs_reinitialisation(condition_ids, x_id)
                 for x_id in self.model.state_ids
             ]
         )
         reinit_x = jnp.array(
             [
-                self._state_reinitialisation_value(
-                    simulation_condition, x_id, p
-                )
+                self._state_reinitialisation_value(condition_ids, x_id, p)
                 for x_id in self.model.state_ids
             ]
         )
@@ -1300,19 +1532,31 @@ class JAXProblem(eqx.Module):
         np_mask: np.ndarray | None = None,
         np_indices: np.ndarray | None = None,
     ) -> tuple[
-        jt.Float[jt.Array, "nc np"],  # noqa: F821, F722
+        jt.Float[jt.Array, "nc ... np"],  # noqa: F821, F722
         jt.Bool[jt.Array, "nx"],  # noqa: F821
         jt.Float[jt.Array, "nx"],  # noqa: F821
-        jt.Float[jt.Array, "nc nt nop"],  # noqa: F821, F722
-        jt.Float[jt.Array, "nc nt nnp"],  # noqa: F821, F722
+        jt.Float[jt.Array, "nc ... nt nop"],  # noqa: F821, F722
+        jt.Float[jt.Array, "nc ... nt nnp"],  # noqa: F821, F722
     ]:
         """
         Prepare experiments for simulation.
 
+        For the main simulation (``is_preeq=False``), all returned arrays
+        (except ``h_mask``) gain a period axis right after the experiment
+        axis, of static size :attr:`_max_periods`, so that
+        :meth:`JAXModel.simulate_condition` can chain one ODE integration
+        per period. Periods beyond an experiment's own period count are
+        padding periods: they are never reinitialised and never contribute
+        to the log-likelihood (see :meth:`_get_measurements`), but must
+        still resolve to *some* valid parameter vector, so they simply
+        reuse the experiment's own last real period.
+
         :param experiments:
             Experiments to prepare simulation arrays for.
         :param conditions:
-            Simulation conditions to prepare.
+            Simulation conditions to prepare. Only used for
+            ``is_preeq=True``, where it is one (pre-equilibration) condition
+            id per experiment.
         :param is_preeq:
             Whether to load preequilibration or simulation parameters.
         :param op_numeric:
@@ -1331,9 +1575,61 @@ class JAXProblem(eqx.Module):
             Tuple of parameter arrays, reinitialisation masks and reinitialisation values, observable parameters and
             noise parameters.
         """
-        p_array = jnp.stack(
-            [self.load_model_parameters(exp, is_preeq) for exp in experiments]
-        )
+        if is_preeq:
+            p_array = jnp.stack(
+                [
+                    self.load_model_parameters(exp, is_preeq=True)
+                    for exp in experiments
+                ]
+            )
+            t_zeros = jnp.stack(
+                [
+                    exp.periods[0].time if exp.periods[0].time >= 0.0 else 0.0
+                    for exp in experiments
+                ]
+            )
+            reinit_condition_ids = conditions
+        else:
+            p_array = jnp.stack(
+                [
+                    jnp.stack(
+                        [
+                            self.load_model_parameters(
+                                exp, is_preeq=False, period_index=i
+                            )
+                            for i in range(self._max_periods)
+                        ]
+                    )
+                    for exp in experiments
+                ]
+            )
+
+            def period_start_times(exp: petabv2.Experiment) -> jnp.ndarray:
+                dyn_periods = self._dynamic_periods(exp)
+                last_time = dyn_periods[-1].time if dyn_periods else 0.0
+                return jnp.array(
+                    [
+                        dyn_periods[i].time
+                        if i < len(dyn_periods)
+                        else last_time
+                        for i in range(self._max_periods)
+                    ]
+                )
+
+            t_zeros = jnp.stack(
+                [period_start_times(exp) for exp in experiments]
+            )
+
+            def period_condition_ids(
+                exp: petabv2.Experiment, i: int
+            ) -> list[str]:
+                dyn_periods = self._dynamic_periods(exp)
+                return dyn_periods[i].condition_ids if i < len(dyn_periods) else []
+
+            reinit_condition_ids = [
+                [period_condition_ids(exp, i) for i in range(self._max_periods)]
+                for exp in experiments
+            ]
 
         exp_ids = [exp.id for exp in experiments]
         all_exp_ids = [exp.id for exp in self._petab_problem.experiments]
@@ -1344,13 +1640,6 @@ class JAXProblem(eqx.Module):
                 if (exp_id in exp_ids)
                 else jnp.zeros(self.model.n_events)
                 for exp_id in all_exp_ids
-            ]
-        )
-
-        t_zeros = jnp.stack(
-            [
-                exp.periods[0].time if exp.periods[0].time >= 0.0 else 0.0
-                for exp in experiments
             ]
         )
 
@@ -1375,43 +1664,78 @@ class JAXProblem(eqx.Module):
                     ]
                 )
         else:
-            unscaled_parameters = jnp.zeros((*self._ts_masks.shape[:2], 0))
+            # No free parameters to gather from. `op_indices`/`np_indices`
+            # may still contain the dummy index 0 for masked-out (i.e. not
+            # actually free-parameter-referencing) entries, so keep a
+            # single dummy slot to gather from -- it is never selected by
+            # `jnp.where` since the corresponding mask is always False.
+            unscaled_parameters = jnp.zeros((1,))
+
+        def gather_unscaled(indices: np.ndarray) -> jnp.ndarray:
+            fn = lambda ip: unscaled_parameters[ip]  # noqa: E731
+            for _ in range(indices.ndim):
+                fn = jax.vmap(fn)
+            return fn(indices)
 
         # placeholder values from sundials code may be needed here
         if op_numeric is not None and op_numeric.size:
             op_array = jnp.where(
                 op_mask,
-                jax.vmap(
-                    jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
-                )(op_indices),
+                gather_unscaled(op_indices),
                 op_numeric,
             )
         else:
-            op_array = jnp.zeros((*self._ts_masks.shape[:2], 0))
+            op_array = jnp.zeros((*self._ts_masks.shape, 0))
 
         if np_numeric is not None and np_numeric.size:
             np_array = jnp.where(
                 np_mask,
-                jax.vmap(
-                    jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
-                )(np_indices),
+                gather_unscaled(np_indices),
                 np_numeric,
             )
         else:
-            np_array = jnp.zeros((*self._ts_masks.shape[:2], 0))
+            np_array = jnp.zeros((*self._ts_masks.shape, 0))
 
-        mask_reinit_array = jnp.stack(
-            [
-                self.load_reinitialisation(sc, p)[0]
-                for sc, p in zip(conditions, p_array)
-            ]
-        )
-        x_reinit_array = jnp.stack(
-            [
-                self.load_reinitialisation(sc, p)[1]
-                for sc, p in zip(conditions, p_array)
-            ]
-        )
+        if is_preeq:
+            mask_reinit_array = jnp.stack(
+                [
+                    self.load_reinitialisation(cids, p)[0]
+                    for cids, p in zip(reinit_condition_ids, p_array)
+                ]
+            )
+            x_reinit_array = jnp.stack(
+                [
+                    self.load_reinitialisation(cids, p)[1]
+                    for cids, p in zip(reinit_condition_ids, p_array)
+                ]
+            )
+        else:
+            mask_reinit_array = jnp.stack(
+                [
+                    jnp.stack(
+                        [
+                            self.load_reinitialisation(cids_i, p_i)[0]
+                            for cids_i, p_i in zip(cids_per_period, p_per_period)
+                        ]
+                    )
+                    for cids_per_period, p_per_period in zip(
+                        reinit_condition_ids, p_array
+                    )
+                ]
+            )
+            x_reinit_array = jnp.stack(
+                [
+                    jnp.stack(
+                        [
+                            self.load_reinitialisation(cids_i, p_i)[1]
+                            for cids_i, p_i in zip(cids_per_period, p_per_period)
+                        ]
+                    )
+                    for cids_per_period, p_per_period in zip(
+                        reinit_condition_ids, p_array
+                    )
+                ]
+            )
         return (
             p_array,
             mask_reinit_array,
@@ -1577,17 +1901,6 @@ class JAXProblem(eqx.Module):
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
         """
-        simulation_conditions = [
-            cid
-            for exp in experiments
-            for p in exp.periods
-            for cid in p.condition_ids
-        ]
-        dynamic_conditions = list(
-            sc for sc in simulation_conditions if "preequilibration" not in sc
-        )
-        dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
-
         (
             p_array,
             mask_reinit_array,
@@ -1598,7 +1911,7 @@ class JAXProblem(eqx.Module):
             t_zeros,
         ) = self._prepare_experiments(
             experiments,
-            dynamic_conditions,
+            [],
             False,
             self._op_numeric,
             self._op_mask,
@@ -1624,7 +1937,7 @@ class JAXProblem(eqx.Module):
                 jnp.array(
                     [
                         self._eval_nn(
-                            p, exp.periods[-1].condition_ids[0]
+                            p, exp.sorted_periods[-1].condition_ids[0]
                         )  # TODO: Add mapping of p to eval_nn?
                         if p in set(self.model.parameter_ids)
                         else 1.0
@@ -1728,14 +2041,8 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        simulation_conditions = [
-            cid
-            for exp in experiments
-            for p in exp.periods
-            for cid in p.condition_ids
-        ]
         preequilibration_conditions = list(
-            {sc for sc in simulation_conditions if "preequilibration" in sc}
+            _get_preequilibration_condition_ids(experiments)
         )
 
         p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
@@ -1815,21 +2122,22 @@ def run_simulations(
             if exp.id in simulation_experiments
         ]
 
+    preeq_condition_ids = _get_preequilibration_condition_ids(experiments)
     simulation_conditions = [
         cid
         for exp in experiments
-        for p in exp.periods
+        for p in exp.sorted_periods
         for cid in p.condition_ids
     ]
     dynamic_conditions = list(
-        sc for sc in simulation_conditions if "preequilibration" not in sc
+        sc for sc in simulation_conditions if sc not in preeq_condition_ids
     )
     dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
     conditions = {
         "dynamic_conditions": dynamic_conditions,
     }
 
-    has_preeq = any(exp.periods[0].time < 0.0 for exp in experiments)
+    has_preeq = any(exp.has_preequilibration for exp in experiments)
 
     if has_preeq:
         preeqs, preresults, h_preeqs = problem.run_preequilibrations(
@@ -2085,6 +2393,26 @@ def _conditions_to_experiment_map(
     return condition_to_experiment
 
 
+def _get_preequilibration_condition_ids(
+    experiments: Iterable[petabv2.Experiment],
+) -> set[str]:
+    """Get the condition IDs used by pre-equilibration periods.
+
+    Determined from :attr:`petabv2.ExperimentPeriod.is_preequilibration`
+    rather than by pattern-matching condition IDs, since condition IDs are no
+    longer guaranteed to follow the naming convention introduced by
+    ``ExperimentsToSbmlConverter`` (which is not applied for the JAX
+    backend).
+    """
+    return {
+        cid
+        for experiment in experiments
+        for period in experiment.sorted_periods
+        if period.is_preequilibration
+        for cid in period.condition_ids
+    }
+
+
 def _parse_model_entity_id(
     model_entity_id: str, nn: dict
 ) -> list[tuple[str, str]]:
@@ -2136,3 +2464,27 @@ def _try_float(value):
         if isinstance(e, ValueError) and "could not convert" in msg:
             return value
         raise
+
+
+def _resolve_petab_change_value(target_value) -> float | str:
+    """
+    Resolve a :class:`petabv2.Change.target_value` (a sympy expression, or
+    already a plain number) to either a numeric literal or a single
+    parameter id.
+
+    Only numeric literals and references to a single other parameter are
+    supported; compound symbolic expressions (e.g. ``"k1 + k2"``) are not.
+
+    :param target_value:
+        Value to resolve.
+    :return:
+        A ``float``, or a ``str`` naming a PEtab/model parameter id.
+    """
+    if getattr(target_value, "is_number", True):
+        return float(target_value)
+    if getattr(target_value, "is_Symbol", False):
+        return str(target_value)
+    raise NotImplementedError(
+        "Condition table changes with compound symbolic expressions are "
+        f"not supported, got {target_value!r}."
+    )
