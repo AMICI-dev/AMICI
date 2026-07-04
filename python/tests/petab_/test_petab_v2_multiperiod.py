@@ -140,12 +140,21 @@ def test_single_period_matches_analytical_solution(tmp_path):
     )
 
 
-def test_gradient_through_multiperiod_chain_matches_finite_differences(
+def test_gradient_through_multiperiod_chain_matches_analytical_derivative(
     tmp_path,
 ):
     """Gradients of the log-likelihood w.r.t. an estimated parameter that
     is referenced from a non-first period's condition table must flow
-    correctly through the chained periods."""
+    correctly through the chained periods.
+
+    The reference gradient is derived analytically rather than by finite
+    differences: within a segment, ``xx(t) = xx0 * exp(-k*(t - t0))``, and
+    with a unit-sigma Gaussian noise model the per-measurement
+    log-likelihood contribution is ``-0.5*log(2*pi) - 0.5*(m-y)^2``, so
+    ``d(llh)/dk = sum_i (m_i - y_i) * dy_i/dk``. Period 3 reinitialises
+    ``xx`` to a literal value, so it -- and its measurements -- no longer
+    depend on ``k_free`` at all, giving a zero gradient contribution.
+    """
     problem = _linear_decay_problem()
     problem.add_parameter(
         "k_free", nominal_value=0.3, estimate=True, lb=0.01, ub=2
@@ -165,9 +174,14 @@ def test_gradient_through_multiperiod_chain_matches_finite_differences(
         4.0,
         "cond_p3",
     )
-    for t in (0.5, 1.5, 2.5, 3.5, 4.5, 5.5):
+    measurement_times = (0.5, 1.5, 2.5, 3.5, 4.5, 5.5)
+    measurement_value = 1.0
+    for t in measurement_times:
         problem.add_measurement(
-            "obs1", time=t, measurement=1.0, experiment_id="exp1"
+            "obs1",
+            time=t,
+            measurement=measurement_value,
+            experiment_id="exp1",
         )
 
     jax_problem = _import_jax(problem, "test_multiperiod_gradient", tmp_path)
@@ -178,17 +192,25 @@ def test_gradient_through_multiperiod_chain_matches_finite_differences(
     p0 = jax_problem.parameters
     grad = jax.grad(llh_fn)(p0)
 
-    eps = 1e-5
-    fd = np.array(
-        [
-            (
-                llh_fn(p0.at[i].add(eps)) - llh_fn(p0.at[i].add(-eps))
-            )
-            / (2 * eps)
-            for i in range(len(p0))
-        ]
+    k = float(p0[0])
+    x_p1_end = 3.0 * np.exp(-k * 2.0)  # xx at t=2, end of period 1
+    dx_p1_end_dk = -2.0 * x_p1_end
+
+    def y_and_dy_dk(t: float) -> tuple[float, float]:
+        if t < 2.0:
+            y = 3.0 * np.exp(-k * t)
+            return y, -t * y
+        if t < 4.0:
+            y = x_p1_end * np.exp(-0.6 * (t - 2.0))
+            return y, dx_p1_end_dk * np.exp(-0.6 * (t - 2.0))
+        # period 3 reinitialises xx to a literal, independent of k_free
+        return 1.5 * np.exp(-0.2 * (t - 4.0)), 0.0
+
+    expected_grad = sum(
+        (measurement_value - y) * dy_dk
+        for y, dy_dk in map(y_and_dy_dk, measurement_times)
     )
-    np.testing.assert_allclose(np.asarray(grad), fd, rtol=1e-3, atol=1e-4)
+    np.testing.assert_allclose(float(grad[0]), expected_grad, rtol=1e-4)
 
 
 @pytest.mark.parametrize("jax_flag", [True])

@@ -70,6 +70,97 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
+def _override_placeholder(
+    n_rows: int, n_pars: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """All-numeric-one override triple, used for an absent/empty override
+    column, or for a synthetic/padding measurement row."""
+    mat_numeric = np.ones((n_rows, n_pars))
+    par_mask = np.zeros_like(mat_numeric, dtype=bool)
+    par_index = np.zeros_like(mat_numeric, dtype=int)
+    return mat_numeric, par_mask, par_index
+
+
+def _resolve_override_symbol(value, parameter_df: pd.DataFrame):
+    """Replace a reference to a non-estimated PEtab parameter by its
+    nominal value; pass through anything else (numeric literals, estimated
+    parameter ids, model entity ids) unchanged."""
+    if (
+        value in parameter_df.index
+        and not parameter_df.loc[value, petabv2.C.ESTIMATE]
+    ):
+        return parameter_df.loc[value, petabv2.C.NOMINAL_VALUE]
+    return value
+
+
+def _split_override_column(
+    col_values: pd.Series, n_pars: int, parameter_df: pd.DataFrame
+) -> np.ndarray:
+    """Split ``;``-separated observable/noise parameter override strings
+    into a ``(n_rows, n_pars)`` matrix of numeric values / free parameter
+    ids, resolving non-estimated parameter references to their nominal
+    value and right-padding with ``1.0``."""
+
+    def resolve_row(entry: list | float) -> list:
+        if isinstance(entry, list):
+            return [_resolve_override_symbol(v, parameter_df) for v in entry]
+        return [] if pd.isna(entry) else [entry]
+
+    rows = col_values.str.split(petabv2.C.PARAMETER_SEPARATOR).apply(
+        resolve_row
+    )
+    padded = rows.apply(
+        lambda row: np.pad(
+            row, (0, n_pars - len(row)), mode="constant", constant_values=1.0
+        )
+    )
+    return np.stack(padded)
+
+
+def _override_triple_from_matrix(
+    mat: np.ndarray, parameter_ids: tuple[str, ...]
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Split a raw (numeric-or-parameter-id) override matrix into numeric
+    values, a free-parameter mask, and free-parameter indices, so that the
+    two can be recombined via ``jnp.where(mask, p[index], numeric)``."""
+    par_index = np.vectorize(
+        lambda x: parameter_ids.index(x) if x in parameter_ids else -1
+    )(mat)
+    par_mask = par_index != -1
+    mat = np.where(par_mask, 0.0, mat).astype(float)
+    par_index[~par_mask] = 0
+    return mat, par_mask, par_index
+
+
+def _column_overrides(
+    m: pd.DataFrame,
+    col: str,
+    n_pars: int,
+    petab_problem: petabv2.Problem,
+    parameter_ids: tuple[str, ...],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Numeric values, non-numeric mask and parameter indices for one
+    observable/noise parameter override column of the rows in ``m``.
+
+    ``petab_problem.parameter_df`` is only accessed once actually needed
+    (i.e. for a column of non-numeric, string-encoded overrides) rather
+    than eagerly on every call, since building it can be expensive and,
+    for some problems (e.g. array-valued PEtab-SciML parameters), emits
+    pydantic serialization warnings.
+    """
+    if col not in m or m[col].isna().all() or (m[col] == "").all():
+        return _override_placeholder(len(m), n_pars)
+    if pd.api.types.is_numeric_dtype(m[col].dtype):
+        mat_numeric = np.expand_dims(m[col].values, axis=1)
+        return (
+            mat_numeric,
+            np.zeros_like(mat_numeric, dtype=bool),
+            np.zeros_like(mat_numeric, dtype=int),
+        )
+    mat = _split_override_column(m[col], n_pars, petab_problem.parameter_df)
+    return _override_triple_from_matrix(mat, parameter_ids)
+
+
 # IDEA: Implement this class in petab-sciml instead?
 class HybridProblem(petabv1.Problem):
     hybridization_df: pd.DataFrame
@@ -318,83 +409,26 @@ class JAXProblem(eqx.Module):
                         .max()
                     )
 
-        def get_parameter_override(x):
-            if (
-                x in self._petab_problem.parameter_df.index
-                and not self._petab_problem.parameter_df.loc[
-                    x, petabv2.C.ESTIMATE
-                ]
-            ):
-                return self._petab_problem.parameter_df.loc[
-                    x, petabv2.C.NOMINAL_VALUE
-                ]
-            return x
-
         def get_overrides(m: pd.DataFrame) -> dict[str, tuple]:
             """Numeric values, non-numeric mask and parameter indices for
             observable/noise parameter overrides of the rows in ``m``."""
-            overrides = {}
-            for col in [
-                petabv2.C.OBSERVABLE_PARAMETERS,
-                petabv2.C.NOISE_PARAMETERS,
-            ]:
-                if col not in m or m[col].isna().all() or all(m[col] == ""):
-                    mat_numeric = np.ones((len(m), n_pars[col]))
-                    par_mask = np.zeros_like(mat_numeric, dtype=bool)
-                    par_index = np.zeros_like(mat_numeric, dtype=int)
-                elif pd.api.types.is_numeric_dtype(m[col].dtype):
-                    mat_numeric = np.expand_dims(m[col].values, axis=1)
-                    par_mask = np.zeros_like(mat_numeric, dtype=bool)
-                    par_index = np.zeros_like(mat_numeric, dtype=int)
-                else:
-                    split_vals = m[col].str.split(
-                        petabv2.C.PARAMETER_SEPARATOR
-                    )
-                    list_vals = split_vals.apply(
-                        lambda x: (
-                            [get_parameter_override(y) for y in x]
-                            if isinstance(x, list)
-                            else []
-                            if pd.isna(x)
-                            else [x]
-                        )  # every string gets transformed to lists, so this is already a float
-                    )
-                    vals = list_vals.apply(
-                        lambda x: np.pad(
-                            x,
-                            (0, n_pars[col] - len(x)),
-                            mode="constant",
-                            constant_values=1.0,
-                        )
-                    )
-                    mat = np.stack(vals)
-                    # deconstruct such that we can reconstruct mapped parameter overrides via vectorized operations
-                    # mat = np.where(par_mask, map(lambda ip: p.at[ip], par_index), mat_numeric)
-                    par_index = np.vectorize(
-                        lambda x: (
-                            self.parameter_ids.index(x)
-                            if x in self.parameter_ids
-                            else -1
-                        )
-                    )(mat)
-                    # map out numeric values
-                    par_mask = par_index != -1
-                    # remove non-numeric values
-                    mat[par_mask] = 0.0
-                    mat_numeric = mat.astype(float)
-                    # replace dummy index with some valid index
-                    par_index[~par_mask] = 0
-
-                overrides[col] = (mat_numeric, par_mask, par_index)
-            return overrides
+            return {
+                col: _column_overrides(
+                    m,
+                    col,
+                    n_pars[col],
+                    self._petab_problem,
+                    self.parameter_ids,
+                )
+                for col in (
+                    petabv2.C.OBSERVABLE_PARAMETERS,
+                    petabv2.C.NOISE_PARAMETERS,
+                )
+            }
 
         def placeholder_row(col: str) -> tuple:
             """A single dummy override row for a synthetic/padding entry."""
-            return (
-                np.ones((1, n_pars[col])),
-                np.zeros((1, n_pars[col]), dtype=bool),
-                np.zeros((1, n_pars[col]), dtype=int),
-            )
+            return _override_placeholder(1, n_pars[col])
 
         def get_iy_trafos(iys: np.ndarray) -> np.ndarray:
             if (
@@ -421,7 +455,7 @@ class JAXProblem(eqx.Module):
         }
         max_periods = max(
             (len(periods) for periods in dyn_periods_by_exp.values()),
-            default=1,
+            default=0,
         )
         max_periods = max(max_periods, 1)
 
@@ -432,10 +466,7 @@ class JAXProblem(eqx.Module):
             # distinguished by time window below since PEtab v2
             # measurements reference an experiment, not an individual
             # condition/period.
-            if isinstance(self._petab_problem, HybridV2Problem):
-                query = f"{petabv2.C.EXPERIMENT_ID} == '{exp.id}'"
-            else:
-                query = f"{petabv2.C.EXPERIMENT_ID} == '{exp.id}'"
+            query = f"{petabv2.C.EXPERIMENT_ID} == '{exp.id}'"
             m_full = self._petab_problem.measurement_df.query(
                 query
             ).sort_values(by=petabv2.C.TIME)
@@ -1431,8 +1462,9 @@ class JAXProblem(eqx.Module):
                 condition_ids[0],
             )
 
-        xval = self._first_condition_value(condition_ids, state_id)
-        if xval is None:
+        if (
+            xval := self._first_condition_value(condition_ids, state_id)
+        ) is None:
             # no reinitialisation, return dummy value
             return 0.0
         if isinstance(xval, Number):
@@ -2127,9 +2159,7 @@ def run_simulations(
         "dynamic_conditions": dynamic_conditions,
     }
 
-    has_preeq = any(exp.has_preequilibration for exp in experiments)
-
-    if has_preeq:
+    if has_preeq := any(exp.has_preequilibration for exp in experiments):
         preeqs, preresults, h_preeqs = problem.run_preequilibrations(
             experiments,
             solver,
@@ -2285,9 +2315,10 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
         #  *change*), so a condition with no changes (e.g. the just-created
         #  default condition) would not appear in it at all. Read condition
         #  ids from the `Condition` objects directly instead.
-        condition_ids = [c.id for c in petab_problem.conditions]
         condition_ids = [
-            c for c in condition_ids if "preequilibration" not in c
+            c.id
+            for c in petab_problem.conditions
+            if "preequilibration" not in c.id
         ]
         default_experiment = petabv2.core.Experiment(
             id="__default__",
@@ -2440,10 +2471,10 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
 def _conditions_to_experiment_map(
     experiment_df: pd.DataFrame,
 ) -> dict[str, str]:
-    condition_to_experiment = {
-        row.conditionId: row.experimentId for row in experiment_df.itertuples()
+    return {
+        row.conditionId: row.experimentId
+        for row in experiment_df.itertuples()
     }
-    return condition_to_experiment
 
 
 def _get_preequilibration_condition_ids(
