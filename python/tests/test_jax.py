@@ -356,6 +356,7 @@ def test_steady_state_event_no_recompile_across_conditions(
     solver/controller/root finder from scratch on every call to make sure
     those (which already hash by value) don't regress either.
     """
+    import equinox as eqx
     from amici.importers.antimony import antimony2sbml
     from amici.importers.sbml import SbmlImporter
     from amici.sim.jax.model import JAXModel
@@ -392,22 +393,29 @@ def test_steady_state_event_no_recompile_across_conditions(
 
     conditions = [1.0, 2.5, 0.3]  # numeric-only differences between calls
 
-    n_traces = {"n": 0}
-    orig_simulate = JAXModel.simulate_condition_unjitted
+    def patch_trace_counter(target, name):
+        # eqx.debug.assert_max_traces/get_num_traces track calls to a plain
+        # callable; since it isn't itself a descriptor, dispatch to it
+        # manually so `self` is still bound correctly when called as
+        # `self.<name>(...)`.
+        wrapped = eqx.debug.assert_max_traces(
+            getattr(target, name), max_traces=1
+        )
 
-    def counting_simulate(self, *args, **kwargs):
-        n_traces["n"] += 1
-        return orig_simulate(self, *args, **kwargs)
+        def dispatch(self, *args, **kwargs):
+            return wrapped(self, *args, **kwargs)
 
-    monkeypatch.setattr(
-        JAXModel, "simulate_condition_unjitted", counting_simulate
-    )
+        monkeypatch.setattr(target, name, dispatch)
+        return wrapped
 
     ts = jnp.array([0.0, 1.0, 2.0])
     my = jnp.zeros_like(ts)
     iys = jnp.zeros_like(ts, dtype=int)
     iy_trafos = jnp.zeros_like(ts, dtype=int)
 
+    simulate_traces = patch_trace_counter(
+        JAXModel, "simulate_condition_unjitted"
+    )
     for k_val in conditions:
         kwargs = fresh_solver_kwargs()
         model.simulate_condition(
@@ -427,20 +435,12 @@ def test_steady_state_event_no_recompile_across_conditions(
             1000,
         )
 
-    assert n_traces["n"] == 1, (
+    assert eqx.debug.get_num_traces(simulate_traces) == 1, (
         "simulate_condition was retraced across conditions with only "
-        f"numeric differences ({n_traces['n']} traces instead of 1)"
+        "numeric differences"
     )
 
-    n_traces["n"] = 0
-    orig_handle_t0_event = JAXModel._handle_t0_event
-
-    def counting_handle_t0_event(self, *args, **kwargs):
-        n_traces["n"] += 1
-        return orig_handle_t0_event(self, *args, **kwargs)
-
-    monkeypatch.setattr(JAXModel, "_handle_t0_event", counting_handle_t0_event)
-
+    preeq_traces = patch_trace_counter(JAXModel, "_handle_t0_event")
     for k_val in conditions:
         kwargs = fresh_solver_kwargs()
         model.preequilibrate_condition(
@@ -455,9 +455,9 @@ def test_steady_state_event_no_recompile_across_conditions(
             1000,
         )
 
-    assert n_traces["n"] == 1, (
+    assert eqx.debug.get_num_traces(preeq_traces) == 1, (
         "preequilibrate_condition was retraced across conditions with only "
-        f"numeric differences ({n_traces['n']} traces instead of 1)"
+        "numeric differences"
     )
 
 
