@@ -275,13 +275,7 @@ class ODEExporter:
             )
             if self._get_all_p_syms()
             else "_",
-            "ROOTS": _jnp_array_str(
-                {
-                    _print_trigger_root(root)
-                    for e in self.model._events
-                    for root in e.get_trigger_times()
-                }
-            ),
+            "ROOTS": _jnp_array_str(self._get_known_discs()),
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
             "N_EEVENTS": str(len(self.model.get_explicit_roots())),
             "EVENT_INITIAL_VALUES": _jnp_array_str(
@@ -349,6 +343,38 @@ class ODEExporter:
     def _get_all_p_syms(self) -> list[sp.Symbol]:
         return list(self.model.sym("p")) + list(self.model.sym("k"))
 
+    def _get_known_discs(self) -> set[str]:
+        """Known discontinuity time points for use in ``_known_discs``.
+
+        ``_known_discs`` only has access to ``p`` (and ``k``, unpacked from
+        ``p``), so explicit trigger times may only depend on those symbols.
+        Trigger times that depend on *static* ``w`` expressions (i.e.
+        expressions that do not depend on time, states, or Heaviside
+        variables) are resolved by recursively substituting in their
+        defining formulas. Trigger times that depend on any other
+        (non-static) symbols cannot be expressed in terms of ``p``/``k``
+        alone and are excluded here; they are still handled correctly at
+        runtime via root-finding in ``_root_cond_fn``.
+        """
+        static_syms = self.model._static_symbols(["k", "p", "w"])
+        p_k_syms = set(self.model.sym("p")) | set(self.model.sym("k"))
+        w_subs = dict(
+            zip(self.model.sym("w"), self.model.eq("w"), strict=True)
+        )
+
+        known_discs = set()
+        for e in self.model._events:
+            for root in e.get_trigger_times():
+                if not root.free_symbols.issubset(static_syms):
+                    continue
+                resolved = root
+                for _ in range(len(w_subs) + 1):
+                    if resolved.free_symbols.issubset(p_k_syms):
+                        known_discs.add(self._code_printer.doprint(resolved))
+                        break
+                    resolved = resolved.subs(w_subs)
+        return known_discs
+
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridization.items():
             generate_equinox(
@@ -402,14 +428,3 @@ class ODEExporter:
             )
 
         self.model_name = model_name
-
-
-def _print_trigger_root(root: sp.Expr) -> str:
-    """Convert a trigger root expression into a string representation.
-
-    :param root: The trigger root expression.
-    :return: A string representation of the trigger root.
-    """
-    if root.is_number:
-        return float(root)
-    return str(root).replace(" ", "")
