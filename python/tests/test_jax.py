@@ -337,6 +337,131 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 
 
 @skip_on_valgrind
+def test_steady_state_event_no_recompile_across_conditions(
+    tmp_path, monkeypatch
+):
+    """Simulating different conditions/parameters must not force JAX to
+    recompile, as long as only numeric inputs (e.g. parameters) change.
+
+    Regression test: ``diffrax.steady_state_event()`` returns a fresh
+    closure on every call, which Python compares by identity rather than
+    value. Since it is passed as a static argument to the
+    ``eqx.filter_jit``-compiled ``JAXModel.simulate_condition`` and
+    ``JAXModel.preequilibrate_condition``, constructing a fresh instance on
+    every call (e.g. once per condition, or once per optimizer iteration)
+    used to defeat the JIT cache and force a full recompilation every time,
+    even though only numeric parameters differed.
+    :class:`amici.sim.jax.petab.SteadyStateEvent` fixes this by giving the
+    event value-based equality/hashing, so this test also reconstructs the
+    solver/controller/root finder from scratch on every call to make sure
+    those (which already hash by value) don't regress either.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.model import JAXModel
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model steady_state_recompile
+        x' = -k * x
+        x = 1
+        k = 1
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("steady_state_recompile", output_dir=tmp_path)
+    module = amici._module_from_path(
+        "steady_state_recompile", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    def fresh_solver_kwargs():
+        # construct brand new instances on every call, mimicking e.g. an
+        # optimizer objective that rebuilds solver settings each iteration
+        return dict(
+            solver=diffrax.Kvaerno5(),
+            controller=diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            root_finder=optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+            steady_state_event=SteadyStateEvent(),
+        )
+
+    conditions = [1.0, 2.5, 0.3]  # numeric-only differences between calls
+
+    n_traces = {"n": 0}
+    orig_simulate = JAXModel.simulate_condition_unjitted
+
+    def counting_simulate(self, *args, **kwargs):
+        n_traces["n"] += 1
+        return orig_simulate(self, *args, **kwargs)
+
+    monkeypatch.setattr(
+        JAXModel, "simulate_condition_unjitted", counting_simulate
+    )
+
+    ts = jnp.array([0.0, 1.0, 2.0])
+    my = jnp.zeros_like(ts)
+    iys = jnp.zeros_like(ts, dtype=int)
+    iy_trafos = jnp.zeros_like(ts, dtype=int)
+
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.simulate_condition(
+            jnp.array([k_val]),
+            ts,
+            jnp.array([]),
+            my,
+            iys,
+            iy_trafos,
+            jnp.zeros((3, 0)),
+            jnp.zeros((3, 0)),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            diffrax.RecursiveCheckpointAdjoint(),
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert n_traces["n"] == 1, (
+        "simulate_condition was retraced across conditions with only "
+        f"numeric differences ({n_traces['n']} traces instead of 1)"
+    )
+
+    n_traces["n"] = 0
+    orig_handle_t0_event = JAXModel._handle_t0_event
+
+    def counting_handle_t0_event(self, *args, **kwargs):
+        n_traces["n"] += 1
+        return orig_handle_t0_event(self, *args, **kwargs)
+
+    monkeypatch.setattr(JAXModel, "_handle_t0_event", counting_handle_t0_event)
+
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.preequilibrate_condition(
+            jnp.array([k_val]),
+            jnp.array([]),
+            jnp.array([]),
+            jnp.array([]),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert n_traces["n"] == 1, (
+        "preequilibrate_condition was retraced across conditions with only "
+        f"numeric differences ({n_traces['n']} traces instead of 1)"
+    )
+
+
+@skip_on_valgrind
 def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""
 
