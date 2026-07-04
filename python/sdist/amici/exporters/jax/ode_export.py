@@ -275,7 +275,7 @@ class ODEExporter:
             )
             if self._get_all_p_syms()
             else "_",
-            "ROOTS": _jnp_array_str(self._get_known_discs()),
+            "ROOTS": _jnp_array_str(sorted(self._get_known_discs())),
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
             "N_EEVENTS": str(len(self.model.get_explicit_roots())),
             "EVENT_INITIAL_VALUES": _jnp_array_str(
