@@ -692,15 +692,15 @@ class JAXModel(eqx.Module):
             ..., diffrax._custom_types.BoolScalarLike
         ],
         max_steps: int | jnp.int_,
-        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        h_preeq: jt.Float[jt.Array, "*ne"] = jnp.array([]),
-        mask_reinit: jt.Bool[jt.Array, "P *nx"] = jnp.array([]),
-        x_reinit: jt.Float[jt.Array, "P *nx"] = jnp.array([]),
-        init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
-        ts_mask: jt.Bool[jt.Array, "P nt"] = jnp.array([]),
-        h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
-        t_zero: jt.Float[jt.Array, "P"] = jnp.array([0.0]),
+        x_preeq: jt.Float[jt.Array, "*nx"] | None = None,
+        h_preeq: jt.Float[jt.Array, "*ne"] | None = None,
+        mask_reinit: jt.Bool[jt.Array, "P *nx"] | None = None,
+        x_reinit: jt.Float[jt.Array, "P *nx"] | None = None,
+        init_override: jt.Float[jt.Array, "*nx"] | None = None,
+        init_override_mask: jt.Bool[jt.Array, "*nx"] | None = None,
+        ts_mask: jt.Bool[jt.Array, "P nt"] | None = None,
+        h_mask: jt.Bool[jt.Array, "ne"] | None = None,
+        t_zero: jt.Float[jt.Array, "P"] | None = None,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
@@ -717,6 +717,31 @@ class JAXModel(eqx.Module):
         See :meth:`simulate_condition` for full documentation.
         """
         n_periods = p.shape[0]
+
+        # Normalize omitted optional arrays here, at call time, rather than
+        # via eager `jnp.array(...)`-valued default arguments: a default
+        # constructed once at function-definition time freezes to
+        # float32 if `jax_enable_x64` is enabled only after this module is
+        # first imported, silently diverging in dtype from every other
+        # (call-time-constructed) array flowing through the same call.
+        if x_preeq is None:
+            x_preeq = jnp.array([])
+        if h_preeq is None:
+            h_preeq = jnp.array([])
+        if mask_reinit is None:
+            mask_reinit = jnp.array([])
+        if x_reinit is None:
+            x_reinit = jnp.array([])
+        if init_override is None:
+            init_override = jnp.array([])
+        if init_override_mask is None:
+            init_override_mask = jnp.array([])
+        if ts_mask is None:
+            ts_mask = jnp.array([])
+        if h_mask is None:
+            h_mask = jnp.array([])
+        if t_zero is None:
+            t_zero = jnp.zeros(n_periods)
 
         if not h_mask.shape[0]:
             h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
@@ -901,15 +926,15 @@ class JAXModel(eqx.Module):
             ..., diffrax._custom_types.BoolScalarLike
         ],
         max_steps: int | jnp.int_,
-        x_preeq: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),
-        mask_reinit: jt.Bool[jt.Array, "P *nx"] = jnp.array([]),
-        x_reinit: jt.Float[jt.Array, "P *nx"] = jnp.array([]),
-        init_override: jt.Float[jt.Array, "*nx"] = jnp.array([]),
-        init_override_mask: jt.Bool[jt.Array, "*nx"] = jnp.array([]),
-        ts_mask: jt.Bool[jt.Array, "P nt"] = jnp.array([]),
-        h_mask: jt.Bool[jt.Array, "ne"] = jnp.array([]),
-        t_zero: jt.Float[jt.Array, "P"] = jnp.array([0.0]),
+        x_preeq: jt.Float[jt.Array, "*nx"] | None = None,
+        h_preeq: jt.Bool[jt.Array, "*ne"] | None = None,
+        mask_reinit: jt.Bool[jt.Array, "P *nx"] | None = None,
+        x_reinit: jt.Float[jt.Array, "P *nx"] | None = None,
+        init_override: jt.Float[jt.Array, "*nx"] | None = None,
+        init_override_mask: jt.Bool[jt.Array, "*nx"] | None = None,
+        ts_mask: jt.Bool[jt.Array, "P nt"] | None = None,
+        h_mask: jt.Bool[jt.Array, "ne"] | None = None,
+        t_zero: jt.Float[jt.Array, "P"] | None = None,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
