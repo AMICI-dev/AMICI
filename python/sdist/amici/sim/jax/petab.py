@@ -127,7 +127,13 @@ def _override_triple_from_matrix(
         lambda x: parameter_ids.index(x) if x in parameter_ids else -1
     )(mat)
     par_mask = par_index != -1
-    mat = np.where(par_mask, 0.0, mat).astype(float)
+    # in-place assignment (rather than e.g. `np.where`) is required here:
+    # `mat` may be a fixed-width numpy string array (not `object` dtype) if
+    # every entry is a parameter reference, and `np.where(mask, 0.0, mat)`
+    # then fails to find a common dtype for the float/string mix.
+    mat = mat.copy()
+    mat[par_mask] = 0.0
+    mat = mat.astype(float)
     par_index[~par_mask] = 0
     return mat, par_mask, par_index
 
