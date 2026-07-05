@@ -213,6 +213,89 @@ def test_gradient_through_multiperiod_chain_matches_analytical_derivative(
     np.testing.assert_allclose(float(grad[0]), expected_grad, rtol=1e-4)
 
 
+def _threshold_piecewise_decay_problem() -> Problem:
+    """A single-species model whose decay rate depends on whether the
+    species concentration is above or below a threshold, via a
+    ``piecewise`` rate law. The JAX backend compiles this to a
+    root-finding/heaviside event, rather than a state-assignment event."""
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "xx = 1; kfast = 1.0; "
+        "xx' = piecewise(-kfast*xx, xx > 2, -0.1*xx);"
+    )
+    problem.add_observable("obs1", "xx", noise_formula="1")
+    return problem
+
+
+def test_event_heaviside_state_not_reevaluated_after_period_reinit(
+    tmp_path,
+):
+    """Documents a known limitation of the native per-period chaining: the
+    heaviside/event state ``h`` from the *end* of one period is carried
+    unconditionally into ``JAXModel._handle_t0_event`` for the next period
+    (mirroring the existing pre-equilibration -> main-period handoff),
+    instead of being re-evaluated against the *actual* (possibly
+    reinitialised) state at the new period's t0. When a reinitialisation
+    crosses the threshold of a ``piecewise`` rate law, the branch selected
+    for the whole following period is determined by where the *previous*
+    period ended, not by the reinitialised state -- until/unless the ODE
+    integrator happens to cross the threshold again during that period.
+
+    This pins the *current* behaviour; it does not assert that behaviour
+    is analytically "correct" for this scenario (see the review discussion
+    on PR #3198 re: ``JAXModel._handle_t0_event``).
+    """
+    problem = _threshold_piecewise_decay_problem()
+    # period 1: xx starts at 5 (above the threshold of 2) and decays past
+    # it, ending (at t=1) below the threshold.
+    problem.add_condition("cond_p1", xx=5.0)
+    # period 2 reinitialises xx to 3 (back above the threshold), but the
+    # heaviside carried over from period 1's end still says "below".
+    problem.add_condition("cond_p2", xx=3.0)
+    problem.add_experiment("exp1", 0.0, "cond_p1", 1.0, "cond_p2")
+    measurement_times = (0.3, 0.8, 1.3, 1.8)
+    for t in measurement_times:
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp1"
+        )
+
+    jax_problem = _import_jax(
+        problem, "test_event_reinit_heaviside_carryover", tmp_path
+    )
+    assert jax_problem._max_periods == 2
+
+    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
+    ts_mask = np.asarray(jax_problem._ts_masks)[0].reshape(-1)
+    actual = np.asarray(x)[0].reshape(-1)[ts_mask]
+
+    # period 1 correctly crosses the threshold via root-finding during
+    # integration (heaviside starts "above" since xx=5 > 2 at t=0).
+    t_cross = np.log(5.0 / 2.0)
+
+    def period1(t):
+        if t < t_cross:
+            return 5.0 * np.exp(-1.0 * t)
+        return 2.0 * np.exp(-0.1 * (t - t_cross))
+
+    def period2_current_behavior(t_local):
+        # the carried-over heaviside (still "below threshold", from
+        # period 1's end) is reused for the entire period, so the
+        # fast-decay branch is never selected here even though the
+        # reinitialised xx=3.0 is above the threshold.
+        return 3.0 * np.exp(-0.1 * t_local)
+
+    expected = np.array(
+        [
+            period1(0.3),
+            period1(0.8),
+            period2_current_behavior(0.3),
+            period2_current_behavior(0.8),
+        ]
+    )
+    np.testing.assert_allclose(actual, expected, rtol=1e-4)
+
+
 @pytest.mark.parametrize("jax_flag", [True])
 def test_petab_importer_skips_event_conversion_for_jax(tmp_path, jax_flag):
     """The JAX backend must not run ExperimentsToSbmlConverter (the

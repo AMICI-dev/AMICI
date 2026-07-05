@@ -122,14 +122,23 @@ def _split_override_column(
     ids, resolving non-estimated parameter references to their nominal
     value and right-padding with ``1.0``."""
 
-    def resolve_row(entry: list | float) -> list:
-        if isinstance(entry, list):
-            return [_resolve_override_symbol(v, parameter_df) for v in entry]
-        return [] if pd.isna(entry) else [entry]
+    def resolve_row(entry) -> list:
+        # `col_values` may have `object` dtype with a mix of `;`-separated
+        # override strings and already-numeric entries (e.g. a column
+        # where only some rows use string-encoded overrides); splitting
+        # via the `.str` accessor on the whole column would silently turn
+        # every non-string entry into NaN; handle each entry's type here
+        # instead.
+        if pd.isna(entry):
+            return []
+        values = (
+            entry.split(petabv2.C.PARAMETER_SEPARATOR)
+            if isinstance(entry, str)
+            else [entry]
+        )
+        return [_resolve_override_symbol(v, parameter_df) for v in values]
 
-    rows = col_values.str.split(petabv2.C.PARAMETER_SEPARATOR).apply(
-        resolve_row
-    )
+    rows = col_values.apply(resolve_row)
     padded = rows.apply(
         lambda row: np.pad(
             row, (0, n_pars - len(row)), mode="constant", constant_values=1.0
@@ -394,6 +403,7 @@ class JAXProblem(eqx.Module):
     _petab_measurement_indices: np.ndarray
     _petab_problem: HybridProblem | petabv2.Problem
     _unconverted_problem: petabv2.Problem | None
+    _all_condition_targets: frozenset[str]
 
     def __init__(
         self,
@@ -420,6 +430,11 @@ class JAXProblem(eqx.Module):
         self.simulation_conditions = scs.conditionId.to_list()
         self._petab_problem = _get_hybrid_petab_problem(petab_problem)
         self._unconverted_problem = unconverted_problem
+        self._all_condition_targets = frozenset(
+            change.target_id
+            for condition in self._petab_problem.conditions
+            for change in condition.changes
+        )
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
@@ -1618,13 +1633,8 @@ class JAXProblem(eqx.Module):
         if isinstance(condition_ids, str):
             condition_ids = [condition_ids]
 
-        all_condition_targets = {
-            change.target_id
-            for condition in self._petab_problem.conditions
-            for change in condition.changes
-        }
         has_reinitialisable_states = any(
-            x_id in all_condition_targets
+            x_id in self._all_condition_targets
             or hasattr(self, "nn_output_ids")
             and x_id in self._parameter_mappings["hybrid_map"]
             for x_id in self.model.state_ids
