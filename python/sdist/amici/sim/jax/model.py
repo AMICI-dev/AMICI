@@ -1123,17 +1123,28 @@ class JAXModel(eqx.Module):
         root_cond_fn: Callable,
         delta_x: Callable,
         h_mask: jt.Bool[jt.Array, "ne"],
-        h_preeq: jt.Bool[jt.Array, "ne"],
+        h_prev: jt.Bool[jt.Array, "ne"],
         stats: dict,
     ):
-        y0 = y0_next.copy()
-        rf0 = self.event_initial_values - 0.5
-
-        if h_preeq.shape[0]:
-            # return immediately because preequilibration is equivalent to handling t0 event?
-            return y0, t0_next, h_preeq, stats
+        if h_prev.shape[0]:
+            # `h_prev` is the heaviside state at wherever `y0_next` came
+            # from (a preceding preequilibration, or the end of the
+            # previous experiment period), used here only as the
+            # pre-transition reference value. It is not necessarily the
+            # trigger state *at* `(t0_next, y0_next)`: a period boundary
+            # (or the reinitialisation applied after preequilibration) may
+            # have crossed an event's trigger threshold without the ODE
+            # integrator ever seeing it, so the trigger condition is always
+            # re-evaluated below against the actual incoming state, exactly
+            # as for a genuine t=0.
+            h = h_prev
         else:
-            h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
+            h = jnp.where(
+                h_mask,
+                jnp.heaviside(self.event_initial_values - 0.5, 0.0),
+                jnp.ones_like(self.event_initial_values),
+            )
+        rf0 = h - 0.5
         args = (p, tcl, h)
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)

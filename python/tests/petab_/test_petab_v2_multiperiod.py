@@ -228,30 +228,27 @@ def _threshold_piecewise_decay_problem() -> Problem:
     return problem
 
 
-def test_event_heaviside_state_not_reevaluated_after_period_reinit(
+def test_event_heaviside_state_reevaluated_after_period_reinit(
     tmp_path,
 ):
-    """Documents a known limitation of the native per-period chaining: the
-    heaviside/event state ``h`` from the *end* of one period is carried
-    unconditionally into ``JAXModel._handle_t0_event`` for the next period
-    (mirroring the existing pre-equilibration -> main-period handoff),
-    instead of being re-evaluated against the *actual* (possibly
-    reinitialised) state at the new period's t0. When a reinitialisation
-    crosses the threshold of a ``piecewise`` rate law, the branch selected
-    for the whole following period is determined by where the *previous*
-    period ended, not by the reinitialised state -- until/unless the ODE
-    integrator happens to cross the threshold again during that period.
+    """A period-boundary reinitialisation that crosses the threshold of a
+    ``piecewise`` rate law must select the branch matching the
+    *reinitialised* state at the new period's t0, not whatever heaviside
+    state the previous period happened to end with.
 
-    This pins the *current* behaviour; it does not assert that behaviour
-    is analytically "correct" for this scenario (see the review discussion
-    on PR #3198 re: ``JAXModel._handle_t0_event``).
+    ``JAXModel._handle_t0_event`` re-evaluates the trigger condition
+    against the actual incoming state at every period boundary (and after
+    preequilibration), using the previous heaviside state only as the
+    pre-transition reference for detecting a crossing -- it does not carry
+    it over unconditionally.
     """
     problem = _threshold_piecewise_decay_problem()
     # period 1: xx starts at 5 (above the threshold of 2) and decays past
     # it, ending (at t=1) below the threshold.
     problem.add_condition("cond_p1", xx=5.0)
-    # period 2 reinitialises xx to 3 (back above the threshold), but the
-    # heaviside carried over from period 1's end still says "below".
+    # period 2 reinitialises xx to 3, back above the threshold: the
+    # trigger must be re-evaluated at t0 of period 2 rather than reusing
+    # period 1's ending ("below threshold") heaviside state.
     problem.add_condition("cond_p2", xx=3.0)
     problem.add_experiment("exp1", 0.0, "cond_p1", 1.0, "cond_p2")
     measurement_times = (0.3, 0.8, 1.3, 1.8)
@@ -261,7 +258,7 @@ def test_event_heaviside_state_not_reevaluated_after_period_reinit(
         )
 
     jax_problem = _import_jax(
-        problem, "test_event_reinit_heaviside_carryover", tmp_path
+        problem, "test_event_reinit_heaviside_reevaluated", tmp_path
     )
     assert jax_problem._max_periods == 2
 
@@ -269,28 +266,31 @@ def test_event_heaviside_state_not_reevaluated_after_period_reinit(
     ts_mask = np.asarray(jax_problem._ts_masks)[0].reshape(-1)
     actual = np.asarray(x)[0].reshape(-1)[ts_mask]
 
-    # period 1 correctly crosses the threshold via root-finding during
-    # integration (heaviside starts "above" since xx=5 > 2 at t=0).
-    t_cross = np.log(5.0 / 2.0)
+    # period 1 crosses the threshold via root-finding during integration
+    # (heaviside starts "above" since xx=5 > 2 at t=0).
+    t_cross1 = np.log(5.0 / 2.0)
 
     def period1(t):
-        if t < t_cross:
+        if t < t_cross1:
             return 5.0 * np.exp(-1.0 * t)
-        return 2.0 * np.exp(-0.1 * (t - t_cross))
+        return 2.0 * np.exp(-0.1 * (t - t_cross1))
 
-    def period2_current_behavior(t_local):
-        # the carried-over heaviside (still "below threshold", from
-        # period 1's end) is reused for the entire period, so the
-        # fast-decay branch is never selected here even though the
-        # reinitialised xx=3.0 is above the threshold.
-        return 3.0 * np.exp(-0.1 * t_local)
+    # period 2 must also start "above" (heaviside re-evaluated against the
+    # reinitialised xx=3.0 at period 2's t0), decaying fast until it
+    # crosses the threshold again, then slow.
+    t_cross2 = np.log(3.0 / 2.0)
+
+    def period2(t_local):
+        if t_local < t_cross2:
+            return 3.0 * np.exp(-1.0 * t_local)
+        return 2.0 * np.exp(-0.1 * (t_local - t_cross2))
 
     expected = np.array(
         [
             period1(0.3),
             period1(0.8),
-            period2_current_behavior(0.3),
-            period2_current_behavior(0.8),
+            period2(0.3),
+            period2(0.8),
         ]
     )
     np.testing.assert_allclose(actual, expected, rtol=1e-4)
