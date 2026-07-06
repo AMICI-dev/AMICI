@@ -365,7 +365,14 @@ jobs:
 
     - name: Python tests
       run: |
+        # Run test_sciml.py in a separate process from the rest of the suite.
+        # It imports petab_sciml, which eagerly imports PyTorch. On macOS,
+        # PyTorch's bundled libomp clashes with AMICI's OpenMP runtime and
+        # aborts (SIGABRT) the SUNDIALS simulations run by other tests
+        # (e.g. test_fiddy.py) once torch is loaded into the same process.
         scripts/run-python-tests.sh \
           --ignore=test_pregenerated_models.py \
           --ignore=test_splines_short.py \
-          --ignore=test_misc.py
+          --ignore=test_misc.py \
+          --ignore=test_sciml.py
+        scripts/run-python-tests.sh test_sciml.py
