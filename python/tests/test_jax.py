@@ -342,19 +342,6 @@ def test_steady_state_event_no_recompile_across_conditions(
 ):
     """Simulating different conditions/parameters must not force JAX to
     recompile, as long as only numeric inputs (e.g. parameters) change.
-
-    Regression test: ``diffrax.steady_state_event()`` returns a fresh
-    closure on every call, which Python compares by identity rather than
-    value. Since it is passed as a static argument to the
-    ``eqx.filter_jit``-compiled ``JAXModel.simulate_condition`` and
-    ``JAXModel.preequilibrate_condition``, constructing a fresh instance on
-    every call (e.g. once per condition, or once per optimizer iteration)
-    used to defeat the JIT cache and force a full recompilation every time,
-    even though only numeric parameters differed.
-    :class:`amici.sim.jax.petab.SteadyStateEvent` fixes this by giving the
-    event value-based equality/hashing, so this test also reconstructs the
-    solver/controller/root finder from scratch on every call to make sure
-    those (which already hash by value) don't regress either.
     """
     import equinox as eqx
     from amici.importers.antimony import antimony2sbml
