@@ -41,6 +41,7 @@ python -m pip install git+https://github.com/pysb/pysb@master # for SPM with com
 python -m pip install git+https://github.com/patrick-kidger/diffrax@main # for events with direction
 python -m pip install optax # for jax petab notebook
 python -m pip install "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@main"
+python -m pip uninstall petab -y
 python -m pip install git+https://github.com/petab-dev/libpetab-python.git@main
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
   python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis,jax]" --no-build-isolation
