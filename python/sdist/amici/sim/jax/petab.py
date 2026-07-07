@@ -70,51 +70,6 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
-# IDEA: Implement this class in petab-sciml instead?
-class HybridProblem(petabv1.Problem):
-    hybridization_df: pd.DataFrame
-
-    def __init__(self, petab_problem: petabv1.Problem):
-        self.__dict__.update(petab_problem.__dict__)
-        self.hybridization_df = _get_hybridization_df(petab_problem)
-
-
-class HybridV2Problem(petabv2.Problem):
-    hybridization_df: pd.DataFrame
-    extensions_config: dict
-
-    def __init__(self, petab_problem: petabv2.Problem):
-        self.__dict__.update(petab_problem.__dict__)
-        if not hasattr(petab_problem.config, "extensions"):
-            self.extensions_config = {}
-        else:
-            self.extensions_config = petab_problem.config.extensions
-        self.hybridization_df = _get_hybridization_df(petab_problem)
-
-
-def _get_hybridization_df(petab_problem):
-    if not hasattr(petab_problem.config, "extensions"):
-        return None
-
-    if "sciml" in petab_problem.config.extensions:
-        hybridizations = [
-            pd.read_csv(hf, sep="\t", index_col=0)
-            for hf in petab_problem.config.extensions["sciml"][
-                "hybridization_files"
-            ]
-        ]
-        hybridization_df = pd.concat(hybridizations)
-        return hybridization_df
-
-
-def _get_hybrid_petab_problem(
-    petab_problem: petabv1.Problem | petabv2.Problem,
-):
-    if isinstance(petab_problem, petabv2.Problem):
-        return HybridV2Problem(petab_problem)
-    return HybridProblem(petab_problem)
-
-
 class JAXProblem(eqx.Module):
     """
     PEtab problem wrapper for JAX models.
@@ -148,7 +103,7 @@ class JAXProblem(eqx.Module):
     _np_mask: np.ndarray
     _np_indices: np.ndarray
     _petab_measurement_indices: np.ndarray
-    _petab_problem: HybridProblem | petabv2.Problem
+    _petab_problem: petabv2.Problem
     _unconverted_problem: petabv2.Problem | None
 
     def __init__(
@@ -174,7 +129,7 @@ class JAXProblem(eqx.Module):
         )
         scs = get_simulation_conditions_v2(petab_problem)
         self.simulation_conditions = scs.conditionId.to_list()
-        self._petab_problem = _get_hybrid_petab_problem(petab_problem)
+        self._petab_problem = petab_problem
         self._unconverted_problem = unconverted_problem
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
@@ -311,20 +266,14 @@ class JAXProblem(eqx.Module):
             ):
                 continue
 
-            if isinstance(self._petab_problem, HybridV2Problem):
-                query = " & ".join(
-                    [
-                        f"{k} == '{v}'"
-                        if isinstance(v, str)
-                        else f"{k} == {v}"
-                        for k, v in simulation_condition.items()
-                        if k != petabv2.C.CONDITION_ID
-                    ]
-                )
-            else:
-                query = " & ".join(
-                    [f"{k} == '{v}'" for k, v in simulation_condition.items()]
-                )
+            query = " & ".join(
+                [
+                    f"{k} == '{v}'" if isinstance(v, str) else f"{k} == {v}"
+                    for k, v in simulation_condition.items()
+                    if k != petabv2.C.CONDITION_ID
+                ]
+            )
+
             m = self._petab_problem.measurement_df.query(query).sort_values(
                 by=petabv2.C.TIME
             )
@@ -558,28 +507,27 @@ class JAXProblem(eqx.Module):
             for ch in c.changes
         }
 
-        hybrid_map = (
-            self._petab_problem.hybridization_df["targetValue"].to_dict()
-            if self._petab_problem.hybridization_df is not None
-            else {}
-        )
+        hybrid_map = {}
+        if self._petab_problem.config.extensions.get("sciml"):
+            hybridization_df = (
+                self._petab_problem.extensions.sciml.hybridization_df
+            )
+            hybrid_map = (
+                hybridization_df.set_index("targetId")["targetValue"]
+                .astype(str)
+                .to_dict()
+            )
 
         return {"targets_map": targets_map, "hybrid_map": hybrid_map}
 
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
-        if isinstance(self._petab_problem, HybridV2Problem):
-            simulation_conditions = get_simulation_conditions_v2(
-                self._petab_problem
-            )
-            return tuple(
-                tuple([row.conditionId])
-                for _, row in simulation_conditions.iterrows()
-            )
-        else:
-            simulation_conditions = self._petab_problem.get_simulation_conditions_from_measurement_df()
-            return tuple(
-                tuple(row) for _, row in simulation_conditions.iterrows()
-            )
+        simulation_conditions = get_simulation_conditions_v2(
+            self._petab_problem
+        )
+        return tuple(
+            tuple([row.conditionId])
+            for _, row in simulation_conditions.iterrows()
+        )
 
     def _initialize_model_parameters(self, model: JAXModel) -> dict:
         """
@@ -610,20 +558,20 @@ class JAXProblem(eqx.Module):
         :return:
             Dictionary mapping network IDs to parameter arrays
         """
-        if not self._petab_problem.extensions_config:
+        if not self._petab_problem.config.extensions:
             return {}
 
-        array_files = self._petab_problem.extensions_config["sciml"].get(
-            "array_files", []
-        )
+        array_files = self._petab_problem.config.extensions.get(
+            "sciml", {}
+        ).array_files
 
         import h5py
 
         # TODO(performance): Avoid opening each file multiple times
         return {
-            file_spec.split("_")[0]: h5py.File(file_spec, "r")["parameters"][
-                file_spec.split("_")[0]
-            ]
+            file_spec.name.split("_")[0]: h5py.File(file_spec, "r")[
+                "parameters"
+            ][file_spec.name.split("_")[0]]
             for file_spec in array_files
             if "parameters" in h5py.File(file_spec, "r").keys()
         }
@@ -635,18 +583,18 @@ class JAXProblem(eqx.Module):
         :return:
             Dictionary mapping network IDs to input arrays
         """
-        if not self._petab_problem.extensions_config:
+        if not self._petab_problem.config.extensions:
             return {}
 
-        array_files = self._petab_problem.extensions_config["sciml"].get(
-            "array_files", []
-        )
+        array_files = self._petab_problem.config.extensions.get(
+            "sciml", {}
+        ).array_files
 
         import h5py
 
         # TODO(performance): Avoid opening each file multiple times
         return {
-            file_spec.split("_")[0]: h5py.File(file_spec, "r")["inputs"]
+            file_spec.name.split("_")[0]: h5py.File(file_spec, "r")["inputs"]
             for file_spec in array_files
             if "inputs" in h5py.File(file_spec, "r").keys()
         }
@@ -808,8 +756,11 @@ class JAXProblem(eqx.Module):
         if len(nn_input_arrays) == 0:
             return model
 
-        array_inputs = self._petab_problem.hybridization_df[
-            self._petab_problem.hybridization_df["targetValue"] == "array"
+        array_inputs = self._petab_problem.extensions.sciml.hybridization_df[
+            self._petab_problem.extensions.sciml.hybridization_df[
+                "targetValue"
+            ]
+            == "array"
         ].index.tolist()
 
         for net_id in model_pars:
@@ -1355,7 +1306,7 @@ class JAXProblem(eqx.Module):
         )
 
         if self.parameters.size:
-            if isinstance(self._petab_problem, HybridV2Problem):
+            if isinstance(self._petab_problem, petabv2.Problem):
                 unscaled_parameters = jnp.stack(
                     [
                         self.parameters[ip]
@@ -1796,9 +1747,7 @@ def run_simulations(
     :return:
         Overall output value and condition specific results and statistics.
     """
-    if isinstance(problem, HybridProblem) or isinstance(
-        problem._petab_problem, petabv1.Problem
-    ):
+    if isinstance(problem._petab_problem, petabv1.Problem):
         raise TypeError(
             "run_simulations does not support PEtab v1 problems. Upgrade the problem to PEtab v2."
         )
@@ -1907,7 +1856,7 @@ def petab_simulate(
         max_steps=max_steps,
         ret=ReturnValue.y,
     )
-    if isinstance(problem._petab_problem, HybridV2Problem):
+    if isinstance(problem._petab_problem, petabv2.Problem):
         return _build_simulation_df_v2(problem, y, r["dynamic_conditions"])
     else:
         dfs = []
@@ -1968,9 +1917,6 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
     Args:
         petab_problem: PEtab v2 problem to modify.
     """
-    if not hasattr(petab_problem, "extensions_config"):
-        petab_problem.extensions_config = {}
-
     petab_problem.visualization_df = None
 
     if petab_problem.condition_df is None:
