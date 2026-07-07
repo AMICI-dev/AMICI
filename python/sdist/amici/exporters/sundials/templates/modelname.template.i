@@ -1,6 +1,7 @@
 %define MODULEIMPORT
 "
 import amici
+import amici.sim.sundials
 import datetime
 import importlib.util
 import os
