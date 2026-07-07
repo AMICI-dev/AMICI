@@ -1833,9 +1833,8 @@ class DEModel:
             # compartment sizes, where the coefficients contain a product of
             # `Piecewise` factors that cancels to 1 in `w` but is retained in
             # `get_x_rdata`.
-            if self._simplify is not None:
+            if self._simplify:
                 expected = [self._simplify(expr) for expr in expected]
-                actual = [self._simplify(expr) for expr in actual]
             if expected != actual:
                 raise AssertionError(
                     "Conservation laws are not at the beginning of 'w'. "
