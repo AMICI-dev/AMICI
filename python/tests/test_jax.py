@@ -285,26 +285,21 @@ def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
 
-    try:
-        with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            r = run_simulations(jax_problem)
-            assert not np.isinf(r[0].item())
-        petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
-            petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
         )
-        with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            r = run_simulations(jax_problem)
-            assert np.isinf(r[0].item())
-    except (TypeError, NotImplementedError) as err:
-        if "JAXProblem does not support PEtab v1 problems" in str(err):
-            pytest.skip(str(err))
-        raise err
+        r = run_simulations(jax_problem)
+        assert not np.isinf(r[0].item())
+    petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
+        petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    )
+    with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        r = run_simulations(jax_problem)
+        assert np.isinf(r[0].item())
 
 
 @skip_on_valgrind
@@ -313,27 +308,22 @@ def test_serialisation(lotka_volterra):  # noqa: F811
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
     ) as model_dir:
-        try:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            # change parameters to random values to test serialisation
-            jax_problem.update_parameters(
-                jax_problem.parameters
-                + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
-            )
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        # change parameters to random values to test serialisation
+        jax_problem.update_parameters(
+            jax_problem.parameters
+            + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
+        )
 
-            with TemporaryDirectoryWinSafe() as outdir:
-                outdir = Path(outdir)
-                jax_problem.save(outdir)
-                jax_problem_loaded = JAXProblem.load(outdir)
-                assert_allclose(
-                    jax_problem.parameters, jax_problem_loaded.parameters
-                )
-        except (TypeError, NotImplementedError) as err:
-            if "JAXProblem does not support PEtab v1 problems" in str(err):
-                pytest.skip(str(err))
-            raise err
+        with TemporaryDirectoryWinSafe() as outdir:
+            outdir = Path(outdir)
+            jax_problem.save(outdir)
+            jax_problem_loaded = JAXProblem.load(outdir)
+            assert_allclose(
+                jax_problem.parameters, jax_problem_loaded.parameters
+            )
 
 
 @skip_on_valgrind
@@ -355,51 +345,45 @@ def test_time_dependent_discontinuity(tmp_path):
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
 
-    try:
-        importer.sbml2jax("time_disc", output_dir=tmp_path)
+    importer.sbml2jax("time_disc", output_dir=tmp_path)
 
-        module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
-        model = module.Model()
+    module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
+    model = module.Model()
 
-        p = jnp.array([1.0])
-        x0_full = model._x0(0.0, p)
-        tcl = model._tcl(x0_full, p)
-        x0 = model._x_solver(x0_full)
-        ts = jnp.array([0.0, 1.0, 2.0])
-        h = model._initialise_heaviside_variables(
-            0.0, model._x_solver(x0), p, tcl
-        )
+    p = jnp.array([1.0])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 1.0, 2.0])
+    h = model._initialise_heaviside_variables(
+        0.0, model._x_solver(x0), p, tcl
+    )
 
-        assert len(model._root_cond_fns()) > 0
-        assert model._known_discs(p).size == 0
+    assert len(model._root_cond_fns()) > 0
+    assert model._known_discs(p).size == 0
 
-        ys, _, _ = solve(
-            p,
-            ts[0],
-            ts,
-            tcl,
-            h,
-            x0,
-            jnp.ones_like(h),
-            diffrax.Tsit5(),
-            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-            optimistix.Newton(atol=1e-8, rtol=1e-8),
-            1000,
-            diffrax.DirectAdjoint(),
-            diffrax.ODETerm(model._xdot),
-            model._root_cond_fns(),
-            model._root_cond_fn,
-            model._delta_x,
-            model._known_discs(p),
-            model.observable_ids,
-        )
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
 
-        assert ys.shape[0] == ts.shape[0]
-
-    except NotImplementedError as err:
-        if "The JAX backend does not support" in str(err):
-            pytest.skip(str(err))
-        raise err
+    assert ys.shape[0] == ts.shape[0]
 
 
 @skip_on_valgrind
@@ -419,52 +403,44 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
     """
 
     sbml = antimony2sbml(ant_model)
-    importer = SbmlImporter(sbml, from_file=False)
-    try:
-        importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
+    importer = SbmlImporter(sbml, from_file=False
+    importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
 
-        module = amici._module_from_path(
-            "time_disc_eq", tmp_path / "__init__.py"
-        )
-        model = module.Model()
+    module = amici._module_from_path(
+        "time_disc_eq", tmp_path / "__init__.py"
+    )
+    model = module.Model()
 
-        p = jnp.array([1.0])
-        x0_full = model._x0(0.0, p)
-        tcl = model._tcl(x0_full, p)
-        x0 = model._x_solver(x0_full)
-        h = model._initialise_heaviside_variables(
-            0.0, model._x_solver(x0), p, tcl
-        )
+    p = jnp.array([1.0])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    h = model._initialise_heaviside_variables(
+        0.0, model._x_solver(x0), p, tcl
+    )
 
-        assert len(model._root_cond_fns()) > 0
-        assert model._known_discs(p).size == 0
+    assert len(model._root_cond_fns()) > 0
+    assert model._known_discs(p).size == 0
 
-        xs, _, _ = eq(
-            p,
-            tcl,
-            h,
-            x0,
-            jnp.ones_like(h),
-            diffrax.Tsit5(),
-            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-            optimistix.Newton(atol=1e-8, rtol=1e-8),
-            diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
-            diffrax.ODETerm(model._xdot),
-            model._root_cond_fns(),
-            model._root_cond_fn,
-            model._delta_x,
-            model._known_discs(p),
-            1000,
-        )
+    xs, _, _ = eq(
+        p,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        1000,
+    )
 
-        assert_allclose(xs[0], 0.0, atol=1e-2)
-
-    except (TypeError, NotImplementedError) as err:
-        if "The JAX backend does not support" in str(err):
-            pytest.skip(str(err))
-        elif "JAXProblem does not support PEtab v1 problems" in str(err):
-            pytest.skip(str(err))
-        raise err
+    assert_allclose(xs[0], 0.0, atol=1e-2)
 
 
 @skip_on_valgrind
@@ -489,59 +465,53 @@ def test_explicit_discontinuity(tmp_path):
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
 
-    try:
-        importer.sbml2jax("explicit_disc", output_dir=tmp_path)
+    importer.sbml2jax("explicit_disc", output_dir=tmp_path)
 
-        # the explicit heaviside must be a tracked variable, not an inlined
-        # symbolic Heaviside function of time
-        generated = (tmp_path / "__init__.py").read_text()
-        assert "jnp.select" not in generated
+    # the explicit heaviside must be a tracked variable, not an inlined
+    # symbolic Heaviside function of time
+    generated = (tmp_path / "__init__.py").read_text()
+    assert "jnp.select" not in generated
 
-        module = amici._module_from_path(
-            "explicit_disc", tmp_path / "__init__.py"
-        )
-        model = module.Model()
+    module = amici._module_from_path(
+        "explicit_disc", tmp_path / "__init__.py"
+    )
+    model = module.Model()
 
-        p = jnp.array([])
-        x0_full = model._x0(0.0, p)
-        tcl = model._tcl(x0_full, p)
-        x0 = model._x_solver(x0_full)
-        ts = jnp.array([0.0, 4.0, 5.0, 6.0, 10.0])
-        h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 4.0, 5.0, 6.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
 
-        # explicit trigger time is a known discontinuity
-        assert model._known_discs(p).size > 0
+    # explicit trigger time is a known discontinuity
+    assert model._known_discs(p).size > 0
 
-        ys, _, stats = solve(
-            p,
-            ts[0],
-            ts,
-            tcl,
-            h,
-            x0,
-            jnp.ones_like(h),
-            diffrax.Tsit5(),
-            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-            optimistix.Newton(atol=1e-8, rtol=1e-8),
-            1000,
-            diffrax.DirectAdjoint(),
-            diffrax.ODETerm(model._xdot),
-            model._root_cond_fns(),
-            model._root_cond_fn,
-            model._delta_x,
-            model._known_discs(p),
-            model.observable_ids,
-        )
+    ys, _, stats = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
 
-        expected = jnp.clip(ts - 5.0, min=0.0)
-        assert_allclose(ys.squeeze(), expected, atol=1e-6, rtol=1e-6)
-        # clipping onto the known discontinuity avoids rejected steps
-        assert stats["num_rejected_steps"] == 0
-
-    except NotImplementedError as err:
-        if "The JAX backend does not support" in str(err):
-            pytest.skip(str(err))
-        raise err
+    expected = jnp.clip(ts - 5.0, min=0.0)
+    assert_allclose(ys.squeeze(), expected, atol=1e-6, rtol=1e-6)
+    # clipping onto the known discontinuity avoids rejected steps
+    assert stats["num_rejected_steps"] == 0
 
 
 @skip_on_valgrind
@@ -579,57 +549,51 @@ def test_event_assignments_odd_root_count(tmp_path):
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
 
-    try:
-        importer.sbml2jax("three_events", output_dir=tmp_path)
+    importer.sbml2jax("three_events", output_dir=tmp_path)
 
-        module = amici._module_from_path(
-            "three_events", tmp_path / "__init__.py"
-        )
-        model = module.Model()
+    module = amici._module_from_path(
+        "three_events", tmp_path / "__init__.py"
+    )
+    model = module.Model()
 
-        p = jnp.array([])
-        x0_full = model._x0(0.0, p)
-        tcl = model._tcl(x0_full, p)
-        x0 = model._x_solver(x0_full)
-        ts = jnp.array([0.0, 1.0, 3.0, 6.0, 9.0, 10.0])
-        h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 1.0, 3.0, 6.0, 9.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
 
-        assert len(model._root_cond_fns()) == 3
+    assert len(model._root_cond_fns()) == 3
 
-        ys, _, _ = solve(
-            p,
-            ts[0],
-            ts,
-            tcl,
-            h,
-            x0,
-            jnp.ones_like(h),
-            diffrax.Tsit5(),
-            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-            optimistix.Newton(atol=1e-8, rtol=1e-8),
-            1000,
-            diffrax.DirectAdjoint(),
-            diffrax.ODETerm(model._xdot),
-            model._root_cond_fns(),
-            model._root_cond_fn,
-            model._delta_x,
-            model._known_discs(p),
-            model.observable_ids,
-        )
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
 
-        expected = jnp.array(
-            [
-                [1.0, 1.0, 1.0],
-                [1.0, 1.0, 1.0],
-                [11.0, 1.0, 1.0],
-                [11.0, 101.0, 1.0],
-                [11.0, 101.0, 1001.0],
-                [11.0, 101.0, 1001.0],
-            ]
-        )
-        assert_allclose(ys, expected, atol=1e-6, rtol=1e-6)
-
-    except NotImplementedError as err:
-        if "The JAX backend does not support" in str(err):
-            pytest.skip(str(err))
-        raise err
+    expected = jnp.array(
+        [
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [11.0, 1.0, 1.0],
+            [11.0, 101.0, 1.0],
+            [11.0, 101.0, 1001.0],
+            [11.0, 101.0, 1001.0],
+        ]
+    )
+    assert_allclose(ys, expected, atol=1e-6, rtol=1e-6)
