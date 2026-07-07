@@ -131,9 +131,7 @@ problems_for_llh_check = [
     "Elowitz_Nature2000",
     "Fiedler_BMCSystBiol2016",
     "Fujita_SciSignal2010",
-    # Excluded until https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/pull/253
-    #  is sorted out
-    # "Isensee_JCB2018",
+    "Isensee_JCB2018",
     "Lucarelli_CellSystems2018",
     "Schwen_PONE2014",
     "Smith_BMCSystBiol2013",
