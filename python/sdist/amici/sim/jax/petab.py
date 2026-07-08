@@ -285,12 +285,6 @@ class JAXProblem(eqx.Module):
                     )
 
         for _, simulation_condition in simulation_conditions.iterrows():
-            if (
-                "preequilibration"
-                in simulation_condition[petabv2.C.CONDITION_ID]
-            ):
-                continue
-
             query = " & ".join(
                 [
                     f"{k} == '{v}'" if isinstance(v, str) else f"{k} == {v}"
@@ -527,9 +521,9 @@ class JAXProblem(eqx.Module):
                 ch.target_id: jnp.asarray(
                     ch.target_value, dtype=self.model.parameters.dtype
                 )
+                for ch in c.changes
             }
             for c in self._petab_problem.conditions
-            for ch in c.changes
         }
 
         hybrid_map = {}
@@ -1325,7 +1319,9 @@ class JAXProblem(eqx.Module):
 
         t_zeros = jnp.stack(
             [
-                exp.periods[0].time if exp.periods[0].time >= 0.0 else 0.0
+                0.0
+                if exp.periods[0].is_preequilibration
+                else exp.periods[0].time
                 for exp in experiments
             ]
         )
@@ -1553,16 +1549,21 @@ class JAXProblem(eqx.Module):
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
         """
-        simulation_conditions = [
-            cid
+        # one entry per experiment, aligned with `experiments` (and thus with
+        # `p_array` built from it in `_prepare_experiments`), not a
+        # deduplicated set of condition names.
+        dynamic_conditions = [
+            next(
+                (
+                    cid
+                    for period in exp.periods
+                    if not period.is_preequilibration
+                    for cid in period.condition_ids
+                ),
+                None,
+            )
             for exp in experiments
-            for p in exp.periods
-            for cid in p.condition_ids
         ]
-        dynamic_conditions = list(
-            sc for sc in simulation_conditions if "preequilibration" not in sc
-        )
-        dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
 
         (
             p_array,
@@ -1704,15 +1705,21 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        simulation_conditions = [
-            cid
+        # one entry per experiment, aligned with `experiments` (and thus with
+        # `p_array` built from it in `_prepare_experiments`), not a
+        # deduplicated set of condition names.
+        preequilibration_conditions = [
+            next(
+                (
+                    cid
+                    for period in exp.periods
+                    if period.is_preequilibration
+                    for cid in period.condition_ids
+                ),
+                None,
+            )
             for exp in experiments
-            for p in exp.periods
-            for cid in p.condition_ids
         ]
-        preequilibration_conditions = list(
-            {sc for sc in simulation_conditions if "preequilibration" in sc}
-        )
 
         p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
             self._prepare_experiments(
@@ -1789,21 +1796,26 @@ def run_simulations(
             if exp.id in simulation_experiments
         ]
 
-    simulation_conditions = [
-        cid
+    # one entry per experiment, aligned with `experiments` (and thus with the
+    # rows of `problem._iys`/`problem._ts_masks` built from it), not a
+    # deduplicated set of condition names.
+    dynamic_conditions = [
+        next(
+            (
+                cid
+                for period in exp.periods
+                if not period.is_preequilibration
+                for cid in period.condition_ids
+            ),
+            None,
+        )
         for exp in experiments
-        for p in exp.periods
-        for cid in p.condition_ids
     ]
-    dynamic_conditions = list(
-        sc for sc in simulation_conditions if "preequilibration" not in sc
-    )
-    dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
     conditions = {
         "dynamic_conditions": dynamic_conditions,
     }
 
-    has_preeq = any(exp.periods[0].time < 0.0 for exp in experiments)
+    has_preeq = any(exp.periods[0].is_preequilibration for exp in experiments)
 
     if has_preeq:
         preeqs, preresults, h_preeqs = problem.run_preequilibrations(
@@ -1993,6 +2005,13 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
             experiment_df[petabv2.C.EXPERIMENT_ID] == exp_id
         ][petabv2.C.CONDITION_ID].unique()
 
+    # drop preequilibration periods, identified by `time == -inf` (per the
+    # PEtab v2 spec, this is the only value that signifies preequilibration)
+    # rather than by condition name, since preequilibration conditions may be
+    # named arbitrarily.
+    experiment_df = experiment_df[
+        experiment_df[petabv2.C.TIME] != petabv2.C.TIME_PREEQUILIBRATION
+    ]
     experiment_df = experiment_df.drop(columns=[petabv2.C.TIME])
     return experiment_df
 

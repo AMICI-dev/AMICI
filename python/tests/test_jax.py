@@ -285,26 +285,21 @@ def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
 
-    try:
-        with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            r = run_simulations(jax_problem)
-            assert not np.isinf(r[0].item())
-        petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
-            petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
         )
-        with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            r = run_simulations(jax_problem)
-            assert np.isinf(r[0].item())
-    except (TypeError, NotImplementedError) as err:
-        if "JAXProblem does not support PEtab v1 problems" in str(err):
-            pytest.skip(str(err))
-        raise err
+        r = run_simulations(jax_problem)
+        assert not np.isinf(r[0].item())
+    petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
+        petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    )
+    with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        r = run_simulations(jax_problem)
+        assert np.isinf(r[0].item())
 
 
 @skip_on_valgrind
