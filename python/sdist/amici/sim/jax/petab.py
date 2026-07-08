@@ -95,6 +95,36 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
+def _get_period_condition_id(
+    exp: petabv2.Experiment, is_preequilibration: bool
+) -> str:
+    """Get the condition id of an experiment's (pre)equilibration period.
+
+    :param exp:
+        PEtab v2 experiment.
+    :param is_preequilibration:
+        If ``True``, look for the preequilibration period
+        (:attr:`petabv2.ExperimentPeriod.is_preequilibration`, i.e.
+        ``time == -inf``). If ``False``, look for the dynamic
+        (non-preequilibration) period.
+    :return:
+        The first condition id of the matching period.
+    :raises ValueError:
+        If ``exp`` has no matching period with a non-empty
+        ``condition_ids``.
+    """
+    for period in exp.periods:
+        if period.is_preequilibration != is_preequilibration:
+            continue
+        if period.condition_ids:
+            return period.condition_ids[0]
+
+    kind = "preequilibration" if is_preequilibration else "dynamic"
+    raise ValueError(
+        f"Experiment {exp.id!r} has no {kind} period with a condition id."
+    )
+
+
 class JAXProblem(eqx.Module):
     """
     PEtab problem wrapper for JAX models.
@@ -1553,15 +1583,7 @@ class JAXProblem(eqx.Module):
         # `p_array` built from it in `_prepare_experiments`), not a
         # deduplicated set of condition names.
         dynamic_conditions = [
-            next(
-                (
-                    cid
-                    for period in exp.periods
-                    if not period.is_preequilibration
-                    for cid in period.condition_ids
-                ),
-                None,
-            )
+            _get_period_condition_id(exp, is_preequilibration=False)
             for exp in experiments
         ]
 
@@ -1709,15 +1731,7 @@ class JAXProblem(eqx.Module):
         # `p_array` built from it in `_prepare_experiments`), not a
         # deduplicated set of condition names.
         preequilibration_conditions = [
-            next(
-                (
-                    cid
-                    for period in exp.periods
-                    if period.is_preequilibration
-                    for cid in period.condition_ids
-                ),
-                None,
-            )
+            _get_period_condition_id(exp, is_preequilibration=True)
             for exp in experiments
         ]
 
@@ -1800,15 +1814,7 @@ def run_simulations(
     # rows of `problem._iys`/`problem._ts_masks` built from it), not a
     # deduplicated set of condition names.
     dynamic_conditions = [
-        next(
-            (
-                cid
-                for period in exp.periods
-                if not period.is_preequilibration
-                for cid in period.condition_ids
-            ),
-            None,
-        )
+        _get_period_condition_id(exp, is_preequilibration=False)
         for exp in experiments
     ]
     conditions = {
@@ -1999,11 +2005,6 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
         A pandas DataFrame mapping experiment_ids to condition ids.
     """
     experiment_df = petab_problem.experiment_df
-    exps = {}
-    for exp_id in experiment_df[petabv2.C.EXPERIMENT_ID].unique():
-        exps[exp_id] = experiment_df[
-            experiment_df[petabv2.C.EXPERIMENT_ID] == exp_id
-        ][petabv2.C.CONDITION_ID].unique()
 
     # drop preequilibration periods, identified by `time == -inf` (per the
     # PEtab v2 spec, this is the only value that signifies preequilibration)
