@@ -46,6 +46,31 @@ SCALE_TO_INT = {
 logger = get_logger(__name__, logging.WARNING)
 
 
+class SteadyStateEvent(eqx.Module):
+    """Steady-state termination event with value-based equality.
+
+    :func:`diffrax.steady_state_event` returns a fresh closure on every
+    call, which Python compares by identity. Since ``steady_state_event`` is
+    passed as a static argument into :func:`equinox.filter_jit`-compiled
+    functions (:meth:`JAXModel.simulate_condition`,
+    :meth:`JAXModel.preequilibrate_condition`), constructing a new closure
+    with identical settings on every call (e.g. once per iteration of an
+    optimization loop) silently defeats the JIT cache and forces a full
+    recompilation, even though only numeric inputs (parameters) changed.
+    Wrapping the settings in an :class:`equinox.Module` gives value-based
+    ``__eq__``/``__hash__``, so equivalent instances share the compiled
+    executable regardless of how many times they are (re-)constructed.
+    """
+
+    rtol: float | None = None
+    atol: float | None = None
+
+    def __call__(self, *args, **kwargs):
+        return diffrax.steady_state_event(rtol=self.rtol, atol=self.atol)(
+            *args, **kwargs
+        )
+
+
 def jax_unscale(
     parameter: jnp.float_,
     scale_str: str,
@@ -1719,7 +1744,7 @@ def run_simulations(
     ),
     steady_state_event: Callable[
         ..., diffrax._custom_types.BoolScalarLike
-    ] = diffrax.steady_state_event(),
+    ] = SteadyStateEvent(),
     max_steps: int = 2**13,
     ret: ReturnValue | str = ReturnValue.llh,
 ):
@@ -1828,7 +1853,7 @@ def petab_simulate(
     ),
     steady_state_event: Callable[
         ..., diffrax._custom_types.BoolScalarLike
-    ] = diffrax.steady_state_event(),
+    ] = SteadyStateEvent(),
     max_steps: int = 2**13,
 ):
     """

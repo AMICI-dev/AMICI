@@ -327,6 +327,121 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 
 
 @skip_on_valgrind
+def test_steady_state_event_no_recompile_across_conditions(
+    tmp_path, monkeypatch
+):
+    """Simulating different conditions/parameters must not force JAX to
+    recompile, as long as only numeric inputs (e.g. parameters) change.
+    """
+    import equinox as eqx
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.model import JAXModel
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model steady_state_recompile
+        x' = -k * x
+        x = 1
+        k = 1
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("steady_state_recompile", output_dir=tmp_path)
+    module = amici._module_from_path(
+        "steady_state_recompile", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    def fresh_solver_kwargs():
+        # construct brand new instances on every call, mimicking e.g. an
+        # optimizer objective that rebuilds solver settings each iteration
+        return dict(
+            solver=diffrax.Kvaerno5(),
+            controller=diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            root_finder=optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+            steady_state_event=SteadyStateEvent(),
+        )
+
+    conditions = [1.0, 2.5, 0.3]  # numeric-only differences between calls
+
+    # Avoid order-dependent failures if prior tests already compiled these methods.
+    jax.clear_caches()
+
+    def patch_trace_counter(target, name):
+        # eqx.debug.assert_max_traces/get_num_traces track calls to a plain
+        # callable; since it isn't itself a descriptor, dispatch to it
+        # manually so `self` is still bound correctly when called as
+        # `self.<name>(...)`.
+        wrapped = eqx.debug.assert_max_traces(
+            getattr(target, name), max_traces=1
+        )
+
+        def dispatch(self, *args, **kwargs):
+            return wrapped(self, *args, **kwargs)
+
+        monkeypatch.setattr(target, name, dispatch)
+        return wrapped
+
+    ts = jnp.array([0.0, 1.0, 2.0])
+    my = jnp.zeros_like(ts)
+    iys = jnp.zeros_like(ts, dtype=int)
+    iy_trafos = jnp.zeros_like(ts, dtype=int)
+
+    simulate_traces = patch_trace_counter(
+        JAXModel, "simulate_condition_unjitted"
+    )
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.simulate_condition(
+            jnp.array([k_val]),
+            ts,
+            jnp.array([]),
+            my,
+            iys,
+            iy_trafos,
+            jnp.zeros((3, 0)),
+            jnp.zeros((3, 0)),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            diffrax.RecursiveCheckpointAdjoint(),
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert eqx.debug.get_num_traces(simulate_traces) == 1, (
+        "simulate_condition was retraced across conditions with only "
+        "numeric differences"
+    )
+
+    preeq_traces = patch_trace_counter(JAXModel, "_handle_t0_event")
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.preequilibrate_condition(
+            jnp.array([k_val]),
+            jnp.array([]),
+            jnp.array([]),
+            jnp.array([]),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert eqx.debug.get_num_traces(preeq_traces) == 1, (
+        "preequilibrate_condition was retraced across conditions with only "
+        "numeric differences"
+    )
+
+
+@skip_on_valgrind
 def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""
 
