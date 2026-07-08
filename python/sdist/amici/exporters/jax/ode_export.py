@@ -367,7 +367,17 @@ class ODEExporter:
                 resolved = root
                 for _ in range(len(w_subs) + 1):
                     if resolved.free_symbols.issubset(p_k_syms):
-                        known_discs.add(self._code_printer.doprint(resolved))
+                        if resolved.is_number:
+                            # force a float literal: under jax_enable_x64,
+                            # jnp.array([5]) infers int64, but `known_discs`
+                            # is used as `jump_ts` in
+                            # diffrax.ClipStepSizeController, which requires
+                            # floating point
+                            known_discs.add(repr(float(resolved)))
+                        else:
+                            known_discs.add(
+                                self._code_printer.doprint(resolved)
+                            )
                         break
                     resolved = resolved.subs(w_subs)
         return known_discs
