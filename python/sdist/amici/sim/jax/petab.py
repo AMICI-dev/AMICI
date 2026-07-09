@@ -1199,11 +1199,46 @@ class JAXProblem(eqx.Module):
         if state_id in self._parameter_mappings["hybrid_map"]:
             return True
 
-        return any(
-            state_id
-            in self._parameter_mappings["targets_map"].get(condition, {})
-            for condition in simulation_conditions
+        return (
+            self._condition_reinit_target_value(
+                simulation_conditions, state_id
+            )
+            is not None
         )
+
+    def _condition_reinit_target_value(
+        self, simulation_conditions: tuple[str, ...], state_id: str
+    ):
+        """Return the *raw* condition-table target value initialising a state.
+
+        Looks up the (unresolved) ``target_value`` that (re)initialises
+        ``state_id`` for the given simultaneously-active conditions, reading
+        it straight from the condition-table changes. Returns ``None`` if no
+        active condition sets ``state_id`` (PEtab v2 requires the targets of
+        simultaneously-active conditions to be disjoint, so at most one does).
+
+        The raw value is returned deliberately -- callers resolve it *live*
+        against :attr:`parameters` (see
+        :meth:`_state_reinitialisation_value`), rather than reusing the
+        ``targets_map`` value cached at construction time, so that gradients
+        w.r.t. parameters used as initial values are not silently dropped.
+        """
+        for condition in simulation_conditions:
+            for c in self._petab_problem.conditions:
+                if c.id != condition:
+                    continue
+                for change in c.changes:
+                    if change.target_id != state_id:
+                        continue
+                    # NaN targets (e.g. "use the preequilibration/SBML value")
+                    # are dropped during v1->v2 conversion, but guard anyway
+                    if (
+                        change.target_value.is_number
+                        and change.target_value.is_finite is False
+                    ):
+                        return None
+                    return change.target_value
+        return None
 
     def _state_reinitialisation_value(
         self,
@@ -1232,10 +1267,17 @@ class JAXProblem(eqx.Module):
                 simulation_conditions[0],
             )
 
-        for condition in simulation_conditions:
-            target = self._parameter_mappings["targets_map"].get(condition, {})
-            if state_id in target:
-                return target[state_id]
+        target_value = self._condition_reinit_target_value(
+            simulation_conditions, state_id
+        )
+        if target_value is not None:
+            # Resolve *live* against ``self.parameters`` (not via the
+            # construction-time ``targets_map`` cache): this method runs inside
+            # the traced/differentiated region (via ``_prepare_experiments``),
+            # so reading ``self.parameters`` here keeps the reinitialisation
+            # value a function of the current parameters -- gradients flow and
+            # re-simulating after ``update_parameters`` reflects the new value.
+            return self._resolve_condition_target_value(target_value)
         # no reinitialisation, return dummy value
         return 0.0
 

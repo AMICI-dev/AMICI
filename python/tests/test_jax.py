@@ -327,6 +327,65 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 
 
 @skip_on_valgrind
+def test_condition_table_initial_value_is_differentiable(tmp_path):
+    """A parameter used as a species initial value via the condition table
+    must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for a bug where the reinitialisation value was resolved
+    through the ``targets_map`` cached at construction time
+    (see ``JAXProblem._state_reinitialisation_value``): the initial value was
+    then frozen at the nominal parameter value, so ``update_parameters`` had
+    no effect on it and its gradient silently leaked into the cache instead of
+    ``grad.parameters``.
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `a0` initialises species `A` via the condition table (not in the model)
+    problem.add_parameter(
+        "a0", estimate=True, nominal_value=2.0, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    problem.add_condition("c0", A="a0")
+    problem.add_measurement("obs_a", "c0", 0.0, 0.7)
+    problem.add_measurement("obs_a", "c0", 10.0, 0.1)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ia = jax_problem.parameter_ids.index("a0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    # `a0` enters the likelihood only through A(0); updating it must change llh
+    assert abs(float(llh(p0.at[ia].add(1.0))) - float(llh(p0))) > 1e-6, (
+        "initial value is frozen w.r.t. update_parameters"
+    )
+
+    # autodiff w.r.t. `a0` (read from grad.parameters) must match finite diff
+    eps = 1e-6
+    fd = (float(llh(p0.at[ia].add(eps))) - float(llh(p0.at[ia].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ia]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
 def test_steady_state_event_no_recompile_across_conditions(
     tmp_path, monkeypatch
 ):
