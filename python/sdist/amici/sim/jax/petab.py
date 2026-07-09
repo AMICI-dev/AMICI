@@ -183,15 +183,12 @@ class JAXProblem(eqx.Module):
         :param directory:
             Directory to save the problem to.
         """
-        self._petab_problem.to_files(
-            prefix_path=directory,
-            model_file="model",
-            condition_file="conditions.tsv",
-            measurement_file="measurements.tsv",
-            parameter_file="parameters.tsv",
-            observable_file="observables.tsv",
-            yaml_file="problem.yaml",
-        )
+        if self._petab_problem.config is None:
+            self._petab_problem.config = petabv2.ProblemConfig(
+                format_version="2.0.0"
+            )
+        self._petab_problem.config.filepath = "problem.yaml"
+        self._petab_problem.to_files(base_path=directory)
         shutil.copy(self.model.jax_py_file, directory / "jax_py_file.py")
         with open(directory / "parameters.pkl", "wb") as f:
             eqx.tree_serialise_leaves(f, self)
