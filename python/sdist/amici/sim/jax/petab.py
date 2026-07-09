@@ -1299,7 +1299,7 @@ class JAXProblem(eqx.Module):
             Condition id(s) simultaneously active for the simulation
             condition to load reinitialisation for.
         :return:
-            Tuple of reinitialisation masm and value for states.
+            Tuple of reinitialisation mask and value for states.
         """
         if isinstance(simulation_conditions, str):
             simulation_conditions = (simulation_conditions,)
@@ -1308,8 +1308,7 @@ class JAXProblem(eqx.Module):
             self._state_needs_reinitialisation(simulation_conditions, x_id)
             for x_id in self.model.state_ids
         ]
-        if not any(needs_reinit):
-            return jnp.array([]), jnp.array([])
+        # Always return full-length arrays per condition; callers stack/vmap across conditions and require consistent shapes.
 
         mask = jnp.array(needs_reinit)
         reinit_x = jnp.array(
