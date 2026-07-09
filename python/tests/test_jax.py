@@ -308,27 +308,22 @@ def test_serialisation(lotka_volterra):  # noqa: F811
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
     ) as model_dir:
-        try:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            # change parameters to random values to test serialisation
-            jax_problem.update_parameters(
-                jax_problem.parameters
-                + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
-            )
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        # change parameters to random values to test serialisation
+        jax_problem.update_parameters(
+            jax_problem.parameters
+            + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
+        )
 
-            with TemporaryDirectoryWinSafe() as outdir:
-                outdir = Path(outdir)
-                jax_problem.save(outdir)
-                jax_problem_loaded = JAXProblem.load(outdir)
-                assert_allclose(
-                    jax_problem.parameters, jax_problem_loaded.parameters
-                )
-        except (TypeError, NotImplementedError) as err:
-            if "JAXProblem does not support PEtab v1 problems" in str(err):
-                pytest.skip(str(err))
-            raise err
+        with TemporaryDirectoryWinSafe() as outdir:
+            outdir = Path(outdir)
+            jax_problem.save(outdir)
+            jax_problem_loaded = JAXProblem.load(outdir)
+            assert_allclose(
+                jax_problem.parameters, jax_problem_loaded.parameters
+            )
 
 
 @skip_on_valgrind
