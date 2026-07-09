@@ -95,6 +95,42 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
+def _get_period_condition_ids(
+    exp: petabv2.Experiment, is_preequilibration: bool
+) -> tuple[str, ...]:
+    """Get the condition ids of an experiment's (pre)equilibration period.
+
+    A period may reference multiple condition ids applied simultaneously
+    (PEtab v2 requires their targets to be disjoint); all of them are
+    returned so callers can consider each one, rather than collapsing them
+    into a single id that would not correspond to any row of
+    :attr:`petab.v2.Problem.condition_df`.
+
+    :param exp:
+        PEtab v2 experiment.
+    :param is_preequilibration:
+        If ``True``, look for the preequilibration period
+        (:attr:`petabv2.ExperimentPeriod.is_preequilibration`, i.e.
+        ``time == -inf``). If ``False``, look for the dynamic
+        (non-preequilibration) period.
+    :return:
+        The condition ids of the matching period, in period order.
+    :raises ValueError:
+        If ``exp`` has no matching period with a non-empty
+        ``condition_ids``.
+    """
+    for period in exp.periods:
+        if period.is_preequilibration != is_preequilibration:
+            continue
+        if period.condition_ids:
+            return tuple(period.condition_ids)
+
+    kind = "preequilibration" if is_preequilibration else "dynamic"
+    raise ValueError(
+        f"Experiment {exp.id!r} has no {kind} period with a condition id."
+    )
+
+
 class JAXProblem(eqx.Module):
     """
     PEtab problem wrapper for JAX models.
@@ -183,15 +219,12 @@ class JAXProblem(eqx.Module):
         :param directory:
             Directory to save the problem to.
         """
-        self._petab_problem.to_files(
-            prefix_path=directory,
-            model_file="model",
-            condition_file="conditions.tsv",
-            measurement_file="measurements.tsv",
-            parameter_file="parameters.tsv",
-            observable_file="observables.tsv",
-            yaml_file="problem.yaml",
-        )
+        if self._petab_problem.config is None:
+            self._petab_problem.config = petabv2.ProblemConfig(
+                format_version="2.0.0"
+            )
+        self._petab_problem.config.filepath = "problem.yaml"
+        self._petab_problem.to_files(base_path=directory)
         shutil.copy(self.model.jax_py_file, directory / "jax_py_file.py")
         with open(directory / "parameters.pkl", "wb") as f:
             eqx.tree_serialise_leaves(f, self)
@@ -285,12 +318,6 @@ class JAXProblem(eqx.Module):
                     )
 
         for _, simulation_condition in simulation_conditions.iterrows():
-            if (
-                "preequilibration"
-                in simulation_condition[petabv2.C.CONDITION_ID]
-            ):
-                continue
-
             query = " & ".join(
                 [
                     f"{k} == '{v}'" if isinstance(v, str) else f"{k} == {v}"
@@ -527,9 +554,9 @@ class JAXProblem(eqx.Module):
                 ch.target_id: jnp.asarray(
                     ch.target_value, dtype=self.model.parameters.dtype
                 )
+                for ch in c.changes
             }
             for c in self._petab_problem.conditions
-            for ch in c.changes
         }
 
         hybrid_map = {}
@@ -1132,14 +1159,16 @@ class JAXProblem(eqx.Module):
 
     def _state_needs_reinitialisation(
         self,
-        simulation_condition: str,
+        simulation_conditions: tuple[str, ...],
         state_id: str,
     ) -> bool:
         """
         Check if a state needs reinitialisation for a simulation condition.
 
-        :param simulation_condition:
-            simulation condition to check reinitialisation for
+        :param simulation_conditions:
+            condition ids simultaneously active for the simulation condition
+            to check reinitialisation for (PEtab v2 requires their targets
+            to be disjoint, so at most one of them defines ``state_id``)
         :param state_id:
             state id to check reinitialisation for
         :return:
@@ -1153,24 +1182,26 @@ class JAXProblem(eqx.Module):
 
         if state_id not in self._petab_problem.condition_df:
             return False
-        xval = self._petab_problem.condition_df.loc[
-            simulation_condition, state_id
-        ]
-        if isinstance(xval, Number) and np.isnan(xval):
-            return False
-        return True
+        for condition in simulation_conditions:
+            xval = self._petab_problem.condition_df.loc[condition, state_id]
+            if not (isinstance(xval, Number) and np.isnan(xval)):
+                return True
+        return False
 
     def _state_reinitialisation_value(
         self,
-        simulation_condition: str,
+        simulation_conditions: tuple[str, ...],
         state_id: str,
         p: jt.Float[jt.Array, "np"],
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
 
-        :param simulation_condition:
-            simulation condition to get reinitialisation value for
+        :param simulation_conditions:
+            condition ids simultaneously active for the simulation condition
+            to get the reinitialisation value for (PEtab v2 requires their
+            targets to be disjoint, so at most one of them defines
+            ``state_id``)
         :param state_id:
             state id to get reinitialisation value for
         :param p:
@@ -1179,21 +1210,27 @@ class JAXProblem(eqx.Module):
             reinitialisation value for the state
         """
         if state_id in self.nn_output_ids:
-            return self._eval_nn(state_id, simulation_condition)
+            return self._eval_nn(state_id, simulation_conditions[0])
 
         if state_id in self._parameter_mappings["hybrid_map"]:
             return self._eval_nn(
                 self._parameter_mappings["hybrid_map"][state_id],
-                simulation_condition,
+                simulation_conditions[0],
             )
 
         if state_id not in self._petab_problem.condition_df:
             # no reinitialisation, return dummy value
             return 0.0
-        xval = self._petab_problem.condition_df.loc[
-            simulation_condition, state_id
-        ]
-        if isinstance(xval, Number) and np.isnan(xval):
+
+        xval = None
+        for condition in simulation_conditions:
+            candidate = self._petab_problem.condition_df.loc[
+                condition, state_id
+            ]
+            if not (isinstance(candidate, Number) and np.isnan(candidate)):
+                xval = candidate
+                break
+        if xval is None:
             # no reinitialisation, return dummy value
             return 0.0
         if isinstance(xval, Number):
@@ -1218,19 +1255,23 @@ class JAXProblem(eqx.Module):
 
     def load_reinitialisation(
         self,
-        simulation_condition: str,
+        simulation_conditions: str | tuple[str, ...],
         p: jt.Float[jt.Array, "np"],
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
         Load reinitialisation values and mask for the state vector for a simulation condition.
 
-        :param simulation_condition:
-            Simulation condition to load reinitialisation for.
+        :param simulation_conditions:
+            Condition id(s) simultaneously active for the simulation
+            condition to load reinitialisation for.
         :param p:
             Parameters for the simulation condition.
         :return:
             Tuple of reinitialisation masm and value for states.
         """
+        if isinstance(simulation_conditions, str):
+            simulation_conditions = (simulation_conditions,)
+
         if not any(
             x_id in self._petab_problem.condition_df
             or hasattr(self, "nn_output_ids")
@@ -1241,14 +1282,14 @@ class JAXProblem(eqx.Module):
 
         mask = jnp.array(
             [
-                self._state_needs_reinitialisation(simulation_condition, x_id)
+                self._state_needs_reinitialisation(simulation_conditions, x_id)
                 for x_id in self.model.state_ids
             ]
         )
         reinit_x = jnp.array(
             [
                 self._state_reinitialisation_value(
-                    simulation_condition, x_id, p
+                    simulation_conditions, x_id, p
                 )
                 for x_id in self.model.state_ids
             ]
@@ -1325,7 +1366,9 @@ class JAXProblem(eqx.Module):
 
         t_zeros = jnp.stack(
             [
-                exp.periods[0].time if exp.periods[0].time >= 0.0 else 0.0
+                0.0
+                if exp.periods[0].is_preequilibration
+                else exp.periods[0].time
                 for exp in experiments
             ]
         )
@@ -1553,16 +1596,13 @@ class JAXProblem(eqx.Module):
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
         """
-        simulation_conditions = [
-            cid
+        # one entry per experiment, aligned with `experiments` (and thus with
+        # `p_array` built from it in `_prepare_experiments`), not a
+        # deduplicated set of condition names.
+        dynamic_conditions = [
+            _get_period_condition_ids(exp, is_preequilibration=False)
             for exp in experiments
-            for p in exp.periods
-            for cid in p.condition_ids
         ]
-        dynamic_conditions = list(
-            sc for sc in simulation_conditions if "preequilibration" not in sc
-        )
-        dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
 
         (
             p_array,
@@ -1704,15 +1744,13 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        simulation_conditions = [
-            cid
+        # one entry per experiment, aligned with `experiments` (and thus with
+        # `p_array` built from it in `_prepare_experiments`), not a
+        # deduplicated set of condition names.
+        preequilibration_conditions = [
+            _get_period_condition_ids(exp, is_preequilibration=True)
             for exp in experiments
-            for p in exp.periods
-            for cid in p.condition_ids
         ]
-        preequilibration_conditions = list(
-            {sc for sc in simulation_conditions if "preequilibration" in sc}
-        )
 
         p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
             self._prepare_experiments(
@@ -1789,21 +1827,18 @@ def run_simulations(
             if exp.id in simulation_experiments
         ]
 
-    simulation_conditions = [
-        cid
+    # one entry per experiment, aligned with `experiments` (and thus with the
+    # rows of `problem._iys`/`problem._ts_masks` built from it), not a
+    # deduplicated set of condition names.
+    dynamic_conditions = [
+        _get_period_condition_ids(exp, is_preequilibration=False)
         for exp in experiments
-        for p in exp.periods
-        for cid in p.condition_ids
     ]
-    dynamic_conditions = list(
-        sc for sc in simulation_conditions if "preequilibration" not in sc
-    )
-    dynamic_conditions = list(dict.fromkeys(dynamic_conditions))
     conditions = {
         "dynamic_conditions": dynamic_conditions,
     }
 
-    has_preeq = any(exp.periods[0].time < 0.0 for exp in experiments)
+    has_preeq = any(exp.periods[0].is_preequilibration for exp in experiments)
 
     if has_preeq:
         preeqs, preresults, h_preeqs = problem.run_preequilibrations(
@@ -1987,12 +2022,11 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
         A pandas DataFrame mapping experiment_ids to condition ids.
     """
     experiment_df = petab_problem.experiment_df
-    exps = {}
-    for exp_id in experiment_df[petabv2.C.EXPERIMENT_ID].unique():
-        exps[exp_id] = experiment_df[
-            experiment_df[petabv2.C.EXPERIMENT_ID] == exp_id
-        ][petabv2.C.CONDITION_ID].unique()
 
+    # drop preequilibration periods
+    experiment_df = experiment_df[
+        experiment_df[petabv2.C.TIME] != petabv2.C.TIME_PREEQUILIBRATION
+    ]
     experiment_df = experiment_df.drop(columns=[petabv2.C.TIME])
     return experiment_df
 
