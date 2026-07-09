@@ -117,7 +117,7 @@ def _get_period_condition_id(
         if period.is_preequilibration != is_preequilibration:
             continue
         if period.condition_ids:
-            return period.condition_ids[0]
+            return '+'.join(period.condition_ids)
 
     kind = "preequilibration" if is_preequilibration else "dynamic"
     raise ValueError(
