@@ -91,6 +91,16 @@ def import_petab_problem(
             "Unsupported model type " + petab_problem.model.type_id
         )
 
+    if jax:
+        # snapshot the pristine v1 problem for the later v1->v2 upgrade
+        # (below) before it gets mutated by SBML/PySB model compilation
+        # (e.g. `_workaround_observable_parameters` adds global SBML
+        # parameters in place); upgrading the mutated problem can fail v1's
+        # own linting inside `petab1to2`.
+        import copy
+
+        pristine_petab_problem = copy.deepcopy(petab_problem)
+
     model_name = model_name or petab_problem.model.model_id
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB and model_name is None:
@@ -267,12 +277,14 @@ def import_petab_problem(
             f"Successfully loaded jax model {model_name} from {output_dir}."
         )
 
-        # JAXProblem requires a PEtab v2 problem; upgrade the v1 problem by
-        # serializing it to a temporary PEtab v1 problem on disk and letting
-        # petab auto-upgrade it (``petab.v2.Problem.from_yaml`` upgrades v1
-        # YAML files via ``petab1to2``).
+        # JAXProblem requires a PEtab v2 problem; upgrade the pristine v1
+        # problem by serializing it to a temporary PEtab v1 problem on disk
+        # and letting petab auto-upgrade it (``petab.v2.Problem.from_yaml``
+        # upgrades v1 YAML files via ``petab1to2``).
         with tempfile.TemporaryDirectory() as tmp_dir:
-            yaml_path = petab_problem.to_files_generic(prefix_path=tmp_dir)
+            yaml_path = pristine_petab_problem.to_files_generic(
+                prefix_path=tmp_dir
+            )
             petab_problem_v2 = petabv2.Problem.from_yaml(yaml_path)
 
         # Create and return JAXProblem

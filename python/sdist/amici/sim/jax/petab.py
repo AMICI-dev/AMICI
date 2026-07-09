@@ -548,11 +548,31 @@ class JAXProblem(eqx.Module):
             np_indices,
         )
 
+    def _resolve_condition_target_value(self, target_value):
+        """Resolve a condition change's target value to a number.
+
+        A condition table target value may be a numeric literal, or a
+        reference to another PEtab parameter id (to be substituted with
+        that parameter's current value, e.g. to share an estimated
+        parameter's value across multiple conditions).
+        """
+        if not target_value.is_number:
+            pname = str(target_value)
+            if pname in self.parameter_ids:
+                return self.parameters[self.parameter_ids.index(pname)]
+            _petab_param_map = {
+                param.id: param.nominal_value
+                for param in self._petab_problem.parameters
+            }
+            if pname in _petab_param_map:
+                return _petab_param_map[pname]
+        return jnp.asarray(target_value, dtype=self.model.parameters.dtype)
+
     def _get_parameter_mappings(self) -> dict[str, ...]:
         targets_map = {
             c.id: {
-                ch.target_id: jnp.asarray(
-                    ch.target_value, dtype=self.model.parameters.dtype
+                ch.target_id: self._resolve_condition_target_value(
+                    ch.target_value
                 )
                 for ch in c.changes
             }
@@ -1989,9 +2009,16 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
         petab_problem.experiment_df is None
         or petab_problem.experiment_df.empty
     ):
-        condition_ids = petab_problem.condition_df[
-            petabv2.C.CONDITION_ID
-        ].values
+        # read condition ids from the condition table elements, not
+        # `condition_df`: a condition with no changes (e.g. the just-added
+        # default condition, or any other no-op condition) contributes zero
+        # rows to the long-format `condition_df`, so its id could not be
+        # recovered from there.
+        condition_ids = [
+            c.id
+            for table in petab_problem.condition_tables
+            for c in table.elements
+        ]
         condition_ids = [
             c for c in condition_ids if "preequilibration" not in c
         ]
@@ -2019,7 +2046,8 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     """Get simulation conditions from PEtab v2 measurement DataFrame.
 
     Returns:
-        A pandas DataFrame mapping experiment_ids to condition ids.
+        A pandas DataFrame mapping experiment_ids to condition ids, one row
+        per experiment.
     """
     experiment_df = petab_problem.experiment_df
 
@@ -2028,6 +2056,16 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
         experiment_df[petabv2.C.TIME] != petabv2.C.TIME_PREEQUILIBRATION
     ]
     experiment_df = experiment_df.drop(columns=[petabv2.C.TIME])
+    # a dynamic period may reference multiple condition ids (e.g. the
+    # synthetic preequilibration-indicator condition alongside the actual
+    # experiment condition); measurements are only ever queried by
+    # experiment id (see `JAXProblem._get_measurements`), so collapse to
+    # one row per experiment -- otherwise arrays built per condition row
+    # here and arrays built per experiment elsewhere (e.g. `p_array` in
+    # `_prepare_experiments`) end up with mismatched batch sizes.
+    experiment_df = experiment_df.drop_duplicates(
+        subset=[petabv2.C.EXPERIMENT_ID]
+    )
     return experiment_df
 
 
@@ -2035,12 +2073,17 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
     """Build petab simulation DataFrame of similation results from a PEtab v2 problem."""
     dfs = []
     for ic, sc in enumerate(dyn_conditions):
+        # all condition ids of a period share the same experiment id, so any
+        # one of them (here, the first) resolves the lookup
         experiment_id = _conditions_to_experiment_map(
             problem._petab_problem.experiment_df
-        )[sc]
+        )[sc[0]]
 
-        if experiment_id == "__default__":
-            experiment_id = jnp.nan
+        # the synthetic default experiment id is reported as NaN, but the
+        # original id is still needed below to query the measurement table
+        reported_experiment_id = (
+            jnp.nan if experiment_id == "__default__" else experiment_id
+        )
 
         obs = [
             problem.model.observable_ids[io]
@@ -2056,7 +2099,7 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
             {
                 petabv2.C.MODEL_ID: [float("nan")] * len(t),
                 petabv2.C.OBSERVABLE_ID: obs,
-                petabv2.C.EXPERIMENT_ID: [experiment_id] * len(t),
+                petabv2.C.EXPERIMENT_ID: [reported_experiment_id] * len(t),
                 petabv2.C.TIME: t[problem._ts_masks[ic, :]],
                 petabv2.C.SIMULATION: y[ic, problem._ts_masks[ic, :]],
             },

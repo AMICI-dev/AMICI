@@ -102,6 +102,17 @@ def _test_case(case, model_type, version, jax):
         simulation_df.rename(
             columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
         )
+        # the JAX backend simulates via the (upgraded) PEtab v2 problem and
+        # thus reports the v2-style `experimentId` (e.g. the synthetic
+        # `"__default__"`, mapped to NaN) instead of the v1-style
+        # `simulationConditionId` expected below. Rows correspond 1:1 to
+        # `problem.measurement_df` (v1->v2 upgrade preserves row order), so
+        # recover the original column by index alignment.
+        simulation_df[petab.SIMULATION_CONDITION_ID] = (
+            problem.measurement_df.loc[
+                simulation_df.index, petab.SIMULATION_CONDITION_ID
+            ].values
+        )
     else:
         model = imported  # import_petab_problem returns Model when jax=False
         solver = model.create_solver()
