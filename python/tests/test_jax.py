@@ -386,6 +386,61 @@ def test_condition_table_initial_value_is_differentiable(tmp_path):
 
 
 @skip_on_valgrind
+def test_condition_table_parameter_override_is_differentiable(tmp_path):
+    """A model parameter mapped to an estimated parameter via the condition
+    table (the standard PEtab pattern for condition-specific estimated
+    parameters) must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for the same construction-time freezing bug as
+    ``test_condition_table_initial_value_is_differentiable``, on the parameter
+    mapping path (``JAXProblem._map_experiment_model_parameter_value``).
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # the condition maps model parameter `k1` to the estimated `k1_c0`
+    problem.add_parameter(
+        "k1_c0", estimate=True, nominal_value=0.8, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    problem.add_condition("c0", k1="k1_c0")
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ik = jax_problem.parameter_ids.index("k1_c0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    assert abs(float(llh(p0.at[ik].add(0.3))) - float(llh(p0))) > 1e-6, (
+        "condition-overridden parameter is frozen w.r.t. update_parameters"
+    )
+
+    eps = 1e-6
+    fd = (float(llh(p0.at[ik].add(eps))) - float(llh(p0.at[ik].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ik]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
 def test_steady_state_event_no_recompile_across_conditions(
     tmp_path, monkeypatch
 ):

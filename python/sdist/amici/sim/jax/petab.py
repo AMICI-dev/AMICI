@@ -1126,18 +1126,25 @@ class JAXProblem(eqx.Module):
         else:
             init_val = self.model.parameters[p_index]
 
-        targets_filtered = {
-            param: value
-            for condition, target in self._parameter_mappings[
-                "targets_map"
-            ].items()
-            for param, value in target.items()
-            if condition in condition_ids
+        # Resolve condition-table overrides *live* from the raw changes rather
+        # than reusing the ``targets_map`` values cached at construction time.
+        # This method runs inside the traced/differentiated region (via
+        # ``_prepare_experiments``), so reading ``self.parameters`` (through
+        # ``_resolve_condition_target_value``) keeps the value a function of
+        # the current parameters -- gradients w.r.t. an (e.g. condition-
+        # specific) estimated parameter that a condition maps this one to flow,
+        # and re-simulating after ``update_parameters`` reflects the new value.
+        raw_targets = {
+            change.target_id: change.target_value
+            for c in self._petab_problem.conditions
+            if c.id in condition_ids
+            for change in c.changes
         }
 
-        if pname in targets_filtered:
+        if pname in raw_targets:
             return jnp.asarray(
-                targets_filtered[pname], dtype=self.model.parameters.dtype
+                self._resolve_condition_target_value(raw_targets[pname]),
+                dtype=self.model.parameters.dtype,
             )
         elif pname in self._parameter_mappings["hybrid_map"]:
             return jnp.asarray(
