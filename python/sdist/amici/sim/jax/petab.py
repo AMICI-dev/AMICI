@@ -2006,10 +2006,7 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     """
     experiment_df = petab_problem.experiment_df
 
-    # drop preequilibration periods, identified by `time == -inf` (per the
-    # PEtab v2 spec, this is the only value that signifies preequilibration)
-    # rather than by condition name, since preequilibration conditions may be
-    # named arbitrarily.
+    # drop preequilibration periods
     experiment_df = experiment_df[
         experiment_df[petabv2.C.TIME] != petabv2.C.TIME_PREEQUILIBRATION
     ]
