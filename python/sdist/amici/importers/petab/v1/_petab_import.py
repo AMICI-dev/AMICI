@@ -38,60 +38,6 @@ __all__ = ["import_petab_problem"]
 logger = get_logger(__name__, logging.WARNING)
 
 
-def _fix_petab1to2_noise_distribution_bug(
-    pristine_v1_problem: petab.Problem, petab_problem_v2
-) -> None:
-    """Work around a bug in ``petab.v2.petab1to2.v1v2_observable_df``.
-
-    That function is supposed to merge the v1 ``observableTransformation``
-    (lin/log/log10) into the v2 ``noiseDistribution`` (e.g. into
-    ``log-normal``), but its inner ``update_noise_dist`` helper never
-    returns the value it computes, so every upgraded observable silently
-    reverts to ``normal`` regardless of the original transformation. This
-    corrupts chi2 (and anything else derived from ``noiseDistribution``,
-    e.g. :func:`amici.sim.jax.petab.JAXProblem._get_measurements`'s
-    ``iy_trafos``) for any v1 problem that used a non-linear observable
-    transformation -- even though AMICI's own log-likelihood code
-    generation is unaffected, since that is derived directly from the
-    pristine v1 problem, not from this v2 upgrade.
-
-    Recompute the correct v2 ``noiseDistribution`` from the pristine v1
-    problem and patch it into the upgraded v2 problem's observables, in
-    place.
-
-    TODO: remove once fixed upstream (``update_noise_dist`` in
-    https://github.com/PEtab-dev/libpetab-python/blob/main/petab/v2/petab1to2.py
-    is missing a ``return new_dist``).
-    """
-    v1_obs_df = pristine_v1_problem.observable_df
-    if petab.C.OBSERVABLE_TRANSFORMATION not in v1_obs_df:
-        return
-
-    import petab.v2 as petabv2
-
-    transformations = v1_obs_df[petab.C.OBSERVABLE_TRANSFORMATION].fillna(
-        petab.C.LIN
-    )
-    if petab.C.NOISE_DISTRIBUTION in v1_obs_df:
-        distributions = v1_obs_df[petab.C.NOISE_DISTRIBUTION].fillna(
-            petab.C.NORMAL
-        )
-    else:
-        distributions = pd.Series(petab.C.NORMAL, index=v1_obs_df.index)
-
-    observables_by_id = {obs.id: obs for obs in petab_problem_v2.observables}
-    for obs_id, trans in transformations.items():
-        if obs_id not in observables_by_id:
-            continue
-        dist = distributions[obs_id]
-        new_dist = dist if trans == petab.C.LIN else f"{trans}-{dist}"
-        # mirrors the (already applied, and already warned-about) v1-only
-        # log10-normal -> log-normal substitution in the real petab1to2
-        if new_dist == "log10-normal":
-            new_dist = petabv2.C.LOG_NORMAL
-        observables_by_id[obs_id].noise_distribution = new_dist
-
-
 def import_petab_problem(
     petab_problem: petab.Problem,
     output_dir: str | Path | None = None,
@@ -340,9 +286,6 @@ def import_petab_problem(
                 prefix_path=tmp_dir
             )
             petab_problem_v2 = petabv2.Problem.from_yaml(yaml_path)
-        _fix_petab1to2_noise_distribution_bug(
-            pristine_petab_problem, petab_problem_v2
-        )
 
         # Create and return JAXProblem
         logger.info(f"Successfully created JAXProblem for {model_name}.")
