@@ -95,10 +95,16 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
-def _get_period_condition_id(
+def _get_period_condition_ids(
     exp: petabv2.Experiment, is_preequilibration: bool
-) -> str:
-    """Get the condition id of an experiment's (pre)equilibration period.
+) -> tuple[str, ...]:
+    """Get the condition ids of an experiment's (pre)equilibration period.
+
+    A period may reference multiple condition ids applied simultaneously
+    (PEtab v2 requires their targets to be disjoint); all of them are
+    returned so callers can consider each one, rather than collapsing them
+    into a single id that would not correspond to any row of
+    :attr:`petab.v2.Problem.condition_df`.
 
     :param exp:
         PEtab v2 experiment.
@@ -108,7 +114,7 @@ def _get_period_condition_id(
         ``time == -inf``). If ``False``, look for the dynamic
         (non-preequilibration) period.
     :return:
-        The first condition id of the matching period.
+        The condition ids of the matching period, in period order.
     :raises ValueError:
         If ``exp`` has no matching period with a non-empty
         ``condition_ids``.
@@ -117,7 +123,7 @@ def _get_period_condition_id(
         if period.is_preequilibration != is_preequilibration:
             continue
         if period.condition_ids:
-            return '+'.join(period.condition_ids)
+            return tuple(period.condition_ids)
 
     kind = "preequilibration" if is_preequilibration else "dynamic"
     raise ValueError(
@@ -1153,14 +1159,16 @@ class JAXProblem(eqx.Module):
 
     def _state_needs_reinitialisation(
         self,
-        simulation_condition: str,
+        simulation_conditions: tuple[str, ...],
         state_id: str,
     ) -> bool:
         """
         Check if a state needs reinitialisation for a simulation condition.
 
-        :param simulation_condition:
-            simulation condition to check reinitialisation for
+        :param simulation_conditions:
+            condition ids simultaneously active for the simulation condition
+            to check reinitialisation for (PEtab v2 requires their targets
+            to be disjoint, so at most one of them defines ``state_id``)
         :param state_id:
             state id to check reinitialisation for
         :return:
@@ -1174,24 +1182,26 @@ class JAXProblem(eqx.Module):
 
         if state_id not in self._petab_problem.condition_df:
             return False
-        xval = self._petab_problem.condition_df.loc[
-            simulation_condition, state_id
-        ]
-        if isinstance(xval, Number) and np.isnan(xval):
-            return False
-        return True
+        for condition in simulation_conditions:
+            xval = self._petab_problem.condition_df.loc[condition, state_id]
+            if not (isinstance(xval, Number) and np.isnan(xval)):
+                return True
+        return False
 
     def _state_reinitialisation_value(
         self,
-        simulation_condition: str,
+        simulation_conditions: tuple[str, ...],
         state_id: str,
         p: jt.Float[jt.Array, "np"],
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
 
-        :param simulation_condition:
-            simulation condition to get reinitialisation value for
+        :param simulation_conditions:
+            condition ids simultaneously active for the simulation condition
+            to get the reinitialisation value for (PEtab v2 requires their
+            targets to be disjoint, so at most one of them defines
+            ``state_id``)
         :param state_id:
             state id to get reinitialisation value for
         :param p:
@@ -1200,21 +1210,27 @@ class JAXProblem(eqx.Module):
             reinitialisation value for the state
         """
         if state_id in self.nn_output_ids:
-            return self._eval_nn(state_id, simulation_condition)
+            return self._eval_nn(state_id, simulation_conditions[0])
 
         if state_id in self._parameter_mappings["hybrid_map"]:
             return self._eval_nn(
                 self._parameter_mappings["hybrid_map"][state_id],
-                simulation_condition,
+                simulation_conditions[0],
             )
 
         if state_id not in self._petab_problem.condition_df:
             # no reinitialisation, return dummy value
             return 0.0
-        xval = self._petab_problem.condition_df.loc[
-            simulation_condition, state_id
-        ]
-        if isinstance(xval, Number) and np.isnan(xval):
+
+        xval = None
+        for condition in simulation_conditions:
+            candidate = self._petab_problem.condition_df.loc[
+                condition, state_id
+            ]
+            if not (isinstance(candidate, Number) and np.isnan(candidate)):
+                xval = candidate
+                break
+        if xval is None:
             # no reinitialisation, return dummy value
             return 0.0
         if isinstance(xval, Number):
@@ -1239,19 +1255,23 @@ class JAXProblem(eqx.Module):
 
     def load_reinitialisation(
         self,
-        simulation_condition: str,
+        simulation_conditions: str | tuple[str, ...],
         p: jt.Float[jt.Array, "np"],
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
         Load reinitialisation values and mask for the state vector for a simulation condition.
 
-        :param simulation_condition:
-            Simulation condition to load reinitialisation for.
+        :param simulation_conditions:
+            Condition id(s) simultaneously active for the simulation
+            condition to load reinitialisation for.
         :param p:
             Parameters for the simulation condition.
         :return:
             Tuple of reinitialisation masm and value for states.
         """
+        if isinstance(simulation_conditions, str):
+            simulation_conditions = (simulation_conditions,)
+
         if not any(
             x_id in self._petab_problem.condition_df
             or hasattr(self, "nn_output_ids")
@@ -1262,14 +1282,14 @@ class JAXProblem(eqx.Module):
 
         mask = jnp.array(
             [
-                self._state_needs_reinitialisation(simulation_condition, x_id)
+                self._state_needs_reinitialisation(simulation_conditions, x_id)
                 for x_id in self.model.state_ids
             ]
         )
         reinit_x = jnp.array(
             [
                 self._state_reinitialisation_value(
-                    simulation_condition, x_id, p
+                    simulation_conditions, x_id, p
                 )
                 for x_id in self.model.state_ids
             ]
@@ -1580,7 +1600,7 @@ class JAXProblem(eqx.Module):
         # `p_array` built from it in `_prepare_experiments`), not a
         # deduplicated set of condition names.
         dynamic_conditions = [
-            _get_period_condition_id(exp, is_preequilibration=False)
+            _get_period_condition_ids(exp, is_preequilibration=False)
             for exp in experiments
         ]
 
@@ -1728,7 +1748,7 @@ class JAXProblem(eqx.Module):
         # `p_array` built from it in `_prepare_experiments`), not a
         # deduplicated set of condition names.
         preequilibration_conditions = [
-            _get_period_condition_id(exp, is_preequilibration=True)
+            _get_period_condition_ids(exp, is_preequilibration=True)
             for exp in experiments
         ]
 
@@ -1811,7 +1831,7 @@ def run_simulations(
     # rows of `problem._iys`/`problem._ts_masks` built from it), not a
     # deduplicated set of condition names.
     dynamic_conditions = [
-        _get_period_condition_id(exp, is_preequilibration=False)
+        _get_period_condition_ids(exp, is_preequilibration=False)
         for exp in experiments
     ]
     conditions = {
