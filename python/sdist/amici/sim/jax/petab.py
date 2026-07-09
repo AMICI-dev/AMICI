@@ -5,7 +5,6 @@ import os
 import re
 import shutil
 from collections.abc import Callable, Iterable, Sized
-from numbers import Number
 from pathlib import Path
 
 import diffrax
@@ -1200,19 +1199,16 @@ class JAXProblem(eqx.Module):
         if state_id in self._parameter_mappings["hybrid_map"]:
             return True
 
-        if state_id not in self._petab_problem.condition_df:
-            return False
-        for condition in simulation_conditions:
-            xval = self._petab_problem.condition_df.loc[condition, state_id]
-            if not (isinstance(xval, Number) and np.isnan(xval)):
-                return True
-        return False
+        return any(
+            state_id
+            in self._parameter_mappings["targets_map"].get(condition, {})
+            for condition in simulation_conditions
+        )
 
     def _state_reinitialisation_value(
         self,
         simulation_conditions: tuple[str, ...],
         state_id: str,
-        p: jt.Float[jt.Array, "np"],
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
@@ -1224,8 +1220,6 @@ class JAXProblem(eqx.Module):
             ``state_id``)
         :param state_id:
             state id to get reinitialisation value for
-        :param p:
-            parameters for the simulation condition
         :return:
             reinitialisation value for the state
         """
@@ -1238,45 +1232,16 @@ class JAXProblem(eqx.Module):
                 simulation_conditions[0],
             )
 
-        if state_id not in self._petab_problem.condition_df:
-            # no reinitialisation, return dummy value
-            return 0.0
-
-        xval = None
         for condition in simulation_conditions:
-            candidate = self._petab_problem.condition_df.loc[
-                condition, state_id
-            ]
-            if not (isinstance(candidate, Number) and np.isnan(candidate)):
-                xval = candidate
-                break
-        if xval is None:
-            # no reinitialisation, return dummy value
-            return 0.0
-        if isinstance(xval, Number):
-            # numerical value, return as is
-            return xval
-        if xval in self.model.parameter_ids:
-            # model parameter, return value
-            return p[self.model.parameter_ids.index(xval)]
-        if xval in self.parameter_ids:
-            # estimated PEtab parameter, return unscaled value
-            return jax_unscale(
-                self.get_petab_parameter_by_id(xval),
-                self._petab_problem.parameter_df.loc[
-                    xval, petabv2.PARAMETER_SCALE
-                ],
-            )
-        # only remaining option is nominal value for PEtab parameter
-        # that is not estimated, return nominal value
-        return self._petab_problem.parameter_df.loc[
-            xval, petabv2.C.NOMINAL_VALUE
-        ]
+            target = self._parameter_mappings["targets_map"].get(condition, {})
+            if state_id in target:
+                return target[state_id]
+        # no reinitialisation, return dummy value
+        return 0.0
 
     def load_reinitialisation(
         self,
         simulation_conditions: str | tuple[str, ...],
-        p: jt.Float[jt.Array, "np"],
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
         Load reinitialisation values and mask for the state vector for a simulation condition.
@@ -1284,33 +1249,23 @@ class JAXProblem(eqx.Module):
         :param simulation_conditions:
             Condition id(s) simultaneously active for the simulation
             condition to load reinitialisation for.
-        :param p:
-            Parameters for the simulation condition.
         :return:
             Tuple of reinitialisation masm and value for states.
         """
         if isinstance(simulation_conditions, str):
             simulation_conditions = (simulation_conditions,)
 
-        if not any(
-            x_id in self._petab_problem.condition_df
-            or hasattr(self, "nn_output_ids")
-            and x_id in self._parameter_mappings["hybrid_map"]
+        needs_reinit = [
+            self._state_needs_reinitialisation(simulation_conditions, x_id)
             for x_id in self.model.state_ids
-        ):
+        ]
+        if not any(needs_reinit):
             return jnp.array([]), jnp.array([])
 
-        mask = jnp.array(
-            [
-                self._state_needs_reinitialisation(simulation_conditions, x_id)
-                for x_id in self.model.state_ids
-            ]
-        )
+        mask = jnp.array(needs_reinit)
         reinit_x = jnp.array(
             [
-                self._state_reinitialisation_value(
-                    simulation_conditions, x_id, p
-                )
+                self._state_reinitialisation_value(simulation_conditions, x_id)
                 for x_id in self.model.state_ids
             ]
         )
@@ -1439,18 +1394,9 @@ class JAXProblem(eqx.Module):
         else:
             np_array = jnp.zeros((*self._ts_masks.shape[:2], 0))
 
-        mask_reinit_array = jnp.stack(
-            [
-                self.load_reinitialisation(sc, p)[0]
-                for sc, p in zip(conditions, p_array)
-            ]
-        )
-        x_reinit_array = jnp.stack(
-            [
-                self.load_reinitialisation(sc, p)[1]
-                for sc, p in zip(conditions, p_array)
-            ]
-        )
+        reinit_arrays = [self.load_reinitialisation(sc) for sc in conditions]
+        mask_reinit_array = jnp.stack([m for m, _ in reinit_arrays])
+        x_reinit_array = jnp.stack([x for _, x in reinit_arrays])
         return (
             p_array,
             mask_reinit_array,
