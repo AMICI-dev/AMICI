@@ -55,29 +55,40 @@ _POSSIBLE_GROUPVARS_FLATTENED_PROBLEM = [
     v2.C.NOISE_PARAMETERS,
 ]
 
-#: Matches PEtab's observable-suffixed observable/noise placeholder
-#: parameters, e.g. ``noiseParameter1_pSTAT5A_rel``. Group 1 is the
-#: generic, index-based placeholder name (``noiseParameter1``).
-_JAX_PLACEHOLDER_PARAMETER_RE = re.compile(
-    r"((?:observable|noise)Parameter\d+)_\w+"
-)
+
+def _all_placeholder_parameters(observables: list[v2.Observable]) -> set[str]:
+    """Return all observable/noise placeholder parameter names declared
+    across the given observables (via ``observablePlaceholders`` /
+    ``noisePlaceholders``)."""
+    return {
+        str(placeholder)
+        for obs in observables
+        for placeholder in (
+            *obs.observable_placeholders,
+            *obs.noise_placeholders,
+        )
+    }
 
 
 def _substitute_jax_placeholder_parameters(
     observation_model: list[MeasurementChannel],
+    observables: list[v2.Observable],
 ) -> list[MeasurementChannel]:
-    """Substitute PEtab's observable-suffixed observable/noise placeholder
-    parameters with their generic, index-based form.
+    """Substitute PEtab's observable/noise placeholder parameters with
+    their generic, index-based form.
 
-    PEtab names observable/noise placeholders per observable, i.e.
-    ``observableParameter{n}_{observableId}`` / ``noiseParameter{n}_{observableId}``.
+    PEtab declares observable/noise placeholders explicitly per observable
+    via ``observablePlaceholders`` / ``noisePlaceholders`` -- these need not
+    follow any particular naming convention (e.g. the PEtab v1-style
+    ``noiseParameter{n}_{observableId}`` is common, but not required; see
+    ``petab.v2.lint.CheckOverridesMatchPlaceholders``, which matches
+    placeholders to measurement overrides purely by count and position).
     The JAX backend maps observable/noise parameter overrides to the
-    generated model by INDEX, not by observable identity (see
-    :mod:`amici.sim.jax.petab`), so all observables must share the same
-    ``observableParameter{n}``/``noiseParameter{n}`` symbols for a given
-    index. Substitution is scoped per channel, since PEtab requires
-    observable/noise placeholders to be suffixed with their own observable
-    ID.
+    generated model by INDEX (see :mod:`amici.sim.jax.petab`), not by
+    placeholder name or observable identity, so all observables must share
+    the same ``observableParameter{n}``/``noiseParameter{n}`` symbols for a
+    given index; substitute each declared placeholder (in declaration
+    order) with the corresponding generic symbol.
 
     This mirrors the substitution already performed for the legacy PEtab v1
     JAX import, see
@@ -88,20 +99,33 @@ def _substitute_jax_placeholder_parameters(
     model used for JAX code generation -- the PEtab problem itself is left
     untouched.
     """
+    observables_by_id = {obs.id: obs for obs in observables}
     result = []
     for channel in observation_model:
         channel = copy.copy(channel)
-        for attr in ("sigma", "formula"):
-            expr = getattr(channel, attr)
-            if expr is None:
-                continue
-            expr = sp.sympify(expr)
-            for sym in expr.free_symbols:
-                if (
-                    m := _JAX_PLACEHOLDER_PARAMETER_RE.fullmatch(str(sym))
-                ) and str(sym) == f"{m.group(1)}_{channel.id}":
-                    expr = expr.subs(sym, sp.Symbol(m.group(1)))
-            setattr(channel, attr, expr)
+        obs = observables_by_id.get(channel.id)
+        if obs is not None:
+            for attr, placeholders, generic_prefix in (
+                ("sigma", obs.noise_placeholders, "noiseParameter"),
+                (
+                    "formula",
+                    obs.observable_placeholders,
+                    "observableParameter",
+                ),
+            ):
+                expr = getattr(channel, attr)
+                if expr is None or not placeholders:
+                    continue
+                expr = sp.sympify(expr)
+                for i, placeholder in enumerate(placeholders, start=1):
+                    # substitute using the placeholder symbol itself, not a
+                    # freshly created one: petab.v2 symbols carry assumptions
+                    # (e.g. real=True) that a plain sp.Symbol(name) lacks, so
+                    # they would not compare equal for .subs()
+                    expr = expr.subs(
+                        placeholder, sp.Symbol(f"{generic_prefix}{i}")
+                    )
+                setattr(channel, attr, expr)
         result.append(channel)
     return result
 
@@ -326,15 +350,17 @@ class PetabImporter:
         self, problem: v1.Problem | v2.Problem
     ) -> v2.Problem:
         """Upgrade the problem to petab v2 if necessary.
-        Otherwise, create a deep copy of the problem."""
+        Otherwise, create a deep copy of the problem.
+
+        An in-memory PEtab v1 problem is upgraded by serializing it to a
+        temporary PEtab v1 problem on disk and letting petab auto-upgrade it
+        (``petab.v2.Problem.from_yaml`` upgrades v1 YAML files via
+        ``petab1to2``). The resulting problem holds the model and tables in
+        memory, so the temporary directory can be removed afterwards.
+        """
         if isinstance(problem, v2.Problem):
             return copy.deepcopy(problem)
 
-        # Upgrade an in-memory PEtab v1 problem to PEtab v2: serialize it to a
-        # temporary PEtab v1 problem on disk and let petab auto-upgrade it
-        # (``petab.v2.Problem.from_yaml`` upgrades v1 YAML files via
-        # ``petab1to2``). The resulting problem holds the model and tables in
-        # memory, so the temporary directory can be removed afterwards.
         import tempfile
 
         logger.info("Upgrading PEtab v1 problem to PEtab v2.")
@@ -385,7 +411,7 @@ class PetabImporter:
         observation_model = self._get_observation_model()
         if self._jax:
             observation_model = _substitute_jax_placeholder_parameters(
-                observation_model
+                observation_model, self.petab_problem.observables
             )
 
         logger.info(f"#Observables: {len(observation_model)}")
@@ -612,14 +638,17 @@ class PetabImporter:
         output_parameters = problem.get_output_parameters()
 
         if self._jax:
-            # Observable-suffixed observable/noise placeholder parameters are
-            # not declared as SBML parameters for the JAX backend; they are
+            # Declared observable/noise placeholder parameters are not
+            # declared as SBML parameters for the JAX backend; they are
             # recognized as placeholders via the (substituted) observation
             # model instead, see `_substitute_jax_placeholder_parameters`.
+            declared_placeholders = _all_placeholder_parameters(
+                problem.observables
+            )
             output_parameters = [
                 par
                 for par in output_parameters
-                if not _JAX_PLACEHOLDER_PARAMETER_RE.fullmatch(par)
+                if par not in declared_placeholders
             ]
 
         logger.debug(

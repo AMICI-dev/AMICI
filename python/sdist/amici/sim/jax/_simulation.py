@@ -72,9 +72,6 @@ def eq(
     :return:
         steady state solution, heaviside variables, and statistics
     """
-    # force the solver to step exactly onto known (explicit) discontinuities so
-    # the discontinuous vector field is integrated accurately instead of relying
-    # solely on root finding
     if known_discs.shape[0]:
         controller = diffrax.ClipStepSizeController(
             controller, jump_ts=jnp.sort(known_discs)
@@ -237,9 +234,6 @@ def solve(
     :return:
         solution+heaviside variables at time points ts and statistics
     """
-    # force the solver to step exactly onto known (explicit) discontinuities so
-    # the discontinuous vector field is integrated accurately instead of relying
-    # solely on root finding
     if known_discs.shape[0]:
         controller = diffrax.ClipStepSizeController(
             controller, jump_ts=jnp.sort(known_discs)
