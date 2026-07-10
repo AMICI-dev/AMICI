@@ -324,3 +324,159 @@ def test_petab_simulator_deepcopy_and_pickle():
 
     ps_pickle = pickle.loads(pickle.dumps(ps))
     assert ps.simulate({"kk": 2}).llh == ps_pickle.simulate({"kk": 2}).llh
+
+
+def test_jax_matches_sundials_with_per_observable_noise_parameters():
+    """JAX and SUNDIALS agree on the log-likelihood for a model with
+    per-observable noise placeholders (``noiseParameter1_{observableId}``).
+
+    Regression test for a bug where the JAX backend applied the first
+    observable's noise value to every measurement, since the PEtab-standard
+    observable-suffixed placeholder names were not recognized as such and
+    leaked into the model parameters instead of the per-measurement noise
+    parameter array.
+    """
+    import numpy as np
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "xa = 1; xb = 2; xa' = -0.1*xa; xb' = 0.2*xb;"
+    )
+    problem.add_parameter(
+        "sd_obsA", nominal_value=0.5, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_parameter(
+        "sd_obsB", nominal_value=2.0, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_observable(
+        "obsA",
+        "xa",
+        noise_formula="noiseParameter1_obsA",
+        noise_placeholders=["noiseParameter1_obsA"],
+    )
+    problem.add_observable(
+        "obsB",
+        "xb",
+        noise_formula="noiseParameter1_obsB",
+        noise_placeholders=["noiseParameter1_obsB"],
+    )
+    for t in [0.0, 1.0, 2.0]:
+        problem.add_measurement(
+            "obsA",
+            time=t,
+            measurement=1.0 + 0.05 * t,
+            noise_parameters="sd_obsA",
+        )
+        problem.add_measurement(
+            "obsB",
+            time=t,
+            measurement=2.0 + 0.1 * t,
+            noise_parameters="sd_obsB",
+        )
+
+    from amici.sim.jax.petab import run_simulations
+
+    # give the model a unique name -- the default derives from the (here
+    # anonymous) SBML model id, which would collide with other tests using
+    # an unnamed antimony model in this file, causing a stale cached module
+    # to be reused
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_noise_params_jax",
+        verbose=False,
+    ).create_simulator(force_import=True)
+    llh_jax, _ = run_simulations(jax_problem, max_steps=10_000)
+    llh_sundials = (
+        PetabImporter(
+            problem,
+            jax=False,
+            module_name="test_noise_params_sundials",
+            verbose=False,
+        )
+        .create_simulator(force_import=True)
+        .simulate()
+        .llh
+    )
+    np.testing.assert_allclose(float(llh_jax), float(llh_sundials), rtol=1e-5)
+
+
+def test_jax_matches_sundials_with_arbitrarily_named_noise_placeholders():
+    """JAX and SUNDIALS agree on the log-likelihood when noise placeholders
+    do not follow the ``noiseParameter{n}_{observableId}`` naming
+    convention.
+
+    PEtab v2 declares observable/noise placeholders explicitly via the
+    ``observablePlaceholders``/``noisePlaceholders`` columns, matched to
+    measurement overrides purely by count and position (see
+    ``petab.v2.lint.CheckOverridesMatchPlaceholders``) -- any name is
+    allowed, e.g. the PEtab test suite (v2.0.0/sbml/0021) uses
+    ``obs_a_noise_scale`` rather than ``noiseParameter1_obs_a``. Regression
+    test for a bug where placeholders were only recognized when they
+    happened to follow the suffixed naming convention.
+    """
+    import numpy as np
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "xa = 1; xb = 2; xa' = -0.1*xa; xb' = 0.05*xb;"
+    )
+    problem.add_parameter(
+        "scale_val", nominal_value=2.0, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_parameter(
+        "sd_b", nominal_value=1.0, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_observable(
+        "obs_a",
+        formula="xa",
+        noise_formula="obs_a * obs_a_noise_scale",
+        noise_placeholders=["obs_a_noise_scale"],
+    )
+    problem.add_observable(
+        "obs_b",
+        formula="xb",
+        noise_formula="sd_b_placeholder",
+        noise_placeholders=["sd_b_placeholder"],
+    )
+    for t in [0.0, 1.0, 2.0]:
+        problem.add_measurement(
+            "obs_a",
+            time=t,
+            measurement=1.0 - 0.05 * t,
+            noise_parameters="scale_val",
+        )
+        problem.add_measurement(
+            "obs_b",
+            time=t,
+            measurement=2.0 + 0.05 * t,
+            noise_parameters="sd_b",
+        )
+
+    from amici.sim.jax.petab import run_simulations
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_arbitrary_placeholder_jax",
+        verbose=False,
+    ).create_simulator(force_import=True)
+    llh_jax, _ = run_simulations(jax_problem, max_steps=10_000)
+    llh_sundials = (
+        PetabImporter(
+            problem,
+            jax=False,
+            module_name="test_arbitrary_placeholder_sundials",
+            verbose=False,
+        )
+        .create_simulator(force_import=True)
+        .simulate()
+        .llh
+    )
+    np.testing.assert_allclose(float(llh_jax), float(llh_sundials), rtol=1e-5)
