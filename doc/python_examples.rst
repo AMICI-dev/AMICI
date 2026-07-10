@@ -19,4 +19,5 @@ Various example notebooks.
    examples/example_large_models/example_performance_optimization.ipynb
    examples/example_jax/ExampleJax.ipynb
    examples/example_jax_petab/ExampleJaxPEtab.ipynb
+   examples/example_petab_sciml/ExamplePEtabSciML.ipynb
    examples/example_splines/ExampleSplines.ipynb
