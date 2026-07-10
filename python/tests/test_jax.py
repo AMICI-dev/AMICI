@@ -441,6 +441,59 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
 
 
 @skip_on_valgrind
+def test_petab_simulate_ragged_experiments(tmp_path):
+    """``petab_simulate`` must handle experiments with different numbers of
+    measurement timepoints.
+
+    Regression test for ``_build_simulation_df_v2``: ``_get_measurements``
+    pads every experiment's arrays to a common length, so an experiment with
+    fewer timepoints has masked-out padding. If the padding mask is not
+    applied consistently to the index and all columns, building the
+    simulation DataFrame raises ``ValueError: arrays must all be same
+    length`` (or leaks padded/duplicated indices).
+    """
+    import petab.v1 as petab
+    from amici.sim.jax import petab_simulate
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `k1` is set per condition below, so only the free `k2` goes in the
+    # parameter table
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    # two conditions -> two experiments, with DIFFERENT numbers of
+    # timepoints so `_ts_masks` has genuine padding
+    problem.add_condition("c0", k1=0.8)
+    problem.add_condition("c1", k1=0.5)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c1", 1.0, 0.4)
+    problem.add_measurement("obs_b", "c1", 5.0, 0.2)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+
+    sim_df = petab_simulate(jax_problem)
+
+    # exactly one simulated row per measurement (1 for c0, 2 for c1) -- no
+    # length mismatch, no padded/duplicated rows, no missing simulations
+    assert len(sim_df) == len(problem.measurement_df) == 3
+    assert sim_df.index.is_unique
+    assert sorted(sim_df[petab.TIME].tolist()) == [1.0, 1.0, 5.0]
+    assert not sim_df[petab.SIMULATION].isna().any()
+
+
+@skip_on_valgrind
 def test_steady_state_event_no_recompile_across_conditions(
     tmp_path, monkeypatch
 ):

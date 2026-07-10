@@ -1850,6 +1850,10 @@ def run_simulations(
     ]
     conditions = {
         "dynamic_conditions": dynamic_conditions,
+        # experiment ids aligned with `dynamic_conditions` and the rows of
+        # `_iys`/`_ts_masks`, so result-building need not reverse-map a
+        # condition id back to its experiment
+        "experiment_ids": [exp.id for exp in experiments],
     }
 
     has_preeq = any(exp.periods[0].is_preequilibration for exp in experiments)
@@ -1931,7 +1935,7 @@ def petab_simulate(
         ret=ReturnValue.y,
     )
     if isinstance(problem._petab_problem, petabv2.Problem):
-        return _build_simulation_df_v2(problem, y, r["dynamic_conditions"])
+        return _build_simulation_df_v2(problem, y, r["experiment_ids"])
     else:
         dfs = []
         for ic, sc in enumerate(r["dynamic_conditions"]):
@@ -2063,41 +2067,42 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     return experiment_df
 
 
-def _build_simulation_df_v2(problem, y, dyn_conditions):
-    """Build petab simulation DataFrame of similation results from a PEtab v2 problem."""
-    dfs = []
-    for ic, sc in enumerate(dyn_conditions):
-        # all condition ids of a period share the same experiment id, so any
-        # one of them (here, the first) resolves the lookup
-        experiment_id = _conditions_to_experiment_map(
-            problem._petab_problem.experiment_df
-        )[sc[0]]
+def _build_simulation_df_v2(problem, y, experiment_ids):
+    """Build a PEtab simulation DataFrame from PEtab v2 simulation results.
 
+    ``experiment_ids`` is aligned with the rows of ``y`` /
+    ``problem._iys`` / ``problem._ts_masks`` (one entry per simulated
+    experiment).
+    """
+    dfs = []
+    for ic, experiment_id in enumerate(experiment_ids):
         # the synthetic default experiment id is reported as NaN, but the
         # original id is still needed below to query the measurement table
         reported_experiment_id = (
             jnp.nan if experiment_id == "__default__" else experiment_id
         )
 
+        # `_get_measurements` pads every experiment's arrays to a common
+        # length; apply the per-experiment mask consistently to the index
+        # and every column so experiments with fewer timepoints don't cause
+        # length mismatches or leak padded/duplicated measurement indices.
+        mask = problem._ts_masks[ic, :]
         obs = [
-            problem.model.observable_ids[io]
-            for io in problem._iys[ic, problem._ts_masks[ic, :]]
+            problem.model.observable_ids[io] for io in problem._iys[ic, mask]
         ]
-        t = jnp.concat(
-            (
-                problem._ts_dyn[ic, :],
-                problem._ts_posteq[ic, :],
-            )
-        )
+        t = jnp.concat((problem._ts_dyn[ic, :], problem._ts_posteq[ic, :]))[
+            mask
+        ]
+        n = len(t)
         df_sc = pd.DataFrame(
             {
-                petabv2.C.MODEL_ID: [float("nan")] * len(t),
+                petabv2.C.MODEL_ID: [float("nan")] * n,
                 petabv2.C.OBSERVABLE_ID: obs,
-                petabv2.C.EXPERIMENT_ID: [reported_experiment_id] * len(t),
-                petabv2.C.TIME: t[problem._ts_masks[ic, :]],
-                petabv2.C.SIMULATION: y[ic, problem._ts_masks[ic, :]],
+                petabv2.C.EXPERIMENT_ID: [reported_experiment_id] * n,
+                petabv2.C.TIME: t,
+                petabv2.C.SIMULATION: y[ic, mask],
             },
-            index=problem._petab_measurement_indices[ic, :],
+            index=problem._petab_measurement_indices[ic, mask],
         )
         if (
             petabv2.C.OBSERVABLE_PARAMETERS
@@ -2116,15 +2121,6 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
             )
         dfs.append(df_sc)
     return pd.concat(dfs).sort_index()
-
-
-def _conditions_to_experiment_map(
-    experiment_df: pd.DataFrame,
-) -> dict[str, str]:
-    condition_to_experiment = {
-        row.conditionId: row.experimentId for row in experiment_df.itertuples()
-    }
-    return condition_to_experiment
 
 
 def _parse_model_entity_id(
