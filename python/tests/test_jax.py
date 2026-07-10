@@ -327,6 +327,173 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 
 
 @skip_on_valgrind
+def test_condition_table_initial_value_is_differentiable(tmp_path):
+    """A parameter used as a species initial value via the condition table
+    must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for a bug where the reinitialisation value was resolved
+    through the ``targets_map`` cached at construction time
+    (see ``JAXProblem._state_reinitialisation_value``): the initial value was
+    then frozen at the nominal parameter value, so ``update_parameters`` had
+    no effect on it and its gradient silently leaked into the cache instead of
+    ``grad.parameters``.
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `a0` initialises species `A` via the condition table (not in the model)
+    problem.add_parameter(
+        "a0", estimate=True, nominal_value=2.0, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    problem.add_condition("c0", A="a0")
+    problem.add_measurement("obs_a", "c0", 0.0, 0.7)
+    problem.add_measurement("obs_a", "c0", 10.0, 0.1)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ia = jax_problem.parameter_ids.index("a0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    # `a0` enters the likelihood only through A(0); updating it must change llh
+    assert abs(float(llh(p0.at[ia].add(1.0))) - float(llh(p0))) > 1e-6, (
+        "initial value is frozen w.r.t. update_parameters"
+    )
+
+    # autodiff w.r.t. `a0` (read from grad.parameters) must match finite diff
+    eps = 1e-6
+    fd = (float(llh(p0.at[ia].add(eps))) - float(llh(p0.at[ia].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ia]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_condition_table_parameter_override_is_differentiable(tmp_path):
+    """A model parameter mapped to an estimated parameter via the condition
+    table (the standard PEtab pattern for condition-specific estimated
+    parameters) must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for the same construction-time freezing bug as
+    ``test_condition_table_initial_value_is_differentiable``, on the parameter
+    mapping path (``JAXProblem._map_experiment_model_parameter_value``).
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # the condition maps model parameter `k1` to the estimated `k1_c0`
+    problem.add_parameter(
+        "k1_c0", estimate=True, nominal_value=0.8, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    problem.add_condition("c0", k1="k1_c0")
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ik = jax_problem.parameter_ids.index("k1_c0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    assert abs(float(llh(p0.at[ik].add(0.3))) - float(llh(p0))) > 1e-6, (
+        "condition-overridden parameter is frozen w.r.t. update_parameters"
+    )
+
+    eps = 1e-6
+    fd = (float(llh(p0.at[ik].add(eps))) - float(llh(p0.at[ik].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ik]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_petab_simulate_ragged_experiments(tmp_path):
+    """``petab_simulate`` must handle experiments with different numbers of
+    measurement timepoints.
+
+    Regression test for ``_build_simulation_df_v2``: ``_get_measurements``
+    pads every experiment's arrays to a common length, so an experiment with
+    fewer timepoints has masked-out padding. If the padding mask is not
+    applied consistently to the index and all columns, building the
+    simulation DataFrame raises ``ValueError: arrays must all be same
+    length`` (or leaks padded/duplicated indices).
+    """
+    import petab.v1 as petab
+    from amici.sim.jax import petab_simulate
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `k1` is set per condition below, so only the free `k2` goes in the
+    # parameter table
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    # two conditions -> two experiments, with DIFFERENT numbers of
+    # timepoints so `_ts_masks` has genuine padding
+    problem.add_condition("c0", k1=0.8)
+    problem.add_condition("c1", k1=0.5)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c1", 1.0, 0.4)
+    problem.add_measurement("obs_b", "c1", 5.0, 0.2)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+
+    sim_df = petab_simulate(jax_problem)
+
+    # exactly one simulated row per measurement (1 for c0, 2 for c1) -- no
+    # length mismatch, no padded/duplicated rows, no missing simulations
+    assert len(sim_df) == len(problem.measurement_df) == 3
+    assert sim_df.index.is_unique
+    assert sorted(sim_df[petab.TIME].tolist()) == [1.0, 1.0, 5.0]
+    assert not sim_df[petab.SIMULATION].isna().any()
+
+
+@skip_on_valgrind
 def test_steady_state_event_no_recompile_across_conditions(
     tmp_path, monkeypatch
 ):

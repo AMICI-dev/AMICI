@@ -5,7 +5,6 @@ import os
 import re
 import shutil
 from collections.abc import Callable, Iterable, Sized
-from numbers import Number
 from pathlib import Path
 
 import diffrax
@@ -548,11 +547,31 @@ class JAXProblem(eqx.Module):
             np_indices,
         )
 
+    def _resolve_condition_target_value(self, target_value):
+        """Resolve a condition change's target value to a number.
+
+        A condition table target value may be a numeric literal, or a
+        reference to another PEtab parameter id (to be substituted with
+        that parameter's current value, e.g. to share an estimated
+        parameter's value across multiple conditions).
+        """
+        if not target_value.is_number:
+            pname = str(target_value)
+            if pname in self.parameter_ids:
+                return self.parameters[self.parameter_ids.index(pname)]
+            _petab_param_map = {
+                param.id: param.nominal_value
+                for param in self._petab_problem.parameters
+            }
+            if pname in _petab_param_map:
+                return _petab_param_map[pname]
+        return jnp.asarray(target_value, dtype=self.model.parameters.dtype)
+
     def _get_parameter_mappings(self) -> dict[str, ...]:
         targets_map = {
             c.id: {
-                ch.target_id: jnp.asarray(
-                    ch.target_value, dtype=self.model.parameters.dtype
+                ch.target_id: self._resolve_condition_target_value(
+                    ch.target_value
                 )
                 for ch in c.changes
             }
@@ -1107,18 +1126,25 @@ class JAXProblem(eqx.Module):
         else:
             init_val = self.model.parameters[p_index]
 
-        targets_filtered = {
-            param: value
-            for condition, target in self._parameter_mappings[
-                "targets_map"
-            ].items()
-            for param, value in target.items()
-            if condition in condition_ids
+        # Resolve condition-table overrides *live* from the raw changes rather
+        # than reusing the ``targets_map`` values cached at construction time.
+        # This method runs inside the traced/differentiated region (via
+        # ``_prepare_experiments``), so reading ``self.parameters`` (through
+        # ``_resolve_condition_target_value``) keeps the value a function of
+        # the current parameters -- gradients w.r.t. an (e.g. condition-
+        # specific) estimated parameter that a condition maps this one to flow,
+        # and re-simulating after ``update_parameters`` reflects the new value.
+        raw_targets = {
+            change.target_id: change.target_value
+            for c in self._petab_problem.conditions
+            if c.id in condition_ids
+            for change in c.changes
         }
 
-        if pname in targets_filtered:
+        if pname in raw_targets:
             return jnp.asarray(
-                targets_filtered[pname], dtype=self.model.parameters.dtype
+                self._resolve_condition_target_value(raw_targets[pname]),
+                dtype=self.model.parameters.dtype,
             )
         elif pname in self._parameter_mappings["hybrid_map"]:
             return jnp.asarray(
@@ -1180,19 +1206,51 @@ class JAXProblem(eqx.Module):
         if state_id in self._parameter_mappings["hybrid_map"]:
             return True
 
-        if state_id not in self._petab_problem.condition_df:
-            return False
+        return (
+            self._condition_reinit_target_value(
+                simulation_conditions, state_id
+            )
+            is not None
+        )
+
+    def _condition_reinit_target_value(
+        self, simulation_conditions: tuple[str, ...], state_id: str
+    ):
+        """Return the *raw* condition-table target value initialising a state.
+
+        Looks up the (unresolved) ``target_value`` that (re)initialises
+        ``state_id`` for the given simultaneously-active conditions, reading
+        it straight from the condition-table changes. Returns ``None`` if no
+        active condition sets ``state_id`` (PEtab v2 requires the targets of
+        simultaneously-active conditions to be disjoint, so at most one does).
+
+        The raw value is returned deliberately -- callers resolve it *live*
+        against :attr:`parameters` (see
+        :meth:`_state_reinitialisation_value`), rather than reusing the
+        ``targets_map`` value cached at construction time, so that gradients
+        w.r.t. parameters used as initial values are not silently dropped.
+        """
         for condition in simulation_conditions:
-            xval = self._petab_problem.condition_df.loc[condition, state_id]
-            if not (isinstance(xval, Number) and np.isnan(xval)):
-                return True
-        return False
+            for c in self._petab_problem.conditions:
+                if c.id != condition:
+                    continue
+                for change in c.changes:
+                    if change.target_id != state_id:
+                        continue
+                    # NaN targets (e.g. "use the preequilibration/SBML value")
+                    # are dropped during v1->v2 conversion, but guard anyway
+                    if (
+                        change.target_value.is_number
+                        and change.target_value.is_finite is False
+                    ):
+                        return None
+                    return change.target_value
+        return None
 
     def _state_reinitialisation_value(
         self,
         simulation_conditions: tuple[str, ...],
         state_id: str,
-        p: jt.Float[jt.Array, "np"],
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
@@ -1204,8 +1262,6 @@ class JAXProblem(eqx.Module):
             ``state_id``)
         :param state_id:
             state id to get reinitialisation value for
-        :param p:
-            parameters for the simulation condition
         :return:
             reinitialisation value for the state
         """
@@ -1218,45 +1274,23 @@ class JAXProblem(eqx.Module):
                 simulation_conditions[0],
             )
 
-        if state_id not in self._petab_problem.condition_df:
-            # no reinitialisation, return dummy value
-            return 0.0
-
-        xval = None
-        for condition in simulation_conditions:
-            candidate = self._petab_problem.condition_df.loc[
-                condition, state_id
-            ]
-            if not (isinstance(candidate, Number) and np.isnan(candidate)):
-                xval = candidate
-                break
-        if xval is None:
-            # no reinitialisation, return dummy value
-            return 0.0
-        if isinstance(xval, Number):
-            # numerical value, return as is
-            return xval
-        if xval in self.model.parameter_ids:
-            # model parameter, return value
-            return p[self.model.parameter_ids.index(xval)]
-        if xval in self.parameter_ids:
-            # estimated PEtab parameter, return unscaled value
-            return jax_unscale(
-                self.get_petab_parameter_by_id(xval),
-                self._petab_problem.parameter_df.loc[
-                    xval, petabv2.PARAMETER_SCALE
-                ],
-            )
-        # only remaining option is nominal value for PEtab parameter
-        # that is not estimated, return nominal value
-        return self._petab_problem.parameter_df.loc[
-            xval, petabv2.C.NOMINAL_VALUE
-        ]
+        target_value = self._condition_reinit_target_value(
+            simulation_conditions, state_id
+        )
+        if target_value is not None:
+            # Resolve *live* against ``self.parameters`` (not via the
+            # construction-time ``targets_map`` cache): this method runs inside
+            # the traced/differentiated region (via ``_prepare_experiments``),
+            # so reading ``self.parameters`` here keeps the reinitialisation
+            # value a function of the current parameters -- gradients flow and
+            # re-simulating after ``update_parameters`` reflects the new value.
+            return self._resolve_condition_target_value(target_value)
+        # no reinitialisation, return dummy value
+        return 0.0
 
     def load_reinitialisation(
         self,
         simulation_conditions: str | tuple[str, ...],
-        p: jt.Float[jt.Array, "np"],
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
         Load reinitialisation values and mask for the state vector for a simulation condition.
@@ -1264,33 +1298,22 @@ class JAXProblem(eqx.Module):
         :param simulation_conditions:
             Condition id(s) simultaneously active for the simulation
             condition to load reinitialisation for.
-        :param p:
-            Parameters for the simulation condition.
         :return:
-            Tuple of reinitialisation masm and value for states.
+            Tuple of reinitialisation mask and value for states.
         """
         if isinstance(simulation_conditions, str):
             simulation_conditions = (simulation_conditions,)
 
-        if not any(
-            x_id in self._petab_problem.condition_df
-            or hasattr(self, "nn_output_ids")
-            and x_id in self._parameter_mappings["hybrid_map"]
+        needs_reinit = [
+            self._state_needs_reinitialisation(simulation_conditions, x_id)
             for x_id in self.model.state_ids
-        ):
-            return jnp.array([]), jnp.array([])
+        ]
+        # Always return full-length arrays per condition; callers stack/vmap across conditions and require consistent shapes.
 
-        mask = jnp.array(
-            [
-                self._state_needs_reinitialisation(simulation_conditions, x_id)
-                for x_id in self.model.state_ids
-            ]
-        )
+        mask = jnp.array(needs_reinit)
         reinit_x = jnp.array(
             [
-                self._state_reinitialisation_value(
-                    simulation_conditions, x_id, p
-                )
+                self._state_reinitialisation_value(simulation_conditions, x_id)
                 for x_id in self.model.state_ids
             ]
         )
@@ -1419,18 +1442,9 @@ class JAXProblem(eqx.Module):
         else:
             np_array = jnp.zeros((*self._ts_masks.shape[:2], 0))
 
-        mask_reinit_array = jnp.stack(
-            [
-                self.load_reinitialisation(sc, p)[0]
-                for sc, p in zip(conditions, p_array)
-            ]
-        )
-        x_reinit_array = jnp.stack(
-            [
-                self.load_reinitialisation(sc, p)[1]
-                for sc, p in zip(conditions, p_array)
-            ]
-        )
+        reinit_arrays = [self.load_reinitialisation(sc) for sc in conditions]
+        mask_reinit_array = jnp.stack([m for m, _ in reinit_arrays])
+        x_reinit_array = jnp.stack([x for _, x in reinit_arrays])
         return (
             p_array,
             mask_reinit_array,
@@ -1836,6 +1850,10 @@ def run_simulations(
     ]
     conditions = {
         "dynamic_conditions": dynamic_conditions,
+        # experiment ids aligned with `dynamic_conditions` and the rows of
+        # `_iys`/`_ts_masks`, so result-building need not reverse-map a
+        # condition id back to its experiment
+        "experiment_ids": [exp.id for exp in experiments],
     }
 
     has_preeq = any(exp.periods[0].is_preequilibration for exp in experiments)
@@ -1917,7 +1935,7 @@ def petab_simulate(
         ret=ReturnValue.y,
     )
     if isinstance(problem._petab_problem, petabv2.Problem):
-        return _build_simulation_df_v2(problem, y, r["dynamic_conditions"])
+        return _build_simulation_df_v2(problem, y, r["experiment_ids"])
     else:
         dfs = []
         for ic, sc in enumerate(r["dynamic_conditions"]):
@@ -1989,9 +2007,16 @@ def add_default_experiment_names_to_v2_problem(petab_problem: petabv2.Problem):
         petab_problem.experiment_df is None
         or petab_problem.experiment_df.empty
     ):
-        condition_ids = petab_problem.condition_df[
-            petabv2.C.CONDITION_ID
-        ].values
+        # read condition ids from the condition table elements, not
+        # `condition_df`: a condition with no changes (e.g. the just-added
+        # default condition, or any other no-op condition) contributes zero
+        # rows to the long-format `condition_df`, so its id could not be
+        # recovered from there.
+        condition_ids = [
+            c.id
+            for table in petab_problem.condition_tables
+            for c in table.elements
+        ]
         condition_ids = [
             c for c in condition_ids if "preequilibration" not in c
         ]
@@ -2019,7 +2044,8 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
     """Get simulation conditions from PEtab v2 measurement DataFrame.
 
     Returns:
-        A pandas DataFrame mapping experiment_ids to condition ids.
+        A pandas DataFrame mapping experiment_ids to condition ids, one row
+        per experiment.
     """
     experiment_df = petab_problem.experiment_df
 
@@ -2028,39 +2054,55 @@ def get_simulation_conditions_v2(petab_problem) -> pd.DataFrame:
         experiment_df[petabv2.C.TIME] != petabv2.C.TIME_PREEQUILIBRATION
     ]
     experiment_df = experiment_df.drop(columns=[petabv2.C.TIME])
+    # a dynamic period may reference multiple condition ids (e.g. the
+    # synthetic preequilibration-indicator condition alongside the actual
+    # experiment condition); measurements are only ever queried by
+    # experiment id (see `JAXProblem._get_measurements`), so collapse to
+    # one row per experiment -- otherwise arrays built per condition row
+    # here and arrays built per experiment elsewhere (e.g. `p_array` in
+    # `_prepare_experiments`) end up with mismatched batch sizes.
+    experiment_df = experiment_df.drop_duplicates(
+        subset=[petabv2.C.EXPERIMENT_ID]
+    )
     return experiment_df
 
 
-def _build_simulation_df_v2(problem, y, dyn_conditions):
-    """Build petab simulation DataFrame of similation results from a PEtab v2 problem."""
+def _build_simulation_df_v2(problem, y, experiment_ids):
+    """Build a PEtab simulation DataFrame from PEtab v2 simulation results.
+
+    ``experiment_ids`` is aligned with the rows of ``y`` /
+    ``problem._iys`` / ``problem._ts_masks`` (one entry per simulated
+    experiment).
+    """
     dfs = []
-    for ic, sc in enumerate(dyn_conditions):
-        experiment_id = _conditions_to_experiment_map(
-            problem._petab_problem.experiment_df
-        )[sc]
-
-        if experiment_id == "__default__":
-            experiment_id = jnp.nan
-
-        obs = [
-            problem.model.observable_ids[io]
-            for io in problem._iys[ic, problem._ts_masks[ic, :]]
-        ]
-        t = jnp.concat(
-            (
-                problem._ts_dyn[ic, :],
-                problem._ts_posteq[ic, :],
-            )
+    for ic, experiment_id in enumerate(experiment_ids):
+        # the synthetic default experiment id is reported as NaN, but the
+        # original id is still needed below to query the measurement table
+        reported_experiment_id = (
+            jnp.nan if experiment_id == "__default__" else experiment_id
         )
+
+        # `_get_measurements` pads every experiment's arrays to a common
+        # length; apply the per-experiment mask consistently to the index
+        # and every column so experiments with fewer timepoints don't cause
+        # length mismatches or leak padded/duplicated measurement indices.
+        mask = problem._ts_masks[ic, :]
+        obs = [
+            problem.model.observable_ids[io] for io in problem._iys[ic, mask]
+        ]
+        t = jnp.concat((problem._ts_dyn[ic, :], problem._ts_posteq[ic, :]))[
+            mask
+        ]
+        n = len(t)
         df_sc = pd.DataFrame(
             {
-                petabv2.C.MODEL_ID: [float("nan")] * len(t),
+                petabv2.C.MODEL_ID: [float("nan")] * n,
                 petabv2.C.OBSERVABLE_ID: obs,
-                petabv2.C.EXPERIMENT_ID: [experiment_id] * len(t),
-                petabv2.C.TIME: t[problem._ts_masks[ic, :]],
-                petabv2.C.SIMULATION: y[ic, problem._ts_masks[ic, :]],
+                petabv2.C.EXPERIMENT_ID: [reported_experiment_id] * n,
+                petabv2.C.TIME: t,
+                petabv2.C.SIMULATION: y[ic, mask],
             },
-            index=problem._petab_measurement_indices[ic, :],
+            index=problem._petab_measurement_indices[ic, mask],
         )
         if (
             petabv2.C.OBSERVABLE_PARAMETERS
@@ -2079,15 +2121,6 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
             )
         dfs.append(df_sc)
     return pd.concat(dfs).sort_index()
-
-
-def _conditions_to_experiment_map(
-    experiment_df: pd.DataFrame,
-) -> dict[str, str]:
-    condition_to_experiment = {
-        row.conditionId: row.experimentId for row in experiment_df.itertuples()
-    }
-    return condition_to_experiment
 
 
 def _parse_model_entity_id(

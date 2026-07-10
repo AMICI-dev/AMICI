@@ -87,7 +87,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@44c8062ce1b87a74a0ba1bd2551de0cdc2a13ff1 \
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@1b8599dd1eb9bda74853255b4cc4baf75b7e4d63 \
             && python3 -m pip install git+https://github.com/pysb/pysb@master \
             && python3 -m pip install sympy>=1.12.1
 
