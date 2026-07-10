@@ -922,18 +922,21 @@ class JAXProblem(eqx.Module):
         """
         if self._petab_problem.mapping_df is None:
             return []
-        if (
-            self._petab_problem.mapping_df[petabv2.C.MODEL_ENTITY_ID]
-            .isnull()
-            .all()
-        ):
-            return []
-        return self._petab_problem.mapping_df[
-            self._petab_problem.mapping_df[petabv2.C.MODEL_ENTITY_ID]
-            .str.split(".")
-            .str[1]
-            .str.startswith("output")
-        ].index.tolist()
+        # A mapping table is not exclusive to neural nets: e.g. PySB problems
+        # map PEtab entities to model expressions like ``A_() ** compartment``
+        # (no ``.``). Match only ``<net>.output...``-style entities and skip
+        # everything else, rather than relying on vectorized ``.str`` accessors
+        # that break when an entity has no ``.`` (``str[1]`` yields a float NaN
+        # series).
+        return [
+            petab_entity_id
+            for petab_entity_id, model_entity_id in self._petab_problem.mapping_df[
+                petabv2.C.MODEL_ENTITY_ID
+            ].items()
+            if isinstance(model_entity_id, str)
+            and len(parts := model_entity_id.split(".")) > 1
+            and parts[1].startswith("output")
+        ]
 
     def get_petab_parameter_by_id(self, name: str) -> jnp.float_:
         """

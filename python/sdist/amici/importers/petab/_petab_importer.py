@@ -260,9 +260,7 @@ class PetabImporter:
 
         if validate:
             logger.info("Validating PEtab problem ...")
-            # validate the (possibly upgraded) v2 problem, not the original
-            # argument which may be a petab.v1.Problem
-            validation_result = self.petab_problem.validate()
+            validation_result = petab_problem.validate()
             if validation_result:
                 validation_result.log()
 
@@ -350,23 +348,16 @@ class PetabImporter:
         self, problem: v1.Problem | v2.Problem
     ) -> v2.Problem:
         """Upgrade the problem to petab v2 if necessary.
-        Otherwise, create a deep copy of the problem.
-
-        An in-memory PEtab v1 problem is upgraded by serializing it to a
-        temporary PEtab v1 problem on disk and letting petab auto-upgrade it
-        (``petab.v2.Problem.from_yaml`` upgrades v1 YAML files via
-        ``petab1to2``). The resulting problem holds the model and tables in
-        memory, so the temporary directory can be removed afterwards.
-        """
+        Otherwise, create a deep copy of the problem."""
         if isinstance(problem, v2.Problem):
             return copy.deepcopy(problem)
 
-        import tempfile
-
-        logger.info("Upgrading PEtab v1 problem to PEtab v2.")
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            yaml_path = problem.to_files_generic(prefix_path=tmp_dir)
-            return v2.Problem.from_yaml(yaml_path)
+        raise NotImplementedError(
+            "'petab_problem' must be a `petab.v2.Problem`. "
+            "`petab.v1.Problem` is not directly supported, but "
+            "file-based PEtab v1 problems can be upgraded via "
+            "`petab.v2.Problem.from_yaml(petab_v1_yaml_file)`."
+        )
 
     @property
     def model_id(self) -> str:
