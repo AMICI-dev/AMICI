@@ -56,27 +56,16 @@ def test_jax_llh(benchmark_problem):
             f"Skipping {problem_id} due to non-supported events in JAX."
         )
 
-    # Known JAX-backend bug (tracked for a dedicated follow-up fix):
-    # ``JAXModel._handle_t0_event`` reuses the pre-equilibration Heaviside/event
-    # state as the dynamic-phase initial event state. That is wrong when an
-    # event's trigger depends on a parameter that differs between the preeq and
-    # dynamic periods (drug/stimulus applied at a condition-specific time, off
-    # during pre-equilibration): Brannmark's second insulin dose at
-    # ``insulin_time_2``, Isensee's ``Fsk_time``/``H89_time``/..., Weber's
-    # ``PdBu_time``/``kb_NB142_70_time`` -- all 0 during pre-equilibration. The
-    # dynamic-phase triggers must instead be re-evaluated at t0 with the
-    # dynamic-period parameters.
-    known_preeq_event_bug = [
-        "Brannmark_JBC2010",
-        "Isensee_JCB2018",
+    # Skipped only to stay within the CI time budget, not for correctness:
+    # Weber uses max_steps=4e7 under reverse-mode AD, which takes hours (it
+    # dominated a full-suite run). The preequilibration + parameter-dependent-
+    # event handling it exercises is also covered by Brannmark_JBC2010 and
+    # Isensee_JCB2018, which stay enabled.
+    slow_models = [
         "Weber_BMC2015",
     ]
-    if problem_id in known_preeq_event_bug:
-        pytest.skip(
-            f"Skipping {problem_id}: known JAX preequilibration + "
-            "parameter-dependent-event bug (dynamic-phase event state is "
-            "inherited from pre-equilibration); fix tracked separately."
-        )
+    if problem_id in slow_models:
+        pytest.skip(f"Skipping {problem_id}: excessive runtime for CI.")
 
     # PEtab v2 has no log10-normal noise: the v1->v2 upgrade rewrites
     # log10-normal to log-normal (a genuinely different likelihood, since the
