@@ -58,7 +58,9 @@ def _jax_variable_equations(
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
-                (s.name for s in model.sym(eq_name)),
+                # pass Symbols (not names) so CSE dependency toposort can match
+                # target symbols against the free symbols of other equations
+                model.sym(eq_name),
                 # sp.Matrix to support event assignments which are lists
                 sp.Matrix(model.eq(eq_name)).subs(subs),
                 indent,
