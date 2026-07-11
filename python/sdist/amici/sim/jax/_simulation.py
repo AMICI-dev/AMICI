@@ -79,6 +79,12 @@ def eq(
 
     # if there are no events, we can avoid expensive looping and just run a single segment
     if not root_cond_fns:
+        # This segment integrates to a genuine steady state (f(y, p) = 0),
+        # so differentiate it with the implicit function theorem: the gradient
+        # is a single linear solve with the Jacobian df/dy at the fixed point,
+        # instead of backpropagating through the whole equilibration trajectory.
+        # `ImplicitAdjoint` requires `SaveAt(t1=True)` (used below) and supports
+        # both forward- and reverse-mode AD.
         sol, _, stats = _run_segment(
             0.0,
             jnp.inf,
@@ -90,7 +96,7 @@ def eq(
             controller,
             root_finder,
             max_steps,
-            diffrax.DirectAdjoint(),
+            diffrax.ImplicitAdjoint(),
             [steady_state_event],
             [None],
             diffrax.SaveAt(t1=True),
