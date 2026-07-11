@@ -975,12 +975,19 @@ class JAXModel(eqx.Module):
         h_preeq: jt.Bool[jt.Array, "ne"],
         stats: dict,
     ):
-        y0 = y0_next.copy()
         rf0 = self.event_initial_values - 0.5
 
         if h_preeq.shape[0]:
-            # return immediately because preequilibration is equivalent to handling t0 event?
-            return y0, t0_next, h_preeq, stats
+            # Dynamic phase following preequilibration: carry the event state
+            # out of preequilibration, but re-evaluate the triggers at t0 under
+            # the dynamic-period parameters, which may differ from the
+            # preequilibration ones (e.g. a stimulus whose onset time is a
+            # condition-specific parameter that is inactive during
+            # preequilibration). Events already active after preequilibration
+            # keep their state and are not re-fired (no sign change), while a
+            # trigger that differs under the dynamic parameters is corrected.
+            h = jnp.where(h_mask, h_preeq, jnp.ones_like(h_preeq))
+            rf0 = jnp.where(h > 0.5, 0.5, -0.5)
         else:
             h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
         args = (p, tcl, h)
