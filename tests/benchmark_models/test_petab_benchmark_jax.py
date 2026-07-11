@@ -44,11 +44,10 @@ def test_jax_llh(benchmark_problem):
         benchmark_problem
     )
 
-    # Models with events not yet supported by the JAX backend.
+    # Models with event assignments that use implicit triggers, which the JAX
+    # backend does not yet support.
     events_not_supported = [
         "Liu_IFACPapersOnLine2025",
-        "Oliveira_NatCommun2021",
-        "SalazarCavazos_MBoC2020",
         "Smith_BMCSystBiol2013",
     ]
     if problem_id in events_not_supported:
