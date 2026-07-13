@@ -44,28 +44,16 @@ def test_jax_llh(benchmark_problem):
         benchmark_problem
     )
 
-    # Models with events not yet supported by the JAX backend.
+    # Models with event assignments that use implicit triggers, which the JAX
+    # backend does not yet support.
     events_not_supported = [
         "Liu_IFACPapersOnLine2025",
-        "Oliveira_NatCommun2021",
-        "SalazarCavazos_MBoC2020",
         "Smith_BMCSystBiol2013",
     ]
     if problem_id in events_not_supported:
         pytest.skip(
             f"Skipping {problem_id} due to non-supported events in JAX."
         )
-
-    # Skipped only to stay within the CI time budget, not for correctness:
-    # Weber uses max_steps=4e7 under reverse-mode AD, which takes hours (it
-    # dominated a full-suite run). The preequilibration + parameter-dependent-
-    # event handling it exercises is also covered by Brannmark_JBC2010 and
-    # Isensee_JCB2018, which stay enabled.
-    slow_models = [
-        "Weber_BMC2015",
-    ]
-    if problem_id in slow_models:
-        pytest.skip(f"Skipping {problem_id}: excessive runtime for CI.")
 
     # PEtab v2 has no log10-normal noise: the v1->v2 upgrade rewrites
     # log10-normal to log-normal (a genuinely different likelihood, since the
@@ -165,7 +153,10 @@ def test_jax_llh(benchmark_problem):
                 atol = 1e-8
                 rtol = 1e-8
                 max_steps = 2 * 10**5
-            beartype(run_simulations)(jax_problem)
+            # A single reverse-mode call compiles and runs the whole graph; a
+            # separate forward-only warm-up would just pay a second, unrelated
+            # compilation (different static ``max_steps``/controller, and
+            # forward-only vs. forward+backward are distinct XLA executables).
             (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
                 run_simulations, has_aux=True
             )(

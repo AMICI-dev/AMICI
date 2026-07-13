@@ -291,9 +291,6 @@ class JAXProblem(eqx.Module):
 
         # Nominal (linear) values of fixed (non-estimated) parameters, used to
         # resolve observable/noise parameter overrides that reference them.
-        # ``estimate`` is taken from the parsed parameter objects, where it is a
-        # real bool; in the raw ``parameter_df`` it is the string
-        # ``"false"``/``"true"`` and therefore truthy either way.
         fixed_parameter_values = {
             p.id: p.nominal_value
             for pt in self._petab_problem.parameter_tables
@@ -1347,6 +1344,18 @@ class JAXProblem(eqx.Module):
         """
         return eqx.tree_at(lambda p: p.parameters, self, p)
 
+    def _experiment_indices(self, experiments) -> np.ndarray:
+        """Positions of ``experiments`` in the full experiment ordering.
+
+        All ``self._*`` per-experiment arrays are built in ``__init__`` keyed by
+        ``self._petab_problem.experiments`` order, so simulating a subset
+        (``simulation_experiments``) requires indexing them by these positions.
+        """
+        positions = {
+            exp.id: i for i, exp in enumerate(self._petab_problem.experiments)
+        }
+        return np.array([positions[exp.id] for exp in experiments], dtype=int)
+
     def _prepare_experiments(
         self,
         experiments: list[petabv2.Experiment],
@@ -1394,16 +1403,10 @@ class JAXProblem(eqx.Module):
             [self.load_model_parameters(exp, is_preeq) for exp in experiments]
         )
 
-        exp_ids = [exp.id for exp in experiments]
-        all_exp_ids = [exp.id for exp in self._petab_problem.experiments]
-
+        # one row per simulated experiment (aligned with ``p_array``); every
+        # simulated experiment has all of its events active.
         h_mask = jnp.stack(
-            [
-                jnp.ones(self.model.n_events)
-                if (exp_id in exp_ids)
-                else jnp.zeros(self.model.n_events)
-                for exp_id in all_exp_ids
-            ]
+            [jnp.ones(self.model.n_events) for _ in experiments]
         )
 
         t_zeros = jnp.stack(
@@ -1448,7 +1451,9 @@ class JAXProblem(eqx.Module):
                 op_numeric,
             )
         else:
-            op_array = jnp.zeros((*self._ts_masks.shape[:2], 0))
+            op_array = jnp.zeros(
+                (len(experiments), self._ts_masks.shape[1], 0)
+            )
 
         if np_numeric is not None and np_numeric.size:
             np_array = jnp.where(
@@ -1459,7 +1464,9 @@ class JAXProblem(eqx.Module):
                 np_numeric,
             )
         else:
-            np_array = jnp.zeros((*self._ts_masks.shape[:2], 0))
+            np_array = jnp.zeros(
+                (len(experiments), self._ts_masks.shape[1], 0)
+            )
 
         reinit_arrays = [self.load_reinitialisation(sc) for sc in conditions]
         mask_reinit_array = jnp.stack([m for m, _ in reinit_arrays])
@@ -1637,6 +1644,13 @@ class JAXProblem(eqx.Module):
             for exp in experiments
         ]
 
+        # Positions of the requested experiments within the full, __init__-time
+        # ordering that all `self._*` per-experiment arrays are keyed by. When a
+        # subset is simulated (``simulation_experiments``), every per-experiment
+        # array must be indexed by these positions so its leading dimension
+        # matches ``p_array`` under the vmap.
+        ei = self._experiment_indices(experiments)
+
         (
             p_array,
             mask_reinit_array,
@@ -1649,12 +1663,12 @@ class JAXProblem(eqx.Module):
             experiments,
             dynamic_conditions,
             False,
-            self._op_numeric,
-            self._op_mask,
-            self._op_indices,
-            self._np_numeric,
-            self._np_mask,
-            self._np_indices,
+            self._op_numeric[ei],
+            self._op_mask[ei],
+            self._op_indices[ei],
+            self._np_numeric[ei],
+            self._np_mask[ei],
+            self._np_indices[ei],
         )
 
         init_override_mask = jnp.stack(
@@ -1686,11 +1700,11 @@ class JAXProblem(eqx.Module):
 
         return self.run_simulation(
             p_array,
-            self._ts_dyn,
-            self._ts_posteq,
-            self._my,
-            self._iys,
-            self._iy_trafos,
+            self._ts_dyn[ei],
+            self._ts_posteq[ei],
+            self._my[ei],
+            self._iys[ei],
+            self._iy_trafos[ei],
             op_array,
             np_array,
             mask_reinit_array,
@@ -1705,7 +1719,7 @@ class JAXProblem(eqx.Module):
             max_steps,
             preeq_array,
             h_preeqs,
-            self._ts_masks,
+            self._ts_masks[ei],
             t_zeros,
             jnp.arange(len(experiments)),
             ret,
@@ -2093,8 +2107,15 @@ def _build_simulation_df_v2(problem, y, experiment_ids):
     ``problem._iys`` / ``problem._ts_masks`` (one entry per simulated
     experiment).
     """
+    # ``y`` rows follow ``experiment_ids`` (the simulated subset), but the
+    # per-experiment ``problem._*`` arrays are keyed by the full experiment
+    # ordering, so map each simulated experiment id back to its full position.
+    full_positions = {
+        exp.id: i for i, exp in enumerate(problem._petab_problem.experiments)
+    }
     dfs = []
     for ic, experiment_id in enumerate(experiment_ids):
+        ie = full_positions[experiment_id]
         # the synthetic default experiment id is reported as NaN, but the
         # original id is still needed below to query the measurement table
         reported_experiment_id = (
@@ -2105,11 +2126,11 @@ def _build_simulation_df_v2(problem, y, experiment_ids):
         # length; apply the per-experiment mask consistently to the index
         # and every column so experiments with fewer timepoints don't cause
         # length mismatches or leak padded/duplicated measurement indices.
-        mask = problem._ts_masks[ic, :]
+        mask = problem._ts_masks[ie, :]
         obs = [
-            problem.model.observable_ids[io] for io in problem._iys[ic, mask]
+            problem.model.observable_ids[io] for io in problem._iys[ie, mask]
         ]
-        t = jnp.concat((problem._ts_dyn[ic, :], problem._ts_posteq[ic, :]))[
+        t = jnp.concat((problem._ts_dyn[ie, :], problem._ts_posteq[ie, :]))[
             mask
         ]
         n = len(t)
@@ -2121,7 +2142,7 @@ def _build_simulation_df_v2(problem, y, experiment_ids):
                 petabv2.C.TIME: t,
                 petabv2.C.SIMULATION: y[ic, mask],
             },
-            index=problem._petab_measurement_indices[ic, mask],
+            index=problem._petab_measurement_indices[ie, mask],
         )
         if (
             petabv2.C.OBSERVABLE_PARAMETERS

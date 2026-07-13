@@ -1,5 +1,6 @@
 """Jax code generation"""
 
+import itertools
 import re
 from collections.abc import Iterable
 from logging import warning
@@ -7,6 +8,7 @@ from logging import warning
 import sympy as sp
 from sympy.core.function import UndefinedFunction
 from sympy.printing.numpy import NumPyPrinter
+from toposort import toposort
 
 
 def _jnp_array_str(array) -> str:
@@ -117,7 +119,41 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             C++ code as list of lines
         """
         indent = " " * indent_level
+        symbols = list(symbols)
+        equations = list(equations)
+
+        # Extract common subexpressions before emitting the equations. Some
+        # generated blocks (e.g. analytic steady-state initial values) repeat
+        # large subterms many times; JAX's autodiff differentiates every copy,
+        # producing a huge reverse-mode graph whose XLA compilation dominates
+        # runtime. Factoring shared terms into temporaries keeps the
+        # differentiated graph compact (and mirrors the SUNDIALS backend).
+        replacements, reduced = sp.cse(
+            equations,
+            symbols=sp.numbered_symbols(prefix="_amici_cse_", cls=sp.Symbol),
+            order="none",
+            list=False,
+        )
+        if not replacements:
+            return [
+                f"{indent}{s} = {self.doprint(e)}"
+                for s, e in zip(symbols, reduced)
+            ]
+
+        # Assignment blocks are sequential: a target symbol (e.g. a `w` entry)
+        # may be referenced by later targets *and* by extracted temporaries, so
+        # temporaries cannot simply be emitted first. Toposort the combined set
+        # of targets and temporaries by their mutual dependencies so every
+        # symbol is defined before use (mirrors the SUNDIALS code printer).
+        expr_dict = dict(
+            itertools.chain(zip(symbols, reduced, strict=True), replacements)
+        )
+        dependencies = {
+            identifier: {s for s in definition.free_symbols if s in expr_dict}
+            for identifier, definition in expr_dict.items()
+        }
         return [
-            f"{indent}{s} = {self.doprint(e)}"
-            for s, e in zip(symbols, equations)
+            f"{indent}{sym} = {self.doprint(expr_dict[sym])}"
+            for group in toposort(dependencies)
+            for sym in sorted(group, key=str)
         ]
