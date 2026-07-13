@@ -291,9 +291,6 @@ class JAXProblem(eqx.Module):
 
         # Nominal (linear) values of fixed (non-estimated) parameters, used to
         # resolve observable/noise parameter overrides that reference them.
-        # ``estimate`` is taken from the parsed parameter objects, where it is a
-        # real bool; in the raw ``parameter_df`` it is the string
-        # ``"false"``/``"true"`` and therefore truthy either way.
         fixed_parameter_values = {
             p.id: p.nominal_value
             for pt in self._petab_problem.parameter_tables
