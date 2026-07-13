@@ -289,6 +289,18 @@ class JAXProblem(eqx.Module):
         measurements = dict()
         petab_indices = dict()
 
+        # Nominal (linear) values of fixed (non-estimated) parameters, used to
+        # resolve observable/noise parameter overrides that reference them.
+        # ``estimate`` is taken from the parsed parameter objects, where it is a
+        # real bool; in the raw ``parameter_df`` it is the string
+        # ``"false"``/``"true"`` and therefore truthy either way.
+        fixed_parameter_values = {
+            p.id: p.nominal_value
+            for pt in self._petab_problem.parameter_tables
+            for p in pt.elements
+            if not p.estimate and p.nominal_value != "array"
+        }
+
         n_pars = dict()
         for col in [
             petabv2.C.OBSERVABLE_PARAMETERS,
@@ -346,12 +358,20 @@ class JAXProblem(eqx.Module):
                 petabv2.C.NOISE_DISTRIBUTION
                 in self._petab_problem.observable_df
             ):
+                # Map each measurement row to its observable's noise trafo so
+                # ``iy_trafos`` is aligned with the other per-measurement arrays
+                # (``my``, ``iys``, ...) of length ``len(m)``, as required by the
+                # dyn/post-eq padding split.
+                obs_trafo = {
+                    obs.id: SCALE_TO_INT[petabv2.C.LOG]
+                    if obs.noise_distribution == petabv2.C.LOG_NORMAL
+                    else SCALE_TO_INT[petabv2.C.LIN]
+                    for obs in self._petab_problem.observables
+                }
                 iy_trafos = np.array(
                     [
-                        SCALE_TO_INT[petabv2.C.LOG]
-                        if obs.noise_distribution == petabv2.C.LOG_NORMAL
-                        else SCALE_TO_INT[petabv2.C.LIN]
-                        for obs in self._petab_problem.observables
+                        obs_trafo[oid]
+                        for oid in m[petabv2.C.OBSERVABLE_ID].values
                     ]
                 )
             else:
@@ -362,16 +382,10 @@ class JAXProblem(eqx.Module):
             parameter_overrides_mask = dict()
 
             def get_parameter_override(x):
-                if (
-                    x in self._petab_problem.parameter_df.index
-                    and not self._petab_problem.parameter_df.loc[
-                        x, petabv2.C.ESTIMATE
-                    ]
-                ):
-                    return self._petab_problem.parameter_df.loc[
-                        x, petabv2.C.NOMINAL_VALUE
-                    ]
-                return x
+                # Substitute fixed parameters with their nominal value; leave
+                # estimated-parameter names untouched (mapped to problem
+                # parameters later via ``par_index``).
+                return fixed_parameter_values.get(x, x)
 
             for col in [
                 petabv2.C.OBSERVABLE_PARAMETERS,
@@ -391,7 +405,9 @@ class JAXProblem(eqx.Module):
                     )
                     list_vals = split_vals.apply(
                         lambda x: (
-                            [get_parameter_override(y) for y in x]
+                            # drop empty tokens (empty cells split to ``['']``);
+                            # an empty override list is padded to the neutral 1.0
+                            [get_parameter_override(y) for y in x if y != ""]
                             if isinstance(x, list)
                             else []
                             if pd.isna(x)

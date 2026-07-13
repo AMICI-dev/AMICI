@@ -6,6 +6,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
+import petab.v1 as petab
 import pytest
 from amici.importers.petab.v1 import (
     import_petab_problem,
@@ -18,6 +19,7 @@ from amici.sim.sundials.petab.v1 import (
     simulate_petab,
 )
 from beartype import beartype
+from petab.v1.parameters import unscale
 from test_petab_benchmark import (
     benchmark_outdir,
     problems_for_gradient_check,
@@ -31,26 +33,53 @@ jax.config.update("jax_enable_x64", True)
     "ignore:The following problem parameters were not used *",
     "ignore: The environment variable *",
     "ignore:Adjoint sensitivity analysis for models with discontinuous ",
+    # v1->v2 auto-upgrade rewrites unsupported log10-normal priors/noise to
+    # log-normal and drops initialisation priors; both are benign for the data
+    # likelihood checked here (priors/init are not part of the objective).
+    "ignore:.*Using `log-normal` instead.*:UserWarning",
+    "ignore:.*Initialisation priors in parameter table are not supported.*:UserWarning",
 )
 def test_jax_llh(benchmark_problem):
     problem_id, flat_petab_problem, petab_problem, amici_model = (
         benchmark_problem
     )
 
-    to_skip = [
+    # Models with events not yet supported by the JAX backend.
+    events_not_supported = [
         "Liu_IFACPapersOnLine2025",
         "Oliveira_NatCommun2021",
         "SalazarCavazos_MBoC2020",
         "Smith_BMCSystBiol2013",
     ]
-    if problem_id in to_skip:
+    if problem_id in events_not_supported:
         pytest.skip(
             f"Skipping {problem_id} due to non-supported events in JAX."
         )
 
-    if problem_id == "Oliveira_NatCommun2021":
+    # Skipped only to stay within the CI time budget, not for correctness:
+    # Weber uses max_steps=4e7 under reverse-mode AD, which takes hours (it
+    # dominated a full-suite run). The preequilibration + parameter-dependent-
+    # event handling it exercises is also covered by Brannmark_JBC2010 and
+    # Isensee_JCB2018, which stay enabled.
+    slow_models = [
+        "Weber_BMC2015",
+    ]
+    if problem_id in slow_models:
+        pytest.skip(f"Skipping {problem_id}: excessive runtime for CI.")
+
+    # PEtab v2 has no log10-normal noise: the v1->v2 upgrade rewrites
+    # log10-normal to log-normal (a genuinely different likelihood, since the
+    # noise parameter is not rescaled by ln(10)), so the JAX (v2) result cannot
+    # match the log10-normal SUNDIALS reference. Mirrors the SUNDIALS v2 test
+    # (test_petab_benchmark.py::test_nominal_parameters_llh_v2).
+    obs_df = flat_petab_problem.observable_df
+    if (
+        petab.C.OBSERVABLE_TRANSFORMATION in obs_df
+        and petab.C.LOG10 in obs_df[petab.C.OBSERVABLE_TRANSFORMATION].unique()
+    ):
         pytest.skip(
-            "Skipping Oliveira_NatCommun2021 due to non-supported events in JAX."
+            f"Skipping {problem_id}: log10-normal noise is not supported in "
+            "PEtab v2."
         )
 
     amici_solver = amici_model.create_solver()
@@ -107,12 +136,21 @@ def test_jax_llh(benchmark_problem):
             jax=True,
         )
         if problem_parameters:
+            # ``problem_parameters`` holds scaled (e.g. log10) values, as fed to
+            # the SUNDIALS reference with ``scaled_parameters=True``. The PEtab
+            # v2 JAX backend operates on *linear* parameters, so unscale before
+            # injecting to evaluate both backends at the same physical point.
             jax_problem = eqx.tree_at(
                 lambda x: x.parameters,
                 jax_problem,
                 jnp.array(
                     [
-                        problem_parameters[pid]
+                        unscale(
+                            problem_parameters[pid],
+                            flat_petab_problem.parameter_df.loc[
+                                pid, petab.C.PARAMETER_SCALE
+                            ],
+                        )
                         for pid in jax_problem.parameter_ids
                     ]
                 ),
@@ -154,14 +192,38 @@ def test_jax_llh(benchmark_problem):
 
         if problem_id in problems_for_gradient_check:
             sllh_amici = r_amici[SLLH]
+            # SUNDIALS returns the gradient w.r.t. the *scaled* parameters
+            # (scaled_gradients=True), while JAX differentiates w.r.t. the
+            # *linear* parameters. Convert the JAX gradient to the estimation
+            # scale via the chain rule
+            #   d(llh)/d(scaled) = d(llh)/d(linear) * d(linear)/d(scaled),
+            # with d(linear)/d(scaled) = p*ln(10) for log10, p for log, 1 for lin.
+            scales = [
+                flat_petab_problem.parameter_df.loc[
+                    pid, petab.C.PARAMETER_SCALE
+                ]
+                for pid in jax_problem.parameter_ids
+            ]
+            p_lin = np.asarray(jax_problem.parameters)
+            chain = np.array(
+                [
+                    p * np.log(10.0)
+                    if s == petab.C.LOG10
+                    else p
+                    if s == petab.C.LOG
+                    else 1.0
+                    for s, p in zip(scales, p_lin)
+                ]
+            )
+            sllh_jax_scaled = np.asarray(sllh_jax.parameters) * chain
             np.testing.assert_allclose(
-                sllh_jax.parameters,
+                sllh_jax_scaled,
                 np.array(
                     [sllh_amici[pid] for pid in jax_problem.parameter_ids]
                 ),
                 rtol=1e-2,
                 atol=1e-2,
-                err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
+                err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax_scaled))}",
             )
     except (NotImplementedError, TypeError) as err:
         if "JAXProblem does not support PEtab v1 problems" in str(err):
