@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 113.
+List of publications using AMICI. Total number is 114.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -17,6 +17,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2026</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 data-entry-spacing="0" role="list">
+<div id="ref-GreinPen2026" class="csl-entry" role="listitem">
+Grein, Stephan, David R. Penas, Daniel Weindl, Polina Lakrisenko, Julio
+R. Banga, and Jan Hasenauer. 2026. <span>“Large-Scale Analysis of
+Optimisation Methods for Parameter Estimation Problems in the Life
+Sciences.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.64898/2026.07.11.737731">https://doi.org/10.64898/2026.07.11.737731</a>.
+</div>
 <div id="ref-JostThi2026" class="csl-entry" role="listitem">
 Jost, Paul Jonas, Christoph Thiele, and Jan Hasenauer. 2026.
 <span>“Balancing Label Resolution and Computational Cost in Dynamical
