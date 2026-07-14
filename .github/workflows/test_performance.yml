@@ -17,6 +17,17 @@ jobs:
         python-version: ["3.12"]
 
     steps:
+    - name: "Debug: runner and hardware info"
+      run: |
+        echo "== Runner =="
+        echo "name=${RUNNER_NAME} os=${RUNNER_OS} arch=${RUNNER_ARCH} environment=${RUNNER_ENVIRONMENT}"
+        uname -a
+        echo "== CPU =="
+        lscpu
+        echo "== Memory =="
+        free -h
+        echo "== Disk =="
+        df -h
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
       with:
@@ -45,6 +56,9 @@ jobs:
         AMICI_PARALLEL_COMPILE="" check_time.sh \
             install_sdist pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+
+    - name: "Debug: list installed Python packages"
+      run: pip3 list
 
     # retrieve test model
     - run: git clone --depth 1 https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT
