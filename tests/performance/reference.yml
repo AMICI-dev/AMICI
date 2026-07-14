@@ -1,7 +1,7 @@
 # Reference wall times (seconds) with some buffer
 create_sdist: 10
 install_sdist: 110
-petab_import: 720
+petab_import: 900  # raised from 720 due to CI runner performance degradation (#3187)
 install_model: 60
 install_model_O0: 40
 install_model_O1: 45
