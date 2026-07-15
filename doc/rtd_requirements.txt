@@ -29,5 +29,5 @@ ipykernel
 -e python/sdist/[jax]
 antimony>=2.13
 fiddy>=0.0.3
-petab_sciml
+petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@main
 -e git+https://github.com/petab-dev/libpetab-python.git@main#egg=petab
