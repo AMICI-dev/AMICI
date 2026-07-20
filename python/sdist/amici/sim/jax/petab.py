@@ -856,7 +856,7 @@ class JAXProblem(eqx.Module):
             self._petab_problem.extensions.sciml.hybridization_df[
                 self._petab_problem.extensions.sciml.hybridization_df[
                     "targetValue"
-                ]
+                ].astype(str)
                 == "array"
             ]
             .set_index("targetId")
