@@ -852,12 +852,16 @@ class JAXProblem(eqx.Module):
         if len(nn_input_arrays) == 0:
             return model
 
-        array_inputs = self._petab_problem.extensions.sciml.hybridization_df[
+        array_inputs = (
             self._petab_problem.extensions.sciml.hybridization_df[
-                "targetValue"
+                self._petab_problem.extensions.sciml.hybridization_df[
+                    "targetValue"
+                ]
+                == "array"
             ]
-            == "array"
-        ].index.tolist()
+            .set_index("targetId")
+            .index.tolist()
+        )
 
         for net_id in model_pars:
             net_id_inputs = array_inputs + model.nns[net_id].inputs
