@@ -869,3 +869,33 @@ def test_event_assignments_odd_root_count(tmp_path):
         ]
     )
     assert_allclose(ys, expected, atol=1e-6, rtol=1e-6)
+
+
+@skip_on_valgrind
+def test_resolve_net_id():
+    """Neural-network parameter rows are matched to their network via the
+    mapping table's model entity id (``<net>.parameters...``).
+    """
+    nns = {"net_params", "net_fitness_fold", "net1"}
+
+    assert (
+        JAXProblem._resolve_net_id("net_params.parameters", nns)
+        == "net_params"
+    )
+    assert (
+        JAXProblem._resolve_net_id("net_fitness_fold.parameters", nns)
+        == "net_fitness_fold"
+    )
+    assert (
+        JAXProblem._resolve_net_id("net_params.parameters[linear].weight", nns)
+        == "net_params"
+    )
+    assert JAXProblem._resolve_net_id("net1.parameters", nns) == "net1"
+
+    # Entities that do not name a known network (non-NN parameters) -> None.
+    assert JAXProblem._resolve_net_id("net_other.parameters", nns) is None
+    assert JAXProblem._resolve_net_id("k1", nns) is None
+    # Missing / empty mapping entries -> None (must never raise).
+    assert JAXProblem._resolve_net_id("", nns) is None
+    assert JAXProblem._resolve_net_id(float("nan"), nns) is None
+    assert JAXProblem._resolve_net_id(None, nns) is None

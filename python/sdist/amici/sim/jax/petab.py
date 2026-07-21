@@ -695,8 +695,30 @@ class JAXProblem(eqx.Module):
             if "inputs" in h5py.File(file_spec, "r").keys()
         }
 
+    @staticmethod
+    def _resolve_net_id(model_entity_id, valid_net_ids) -> str | None:
+        """Resolve the neural-network id a PEtab parameter row belongs to.
+
+        The mapping table names an NN parameter's target as
+        ``<net>.parameters...``; the id before the first ``.`` is the network.
+        Return ``None`` when the entity does not name a known network (e.g. the
+        parameter is not a neural-network parameter, or has no mapping entry).
+
+        :param model_entity_id:
+            Mapped model entity id for the parameter (e.g.
+            ``net_params.parameters``), or an empty/NaN value if the parameter
+            is not in the mapping table.
+        :param valid_net_ids:
+            Container of known network ids (e.g. ``model.nns``).
+        """
+        if isinstance(model_entity_id, str) and model_entity_id:
+            net = model_entity_id.split(".")[0]
+            if net in valid_net_ids:
+                return net
+        return None
+
     def _parse_parameter_name(
-        self, pname: str, model_pars: dict
+        self, pname: str, model_pars: dict, net: str
     ) -> list[tuple[str, str]]:
         """
         Parse parameter name to determine which layers and attributes to set.
@@ -705,11 +727,13 @@ class JAXProblem(eqx.Module):
             Parameter name from PEtab (format: net.layer.attribute)
         :param model_pars:
             Model parameters dictionary
+        :param net:
+            Network id ``pname`` belongs to (resolved via
+            :meth:`_resolve_net_id`).
 
         :return:
             List of (layer_name, attribute_name) tuples to set
         """
-        net = pname.split("_")[0]
         nn = model_pars[net]
         to_set = []
 
@@ -772,8 +796,9 @@ class JAXProblem(eqx.Module):
 
             for parameter in sorted_params:
                 pname = parameter.id
-                net = pname.split("_")[0]
-                if net not in model.nns:
+                model_entity_id = _lookup_mid(pname)
+                net = self._resolve_net_id(model_entity_id, model.nns)
+                if net is None:
                     continue
 
                 nn = model_pars[net]
@@ -785,13 +810,12 @@ class JAXProblem(eqx.Module):
                 else:
                     value = float(parameter.nominal_value)
 
-                model_entity_id = _lookup_mid(pname)
                 if model_entity_id != "" and "parameters[" in str(
                     model_entity_id
                 ):
                     to_set = _parse_model_entity_id(model_entity_id, nn)
                 else:
-                    to_set = self._parse_parameter_name(pname, model_pars)
+                    to_set = self._parse_parameter_name(pname, model_pars, net)
 
                 for layer, attribute in to_set:
                     if scalar:
