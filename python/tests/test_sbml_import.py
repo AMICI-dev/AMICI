@@ -1259,6 +1259,35 @@ def test_chained_initial_assignment_parameter_not_constant_folded():
 
 
 @skip_on_valgrind
+def test_initial_assignment_fixed_parameter_not_constant_folded():
+    """Regression test for #3214 (fixed-parameter variant).
+
+    The same constant-folding must be avoided for a fixed (constant)
+    parameter: even though it is excluded from sensitivity analysis, its
+    symbol must be retained in ``x0`` so that changing the constant still
+    moves the initial condition, rather than being baked in as a literal.
+    """
+    sbml_str = antimony2sbml("""
+        model test_ia_not_folded_fixed
+            species X;
+            X = X0;
+            X0 = 6 * 1;
+            k = 0.33;
+            degradation: X -> ; k * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    assert sbml_importer.sbml_model.getInitialAssignment("X0") is not None
+
+    de_model = sbml_importer._build_ode_model(fixed_parameters=["X0"])
+
+    assert "X0" in [p.get_id() for p in de_model.fixed_parameters()]
+    assert "X0" not in [p.get_id() for p in de_model.free_parameters()]
+    (x0_x,) = de_model.eq("x0")
+    assert x0_x == symbol_with_assumptions("X0")
+
+
+@skip_on_valgrind
 def test_minmax_piecewise_is_converted_to_minmax():
     """Test that _piecewise_to_minmax is applied during SBML import."""
     sbml_str = antimony2sbml("""
