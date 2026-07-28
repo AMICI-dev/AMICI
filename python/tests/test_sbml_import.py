@@ -1205,6 +1205,11 @@ def test_initial_assignment_parameter_not_constant_folded():
         end
     """)
     sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    # The test only exercises the bug if X0 actually carries an initial
+    # assignment; guard against a future antimony/libSBML folding `6 * 1` to a
+    # plain value, which would silently turn this into a false negative.
+    assert sbml_importer.sbml_model.getInitialAssignment("X0") is not None
+
     de_model = sbml_importer._build_ode_model()
 
     # X0 is offered as a differentiable free parameter ...
@@ -1214,6 +1219,43 @@ def test_initial_assignment_parameter_not_constant_folded():
     (x0_x,) = de_model.eq("x0")
     assert x0_x == symbol_with_assumptions("X0")
     assert sp.diff(x0_x, symbol_with_assumptions("X0")) == 1
+
+
+@skip_on_valgrind
+def test_chained_initial_assignment_parameter_not_constant_folded():
+    """Regression test for #3214 (chained-parameter variant).
+
+    ``X0`` is defined via an initial assignment referencing another parameter
+    ``X1`` whose own initial assignment has a dependency-free (numeric)
+    right-hand side. The dependence of the initial condition on ``X1`` must be
+    retained rather than folded into ``X1``'s nominal value while parameters
+    are being classified.
+    """
+    sbml_str = antimony2sbml("""
+        model test_chained_ia_not_folded
+            species X;
+            X = X0;
+            X0 = X1;
+            X1 = 5 * 1;
+            k = 0.33;
+            degradation: X -> ; k * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    assert sbml_importer.sbml_model.getInitialAssignment("X0") is not None
+    assert sbml_importer.sbml_model.getInitialAssignment("X1") is not None
+
+    de_model = sbml_importer._build_ode_model()
+
+    # X1 remains the differentiable free parameter; X0 becomes an expression
+    # for it rather than an independent, constant-folded parameter.
+    free_parameter_ids = [p.get_id() for p in de_model.free_parameters()]
+    assert "X1" in free_parameter_ids
+    assert "X0" not in free_parameter_ids
+
+    (x0_x,) = de_model.eq("x0")
+    assert x0_x == symbol_with_assumptions("X1")
+    assert sp.diff(x0_x, symbol_with_assumptions("X1")) == 1
 
 
 @skip_on_valgrind

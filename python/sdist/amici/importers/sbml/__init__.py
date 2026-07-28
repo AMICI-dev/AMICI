@@ -2293,15 +2293,34 @@ class SbmlImporter:
         for var in sym_math.free_symbols:
             element_id = str(var)
             if (
-                var in self._symbols[SymbolId.FREE_PARAMETER]
-                or var in self._symbols[SymbolId.FIXED_PARAMETER]
+                var not in self._symbols[SymbolId.SPECIES]
+                and var not in self._symbols[SymbolId.ALGEBRAIC_STATE]
+                and (
+                    var in self._symbols[SymbolId.FREE_PARAMETER]
+                    or var in self._symbols[SymbolId.FIXED_PARAMETER]
+                    or (
+                        (par := self.sbml_model.getParameter(element_id))
+                        is not None
+                        and not self._is_rate_rule_target(par)
+                        and not self._is_assignment_rule_target(par)
+                    )
+                )
             ):
-                # `var` is a parameter that AMICI keeps as a (differentiable)
-                # symbolic parameter. If it carries an initial assignment, its
-                # value has already been captured as the parameter's nominal
-                # value in `_process_parameters`. Substituting that assignment
-                # here would constant-fold the parameter dependence out of the
-                # initial condition (see #3214), so we keep the symbol instead.
+                # `var` is a parameter that AMICI keeps as a symbolic quantity
+                # (a differentiable free/fixed parameter, or an expression),
+                # rather than folding it to a number. Its value / definition is
+                # captured during parameter processing -- as the parameter's
+                # nominal value or as an expression referencing other
+                # parameters. Substituting its initial assignment here would
+                # constant-fold the dependence out of the initial condition,
+                # either directly (a numeric initial assignment, e.g.
+                # `init_STAT`) or transitively (a chain of parameter
+                # assignments). The FREE/FIXED_PARAMETER dicts are not yet
+                # populated while parameters are still being classified in
+                # `_process_parameters`, so also recognize a parameter from the
+                # SBML model directly. Parameters that become states (rate-rule
+                # targets, or parameters converted to species) are excluded
+                # above and handled by the state branches below. See #3214.
                 continue
             # already recursive since _get_element_initial_assignment calls _make_initial
             if (

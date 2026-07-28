@@ -17,7 +17,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   when that parameter both carried an `initialAssignment` with a numeric
   right-hand side and defined a species' initial value. The parameter remained
   in the free-parameter list, so its (initial-condition) sensitivity was
-  silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`) (#3214).
+  silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
+  covers the transitive case, where such a parameter is reached through a chain
+  of parameter initial assignments (#3214).
 
 ### v1.0.1 (2026-03-13)
 
