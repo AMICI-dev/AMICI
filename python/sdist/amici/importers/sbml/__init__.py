@@ -2292,6 +2292,17 @@ class SbmlImporter:
         # compute all initial values from scratch, recursively
         for var in sym_math.free_symbols:
             element_id = str(var)
+            if (
+                var in self._symbols[SymbolId.FREE_PARAMETER]
+                or var in self._symbols[SymbolId.FIXED_PARAMETER]
+            ):
+                # `var` is a parameter that AMICI keeps as a (differentiable)
+                # symbolic parameter. If it carries an initial assignment, its
+                # value has already been captured as the parameter's nominal
+                # value in `_process_parameters`. Substituting that assignment
+                # here would constant-fold the parameter dependence out of the
+                # initial condition (see #3214), so we keep the symbol instead.
+                continue
             # already recursive since _get_element_initial_assignment calls _make_initial
             if (
                 ia := self._get_element_initial_assignment(element_id)

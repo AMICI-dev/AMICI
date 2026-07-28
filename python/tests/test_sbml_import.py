@@ -1180,6 +1180,43 @@ def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
 
 
 @skip_on_valgrind
+def test_initial_assignment_parameter_not_constant_folded():
+    """Regression test for #3214.
+
+    A parameter that both carries an ``initialAssignment`` with a
+    dependency-free (numeric) right-hand side and defines a species' initial
+    condition must not be constant-folded out of ``x0``. Such a parameter is
+    still offered as a free (differentiable) parameter, so folding its value
+    into ``x0`` would silently return a zero sensitivity for it.
+
+    This is the shape antimony produces for every parameter assignment whose
+    right-hand side is a compound expression (e.g. ``init_STAT = 10^0`` in
+    ``jakstat_adjoint``).
+    """
+    # `X0 = 6 * 1` is a compound expression, so antimony emits it as an
+    # initial assignment on the parameter X0 (a bare literal would not).
+    sbml_str = antimony2sbml("""
+        model test_ia_not_folded
+            species X;
+            X = X0;
+            X0 = 6 * 1;
+            k = 0.33;
+            degradation: X -> ; k * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    de_model = sbml_importer._build_ode_model()
+
+    # X0 is offered as a differentiable free parameter ...
+    assert "X0" in [p.get_id() for p in de_model.free_parameters()]
+    # ... so x0 must retain the symbolic dependence on it rather than folding
+    # in its nominal value.
+    (x0_x,) = de_model.eq("x0")
+    assert x0_x == symbol_with_assumptions("X0")
+    assert sp.diff(x0_x, symbol_with_assumptions("X0")) == 1
+
+
+@skip_on_valgrind
 def test_minmax_piecewise_is_converted_to_minmax():
     """Test that _piecewise_to_minmax is applied during SBML import."""
     sbml_str = antimony2sbml("""
