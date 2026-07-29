@@ -178,7 +178,10 @@ def _split_override_column(
         if pd.isna(entry):
             return []
         values = (
-            entry.split(petabv2.C.PARAMETER_SEPARATOR)
+            # an empty cell (as opposed to a missing/NaN one) splits to a
+            # single empty-string token; drop it rather than trying to
+            # resolve/convert "" as if it were a real override
+            [v for v in entry.split(petabv2.C.PARAMETER_SEPARATOR) if v]
             if isinstance(entry, str)
             else [entry]
         )
@@ -1710,7 +1713,6 @@ class JAXProblem(eqx.Module):
     def _prepare_experiments(
         self,
         experiments: list[petabv2.Experiment],
-        conditions: list[str],
         is_preeq: bool,
         op_numeric: np.ndarray | None = None,
         op_mask: np.ndarray | None = None,
@@ -1740,10 +1742,6 @@ class JAXProblem(eqx.Module):
 
         :param experiments:
             Experiments to prepare simulation arrays for.
-        :param conditions:
-            Simulation conditions to prepare. Only used for
-            ``is_preeq=True``, where it is one (pre-equilibration) condition
-            id per experiment.
         :param is_preeq:
             Whether to load preequilibration or simulation parameters.
         :param op_numeric:
@@ -1775,7 +1773,16 @@ class JAXProblem(eqx.Module):
                     for exp in experiments
                 ]
             )
-            reinit_condition_ids = conditions
+
+            def preeq_condition_ids(exp: petabv2.Experiment) -> list[str]:
+                for period in exp.sorted_periods:
+                    if period.is_preequilibration:
+                        return period.condition_ids
+                return []
+
+            reinit_condition_ids = [
+                preeq_condition_ids(exp) for exp in experiments
+            ]
         else:
             p_array = jnp.stack(
                 [
@@ -2098,7 +2105,6 @@ class JAXProblem(eqx.Module):
             t_zeros,
         ) = self._prepare_experiments(
             experiments,
-            [],
             False,
             self._op_numeric,
             self._op_mask,
@@ -2228,14 +2234,8 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        preequilibration_conditions = list(
-            _get_preequilibration_condition_ids(experiments)
-        )
-
         p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
-            self._prepare_experiments(
-                experiments, preequilibration_conditions, True, None, None
-            )
+            self._prepare_experiments(experiments, True, None, None)
         )
         return self.run_preequilibration(
             p_array,
@@ -2606,21 +2606,28 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
             },
             index=problem._petab_measurement_indices[exp_idx, period_idx, mask],
         )
-        if (
-            petabv2.C.OBSERVABLE_PARAMETERS
-            in problem._petab_problem.measurement_df
-        ):
-            df_sc[petabv2.C.OBSERVABLE_PARAMETERS] = (
-                problem._petab_problem.measurement_df.query(
-                    f"{petabv2.C.EXPERIMENT_ID} == '{experiment_id}'"
-                )[petabv2.C.OBSERVABLE_PARAMETERS]
-            )
-        if petabv2.C.NOISE_PARAMETERS in problem._petab_problem.measurement_df:
-            df_sc[petabv2.C.NOISE_PARAMETERS] = (
-                problem._petab_problem.measurement_df.query(
-                    f"{petabv2.C.EXPERIMENT_ID} == '{experiment_id}'"
-                )[petabv2.C.NOISE_PARAMETERS]
-            )
+        measurement_df = problem._petab_problem.measurement_df
+        # `experiment_id` may be `jnp.nan` (the "__default__" experiment
+        # sentinel): a string `.query()` (`== 'nan'`) does not match actual
+        # NaN values in the column, silently selecting zero rows and
+        # leaving the assigned column all-NaN below. Select via a boolean
+        # mask instead, which handles both the NaN and real-id cases.
+        if isinstance(experiment_id, float):  # NaN sentinel
+            exp_rows = measurement_df[
+                measurement_df[petabv2.C.EXPERIMENT_ID].isna()
+            ]
+        else:
+            exp_rows = measurement_df[
+                measurement_df[petabv2.C.EXPERIMENT_ID] == experiment_id
+            ]
+        if petabv2.C.OBSERVABLE_PARAMETERS in measurement_df:
+            df_sc[petabv2.C.OBSERVABLE_PARAMETERS] = exp_rows[
+                petabv2.C.OBSERVABLE_PARAMETERS
+            ]
+        if petabv2.C.NOISE_PARAMETERS in measurement_df:
+            df_sc[petabv2.C.NOISE_PARAMETERS] = exp_rows[
+                petabv2.C.NOISE_PARAMETERS
+            ]
         dfs.append(df_sc)
     return pd.concat(dfs).sort_index()
 

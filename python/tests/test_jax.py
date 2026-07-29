@@ -575,14 +575,14 @@ def test_steady_state_event_no_recompile_across_conditions(
     for k_val in conditions:
         kwargs = fresh_solver_kwargs()
         model.simulate_condition(
-            jnp.array([k_val]),
-            ts,
-            jnp.array([]),
-            my,
-            iys,
-            iy_trafos,
-            jnp.zeros((3, 0)),
-            jnp.zeros((3, 0)),
+            jnp.array([[k_val]]),
+            ts[None, :],
+            jnp.zeros((1, 0)),
+            my[None, :],
+            iys[None, :],
+            iy_trafos[None, :],
+            jnp.zeros((1, 3, 0)),
+            jnp.zeros((1, 3, 0)),
             kwargs["solver"],
             kwargs["controller"],
             kwargs["root_finder"],
