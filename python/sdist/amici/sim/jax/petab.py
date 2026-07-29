@@ -1022,6 +1022,17 @@ class JAXProblem(eqx.Module):
         def resolve_symbol(name: str) -> jt.Array:
             if name in self.parameter_ids:
                 return self.parameters[self.parameter_ids.index(name)]
+            if name in self.model.state_ids:
+                # a parameter override referencing a state's value would
+                # require the actual simulated trajectory, which does not
+                # exist yet at this (static, pre-simulation) precompute
+                # step -- see the matching check in
+                # `_state_reinitialisation_value`.
+                raise NotImplementedError(
+                    "Condition table changes referencing a state's value "
+                    f"(got {name!r}) are not supported for parameter "
+                    "overrides."
+                )
             return jnp.asarray(
                 self._petab_problem.parameter_df.loc[
                     name, petabv2.C.NOMINAL_VALUE
@@ -1758,6 +1769,19 @@ class JAXProblem(eqx.Module):
                 # linear.
                 return jax_unscale(
                     self.get_petab_parameter_by_id(name), petabv2.C.LIN
+                )
+            if name in self.model.state_ids:
+                # a reinitialisation value referencing another state's
+                # value (e.g. `A = A + 5.0`) would need that state's
+                # actual simulated value at this period boundary, which
+                # `load_reinitialisation` cannot provide: `x_reinit` is
+                # precomputed once per experiment (see
+                # `_prepare_experiments`), before any period is actually
+                # integrated, so no simulated state exists yet to
+                # reference.
+                raise NotImplementedError(
+                    "Condition table changes referencing another state's "
+                    f"value (got {name!r}) are not supported."
                 )
             # only remaining option is nominal value for PEtab parameter
             # that is not estimated, return nominal value
