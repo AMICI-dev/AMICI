@@ -938,7 +938,7 @@ class JAXModel(eqx.Module):
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
-        Simulate a condition (JIT-compiled version).
+        Simulate an experiment (JIT-compiled version).
 
         This is the JIT-compiled version for optimal performance. For runtime type checking
         with beartype, use :meth:`simulate_experiment_unjitted` instead.
