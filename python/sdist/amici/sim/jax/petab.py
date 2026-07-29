@@ -151,14 +151,6 @@ def _get_fixed_parameter_values(
     }
 
 
-def _resolve_override_symbol(value, fixed_parameter_values: dict[str, float]):
-    """Replace a reference to a non-estimated PEtab parameter by its
-    nominal value; pass through anything else (numeric literals, estimated
-    parameter ids, model entity ids, array-valued fixed parameters)
-    unchanged."""
-    return fixed_parameter_values.get(value, value)
-
-
 def _split_override_column(
     col_values: pd.Series,
     n_pars: int,
@@ -186,10 +178,11 @@ def _split_override_column(
             if isinstance(entry, str)
             else [entry]
         )
-        return [
-            _resolve_override_symbol(v, fixed_parameter_values)
-            for v in values
-        ]
+        # replace a reference to a non-estimated PEtab parameter by its
+        # nominal value; pass through anything else (numeric literals,
+        # estimated parameter ids, model entity ids, array-valued fixed
+        # parameters) unchanged
+        return [fixed_parameter_values.get(v, v) for v in values]
 
     rows = col_values.apply(resolve_row)
     padded = rows.apply(
