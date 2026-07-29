@@ -53,7 +53,7 @@ class SteadyStateEvent(eqx.Module):
     :func:`diffrax.steady_state_event` returns a fresh closure on every
     call, which Python compares by identity. Since ``steady_state_event`` is
     passed as a static argument into :func:`equinox.filter_jit`-compiled
-    functions (:meth:`JAXModel.simulate_condition`,
+    functions (:meth:`JAXModel.simulate_experiment`,
     :meth:`JAXModel.preequilibrate_condition`), constructing a new closure
     with identical settings on every call (e.g. once per iteration of an
     optimization loop) silently defeats the JIT cache and forces a full
@@ -1799,7 +1799,7 @@ class JAXProblem(eqx.Module):
         For the main simulation (``is_preeq=False``), all returned arrays
         (except ``h_mask``) gain a period axis right after the experiment
         axis, of static size :attr:`_max_periods`, so that
-        :meth:`JAXModel.simulate_condition` can chain one ODE integration
+        :meth:`JAXModel.simulate_experiment` can chain one ODE integration
         per period. Periods beyond an experiment's own period count are
         padding periods: they are never reinitialised and never contribute
         to the log-likelihood (see :meth:`_get_measurements`), but must
@@ -2081,7 +2081,7 @@ class JAXProblem(eqx.Module):
         :param h_preeq:
             Pre-equilibration event mask. Can be empty if no pre-equilibration is available
         :param ts_mask:
-            padding mask, see :meth:`JAXModel.simulate_condition` for details.
+            padding mask, see :meth:`JAXModel.simulate_experiment` for details.
         :param t_zeros:
             simulation start time for the current experiment.
         :param ret:
@@ -2092,7 +2092,7 @@ class JAXProblem(eqx.Module):
         model = eqx.tree_at(
             lambda m: m._array_input_index, self.model, experiment_index
         )
-        return model.simulate_condition(
+        return model.simulate_experiment(
             p=p,
             ts_dyn=jax.lax.stop_gradient(jnp.array(ts_dyn)),
             ts_posteq=jax.lax.stop_gradient(jnp.array(ts_posteq)),

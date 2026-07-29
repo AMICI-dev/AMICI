@@ -72,10 +72,10 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
     )
     root_finder = optimistix.Newton(atol=atol, rtol=rtol)
-    # `simulate_condition` chains one ODE integration per experiment
+    # `simulate_experiment` chains one ODE integration per experiment
     # period; add a leading period axis of size 1 for this single,
     # non-chained simulation.
-    x, stats = model.simulate_condition(
+    x, stats = model.simulate_experiment(
         p[None, :],
         ts_jnp[None, :],
         jnp.zeros((1, 0)),

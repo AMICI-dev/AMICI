@@ -674,7 +674,7 @@ class JAXModel(eqx.Module):
 
         return ts, xs, hs, x_solver, h, stats_dyn, stats_posteq
 
-    def simulate_condition_unjitted(
+    def simulate_experiment_unjitted(
         self,
         p: jt.Float[jt.Array, "P np"],
         ts_dyn: jt.Float[jt.Array, "P nt_dyn"],
@@ -704,7 +704,7 @@ class JAXModel(eqx.Module):
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
-        Unjitted version of simulate_condition.
+        Unjitted version of simulate_experiment.
 
         Chains one ODE integration per experiment period (the leading axis,
         of static size ``P``, of ``p``/``ts_dyn``/``ts_posteq``/``my``/
@@ -714,7 +714,7 @@ class JAXModel(eqx.Module):
         lieu of encoding period transitions as model events. ``P == 1``
         reduces to a single, non-chained simulation.
 
-        See :meth:`simulate_condition` for full documentation.
+        See :meth:`simulate_experiment` for full documentation.
         """
         n_periods = p.shape[0]
 
@@ -908,7 +908,7 @@ class JAXModel(eqx.Module):
         return output, stats
 
     @eqx.filter_jit
-    def simulate_condition(
+    def simulate_experiment(
         self,
         p: jt.Float[jt.Array, "P np"],
         ts_dyn: jt.Float[jt.Array, "P nt_dyn"],
@@ -941,7 +941,7 @@ class JAXModel(eqx.Module):
         Simulate a condition (JIT-compiled version).
 
         This is the JIT-compiled version for optimal performance. For runtime type checking
-        with beartype, use :meth:`simulate_condition_unjitted` instead.
+        with beartype, use :meth:`simulate_experiment_unjitted` instead.
 
         Chains one ODE integration per experiment period (the leading axis,
         of static size ``P``, of ``p``/``ts_dyn``/``ts_posteq``/``my``/
@@ -1001,7 +1001,7 @@ class JAXModel(eqx.Module):
         :return:
             output according to `ret` and general results/statistics
         """
-        return self.simulate_condition_unjitted(
+        return self.simulate_experiment_unjitted(
             p,
             ts_dyn,
             ts_posteq,

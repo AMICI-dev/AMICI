@@ -194,7 +194,7 @@ def check_fields_jax(
     }
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
-    # `simulate_condition[_unjitted]` chains one ODE integration per
+    # `simulate_experiment[_unjitted]` chains one ODE integration per
     # experiment period; add a leading period axis of size 1 for this
     # single, non-chained simulation. `p` itself is kept 1-D here (and
     # the period axis added inside `fun` below) so that `jax.grad`/
@@ -218,7 +218,7 @@ def check_fields_jax(
     }
     # Use beartype-wrapped unjitted version for type checking
     # (beartype cannot introspect jitted functions, so we wrap the unjitted version)
-    fun_periodic = beartype(jax_model.simulate_condition_unjitted)
+    fun_periodic = beartype(jax_model.simulate_experiment_unjitted)
 
     def fun(p, **kw):
         return fun_periodic(p[None, :], **kw)
@@ -570,11 +570,11 @@ def test_steady_state_event_no_recompile_across_conditions(
     iy_trafos = jnp.zeros_like(ts, dtype=int)
 
     simulate_traces = patch_trace_counter(
-        JAXModel, "simulate_condition_unjitted"
+        JAXModel, "simulate_experiment_unjitted"
     )
     for k_val in conditions:
         kwargs = fresh_solver_kwargs()
-        model.simulate_condition(
+        model.simulate_experiment(
             jnp.array([[k_val]]),
             ts[None, :],
             jnp.zeros((1, 0)),
@@ -592,7 +592,7 @@ def test_steady_state_event_no_recompile_across_conditions(
         )
 
     assert eqx.debug.get_num_traces(simulate_traces) == 1, (
-        "simulate_condition was retraced across conditions with only "
+        "simulate_experiment was retraced across conditions with only "
         "numeric differences"
     )
 

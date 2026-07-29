@@ -220,7 +220,7 @@ def jax_sensitivity_check(
         root_finder = optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS)
 
         def simulate(pars):
-            x, _ = jax_model.simulate_condition(
+            x, _ = jax_model.simulate_experiment(
                 pars,
                 ts_jnp,
                 jnp.array([]),

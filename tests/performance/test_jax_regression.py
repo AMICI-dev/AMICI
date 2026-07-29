@@ -30,11 +30,11 @@ TIER1_FWD_CASES = [
     "MultiEvent",
 ]
 
-# ── Helper: build simulate_condition_unjitted kwargs for each model ─────────
+# ── Helper: build simulate_experiment_unjitted kwargs for each model ─────────
 
 
 def _sim_kwargs(model, solver_kwargs) -> dict:
-    """Return keyword arguments for simulate_condition_unjitted."""
+    """Return keyword arguments for simulate_experiment_unjitted."""
     import tests.performance.synthetic_models.conservation_law as cl
     import tests.performance.synthetic_models.linear_decay as ld
     import tests.performance.synthetic_models.lotka_volterra as lv
@@ -89,7 +89,7 @@ def _sim_kwargs(model, solver_kwargs) -> dict:
     model_name = type(model).__name__
     ts_dyn, my, iys, iy_trafos, ops, nps = _MAP[model_name]
 
-    # `simulate_condition`/`simulate_condition_unjitted` chain one ODE
+    # `simulate_experiment`/`simulate_experiment_unjitted` chain one ODE
     # integration per experiment period; add a leading period axis of
     # size 1 since these synthetic models are all single-period.
     return dict(
@@ -105,7 +105,7 @@ def _sim_kwargs(model, solver_kwargs) -> dict:
 
 
 def _extract_stats(stats: dict) -> dict:
-    """Pull step counts out of the stats dict returned by simulate_condition."""
+    """Pull step counts out of the stats dict returned by simulate_experiment."""
     out = {}
     for key in ("stats_dyn", "stats_posteq"):
         s = stats.get(key)
@@ -139,10 +139,10 @@ def test_tier1_fwd_sim(
     kwargs = _sim_kwargs(model, solver_kwargs)
 
     # Deterministic run (unjitted, for exact step counts)
-    llh, stats = model.simulate_condition_unjitted(p, **kwargs)
+    llh, stats = model.simulate_experiment_unjitted(p, **kwargs)
 
     # Timing (JIT-compiled path)
-    sim_fn = model.simulate_condition
+    sim_fn = model.simulate_experiment
     t_first, t_exec = measure_exec_time(sim_fn, p, **kwargs)
 
     results_collector.add(
@@ -168,7 +168,7 @@ def test_tier1_adj(model_id, tier1_models, solver_kwargs, results_collector):
     kwargs = _sim_kwargs(model, solver_kwargs)
 
     def _fn(p):
-        return model.simulate_condition(p, **kwargs)
+        return model.simulate_experiment(p, **kwargs)
 
     t_first, t_exec = measure_exec_time(
         eqx.filter_value_and_grad(_fn, has_aux=True), p
@@ -200,7 +200,7 @@ def test_tier1_fwd_sens(
     }
 
     def _fn(p):
-        return model.simulate_condition(p, **kwargs)
+        return model.simulate_experiment(p, **kwargs)
 
     t_first, t_exec = measure_exec_time(jax.jacfwd(_fn, has_aux=True), p)
 

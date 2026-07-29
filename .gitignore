@@ -39,6 +39,12 @@ models/model_calvetti/build/*
 
 amici_models/
 
+# PetabImporter-generated test models: python/tests/conftest.py points
+# AMICI_MODELS_ROOT at the repo root for the test session, so these land
+# directly in a bare <amici_version>/ directory instead of under
+# amici_models/<amici_version>/.
+/[0-9]*.[0-9]*.[0-9]*/
+
 # PEtab SciML test suite (downloaded dynamically)
 tests/sciml/testsuite/
 
