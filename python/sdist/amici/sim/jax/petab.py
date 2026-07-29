@@ -678,16 +678,52 @@ class JAXProblem(eqx.Module):
                         ts_posteq = m_posteq[petabv2.C.TIME].values
                         index_posteq = list(m_posteq.index)
 
+                        # Post-equilibrium measurements (e.g. steady-state
+                        # comparisons) have their own observable/override
+                        # data, distinct from the dynamic-phase measurements
+                        # above; this must be concatenated onto the dyn
+                        # portion so that `mv.my`/`iys`/`iy_trafos`/overrides
+                        # cover the full `len(ts_dyn) + len(ts_posteq)` range
+                        # that `_pad_and_stack` later splits at
+                        # `len(mv.ts_dyn)` -- otherwise post-equilibrium rows
+                        # silently fall back to zero-filled placeholders
+                        # (wrong measurement value, wrong observable index,
+                        # wrong noise override) while still being marked
+                        # valid.
+                        iys_posteq = np.array(
+                            [
+                                self.model.observable_ids.index(oid)
+                                for oid in m_posteq[
+                                    petabv2.C.OBSERVABLE_ID
+                                ].values
+                            ],
+                            dtype=int,
+                        )
+                        my_posteq = m_posteq[petabv2.C.MEASUREMENT].values
+                        iy_trafos_posteq = _get_iy_trafos(
+                            iys_posteq,
+                            self._petab_problem,
+                            self.model.observable_ids,
+                        )
+                        overrides_posteq = _get_overrides(
+                            m_posteq,
+                            n_pars,
+                            fixed_parameter_values,
+                            self.parameter_ids,
+                        )
+
                         # No further period to hand off to within this
                         # experiment's own chain; padding slots (if any)
                         # after this one are pure no-ops.
                         if len(ts_dyn_real):
                             ts_dyn = ts_dyn_real
                             dyn_valid = np.ones(len(ts_dyn_real), dtype=bool)
-                            my = my_real
-                            iys = iys_real
-                            iy_trafos = iy_trafos_real
-                            overrides = overrides_real
+                            my_dyn, iys_dyn, iy_trafos_dyn = (
+                                my_real,
+                                iys_real,
+                                iy_trafos_real,
+                            )
+                            overrides_dyn = overrides_real
                             index_dyn_full = index_dyn
                         else:
                             # No real dyn measurements in this period (e.g.
@@ -698,12 +734,24 @@ class JAXProblem(eqx.Module):
                             (
                                 ts_dyn,
                                 dyn_valid,
-                                my,
-                                iys,
-                                iy_trafos,
-                                overrides,
+                                my_dyn,
+                                iys_dyn,
+                                iy_trafos_dyn,
+                                overrides_dyn,
                             ) = _masked_placeholder_period(t_lo, n_pars)
                             index_dyn_full = [-1]
+
+                        my = np.concatenate([my_dyn, my_posteq])
+                        iys = np.concatenate([iys_dyn, iys_posteq])
+                        iy_trafos = np.concatenate(
+                            [iy_trafos_dyn, iy_trafos_posteq]
+                        )
+                        overrides = {
+                            col: OverrideColumn.concatenate(
+                                overrides_dyn[col], overrides_posteq[col]
+                            )
+                            for col in overrides_dyn
+                        }
                     else:
                         ts_posteq = np.array([])
                         index_posteq = []
