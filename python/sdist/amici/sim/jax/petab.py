@@ -258,19 +258,34 @@ def _get_overrides(
 
 
 def _get_iy_trafos(
-    iys: np.ndarray, petab_problem: petabv2.Problem
+    iys: np.ndarray,
+    petab_problem: petabv2.Problem,
+    observable_ids: list[str],
 ) -> np.ndarray:
     """Observable transformation index (see ``SCALE_TO_INT``) for each
-    observable index in ``iys``."""
+    (per-measurement-row) observable index in ``iys``.
+
+    ``iys`` indexes into ``observable_ids`` (i.e. ``self.model.observable_ids``),
+    not into ``petab_problem.observables`` directly, so the per-observable
+    transformation is first resolved by id, then gathered onto ``iys``'s own
+    (measurement-row) length -- returning one entry per row in
+    ``petab_problem.observables`` order would silently produce an array of
+    the wrong length whenever the number of measurement rows differs from
+    the number of observables.
+    """
     if petabv2.C.NOISE_DISTRIBUTION in petab_problem.observable_df:
-        return np.array(
-            [
+        trafo_by_id = {
+            obs.id: (
                 SCALE_TO_INT[petabv2.C.LOG]
                 if obs.noise_distribution == petabv2.C.LOG_NORMAL
                 else SCALE_TO_INT[petabv2.C.LIN]
-                for obs in petab_problem.observables
-            ]
+            )
+            for obs in petab_problem.observables
+        }
+        trafo_by_index = np.array(
+            [trafo_by_id[oid] for oid in observable_ids]
         )
+        return trafo_by_index[iys]
     return np.zeros_like(iys)
 
 
@@ -647,7 +662,9 @@ class JAXProblem(eqx.Module):
                         ]
                     )
                     iy_trafos_real = _get_iy_trafos(
-                        iys_real, self._petab_problem
+                        iys_real,
+                        self._petab_problem,
+                        self.model.observable_ids,
                     )
                     overrides_real = _get_overrides(
                         m, n_pars, fixed_parameter_values, self.parameter_ids
@@ -2607,19 +2624,21 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
             index=problem._petab_measurement_indices[exp_idx, period_idx, mask],
         )
         measurement_df = problem._petab_problem.measurement_df
-        # `experiment_id` may be `jnp.nan` (the "__default__" experiment
-        # sentinel): a string `.query()` (`== 'nan'`) does not match actual
-        # NaN values in the column, silently selecting zero rows and
-        # leaving the assigned column all-NaN below. Select via a boolean
-        # mask instead, which handles both the NaN and real-id cases.
-        if isinstance(experiment_id, float):  # NaN sentinel
-            exp_rows = measurement_df[
-                measurement_df[petabv2.C.EXPERIMENT_ID].isna()
-            ]
-        else:
-            exp_rows = measurement_df[
-                measurement_df[petabv2.C.EXPERIMENT_ID] == experiment_id
-            ]
+        # `experiment_id` is coerced to `jnp.nan` above for the "__default__"
+        # experiment sentinel, but `measurement_df`'s own `experimentId`
+        # column still stores the literal string `"__default__"` (never a
+        # real NaN): a string `.query()` (`== 'nan'`) or an `.isna()` mask
+        # both silently select zero rows in that case, leaving the assigned
+        # column all-NaN below. Match against the literal sentinel string
+        # instead.
+        match_id = (
+            "__default__"
+            if isinstance(experiment_id, float)
+            else experiment_id
+        )
+        exp_rows = measurement_df[
+            measurement_df[petabv2.C.EXPERIMENT_ID] == match_id
+        ]
         if petabv2.C.OBSERVABLE_PARAMETERS in measurement_df:
             df_sc[petabv2.C.OBSERVABLE_PARAMETERS] = exp_rows[
                 petabv2.C.OBSERVABLE_PARAMETERS
