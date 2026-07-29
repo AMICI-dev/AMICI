@@ -5,7 +5,6 @@ import os
 import re
 import shutil
 from collections.abc import Callable, Iterable, Sized
-from numbers import Number
 from pathlib import Path
 from typing import NamedTuple
 
@@ -19,11 +18,13 @@ import optimistix
 import pandas as pd
 import petab.v1 as petabv1
 import petab.v2 as petabv2
+import sympy as sp
 from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
+from amici.exporters.jax.jaxcodeprinter import AmiciJaxCodePrinter
 from amici.logging import get_logger
-from amici.sim.jax.model import JAXModel, ReturnValue
+from amici.sim.jax.model import JAXModel, ReturnValue, safe_div, safe_log
 
 DEFAULT_CONTROLLER_SETTINGS = {
     "atol": 1e-8,
@@ -292,16 +293,32 @@ def _get_iy_trafos(
 class _PeriodMeasurements(NamedTuple):
     """One experiment period's bucketed measurement data, as built by
     :meth:`JAXProblem._get_measurements` and consumed by its
-    padding/stacking step."""
+    padding/stacking step.
+
+    Dynamic-phase and post-equilibrium-phase data are tracked as separate
+    fields throughout (mirroring ``ts_dyn``/``ts_posteq``) rather than
+    concatenated into one array and later re-split by ``len(ts_dyn)``: once
+    merged, that split point is only recoverable by convention, and a
+    single missed field silently corrupts that field's post-equilibrium
+    entries while leaving them marked valid.
+    """
 
     ts_dyn: np.ndarray
     ts_posteq: np.ndarray
-    my: np.ndarray
-    iys: np.ndarray
-    iy_trafos: np.ndarray
-    op_overrides: OverrideColumn
-    noise_overrides: OverrideColumn
-    valid: np.ndarray
+    my_dyn: np.ndarray
+    my_posteq: np.ndarray
+    iys_dyn: np.ndarray
+    iys_posteq: np.ndarray
+    iy_trafos_dyn: np.ndarray
+    iy_trafos_posteq: np.ndarray
+    op_overrides_dyn: OverrideColumn
+    op_overrides_posteq: OverrideColumn
+    noise_overrides_dyn: OverrideColumn
+    noise_overrides_posteq: OverrideColumn
+    valid_dyn: np.ndarray
+    valid_posteq: np.ndarray
+    index_dyn: tuple[int, ...]
+    index_posteq: tuple[int, ...]
 
 
 def _masked_placeholder_period(
@@ -365,17 +382,19 @@ def _pad_measurement(
 
 def _pad_and_stack(
     measurements: dict[tuple[str, int], _PeriodMeasurements],
-    extractor: Callable[[_PeriodMeasurements], np.ndarray],
+    extractor_dyn: Callable[[_PeriodMeasurements], np.ndarray],
+    extractor_posteq: Callable[[_PeriodMeasurements], np.ndarray],
     n_ts_dyn: int,
     n_ts_posteq: int,
 ) -> np.ndarray:
-    """Apply ``extractor`` to every bucketed period, split each result at
-    its own dynamic/post-equilibrium boundary, pad, and stack."""
+    """Apply ``extractor_dyn``/``extractor_posteq`` to every bucketed
+    period's independently-tracked dynamic/post-equilibrium portions, pad
+    each to ``n_ts_dyn``/``n_ts_posteq``, and stack across periods."""
     return np.stack(
         [
             _pad_measurement(
-                extractor(mv)[: len(mv.ts_dyn)],
-                extractor(mv)[len(mv.ts_dyn) :],
+                extractor_dyn(mv),
+                extractor_posteq(mv),
                 n_ts_dyn,
                 n_ts_posteq,
             )
@@ -561,7 +580,6 @@ class JAXProblem(eqx.Module):
              - parameter indices (problem parameters) for noise parameter overrides
         """
         measurements: dict[tuple[str, int], _PeriodMeasurements] = {}
-        petab_indices = dict()
 
         # Nominal (linear) values of fixed (non-estimated) parameters, used to
         # resolve observable/noise parameter overrides that reference them.
@@ -631,13 +649,25 @@ class JAXProblem(eqx.Module):
                 if i_period >= len(dyn_periods):
                     # Padding slot: this experiment has no period here at
                     # all. A single masked, zero-duration integration step
-                    # that leaves the carried-over state unchanged.
-                    ts_dyn, dyn_valid, my, iys, iy_trafos, overrides = (
+                    # that leaves the carried-over state unchanged. No
+                    # post-equilibrium portion applies to a padding slot.
+                    ts_dyn, dyn_valid, my_dyn, iys_dyn, iy_trafos_dyn, overrides_dyn = (
                         _masked_placeholder_period(last_period_time, n_pars)
                     )
+                    index_dyn = (-1,)
                     ts_posteq = np.array([])
-                    posteq_valid = np.array([])
-                    index = [-1]
+                    my_posteq = np.array([])
+                    iys_posteq = np.array([], dtype=int)
+                    iy_trafos_posteq = np.array([], dtype=int)
+                    overrides_posteq = {
+                        col: OverrideColumn.placeholder(0, n_pars[col])
+                        for col in (
+                            petabv2.C.OBSERVABLE_PARAMETERS,
+                            petabv2.C.NOISE_PARAMETERS,
+                        )
+                    }
+                    posteq_valid = np.array([], dtype=bool)
+                    index_posteq = ()
                 else:
                     is_own_last = i_period == len(dyn_periods) - 1
                     t_lo = dyn_periods[i_period].time
@@ -670,26 +700,19 @@ class JAXProblem(eqx.Module):
                     overrides_real = _get_overrides(
                         m, n_pars, fixed_parameter_values, self.parameter_ids
                     )
-                    index_dyn = list(m.index)
+                    index_dyn_real = list(m.index)
 
                     if is_own_last:
-                        posteq_mask = np.isfinite(m_full_times) == False  # noqa: E712
-                        m_posteq = m_full[posteq_mask]
-                        ts_posteq = m_posteq[petabv2.C.TIME].values
-                        index_posteq = list(m_posteq.index)
-
                         # Post-equilibrium measurements (e.g. steady-state
                         # comparisons) have their own observable/override
                         # data, distinct from the dynamic-phase measurements
-                        # above; this must be concatenated onto the dyn
-                        # portion so that `mv.my`/`iys`/`iy_trafos`/overrides
-                        # cover the full `len(ts_dyn) + len(ts_posteq)` range
-                        # that `_pad_and_stack` later splits at
-                        # `len(mv.ts_dyn)` -- otherwise post-equilibrium rows
-                        # silently fall back to zero-filled placeholders
-                        # (wrong measurement value, wrong observable index,
-                        # wrong noise override) while still being marked
-                        # valid.
+                        # above, and are tracked as a separate portion of
+                        # this period throughout (see `_PeriodMeasurements`).
+                        posteq_mask = np.isfinite(m_full_times) == False  # noqa: E712
+                        m_posteq = m_full[posteq_mask]
+                        ts_posteq = m_posteq[petabv2.C.TIME].values
+                        index_posteq = tuple(m_posteq.index)
+
                         iys_posteq = np.array(
                             [
                                 self.model.observable_ids.index(oid)
@@ -724,7 +747,7 @@ class JAXProblem(eqx.Module):
                                 iy_trafos_real,
                             )
                             overrides_dyn = overrides_real
-                            index_dyn_full = index_dyn
+                            index_dyn = tuple(index_dyn_real)
                         else:
                             # No real dyn measurements in this period (e.g.
                             # a pure post-equilibration period): still need
@@ -739,22 +762,17 @@ class JAXProblem(eqx.Module):
                                 iy_trafos_dyn,
                                 overrides_dyn,
                             ) = _masked_placeholder_period(t_lo, n_pars)
-                            index_dyn_full = [-1]
-
-                        my = np.concatenate([my_dyn, my_posteq])
-                        iys = np.concatenate([iys_dyn, iys_posteq])
-                        iy_trafos = np.concatenate(
-                            [iy_trafos_dyn, iy_trafos_posteq]
-                        )
-                        overrides = {
-                            col: OverrideColumn.concatenate(
-                                overrides_dyn[col], overrides_posteq[col]
-                            )
-                            for col in overrides_dyn
-                        }
+                            index_dyn = (-1,)
                     else:
                         ts_posteq = np.array([])
-                        index_posteq = []
+                        my_posteq = np.array([])
+                        iys_posteq = np.array([], dtype=int)
+                        iy_trafos_posteq = np.array([], dtype=int)
+                        overrides_posteq = {
+                            col: OverrideColumn.placeholder(0, n_pars[col])
+                            for col in overrides_real
+                        }
+                        index_posteq = ()
 
                         # Append a synthetic, masked boundary time point at
                         # the start of the next period so that the ODE
@@ -765,36 +783,46 @@ class JAXProblem(eqx.Module):
                         dyn_valid = np.append(
                             np.ones(len(ts_dyn_real), dtype=bool), False
                         )
-                        my = np.append(my_real, 0.0)
-                        iys = np.append(iys_real, 0)
-                        iy_trafos = np.append(iy_trafos_real, 0)
-                        overrides = {
+                        my_dyn = np.append(my_real, 0.0)
+                        iys_dyn = np.append(iys_real, 0)
+                        iy_trafos_dyn = np.append(iy_trafos_real, 0)
+                        overrides_dyn = {
                             col: OverrideColumn.concatenate(
                                 overrides_real[col],
                                 OverrideColumn.placeholder(1, n_pars[col]),
                             )
                             for col in overrides_real
                         }
-                        index_dyn_full = [*index_dyn, -1]
+                        index_dyn = (*index_dyn_real, -1)
 
-                    index = [*index_dyn_full, *index_posteq]
                     posteq_valid = np.ones(len(ts_posteq), dtype=bool)
-
-                valid = np.concatenate([dyn_valid, posteq_valid]).astype(
-                    bool
-                )
 
                 measurements[(exp.id, i_period)] = _PeriodMeasurements(
                     ts_dyn=ts_dyn,
                     ts_posteq=ts_posteq,
-                    my=my,
-                    iys=iys,
-                    iy_trafos=iy_trafos,
-                    op_overrides=overrides[petabv2.C.OBSERVABLE_PARAMETERS],
-                    noise_overrides=overrides[petabv2.C.NOISE_PARAMETERS],
-                    valid=valid,
+                    my_dyn=my_dyn,
+                    my_posteq=my_posteq,
+                    iys_dyn=iys_dyn,
+                    iys_posteq=iys_posteq,
+                    iy_trafos_dyn=iy_trafos_dyn,
+                    iy_trafos_posteq=iy_trafos_posteq,
+                    op_overrides_dyn=overrides_dyn[
+                        petabv2.C.OBSERVABLE_PARAMETERS
+                    ],
+                    op_overrides_posteq=overrides_posteq[
+                        petabv2.C.OBSERVABLE_PARAMETERS
+                    ],
+                    noise_overrides_dyn=overrides_dyn[
+                        petabv2.C.NOISE_PARAMETERS
+                    ],
+                    noise_overrides_posteq=overrides_posteq[
+                        petabv2.C.NOISE_PARAMETERS
+                    ],
+                    valid_dyn=dyn_valid,
+                    valid_posteq=posteq_valid,
+                    index_dyn=index_dyn,
+                    index_posteq=index_posteq,
                 )
-                petab_indices[(exp.id, i_period)] = tuple(index)
 
         # compute maximum lengths
         n_ts_dyn = max(len(mv.ts_dyn) for mv in measurements.values())
@@ -823,47 +851,65 @@ class JAXProblem(eqx.Module):
         )
 
         my = _pad_and_stack(
-            measurements, lambda mv: mv.my, n_ts_dyn, n_ts_posteq
+            measurements,
+            lambda mv: mv.my_dyn,
+            lambda mv: mv.my_posteq,
+            n_ts_dyn,
+            n_ts_posteq,
         )
         iys = _pad_and_stack(
-            measurements, lambda mv: mv.iys, n_ts_dyn, n_ts_posteq
+            measurements,
+            lambda mv: mv.iys_dyn,
+            lambda mv: mv.iys_posteq,
+            n_ts_dyn,
+            n_ts_posteq,
         )
         iy_trafos = _pad_and_stack(
-            measurements, lambda mv: mv.iy_trafos, n_ts_dyn, n_ts_posteq
+            measurements,
+            lambda mv: mv.iy_trafos_dyn,
+            lambda mv: mv.iy_trafos_posteq,
+            n_ts_dyn,
+            n_ts_posteq,
         )
         op_numeric = _pad_and_stack(
             measurements,
-            lambda mv: mv.op_overrides.numeric,
+            lambda mv: mv.op_overrides_dyn.numeric,
+            lambda mv: mv.op_overrides_posteq.numeric,
             n_ts_dyn,
             n_ts_posteq,
         )
         op_mask = _pad_and_stack(
             measurements,
-            lambda mv: mv.op_overrides.mask,
+            lambda mv: mv.op_overrides_dyn.mask,
+            lambda mv: mv.op_overrides_posteq.mask,
             n_ts_dyn,
             n_ts_posteq,
         )
         op_indices = _pad_and_stack(
             measurements,
-            lambda mv: mv.op_overrides.index,
+            lambda mv: mv.op_overrides_dyn.index,
+            lambda mv: mv.op_overrides_posteq.index,
             n_ts_dyn,
             n_ts_posteq,
         )
         np_numeric = _pad_and_stack(
             measurements,
-            lambda mv: mv.noise_overrides.numeric,
+            lambda mv: mv.noise_overrides_dyn.numeric,
+            lambda mv: mv.noise_overrides_posteq.numeric,
             n_ts_dyn,
             n_ts_posteq,
         )
         np_mask = _pad_and_stack(
             measurements,
-            lambda mv: mv.noise_overrides.mask,
+            lambda mv: mv.noise_overrides_dyn.mask,
+            lambda mv: mv.noise_overrides_posteq.mask,
             n_ts_dyn,
             n_ts_posteq,
         )
         np_indices = _pad_and_stack(
             measurements,
-            lambda mv: mv.noise_overrides.index,
+            lambda mv: mv.noise_overrides_dyn.index,
+            lambda mv: mv.noise_overrides_posteq.index,
             n_ts_dyn,
             n_ts_posteq,
         )
@@ -875,11 +921,11 @@ class JAXProblem(eqx.Module):
                 np.concatenate(
                     (
                         np.pad(
-                            mv.valid[: len(mv.ts_dyn)],
+                            mv.valid_dyn,
                             (0, n_ts_dyn - len(mv.ts_dyn)),
                         ),
                         np.pad(
-                            mv.valid[len(mv.ts_dyn) :],
+                            mv.valid_posteq,
                             (0, n_ts_posteq - len(mv.ts_posteq)),
                         ),
                     )
@@ -890,14 +936,12 @@ class JAXProblem(eqx.Module):
         petab_indices = np.stack(
             [
                 _pad_measurement(
-                    np.array(idx[: len(mv.ts_dyn)]),
-                    np.array(idx[len(mv.ts_dyn) :]),
+                    np.array(mv.index_dyn),
+                    np.array(mv.index_posteq),
                     n_ts_dyn,
                     n_ts_posteq,
                 )
-                for mv, idx in zip(
-                    measurements.values(), petab_indices.values()
-                )
+                for mv in measurements.values()
             ]
         )
 
@@ -926,16 +970,16 @@ class JAXProblem(eqx.Module):
         )
 
     def _get_parameter_mappings(self) -> dict[str, ...]:
-        # `targets_map` intentionally stores each value only lightly parsed
-        # (a numeric literal, or a parameter id `str`, via
-        # `_resolve_petab_change_value`) rather than eagerly resolved
-        # against `self.parameters`: this dict is cached once at
-        # construction time (`self._parameter_mappings`, see `__init__`),
-        # and `update_parameters` (`eqx.tree_at(lambda p: p.parameters,
-        # self, p)`) does not recompute it, so an eagerly-resolved value
-        # would go stale after a parameter update.
-        # `_resolve_parameter_reference` re-resolves the actual value live
-        # against `self.parameters` at use time instead.
+        # `targets_map` intentionally stores each value only as a compiled
+        # `_CompiledConditionExpr` (see `_resolve_petab_change_value`)
+        # rather than eagerly resolved against `self.parameters`: this
+        # dict is cached once at construction time
+        # (`self._parameter_mappings`, see `__init__`), and
+        # `update_parameters` (`eqx.tree_at(lambda p: p.parameters, self,
+        # p)`) does not recompute it, so an eagerly-resolved value would
+        # go stale after a parameter update. `_resolve_parameter_reference`
+        # re-resolves the actual value live against `self.parameters` at
+        # use time instead.
         targets_map = {
             c.id: {
                 ch.target_id: _resolve_petab_change_value(ch.target_value)
@@ -958,30 +1002,36 @@ class JAXProblem(eqx.Module):
         return {"targets_map": targets_map, "hybrid_map": hybrid_map}
 
     def _resolve_parameter_reference(
-        self, value: float | str
+        self, value: "_CompiledConditionExpr"
     ) -> jt.Float[jt.Scalar, ""]:  # noqa: F722
         """
         Resolve a value from ``targets_map`` (see :meth:`_get_parameter_mappings`)
-        to a JAX scalar. Numeric values pass through; a parameter id
-        resolves to that parameter's current (estimated) or nominal
-        (fixed) value. Symbolic references to estimated parameters keep
-        their dependence on :attr:`parameters` so gradients flow through
+        to a JAX scalar by evaluating its compiled expression with each
+        free symbol resolved to that parameter's current (estimated) or
+        nominal (fixed) value. A numeric literal or a single parameter
+        reference is just the zero/one-free-symbol case of the same
+        mechanism. Symbolic references to estimated parameters keep their
+        dependence on :attr:`parameters` so gradients flow through
         correctly.
 
         :param value:
-            A numeric literal or PEtab parameter id, as returned by
+            A compiled expression, as returned by
             :func:`_resolve_petab_change_value`.
         """
-        if isinstance(value, str):
-            if value in self.parameter_ids:
-                return self.parameters[self.parameter_ids.index(value)]
+
+        def resolve_symbol(name: str) -> jt.Array:
+            if name in self.parameter_ids:
+                return self.parameters[self.parameter_ids.index(name)]
             return jnp.asarray(
                 self._petab_problem.parameter_df.loc[
-                    value, petabv2.C.NOMINAL_VALUE
+                    name, petabv2.C.NOMINAL_VALUE
                 ],
                 dtype=self.model.parameters.dtype,
             )
-        return jnp.asarray(value, dtype=self.model.parameters.dtype)
+
+        return jnp.asarray(
+            value(resolve_symbol), dtype=self.model.parameters.dtype
+        )
 
     def get_all_simulation_conditions(self) -> tuple[tuple[str, ...], ...]:
         simulation_conditions = get_simulation_conditions_v2(
@@ -1620,10 +1670,9 @@ class JAXProblem(eqx.Module):
         ``condition_ids`` (applied simultaneously, e.g. for one experiment
         period) that actually sets it.
 
-        Numeric values are returned as plain Python ``float``s; a
-        reference to a single other parameter is returned as that
-        parameter's id (``str``). Compound symbolic expressions are not
-        supported.
+        The value is returned as a :class:`_CompiledConditionExpr` (a
+        numeric literal or a reference to a single other parameter is just
+        its zero/one-free-symbol special case).
 
         :param condition_ids:
             Condition IDs to check, in priority order.
@@ -1698,23 +1747,28 @@ class JAXProblem(eqx.Module):
         ) is None:
             # no reinitialisation, return dummy value
             return 0.0
-        if isinstance(xval, Number):
-            # numerical value, return as is
-            return xval
-        if xval in self.model.parameter_ids:
-            # model parameter, return value
-            return p[self.model.parameter_ids.index(xval)]
-        if xval in self.parameter_ids:
-            # estimated PEtab parameter, return unscaled value. PEtab v2
-            # has no parameterScale column -- all parameters are linear.
-            return jax_unscale(
-                self.get_petab_parameter_by_id(xval), petabv2.C.LIN
-            )
-        # only remaining option is nominal value for PEtab parameter
-        # that is not estimated, return nominal value
-        return self._petab_problem.parameter_df.loc[
-            xval, petabv2.C.NOMINAL_VALUE
-        ]
+
+        def resolve_symbol(name: str):
+            if name in self.model.parameter_ids:
+                # model parameter, return value
+                return p[self.model.parameter_ids.index(name)]
+            if name in self.parameter_ids:
+                # estimated PEtab parameter, return unscaled value. PEtab
+                # v2 has no parameterScale column -- all parameters are
+                # linear.
+                return jax_unscale(
+                    self.get_petab_parameter_by_id(name), petabv2.C.LIN
+                )
+            # only remaining option is nominal value for PEtab parameter
+            # that is not estimated, return nominal value
+            return self._petab_problem.parameter_df.loc[
+                name, petabv2.C.NOMINAL_VALUE
+            ]
+
+        # a numeric literal or a single parameter reference is just the
+        # zero/one-free-symbol case of the same compiled-expression
+        # mechanism
+        return xval(resolve_symbol)
 
     def load_reinitialisation(
         self,
@@ -2782,25 +2836,52 @@ def _try_float(value):
         raise
 
 
-def _resolve_petab_change_value(target_value) -> float | str:
-    """
-    Resolve a :class:`petabv2.Change.target_value` (a sympy expression, or
-    already a plain number) to either a numeric literal or a single
-    parameter id.
+class _CompiledConditionExpr(NamedTuple):
+    """A condition table change's compound symbolic ``target_value``
+    expression (e.g. ``k1 + 2 * k2``), compiled to a JAX-callable function
+    of its free parameter symbols (sorted by name), using the same
+    sympy-to-JAX code printer (:class:`AmiciJaxCodePrinter`) that the
+    model's own equations are generated with -- rather than being
+    restricted to the numeric-literal/single-parameter-reference special
+    cases that :func:`_resolve_petab_change_value` can resolve without
+    compilation.
 
-    Only numeric literals and references to a single other parameter are
-    supported; compound symbolic expressions (e.g. ``"k1 + k2"``) are not.
+    Each caller resolves the free symbols to JAX values according to its
+    own rules (e.g. a state reinitialisation value may reference the
+    model's own parameters directly, while a parameter override may only
+    reference other PEtab parameters) and supplies them via
+    :meth:`__call__`.
+    """
+
+    symbol_names: tuple[str, ...]
+    fn: Callable[..., jt.Array]
+
+    @classmethod
+    def compile(cls, expr: sp.Expr) -> "_CompiledConditionExpr":
+        free_syms = sorted(expr.free_symbols, key=str)
+        symbol_names = tuple(s.name for s in free_syms)
+        body = AmiciJaxCodePrinter().doprint(expr)
+        namespace = {"jnp": jnp, "safe_log": safe_log, "safe_div": safe_div}
+        src = f"def _expr({', '.join(symbol_names)}):\n    return {body}\n"
+        exec(src, namespace)  # noqa: S102 -- code-generated from the PEtab problem's own sympy expressions, not user input
+        return cls(symbol_names, namespace["_expr"])
+
+    def __call__(self, resolve_symbol: Callable[[str], jt.Array]) -> jt.Array:
+        return self.fn(*(resolve_symbol(name) for name in self.symbol_names))
+
+
+def _resolve_petab_change_value(target_value) -> _CompiledConditionExpr:
+    """
+    Compile a :class:`petabv2.Change.target_value` (a sympy expression, a
+    plain number, or a single parameter reference) to a
+    :class:`_CompiledConditionExpr`. A numeric literal or a single
+    parameter reference is just the zero/one-free-symbol case of the same
+    general compiled-expression mechanism, so no special-casing is needed
+    here.
 
     :param target_value:
         Value to resolve.
     :return:
-        A ``float``, or a ``str`` naming a PEtab/model parameter id.
+        A :class:`_CompiledConditionExpr`.
     """
-    if getattr(target_value, "is_number", True):
-        return float(target_value)
-    if getattr(target_value, "is_Symbol", False):
-        return str(target_value)
-    raise NotImplementedError(
-        "Condition table changes with compound symbolic expressions are "
-        f"not supported, got {target_value!r}."
-    )
+    return _CompiledConditionExpr.compile(sp.sympify(target_value))

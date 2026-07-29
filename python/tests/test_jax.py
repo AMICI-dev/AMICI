@@ -450,6 +450,89 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
 
 
 @skip_on_valgrind
+def test_condition_table_compound_expression_is_differentiable(tmp_path):
+    """A condition table change with a compound symbolic ``target_value``
+    (e.g. ``a0 + b0``, referencing two estimated parameters) must be
+    compiled and evaluated correctly, with gradients flowing through every
+    free symbol.
+
+    PEtab v1's condition table format only allows numeric literals or a
+    single parameter reference as a condition value; compound expressions
+    are a PEtab v2-only feature, so this uses the native v2 API rather
+    than the v1-upgrade path used by the sibling tests above.
+
+    Regression test for ``_resolve_petab_change_value``, which used to
+    raise ``NotImplementedError`` for anything beyond a numeric literal or
+    a single parameter reference; compound expressions are now compiled to
+    JAX via the same sympy-to-JAX code printer used to generate the
+    model's own equations (see ``_CompiledConditionExpr``).
+    """
+    import equinox as eqx
+    import petab.v2 as petabv2
+    from amici.importers.petab._petab_importer import PetabImporter
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = petabv2.Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    problem.add_parameter(
+        "a0", nominal_value=2.0, estimate=True, lb=0.1, ub=10
+    )
+    problem.add_parameter(
+        "b0", nominal_value=1.0, estimate=True, lb=0.1, ub=10
+    )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    # compound expression: A's initial value is the *sum* of two estimated
+    # parameters, not a numeric literal or a single parameter reference
+    problem.add_condition("c0", A="a0 + b0")
+    problem.add_experiment("exp0", 0.0, "c0")
+    for t in [0.0, 10.0]:
+        problem.add_measurement(
+            "obs_a", experiment_id="exp0", time=t, measurement=0.5
+        )
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_condition_table_compound_expression_jax",
+        verbose=False,
+        output_dir=str(tmp_path),
+    ).create_simulator(force_import=True)
+
+    ia = jax_problem.parameter_ids.index("a0")
+    ib = jax_problem.parameter_ids.index("b0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    # `a0 + b0` enters the likelihood only through A(0); updating either
+    # must change llh
+    assert abs(float(llh(p0.at[ia].add(1.0))) - float(llh(p0))) > 1e-6, (
+        "compound-expression condition value is frozen w.r.t. "
+        "update_parameters"
+    )
+
+    eps = 1e-6
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    for i in (ia, ib):
+        fd = (
+            float(llh(p0.at[i].add(eps))) - float(llh(p0.at[i].add(-eps)))
+        ) / (2 * eps)
+        assert_allclose(float(grad.parameters[i]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
 def test_petab_simulate_ragged_experiments(tmp_path):
     """``petab_simulate`` must handle experiments with different numbers of
     measurement timepoints.
