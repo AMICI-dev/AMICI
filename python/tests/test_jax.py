@@ -700,6 +700,68 @@ def test_steady_state_event_no_recompile_across_conditions(
     )
 
 
+def test_simulate_condition_is_deprecated_alias_for_simulate_experiment(
+    tmp_path,
+):
+    """``simulate_condition[_unjitted]`` (pre-rename names) must still work,
+    with a ``DeprecationWarning``, and produce the same result as the
+    ``simulate_experiment[_unjitted]`` methods they were renamed to."""
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model simulate_condition_alias
+        x' = -k * x
+        x = 1
+        k = 1
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("simulate_condition_alias", output_dir=tmp_path)
+    module = amici._module_from_path(
+        "simulate_condition_alias", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    ts = jnp.array([0.0, 1.0, 2.0])
+    my = jnp.zeros_like(ts)
+    iys = jnp.zeros_like(ts, dtype=int)
+    iy_trafos = jnp.zeros_like(ts, dtype=int)
+    args = (
+        jnp.array([[2.5]]),
+        ts[None, :],
+        jnp.zeros((1, 0)),
+        my[None, :],
+        iys[None, :],
+        iy_trafos[None, :],
+        jnp.zeros((1, 3, 0)),
+        jnp.zeros((1, 3, 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.RecursiveCheckpointAdjoint(),
+        SteadyStateEvent(),
+        1000,
+    )
+
+    expected_llh, _ = model.simulate_experiment(*args)
+    expected_llh_unjitted, _ = model.simulate_experiment_unjitted(*args)
+
+    with pytest.warns(DeprecationWarning, match="simulate_experiment"):
+        actual_llh, _ = model.simulate_condition(*args)
+    with pytest.warns(DeprecationWarning, match="simulate_experiment_unjitted"):
+        actual_llh_unjitted, _ = model.simulate_condition_unjitted(*args)
+
+    assert_allclose(float(actual_llh), float(expected_llh))
+    assert_allclose(float(actual_llh_unjitted), float(expected_llh_unjitted))
+
+
 @skip_on_valgrind
 def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""

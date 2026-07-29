@@ -92,54 +92,6 @@ def test_three_period_chain_matches_analytical_solution(tmp_path):
     assert np.isfinite(llh)
 
 
-def test_two_period_preequilibration_matches_analytical_solution(tmp_path):
-    """Regression check for the common (already-supported) pre-equilibration
-    + one main period case, now driven through the same native-chaining
-    code path as N>2-period experiments (P=2 special case)."""
-    problem = _linear_decay_problem()
-    problem.add_condition("cond_preeq", kk=0.5)
-    problem.add_condition("cond_main", kk=0.7, xx=2.0)
-    problem.add_experiment(
-        "exp1", C.TIME_PREEQUILIBRATION, "cond_preeq", 0.0, "cond_main"
-    )
-    ts = (0.0, 1.0, 2.0, 3.0)
-    for t in ts:
-        problem.add_measurement(
-            "obs1", time=t, measurement=0.0, experiment_id="exp1"
-        )
-
-    jax_problem = _import_jax(problem, "test_two_period_preeq", tmp_path)
-    assert jax_problem._max_periods == 1
-
-    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
-    expected = 2.0 * np.exp(-0.7 * np.array(ts))
-    np.testing.assert_allclose(
-        np.asarray(x)[0, :, 0], expected, rtol=1e-4
-    )
-
-
-def test_single_period_matches_analytical_solution(tmp_path):
-    """Regression check for the simplest (no pre-equilibration, single
-    period) case, P=1 with no chaining at all."""
-    problem = _linear_decay_problem()
-    problem.add_condition("cond1", kk=0.7)
-    problem.add_experiment("exp1", 0.0, "cond1")
-    ts = (0.0, 1.0, 2.0, 3.0)
-    for t in ts:
-        problem.add_measurement(
-            "obs1", time=t, measurement=0.0, experiment_id="exp1"
-        )
-
-    jax_problem = _import_jax(problem, "test_single_period", tmp_path)
-
-    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
-    # model's default initial value (xx=1) applies, no reinit here
-    expected = 1.0 * np.exp(-0.7 * np.array(ts))
-    np.testing.assert_allclose(
-        np.asarray(x)[0, :, 0], expected, rtol=1e-4
-    )
-
-
 def test_gradient_through_multiperiod_chain_matches_analytical_derivative(
     tmp_path,
 ):

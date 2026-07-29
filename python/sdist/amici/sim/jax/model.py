@@ -4,6 +4,7 @@
 
 import enum
 import os
+import warnings
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import field
@@ -907,6 +908,17 @@ class JAXModel(eqx.Module):
 
         return output, stats
 
+    def simulate_condition_unjitted(self, *args, **kwargs):
+        """Deprecated alias for :meth:`simulate_experiment_unjitted`."""
+        warnings.warn(
+            "`simulate_condition_unjitted` has been renamed to "
+            "`simulate_experiment_unjitted` and will be removed in a "
+            "future release.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.simulate_experiment_unjitted(*args, **kwargs)
+
     @eqx.filter_jit
     def simulate_experiment(
         self,
@@ -1027,6 +1039,16 @@ class JAXModel(eqx.Module):
             t_zero,
             ret,
         )
+
+    def simulate_condition(self, *args, **kwargs):
+        """Deprecated alias for :meth:`simulate_experiment`."""
+        warnings.warn(
+            "`simulate_condition` has been renamed to `simulate_experiment` "
+            "and will be removed in a future release.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.simulate_experiment(*args, **kwargs)
 
     @eqx.filter_jit
     def preequilibrate_condition(
