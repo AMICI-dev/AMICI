@@ -1,0 +1,88 @@
+name: PEtab SciML Benchmarks
+on:
+  push:
+    branches:
+      - main
+      - 'release*'
+  pull_request:
+    branches:
+      - main
+  merge_group:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: PEtab SciML Benchmarks
+
+    runs-on: ubuntu-latest
+
+    env:
+      ENABLE_GCOV_COVERAGE: TRUE
+
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 20
+
+      - name: Download PEtab SciML benchmark test suite
+        run: |
+          git clone --depth 1 --branch bes/networks \
+            https://github.com/sebapersson/Benchmark-Models-PEtab-SciML.git \
+            tests/sciml_benchmarks/testsuite
+
+      - name: Install apt dependencies
+        uses: ./.github/actions/install-apt-dependencies
+
+      # install dependencies
+      - name: apt
+        run: |
+          sudo apt-get update \
+            && sudo apt-get install -y python3-venv
+
+      - run: |
+          echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+
+      # install AMICI
+      - name: Install python package
+        run: scripts/installAmiciSource.sh
+
+      - name: Install Python dependencies
+        run: |
+          source ./venv/bin/activate \
+            && pip3 install wheel pytest shyaml pytest-cov
+
+      # retrieve test models
+      - name: Download and install PEtab SciML
+        run: |
+          source ./venv/bin/activate \
+            && python -m pip install "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@main"
+
+      - name: Install petab
+        run: |
+          source ./venv/bin/activate \
+            && python3 -m pip uninstall -y petab \
+            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main
+
+      - name: Run PEtab SciML benchmarks
+        run: |
+          source ./venv/bin/activate \
+            && pytest --cov-report=xml:coverage_petab_sciml_benchmarks.xml \
+              --cov=amici tests/sciml_benchmarks/test_sciml_benchmarks.py
+
+      - name: Codecov
+        if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage_petab_sciml_benchmarks.xml
+          flags: petab_sciml_benchmarks
+          fail_ci_if_error: true

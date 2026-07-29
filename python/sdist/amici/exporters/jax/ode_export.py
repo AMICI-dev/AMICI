@@ -58,7 +58,9 @@ def _jax_variable_equations(
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
-                (s.name for s in model.sym(eq_name)),
+                # pass Symbols (not names) so CSE dependency toposort can match
+                # target symbols against the free symbols of other equations
+                model.sym(eq_name),
                 # sp.Matrix to support event assignments which are lists
                 sp.Matrix(model.eq(eq_name)).subs(subs),
                 indent,
@@ -229,14 +231,11 @@ class ODEExporter:
 
         indent = 8
 
-        # replaces Heaviside variables with corresponding functions
-        subs_heaviside = dict(
-            zip(
-                self.model.sym("eh"),
-                [sp.Heaviside(x) for x in self.model.eq("eroot")],
-                strict=True,
-            )
-        )
+        # Explicit (time-triggered) Heaviside variables are kept as tracked
+        # heaviside variables (like implicit ones) rather than being inlined as
+        # symbolic Heaviside functions of time. This keeps the vector field
+        # smooth within each integration segment; the variables are toggled at
+        # the (root-found, known-discontinuity-clipped) event times.
 
         # replaces observables with a generic my variable
         subs_observables = dict(
@@ -246,7 +245,7 @@ class ODEExporter:
                 strict=True,
             )
         )
-        subs = subs_heaviside | subs_observables
+        subs = subs_observables
 
         array_inputs_init = self._generate_array_inputs_init()
 
@@ -370,7 +369,17 @@ class ODEExporter:
                 resolved = root
                 for _ in range(len(w_subs) + 1):
                     if resolved.free_symbols.issubset(p_k_syms):
-                        known_discs.add(self._code_printer.doprint(resolved))
+                        if resolved.is_number:
+                            # force a float literal: under jax_enable_x64,
+                            # jnp.array([5]) infers int64, but `known_discs`
+                            # is used as `jump_ts` in
+                            # diffrax.ClipStepSizeController, which requires
+                            # floating point
+                            known_discs.add(repr(float(resolved)))
+                        else:
+                            known_discs.add(
+                                self._code_printer.doprint(resolved)
+                            )
                         break
                     resolved = resolved.subs(w_subs)
         return known_discs

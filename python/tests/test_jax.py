@@ -294,26 +294,21 @@ def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
 
-    try:
-        with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            r = run_simulations(jax_problem)
-            assert not np.isinf(r[0].item())
-        petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
-            petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
         )
-        with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            r = run_simulations(jax_problem)
-            assert np.isinf(r[0].item())
-    except (TypeError, NotImplementedError) as err:
-        if "JAXProblem does not support PEtab v1 problems" in str(err):
-            pytest.skip(str(err))
-        raise err
+        r = run_simulations(jax_problem)
+        assert not np.isinf(r[0].item())
+    petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
+        petab_problem.measurement_df[SIMULATION_CONDITION_ID]
+    )
+    with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        r = run_simulations(jax_problem)
+        assert np.isinf(r[0].item())
 
 
 @skip_on_valgrind
@@ -322,27 +317,304 @@ def test_serialisation(lotka_volterra):  # noqa: F811
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
     ) as model_dir:
-        try:
-            jax_problem = import_petab_problem(
-                petab_problem, jax=True, output_dir=model_dir
-            )
-            # change parameters to random values to test serialisation
-            jax_problem.update_parameters(
-                jax_problem.parameters
-                + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        # change parameters to random values to test serialisation
+        jax_problem.update_parameters(
+            jax_problem.parameters
+            + jr.normal(jr.PRNGKey(0), jax_problem.parameters.shape)
+        )
+
+        with TemporaryDirectoryWinSafe() as outdir:
+            outdir = Path(outdir)
+            jax_problem.save(outdir)
+            jax_problem_loaded = JAXProblem.load(outdir)
+            assert_allclose(
+                jax_problem.parameters, jax_problem_loaded.parameters
             )
 
-            with TemporaryDirectoryWinSafe() as outdir:
-                outdir = Path(outdir)
-                jax_problem.save(outdir)
-                jax_problem_loaded = JAXProblem.load(outdir)
-                assert_allclose(
-                    jax_problem.parameters, jax_problem_loaded.parameters
-                )
-        except (TypeError, NotImplementedError) as err:
-            if "JAXProblem does not support PEtab v1 problems" in str(err):
-                pytest.skip(str(err))
-            raise err
+
+@skip_on_valgrind
+def test_condition_table_initial_value_is_differentiable(tmp_path):
+    """A parameter used as a species initial value via the condition table
+    must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for a bug where the reinitialisation value was resolved
+    through the ``targets_map`` cached at construction time
+    (see ``JAXProblem._state_reinitialisation_value``): the initial value was
+    then frozen at the nominal parameter value, so ``update_parameters`` had
+    no effect on it and its gradient silently leaked into the cache instead of
+    ``grad.parameters``.
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `a0` initialises species `A` via the condition table (not in the model)
+    problem.add_parameter(
+        "a0", estimate=True, nominal_value=2.0, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    problem.add_condition("c0", A="a0")
+    problem.add_measurement("obs_a", "c0", 0.0, 0.7)
+    problem.add_measurement("obs_a", "c0", 10.0, 0.1)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ia = jax_problem.parameter_ids.index("a0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    # `a0` enters the likelihood only through A(0); updating it must change llh
+    assert abs(float(llh(p0.at[ia].add(1.0))) - float(llh(p0))) > 1e-6, (
+        "initial value is frozen w.r.t. update_parameters"
+    )
+
+    # autodiff w.r.t. `a0` (read from grad.parameters) must match finite diff
+    eps = 1e-6
+    fd = (float(llh(p0.at[ia].add(eps))) - float(llh(p0.at[ia].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ia]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_condition_table_parameter_override_is_differentiable(tmp_path):
+    """A model parameter mapped to an estimated parameter via the condition
+    table (the standard PEtab pattern for condition-specific estimated
+    parameters) must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for the same construction-time freezing bug as
+    ``test_condition_table_initial_value_is_differentiable``, on the parameter
+    mapping path (``JAXProblem._map_experiment_model_parameter_value``).
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # the condition maps model parameter `k1` to the estimated `k1_c0`
+    problem.add_parameter(
+        "k1_c0", estimate=True, nominal_value=0.8, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    problem.add_condition("c0", k1="k1_c0")
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ik = jax_problem.parameter_ids.index("k1_c0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    assert abs(float(llh(p0.at[ik].add(0.3))) - float(llh(p0))) > 1e-6, (
+        "condition-overridden parameter is frozen w.r.t. update_parameters"
+    )
+
+    eps = 1e-6
+    fd = (float(llh(p0.at[ik].add(eps))) - float(llh(p0.at[ik].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ik]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_petab_simulate_ragged_experiments(tmp_path):
+    """``petab_simulate`` must handle experiments with different numbers of
+    measurement timepoints.
+
+    Regression test for ``_build_simulation_df_v2``: ``_get_measurements``
+    pads every experiment's arrays to a common length, so an experiment with
+    fewer timepoints has masked-out padding. If the padding mask is not
+    applied consistently to the index and all columns, building the
+    simulation DataFrame raises ``ValueError: arrays must all be same
+    length`` (or leaks padded/duplicated indices).
+    """
+    import petab.v1 as petab
+    from amici.sim.jax import petab_simulate
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `k1` is set per condition below, so only the free `k2` goes in the
+    # parameter table
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    # two conditions -> two experiments, with DIFFERENT numbers of
+    # timepoints so `_ts_masks` has genuine padding
+    problem.add_condition("c0", k1=0.8)
+    problem.add_condition("c1", k1=0.5)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c1", 1.0, 0.4)
+    problem.add_measurement("obs_b", "c1", 5.0, 0.2)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+
+    sim_df = petab_simulate(jax_problem)
+
+    # exactly one simulated row per measurement (1 for c0, 2 for c1) -- no
+    # length mismatch, no padded/duplicated rows, no missing simulations
+    assert len(sim_df) == len(problem.measurement_df) == 3
+    assert sim_df.index.is_unique
+    assert sorted(sim_df[petab.TIME].tolist()) == [1.0, 1.0, 5.0]
+    assert not sim_df[petab.SIMULATION].isna().any()
+
+
+@skip_on_valgrind
+def test_steady_state_event_no_recompile_across_conditions(
+    tmp_path, monkeypatch
+):
+    """Simulating different conditions/parameters must not force JAX to
+    recompile, as long as only numeric inputs (e.g. parameters) change.
+    """
+    import equinox as eqx
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.model import JAXModel
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model steady_state_recompile
+        x' = -k * x
+        x = 1
+        k = 1
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("steady_state_recompile", output_dir=tmp_path)
+    module = amici._module_from_path(
+        "steady_state_recompile", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    def fresh_solver_kwargs():
+        # construct brand new instances on every call, mimicking e.g. an
+        # optimizer objective that rebuilds solver settings each iteration
+        return dict(
+            solver=diffrax.Kvaerno5(),
+            controller=diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            root_finder=optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+            steady_state_event=SteadyStateEvent(),
+        )
+
+    conditions = [1.0, 2.5, 0.3]  # numeric-only differences between calls
+
+    # Avoid order-dependent failures if prior tests already compiled these methods.
+    jax.clear_caches()
+
+    def patch_trace_counter(target, name):
+        # eqx.debug.assert_max_traces/get_num_traces track calls to a plain
+        # callable; since it isn't itself a descriptor, dispatch to it
+        # manually so `self` is still bound correctly when called as
+        # `self.<name>(...)`.
+        wrapped = eqx.debug.assert_max_traces(
+            getattr(target, name), max_traces=1
+        )
+
+        def dispatch(self, *args, **kwargs):
+            return wrapped(self, *args, **kwargs)
+
+        monkeypatch.setattr(target, name, dispatch)
+        return wrapped
+
+    ts = jnp.array([0.0, 1.0, 2.0])
+    my = jnp.zeros_like(ts)
+    iys = jnp.zeros_like(ts, dtype=int)
+    iy_trafos = jnp.zeros_like(ts, dtype=int)
+
+    simulate_traces = patch_trace_counter(
+        JAXModel, "simulate_condition_unjitted"
+    )
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.simulate_condition(
+            jnp.array([k_val]),
+            ts,
+            jnp.array([]),
+            my,
+            iys,
+            iy_trafos,
+            jnp.zeros((3, 0)),
+            jnp.zeros((3, 0)),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            diffrax.RecursiveCheckpointAdjoint(),
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert eqx.debug.get_num_traces(simulate_traces) == 1, (
+        "simulate_condition was retraced across conditions with only "
+        "numeric differences"
+    )
+
+    preeq_traces = patch_trace_counter(JAXModel, "_handle_t0_event")
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.preequilibrate_condition(
+            jnp.array([k_val]),
+            jnp.array([]),
+            jnp.array([]),
+            jnp.array([]),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert eqx.debug.get_num_traces(preeq_traces) == 1, (
+        "preequilibrate_condition was retraced across conditions with only "
+        "numeric differences"
+    )
 
 
 @skip_on_valgrind
@@ -364,51 +636,43 @@ def test_time_dependent_discontinuity(tmp_path):
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
 
-    try:
-        importer.sbml2jax("time_disc", output_dir=tmp_path)
+    importer.sbml2jax("time_disc", output_dir=tmp_path)
 
-        module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
-        model = module.Model()
+    module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
+    model = module.Model()
 
-        p = jnp.array([1.0])
-        x0_full = model._x0(0.0, p)
-        tcl = model._tcl(x0_full, p)
-        x0 = model._x_solver(x0_full)
-        ts = jnp.array([0.0, 1.0, 2.0])
-        h = model._initialise_heaviside_variables(
-            0.0, model._x_solver(x0), p, tcl
-        )
+    p = jnp.array([1.0])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 1.0, 2.0])
+    h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
 
-        assert len(model._root_cond_fns()) > 0
-        assert model._known_discs(p).size == 0
+    assert len(model._root_cond_fns()) > 0
+    assert model._known_discs(p).size == 0
 
-        ys, _, _ = solve(
-            p,
-            ts[0],
-            ts,
-            tcl,
-            h,
-            x0,
-            jnp.ones_like(h),
-            diffrax.Tsit5(),
-            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-            optimistix.Newton(atol=1e-8, rtol=1e-8),
-            1000,
-            diffrax.DirectAdjoint(),
-            diffrax.ODETerm(model._xdot),
-            model._root_cond_fns(),
-            model._root_cond_fn,
-            model._delta_x,
-            model._known_discs(p),
-            model.observable_ids,
-        )
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
 
-        assert ys.shape[0] == ts.shape[0]
-
-    except NotImplementedError as err:
-        if "The JAX backend does not support" in str(err):
-            pytest.skip(str(err))
-        raise err
+    assert ys.shape[0] == ts.shape[0]
 
 
 @skip_on_valgrind
@@ -429,48 +693,188 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
 
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
-    try:
-        importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
+    importer.sbml2jax("time_disc_eq", output_dir=tmp_path)
 
-        module = amici._module_from_path(
-            "time_disc_eq", tmp_path / "__init__.py"
-        )
-        model = module.Model()
+    module = amici._module_from_path("time_disc_eq", tmp_path / "__init__.py")
+    model = module.Model()
 
-        p = jnp.array([1.0])
-        x0_full = model._x0(0.0, p)
-        tcl = model._tcl(x0_full, p)
-        x0 = model._x_solver(x0_full)
-        h = model._initialise_heaviside_variables(
-            0.0, model._x_solver(x0), p, tcl
-        )
+    p = jnp.array([1.0])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    h = model._initialise_heaviside_variables(0.0, model._x_solver(x0), p, tcl)
 
-        assert len(model._root_cond_fns()) > 0
-        assert model._known_discs(p).size == 0
+    assert len(model._root_cond_fns()) > 0
+    assert model._known_discs(p).size == 0
 
-        xs, _, _ = eq(
-            p,
-            tcl,
-            h,
-            x0,
-            jnp.ones_like(h),
-            diffrax.Tsit5(),
-            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
-            optimistix.Newton(atol=1e-8, rtol=1e-8),
-            diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
-            diffrax.ODETerm(model._xdot),
-            model._root_cond_fns(),
-            model._root_cond_fn,
-            model._delta_x,
-            model._known_discs(p),
-            1000,
-        )
+    xs, _, _ = eq(
+        p,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        diffrax.steady_state_event(rtol=1e-8, atol=1e-8),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        1000,
+    )
 
-        assert_allclose(xs[0], 0.0, atol=1e-2)
+    assert_allclose(xs[0], 0.0, atol=1e-2)
 
-    except (TypeError, NotImplementedError) as err:
-        if "The JAX backend does not support" in str(err):
-            pytest.skip(str(err))
-        elif "JAXProblem does not support PEtab v1 problems" in str(err):
-            pytest.skip(str(err))
-        raise err
+
+@skip_on_valgrind
+def test_explicit_discontinuity(tmp_path):
+    """Explicit (time-triggered) discontinuities are emitted as tracked
+    heaviside variables (not inlined ``jnp.select`` functions) and the solver
+    is clipped onto the known discontinuity time.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    # dx/dt = 1 for time > 5 else 0, x(0) = 0  =>  x(t) = max(t - 5, 0)
+    ant_model = """
+    model explicit_disc
+        x' = piecewise(1, time > 5, 0)
+        x = 0
+    end
+    """
+
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+
+    importer.sbml2jax("explicit_disc", output_dir=tmp_path)
+
+    # the explicit heaviside must be a tracked variable, not an inlined
+    # symbolic Heaviside function of time
+    generated = (tmp_path / "__init__.py").read_text()
+    assert "jnp.select" not in generated
+
+    module = amici._module_from_path("explicit_disc", tmp_path / "__init__.py")
+    model = module.Model()
+
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 4.0, 5.0, 6.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+
+    # explicit trigger time is a known discontinuity
+    assert model._known_discs(p).size > 0
+
+    ys, _, stats = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    expected = jnp.clip(ts - 5.0, min=0.0)
+    assert_allclose(ys.squeeze(), expected, atol=1e-6, rtol=1e-6)
+    # clipping onto the known discontinuity avoids rejected steps
+    assert stats["num_rejected_steps"] == 0
+
+
+@skip_on_valgrind
+def test_event_assignments_odd_root_count(tmp_path):
+    """Event assignments are applied for every event, even when the total
+    number of roots is odd.
+
+    Regression test: ``_apply_event_assignments`` used to process roots in
+    fixed windows of two (mirroring the root pairs generated for a
+    persisted Heaviside variable), silently dropping the last root's
+    assignment whenever a model's total root count was odd -- e.g. for any
+    odd number of plain (non-Heaviside) events with assignments.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    # three independent events, no Heaviside anywhere in the RHS -> three
+    # roots total (odd), one per event
+    ant_model = """
+    model three_events
+        x = 1
+        y = 1
+        z = 1
+        x' = 0
+        y' = 0
+        z' = 0
+        at time > 2: x = x + 10
+        at time > 5: y = y + 100
+        at time > 8: z = z + 1000
+    end
+    """
+
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+
+    importer.sbml2jax("three_events", output_dir=tmp_path)
+
+    module = amici._module_from_path("three_events", tmp_path / "__init__.py")
+    model = module.Model()
+
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 1.0, 3.0, 6.0, 9.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+
+    assert len(model._root_cond_fns()) == 3
+
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    expected = jnp.array(
+        [
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [11.0, 1.0, 1.0],
+            [11.0, 101.0, 1.0],
+            [11.0, 101.0, 1001.0],
+            [11.0, 101.0, 1001.0],
+        ]
+    )
+    assert_allclose(ys, expected, atol=1e-6, rtol=1e-6)

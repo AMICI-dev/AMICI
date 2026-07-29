@@ -1817,14 +1817,25 @@ class DEModel:
             self._eqs[name] = self.sym(name)
 
         elif name == "dwdx":
-            if (
-                expected := list(
-                    map(
-                        ConservationLaw.get_x_rdata,
-                        reversed(self.conservation_laws()),
-                    )
+            expected = list(
+                map(
+                    ConservationLaw.get_x_rdata,
+                    reversed(self.conservation_laws()),
                 )
-            ) != (actual := self.eq("w")[: self.num_cons_law()]):
+            )
+            actual = self.eq("w")[: self.num_cons_law()]
+            # `self.eq("w")` has been passed through `self._simplify`, whereas
+            # `ConservationLaw.get_x_rdata` returns the unsimplified expression.
+            # Apply the same simplification to the expected `x_rdata`
+            # reconstruction before comparing, so that mathematically
+            # equivalent but structurally different forms do not trigger a
+            # spurious mismatch. This happens, e.g., for condition-dependent
+            # compartment sizes, where the coefficients contain a product of
+            # `Piecewise` factors that cancels to 1 in `w` but is retained in
+            # `get_x_rdata`.
+            if self._simplify:
+                expected = [self._simplify(expr) for expr in expected]
+            if expected != actual:
                 raise AssertionError(
                     "Conservation laws are not at the beginning of 'w'. "
                     f"Got {actual}, expected {expected}."

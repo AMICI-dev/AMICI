@@ -1126,25 +1126,25 @@ class JAXModel(eqx.Module):
         h_prev: jt.Bool[jt.Array, "ne"],
         stats: dict,
     ):
+        rf0 = self.event_initial_values - 0.5
+
         if h_prev.shape[0]:
             # `h_prev` is the heaviside state at wherever `y0_next` came
             # from (a preceding preequilibration, or the end of the
-            # previous experiment period), used here only as the
-            # pre-transition reference value. It is not necessarily the
+            # previous experiment period). It is not necessarily the
             # trigger state *at* `(t0_next, y0_next)`: a period boundary
             # (or the reinitialisation applied after preequilibration) may
-            # have crossed an event's trigger threshold without the ODE
-            # integrator ever seeing it, so the trigger condition is always
-            # re-evaluated below against the actual incoming state, exactly
-            # as for a genuine t=0.
-            h = h_prev
+            # have crossed an event's trigger threshold, or the dynamic
+            # phase may use different parameters than preequilibration did
+            # (e.g. a stimulus onset time that is inactive during
+            # preequilibration), without the ODE integrator ever seeing it.
+            # So the trigger condition is always re-evaluated below against
+            # the actual incoming state, exactly as for a genuine t=0;
+            # `h_prev` only supplies the pre-transition reference value.
+            h = jnp.where(h_mask, h_prev, jnp.ones_like(h_prev))
+            rf0 = jnp.where(h > 0.5, 0.5, -0.5)
         else:
-            h = jnp.where(
-                h_mask,
-                jnp.heaviside(self.event_initial_values - 0.5, 0.0),
-                jnp.ones_like(self.event_initial_values),
-            )
-        rf0 = h - 0.5
+            h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
         args = (p, tcl, h)
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)

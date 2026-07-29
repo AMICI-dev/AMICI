@@ -47,6 +47,31 @@ SCALE_TO_INT = {
 logger = get_logger(__name__, logging.WARNING)
 
 
+class SteadyStateEvent(eqx.Module):
+    """Steady-state termination event with value-based equality.
+
+    :func:`diffrax.steady_state_event` returns a fresh closure on every
+    call, which Python compares by identity. Since ``steady_state_event`` is
+    passed as a static argument into :func:`equinox.filter_jit`-compiled
+    functions (:meth:`JAXModel.simulate_condition`,
+    :meth:`JAXModel.preequilibrate_condition`), constructing a new closure
+    with identical settings on every call (e.g. once per iteration of an
+    optimization loop) silently defeats the JIT cache and forces a full
+    recompilation, even though only numeric inputs (parameters) changed.
+    Wrapping the settings in an :class:`equinox.Module` gives value-based
+    ``__eq__``/``__hash__``, so equivalent instances share the compiled
+    executable regardless of how many times they are (re-)constructed.
+    """
+
+    rtol: float | None = None
+    atol: float | None = None
+
+    def __call__(self, *args, **kwargs):
+        return diffrax.steady_state_event(rtol=self.rtol, atol=self.atol)(
+            *args, **kwargs
+        )
+
+
 def jax_unscale(
     parameter: jnp.float_,
     scale_str: str,
@@ -102,20 +127,41 @@ class OverrideColumn(NamedTuple):
         )
 
 
-def _resolve_override_symbol(value, parameter_df: pd.DataFrame):
+def _get_fixed_parameter_values(
+    petab_problem: petabv2.Problem,
+) -> dict[str, float]:
+    """Nominal (linear) values of fixed (non-estimated) parameters, used to
+    resolve observable/noise parameter overrides that reference them.
+
+    Array-valued (PEtab-SciML) fixed parameters are excluded: their nominal
+    value is the literal string ``"array"``, not a substitutable number.
+
+    Built once (from :attr:`petabv2.Problem.parameter_tables` directly)
+    rather than via the :attr:`petabv2.Problem.parameter_df` property on
+    every override column, since building the latter can be expensive and,
+    for some problems (e.g. array-valued PEtab-SciML parameters), emits
+    pydantic serialization warnings.
+    """
+    return {
+        p.id: p.nominal_value
+        for pt in petab_problem.parameter_tables
+        for p in pt.elements
+        if not p.estimate and p.nominal_value != "array"
+    }
+
+
+def _resolve_override_symbol(value, fixed_parameter_values: dict[str, float]):
     """Replace a reference to a non-estimated PEtab parameter by its
     nominal value; pass through anything else (numeric literals, estimated
-    parameter ids, model entity ids) unchanged."""
-    if (
-        value in parameter_df.index
-        and not parameter_df.loc[value, petabv2.C.ESTIMATE]
-    ):
-        return parameter_df.loc[value, petabv2.C.NOMINAL_VALUE]
-    return value
+    parameter ids, model entity ids, array-valued fixed parameters)
+    unchanged."""
+    return fixed_parameter_values.get(value, value)
 
 
 def _split_override_column(
-    col_values: pd.Series, n_pars: int, parameter_df: pd.DataFrame
+    col_values: pd.Series,
+    n_pars: int,
+    fixed_parameter_values: dict[str, float],
 ) -> np.ndarray:
     """Split ``;``-separated observable/noise parameter override strings
     into a ``(n_rows, n_pars)`` matrix of numeric values / free parameter
@@ -136,7 +182,10 @@ def _split_override_column(
             if isinstance(entry, str)
             else [entry]
         )
-        return [_resolve_override_symbol(v, parameter_df) for v in values]
+        return [
+            _resolve_override_symbol(v, fixed_parameter_values)
+            for v in values
+        ]
 
     rows = col_values.apply(resolve_row)
     padded = rows.apply(
@@ -171,18 +220,11 @@ def _column_overrides(
     m: pd.DataFrame,
     col: str,
     n_pars: int,
-    petab_problem: petabv2.Problem,
+    fixed_parameter_values: dict[str, float],
     parameter_ids: tuple[str, ...],
 ) -> OverrideColumn:
     """Numeric values, non-numeric mask and parameter indices for one
-    observable/noise parameter override column of the rows in ``m``.
-
-    ``petab_problem.parameter_df`` is only accessed once actually needed
-    (i.e. for a column of non-numeric, string-encoded overrides) rather
-    than eagerly on every call, since building it can be expensive and,
-    for some problems (e.g. array-valued PEtab-SciML parameters), emits
-    pydantic serialization warnings.
-    """
+    observable/noise parameter override column of the rows in ``m``."""
     if col not in m or m[col].isna().all() or (m[col] == "").all():
         return OverrideColumn.placeholder(len(m), n_pars)
     if pd.api.types.is_numeric_dtype(m[col].dtype):
@@ -192,20 +234,22 @@ def _column_overrides(
             np.zeros_like(mat_numeric, dtype=bool),
             np.zeros_like(mat_numeric, dtype=int),
         )
-    mat = _split_override_column(m[col], n_pars, petab_problem.parameter_df)
+    mat = _split_override_column(m[col], n_pars, fixed_parameter_values)
     return _override_triple_from_matrix(mat, parameter_ids)
 
 
 def _get_overrides(
     m: pd.DataFrame,
     n_pars: dict[str, int],
-    petab_problem: petabv2.Problem,
+    fixed_parameter_values: dict[str, float],
     parameter_ids: tuple[str, ...],
 ) -> dict[str, OverrideColumn]:
     """Numeric values, non-numeric mask and parameter indices for
     observable/noise parameter overrides of the rows in ``m``."""
     return {
-        col: _column_overrides(m, col, n_pars[col], petab_problem, parameter_ids)
+        col: _column_overrides(
+            m, col, n_pars[col], fixed_parameter_values, parameter_ids
+        )
         for col in (petabv2.C.OBSERVABLE_PARAMETERS, petabv2.C.NOISE_PARAMETERS)
     }
 
@@ -418,15 +462,12 @@ class JAXProblem(eqx.Module):
         :param directory:
             Directory to save the problem to.
         """
-        self._petab_problem.to_files(
-            prefix_path=directory,
-            model_file="model",
-            condition_file="conditions.tsv",
-            measurement_file="measurements.tsv",
-            parameter_file="parameters.tsv",
-            observable_file="observables.tsv",
-            yaml_file="problem.yaml",
-        )
+        if self._petab_problem.config is None:
+            self._petab_problem.config = petabv2.ProblemConfig(
+                format_version="2.0.0"
+            )
+        self._petab_problem.config.filepath = "problem.yaml"
+        self._petab_problem.to_files(base_path=directory)
         shutil.copy(self.model.jax_py_file, directory / "jax_py_file.py")
         with open(directory / "parameters.pkl", "wb") as f:
             eqx.tree_serialise_leaves(f, self)
@@ -503,6 +544,14 @@ class JAXProblem(eqx.Module):
         """
         measurements: dict[tuple[str, int], _PeriodMeasurements] = {}
         petab_indices = dict()
+
+        # Nominal (linear) values of fixed (non-estimated) parameters, used to
+        # resolve observable/noise parameter overrides that reference them.
+        # Built once up front (rather than lazily per override column) since
+        # it is otherwise rebuilt once per period.
+        fixed_parameter_values = _get_fixed_parameter_values(
+            self._petab_problem
+        )
 
         n_pars = dict()
         for col in [
@@ -598,7 +647,7 @@ class JAXProblem(eqx.Module):
                         iys_real, self._petab_problem
                     )
                     overrides_real = _get_overrides(
-                        m, n_pars, self._petab_problem, self.parameter_ids
+                        m, n_pars, fixed_parameter_values, self.parameter_ids
                     )
                     index_dyn = list(m.index)
 
@@ -808,6 +857,16 @@ class JAXProblem(eqx.Module):
         )
 
     def _get_parameter_mappings(self) -> dict[str, ...]:
+        # `targets_map` intentionally stores each value only lightly parsed
+        # (a numeric literal, or a parameter id `str`, via
+        # `_resolve_petab_change_value`) rather than eagerly resolved
+        # against `self.parameters`: this dict is cached once at
+        # construction time (`self._parameter_mappings`, see `__init__`),
+        # and `update_parameters` (`eqx.tree_at(lambda p: p.parameters,
+        # self, p)`) does not recompute it, so an eagerly-resolved value
+        # would go stale after a parameter update.
+        # `_resolve_parameter_reference` re-resolves the actual value live
+        # against `self.parameters` at use time instead.
         targets_map = {
             c.id: {
                 ch.target_id: _resolve_petab_change_value(ch.target_value)
@@ -902,13 +961,19 @@ class JAXProblem(eqx.Module):
 
         import h5py
 
+        net_ids = list(
+            self._petab_problem.config.extensions[
+                "sciml"
+            ].neural_networks.keys()
+        )
+
         # TODO(performance): Avoid opening each file multiple times
         return {
-            file_spec.name.split("_")[0]: h5py.File(file_spec, "r")[
-                "parameters"
-            ][file_spec.name.split("_")[0]]
+            net_id: h5py.File(file_spec, "r")["parameters"][net_id]
             for file_spec in array_files
+            for net_id in net_ids
             if "parameters" in h5py.File(file_spec, "r").keys()
+            and net_id in h5py.File(file_spec, "r")["parameters"].keys()
         }
 
     def _load_input_arrays_from_files(self) -> dict:
@@ -927,10 +992,17 @@ class JAXProblem(eqx.Module):
 
         import h5py
 
+        net_ids = list(
+            self._petab_problem.config.extensions[
+                "sciml"
+            ].neural_networks.keys()
+        )
+
         # TODO(performance): Avoid opening each file multiple times
         return {
-            file_spec.name.split("_")[0]: h5py.File(file_spec, "r")["inputs"]
+            net_id: h5py.File(file_spec, "r")["inputs"]
             for file_spec in array_files
+            for net_id in net_ids
             if "inputs" in h5py.File(file_spec, "r").keys()
         }
 
@@ -1186,18 +1258,21 @@ class JAXProblem(eqx.Module):
         """
         if self._petab_problem.mapping_df is None:
             return []
-        if (
-            self._petab_problem.mapping_df[petabv2.C.MODEL_ENTITY_ID]
-            .isnull()
-            .all()
-        ):
-            return []
-        return self._petab_problem.mapping_df[
-            self._petab_problem.mapping_df[petabv2.C.MODEL_ENTITY_ID]
-            .str.split(".")
-            .str[1]
-            .str.startswith("output")
-        ].index.tolist()
+        # A mapping table is not exclusive to neural nets: e.g. PySB problems
+        # map PEtab entities to model expressions like ``A_() ** compartment``
+        # (no ``.``). Match only ``<net>.output...``-style entities and skip
+        # everything else, rather than relying on vectorized ``.str`` accessors
+        # that break when an entity has no ``.`` (``str[1]`` yields a float NaN
+        # series).
+        return [
+            petab_entity_id
+            for petab_entity_id, model_entity_id in self._petab_problem.mapping_df[
+                petabv2.C.MODEL_ENTITY_ID
+            ].items()
+            if isinstance(model_entity_id, str)
+            and len(parts := model_entity_id.split(".")) > 1
+            and parts[1].startswith("output")
+        ]
 
     def get_petab_parameter_by_id(self, name: str) -> jnp.float_:
         """
@@ -1363,6 +1438,10 @@ class JAXProblem(eqx.Module):
         :return:
             Parameters for the experiment.
         """
+        if not self.model.parameter_ids:
+            # a model with no free SBML parameters (e.g. only literal rate
+            # constants); `jnp.stack` of an empty sequence raises.
+            return jnp.array([])
         p = jnp.stack(
             [
                 self._map_experiment_model_parameter_value(
@@ -1762,7 +1841,12 @@ class JAXProblem(eqx.Module):
             else:
                 unscaled_parameters = jnp.stack(
                     [
-                        jax_unscale(self.parameters[ip], petabv2.C.LIN)
+                        jax_unscale(
+                            self.parameters[ip],
+                            self._petab_problem.parameter_df.loc[
+                                p_id, petabv2.C.PARAMETER_SCALE
+                            ],
+                        )
                         for ip, p_id in enumerate(self.parameter_ids)
                     ]
                 )
