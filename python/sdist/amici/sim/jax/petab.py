@@ -659,7 +659,8 @@ class JAXProblem(eqx.Module):
                         [
                             self.model.observable_ids.index(oid)
                             for oid in m[petabv2.C.OBSERVABLE_ID].values
-                        ]
+                        ],
+                        dtype=int,
                     )
                     iy_trafos_real = _get_iy_trafos(
                         iys_real,
