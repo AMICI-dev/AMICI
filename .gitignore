@@ -141,6 +141,7 @@ tests/sbml/sbml-test-suite/*
 tests/sbml/sbml-test-suite/
 */sbml-semantic-test-cases/*
 tests/sbml/SBMLTestModels/
+tests/sbml/SBMLTestModelsJax/
 tests/benchmark_models/test_bmc
 */tests/BIOMD0000000529/*
 
