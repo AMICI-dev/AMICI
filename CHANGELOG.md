@@ -20,6 +20,13 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   (e.g., when using network file systems with not synchronized clocks).
   If you encounter this warning, and you are sure that the model was not
   modified since the last import, you can safely ignore it.
+* Fixed SBML import constant-folding a parameter out of the initial conditions
+  when that parameter both carried an `initialAssignment` with a numeric
+  right-hand side and defined a species' initial value. The parameter remained
+  in the free-parameter list, so its (initial-condition) sensitivity was
+  silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
+  covers the transitive case, where such a parameter is reached through a chain
+  of parameter initial assignments (#3214).
 * `amici.sim.sundials.petab.PetabSimulator.simulate` no longer fails for
   PEtab v2 problems with non-Gaussian noise models or for the
   `RDataReporting.residuals` reporting mode. The respective unavailable
