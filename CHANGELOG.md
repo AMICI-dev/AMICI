@@ -6,6 +6,13 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ### v1.0.2 (unreleased)
 
+**Features**
+
+* The PEtab v2 simulator now aggregates the residual sensitivities of all
+  experiments: `PetabSimulationResult.sres` contains the sensitivities of the
+  residuals returned by `PetabSimulationResult.res` with respect to the
+  estimated PEtab problem parameters.
+
 **Fixes**
 
 * Demote the module import mtime check during sundials model import to a
@@ -13,6 +20,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   (e.g., when using network file systems with not synchronized clocks).
   If you encounter this warning, and you are sure that the model was not
   modified since the last import, you can safely ignore it.
+* `amici.sim.sundials.petab.PetabSimulator.simulate` no longer fails for
+  PEtab v2 problems with non-Gaussian noise models or for the
+  `RDataReporting.residuals` reporting mode. The respective unavailable
+  aggregated results (`sllh`, `s2llh`, `res`, `sres`) are `None` now.
+  Experiments without measurements no longer suppress the residuals of all
+  other experiments.
 
 ### v1.0.1 (2026-03-13)
 
