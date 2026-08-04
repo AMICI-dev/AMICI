@@ -6,6 +6,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ### v1.0.2 (unreleased)
 
+**BREAKING CHANGES**
+
+* `PetabSimulationResult.res` (PEtab v2) is a property now, for consistency
+  with `PetabSimulationResult.llh`. Replace `result.res()` by `result.res`.
+
 **Features**
 
 * The PEtab v2 simulator now aggregates the residual sensitivities of all
@@ -33,9 +38,13 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   aggregated results (`sllh`, `s2llh`, `res`, `sres`) are `None` now.
   Experiments without measurements no longer suppress the residuals of all
   other experiments.
-* `PetabSimulationResult.res` returns `None` if any experiment failed to
-  simulate. AMICI does not invalidate the residuals of failed simulations,
-  so the residuals of the failed timepoints used to look like a perfect fit.
+* The residuals (`ReturnData.res`), their sensitivities (`ReturnData.sres`)
+  and the Fisher information matrix (`ReturnData.FIM`) of failed simulations
+  are invalidated now. Previously, the residuals of the timepoints that were
+  not reached stayed at their initial value of 0.0, i.e., they looked like a
+  perfect fit, and the FIM contained a partial sum.
+* `PetabSimulationResult.res` (PEtab v2) returns `None` if any experiment
+  failed to simulate.
 
 ### v1.0.1 (2026-03-13)
 

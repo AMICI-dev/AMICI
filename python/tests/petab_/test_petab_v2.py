@@ -427,7 +427,7 @@ def test_aggregated_residual_sensitivities(residual_test_importer):
     ps.solver.set_sensitivity_order(SensitivityOrder.first)
     result = ps.simulate(x)
 
-    res = result.res()
+    res = result.res
     sres = result.sres
     # 2 experiments (the third one has no measurements)
     #  x 3 timepoints x 2 observables
@@ -452,8 +452,8 @@ def test_aggregated_residual_sensitivities(residual_test_importer):
     for i, par_id in enumerate(x_ids):
         eps = 1e-5 * x[par_id]
         sres_fd[:, i] = (
-            ps.simulate(x | {par_id: x[par_id] + eps}).res()
-            - ps.simulate(x | {par_id: x[par_id] - eps}).res()
+            ps.simulate(x | {par_id: x[par_id] + eps}).res
+            - ps.simulate(x | {par_id: x[par_id] - eps}).res
         ) / (2 * eps)
     np.testing.assert_allclose(sres, sres_fd, rtol=1e-4, atol=1e-6)
 
@@ -482,7 +482,7 @@ def test_aggregated_residual_sensitivities_reporting_modes(
 
     ps.solver.set_return_data_reporting_mode(RDataReporting.residuals)
     result = ps.simulate(x)
-    np.testing.assert_allclose(result.res(), expected.res())
+    np.testing.assert_allclose(result.res, expected.res)
     np.testing.assert_allclose(result.sres, expected.sres)
     # the log-likelihood is computed from the residuals in this mode, ...
     np.testing.assert_allclose(result.llh, expected.llh)
@@ -492,7 +492,7 @@ def test_aggregated_residual_sensitivities_reporting_modes(
 
     ps.solver.set_return_data_reporting_mode(RDataReporting.likelihood)
     result = ps.simulate(x)
-    assert result.res() is None
+    assert result.res is None
     assert result.sres is None
     assert result.sllh is not None
 
@@ -515,7 +515,7 @@ def test_aggregated_residuals_failed_simulation(residual_test_importer):
     result = ps.simulate({"k_decay": 0.4, "scale": 1.5})
     assert any(rdata.status != AMICI_SUCCESS for rdata in result.rdatas)
     assert np.isnan(result.llh)
-    assert result.res() is None
+    assert result.res is None
     assert result.sres is None
     assert result.sllh is None
     assert result.s2llh is None
@@ -551,7 +551,7 @@ def test_aggregated_residual_sensitivities_non_gaussian_noise():
     ps.solver.set_sensitivity_order(SensitivityOrder.first)
 
     result = ps.simulate({"k_decay": 0.4})
-    assert result.res() is None
+    assert result.res is None
     assert result.sres is None
     # ... but the likelihood and its sensitivities are computed
     assert np.isfinite(result.llh)

@@ -544,7 +544,7 @@ class PetabSimulationResult:
     #: Aggregated sensitivities of the residuals w.r.t. the estimated PEtab
     #: problem parameters as a 2D :class:`numpy.ndarray` of shape
     #: ``(n_residuals, n_estimated)``. The rows correspond to the residuals
-    #: returned by :meth:`res`, the columns are in the order of
+    #: returned by :attr:`res`, the columns are in the order of
     #: ``Problem.x_free_ids``. ``None`` if residual sensitivities were not
     #: computed.
     sres: np.ndarray | None = None
@@ -554,6 +554,7 @@ class PetabSimulationResult:
         """The total log-likelihood across all experiments."""
         return sum(rdata.llh for rdata in self.rdatas)
 
+    @property
     def res(self) -> np.ndarray | None:
         """
         Concatenated residuals.
@@ -569,8 +570,8 @@ class PetabSimulationResult:
         """
         res = []
         for rdata in self.rdatas:
-            # AMICI does not invalidate the residuals of failed simulations,
-            #  so they would look like a perfect fit
+            # the residuals of a failed simulation are invalidated (NaN),
+            #  there is nothing useful to return
             if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
                 return None
             if not _has_timepoints(rdata):
@@ -922,7 +923,7 @@ class PetabSimulator:
 
         The residuals of the individual experiments are concatenated in the
         order of ``rdatas``, matching
-        :meth:`PetabSimulationResult.res`. Sensitivities w.r.t. model
+        :attr:`PetabSimulationResult.res`. Sensitivities w.r.t. model
         parameters that map to the same problem parameter (i.e., output
         parameter placeholders) are summed up.
 
