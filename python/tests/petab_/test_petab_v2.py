@@ -1,5 +1,6 @@
 import copy
 
+import pytest
 from amici.importers.petab import (
     PetabImporter,
     flatten_timepoint_specific_output_overrides,
@@ -390,18 +391,32 @@ def _residual_test_problem() -> Problem:
     return problem
 
 
-def test_aggregated_residual_sensitivities():
+@pytest.fixture(scope="module")
+def residual_test_importer() -> PetabImporter:
+    """Importer for the model of :func:`_residual_test_problem`.
+
+    The model module is regenerated once for all tests using this fixture, so
+    that they neither depend on a previously generated module nor pay for
+    repeated model compilation. Each test creates its own simulator (and thus
+    its own model and solver instance) from it.
+    """
+    pi = PetabImporter(
+        _residual_test_problem(),
+        module_name="test_petab_v2_residuals",
+        verbose=False,
+    )
+    pi.import_module(force_import=True)
+    return pi
+
+
+def test_aggregated_residual_sensitivities(residual_test_importer):
     """Aggregated residual sensitivities are consistent with the aggregated
     log-likelihood sensitivities, the FIM, and finite differences."""
     import numpy as np
     from amici.sim.sundials import SensitivityMethod
 
     problem = _residual_test_problem()
-    ps = PetabImporter(
-        problem,
-        module_name="test_petab_v2_residuals",
-        verbose=False,
-    ).create_simulator(force_import=True)
+    ps = residual_test_importer.create_simulator()
     ps.solver.set_absolute_tolerance(1e-14)
     ps.solver.set_relative_tolerance(1e-12)
 
@@ -446,7 +461,9 @@ def test_aggregated_residual_sensitivities():
     assert ps.simulate(x).sres is None
 
 
-def test_aggregated_residual_sensitivities_reporting_modes():
+def test_aggregated_residual_sensitivities_reporting_modes(
+    residual_test_importer,
+):
     """Aggregated residuals and their sensitivities are available in the
     residual-only reporting mode, but not in the likelihood-only mode."""
     import numpy as np
@@ -456,12 +473,7 @@ def test_aggregated_residual_sensitivities_reporting_modes():
         SensitivityOrder,
     )
 
-    problem = _residual_test_problem()
-    ps = PetabImporter(
-        problem,
-        module_name="test_petab_v2_residuals",
-        verbose=False,
-    ).create_simulator(force_import=False)
+    ps = residual_test_importer.create_simulator()
     ps.solver.set_sensitivity_method(SensitivityMethod.forward)
     ps.solver.set_sensitivity_order(SensitivityOrder.first)
     x = {"k_decay": 0.4, "scale": 1.5}
@@ -485,7 +497,7 @@ def test_aggregated_residual_sensitivities_reporting_modes():
     assert result.sllh is not None
 
 
-def test_aggregated_residuals_failed_simulation():
+def test_aggregated_residuals_failed_simulation(residual_test_importer):
     """No residuals are reported if any experiment failed to simulate.
 
     AMICI does not invalidate the residuals of failed simulations, so the
@@ -494,12 +506,7 @@ def test_aggregated_residuals_failed_simulation():
     import numpy as np
     from amici.sim.sundials import AMICI_SUCCESS, SensitivityMethod
 
-    problem = _residual_test_problem()
-    ps = PetabImporter(
-        problem,
-        module_name="test_petab_v2_residuals",
-        verbose=False,
-    ).create_simulator(force_import=False)
+    ps = residual_test_importer.create_simulator()
     ps.solver.set_sensitivity_method(SensitivityMethod.forward)
     ps.solver.set_sensitivity_order(SensitivityOrder.first)
     # provoke an integration failure
