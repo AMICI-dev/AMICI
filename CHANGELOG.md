@@ -20,6 +20,17 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
   covers the transitive case, where such a parameter is reached through a chain
   of parameter initial assignments (#3214).
+* Fixed SBML import turning a parameter into a constant state when its
+  `initialAssignment` referenced another parameter that becomes an AMICI
+  expression. Such chains are now resolved to a fixed point, so those
+  parameters stay expressions instead of inflating the state vector (e.g.
+  `C2ss`/`C3ss` in `calvetti`).
+* `ReturnData::invalidate` left `res`, `sres` and `FIM` untouched, so the
+  residuals of timepoints that were not reached stayed at their initial value
+  of 0.0 -- a failed simulation looked like a perfect fit -- and the `FIM`
+  contained a partial sum. The residuals and their sensitivities are now
+  invalidated from the failed timepoint on (including the error residuals, if
+  any), and the `FIM` completely, since it is accumulated over all timepoints.
 
 ### v1.0.1 (2026-03-13)
 

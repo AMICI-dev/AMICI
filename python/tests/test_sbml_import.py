@@ -1288,6 +1288,40 @@ def test_initial_assignment_fixed_parameter_not_constant_folded():
 
 
 @skip_on_valgrind
+def test_chained_initial_assignment_parameter_stays_expression():
+    """A chain of parameter initial assignments must not create states.
+
+    ``c`` is defined via an initial assignment referencing ``q``, which is
+    itself an expression. Since expressions may depend on other expressions,
+    ``c`` is representable as an expression too, and must not be turned into a
+    constant state (which would needlessly inflate the state vector, as it did
+    for ``C2ss``/``C3ss`` in the ``calvetti`` test model).
+    """
+    sbml_str = antimony2sbml("""
+        model test_chained_ia_stays_expression
+            species X;
+            X = 1;
+            kf = 0.5;
+            q = 1 - kf;
+            c = 2 / (q - 0.25 * kf);
+            k = 0.33;
+            degradation: X -> ; k * c * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    assert sbml_importer.sbml_model.getInitialAssignment("q") is not None
+    assert sbml_importer.sbml_model.getInitialAssignment("c") is not None
+
+    de_model = sbml_importer._build_ode_model()
+
+    # only X is a state; q and c are expressions
+    assert [s.get_id() for s in de_model.states()] == ["X"]
+    expression_ids = [e.get_id() for e in de_model.expressions()]
+    assert "q" in expression_ids
+    assert "c" in expression_ids
+
+
+@skip_on_valgrind
 def test_minmax_piecewise_is_converted_to_minmax():
     """Test that _piecewise_to_minmax is applied during SBML import."""
     sbml_str = antimony2sbml("""
