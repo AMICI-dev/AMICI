@@ -562,10 +562,17 @@ class PetabSimulationResult:
         order of :attr:`rdatas`. This matches the row order of :attr:`sres`.
 
         :returns: Concatenated residuals from all experiments as a 1D
-            :class:`numpy.ndarray`, or ``None`` if not available.
+            :class:`numpy.ndarray`, or ``None`` if they are not available,
+            i.e., if any experiment failed to simulate or if residuals were
+            not computed at all. If no experiment has any measurement, an
+            empty array is returned.
         """
         res = []
         for rdata in self.rdatas:
+            # AMICI does not invalidate the residuals of failed simulations,
+            #  so they would look like a perfect fit
+            if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
+                return None
             if not _has_timepoints(rdata):
                 # experiment without measurements -- no residuals
                 continue
@@ -613,6 +620,12 @@ class PetabSimulator:
         )
         self._exp_man: ExperimentManager = em
         self.num_threads = num_threads
+        # cache for `_get_plist_to_problem_par_ix`; the mapping only depends
+        #  on the (immutable) PEtab problem, the model, and the parameter list
+        #  of the respective experiment
+        self._plist_to_problem_par_ix: dict[
+            tuple[str, tuple[int, ...]], dict[int, int]
+        ] = {}
 
     @property
     def model(self) -> amici.sim.sundials.Model:
@@ -744,20 +757,33 @@ class PetabSimulator:
         injective: several model parameters (output parameter placeholders)
         may map to the same problem parameter.
 
+        The result is cached, as it is the same for every simulation of a
+        given experiment, and must not be modified by the caller.
+
         :param rdata: The simulation result to create the mapping for.
         :return: The mapping from ``rdata.plist`` indices to
             ``Problem.x_free_ids`` indices.
         """
+        plist = tuple(rdata.plist)
+        cache_key = (rdata.id, plist)
+        if (
+            cached := self._plist_to_problem_par_ix.get(cache_key)
+        ) is not None:
+            return cached
+
         model_par_ids = self._model.get_free_parameter_ids()
-        x_free_ids = self._petab_problem.x_free_ids
+        # problem parameter ID to index of the estimated problem parameters
+        x_free_ix = {
+            pid: ix for ix, pid in enumerate(self._petab_problem.x_free_ids)
+        }
 
         # Model parameter index to problem parameter index map for estimated
         #  parameters except placeholders.
         #  This is the same for all experiments.
         ix_map: dict[int, int] = {
-            model_ix: x_free_ids.index(model_pid)
+            model_ix: x_free_ix[model_pid]
             for model_ix, model_pid in enumerate(model_par_ids)
-            if model_pid in x_free_ids
+            if model_pid in x_free_ix
         }
 
         # still needs experiment-specific parameter mapping for placeholders
@@ -766,20 +792,17 @@ class PetabSimulator:
             experiment
         )
         for model_pid, problem_pid in placeholder_mappings.items():
-            try:
-                ix_map[model_par_ids.index(model_pid)] = x_free_ids.index(
-                    problem_pid
-                )
-            except ValueError:
-                # mapped-to parameter is not estimated
-                pass
+            if (problem_par_ix := x_free_ix.get(problem_pid)) is not None:
+                ix_map[model_par_ids.index(model_pid)] = problem_par_ix
+            # else: mapped-to parameter is not estimated
 
         # translate model parameter index to plist index
-        plist = tuple(rdata.plist)
-        return {
+        ix_map = {
             plist.index(model_par_ix): problem_par_ix
             for model_par_ix, problem_par_ix in ix_map.items()
         }
+        self._plist_to_problem_par_ix[cache_key] = ix_map
+        return ix_map
 
     def _aggregate_s2llh(
         self,

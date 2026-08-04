@@ -472,7 +472,9 @@ def test_aggregated_residual_sensitivities_reporting_modes():
     result = ps.simulate(x)
     np.testing.assert_allclose(result.res(), expected.res())
     np.testing.assert_allclose(result.sres, expected.sres)
-    # the likelihood and its sensitivities are not computed in this mode
+    # the log-likelihood is computed from the residuals in this mode, ...
+    np.testing.assert_allclose(result.llh, expected.llh)
+    # ... but its sensitivities are not
     assert result.sllh is None
     assert result.s2llh is None
 
@@ -481,6 +483,35 @@ def test_aggregated_residual_sensitivities_reporting_modes():
     assert result.res() is None
     assert result.sres is None
     assert result.sllh is not None
+
+
+def test_aggregated_residuals_failed_simulation():
+    """No residuals are reported if any experiment failed to simulate.
+
+    AMICI does not invalidate the residuals of failed simulations, so the
+    residuals of the failed timepoints would look like a perfect fit.
+    """
+    import numpy as np
+    from amici.sim.sundials import AMICI_SUCCESS, SensitivityMethod
+
+    problem = _residual_test_problem()
+    ps = PetabImporter(
+        problem,
+        module_name="test_petab_v2_residuals",
+        verbose=False,
+    ).create_simulator(force_import=False)
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    # provoke an integration failure
+    ps.solver.set_max_steps(1)
+
+    result = ps.simulate({"k_decay": 0.4, "scale": 1.5})
+    assert any(rdata.status != AMICI_SUCCESS for rdata in result.rdatas)
+    assert np.isnan(result.llh)
+    assert result.res() is None
+    assert result.sres is None
+    assert result.sllh is None
+    assert result.s2llh is None
 
 
 def test_aggregated_residual_sensitivities_non_gaussian_noise():

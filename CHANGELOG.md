@@ -26,6 +26,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   aggregated results (`sllh`, `s2llh`, `res`, `sres`) are `None` now.
   Experiments without measurements no longer suppress the residuals of all
   other experiments.
+* `PetabSimulationResult.res` returns `None` if any experiment failed to
+  simulate. AMICI does not invalidate the residuals of failed simulations,
+  so the residuals of the failed timepoints used to look like a perfect fit.
 
 ### v1.0.1 (2026-03-13)
 
