@@ -1425,6 +1425,19 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
+    @staticmethod
+    def _first_condition_id(condition_ids: list[str]) -> str:
+        """The first of ``condition_ids``, or ``""`` if there are none.
+
+        A period need not reference any condition at all (e.g. one used
+        only to mark a timepoint, with nothing to change there), so
+        ``condition_ids`` may legitimately be empty. ``""`` can never
+        collide with a real PEtab condition ID, and :meth:`_eval_nn`
+        already falls back to its default (``"0"``-keyed) array input when
+        the condition it is given doesn't match any actual condition.
+        """
+        return condition_ids[0] if condition_ids else ""
+
     def _resolve_original_condition_id(self, condition_id: str) -> str:
         """Map a converted condition ID back to its original unconverted ID."""
         if self._unconverted_problem is None:
@@ -1633,7 +1646,7 @@ class JAXProblem(eqx.Module):
             return jnp.asarray(
                 self._eval_nn(
                     self._parameter_mappings["hybrid_map"][pname],
-                    condition_ids[0],
+                    self._first_condition_id(condition_ids),
                 ),
                 dtype=self.model.parameters.dtype,
             )
@@ -1738,12 +1751,14 @@ class JAXProblem(eqx.Module):
             reinitialisation value for the state
         """
         if state_id in self.nn_output_ids:
-            return self._eval_nn(state_id, condition_ids[0])
+            return self._eval_nn(
+                state_id, self._first_condition_id(condition_ids)
+            )
 
         if state_id in self._parameter_mappings["hybrid_map"]:
             return self._eval_nn(
                 self._parameter_mappings["hybrid_map"][state_id],
-                condition_ids[0],
+                self._first_condition_id(condition_ids),
             )
 
         if (
@@ -2283,7 +2298,10 @@ class JAXProblem(eqx.Module):
                 jnp.array(
                     [
                         self._eval_nn(
-                            p, exp.sorted_periods[-1].condition_ids[0]
+                            p,
+                            self._first_condition_id(
+                                exp.sorted_periods[-1].condition_ids
+                            ),
                         )  # TODO: Add mapping of p to eval_nn?
                         if p in set(self.model.parameter_ids)
                         else 1.0
