@@ -6,6 +6,18 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ### v1.0.2 (unreleased)
 
+**BREAKING CHANGES**
+
+* `PetabSimulationResult.res` (PEtab v2) is a property now, for consistency
+  with `PetabSimulationResult.llh`. Replace `result.res()` by `result.res`.
+
+**Features**
+
+* The PEtab v2 simulator now aggregates the residual sensitivities of all
+  experiments: `PetabSimulationResult.sres` contains the sensitivities of the
+  residuals returned by `PetabSimulationResult.res` with respect to the
+  estimated PEtab problem parameters.
+
 **Fixes**
 
 * Demote the module import mtime check during sundials model import to a
@@ -13,6 +25,31 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   (e.g., when using network file systems with not synchronized clocks).
   If you encounter this warning, and you are sure that the model was not
   modified since the last import, you can safely ignore it.
+* Fixed SBML import constant-folding a parameter out of the initial conditions
+  when that parameter both carried an `initialAssignment` with a numeric
+  right-hand side and defined a species' initial value. The parameter remained
+  in the free-parameter list, so its (initial-condition) sensitivity was
+  silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
+  covers the transitive case, where such a parameter is reached through a chain
+  of parameter initial assignments (#3214).
+* `amici.sim.sundials.petab.PetabSimulator.simulate` no longer fails for
+  PEtab v2 problems with non-Gaussian noise models or for the
+  `RDataReporting.residuals` reporting mode. The respective unavailable
+  aggregated results (`sllh`, `s2llh`, `res`, `sres`) are `None` now.
+  Experiments without measurements no longer suppress the residuals of all
+  other experiments.
+* The residuals (`ReturnData.res`), their sensitivities (`ReturnData.sres`)
+  and the Fisher information matrix (`ReturnData.FIM`) of failed simulations
+  are invalidated now. Previously, the residuals of the timepoints that were
+  not reached stayed at their initial value of 0.0, i.e., they looked like a
+  perfect fit, and the FIM contained a partial sum.
+* `PetabSimulationResult.res` (PEtab v2) returns `None` if any experiment
+  failed to simulate.
+* Fixed SBML import turning a parameter into a constant state when its
+  `initialAssignment` referenced another parameter that becomes an AMICI
+  expression. Such chains are now resolved to a fixed point, so those
+  parameters stay expressions instead of inflating the state vector (e.g.
+  `C2ss`/`C3ss` in `calvetti`).
 
 ### v1.0.1 (2026-03-13)
 
