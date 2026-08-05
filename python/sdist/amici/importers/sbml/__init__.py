@@ -1299,43 +1299,64 @@ class SbmlImporter:
             self._symbols[SymbolId.FREE_PARAMETER]
         ) | set(self._symbols[SymbolId.FIXED_PARAMETER])
 
-        for par in self.sbml_model.getListOfParameters():
-            if (
-                (ia := par_id_to_ia.get(par.getId())) is not None
-                and not ia.is_Number
-                and not self._is_rate_rule_target(par)
-            ):
-                if not (ia.free_symbols - syms_allowed_in_expr_ia):
-                    self._symbols[SymbolId.EXPRESSION][
-                        _get_identifier_symbol(par)
-                    ] = {
-                        "name": par.getName()
-                        if par.isSetName()
-                        else par.getId(),
-                        "value": ia,
-                    }
-                else:
-                    # Convert parameters with initial assignments that
-                    #  explicitly depend on time to species.
-                    #  We can't represent that as expression, since the
-                    #  initial simulation time is only known at the time of the
-                    #  simulation, so we can't substitute it.
-                    # Also, any parameter with an initial assignment
-                    #  that expression that is implicitly time-dependent
-                    #  must be converted to a species to avoid re-evaluating
-                    #  the initial assignment at every time step.
-                    self._symbols[SymbolId.SPECIES][
-                        _get_identifier_symbol(par)
-                    ] = {
-                        "name": par.getName()
-                        if par.isSetName()
-                        else par.getId(),
-                        "init": ia,
-                        "dt": sp.Float(0),
-                        "amount": True,
-                        "constant": True,
-                        "index": len(self._symbols[SymbolId.SPECIES]),
-                    }
+        to_convert = [
+            (par, ia)
+            for par in self.sbml_model.getListOfParameters()
+            if (ia := par_id_to_ia.get(par.getId())) is not None
+            and not ia.is_Number
+            and not self._is_rate_rule_target(par)
+        ]
+
+        # An initial assignment may reference another parameter that becomes an
+        #  expression itself (e.g. `C2ss := V2ss / (p2 - 0.5 * R2ss)` with
+        #  `p2 := 1 - R1ss`). Such a chain is representable as expressions --
+        #  expressions may depend on other expressions, and they are toposorted
+        #  in `_process_rules` -- so resolve it to a fixed point before
+        #  concluding that a parameter cannot be an expression. Otherwise these
+        #  parameters would needlessly end up as constant states.
+        as_expression = []
+        remaining = to_convert
+        while True:
+            resolvable, unresolvable = [], []
+            for par, ia in remaining:
+                target = (
+                    unresolvable
+                    if ia.free_symbols - syms_allowed_in_expr_ia
+                    else resolvable
+                )
+                target.append((par, ia))
+            if not resolvable:
+                break
+            as_expression += resolvable
+            syms_allowed_in_expr_ia |= {
+                _get_identifier_symbol(par) for par, _ in resolvable
+            }
+            remaining = unresolvable
+
+        for par, ia in as_expression:
+            self._symbols[SymbolId.EXPRESSION][_get_identifier_symbol(par)] = {
+                "name": par.getName() if par.isSetName() else par.getId(),
+                "value": ia,
+            }
+
+        # Convert parameters with initial assignments that
+        #  explicitly depend on time to species.
+        #  We can't represent that as expression, since the
+        #  initial simulation time is only known at the time of the
+        #  simulation, so we can't substitute it.
+        # Also, any parameter with an initial assignment
+        #  that expression that is implicitly time-dependent
+        #  must be converted to a species to avoid re-evaluating
+        #  the initial assignment at every time step.
+        for par, ia in remaining:
+            self._symbols[SymbolId.SPECIES][_get_identifier_symbol(par)] = {
+                "name": par.getName() if par.isSetName() else par.getId(),
+                "init": ia,
+                "dt": sp.Float(0),
+                "amount": True,
+                "constant": True,
+                "index": len(self._symbols[SymbolId.SPECIES]),
+            }
 
     @log_execution_time("processing SBML reactions", logger)
     def _process_reactions(self):

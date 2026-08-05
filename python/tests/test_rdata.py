@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from amici.sim.sundials import (
     AMICI_SUCCESS,
+    ExpData,
     SensitivityMethod,
     SensitivityOrder,
     evaluate,
@@ -24,6 +25,44 @@ def rdata_by_id_fixture(sbml_example_presimulation_module):
     rdata = run_simulation(model, solver)
     assert rdata.status == AMICI_SUCCESS
     return model, rdata
+
+
+@skip_on_valgrind
+def test_invalidate_residuals_on_failure(sbml_example_presimulation_module):
+    """Residuals of failed simulations must be invalidated.
+
+    Otherwise, the residuals of the timepoints that were not reached would
+    stay at their initial value of 0.0, i.e., they would look like a perfect
+    fit.
+    """
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    solver = model.create_solver()
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    # residuals require measurements
+    edata = ExpData(run_simulation(model, solver), 1.0, 0.0)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert np.all(np.isfinite(rdata.res))
+    assert np.all(np.isfinite(rdata.sres))
+    assert np.all(np.isfinite(rdata.FIM))
+
+    # provoke an integration failure
+    solver.set_max_steps(1)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status != AMICI_SUCCESS
+    assert np.isnan(rdata.llh)
+    # the timepoints up to the failure are still valid, ...
+    nytrue = len(model.get_observable_ids())
+    assert np.all(np.isfinite(rdata.res[:nytrue]))
+    # ... the remaining ones are not
+    assert np.all(np.isnan(rdata.res[nytrue:]))
+    assert np.all(np.isnan(rdata.sres[nytrue:, :]))
+    # the FIM is accumulated over all timepoints, so there is no valid
+    #  partial result
+    assert np.all(np.isnan(rdata.FIM))
 
 
 @skip_on_valgrind

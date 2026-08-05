@@ -1,10 +1,12 @@
 %define MODULEIMPORT
 "
 import amici
+import amici.sim.sundials
 import datetime
 import importlib.util
 import os
 import sysconfig
+import warnings
 from pathlib import Path
 
 ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
@@ -24,13 +26,16 @@ if t_imported < t_modified:
     t_imp_str = datetime.datetime.fromtimestamp(t_imported).isoformat()
     t_mod_str = datetime.datetime.fromtimestamp(t_modified).isoformat()
     module_path = Path(__file__).resolve()
-    raise RuntimeError(
+    warnings.warn(
         f'Cannot import extension for model_nested_events_py from '
         f'{module_path}, because an extension in the same location '
         f'has already been imported, but the file was modified on '
         f'disk. \\nImported at {t_imp_str}\\nModified at {t_mod_str}.\\n'
         'Import the module with a different name or restart the '
-        'Python kernel.'
+        'Python kernel. '
+        'This can happen when the files live on a network share and '
+        'the machines\\' system clocks are not synchronized; in that case '
+        'this warning can be ignored.', RuntimeWarning, stacklevel=1
     )
 "
 %enddef
