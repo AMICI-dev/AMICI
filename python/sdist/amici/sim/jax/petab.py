@@ -1804,7 +1804,7 @@ class JAXProblem(eqx.Module):
 
     def load_reinitialisation(
         self,
-        condition_ids: list[str] | str,
+        condition_ids: list[str] | str | None,
         p: jt.Float[jt.Array, "np"],
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
@@ -1814,16 +1814,19 @@ class JAXProblem(eqx.Module):
         :param condition_ids:
             Condition id(s) (e.g. of one experiment period) to load
             reinitialisation for. A bare string is treated as a
-            single-element list. An empty list means no reinitialisation
-            (e.g. for a padding period).
+            single-element list. ``None`` means there is no period at all
+            here (e.g. a padding slot beyond an experiment's own periods,
+            or an experiment without preequilibration), so reinitialisation
+            is skipped unconditionally. An empty list means a real period
+            (or preequilibration) that simply references no condition --
+            reinitialisation may still apply, e.g. for a state driven by a
+            hybridization target, which does not need an actual condition
+            to be resolved (see :meth:`_state_reinitialisation_value`).
         :param p:
             Parameters for the simulation condition.
         :return:
             Tuple of reinitialisation masm and value for states.
         """
-        if isinstance(condition_ids, str):
-            condition_ids = [condition_ids]
-
         has_reinitialisable_states = any(
             x_id in self._all_condition_targets
             or hasattr(self, "nn_output_ids")
@@ -1833,11 +1836,15 @@ class JAXProblem(eqx.Module):
         if not has_reinitialisable_states:
             return jnp.array([]), jnp.array([])
 
-        if not condition_ids:
-            # padding period: no reinitialisation, but still return
-            # full-shaped, all-False/all-zero arrays for stacking
+        if condition_ids is None:
+            # no period at all here (padding, or no preequilibration): no
+            # reinitialisation, but still return full-shaped,
+            # all-False/all-zero arrays for stacking
             nx = len(self.model.state_ids)
             return jnp.zeros(nx, dtype=bool), jnp.zeros(nx)
+
+        if isinstance(condition_ids, str):
+            condition_ids = [condition_ids]
 
         mask = jnp.array(
             [
@@ -1926,11 +1933,15 @@ class JAXProblem(eqx.Module):
                 ]
             )
 
-            def preeq_condition_ids(exp: petabv2.Experiment) -> list[str]:
+            def preeq_condition_ids(exp: petabv2.Experiment) -> list[str] | None:
                 for period in exp.sorted_periods:
                     if period.is_preequilibration:
                         return period.condition_ids
-                return []
+                # no preequilibration period at all for this experiment:
+                # distinct from a preequilibration period that references
+                # zero conditions (`[]`), which should still resolve any
+                # hybridization-driven reinitialisation.
+                return None
 
             reinit_condition_ids = [
                 preeq_condition_ids(exp) for exp in experiments
@@ -1968,9 +1979,16 @@ class JAXProblem(eqx.Module):
 
             def period_condition_ids(
                 exp: petabv2.Experiment, i: int
-            ) -> list[str]:
+            ) -> list[str] | None:
                 dyn_periods = self._dynamic_periods(exp)
-                return dyn_periods[i].condition_ids if i < len(dyn_periods) else []
+                # `None` marks an actual padding slot (beyond this
+                # experiment's own periods), as opposed to `[]`, which is a
+                # real period that simply references no condition -- the two
+                # need to stay distinguishable so `load_reinitialisation` does
+                # not silently skip reinitialisation (e.g. of a
+                # hybridization-driven state) for a real, condition-less
+                # period.
+                return dyn_periods[i].condition_ids if i < len(dyn_periods) else None
 
             reinit_condition_ids = [
                 [period_condition_ids(exp, i) for i in range(self._max_periods)]
