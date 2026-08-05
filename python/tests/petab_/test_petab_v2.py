@@ -8,6 +8,7 @@ from amici.importers.petab import (
     unflatten_simulation_df,
 )
 from amici.sim.sundials import SensitivityOrder
+from amici.testing import TemporaryDirectoryWinSafe
 from petab.v2 import C, Problem
 from petab.v2.models.sbml_model import SbmlModel
 
@@ -395,18 +396,21 @@ def _residual_test_problem() -> Problem:
 def residual_test_importer() -> PetabImporter:
     """Importer for the model of :func:`_residual_test_problem`.
 
-    The model module is regenerated once for all tests using this fixture, so
-    that they neither depend on a previously generated module nor pay for
-    repeated model compilation. Each test creates its own simulator (and thus
-    its own model and solver instance) from it.
+    The model is generated once for all tests using this fixture, into a
+    temporary directory of its own -- so the tests neither depend on nor
+    interfere with any other model module, also when run concurrently or
+    distributed across processes. Each test creates its own simulator (and
+    thus its own model and solver instance) from the importer.
     """
-    pi = PetabImporter(
-        _residual_test_problem(),
-        module_name="test_petab_v2_residuals",
-        verbose=False,
-    )
-    pi.import_module(force_import=True)
-    return pi
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_residuals_") as output_dir:
+        pi = PetabImporter(
+            _residual_test_problem(),
+            module_name="test_petab_v2_residuals",
+            output_dir=output_dir,
+            verbose=False,
+        )
+        pi.import_module(force_import=True)
+        yield pi
 
 
 def test_aggregated_residual_sensitivities(residual_test_importer):
@@ -542,15 +546,18 @@ def test_aggregated_residual_sensitivities_non_gaussian_noise():
         problem.add_measurement("obs_a", time=t, measurement=0.9 - 0.1 * t)
     problem.assert_valid()
 
-    ps = PetabImporter(
-        problem,
-        module_name="test_petab_v2_residuals_laplace",
-        verbose=False,
-    ).create_simulator(force_import=True)
-    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
-    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_laplace_") as output_dir:
+        ps = PetabImporter(
+            problem,
+            module_name="test_petab_v2_residuals_laplace",
+            output_dir=output_dir,
+            verbose=False,
+        ).create_simulator(force_import=True)
+        ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+        ps.solver.set_sensitivity_order(SensitivityOrder.first)
 
-    result = ps.simulate({"k_decay": 0.4})
+        result = ps.simulate({"k_decay": 0.4})
+
     assert result.res is None
     assert result.sres is None
     # ... but the likelihood and its sensitivities are computed
