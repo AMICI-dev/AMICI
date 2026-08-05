@@ -45,6 +45,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   perfect fit, and the FIM contained a partial sum.
 * `PetabSimulationResult.res` (PEtab v2) returns `None` if any experiment
   failed to simulate.
+* Fixed SBML import turning a parameter into a constant state when its
+  `initialAssignment` referenced another parameter that becomes an AMICI
+  expression. Such chains are now resolved to a fixed point, so those
+  parameters stay expressions instead of inflating the state vector (e.g.
+  `C2ss`/`C3ss` in `calvetti`).
 
 ### v1.0.1 (2026-03-13)
 

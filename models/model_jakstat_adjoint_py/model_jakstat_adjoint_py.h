@@ -73,7 +73,7 @@ extern void dsigmaydp_model_jakstat_adjoint_py(realtype *dsigmaydp, const realty
 extern void w_model_jakstat_adjoint_py(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl, bool include_static);
 extern void x0_model_jakstat_adjoint_py(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 
-
+extern void sx0_model_jakstat_adjoint_py(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip);
 
 extern void xdot_model_jakstat_adjoint_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_model_jakstat_adjoint_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
@@ -342,7 +342,9 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
 
     void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
 
-    void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {}
+    void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {
+        sx0_model_jakstat_adjoint_py(sx0, t, x, p, k, ip);
+    }
 
     void fsx0_fixedParameters(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip, gsl::span<const int> reinitialization_state_idxs) override {}
 
@@ -536,7 +538,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "33affbfd8bca2bd5e82a10cc6b764a63e292cc6f";
+        return "f5c9b1ec05596c5e78e306e76f9992c031a25dee";
     }
 
     bool has_quadratic_llh() const override {
