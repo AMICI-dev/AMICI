@@ -454,12 +454,18 @@ class PetabImporter:
         #  entirely (see the NotImplementedError raised in
         #  `_preprocess_sbml`) since AMICI does not support making a
         #  compartment a runtime-settable fixed parameter either way.
+        #  A condition ID referenced by an experiment need not have its own
+        #  entry in a condition table at all -- a condition that makes no
+        #  changes has nothing to define -- so a missing lookup contributes
+        #  no changes rather than being an error.
         fixed_parameters = {
             change.target_id
             for experiment in self.petab_problem.experiments
             for period in experiment.periods
             for condition_id in period.condition_ids
-            for change in self.petab_problem[condition_id].changes
+            for change in _get_condition_changes(
+                self.petab_problem, condition_id
+            )
             if not self.petab_problem.model.is_state_variable(
                 change.target_id
             )
@@ -555,7 +561,9 @@ class PetabImporter:
             for experiment in self.petab_problem.experiments
             for period in experiment.periods
             for condition_id in period.condition_ids
-            for change in self.petab_problem[condition_id].changes
+            for change in _get_condition_changes(
+                self.petab_problem, condition_id
+            )
         }
         # TODO: handle self._non_estimated_parameters_as_constants
 
@@ -1286,6 +1294,26 @@ def unflatten_simulation_df(
         }
     )
     return unflattened_simulation_df
+
+
+def _get_condition_changes(
+    petab_problem: v2.Problem, condition_id: str
+) -> list:
+    """Get the ``changes`` of the condition with the given ID, or an empty
+    list if it has none.
+
+    A condition ID referenced by an experiment period is not required to
+    have a matching entry in any condition table: a condition that changes
+    nothing (e.g. one used only to mark a timepoint, or a PEtab v1 problem's
+    default/empty condition) need not be defined at all, since there would
+    be nothing to define.
+    """
+    if not condition_id:
+        return []
+    try:
+        return petab_problem[condition_id].changes
+    except KeyError:
+        return []
 
 
 def _get_fixed_parameters_sbml(

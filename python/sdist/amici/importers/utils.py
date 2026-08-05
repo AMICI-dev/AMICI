@@ -984,7 +984,16 @@ def cast_to_sym(
         typecast value
     """
     if isinstance(value, (sp.RealNumber | numbers.Number)):
-        value = sp.Float(float(value))
+        # `sp.Float(some_python_float)` defaults to ~15 significant digits
+        # of *string* precision, even though the underlying double is
+        # preserved exactly -- so two floats that are bit-identical can
+        # print (and round-trip through generated code) as different
+        # decimal literals if one of them passed through this constructor
+        # and the other didn't (e.g. a parameter's value vs. a `pi`/`E`
+        # literal emitted directly by a code printer). Building from
+        # `repr()` (the shortest string that round-trips exactly) fixes the
+        # printed precision to match the actual double.
+        value = sp.Float(repr(float(value)))
     elif isinstance(value, BooleanAtom):
         value = sp.Float(float(bool(value)))
 
