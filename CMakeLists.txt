@@ -50,14 +50,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -Wall)
-foreach(flag ${MY_CXX_FLAGS})
-  unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
-  if(${CUR_FLAG_SUPPORTED})
-    string(APPEND CMAKE_CXX_FLAGS " ${flag}")
-  endif()
-endforeach()
+# -Wall is supported by every GCC/Clang version AMICI targets; skip the
+# check_cxx_compiler_flag() try_compile() and just gate on the compiler
+# family.
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+  string(APPEND CMAKE_CXX_FLAGS " -Wall")
+endif()
 
 if(MSVC)
   set(MY_CXX_FLAGS
