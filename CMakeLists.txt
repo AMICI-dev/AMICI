@@ -136,6 +136,18 @@ elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 
+if(HDF5_FOUND)
+  # Extract the plain library paths for hdf5/hdf5_cpp/hdf5_hl/hdf5_hl_cpp
+  # (dropping the transitive system libs like crypto/curl/z that
+  # HDF5_C_LIBRARIES/HDF5_CXX_LIBRARIES also list) so that AmiciConfig.cmake
+  # can bake them in as fixed imported targets, instead of every downstream
+  # model re-running FindHDF5.cmake's compiler-wrapper interrogation.
+  list(GET HDF5_C_LIBRARIES 0 AMICI_HDF5_C_LIBRARY)
+  list(GET HDF5_CXX_LIBRARIES 0 AMICI_HDF5_CXX_LIBRARY)
+  list(GET HDF5_C_HL_LIBRARIES 0 AMICI_HDF5_HL_LIBRARY)
+  list(GET HDF5_CXX_HL_LIBRARIES 0 AMICI_HDF5_HL_CXX_LIBRARY)
+endif()
+
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(SUNDIALS_PRIVATE_INCLUDE_DIRS
     "${VENDORED_SUNDIALS_DIR}/src;${VENDORED_SUNDIALS_DIR}/src/sundials")
