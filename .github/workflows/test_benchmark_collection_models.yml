@@ -26,6 +26,8 @@ jobs:
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:
@@ -103,6 +105,8 @@ jobs:
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:
