@@ -200,3 +200,4 @@ venv/*
 .coverage
 tests/sciml/models/*
 amici_models
+doc/examples/example_petab_sciml/Dandekar_Patterns2020/

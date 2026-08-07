@@ -7,7 +7,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite_jax.yml
-      - python/sdist/amici/jax/**
+      - python/sdist/amici/**/jax/**
       - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuiteJax.py
       - tests/sbml/conftest.py
@@ -28,7 +28,7 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 

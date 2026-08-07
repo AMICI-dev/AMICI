@@ -505,6 +505,15 @@ class ExperimentManager:
         return mapping
 
 
+def _has_timepoints(rdata: amici.sim.sundials.ReturnDataView) -> bool:
+    """Whether the given simulation result has any timepoints.
+
+    Experiments without measurements have no timepoints and thus no
+    residuals, which is different from residuals not having been computed.
+    """
+    return rdata.ts is not None
+
+
 @dataclass
 class PetabSimulationResult:
     """
@@ -532,8 +541,12 @@ class PetabSimulationResult:
     #: ``Problem.x_free_ids``. ``None`` if second-order sensitivities
     #: were not computed.
     s2llh: np.ndarray | None = None
-    #: Sensitivities of the residuals (if computed) as a
-    #: :class:`numpy.ndarray`, or ``None`` when not computed.
+    #: Aggregated sensitivities of the residuals w.r.t. the estimated PEtab
+    #: problem parameters as a 2D :class:`numpy.ndarray` of shape
+    #: ``(n_residuals, n_estimated)``. The rows correspond to the residuals
+    #: returned by :attr:`res`, the columns are in the order of
+    #: ``Problem.x_free_ids``. ``None`` if residual sensitivities were not
+    #: computed.
     sres: np.ndarray | None = None
 
     @property
@@ -541,17 +554,34 @@ class PetabSimulationResult:
         """The total log-likelihood across all experiments."""
         return sum(rdata.llh for rdata in self.rdatas)
 
+    @property
     def res(self) -> np.ndarray | None:
         """
         Concatenated residuals.
 
-        :returns: Concatenated residuals from all experiments as a 1D
-            :class:`numpy.ndarray`, or ``None`` if not available.
-        """
-        if any(rdata.res is None for rdata in self.rdatas):
-            return None
+        The residuals of the individual experiments are concatenated in the
+        order of :attr:`rdatas`. This matches the row order of :attr:`sres`.
 
-        return np.hstack([rdata.res for rdata in self.rdatas])
+        :returns: Concatenated residuals from all experiments as a 1D
+            :class:`numpy.ndarray`, or ``None`` if they are not available,
+            i.e., if any experiment failed to simulate or if residuals were
+            not computed at all. If no experiment has any measurement, an
+            empty array is returned.
+        """
+        res = []
+        for rdata in self.rdatas:
+            # the residuals of a failed simulation are invalidated (NaN),
+            #  there is nothing useful to return
+            if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
+                return None
+            if not _has_timepoints(rdata):
+                # experiment without measurements -- no residuals
+                continue
+            if rdata.res is None:
+                return None
+            res.append(rdata.res)
+
+        return np.hstack(res) if res else np.zeros(0)
 
 
 class PetabSimulator:
@@ -591,6 +621,12 @@ class PetabSimulator:
         )
         self._exp_man: ExperimentManager = em
         self.num_threads = num_threads
+        # cache for `_get_plist_to_problem_par_ix`; the mapping only depends
+        #  on the (immutable) PEtab problem, the model, and the parameter list
+        #  of the respective experiment
+        self._plist_to_problem_par_ix: dict[
+            tuple[str, tuple[int, ...]], dict[int, int]
+        ] = {}
 
     @property
     def model(self) -> amici.sim.sundials.Model:
@@ -620,8 +656,6 @@ class PetabSimulator:
             Note that the returned :class:`amici.sim.sundials.ExpData`
             instances may be changed by subsequent calls to this function.
             Create a copy if needed.
-
-            Aggregated residual sensitivities are not implemented yet.
         """
         if problem_parameters is None:
             # use default parameters, i.e., nominal values for all parameters
@@ -649,8 +683,7 @@ class PetabSimulator:
             rdatas=rdatas,
             sllh=self._aggregate_sllh(rdatas),
             s2llh=self._aggregate_s2llh(rdatas, use_fim=True),
-            # TODO: implement residual sensitivity aggregation
-            sres=None,
+            sres=self._aggregate_sres(rdatas),
         )
 
     def _aggregate_sllh(
@@ -661,9 +694,16 @@ class PetabSimulator:
         :param rdatas:
             The ReturnData objects to aggregate the sensitivities from.
         :return:
-            The aggregated sensitivities (parameter ID -> sensitivity value).
+            The aggregated sensitivities (parameter ID -> sensitivity value),
+            or ``None`` if the likelihood sensitivities were not computed.
         """
-        if self._solver.get_sensitivity_order() < SensitivityOrder.first:
+        if (
+            self._solver.get_sensitivity_order() < SensitivityOrder.first
+            # the log-likelihood and its sensitivities are not computed in
+            #  residual-only reporting mode
+            or self._solver.get_return_data_reporting_mode()
+            == RDataReporting.residuals
+        ):
             return None
 
         sllh_total: dict[str, float] = {}
@@ -701,6 +741,69 @@ class PetabSimulator:
                     sllh_total.get(problem_par_id, 0.0) + sllh
                 )
         return sllh_total
+
+    def _get_plist_to_problem_par_ix(
+        self, rdata: amici.sim.sundials.ReturnDataView
+    ) -> dict[int, int]:
+        """Map sensitivity indices of an experiment to problem parameters.
+
+        Create the mapping from indices into the parameter list of the given
+        simulation result (i.e., indices into the parameter dimension of
+        ``rdata.sllh``, ``rdata.sres``, ``rdata.FIM``, ...) to the indices of
+        the estimated PEtab problem parameters
+        (i.e., indices into ``Problem.x_free_ids``).
+
+        Model parameters that do not correspond to any estimated problem
+        parameter are omitted. Note that the mapping is not necessarily
+        injective: several model parameters (output parameter placeholders)
+        may map to the same problem parameter.
+
+        The result is cached, as it is the same for every simulation of a
+        given experiment, and must not be modified by the caller.
+
+        :param rdata: The simulation result to create the mapping for.
+        :return: The mapping from ``rdata.plist`` indices to
+            ``Problem.x_free_ids`` indices.
+        """
+        plist = tuple(rdata.plist)
+        cache_key = (rdata.id, plist)
+        if (
+            cached := self._plist_to_problem_par_ix.get(cache_key)
+        ) is not None:
+            return cached
+
+        model_par_ids = self._model.get_free_parameter_ids()
+        # problem parameter ID to index of the estimated problem parameters
+        x_free_ix = {
+            pid: ix for ix, pid in enumerate(self._petab_problem.x_free_ids)
+        }
+
+        # Model parameter index to problem parameter index map for estimated
+        #  parameters except placeholders.
+        #  This is the same for all experiments.
+        ix_map: dict[int, int] = {
+            model_ix: x_free_ix[model_pid]
+            for model_ix, model_pid in enumerate(model_par_ids)
+            if model_pid in x_free_ix
+        }
+
+        # still needs experiment-specific parameter mapping for placeholders
+        experiment = self._petab_problem[rdata.id]
+        placeholder_mappings = self._exp_man._get_placeholder_mapping(
+            experiment
+        )
+        for model_pid, problem_pid in placeholder_mappings.items():
+            if (problem_par_ix := x_free_ix.get(problem_pid)) is not None:
+                ix_map[model_par_ids.index(model_pid)] = problem_par_ix
+            # else: mapped-to parameter is not estimated
+
+        # translate model parameter index to plist index
+        ix_map = {
+            plist.index(model_par_ix): problem_par_ix
+            for model_par_ix, problem_par_ix in ix_map.items()
+        }
+        self._plist_to_problem_par_ix[cache_key] = ix_map
+        return ix_map
 
     def _aggregate_s2llh(
         self,
@@ -744,22 +847,11 @@ class PetabSimulator:
             # Condition failed during simulation.
             if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
                 return None
-            # Condition simulation result does not provide FIM.
+            # Condition simulation result does not provide the FIM, e.g.,
+            #  because of a non-Gaussian noise model.
             if rdata.FIM is None:
-                raise ValueError(
-                    f"The FIM was not computed for experiment {rdata.id!r}."
-                )
+                return None
 
-        # Model parameter index to problem parameter index map for estimated
-        #  parameters except placeholders.
-        #  This is the same for all experiments.
-        global_ix_map: dict[int, int] = {
-            model_ix: self._petab_problem.x_free_ids.index(model_pid)
-            for model_ix, model_pid in enumerate(
-                self._model.get_free_parameter_ids()
-            )
-            if model_pid in self._petab_problem.x_free_ids
-        }
         s2llh_total = np.zeros(
             shape=(
                 self._petab_problem.n_estimated,
@@ -769,27 +861,7 @@ class PetabSimulator:
         )
 
         for rdata in rdatas:
-            ix_map = global_ix_map.copy()
-            # still needs experiment-specific parameter mapping for
-            # placeholders
-            experiment = self._petab_problem[rdata.id]
-            placeholder_mappings = self._exp_man._get_placeholder_mapping(
-                experiment
-            )
-            for model_pid, problem_pid in placeholder_mappings.items():
-                try:
-                    ix_map[
-                        self.model.get_free_parameter_ids().index(model_pid)
-                    ] = self._petab_problem.x_free_ids.index(problem_pid)
-                except ValueError:
-                    # mapped-to parameter is not estimated
-                    pass
-
-            # translate model parameter index to plist index
-            ix_map: dict[int, int] = {
-                tuple(rdata.plist).index(model_par_ix): problem_par_ix
-                for model_par_ix, problem_par_ix in ix_map.items()
-            }
+            ix_map = self._get_plist_to_problem_par_ix(rdata)
             if use_fim:
                 model_s2llh = rdata.FIM
             else:
@@ -840,3 +912,77 @@ class PetabSimulator:
                         ]
 
         return s2llh_total
+
+    def _aggregate_sres(
+        self, rdatas: Sequence[amici.sim.sundials.ReturnDataView]
+    ) -> np.ndarray | None:
+        """Aggregate the residual sensitivities from individual experiments.
+
+        Compute the sensitivities of the residuals of all experiments
+        w.r.t. the estimated PEtab problem parameters.
+
+        The residuals of the individual experiments are concatenated in the
+        order of ``rdatas``, matching
+        :attr:`PetabSimulationResult.res`. Sensitivities w.r.t. model
+        parameters that map to the same problem parameter (i.e., output
+        parameter placeholders) are summed up.
+
+        :param rdatas:
+            The ReturnData objects to aggregate the sensitivities from.
+        :return:
+            The aggregated residual sensitivities as a 2D numpy array of
+            shape ``(n_residuals, n_estimated)``, where the columns are in
+            the order of the estimated PEtab problem parameters
+            (``Problem.x_free_ids``), or ``None`` if residual sensitivities
+            were not computed.
+        """
+        if (
+            self._solver.get_sensitivity_order() < SensitivityOrder.first
+            or self._solver.get_sensitivity_method()
+            != SensitivityMethod.forward
+        ):
+            return None
+
+        # Check for issues in all experiment simulation results.
+        rdatas_with_res = []
+        for rdata in rdatas:
+            # Experiment failed during simulation.
+            if rdata.status != amici.sim.sundials.AMICI_SUCCESS:
+                return None
+            if not _has_timepoints(rdata):
+                # experiment without measurements -- no residuals
+                continue
+            # Residual sensitivities are unavailable, e.g., because of the
+            #  current ReturnData reporting mode or because the problem
+            #  contains non-Gaussian noise models.
+            if rdata.sres is None:
+                return None
+            rdatas_with_res.append(rdata)
+        rdatas = rdatas_with_res
+
+        sres_total = np.zeros(
+            shape=(
+                sum(rdata.sres.shape[0] for rdata in rdatas),
+                self._petab_problem.n_estimated,
+            ),
+            dtype=float,
+        )
+
+        cur_row = 0
+        for rdata in rdatas:
+            ix_map = self._get_plist_to_problem_par_ix(rdata)
+            plist_slice = np.fromiter(ix_map.keys(), dtype=int)
+            problem_par_slice = np.fromiter(ix_map.values(), dtype=int)
+
+            # view on the rows belonging to the current experiment
+            cur_sres = sres_total[cur_row : cur_row + rdata.sres.shape[0], :]
+            # `np.add.at` to correctly handle non-unique indices in
+            #  `problem_par_slice` (i.e. multiple model parameters mapping to
+            #  the same problem parameter); indexing the transposed arrays,
+            #  since `np.add.at` indexes the first dimension
+            np.add.at(
+                cur_sres.T, problem_par_slice, rdata.sres[:, plist_slice].T
+            )
+            cur_row += rdata.sres.shape[0]
+
+        return sres_total

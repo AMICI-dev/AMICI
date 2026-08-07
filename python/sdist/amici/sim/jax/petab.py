@@ -1496,6 +1496,7 @@ class JAXProblem(eqx.Module):
     @eqx.filter_vmap(
         in_axes={
             "max_steps": None,
+            "checkpoints": None,
             "self": None,
         },  # only list arguments here where eqx.is_array(0) is not the right thing
     )
@@ -1527,6 +1528,7 @@ class JAXProblem(eqx.Module):
         t_zeros: jnp.float_ = 0.0,
         experiment_index: jnp.int32 = jnp.int32(0),
         ret: ReturnValue = ReturnValue.llh,
+        checkpoints: int | None = None,
     ) -> tuple[jnp.float_, dict]:
         """
         Run a simulation for a given simulation experiment.
@@ -1573,6 +1575,15 @@ class JAXProblem(eqx.Module):
             simulation start time for the current experiment.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
+        :param checkpoints:
+            number of checkpoints for the reverse-mode adjoint
+            (:class:`diffrax.RecursiveCheckpointAdjoint`, used when ``ret`` is
+            ``llh`` or ``chi2``). ``None`` (default) lets diffrax/equinox choose
+            ``~sqrt(2 * max_steps)`` checkpoints. Larger values reduce
+            backward-pass recomputation at the cost of memory and compile time;
+            this only helps when the number of solver steps actually taken
+            exceeds the default. Ignored for other return values, which use
+            :class:`diffrax.DirectAdjoint`.
         :return:
             Tuple of output value and simulation statistics
         """
@@ -1602,7 +1613,7 @@ class JAXProblem(eqx.Module):
             root_finder=root_finder,
             max_steps=max_steps,
             steady_state_event=steady_state_event,
-            adjoint=diffrax.RecursiveCheckpointAdjoint()
+            adjoint=diffrax.RecursiveCheckpointAdjoint(checkpoints=checkpoints)
             if ret in (ReturnValue.llh, ReturnValue.chi2)
             else diffrax.DirectAdjoint(),
             ret=ret,
@@ -1621,6 +1632,7 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
         ret: ReturnValue = ReturnValue.llh,
+        checkpoints: int | None = None,
     ):
         """
         Run simulations for a list of simulation experiments.
@@ -1644,6 +1656,10 @@ class JAXProblem(eqx.Module):
             Maximum number of steps to take during simulation.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
+        :param checkpoints:
+            number of checkpoints for the reverse-mode adjoint. See
+            :meth:`run_simulation` for details. ``None`` (default) preserves the
+            previous behaviour (diffrax picks ``~sqrt(2 * max_steps)``).
         :return:
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
@@ -1735,6 +1751,7 @@ class JAXProblem(eqx.Module):
             t_zeros,
             jnp.arange(len(experiments)),
             ret,
+            checkpoints,
         )
 
     @eqx.filter_vmap(
@@ -1844,6 +1861,7 @@ def run_simulations(
     ] = SteadyStateEvent(),
     max_steps: int = 2**13,
     ret: ReturnValue | str = ReturnValue.llh,
+    checkpoints: int | None = None,
 ):
     """
     Run simulations for a problem.
@@ -1866,6 +1884,14 @@ def run_simulations(
         Maximum number of steps to take during simulation.
     :param ret:
         which output to return. See :class:`ReturnValue` for available options.
+    :param checkpoints:
+        Number of checkpoints for the reverse-mode adjoint used when computing
+        gradients of ``llh``/``chi2`` (see :meth:`JAXProblem.run_simulation`).
+        ``None`` (default) keeps the previous behaviour, where diffrax picks
+        ``~sqrt(2 * max_steps)`` checkpoints. Increasing it reduces backward-pass
+        recomputation for models whose trajectories take many solver steps
+        (e.g. long/stiff dynamics where the step count greatly exceeds the
+        default), at the cost of higher memory use and compilation time.
     :return:
         Overall output value and condition specific results and statistics.
     """
@@ -1930,6 +1956,7 @@ def run_simulations(
         steady_state_event,
         max_steps,
         ret,
+        checkpoints=checkpoints,
     )
 
     if ret in (ReturnValue.llh, ReturnValue.chi2):

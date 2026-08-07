@@ -19,8 +19,9 @@ void sx0_fixedParameters_model_neuron_py(realtype *sx0_fixedParameters, const re
     }
     switch(ip) {
         case 1:
-            if(std::find(reinitialization_state_idxs.cbegin(), reinitialization_state_idxs.cend(), 1) != reinitialization_state_idxs.cend())
+            if(std::find(reinitialization_state_idxs.cbegin(), reinitialization_state_idxs.cend(), 1) != reinitialization_state_idxs.cend()) {
                 sx0_fixedParameters[1] = v0;
+            }
             break;
     }
 }
