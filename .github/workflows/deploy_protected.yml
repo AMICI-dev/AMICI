@@ -16,6 +16,8 @@ jobs:
     outputs:
       secrets-defined: ${{ steps.secret-check.outputs.defined }}
     steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
       - name: Check for Secret availability
         id: secret-check
         shell: bash
@@ -37,6 +39,8 @@ jobs:
         python-version: ["3.12"]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:
