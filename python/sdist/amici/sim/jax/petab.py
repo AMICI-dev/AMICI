@@ -1483,26 +1483,32 @@ class JAXProblem(eqx.Module):
 
         # placeholder values from sundials code may be needed here
         if op_numeric is not None and op_numeric.size:
-            op_array = jnp.where(
-                op_mask,
-                jax.vmap(
-                    jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
-                )(op_indices),
-                op_numeric,
-            )
+            if unscaled_parameters.size:
+                op_array = jnp.where(
+                    op_mask,
+                    jax.vmap(
+                        jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
+                    )(op_indices),
+                    op_numeric,
+                )
+            else:
+                op_array = op_numeric
         else:
             op_array = jnp.zeros(
                 (len(experiments), self._ts_masks.shape[1], 0)
             )
 
         if np_numeric is not None and np_numeric.size:
-            np_array = jnp.where(
-                np_mask,
-                jax.vmap(
-                    jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
-                )(np_indices),
-                np_numeric,
-            )
+            if unscaled_parameters.size:
+                np_array = jnp.where(
+                    np_mask,
+                    jax.vmap(
+                        jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
+                    )(np_indices),
+                    np_numeric,
+                )
+            else:
+                np_array = np_numeric
         else:
             np_array = jnp.zeros(
                 (len(experiments), self._ts_masks.shape[1], 0)

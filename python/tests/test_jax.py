@@ -471,6 +471,66 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
 
 
 @skip_on_valgrind
+def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
+    """
+    Regression test: ``_prepare_experiments`` must preserve the shape of numeric override
+    arrays when the problem has no estimated scalar parameters.
+    """
+    import petab.v1 as petab
+    from amici.sim.jax.petab import _get_period_condition_ids
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # no estimated parameters -> ``JAXProblem.parameters`` is empty
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    # numeric noise-parameter overrides -> ``_np_numeric`` is non-empty while
+    # ``_np_mask`` is all-False (nothing to look up in the parameter vector)
+    problem.add_observable("obs_b", "B", noise_formula="noiseParameter1_obs_b")
+    problem.add_condition("c0", k1=0.8)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3, noise_parameters=[0.5])
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4, noise_parameters=[0.7])
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    assert jax_problem.parameters.size == 0
+    assert jax_problem._np_numeric.size
+
+    experiments = jax_problem._petab_problem.experiments
+    conditions = [
+        _get_period_condition_ids(exp, is_preequilibration=False)
+        for exp in experiments
+    ]
+    ei = jax_problem._experiment_indices(experiments)
+    np_numeric = jax_problem._np_numeric[ei]
+
+    (*_, np_array, _, _) = jax_problem._prepare_experiments(
+        experiments,
+        conditions,
+        False,
+        jax_problem._op_numeric[ei],
+        jax_problem._op_mask[ei],
+        jax_problem._op_indices[ei],
+        np_numeric,
+        jax_problem._np_mask[ei],
+        jax_problem._np_indices[ei],
+    )
+
+    assert np_array.shape == np_numeric.shape
+    assert_allclose(np.asarray(np_array), np.asarray(np_numeric))
+
+
+@skip_on_valgrind
 def test_petab_simulate_ragged_experiments(tmp_path):
     """``petab_simulate`` must handle experiments with different numbers of
     measurement timepoints.
