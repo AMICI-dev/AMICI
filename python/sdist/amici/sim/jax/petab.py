@@ -1019,10 +1019,27 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
-    def _resolve_original_condition_id(self, condition_id: str) -> str:
-        """Map a converted condition ID back to its original unconverted ID."""
-        if self._unconverted_problem is None:
-            return condition_id
+    def _find_original_period(
+        self, condition_ids: tuple[str, ...]
+    ) -> (
+        tuple[
+            petabv2.Experiment,
+            petabv2.ExperimentPeriod,
+            petabv2.ExperimentPeriod,
+        ]
+        | None
+    ):
+        """Locate the unconverted period the given converted condition ids belong to
+        using the stored _unconverted_problem.
+
+        :return:
+            ``(converted experiment, original period, converted period)``, or
+            ``None`` if the problem was not converted, or if no corresponding
+            original period was found.
+        """
+        if self._unconverted_problem is None or not condition_ids:
+            return None
+        wanted = set(condition_ids)
         for orig_exp, conv_exp in zip(
             self._unconverted_problem.experiments,
             self._petab_problem.experiments,
@@ -1031,11 +1048,90 @@ class JAXProblem(eqx.Module):
                 orig_exp.sorted_periods, conv_exp.sorted_periods
             ):
                 if (
-                    condition_id in conv_period.condition_ids
+                    wanted.issubset(conv_period.condition_ids)
                     and orig_period.condition_ids
                 ):
-                    return orig_period.condition_ids[0]
-        return condition_id
+                    return conv_exp, orig_period, conv_period
+        return None
+
+    def _resolve_original_condition_ids(
+        self, condition_ids: tuple[str, ...]
+    ) -> tuple[str, ...]:
+        """Map converted condition IDs back to their original unconverted IDs.
+
+        Returns ``condition_ids`` unchanged if no original period was found.
+        """
+        match = self._find_original_period(condition_ids)
+        if match is None:
+            return tuple(condition_ids)
+        _, orig_period, _ = match
+        return tuple(orig_period.condition_ids)
+
+    def _resolve_original_condition_id(self, condition_id: str) -> str:
+        """Map a converted condition ID back to its original unconverted ID.
+
+        See :meth:`_resolve_original_condition_ids`; a single id may not
+        identify a period unambiguously, and where the matched period
+        references several simultaneously-active conditions, only the first one
+        is returned.
+        """
+        return self._resolve_original_condition_ids((condition_id,))[0]
+
+    @staticmethod
+    def _period_starts_at_t0(
+        conv_exp: petabv2.Experiment,
+        orig_period: petabv2.ExperimentPeriod,
+        conv_period: petabv2.ExperimentPeriod,
+    ) -> bool:
+        """Whether reinitialising at the phase's ``t0`` implements a period."""
+        if conv_period.is_preequilibration:
+            return True
+        first_period = conv_exp.sorted_periods[0]
+        t_zero = 0.0 if first_period.is_preequilibration else first_period.time
+        return orig_period.time == t_zero
+
+    def _conditions_defining_changes(
+        self, condition_ids: tuple[str, ...]
+    ) -> list[tuple[petabv2.Condition, bool]]:
+        """The condition-table entries holding the changes of ``condition_ids``.
+
+        For a converted SBML problem (see :meth:`_find_original_period`), condition
+        changes are implemented as model events and removed from the conditions table,
+        so the entries of the *unconverted* problem are considered as well for
+        reinitialization.
+
+        :return:
+            One ``(condition, is_original)`` tuple per matching entry, in
+            lookup order, where ``is_original`` flags entries taken from the
+            unconverted problem (whose changes are already encoded in the
+            model).
+        """
+        conditions = [
+            (c, False)
+            for condition_id in condition_ids
+            for c in self._petab_problem.conditions
+            if c.id == condition_id
+        ]
+        match = self._find_original_period(condition_ids)
+        if match is not None and self._period_starts_at_t0(*match):
+            _, orig_period, _ = match
+            conditions += [
+                (c, True)
+                for c in self._unconverted_problem.conditions
+                if c.id in orig_period.condition_ids
+            ]
+        return conditions
+
+    def _can_resolve_condition_target_value(self, target_value) -> bool:
+        """Whether :meth:`_resolve_condition_target_value` can evaluate this
+        condition-table target value.
+        """
+        if target_value.is_number:
+            return True
+        pname = str(target_value)
+        return pname in self.parameter_ids or pname in {
+            param.id for param in self._petab_problem.parameters
+        }
 
     def _eval_nn(self, output_par: str, condition_id: str):
         entity_id = self._petab_problem.mapping_df.loc[
@@ -1286,21 +1382,27 @@ class JAXProblem(eqx.Module):
         ``targets_map`` value cached at construction time, so that gradients
         w.r.t. parameters used as initial values are not silently dropped.
         """
-        for condition in simulation_conditions:
-            for c in self._petab_problem.conditions:
-                if c.id != condition:
+        for c, is_original in self._conditions_defining_changes(
+            simulation_conditions
+        ):
+            for change in c.changes:
+                if change.target_id != state_id:
                     continue
-                for change in c.changes:
-                    if change.target_id != state_id:
-                        continue
-                    # NaN targets (e.g. "use the preequilibration/SBML value")
-                    # are dropped during v1->v2 conversion, but guard anyway
-                    if (
-                        change.target_value.is_number
-                        and change.target_value.is_finite is False
-                    ):
-                        return None
-                    return change.target_value
+                # NaN targets (e.g. "use the preequilibration/SBML value")
+                # are dropped during v1->v2 conversion, but guard anyway
+                if (
+                    change.target_value.is_number
+                    and change.target_value.is_finite is False
+                ):
+                    return None
+                if (
+                    is_original
+                    and not self._can_resolve_condition_target_value(
+                        change.target_value
+                    )
+                ):
+                    return None
+                return change.target_value
         return None
 
     def _state_reinitialisation_value(

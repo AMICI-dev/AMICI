@@ -15,10 +15,10 @@ import pytest
 from amici.exporters.jax import generate_equinox
 from amici.importers.petab import *
 from amici.sim.jax import petab_simulate, run_simulations
-from petab import v2
 from petab_sciml import NNModelStandard
-from sciml_helpers import _v2_sciml_problem_helper
 from yaml import safe_load
+
+from petab import v2
 
 
 @contextmanager
