@@ -17,6 +17,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
       - name: apt
         run: |
           if [[ ${{ matrix.os }} == ubuntu* ]] ; then \
