@@ -14,17 +14,17 @@ void w_model_calvetti_py(realtype *w, const realtype t, const realtype *x, const
     // static expressions
     if (include_static) {
         C1ss = V1ss/(1.0 - 0.5*R1ss);  // w[0]
-        C2ss = V2ss/(-R1ss - 0.5*R2ss + 1.0);  // w[1]
-        C3ss = V3ss/(-R1ss - R2ss - 0.5*R3ss + 1.0);  // w[2]
-        L1 = std::pow(R1ss, 0.33333333333333331)*std::pow(std::fabs(V1ss), 0.66666666666666663);  // w[3]
-        L2 = std::pow(R2ss, 0.33333333333333331)*std::pow(std::fabs(V2ss), 0.66666666666666663);  // w[4]
-        L3 = std::pow(R3ss, 0.33333333333333331)*std::pow(std::fabs(V3ss), 0.66666666666666663);  // w[5]
-        p2 = 1.0 - R1ss;  // w[6]
-        p3 = -R1ss - R2ss + 1.0;  // w[7]
+        L1 = std::pow(R1ss, 0.33333333333333331)*std::pow(std::fabs(V1ss), 0.66666666666666663);  // w[1]
+        L2 = std::pow(R2ss, 0.33333333333333331)*std::pow(std::fabs(V2ss), 0.66666666666666663);  // w[2]
+        L3 = std::pow(R3ss, 0.33333333333333331)*std::pow(std::fabs(V3ss), 0.66666666666666663);  // w[3]
+        p2 = 1.0 - R1ss;  // w[4]
+        p3 = -R1ss - R2ss + 1.0;  // w[5]
+        C2ss = V2ss/(-0.5*R2ss + p2);  // w[7]
+        C3ss = V3ss/(-0.5*R3ss + p3);  // w[8]
     }
 
     // dynamic expressions
-    s = Heaviside_0*Heaviside_2;  // w[8]
+    s = Heaviside_0*Heaviside_2;  // w[6]
     R1 = std::pow(L1, 3)/std::pow(V1, 2);  // w[9]
     R2 = std::pow(L2, 3)/std::pow(V2, 2);  // w[10]
     R3 = std::pow(L3, 3)/std::pow(V3, 2);  // w[11]

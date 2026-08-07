@@ -94,6 +94,7 @@ sigmay.cpp
 sigmay.h 
 spl.h 
 sspl.h 
+sx0.cpp 
 w.cpp 
 w.h 
 wrapfunctions.cpp 

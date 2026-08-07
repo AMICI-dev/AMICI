@@ -701,6 +701,37 @@ void ReturnData::invalidate(int const it_start) {
         );
     if (!sy.empty())
         std::fill(sy.begin() + ny * nplist * it_start, sy.end(), get_nan());
+
+    // Residuals of the remaining timepoints would stay at their initial
+    // value of 0.0, i.e., they would look like a perfect fit.
+    // Note that `res` and `sres` may contain a second block of
+    // (sensitivities of) error residuals (see `sigma_res`).
+    if (!res.empty()) {
+        std::fill(
+            res.begin() + nytrue * it_start, res.begin() + nytrue * nt,
+            get_nan()
+        );
+        if (sigma_res)
+            std::fill(
+                res.begin() + nytrue * (nt + it_start), res.end(), get_nan()
+            );
+    }
+    if (!sres.empty()) {
+        std::fill(
+            sres.begin() + nytrue * nplist * it_start,
+            sres.begin() + nytrue * nplist * nt, get_nan()
+        );
+        if (sigma_res)
+            std::fill(
+                sres.begin() + nytrue * nplist * (nt + it_start), sres.end(),
+                get_nan()
+            );
+    }
+    // The FIM is accumulated over all timepoints, so -- as for the
+    // (sensitivities of the) log-likelihood -- there is no valid partial
+    // result to keep.
+    if (!FIM.empty())
+        std::ranges::fill(FIM, get_nan());
 }
 
 void ReturnData::invalidate_llh() {
