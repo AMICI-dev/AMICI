@@ -54,7 +54,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@main
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@fix/consistency-step-size-outlier-rejection # TODO revert once ICB-DCM/fiddy#77 is merged (fixes #3078)
 
     - name: Download benchmark collection
       run: |
