@@ -20,6 +20,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
   covers the transitive case, where such a parameter is reached through a chain
   of parameter initial assignments (#3214).
+* Fixed the JAX model exporter writing floating-point numbers with only 15
+  significant digits, which is not enough to round-trip a double. Values were
+  silently perturbed in the last bits, which mattered wherever a model compares
+  values exactly (e.g. a parameter with value `pi` no longer tested equal to
+  `pi`).
 
 ### v1.0.1 (2026-03-13)
 
