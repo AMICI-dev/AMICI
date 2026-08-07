@@ -173,6 +173,15 @@ class GradientCheckSettings:
             1e-5,
         ]
     )
+    # Finite difference schemes to use. All of them have to agree within
+    # (atol|rtol)_consistency for a step size to be considered.
+    method_ids: list[MethodId] = field(
+        default_factory=lambda: [
+            MethodId.CENTRAL,
+            MethodId.FORWARD,
+            MethodId.BACKWARD,
+        ]
+    )
     rng_seed: int = 0
     ss_computation_mode: SteadyStateComputationMode = (
         SteadyStateComputationMode.integrationOnly
@@ -237,6 +246,18 @@ settings["Weber_BMC2015"] = GradientCheckSettings(
     atol_check=1e-6,
     rtol_check=1e-2,
     rng_seed=2,
+    # No single step size works for all directions with the default
+    # forward/backward/central agreement requirement: the noise parameters
+    # (e.g. std_yPKDpN25) are so strongly curved that forward and backward
+    # differences only agree with the central one for steps <= 5e-5, while at
+    # those steps the finite differences of parameters with a small nominal
+    # value (e.g. a32 ~ 1e-4) are dominated by integrator noise. Since
+    # `Consistency` averages over all step sizes it accepts, the noisy small
+    # steps then bias the result by ~1%, right at `rtol_check` -- which is what
+    # made this test flip-flop between runs. Use central differences only, over
+    # the step size window in which every direction is converged.
+    method_ids=[MethodId.CENTRAL],
+    step_sizes=[5e-3, 2e-3, 1e-3, 5e-4],
 )
 settings["Zheng_PNAS2012"] = GradientCheckSettings(
     rng_seed=1,
@@ -484,7 +505,7 @@ def test_benchmark_gradient(
         point=point,
         sizes=cur_settings.step_sizes,
         direction_ids=parameter_ids,
-        method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
+        method_ids=cur_settings.method_ids,
         success_checker=Consistency(
             rtol=cur_settings.rtol_consistency,
             atol=cur_settings.atol_consistency,
@@ -810,7 +831,7 @@ def test_nominal_parameters_llh_v2(problem_id):
         point=point,
         sizes=cur_settings.step_sizes,
         direction_ids=parameter_ids,
-        method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
+        method_ids=cur_settings.method_ids,
         success_checker=Consistency(
             rtol=cur_settings.rtol_consistency,
             atol=cur_settings.atol_consistency,
