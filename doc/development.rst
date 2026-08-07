@@ -30,10 +30,12 @@ process described below:
 
 -  Implement your changes
 
--  Update ``CHANGELOG.md`` with a short description of your changes.
-   This can be omitted for small changes that do not affect the
-   functionality of AMICI, e.g. fixing typos or formatting issues,
-   private refactoring, ...
+-  Update ``CHANGELOG.md`` with a short, user-facing description of your
+   changes — this includes new features, bug fixes, breaking changes, and
+   performance or build-system changes that affect model import or build
+   times. It should be omitted if the change has no user-visible effect,
+   e.g. fixing typos or formatting issues, CI-only changes, or private
+   refactoring.
 
 -  Submit a pull request to the ``main`` branch
 

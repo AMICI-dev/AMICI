@@ -1,5 +1,6 @@
 import copy
 
+import pytest
 from amici.importers.petab import (
     PetabImporter,
     flatten_timepoint_specific_output_overrides,
@@ -7,6 +8,7 @@ from amici.importers.petab import (
     unflatten_simulation_df,
 )
 from amici.sim.sundials import SensitivityOrder
+from amici.testing import TemporaryDirectoryWinSafe
 from petab.v2 import C, Problem
 from petab.v2.models.sbml_model import SbmlModel
 
@@ -324,6 +326,245 @@ def test_petab_simulator_deepcopy_and_pickle():
 
     ps_pickle = pickle.loads(pickle.dumps(ps))
     assert ps.simulate({"kk": 2}).llh == ps_pickle.simulate({"kk": 2}).llh
+
+
+def _residual_test_problem() -> Problem:
+    """A small two-experiment problem for residual (sensitivity) tests.
+
+    All three observable placeholders are mapped to the same estimated
+    parameter (``scale``), so that several model parameters map to a single
+    problem parameter -- for ``obs_a`` even within a single residual. The
+    noise formulas are parameter-independent, such that the least-squares
+    identities ``FIM == sres.T @ sres`` and ``sllh == -res @ sres`` hold.
+    """
+    problem = Problem()
+    problem.model = SbmlModel.from_antimony(
+        "xa = 1; xb = 2; xa' = -k_decay * xa; xb' = -0.3 * xb; k_decay = 0.5;"
+    )
+    problem.add_parameter(
+        "k_decay", nominal_value=0.5, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_parameter(
+        "scale", nominal_value=2.0, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_observable(
+        "obs_a",
+        formula=(
+            "observableParameter1_obs_a * xa + observableParameter2_obs_a"
+        ),
+        noise_formula="0.5",
+        observable_placeholders=[
+            "observableParameter1_obs_a",
+            "observableParameter2_obs_a",
+        ],
+    )
+    problem.add_observable(
+        "obs_b",
+        formula="observableParameter1_obs_b * xb",
+        noise_formula="0.7",
+        observable_placeholders=["observableParameter1_obs_b"],
+    )
+    # two experiments with different initial conditions, plus one experiment
+    #  without any measurements, which must not contribute any residuals
+    problem.add_condition("cond_lo", xa=1.0)
+    problem.add_condition("cond_hi", xa=4.0)
+    problem.add_experiment("exp_lo", 0, "cond_lo")
+    problem.add_experiment("exp_hi", 0, "cond_hi")
+    problem.add_experiment("exp_no_measurements", 0, "cond_lo")
+
+    for experiment_id in ("exp_lo", "exp_hi"):
+        for t in (0.0, 1.0, 2.0):
+            problem.add_measurement(
+                "obs_a",
+                experiment_id=experiment_id,
+                time=t,
+                measurement=1.9 - 0.1 * t,
+                observable_parameters=["scale", "scale"],
+            )
+            problem.add_measurement(
+                "obs_b",
+                experiment_id=experiment_id,
+                time=t,
+                measurement=3.8 - 0.2 * t,
+                observable_parameters="scale",
+            )
+    problem.assert_valid()
+    return problem
+
+
+@pytest.fixture(scope="module")
+def residual_test_importer() -> PetabImporter:
+    """Importer for the model of :func:`_residual_test_problem`.
+
+    The model is generated once for all tests using this fixture, into a
+    temporary directory of its own -- so the tests neither depend on nor
+    interfere with any other model module, also when run concurrently or
+    distributed across processes. Each test creates its own simulator (and
+    thus its own model and solver instance) from the importer.
+    """
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_residuals_") as output_dir:
+        pi = PetabImporter(
+            _residual_test_problem(),
+            module_name="test_petab_v2_residuals",
+            output_dir=output_dir,
+            verbose=False,
+        )
+        pi.import_module(force_import=True)
+        yield pi
+
+
+def test_aggregated_residual_sensitivities(residual_test_importer):
+    """Aggregated residual sensitivities are consistent with the aggregated
+    log-likelihood sensitivities, the FIM, and finite differences."""
+    import numpy as np
+    from amici.sim.sundials import SensitivityMethod
+
+    problem = _residual_test_problem()
+    ps = residual_test_importer.create_simulator()
+    ps.solver.set_absolute_tolerance(1e-14)
+    ps.solver.set_relative_tolerance(1e-12)
+
+    x_ids = problem.x_free_ids
+    x = {"k_decay": 0.4, "scale": 1.5}
+
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    result = ps.simulate(x)
+
+    res = result.res
+    sres = result.sres
+    # 2 experiments (the third one has no measurements)
+    #  x 3 timepoints x 2 observables
+    assert len(result.rdatas) == 3
+    assert res.shape == (12,)
+    assert sres.shape == (12, problem.n_estimated)
+
+    # least-squares identities (valid for parameter-independent sigmas)
+    np.testing.assert_allclose(
+        result.s2llh, sres.T @ sres, rtol=1e-5, atol=1e-8
+    )
+    np.testing.assert_allclose(
+        [result.sllh[par_id] for par_id in x_ids],
+        -res @ sres,
+        rtol=1e-5,
+        atol=1e-8,
+    )
+
+    # compare to finite differences
+    ps.solver.set_sensitivity_order(SensitivityOrder.none)
+    sres_fd = np.zeros_like(sres)
+    for i, par_id in enumerate(x_ids):
+        eps = 1e-5 * x[par_id]
+        sres_fd[:, i] = (
+            ps.simulate(x | {par_id: x[par_id] + eps}).res
+            - ps.simulate(x | {par_id: x[par_id] - eps}).res
+        ) / (2 * eps)
+    np.testing.assert_allclose(sres, sres_fd, rtol=1e-4, atol=1e-6)
+
+    # without sensitivities, no residual sensitivities are computed
+    assert ps.simulate(x).sres is None
+
+
+def test_aggregated_residual_sensitivities_reporting_modes(
+    residual_test_importer,
+):
+    """Aggregated residuals and their sensitivities are available in the
+    residual-only reporting mode, but not in the likelihood-only mode."""
+    import numpy as np
+    from amici.sim.sundials import (
+        RDataReporting,
+        SensitivityMethod,
+        SensitivityOrder,
+    )
+
+    ps = residual_test_importer.create_simulator()
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    x = {"k_decay": 0.4, "scale": 1.5}
+
+    expected = ps.simulate(x)
+
+    ps.solver.set_return_data_reporting_mode(RDataReporting.residuals)
+    result = ps.simulate(x)
+    np.testing.assert_allclose(result.res, expected.res)
+    np.testing.assert_allclose(result.sres, expected.sres)
+    # the log-likelihood is computed from the residuals in this mode, ...
+    np.testing.assert_allclose(result.llh, expected.llh)
+    # ... but its sensitivities are not
+    assert result.sllh is None
+    assert result.s2llh is None
+
+    ps.solver.set_return_data_reporting_mode(RDataReporting.likelihood)
+    result = ps.simulate(x)
+    assert result.res is None
+    assert result.sres is None
+    assert result.sllh is not None
+
+
+def test_aggregated_residuals_failed_simulation(residual_test_importer):
+    """No residuals are reported if any experiment failed to simulate.
+
+    AMICI does not invalidate the residuals of failed simulations, so the
+    residuals of the failed timepoints would look like a perfect fit.
+    """
+    import numpy as np
+    from amici.sim.sundials import AMICI_SUCCESS, SensitivityMethod
+
+    ps = residual_test_importer.create_simulator()
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    # provoke an integration failure
+    ps.solver.set_max_steps(1)
+
+    result = ps.simulate({"k_decay": 0.4, "scale": 1.5})
+    assert any(rdata.status != AMICI_SUCCESS for rdata in result.rdatas)
+    assert np.isnan(result.llh)
+    assert result.res is None
+    assert result.sres is None
+    assert result.sllh is None
+    assert result.s2llh is None
+
+
+def test_aggregated_residual_sensitivities_non_gaussian_noise():
+    """No residuals are computed for non-Gaussian noise models, but the
+    log-likelihood and its sensitivities are."""
+    import numpy as np
+    from amici.sim.sundials import SensitivityMethod
+
+    problem = Problem()
+    problem.model = SbmlModel.from_antimony("xa = 1; xa' = -k_decay * xa;")
+    problem.add_parameter(
+        "k_decay", nominal_value=0.5, estimate=True, lb=0.01, ub=10
+    )
+    problem.add_observable(
+        "obs_a",
+        formula="xa",
+        noise_formula="0.5",
+        noise_distribution="laplace",
+    )
+    for t in (0.0, 1.0, 2.0):
+        problem.add_measurement("obs_a", time=t, measurement=0.9 - 0.1 * t)
+    problem.assert_valid()
+
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_laplace_") as output_dir:
+        ps = PetabImporter(
+            problem,
+            module_name="test_petab_v2_residuals_laplace",
+            output_dir=output_dir,
+            verbose=False,
+        ).create_simulator(force_import=True)
+        ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+        ps.solver.set_sensitivity_order(SensitivityOrder.first)
+
+        result = ps.simulate({"k_decay": 0.4})
+
+    assert result.res is None
+    assert result.sres is None
+    # ... but the likelihood and its sensitivities are computed
+    assert np.isfinite(result.llh)
+    assert result.sllh.keys() == {"k_decay"}
+    # the FIM is not available for non-Gaussian noise models
+    assert result.s2llh is None
 
 
 def test_jax_matches_sundials_with_per_observable_noise_parameters():

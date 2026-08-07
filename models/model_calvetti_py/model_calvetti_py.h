@@ -130,7 +130,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
                   .nw = 16,
                   .ndwdx = 15,
                   .ndwdp = 0,
-                  .ndwdw = 16,
+                  .ndwdw = 18,
                   .ndxdotdw = 7,
                   .ndJydy = std::vector<int>{1, 1, 1, 1, 1, 1},
                   .ndxrdatadxsolver = 0,
@@ -541,7 +541,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "33affbfd8bca2bd5e82a10cc6b764a63e292cc6f";
+        return "f5c9b1ec05596c5e78e306e76f9992c031a25dee";
     }
 
     bool has_quadratic_llh() const override {
