@@ -1,6 +1,7 @@
 """Jax code generation"""
 
 import itertools
+import math
 import re
 from collections.abc import Iterable
 from logging import warning
@@ -11,14 +12,22 @@ from sympy.printing.numpy import NumPyPrinter
 from toposort import toposort
 
 
-def _jnp_array_str(array) -> str:
-    elems = ", ".join(str(s) for s in array)
-
-    return f"jnp.array([{elems}])"
-
-
 class AmiciJaxCodePrinter(NumPyPrinter):
     """JAX code printer"""
+
+    def _print_Float(self, expr: sp.Float) -> str:
+        # sympy's string printer emits 15 significant digits, which is not
+        # enough to round-trip a double. The lost bits change results wherever
+        # a value is compared exactly, e.g. a parameter with the value `pi`
+        # would no longer test equal to `pi` (SBML test suite case 00958).
+        # Emit the shortest representation that recovers the exact double
+        # instead (the SUNDIALS backend prints 17 digits for the same reason).
+        value = float(expr)
+        if not math.isfinite(value):
+            # outside the double range; `repr` would emit a bare `inf`, which
+            # is not a valid literal in the generated module
+            return super()._print_Float(expr)
+        return repr(value)
 
     def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         try:
@@ -88,13 +97,13 @@ class AmiciJaxCodePrinter(NumPyPrinter):
         """
         Print the max function, replacing it with jnp.max.
         """
-        return f"jnp.max({_jnp_array_str(expr.args)})"
+        return f"jnp.max({_jnp_array_str(expr.args, self)})"
 
     def _print_Min(self, expr: sp.Expr) -> str:
         """
         Print the min function, replacing it with jnp.min.
         """
-        return f"jnp.min({_jnp_array_str(expr.args)})"
+        return f"jnp.min({_jnp_array_str(expr.args, self)})"
 
     def _get_sym_lines(
         self,
@@ -157,3 +166,15 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             for group in toposort(dependencies)
             for sym in sorted(group, key=str)
         ]
+
+
+def _jnp_array_str(
+    array, code_printer: AmiciJaxCodePrinter | None = None
+) -> str:
+    printer = code_printer or AmiciJaxCodePrinter()
+    elems = ", ".join(
+        printer.doprint(s) if isinstance(s, sp.Basic) else str(s)
+        for s in array
+    )
+
+    return f"jnp.array([{elems}])"
