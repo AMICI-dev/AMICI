@@ -2005,6 +2005,28 @@ class JAXProblem(eqx.Module):
         """
         return eqx.tree_at(lambda p: p.parameters, self, p)
 
+    def _experiment_indices(
+        self, experiments: list[petabv2.Experiment]
+    ) -> np.ndarray:
+        """Positions of ``experiments`` within the problem's experiments.
+
+        The measurement arrays (:attr:`_ts_dyn`, :attr:`_my`,
+        :attr:`_ts_masks`, ...) are built once for *all* of the problem's
+        experiments, while a simulation may be restricted to a subset (see
+        ``simulation_experiments``). Everything handed to the vmapped
+        :meth:`run_simulation` has to agree on that leading axis, so the
+        full-length arrays are indexed with this before being passed.
+        """
+        positions = {
+            exp.id: i
+            for i, exp in enumerate(self._petab_problem.experiments)
+        }
+        # an array rather than a list: these index jax arrays too, and jax
+        # rejects a plain sequence as a multidimensional index
+        return np.array(
+            [positions[exp.id] for exp in experiments], dtype=int
+        )
+
     def _prepare_experiments(
         self,
         experiments: list[petabv2.Experiment],
@@ -2135,17 +2157,17 @@ class JAXProblem(eqx.Module):
                 for exp in experiments
             ]
 
-        exp_ids = [exp.id for exp in experiments]
-        all_exp_ids = [exp.id for exp in self._petab_problem.experiments]
+        exp_indices = self._experiment_indices(experiments)
+        # `_ts_masks` spans all of the problem's experiments; restrict it to
+        # the ones actually being simulated so everything handed to the
+        # vmapped `run_simulation` agrees on the leading axis.
+        ts_masks_sel = np.asarray(self._ts_masks)[exp_indices]
 
-        h_mask = jnp.stack(
-            [
-                jnp.ones(self.model.n_events)
-                if (exp_id in exp_ids)
-                else jnp.zeros(self.model.n_events)
-                for exp_id in all_exp_ids
-            ]
-        )
+        # One row per *simulated* experiment. This used to be built over all
+        # of the problem's experiments, zeroing the rows of the ones left
+        # out -- which only lined up with the other vmapped arrays when no
+        # subset was requested.
+        h_mask = jnp.ones((len(experiments), self.model.n_events))
 
         if self.parameters.size:
             if isinstance(self._petab_problem, petabv2.Problem):
@@ -2181,24 +2203,30 @@ class JAXProblem(eqx.Module):
                 fn = jax.vmap(fn)
             return fn(indices)
 
+        # The override arrays, like the measurement arrays they are indexed
+        # alongside, span all of the problem's experiments; restrict them to
+        # the simulated ones (see `_experiment_indices`).
+        def _sel(arr):
+            return None if arr is None else arr[exp_indices]
+
         # placeholder values from sundials code may be needed here
         if op_numeric is not None and op_numeric.size:
             op_array = jnp.where(
-                op_mask,
-                gather_unscaled(op_indices),
-                op_numeric,
+                _sel(op_mask),
+                gather_unscaled(_sel(op_indices)),
+                _sel(op_numeric),
             )
         else:
-            op_array = jnp.zeros((*self._ts_masks.shape, 0))
+            op_array = jnp.zeros((*ts_masks_sel.shape, 0))
 
         if np_numeric is not None and np_numeric.size:
             np_array = jnp.where(
-                np_mask,
-                gather_unscaled(np_indices),
-                np_numeric,
+                _sel(np_mask),
+                gather_unscaled(_sel(np_indices)),
+                _sel(np_numeric),
             )
         else:
-            np_array = jnp.zeros((*self._ts_masks.shape, 0))
+            np_array = jnp.zeros((*ts_masks_sel.shape, 0))
 
         # Condition-table state changes: the model's own generated
         # `_x_reinit` computes the values at the period boundary, so only the
@@ -2286,12 +2314,14 @@ class JAXProblem(eqx.Module):
         # short experiment is not the problem-wide last period -- hence the
         # per-experiment mask rather than a single `is_final` index.
         n_ts_posteq = self._ts_posteq.shape[-1]
+        # `_ts_masks` spans all of the problem's experiments; restrict it to
+        # the ones actually being simulated so the result lines up with the
+        # other (subset-sized) vmapped arrays.
+        ts_masks_sel = np.asarray(self._ts_masks)[exp_indices]
         if n_ts_posteq:
-            posteq_mask_np = np.asarray(self._ts_masks)[
-                ..., -n_ts_posteq:
-            ].any(axis=-1)
+            posteq_mask_np = ts_masks_sel[..., -n_ts_posteq:].any(axis=-1)
         else:
-            posteq_mask_np = np.zeros(self._ts_masks.shape[:-1], dtype=bool)
+            posteq_mask_np = np.zeros(ts_masks_sel.shape[:-1], dtype=bool)
         if is_preeq:
             posteq_mask = jnp.zeros(len(experiments), dtype=bool)
             posteq_slots = ()
@@ -2579,13 +2609,17 @@ class JAXProblem(eqx.Module):
             ]
         )
 
+        # `_ts_dyn`/`_my`/... cover every experiment of the problem; select
+        # the simulated ones so the vmapped leading axis matches `p_array`
+        # and friends (see `_experiment_indices`).
+        exp_indices = self._experiment_indices(experiments)
         return self.run_simulation(
             p_array,
-            self._ts_dyn,
-            self._ts_posteq,
-            self._my,
-            self._iys,
-            self._iy_trafos,
+            self._ts_dyn[exp_indices],
+            self._ts_posteq[exp_indices],
+            self._my[exp_indices],
+            self._iys[exp_indices],
+            self._iy_trafos[exp_indices],
             op_array,
             np_array,
             mask_reinit_array,
@@ -2600,7 +2634,7 @@ class JAXProblem(eqx.Module):
             max_steps,
             preeq_array,
             h_preeqs,
-            self._ts_masks,
+            self._ts_masks[exp_indices],
             t_zeros,
             posteq_mask,
             posteq_slots,

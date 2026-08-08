@@ -539,3 +539,47 @@ def test_posteq_runs_at_own_last_period_of_a_short_experiment(tmp_path):
     # dynamic measurement at t=1.0, then the post-equilibrated steady state
     np.testing.assert_allclose(actual[0], np.exp(-0.5 * 1.0), rtol=1e-4)
     np.testing.assert_allclose(actual[-1], 0.0, atol=1e-6)
+
+
+def test_simulation_experiments_can_select_a_subset(tmp_path):
+    """``simulation_experiments`` must accept a proper subset.
+
+    The measurement arrays are built once for every experiment of the
+    problem, while the parameter arrays are built only for the experiments
+    being simulated. Passing both to the same ``vmap`` only lined up when
+    the "subset" happened to be all of them; any real subset raised
+    ``vmap got inconsistent sizes for array axes to be mapped``.
+    """
+    problem = _linear_decay_problem()
+    problem.add_condition("c1", kk=0.5)
+    problem.add_condition("c2", kk=0.9)
+    for exp_id, cond_id in (("e1", "c1"), ("e2", "c2")):
+        problem.add_experiment(exp_id, 0.0, cond_id)
+        for t in (0.5, 1.5):
+            problem.add_measurement(
+                "obs1", time=t, measurement=0.0, experiment_id=exp_id
+            )
+
+    jax_problem = _import_jax(problem, "test_experiment_subset", tmp_path)
+
+    llh_all, _ = run_simulations(jax_problem, ret=ReturnValue.llh)
+    llh_e1, _ = run_simulations(
+        jax_problem, simulation_experiments=["e1"], ret=ReturnValue.llh
+    )
+    llh_e2, _ = run_simulations(
+        jax_problem, simulation_experiments=["e2"], ret=ReturnValue.llh
+    )
+
+    # experiments contribute independently, so the parts must sum to the
+    # whole -- a subset that merely runs but mixes up which experiment's
+    # measurements it scores would not satisfy this
+    np.testing.assert_allclose(
+        float(llh_e1) + float(llh_e2), float(llh_all), rtol=1e-8
+    )
+    assert float(llh_e1) != float(llh_e2)
+
+    # selection is by id, not by position
+    llh_reversed, _ = run_simulations(
+        jax_problem, simulation_experiments=["e2", "e1"], ret=ReturnValue.llh
+    )
+    np.testing.assert_allclose(float(llh_reversed), float(llh_all), rtol=1e-8)
