@@ -628,3 +628,30 @@ def test_run_simulations_under_filter_jit(tmp_path):
     assert np.isfinite(float(llh))
     # the gradient must actually reach the estimated parameters
     assert np.any(np.asarray(grad.parameters) != 0.0)
+
+
+def test_measurement_row_indices_stay_integral(tmp_path):
+    """Measurement row indices must not be widened to float.
+
+    The per-period arrays are assembled by padding a dynamic and a
+    post-equilibration part and concatenating them. An absent
+    post-equilibration part is an empty array, which numpy types as
+    float64 regardless of what the data is -- so concatenating it against
+    the integer row indices silently produced a float index, which no
+    longer compares equal to the measurement table's integer index.
+    """
+    problem = _linear_decay_problem()
+    problem.add_condition("c_p1", kk=0.4)
+    problem.add_condition("c_p2", kk=0.8)
+    problem.add_experiment("e1", 0.0, "c_p1", 2.0, "c_p2")
+    for t in (0.5, 1.5, 2.5):
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="e1"
+        )
+
+    jax_problem = _import_jax(problem, "test_index_dtype", tmp_path)
+
+    assert jax_problem._petab_measurement_indices.dtype.kind in "iu", (
+        "measurement row indices must stay integral, got "
+        f"{jax_problem._petab_measurement_indices.dtype}"
+    )
