@@ -287,13 +287,12 @@ class PetabImporter:
         if not isinstance(self.petab_problem.model, SbmlModel):
             raise ValueError("The PEtab problem must contain an SBML model.")
 
-        # Convert petab experiments to events, because so far,
-        #  AMICI only supports preequilibration/presimulation/simulation, but
-        #  no arbitrary list of periods.
-        exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
-        # This will always create a copy of the problem.
         if self._jax:
-            self._unconverted_problem = exp_event_conv._original_problem
+            # The JAX backend natively chains one ODE integration per
+            #  experiment period (see amici.sim.jax.petab), so there is no
+            #  need to convert experiments with more than two periods into
+            #  SBML events. The condition table is left untouched.
+            self._unconverted_problem = None
             condition_targets = {
                 change.target_id
                 for condition in self.petab_problem.conditions
@@ -307,13 +306,36 @@ class PetabImporter:
                     "The JAX backend does not currently support PEtab problems where network "
                     "parameters appear in the conditions table. "
                 )
-        self.petab_problem = exp_event_conv.convert()
-        for experiment in self.petab_problem.experiments:
-            if len(experiment.periods) > 2:
-                # This should never happen due to the conversion above
+            # Condition-table changes are applied directly in Python at
+            #  simulation time (see JAXProblem), by either overriding a
+            #  model parameter or reinitialising a species state. Any other
+            #  target (e.g. a compartment size) has no such mechanism here.
+            sbml_model = self.petab_problem.model.sbml_model
+            unsupported_targets = {
+                target_id
+                for target_id in condition_targets
+                if sbml_model.getSpecies(target_id) is None
+                and sbml_model.getParameter(target_id) is None
+            }
+            if unsupported_targets:
                 raise NotImplementedError(
-                    "AMICI currently does not support more than two periods."
+                    "The JAX backend only supports condition table changes "
+                    "that target a species or a parameter. Got change(s) "
+                    f"targeting: {sorted(unsupported_targets)}."
                 )
+        else:
+            # Convert petab experiments to events, because so far, the
+            #  sundials backend only supports preequilibration/presimulation/
+            #  simulation, but no arbitrary list of periods.
+            exp_event_conv = ExperimentsToSbmlConverter(self.petab_problem)
+            # This will always create a copy of the problem.
+            self.petab_problem = exp_event_conv.convert()
+            for experiment in self.petab_problem.experiments:
+                if len(experiment.periods) > 2:
+                    # This should never happen due to the conversion above
+                    raise NotImplementedError(
+                        "AMICI currently does not support more than two periods."
+                    )
 
         if self._debug:
             print("PetabImpoter._preprocess_sbml: petab_problem:")
@@ -340,7 +362,15 @@ class PetabImporter:
 
         pysb.bng.generate_equations(self.petab_problem.model.model)
 
-        # Convert PEtab v2 experiments/conditions to events
+        # Convert PEtab v2 experiments/conditions to events. Unlike for SBML
+        #  (see `_preprocess_sbml`), this is not skipped for the JAX backend:
+        #  PySB condition-table targets are frequently pysb.Observable
+        #  names that alias an underlying pysb.Initial/Expression rather
+        #  than a state or free parameter directly, and applying those
+        #  requires the same model-rewriting this converter already does.
+        #  JAXProblem's native per-period parameter/state resolution has no
+        #  equivalent for that, so PySB models keep going through event
+        #  conversion for both backends.
         converter = ExperimentsToPySBConverter(self.petab_problem)
         self.petab_problem, self._events = converter.convert()
 
@@ -412,15 +442,33 @@ class PetabImporter:
             output_parameter_defaults=self._output_parameter_defaults,
         )
 
-        # All indicator variables, i.e., all remaining targets after
-        #  experiments-to-event in the PEtab problem must be converted
-        #  to fixed parameters
+        # All condition-table targets that are not estimated must be
+        #  converted to fixed parameters. For the sundials backend, these are
+        #  only ever the indicator variables introduced by the
+        #  experiments-to-event conversion above. For the JAX backend, which
+        #  keeps the original condition table, this may also contain state
+        #  targets (species, or rate-/assignment-rule-governed parameters),
+        #  which must NOT be treated as fixed parameters since they are
+        #  handled via state reinitialisation instead. Compartment targets
+        #  are also excluded here, but are unsupported for the JAX backend
+        #  entirely (see the NotImplementedError raised in
+        #  `_preprocess_sbml`) since AMICI does not support making a
+        #  compartment a runtime-settable fixed parameter either way.
+        #  A condition ID referenced by an experiment need not have its own
+        #  entry in a condition table at all -- a condition that makes no
+        #  changes has nothing to define -- so a missing lookup contributes
+        #  no changes rather than being an error.
         fixed_parameters = {
             change.target_id
             for experiment in self.petab_problem.experiments
             for period in experiment.periods
             for condition_id in period.condition_ids
-            for change in self.petab_problem[condition_id].changes
+            for change in _get_condition_changes(
+                self.petab_problem, condition_id
+            )
+            if not self.petab_problem.model.is_state_variable(
+                change.target_id
+            )
         }
 
         from .v1._sbml_import import show_model_info
@@ -454,6 +502,7 @@ class PetabImporter:
                 fixed_parameters=fixed_parameters,
                 verbose=self._verbose,
                 hybridization=hybridization,
+                reinitialisations=self._build_reinitialisations(),
                 # **kwargs,
             )
             return sbml_importer
@@ -513,7 +562,9 @@ class PetabImporter:
             for experiment in self.petab_problem.experiments
             for period in experiment.periods
             for condition_id in period.condition_ids
-            for change in self.petab_problem[condition_id].changes
+            for change in _get_condition_changes(
+                self.petab_problem, condition_id
+            )
         }
         # TODO: handle self._non_estimated_parameters_as_constants
 
@@ -691,6 +742,31 @@ class PetabImporter:
             .items()
         )
 
+    def _build_reinitialisations(self) -> list[dict]:
+        """Condition-table changes, for baking into the generated JAX model.
+
+        The JAX exporter emits every change whose target is a model *state*
+        as a state-reinitialisation expression inside the generated model
+        file (see
+        :meth:`amici.exporters.jax.ode_export.ODEExporter._process_reinitialisations`),
+        so that the model carries its own reinitialisation code instead of
+        depending on the PEtab layer to precompute values. Changes targeting
+        parameters are passed along unfiltered and dropped by the exporter,
+        which is the side that knows which ids ended up as states.
+
+        :return:
+            One entry per condition-table change, in condition-table order.
+        """
+        return [
+            {
+                "condition_id": condition.id,
+                "target_id": change.target_id,
+                "target_value": change.target_value,
+            }
+            for condition in self.petab_problem.conditions
+            for change in condition.changes
+        ]
+
     def _build_hybridization(self) -> dict[str, dict]:
         if "sciml" not in self.petab_problem.config.extensions:
             return None
@@ -864,8 +940,6 @@ class PetabImporter:
             Whether to force re-import even if the model module already exists.
         :return: The created PEtab simulator.
         """
-        from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
-
         if self._jax:
             model_module = self.import_module(force_import=force_import)
             model = model_module.Model()
@@ -879,6 +953,8 @@ class PetabImporter:
                     self, "_unconverted_problem", None
                 ),
             )
+
+        from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
 
         model = self.import_module(force_import=force_import).get_model()
         em = ExperimentManager(model=model, petab_problem=self.petab_problem)
@@ -1244,6 +1320,26 @@ def unflatten_simulation_df(
         }
     )
     return unflattened_simulation_df
+
+
+def _get_condition_changes(
+    petab_problem: v2.Problem, condition_id: str
+) -> list:
+    """Get the ``changes`` of the condition with the given ID, or an empty
+    list if it has none.
+
+    A condition ID referenced by an experiment period is not required to
+    have a matching entry in any condition table: a condition that changes
+    nothing (e.g. one used only to mark a timepoint, or a PEtab v1 problem's
+    default/empty condition) need not be defined at all, since there would
+    be nothing to define.
+    """
+    if not condition_id:
+        return []
+    try:
+        return petab_problem[condition_id].changes
+    except KeyError:
+        return []
 
 
 def _get_fixed_parameters_sbml(

@@ -43,7 +43,7 @@ SIGMA = 2.0
 class LotkaVolterra(JAXModel):
     """Non-stiff oscillator — exercises long-horizon integration."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()

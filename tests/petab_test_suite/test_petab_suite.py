@@ -7,6 +7,7 @@ import sys
 import diffrax
 import pandas as pd
 import petab.v1 as petab
+import petab.v2 as petabv2
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
@@ -143,11 +144,17 @@ def _test_case(case, model_type, version, jax):
         # `"__default__"`, mapped to NaN) instead of the v1-style
         # `simulationConditionId` expected below. Rows correspond 1:1 to
         # `problem.measurement_df` (v1->v2 upgrade preserves row order), so
-        # recover the original column by index alignment.
+        # recover the original column by index alignment. Drop `experimentId`
+        # afterwards: `petabtests.evaluate_simulations` determines the PEtab
+        # version from column presence and errors out if both id columns
+        # are present at once.
         simulation_df[petab.SIMULATION_CONDITION_ID] = (
             problem.measurement_df.loc[
                 simulation_df.index, petab.SIMULATION_CONDITION_ID
             ].values
+        )
+        simulation_df = simulation_df.drop(
+            columns=[petabv2.C.EXPERIMENT_ID]
         )
     else:
         model = imported  # import_petab_problem returns Model when jax=False

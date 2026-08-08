@@ -224,14 +224,20 @@ def check_fields_jax(
     }
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
+    # `simulate_experiment[_unjitted]` chains one ODE integration per
+    # experiment period; add a leading period axis of size 1 for this
+    # single, non-chained simulation. `p` itself is kept 1-D here (and
+    # the period axis added inside `fun` below) so that `jax.grad`/
+    # `jax.jacfwd` differentiate w.r.t. the original 1-D parameter vector,
+    # matching the shapes the rest of this function already expects.
     kwargs = {
-        "ts_dyn": jnp.array(ts_dyn),
-        "ts_posteq": jnp.array(ts_posteq),
-        "my": jnp.array(my),
-        "iys": jnp.array(iys),
-        "ops": jnp.zeros((*my.shape[:2], 0)),
-        "nps": jnp.zeros((*my.shape[:2], 0)),
-        "iy_trafos": jnp.array(iy_trafos),
+        "ts_dyn": jnp.array(ts_dyn)[None, :],
+        "ts_posteq": jnp.array(ts_posteq)[None, :],
+        "my": jnp.array(my)[None, :],
+        "iys": jnp.array(iys)[None, :],
+        "ops": jnp.zeros((1, *my.shape[:2], 0)),
+        "nps": jnp.zeros((1, *my.shape[:2], 0)),
+        "iy_trafos": jnp.array(iy_trafos)[None, :],
         "x_preeq": jnp.array([]),
         "solver": diffrax.Kvaerno5(),
         "controller": diffrax.PIDController(atol=1e-8, rtol=1e-8),
@@ -242,7 +248,10 @@ def check_fields_jax(
     }
     # Use beartype-wrapped unjitted version for type checking
     # (beartype cannot introspect jitted functions, so we wrap the unjitted version)
-    fun = beartype(jax_model.simulate_condition_unjitted)
+    fun_periodic = beartype(jax_model.simulate_experiment_unjitted)
+
+    def fun(p, **kw):
+        return fun_periodic(p[None, :], **kw)
 
     for output in ["llh", "x0", "x", "y", "res"]:
         okwargs = kwargs | {
@@ -471,6 +480,89 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
 
 
 @skip_on_valgrind
+def test_condition_table_compound_expression_is_differentiable(tmp_path):
+    """A condition table change with a compound symbolic ``target_value``
+    (e.g. ``a0 + b0``, referencing two estimated parameters) must be
+    compiled and evaluated correctly, with gradients flowing through every
+    free symbol.
+
+    PEtab v1's condition table format only allows numeric literals or a
+    single parameter reference as a condition value; compound expressions
+    are a PEtab v2-only feature, so this uses the native v2 API rather
+    than the v1-upgrade path used by the sibling tests above.
+
+    Regression test for ``_resolve_petab_change_value``, which used to
+    raise ``NotImplementedError`` for anything beyond a numeric literal or
+    a single parameter reference; compound expressions are now compiled to
+    JAX via the same sympy-to-JAX code printer used to generate the
+    model's own equations (see ``_CompiledConditionExpr``).
+    """
+    import equinox as eqx
+    import petab.v2 as petabv2
+    from amici.importers.petab._petab_importer import PetabImporter
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = petabv2.Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    problem.add_parameter(
+        "a0", nominal_value=2.0, estimate=True, lb=0.1, ub=10
+    )
+    problem.add_parameter(
+        "b0", nominal_value=1.0, estimate=True, lb=0.1, ub=10
+    )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    # compound expression: A's initial value is the *sum* of two estimated
+    # parameters, not a numeric literal or a single parameter reference
+    problem.add_condition("c0", A="a0 + b0")
+    problem.add_experiment("exp0", 0.0, "c0")
+    for t in [0.0, 10.0]:
+        problem.add_measurement(
+            "obs_a", experiment_id="exp0", time=t, measurement=0.5
+        )
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_condition_table_compound_expression_jax",
+        verbose=False,
+        output_dir=str(tmp_path),
+    ).create_simulator(force_import=True)
+
+    ia = jax_problem.parameter_ids.index("a0")
+    ib = jax_problem.parameter_ids.index("b0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    # `a0 + b0` enters the likelihood only through A(0); updating either
+    # must change llh
+    assert abs(float(llh(p0.at[ia].add(1.0))) - float(llh(p0))) > 1e-6, (
+        "compound-expression condition value is frozen w.r.t. "
+        "update_parameters"
+    )
+
+    eps = 1e-6
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    for i in (ia, ib):
+        fd = (
+            float(llh(p0.at[i].add(eps))) - float(llh(p0.at[i].add(-eps)))
+        ) / (2 * eps)
+        assert_allclose(float(grad.parameters[i]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
 def test_petab_simulate_ragged_experiments(tmp_path):
     """``petab_simulate`` must handle experiments with different numbers of
     measurement timepoints.
@@ -591,19 +683,19 @@ def test_steady_state_event_no_recompile_across_conditions(
     iy_trafos = jnp.zeros_like(ts, dtype=int)
 
     simulate_traces = patch_trace_counter(
-        JAXModel, "simulate_condition_unjitted"
+        JAXModel, "simulate_experiment_unjitted"
     )
     for k_val in conditions:
         kwargs = fresh_solver_kwargs()
-        model.simulate_condition(
-            jnp.array([k_val]),
-            ts,
-            jnp.array([]),
-            my,
-            iys,
-            iy_trafos,
-            jnp.zeros((3, 0)),
-            jnp.zeros((3, 0)),
+        model.simulate_experiment(
+            jnp.array([[k_val]]),
+            ts[None, :],
+            jnp.zeros((1, 0)),
+            my[None, :],
+            iys[None, :],
+            iy_trafos[None, :],
+            jnp.zeros((1, 3, 0)),
+            jnp.zeros((1, 3, 0)),
             kwargs["solver"],
             kwargs["controller"],
             kwargs["root_finder"],
@@ -613,7 +705,7 @@ def test_steady_state_event_no_recompile_across_conditions(
         )
 
     assert eqx.debug.get_num_traces(simulate_traces) == 1, (
-        "simulate_condition was retraced across conditions with only "
+        "simulate_experiment was retraced across conditions with only "
         "numeric differences"
     )
 
@@ -636,6 +728,68 @@ def test_steady_state_event_no_recompile_across_conditions(
         "preequilibrate_condition was retraced across conditions with only "
         "numeric differences"
     )
+
+
+def test_simulate_condition_is_deprecated_alias_for_simulate_experiment(
+    tmp_path,
+):
+    """``simulate_condition[_unjitted]`` (pre-rename names) must still work,
+    with a ``DeprecationWarning``, and produce the same result as the
+    ``simulate_experiment[_unjitted]`` methods they were renamed to."""
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model simulate_condition_alias
+        x' = -k * x
+        x = 1
+        k = 1
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("simulate_condition_alias", output_dir=tmp_path)
+    module = amici._module_from_path(
+        "simulate_condition_alias", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    ts = jnp.array([0.0, 1.0, 2.0])
+    my = jnp.zeros_like(ts)
+    iys = jnp.zeros_like(ts, dtype=int)
+    iy_trafos = jnp.zeros_like(ts, dtype=int)
+    args = (
+        jnp.array([[2.5]]),
+        ts[None, :],
+        jnp.zeros((1, 0)),
+        my[None, :],
+        iys[None, :],
+        iy_trafos[None, :],
+        jnp.zeros((1, 3, 0)),
+        jnp.zeros((1, 3, 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.RecursiveCheckpointAdjoint(),
+        SteadyStateEvent(),
+        1000,
+    )
+
+    expected_llh, _ = model.simulate_experiment(*args)
+    expected_llh_unjitted, _ = model.simulate_experiment_unjitted(*args)
+
+    with pytest.warns(DeprecationWarning, match="simulate_experiment"):
+        actual_llh, _ = model.simulate_condition(*args)
+    with pytest.warns(DeprecationWarning, match="simulate_experiment_unjitted"):
+        actual_llh_unjitted, _ = model.simulate_condition_unjitted(*args)
+
+    assert_allclose(float(actual_llh), float(expected_llh))
+    assert_allclose(float(actual_llh_unjitted), float(expected_llh_unjitted))
 
 
 @skip_on_valgrind
@@ -899,6 +1053,72 @@ def test_event_assignments_odd_root_count(tmp_path):
         ]
     )
     assert_allclose(ys, expected, atol=1e-6, rtol=1e-6)
+
+
+@skip_on_valgrind
+def test_heaviside_state_carried_across_zero_duration_period(tmp_path):
+    """A zero-duration period preserves the incoming heaviside state.
+
+    Regression test: the ``hs`` loop carry used to be seeded with plain
+    zeros while the ``ys`` carry was seeded with ``x0``. When the loop body
+    never runs -- i.e. ``t0 >= ts[-1]``, which is exactly what a
+    zero-duration period looks like -- the carry is returned untouched, so
+    states were preserved but the heaviside state silently reset to all
+    zeros instead of being chained on from the previous period.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    ant_model = """
+    model hs_carry
+        x = 0
+        x' = piecewise(1, time > 2, 0)
+    end
+    """
+
+    sbml = antimony2sbml(ant_model)
+    SbmlImporter(sbml, from_file=False).sbml2jax("hs_carry", output_dir=tmp_path)
+    module = amici._module_from_path("hs_carry", tmp_path / "__init__.py")
+    model = module.Model()
+
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+
+    # evaluated at t=5, where the `time > 2` trigger is satisfied, so at
+    # least one heaviside variable is non-zero and a reset is detectable
+    h = model._initialise_heaviside_variables(5.0, x0, p, tcl)
+    assert h.shape[0] and not jnp.allclose(h, 0.0)
+
+    # zero-duration span: `cond_fn` is false at entry, body never runs
+    ts = jnp.array([5.0, 5.0])
+    ys, hs, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    # the state carry already behaved; the heaviside carry must match it
+    assert_allclose(ys, jnp.broadcast_to(x0, ys.shape), atol=1e-6, rtol=1e-6)
+    assert_allclose(hs, jnp.broadcast_to(h, hs.shape), atol=1e-6, rtol=1e-6)
 
 
 @skip_on_valgrind

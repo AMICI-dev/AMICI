@@ -27,7 +27,7 @@ SIGMA = 0.05
 class ConservationLaw(JAXModel):
     """Two-state reversible system with one conservation law."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()

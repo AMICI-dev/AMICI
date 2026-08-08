@@ -20,7 +20,7 @@ SIGMA = 0.1
 class LinearDecay(JAXModel):
     """Canary model — any regression here indicates a fundamental problem."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
