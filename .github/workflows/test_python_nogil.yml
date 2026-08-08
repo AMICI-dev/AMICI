@@ -14,6 +14,8 @@ jobs:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       AMICI_PARALLEL_COMPILE: ""
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - name: Set up free-threaded Python
       uses: actions/setup-python@v7

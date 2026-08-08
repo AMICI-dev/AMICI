@@ -10,6 +10,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 * `PetabSimulationResult.res` (PEtab v2) is a property now, for consistency
   with `PetabSimulationResult.llh`. Replace `result.res()` by `result.res`.
+* Require Python >= 3.12, following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#drop-schedule)
+  (#3180).
 
 **Features**
 
@@ -17,6 +19,15 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   experiments: `PetabSimulationResult.sres` contains the sensitivities of the
   residuals returned by `PetabSimulationResult.res` with respect to the
   estimated PEtab problem parameters.
+* Added a `checkpoints` parameter to the JAX PEtab simulation interface
+  (`run_simulation`/`run_simulations`), controlling the number of checkpoints
+  `diffrax`'s `RecursiveCheckpointAdjoint` uses for reverse-mode gradients.
+  Defaults to `None` (diffrax's automatic choice), preserving previous
+  behavior (#3217).
+* PEtab SciML: added support for importing `equinox` modules (#3179).
+* PEtab SciML: implemented additional PyTorch-style layer types
+  (`BatchNorm`, `InstanceNorm`, `AlphaDropout`, `Bilinear`) (#3176).
+* PEtab SciML: updated support to PEtab v2 (#3165).
 
 **Fixes**
 
@@ -32,6 +43,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
   covers the transitive case, where such a parameter is reached through a chain
   of parameter initial assignments (#3214).
+* Fixed the JAX model exporter writing floating-point numbers with only 15
+  significant digits, which is not enough to round-trip a double. Values were
+  silently perturbed in the last bits, which mattered wherever a model compares
+  values exactly (e.g. a parameter with value `pi` no longer tested equal to
+  `pi`).
 * `amici.sim.sundials.petab.PetabSimulator.simulate` no longer fails for
   PEtab v2 problems with non-Gaussian noise models or for the
   `RDataReporting.residuals` reporting mode. The respective unavailable
@@ -50,6 +66,55 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   expression. Such chains are now resolved to a fixed point, so those
   parameters stay expressions instead of inflating the state vector (e.g.
   `C2ss`/`C3ss` in `calvetti`).
+* Fixed an `AttributeError` when importing a model module without having
+  first imported something else from `amici.sim.sundials` (#3200).
+* Fixed PEtab problem flattening not substituting the old observable ID in
+  the noise formula; updated the error message shown when importing a
+  non-flattened PEtab problem that requires flattening (#3177).
+* Fixed a spurious `AssertionError` from the conservation-law computation for
+  models with condition-dependent compartment sizes, caused by comparing a
+  simplified and an unsimplified but mathematically equivalent expression
+  (#3202).
+* Fixed a `NameError` in JAX-exported models when an explicit
+  (time-triggered) event trigger depends on a model expression (`w`) rather
+  than only on parameters (#3195).
+* JAX PEtab backend: fixed condition-name-based preequilibration detection,
+  which only worked for AMICI's own synthetic condition names and produced
+  incorrect or crashing results for PEtab problems using arbitrary condition
+  names for preequilibration (#3205).
+* JAX PEtab backend: fixed `JAXProblem.save()`/`load()`, which no longer
+  matched the current `petab.v2` API (#3204).
+* JAX PEtab backend: fixed condition-table state-reinitialization lookup,
+  noise-distribution handling, and differentiability of condition-table
+  target values (#3207).
+* JAX PEtab backend: fixed discontinuity stepping, PEtab v1 problems (now
+  auto-upgraded to v2), noise/observable placeholder substitution, and event
+  assignments silently dropped for models with an odd number of roots
+  (#3196).
+* JAX PEtab backend: fixed measurement/override parsing and parameter-scaling
+  bugs that caused JAX benchmark simulations to fail or diverge from
+  SUNDIALS (#3210).
+
+**Performance**
+
+* Reduced JAX PEtab gradient-compilation time for benchmark models with
+  large repeated subexpressions (e.g. analytic steady-state initial values)
+  by adding common-subexpression elimination to the JAX code printer and
+  switching to `ImplicitAdjoint` (#3212).
+* Avoided unnecessary JAX recompilation caused by `diffrax.steady_state_event()`
+  returning a new closure (compared by identity) on every call; equivalent
+  settings now share the compiled executable (#3197).
+* Sped up importing/building models with CMake, most noticeably when
+  importing many independent models in one go (e.g. test suites, benchmark
+  collections, or PEtab batch imports): skip redundant HDF5 (#3220) and
+  compiler-flag (#3221) detection that was previously repeated on every
+  single model configure.
+
+**Documentation**
+
+* Added a PEtab SciML example notebook demonstrating problem loading,
+  simulation, and a basic training loop, using the Dandekar PEtab SciML
+  benchmark (#3208).
 
 ### v1.0.1 (2026-03-13)
 

@@ -17,17 +17,8 @@ jobs:
         python-version: ["3.12"]
 
     steps:
-    - name: "Debug: runner and hardware info"
-      run: |
-        echo "== Runner =="
-        echo "name=${RUNNER_NAME} os=${RUNNER_OS} arch=${RUNNER_ARCH} environment=${RUNNER_ENVIRONMENT}"
-        uname -a
-        echo "== CPU =="
-        lscpu
-        echo "== Memory =="
-        free -h
-        echo "== Disk =="
-        df -h
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:

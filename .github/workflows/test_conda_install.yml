@@ -17,6 +17,8 @@ jobs:
         python-version: ['3.12', '3.13', '3.14']
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
       - uses: actions/checkout@v7
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v4
