@@ -1738,6 +1738,7 @@ class JAXProblem(eqx.Module):
         self,
         condition_ids: list[str],
         state_id: str,
+        is_initial: bool = True,
     ) -> bool:
         """
         Check if a state needs reinitialisation for the given (simultaneous)
@@ -1748,13 +1749,20 @@ class JAXProblem(eqx.Module):
             reinitialisation for
         :param state_id:
             state id to check reinitialisation for
+        :param is_initial:
+            whether this is the start of the experiment rather than a
+            later period boundary. A neural network that drives a state
+            supplies that state's *initial value*, so it must not be
+            re-applied at every subsequent period boundary, where it would
+            overwrite the integrated trajectory. Condition-table changes
+            are unaffected: they apply wherever their condition does.
         :return:
             True if state needs reinitialisation, False otherwise
         """
-        if state_id in self.nn_output_ids:
+        if is_initial and state_id in self.nn_output_ids:
             return True
 
-        if state_id in self._parameter_mappings["hybrid_map"]:
+        if is_initial and state_id in self._parameter_mappings["hybrid_map"]:
             return True
 
         return self._first_condition_value(condition_ids, state_id) is not None
@@ -1764,6 +1772,7 @@ class JAXProblem(eqx.Module):
         condition_ids: list[str],
         state_id: str,
         p: jt.Float[jt.Array, "np"],
+        is_initial: bool = True,
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
@@ -1775,15 +1784,19 @@ class JAXProblem(eqx.Module):
             state id to get reinitialisation value for
         :param p:
             parameters for the simulation condition
+        :param is_initial:
+            see :meth:`_state_needs_reinitialisation`. Kept in sync with it
+            so that the value and the mask always agree on whether a
+            network-driven state applies here.
         :return:
             reinitialisation value for the state
         """
-        if state_id in self.nn_output_ids:
+        if is_initial and state_id in self.nn_output_ids:
             return self._eval_nn(
                 state_id, self._first_condition_id(condition_ids)
             )
 
-        if state_id in self._parameter_mappings["hybrid_map"]:
+        if is_initial and state_id in self._parameter_mappings["hybrid_map"]:
             return self._eval_nn(
                 self._parameter_mappings["hybrid_map"][state_id],
                 self._first_condition_id(condition_ids),
@@ -1834,6 +1847,7 @@ class JAXProblem(eqx.Module):
         self,
         condition_ids: list[str] | str | None,
         p: jt.Float[jt.Array, "np"],
+        is_initial: bool = True,
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
         Load reinitialisation values and mask for the state vector for the
@@ -1852,13 +1866,17 @@ class JAXProblem(eqx.Module):
             to be resolved (see :meth:`_state_reinitialisation_value`).
         :param p:
             Parameters for the simulation condition.
+        :param is_initial:
+            Whether this is the start of the experiment rather than a later
+            period boundary; see
+            :meth:`_state_needs_reinitialisation`.
         :return:
             Tuple of reinitialisation masm and value for states.
         """
         has_reinitialisable_states = any(
             x_id in self._all_condition_targets
-            or hasattr(self, "nn_output_ids")
-            and x_id in self._parameter_mappings["hybrid_map"]
+            or x_id in self.nn_output_ids
+            or x_id in self._parameter_mappings["hybrid_map"]
             for x_id in self.model.state_ids
         )
         if not has_reinitialisable_states:
@@ -1876,13 +1894,17 @@ class JAXProblem(eqx.Module):
 
         mask = jnp.array(
             [
-                self._state_needs_reinitialisation(condition_ids, x_id)
+                self._state_needs_reinitialisation(
+                    condition_ids, x_id, is_initial
+                )
                 for x_id in self.model.state_ids
             ]
         )
         reinit_x = jnp.array(
             [
-                self._state_reinitialisation_value(condition_ids, x_id, p)
+                self._state_reinitialisation_value(
+                    condition_ids, x_id, p, is_initial
+                )
                 for x_id in self.model.state_ids
             ]
         )
@@ -2102,12 +2124,19 @@ class JAXProblem(eqx.Module):
                 ]
             )
         else:
+            # `i == 0` is the start of the experiment's own dynamic chain;
+            # later periods are boundaries within it, where a
+            # network-driven state must not be re-initialised over the
+            # integrated trajectory (see
+            # `_state_needs_reinitialisation`).
             mask_reinit_array = jnp.stack(
                 [
                     jnp.stack(
                         [
-                            self.load_reinitialisation(cids_i, p_i)[0]
-                            for cids_i, p_i in zip(cids_per_period, p_per_period)
+                            self.load_reinitialisation(cids_i, p_i, i == 0)[0]
+                            for i, (cids_i, p_i) in enumerate(
+                                zip(cids_per_period, p_per_period)
+                            )
                         ]
                     )
                     for cids_per_period, p_per_period in zip(
@@ -2119,8 +2148,10 @@ class JAXProblem(eqx.Module):
                 [
                     jnp.stack(
                         [
-                            self.load_reinitialisation(cids_i, p_i)[1]
-                            for cids_i, p_i in zip(cids_per_period, p_per_period)
+                            self.load_reinitialisation(cids_i, p_i, i == 0)[1]
+                            for i, (cids_i, p_i) in enumerate(
+                                zip(cids_per_period, p_per_period)
+                            )
                         ]
                     )
                     for cids_per_period, p_per_period in zip(
