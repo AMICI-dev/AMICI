@@ -583,3 +583,48 @@ def test_simulation_experiments_can_select_a_subset(tmp_path):
         jax_problem, simulation_experiments=["e2", "e1"], ret=ReturnValue.llh
     )
     np.testing.assert_allclose(float(llh_reversed), float(llh_all), rtol=1e-8)
+
+
+def test_run_simulations_under_filter_jit(tmp_path):
+    """``run_simulations`` must work inside ``eqx.filter_jit``.
+
+    ``JAXProblem`` is an ``eqx.Module``, so its array fields -- including
+    the measurement masks -- become tracers under ``filter_jit``. Reading
+    concrete values out of them (rather than just their shapes) raises
+    ``TracerArrayConversionError``, which plain (non-jitted) calls never
+    surface. This is the pattern the JAX PEtab example notebook uses to
+    build an optimisation step.
+    """
+    import equinox as eqx
+
+    problem = _linear_decay_problem()
+    problem.add_parameter(
+        "k_free", nominal_value=0.4, estimate=True, lb=0.01, ub=10
+    )
+    # an estimated parameter drives the first period, so the gradient is
+    # non-trivial and must reach `problem.parameters`
+    problem.add_condition("c_p1", kk="k_free")
+    problem.add_condition("c_p2", kk=0.8)
+    problem.add_experiment("e1", 0.0, "c_p1", 2.0, "c_p2")
+    for t in (0.5, 1.5, 2.5, 3.5):
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="e1"
+        )
+    # a post-equilibration row, so the post-equilibration bookkeeping is
+    # exercised too
+    problem.add_measurement(
+        "obs1", time=np.inf, measurement=0.0, experiment_id="e1"
+    )
+
+    jax_problem = _import_jax(problem, "test_filter_jit", tmp_path)
+
+    @eqx.filter_jit
+    def llh_and_grad(p):
+        return eqx.filter_value_and_grad(
+            lambda q: run_simulations(q, ret=ReturnValue.llh)[0]
+        )(p)
+
+    llh, grad = llh_and_grad(jax_problem)
+    assert np.isfinite(float(llh))
+    # the gradient must actually reach the estimated parameters
+    assert np.any(np.asarray(grad.parameters) != 0.0)

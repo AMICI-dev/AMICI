@@ -359,16 +359,29 @@ def _pad_measurement(
     pad_width_peq = tuple(
         [(0, n_ts_posteq - len(x_peq))] + [(0, 0)] * (x_peq.ndim - 1)
     )
+    # Take the dtype from whichever side actually has values. An empty side
+    # is typically `np.array(())`, i.e. float64 regardless of what the data
+    # is, and concatenating that against integral values would silently
+    # widen them to float -- which for the measurement row indices means an
+    # index that no longer compares equal to the measurement table's.
+    if len(x_dyn) and len(x_peq):
+        dtype = np.result_type(x_dyn.dtype, x_peq.dtype)
+    elif len(x_peq):
+        dtype = x_peq.dtype
+    else:
+        dtype = x_dyn.dtype
     return np.concatenate(
         (
-            np.pad(x_dyn, pad_width_dyn, mode="edge")
+            np.pad(x_dyn, pad_width_dyn, mode="edge").astype(
+                dtype, copy=False
+            )
             if len(x_dyn)
-            else np.zeros((n_ts_dyn, *x_dyn.shape[1:]), dtype=x_dyn.dtype),
-            np.pad(x_peq, pad_width_peq, mode="edge")
+            else np.zeros((n_ts_dyn, *x_dyn.shape[1:]), dtype=dtype),
+            np.pad(x_peq, pad_width_peq, mode="edge").astype(
+                dtype, copy=False
+            )
             if len(x_peq)
-            else np.zeros(
-                (n_ts_posteq, *x_peq.shape[1:]), dtype=x_peq.dtype
-            ),
+            else np.zeros((n_ts_posteq, *x_peq.shape[1:]), dtype=dtype),
         )
     )
 
@@ -2005,6 +2018,19 @@ class JAXProblem(eqx.Module):
         """
         return eqx.tree_at(lambda p: p.parameters, self, p)
 
+    def _experiment_has_posteq(self, experiment: petabv2.Experiment) -> bool:
+        """Whether ``experiment`` has post-equilibration measurements.
+
+        Those are the rows with a non-finite (``inf``) time; they are scored
+        against the steady state rather than against the dynamic
+        trajectory.
+        """
+        df = self._petab_problem.measurement_df
+        rows = df[df[petabv2.C.EXPERIMENT_ID] == experiment.id]
+        if not len(rows):
+            return False
+        return bool((~np.isfinite(rows[petabv2.C.TIME].to_numpy())).any())
+
     def _experiment_indices(
         self, experiments: list[petabv2.Experiment]
     ) -> np.ndarray:
@@ -2161,7 +2187,9 @@ class JAXProblem(eqx.Module):
         # `_ts_masks` spans all of the problem's experiments; restrict it to
         # the ones actually being simulated so everything handed to the
         # vmapped `run_simulation` agrees on the leading axis.
-        ts_masks_sel = np.asarray(self._ts_masks)[exp_indices]
+        # NB: `.shape` only -- `_ts_masks` is a traced pytree leaf under
+        # `eqx.filter_jit`, so it must not be converted to numpy here.
+        ts_masks_shape = (len(experiments), *self._ts_masks.shape[1:])
 
         # One row per *simulated* experiment. This used to be built over all
         # of the problem's experiments, zeroing the rows of the ones left
@@ -2217,7 +2245,7 @@ class JAXProblem(eqx.Module):
                 _sel(op_numeric),
             )
         else:
-            op_array = jnp.zeros((*ts_masks_sel.shape, 0))
+            op_array = jnp.zeros((*ts_masks_shape, 0))
 
         if np_numeric is not None and np_numeric.size:
             np_array = jnp.where(
@@ -2226,7 +2254,7 @@ class JAXProblem(eqx.Module):
                 _sel(np_numeric),
             )
         else:
-            np_array = jnp.zeros((*ts_masks_sel.shape, 0))
+            np_array = jnp.zeros((*ts_masks_shape, 0))
 
         # Condition-table state changes: the model's own generated
         # `_x_reinit` computes the values at the period boundary, so only the
@@ -2313,15 +2341,23 @@ class JAXProblem(eqx.Module):
         # rows attach to each experiment's *own* last period, which for a
         # short experiment is not the problem-wide last period -- hence the
         # per-experiment mask rather than a single `is_final` index.
-        n_ts_posteq = self._ts_posteq.shape[-1]
-        # `_ts_masks` spans all of the problem's experiments; restrict it to
-        # the ones actually being simulated so the result lines up with the
-        # other (subset-sized) vmapped arrays.
-        ts_masks_sel = np.asarray(self._ts_masks)[exp_indices]
-        if n_ts_posteq:
-            posteq_mask_np = ts_masks_sel[..., -n_ts_posteq:].any(axis=-1)
-        else:
-            posteq_mask_np = np.zeros(ts_masks_sel.shape[:-1], dtype=bool)
+        # Derived from the problem structure rather than from `_ts_masks`:
+        # that is an `eqx.Module` field, so under `eqx.filter_jit` it is a
+        # tracer, and reading concrete values out of it (which
+        # `posteq_slots` needs, being static) would raise
+        # `TracerArrayConversionError`. Whether a cell post-equilibrates is
+        # a property of the PEtab tables, known without any traced value.
+        posteq_mask_np = np.zeros(
+            (len(experiments), self._max_periods), dtype=bool
+        )
+        for i_exp, exp in enumerate(experiments):
+            if not self._experiment_has_posteq(exp):
+                continue
+            n_dyn = len(self._dynamic_periods(exp))
+            if n_dyn:
+                # post-equilibration rows attach to the experiment's own
+                # last period
+                posteq_mask_np[i_exp, n_dyn - 1] = True
         if is_preeq:
             posteq_mask = jnp.zeros(len(experiments), dtype=bool)
             posteq_slots = ()
