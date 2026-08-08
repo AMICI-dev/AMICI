@@ -78,6 +78,15 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
 
         return TPL_TOTAL_CL_RET
 
+    def _x_reinit(self, x, p, pc):
+        TPL_X_RDATA_SYMS = x
+        TPL_ALL_P_SYMS = p
+        TPL_REINIT_P_SYMS = pc
+
+        TPL_X_REINIT_EQ
+
+        return TPL_X_REINIT_RET
+
     def _y(self, t, x, p, tcl, h, op):
         TPL_X_SYMS = x
         TPL_ALL_P_SYMS = p
@@ -163,6 +172,14 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
     @property
     def expression_ids(self):
         return TPL_W_IDS
+
+    @property
+    def reinitialisation_targets(self):
+        return TPL_REINIT_TARGETS
+
+    @property
+    def reinitialisation_parameter_ids(self):
+        return TPL_REINIT_P_IDS
 
 
 Model = JAXModel_TPL_MODEL_NAME

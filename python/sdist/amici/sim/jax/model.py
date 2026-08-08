@@ -6,7 +6,7 @@ import enum
 import os
 import warnings
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import field
 from pathlib import Path
 
@@ -48,7 +48,7 @@ class JAXModel(eqx.Module):
         Path to the JAX model file.
     """
 
-    MODEL_API_VERSION = "0.0.4"
+    MODEL_API_VERSION = "0.0.5"
     api_version: str
     jax_py_file: Path
     nns: dict
@@ -166,6 +166,115 @@ class JAXModel(eqx.Module):
             total values for conservation laws
         """
         ...
+
+    def _x_reinit(
+        self,
+        x: jt.Float[jt.Array, "nx"],
+        p: jt.Float[jt.Array, "np"],
+        pc: jt.Float[jt.Array, "npc"],
+    ) -> jt.Float[jt.Array, "nreinit"]:
+        """
+        Evaluate the model's state-reinitialisation expressions.
+
+        These are the PEtab condition-table changes that target a state,
+        emitted into the generated model at code-generation time (see
+        :meth:`amici.exporters.jax.ode_export.ODEExporter._process_reinitialisations`)
+        so that the model carries its own reinitialisation code. They are
+        evaluated at an experiment period boundary (or at the start of a
+        pre-equilibration), *before* the period's conservation laws and
+        expressions are computed -- so ``tcl``/``w`` are deliberately not
+        available here, and reinitialisation values may only reference states
+        and parameters.
+
+        :param x:
+            full state vector at the period boundary, i.e. the values a
+            reinitialisation value referencing another state
+            (``A = A + 5*B``) sees
+        :param p:
+            model parameters for the period
+        :param pc:
+            values for the free symbols of the reinitialisation expressions
+            that are not model parameters (i.e. PEtab parameters), ordered as
+            in :attr:`reinitialisation_parameter_ids`
+        :return:
+            one value per entry of :attr:`reinitialisation_targets`
+        """
+        return jnp.array([])
+
+    @property
+    def reinitialisation_targets(self) -> tuple[tuple[str, str, str], ...]:
+        """
+        The condition-table changes this model's :meth:`_x_reinit` was
+        generated from, as ``(condition_id, target_id, target_value)``
+        triples, where ``target_value`` is the ``str()`` of the sympified
+        expression. The i-th entry corresponds to the i-th value returned by
+        :meth:`_x_reinit`.
+
+        Used by :class:`amici.sim.jax.petab.JAXProblem` both to map states to
+        reinitialisation expressions and to detect a model that was generated
+        from a different (i.e. since edited) condition table.
+        """
+        return ()
+
+    @property
+    def reinitialisation_parameter_ids(self) -> tuple[str, ...]:
+        """
+        Ids of the non-model-parameter symbols (i.e. PEtab parameters)
+        referenced by the reinitialisation expressions, in the order
+        :meth:`_x_reinit` expects them in its ``pc`` argument.
+        """
+        return ()
+
+    def reinitialisation_selection(
+        self, condition_ids: Sequence[str] | None
+    ) -> tuple[jt.Bool[jt.Array, "*nx"], jt.Int[jt.Array, "*nx"]]:
+        """
+        Which state takes which of :meth:`_x_reinit`'s values, for one
+        experiment period's simultaneously-active conditions.
+
+        Derived purely from :attr:`reinitialisation_targets`, i.e. from the
+        model itself: a caller that has only the generated model (and the
+        condition ids of the periods it wants to simulate) can build the
+        ``reinit_mask``/``reinit_index`` arguments of
+        :meth:`simulate_experiment` without the PEtab problem the model was
+        generated from.
+
+        :param condition_ids:
+            Condition ids active in this period. ``None`` (no period here at
+            all, e.g. a padding slot) yields an all-``False`` mask.
+        :return:
+            Tuple of a boolean mask over :attr:`state_ids` and, per state,
+            the index into :meth:`_x_reinit`'s output. Both are empty if the
+            model carries no reinitialisation expressions.
+        """
+        rows = {
+            (condition_id, target_id): i
+            for i, (condition_id, target_id, _) in enumerate(
+                self.reinitialisation_targets
+            )
+        }
+        if not rows:
+            return jnp.zeros(0, dtype=bool), jnp.zeros(0, dtype=int)
+
+        if isinstance(condition_ids, str):
+            condition_ids = [condition_ids]
+        condition_ids = list(condition_ids) if condition_ids else []
+
+        mask, index = [], []
+        for x_id in self.state_ids:
+            # PEtab v2 requires the targets of simultaneously-active
+            # conditions to be disjoint, so at most one of them sets `x_id`
+            row = next(
+                (
+                    rows[(condition_id, x_id)]
+                    for condition_id in condition_ids
+                    if (condition_id, x_id) in rows
+                ),
+                None,
+            )
+            mask.append(row is not None)
+            index.append(0 if row is None else row)
+        return jnp.array(mask, dtype=bool), jnp.array(index, dtype=int)
 
     @abstractmethod
     def _y(
@@ -717,6 +826,9 @@ class JAXModel(eqx.Module):
         posteq_mask: jt.Bool[jt.Array, "P"] | None = None,
         posteq_slots: tuple[bool, ...] | None = None,
         ret: ReturnValue = ReturnValue.llh,
+        reinit_mask: jt.Bool[jt.Array, "P *nx"] | None = None,
+        reinit_index: jt.Int[jt.Array, "P *nx"] | None = None,
+        reinit_pc: jt.Float[jt.Array, "*npc"] | None = None,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
         Unjitted version of simulate_experiment.
@@ -747,6 +859,12 @@ class JAXModel(eqx.Module):
             mask_reinit = jnp.array([])
         if x_reinit is None:
             x_reinit = jnp.array([])
+        if reinit_mask is None:
+            reinit_mask = jnp.array([])
+        if reinit_index is None:
+            reinit_index = jnp.array([], dtype=int)
+        if reinit_pc is None:
+            reinit_pc = jnp.array([])
         if init_override is None:
             init_override = jnp.array([])
         if init_override_mask is None:
@@ -774,6 +892,11 @@ class JAXModel(eqx.Module):
             ts_mask = jnp.ones_like(my, dtype=jnp.bool_)
 
         has_reinit = x_reinit.shape[-1] > 0
+        has_reinit_expr = (
+            reinit_mask.shape[-1] > 0
+            and reinit_index.shape[-1] > 0
+            and len(self.reinitialisation_targets) > 0
+        )
 
         t0_0 = t_zero[0]
         if x_preeq.shape[0]:
@@ -807,7 +930,25 @@ class JAXModel(eqx.Module):
                 # back to full state space
                 x_i_full = self._x_rdata(x_solver, tcl_prev)
 
+            if has_reinit_expr:
+                # Condition-table reinitialisations, evaluated by the model's
+                # own generated code. `x_i_full` is the *incoming* state, so
+                # a value referencing another state (`A = A + 5*B`) sees the
+                # simulated trajectory at this period boundary, and all
+                # changes of a period are applied simultaneously (each is
+                # computed from the pre-change state).
+                reinit_values = self._x_reinit(x_i_full, p_i, reinit_pc)
+                x_i_full = jnp.where(
+                    reinit_mask[i],
+                    reinit_values[reinit_index[i]],
+                    x_i_full,
+                )
+
             if has_reinit:
+                # Network-driven (hybridization) initial values, supplied as
+                # data by the PEtab layer. Applied after the condition-table
+                # expressions above so that a network keeps precedence over a
+                # condition, matching `JAXProblem._state_reinitialisation_value`.
                 x_i_full = jnp.where(mask_reinit[i], x_reinit[i], x_i_full)
 
             x_solver = self._x_solver(x_i_full)
@@ -974,6 +1115,9 @@ class JAXModel(eqx.Module):
         posteq_mask: jt.Bool[jt.Array, "P"] | None = None,
         posteq_slots: tuple[bool, ...] | None = None,
         ret: ReturnValue = ReturnValue.llh,
+        reinit_mask: jt.Bool[jt.Array, "P *nx"] | None = None,
+        reinit_index: jt.Int[jt.Array, "P *nx"] | None = None,
+        reinit_pc: jt.Float[jt.Array, "*npc"] | None = None,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
         Simulate an experiment (JIT-compiled version).
@@ -1036,6 +1180,19 @@ class JAXModel(eqx.Module):
             it marked as 1.0.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
+        :param reinit_mask:
+            mask selecting the states that a condition-table change
+            reinitialises, one row per experiment period. The values
+            themselves come from the model's own generated
+            :meth:`_x_reinit`, so that reinitialisation values referencing
+            other states are evaluated against the simulated trajectory.
+        :param reinit_index:
+            for each masked state, the index into :meth:`_x_reinit`'s output
+            that supplies its value. Entries for unmasked states are ignored
+            (but must still be in range).
+        :param reinit_pc:
+            values for :attr:`reinitialisation_parameter_ids`, passed through
+            to :meth:`_x_reinit`.
         :return:
             output according to `ret` and general results/statistics
         """
@@ -1066,6 +1223,9 @@ class JAXModel(eqx.Module):
             posteq_mask,
             posteq_slots,
             ret,
+            reinit_mask,
+            reinit_index,
+            reinit_pc,
         )
 
     def simulate_condition(self, *args, **kwargs):
@@ -1092,6 +1252,9 @@ class JAXModel(eqx.Module):
             ..., diffrax._custom_types.BoolScalarLike
         ],
         max_steps: int | jnp.int_,
+        reinit_mask: jt.Bool[jt.Array, "*nx"] | None = None,
+        reinit_index: jt.Int[jt.Array, "*nx"] | None = None,
+        reinit_pc: jt.Float[jt.Array, "*npc"] | None = None,
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:
         r"""
         Simulate a condition.
@@ -1112,6 +1275,14 @@ class JAXModel(eqx.Module):
             step size controller
         :param max_steps:
             maximum number of solver steps
+        :param reinit_mask:
+            mask selecting the states that a condition-table change
+            reinitialises, see :meth:`simulate_experiment`.
+        :param reinit_index:
+            index into :meth:`_x_reinit`'s output per state, see
+            :meth:`simulate_experiment`.
+        :param reinit_pc:
+            values for :attr:`reinitialisation_parameter_ids`.
         :return:
             pre-equilibrated state variables and statistics
         """
@@ -1120,10 +1291,24 @@ class JAXModel(eqx.Module):
         if p is None:
             p = self.parameters
 
+        if reinit_mask is None:
+            reinit_mask = jnp.array([])
+        if reinit_index is None:
+            reinit_index = jnp.array([], dtype=int)
+        if reinit_pc is None:
+            reinit_pc = jnp.array([])
+
         if not h_mask.shape[0]:
             h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
 
         x0 = self._x0(t0, p)
+        if (
+            reinit_mask.shape[-1]
+            and reinit_index.shape[-1]
+            and len(self.reinitialisation_targets)
+        ):
+            reinit_values = self._x_reinit(x0, p, reinit_pc)
+            x0 = jnp.where(reinit_mask, reinit_values[reinit_index], x0)
         if x_reinit.shape[0]:
             x0 = jnp.where(mask_reinit, x_reinit, x0)
         tcl = self._tcl(x0, p)

@@ -123,6 +123,7 @@ class ODEExporter:
         verbose: bool | int | None = False,
         model_name: str | None = "model",
         hybridization: dict[str, dict] = None,
+        reinitialisations: list[dict] = None,
     ):
         """
         Generate AMICI jax files for the ODE provided to the constructor.
@@ -143,6 +144,15 @@ class ODEExporter:
         :param hybridization:
             dict representation of the hybridization information in the PEtab YAML file, see
             https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
+
+        :param reinitialisations:
+            PEtab condition-table changes to bake into the generated model as
+            state reinitialisation expressions, see
+            :meth:`_process_reinitialisations`. Each entry is a dict with keys
+            ``condition_id``, ``target_id`` and ``target_value``. Entries whose
+            ``target_id`` is not a state of ``ode_model`` are ignored (they are
+            parameter overrides, which are applied through the parameter
+            vector instead).
         """
         set_log_level(logger, verbose)
 
@@ -171,6 +181,10 @@ class ODEExporter:
         self.model: DEModel = ode_model
 
         self.hybridization = hybridization if hybridization is not None else {}
+
+        self.reinitialisations = (
+            list(reinitialisations) if reinitialisations is not None else []
+        )
 
         self._code_printer = AmiciJaxCodePrinter()
 
@@ -249,7 +263,10 @@ class ODEExporter:
 
         array_inputs_init = self._generate_array_inputs_init()
 
+        reinit_data = self._process_reinitialisations(indent)
+
         tpl_data = {
+            **reinit_data,
             # assign named variable using corresponding algebraic formula (function body)
             **_jax_variable_equations(
                 self.model, self._code_printer, eq_names, subs, indent
@@ -307,6 +324,117 @@ class ODEExporter:
             self.model_path / "__init__.py",
             tpl_data,
         )
+
+    def _process_reinitialisations(self, indent: int) -> dict[str, str]:
+        """Generate the ``_x_reinit`` body and metadata from PEtab
+        condition-table changes.
+
+        Every condition-table change whose target is a *state* of the model is
+        emitted as one assignment inside the generated ``_x_reinit`` method,
+        so that state reinitialisation is part of the model file rather than
+        data computed by the PEtab layer at simulation time. This is what
+        makes reinitialisation values that reference other states (e.g.
+        ``A = A + 5*B``, which needs the *simulated* value of ``B`` at the
+        period boundary) representable at all, and it keeps the generated
+        model deployable without the PEtab problem it was generated from.
+
+        The generated method receives
+
+        * ``x`` -- the full (``x_rdata``) state vector at the period boundary,
+        * ``p`` -- the model's parameter vector (``p`` and ``k``) for the
+          period, and
+        * ``pc`` -- values for any remaining free symbols, i.e. PEtab
+          parameters that are not model parameters (reported through the
+          model's ``reinitialisation_parameter_ids``).
+
+        Because reinitialisation is applied *before* the new period's
+        conservation laws (``tcl``) and expressions (``w``) are computed --
+        indeed, the reinitialised state is what they are computed from -- the
+        generated code cannot evaluate ``w``. A ``targetValue`` referencing an
+        assignment-rule-governed quantity is therefore rejected here, at code
+        generation time, rather than failing later inside the code printer.
+
+        :param indent:
+            indentation level (number of leading blanks) of the generated
+            equation block
+        :return:
+            ``tpl_data`` entries for the reinitialisation placeholders
+        """
+        state_syms = {s.name: s for s in self.model.sym("x_rdata")}
+        p_sym_names = {s.name for s in self._get_all_p_syms()}
+        # `w` (assignment-rule-governed expressions) and observables are not
+        # available where reinitialisation is applied, see the docstring.
+        unavailable = {
+            **{
+                s.name: "an assignment rule target"
+                for s in self.model.sym("w")
+            },
+            **{s.name: "an observable" for s in self.model.sym("y")},
+            "t": "the simulation time",
+            "time": "the simulation time",
+        }
+
+        targets: list[tuple[str, str, str]] = []
+        exprs: list[sp.Expr] = []
+        pc_names: list[str] = []
+
+        for entry in self.reinitialisations:
+            target_id = entry["target_id"]
+            if target_id not in state_syms:
+                # a parameter override, applied through the parameter vector
+                continue
+            expr = sp.sympify(entry["target_value"])
+            for sym in sorted(expr.free_symbols, key=str):
+                name = sym.name
+                if name in state_syms or name in p_sym_names:
+                    continue
+                if name in unavailable:
+                    raise NotImplementedError(
+                        f"Condition {entry['condition_id']!r} initialises the "
+                        f"state {target_id!r} to {expr}, which references "
+                        f"{name!r}. The model represents {name!r} as "
+                        f"{unavailable[name]}, whose value is only defined "
+                        "once the conservation laws and expressions of the "
+                        "period have been computed -- which happens after "
+                        "(and from) the reinitialised state. State "
+                        "reinitialisation values may only reference states "
+                        "and parameters. Rewrite the target value in terms "
+                        "of states and parameters."
+                    )
+                if name not in pc_names:
+                    pc_names.append(name)
+            targets.append((entry["condition_id"], target_id, str(expr)))
+            exprs.append(expr)
+
+        pc_names = sorted(pc_names)
+
+        if exprs:
+            symbols = [sp.Symbol(f"_x_reinit_{i}") for i in range(len(exprs))]
+            eq = "\n".join(
+                self._code_printer._get_sym_lines(
+                    symbols, sp.Matrix(exprs), indent
+                )
+            )[indent:]
+            ret = _jnp_array_str([s.name for s in symbols])
+        else:
+            eq = "pass"
+            ret = "jnp.array([])"
+
+        return {
+            "X_REINIT_EQ": eq,
+            "X_REINIT_RET": ret,
+            "REINIT_P_SYMS": "".join(f"{name}, " for name in pc_names)
+            if pc_names
+            else "_",
+            "REINIT_P_IDS": "".join(f'"{name}", ' for name in pc_names)
+            if pc_names
+            else "tuple()",
+            "REINIT_TARGETS": "".join(
+                f"({c!r}, {t!r}, {v!r}), " for c, t, v in targets
+            )
+            if targets
+            else "tuple()",
+        }
 
     def _generate_array_inputs_init(self) -> str:
         """Generate code to initialize array inputs from HDF5 data.

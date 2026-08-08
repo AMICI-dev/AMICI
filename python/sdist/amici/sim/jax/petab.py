@@ -432,7 +432,6 @@ class JAXProblem(eqx.Module):
     _petab_measurement_indices: np.ndarray
     _petab_problem: petabv2.Problem
     _unconverted_problem: petabv2.Problem | None
-    _all_condition_targets: frozenset[str]
 
     def __init__(
         self,
@@ -459,14 +458,13 @@ class JAXProblem(eqx.Module):
         self.simulation_conditions = scs.conditionId.to_list()
         self._petab_problem = petab_problem
         self._unconverted_problem = unconverted_problem
-        self._all_condition_targets = frozenset(
-            change.target_id
-            for condition in self._petab_problem.conditions
-            for change in condition.changes
-        )
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
+        # State reinitialisation is baked into the generated model file, so a
+        # stale (cached) model directory must not be paired with an edited
+        # condition table.
+        self._check_reinitialisation_targets()
         self._parameter_mappings = self._get_parameter_mappings()
         (
             self._max_periods,
@@ -1707,33 +1705,6 @@ class JAXProblem(eqx.Module):
         else:
             return jnp.asarray(param_entry, dtype=self.model.parameters.dtype)
 
-    def _first_condition_value(
-        self, condition_ids: list[str], state_id: str
-    ):
-        """
-        Find the value assigned to ``state_id`` by the first of
-        ``condition_ids`` (applied simultaneously, e.g. for one experiment
-        period) that actually sets it.
-
-        The value is returned as a :class:`_CompiledConditionExpr` (a
-        numeric literal or a reference to a single other parameter is just
-        its zero/one-free-symbol special case).
-
-        :param condition_ids:
-            Condition IDs to check, in priority order.
-        :param state_id:
-            State (or parameter) id to look up.
-        :return:
-            The assigned value, or ``None`` if none of ``condition_ids``
-            sets ``state_id``.
-        """
-        for condition_id in condition_ids:
-            for change in self._petab_problem[condition_id].changes:
-                if change.target_id != state_id:
-                    continue
-                return _resolve_petab_change_value(change.target_value)
-        return None
-
     def _state_needs_reinitialisation(
         self,
         condition_ids: list[str],
@@ -1741,8 +1712,14 @@ class JAXProblem(eqx.Module):
         is_initial: bool = True,
     ) -> bool:
         """
-        Check if a state needs reinitialisation for the given (simultaneous)
-        conditions.
+        Check if a state needs *network-driven* reinitialisation for the
+        given (simultaneous) conditions.
+
+        Condition-table changes are deliberately *not* considered here: they
+        are compiled into the generated model's own ``_x_reinit`` (see
+        :meth:`_load_reinitialisation_expressions`) rather than precomputed
+        as data, so that a reinitialisation value may reference the simulated
+        value of another state.
 
         :param condition_ids:
             condition ids (e.g. of one experiment period) to check
@@ -1754,18 +1731,17 @@ class JAXProblem(eqx.Module):
             later period boundary. A neural network that drives a state
             supplies that state's *initial value*, so it must not be
             re-applied at every subsequent period boundary, where it would
-            overwrite the integrated trajectory. Condition-table changes
-            are unaffected: they apply wherever their condition does.
+            overwrite the integrated trajectory.
         :return:
             True if state needs reinitialisation, False otherwise
         """
-        if is_initial and state_id in self.nn_output_ids:
-            return True
+        if not is_initial:
+            return False
 
-        if is_initial and state_id in self._parameter_mappings["hybrid_map"]:
-            return True
-
-        return self._first_condition_value(condition_ids, state_id) is not None
+        return (
+            state_id in self.nn_output_ids
+            or state_id in self._parameter_mappings["hybrid_map"]
+        )
 
     def _state_reinitialisation_value(
         self,
@@ -1775,7 +1751,10 @@ class JAXProblem(eqx.Module):
         is_initial: bool = True,
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
-        Get the reinitialisation value for a state.
+        Get the network-driven reinitialisation value for a state.
+
+        Condition-table changes are handled by the model's generated
+        ``_x_reinit``, see :meth:`_state_needs_reinitialisation`.
 
         :param condition_ids:
             condition ids (e.g. of one experiment period) to get the
@@ -1802,46 +1781,8 @@ class JAXProblem(eqx.Module):
                 self._first_condition_id(condition_ids),
             )
 
-        if (
-            xval := self._first_condition_value(condition_ids, state_id)
-        ) is None:
-            # no reinitialisation, return dummy value
-            return 0.0
-
-        def resolve_symbol(name: str):
-            if name in self.model.parameter_ids:
-                # model parameter, return value
-                return p[self.model.parameter_ids.index(name)]
-            if name in self.parameter_ids:
-                # estimated PEtab parameter, return unscaled value. PEtab
-                # v2 has no parameterScale column -- all parameters are
-                # linear.
-                return jax_unscale(
-                    self.get_petab_parameter_by_id(name), petabv2.C.LIN
-                )
-            if name in self.model.state_ids:
-                # a reinitialisation value referencing another state's
-                # value (e.g. `A = A + 5.0`) would need that state's
-                # actual simulated value at this period boundary, which
-                # `load_reinitialisation` cannot provide: `x_reinit` is
-                # precomputed once per experiment (see
-                # `_prepare_experiments`), before any period is actually
-                # integrated, so no simulated state exists yet to
-                # reference.
-                raise NotImplementedError(
-                    "Condition table changes referencing another state's "
-                    f"value (got {name!r}) are not supported."
-                )
-            # only remaining option is nominal value for PEtab parameter
-            # that is not estimated, return nominal value
-            return self._petab_problem.parameter_df.loc[
-                name, petabv2.C.NOMINAL_VALUE
-            ]
-
-        # a numeric literal or a single parameter reference is just the
-        # zero/one-free-symbol case of the same compiled-expression
-        # mechanism
-        return xval(resolve_symbol)
+        # no reinitialisation, return dummy value
+        return 0.0
 
     def load_reinitialisation(
         self,
@@ -1850,8 +1791,12 @@ class JAXProblem(eqx.Module):
         is_initial: bool = True,
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
-        Load reinitialisation values and mask for the state vector for the
-        given (simultaneous) conditions.
+        Load network-driven reinitialisation values and mask for the state
+        vector for the given (simultaneous) conditions.
+
+        Condition-table state changes are *not* included here; they are
+        applied by the model's own generated code, see
+        :meth:`_load_reinitialisation_expressions`.
 
         :param condition_ids:
             Condition id(s) (e.g. of one experiment period) to load
@@ -1871,11 +1816,10 @@ class JAXProblem(eqx.Module):
             period boundary; see
             :meth:`_state_needs_reinitialisation`.
         :return:
-            Tuple of reinitialisation masm and value for states.
+            Tuple of reinitialisation mask and value for states.
         """
         has_reinitialisable_states = any(
-            x_id in self._all_condition_targets
-            or x_id in self.nn_output_ids
+            x_id in self.nn_output_ids
             or x_id in self._parameter_mappings["hybrid_map"]
             for x_id in self.model.state_ids
         )
@@ -1909,6 +1853,148 @@ class JAXProblem(eqx.Module):
             ]
         )
         return mask, reinit_x
+
+    def _petab_reinitialisation_targets(self) -> dict[tuple[str, str], str]:
+        """The condition-table changes that (re)initialise a model state.
+
+        Keyed by ``(condition_id, target_id)``, valued by the canonical
+        ``str()`` of the sympified ``targetValue``. This is exactly the
+        enumeration the JAX exporter performs at code-generation time (see
+        :meth:`amici.exporters.jax.ode_export.ODEExporter._process_reinitialisations`),
+        re-derived from the *current* PEtab problem so that the two can be
+        compared, see :meth:`_check_reinitialisation_targets`.
+        """
+        state_ids = set(self.model.state_ids)
+        return {
+            (condition.id, change.target_id): str(
+                sp.sympify(change.target_value)
+            )
+            for condition in self._petab_problem.conditions
+            for change in condition.changes
+            if change.target_id in state_ids
+        }
+
+    def _check_reinitialisation_targets(self) -> None:
+        """Guard against a cached model generated from a different condition
+        table.
+
+        State reinitialisation expressions live *inside* the generated model
+        file now, so an edited ``targetValue`` combined with a reused model
+        directory (``force_import=False``) would otherwise silently keep
+        simulating the value the model was generated with.
+
+        :raises ValueError:
+            if the model's baked-in reinitialisations do not match the ones
+            the PEtab problem currently specifies.
+        """
+        expected = self._petab_reinitialisation_targets()
+        actual = {
+            (condition_id, target_id): target_value
+            for condition_id, target_id, target_value in (
+                self.model.reinitialisation_targets
+            )
+        }
+        if actual == expected:
+            return
+
+        def _fmt(keys, source):
+            return ", ".join(
+                f"{condition_id}: {target_id} = {source[(condition_id, target_id)]}"
+                for condition_id, target_id in sorted(keys)
+            )
+
+        problems = []
+        if missing := set(expected) - set(actual):
+            problems.append(
+                f"missing from the model: {_fmt(missing, expected)}"
+            )
+        if extra := set(actual) - set(expected):
+            problems.append(
+                f"no longer in the PEtab problem: {_fmt(extra, actual)}"
+            )
+        if changed := {
+            k for k in set(actual) & set(expected) if actual[k] != expected[k]
+        }:
+            problems.append(
+                "changed value: "
+                + ", ".join(
+                    f"{condition_id}: {target_id} = {actual[(condition_id, target_id)]}"
+                    f" (model) vs {expected[(condition_id, target_id)]} (PEtab problem)"
+                    for condition_id, target_id in sorted(changed)
+                )
+            )
+        raise ValueError(
+            "The generated JAX model's state reinitialisations do not match "
+            "the PEtab problem's condition table: "
+            + "; ".join(problems)
+            + ". State reinitialisation is generated into the model file, so "
+            "the model must be regenerated after editing the condition "
+            "table (e.g. `PetabImporter(...).create_simulator("
+            "force_import=True)`, or delete the model output directory)."
+        )
+
+    def _reinitialisation_parameters(self) -> jt.Float[jt.Array, "npc"]:  # noqa: F821
+        """Values for the model's :attr:`reinitialisation_parameter_ids`.
+
+        These are the free symbols of the generated reinitialisation
+        expressions that are *not* model parameters, i.e. PEtab parameters
+        that never made it into the model (a common case: a parameter that is
+        only ever used as a species' initial value via the condition table).
+        Resolved live against :attr:`parameters` so that gradients w.r.t.
+        estimated parameters flow into the reinitialised state.
+        """
+        ids = self.model.reinitialisation_parameter_ids
+        if not ids:
+            return jnp.array([])
+
+        def value(name: str):
+            if name in self.parameter_ids:
+                # PEtab v2 has no parameterScale column -- all parameters
+                # are linear -- but keep the unscaling explicit.
+                return jax_unscale(
+                    self.get_petab_parameter_by_id(name), petabv2.C.LIN
+                )
+            if (
+                self._petab_problem.parameter_df is not None
+                and name in self._petab_problem.parameter_df.index
+            ):
+                return jnp.asarray(
+                    self._petab_problem.parameter_df.loc[
+                        name, petabv2.C.NOMINAL_VALUE
+                    ],
+                    dtype=self.model.parameters.dtype,
+                )
+            raise ValueError(
+                f"The state reinitialisation expressions of model "
+                f"{self.model.__class__.__name__} reference {name!r}, which "
+                "is neither a model parameter nor a PEtab parameter of this "
+                "problem."
+            )
+
+        return jnp.stack([jnp.asarray(value(name)) for name in ids])
+
+    def _load_reinitialisation_expressions(
+        self, condition_ids: list[str] | str | None
+    ) -> tuple[jt.Bool[jt.Array, "*nx"], jt.Int[jt.Array, "*nx"]]:  # noqa: F821, F722
+        """Mask and row index selecting the model's generated reinitialisation
+        expressions for the given (simultaneous) conditions.
+
+        The *values* are computed by the model itself
+        (:meth:`JAXModel._x_reinit`) at the period boundary, from the state
+        actually reached there; all this has to supply is which state takes
+        which of the model's reinitialisation rows -- which the model can
+        answer on its own (:meth:`JAXModel.reinitialisation_selection`), since
+        it carries the condition ids it was generated with.
+
+        :param condition_ids:
+            Condition id(s) of one experiment period, or ``None`` for a
+            padding slot / an absent preequilibration period.
+        :return:
+            Tuple of a boolean mask over states and, per state, the index
+            into :meth:`JAXModel._x_reinit`'s output. Both are empty if the
+            model has no reinitialisation expressions at all.
+        """
+        return self.model.reinitialisation_selection(condition_ids)
 
     def update_parameters(self, p: jt.Float[jt.Array, "np"]) -> "JAXProblem":
         """
@@ -1966,8 +2052,12 @@ class JAXProblem(eqx.Module):
         :param np_indices:
             Free parameter indices (wrt. `self.parameters`) for noise parameter overrides.
         :return:
-            Tuple of parameter arrays, reinitialisation masks and reinitialisation values, observable parameters and
-            noise parameters.
+            Tuple of parameter arrays, network-driven reinitialisation masks
+            and values, observable parameters, noise parameters, event mask,
+            period start times, post-equilibration mask/slots, and the
+            condition-table reinitialisation mask, expression index and
+            expression parameter values (the latter three select and feed the
+            model's own generated :meth:`JAXModel._x_reinit`).
         """
         if is_preeq:
             p_array = jnp.stack(
@@ -2110,6 +2200,35 @@ class JAXProblem(eqx.Module):
         else:
             np_array = jnp.zeros((*self._ts_masks.shape, 0))
 
+        # Condition-table state changes: the model's own generated
+        # `_x_reinit` computes the values at the period boundary, so only the
+        # (static) selection of which state takes which expression is passed
+        # in here.
+        reinit_pc = self._reinitialisation_parameters()
+        if is_preeq:
+            reinit_expressions = [
+                self._load_reinitialisation_expressions(cids)
+                for cids in reinit_condition_ids
+            ]
+        else:
+            reinit_expressions = [
+                [
+                    self._load_reinitialisation_expressions(cids_i)
+                    for cids_i in cids_per_period
+                ]
+                for cids_per_period in reinit_condition_ids
+            ]
+        if is_preeq:
+            reinit_mask_array = jnp.stack([m for m, _ in reinit_expressions])
+            reinit_index_array = jnp.stack([i for _, i in reinit_expressions])
+        else:
+            reinit_mask_array = jnp.stack(
+                [jnp.stack([m for m, _ in e]) for e in reinit_expressions]
+            )
+            reinit_index_array = jnp.stack(
+                [jnp.stack([i for _, i in e]) for e in reinit_expressions]
+            )
+
         if is_preeq:
             mask_reinit_array = jnp.stack(
                 [
@@ -2191,6 +2310,9 @@ class JAXProblem(eqx.Module):
             t_zeros,
             posteq_mask,
             posteq_slots,
+            reinit_mask_array,
+            reinit_index_array,
+            reinit_pc,
         )
 
     @eqx.filter_vmap(
@@ -2200,6 +2322,9 @@ class JAXProblem(eqx.Module):
             "self": None,
             # static per-slot flag shared by all experiments
             "posteq_slots": None,
+            # PEtab parameters are global, so the reinitialisation expression
+            # parameters are shared across experiments rather than batched
+            "reinit_pc": None,
         },  # only list arguments here where eqx.is_array(0) is not the right thing
     )
     def run_simulation(
@@ -2233,6 +2358,9 @@ class JAXProblem(eqx.Module):
         experiment_index: jnp.int32 = jnp.int32(0),
         ret: ReturnValue = ReturnValue.llh,
         checkpoints: int | None = None,
+        reinit_mask: jt.Bool[jt.Array, "P nx"] = None,  # noqa: F821, F722
+        reinit_index: jt.Int[jt.Array, "P nx"] = None,  # noqa: F821, F722
+        reinit_pc: jt.Float[jt.Array, "npc"] = None,  # noqa: F821, F722
     ) -> tuple[jnp.float_, dict]:
         """
         Run a simulation for a given simulation experiment.
@@ -2279,6 +2407,16 @@ class JAXProblem(eqx.Module):
             simulation start time for the current experiment.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
+        :param reinit_mask:
+            Mask selecting the states reinitialised by a condition-table
+            change, one row per experiment period. See
+            :meth:`JAXModel.simulate_experiment`.
+        :param reinit_index:
+            Per state, the index into the model's generated
+            :meth:`JAXModel._x_reinit` output.
+        :param reinit_pc:
+            Values for the model's
+            :attr:`JAXModel.reinitialisation_parameter_ids`.
         :param checkpoints:
             number of checkpoints for the reverse-mode adjoint
             (:class:`diffrax.RecursiveCheckpointAdjoint`, used when ``ret`` is
@@ -2307,6 +2445,19 @@ class JAXProblem(eqx.Module):
             h_preeq=h_preeq,
             mask_reinit=jax.lax.stop_gradient(mask_reinit),
             x_reinit=x_reinit,
+            reinit_mask=(
+                None
+                if reinit_mask is None
+                else jax.lax.stop_gradient(reinit_mask)
+            ),
+            reinit_index=(
+                None
+                if reinit_index is None
+                else jax.lax.stop_gradient(reinit_index)
+            ),
+            # not stop_gradient'ed: an estimated PEtab parameter used as a
+            # (re)initial value must stay differentiable
+            reinit_pc=reinit_pc,
             init_override=init_override,
             init_override_mask=jax.lax.stop_gradient(init_override_mask),
             ts_mask=jax.lax.stop_gradient(jnp.array(ts_mask)),
@@ -2384,6 +2535,9 @@ class JAXProblem(eqx.Module):
             t_zeros,
             posteq_mask,
             posteq_slots,
+            reinit_mask_array,
+            reinit_index_array,
+            reinit_pc,
         ) = self._prepare_experiments(
             experiments,
             False,
@@ -2453,12 +2607,17 @@ class JAXProblem(eqx.Module):
             jnp.arange(len(experiments)),
             ret,
             checkpoints,
+            reinit_mask_array,
+            reinit_index_array,
+            reinit_pc,
         )
 
     @eqx.filter_vmap(
         in_axes={
             "max_steps": None,
             "self": None,
+            # PEtab parameters are global, so shared across experiments
+            "reinit_pc": None,
         },  # only list arguments here where eqx.is_array(0) is not the right thing
     )
     def run_preequilibration(
@@ -2474,6 +2633,9 @@ class JAXProblem(eqx.Module):
             ..., diffrax._custom_types.BoolScalarLike
         ],
         max_steps: jnp.int_,
+        reinit_mask: jt.Bool[jt.Array, "nx"] = None,  # noqa: F821, F722
+        reinit_index: jt.Int[jt.Array, "nx"] = None,  # noqa: F821, F722
+        reinit_pc: jt.Float[jt.Array, "npc"] = None,  # noqa: F821, F722
     ) -> tuple[jt.Float[jt.Array, "nx"], dict]:  # noqa: F821
         """
         Run a pre-equilibration simulation for a given simulation experiment.
@@ -2495,6 +2657,15 @@ class JAXProblem(eqx.Module):
             condition, see :func:`diffrax.steady_state_event` for details.
         :param max_steps:
             Maximum number of steps to take during simulation
+        :param reinit_mask:
+            Mask selecting the states reinitialised by a condition-table
+            change in the preequilibration period.
+        :param reinit_index:
+            Per state, the index into the model's generated
+            :meth:`JAXModel._x_reinit` output.
+        :param reinit_pc:
+            Values for the model's
+            :attr:`JAXModel.reinitialisation_parameter_ids`.
         :return:
             Pre-equilibration state
         """
@@ -2508,6 +2679,17 @@ class JAXProblem(eqx.Module):
             root_finder=root_finder,
             max_steps=max_steps,
             steady_state_event=steady_state_event,
+            reinit_mask=(
+                None
+                if reinit_mask is None
+                else jax.lax.stop_gradient(reinit_mask)
+            ),
+            reinit_index=(
+                None
+                if reinit_index is None
+                else jax.lax.stop_gradient(reinit_index)
+            ),
+            reinit_pc=reinit_pc,
         )
 
     def run_preequilibrations(
@@ -2521,9 +2703,20 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _, _, _ = (
-            self._prepare_experiments(experiments, True, None, None)
-        )
+        (
+            p_array,
+            mask_reinit_array,
+            x_reinit_array,
+            _,
+            _,
+            h_mask,
+            _,
+            _,
+            _,
+            reinit_mask_array,
+            reinit_index_array,
+            reinit_pc,
+        ) = self._prepare_experiments(experiments, True, None, None)
         return self.run_preequilibration(
             p_array,
             mask_reinit_array,
@@ -2534,6 +2727,9 @@ class JAXProblem(eqx.Module):
             root_finder,
             steady_state_event,
             max_steps,
+            reinit_mask_array,
+            reinit_index_array,
+            reinit_pc,
         )
 
 

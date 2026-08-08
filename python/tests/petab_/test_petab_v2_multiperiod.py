@@ -165,6 +165,219 @@ def test_gradient_through_multiperiod_chain_matches_analytical_derivative(
     np.testing.assert_allclose(float(grad[0]), expected_grad, rtol=1e-4)
 
 
+def _two_species_decay_problem() -> Problem:
+    """Two independently decaying species, ``AA' = -kA*AA``, ``BB' = -kB*BB``."""
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "AA = 1; BB = 2; kA = 0.5; kB = 0.25; AA' = -kA*AA; BB' = -kB*BB;"
+    )
+    problem.add_observable("obs_a", "AA", noise_formula="1")
+    problem.add_observable("obs_b", "BB", noise_formula="1")
+    return problem
+
+
+def _state_from_state_problem(
+    reinit_expr: str = "AA + scale*BB",
+) -> Problem:
+    """A two-period problem whose second period initialises ``AA`` from the
+    *simulated* value of both ``AA`` and ``BB`` at the period boundary."""
+    problem = _two_species_decay_problem()
+    problem.add_parameter(
+        "scale", nominal_value=5.0, estimate=True, lb=0.1, ub=10
+    )
+    problem.add_condition("c_p1", AA=1.0, BB=2.0)
+    # the previously-unsupported case: a state's (re)initial value is an
+    # expression in other states' simulated values, mixed with an estimated
+    # PEtab parameter that is not a model parameter
+    problem.add_condition("c_p2", AA=reinit_expr)
+    problem.add_experiment("exp1", 0.0, "c_p1", 1.0, "c_p2")
+    return problem
+
+
+#: measurement times of :func:`_state_from_state_problem`, one in the first
+#: period and two in the second
+_STATE_FROM_STATE_TIMES = (0.5, 1.5, 2.5)
+
+
+def _state_from_state_analytical(
+    scale: float, t: float
+) -> tuple[float, float]:
+    """``(AA(t), BB(t))`` of :func:`_state_from_state_problem`, segment-wise.
+
+    ``AA`` and ``BB`` decay independently at rates 0.5 and 0.25 from
+    ``AA(0)=1``/``BB(0)=2``. At ``t=1`` the second period's condition replaces
+    ``AA`` by ``AA(1) + scale*BB(1)``, leaving ``BB`` untouched.
+    """
+    if t < 1.0:
+        return np.exp(-0.5 * t), 2.0 * np.exp(-0.25 * t)
+    aa1 = np.exp(-0.5)
+    bb1 = 2.0 * np.exp(-0.25)
+    return (
+        (aa1 + scale * bb1) * np.exp(-0.5 * (t - 1.0)),
+        bb1 * np.exp(-0.25 * (t - 1.0)),
+    )
+
+
+def test_period_condition_initialises_state_from_another_state(tmp_path):
+    """A non-first period's condition may set a state from other states'
+    *simulated* values (``AA = AA + scale*BB``).
+
+    This is only possible because the reinitialisation expression is
+    generated into the model file (``JAXModel._x_reinit``) and evaluated at
+    the period boundary against the state actually reached there. Resolving
+    it in Python ahead of the simulation -- as the PEtab layer used to --
+    raised ``NotImplementedError``, since no simulated state exists yet at
+    that point.
+    """
+    problem = _state_from_state_problem()
+    for t in _STATE_FROM_STATE_TIMES:
+        for obs in ("obs_a", "obs_b"):
+            problem.add_measurement(
+                obs, time=t, measurement=0.0, experiment_id="exp1"
+            )
+
+    jax_problem = _import_jax(problem, "test_reinit_state_ref", tmp_path)
+    assert jax_problem._max_periods == 2
+
+    # the reinitialisation expression really is in the generated model file,
+    # not resolved by the PEtab layer
+    assert jax_problem.model.reinitialisation_targets == (
+        ("c_p1", "AA", "1.00000000000000"),
+        ("c_p1", "BB", "2.00000000000000"),
+        ("c_p2", "AA", "AA + BB*scale"),
+    )
+    assert jax_problem.model.reinitialisation_parameter_ids == ("scale",)
+    assert "AA + BB*scale" in jax_problem.model.jax_py_file.read_text()
+
+    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
+    ts_mask = np.asarray(jax_problem._ts_masks)[0].reshape(-1)
+    actual = np.asarray(x)[0].reshape(-1, len(jax_problem.model.state_ids))
+    actual = actual[ts_mask]
+
+    scale = float(
+        jax_problem.parameters[jax_problem.parameter_ids.index("scale")]
+    )
+    i_aa = list(jax_problem.model.state_ids).index("AA")
+    i_bb = list(jax_problem.model.state_ids).index("BB")
+    # two measurements (obs_a, obs_b) share each timepoint
+    expected = np.array(
+        [
+            _state_from_state_analytical(scale, t)
+            for t in _STATE_FROM_STATE_TIMES
+            for _ in range(2)
+        ]
+    )
+    np.testing.assert_allclose(actual[:, i_aa], expected[:, 0], rtol=1e-6)
+    np.testing.assert_allclose(actual[:, i_bb], expected[:, 1], rtol=1e-6)
+
+
+def test_gradient_through_state_referencing_reinitialisation(tmp_path):
+    """The reinitialisation ``AA = AA + scale*BB`` must stay differentiable
+    w.r.t. the estimated parameter ``scale`` appearing in it.
+
+    ``scale`` is a PEtab parameter that is *not* a model parameter (it only
+    ever appears in a condition-table ``targetValue``), so it reaches the
+    generated ``_x_reinit`` through the model's
+    ``reinitialisation_parameter_ids`` channel. With a unit-sigma Gaussian
+    noise model, ``d(llh)/d(scale) = sum_i (m_i - y_i) * dy_i/d(scale)``, and
+    only the second period's ``obs_a`` measurements depend on ``scale``, with
+    ``dAA/d(scale) = BB(1) * exp(-0.5*(t-1))``.
+    """
+    problem = _state_from_state_problem()
+    measurement_value = 1.0
+    for t in _STATE_FROM_STATE_TIMES:
+        problem.add_measurement(
+            "obs_a",
+            time=t,
+            measurement=measurement_value,
+            experiment_id="exp1",
+        )
+
+    jax_problem = _import_jax(problem, "test_reinit_state_ref_grad", tmp_path)
+    i_scale = jax_problem.parameter_ids.index("scale")
+
+    def llh_fn(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    grad = jax.grad(llh_fn)(p0)
+
+    scale = float(p0[i_scale])
+    bb1 = 2.0 * np.exp(-0.25)
+    expected_grad = 0.0
+    for t in _STATE_FROM_STATE_TIMES:
+        if t < 1.0:
+            continue  # first period is independent of `scale`
+        y = _state_from_state_analytical(scale, t)[0]
+        dy_dscale = bb1 * np.exp(-0.5 * (t - 1.0))
+        expected_grad += (measurement_value - y) * dy_dscale
+    np.testing.assert_allclose(float(grad[i_scale]), expected_grad, rtol=1e-5)
+
+    # cross-check against central finite differences
+    eps = 1e-6
+    fd = (
+        float(llh_fn(p0.at[i_scale].add(eps)))
+        - float(llh_fn(p0.at[i_scale].add(-eps)))
+    ) / (2 * eps)
+    np.testing.assert_allclose(float(grad[i_scale]), fd, rtol=1e-5, atol=1e-6)
+
+
+def test_stale_model_condition_table_mismatch_is_detected(tmp_path):
+    """Editing a ``targetValue`` and reusing a cached model directory must
+    fail loudly.
+
+    Reinitialisation values are generated into the model file, so a model
+    generated from a different condition table would otherwise silently keep
+    simulating the value it was generated with.
+    """
+    problem = _state_from_state_problem()
+    for t in _STATE_FROM_STATE_TIMES:
+        problem.add_measurement(
+            "obs_a", time=t, measurement=0.0, experiment_id="exp1"
+        )
+    jax_problem = _import_jax(problem, "test_reinit_stale", tmp_path)
+
+    from amici.sim.jax.petab import JAXProblem
+
+    # same (already generated) model, but the condition table now says
+    # something else
+    edited = _state_from_state_problem("AA + 2*scale*BB")
+    for t in _STATE_FROM_STATE_TIMES:
+        edited.add_measurement(
+            "obs_a", time=t, measurement=0.0, experiment_id="exp1"
+        )
+
+    with pytest.raises(ValueError, match="must be regenerated"):
+        JAXProblem(jax_problem.model, edited)
+
+
+def test_reinitialisation_referencing_assignment_rule_is_rejected(tmp_path):
+    """A ``targetValue`` referencing an assignment-rule target cannot be
+    represented and must be rejected at code generation time.
+
+    Reinitialisation happens at a period boundary *before* the period's
+    expressions (``w``) and conservation laws (``tcl``) are computed -- they
+    are computed *from* the reinitialised state -- so the generated
+    ``_x_reinit`` has no way to evaluate one.
+    """
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "AA = 1; kA = 0.5; scaled := 3*kA; AA' = -kA*AA;"
+    )
+    problem.add_observable("obs_a", "AA", noise_formula="1")
+    problem.add_condition("c_p1", AA=1.0)
+    problem.add_condition("c_p2", AA="scaled")
+    problem.add_experiment("exp1", 0.0, "c_p1", 1.0, "c_p2")
+    problem.add_measurement(
+        "obs_a", time=0.5, measurement=0.0, experiment_id="exp1"
+    )
+
+    with pytest.raises(NotImplementedError, match="assignment rule"):
+        _import_jax(problem, "test_reinit_w_ref", tmp_path)
+
+
 def _threshold_piecewise_decay_problem() -> Problem:
     """A single-species model whose decay rate depends on whether the
     species concentration is above or below a threshold, via a
@@ -173,8 +386,7 @@ def _threshold_piecewise_decay_problem() -> Problem:
     problem = Problem()
     problem.config = ProblemConfig()
     problem.model = SbmlModel.from_antimony(
-        "xx = 1; kfast = 1.0; "
-        "xx' = piecewise(-kfast*xx, xx > 2, -0.1*xx);"
+        "xx = 1; kfast = 1.0; xx' = piecewise(-kfast*xx, xx > 2, -0.1*xx);"
     )
     problem.add_observable("obs1", "xx", noise_formula="1")
     return problem
@@ -269,7 +481,9 @@ def test_petab_importer_skips_event_conversion_for_jax(tmp_path, jax_flag):
         4.0,
         "cond_p3",
     )
-    problem.add_measurement("obs1", time=0.5, measurement=0.0, experiment_id="exp1")
+    problem.add_measurement(
+        "obs1", time=0.5, measurement=0.0, experiment_id="exp1"
+    )
 
     pi = PetabImporter(
         petab_problem=problem,

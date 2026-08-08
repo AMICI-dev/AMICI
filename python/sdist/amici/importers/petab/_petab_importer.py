@@ -502,6 +502,7 @@ class PetabImporter:
                 fixed_parameters=fixed_parameters,
                 verbose=self._verbose,
                 hybridization=hybridization,
+                reinitialisations=self._build_reinitialisations(),
                 # **kwargs,
             )
             return sbml_importer
@@ -740,6 +741,31 @@ class PetabImporter:
             .to_dict()
             .items()
         )
+
+    def _build_reinitialisations(self) -> list[dict]:
+        """Condition-table changes, for baking into the generated JAX model.
+
+        The JAX exporter emits every change whose target is a model *state*
+        as a state-reinitialisation expression inside the generated model
+        file (see
+        :meth:`amici.exporters.jax.ode_export.ODEExporter._process_reinitialisations`),
+        so that the model carries its own reinitialisation code instead of
+        depending on the PEtab layer to precompute values. Changes targeting
+        parameters are passed along unfiltered and dropped by the exporter,
+        which is the side that knows which ids ended up as states.
+
+        :return:
+            One entry per condition-table change, in condition-table order.
+        """
+        return [
+            {
+                "condition_id": condition.id,
+                "target_id": change.target_id,
+                "target_value": change.target_value,
+            }
+            for condition in self.petab_problem.conditions
+            for change in condition.changes
+        ]
 
     def _build_hybridization(self) -> dict[str, dict]:
         if "sciml" not in self.petab_problem.config.extensions:
