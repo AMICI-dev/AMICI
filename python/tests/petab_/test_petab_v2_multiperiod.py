@@ -282,3 +282,57 @@ def test_petab_importer_skips_event_conversion_for_jax(tmp_path, jax_flag):
     # experiment periods are untouched (still 4: preeq + 3 dosing periods)
     assert len(pi.petab_problem.experiments[0].periods) == 4
     assert pi._unconverted_problem is None
+
+
+@pytest.mark.xfail(
+    reason="post-equilibration is gated on the globally-last period index "
+    "(`is_final`, model.py) while post-equilibration measurements are "
+    "attached to each experiment's OWN last period (`is_own_last`, "
+    "petab.py). For an experiment with fewer periods than the problem "
+    "maximum, `eq()` therefore never runs where its `time=inf` rows live, "
+    "and those rows -- which are flagged valid and so enter the likelihood "
+    "-- are scored against the end-of-dynamics state instead of the "
+    "steady state.",
+    strict=True,
+)
+def test_posteq_runs_at_own_last_period_of_a_short_experiment(tmp_path):
+    """A ragged problem: post-equilibration must be applied per experiment.
+
+    ``exp_long`` has two dynamic periods and so sets the problem-wide
+    period count; ``exp_short`` has one, plus a ``time=inf`` measurement.
+    The steady state of ``xx' = -kk*xx`` is ``0``, so a post-equilibrated
+    value is analytically distinguishable from the end-of-dynamics value.
+    """
+    problem = _linear_decay_problem()
+    problem.add_condition("c_a", kk=0.5)
+    problem.add_condition("c_b", kk=0.9)
+
+    # two dynamic periods -> problem-wide maximum is 2
+    problem.add_experiment("exp_long", 0.0, "c_a", 2.0, "c_b")
+    for t in (0.5, 2.5):
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp_long"
+        )
+
+    # a single dynamic period, i.e. fewer than the problem-wide maximum,
+    # carrying a post-equilibration measurement
+    problem.add_experiment("exp_short", 0.0, "c_a")
+    problem.add_measurement(
+        "obs1", time=1.0, measurement=0.0, experiment_id="exp_short"
+    )
+    problem.add_measurement(
+        "obs1", time=np.inf, measurement=0.0, experiment_id="exp_short"
+    )
+
+    jax_problem = _import_jax(problem, "test_ragged_posteq", tmp_path)
+    assert jax_problem._max_periods == 2
+
+    x, _ = run_simulations(jax_problem, ret=ReturnValue.x)
+    exp_ids = [e.id for e in jax_problem._petab_problem.experiments]
+    i_short = exp_ids.index("exp_short")
+    mask = np.asarray(jax_problem._ts_masks)[i_short].reshape(-1)
+    actual = np.asarray(x)[i_short].reshape(-1)[mask]
+
+    # dynamic measurement at t=1.0, then the post-equilibrated steady state
+    np.testing.assert_allclose(actual[0], np.exp(-0.5 * 1.0), rtol=1e-4)
+    np.testing.assert_allclose(actual[-1], 0.0, atol=1e-6)
