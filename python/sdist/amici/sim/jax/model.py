@@ -587,7 +587,8 @@ class JAXModel(eqx.Module):
         h: jt.Bool[jt.Array, "ne"],
         h_mask: jt.Bool[jt.Array, "ne"],
         x_solver: jt.Float[jt.Array, "nxs"],
-        is_final: bool,
+        has_posteq_slot: bool,
+        do_posteq: jt.Bool[jt.Scalar, ""],  # noqa: F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -601,9 +602,9 @@ class JAXModel(eqx.Module):
         Simulate a single experiment period, starting from ``x_solver``/``h``
         at time ``t0`` with parameters ``p``/``tcl``.
 
-        Only the final period of an experiment (``is_final=True``) is
-        post-equilibrated; earlier periods only integrate up to (and
-        including) the synthetic hand-off time point appended to
+        Only an experiment's own final period is post-equilibrated (see
+        ``has_posteq_slot``/``do_posteq``); earlier periods only integrate
+        up to (and including) the synthetic hand-off time point appended to
         ``ts_dyn`` by :meth:`amici.sim.jax.petab.JAXProblem._get_measurements`.
 
         :return:
@@ -639,11 +640,19 @@ class JAXModel(eqx.Module):
             h_dyn = jnp.repeat(h[None, :], ts_dyn.shape[0], axis=0)
             stats_dyn = None
 
-        # Post-equilibration (only ever meaningful for the final period of
-        # an experiment; earlier periods just hand off state to the next
-        # period).
-        if is_final and ts_posteq.shape[0]:
-            x_solver, h, stats_posteq = eq(
+        # Post-equilibration. Which period is an experiment's last is a
+        # per-experiment property, but this loop is shared across the
+        # vmapped experiment axis, so the two halves of the decision are
+        # split: ``has_posteq_slot`` is static and decides whether the
+        # steady-state solve is traced here at all (no experiment carries
+        # post-equilibration rows in this slot -> no solve), while
+        # ``do_posteq`` is a per-experiment traced flag deciding whether
+        # the result is actually adopted. The blend matters: ``eq``
+        # replaces the state that is handed to the next period, so
+        # equilibrating unconditionally would clobber the trajectory of
+        # any experiment whose chain continues past this slot.
+        if has_posteq_slot and ts_posteq.shape[0]:
+            x_eq, h_eq, stats_posteq = eq(
                 p,
                 tcl,
                 h,
@@ -660,6 +669,9 @@ class JAXModel(eqx.Module):
                 self._known_discs(p),
                 max_steps,
             )
+            x_solver = jnp.where(do_posteq, x_eq, x_solver)
+            if h.shape[0]:
+                h = jnp.where(do_posteq, h_eq, h)
         else:
             stats_posteq = None
 
@@ -702,6 +714,8 @@ class JAXModel(eqx.Module):
         ts_mask: jt.Bool[jt.Array, "P nt"] | None = None,
         h_mask: jt.Bool[jt.Array, "ne"] | None = None,
         t_zero: jt.Float[jt.Array, "P"] | None = None,
+        posteq_mask: jt.Bool[jt.Array, "P"] | None = None,
+        posteq_slots: tuple[bool, ...] | None = None,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         """
@@ -743,6 +757,15 @@ class JAXModel(eqx.Module):
             h_mask = jnp.array([])
         if t_zero is None:
             t_zero = jnp.zeros(n_periods)
+        if posteq_mask is None:
+            # default: only the last period post-equilibrates, which is
+            # what a single-experiment (or uniform-period-count) caller
+            # wants and reproduces the previous `is_final` behaviour
+            posteq_mask = jnp.arange(n_periods) == n_periods - 1
+        if posteq_slots is None:
+            posteq_slots = tuple(
+                i == n_periods - 1 for i in range(n_periods)
+            )
 
         if not h_mask.shape[0]:
             h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
@@ -814,7 +837,8 @@ class JAXModel(eqx.Module):
                     h,
                     h_mask,
                     x_solver,
-                    is_final,
+                    posteq_slots[i],
+                    posteq_mask[i],
                     solver,
                     controller,
                     root_finder,
@@ -947,6 +971,8 @@ class JAXModel(eqx.Module):
         ts_mask: jt.Bool[jt.Array, "P nt"] | None = None,
         h_mask: jt.Bool[jt.Array, "ne"] | None = None,
         t_zero: jt.Float[jt.Array, "P"] | None = None,
+        posteq_mask: jt.Bool[jt.Array, "P"] | None = None,
+        posteq_slots: tuple[bool, ...] | None = None,
         ret: ReturnValue = ReturnValue.llh,
     ) -> tuple[jt.Float[jt.Array, "*nt"], dict]:
         r"""
@@ -1037,6 +1063,8 @@ class JAXModel(eqx.Module):
             ts_mask,
             h_mask,
             t_zero,
+            posteq_mask,
+            posteq_slots,
             ret,
         )
 

@@ -2159,6 +2159,28 @@ class JAXProblem(eqx.Module):
                     )
                 ]
             )
+        # Which (experiment, period) cells actually carry post-equilibration
+        # rows. `_ts_masks` spans the concatenated dynamic + post-eq axis, so
+        # the trailing `n_ts_posteq` columns are exactly the post-eq part;
+        # a cell is post-equilibrated iff any of them is unmasked. Post-eq
+        # rows attach to each experiment's *own* last period, which for a
+        # short experiment is not the problem-wide last period -- hence the
+        # per-experiment mask rather than a single `is_final` index.
+        n_ts_posteq = self._ts_posteq.shape[-1]
+        if n_ts_posteq:
+            posteq_mask_np = np.asarray(self._ts_masks)[
+                ..., -n_ts_posteq:
+            ].any(axis=-1)
+        else:
+            posteq_mask_np = np.zeros(self._ts_masks.shape[:-1], dtype=bool)
+        if is_preeq:
+            posteq_mask = jnp.zeros(len(experiments), dtype=bool)
+            posteq_slots = ()
+        else:
+            posteq_mask = jnp.asarray(posteq_mask_np)
+            # static, so that the steady-state solve is only traced for
+            # slots some experiment actually post-equilibrates in
+            posteq_slots = tuple(bool(v) for v in posteq_mask_np.any(axis=0))
         return (
             p_array,
             mask_reinit_array,
@@ -2167,6 +2189,8 @@ class JAXProblem(eqx.Module):
             np_array,
             h_mask,
             t_zeros,
+            posteq_mask,
+            posteq_slots,
         )
 
     @eqx.filter_vmap(
@@ -2174,6 +2198,8 @@ class JAXProblem(eqx.Module):
             "max_steps": None,
             "checkpoints": None,
             "self": None,
+            # static per-slot flag shared by all experiments
+            "posteq_slots": None,
         },  # only list arguments here where eqx.is_array(0) is not the right thing
     )
     def run_simulation(
@@ -2202,6 +2228,8 @@ class JAXProblem(eqx.Module):
         h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),  # noqa: F821, F722
         ts_mask: np.ndarray = np.array([]),
         t_zeros: jnp.float_ = 0.0,
+        posteq_mask: jt.Bool[jt.Array, "P"] = None,  # noqa: F821, F722
+        posteq_slots: tuple[bool, ...] | None = None,
         experiment_index: jnp.int32 = jnp.int32(0),
         ret: ReturnValue = ReturnValue.llh,
         checkpoints: int | None = None,
@@ -2284,6 +2312,12 @@ class JAXProblem(eqx.Module):
             ts_mask=jax.lax.stop_gradient(jnp.array(ts_mask)),
             h_mask=jax.lax.stop_gradient(jnp.array(h_mask)),
             t_zero=t_zeros,
+            posteq_mask=(
+                None
+                if posteq_mask is None
+                else jax.lax.stop_gradient(jnp.array(posteq_mask))
+            ),
+            posteq_slots=posteq_slots,
             solver=solver,
             controller=controller,
             root_finder=root_finder,
@@ -2348,6 +2382,8 @@ class JAXProblem(eqx.Module):
             np_array,
             h_mask,
             t_zeros,
+            posteq_mask,
+            posteq_slots,
         ) = self._prepare_experiments(
             experiments,
             False,
@@ -2412,6 +2448,8 @@ class JAXProblem(eqx.Module):
             h_preeqs,
             self._ts_masks,
             t_zeros,
+            posteq_mask,
+            posteq_slots,
             jnp.arange(len(experiments)),
             ret,
             checkpoints,
@@ -2483,7 +2521,7 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
+        p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _, _, _ = (
             self._prepare_experiments(experiments, True, None, None)
         )
         return self.run_preequilibration(

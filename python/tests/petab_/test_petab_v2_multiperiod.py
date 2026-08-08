@@ -284,17 +284,6 @@ def test_petab_importer_skips_event_conversion_for_jax(tmp_path, jax_flag):
     assert pi._unconverted_problem is None
 
 
-@pytest.mark.xfail(
-    reason="post-equilibration is gated on the globally-last period index "
-    "(`is_final`, model.py) while post-equilibration measurements are "
-    "attached to each experiment's OWN last period (`is_own_last`, "
-    "petab.py). For an experiment with fewer periods than the problem "
-    "maximum, `eq()` therefore never runs where its `time=inf` rows live, "
-    "and those rows -- which are flagged valid and so enter the likelihood "
-    "-- are scored against the end-of-dynamics state instead of the "
-    "steady state.",
-    strict=True,
-)
 def test_posteq_runs_at_own_last_period_of_a_short_experiment(tmp_path):
     """A ragged problem: post-equilibration must be applied per experiment.
 
