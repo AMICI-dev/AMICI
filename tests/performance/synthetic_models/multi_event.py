@@ -28,7 +28,7 @@ SIGMA = 0.05
 class MultiEvent(JAXModel):
     """Three sequential impulses — stresses the while_loop in solve()."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()

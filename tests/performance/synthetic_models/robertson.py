@@ -26,7 +26,7 @@ SIGMA = 0.05
 class Robertson(JAXModel):
     """Stiff Robertson chemistry — stresses diffrax adaptive step control."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
