@@ -1056,6 +1056,72 @@ def test_event_assignments_odd_root_count(tmp_path):
 
 
 @skip_on_valgrind
+def test_heaviside_state_carried_across_zero_duration_period(tmp_path):
+    """A zero-duration period preserves the incoming heaviside state.
+
+    Regression test: the ``hs`` loop carry used to be seeded with plain
+    zeros while the ``ys`` carry was seeded with ``x0``. When the loop body
+    never runs -- i.e. ``t0 >= ts[-1]``, which is exactly what a
+    zero-duration period looks like -- the carry is returned untouched, so
+    states were preserved but the heaviside state silently reset to all
+    zeros instead of being chained on from the previous period.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    ant_model = """
+    model hs_carry
+        x = 0
+        x' = piecewise(1, time > 2, 0)
+    end
+    """
+
+    sbml = antimony2sbml(ant_model)
+    SbmlImporter(sbml, from_file=False).sbml2jax("hs_carry", output_dir=tmp_path)
+    module = amici._module_from_path("hs_carry", tmp_path / "__init__.py")
+    model = module.Model()
+
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+
+    # evaluated at t=5, where the `time > 2` trigger is satisfied, so at
+    # least one heaviside variable is non-zero and a reset is detectable
+    h = model._initialise_heaviside_variables(5.0, x0, p, tcl)
+    assert h.shape[0] and not jnp.allclose(h, 0.0)
+
+    # zero-duration span: `cond_fn` is false at entry, body never runs
+    ts = jnp.array([5.0, 5.0])
+    ys, hs, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    # the state carry already behaved; the heaviside carry must match it
+    assert_allclose(ys, jnp.broadcast_to(x0, ys.shape), atol=1e-6, rtol=1e-6)
+    assert_allclose(hs, jnp.broadcast_to(h, hs.shape), atol=1e-6, rtol=1e-6)
+
+
+@skip_on_valgrind
 def test_resolve_net_id():
     """Neural-network parameter rows are matched to their network via the
     mapping table's model entity id (``<net>.parameters...``).

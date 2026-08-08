@@ -348,7 +348,13 @@ def solve(
             jnp.zeros((ts.shape[0], x0.shape[0]), dtype=x0.dtype) + x0,
             t0,
             x0,
-            jnp.zeros((ts.shape[0], h.shape[0]), dtype=h.dtype),
+            # seeded with the incoming `h`, mirroring the state carry above:
+            # if the loop body never runs (a zero-duration span, i.e.
+            # `t0 >= ts[-1]`, i.e. `cond_fn` false at entry) the carry is
+            # returned as-is, and an all-zero `hs` would silently reset the
+            # heaviside state that the caller chained in from the previous
+            # period rather than preserving it.
+            jnp.zeros((ts.shape[0], h.shape[0]), dtype=h.dtype) + h,
             h,
             dict(**STARTING_STATS),
         ),
