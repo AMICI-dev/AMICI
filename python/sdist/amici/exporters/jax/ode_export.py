@@ -260,9 +260,11 @@ class ODEExporter:
             **_jax_variable_assignments(self.model, sym_names),
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
-            "P_VALUES": _jnp_array_str(self.model.val("p")),
+            "P_VALUES": _jnp_array_str(
+                self.model.val("p"), self._code_printer
+            ),
             "ALL_P_VALUES": _jnp_array_str(
-                self.model.val("p") + self.model.val("k")
+                self.model.val("p") + self.model.val("k"), self._code_printer
             ),
             "ALL_P_IDS": "".join(
                 f'"{s.name}", ' for s in self._get_all_p_syms()
@@ -274,11 +276,14 @@ class ODEExporter:
             )
             if self._get_all_p_syms()
             else "_",
-            "ROOTS": _jnp_array_str(sorted(self._get_known_discs())),
+            "ROOTS": _jnp_array_str(
+                sorted(self._get_known_discs()), self._code_printer
+            ),
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
             "N_EEVENTS": str(len(self.model.get_explicit_roots())),
             "EVENT_INITIAL_VALUES": _jnp_array_str(
-                [e.get_initial_value() for e in self.model._events]
+                [e.get_initial_value() for e in self.model._events],
+                self._code_printer,
             ),
             **{
                 "MODEL_NAME": self.model_name,

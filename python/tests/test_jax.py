@@ -11,8 +11,13 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 import optimistix
+import sympy as sp
 from amici import MeasurementChannel as MC
 from amici import import_model_module
+from amici.exporters.jax.jaxcodeprinter import (
+    AmiciJaxCodePrinter,
+    _jnp_array_str,
+)
 from amici.importers.petab.v1 import import_petab_problem
 from amici.importers.pysb import pysb2amici, pysb2jax
 from amici.sim.jax import JAXProblem, ReturnValue, run_simulations
@@ -34,6 +39,31 @@ jax.config.update("jax_enable_x64", True)
 
 ATOL_SIM = 1e-12
 RTOL_SIM = 1e-12
+
+
+@skip_on_valgrind
+def test_code_printer_floats_roundtrip():
+    """Generated code must recover the exact double.
+
+    sympy's string printer emits only 15 significant digits, which perturbs
+    the last bits and breaks exact comparisons in the generated model
+    (SBML test suite case 00958: a parameter with value `pi` must test equal
+    to `pi`).
+    """
+    printer = AmiciJaxCodePrinter()
+    values = [sp.pi.evalf(), sp.Float(0.1), sp.Float(1) / 3, sp.Float(1e-17)]
+
+    for value in values:
+        assert float(printer.doprint(value)) == float(value)
+        # `Max`/`Min` build their argument array themselves
+        assert repr(float(value)) in printer.doprint(
+            sp.Max(value, sp.Symbol("x"))
+        )
+
+    # parameter values are emitted without going through `doprint`
+    assert _jnp_array_str(values) == "jnp.array([{}])".format(
+        ", ".join(repr(float(value)) for value in values)
+    )
 
 
 @skip_on_valgrind
