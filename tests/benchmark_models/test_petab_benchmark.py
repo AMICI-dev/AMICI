@@ -21,6 +21,7 @@ import pytest
 import yaml
 from amici import get_model_root_dir
 from amici.adapters.fiddy import (
+    RobustConsistency,
     simulate_petab_to_cached_functions,
     simulate_petab_v2_to_cached_functions,
 )
@@ -43,7 +44,6 @@ from amici.sim.sundials.petab.v1 import (
 )
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
-from fiddy.success import Consistency
 from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 from petab.v1.visualize import plot_problem
 
@@ -388,6 +388,13 @@ def test_nominal_parameters_llh(benchmark_problem):
     # https://github.com/AMICI-dev/AMICI/issues/18
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
     "right hand sides .*:UserWarning",
+    # RobustConsistency deliberately warns when it rejects a step size that
+    # was self-consistent on its own but inconsistent with the majority of
+    # other step sizes -- this is the intended corrective behavior, not a
+    # test failure (see https://github.com/ICB-DCM/fiddy/pull/77, fixes
+    # AMICI-dev/AMICI#3078).
+    "ignore:.*were rejected as inconsistent with the majority of other "
+    "step sizes.*:UserWarning",
 )
 @pytest.mark.parametrize("scale", (True, False), ids=["scaled", "unscaled"])
 @pytest.mark.parametrize(
@@ -485,7 +492,7 @@ def test_benchmark_gradient(
         sizes=cur_settings.step_sizes,
         direction_ids=parameter_ids,
         method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
-        success_checker=Consistency(
+        success_checker=RobustConsistency(
             rtol=cur_settings.rtol_consistency,
             atol=cur_settings.atol_consistency,
         ),
@@ -601,6 +608,13 @@ def write_debug_output(
     "right hand sides .*:UserWarning",
     "ignore:.*has `useValuesFromTriggerTime=true'.*:UserWarning",
     "ignore:.*Using `log-normal` instead.*:UserWarning",
+    # RobustConsistency deliberately warns when it rejects a step size that
+    # was self-consistent on its own but inconsistent with the majority of
+    # other step sizes -- this is the intended corrective behavior, not a
+    # test failure (see https://github.com/ICB-DCM/fiddy/pull/77, fixes
+    # AMICI-dev/AMICI#3078).
+    "ignore:.*were rejected as inconsistent with the majority of other "
+    "step sizes.*:UserWarning",
 )
 @pytest.mark.parametrize("problem_id", problems_for_llh_check)
 def test_nominal_parameters_llh_v2(problem_id):
@@ -811,7 +825,7 @@ def test_nominal_parameters_llh_v2(problem_id):
         sizes=cur_settings.step_sizes,
         direction_ids=parameter_ids,
         method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
-        success_checker=Consistency(
+        success_checker=RobustConsistency(
             rtol=cur_settings.rtol_consistency,
             atol=cur_settings.atol_consistency,
         ),

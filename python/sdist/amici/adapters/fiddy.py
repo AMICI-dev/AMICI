@@ -10,6 +10,7 @@ package for finite difference checks.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
 from functools import partial
 from inspect import signature
@@ -18,6 +19,8 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import petab.v1 as petab
 from fiddy import CachedFunction, Type, fiddy_array
+from fiddy.directional_derivative import DirectionalDerivative
+from fiddy.success import Consistency
 from petab.v1.C import LIN, LOG, LOG10
 
 from amici.sim.sundials import (
@@ -38,12 +41,226 @@ if TYPE_CHECKING:
     from amici.sim.sundials.petab import PetabSimulationResult, PetabSimulator
 
 __all__ = [
+    "RobustConsistency",
     "run_simulation_to_cached_functions",
     "simulate_petab_to_cached_functions",
     "simulate_petab_v2_to_cached_functions",
 ]
 
 LOG_E_10 = np.log(10)
+
+
+class RobustConsistency(Consistency):
+    """`Consistency`, plus rejection of step sizes that are self-consistent
+    but inconsistent with the majority of other step sizes.
+
+    `Consistency` checks whether the requested methods (e.g.
+    forward/backward/central) agree with each other at each step size
+    ("self-consistent"), then blends every self-consistent size's mean into
+    the final value. Self-consistency alone is not a strong guarantee on its
+    own: a step size can be small enough that all methods sample points
+    within the target function's floating-point noise floor and become
+    correlated (affected by the same rounding/cancellation error) --
+    self-consistent, yet biased away from the truth. Symmetrically, a step
+    size can also be large enough that all methods are biased the same way
+    by higher-order/truncation effects.
+
+    To guard against this, self-consistent step sizes are additionally
+    required to agree with the majority of other self-consistent step sizes,
+    via iterative outlier rejection (order-independent; step size magnitude
+    is not used as a proxy for trustworthiness): repeatedly compute the
+    median and a robust (MAD-based) spread of the current candidates, and
+    drop the single worst-deviating one if it exceeds ``trend_n_sigma``
+    scaled MADs from the median, until nothing looks anomalous. This only
+    activates once there are at least ``min_trend_samples`` self-consistent
+    step sizes; below that, there isn't enough data to estimate a spread, and
+    all self-consistent step sizes are used, as in `Consistency`. A
+    `UserWarning` is emitted whenever one or more step sizes are rejected
+    this way.
+
+    This addresses a long-standing intermittent CI failure in AMICI's PEtab
+    benchmark gradient test
+    (``test_benchmark_gradient[Weber_BMC2015-*-unscaled]``, see
+    https://github.com/AMICI-dev/AMICI/issues/3078): that test uses
+    `Consistency` to finite-difference-check an analytically computed
+    gradient for a model parameter (``a32``) several orders of magnitude
+    smaller than the model's other free parameters, and a small step size
+    could become spuriously self-consistent while biased away from the true
+    derivative.
+
+    Note that this is a majority-vote style method: like any check based
+    purely on the agreement of the values themselves (no independent ground
+    truth), it has a breakdown point of roughly 50% (a property of the
+    underlying median/MAD statistics) -- if close to half (or more) of the
+    self-consistent step sizes are corrupted, this check cannot reliably
+    tell which subset is trustworthy. This is a fundamental limitation of
+    any purely data-driven consistency check, not something this
+    implementation can detect or work around; sufficient step sizes with a
+    real chance of being individually trustworthy should be provided.
+
+    This was originally proposed upstream, in fiddy, as
+    https://github.com/ICB-DCM/fiddy/pull/77, but was not merged; it lives
+    here instead.
+    """
+
+    id = "robust_consistency"
+
+    def __init__(
+        self,
+        *args,
+        trend_n_sigma: float = 5.0,
+        min_trend_samples: int = 3,
+        **kwargs,
+    ):
+        """Construct.
+
+        :param trend_n_sigma:
+            The number of scaled median-absolute-deviations a
+            self-consistent step size's estimate may deviate from the
+            median of the other trusted step sizes' estimates, before it
+            is rejected as an outlier.
+        :param min_trend_samples:
+            The minimum number of self-consistent step sizes required
+            before the cross-step-size outlier rejection is attempted.
+            Below this, all self-consistent step sizes are trusted, same
+            as in `Consistency`.
+        :param args:
+            Positional arguments passed to `Consistency.__init__`.
+        :param kwargs:
+            Keyword arguments passed to `Consistency.__init__`
+            (e.g. ``rtol``, ``atol``, ``equal_nan``).
+        """
+        super().__init__(*args, **kwargs)
+        self.trend_n_sigma = trend_n_sigma
+        self.min_trend_samples = min_trend_samples
+
+    def _self_consistent_means(
+        self, directional_derivative: DirectionalDerivative
+    ) -> list[Type.DIRECTIONAL_DERIVATIVE]:
+        """Group results by step size, and return the per-size mean for
+        every step size whose requested methods agree with each other
+        ("self-consistent") within ``rtol/2``, ``atol/2``."""
+        computer_results = directional_derivative.get_computer_results()
+        analysis_results = directional_derivative.get_analysis_results()
+        results_by_size = {}
+        for result in [*computer_results, *analysis_results]:
+            size = result.metadata.get("size_absolute", None)
+            if size is None:
+                continue
+            if size not in results_by_size:
+                results_by_size[size] = {}
+            if result.method_id in results_by_size[size]:
+                raise ValueError(
+                    f"Duplicate, and possibly conflicting, results for method "
+                    f'"{result.method_id}" and size "{size}".',
+                )
+            results_by_size[size][result.method_id] = result.value
+
+        self_consistent_means = []
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", "Mean of empty slice", RuntimeWarning
+            )
+            for results in results_by_size.values():
+                values = list(results.values())
+                mean = np.nanmean(values, axis=0)
+                is_self_consistent = np.isclose(
+                    values,
+                    mean,
+                    rtol=self.rtol / 2,
+                    atol=self.atol / 2,
+                    equal_nan=self.equal_nan,
+                ).all()
+                if is_self_consistent:
+                    self_consistent_means.append(mean)
+        return self_consistent_means
+
+    def method(
+        self, directional_derivative: DirectionalDerivative
+    ) -> tuple[bool, float]:
+        self_consistent_means = self._self_consistent_means(
+            directional_derivative
+        )
+
+        if not self_consistent_means:
+            return False, np.nan
+
+        trusted_means = self._reject_outliers(self_consistent_means)
+
+        if not trusted_means:
+            return False, np.nan
+
+        n_rejected = len(self_consistent_means) - len(trusted_means)
+        if n_rejected:
+            warnings.warn(
+                f"{n_rejected} step size(s) were self-consistent (the "
+                "requested methods agreed with each other) but were "
+                "rejected as inconsistent with the majority of other step "
+                "sizes; see `RobustConsistency`'s docstring.",
+                stacklevel=2,
+            )
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", "Mean of empty slice", RuntimeWarning
+            )
+            value = np.nanmean(trusted_means, axis=0)
+
+        success = (
+            np.isclose(
+                trusted_means,
+                value,
+                rtol=self.rtol,
+                atol=self.atol,
+                equal_nan=self.equal_nan,
+            ).all()
+            and not np.isnan(trusted_means).all()
+        )
+        return success, value
+
+    def _reject_outliers(
+        self, means: list[Type.DIRECTIONAL_DERIVATIVE]
+    ) -> list[Type.DIRECTIONAL_DERIVATIVE]:
+        """Iteratively reject step sizes whose estimate is an outlier.
+
+        See the class docstring for the rationale. Order-independent: does
+        not assume larger (or smaller) step sizes are inherently more
+        trustworthy.
+
+        :param means:
+            The per-step-size mean estimates that passed the
+            within-step-size self-consistency check.
+        :return:
+            The subset of `means` that are also mutually consistent with
+            each other.
+        """
+        trusted = list(means)
+        if len(trusted) < self.min_trend_samples:
+            return trusted
+
+        floor = max(self.atol / 2, np.finfo(float).tiny)
+        while len(trusted) >= self.min_trend_samples:
+            stacked = np.asarray(trusted, dtype=float)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", "All-NaN", RuntimeWarning)
+                center = np.nanmedian(stacked, axis=0)
+                mad = np.nanmedian(np.abs(stacked - center), axis=0)
+                scale = np.maximum(mad * 1.4826, floor)
+                # One badness score per candidate, reduced across all
+                # output dimensions (a candidate is an outlier if it
+                # deviates too much in *any* output element).
+                badness = np.nanmax(
+                    (np.abs(stacked - center) / scale).reshape(
+                        len(trusted), -1
+                    ),
+                    axis=1,
+                )
+                worst = int(np.nanargmax(badness))
+            if badness[worst] > self.trend_n_sigma:
+                trusted.pop(worst)
+            else:
+                break
+        return trusted
 
 
 def _transform_gradient_lin_to_lin(gradient_value, _):
