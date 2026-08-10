@@ -14,7 +14,6 @@ from amici.sim.sundials import SensitivityOrder, SteadyStateSensitivityMode
 from fiddy import MethodId, Type, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.directional_derivative import ComputerResult
-from fiddy.success import Consistency
 from numpy.testing import assert_allclose
 from petab import v1
 from scipy.optimize import rosen
@@ -80,7 +79,7 @@ def test_run_amici_simulation_to_functions(problem_generator):
         # analysis_classes=[
         #    lambda: TransformByDirectionScale(scales=parameter_scales),
         # ],
-        success_checker=Consistency(atol=1e-2),
+        success_checker=RobustConsistency(atol=1e-2),
     )
     test_derivative = derivative.value
 
@@ -160,7 +159,7 @@ def test_simulate_petab_to_functions(problem_generator, scaled_parameters):
         sizes=[1e-10, 1e-5, 1e-3, 1e-1],
         direction_ids=free_parameter_ids,
         method_ids=[MethodId.FORWARD, MethodId.BACKWARD, MethodId.CENTRAL],
-        success_checker=Consistency(),
+        success_checker=RobustConsistency(),
     )
 
     check = NumpyIsCloseDerivativeCheck(
