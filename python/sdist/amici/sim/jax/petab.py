@@ -647,7 +647,11 @@ class JAXProblem(eqx.Module):
             ).sort_values(by=petabv2.C.TIME)
             m_full_times = m_full[petabv2.C.TIME].to_numpy()
 
-            last_period_time = dyn_periods[-1].time if dyn_periods else 0.0
+            # anchor for the trailing padding slots: the time the chain has
+            # already reached once the last real period is done, see
+            # `_experiment_end_time`. Must stay in sync with the
+            # `t_zeros` entries built by `period_start_times`.
+            experiment_end_time = self._experiment_end_time(exp)
 
             for i_period in range(max_periods):
                 if i_period >= len(dyn_periods):
@@ -656,7 +660,7 @@ class JAXProblem(eqx.Module):
                     # that leaves the carried-over state unchanged. No
                     # post-equilibrium portion applies to a padding slot.
                     ts_dyn, dyn_valid, my_dyn, iys_dyn, iy_trafos_dyn, overrides_dyn = (
-                        _masked_placeholder_period(last_period_time, n_pars)
+                        _masked_placeholder_period(experiment_end_time, n_pars)
                     )
                     index_dyn = (-1,)
                     ts_posteq = np.array([])
@@ -2031,6 +2035,39 @@ class JAXProblem(eqx.Module):
             return False
         return bool((~np.isfinite(rows[petabv2.C.TIME].to_numpy())).any())
 
+    def _experiment_end_time(self, experiment: petabv2.Experiment) -> float:
+        """Simulation time at which ``experiment``'s last real period ends.
+
+        Every experiment is padded out to :attr:`_max_periods` with trailing
+        placeholder periods (see :meth:`_get_measurements`). Those are
+        zero-duration steps that must leave the carried-over state alone,
+        which means they have to be anchored at the time the chain has
+        *already reached* -- the end of the last real period, not its start.
+
+        Anchoring them at ``dyn_periods[-1].time`` instead (the start of the
+        last real period) hands :meth:`JAXModel._handle_t0_event` a ``t0``
+        that lies in the simulation's past, so a time-dependent trigger gets
+        re-evaluated against a time the solver already left behind, and the
+        period start times stop being monotonic.
+
+        The end of the last real period is its last dynamic time point,
+        i.e. the largest finite measurement time of the experiment (that
+        window runs to ``inf``, so it owns the largest ones), falling back
+        to the period's own start time if it has no measurements at all.
+        Post-equilibration rows carry a non-finite time and do not advance
+        dynamic time, so they are excluded.
+        """
+        dyn_periods = self._dynamic_periods(experiment)
+        t_end = dyn_periods[-1].time if dyn_periods else 0.0
+        df = self._petab_problem.measurement_df
+        times = df.loc[
+            df[petabv2.C.EXPERIMENT_ID] == experiment.id, petabv2.C.TIME
+        ].to_numpy()
+        times = times[np.isfinite(times)]
+        if len(times):
+            t_end = max(t_end, times.max())
+        return float(t_end)
+
     def _experiment_indices(
         self, experiments: list[petabv2.Experiment]
     ) -> np.ndarray:
@@ -2151,12 +2188,17 @@ class JAXProblem(eqx.Module):
 
             def period_start_times(exp: petabv2.Experiment) -> jnp.ndarray:
                 dyn_periods = self._dynamic_periods(exp)
-                last_time = dyn_periods[-1].time if dyn_periods else 0.0
+                # trailing padding slots are anchored at the end of the last
+                # real period rather than at its start, so that they stay
+                # zero-duration *and* non-backward-in-time; see
+                # `_experiment_end_time`. Must match the placeholder time
+                # points `_get_measurements` puts in those slots.
+                end_time = self._experiment_end_time(exp)
                 return jnp.array(
                     [
                         dyn_periods[i].time
                         if i < len(dyn_periods)
-                        else last_time
+                        else end_time
                         for i in range(self._max_periods)
                     ]
                 )
@@ -2285,54 +2327,38 @@ class JAXProblem(eqx.Module):
                 [jnp.stack([i for _, i in e]) for e in reinit_expressions]
             )
 
+        # `load_reinitialisation` returns the (mask, values) pair, so resolve
+        # each cell once and unstack, rather than calling it a second time
+        # just to pick the other half out of the tuple.
         if is_preeq:
-            mask_reinit_array = jnp.stack(
-                [
-                    self.load_reinitialisation(cids, p)[0]
-                    for cids, p in zip(reinit_condition_ids, p_array)
-                ]
-            )
-            x_reinit_array = jnp.stack(
-                [
-                    self.load_reinitialisation(cids, p)[1]
-                    for cids, p in zip(reinit_condition_ids, p_array)
-                ]
-            )
+            reinitialisations = [
+                self.load_reinitialisation(cids, p)
+                for cids, p in zip(reinit_condition_ids, p_array)
+            ]
+            mask_reinit_array = jnp.stack([m for m, _ in reinitialisations])
+            x_reinit_array = jnp.stack([x for _, x in reinitialisations])
         else:
             # `i == 0` is the start of the experiment's own dynamic chain;
             # later periods are boundaries within it, where a
             # network-driven state must not be re-initialised over the
             # integrated trajectory (see
             # `_state_needs_reinitialisation`).
-            mask_reinit_array = jnp.stack(
+            reinitialisations = [
                 [
-                    jnp.stack(
-                        [
-                            self.load_reinitialisation(cids_i, p_i, i == 0)[0]
-                            for i, (cids_i, p_i) in enumerate(
-                                zip(cids_per_period, p_per_period)
-                            )
-                        ]
-                    )
-                    for cids_per_period, p_per_period in zip(
-                        reinit_condition_ids, p_array
+                    self.load_reinitialisation(cids_i, p_i, i == 0)
+                    for i, (cids_i, p_i) in enumerate(
+                        zip(cids_per_period, p_per_period)
                     )
                 ]
+                for cids_per_period, p_per_period in zip(
+                    reinit_condition_ids, p_array
+                )
+            ]
+            mask_reinit_array = jnp.stack(
+                [jnp.stack([m for m, _ in e]) for e in reinitialisations]
             )
             x_reinit_array = jnp.stack(
-                [
-                    jnp.stack(
-                        [
-                            self.load_reinitialisation(cids_i, p_i, i == 0)[1]
-                            for i, (cids_i, p_i) in enumerate(
-                                zip(cids_per_period, p_per_period)
-                            )
-                        ]
-                    )
-                    for cids_per_period, p_per_period in zip(
-                        reinit_condition_ids, p_array
-                    )
-                ]
+                [jnp.stack([x for _, x in e]) for e in reinitialisations]
             )
         # Which (experiment, period) cells actually carry post-equilibration
         # rows. `_ts_masks` spans the concatenated dynamic + post-eq axis, so

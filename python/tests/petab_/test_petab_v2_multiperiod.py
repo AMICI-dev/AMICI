@@ -655,3 +655,65 @@ def test_measurement_row_indices_stay_integral(tmp_path):
         "measurement row indices must stay integral, got "
         f"{jax_problem._petab_measurement_indices.dtype}"
     )
+
+
+def test_padding_periods_are_anchored_at_the_end_of_the_chain(tmp_path):
+    """Trailing padding periods must not step back in time.
+
+    An experiment with fewer periods than the problem-wide maximum is
+    padded out with placeholder periods. Those are zero-duration steps
+    that leave the carried-over state alone, which only holds if they are
+    anchored at the time the chain has already reached -- the *end* of the
+    last real period. Anchoring them at ``dyn_periods[-1].time`` (its
+    start) hands ``JAXModel._handle_t0_event`` a ``t0`` in the
+    simulation's past and makes the period start times non-monotonic.
+    """
+    problem = _linear_decay_problem()
+    problem.add_condition("c_a1", kk=0.3)
+    problem.add_condition("c_a2", kk=0.6)
+    # `exp_long` sets the problem-wide period count to 2 ...
+    problem.add_experiment("exp_long", 0.0, "c_a1", 2.0, "c_a2")
+    for t in (0.5, 1.5, 2.5, 3.5):
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp_long"
+        )
+    # ... so `exp_short`, which has a single period starting at t=0 but
+    # measurements out to t=4, gets a padding period at index 1.
+    problem.add_condition("c_b1", kk=0.4)
+    problem.add_experiment("exp_short", 0.0, "c_b1")
+    for t in (1.0, 2.0, 4.0):
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.0, experiment_id="exp_short"
+        )
+
+    jax_problem = _import_jax(problem, "test_padding_anchor", tmp_path)
+    assert jax_problem._max_periods == 2
+
+    experiments = jax_problem._petab_problem.experiments
+    (i_short,) = [i for i, e in enumerate(experiments) if e.id == "exp_short"]
+
+    # the placeholder time points of the padding period ...
+    ts_dyn = np.asarray(jax_problem._ts_dyn)[i_short]
+    assert ts_dyn[1].min() == pytest.approx(4.0), (
+        "padding period should be anchored at the end of the experiment's "
+        f"trajectory (t=4.0), got {ts_dyn[1]}"
+    )
+
+    # ... and the period start times handed to the solver must agree, and
+    # must not run backwards relative to the last real period.
+    t_zeros = np.asarray(
+        jax_problem._prepare_experiments(
+            experiments,
+            False,
+            jax_problem._op_numeric,
+            jax_problem._op_mask,
+            jax_problem._op_indices,
+            jax_problem._np_numeric,
+            jax_problem._np_mask,
+            jax_problem._np_indices,
+        )[6]
+    )[i_short]
+    assert t_zeros[1] == pytest.approx(4.0)
+    assert np.all(np.diff(t_zeros) >= 0.0), (
+        f"period start times must be non-decreasing, got {t_zeros}"
+    )
