@@ -63,6 +63,28 @@ jobs:
         AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
 
+    # Diagnostic for https://github.com/AMICI-dev/AMICI/issues/3078: root
+    # cause was NumPy's own runtime SIMD dispatch for transcendental ufuncs
+    # (np.power/np.exp, used when unscaling log10/log-scaled PEtab
+    # parameters) picking different, non-bit-identical kernels depending on
+    # which instruction-set tiers are available on the runner. This can't be
+    # inferred from generic hardware diagnostics (dweindl/gha-runner-diagnostics@v1,
+    # which runs before Python/NumPy even exist) -- it has to be queried
+    # from NumPy directly, after it's installed.
+    - name: NumPy SIMD dispatch state (#3078)
+      run: |
+        python3 -c "
+        import numpy as np
+        try:
+            from numpy._core import _multiarray_umath as mau
+        except ImportError:
+            from numpy.core import _multiarray_umath as mau
+        print('numpy:', np.__version__)
+        print('baseline:', mau.__cpu_baseline__)
+        print('dispatch (compiled in):', mau.__cpu_dispatch__)
+        print('features (active this run):', [k for k, v in mau.__cpu_features__.items() if v])
+        "
+
     - name: Install test dependencies
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
