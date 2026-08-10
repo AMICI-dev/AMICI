@@ -90,16 +90,19 @@ def _sim_kwargs(model, solver_kwargs) -> dict:
     ts_dyn, my, iys, iy_trafos, ops, nps = _MAP[model_name]
 
     # `simulate_experiment`/`simulate_experiment_unjitted` chain one ODE
-    # integration per experiment period; add a leading period axis of
-    # size 1 since these synthetic models are all single-period.
+    # integration per experiment period, so `ts_dyn` gets a leading period
+    # axis of size 1 (these synthetic models are all single-period). The
+    # measurement arrays instead live on the flat time axis that produces
+    # -- the period blocks followed by a single post-equilibration block --
+    # so they stay one-dimensional, and `ts_posteq` is empty.
     return dict(
         ts_dyn=ts_dyn[None, :],
-        ts_posteq=jnp.zeros((1, 0)),
-        my=my[None, :],
-        iys=iys[None, :],
-        iy_trafos=iy_trafos[None, :],
-        ops=ops[None, :, :],
-        nps=nps[None, :, :],
+        ts_posteq=jnp.zeros((0,)),
+        my=my,
+        iys=iys,
+        iy_trafos=iy_trafos,
+        ops=ops,
+        nps=nps,
         **solver_kwargs,
     )
 

@@ -225,19 +225,22 @@ def check_fields_jax(
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
     # `simulate_experiment[_unjitted]` chains one ODE integration per
-    # experiment period; add a leading period axis of size 1 for this
-    # single, non-chained simulation. `p` itself is kept 1-D here (and
+    # experiment period, so `ts_dyn` gets a leading period axis of size 1
+    # for this single, non-chained simulation. The measurement arrays live
+    # on the flat time axis that produces -- the period blocks followed by
+    # a single post-equilibration block -- so they stay one-dimensional,
+    # and `ts_posteq` has no period axis. `p` itself is kept 1-D here (and
     # the period axis added inside `fun` below) so that `jax.grad`/
     # `jax.jacfwd` differentiate w.r.t. the original 1-D parameter vector,
     # matching the shapes the rest of this function already expects.
     kwargs = {
         "ts_dyn": jnp.array(ts_dyn)[None, :],
-        "ts_posteq": jnp.array(ts_posteq)[None, :],
-        "my": jnp.array(my)[None, :],
-        "iys": jnp.array(iys)[None, :],
-        "ops": jnp.zeros((1, *my.shape[:2], 0)),
-        "nps": jnp.zeros((1, *my.shape[:2], 0)),
-        "iy_trafos": jnp.array(iy_trafos)[None, :],
+        "ts_posteq": jnp.array(ts_posteq),
+        "my": jnp.array(my),
+        "iys": jnp.array(iys),
+        "ops": jnp.zeros((*my.shape[:1], 0)),
+        "nps": jnp.zeros((*my.shape[:1], 0)),
+        "iy_trafos": jnp.array(iy_trafos),
         "x_preeq": jnp.array([]),
         "solver": diffrax.Kvaerno5(),
         "controller": diffrax.PIDController(atol=1e-8, rtol=1e-8),
