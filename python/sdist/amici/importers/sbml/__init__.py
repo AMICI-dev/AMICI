@@ -445,6 +445,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         hybridization: dict = None,
+        reinitialisations: list[dict] = None,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -513,6 +514,11 @@ class SbmlImporter:
         :param hybridization:
             dict representation of the hybridization information in the PEtab YAML file, see
             https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
+
+        :param reinitialisations:
+            PEtab condition-table changes to be emitted into the generated
+            model as state reinitialisation expressions, see
+            :meth:`amici.exporters.jax.ode_export.ODEExporter._process_reinitialisations`.
         """
         set_log_level(logger, verbose)
 
@@ -534,6 +540,7 @@ class SbmlImporter:
             output_dir=output_dir,
             verbose=verbose,
             hybridization=hybridization,
+            reinitialisations=reinitialisations,
         )
         exporter.generate_model_code()
 

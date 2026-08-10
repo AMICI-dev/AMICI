@@ -235,6 +235,7 @@ def import_model_sbml(
     discard_sbml_annotations: bool = False,
     hybridization: dict = None,
     jax: bool = False,
+    reinitialisations: list[dict] = None,
     **kwargs,
 ) -> amici.SbmlImporter:
     """
@@ -280,6 +281,12 @@ def import_model_sbml(
 
     :param jax:
         Whether to generate JAX code instead of C++ code.
+
+    :param reinitialisations:
+        PEtab (v2) condition-table changes to bake into the generated JAX
+        model as state reinitialisation expressions. Only used if ``jax`` is
+        ``True``; see
+        :meth:`amici.exporters.jax.ode_export.ODEExporter._process_reinitialisations`.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -394,6 +401,7 @@ def import_model_sbml(
             observation_model=observation_model,
             verbose=verbose,
             hybridization=hybridization,
+            reinitialisations=reinitialisations,
             **kwargs,
         )
         return sbml_importer

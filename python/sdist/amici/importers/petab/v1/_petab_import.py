@@ -106,6 +106,22 @@ def import_petab_problem(
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # JAXProblem requires a PEtab v2 problem; upgrade the v1 problem by
+    # serializing it to a temporary PEtab v1 problem on disk and letting
+    # petab auto-upgrade it (``petab.v2.Problem.from_yaml`` upgrades v1 YAML
+    # files via ``petab1to2``). This happens *before* code generation because
+    # the JAX exporter bakes the (v2) condition table's state changes into the
+    # generated model as reinitialisation expressions.
+    petab_problem_v2 = None
+    if jax:
+        import tempfile
+
+        import petab.v2 as petabv2
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            yaml_path = petab_problem.to_files_generic(prefix_path=tmp_dir)
+            petab_problem_v2 = petabv2.Problem.from_yaml(yaml_path)
+
     # check if compilation necessary
     if compile_ or (
         compile_ is None and not _can_import_model(model_name, output_dir, jax)
@@ -246,6 +262,7 @@ def import_petab_problem(
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
                 hybridization=hybridization,
                 jax=jax,
+                reinitialisations=_v2_reinitialisations(petab_problem_v2),
                 **kwargs,
             )
 
@@ -255,10 +272,6 @@ def import_petab_problem(
     )
 
     if jax:
-        import tempfile
-
-        import petab.v2 as petabv2
-
         from amici.sim.jax import JAXProblem
 
         model = model_module.Model()
@@ -267,15 +280,7 @@ def import_petab_problem(
             f"Successfully loaded jax model {model_name} from {output_dir}."
         )
 
-        # JAXProblem requires a PEtab v2 problem; upgrade the v1 problem by
-        # serializing it to a temporary PEtab v1 problem on disk and letting
-        # petab auto-upgrade it (``petab.v2.Problem.from_yaml`` upgrades v1
-        # YAML files via ``petab1to2``).
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            yaml_path = petab_problem.to_files_generic(prefix_path=tmp_dir)
-            petab_problem_v2 = petabv2.Problem.from_yaml(yaml_path)
-
-        # Create and return JAXProblem
+        # Create and return JAXProblem (from the v2 problem upgraded above)
         logger.info(f"Successfully created JAXProblem for {model_name}.")
         return JAXProblem(model, petab_problem_v2)
 
@@ -285,6 +290,33 @@ def import_petab_problem(
     logger.info(f"Successfully loaded model {model_name} from {output_dir}.")
 
     return model
+
+
+def _v2_reinitialisations(petab_problem_v2) -> list[dict] | None:
+    """Condition-table changes of an (upgraded) PEtab v2 problem, for the JAX
+    exporter to bake into the generated model as state reinitialisation
+    expressions.
+
+    Mirrors
+    :meth:`amici.importers.petab.PetabImporter._build_reinitialisations`; the
+    exporter drops the entries whose target did not end up as a model state.
+
+    :param petab_problem_v2:
+        The upgraded PEtab v2 problem, or ``None`` for a non-JAX import.
+    :return:
+        One entry per condition-table change, or ``None``.
+    """
+    if petab_problem_v2 is None:
+        return None
+    return [
+        {
+            "condition_id": condition.id,
+            "target_id": change.target_id,
+            "target_value": change.target_value,
+        }
+        for condition in petab_problem_v2.conditions
+        for change in condition.changes
+    ]
 
 
 def _get_net_index(model_id: str):

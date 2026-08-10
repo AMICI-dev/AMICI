@@ -12,6 +12,30 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   with `PetabSimulationResult.llh`. Replace `result.res()` by `result.res`.
 * Require Python >= 3.12, following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#drop-schedule)
   (#3180).
+* The JAX model API version is now `0.0.5`. PEtab condition-table changes
+  that target a state are emitted into the generated model as
+  reinitialisation code, so the model carries its own reinitialisation and
+  no longer needs the PEtab problem to apply it. Regenerate JAX models;
+  a model generated with an earlier version raises "JAXModel API version
+  mismatch" rather than failing later during simulation. Hand-written
+  `JAXModel` subclasses only need their `api_version` updated —
+  `_x_reinit()` and the `reinitialisation_*` properties have no-op
+  defaults on the base class.
+* Editing a condition table's state changes now requires regenerating the
+  JAX model, since those expressions are baked into it. `JAXProblem`
+  compares the model's reinitialisations against the PEtab problem and
+  raises if they disagree, rather than silently simulating stale values.
+* `JAXModel.simulate_experiment` post-equilibrates once per experiment,
+  after its whole period chain, rather than inside the period loop. The
+  measurement arrays it takes (`my`, `iys`, `iy_trafos`, `ops`, `nps`,
+  `ts_mask`) are now laid out along one flat time axis — the `P` dynamic
+  blocks of `ts_dyn` followed by a single trailing `ts_posteq` block — so
+  they lose their leading period axis, and `ts_posteq` becomes
+  one-dimensional. The `posteq_mask`/`posteq_slots` arguments are replaced
+  by a single `do_posteq` flag per experiment. Callers going through
+  `run_simulations`/`petab_simulate` are unaffected; direct callers of
+  `simulate_experiment` need to reshape. No model regeneration is required
+  — the JAX model API version is unchanged.
 
 **Features**
 
