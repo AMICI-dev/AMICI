@@ -34,10 +34,10 @@ jobs:
     - name: CPU identity (fine-grained)
       run: |
         echo "== /proc/cpuinfo (first cpu) =="
-        grep -m1 -E "^vendor_id|^cpu family|^model[[:space:]]|^model name|^stepping|^microcode" /proc/cpuinfo || true
+        sed -n '/^$/q;p' /proc/cpuinfo | grep -E "^vendor_id|^cpu family|^model[[:space:]]|^model name|^stepping|^microcode" || true
         echo "== toolchain versions =="
-        gcc --version | head -1 || true
-        ldd --version | head -1 || true
+        gcc --version 2>/dev/null | head -1 || true
+        ldd --version 2>/dev/null | head -1 || true
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
