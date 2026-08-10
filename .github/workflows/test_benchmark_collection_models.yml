@@ -28,6 +28,17 @@ jobs:
     steps:
     - uses: dweindl/gha-runner-diagnostics@v1
 
+    # Additional CPU identification for https://github.com/AMICI-dev/AMICI/issues/3078:
+    # the friendly "model name" alone isn't enough to distinguish CPU
+    # revisions that may behave differently at the floating-point level.
+    - name: CPU identity (fine-grained)
+      run: |
+        echo "== /proc/cpuinfo (first cpu) =="
+        grep -m1 -E "^vendor_id|^cpu family|^model[[:space:]]|^model name|^stepping|^microcode" /proc/cpuinfo || true
+        echo "== toolchain versions =="
+        gcc --version | head -1 || true
+        ldd --version | head -1 || true
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:
@@ -71,6 +82,13 @@ jobs:
           --cov=amici \
           --cov-report=xml:"coverage_py.xml" \
           --cov-append \
+
+    # Diagnostic data point for https://github.com/AMICI-dev/AMICI/issues/3078:
+    # runs regardless of the outcome above, to correlate the computed value
+    # against runner hardware without needing to catch an actual failure.
+    - name: Canary (#3078)
+      if: ${{ always() }}
+      run: python3 tests/benchmark_models/canary_a32.py
 
     - name: Codecov Python
       if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
