@@ -293,7 +293,13 @@ class _PeriodMeasurements(NamedTuple):
     concatenated into one array and later re-split by ``len(ts_dyn)``: once
     merged, that split point is only recoverable by convention, and a
     single missed field silently corrupts that field's post-equilibrium
-    entries while leaving them marked valid.
+    entries while leaving them marked valid. The two also end up in
+    different places on the assembled time axis -- the dynamic part in this
+    period's block, the post-equilibrium part in the experiment's single
+    trailing block (see :func:`_pad_and_stack`).
+
+    At most one period per experiment (its own last) carries
+    post-equilibrium data; the fields are empty for all the others.
     """
 
     ts_dyn: np.ndarray
@@ -348,42 +354,34 @@ def _masked_placeholder_period(
     )
 
 
-def _pad_measurement(
-    x_dyn: np.ndarray, x_peq: np.ndarray, n_ts_dyn: int, n_ts_posteq: int
+def _pad_part(
+    x: np.ndarray, n: int, dtype: np.dtype, mode: str = "edge"
 ) -> np.ndarray:
-    """Right-pad ``x_dyn``/``x_peq`` (edge mode: repeat the last value) to
-    ``n_ts_dyn``/``n_ts_posteq`` along the first axis, then concatenate."""
-    pad_width_dyn = tuple(
-        [(0, n_ts_dyn - len(x_dyn))] + [(0, 0)] * (x_dyn.ndim - 1)
-    )
-    pad_width_peq = tuple(
-        [(0, n_ts_posteq - len(x_peq))] + [(0, 0)] * (x_peq.ndim - 1)
-    )
-    # Take the dtype from whichever side actually has values. An empty side
-    # is typically `np.array(())`, i.e. float64 regardless of what the data
-    # is, and concatenating that against integral values would silently
-    # widen them to float -- which for the measurement row indices means an
-    # index that no longer compares equal to the measurement table's.
-    if len(x_dyn) and len(x_peq):
-        dtype = np.result_type(x_dyn.dtype, x_peq.dtype)
-    elif len(x_peq):
-        dtype = x_peq.dtype
-    else:
-        dtype = x_dyn.dtype
-    return np.concatenate(
-        (
-            np.pad(x_dyn, pad_width_dyn, mode="edge").astype(
-                dtype, copy=False
-            )
-            if len(x_dyn)
-            else np.zeros((n_ts_dyn, *x_dyn.shape[1:]), dtype=dtype),
-            np.pad(x_peq, pad_width_peq, mode="edge").astype(
-                dtype, copy=False
-            )
-            if len(x_peq)
-            else np.zeros((n_ts_posteq, *x_peq.shape[1:]), dtype=dtype),
-        )
-    )
+    """Right-pad ``x`` to length ``n`` along the first axis.
+
+    ``mode="edge"`` repeats the last value (the padding is masked out, so
+    the value only has to be benign); ``mode="constant"`` pads with zeros,
+    which is what the validity masks themselves need.
+    """
+    if not len(x):
+        return np.zeros((n, *x.shape[1:]), dtype=dtype)
+    pad_width = tuple([(0, n - len(x))] + [(0, 0)] * (x.ndim - 1))
+    return np.pad(x, pad_width, mode=mode).astype(dtype, copy=False)
+
+
+def _common_dtype(parts: list[np.ndarray]) -> np.dtype:
+    """Result dtype across ``parts``, ignoring empty ones.
+
+    An empty part is typically ``np.array(())``, i.e. float64 regardless of
+    what the data is, so letting it take part in the promotion would
+    silently widen integral values to float -- which for the measurement
+    row indices means an index that no longer compares equal to the
+    measurement table's.
+    """
+    non_empty = [p.dtype for p in parts if len(p)]
+    if not non_empty:
+        return parts[0].dtype if parts else np.dtype(float)
+    return np.result_type(*non_empty)
 
 
 def _pad_and_stack(
@@ -392,21 +390,62 @@ def _pad_and_stack(
     extractor_posteq: Callable[[_PeriodMeasurements], np.ndarray],
     n_ts_dyn: int,
     n_ts_posteq: int,
+    n_exp: int,
+    max_periods: int,
+    mode: str = "edge",
 ) -> np.ndarray:
-    """Apply ``extractor_dyn``/``extractor_posteq`` to every bucketed
-    period's independently-tracked dynamic/post-equilibrium portions, pad
-    each to ``n_ts_dyn``/``n_ts_posteq``, and stack across periods."""
-    return np.stack(
+    """Lay one measurement field out over an experiment's time axis.
+
+    The axis is the experiment's ``max_periods`` dynamic blocks of
+    ``n_ts_dyn`` entries each, followed by a *single* trailing
+    post-equilibration block of ``n_ts_posteq`` entries::
+
+        [ period 0 dyn | period 1 dyn | ... | post-eq ]
+
+    Post-equilibration is a property of the experiment, not of a period:
+    it happens once, after the whole period chain has run (see
+    :meth:`JAXModel.simulate_experiment`). Giving every period its own
+    post-equilibration block would leave ``(max_periods - 1)`` empty ones
+    per experiment.
+
+    :return:
+        Array of shape ``(n_exp, max_periods * n_ts_dyn + n_ts_posteq, ...)``.
+    """
+    cells = list(measurements.values())
+    dyn_parts = [extractor_dyn(mv) for mv in cells]
+    posteq_parts = [extractor_posteq(mv) for mv in cells]
+    dtype = _common_dtype(dyn_parts + posteq_parts)
+
+    dyn = np.stack(
+        [_pad_part(part, n_ts_dyn, dtype, mode) for part in dyn_parts]
+    )
+    dyn = dyn.reshape(n_exp, max_periods * n_ts_dyn, *dyn.shape[2:])
+
+    # `measurements` is keyed `(experiment, period)` and filled in
+    # experiment-major order, so the cells of one experiment are
+    # contiguous. At most one of them carries post-equilibration rows (an
+    # experiment's own last period), but concatenating is robust to that.
+    posteq = np.stack(
         [
-            _pad_measurement(
-                extractor_dyn(mv),
-                extractor_posteq(mv),
-                n_ts_dyn,
+            _pad_part(
+                np.concatenate(
+                    [
+                        part
+                        for part in posteq_parts[
+                            i * max_periods : (i + 1) * max_periods
+                        ]
+                        if len(part)
+                    ]
+                    or [posteq_parts[i * max_periods][:0]]
+                ),
                 n_ts_posteq,
+                dtype,
+                mode,
             )
-            for mv in measurements.values()
+            for i in range(n_exp)
         ]
     )
+    return np.concatenate((dyn, posteq), axis=1)
 
 
 class JAXProblem(eqx.Module):
@@ -833,10 +872,25 @@ class JAXProblem(eqx.Module):
                 )
 
         # compute maximum lengths
+        n_exp = len(experiments)
         n_ts_dyn = max(len(mv.ts_dyn) for mv in measurements.values())
         n_ts_posteq = max(len(mv.ts_posteq) for mv in measurements.values())
 
-        # pad with last value and stack
+        def pad_and_stack(extractor_dyn, extractor_posteq, mode="edge"):
+            return _pad_and_stack(
+                measurements,
+                extractor_dyn,
+                extractor_posteq,
+                n_ts_dyn,
+                n_ts_posteq,
+                n_exp,
+                max_periods,
+                mode,
+            )
+
+        # `ts_dyn` keeps its period axis: the simulation loop integrates one
+        # period at a time and indexes it per period. Everything else is laid
+        # out along the flat time axis described in `_pad_and_stack`.
         ts_dyn = np.stack(
             [
                 np.pad(mv.ts_dyn, (0, n_ts_dyn - len(mv.ts_dyn)), mode="edge")
@@ -844,117 +898,57 @@ class JAXProblem(eqx.Module):
                 else np.zeros(n_ts_dyn, dtype=mv.ts_dyn.dtype)
                 for mv in measurements.values()
             ]
-        )
-        ts_posteq = np.stack(
-            [
-                np.pad(
-                    mv.ts_posteq,
-                    (0, n_ts_posteq - len(mv.ts_posteq)),
-                    mode="edge",
-                )
-                if len(mv.ts_posteq)
-                else np.zeros(n_ts_posteq, dtype=mv.ts_posteq.dtype)
-                for mv in measurements.values()
-            ]
-        )
+        ).reshape(n_exp, max_periods, n_ts_dyn)
+        # ... whereas post-equilibration happens once per experiment, so
+        # `ts_posteq` has no period axis at all: an empty dynamic part
+        # leaves just the trailing post-equilibration block.
+        ts_posteq = pad_and_stack(
+            lambda mv: mv.ts_dyn[:0], lambda mv: mv.ts_posteq
+        )[:, max_periods * n_ts_dyn :]
 
-        my = _pad_and_stack(
-            measurements,
-            lambda mv: mv.my_dyn,
-            lambda mv: mv.my_posteq,
-            n_ts_dyn,
-            n_ts_posteq,
+        my = pad_and_stack(lambda mv: mv.my_dyn, lambda mv: mv.my_posteq)
+        iys = pad_and_stack(lambda mv: mv.iys_dyn, lambda mv: mv.iys_posteq)
+        iy_trafos = pad_and_stack(
+            lambda mv: mv.iy_trafos_dyn, lambda mv: mv.iy_trafos_posteq
         )
-        iys = _pad_and_stack(
-            measurements,
-            lambda mv: mv.iys_dyn,
-            lambda mv: mv.iys_posteq,
-            n_ts_dyn,
-            n_ts_posteq,
-        )
-        iy_trafos = _pad_and_stack(
-            measurements,
-            lambda mv: mv.iy_trafos_dyn,
-            lambda mv: mv.iy_trafos_posteq,
-            n_ts_dyn,
-            n_ts_posteq,
-        )
-        op_numeric = _pad_and_stack(
-            measurements,
+        op_numeric = pad_and_stack(
             lambda mv: mv.op_overrides_dyn.numeric,
             lambda mv: mv.op_overrides_posteq.numeric,
-            n_ts_dyn,
-            n_ts_posteq,
         )
-        op_mask = _pad_and_stack(
-            measurements,
+        op_mask = pad_and_stack(
             lambda mv: mv.op_overrides_dyn.mask,
             lambda mv: mv.op_overrides_posteq.mask,
-            n_ts_dyn,
-            n_ts_posteq,
         )
-        op_indices = _pad_and_stack(
-            measurements,
+        op_indices = pad_and_stack(
             lambda mv: mv.op_overrides_dyn.index,
             lambda mv: mv.op_overrides_posteq.index,
-            n_ts_dyn,
-            n_ts_posteq,
         )
-        np_numeric = _pad_and_stack(
-            measurements,
+        np_numeric = pad_and_stack(
             lambda mv: mv.noise_overrides_dyn.numeric,
             lambda mv: mv.noise_overrides_posteq.numeric,
-            n_ts_dyn,
-            n_ts_posteq,
         )
-        np_mask = _pad_and_stack(
-            measurements,
+        np_mask = pad_and_stack(
             lambda mv: mv.noise_overrides_dyn.mask,
             lambda mv: mv.noise_overrides_posteq.mask,
-            n_ts_dyn,
-            n_ts_posteq,
         )
-        np_indices = _pad_and_stack(
-            measurements,
+        np_indices = pad_and_stack(
             lambda mv: mv.noise_overrides_dyn.index,
             lambda mv: mv.noise_overrides_posteq.index,
-            n_ts_dyn,
-            n_ts_posteq,
         )
-        # mask padding must stay `False` (not repeat the last real mask
-        # value), so this is stacked directly rather than via
-        # `_pad_and_stack` (which pads in "edge" mode).
-        ts_masks = np.stack(
-            [
-                np.concatenate(
-                    (
-                        np.pad(
-                            mv.valid_dyn,
-                            (0, n_ts_dyn - len(mv.ts_dyn)),
-                        ),
-                        np.pad(
-                            mv.valid_posteq,
-                            (0, n_ts_posteq - len(mv.ts_posteq)),
-                        ),
-                    )
-                )
-                for mv in measurements.values()
-            ]
+        # mask padding must stay `False` rather than repeat the last real
+        # mask value, hence "constant" instead of the default edge mode.
+        ts_masks = pad_and_stack(
+            lambda mv: mv.valid_dyn,
+            lambda mv: mv.valid_posteq,
+            mode="constant",
         ).astype(bool)
-        petab_indices = np.stack(
-            [
-                _pad_measurement(
-                    np.array(mv.index_dyn),
-                    np.array(mv.index_posteq),
-                    n_ts_dyn,
-                    n_ts_posteq,
-                )
-                for mv in measurements.values()
-            ]
+        petab_indices = pad_and_stack(
+            lambda mv: np.array(mv.index_dyn),
+            lambda mv: np.array(mv.index_posteq, dtype=int),
         )
 
-        n_exp = len(experiments)
-        outputs = (
+        return (
+            max_periods,
             ts_dyn,
             ts_posteq,
             my,
@@ -968,13 +962,6 @@ class JAXProblem(eqx.Module):
             np_numeric,
             np_mask,
             np_indices,
-        )
-        return (
-            max_periods,
-            *(
-                arr.reshape(n_exp, max_periods, *arr.shape[1:])
-                for arr in outputs
-            ),
         )
 
     def _get_parameter_mappings(self) -> dict[str, ...]:
@@ -2139,7 +2126,8 @@ class JAXProblem(eqx.Module):
         :return:
             Tuple of parameter arrays, network-driven reinitialisation masks
             and values, observable parameters, noise parameters, event mask,
-            period start times, post-equilibration mask/slots, and the
+            period start times, the per-experiment post-equilibration flag,
+            and the
             condition-table reinitialisation mask, expression index and
             expression parameter values (the latter three select and feed the
             model's own generated :meth:`JAXModel._x_reinit`).
@@ -2360,38 +2348,28 @@ class JAXProblem(eqx.Module):
             x_reinit_array = jnp.stack(
                 [jnp.stack([x for _, x in e]) for e in reinitialisations]
             )
-        # Which (experiment, period) cells actually carry post-equilibration
-        # rows. `_ts_masks` spans the concatenated dynamic + post-eq axis, so
-        # the trailing `n_ts_posteq` columns are exactly the post-eq part;
-        # a cell is post-equilibrated iff any of them is unmasked. Post-eq
-        # rows attach to each experiment's *own* last period, which for a
-        # short experiment is not the problem-wide last period -- hence the
-        # per-experiment mask rather than a single `is_final` index.
-        # Derived from the problem structure rather than from `_ts_masks`:
-        # that is an `eqx.Module` field, so under `eqx.filter_jit` it is a
-        # tracer, and reading concrete values out of it (which
-        # `posteq_slots` needs, being static) would raise
-        # `TracerArrayConversionError`. Whether a cell post-equilibrates is
-        # a property of the PEtab tables, known without any traced value.
-        posteq_mask_np = np.zeros(
-            (len(experiments), self._max_periods), dtype=bool
-        )
-        for i_exp, exp in enumerate(experiments):
-            if not self._experiment_has_posteq(exp):
-                continue
-            n_dyn = len(self._dynamic_periods(exp))
-            if n_dyn:
-                # post-equilibration rows attach to the experiment's own
-                # last period
-                posteq_mask_np[i_exp, n_dyn - 1] = True
+        # Whether each experiment post-equilibrates at all. Post-equilibration
+        # happens once, after the experiment's period chain has run, so this
+        # is one flag per experiment rather than a per-period mask. It stays
+        # traced (rather than static) only because experiments sharing a
+        # vmapped batch may disagree on it; whether the steady-state solve is
+        # traced at all follows from the presence of `ts_posteq` time points.
+        #
+        # Derived from the PEtab tables rather than from `_ts_masks`: that is
+        # an `eqx.Module` field, so under `eqx.filter_jit` it is a tracer, and
+        # reading concrete values out of it would raise
+        # `TracerArrayConversionError`.
         if is_preeq:
-            posteq_mask = jnp.zeros(len(experiments), dtype=bool)
-            posteq_slots = ()
+            do_posteq = jnp.zeros(len(experiments), dtype=bool)
         else:
-            posteq_mask = jnp.asarray(posteq_mask_np)
-            # static, so that the steady-state solve is only traced for
-            # slots some experiment actually post-equilibrates in
-            posteq_slots = tuple(bool(v) for v in posteq_mask_np.any(axis=0))
+            do_posteq = jnp.array(
+                [
+                    self._experiment_has_posteq(exp)
+                    and bool(self._dynamic_periods(exp))
+                    for exp in experiments
+                ],
+                dtype=bool,
+            )
         return (
             p_array,
             mask_reinit_array,
@@ -2400,8 +2378,7 @@ class JAXProblem(eqx.Module):
             np_array,
             h_mask,
             t_zeros,
-            posteq_mask,
-            posteq_slots,
+            do_posteq,
             reinit_mask_array,
             reinit_index_array,
             reinit_pc,
@@ -2412,8 +2389,6 @@ class JAXProblem(eqx.Module):
             "max_steps": None,
             "checkpoints": None,
             "self": None,
-            # static per-slot flag shared by all experiments
-            "posteq_slots": None,
             # PEtab parameters are global, so the reinitialisation expression
             # parameters are shared across experiments rather than batched
             "reinit_pc": None,
@@ -2445,8 +2420,7 @@ class JAXProblem(eqx.Module):
         h_preeq: jt.Bool[jt.Array, "*ne"] = jnp.array([]),  # noqa: F821, F722
         ts_mask: np.ndarray = np.array([]),
         t_zeros: jnp.float_ = 0.0,
-        posteq_mask: jt.Bool[jt.Array, "P"] = None,  # noqa: F821, F722
-        posteq_slots: tuple[bool, ...] | None = None,
+        do_posteq: jt.Bool[jt.Scalar, ""] = None,  # noqa: F821, F722
         experiment_index: jnp.int32 = jnp.int32(0),
         ret: ReturnValue = ReturnValue.llh,
         checkpoints: int | None = None,
@@ -2457,12 +2431,17 @@ class JAXProblem(eqx.Module):
         """
         Run a simulation for a given simulation experiment.
 
+        ``ts_dyn`` keeps a period axis, one row per period of the chain.
+        Everything else is laid out along the flat time axis that produces:
+        the ``max_periods`` dynamic blocks followed by a single trailing
+        post-equilibration block (see :func:`_pad_and_stack`).
+
         :param p:
             Parameters for the simulation experiment
         :param ts_dyn:
-            (Padded) dynamic time points
+            (Padded) dynamic time points, per period
         :param ts_posteq:
-            (Padded) post-equilibrium time points
+            (Padded) post-equilibrium time points, once per experiment
         :param my:
             (Padded) measurements
         :param iys:
@@ -2555,12 +2534,11 @@ class JAXProblem(eqx.Module):
             ts_mask=jax.lax.stop_gradient(jnp.array(ts_mask)),
             h_mask=jax.lax.stop_gradient(jnp.array(h_mask)),
             t_zero=t_zeros,
-            posteq_mask=(
+            do_posteq=(
                 None
-                if posteq_mask is None
-                else jax.lax.stop_gradient(jnp.array(posteq_mask))
+                if do_posteq is None
+                else jax.lax.stop_gradient(jnp.array(do_posteq))
             ),
-            posteq_slots=posteq_slots,
             solver=solver,
             controller=controller,
             root_finder=root_finder,
@@ -2625,8 +2603,7 @@ class JAXProblem(eqx.Module):
             np_array,
             h_mask,
             t_zeros,
-            posteq_mask,
-            posteq_slots,
+            do_posteq,
             reinit_mask_array,
             reinit_index_array,
             reinit_pc,
@@ -2698,8 +2675,7 @@ class JAXProblem(eqx.Module):
             h_preeqs,
             self._ts_masks[exp_indices],
             t_zeros,
-            posteq_mask,
-            posteq_slots,
+            do_posteq,
             jnp.arange(len(experiments)),
             ret,
             checkpoints,
@@ -2806,7 +2782,6 @@ class JAXProblem(eqx.Module):
             _,
             _,
             h_mask,
-            _,
             _,
             _,
             reinit_mask_array,
@@ -3162,7 +3137,8 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
     """Build petab simulation DataFrame of similation results from a PEtab v2 problem."""
     experiments = problem._petab_problem.experiments
     position_map = _dynamic_condition_index_map(experiments)
-    nt_per_period = problem._ts_masks.shape[-1]
+    max_periods, n_ts_dyn = problem._ts_dyn.shape[1:]
+    n_dyn_total = max_periods * n_ts_dyn
 
     dfs = []
     for sc in dyn_conditions:
@@ -3172,18 +3148,37 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
         if experiment_id == "__default__":
             experiment_id = jnp.nan
 
-        mask = problem._ts_masks[exp_idx, period_idx, :]
+        # The flat time axis is `max_periods` dynamic blocks followed by a
+        # single post-equilibration block (see `_pad_and_stack`). This period
+        # owns its dynamic block; the post-equilibration block belongs to the
+        # experiment as a whole and is reported against its last period, the
+        # one the steady state is reached from.
+        lo = period_idx * n_ts_dyn
+        cols = np.arange(lo, lo + n_ts_dyn)
+        n_dyn_periods = len(
+            [
+                p
+                for p in experiments[exp_idx].sorted_periods
+                if not p.is_preequilibration
+            ]
+        )
+        if period_idx == n_dyn_periods - 1:
+            cols = np.concatenate(
+                (cols, np.arange(n_dyn_total, problem._ts_masks.shape[-1]))
+            )
+
+        mask = problem._ts_masks[exp_idx, cols]
         obs = [
             problem.model.observable_ids[io]
-            for io in problem._iys[exp_idx, period_idx, mask]
+            for io in problem._iys[exp_idx, cols][mask]
         ]
         t = jnp.concatenate(
             (
                 problem._ts_dyn[exp_idx, period_idx, :],
-                problem._ts_posteq[exp_idx, period_idx, :],
+                problem._ts_posteq[exp_idx, :],
             )
-        )
-        y_period = y[exp_idx].reshape(-1, nt_per_period)[period_idx, :]
+        )[: len(cols)]
+        y_period = y[exp_idx][cols]
         n_real = int(mask.sum())
         df_sc = pd.DataFrame(
             {
@@ -3193,7 +3188,7 @@ def _build_simulation_df_v2(problem, y, dyn_conditions):
                 petabv2.C.TIME: t[mask],
                 petabv2.C.SIMULATION: y_period[mask],
             },
-            index=problem._petab_measurement_indices[exp_idx, period_idx, mask],
+            index=problem._petab_measurement_indices[exp_idx, cols][mask],
         )
         measurement_df = problem._petab_problem.measurement_df
         # `experiment_id` is coerced to `jnp.nan` above for the "__default__"

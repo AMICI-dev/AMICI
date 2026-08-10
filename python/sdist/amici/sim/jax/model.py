@@ -691,35 +691,31 @@ class JAXModel(eqx.Module):
         p: jt.Float[jt.Array, "np"],
         t0: jnp.float_,
         ts_dyn: jt.Float[jt.Array, "nt_dyn"],
-        ts_posteq: jt.Float[jt.Array, "nt_posteq"],
         tcl: jt.Float[jt.Array, "ncl"],
         h: jt.Bool[jt.Array, "ne"],
         h_mask: jt.Bool[jt.Array, "ne"],
         x_solver: jt.Float[jt.Array, "nxs"],
-        has_posteq_slot: bool,
-        do_posteq: jt.Bool[jt.Scalar, ""],  # noqa: F722
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
         adjoint: diffrax.AbstractAdjoint,
-        steady_state_event: Callable[
-            ..., diffrax._custom_types.BoolScalarLike
-        ],
         max_steps: int | jnp.int_,
     ):
         """
         Simulate a single experiment period, starting from ``x_solver``/``h``
         at time ``t0`` with parameters ``p``/``tcl``.
 
-        Only an experiment's own final period is post-equilibrated (see
-        ``has_posteq_slot``/``do_posteq``); earlier periods only integrate
-        up to (and including) the synthetic hand-off time point appended to
-        ``ts_dyn`` by :meth:`amici.sim.jax.petab.JAXProblem._get_measurements`.
+        A period only integrates up to (and including) the synthetic hand-off
+        time point appended to ``ts_dyn`` by
+        :meth:`amici.sim.jax.petab.JAXProblem._get_measurements`.
+        Post-equilibration is *not* part of a period: it is a property of the
+        experiment and runs once, after the whole chain, in
+        :meth:`simulate_experiment`.
 
         :return:
-            Tuple of (state trajectory, heaviside trajectory, ending reduced
-            state, ending heaviside state, dynamic simulation statistics,
-            post-equilibration statistics).
+            Tuple of (time points, state trajectory, heaviside trajectory,
+            ending reduced state, ending heaviside state, dynamic simulation
+            statistics).
         """
         if ts_dyn.shape[0]:
             x_dyn, h_dyn, stats_dyn = solve(
@@ -749,63 +745,21 @@ class JAXModel(eqx.Module):
             h_dyn = jnp.repeat(h[None, :], ts_dyn.shape[0], axis=0)
             stats_dyn = None
 
-        # Post-equilibration. Which period is an experiment's last is a
-        # per-experiment property, but this loop is shared across the
-        # vmapped experiment axis, so the two halves of the decision are
-        # split: ``has_posteq_slot`` is static and decides whether the
-        # steady-state solve is traced here at all (no experiment carries
-        # post-equilibration rows in this slot -> no solve), while
-        # ``do_posteq`` is a per-experiment traced flag deciding whether
-        # the result is actually adopted. The blend matters: ``eq``
-        # replaces the state that is handed to the next period, so
-        # equilibrating unconditionally would clobber the trajectory of
-        # any experiment whose chain continues past this slot.
-        if has_posteq_slot and ts_posteq.shape[0]:
-            x_eq, h_eq, stats_posteq = eq(
-                p,
-                tcl,
-                h,
-                x_solver,
-                h_mask,
-                solver,
-                controller,
-                root_finder,
-                steady_state_event,
-                diffrax.ODETerm(self._xdot),
-                self._root_cond_fns(),
-                self._root_cond_fn,
-                self._delta_x,
-                self._known_discs(p),
-                max_steps,
-            )
-            x_solver = jnp.where(do_posteq, x_eq, x_solver)
-            if h.shape[0]:
-                h = jnp.where(do_posteq, h_eq, h)
-        else:
-            stats_posteq = None
+        if not h.shape[0]:
+            h_dyn = jnp.zeros((ts_dyn.shape[0], h.shape[0]))
 
-        x_posteq = jnp.repeat(x_solver[None, :], ts_posteq.shape[0], axis=0)
-        h_posteq = jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
-
-        ts = jnp.concatenate((ts_dyn, ts_posteq), axis=0)
-        if h.shape[0]:
-            hs = jnp.concatenate((h_dyn, h_posteq), axis=0)
-        else:
-            hs = jnp.zeros((ts.shape[0], h.shape[0]))
-        xs = jnp.concatenate((x_dyn, x_posteq), axis=0)
-
-        return ts, xs, hs, x_solver, h, stats_dyn, stats_posteq
+        return ts_dyn, x_dyn, h_dyn, x_solver, h, stats_dyn
 
     def simulate_experiment_unjitted(
         self,
         p: jt.Float[jt.Array, "P np"],
         ts_dyn: jt.Float[jt.Array, "P nt_dyn"],
-        ts_posteq: jt.Float[jt.Array, "P nt_posteq"],
-        my: jt.Float[jt.Array, "P nt"],
-        iys: jt.Int[jt.Array, "P nt"],
-        iy_trafos: jt.Int[jt.Array, "P nt"],
-        ops: jt.Float[jt.Array, "P nt *nop"],
-        nps: jt.Float[jt.Array, "P nt *nnp"],
+        ts_posteq: jt.Float[jt.Array, "nt_posteq"],
+        my: jt.Float[jt.Array, "nt"],
+        iys: jt.Int[jt.Array, "nt"],
+        iy_trafos: jt.Int[jt.Array, "nt"],
+        ops: jt.Float[jt.Array, "nt *nop"],
+        nps: jt.Float[jt.Array, "nt *nnp"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -820,11 +774,10 @@ class JAXModel(eqx.Module):
         x_reinit: jt.Float[jt.Array, "P *nx"] | None = None,
         init_override: jt.Float[jt.Array, "*nx"] | None = None,
         init_override_mask: jt.Bool[jt.Array, "*nx"] | None = None,
-        ts_mask: jt.Bool[jt.Array, "P nt"] | None = None,
+        ts_mask: jt.Bool[jt.Array, "nt"] | None = None,
         h_mask: jt.Bool[jt.Array, "ne"] | None = None,
         t_zero: jt.Float[jt.Array, "P"] | None = None,
-        posteq_mask: jt.Bool[jt.Array, "P"] | None = None,
-        posteq_slots: tuple[bool, ...] | None = None,
+        do_posteq: jt.Bool[jt.Scalar, ""] | None = None,  # noqa: F722
         ret: ReturnValue = ReturnValue.llh,
         reinit_mask: jt.Bool[jt.Array, "P *nx"] | None = None,
         reinit_index: jt.Int[jt.Array, "P *nx"] | None = None,
@@ -834,12 +787,16 @@ class JAXModel(eqx.Module):
         Unjitted version of simulate_experiment.
 
         Chains one ODE integration per experiment period (the leading axis,
-        of static size ``P``, of ``p``/``ts_dyn``/``ts_posteq``/``my``/
-        ``iys``/``iy_trafos``/``ops``/``nps``/``mask_reinit``/``x_reinit``/
-        ``ts_mask``/``t_zero``), carrying the ODE state and heaviside/event
+        of static size ``P``, of ``p``/``ts_dyn``/``mask_reinit``/
+        ``x_reinit``/``t_zero``), carrying the ODE state and heaviside/event
         state from the end of one period into the start of the next, in
         lieu of encoding period transitions as model events. ``P == 1``
         reduces to a single, non-chained simulation.
+
+        ``my``/``iys``/``iy_trafos``/``ops``/``nps``/``ts_mask`` are laid out
+        along the flat time axis this produces: the ``P`` dynamic blocks of
+        ``ts_dyn`` followed by a single trailing ``ts_posteq`` block.
+        Post-equilibration runs once, after the whole chain.
 
         See :meth:`simulate_experiment` for full documentation.
         """
@@ -875,15 +832,10 @@ class JAXModel(eqx.Module):
             h_mask = jnp.array([])
         if t_zero is None:
             t_zero = jnp.zeros(n_periods)
-        if posteq_mask is None:
-            # default: only the last period post-equilibrates, which is
-            # what a single-experiment (or uniform-period-count) caller
-            # wants and reproduces the previous `is_final` behaviour
-            posteq_mask = jnp.arange(n_periods) == n_periods - 1
-        if posteq_slots is None:
-            posteq_slots = tuple(
-                i == n_periods - 1 for i in range(n_periods)
-            )
+        if do_posteq is None:
+            # default: post-equilibrate iff there are post-equilibration
+            # time points to report it at
+            do_posteq = jnp.array(ts_posteq.shape[0] > 0)
 
         if not h_mask.shape[0]:
             h_mask = jnp.ones(self.n_events, dtype=jnp.bool_)
@@ -917,7 +869,6 @@ class JAXModel(eqx.Module):
         tcl_list = []
         p_list = []
         stats_dyn_list = []
-        stats_posteq_final = None
 
         for i in range(n_periods):
             p_i = p[i]
@@ -967,29 +918,20 @@ class JAXModel(eqx.Module):
                 {},
             )
 
-            is_final = i == n_periods - 1
-            ts_i, xs_i, hs_i, x_solver, h, stats_dyn_i, stats_posteq_i = (
-                self._simulate_period(
-                    p_i,
-                    t0_i,
-                    ts_dyn[i],
-                    ts_posteq[i],
-                    tcl_i,
-                    h,
-                    h_mask,
-                    x_solver,
-                    posteq_slots[i],
-                    posteq_mask[i],
-                    solver,
-                    controller,
-                    root_finder,
-                    adjoint,
-                    steady_state_event,
-                    max_steps,
-                )
+            ts_i, xs_i, hs_i, x_solver, h, stats_dyn_i = self._simulate_period(
+                p_i,
+                t0_i,
+                ts_dyn[i],
+                tcl_i,
+                h,
+                h_mask,
+                x_solver,
+                solver,
+                controller,
+                root_finder,
+                adjoint,
+                max_steps,
             )
-            if is_final:
-                stats_posteq_final = stats_posteq_i
 
             ts_list.append(ts_i)
             x_list.append(xs_i)
@@ -1000,20 +942,66 @@ class JAXModel(eqx.Module):
 
             tcl_prev = tcl_i
 
+        # Post-equilibration, once, after the whole chain. It is a property
+        # of the experiment rather than of any one period: the steady state
+        # is reached from wherever the last period left off, so running it
+        # here needs neither a per-period static flag deciding whether to
+        # trace a steady-state solve, nor a per-period blend deciding
+        # whether to adopt its result. `do_posteq` stays traced only
+        # because experiments sharing a vmapped batch may disagree on
+        # whether they post-equilibrate at all.
+        #
+        # For an experiment shorter than the problem-wide period count this
+        # runs *after* its trailing padding periods rather than at its own
+        # last real period, which is equivalent only because those are
+        # zero-duration no-ops: they carry the state through untouched, and
+        # they re-evaluate `_handle_t0_event` at a time that is not in the
+        # past (see `JAXProblem._experiment_end_time`). `p_i`/`tcl_prev` are
+        # therefore still the last *real* period's -- a padding period's
+        # parameters are clamped to it, and conservation laws are invariant
+        # along the trajectory.
+        stats_posteq = None
+        if ts_posteq.shape[0]:
+            x_eq, h_eq, stats_posteq = eq(
+                p_i,
+                tcl_prev,
+                h,
+                x_solver,
+                h_mask,
+                solver,
+                controller,
+                root_finder,
+                steady_state_event,
+                diffrax.ODETerm(self._xdot),
+                self._root_cond_fns(),
+                self._root_cond_fn,
+                self._delta_x,
+                self._known_discs(p_i),
+                max_steps,
+            )
+            x_solver = jnp.where(do_posteq, x_eq, x_solver)
+            if h.shape[0]:
+                h = jnp.where(do_posteq, h_eq, h)
+
+            ts_list.append(ts_posteq)
+            x_list.append(
+                jnp.repeat(x_solver[None, :], ts_posteq.shape[0], axis=0)
+            )
+            h_list.append(
+                jnp.repeat(h[None, :], ts_posteq.shape[0], axis=0)
+                if h.shape[0]
+                else jnp.zeros((ts_posteq.shape[0], h.shape[0]))
+            )
+            tcl_list.append(
+                jnp.repeat(tcl_prev[None, :], ts_posteq.shape[0], axis=0)
+            )
+            p_list.append(jnp.repeat(p_i[None, :], ts_posteq.shape[0], axis=0))
+
         ts = jnp.concatenate(ts_list, axis=0)
         x = jnp.concatenate(x_list, axis=0)
         hs = jnp.concatenate(h_list, axis=0)
         tcls = jnp.concatenate(tcl_list, axis=0)
         ps = jnp.concatenate(p_list, axis=0)
-
-        my = my.reshape(-1)
-        iys = iys.reshape(-1)
-        iy_trafos = iy_trafos.reshape(-1)
-        # avoid `-1` in reshape: it errors on a `math.prod(...) == 0`
-        # trailing shape (e.g. no observable/noise parameter overrides)
-        ops = ops.reshape(ops.shape[0] * ops.shape[1], *ops.shape[2:])
-        nps = nps.reshape(nps.shape[0] * nps.shape[1], *nps.shape[2:])
-        ts_mask = ts_mask.reshape(-1)
 
         nllhs = self._nllhs(ts, x, ps, tcls, hs, my, iys, ops, nps)
         nllhs = jnp.where(ts_mask, nllhs, 0.0)
@@ -1025,7 +1013,7 @@ class JAXModel(eqx.Module):
             hs=hs,
             llh=llh,
             stats_dyn=stats_dyn_list,
-            stats_posteq=stats_posteq_final,
+            stats_posteq=stats_posteq,
         )
         if ret == ReturnValue.llh:
             output = llh
@@ -1089,12 +1077,12 @@ class JAXModel(eqx.Module):
         self,
         p: jt.Float[jt.Array, "P np"],
         ts_dyn: jt.Float[jt.Array, "P nt_dyn"],
-        ts_posteq: jt.Float[jt.Array, "P nt_posteq"],
-        my: jt.Float[jt.Array, "P nt"],
-        iys: jt.Int[jt.Array, "P nt"],
-        iy_trafos: jt.Int[jt.Array, "P nt"],
-        ops: jt.Float[jt.Array, "P nt *nop"],
-        nps: jt.Float[jt.Array, "P nt *nnp"],
+        ts_posteq: jt.Float[jt.Array, "nt_posteq"],
+        my: jt.Float[jt.Array, "nt"],
+        iys: jt.Int[jt.Array, "nt"],
+        iy_trafos: jt.Int[jt.Array, "nt"],
+        ops: jt.Float[jt.Array, "nt *nop"],
+        nps: jt.Float[jt.Array, "nt *nnp"],
         solver: diffrax.AbstractSolver,
         controller: diffrax.AbstractStepSizeController,
         root_finder: AbstractRootFinder,
@@ -1109,11 +1097,10 @@ class JAXModel(eqx.Module):
         x_reinit: jt.Float[jt.Array, "P *nx"] | None = None,
         init_override: jt.Float[jt.Array, "*nx"] | None = None,
         init_override_mask: jt.Bool[jt.Array, "*nx"] | None = None,
-        ts_mask: jt.Bool[jt.Array, "P nt"] | None = None,
+        ts_mask: jt.Bool[jt.Array, "nt"] | None = None,
         h_mask: jt.Bool[jt.Array, "ne"] | None = None,
         t_zero: jt.Float[jt.Array, "P"] | None = None,
-        posteq_mask: jt.Bool[jt.Array, "P"] | None = None,
-        posteq_slots: tuple[bool, ...] | None = None,
+        do_posteq: jt.Bool[jt.Scalar, ""] | None = None,  # noqa: F722
         ret: ReturnValue = ReturnValue.llh,
         reinit_mask: jt.Bool[jt.Array, "P *nx"] | None = None,
         reinit_index: jt.Int[jt.Array, "P *nx"] | None = None,
@@ -1126,10 +1113,11 @@ class JAXModel(eqx.Module):
         with beartype, use :meth:`simulate_experiment_unjitted` instead.
 
         Chains one ODE integration per experiment period (the leading axis,
-        of static size ``P``, of ``p``/``ts_dyn``/``ts_posteq``/``my``/
-        ``iys``/``iy_trafos``/``ops``/``nps``/``mask_reinit``/``x_reinit``/
-        ``ts_mask``/``t_zero``); ``P == 1`` reduces to a single, non-chained
-        simulation.
+        of static size ``P``, of ``p``/``ts_dyn``/``mask_reinit``/
+        ``x_reinit``/``t_zero``); ``P == 1`` reduces to a single, non-chained
+        simulation. ``my``/``iys``/``iy_trafos``/``ops``/``nps``/``ts_mask``
+        are laid out along the flat time axis: the ``P`` dynamic blocks
+        followed by a single trailing ``ts_posteq`` block.
 
         :param p:
             parameters for simulation ordered according to ids in :ivar parameter_ids:, one row per
@@ -1178,6 +1166,12 @@ class JAXModel(eqx.Module):
         :param h_mask:
             mask for heaviside variables. If `True`, the corresponding heaviside variable is updated during simulation, otherwise it
             it marked as 1.0.
+        :param do_posteq:
+            whether to actually post-equilibrate after the period chain.
+            Traced rather than static because experiments sharing a vmapped
+            batch may disagree on it; the steady-state solve itself is traced
+            iff there are ``ts_posteq`` time points to report it at. Defaults
+            to ``True`` whenever there are.
         :param ret:
             which output to return. See :class:`ReturnValue` for available options.
         :param reinit_mask:
@@ -1220,8 +1214,7 @@ class JAXModel(eqx.Module):
             ts_mask,
             h_mask,
             t_zero,
-            posteq_mask,
-            posteq_slots,
+            do_posteq,
             ret,
             reinit_mask,
             reinit_index,

@@ -717,3 +717,61 @@ def test_padding_periods_are_anchored_at_the_end_of_the_chain(tmp_path):
     assert np.all(np.diff(t_zeros) >= 0.0), (
         f"period start times must be non-decreasing, got {t_zeros}"
     )
+
+
+def test_simulation_df_attributes_posteq_rows_to_the_last_period(tmp_path):
+    """``petab_simulate`` must place post-equilibration rows on the right
+    experiment and period.
+
+    Post-equilibration happens once per experiment, after its whole period
+    chain, so its rows live in a single trailing block of the flat time
+    axis rather than inside any period's block (see
+    ``JAXProblem._pad_and_stack``). ``_build_simulation_df_v2`` walks the
+    axis per period, so it has to attribute that trailing block to the
+    experiment's *own* last period -- which for a short experiment is not
+    the problem-wide last one.
+    """
+    from amici.sim.jax import petab_simulate
+
+    problem = _linear_decay_problem()
+    # a long experiment (2 periods) sets the problem-wide period count ...
+    problem.add_condition("c_l1", kk=0.3)
+    problem.add_condition("c_l2", kk=0.9)
+    problem.add_experiment("exp_long", 0.0, "c_l1", 2.0, "c_l2")
+    for t in (0.5, 2.5):
+        problem.add_measurement(
+            "obs1", time=t, measurement=0.1, experiment_id="exp_long"
+        )
+    problem.add_measurement(
+        "obs1", time=np.inf, measurement=0.05, experiment_id="exp_long"
+    )
+    # ... and a short one (1 period) post-equilibrates at period 0
+    problem.add_condition("c_s1", kk=0.7)
+    problem.add_experiment("exp_short", 0.0, "c_s1")
+    problem.add_measurement(
+        "obs1", time=1.0, measurement=0.2, experiment_id="exp_short"
+    )
+    problem.add_measurement(
+        "obs1", time=np.inf, measurement=0.05, experiment_id="exp_short"
+    )
+
+    jax_problem = _import_jax(problem, "test_posteq_simulation_df", tmp_path)
+    assert jax_problem._max_periods == 2
+
+    sim_df = petab_simulate(jax_problem)
+
+    # one simulated row per measurement, no padding leaking through and no
+    # post-equilibration row lost or duplicated onto the wrong period
+    assert len(sim_df) == len(problem.measurement_df) == 5
+    assert sim_df.index.is_unique
+    assert not sim_df[C.SIMULATION].isna().any()
+    assert sorted(sim_df[C.TIME].tolist()) == [0.5, 1.0, 2.5, np.inf, np.inf]
+
+    # both steady-state rows must be present, one per experiment, and equal
+    # the analytical steady state of a pure decay (zero)
+    posteq = sim_df[~np.isfinite(sim_df[C.TIME])]
+    assert sorted(posteq[C.EXPERIMENT_ID].tolist()) == [
+        "exp_long",
+        "exp_short",
+    ]
+    np.testing.assert_allclose(posteq[C.SIMULATION].to_numpy(), 0.0, atol=1e-6)

@@ -25,6 +25,17 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   JAX model, since those expressions are baked into it. `JAXProblem`
   compares the model's reinitialisations against the PEtab problem and
   raises if they disagree, rather than silently simulating stale values.
+* `JAXModel.simulate_experiment` post-equilibrates once per experiment,
+  after its whole period chain, rather than inside the period loop. The
+  measurement arrays it takes (`my`, `iys`, `iy_trafos`, `ops`, `nps`,
+  `ts_mask`) are now laid out along one flat time axis — the `P` dynamic
+  blocks of `ts_dyn` followed by a single trailing `ts_posteq` block — so
+  they lose their leading period axis, and `ts_posteq` becomes
+  one-dimensional. The `posteq_mask`/`posteq_slots` arguments are replaced
+  by a single `do_posteq` flag per experiment. Callers going through
+  `run_simulations`/`petab_simulate` are unaffected; direct callers of
+  `simulate_experiment` need to reshape. No model regeneration is required
+  — the JAX model API version is unchanged.
 
 **Features**
 
