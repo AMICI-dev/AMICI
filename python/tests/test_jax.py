@@ -11,8 +11,13 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 import optimistix
+import sympy as sp
 from amici import MeasurementChannel as MC
 from amici import import_model_module
+from amici.exporters.jax.jaxcodeprinter import (
+    AmiciJaxCodePrinter,
+    _jnp_array_str,
+)
 from amici.importers.petab.v1 import import_petab_problem
 from amici.importers.pysb import pysb2amici, pysb2jax
 from amici.sim.jax import JAXProblem, ReturnValue, run_simulations
@@ -24,9 +29,8 @@ from amici.sim.sundials import (
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from beartype import beartype
 from numpy.testing import assert_allclose
-from test_petab_objective import lotka_volterra  # noqa: F401
-
 from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
+from test_petab_objective import lotka_volterra  # noqa: F401
 
 pysb = pytest.importorskip("pysb")
 
@@ -35,6 +39,31 @@ jax.config.update("jax_enable_x64", True)
 
 ATOL_SIM = 1e-12
 RTOL_SIM = 1e-12
+
+
+@skip_on_valgrind
+def test_code_printer_floats_roundtrip():
+    """Generated code must recover the exact double.
+
+    sympy's string printer emits only 15 significant digits, which perturbs
+    the last bits and breaks exact comparisons in the generated model
+    (SBML test suite case 00958: a parameter with value `pi` must test equal
+    to `pi`).
+    """
+    printer = AmiciJaxCodePrinter()
+    values = [sp.pi.evalf(), sp.Float(0.1), sp.Float(1) / 3, sp.Float(1e-17)]
+
+    for value in values:
+        assert float(printer.doprint(value)) == float(value)
+        # `Max`/`Min` build their argument array themselves
+        assert repr(float(value)) in printer.doprint(
+            sp.Max(value, sp.Symbol("x"))
+        )
+
+    # parameter values are emitted without going through `doprint`
+    assert _jnp_array_str(values) == "jnp.array([{}])".format(
+        ", ".join(repr(float(value)) for value in values)
+    )
 
 
 @skip_on_valgrind
@@ -340,7 +369,6 @@ def test_condition_table_initial_value_is_differentiable(tmp_path):
     ``grad.parameters``.
     """
     import equinox as eqx
-
     import petab.v1 as petab
     from petab.v1.models.sbml_model import SbmlModel
 
@@ -398,7 +426,6 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
     mapping path (``JAXProblem._map_experiment_model_parameter_value``).
     """
     import equinox as eqx
-
     import petab.v1 as petab
     from petab.v1.models.sbml_model import SbmlModel
 
@@ -465,7 +492,6 @@ def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
     """
     import equinox as eqx
     from amici.importers.petab import PetabImporter
-
     from petab.v2 import Problem
     from petab.v2.core import ProblemConfig
     from petab.v2.models.sbml_model import SbmlModel
@@ -564,7 +590,6 @@ def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
     """
     from amici.importers.petab import PetabImporter
     from amici.sim.jax.petab import _get_period_condition_ids
-
     from petab.v2 import Problem
     from petab.v2.core import ProblemConfig
     from petab.v2.models.sbml_model import SbmlModel
@@ -632,6 +657,66 @@ def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
 
 
 @skip_on_valgrind
+def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
+    """
+    Regression test: ``_prepare_experiments`` must preserve the shape of numeric override
+    arrays when the problem has no estimated scalar parameters.
+    """
+    import petab.v1 as petab
+    from amici.sim.jax.petab import _get_period_condition_ids
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # no estimated parameters -> ``JAXProblem.parameters`` is empty
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    # numeric noise-parameter overrides -> ``_np_numeric`` is non-empty while
+    # ``_np_mask`` is all-False (nothing to look up in the parameter vector)
+    problem.add_observable("obs_b", "B", noise_formula="noiseParameter1_obs_b")
+    problem.add_condition("c0", k1=0.8)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3, noise_parameters=[0.5])
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4, noise_parameters=[0.7])
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    assert jax_problem.parameters.size == 0
+    assert jax_problem._np_numeric.size
+
+    experiments = jax_problem._petab_problem.experiments
+    conditions = [
+        _get_period_condition_ids(exp, is_preequilibration=False)
+        for exp in experiments
+    ]
+    ei = jax_problem._experiment_indices(experiments)
+    np_numeric = jax_problem._np_numeric[ei]
+
+    (*_, np_array, _, _) = jax_problem._prepare_experiments(
+        experiments,
+        conditions,
+        False,
+        jax_problem._op_numeric[ei],
+        jax_problem._op_mask[ei],
+        jax_problem._op_indices[ei],
+        np_numeric,
+        jax_problem._np_mask[ei],
+        jax_problem._np_indices[ei],
+    )
+
+    assert np_array.shape == np_numeric.shape
+    assert_allclose(np.asarray(np_array), np.asarray(np_numeric))
+
+
+@skip_on_valgrind
 def test_petab_simulate_ragged_experiments(tmp_path):
     """``petab_simulate`` must handle experiments with different numbers of
     measurement timepoints.
@@ -643,9 +728,8 @@ def test_petab_simulate_ragged_experiments(tmp_path):
     simulation DataFrame raises ``ValueError: arrays must all be same
     length`` (or leaks padded/duplicated indices).
     """
-    from amici.sim.jax import petab_simulate
-
     import petab.v1 as petab
+    from amici.sim.jax import petab_simulate
     from petab.v1.models.sbml_model import SbmlModel
 
     problem = petab.Problem()
