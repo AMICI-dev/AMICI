@@ -412,11 +412,6 @@ def test_benchmark_gradient(
     if not scale and problem_id in (
         "Smith_BMCSystBiol2013",
         "Brannmark_JBC2010",
-        "Elowitz_Nature2000",
-        "Borghans_BiophysChem1997",
-        "Sneyd_PNAS2002",
-        "Bertozzi_PNAS2020",
-        "Zheng_PNAS2012",
     ):
         # not really worth the effort trying to fix these cases if they
         # only fail on linear scale
