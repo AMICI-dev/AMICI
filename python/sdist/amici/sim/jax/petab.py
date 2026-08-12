@@ -1019,23 +1019,16 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
-    def _find_original_period(
+    def _find_unconverted_period(
         self, condition_ids: tuple[str, ...]
-    ) -> (
-        tuple[
-            petabv2.Experiment,
-            petabv2.ExperimentPeriod,
-            petabv2.ExperimentPeriod,
-        ]
-        | None
-    ):
+    ) -> petabv2.ExperimentPeriod | None:
         """Locate the unconverted period the given converted condition ids belong to
         using the stored _unconverted_problem.
 
         :return:
-            ``(converted experiment, original period, converted period)``, or
-            ``None`` if the problem was not converted, or if no corresponding
-            original period was found.
+            The corresponding original (unconverted) period, or ``None`` if the
+            problem was not converted, or if no corresponding original period
+            was found.
         """
         if self._unconverted_problem is None or not condition_ids:
             return None
@@ -1051,58 +1044,44 @@ class JAXProblem(eqx.Module):
                     wanted.issubset(conv_period.condition_ids)
                     and orig_period.condition_ids
                 ):
-                    return conv_exp, orig_period, conv_period
+                    return orig_period
         return None
 
-    def _resolve_original_condition_ids(
+    def _resolve_unconverted_condition_ids(
         self, condition_ids: tuple[str, ...]
     ) -> tuple[str, ...]:
         """Map converted condition IDs back to their original unconverted IDs.
 
         Returns ``condition_ids`` unchanged if no original period was found.
         """
-        match = self._find_original_period(condition_ids)
-        if match is None:
+        orig_period = self._find_unconverted_period(condition_ids)
+        if orig_period is None:
             return tuple(condition_ids)
-        _, orig_period, _ = match
         return tuple(orig_period.condition_ids)
 
-    def _resolve_original_condition_id(self, condition_id: str) -> str:
+    def _resolve_unconverted_condition_id(self, condition_id: str) -> str:
         """Map a converted condition ID back to its original unconverted ID.
 
-        See :meth:`_resolve_original_condition_ids`; a single id may not
+        See :meth:`_resolve_unconverted_condition_ids`; a single id may not
         identify a period unambiguously, and where the matched period
         references several simultaneously-active conditions, only the first one
         is returned.
         """
-        return self._resolve_original_condition_ids((condition_id,))[0]
-
-    @staticmethod
-    def _period_starts_at_t0(
-        conv_exp: petabv2.Experiment,
-        orig_period: petabv2.ExperimentPeriod,
-        conv_period: petabv2.ExperimentPeriod,
-    ) -> bool:
-        """Whether reinitialising at the phase's ``t0`` implements a period."""
-        if conv_period.is_preequilibration:
-            return True
-        first_period = conv_exp.sorted_periods[0]
-        t_zero = 0.0 if first_period.is_preequilibration else first_period.time
-        return orig_period.time == t_zero
+        return self._resolve_unconverted_condition_ids((condition_id,))[0]
 
     def _conditions_defining_changes(
         self, condition_ids: tuple[str, ...]
     ) -> list[tuple[petabv2.Condition, bool]]:
         """The condition-table entries holding the changes of ``condition_ids``.
 
-        For a converted SBML problem (see :meth:`_find_original_period`), condition
+        For a converted SBML problem (see :meth:`_find_unconverted_period`), condition
         changes are implemented as model events and removed from the conditions table,
         so the entries of the *unconverted* problem are considered as well for
         reinitialization.
 
         :return:
-            One ``(condition, is_original)`` tuple per matching entry, in
-            lookup order, where ``is_original`` flags entries taken from the
+            One ``(condition, is_unconverted)`` tuple per matching entry, in
+            lookup order, where ``is_unconverted`` flags entries taken from the
             unconverted problem (whose changes are already encoded in the
             model).
         """
@@ -1112,13 +1091,15 @@ class JAXProblem(eqx.Module):
             for c in self._petab_problem.conditions
             if c.id == condition_id
         ]
-        match = self._find_original_period(condition_ids)
-        if match is not None and self._period_starts_at_t0(*match):
-            _, orig_period, _ = match
+        unconverted_period = self._find_unconverted_period(condition_ids)
+        if unconverted_period is not None and (
+            unconverted_period.is_preequilibration
+            or unconverted_period.time == 0.0
+        ):
             conditions += [
                 (c, True)
                 for c in self._unconverted_problem.conditions
-                if c.id in orig_period.condition_ids
+                if c.id in unconverted_period.condition_ids
             ]
         return conditions
 
@@ -1140,7 +1121,7 @@ class JAXProblem(eqx.Module):
         net_id = entity_id.split(".")[0]
         ind = int(re.search(r"\[\d+\]\[(\d+)\]", entity_id).group(1))
         nn = self.model.nns[net_id]
-        original_condition_id = self._resolve_original_condition_id(
+        unconverted_condition_id = self._resolve_unconverted_condition_id(
             condition_id
         )
 
@@ -1191,9 +1172,9 @@ class JAXProblem(eqx.Module):
                 val = condition_input_map[petab_id]
             elif (
                 petab_id in nn_inputs
-                and original_condition_id in nn_inputs[petab_id]
+                and unconverted_condition_id in nn_inputs[petab_id]
             ):
-                val = nn_inputs[petab_id][original_condition_id]
+                val = nn_inputs[petab_id][unconverted_condition_id]
             else:
                 val = nn_inputs[petab_id]["0"]
 
