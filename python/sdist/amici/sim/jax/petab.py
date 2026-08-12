@@ -1059,16 +1059,6 @@ class JAXProblem(eqx.Module):
             return tuple(condition_ids)
         return tuple(orig_period.condition_ids)
 
-    def _resolve_unconverted_condition_id(self, condition_id: str) -> str:
-        """Map a converted condition ID back to its original unconverted ID.
-
-        See :meth:`_resolve_unconverted_condition_ids`; a single id may not
-        identify a period unambiguously, and where the matched period
-        references several simultaneously-active conditions, only the first one
-        is returned.
-        """
-        return self._resolve_unconverted_condition_ids((condition_id,))[0]
-
     def _conditions_defining_changes(
         self, condition_ids: tuple[str, ...]
     ) -> list[tuple[petabv2.Condition, bool]]:
@@ -1121,9 +1111,9 @@ class JAXProblem(eqx.Module):
         net_id = entity_id.split(".")[0]
         ind = int(re.search(r"\[\d+\]\[(\d+)\]", entity_id).group(1))
         nn = self.model.nns[net_id]
-        unconverted_condition_id = self._resolve_unconverted_condition_id(
-            condition_id
-        )
+        unconverted_condition_id = self._resolve_unconverted_condition_ids(
+            (condition_id,)
+        )[0]
 
         def _is_net_input(model_id):
             comps = model_id.split(".")
