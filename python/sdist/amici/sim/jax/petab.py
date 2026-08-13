@@ -1025,6 +1025,8 @@ class JAXProblem(eqx.Module):
         """Locate the unconverted period the given converted condition ids belong to
         using the stored _unconverted_problem.
 
+        Note that this relies on the ordering of experiments being consistent between the converted and unconverted problems.
+
         :return:
             The corresponding original (unconverted) period, or ``None`` if the
             problem was not converted, or if no corresponding original period
