@@ -165,7 +165,6 @@ class JAXProblem(eqx.Module):
     _petab_measurement_indices: np.ndarray
     _petab_problem: petabv2.Problem
     _unconverted_problem: petabv2.Problem | None
-    _unconverted_period_map: dict[str, petabv2.ExperimentPeriod]
 
     def __init__(
         self,
@@ -192,7 +191,6 @@ class JAXProblem(eqx.Module):
         self.simulation_conditions = scs.conditionId.to_list()
         self._petab_problem = petab_problem
         self._unconverted_problem = unconverted_problem
-        self._unconverted_period_map = self._compute_unconverted_period_map()
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
@@ -580,31 +578,6 @@ class JAXProblem(eqx.Module):
             if pname in _petab_param_map:
                 return _petab_param_map[pname]
         return jnp.asarray(target_value, dtype=self.model.parameters.dtype)
-
-    def _compute_unconverted_period_map(
-        self,
-    ) -> dict[str, petabv2.ExperimentPeriod]:
-        """
-        Locate the unconverted period the given converted condition ids. Note that this
-        relies on the ordering of experiments being consistent between the converted
-        and unconverted problems.
-        """
-        return (
-            {
-                cid: orig_period
-                for orig_exp, conv_exp in zip(
-                    self._unconverted_problem.experiments,
-                    self._petab_problem.experiments,
-                )
-                for orig_period, conv_period in zip(
-                    orig_exp.sorted_periods, conv_exp.sorted_periods
-                )
-                if orig_period.condition_ids
-                for cid in conv_period.condition_ids
-            }
-            if self._unconverted_problem is not None
-            else {}
-        )
 
     def _get_parameter_mappings(self) -> dict[str, ...]:
         targets_map = {
@@ -1052,21 +1025,29 @@ class JAXProblem(eqx.Module):
         """Locate the unconverted period the given converted condition ids belong to
         using the stored _unconverted_problem.
 
+        Note that this relies on the ordering of experiments being consistent between the converted and unconverted problems.
+
         :return:
             The corresponding original (unconverted) period, or ``None`` if the
             problem was not converted, or if no corresponding original period
             was found.
         """
-        if not condition_ids:
+        if self._unconverted_problem is None or not condition_ids:
             return None
-        return next(
-            (
-                self._unconverted_period_map[cid]
-                for cid in condition_ids
-                if cid in self._unconverted_period_map
-            ),
-            None,
-        )
+        wanted = set(condition_ids)
+        for orig_exp, conv_exp in zip(
+            self._unconverted_problem.experiments,
+            self._petab_problem.experiments,
+        ):
+            for orig_period, conv_period in zip(
+                orig_exp.sorted_periods, conv_exp.sorted_periods
+            ):
+                if (
+                    wanted.issubset(conv_period.condition_ids)
+                    and orig_period.condition_ids
+                ):
+                    return orig_period
+        return None
 
     def _resolve_unconverted_condition_ids(
         self, condition_ids: tuple[str, ...]
@@ -1075,16 +1056,7 @@ class JAXProblem(eqx.Module):
 
         Returns ``condition_ids`` unchanged if no original period was found.
         """
-        if not condition_ids:
-            return condition_ids
-        orig_period = next(
-            (
-                self._unconverted_period_map[cid]
-                for cid in condition_ids
-                if cid in self._unconverted_period_map
-            ),
-            None,
-        )
+        orig_period = self._find_unconverted_period(condition_ids)
         if orig_period is None:
             return tuple(condition_ids)
         return tuple(orig_period.condition_ids)
@@ -1111,14 +1083,7 @@ class JAXProblem(eqx.Module):
             for c in self._petab_problem.conditions
             if c.id == condition_id
         ]
-        unconverted_period = next(
-            (
-                self._unconverted_period_map[cid]
-                for cid in condition_ids
-                if cid in self._unconverted_period_map
-            ),
-            None,
-        )
+        unconverted_period = self._find_unconverted_period(condition_ids)
         if unconverted_period is not None and (
             unconverted_period.is_preequilibration
             or unconverted_period.time == 0.0
