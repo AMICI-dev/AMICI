@@ -28,6 +28,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * PEtab SciML: implemented additional PyTorch-style layer types
   (`BatchNorm`, `InstanceNorm`, `AlphaDropout`, `Bilinear`) (#3176).
 * PEtab SciML: updated support to PEtab v2 (#3165).
+* Sped up parallel model import (`AMICI_IMPORT_NPROCS` > 1) considerably.
+  Previously, a new worker pool was created for every parallelized operation,
+  and every worker of every pool had to import sympy and amici from scratch.
+  Now, a single pool is created lazily and reused, and its workers are forked
+  from a `forkserver` process that performs these imports only once. For small
+  operations, where the inter-process communication overhead outweighs any
+  speed-up, processing stays serial. Previously, parallel import could be
+  slower than serial import for all but the largest models.
 
 **Fixes**
 
