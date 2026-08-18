@@ -2,7 +2,12 @@
 
 import numpy as np
 import pytest
+from amici import import_model_module
+from amici.importers.antimony import antimony2amici
+from amici.sim.sundials import AMICI_SUCCESS, run_simulation
+from amici.testing import skip_on_valgrind
 from amici.testing.models import create_amici_model, create_sbml_model
+from numpy.testing import assert_allclose
 from util import (
     check_trajectories_with_adjoint_sensitivities,
     check_trajectories_with_forward_sensitivities,
@@ -354,4 +359,68 @@ def model_definition_piecewise_many_conditions():
         timepoints,
         x_expected,
         sx_expected,
+    )
+
+
+@skip_on_valgrind
+def test_nested_piecewise_in_condition(tempdir):
+    """Test a piecewise expression inside the condition of another one.
+
+    The condition of the outer piecewise expression depends (via `p3`) on the
+    value of the inner one. This requires the Heaviside variable of the outer
+    expression to be initialized based on the *updated* value of the inner one.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3233.
+    """
+    ant_model = """
+    model nested_piecewise
+      p1 := 0.001;
+      p2 := piecewise(0, p1 < 0, p1);
+      p3 := p2 - 0.0001;
+      p4 := piecewise(0, p3 < 0, p3);
+      # three levels of nesting
+      p5 := p4 - 0.0001;
+      p6 := piecewise(0, p5 < 0, p5);
+      x = 0;
+      x' = p6;
+    end
+    """
+    module_name = "test_nested_piecewise_in_condition"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    amici_model = import_model_module(
+        module_name=module_name, module_path=tempdir
+    ).get_model()
+    amici_model.set_timepoints([0.0, 1.0])
+    rdata = run_simulation(amici_model, amici_model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+
+    expr_ids = list(amici_model.get_expression_ids())
+    w = np.asarray(rdata.w).reshape(len(rdata.ts), -1)
+    expected = {
+        "p1": 0.001,
+        "p2": 0.001,
+        "p3": 0.0009,
+        "p4": 0.0009,
+        "p5": 0.0008,
+        "p6": 0.0008,
+    }
+    for expr_id, expected_val in expected.items():
+        assert_allclose(
+            w[:, expr_ids.index(expr_id)],
+            expected_val,
+            rtol=1e-10,
+            atol=1e-14,
+            err_msg=f"Unexpected value for {expr_id}",
+        )
+
+    # dx/dt == p6 == const
+    assert_allclose(
+        np.asarray(rdata.x).flatten(),
+        expected["p6"] * np.asarray(rdata.ts),
+        rtol=1e-8,
+        atol=1e-14,
     )

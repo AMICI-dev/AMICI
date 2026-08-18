@@ -422,18 +422,36 @@ void Model::reinit_events(
     realtype t, AmiVector const& x, AmiVector const& dx,
     std::vector<realtype> const& h_old, std::vector<int>& roots_found
 ) {
+    // Root functions may themselves depend on Heaviside variables, e.g., for
+    // a piecewise expression occurring inside the condition of another
+    // piecewise expression. In that case, a single pass would evaluate the
+    // outer root function using stale Heaviside variables. Therefore, iterate
+    // until `h` is consistent with the root function values.
+    // Each iteration resolves at least one more level of the dependency
+    // hierarchy, so `ne` iterations always suffice for acyclic dependencies.
+    // The iteration count is bounded to avoid infinite loops in case of
+    // (pathological) cyclic dependencies.
     std::vector<realtype> rootvals(ne, 0.0);
-    froot(t, x, dx, rootvals);
+    for (int iter = 0; iter <= ne; ++iter) {
+        froot(t, x, dx, rootvals);
+        bool h_changed = false;
+        for (int ie = 0; ie < ne; ie++) {
+            realtype const h_new = rootvals.at(ie) < 0.0 ? 0.0 : 1.0;
+            if (h_new != state_.h.at(ie)) {
+                state_.h.at(ie) = h_new;
+                h_changed = true;
+            }
+        }
+        if (!h_changed) {
+            break;
+        }
+    }
+
     std::ranges::fill(roots_found, 0);
     for (int ie = 0; ie < ne; ie++) {
-        if (rootvals.at(ie) < 0.0) {
-            state_.h.at(ie) = 0.0;
-        } else {
-            state_.h.at(ie) = 1.0;
-            if (h_old.at(ie) <= 0.0) {
-                // only false->true triggers event
-                roots_found.at(ie) = 1;
-            }
+        if (state_.h.at(ie) > 0.0 && h_old.at(ie) <= 0.0) {
+            // only false->true triggers event
+            roots_found.at(ie) = 1;
         }
     }
 
