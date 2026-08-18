@@ -1175,3 +1175,72 @@ def test_resolve_net_id():
     assert JAXProblem._resolve_net_id("", nns) is None
     assert JAXProblem._resolve_net_id(float("nan"), nns) is None
     assert JAXProblem._resolve_net_id(None, nns) is None
+
+
+@skip_on_valgrind
+def test_nested_piecewise_in_condition(tmp_path):
+    """A piecewise expression inside the condition of another one.
+
+    The condition of the outer piecewise expression depends (via ``p3``) on the
+    value of the inner one, so the Heaviside variables have to be consistent
+    with the root functions before the branches are selected.
+
+    ``p2`` encodes as ``p1 * H(p1)`` with a consistent ``H(p1) = 0``. Seeding
+    the Heaviside variables from the trigger initial values (``h = 1``) would
+    give a stale ``p2 = -1e-3``, hence ``p3 = -9e-4 < 0``, and collapse ``p4``
+    to zero.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3233.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model nested_piecewise
+        p1 := -0.001;
+        p2 := piecewise(0, p1 < 0, p1);
+        p3 := p2 + 0.0001;
+        p4 := piecewise(0, p3 < 0, p3);
+        x = 0.0;
+        x' = p4;
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    SbmlImporter(sbml, from_file=False).sbml2jax(
+        "nested_piecewise", output_dir=tmp_path
+    )
+    model = amici._module_from_path(
+        "nested_piecewise", tmp_path / "__init__.py"
+    ).Model()
+
+    ts = jnp.array([0.0, 1.0])
+    x, _ = model.simulate_condition(
+        jnp.array(model.parameters),
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.DirectAdjoint(),
+        SteadyStateEvent(),
+        1000,
+        ret=ReturnValue.x,
+    )
+
+    # dx/dt == p4 == 1e-4, constant
+    assert_allclose(
+        np.asarray(x).flatten(),
+        1e-4 * np.asarray(ts),
+        rtol=1e-5,
+        atol=1e-12,
+    )
