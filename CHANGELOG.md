@@ -31,11 +31,13 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Fixes**
 
-* Fixed the sundials backend selecting the wrong branch of a piecewise
+* Fixed both simulation backends selecting the wrong branch of a piecewise
   expression whose condition depends on the value of another piecewise
   expression. The Heaviside variables were initialized in a single pass, so
   the outer condition was evaluated using the not-yet-updated value of the
-  inner expression. They are now iterated to a fixed point (#3233).
+  inner expression. They are now iterated to a fixed point, which also makes
+  the result independent of the (previously differing) value the Heaviside
+  variables happened to be seeded with in either backend (#3233).
 * Demote the module import mtime check during sundials model import to a
   warning, as it can lead to false positives in some environments
   (e.g., when using network file systems with not synchronized clocks).
