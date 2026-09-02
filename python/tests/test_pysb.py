@@ -559,3 +559,17 @@ def test_pysb_derived_name_collisions(tempdir):
     rdata = run_simulation(amici_model, solver)
     assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
     assert np.all(np.isfinite(rdata.x))
+
+
+@skip_on_valgrind
+def test_pysb_unknown_observation_model_observable_warns():
+    """An observable in the observation model but absent from the PySB model
+    should warn instead of being silently ignored (issue #918)."""
+    from amici._symbolic.de_model import DEModel
+    from amici.importers.pysb import _process_pysb_observables
+
+    pysb.SelfExporter.cleanup()
+    model = pysb.Model("unknown_obs")
+    channel = MeasurementChannel("nonexistent")
+    with pytest.warns(UserWarning, match="nonexistent"):
+        _process_pysb_observables(model, DEModel(), {channel.id: channel})

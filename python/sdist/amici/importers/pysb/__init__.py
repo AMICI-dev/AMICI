@@ -11,6 +11,7 @@ import itertools
 import logging
 import os
 import sys
+import warnings
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
@@ -916,6 +917,18 @@ def _process_pysb_observables(
         names already claimed in the model so far, see `all_names` in
         `ode_model_from_pysb_importer`
     """
+    # Warn about observables from the observation model that do not correspond
+    # to any observable in the PySB model: they are silently ignored otherwise
+    # (e.g. because of a typo in the observable ID).
+    pysb_observable_names = {obs.name for obs in pysb_model.observables}
+    for obs_id in observation_model:
+        if obs_id not in pysb_observable_names:
+            warnings.warn(
+                f"Observable '{obs_id}' from the observation model is not "
+                "contained in the PySB model and will be ignored.",
+                stacklevel=2,
+            )
+
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in pysb_model.observables:
