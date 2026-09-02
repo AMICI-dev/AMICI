@@ -1019,10 +1019,22 @@ class JAXProblem(eqx.Module):
             [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
         )
 
-    def _resolve_original_condition_id(self, condition_id: str) -> str:
-        """Map a converted condition ID back to its original unconverted ID."""
-        if self._unconverted_problem is None:
-            return condition_id
+    def _find_unconverted_period(
+        self, condition_ids: tuple[str, ...]
+    ) -> petabv2.ExperimentPeriod | None:
+        """Locate the unconverted period the given converted condition ids belong to
+        using the stored _unconverted_problem.
+
+        Note that this relies on the ordering of experiments being consistent between the converted and unconverted problems.
+
+        :return:
+            The corresponding original (unconverted) period, or ``None`` if the
+            problem was not converted, or if no corresponding original period
+            was found.
+        """
+        if self._unconverted_problem is None or not condition_ids:
+            return None
+        wanted = set(condition_ids)
         for orig_exp, conv_exp in zip(
             self._unconverted_problem.experiments,
             self._petab_problem.experiments,
@@ -1031,11 +1043,68 @@ class JAXProblem(eqx.Module):
                 orig_exp.sorted_periods, conv_exp.sorted_periods
             ):
                 if (
-                    condition_id in conv_period.condition_ids
+                    wanted.issubset(conv_period.condition_ids)
                     and orig_period.condition_ids
                 ):
-                    return orig_period.condition_ids[0]
-        return condition_id
+                    return orig_period
+        return None
+
+    def _resolve_unconverted_condition_ids(
+        self, condition_ids: tuple[str, ...]
+    ) -> tuple[str, ...]:
+        """Map converted condition IDs back to their original unconverted IDs.
+
+        Returns ``condition_ids`` unchanged if no original period was found.
+        """
+        orig_period = self._find_unconverted_period(condition_ids)
+        if orig_period is None:
+            return tuple(condition_ids)
+        return tuple(orig_period.condition_ids)
+
+    def _conditions_defining_changes(
+        self, condition_ids: tuple[str, ...]
+    ) -> list[tuple[petabv2.Condition, bool]]:
+        """The condition-table entries holding the changes of ``condition_ids``.
+
+        For a converted SBML problem (see :meth:`_find_unconverted_period`), condition
+        changes are implemented as model events and removed from the conditions table,
+        so the entries of the *unconverted* problem are considered as well for
+        reinitialization.
+
+        :return:
+            One ``(condition, is_unconverted)`` tuple per matching entry, in
+            lookup order, where ``is_unconverted`` flags entries taken from the
+            unconverted problem (whose changes are already encoded in the
+            model).
+        """
+        conditions = [
+            (c, False)
+            for condition_id in condition_ids
+            for c in self._petab_problem.conditions
+            if c.id == condition_id
+        ]
+        unconverted_period = self._find_unconverted_period(condition_ids)
+        if unconverted_period is not None and (
+            unconverted_period.is_preequilibration
+            or unconverted_period.time == 0.0
+        ):
+            conditions += [
+                (c, True)
+                for c in self._unconverted_problem.conditions
+                if c.id in unconverted_period.condition_ids
+            ]
+        return conditions
+
+    def _can_resolve_condition_target_value(self, target_value) -> bool:
+        """Whether :meth:`_resolve_condition_target_value` can evaluate this
+        condition-table target value.
+        """
+        if target_value.is_number:
+            return True
+        pname = str(target_value)
+        return pname in self.parameter_ids or pname in {
+            param.id for param in self._petab_problem.parameters
+        }
 
     def _eval_nn(self, output_par: str, condition_id: str):
         entity_id = self._petab_problem.mapping_df.loc[
@@ -1044,9 +1113,9 @@ class JAXProblem(eqx.Module):
         net_id = entity_id.split(".")[0]
         ind = int(re.search(r"\[\d+\]\[(\d+)\]", entity_id).group(1))
         nn = self.model.nns[net_id]
-        original_condition_id = self._resolve_original_condition_id(
-            condition_id
-        )
+        unconverted_condition_id = self._resolve_unconverted_condition_ids(
+            (condition_id,)
+        )[0]
 
         def _is_net_input(model_id):
             comps = model_id.split(".")
@@ -1095,9 +1164,9 @@ class JAXProblem(eqx.Module):
                 val = condition_input_map[petab_id]
             elif (
                 petab_id in nn_inputs
-                and original_condition_id in nn_inputs[petab_id]
+                and unconverted_condition_id in nn_inputs[petab_id]
             ):
-                val = nn_inputs[petab_id][original_condition_id]
+                val = nn_inputs[petab_id][unconverted_condition_id]
             else:
                 val = nn_inputs[petab_id]["0"]
 
@@ -1286,21 +1355,27 @@ class JAXProblem(eqx.Module):
         ``targets_map`` value cached at construction time, so that gradients
         w.r.t. parameters used as initial values are not silently dropped.
         """
-        for condition in simulation_conditions:
-            for c in self._petab_problem.conditions:
-                if c.id != condition:
+        for c, is_original in self._conditions_defining_changes(
+            simulation_conditions
+        ):
+            for change in c.changes:
+                if change.target_id != state_id:
                     continue
-                for change in c.changes:
-                    if change.target_id != state_id:
-                        continue
-                    # NaN targets (e.g. "use the preequilibration/SBML value")
-                    # are dropped during v1->v2 conversion, but guard anyway
-                    if (
-                        change.target_value.is_number
-                        and change.target_value.is_finite is False
-                    ):
-                        return None
-                    return change.target_value
+                # NaN targets (e.g. "use the preequilibration/SBML value")
+                # are dropped during v1->v2 conversion, but guard anyway
+                if (
+                    change.target_value.is_number
+                    and change.target_value.is_finite is False
+                ):
+                    return None
+                if (
+                    is_original
+                    and not self._can_resolve_condition_target_value(
+                        change.target_value
+                    )
+                ):
+                    return None
+                return change.target_value
         return None
 
     def _state_reinitialisation_value(
@@ -1483,26 +1558,32 @@ class JAXProblem(eqx.Module):
 
         # placeholder values from sundials code may be needed here
         if op_numeric is not None and op_numeric.size:
-            op_array = jnp.where(
-                op_mask,
-                jax.vmap(
-                    jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
-                )(op_indices),
-                op_numeric,
-            )
+            if unscaled_parameters.size:
+                op_array = jnp.where(
+                    op_mask,
+                    jax.vmap(
+                        jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
+                    )(op_indices),
+                    op_numeric,
+                )
+            else:
+                op_array = op_numeric
         else:
             op_array = jnp.zeros(
                 (len(experiments), self._ts_masks.shape[1], 0)
             )
 
         if np_numeric is not None and np_numeric.size:
-            np_array = jnp.where(
-                np_mask,
-                jax.vmap(
-                    jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
-                )(np_indices),
-                np_numeric,
-            )
+            if unscaled_parameters.size:
+                np_array = jnp.where(
+                    np_mask,
+                    jax.vmap(
+                        jax.vmap(jax.vmap(lambda ip: unscaled_parameters[ip]))
+                    )(np_indices),
+                    np_numeric,
+                )
+            else:
+                np_array = np_numeric
         else:
             np_array = jnp.zeros(
                 (len(experiments), self._ts_masks.shape[1], 0)

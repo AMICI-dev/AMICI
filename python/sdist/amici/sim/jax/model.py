@@ -990,7 +990,35 @@ class JAXModel(eqx.Module):
             rf0 = jnp.where(h > 0.5, 0.5, -0.5)
         else:
             h = jnp.where(h_mask, jnp.heaviside(rf0, 0.0), jnp.ones_like(rf0))
-        args = (p, tcl, h)
+
+        # The root functions may themselves depend on the Heaviside variables,
+        # e.g., for a piecewise expression occurring inside the condition of
+        # another piecewise expression. Evaluating them once at the seeded `h`
+        # would use a stale value for the inner expression and select the wrong
+        # branch of the outer one, so refine `h` to a fixed point before
+        # deciding which events triggered (see #3233).
+        # `n_events` refinement steps plus the final evaluation below resolve
+        # any acyclic dependency hierarchy. The trip count is static so that
+        # this stays reverse-mode differentiable, unlike `jax.lax.while_loop`.
+        # Note that `h` itself keeps its seeded (pre-event) value -- it is the
+        # reference that `roots_found` flips below -- only the point at which
+        # the root functions are evaluated changes.
+        h_eval = h
+        if self.n_events:
+            ones = jnp.ones_like(rf0)
+
+            def refine_h(h_cur, _):
+                rfx_cur = root_cond_fn(t0_next, y0_next, (p, tcl, h_cur))
+                h_new = jnp.where(
+                    h_mask, jnp.heaviside(rfx_cur, 1.0), ones
+                ).astype(h_cur.dtype)
+                return h_new, None
+
+            h_eval, _ = jax.lax.scan(
+                refine_h, h_eval, None, length=self.n_events
+            )
+
+        args = (p, tcl, h_eval)
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)
         roots_found = jnp.sign(rfx) != jnp.sign(rf0)

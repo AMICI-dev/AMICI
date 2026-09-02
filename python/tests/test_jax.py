@@ -471,6 +471,252 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
 
 
 @skip_on_valgrind
+def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
+    """A condition-table change of a species must still be found when the
+    conditions have been renamed during import.
+
+    ``PetabImporter`` converts the PEtab experiments to SBML events
+    (``petab.v2.converters.ExperimentsToSbmlConverter``), which replaces the
+    condition table by ``_petab*`` indicator conditions. The simulation
+    condition ids of the resulting ``JAXProblem`` therefore no longer name the
+    original condition-table entries.
+
+    Regression test for a bug where
+    ``JAXProblem._condition_reinit_target_value`` only looked the (converted)
+    ids up in the converted condition table -- which merely sets the indicator
+    parameters -- so the state was reported as not needing reinitialisation.
+    ``_eval_nn`` already resolved the ids back to the original ones via
+    ``_resolve_original_condition_id``; the reinitialisation lookup must do the
+    same, while still returning the *raw* target value so that the caller can
+    resolve it against the traced ``JAXProblem.parameters``.
+    """
+    import equinox as eqx
+    from amici.importers.petab import PetabImporter
+    from petab.v2 import Problem
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `a0` initialises species `A` via the condition table (not in the model)
+    problem.add_parameter(
+        "a0", nominal_value=2.0, estimate=True, lb=0.1, ub=10, scale="lin"
+    )
+    problem.add_observable("obs_a", formula="A", noise_formula="0.5")
+    problem.add_condition("c0", A="a0")
+    problem.add_experiment("e0", 0, "c0")
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=0.0, measurement=0.7
+    )
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=10.0, measurement=0.1
+    )
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_reinit_renamed_conditions",
+        output_dir=str(tmp_path),
+        verbose=False,
+    ).create_simulator(force_import=True)
+
+    (condition_id,) = jax_problem.simulation_conditions
+    sc = (condition_id,)
+    # The import must actually have renamed the condition, otherwise the
+    # resolution under test is never exercised.
+    assert condition_id != "c0"
+    assert "c0" not in {c.id for c in jax_problem._petab_problem.conditions}
+    assert "c0" in {c.id for c in jax_problem._unconverted_problem.conditions}
+
+    # the raw (unresolved) target value is looked up under the original id
+    assert str(jax_problem._condition_reinit_target_value(sc, "A")) == "a0"
+    assert jax_problem._condition_reinit_target_value(sc, "B") is None
+
+    ix = jax_problem.model.state_ids.index("A")
+    ia = jax_problem.parameter_ids.index("a0")
+
+    mask, reinit_x = jax_problem.load_reinitialisation(sc)
+    assert bool(mask[ix]), "state reinitialisation was not detected"
+    assert not bool(mask[jax_problem.model.state_ids.index("B")])
+    assert_allclose(float(reinit_x[ix]), 2.0)
+
+    # the raw value must be resolved live, so it follows `update_parameters`...
+    p0 = jax_problem.parameters
+    _, reinit_x = jax_problem.update_parameters(
+        p0.at[ia].set(5.0)
+    ).load_reinitialisation(sc)
+    assert_allclose(float(reinit_x[ix]), 5.0)
+
+    # ... and stays differentiable w.r.t. `JAXProblem.parameters`
+    grad = eqx.filter_grad(lambda m: m.load_reinitialisation(sc)[1][ix])(
+        jax_problem
+    )
+    assert_allclose(float(grad.parameters[ia]), 1.0)
+
+    # the reinitialised initial value is reflected in the likelihood
+    def llh(p):
+        return float(run_simulations(jax_problem.update_parameters(p))[0])
+
+    assert abs(llh(p0.at[ia].add(1.0)) - llh(p0)) > 1e-6
+    eps = 1e-6
+    fd = (llh(p0.at[ia].add(eps)) - llh(p0.at[ia].add(-eps))) / (2 * eps)
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ia]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
+    """Resolving renamed conditions must not reinitialise a state for a period
+    that does not start at the simulated ``t0``.
+
+    Reinitialisation is applied at the initial time of the (pre-)equilibration
+    or of the dynamic simulation, which for an experiment with
+    preequilibration is ``t=0`` -- not the start time of the first dynamic
+    period. A change of a later-starting period is applied by the event that
+    ``PetabImporter`` created for it, so resolving the renamed conditions
+    (see ``test_condition_table_initial_value_with_renamed_conditions``) must
+    not additionally reinitialise the state at ``t0``, which would apply the
+    change too early (PEtab test suite cases 0017/0018).
+    """
+    from amici.importers.petab import PetabImporter
+    from amici.sim.jax.petab import _get_period_condition_ids
+    from petab.v2 import Problem
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    problem.add_observable("obs_a", formula="A", noise_formula="0.5")
+    problem.add_condition("preeq_c0", A=0.0, B=2.0)
+    problem.add_condition("c0", A=1.0)
+    # the dynamic period starts at t=10, i.e. after the simulation's t0 (=0)
+    problem.add_experiment("e0", "-inf", "preeq_c0", 10.0, "c0")
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=10.0, measurement=0.7
+    )
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=20.0, measurement=0.1
+    )
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_reinit_renamed_conditions_preeq",
+        output_dir=str(tmp_path),
+        verbose=False,
+    ).create_simulator(force_import=True)
+
+    (experiment,) = jax_problem._petab_problem.experiments
+    preeq_conditions = _get_period_condition_ids(
+        experiment, is_preequilibration=True
+    )
+    dyn_conditions = _get_period_condition_ids(
+        experiment, is_preequilibration=False
+    )
+    # both periods carry the same experiment indicator condition, so a single
+    # condition id does not identify the period
+    assert set(preeq_conditions) & set(dyn_conditions)
+
+    # the preequilibration period starts at the preequilibration's t0 ...
+    assert (
+        float(
+            jax_problem._condition_reinit_target_value(preeq_conditions, "B")
+        )
+        == 2.0
+    )
+    mask, reinit_x = jax_problem.load_reinitialisation(preeq_conditions)
+    ib = jax_problem.model.state_ids.index("B")
+    assert bool(mask[ib])
+    assert_allclose(float(reinit_x[ib]), 2.0)
+
+    # ... whereas the dynamic period starts at t=10, so `A = 1` must be left to
+    # the event and not be applied at t0
+    assert (
+        jax_problem._condition_reinit_target_value(dyn_conditions, "A") is None
+    )
+    mask, _ = jax_problem.load_reinitialisation(dyn_conditions)
+    assert not bool(mask[jax_problem.model.state_ids.index("A")])
+
+
+@skip_on_valgrind
+def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
+    """
+    Regression test: ``_prepare_experiments`` must preserve the shape of numeric override
+    arrays when the problem has no estimated scalar parameters.
+    """
+    import petab.v1 as petab
+    from amici.sim.jax.petab import _get_period_condition_ids
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # no estimated parameters -> ``JAXProblem.parameters`` is empty
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    # numeric noise-parameter overrides -> ``_np_numeric`` is non-empty while
+    # ``_np_mask`` is all-False (nothing to look up in the parameter vector)
+    problem.add_observable("obs_b", "B", noise_formula="noiseParameter1_obs_b")
+    problem.add_condition("c0", k1=0.8)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3, noise_parameters=[0.5])
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4, noise_parameters=[0.7])
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    assert jax_problem.parameters.size == 0
+    assert jax_problem._np_numeric.size
+
+    experiments = jax_problem._petab_problem.experiments
+    conditions = [
+        _get_period_condition_ids(exp, is_preequilibration=False)
+        for exp in experiments
+    ]
+    ei = jax_problem._experiment_indices(experiments)
+    np_numeric = jax_problem._np_numeric[ei]
+
+    (*_, np_array, _, _) = jax_problem._prepare_experiments(
+        experiments,
+        conditions,
+        False,
+        jax_problem._op_numeric[ei],
+        jax_problem._op_mask[ei],
+        jax_problem._op_indices[ei],
+        np_numeric,
+        jax_problem._np_mask[ei],
+        jax_problem._np_indices[ei],
+    )
+
+    assert np_array.shape == np_numeric.shape
+    assert_allclose(np.asarray(np_array), np.asarray(np_numeric))
+
+
+@skip_on_valgrind
 def test_petab_simulate_ragged_experiments(tmp_path):
     """``petab_simulate`` must handle experiments with different numbers of
     measurement timepoints.
@@ -929,3 +1175,72 @@ def test_resolve_net_id():
     assert JAXProblem._resolve_net_id("", nns) is None
     assert JAXProblem._resolve_net_id(float("nan"), nns) is None
     assert JAXProblem._resolve_net_id(None, nns) is None
+
+
+@skip_on_valgrind
+def test_nested_piecewise_in_condition(tmp_path):
+    """A piecewise expression inside the condition of another one.
+
+    The condition of the outer piecewise expression depends (via ``p3``) on the
+    value of the inner one, so the Heaviside variables have to be consistent
+    with the root functions before the branches are selected.
+
+    ``p2`` encodes as ``p1 * H(p1)`` with a consistent ``H(p1) = 0``. Seeding
+    the Heaviside variables from the trigger initial values (``h = 1``) would
+    give a stale ``p2 = -1e-3``, hence ``p3 = -9e-4 < 0``, and collapse ``p4``
+    to zero.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3233.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model nested_piecewise
+        p1 := -0.001;
+        p2 := piecewise(0, p1 < 0, p1);
+        p3 := p2 + 0.0001;
+        p4 := piecewise(0, p3 < 0, p3);
+        x = 0.0;
+        x' = p4;
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    SbmlImporter(sbml, from_file=False).sbml2jax(
+        "nested_piecewise", output_dir=tmp_path
+    )
+    model = amici._module_from_path(
+        "nested_piecewise", tmp_path / "__init__.py"
+    ).Model()
+
+    ts = jnp.array([0.0, 1.0])
+    x, _ = model.simulate_condition(
+        jnp.array(model.parameters),
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.DirectAdjoint(),
+        SteadyStateEvent(),
+        1000,
+        ret=ReturnValue.x,
+    )
+
+    # dx/dt == p4 == 1e-4, constant
+    assert_allclose(
+        np.asarray(x).flatten(),
+        1e-4 * np.asarray(ts),
+        rtol=1e-5,
+        atol=1e-12,
+    )

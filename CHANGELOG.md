@@ -28,9 +28,24 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * PEtab SciML: implemented additional PyTorch-style layer types
   (`BatchNorm`, `InstanceNorm`, `AlphaDropout`, `Bilinear`) (#3176).
 * PEtab SciML: updated support to PEtab v2 (#3165).
+* Sped up parallel model import (`AMICI_IMPORT_NPROCS` > 1) considerably.
+  Previously, a new worker pool was created for every parallelized operation,
+  and every worker of every pool had to import sympy and amici from scratch.
+  Now, a single pool is created lazily and reused, and its workers are forked
+  from a `forkserver` process that performs these imports only once. For small
+  operations, where the inter-process communication overhead outweighs any
+  speed-up, processing stays serial. Previously, parallel import could be
+  slower than serial import for all but the largest models.
 
 **Fixes**
 
+* Fixed both simulation backends selecting the wrong branch of a piecewise
+  expression whose condition depends on the value of another piecewise
+  expression. The Heaviside variables were initialized in a single pass, so
+  the outer condition was evaluated using the not-yet-updated value of the
+  inner expression. They are now iterated to a fixed point, which also makes
+  the result independent of the (previously differing) value the Heaviside
+  variables happened to be seeded with in either backend (#3233).
 * Demote the module import mtime check during sundials model import to a
   warning, as it can lead to false positives in some environments
   (e.g., when using network file systems with not synchronized clocks).
