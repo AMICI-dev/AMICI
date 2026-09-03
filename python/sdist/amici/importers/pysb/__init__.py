@@ -917,12 +917,16 @@ def _process_pysb_observables(
         names already claimed in the model so far, see `all_names` in
         `ode_model_from_pysb_importer`
     """
-    # Warn about observables from the observation model that do not correspond
-    # to any observable in the PySB model: they are silently ignored otherwise
-    # (e.g. because of a typo in the observable ID).
-    pysb_observable_names = {obs.name for obs in pysb_model.observables}
+    # Warn about entries from the observation model that do not correspond to
+    # any PySB observable or expression: they are silently ignored otherwise
+    # (e.g. because of a typo in the ID). A channel ID may refer to either a
+    # pysb.Observable or a pysb.Expression (see pysb2amici docstring), both of
+    # which are turned into AMICI observables via _add_expression.
+    known_names = {obs.name for obs in pysb_model.observables} | {
+        expr.name for expr in pysb_model.expressions
+    }
     for obs_id in observation_model:
-        if obs_id not in pysb_observable_names:
+        if obs_id not in known_names:
             warnings.warn(
                 f"Observable '{obs_id}' from the observation model is not "
                 "contained in the PySB model and will be ignored.",

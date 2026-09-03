@@ -436,7 +436,6 @@ def test_pysb_event(tempdir):
         model,
         outdir,
         verbose=True,
-        observation_model=[MeasurementChannel("a")],
         compute_conservation_laws=False,
         _events=events,
     )
