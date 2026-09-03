@@ -4,7 +4,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v1.X Series
 
-### v1.0.2 (unreleased)
+### v1.1 (2026-09-03)
 
 **BREAKING CHANGES**
 

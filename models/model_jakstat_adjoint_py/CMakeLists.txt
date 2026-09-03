@@ -19,18 +19,16 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  list(APPEND MY_CXX_FLAGS -Wno-unused-but-set-variable)
-endif()
-foreach(flag ${MY_CXX_FLAGS})
-  unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
-  if(${CUR_FLAG_SUPPORTED})
-    string(APPEND CMAKE_CXX_FLAGS " ${flag}")
+# -Wall/-Wno-unused-* are supported by every GCC/Clang version AMICI
+# targets, so skip the check_cxx_compiler_flag() probing (a full
+# try_compile() per flag, on every single model configure) and just gate
+# on the compiler family.
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+  string(APPEND CMAKE_CXX_FLAGS " -Wall -Wno-unused-function -Wno-unused-variable")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-but-set-variable")
   endif()
-endforeach()
+endif()
 
 if(DEFINED ENV{AMICI_CXXFLAGS})
   message(STATUS "Appending flags from AMICI_CXXFLAGS: $ENV{AMICI_CXXFLAGS}")
@@ -41,7 +39,7 @@ if(DEFINED ENV{AMICI_LDFLAGS})
   link_libraries("$ENV{AMICI_LDFLAGS}")
 endif()
 
-find_package(Amici 1.0.1 REQUIRED HINTS
+find_package(Amici 1.1.0 REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 set_target_properties(Upstream::amici PROPERTIES
