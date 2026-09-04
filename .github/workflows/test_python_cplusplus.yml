@@ -60,6 +60,12 @@ jobs:
     - name: Check OpenMP support
       run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
 
+    - name: Check that test models are up to date
+      # Regenerating all test models is slow, so only run this as part of
+      # the merge queue gate, not on every push/PR run.
+      if: ${{ github.event_name == 'merge_group' }}
+      run: source venv/bin/activate && scripts/run-check-test-models.sh
+
     - name: Python tests (part 1)
       run: |
         source venv/bin/activate \
