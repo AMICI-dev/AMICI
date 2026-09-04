@@ -4,7 +4,7 @@
 #
 set -euo pipefail
 
-BNG_VERSION="2.9.3"
+BNG_VERSION="2.9.2"
 
 script_path=$(dirname "$BASH_SOURCE")
 amici_path=$(cd "$script_path/.." && pwd)
