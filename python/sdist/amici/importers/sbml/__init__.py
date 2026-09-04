@@ -49,7 +49,6 @@ from amici.constants import SymbolId
 from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
-    RESERVED_SYMBOLS,
     MeasurementChannel,
     _check_unsupported_functions,
     _default_simplify,
@@ -65,6 +64,7 @@ from amici.importers.utils import (
     generate_regularization_symbol,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
+    resolve_reserved_symbol_renames,
     sbml_time_symbol,
     smart_subs,
     smart_subs_dict,
@@ -2825,27 +2825,16 @@ class SbmlImporter:
         The original id is kept so it can be restored for anything reported
         outward (state/parameter ids, PEtab mapping, ...).
         """
-        self._reserved_symbol_original_ids: dict[str, str] = {}
         all_names = {
             s.name for symbols in self._symbols.values() for s in symbols
         }
+        renames = resolve_reserved_symbol_renames(all_names)
+        self._reserved_symbol_original_ids = {
+            new_name: old_name for old_name, new_name in renames.items()
+        }
 
-        for sym in RESERVED_SYMBOLS:
-            old_symbol = symbol_with_assumptions(sym)
-            if not any(
-                old_symbol in symbols for symbols in self._symbols.values()
-            ):
-                continue
-
-            # the model may already define e.g. "amici_t" itself; keep
-            # trying suffixes until we land on a name that's actually free
-            new_name, n = f"amici_{sym}", 2
-            while new_name in all_names:
-                new_name = f"amici_{sym}_{n}"
-                n += 1
-            all_names.add(new_name)
-            self._reserved_symbol_original_ids[new_name] = sym
-
+        for old_name, new_name in renames.items():
+            old_symbol = symbol_with_assumptions(old_name)
             new_symbol = symbol_with_assumptions(new_name)
             self._replace_in_all_expressions(
                 old_symbol, new_symbol, replace_identifiers=True

@@ -48,6 +48,43 @@ RESERVED_SYMBOLS = [
 ]
 
 
+def resolve_reserved_symbol_renames(all_names: set[str]) -> dict[str, str]:
+    """
+    Decide non-colliding replacement names for any of ``RESERVED_SYMBOLS``
+    that collide with a name already in use in the model.
+
+    Each importer is responsible for actually renaming the corresponding
+    symbol everywhere it's used (before it's embedded in any expression)
+    and for recording the mapping so the original id can be restored for
+    anything reported outward (state/parameter ids, PEtab mapping, ...).
+
+    :param all_names:
+        every symbol name already used in the model. Used both to detect
+        which reserved names actually collide, and to disambiguate the
+        replacement (e.g. if the model already defines "amici_t" itself).
+
+    :return:
+        mapping from a colliding reserved name to a new, guaranteed-free
+        replacement name (``amici_{name}``, or ``amici_{name}_{n}`` if
+        that's already taken too). Only contains entries for names that
+        actually collide with something in ``all_names``.
+    """
+    all_names = set(all_names)  # local copy; we add newly chosen names below
+    renames: dict[str, str] = {}
+    for sym in RESERVED_SYMBOLS:
+        if sym not in all_names:
+            continue
+
+        new_name, n = f"amici_{sym}", 2
+        while new_name in all_names:
+            new_name = f"amici_{sym}_{n}"
+            n += 1
+        all_names.add(new_name)
+        renames[sym] = new_name
+
+    return renames
+
+
 class SBMLException(Exception):
     """Exception for SBML related errors.
 
@@ -1123,15 +1160,24 @@ def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
     return False
 
 
-def _expr_to_amici(expr: sp.Basic | sp.MatrixBase):
+def _expr_to_amici(
+    expr: sp.Basic | sp.MatrixBase, renames: dict[str, str] | None = None
+):
     """Convert the given sympy expression to an AMICI-compatible expression.
 
-    Replaces all symbols by plain sympy symbols with the expected assumptions.
+    Replaces all symbols by plain sympy symbols with the expected
+    assumptions.
 
     :param expr: The sympy expression to convert.
+    :param renames:
+        optional mapping from a symbol's current name to a replacement
+        name (e.g. from `resolve_reserved_symbol_renames`), applied while
+        converting.
     :return: The AMICI-compatible sympy expression.
     """
+    renames = renames or {}
     replacements = {
-        s: symbol_with_assumptions(s.name) for s in expr.free_symbols
+        s: symbol_with_assumptions(renames.get(s.name, s.name))
+        for s in expr.free_symbols
     }
     return expr.xreplace(replacements)
