@@ -416,14 +416,16 @@ class DEExporter:
         # whether a dependency's mangled name is referenced by the printed
         # body, to skip declaring unused aliases below. Checked against the
         # printed code rather than the symbolic equations -- see
-        # `_get_local_declarations`
+        # `_get_local_declarations`. Tokenized once per function rather than
+        # re-scanning the whole body per candidate, which used to make this
+        # O(num_candidates * len(body_text)) and dominated codegen time for
+        # functions with both a large body and a large dependency array
+        # (e.g. `w`, `xdot`, and the `w`-Jacobians).
         body_text = "\n".join(body)
+        used_identifiers = set(re.findall(r"\b\w+\b", body_text))
 
         def is_used(mangled_name: str) -> bool:
-            return (
-                re.search(rf"\b{re.escape(mangled_name)}\b", body_text)
-                is not None
-            )
+            return mangled_name in used_identifiers
 
         # colptrs / rowvals for sparse matrices
         if function in sparse_functions:
