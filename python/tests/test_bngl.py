@@ -87,15 +87,6 @@ def test_compare_to_pysb_simulation(example):
                     compute_conservation_laws=True,
                 )
 
-        if example in ["empty_compartments_block", "motor"]:
-            # these define a model quantity literally named "k"/"w" --
-            # reserved AMICI array-parameter names. Unlike SBML import,
-            # PySB/BNGL import has no automatic rename-and-restore for
-            # reserved names, so this is expected to fail outright.
-            with pytest.raises(ValueError, match="Cannot add"):
-                bngl2amici(model_file, output_dir=outdir, **kwargs)
-            return
-
         bngl2amici(model_file, output_dir=outdir, **kwargs)
 
         amici_model_module = import_model_module(pysb_model.name, outdir)

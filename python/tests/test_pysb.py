@@ -413,10 +413,7 @@ def test_pysb_event(tempdir):
     model = pysb.Model("pysb_event_test")
     a = pysb.Monomer("A")
     pysb.Initial(a(), pysb.Parameter("a0"))
-    # "k" is reserved (it's one of AMICI's fixed array-parameter names);
-    # unlike SBML import, PySB import has no automatic rename-and-restore
-    # for reserved names, so it must be avoided here
-    pysb.Rule("deg", a() >> None, pysb.Parameter("kk", 1.0))
+    pysb.Rule("deg", a() >> None, pysb.Parameter("k", 1.0))
 
     events = [
         Event(
@@ -454,3 +451,46 @@ def test_pysb_event(tempdir):
     np.testing.assert_allclose(
         amici_model.simulate().x, np.array([[0.0], [0.0], [1000.0]])
     )
+
+
+@skip_on_valgrind
+def test_pysb_reserved_names(tempdir):
+    """Model quantities literally named one of AMICI's reserved
+    array-parameter names (x, p, k, h, w, y) are renamed internally and
+    have their original ids restored everywhere they're reported --
+    mirrors SBML import's handling of the same collision class, see
+    test_reserved_symbols.py."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_reserved_names_test")
+    a = pysb.Monomer("A")
+    pysb.Initial(a(), pysb.Parameter("a0", 1.0))
+    pysb.Rule("deg", a() >> None, pysb.Parameter("p", 0.5))
+    # reference "p" here too, so its renamed symbol survives substitution
+    # into another expression
+    pysb.Expression("h", 2 * model.parameters["p"])
+    pysb.Observable("y", a())
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        observation_model=[MeasurementChannel("y")],
+        compute_conservation_laws=False,
+    )
+
+    model_module = import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+
+    assert amici_model.get_observable_ids() == ("y",)
+    assert "p" in amici_model.get_free_parameter_ids()
+    assert "h" in amici_model.get_expression_ids()
+
+    amici_model.set_timepoints([0, 1, 2])
+    solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    assert np.all(np.isfinite(rdata.x))

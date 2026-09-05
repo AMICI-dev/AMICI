@@ -30,6 +30,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   at import time instead of silently generating incorrect C++, since
   simulating such models is not yet supported (#3245).
 
+* Fixed PySB/BNGL import failing with a `ValueError` when a model quantity
+  was literally named one of AMICI's reserved argument names (`x`, `p`,
+  `k`, `h`, `w`, `y`). These are now renamed internally and the original
+  ID is restored everywhere it's reported, matching existing SBML import
+  behavior.
+
 ### v1.1 (2026-09-03)
 
 **BREAKING CHANGES**

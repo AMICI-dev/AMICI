@@ -44,6 +44,7 @@ from ..utils import (
     generate_measurement_symbol,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
+    resolve_reserved_symbol_renames,
     symbol_with_assumptions,
 )
 
@@ -385,8 +386,26 @@ def ode_model_from_pysb_importer(
 
     pysb.bng.generate_equations(model, verbose=verbose)
 
-    _process_pysb_species(model, ode)
-    _process_pysb_parameters(model, ode, fixed_parameters)
+    # species/conservation-law/sigma/log-likelihood symbols are all
+    # synthetically prefixed (__s{ix}, tcl_s{ix}, sigma_{name}, llh_{name})
+    # so they can never literally match a reserved name (single letters);
+    # only parameter and expression/observable names need checking
+    all_names = (
+        {par.name for par in model.parameters}
+        | {
+            expr.name
+            for expr in model.expressions_constant(include_derived=True)
+            | model.expressions_dynamic(include_derived=True)
+        }
+        | {obs.name for obs in model.observables}
+    )
+    renames = resolve_reserved_symbol_renames(all_names)
+    ode.reserved_symbol_original_ids = {
+        new_name: old_name for old_name, new_name in renames.items()
+    }
+
+    _process_pysb_species(model, ode, renames)
+    _process_pysb_parameters(model, ode, fixed_parameters, renames)
     if compute_conservation_laws:
         if _events:
             raise NotImplementedError(
@@ -399,12 +418,14 @@ def ode_model_from_pysb_importer(
         ode,
         observation_model,
         pysb_model_has_obs_and_noise,
+        renames,
     )
     _process_pysb_expressions(
         model,
         ode,
         observation_model,
         pysb_model_has_obs_and_noise,
+        renames,
     )
 
     for event in _events or []:
@@ -416,7 +437,7 @@ def ode_model_from_pysb_importer(
         for channel in observation_model.values()
     )
 
-    _process_stoichiometric_matrix(model, ode, fixed_parameters)
+    _process_stoichiometric_matrix(model, ode, fixed_parameters, renames)
 
     ode.generate_basic_variables()
 
@@ -425,7 +446,10 @@ def ode_model_from_pysb_importer(
 
 @log_execution_time("processing PySB stoich. matrix", logger)
 def _process_stoichiometric_matrix(
-    pysb_model: pysb.Model, ode_model: DEModel, fixed_parameters: list[str]
+    pysb_model: pysb.Model,
+    ode_model: DEModel,
+    fixed_parameters: list[str],
+    renames: dict[str, str],
 ) -> None:
     """
     Exploits the PySB stoichiometric matrix to generate xdot derivatives
@@ -438,6 +462,10 @@ def _process_stoichiometric_matrix(
 
     :param fixed_parameters:
         list of model variables excluded from sensitivity analysis
+
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
     """
 
     x = ode_model.sym("x")
@@ -479,7 +507,7 @@ def _process_stoichiometric_matrix(
                 values = dflux_dw_dict
 
             values[(ir, idx)] = sp.diff(
-                _expr_to_amici(rxn["rate"]), x_rdata[ix]
+                _expr_to_amici(rxn["rate"], renames), x_rdata[ix]
             )
 
         # typically <= 3 free symbols in rate, we already account for
@@ -502,9 +530,13 @@ def _process_stoichiometric_matrix(
                 continue
 
             idx = get_cached_index(
-                symbol_with_assumptions(fs.name), var, idx_cache
+                symbol_with_assumptions(renames.get(fs.name, fs.name)),
+                var,
+                idx_cache,
             )
-            values[(ir, idx)] = _expr_to_amici(sp.diff(rxn["rate"], fs))
+            values[(ir, idx)] = _expr_to_amici(
+                sp.diff(rxn["rate"], fs), renames
+            )
 
     dflux_dx = sp.ImmutableSparseMatrix(n_r, n_x, dflux_dx_dict)
     dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
@@ -525,7 +557,11 @@ def _process_stoichiometric_matrix(
 
 
 @log_execution_time("processing PySB species", logger)
-def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
+def _process_pysb_species(
+    pysb_model: pysb.Model,
+    ode_model: DEModel,
+    renames: dict[str, str],
+) -> None:
     """
     Converts pysb Species into States and adds them to the DEModel instance
 
@@ -534,9 +570,13 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
 
     :param ode_model:
         DEModel instance
+
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
     """
     xdot = sp.Matrix(pysb_model.odes)
-    xdot = _expr_to_amici(xdot)
+    xdot = _expr_to_amici(xdot, renames)
 
     for ix, specie in enumerate(pysb_model.species):
         init = sp.sympify("0.0")
@@ -550,7 +590,7 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
                 else:
                     init = ic.value
 
-        init = _expr_to_amici(init)
+        init = _expr_to_amici(init, renames)
         ode_model.add_component(
             DifferentialState(
                 symbol_with_assumptions(f"__s{ix}"),
@@ -567,6 +607,7 @@ def _process_pysb_parameters(
     pysb_model: pysb.Model,
     ode_model: DEModel,
     fixed_parameters: list[str],
+    renames: dict[str, str],
 ) -> None:
     """
     Converts pysb parameters into Parameters or Constants and adds them to
@@ -580,9 +621,14 @@ def _process_pysb_parameters(
 
     :param ode_model:
         DEModel instance
+
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
     """
     for par in pysb_model.parameters:
-        args = [symbol_with_assumptions(par.name), par.name]
+        symbol = symbol_with_assumptions(renames.get(par.name, par.name))
+        args = [symbol, par.name]
         if par.name in fixed_parameters:
             comp = FixedParameter
             args.append(par.value)
@@ -599,6 +645,7 @@ def _process_pysb_expressions(
     ode_model: DEModel,
     observation_model: dict[str, MeasurementChannel],
     pysb_model_has_obs_and_noise: bool = False,
+    renames: dict[str, str] | None = None,
 ) -> None:
     r"""
     Converts pysb expressions/observables into Observables (with
@@ -619,6 +666,10 @@ def _process_pysb_expressions(
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra
         observables and noise variables added
+
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
     """
     # we no longer expand expressions here. pysb/bng guarantees that
     # they are ordered according to their dependency and we can
@@ -646,6 +697,7 @@ def _process_pysb_expressions(
             ode_model,
             observation_model,
             pysb_model_has_obs_and_noise,
+            renames,
         )
 
 
@@ -656,6 +708,7 @@ def _add_expression(
     ode_model: DEModel,
     observation_model: dict[str, MeasurementChannel],
     pysb_model_has_obs_and_noise: bool = False,
+    renames: dict[str, str] | None = None,
 ):
     """
     Adds expressions to the ODE model given and adds observables/sigmas if
@@ -679,7 +732,15 @@ def _add_expression(
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra
         observables and noise variables added
+
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
     """
+    renames = renames or {}
+    # `name` stays the original (used for `observation_model` lookups and
+    # as the human-readable label); only the identifier is renamed
+    sym_name = renames.get(name, name)
     if not pysb_model_has_obs_and_noise or name not in observation_model:
         if any(
             name == str(channel.sigma)
@@ -688,15 +749,15 @@ def _add_expression(
             component = SigmaY
         else:
             component = Expression
-        expr = _parse_special_functions(_expr_to_amici(expr))
+        expr = _parse_special_functions(_expr_to_amici(expr, renames))
         ode_model.add_component(
-            component(symbol_with_assumptions(name), name, expr)
+            component(symbol_with_assumptions(sym_name), name, expr)
         )
 
     if name in observation_model:
         noise_dist = observation_model[name].noise_distribution
 
-        y = symbol_with_assumptions(name)
+        y = symbol_with_assumptions(sym_name)
         trafo = noise_distribution_to_observable_transformation(noise_dist)
         # note that this is a bit iffy since we are potentially using the same
         # _symbolic identifier in expressions (w) and observables (y).
@@ -705,7 +766,7 @@ def _add_expression(
         # If this changes, I would expect symbol redefinition warnings in CPP
         # models and overwriting in JAX models, but as both symbols refer to
         # the same _symbolic entity, this should not be a problem (untested)
-        expr = _parse_special_functions(_expr_to_amici(expr))
+        expr = _parse_special_functions(_expr_to_amici(expr, renames))
         obs = Observable(y, name, expr, transformation=trafo)
         ode_model.add_component(obs)
 
@@ -713,7 +774,7 @@ def _add_expression(
         if isinstance(sigma_name, sp.Symbol):
             sigma_name = sigma_name.name
 
-        sigma = _get_sigma(pysb_model, name, sigma_name)
+        sigma = _get_sigma(pysb_model, name, sigma_name, renames)
         if not pysb_model_has_obs_and_noise:
             ode_model.add_component(
                 SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))
@@ -731,7 +792,7 @@ def _add_expression(
                 )
             ),
         )
-        cost_fun_expr = _expr_to_amici(cost_fun_expr)
+        cost_fun_expr = _expr_to_amici(cost_fun_expr, renames)
         ode_model.add_component(
             LogLikelihoodY(
                 symbol_with_assumptions(f"llh_{name}"),
@@ -742,7 +803,10 @@ def _add_expression(
 
 
 def _get_sigma(
-    pysb_model: pysb.Model, obs_name: str, sigma_name: str | None
+    pysb_model: pysb.Model,
+    obs_name: str,
+    sigma_name: str | None,
+    renames: dict[str, str] | None = None,
 ) -> sp.Symbol:
     """
     Tries to extract standard deviation _symbolic identifier and formula
@@ -759,6 +823,10 @@ def _get_sigma(
         Name of a :class:`pysb.core.Expression` that should be mapped to a
         sigma or ``None``.
 
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
+
     :return:
         _symbolic variable representing the standard deviation of the observable
     """
@@ -766,7 +834,7 @@ def _get_sigma(
         return symbol_with_assumptions(f"sigma_{obs_name}")
 
     if sigma_name in pysb_model.expressions.keys():
-        return _expr_to_amici(pysb_model.expressions[sigma_name])
+        return _expr_to_amici(pysb_model.expressions[sigma_name], renames)
 
     raise ValueError(f"value of sigma {obs_name} is not a valid expression.")
 
@@ -777,6 +845,7 @@ def _process_pysb_observables(
     ode_model: DEModel,
     observation_model: dict[str, MeasurementChannel],
     pysb_model_has_obs_and_noise: bool = False,
+    renames: dict[str, str] | None = None,
 ) -> None:
     """
     Converts :class:`pysb.core.Observable` into
@@ -795,6 +864,10 @@ def _process_pysb_observables(
     :param pysb_model_has_obs_and_noise:
         if set to ``True``, the pysb model is expected to have extra
         observables and noise variables added
+
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
     """
     # only add those pysb observables that occur in the added
     # Observables as expressions
@@ -806,6 +879,7 @@ def _process_pysb_observables(
             ode_model,
             observation_model,
             pysb_model_has_obs_and_noise,
+            renames,
         )
 
 
