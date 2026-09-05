@@ -1,8 +1,94 @@
+import libsbml
 import pytest
 import sympy as sp
+from amici import MeasurementChannel, SbmlImporter
 from amici._symbolic.de_model_components import Event, FreeParameter
+from amici.importers.antimony import antimony2sbml
+from amici.importers.sbml.splines import CubicHermiteSpline
 from amici.importers.utils import amici_time_symbol
 from amici.testing import skip_on_valgrind
+
+
+def _build_spline_model(*, with_spline_dependent_event: bool):
+    """Build a minimal `DEModel` with a single state and a single spline,
+    optionally with an event whose trigger depends on the spline's value.
+
+    Kept intentionally tiny and built via `_build_ode_model` directly (no
+    codegen/compilation) so these tests run fast.
+    """
+    event_line = (
+        "e1: at u > 1: x = x + 1;\n" if with_spline_dependent_event else ""
+    )
+    ant_str = rf"""
+    model spline_model
+        p1 = 1;
+        sp1 = 0;
+        sp2 = 2;
+        species x = 1;
+        x' = -p1*x + u;
+        var u = 0;
+        {event_line}
+    end
+    """
+    sbml_str = antimony2sbml(ant_str)
+    sbml_model = libsbml.SBMLReader().readSBMLFromString(sbml_str).getModel()
+
+    spline = CubicHermiteSpline(
+        sbml_id="u",
+        evaluate_at=amici_time_symbol,
+        nodes=[0, 10],
+        values_at_nodes=[sp.Symbol("sp1"), sp.Symbol("sp2")],
+        extrapolate=("constant", "constant"),
+    )
+    spline.add_to_sbml_model(sbml_model, auto_add=False)
+
+    importer = SbmlImporter(sbml_model)
+    model = importer._build_ode_model(
+        observation_model=[MeasurementChannel(id_="obs_x", formula="x")],
+    )
+    model.generate_basic_variables()
+    return model
+
+
+@skip_on_valgrind
+def test_spline_static_indices_and_substitution():
+    """Splines occur in the model as `AmiciSpline`/`AmiciSplineSensitivity`
+    sympy `Function` calls, which must be substituted for `spl`/`sspl`
+    symbols so `static_indices()` can classify spline-dependent rows as
+    dynamic without falling back to string matching (see the FIXMEs this
+    replaces)."""
+    model = _build_spline_model(with_spline_dependent_event=False)
+
+    # the spline's own row in `w` is time-varying and must not be static
+    w = model.eq("w")
+    static_w = set(model.static_indices("w"))
+    spline_row = next(
+        i for i, sym in enumerate(model.sym("w")) if str(sym) == "u"
+    )
+    assert spline_row not in static_w
+
+    # no raw spline Function calls should survive substitution anywhere
+    for name in ("w", "dwdx", "dwdw", "dwdp"):
+        eq = model.eq(name)
+        for entry in eq:
+            assert "AmiciSpline" not in str(entry)
+
+    # dwdp's entry for the spline row references the sensitivity symbols
+    assert set(model.sym("sspl")) & w[spline_row].free_symbols == set()
+    dwdp_spline_row = model.eq("dwdp")[spline_row, :]
+    assert set(model.sym("sspl")) & dwdp_spline_row.free_symbols
+
+
+@skip_on_valgrind
+def test_spline_derivative_in_event_not_supported():
+    """`AmiciSplineDerivative` (a spline's time derivative) has no C++
+    codegen support yet. A model where an event trigger depends on a
+    time-varying spline must fail loudly at import time instead of
+    silently generating C++ that references an undefined `dspl_N`."""
+    model = _build_spline_model(with_spline_dependent_event=True)
+
+    with pytest.raises(NotImplementedError, match="time derivative"):
+        model.eq("drootdt_total")
 
 
 @skip_on_valgrind

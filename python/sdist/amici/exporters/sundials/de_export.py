@@ -218,16 +218,6 @@ class DEExporter:
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
         self.model: DEModel = de_model
-        self._code_printer.known_functions.update(
-            splines._spline_user_functions(
-                self.model._splines,
-                {
-                    self._code_printer.mangle_identifier(name): index
-                    for name, index in self._get_index("p").items()
-                },
-                self._code_printer.mangle_identifier,
-            )
-        )
 
         # To only generate a subset of functions, apply subselection here
         self.functions: dict[str, _FunctionInfo] = copy.deepcopy(functions)
@@ -304,24 +294,6 @@ class DEExporter:
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
         )
 
-    def _get_index(self, name: str) -> dict[str, int]:
-        """
-        Compute indices for a symbolic array.
-        :param name:
-            key in self.model._syms for which to obtain the index.
-        :return:
-            a dictionary of symbol/index pairs.
-        """
-        if name in self.model.sym_names():
-            if name in sparse_functions:
-                symbols = self.model.sparsesym(name)
-            else:
-                symbols = self.model.sym(name).T
-        else:
-            raise ValueError(f"Unknown symbolic array: {name}")
-
-        return {symbol.name: index for index, symbol in enumerate(symbols)}
-
     def _get_local_declarations(
         self, name: str, is_used: Callable[[str], bool] | None = None
     ) -> list[str]:
@@ -336,16 +308,13 @@ class DEExporter:
             called with a candidate entry's mangled name; entries for which
             this returns ``False`` are skipped. If ``None``, a declaration
             is generated for every (non-zero) entry. Usage is checked
-            against the printed code rather than the symbolic equations,
-            since some entries (e.g. spline (sensitivity) values) are only
-            ever referenced via a custom print function, never appearing
-            as a plain symbol in the equations themselves.
-
-            TODO: once splines no longer need a custom print function for
-            this (i.e. spline (sensitivity) values are represented as
-            regular symbols in the equations), this can go back to a plain
-            ``equations.free_symbols`` set instead of matching against
-            printed text.
+            against the printed code rather than the symbolic equations:
+            ``"create_splines"``/``"explicit_roots"`` bodies aren't backed
+            by a single symbolic equations matrix at all (they're built
+            directly from ``AbstractSpline``/event objects), so there is no
+            uniform ``equations.free_symbols`` set to check against for
+            every function this is called for -- matching against the
+            printed text works uniformly across all of them.
         """
         if name not in self.model.sym_names():
             raise ValueError(f"Unknown symbolic array: {name}")

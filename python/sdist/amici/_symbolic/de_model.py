@@ -724,17 +724,126 @@ class DEModel:
         Returns (and constructs if necessary) the formulas for a symbolic
         entity.
 
+        Unlike `_eq_raw`, any `AmiciSpline`/`AmiciSplineDerivative`/
+        `AmiciSplineSensitivity` function calls occurring in the formulas are
+        substituted for the corresponding `spl`/`dspl`/`sspl` symbols. This
+        is the accessor that must be used by anything other than the small
+        set of internal call sites that differentiate `w` itself (which need
+        the un-substituted `Function` form intact for sympy to apply the
+        correct chain rule) -- see `_eq_raw`.
+
+        The substituted result is deliberately NOT cached separately from
+        `self._eqs`: some equations (e.g. `dydx`) are computed by mutating
+        `self._eqs[name]` in place across multiple reentrant calls, e.g. via
+        `sym_or_eq`, which may call `self.eq(name)` for the very `name`
+        that's still being computed, to obtain an intermediate partial
+        result. Caching a substituted snapshot from such a reentrant call
+        would freeze a stale, incomplete value under `name` once the
+        computation of `self._eqs[name]` later continues.
+
         :param name:
             name of the symbolic variable
 
         :return:
             matrix of symbolic formulas
         """
+        raw = self._eq_raw(name)
+        if not self._splines or name in ("spl", "sspl", "dspl"):
+            return raw
 
+        substituted = self._substitute_splines(raw)
+        if self._contains_dspl(substituted):
+            raise NotImplementedError(
+                f"Model uses a spline in an expression that depends on "
+                f"its time derivative (encountered while computing "
+                f"'{name}'). This typically means an event trigger "
+                f"depends on a time-varying spline, which is not yet "
+                f"supported."
+            )
+        return substituted
+
+    def _eq_raw(self, name: str) -> sp.Matrix:
+        """
+        Returns (and constructs if necessary) the formulas for a symbolic
+        entity, without substituting spline function calls for symbols.
+
+        This must only be used internally, by code that differentiates `w`
+        (the only named equation whose un-substituted `Function`-call form
+        is required for correct further differentiation) -- see `eq`.
+
+        :param name:
+            name of the symbolic variable
+
+        :return:
+            matrix of symbolic formulas
+        """
         if name not in self._eqs:
             dec = log_execution_time(f"computing {name}", logger)
             dec(self._compute_equation)(name)
         return self._eqs[name]
+
+    def _contains_dspl(self, expr) -> bool:
+        """
+        Returns whether ``expr`` (as returned by `_substitute_splines`)
+        contains any `self.sym("dspl")` entry. ``expr`` may be a plain
+        matrix or, for equations defined per-event, a list of matrices.
+        """
+        if isinstance(expr, list):
+            return any(self._contains_dspl(e) for e in expr)
+        return expr.has(*self.sym("dspl"))
+
+    def _substitute_splines(self, expr: sp.Matrix):
+        """
+        Substitutes ``AmiciSpline``/``AmiciSplineDerivative``/
+        ``AmiciSplineSensitivity`` function calls (see
+        :mod:`amici.importers.sbml.splines`) in ``expr`` for the
+        corresponding ``self.sym("spl")``/``self.sym("dspl")``/
+        ``self.sym("sspl")`` entries.
+
+        Matching is done by function-class name (``e.func.__name__``), not
+        by ``isinstance``/class identity: `AmiciSplineDerivative` and
+        `AmiciSplineSensitivity` are freshly defined nested classes on every
+        ``fdiff()`` call, so no single saved class reference would match all
+        occurrences.
+
+        :param expr:
+            expression (or matrix of expressions) that may contain spline
+            function calls; equations defined per-event are lists of
+            matrices instead of a single matrix, and are handled by
+            recursing over the list
+
+        :return:
+            ``expr`` with all spline function calls replaced by symbols
+        """
+        if isinstance(expr, list):
+            return [self._substitute_splines(e) for e in expr]
+
+        spline_index = {
+            spline.sbml_id: i for i, spline in enumerate(self._splines)
+        }
+        param_index = {sym: i for i, sym in enumerate(self.sym("p"))}
+
+        def repl(e: sp.Function) -> sp.Symbol:
+            idx = spline_index[e.args[0]]
+            if e.func.__name__ == "AmiciSpline":
+                return self.sym("spl")[idx]
+            if e.func.__name__ == "AmiciSplineDerivative":
+                return self.sym("dspl")[idx]
+            # AmiciSplineSensitivity(spline_id, x, param_id, *params)
+            return self.sym("sspl")[idx, param_index[e.args[2]]]
+
+        return expr.replace(
+            lambda e: (
+                isinstance(e, sp.Function)
+                and e.func.__name__
+                in (
+                    "AmiciSpline",
+                    "AmiciSplineDerivative",
+                    "AmiciSplineSensitivity",
+                )
+            ),
+            repl,
+        )
 
     def sparseeq(self, name) -> sp.Matrix:
         """
@@ -859,31 +968,16 @@ class DEModel:
             # to check for other time-dependence, we add a column to the dwdx
             #  matrix
             dynamic_syms = [
-                # FIXME: see spline comment below
-                # *self.sym("spl"),
+                *self.sym("spl"),
                 *self.sym("h"),
                 amici_time_symbol,
             ]
             dynamic_dependency = np.hstack(
                 (
                     dynamic_dependency,
-                    np.array(
-                        [
-                            expr.has(*dynamic_syms)
-                            # FIXME: the current spline implementation is a giant pita
-                            #  currently, the splines occur in the form of sympy functions, e.g.:
-                            #   AmiciSpline(y0, time, y0_3, y0_1)
-                            #   AmiciSplineSensitivity(y0, time, y0_1, y0_3, y0_1)
-                            #  until it uses the proper self.sym("spl") / self.sym("sspl")
-                            #  symbols, which will require quite some refactoring,
-                            #  we just do dumb string checks :|
-                            or (
-                                bool(self._splines)
-                                and "AmiciSpline" in str(expr)
-                            )
-                            for expr in w
-                        ]
-                    )[:, np.newaxis],
+                    np.array([expr.has(*dynamic_syms) for expr in w])[
+                        :, np.newaxis
+                    ],
                 )
             )
 
@@ -918,9 +1012,9 @@ class DEModel:
                 amici_time_symbol,
                 *self.sym("x"),
                 *self.sym("h"),
-                # FIXME see spline comment above
-                # *(self.sym("spl") if name in ("dwdw", "dwdx") else ()),
-                # *(self.sym("sspl") if name == "dwdp" else ()),
+                *(self.sym("spl") if name in ("dwdw", "dwdx") else ()),
+                *(self.sym("sspl") if name == "dwdp" else ()),
+                *self.sym("dspl"),
             ]
             dynamic_syms = sp.Matrix(dynamic_syms)
             rowvals = self.rowvals(name)
@@ -937,26 +1031,15 @@ class DEModel:
                 if row_idx in static_indices_w
                 # constant expressions
                 or expr.is_Number
-                # check for dependencies on non-static entities
-                or (
-                    # FIXME see spline comment above
-                    #  (check str before diff, as diff will fail on spline functions)
-                    (
-                        # splines: non-static
-                        not self._splines or "AmiciSpline" not in str(expr)
-                    )
-                    and (
-                        # If the expression contains dynamic symbols, it might
-                        # still be static. However, checking the derivative
-                        # is currently too expensive, and we rather accept
-                        # false negatives.
-                        not expr.has(*dynamic_syms)
-                        # or all(
-                        #     expr.diff(dyn_sym).is_zero
-                        #     for dyn_sym in dynamic_syms
-                        # )
-                    )
-                )
+                # check for dependencies on non-static entities.
+                # If the expression contains dynamic symbols, it might still
+                # be static. However, checking the derivative is currently
+                # too expensive, and we rather accept false negatives.
+                or not expr.has(*dynamic_syms)
+                # or all(
+                #     expr.diff(dyn_sym).is_zero
+                #     for dyn_sym in dynamic_syms
+                # )
             ]
             return self._static_indices[name]
 
@@ -1129,6 +1212,13 @@ class DEModel:
                 ]
             )
             return
+        elif name == "dspl":
+            # placeholders for spline time derivatives. Need to create
+            # symbols
+            self._syms[name] = sp.Matrix(
+                [[f"dspl_{isp}" for isp in range(len(self._splines))]]
+            )
+            return
         elif name == "ih":
             self._syms[name] = sp.Matrix(
                 [
@@ -1170,7 +1260,7 @@ class DEModel:
             if var not in self._syms:
                 self._generate_symbol(var)
         # symbols for spline values need to be created in addition
-        for var in ["spl", "sspl"]:
+        for var in ["spl", "sspl", "dspl"]:
             self._generate_symbol(var)
 
         self._generate_symbol("x")
@@ -1542,6 +1632,10 @@ class DEModel:
             # force symbols
             self._eqs[name] = self.sym(name)
 
+        elif name == "dspl":
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
         elif name == "spline_values":
             # force symbols
             self._eqs[name] = sp.Matrix(
@@ -1583,7 +1677,9 @@ class DEModel:
             # += drootdw * dwdt_total
             if not smart_is_zero_matrix(drootdw := self.eq("drootdw")):
                 dwdt = self.eq("dwdt")
-                dwdx_explicit = smart_jacobian(self.eq("w"), self.sym("x"))
+                dwdx_explicit = smart_jacobian(
+                    self._eq_raw("w"), self.sym("x")
+                )
                 dwdt_total = dwdt + smart_multiply(dwdx_explicit, xdot)
                 self._eqs[name] += smart_multiply(drootdw, dwdt_total)
 
@@ -1828,8 +1924,8 @@ class DEModel:
                     reversed(self.conservation_laws()),
                 )
             )
-            actual = self.eq("w")[: self.num_cons_law()]
-            # `self.eq("w")` has been passed through `self._simplify`, whereas
+            actual = self._eq_raw("w")[: self.num_cons_law()]
+            # `self._eq_raw("w")` has been passed through `self._simplify`, whereas
             # `ConservationLaw.get_x_rdata` returns the unsimplified expression.
             # Apply the same simplification to the expected `x_rdata`
             # reconstruction before comparing, so that mathematically
@@ -1854,11 +1950,11 @@ class DEModel:
                     for cl in reversed(self._conservation_laws)
                 ]
             ).col_join(
-                smart_jacobian(self.eq("w")[self.num_cons_law() :, :], x)
+                smart_jacobian(self._eq_raw("w")[self.num_cons_law() :, :], x)
             )
 
         elif name == "dwdt":
-            self._eqs[name] = smart_jacobian(self.eq("w"), time_symbol)
+            self._eqs[name] = smart_jacobian(self._eq_raw("w"), time_symbol)
 
         elif name == "iroot":
             self._eqs[name] = sp.Matrix(
@@ -2022,7 +2118,15 @@ class DEModel:
             return
 
         # partial derivative
-        sym_eq = self.eq(eq).transpose() if eq == "Jy" else self.eq(eq)
+        if eq == "w":
+            # differentiating `w` requires the un-substituted spline
+            # `Function`-call form for sympy to apply the correct chain
+            # rule (see `_eq_raw`)
+            sym_eq = self._eq_raw(eq)
+        elif eq == "Jy":
+            sym_eq = self.eq(eq).transpose()
+        else:
+            sym_eq = self.eq(eq)
 
         sym_var = self.sym(var)
 

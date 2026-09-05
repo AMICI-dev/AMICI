@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
     from numbers import Real
     from typing import (
         Any,
@@ -1179,7 +1179,7 @@ class AbstractSpline(ABC):
     ) -> None:
         if self.sbml_id == old:
             self._sbml_id = new
-        self._x = self.evaluate_at.subs(old, new)
+        self._evaluate_at = self.evaluate_at.subs(old, new)
         if not isinstance(self.nodes, UniformGrid):
             self._nodes = [x.subs(old, new) for x in self.nodes]
         self._values_at_nodes = [
@@ -1484,49 +1484,6 @@ class AbstractSpline(ABC):
         if ylabel is not None:
             ax.set_ylabel(ylabel)
         return ax
-
-
-def _spline_user_functions(
-    splines: list[AbstractSpline],
-    p_index: dict[sp.Symbol, int],
-    mangle: Callable[[str], str],
-) -> dict[str, list[tuple[Callable[..., bool], Callable[..., str]]]]:
-    """
-    Custom user functions to be used in `ODEExporter`
-    for linking spline expressions to C++ code.
-
-    :param mangle:
-        The code printer's identifier mangling, applied here to match:
-        by the time these lambdas run, `spline_id`/`param_id` have already
-        been printed (i.e. mangled) by the code printer.
-    """
-    spline_ids = [mangle(spline.sbml_id.name) for spline in splines]
-    return {
-        "AmiciSpline": [
-            (
-                lambda *args: True,
-                lambda spline_id, x, *p: mangle(
-                    f"spl_{spline_ids.index(spline_id)}"
-                ),
-            )
-        ],
-        "AmiciSplineDerivative": [
-            (
-                lambda *args: True,
-                lambda spline_id, x, *p: mangle(
-                    f"dspl_{spline_ids.index(spline_id)}"
-                ),
-            )
-        ],
-        "AmiciSplineSensitivity": [
-            (
-                lambda *args: True,
-                lambda spline_id, x, param_id, *p: mangle(
-                    f"sspl_{spline_ids.index(spline_id)}_{p_index[param_id]}"
-                ),
-            )
-        ],
-    }
 
 
 class CubicHermiteSpline(AbstractSpline):

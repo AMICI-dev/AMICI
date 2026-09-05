@@ -2720,6 +2720,18 @@ class SbmlImporter:
                     field, smart_subs(self.__getattribute__(field), old, new)
                 )
 
+        # `self._splines` holds `AbstractSpline` objects, not sympy
+        # expressions living in one of the fields/dicts below, so it needs
+        # its own delegate. In particular, this is what propagates the
+        # sbml-time -> amici-time substitution (from `_process_time`, called
+        # after all rules -- including splines -- have been processed) into
+        # each spline's `evaluate_at`/nodes/values_at_nodes; without it,
+        # `evaluate_at` stays the SBML time symbol -- a distinct object from
+        # `amici_time_symbol` despite printing the same, silently breaking
+        # any differentiation with respect to time.
+        for spline in self._splines:
+            spline._replace_in_all_expressions(old, new)
+
         dictfields = [
             "_compartment_assignment_rules",
             "_parameter_assignment_rules",
