@@ -494,3 +494,68 @@ def test_pysb_reserved_names(tempdir):
     rdata = run_simulation(amici_model, solver)
     assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
     assert np.all(np.isfinite(rdata.x))
+
+
+@skip_on_valgrind
+def test_pysb_derived_name_collisions(tempdir):
+    """Model quantities literally named after AMICI-internally-derived
+    symbols (a conservation-law total `tcl_s{n}`, or an observable's
+    measurement/sigma symbols `m{obs}`/`sigma_{obs}`) must not collide
+    with them -- the derived symbol is disambiguated instead, with the
+    user's own parameter keeping its original id. See
+    https://github.com/AMICI-dev/AMICI/issues/3240 and the analogous SBML
+    coverage in test_derived_symbol_collisions.py."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_derived_name_collision_test")
+    a = pysb.Monomer("A", ["b"])
+    b = pysb.Monomer("B", ["a"])
+    pysb.Parameter("A_0", 10)
+    pysb.Parameter("B_0", 5)
+    pysb.Parameter("kf", 1.0)
+    pysb.Parameter("kr", 0.5)
+    # decoys: whichever species index ends up being the conservation-law
+    # target, one of these collides with its `tcl_s{n}` total-abundance
+    # symbol
+    for i in range(4):
+        pysb.Parameter(f"tcl_s{i}", 42.0)
+    # decoys colliding with the observable's derived measurement/sigma
+    # symbols (`m{obs}` / `sigma_{obs}`)
+    pysb.Parameter("mobs_a", 1.0)
+    pysb.Parameter("sigma_obs_a", 1.0)
+
+    pysb.Initial(a(b=None), model.parameters["A_0"])
+    pysb.Initial(b(a=None), model.parameters["B_0"])
+    pysb.Rule(
+        "bind",
+        a(b=None) + b(a=None) | a(b=1) % b(a=1),
+        model.parameters["kf"],
+        model.parameters["kr"],
+    )
+    pysb.Observable("obs_a", a())
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        observation_model=[MeasurementChannel("obs_a")],
+        compute_conservation_laws=True,
+    )
+
+    model_module = import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+
+    # the decoy parameters kept their own original ids
+    free_ids = amici_model.get_free_parameter_ids()
+    assert all(f"tcl_s{i}" in free_ids for i in range(4))
+    assert "mobs_a" in free_ids
+    assert "sigma_obs_a" in free_ids
+
+    amici_model.set_timepoints([0, 1, 2, 5])
+    solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    assert np.all(np.isfinite(rdata.x))

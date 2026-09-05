@@ -80,17 +80,17 @@ def test_mangle_identifier():
     cp = AmiciCxxCodePrinter()
 
     # ordinary names just get a trailing underscore
-    assert cp.mangle_identifier("STAT") == "STAT_"
+    assert cp.mangle_identifier(sp.Symbol("STAT")) == "STAT_"
 
     # names already ending in `_` get a bare-letter marker, not `_v` --
     # regression test: `f"{name}_v"` would produce "k__v", reintroducing
     # exactly the `__` this is supposed to avoid
-    assert cp.mangle_identifier("k_") == "k_v"
-    assert "__" not in cp.mangle_identifier("k_")
-    assert "__" not in cp.mangle_identifier("k__")
+    assert cp.mangle_identifier(sp.Symbol("k_")) == "k_v"
+    assert "__" not in cp.mangle_identifier(sp.Symbol("k_"))
+    assert "__" not in cp.mangle_identifier(sp.Symbol("k__"))
 
     # an internal `__` run collapses to a single `_` before suffixing
-    assert cp.mangle_identifier("my__species") == "my_species_"
+    assert cp.mangle_identifier(sp.Symbol("my__species")) == "my_species_"
 
     # C++ keywords and stdlib macros mangle to something distinct from the
     # original token
@@ -105,20 +105,46 @@ def test_mangle_identifier():
         "INFINITY",
         "NAN",
     ):
-        mangled = cp.mangle_identifier(name)
+        mangled = cp.mangle_identifier(sp.Symbol(name))
         assert mangled != name
         assert "__" not in mangled
 
     # same input -> same output (cache hit, not recomputed)
-    assert cp.mangle_identifier("STAT") == cp.mangle_identifier("STAT")
+    assert cp.mangle_identifier(sp.Symbol("STAT")) == cp.mangle_identifier(
+        sp.Symbol("STAT")
+    )
 
     # distinct inputs that collapse to the same base still get distinct,
     # `__`-free results
-    r1 = cp.mangle_identifier("a__b")
-    r2 = cp.mangle_identifier("a_b")
+    r1 = cp.mangle_identifier(sp.Symbol("a__b"))
+    r2 = cp.mangle_identifier(sp.Symbol("a_b"))
     assert r1 != r2
     assert "__" not in r1
     assert "__" not in r2
+
+
+@skip_on_valgrind
+def test_mangle_identifier_distinguishes_symbols_with_same_name():
+    """Two distinct symbols that merely happen to share a `.name` (e.g. one
+    is a plain user-entity symbol, the other one of AMICI's own
+    assumption-free internal placeholders for e.g. a state derivative or a
+    spline) must never be mangled to the same C++ identifier -- otherwise
+    two logically different quantities silently collide into a single
+    declared local (#3240)."""
+    cp = AmiciCxxCodePrinter()
+
+    same_name_plain = sp.Symbol("dpdt")
+    same_name_real = sp.Symbol("dpdt", real=True)
+    assert same_name_plain != same_name_real  # sanity check on the premise
+
+    r1 = cp.mangle_identifier(same_name_plain)
+    r2 = cp.mangle_identifier(same_name_real)
+    assert r1 != r2
+
+    # each symbol is still cached by its own identity: repeated mangling of
+    # the *same* object doesn't drift or get reassigned to the other's slot
+    assert cp.mangle_identifier(same_name_plain) == r1
+    assert cp.mangle_identifier(same_name_real) == r2
 
 
 @skip_on_valgrind

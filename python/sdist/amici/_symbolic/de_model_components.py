@@ -417,6 +417,7 @@ class Observable(ModelQuantity):
         name: str,
         value: sp.Expr,
         measurement_symbol: sp.Symbol | None = None,
+        regularization_symbol: sp.Symbol | None = None,
         transformation: None
         | ObservableTransformation = ObservableTransformation.LIN,
     ):
@@ -432,13 +433,25 @@ class Observable(ModelQuantity):
         :param value:
             formula
 
+        :param measurement_symbol:
+            symbol to use for measurements of this observable; generated
+            on first use if not given (see `get_measurement_symbol`) --
+            callers that already minted a (possibly disambiguated, see
+            :func:`amici.importers.utils.make_name_unique`) symbol for
+            this elsewhere must pass it here, since a later, independent
+            call to `get_measurement_symbol`/`generate_measurement_symbol`
+            is not guaranteed to reproduce the exact same symbol.
+
+        :param regularization_symbol:
+            as `measurement_symbol`, but for `get_regularization_symbol`.
+
         :param transformation:
             observable transformation, only applies when evaluating objective
             function or residuals
         """
         super().__init__(symbol, name, value)
         self._measurement_symbol = measurement_symbol
-        self._regularization_symbol = None
+        self._regularization_symbol = regularization_symbol
         self.trafo = transformation
 
     def get_measurement_symbol(self) -> sp.Symbol:
@@ -474,6 +487,7 @@ class EventObservable(Observable):
         value: sp.Expr,
         event: sp.Symbol,
         measurement_symbol: sp.Symbol | None = None,
+        regularization_symbol: sp.Symbol | None = None,
         transformation: ObservableTransformation | None = "lin",
     ):
         """
@@ -488,6 +502,12 @@ class EventObservable(Observable):
         :param value:
             See :py:meth:`Observable.__init__`.
 
+        :param measurement_symbol:
+            See :py:meth:`Observable.__init__`.
+
+        :param regularization_symbol:
+            See :py:meth:`Observable.__init__`.
+
         :param transformation:
             See :py:meth:`Observable.__init__`.
 
@@ -495,7 +515,12 @@ class EventObservable(Observable):
             Symbolic identifier of the corresponding event.
         """
         super().__init__(
-            symbol, name, value, measurement_symbol, transformation
+            symbol,
+            name,
+            value,
+            measurement_symbol,
+            regularization_symbol,
+            transformation,
         )
         self._event: sp.Symbol = event
 

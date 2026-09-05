@@ -337,7 +337,7 @@ class DEExporter:
                 continue
             if str(symbol.name) == "":
                 raise ValueError(f'{name} contains a symbol called ""')
-            mangled = self._code_printer.mangle_identifier(symbol.name)
+            mangled = self._code_printer.mangle_identifier(symbol)
             if is_used is not None and not is_used(mangled):
                 continue
             lines.append(f"    const realtype {mangled} = {name}[{index}];")
