@@ -45,4 +45,6 @@ python -m pip uninstall petab -y
 python -m pip install git+https://github.com/petab-dev/libpetab-python.git@main
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
   python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis,jax]" --no-build-isolation
+# TODO: switch back to PyPI once the fiddy redesign is released
+python -m pip install git+https://github.com/ICB-DCM/fiddy.git@redesign-fd-engine
 deactivate
