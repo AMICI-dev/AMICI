@@ -56,4 +56,4 @@ RUN . ./.profile && ${VENV_PATH}/bin/python3 -m build --sdist python/sdist && \
     ${VENV_PATH}/bin/pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
     scripts/buildBNGL.sh
 
-ENV BNGPATH="${HOME}/ThirdParty/BioNetGen-2.7.0"
+ENV BNGPATH="${HOME}/ThirdParty/BioNetGen-2.9.2"

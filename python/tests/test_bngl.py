@@ -51,7 +51,7 @@ def test_compare_to_pysb_simulation(example):
         "..",
         "..",
         "ThirdParty",
-        "BioNetGen-2.7.0",
+        "BioNetGen-2.9.2",
         "Validate",
         f"{example}.bngl",
     )

@@ -50,7 +50,7 @@ jobs:
       - run: |
           echo "${HOME}/.local/bin/" >> $GITHUB_PATH
           echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
-          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.9.2" >> $GITHUB_ENV
 
       # install AMICI
       - name: Install python package
@@ -159,7 +159,7 @@ jobs:
       - run: |
           echo "${HOME}/.local/bin/" >> $GITHUB_PATH
           echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
-          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.9.2" >> $GITHUB_ENV
 
       # install AMICI
       - name: Install python package

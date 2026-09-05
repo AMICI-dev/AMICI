@@ -110,7 +110,9 @@ end
 """
 
 
-def import_model_robertson(output_dir: Path = None) -> Model:
+def import_model_robertson(
+    output_dir: Path = None, compile: bool = True
+) -> Model | None:
     """Import the Robertson model."""
     model_name = "model_robertson_py"
 
@@ -127,14 +129,19 @@ def import_model_robertson(output_dir: Path = None) -> Model:
         ],
         model_name=model_name,
         output_dir=output_dir,
+        compile=compile,
     )
+    if not compile:
+        return None
     model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
 
     return model
 
 
-def import_model_calvetti(output_dir: Path = None) -> Model:
+def import_model_calvetti(
+    output_dir: Path = None, compile: bool = True
+) -> Model | None:
     model_name = "model_calvetti_py"
 
     if output_dir is None:
@@ -154,7 +161,10 @@ def import_model_calvetti(output_dir: Path = None) -> Model:
         model_name=model_name,
         output_dir=output_dir,
         hardcode_symbols=["p1"],
+        compile=compile,
     )
+    if not compile:
+        return None
     model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
 
@@ -170,7 +180,9 @@ def import_model_calvetti(output_dir: Path = None) -> Model:
     return model
 
 
-def import_model_dirac(output_dir: Path = None) -> Model:
+def import_model_dirac(
+    output_dir: Path = None, compile: bool = True
+) -> Model | None:
     """Import the Dirac model."""
     model_name = "model_dirac_py"
 
@@ -182,14 +194,19 @@ def import_model_dirac(output_dir: Path = None) -> Model:
         observation_model=[MeasurementChannel(id_="obs_x2", formula="x2")],
         model_name=model_name,
         output_dir=output_dir,
+        compile=compile,
     )
+    if not compile:
+        return None
     model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
 
     return model
 
 
-def import_model_neuron(output_dir: Path = None) -> AmiciModel:
+def import_model_neuron(
+    output_dir: Path = None, compile: bool = True
+) -> AmiciModel | None:
     """Python implementation of the neuron model (Hodgkin-Huxley).
 
     ODEs
@@ -254,11 +271,14 @@ def import_model_neuron(output_dir: Path = None) -> AmiciModel:
         ],
         fixed_parameters=constants,
         output_dir=output_dir,
+        compile=compile,
     )
     return model
 
 
-def import_model_events(output_dir: Path = None) -> AmiciModel:
+def import_model_events(
+    output_dir: Path = None, compile: bool = True
+) -> AmiciModel | None:
     """Python implementation of the events model.
 
     ODEs
@@ -331,11 +351,14 @@ def import_model_events(output_dir: Path = None) -> AmiciModel:
         ],
         fixed_parameters=constants,
         output_dir=output_dir,
+        compile=compile,
     )
     return model
 
 
-def import_model_jakstat(output_dir: Path = None) -> AmiciModel:
+def import_model_jakstat(
+    output_dir: Path = None, compile: bool = True
+) -> AmiciModel | None:
     model_name = "model_jakstat_adjoint_py"
     if output_dir is None:
         output_dir = model_name
@@ -437,13 +460,18 @@ def import_model_jakstat(output_dir: Path = None) -> AmiciModel:
         ],
         model_name=model_name,
         output_dir=output_dir,
+        compile=compile,
     )
+    if not compile:
+        return None
     model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
     return model
 
 
-def import_model_nested_events(output_dir: Path = None) -> AmiciModel:
+def import_model_nested_events(
+    output_dir: Path = None, compile: bool = True
+) -> AmiciModel | None:
     model_name = "model_nested_events_py"
     if output_dir is None:
         output_dir = model_name
@@ -474,13 +502,18 @@ def import_model_nested_events(output_dir: Path = None) -> AmiciModel:
         ],
         model_name=model_name,
         output_dir=output_dir,
+        compile=compile,
     )
+    if not compile:
+        return None
     model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
     return model
 
 
-def import_model_steadystate(output_dir: Path = None) -> AmiciModel:
+def import_model_steadystate(
+    output_dir: Path = None, compile: bool = True
+) -> AmiciModel | None:
     model_name = "model_steadystate_py"
     if output_dir is None:
         output_dir = model_name
@@ -519,35 +552,59 @@ def import_model_steadystate(output_dir: Path = None) -> AmiciModel:
         ],
         model_name=model_name,
         output_dir=output_dir,
+        compile=compile,
     )
+    if not compile:
+        return None
     model_module = import_model_module(model_name, output_dir)
     model = model_module.get_model()
     return model
 
 
-def import_test_models():
-    """Import models required for C++ integration tests."""
+def import_test_models(compile: bool = True):
+    """Import models required for C++ integration tests.
+
+    :param compile:
+        If ``False``, only (re-)generate the model source code, skipping
+        compilation. Useful for checking that the generated code is up to
+        date without the -- much slower -- compilation step, and without
+        leaving gitignored build byproducts behind.
+    """
     # out_root = Path(os.getcwd())
     repo_root = Path(__file__).parents[4]
     out_root = repo_root / "models"
 
     print(f"Generating test models in {out_root}...")
     print("Importing model_dirac_py...")
-    import_model_dirac(output_dir=out_root / "model_dirac_py")
+    import_model_dirac(output_dir=out_root / "model_dirac_py", compile=compile)
     print("Importing model_events_py...")
-    import_model_events(output_dir=out_root / "model_events_py")
+    import_model_events(
+        output_dir=out_root / "model_events_py", compile=compile
+    )
     print("Importing model_neuron_py...")
-    import_model_neuron(output_dir=out_root / "model_neuron_py")
+    import_model_neuron(
+        output_dir=out_root / "model_neuron_py", compile=compile
+    )
     print("Importing model_calvetti_py...")
-    import_model_calvetti(output_dir=out_root / "model_calvetti_py")
+    import_model_calvetti(
+        output_dir=out_root / "model_calvetti_py", compile=compile
+    )
     print("Importing model_robertson_py...")
-    import_model_robertson(output_dir=out_root / "model_robertson_py")
+    import_model_robertson(
+        output_dir=out_root / "model_robertson_py", compile=compile
+    )
     print("Importing model_jakstat_adjoint_py...")
-    import_model_jakstat(output_dir=out_root / "model_jakstat_adjoint_py")
+    import_model_jakstat(
+        output_dir=out_root / "model_jakstat_adjoint_py", compile=compile
+    )
     print("Importing model_nested_events_py...")
-    import_model_nested_events(output_dir=out_root / "model_nested_events_py")
+    import_model_nested_events(
+        output_dir=out_root / "model_nested_events_py", compile=compile
+    )
     print("Importing model_steadystate_py...")
-    import_model_steadystate(output_dir=out_root / "model_steadystate_py")
+    import_model_steadystate(
+        output_dir=out_root / "model_steadystate_py", compile=compile
+    )
 
 
 def create_sbml_model(
@@ -638,7 +695,7 @@ def create_sbml_model(
 
 def create_amici_model(
     sbml_model, model_name, output_dir: Path = None, **kwargs
-) -> AmiciModel:
+) -> AmiciModel | None:
     """
     Import an sbml file and create an AMICI model from it
     """
@@ -658,5 +715,7 @@ def create_amici_model(
         model_name=model_name, output_dir=output_dir, **kwargs
     )
 
+    if not kwargs.get("compile", True):
+        return None
     model_module = import_model_module(model_name, output_dir)
     return model_module.get_model()

@@ -8,7 +8,7 @@ source "${amici_path}"/venv/bin/activate
 pip install coverage pytest pytest-cov
 
 if [[ -z "${BNGPATH}" ]]; then
-    export BNGPATH="${amici_path}"/ThirdParty/BioNetGen-2.7.0
+    export BNGPATH="${amici_path}"/ThirdParty/BioNetGen-2.9.2
 fi
 
 pytest \
