@@ -121,3 +121,40 @@ def test_conservation_law_and_observable_symbol_collisions(tempdir):
     assert "mobs1_2_ = my[0]" in jy
     assert "sigma_obs1_2_" in jy
     assert "mobs1_ " not in jy
+
+
+@skip_on_valgrind
+def test_sparse_jacobian_placeholder_collision(tempdir):
+    """A parameter literally named after the sparse-Jacobian placeholder
+    AMICI derives for some row/col pair (`d{row}_d{col}`, minted in
+    `csc_matrix`) must not collide with it -- the placeholder is
+    disambiguated instead.
+
+    Checked from generated source rather than by compiling, as in
+    test_conservation_law_and_observable_symbol_collisions above."""
+    model_name = "sparse_jac_placeholder_collision_test"
+    antimony2amici(
+        """
+        model test
+            compartment comp = 1;
+            species A in comp = 10;
+            species B in comp = 0;
+            r1: A -> B; 0.1*A;
+            dflux_r1_dA = 1;
+        end
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=None,
+        compute_conservation_laws=False,
+        compile=False,
+    )
+
+    # the original id of the colliding parameter is preserved
+    model_cpp = _generated_source(tempdir, f"{model_name}.cpp")
+    assert '"dflux_r1_dA"' in model_cpp
+
+    # the dwdx placeholder for d(flux_r1)/d(A) was disambiguated instead
+    dwdx = _generated_source(tempdir, "dwdx.cpp")
+    assert "dflux_r1_dA_2_ = dwdx[" in dwdx
+    assert "dflux_r1_dA_ =" not in dwdx

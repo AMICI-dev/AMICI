@@ -1401,6 +1401,16 @@ class DEModel:
             rownames = self.sym(eq)
             colnames = self.sym(var)
 
+        # every name already claimed in the model, so the placeholder names
+        # csc_matrix mints below can never alias an unrelated model entity
+        # that happens to share the same id (#3246); shared and mutated
+        # in-place across all csc_matrix calls below so they also can't
+        # collide with each other
+        taken_names = {
+            c.get_id() if isinstance(c, ModelQuantity) else c.sbml_id.name
+            for c in self._components
+        }
+
         if name == "dJydy":
             # One entry per y-slice
             self._colptrs[name] = []
@@ -1421,6 +1431,7 @@ class DEModel:
                     rownames=rownames,
                     colnames=colnames,
                     identifier=iy,
+                    taken_names=taken_names,
                 )
                 self._colptrs[name].append(symbol_col_ptrs)
                 self._rowvals[name].append(symbol_row_vals)
@@ -1439,6 +1450,7 @@ class DEModel:
                 rownames=rownames,
                 colnames=colnames,
                 pattern_only=name in nobody_functions,
+                taken_names=taken_names,
             )
 
             self._colptrs[name] = symbol_col_ptrs
