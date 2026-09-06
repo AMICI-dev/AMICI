@@ -60,8 +60,7 @@ from amici.importers.utils import (
     amici_time_symbol,
     annotation_namespace,
     generate_flux_symbol,
-    generate_measurement_symbol,
-    generate_regularization_symbol,
+    make_name_unique,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
     resolve_reserved_symbol_renames,
@@ -259,6 +258,11 @@ class SbmlImporter:
         """
         self._symbols = copy.deepcopy(default_symbols)
         self._local_symbols = {}
+        # names already claimed by an AMICI-internally-derived symbol
+        # (flux/conservation-law/observable-related, ...), across the whole
+        # model; used to disambiguate further derived names against, see
+        # `_make_derived_name_unique`
+        self._claimed_derived_names: set[str] = set()
 
     def sbml2amici(
         self,
@@ -671,9 +675,13 @@ class SbmlImporter:
                     "use_values_from_trigger_time",
                 ]
             elif symbol_name == SymbolId.OBSERVABLE:
-                args += ["transformation"]
+                args += ["transformation", "measurement_symbol"]
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
-                args += ["event"]
+                args += [
+                    "event",
+                    "measurement_symbol",
+                    "regularization_symbol",
+                ]
 
             comp_kwargs = [
                 {
@@ -1376,9 +1384,11 @@ class SbmlImporter:
         #  level 3 version 2 the ID attribute was not mandatory and may be
         #  unset)
         self._flux_ids = [
-            f"flux_{reaction.getId()}"
-            if reaction.isSetId()
-            else f"flux_r{reaction_idx}"
+            self._make_derived_name_unique(
+                f"flux_{reaction.getId()}"
+                if reaction.isSetId()
+                else f"flux_r{reaction_idx}"
+            )
             for reaction_idx, reaction in enumerate(reactions)
         ]
 
@@ -2168,9 +2178,20 @@ class SbmlImporter:
             llh_symbol = SymbolId.LLHY
 
         for obs_id, obs in self._symbols[obs_symbol].items():
-            obs["measurement_symbol"] = generate_measurement_symbol(obs_id)
+            # event observables go through this method twice (once with
+            # `event_reg=False`, once with `event_reg=True`, both against
+            # the same `self._symbols[SymbolId.EVENT_OBSERVABLE]` dict) --
+            # only mint the measurement symbol once, so a second pass
+            # doesn't see its own first choice as an already-taken name and
+            # needlessly disambiguate again
+            if "measurement_symbol" not in obs:
+                obs["measurement_symbol"] = symbol_with_assumptions(
+                    self._make_derived_name_unique(f"m{obs_id}")
+                )
             if event_reg:
-                obs["reg_symbol"] = generate_regularization_symbol(obs_id)
+                obs["regularization_symbol"] = symbol_with_assumptions(
+                    self._make_derived_name_unique(f"r{obs_id}")
+                )
 
         if not event_reg:
             sigmas = {
@@ -2190,7 +2211,9 @@ class SbmlImporter:
             #  sigma formula, but not any other observable ID
             #  https://github.com/AMICI-dev/AMICI/issues/2561
             self._symbols[sigma_symbol] = {
-                symbol_with_assumptions(f"sigma_{obs_id}"): {
+                symbol_with_assumptions(
+                    self._make_derived_name_unique(f"sigma_{obs_id}")
+                ): {
                     "name": f"sigma_{obs['name']}",
                     "value": sigmas.get(str(obs_id), sp.Float(1.0)),
                 }
@@ -2203,7 +2226,9 @@ class SbmlImporter:
             self._symbols[sigma_symbol].items(),
             strict=True,
         ):
-            symbol = symbol_with_assumptions(f"J{obs_id}")
+            symbol = symbol_with_assumptions(
+                self._make_derived_name_unique(f"J{obs_id}")
+            )
             dist = noise_distributions.get(str(obs_id), "normal")
             cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
             # TODO: clarify expected grammar for cost_fun
@@ -2220,7 +2245,7 @@ class SbmlImporter:
             )
             if event_reg:
                 value = value.subs(obs["measurement_symbol"], 0.0)
-                value = value.subs(obs_id, obs["reg_symbol"])
+                value = value.subs(obs_id, obs["regularization_symbol"])
             self._symbols[llh_symbol][symbol] = {
                 "name": f"J{obs['name']}",
                 "value": value,
@@ -2404,7 +2429,7 @@ class SbmlImporter:
 
         # Create conservation laws for constant species
         species_solver = _add_conservation_for_constant_species(
-            ode_model, conservation_laws
+            ode_model, conservation_laws, self._make_derived_name_unique
         )
         # Non-constant species processed here
         if (
@@ -2654,7 +2679,9 @@ class SbmlImporter:
             compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
             target_state_id = all_state_ids[target_state_model_idx]
-            total_abundance = symbol_with_assumptions(f"tcl_{target_state_id}")
+            total_abundance = symbol_with_assumptions(
+                self._make_derived_name_unique(f"tcl_{target_state_id}")
+            )
 
             new_conservation_laws.append(
                 {
@@ -2858,6 +2885,21 @@ class SbmlImporter:
                         new_symbol if k == old_symbol else k: v
                         for k, v in symbols.items()
                     }
+
+    def _make_derived_name_unique(self, name: str) -> str:
+        """
+        Disambiguate an AMICI-internally-derived name (e.g. a flux,
+        conservation-law, or observable-related symbol) against every model
+        entity id and every other such derived name claimed so far.
+
+        See :func:`amici.importers.utils.make_name_unique`.
+        """
+        taken = {
+            s.name for symbols in self._symbols.values() for s in symbols
+        } | self._claimed_derived_names
+        unique_name = make_name_unique(name, taken)
+        self._claimed_derived_names.add(unique_name)
+        return unique_name
 
     def _sympify(
         self,
@@ -3415,13 +3457,20 @@ def assignment_rules_to_observables(
 
 
 def _add_conservation_for_constant_species(
-    ode_model: DEModel, conservation_laws: list[ConservationLaw]
+    ode_model: DEModel,
+    conservation_laws: list[ConservationLaw],
+    claim_unique_name: Callable[[str], str],
 ) -> list[int]:
     """
     Adds constant species to conservations laws
 
     :param ode_model:
         DEModel object with basic definitions
+
+    :param claim_unique_name:
+        callback to disambiguate a derived name against everything already
+        claimed in the model, see
+        :func:`SbmlImporter._make_derived_name_unique`
 
     :param conservation_laws:
         List of already known conservation laws
@@ -3439,7 +3488,9 @@ def _add_conservation_for_constant_species(
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
             target_state = ode_model._differential_states[ix].get_sym()
-            total_abundance = symbol_with_assumptions(f"tcl_{target_state}")
+            total_abundance = symbol_with_assumptions(
+                claim_unique_name(f"tcl_{target_state}")
+            )
             conservation_laws.append(
                 {
                     "state": target_state,

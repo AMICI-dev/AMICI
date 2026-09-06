@@ -36,17 +36,6 @@ jax.config.update("jax_enable_x64", True)
 )
 def test_case(case, model_type, version, jax):
     """Wrapper for _test_case for handling test outcomes"""
-    # TODO: unskip once https://github.com/AMICI-dev/AMICI/issues/3240 is
-    #  fixed. This case defines its own parameter "dpdt", which collides
-    #  with AMICI's auto-generated derivative symbol for differential
-    #  parameter "p" (`d{state}dt`), causing a C++ redeclaration error in
-    #  deltasx.cpp/deltaxB.cpp.
-    if (
-        petabtests.test_id_str(case) == "0023"
-        and model_type == "sbml"
-        and not jax
-    ):
-        pytest.skip("Case 0023 (sbml) known to fail, see AMICI issue #3240")
     try:
         _test_case(case, model_type, version, jax)
     except Exception as e:

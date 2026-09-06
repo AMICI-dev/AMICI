@@ -70,32 +70,36 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         else:
             self._fpoptimizer = None
 
-        # mangled-name cache, keyed by original identifier, for this model
-        self._mangled_names: dict[str, str] = {}
+        # mangled-name cache, keyed by original symbol, for this model
+        self._mangled_names: dict[sp.Symbol, str] = {}
         # mangled names already assigned, for collision detection
         self._mangled_name_set: set[str] = set()
 
-    def mangle_identifier(self, name: str) -> str:
-        """Mangle `name`, deduplicating against prior results for this model.
+    def mangle_identifier(self, symbol: sp.Symbol) -> str:
+        """Mangle the identifier for `symbol`, deduplicating against prior
+        results for this model.
 
-        Same input always yields the same output; distinct inputs never
-        yield the same output.
+        The same symbol always yields the same output; distinct symbols
+        never yield the same output -- keyed on the full symbol (name *and*
+        assumptions), not just its name, since two AMICI-internal symbols
+        can otherwise legitimately share a name with a differently-created
+        (e.g. user-entity) symbol of the same name (#3240).
         """
-        if (cached := self._mangled_names.get(name)) is not None:
+        if (cached := self._mangled_names.get(symbol)) is not None:
             return cached
-        base = mangled = _mangle(name)
+        base = mangled = _mangle(symbol.name)
         n = 2
         while mangled in self._mangled_name_set:
             mangled = f"{base}{n}"
             n += 1
-        self._mangled_names[name] = mangled
+        self._mangled_names[symbol] = mangled
         self._mangled_name_set.add(mangled)
         return mangled
 
     def _print_Symbol(self, expr: sp.Symbol) -> str:
         if expr == amici_time_symbol:
             return "t"
-        return self.mangle_identifier(expr.name)
+        return self.mangle_identifier(expr)
 
     def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         if self._fpoptimizer:

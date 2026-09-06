@@ -85,6 +85,42 @@ def resolve_reserved_symbol_renames(all_names: set[str]) -> dict[str, str]:
     return renames
 
 
+def make_name_unique(name: str, taken: set[str]) -> str:
+    """
+    Disambiguate an AMICI-internally-derived name against everything
+    already claimed in the model.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3240: many internal
+    symbol names are derived by string-formatting a pattern
+    around an existing model entity's own id (e.g. a reaction flux id
+    ``flux_{reaction_id}``, a conservation-law total ``tcl_{state_id}``,
+    an observable's measurement/sigma symbol ``m{obs_id}``/
+    ``sigma_{obs_id}``). If that generated string happens to already
+    denote some other, unrelated model entity, nothing distinguishes them
+    once both are minted with AMICI's canonical (identical) assumptions,
+    so any two colliding here would silently become one and the same
+    symbol throughout the entire model. This disambiguates the derived
+    name itself (not the pre-existing entity's), matching the precedent
+    already established for ``RESERVED_SYMBOLS`` above, generalized to
+    any name and any point in the import pipeline.
+
+    :param name:
+        the candidate derived name.
+    :param taken:
+        every name already claimed in the model so far; mutated in place
+        to additionally reserve the returned name.
+    :return:
+        ``name`` unchanged if free, otherwise a numeric-suffixed variant
+        (``f"{name}_2"``, ``f"{name}_3"``, ...) that isn't in ``taken``.
+    """
+    candidate, n = name, 2
+    while candidate in taken:
+        candidate = f"{name}_{n}"
+        n += 1
+    taken.add(candidate)
+    return candidate
+
+
 class SBMLException(Exception):
     """Exception for SBML related errors.
 
@@ -1047,12 +1083,18 @@ def cast_to_sym(
     return value
 
 
-def generate_measurement_symbol(observable_id: str | sp.Symbol):
+def generate_measurement_symbol(
+    observable_id: str | sp.Symbol, taken_names: set[str] | None = None
+):
     """
     Generates the appropriate measurement symbol for the provided observable
 
     :param observable_id:
         symbol (or string representation) of the observable
+    :param taken_names:
+        if given, every name already claimed in the model; the derived
+        name is disambiguated against it (and reserved in it) if it would
+        otherwise collide, see :func:`make_name_unique`
 
     :return:
         symbol for the corresponding measurement
@@ -1063,15 +1105,24 @@ def generate_measurement_symbol(observable_id: str | sp.Symbol):
             if isinstance(observable_id, sp.Symbol)
             else observable_id
         )
-    return symbol_with_assumptions(f"m{observable_id}")
+    name = f"m{observable_id}"
+    if taken_names is not None:
+        name = make_name_unique(name, taken_names)
+    return symbol_with_assumptions(name)
 
 
-def generate_regularization_symbol(observable_id: str | sp.Symbol):
+def generate_regularization_symbol(
+    observable_id: str | sp.Symbol, taken_names: set[str] | None = None
+):
     """
     Generates the appropriate regularization symbol for the provided observable
 
     :param observable_id:
         symbol (or string representation) of the observable
+    :param taken_names:
+        if given, every name already claimed in the model; the derived
+        name is disambiguated against it (and reserved in it) if it would
+        otherwise collide, see :func:`make_name_unique`
 
     :return:
         symbol for the corresponding regularization
@@ -1082,7 +1133,10 @@ def generate_regularization_symbol(observable_id: str | sp.Symbol):
             if isinstance(observable_id, sp.Symbol)
             else observable_id
         )
-    return symbol_with_assumptions(f"r{observable_id}")
+    name = f"r{observable_id}"
+    if taken_names is not None:
+        name = make_name_unique(name, taken_names)
+    return symbol_with_assumptions(name)
 
 
 def generate_flux_symbol(

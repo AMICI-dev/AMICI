@@ -8,19 +8,31 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Fixes**
 
-* Fixed model import/compilation failing, or generating incorrect code
-  without any indication of the actual cause, when a model entity's ID
-  collided with a C++ keyword, a standard-library macro (e.g. `NULL`,
-  `EOF`), or one of AMICI's reserved argument names (`x`, `p`, `k`, `h`,
-  `w`, `y`). Generated C++ files no longer rely on unscoped `#define`
-  macros for entity names.
+* There are no more reserved names: previously, model import or
+  compilation could fail — or silently generate incorrect code, with no
+  indication of the actual cause — whenever a model entity's ID collided
+  with a C++ keyword, a standard-library macro (e.g. `NULL`, `EOF`), one
+  of AMICI's fixed array-parameter names (`x`, `p`, `k`, `h`, `w`, `y`),
+  or an AMICI-internally-derived symbol name (e.g. a reaction's own flux
+  symbol, a conservation-law total, or an observable's measurement/sigma
+  symbol). In particular, single-letter entity names used to be a common
+  source of such failures. All of these are now handled transparently:
+  colliding names are disambiguated or renamed internally, with the
+  original ID restored everywhere it's reported (state/parameter/
+  observable/expression IDs, PEtab mapping, ...) — for some single-letter
+  names, this internal renaming previously used an `amici_` prefix that
+  could itself leak into reported IDs; that prefix is now purely an
+  implementation detail and never visible to users. Generated C++ locals
+  are also never aliased across two different quantities that merely
+  happen to print the same name, and generated C++ files no longer rely
+  on unscoped `#define` macros for entity names either.
 
   As a side effect, the local variable names used internally in generated
   model code have changed (e.g. `STAT` is now printed as `STAT_`). This
   does not affect the public API — state/parameter/observable IDs are
   unaffected — but if you inspect or post-process AMICI-generated C++
   source directly, expect different local variable names (#2226, #2461,
-  #3237).
+  #3237, #3240, #3243).
 
 * Fixed splines being treated as unconditionally time-dependent via
   fragile string matching, rather than through AMICI's normal symbolic
@@ -29,12 +41,6 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   spline with an event trigger that depends on it now raise a clear error
   at import time instead of silently generating incorrect C++, since
   simulating such models is not yet supported (#3245).
-
-* Fixed PySB/BNGL import failing with a `ValueError` when a model quantity
-  was literally named one of AMICI's reserved argument names (`x`, `p`,
-  `k`, `h`, `w`, `y`). These are now renamed internally and the original
-  ID is restored everywhere it's reported, matching existing SBML import
-  behavior.
 
 ### v1.1 (2026-09-03)
 
