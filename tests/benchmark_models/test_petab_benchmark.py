@@ -172,21 +172,14 @@ settings = defaultdict(GradientCheckSettings)
 settings["Blasi_CellSystems2016"] = GradientCheckSettings(
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
 )
-settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
-    rng_seed=7,
-)
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
     rtol_sim=1e-14,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
-)
-settings["Elowitz_Nature2000"] = GradientCheckSettings(
-    rng_seed=3,
 )
 settings["Giordano_Nature2020"] = GradientCheckSettings(rng_seed=1)
 settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     atol_sim=1e-14,
     rtol_sim=1e-14,
-    rng_seed=4,
     noise_level=0.01,
 )
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
@@ -211,9 +204,6 @@ settings["Weber_BMC2015"] = GradientCheckSettings(
     atol_sim=1e-13,
     rtol_sim=1e-13,
     rng_seed=1,
-)
-settings["Zhao_QuantBiol2020"] = GradientCheckSettings(
-    rng_seed=3,
 )
 settings["Zheng_PNAS2012"] = GradientCheckSettings(
     rng_seed=2,
@@ -379,32 +369,6 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
     problem_id, petab_problem, _, amici_model = benchmark_problem
     if problem_id not in problems_for_gradient_check:
         pytest.skip("Excluded from gradient check.")
-
-    if not scale and problem_id in (
-        "Smith_BMCSystBiol2013",
-        # Bounds-aware clamping (fiddy's `bounds=` / `check_gradient`'s
-        # `noise_floor_strategy="auto"`) fixed this for every other
-        # previously-skipped model here (Boehm_JProteomeRes2014,
-        # Zheng_PNAS2012, Brannmark_JBC2010, Schwen_PONE2014). This
-        # model's remaining unscaled-only failures are consistently the
-        # three `scale_yPKDpN{0,24,25}` directions -- PEtab
-        # observableParameter-only linear observable-scaling factors.
-        # Verified directly (manual central difference of the full
-        # PEtab-aggregated log-likelihood vs. AMICI's analytic gradient):
-        # these values actually agree to ~1e-10 relative error, an
-        # excellent match, not a precision problem. The reported failure
-        # is a fiddy tolerance-calibration artifact: perturbing a
-        # pure observable-scaling parameter barely touches the ODE
-        # simulation, so fiddy's noise-floor probe for that direction
-        # measures spuriously low self-consistency noise, producing an
-        # auto-derived tolerance (~1e-7) far tighter than the ~1e-4
-        # absolute floor of comparing two independently-computed
-        # large-magnitude (~5e5) values -- not a bug in the checked
-        # gradient itself. Left skipped here since fixing it needs a
-        # fiddy-side tolerance-calibration change, not per-model tuning.
-        "Weber_BMC2015",
-    ):
-        pytest.skip("scale=False disabled for this problem")
 
     petab_problem = benchmark_models_petab.get_problem(problem_id)
     if measurement_table_has_timepoint_specific_mappings(
