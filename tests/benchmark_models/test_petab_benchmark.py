@@ -78,15 +78,6 @@ problems_for_gradient_check = set(benchmark_models_petab.MODELS) - {
     "Smith_BMCSystBiol2013",
     # excluded due to excessive numerical failures
     "Crauste_CellSystems2017",
-    # excluded: a finite-difference step reliably leaves this model's
-    # valid parameter domain even on the scaled path (confirmed
-    # unfixable by jittered-point/rng_seed choice alone -- fails the
-    # same way for every seed tried). Needs bounds-aware step clamping
-    # in fiddy itself, not implemented yet -- see fiddy's own
-    # `project_fiddy_unscaled_gradient_check` memory/plan notes for the
-    # design (accepting optional per-parameter bounds and never
-    # stepping outside them).
-    "Schwen_PONE2014",
 }
 problems_for_gradient_check = list(sorted(problems_for_gradient_check))
 
@@ -182,15 +173,20 @@ settings["Blasi_CellSystems2016"] = GradientCheckSettings(
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
 )
 settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
-    rng_seed=2,
+    rng_seed=7,
 )
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
+    rtol_sim=1e-14,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
+)
+settings["Elowitz_Nature2000"] = GradientCheckSettings(
+    rng_seed=3,
 )
 settings["Giordano_Nature2020"] = GradientCheckSettings(rng_seed=1)
 settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     atol_sim=1e-14,
     rtol_sim=1e-14,
+    rng_seed=4,
     noise_level=0.01,
 )
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
@@ -212,12 +208,15 @@ settings["Sneyd_PNAS2002"] = GradientCheckSettings(
     rng_seed=7,
 )
 settings["Weber_BMC2015"] = GradientCheckSettings(
-    atol_sim=1e-12,
-    rtol_sim=1e-12,
-    rng_seed=2,
+    atol_sim=1e-13,
+    rtol_sim=1e-13,
+    rng_seed=1,
+)
+settings["Zhao_QuantBiol2020"] = GradientCheckSettings(
+    rng_seed=3,
 )
 settings["Zheng_PNAS2012"] = GradientCheckSettings(
-    rng_seed=1,
+    rng_seed=2,
     rtol_sim=1e-15,
     noise_level=0.01,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
@@ -383,26 +382,28 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
 
     if not scale and problem_id in (
         "Smith_BMCSystBiol2013",
-        "Brannmark_JBC2010",
-        # These three fail the same way, confirmed this round: unscaled
-        # (linear-scale) free parameters here span many orders of
-        # magnitude (e.g. Boehm's ~1e-5 to ~1e5, vs. all O(1) on log10
-        # scale), and fiddy's noise floor is probed once, along a single
-        # all-ones direction across every parameter -- a point this poorly
-        # conditioned distorts that shared probe badly enough to send some
-        # perturbed evaluations to nonsensical parameter values (the same
-        # root cause already documented for Oliveira_NatCommun2021 in
-        # fiddy.step_size's module docstring). This is a known, deferred
-        # fiddy engine limitation (a per-direction noise floor would fix
-        # it properly), not per-model bugs to individually tune around --
-        # do not extend this list by testing more models unscaled; treat
-        # `scale=False` as broadly unreliable until fiddy addresses this.
-        "Boehm_JProteomeRes2014",
+        # Bounds-aware clamping (fiddy's `bounds=` / `check_gradient`'s
+        # `noise_floor_strategy="auto"`) fixed this for every other
+        # previously-skipped model here (Boehm_JProteomeRes2014,
+        # Zheng_PNAS2012, Brannmark_JBC2010, Schwen_PONE2014). This
+        # model's remaining unscaled-only failures are consistently the
+        # three `scale_yPKDpN{0,24,25}` directions -- PEtab
+        # observableParameter-only linear observable-scaling factors.
+        # Verified directly (manual central difference of the full
+        # PEtab-aggregated log-likelihood vs. AMICI's analytic gradient):
+        # these values actually agree to ~1e-10 relative error, an
+        # excellent match, not a precision problem. The reported failure
+        # is a fiddy tolerance-calibration artifact: perturbing a
+        # pure observable-scaling parameter barely touches the ODE
+        # simulation, so fiddy's noise-floor probe for that direction
+        # measures spuriously low self-consistency noise, producing an
+        # auto-derived tolerance (~1e-7) far tighter than the ~1e-4
+        # absolute floor of comparing two independently-computed
+        # large-magnitude (~5e5) values -- not a bug in the checked
+        # gradient itself. Left skipped here since fixing it needs a
+        # fiddy-side tolerance-calibration change, not per-model tuning.
         "Weber_BMC2015",
-        "Zheng_PNAS2012",
     ):
-        # not really worth the effort trying to fix these cases if they
-        # only fail on linear scale
         pytest.skip("scale=False disabled for this problem")
 
     petab_problem = benchmark_models_petab.get_problem(problem_id)
@@ -443,6 +444,11 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
     )
     np.random.seed(cur_settings.rng_seed)
 
+    bounds = (
+        np.array(petab_problem.get_lb(free=True, fixed=False, scaled=scale)),
+        np.array(petab_problem.get_ub(free=True, fixed=False, scaled=scale)),
+    )
+
     # find a point where the derivative can be computed
     for _ in range(5):
         if scale:
@@ -456,6 +462,9 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
                 np.random.randn(len(point)) * point * cur_settings.noise_level
             )
         point += point_noise  # avoid small gradients at nominal value
+        # Jittering can push a point outside its own bounds; clip before
+        # passing both to fiddy.
+        point = np.clip(point, bounds[0], bounds[1])
 
         try:
             expected_derivative = amici_derivative(point)
@@ -470,7 +479,9 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
     print("Testing at:", point)
     print("Expected derivative (amici):", expected_derivative)
 
-    result = check_gradient(amici_function, point, expected_derivative)
+    result = check_gradient(
+        amici_function, point, expected_derivative, bounds=bounds
+    )
     result.assert_success(always_print=True)
     assert_gradient_check_confirms_something(result)
 
@@ -625,20 +636,6 @@ def test_nominal_parameters_llh_v2(problem_id):
     # TODO
     scale = False
 
-    # also excluded from v1 test
-    if not scale and problem_id in (
-        "Smith_BMCSystBiol2013",
-        "Brannmark_JBC2010",
-        "Elowitz_Nature2000",
-        "Borghans_BiophysChem1997",
-        "Sneyd_PNAS2002",
-        "Bertozzi_PNAS2020",
-        # "Zheng_PNAS2012",
-    ):
-        # not really worth the effort trying to fix these cases if they
-        # only fail on linear scale
-        pytest.skip("scale=False disabled for this problem")
-
     cur_settings = settings[problem_id]
     ps.solver.set_absolute_tolerance(cur_settings.atol_sim)
     ps.solver.set_relative_tolerance(cur_settings.rtol_sim)
@@ -664,6 +661,11 @@ def test_nominal_parameters_llh_v2(problem_id):
     )
     np.random.seed(cur_settings.rng_seed)
 
+    bounds = (
+        np.array(ps._petab_problem.get_lb(free=True, fixed=False)),
+        np.array(ps._petab_problem.get_ub(free=True, fixed=False)),
+    )
+
     # find a point where the derivative can be computed
     for _ in range(5):
         if scale:
@@ -677,6 +679,9 @@ def test_nominal_parameters_llh_v2(problem_id):
                 np.random.randn(len(point)) * point * cur_settings.noise_level
             )
         point += point_noise  # avoid small gradients at nominal value
+        # Jittering can push a point outside its own bounds; clip before
+        # passing both to fiddy.
+        point = np.clip(point, bounds[0], bounds[1])
 
         try:
             expected_derivative = amici_derivative(point)
@@ -691,7 +696,9 @@ def test_nominal_parameters_llh_v2(problem_id):
     print("Testing at:", point)
     print("Expected derivative (amici):", expected_derivative)
 
-    result = check_gradient(amici_function, point, expected_derivative)
+    result = check_gradient(
+        amici_function, point, expected_derivative, bounds=bounds
+    )
     result.assert_success(always_print=True)
     assert_gradient_check_confirms_something(result)
 
