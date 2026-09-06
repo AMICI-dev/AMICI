@@ -12,7 +12,11 @@ from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
 from toposort import toposort
 
-from amici.importers.utils import amici_time_symbol, symbol_with_assumptions
+from amici.importers.utils import (
+    amici_time_symbol,
+    make_name_unique,
+    symbol_with_assumptions,
+)
 
 
 def _mangle(name: str) -> str:
@@ -447,6 +451,7 @@ def csc_matrix(
     colnames: list[sp.Symbol],
     identifier: int | None = 0,
     pattern_only: bool | None = False,
+    taken_names: set[str] | None = None,
 ) -> tuple[list[int], list[int], sp.Matrix, list[sp.Symbol], sp.Matrix]:
     """
     Generates the sparse symbolic identifiers, symbolic identifiers,
@@ -470,6 +475,14 @@ def csc_matrix(
 
     :param pattern_only:
         flag for computing sparsity pattern without whole matrix
+
+    :param taken_names:
+        every name already claimed in the model so far; if given, each
+        placeholder name is disambiguated against it (and against
+        placeholders already minted in this call) via
+        :func:`amici.importers.utils.make_name_unique` before being minted,
+        so a placeholder can never alias an unrelated model entity that
+        happens to have the same id (see #3246). Mutated in place.
 
     :return:
         symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list,
@@ -496,6 +509,8 @@ def csc_matrix(
             symbol_name = f"d{rownames[row].name}_d{colnames[col].name}"
             if identifier:
                 symbol_name += f"_{identifier}"
+            if taken_names is not None:
+                symbol_name = make_name_unique(symbol_name, taken_names)
             symbol_list.append(symbol_with_assumptions(symbol_name))
             if pattern_only:
                 continue
