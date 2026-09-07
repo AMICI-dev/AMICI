@@ -5,7 +5,10 @@ and for the time-symbol."""
 from pathlib import Path
 
 import numpy as np
-from amici.importers.antimony import antimony2amici
+import pytest
+from amici import import_model_module
+from amici.importers.antimony import antimony2amici, antimony2sbml
+from amici.importers.utils import RESERVED_SYMBOLS
 from amici.sim.sundials import AMICI_SUCCESS
 from amici.testing import skip_on_valgrind
 
@@ -39,12 +42,7 @@ def _without_comments(source: str) -> str:
 # pre-defined floating-point-NaN constant, rejected at parse time regardless
 # of context -- `NULL`/`EOF`/`INFINITY` already cover this class of case.)
 RESERVED_SPECIES_IDS = [
-    "x",
-    "p",
-    "k",
-    "h",
-    "w",
-    "y",
+    *RESERVED_SYMBOLS,
     "NULL",
     "int",
     "class",
@@ -144,3 +142,27 @@ def test_species_named_t(tempdir):
     xdot = _generated_source(tempdir, "xdot.cpp")
     assert "amici_t_ = x[0];" in xdot
     assert "-1.0/10.0*amici_t_" in xdot
+
+
+@skip_on_valgrind
+def test_reserved_species_ids_jax(tempdir):
+    """JAX counterpart of ``test_reserved_species_ids``: species named after
+    amici's reserved array-parameter names must report their original id
+    via ``JAXModel.state_ids``, not the internally-mangled ``amici_*`` name.
+    """
+    pytest.importorskip("jax")
+    from amici.importers.sbml import SbmlImporter
+
+    model_name = "reserved_species_test_jax"
+    sbml_str = antimony2sbml(_antimony_model_with_species(RESERVED_SYMBOLS))
+    importer = SbmlImporter(sbml_str, from_file=False)
+    importer.sbml2jax(
+        model_name,
+        output_dir=Path(tempdir) / model_name,
+        observation_model=[],
+        compute_conservation_laws=False,
+    )
+    module = import_model_module(model_name, tempdir)
+    model = module.Model()
+
+    assert tuple(model.state_ids) == tuple(RESERVED_SYMBOLS)

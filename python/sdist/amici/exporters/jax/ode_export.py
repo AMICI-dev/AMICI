@@ -85,9 +85,14 @@ def _jax_return_variables(
 
 
 def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
+    original_ids = model.reserved_symbol_original_ids
     return {
         f"{sym_name.upper()}_IDS": "".join(
-            f'"{s.name}", ' for s in model.sym(sym_name)
+            # public ids must stay exactly as the user named them, even if
+            # amici had to mangle the identifier internally (e.g. an entity
+            # named `p`, which collides with the array-parameter name `p`)
+            f'"{original_ids.get(s.name, s.name)}", '
+            for s in model.sym(sym_name)
         )
         if model.sym(sym_name)
         else "tuple()"
@@ -267,7 +272,8 @@ class ODEExporter:
                 self.model.val("p") + self.model.val("k"), self._code_printer
             ),
             "ALL_P_IDS": "".join(
-                f'"{s.name}", ' for s in self._get_all_p_syms()
+                f'"{self.model.reserved_symbol_original_ids.get(s.name, s.name)}", '
+                for s in self._get_all_p_syms()
             )
             if self._get_all_p_syms()
             else "tuple()",
