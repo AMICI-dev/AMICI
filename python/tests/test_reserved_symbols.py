@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from amici import import_model_module
 from amici.importers.antimony import antimony2amici, antimony2sbml
-from amici.importers.utils import RESERVED_SYMBOLS
+from amici.importers.utils import MeasurementChannel
 from amici.sim.sundials import AMICI_SUCCESS
 from amici.testing import skip_on_valgrind
 
@@ -33,16 +33,22 @@ def _without_comments(source: str) -> str:
     return "\n".join(line.split("//")[0] for line in source.splitlines())
 
 
-# amici's own reserved array/argument names (x, p, k, h, w, y) -- renamed
-# internally just like `t`, with the original id restored for anything
-# reported outward; real C++ keywords and known standard-library macros
-# (int, class, EOF, INFINITY, NULL) -- handled by C++ mangling alone, no
-# renaming needed; and the underscore edge cases from #2226's design.
+# Names that are unsafe in the generated C++ -- amici's own fixed
+# array-parameter names (x, p, k, h, w, y), real C++ keywords and known
+# standard-library macros (int, class, EOF, INFINITY, NULL) -- plus the
+# underscore edge cases from #2226's design. None of these is reserved at
+# the model level: they're all handled by the code printer mangling every
+# identifier it prints.
 # (Not `NAN`/`NaN`/`nan`: Antimony reserves those spellings as its own
 # pre-defined floating-point-NaN constant, rejected at parse time regardless
 # of context -- `NULL`/`EOF`/`INFINITY` already cover this class of case.)
 RESERVED_SPECIES_IDS = [
-    *RESERVED_SYMBOLS,
+    "x",
+    "p",
+    "k",
+    "h",
+    "w",
+    "y",
     "NULL",
     "int",
     "class",
@@ -50,6 +56,45 @@ RESERVED_SPECIES_IDS = [
     "INFINITY",
     "k_",
     "my__species",
+]
+
+# The same for the generated JAX module: amici's fixed array-parameter
+# names, every other argument and local the generated methods use, the
+# module-level imports they call into, and Python keywords. Plus `t`, the
+# one name that *is* still renamed at the model level (see RESERVED_SYMBOLS)
+# and must be reported back under its original id.
+JAX_UNSAFE_SPECIES_IDS = [
+    # amici's fixed array-parameter names
+    "x",
+    "p",
+    "k",
+    "h",
+    "w",
+    "y",
+    # further arguments/locals of the generated methods
+    "t",
+    "tcl",
+    "op",
+    "np",
+    "my",
+    "iy",
+    "args",
+    "self",
+    # module-level imports the generated code calls into
+    "jnp",
+    "jr",
+    "eqx",
+    "oo",
+    "safe_log",
+    "safe_div",
+    "Path",
+    "JAXModel",
+    # Python keywords
+    "class",
+    "lambda",
+    "None",
+    "def",
+    "return",
 ]
 
 
@@ -146,23 +191,88 @@ def test_species_named_t(tempdir):
 
 @skip_on_valgrind
 def test_reserved_species_ids_jax(tempdir):
-    """JAX counterpart of ``test_reserved_species_ids``: species named after
-    amici's reserved array-parameter names must report their original id
-    via ``JAXModel.state_ids``, not the internally-mangled ``amici_*`` name.
-    """
+    """JAX counterpart of ``test_reserved_species_ids``: species whose ids
+    are unsafe as identifiers in the generated JAX module import and
+    evaluate correctly, and report their original id.
+
+    The generated methods destructure their array arguments into per-entry
+    locals, so an entity id that isn't mangled would shadow the argument it
+    was unpacked from (or a module-level import, or be a syntax error) --
+    hence checking that the right-hand sides still evaluate, not just that
+    the id lists look right."""
     pytest.importorskip("jax")
+    import jax.numpy as jnp
     from amici.importers.sbml import SbmlImporter
 
+    species_ids = JAX_UNSAFE_SPECIES_IDS
     model_name = "reserved_species_test_jax"
-    sbml_str = antimony2sbml(_antimony_model_with_species(RESERVED_SYMBOLS))
-    importer = SbmlImporter(sbml_str, from_file=False)
-    importer.sbml2jax(
+    sbml_str = antimony2sbml(_antimony_model_with_species(species_ids))
+    SbmlImporter(sbml_str, from_file=False).sbml2jax(
         model_name,
         output_dir=Path(tempdir) / model_name,
         observation_model=[],
         compute_conservation_laws=False,
     )
-    module = import_model_module(model_name, tempdir)
-    model = module.Model()
+    model = import_model_module(model_name, tempdir).Model()
 
-    assert tuple(model.state_ids) == tuple(RESERVED_SYMBOLS)
+    assert tuple(model.state_ids) == tuple(species_ids)
+
+    # each species follows d[id]/dt = -0.1 * [id], starting at 1
+    x0 = model._x0(0.0, model.parameters)
+    empty = jnp.array([])
+    xdot = model._xdot(0.0, x0, (model.parameters, empty, empty))
+    assert np.allclose(x0, 1.0)
+    assert np.allclose(xdot, -0.1)
+
+
+@skip_on_valgrind
+def test_observable_named_my_jax(tempdir):
+    """An observable named `my` must not shadow the generated `_nllh`'s
+    measurement argument, which is called exactly that.
+
+    Unlike a shadowed state, this one produces no error at all: the
+    negative log-likelihood would just silently be computed against the
+    simulated observable instead of the measurement, and come out
+    independent of the data."""
+    pytest.importorskip("jax")
+    import jax.numpy as jnp
+    from amici.importers.sbml import SbmlImporter
+
+    model_name = "observable_named_my_test_jax"
+    sbml_str = antimony2sbml(_antimony_model_with_species(["A"]))
+    SbmlImporter(sbml_str, from_file=False).sbml2jax(
+        model_name,
+        output_dir=Path(tempdir) / model_name,
+        observation_model=[
+            MeasurementChannel(
+                id_="my",
+                formula="A",
+                noise_distribution="normal",
+                sigma=1.0,
+            )
+        ],
+        compute_conservation_laws=False,
+    )
+    model = import_model_module(model_name, tempdir).Model()
+
+    assert tuple(model.observable_ids) == ("my",)
+
+    x0 = model._x0(0.0, model.parameters)  # A(0) = 1, so `my` = 1
+    empty = jnp.array([])
+
+    def nllh(measurement):
+        return model._nllh(
+            0.0,
+            x0,
+            model.parameters,
+            empty,
+            empty,
+            jnp.array([measurement]),
+            0,
+            empty,
+            empty,
+        )
+
+    # normal noise with sigma=1: 0.5*(y - my)**2 + 0.5*log(2*pi)
+    assert np.isclose(nllh(1.0), 0.5 * np.log(2 * np.pi))
+    assert np.isclose(nllh(5.0), 0.5 * 4**2 + 0.5 * np.log(2 * np.pi))
