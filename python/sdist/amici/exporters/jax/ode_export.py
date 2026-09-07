@@ -29,18 +29,27 @@ from amici.exporters.template import apply_template
 from amici.logging import get_logger, log_execution_time, set_log_level
 from amici.sim.jax.model import JAXModel
 
-from .jaxcodeprinter import AmiciJaxCodePrinter, _jnp_array_str
+from .jaxcodeprinter import (
+    AmiciJaxCodePrinter,
+    _jnp_array_str,
+    generic_measurement_symbol,
+)
 
 #: python log manager
 logger = get_logger(__name__, logging.ERROR)
 
 
 def _jax_variable_assignments(
-    model: DEModel, sym_names: tuple[str, ...]
+    model: DEModel,
+    code_printer: AmiciJaxCodePrinter,
+    sym_names: tuple[str, ...],
 ) -> dict:
     return {
         f"{sym_name.upper()}_SYMS": "".join(
-            f"{s.name}, " for s in model.sym(sym_name)
+            # local variable names, so mangled -- never the entity id, which
+            # could shadow the array argument it's unpacked from
+            f"{code_printer.doprint(s)}, "
+            for s in model.sym(sym_name)
         )
         if model.sym(sym_name)
         else "_"
@@ -72,11 +81,12 @@ def _jax_variable_equations(
 
 def _jax_return_variables(
     model: DEModel,
+    code_printer: AmiciJaxCodePrinter,
     eq_names: tuple[str, ...],
 ) -> dict:
     return {
         f"{eq_name.upper()}_RET": _jnp_array_str(
-            s.name for s in model.sym(eq_name)
+            model.sym(eq_name), code_printer
         )
         if model.sym(eq_name) and sp.Matrix(model.eq(eq_name)).shape[0]
         else "jnp.array([])"
@@ -89,8 +99,8 @@ def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
     return {
         f"{sym_name.upper()}_IDS": "".join(
             # public ids must stay exactly as the user named them, even if
-            # amici had to mangle the identifier internally (e.g. an entity
-            # named `p`, which collides with the array-parameter name `p`)
+            # amici had to rename the entity internally (an entity named
+            # `t`, the one name that still collides -- see RESERVED_SYMBOLS)
             f'"{original_ids.get(s.name, s.name)}", '
             for s in model.sym(sym_name)
         )
@@ -246,7 +256,7 @@ class ODEExporter:
         subs_observables = dict(
             zip(
                 self.model.sym("my"),
-                [sp.Symbol("my")] * len(self.model.sym("my")),
+                [generic_measurement_symbol] * len(self.model.sym("my")),
                 strict=True,
             )
         )
@@ -260,9 +270,11 @@ class ODEExporter:
                 self.model, self._code_printer, eq_names, subs, indent
             ),
             # create jax array from concatenation of named variables
-            **_jax_return_variables(self.model, eq_names),
+            **_jax_return_variables(self.model, self._code_printer, eq_names),
             # assign named variables from a jax array
-            **_jax_variable_assignments(self.model, sym_names),
+            **_jax_variable_assignments(
+                self.model, self._code_printer, sym_names
+            ),
             # tuple of variable names (ids as they are unique)
             **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
             "P_VALUES": _jnp_array_str(
@@ -278,7 +290,8 @@ class ODEExporter:
             if self._get_all_p_syms()
             else "tuple()",
             "ALL_P_SYMS": "".join(
-                f"{s.name}, " for s in self._get_all_p_syms()
+                f"{self._code_printer.doprint(s)}, "
+                for s in self._get_all_p_syms()
             )
             if self._get_all_p_syms()
             else "_",
