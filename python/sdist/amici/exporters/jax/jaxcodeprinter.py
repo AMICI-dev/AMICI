@@ -11,9 +11,54 @@ from sympy.core.function import UndefinedFunction
 from sympy.printing.numpy import NumPyPrinter
 from toposort import toposort
 
+from amici.exporters._mangling import IdentifierMangler
+from amici.importers.utils import amici_time_symbol
+
+#: The generic measurement symbol that observable-specific measurement
+#: symbols are substituted by before code generation. Unlike every other
+#: symbol printed here, it denotes a fixed argument of the generated
+#: ``_nllh`` (see ``jax.template.py``), not a model entity.
+generic_measurement_symbol = sp.Symbol("my")
+
 
 class AmiciJaxCodePrinter(NumPyPrinter):
     """JAX code printer"""
+
+    #: Symbols denoting one of the fixed arguments of the generated
+    #: functions rather than a model entity, mapped to the argument name
+    #: they have to be printed as (see ``jax.template.py``). Keyed on the
+    #: full symbol, so a model entity that merely shares the name is
+    #: unaffected (and gets a mangled name of its own, as any other).
+    _fixed_symbol_names = {
+        amici_time_symbol: "t",
+        generic_measurement_symbol: "my",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # identifier mangling for this model, shared with the C++ backend
+        self._mangler = IdentifierMangler()
+
+    def mangle_identifier(self, symbol: sp.Symbol) -> str:
+        """Mangle the identifier for `symbol` into a safe, unique Python
+        local variable name.
+
+        Every model entity id printed into the generated module -- as the
+        target of an assignment as much as inside an expression -- has to
+        go through here. The generated functions destructure their array
+        arguments into per-entry locals (``x_, y_ = x``), so an unmangled
+        entity id would shadow the argument it was unpacked from (or the
+        module's imports, or a Python keyword), silently corrupting every
+        later use of it in that function.
+
+        See :meth:`amici.exporters._mangling.IdentifierMangler.mangle`.
+        """
+        return self._mangler.mangle(symbol)
+
+    def _print_Symbol(self, expr: sp.Symbol) -> str:
+        if (fixed_name := self._fixed_symbol_names.get(expr)) is not None:
+            return fixed_name
+        return self.mangle_identifier(expr)
 
     def _print_Float(self, expr: sp.Float) -> str:
         # sympy's string printer emits 15 significant digits, which is not
@@ -145,7 +190,8 @@ class AmiciJaxCodePrinter(NumPyPrinter):
         )
         if not replacements:
             return [
-                f"{indent}{s} = {self.doprint(e)}"
+                f"{indent}{self._print_assignment_target(s)} = "
+                f"{self.doprint(e)}"
                 for s, e in zip(symbols, reduced)
             ]
 
@@ -162,10 +208,24 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             for identifier, definition in expr_dict.items()
         }
         return [
-            f"{indent}{sym} = {self.doprint(expr_dict[sym])}"
+            f"{indent}{self._print_assignment_target(sym)} = "
+            f"{self.doprint(expr_dict[sym])}"
             for group in toposort(dependencies)
             for sym in sorted(group, key=str)
         ]
+
+    def _print_assignment_target(self, symbol: sp.Symbol | str) -> str:
+        """Print `symbol` as the left-hand side of an assignment.
+
+        Same identifier as the symbol gets inside an expression -- the two
+        sides have to agree, which they only do if both go through the
+        printer.
+        """
+        return (
+            self.doprint(symbol)
+            if isinstance(symbol, sp.Basic)
+            else str(symbol)
+        )
 
 
 def _jnp_array_str(

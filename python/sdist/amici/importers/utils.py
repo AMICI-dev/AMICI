@@ -24,27 +24,21 @@ __all__ = [
 #
 # `t` is merged into the model's expression graph as an actual sympy.Symbol
 # (amici.importers.sbml._process_time), so it must never collide with a
-# model entity.
+# model entity: a model entity named `t` would not merely *print* like the
+# time symbol, it would *be* the very same sympy symbol, and no amount of
+# mangling downstream could tell the two apart again.
 #
-# `x`, `p`, `k`, `h`, `w`, `y` are the fixed array-parameter names AMICI
-# functions are generated with, for both backends. The C++ printer mangles
-# every identifier it prints (AmiciCxxCodePrinter.mangle_identifier), so
-# a model entity sharing one of these names is safe there -- but the JAX
-# exporter has no such protection: its generated methods destructure the
-# array parameter into per-entry locals *by reusing the parameter's own
-# name* (e.g. `def _xdot(self, t, x, args): x, = x`), so an entity actually
-# named e.g. "x" silently shadows the array parameter for the rest of that
-# function, corrupting any later use of the array itself (e.g. a call like
-# `self._w(t, x, ...)` then passes the already-unpacked scalar instead of
-# the array). Renaming here avoids that regardless of target backend.
+# Nothing else needs reserving. A name that's merely unsafe *in the
+# generated code* -- a keyword, a stdlib macro, one of the fixed argument
+# names the generated functions are written with (`x`, `p`, `k`, `h`, `w`,
+# `y`, `tcl`, `self`, `jnp`, ...) -- is handled where it actually matters,
+# by each backend's code printer mangling every identifier it prints
+# (amici.exporters._mangling.IdentifierMangler). That keeps such names an
+# implementation detail of code generation instead of something the model
+# representation, and everything reporting ids out of it, has to know
+# about.
 RESERVED_SYMBOLS = [
     "t",
-    "x",
-    "p",
-    "k",
-    "h",
-    "w",
-    "y",
 ]
 
 

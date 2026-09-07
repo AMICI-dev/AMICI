@@ -12,25 +12,12 @@ from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
 from toposort import toposort
 
+from amici.exporters._mangling import IdentifierMangler
 from amici.importers.utils import (
     amici_time_symbol,
     make_name_unique,
     symbol_with_assumptions,
 )
-
-
-def _mangle(name: str) -> str:
-    """Make a model-derived identifier safe as a C++ local variable name.
-
-    Appends `_` so it can never equal a real keyword/macro. Collapses any
-    SBML-legal `__` run first, and uses `v` instead of `_` as the marker for
-    names already ending in `_`, so the result never contains `__` either.
-    This is not injective and does not guarantee a unique result on its own
-    (e.g. `"a__b"` and `"a_b"` both collapse to the same string) -- callers
-    that need uniqueness across a whole model handle that separately.
-    """
-    name = re.sub(r"_{2,}", "_", name)
-    return f"{name}v" if name.endswith("_") else f"{name}_"
 
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):
@@ -74,31 +61,16 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         else:
             self._fpoptimizer = None
 
-        # mangled-name cache, keyed by original symbol, for this model
-        self._mangled_names: dict[sp.Symbol, str] = {}
-        # mangled names already assigned, for collision detection
-        self._mangled_name_set: set[str] = set()
+        # identifier mangling for this model, shared with the JAX backend
+        self._mangler = IdentifierMangler()
 
     def mangle_identifier(self, symbol: sp.Symbol) -> str:
-        """Mangle the identifier for `symbol`, deduplicating against prior
-        results for this model.
+        """Mangle the identifier for `symbol` into a safe, unique C++ local
+        variable name.
 
-        The same symbol always yields the same output; distinct symbols
-        never yield the same output -- keyed on the full symbol (name *and*
-        assumptions), not just its name, since two AMICI-internal symbols
-        can otherwise legitimately share a name with a differently-created
-        (e.g. user-entity) symbol of the same name (#3240).
+        See :meth:`amici.exporters._mangling.IdentifierMangler.mangle`.
         """
-        if (cached := self._mangled_names.get(symbol)) is not None:
-            return cached
-        base = mangled = _mangle(symbol.name)
-        n = 2
-        while mangled in self._mangled_name_set:
-            mangled = f"{base}{n}"
-            n += 1
-        self._mangled_names[symbol] = mangled
-        self._mangled_name_set.add(mangled)
-        return mangled
+        return self._mangler.mangle(symbol)
 
     def _print_Symbol(self, expr: sp.Symbol) -> str:
         if expr == amici_time_symbol:
