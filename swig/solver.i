@@ -109,6 +109,13 @@ def _solver_reduce(self: "Solver"):
     reboots and will not work in distributed (MPI) settings.
     This requires that amici was compiled with HDF5 support.
     """
+    from amici.sim.sundials import hdf5_enabled
+    if not hdf5_enabled:
+        raise RuntimeError(
+            "Cannot pickle this Solver: pickling stores solver settings "
+            "via HDF5, but this AMICI installation was built without "
+            "HDF5 support."
+        )
     from amici.sim.sundials._swig_wrappers import restore_solver, write_solver_settings_to_hdf5
     from tempfile import NamedTemporaryFile
     import os

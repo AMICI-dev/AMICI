@@ -1,5 +1,6 @@
 """Tests for `amici.adapters.fiddy`."""
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -68,6 +69,10 @@ def test_run_amici_simulation_to_function_and_derivative():
     result.assert_success(always_print=True)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Parallelization/pickling requires HDF5 support -- unavailable on Windows builds.",
+)
 def test_joblib_executor_agrees_with_sequential_executor():
     """Results from `SequentialExecutor` and `JoblibExecutor`
     must agree exactly.
