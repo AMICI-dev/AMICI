@@ -40,5 +40,5 @@ if [[ -d "${RESULT_DIR}" ]]; then
 fi
 mkdir "${RESULT_DIR}"
 
-pytest "$TEST_SCRIPT" $cases -rfsE -n auto \
+pytest "$TEST_SCRIPT" $cases -rfsE -n auto --dist=loadgroup \
   --cov=amici --cov-report=xml:"$COVERAGE_FILE" --cov-append

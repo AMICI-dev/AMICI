@@ -4,8 +4,11 @@ Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
 
 Usage:
-    pytest tests.sbml.testSBMLSuite -n CORES --cases=SELECTION
+    pytest tests.sbml.testSBMLSuite -n CORES --dist=loadgroup --cases=SELECTION
         CORES can be an integer or `auto` for all available cores.
+        `--dist=loadgroup` is required whenever `-n` is used: each case's
+        simulation and sensitivity checks share one compiled model
+        (`compiled_case` fixture) and must run on the same xdist worker.
         SELECTION can be e.g.: `1`, `1,3`, `-3,4,6-7`, or `100-` to select
         specific test cases. If `--cases` is omitted, all cases are run.
 """
@@ -44,83 +47,120 @@ from utils import (
     write_result_file,
 )
 
+# test cases for which sensitivities are to be checked
+#  key: case ID; value: epsilon for finite differences
+_SENSITIVITY_CHECK_CASES = {
+    # parameter-dependent conservation laws
+    "00783": 1.5e-2,
+    # initial events
+    "00995": 1e-3,
+}
 
-def test_sbml_testsuite_case(test_id, result_path, sbml_semantic_cases_dir):
-    model_dir = None
 
-    # test cases for which sensitivities are to be checked
-    #  key: case ID; value: epsilon for finite differences
-    sensitivity_check_cases = {
-        # parameter-dependent conservation laws
-        "00783": 1.5e-2,
-        # initial events
-        "00995": 1e-3,
-    }
+@pytest.fixture(scope="session")
+def compiled_case(test_id, sbml_semantic_cases_dir):
+    """Compile and configure a case's model, shared by its simulation and
+    sensitivity test nodes.
 
+    Model import/compilation is expensive and must happen at most once per
+    `test_id` -- see the `xdist_group`/`scope="session"` comment in
+    `pytest_generate_tests` (conftest.py) for why that requires both
+    consuming test nodes to run on the same xdist worker.
+    """
+    current_test_path = sbml_semantic_cases_dir / test_id
+    model_dir = Path(__file__).parent / "SBMLTestModels" / test_id
     try:
-        current_test_path = sbml_semantic_cases_dir / test_id
-
-        # parse expected results
-        results_file = current_test_path / f"{test_id}-results.csv"
-        results = pd.read_csv(results_file, delimiter=",")
-        results.rename(
-            columns={c: c.replace(" ", "") for c in results.columns},
-            inplace=True,
-        )
-
-        # setup model
-        model_dir = Path(__file__).parent / "SBMLTestModels" / test_id
         model, solver, wrapper = compile_model(
             current_test_path,
             test_id,
             model_dir,
             generate_sensitivity_code=True,
         )
-        settings = read_settings_file(current_test_path, test_id)
-
-        atol, rtol = apply_settings(settings, solver, model, test_id)
-
-        solver.set_sensitivity_order(SensitivityOrder.first)
-        solver.set_sensitivity_method(SensitivityMethod.forward)
-
-        if test_id == "00885":
-            # 00885: root-after-reinitialization with FSA with default settings
-            solver.set_absolute_tolerance(1e-16)
-            solver.set_relative_tolerance(1e-15)
-
-        # simulate model
-        rdata = run_simulation(model, solver)
-        if rdata["status"] != AMICI_SUCCESS:
-            if test_id in ("00748", "00374", "00369"):
-                pytest.skip("Simulation Failed expectedly")
-            else:
-                raise RuntimeError("Simulation failed unexpectedly")
-
-        # verify
-        simulated = verify_results(
-            settings, rdata, results, wrapper, model, atol, rtol
-        )
-
-        # record results
-        write_result_file(simulated, test_id, result_path)
-
-        # check sensitivities for selected models
-        if epsilon := sensitivity_check_cases.get(test_id):
-            check_derivatives(model, solver=solver, epsilon=epsilon)
-            jax_sensitivity_check(
-                current_test_path,
-                test_id,
-                model,
-                rdata,
-                atol,
-                rtol,
-            )
-
     except amici.importers.sbml.SBMLException as err:
+        # `pytest.skip` from inside a fixture correctly propagates as
+        # SKIPPED to every dependent test, not as a fixture ERROR.
         pytest.skip(str(err))
-    finally:
-        if model_dir:
-            shutil.rmtree(model_dir, ignore_errors=True)
+
+    settings = read_settings_file(current_test_path, test_id)
+    atol, rtol = apply_settings(settings, solver, model, test_id)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    if test_id == "00885":
+        # 00885: root-after-reinitialization with FSA with default settings
+        solver.set_absolute_tolerance(1e-16)
+        solver.set_relative_tolerance(1e-15)
+
+    yield model, solver, wrapper, settings, atol, rtol, current_test_path
+
+    shutil.rmtree(model_dir, ignore_errors=True)
+
+
+def _check_simulation_status(rdata, test_id: str) -> None:
+    """Skip/fail consistently for a known-bad vs. a genuinely unexpected
+    base simulation failure."""
+    if rdata["status"] != AMICI_SUCCESS:
+        if test_id in ("00748", "00374", "00369"):
+            pytest.skip("Simulation Failed expectedly")
+        raise RuntimeError("Simulation failed unexpectedly")
+
+
+def test_sbml_testsuite_case(test_id, compiled_case, result_path):
+    model, solver, wrapper, settings, atol, rtol, current_test_path = (
+        compiled_case
+    )
+
+    # parse expected results
+    results_file = current_test_path / f"{test_id}-results.csv"
+    results = pd.read_csv(results_file, delimiter=",")
+    results.rename(
+        columns={c: c.replace(" ", "") for c in results.columns},
+        inplace=True,
+    )
+
+    # simulate model
+    rdata = run_simulation(model, solver)
+    _check_simulation_status(rdata, test_id)
+
+    # verify
+    simulated = verify_results(
+        settings, rdata, results, wrapper, model, atol, rtol
+    )
+
+    # record results
+    write_result_file(simulated, test_id, result_path)
+
+
+def test_sbml_testsuite_case_sensitivity(test_id, compiled_case):
+    """Check the model's sensitivities for the selected cases in
+    `_SENSITIVITY_CHECK_CASES`, via finite differences and against JAX
+    autodiff.
+
+    Reported independently from `test_sbml_testsuite_case`: whether AMICI
+    can correctly *simulate* an SBML feature and whether its *sensitivities*
+    for that feature are correct are different questions, and a case whose
+    simulation is right but whose sensitivities aren't (yet) checked
+    shouldn't count against basic SBML simulation support.
+    """
+    model, solver, wrapper, settings, atol, rtol, current_test_path = (
+        compiled_case
+    )
+
+    epsilon = _SENSITIVITY_CHECK_CASES.get(test_id)
+    if epsilon is None:
+        pytest.skip("No sensitivity check defined for this case")
+
+    rdata = run_simulation(model, solver)
+    _check_simulation_status(rdata, test_id)
+
+    check_derivatives(model, solver=solver, epsilon=epsilon)
+    jax_sensitivity_check(
+        current_test_path,
+        test_id,
+        model,
+        rdata,
+        atol,
+        rtol,
+    )
 
 
 def compile_model(

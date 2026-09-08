@@ -16,12 +16,23 @@ script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:
     sys.path.insert(0, str(script_dir))
 
-# stores passed SBML semantic test suite IDs
-passed_ids = []
-# test tags we encountered
+# the two independently-reported checks per SBML semantic test suite case
+SIMULATION_CHECK = "test_sbml_testsuite_case"
+SENSITIVITY_CHECK = "test_sbml_testsuite_case_sensitivity"
+
+# stores passed SBML semantic test suite IDs, by check
+passed_ids: dict[str, list[str]] = {
+    SIMULATION_CHECK: [],
+    SENSITIVITY_CHECK: [],
+}
+# test tags we encountered (from the simulation check only -- that's what
+# the SBML test suite's own tag-support semantics are about)
 encountered_tags: set[str] = set()
-# failed tests with error message
-failed_or_skipped_ids: dict[str, str] = dict()
+# failed/skipped tests with error message, by check
+failed_or_skipped_ids: dict[str, dict[str, str]] = {
+    SIMULATION_CHECK: {},
+    SENSITIVITY_CHECK: {},
+}
 
 SBML_SEMANTIC_CASES_DIR = (
     Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
@@ -35,7 +46,7 @@ def result_path() -> Path:
     return RESULT_PATH
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def sbml_semantic_cases_dir() -> Path:
     """directory with sbml semantic test cases"""
     return SBML_SEMANTIC_CASES_DIR
@@ -94,7 +105,25 @@ def pytest_generate_tests(metafunc):
         else:
             # Run all tests
             test_ids = get_all_semantic_case_ids()
-        metafunc.parametrize("test_id", test_ids)
+        # `scope="session"` lets the session-scoped `compiled_case` fixture
+        # (which imports/compiles the model -- expensive, must happen at
+        # most once per test_id) depend on `test_id` at all; without it,
+        # pytest raises `ScopeMismatch`. `xdist_group` keeps both this
+        # test_id's simulation and sensitivity test nodes on the same
+        # xdist worker -- required (not just an optimization) whenever
+        # running with `-n`: `compiled_case`'s cache is per-worker-process,
+        # so if the two nodes for one test_id land on different workers,
+        # each independently recompiles the same model into the same
+        # on-disk directory, which is both wasteful and racy. This only
+        # takes effect when running with `--dist=loadgroup`.
+        metafunc.parametrize(
+            "test_id",
+            [
+                pytest.param(t, marks=pytest.mark.xdist_group(name=t))
+                for t in test_ids
+            ],
+            scope="session",
+        )
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -106,18 +135,26 @@ def pytest_sessionfinish(session, exitstatus):
     terminalreporter.ensure_newline()
     # parse test names to get passed case IDs (don't know any better way to
     # access fixture values)
-    passed_ids = [format_test_id(_) for _ in passed_ids]
-    if passed_ids or failed_or_skipped_ids:
-        write_passed_tags(passed_ids, terminalreporter)
+    passed_ids = {
+        check: [format_test_id(_) for _ in ids]
+        for check, ids in passed_ids.items()
+    }
+    if any(passed_ids.values()) or any(failed_or_skipped_ids.values()):
+        write_passed_tags(passed_ids[SIMULATION_CHECK], terminalreporter)
     terminalreporter.ensure_newline()
 
 
-def write_passed_tags(passed_ids, out=sys.stdout):
-    """Write tags of passed SBML semantic test cases"""
+def write_passed_tags(passed_simulation_ids, out=sys.stdout):
+    """Write tags of passed SBML semantic test cases
+
+    Tag coverage (what the SBML test suite's own result database tracks)
+    only concerns basic simulation support, not the separate sensitivity
+    check -- so tags are derived from `passed_simulation_ids` alone.
+    """
     passed_component_tags = set()
     passed_test_tags = set()
 
-    for test_id in passed_ids:
+    for test_id in passed_simulation_ids:
         cur_component_tags, cur_test_tags = get_tags_for_test(test_id)
         passed_component_tags |= cur_component_tags
         passed_test_tags |= cur_test_tags
@@ -141,10 +178,17 @@ def write_passed_tags(passed_ids, out=sys.stdout):
                     passed_test_tags | passed_component_tags
                 ),
                 "encountered_tags": sorted(encountered_tags),
-                "passed_tests": sorted(passed_ids),
-                "failed_or_skipped": {
-                    k: failed_or_skipped_ids[k]
-                    for k in sorted(failed_or_skipped_ids)
+                "passed_tests_simulation": sorted(passed_simulation_ids),
+                "passed_tests_sensitivity": sorted(
+                    passed_ids[SENSITIVITY_CHECK]
+                ),
+                "failed_or_skipped_simulation": {
+                    k: failed_or_skipped_ids[SIMULATION_CHECK][k]
+                    for k in sorted(failed_or_skipped_ids[SIMULATION_CHECK])
+                },
+                "failed_or_skipped_sensitivity": {
+                    k: failed_or_skipped_ids[SENSITIVITY_CHECK][k]
+                    for k in sorted(failed_or_skipped_ids[SENSITIVITY_CHECK])
                 },
             },
             f,
@@ -154,24 +198,27 @@ def write_passed_tags(passed_ids, out=sys.stdout):
 
 def pytest_runtest_logreport(report: "TestReport") -> None:
     """Collect test case IDs of passed SBML semantic test suite cases"""
-    if (
-        report.when == "call"
-        and "::test_sbml_testsuite_case[" in report.nodeid
-    ):
-        test_case_id = re.sub(
-            r"^.*::test_sbml_testsuite_case\[(\d+)].*$", r"\1", report.nodeid
-        )
+    if report.when != "call":
+        return
+    match = re.search(
+        r"::(test_sbml_testsuite_case(?:_sensitivity)?)\[(\d+)\]",
+        report.nodeid,
+    )
+    if not match:
+        return
+    check, test_case_id = match.group(1), match.group(2)
 
+    if check == SIMULATION_CHECK:
         global encountered_tags
 
         component_tags, test_tags = get_tags_for_test(test_case_id)
         encountered_tags |= component_tags
         encountered_tags |= test_tags
 
-        if report.outcome == "passed":
-            passed_ids.append(test_case_id)
-        else:
-            failed_or_skipped_ids[test_case_id] = report.longreprtext
+    if report.outcome == "passed":
+        passed_ids[check].append(test_case_id)
+    else:
+        failed_or_skipped_ids[check][test_case_id] = report.longreprtext
 
 
 def get_tags_for_test(test_id: str) -> tuple[set[str], set[str]]:
