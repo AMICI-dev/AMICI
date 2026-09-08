@@ -188,22 +188,32 @@ def run_simulation_to_function_and_derivative(
 
     def function(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.none)
-        return {
-            variable: np.asarray(getattr(rdata, variable), dtype=float)
-            for variable in chosen_derivatives
-        }
+        outputs = {}
+        for variable in chosen_derivatives:
+            value = getattr(rdata, variable)
+            # AMICI represents a structurally empty field (e.g. `x` for a
+            # model with zero states) as `None`, not an empty array --
+            # `np.asarray(None, dtype=float)` would silently produce a 0-d
+            # NaN scalar instead, which is both the wrong shape and would
+            # spuriously fail fiddy's non-finite-value check. Whether a
+            # field is `None` depends only on the model's structure (e.g.
+            # `nx_rdata == 0`), not on the point being evaluated, so
+            # omitting it here is consistent across every call.
+            if value is not None:
+                outputs[variable] = np.asarray(value, dtype=float)
+        return outputs
 
     def derivative(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.first)
-        return {
-            variable: _rdata_array_transpose(
-                array=np.asarray(
-                    getattr(rdata, derivative_variable), dtype=float
-                ),
-                variable=derivative_variable,
-            )[..., parameter_indices]
-            for variable, derivative_variable in chosen_derivatives.items()
-        }
+        outputs = {}
+        for variable, derivative_variable in chosen_derivatives.items():
+            value = getattr(rdata, derivative_variable)
+            if value is not None:  # see `function`'s comment above
+                outputs[variable] = _rdata_array_transpose(
+                    array=np.asarray(value, dtype=float),
+                    variable=derivative_variable,
+                )[..., parameter_indices]
+        return outputs
 
     if cache:
         # Only `function` -- the one fiddy's own FD engine calls, and
