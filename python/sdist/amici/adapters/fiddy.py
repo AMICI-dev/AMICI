@@ -157,7 +157,7 @@ def run_simulation_to_function_and_derivative(
         amici_solver = amici_model.create_solver()
     if free_parameter_ids is None:
         free_parameter_ids = amici_model.get_free_parameter_ids()
-    if amici_edata is not None and amici_edata.free_parameters is not None:
+    if amici_edata is not None and amici_edata.free_parameters:
         raise NotImplementedError(
             "Customization of parameter values inside AMICI ExpData."
         )
