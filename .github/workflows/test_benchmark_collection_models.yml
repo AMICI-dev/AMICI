@@ -78,7 +78,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@redesign-fd-engine # TODO switch back to @main once the fiddy redesign is merged/released
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@main
 
     - name: Download benchmark collection
       run: |
@@ -163,7 +163,7 @@ jobs:
       run: |
         python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@1b8599dd1eb9bda74853255b4cc4baf75b7e4d63 \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@redesign-fd-engine # TODO switch back to @main once the fiddy redesign is merged/released
+        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git@main
 
     - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax@main # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654 + event dirs
 
