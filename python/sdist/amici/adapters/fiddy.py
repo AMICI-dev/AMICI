@@ -41,6 +41,7 @@ __all__ = [
     "run_simulation_to_function_and_derivative",
     "simulate_petab_to_function_and_derivative",
     "simulate_petab_v2_to_function_and_derivative",
+    "output_labels_for_derivatives",
 ]
 
 LOG_E_10 = np.log(10)
@@ -109,6 +110,71 @@ default_derivatives = {
     if v not in ["sz", "srz", "ssigmaz", "s2llh"]
 }
 
+# Entities to id type mapping
+_entity_ids_by_variable = {
+    "x": "state",
+    "x0": "state",
+    "x_ss": "state",
+    "y": "observable",
+    "sigmay": "observable",
+    "res": "observable",
+}
+# Entities that have a time
+_has_timepoint_axis = {"x", "y", "sigmay", "res"}
+
+
+def output_labels_for_derivatives(
+    amici_model: AmiciModel,
+    derivative_variables: list[str] = None,
+    timepoints: list[float] = None,
+) -> list[str]:
+    """Per-flat-row labels for fiddy's `function`/`derivative`'s bundled output.
+
+    :param amici_model: The AMICI model (for state/observable IDs).
+    :param derivative_variables: Same meaning/default as
+        :func:`run_simulation_to_function_and_derivative`.
+    :param timepoints: Output timepoints, for variables with a timepoint
+        axis. Defaults to `amici_model.get_timepoints()`.
+    :return: One label per flat output row, in bundling order.
+    :raises NotImplementedError: For a variable with no label source
+        (``z``, ``rz``, ``sigmaz``, or second-order ``sllh``).
+    """
+    variables = list(
+        default_derivatives
+        if derivative_variables is None
+        else derivative_variables
+    )
+    unsupported = [v for v in variables if v not in default_derivatives]
+    if unsupported:
+        raise NotImplementedError(
+            f"No output labels available for {unsupported} -- only "
+            f"{list(default_derivatives)} are supported."
+        )
+    if timepoints is None:
+        timepoints = list(amici_model.get_timepoints())
+    ids_by_kind = {
+        "state": list(amici_model.get_state_ids()),
+        "observable": list(amici_model.get_observable_ids()),
+    }
+
+    labels = []
+    for variable in variables:
+        if variable == "llh":
+            labels.append("llh")
+            continue
+        entity_ids = ids_by_kind[_entity_ids_by_variable[variable]]
+        if variable in _has_timepoint_axis:
+            labels.extend(
+                f"{variable}[t={t:g}, id={entity_id}]"
+                for t in timepoints
+                for entity_id in entity_ids
+            )
+        else:
+            labels.extend(
+                f"{variable}[id={entity_id}]" for entity_id in entity_ids
+            )
+    return labels
+
 
 def run_simulation_to_function_and_derivative(
     amici_model: AmiciModel,
@@ -127,11 +193,11 @@ def run_simulation_to_function_and_derivative(
     -- one simulation output per key for `function` (`x`, `y`, `llh`, ...),
     its forward-sensitivity counterpart for `derivative` (`sx`, `sy`,
     `sllh`, ..., with the parameter axis moved last via
-    :func:`_rdata_array_transpose`, and already sliced down to just
-    `free_parameter_ids`, in that order -- AMICI's own sensitivity arrays
-    are w.r.t. `amici_model.get_free_parameter_ids()`, which need not be
-    the same set/order as `free_parameter_ids`, so this slicing happens
-    once here rather than requiring every caller to redo it). fiddy's own
+    :func:`_rdata_array_transpose`, and sliced/reordered to
+    `free_parameter_ids` from each simulation's own resolved
+    `rdata.plist` -- not assumed to match `amici_model`'s own free
+    parameter order, since `amici_edata.plist` takes priority whenever
+    non-empty). fiddy's own
     :class:`fiddy.Function`/:func:`fiddy.check_jacobian` handle flattening
     and unbundling a dict-returning function internally -- no manual
     concatenation or index bookkeeping needed here.
@@ -147,8 +213,9 @@ def run_simulation_to_function_and_derivative(
         The variables that derivatives will be computed or approximated for.
         See the keys of `all_rdata_derivatives` for options.
     :param free_parameter_ids:
-        The IDs that correspond to the values in the free parameter vector that is
-        simulated.
+        IDs for the values in the simulated free parameter vector. Each
+        must be in the resolved `plist` (see above), or `derivative`
+        raises `ValueError`.
     :param cache:
         Whether to cache the function calls.
     :returns: A tuple of `(function, derivative)`.
@@ -166,14 +233,7 @@ def run_simulation_to_function_and_derivative(
         chosen_derivatives = {
             k: all_rdata_derivatives[k] for k in derivative_variables
         }
-    # AMICI's own sensitivity arrays are w.r.t. `amici_model`'s full free
-    # parameter vector, which need not match `free_parameter_ids` (subset
-    # and/or order) -- slice/reorder to `free_parameter_ids` once here.
     amici_free_parameter_ids = amici_model.get_free_parameter_ids()
-    parameter_indices = [
-        amici_free_parameter_ids.index(parameter_id)
-        for parameter_id in free_parameter_ids
-    ]
 
     def run_amici_simulation(
         point: Type.POINT, order: SensitivityOrder
@@ -205,6 +265,23 @@ def run_simulation_to_function_and_derivative(
 
     def derivative(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.first)
+        rdata_free_parameter_ids = [
+            amici_free_parameter_ids[i] for i in rdata.plist
+        ]
+        try:
+            parameter_indices = [
+                rdata_free_parameter_ids.index(parameter_id)
+                for parameter_id in free_parameter_ids
+            ]
+        except ValueError as error:
+            raise ValueError(
+                f"{error}. `free_parameter_ids` requested a parameter "
+                "whose sensitivity was not computed by this simulation "
+                "-- check `amici_model.get_parameter_list()` and "
+                "`amici_edata.plist` (if `amici_edata` is given, its own "
+                "`plist` takes priority over the model's whenever it is "
+                "non-empty)."
+            ) from error
         outputs = {}
         for variable, derivative_variable in chosen_derivatives.items():
             value = getattr(rdata, derivative_variable)
