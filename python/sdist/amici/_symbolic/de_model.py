@@ -1166,22 +1166,7 @@ class DEModel:
             )
             return
         elif name == "dtcldp":
-            # check, whether the CL consists of only one state. Then,
-            # sensitivities drop out, otherwise generate symbols
-            self._syms[name] = sp.Matrix(
-                [
-                    [
-                        sp.Symbol(
-                            f"s{tcl.get_id()}__{par.get_id()}",
-                            real=True,
-                        )
-                        for par in self._free_parameters
-                    ]
-                    if self.conservation_law_has_multispecies(tcl)
-                    else [0] * self.num_par()
-                    for tcl in self._conservation_laws
-                ]
-            )
+            self._syms[name] = self._dtcldp_symbols()
             return
         elif name == "x_old":
             length = len(self.eq("xdot"))
@@ -2440,20 +2425,34 @@ class DEModel:
 
         return state.get_dt().is_zero
 
-    def conservation_law_has_multispecies(self, tcl: ConservationLaw) -> bool:
+    def _dtcldp_symbols(self) -> sp.Matrix:
         """
-        Checks whether a conservation law has multiple species or it just
-        defines one constant species
+        Builds the symbol matrix for ``dtcldp``, the sensitivity of each
+        conservation law's total abundance w.r.t. the free parameters.
 
-        :param tcl:
-            conservation law
+        This is always a symbol, never a literal zero: whether a
+        conservation law's total abundance actually depends on a free
+        parameter can't be decided from the model's own symbolic initial
+        conditions alone. Preequilibration (steady-state Newton solve) and
+        state reinitialization compute/override initial states and
+        sensitivities at runtime, entirely bypassing the model's compiled
+        ``fx0``/``fsx0``, so a species' initial value can depend on a
+        parameter even where the static formula shows no such dependence.
+        The correct numeric value is always computed at runtime via
+        ``fdtotal_cldp``/``fdtotal_cldx_rdata``.
 
         :return:
-            boolean indicating if conservation_law is not None
+            symbol matrix, one row per conservation law
         """
-        state_set = set(self.sym("x_rdata"))
-        n_species = len(state_set.intersection(tcl.get_val().free_symbols))
-        return n_species > 1
+        return sp.Matrix(
+            [
+                [
+                    symbol_with_assumptions(f"s{tcl.get_id()}__{par.get_id()}")
+                    for par in self._free_parameters
+                ]
+                for tcl in self._conservation_laws
+            ]
+        )
 
     def _expr_is_time_dependent(self, expr: sp.Expr) -> bool:
         """Determine whether an expression is time-dependent.
