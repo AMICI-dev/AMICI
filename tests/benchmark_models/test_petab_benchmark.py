@@ -145,14 +145,7 @@ problems = list(
 
 @dataclass
 class GradientCheckSettings:
-    """Problem-specific settings for gradient checks.
-
-    Only simulation-specific settings remain here -- `fiddy.check_gradient`
-    derives its own step sizes and per-direction tolerance from the
-    function's measured noise floor, so no FD-check-specific settings
-    (step sizes, consistency tolerances, final check tolerances) are
-    needed here any more.
-    """
+    """Problem-specific settings for gradient checks."""
 
     # Absolute and relative tolerances for simulation
     atol_sim: float = 1e-16
@@ -218,10 +211,7 @@ def assert_gradient_check_confirms_something(result) -> None:
     confidently *wrong* -- a check where every direction came back
     "inconclusive" (noise-dominated/discontinuity-suspected) would still
     report success, having actually confirmed nothing. Require at least
-    one direction to have been confirmed converged, so a silent coverage
-    regression (e.g. a bad nominal-point jitter landing on an
-    unresolvable point for every parameter) fails loudly instead of
-    passing vacuously.
+    one direction to have been confirmed converged.
     """
     assert any(r.outcome == "passed" for r in result.direction_results), (
         "check_gradient reported success, but every direction was "

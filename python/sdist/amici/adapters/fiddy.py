@@ -192,15 +192,8 @@ def run_simulation_to_function_and_derivative(
     `derivative_variables` (or `default_derivatives`' keys, if not given)
     -- one simulation output per key for `function` (`x`, `y`, `llh`, ...),
     its forward-sensitivity counterpart for `derivative` (`sx`, `sy`,
-    `sllh`, ..., with the parameter axis moved last via
-    :func:`_rdata_array_transpose`, and sliced/reordered to
-    `free_parameter_ids` from each simulation's own resolved
-    `rdata.plist` -- not assumed to match `amici_model`'s own free
-    parameter order, since `amici_edata.plist` takes priority whenever
-    non-empty). fiddy's own
-    :class:`fiddy.Function`/:func:`fiddy.check_jacobian` handle flattening
-    and unbundling a dict-returning function internally -- no manual
-    concatenation or index bookkeeping needed here.
+    `sllh`, ..., with the parameter axis moved last, and sliced/reordered to
+    `free_parameter_ids` from each simulation's `rdata.plist`.
 
     :param amici_model:
         The AMICI model to simulate.
@@ -214,8 +207,8 @@ def run_simulation_to_function_and_derivative(
         See the keys of `all_rdata_derivatives` for options.
     :param free_parameter_ids:
         IDs for the values in the simulated free parameter vector. Each
-        must be in the resolved `plist` (see above), or `derivative`
-        raises `ValueError`.
+        must be in the resolved `plist` (`amici_model` or `amici_edata`),
+        or `derivative` raises `ValueError`.
     :param cache:
         Whether to cache the function calls.
     :returns: A tuple of `(function, derivative)`.
@@ -255,10 +248,7 @@ def run_simulation_to_function_and_derivative(
             # model with zero states) as `None`, not an empty array --
             # `np.asarray(None, dtype=float)` would silently produce a 0-d
             # NaN scalar instead, which is both the wrong shape and would
-            # spuriously fail fiddy's non-finite-value check. Whether a
-            # field is `None` depends only on the model's structure (e.g.
-            # `nx_rdata == 0`), not on the point being evaluated, so
-            # omitting it here is consistent across every call.
+            # spuriously fail fiddy's non-finite-value check.
             if value is not None:
                 outputs[variable] = np.asarray(value, dtype=float)
         return outputs
@@ -293,15 +283,6 @@ def run_simulation_to_function_and_derivative(
         return outputs
 
     if cache:
-        # Only `function` -- the one fiddy's own FD engine calls, and
-        # calls repeatedly at the same point via its own caching-aware
-        # batch dispatch -- benefits from this. `derivative` is called at
-        # most a handful of times, each at a different (jittered) point,
-        # so caching it has no practical benefit; worse, `CachedFunction`
-        # is a `fiddy.Function` subclass, which always flattens a dict
-        # return into a flat array -- silently breaking `derivative`'s
-        # dict-shaped return for any caller expecting it back untouched
-        # (e.g. `fiddy.check_jacobian`'s `expected` argument).
         function = CachedFunction(function)
 
     return function, derivative
@@ -426,13 +407,6 @@ def simulate_petab_to_function_and_derivative(
         return sllh
 
     if cache:
-        # Only `function` -- the one fiddy's own FD engine calls
-        # repeatedly -- benefits from caching. `derivative` is called at
-        # most a handful of times, each at a different (jittered) point,
-        # so caching it has no practical benefit; also avoids relying on
-        # `CachedFunction` (a `fiddy.Function` subclass, which always
-        # flattens a dict return into a flat array) for a function whose
-        # return shape a caller expects back untouched.
         function = CachedFunction(function)
 
     return function, derivative
@@ -491,13 +465,6 @@ def simulate_petab_v2_to_function_and_derivative(
         return sllh
 
     if cache:
-        # Only `function` -- the one fiddy's own FD engine calls
-        # repeatedly -- benefits from caching. `derivative` is called at
-        # most a handful of times, each at a different (jittered) point,
-        # so caching it has no practical benefit; also avoids relying on
-        # `CachedFunction` (a `fiddy.Function` subclass, which always
-        # flattens a dict return into a flat array) for a function whose
-        # return shape a caller expects back untouched.
         function = CachedFunction(function)
 
     return function, derivative

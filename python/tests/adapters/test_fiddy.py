@@ -66,12 +66,6 @@ def test_run_amici_simulation_to_function_and_derivative(
         ].index
     )
 
-    # `x_ss`/`llh`/`res` are excluded: this model has no steady state (a
-    # pure oscillator, so `x_ss`/`sx_ss` are structurally undefined), and no
-    # `amici_edata` is supplied here (this test is about plain-ReturnData
-    # sensitivities, not PEtab-driven measurement fitting -- see
-    # `test_simulate_petab_to_function_and_derivative` for the `llh`/`sllh`
-    # case), so `llh`/`res` (which need measurements) are undefined too.
     derivative_variables = ["x", "x0", "y", "sigmay"]
     function, derivative = run_simulation_to_function_and_derivative(
         free_parameter_ids=parameter_ids,
