@@ -9,11 +9,10 @@ import contextlib
 import logging
 import os
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import benchmark_models_petab
-import fiddy
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
@@ -21,9 +20,8 @@ import pytest
 import yaml
 from amici import get_model_root_dir
 from amici.adapters.fiddy import (
-    RobustConsistency,
-    simulate_petab_to_cached_functions,
-    simulate_petab_v2_to_cached_functions,
+    simulate_petab_to_function_and_derivative,
+    simulate_petab_v2_to_function_and_derivative,
 )
 from amici.importers.petab.v1 import (
     import_petab_problem,
@@ -42,8 +40,7 @@ from amici.sim.sundials.petab.v1 import (
     rdatas_to_measurement_df,
     simulate_petab,
 )
-from fiddy import MethodId, get_derivative
-from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
+from fiddy import check_gradient
 from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 from petab.v1.visualize import plot_problem
 
@@ -153,26 +150,6 @@ class GradientCheckSettings:
     # Absolute and relative tolerances for simulation
     atol_sim: float = 1e-16
     rtol_sim: float = 1e-12
-    # Absolute and relative tolerances for finite difference gradient checks.
-    atol_check: float = 1e-3
-    rtol_check: float = 1e-2
-    # Absolute and relative tolerances for fiddy consistency check between
-    # forward/backward/central differences.
-    atol_consistency: float = 1e-5
-    rtol_consistency: float = 1e-1
-    # Step sizes for finite difference gradient checks.
-    step_sizes: list[float] = field(
-        default_factory=lambda: [
-            2e-1,
-            1e-1,
-            5e-2,
-            1e-2,
-            5e-1,
-            1e-3,
-            1e-4,
-            1e-5,
-        ]
-    )
     rng_seed: int = 0
     ss_computation_mode: SteadyStateComputationMode = (
         SteadyStateComputationMode.integrationOnly
@@ -186,39 +163,26 @@ class GradientCheckSettings:
 settings = defaultdict(GradientCheckSettings)
 # NOTE: Newton method fails badly with ASA for Blasi_CellSystems2016
 settings["Blasi_CellSystems2016"] = GradientCheckSettings(
-    atol_check=1e-12,
-    rtol_check=1e-4,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
-)
-settings["Borghans_BiophysChem1997"] = GradientCheckSettings(
-    rng_seed=2,
-    atol_check=1e-5,
-    rtol_check=1e-3,
 )
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
+    rtol_sim=1e-14,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
 )
-settings["Fujita_SciSignal2010"] = GradientCheckSettings(
-    atol_check=1e-7,
-    rtol_check=5e-4,
-)
-settings["Giordano_Nature2020"] = GradientCheckSettings(
-    atol_check=1e-6, rtol_check=1e-3, rng_seed=1
-)
+settings["Giordano_Nature2020"] = GradientCheckSettings(rng_seed=1)
 settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     atol_sim=1e-14,
     rtol_sim=1e-14,
     noise_level=0.01,
-    atol_consistency=1e-3,
 )
 settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
     # Avoid "root after reinitialization"
     atol_sim=1e-12,
     rtol_sim=1e-12,
 )
-settings["Raia_CancerResearch2011"] = GradientCheckSettings(
-    atol_check=1e-10,
-    rtol_check=1e-3,
+settings["SalazarCavazos_MBoC2020"] = GradientCheckSettings(
+    atol_sim=1e-12,
+    rtol_sim=1e-12,
 )
 settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
     atol_sim=1e-10,
@@ -227,36 +191,32 @@ settings["Smith_BMCSystBiol2013"] = GradientCheckSettings(
 settings["Sneyd_PNAS2002"] = GradientCheckSettings(
     atol_sim=1e-15,
     rtol_sim=1e-12,
-    atol_check=1e-5,
-    rtol_check=1e-4,
     rng_seed=7,
 )
 settings["Weber_BMC2015"] = GradientCheckSettings(
-    atol_sim=1e-12,
-    rtol_sim=1e-12,
-    atol_check=1e-6,
-    rtol_check=1e-2,
-    rng_seed=2,
+    atol_sim=1e-13,
+    rtol_sim=1e-13,
+    rng_seed=1,
 )
 settings["Zheng_PNAS2012"] = GradientCheckSettings(
-    rng_seed=1,
+    rng_seed=2,
     rtol_sim=1e-15,
-    atol_check=5e-4,
-    rtol_check=4e-3,
     noise_level=0.01,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
-    step_sizes=[
-        3e-1,
-        2e-1,
-        1e-1,
-        5e-2,
-        1e-2,
-        5e-1,
-        1e-3,
-        1e-4,
-        1e-5,
-    ],
 )
+
+
+def assert_gradient_check_confirms_something(result) -> None:
+    """`check_gradient`'s `success` is `True` as long as no direction is
+    confidently *wrong* -- a check where every direction came back
+    "inconclusive" (noise-dominated/discontinuity-suspected) would still
+    report success, having actually confirmed nothing. Require at least
+    one direction to have been confirmed converged.
+    """
+    assert any(r.outcome == "passed" for r in result.direction_results), (
+        "check_gradient reported success, but every direction was "
+        "inconclusive -- nothing was actually confirmed correct."
+    )
 
 
 @pytest.mark.filterwarnings(
@@ -388,13 +348,6 @@ def test_nominal_parameters_llh(benchmark_problem):
     # https://github.com/AMICI-dev/AMICI/issues/18
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
     "right hand sides .*:UserWarning",
-    # RobustConsistency deliberately warns when it rejects a step size that
-    # was self-consistent on its own but inconsistent with the majority of
-    # other step sizes -- this is the intended corrective behavior, not a
-    # test failure (see https://github.com/ICB-DCM/fiddy/pull/77, fixes
-    # AMICI-dev/AMICI#3078).
-    "ignore:.*were rejected as inconsistent with the majority of other "
-    "step sizes.*:UserWarning",
 )
 @pytest.mark.parametrize("scale", (True, False), ids=["scaled", "unscaled"])
 @pytest.mark.parametrize(
@@ -402,20 +355,10 @@ def test_nominal_parameters_llh(benchmark_problem):
     (SensitivityMethod.forward, SensitivityMethod.adjoint),
     ids=["forward", "adjoint"],
 )
-def test_benchmark_gradient(
-    benchmark_problem, scale, sensitivity_method, request
-):
+def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
     problem_id, petab_problem, _, amici_model = benchmark_problem
     if problem_id not in problems_for_gradient_check:
         pytest.skip("Excluded from gradient check.")
-
-    if not scale and problem_id in (
-        "Smith_BMCSystBiol2013",
-        "Brannmark_JBC2010",
-    ):
-        # not really worth the effort trying to fix these cases if they
-        # only fail on linear scale
-        pytest.skip("scale=False disabled for this problem")
 
     petab_problem = benchmark_models_petab.get_problem(problem_id)
     if measurement_table_has_timepoint_specific_mappings(
@@ -442,21 +385,23 @@ def test_benchmark_gradient(
         cur_settings.ss_sensitivity_mode
     )
 
-    amici_function, amici_derivative = simulate_petab_to_cached_functions(
-        petab_problem=petab_problem,
-        free_parameter_ids=parameter_ids,
-        amici_model=amici_model,
-        solver=amici_solver,
-        scaled_parameters=scale,
-        scaled_gradients=scale,
-        # FIXME: there is some issue with caching in fiddy
-        #  e.g. Elowitz_Nature2000-True fails with cache=True,
-        #  but not with cache=False
-        # cache=not debug,
-        cache=False,
-        num_threads=os.cpu_count(),
+    amici_function, amici_derivative = (
+        simulate_petab_to_function_and_derivative(
+            petab_problem=petab_problem,
+            free_parameter_ids=parameter_ids,
+            amici_model=amici_model,
+            solver=amici_solver,
+            scaled_parameters=scale,
+            scaled_gradients=scale,
+            num_threads=os.cpu_count(),
+        )
     )
     np.random.seed(cur_settings.rng_seed)
+
+    bounds = (
+        np.array(petab_problem.get_lb(free=True, fixed=False, scaled=scale)),
+        np.array(petab_problem.get_ub(free=True, fixed=False, scaled=scale)),
+    )
 
     # find a point where the derivative can be computed
     for _ in range(5):
@@ -471,6 +416,9 @@ def test_benchmark_gradient(
                 np.random.randn(len(point)) * point * cur_settings.noise_level
             )
         point += point_noise  # avoid small gradients at nominal value
+        # Jittering can push a point outside its own bounds; clip before
+        # passing both to fiddy.
+        point = np.clip(point, bounds[0], bounds[1])
 
         try:
             expected_derivative = amici_derivative(point)
@@ -481,119 +429,15 @@ def test_benchmark_gradient(
     else:
         raise RuntimeError("Could not compute expected derivative.")
 
-    derivative = get_derivative(
-        function=amici_function,
-        point=point,
-        sizes=cur_settings.step_sizes,
-        direction_ids=parameter_ids,
-        method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
-        success_checker=RobustConsistency(
-            rtol=cur_settings.rtol_consistency,
-            atol=cur_settings.atol_consistency,
-        ),
-        expected_result=expected_derivative,
-        relative_sizes=not scale,
-    )
-
     print()
     print("Testing at:", point)
     print("Expected derivative (amici):", expected_derivative)
-    print("Print actual derivative (fiddy):", derivative.series.values)
 
-    if debug:
-        write_debug_output(
-            debug_path / f"{request.node.callspec.id}.tsv",
-            derivative,
-            expected_derivative,
-            parameter_ids,
-        )
-
-    assert_gradient_check_success(
-        derivative,
-        expected_derivative,
-        point,
-        rtol=cur_settings.rtol_check,
-        atol=cur_settings.atol_check,
-        always_print=True,
+    result = check_gradient(
+        amici_function, point, expected_derivative, bounds=bounds
     )
-
-
-def assert_gradient_check_success(
-    derivative: fiddy.Derivative,
-    expected_derivative: np.ndarray,
-    point: np.ndarray,
-    atol: float,
-    rtol: float,
-    always_print: bool = False,
-) -> None:
-    if not derivative.df.success.all():
-        raise AssertionError(
-            f"Failed to compute finite differences:\n{derivative.df}"
-        )
-    check = NumpyIsCloseDerivativeCheck(
-        derivative=derivative,
-        expectation=expected_derivative,
-        point=point,
-    )
-    check_result = check(rtol=rtol, atol=atol)
-
-    if check_result.success is True and not always_print:
-        return
-
-    df = check_result.df
-    df["abs_diff"] = np.abs(df["expectation"] - df["test"])
-    df["rel_diff"] = df["abs_diff"] / np.abs(df["expectation"])
-    df["atol_success"] = df["abs_diff"] <= atol
-    df["rtol_success"] = df["rel_diff"] <= rtol
-    max_adiff = df["abs_diff"].max()
-    max_rdiff = df["rel_diff"].max()
-
-    success_fail = "succeeded" if check_result.success else "failed"
-    with pd.option_context(
-        "display.max_columns",
-        None,
-        "display.width",
-        None,
-        "display.max_rows",
-        None,
-    ):
-        message = (
-            f"Gradient check {success_fail}:\n{df}\n\n"
-            f"Maximum absolute difference: {max_adiff} (tolerance: {atol})\n"
-            f"Maximum relative difference: {max_rdiff} (tolerance: {rtol})"
-        )
-
-    if check_result.success is False:
-        raise AssertionError(message)
-
-    if always_print:
-        print(message)
-
-
-def write_debug_output(
-    file_name, derivative, expected_derivative, parameter_ids
-):
-    df = pd.DataFrame(
-        [
-            {
-                (
-                    "fd",
-                    r.metadata["size_absolute"],
-                    str(r.method_id),
-                ): r.value
-                for c in d.computers
-                for r in c.results
-            }
-            for d in derivative.directional_derivatives
-        ],
-        index=parameter_ids,
-    )
-    df[("fd", "full", "")] = derivative.series.values
-    df[("amici", "", "")] = expected_derivative
-    df["abs_diff"] = np.abs(df[("fd", "full", "")] - df[("amici", "", "")])
-    df["rel_diff"] = df["abs_diff"] / np.abs(df[("amici", "", "")])
-
-    df.to_csv(file_name, sep="\t")
+    result.assert_success(always_print=True)
+    assert_gradient_check_confirms_something(result)
 
 
 @pytest.mark.filterwarnings(
@@ -603,13 +447,6 @@ def write_debug_output(
     "right hand sides .*:UserWarning",
     "ignore:.*has `useValuesFromTriggerTime=true'.*:UserWarning",
     "ignore:.*Using `log-normal` instead.*:UserWarning",
-    # RobustConsistency deliberately warns when it rejects a step size that
-    # was self-consistent on its own but inconsistent with the majority of
-    # other step sizes -- this is the intended corrective behavior, not a
-    # test failure (see https://github.com/ICB-DCM/fiddy/pull/77, fixes
-    # AMICI-dev/AMICI#3078).
-    "ignore:.*were rejected as inconsistent with the majority of other "
-    "step sizes.*:UserWarning",
 )
 @pytest.mark.parametrize("problem_id", problems_for_llh_check)
 def test_nominal_parameters_llh_v2(problem_id):
@@ -753,20 +590,6 @@ def test_nominal_parameters_llh_v2(problem_id):
     # TODO
     scale = False
 
-    # also excluded from v1 test
-    if not scale and problem_id in (
-        "Smith_BMCSystBiol2013",
-        "Brannmark_JBC2010",
-        "Elowitz_Nature2000",
-        "Borghans_BiophysChem1997",
-        "Sneyd_PNAS2002",
-        "Bertozzi_PNAS2020",
-        # "Zheng_PNAS2012",
-    ):
-        # not really worth the effort trying to fix these cases if they
-        # only fail on linear scale
-        pytest.skip("scale=False disabled for this problem")
-
     cur_settings = settings[problem_id]
     ps.solver.set_absolute_tolerance(cur_settings.atol_sim)
     ps.solver.set_relative_tolerance(cur_settings.rtol_sim)
@@ -784,12 +607,18 @@ def test_nominal_parameters_llh_v2(problem_id):
     )
 
     parameter_ids = ps._petab_problem.x_free_ids
-    amici_function, amici_derivative = simulate_petab_v2_to_cached_functions(
-        ps,
-        free_parameter_ids=parameter_ids,
-        cache=False,
+    amici_function, amici_derivative = (
+        simulate_petab_v2_to_function_and_derivative(
+            ps,
+            free_parameter_ids=parameter_ids,
+        )
     )
     np.random.seed(cur_settings.rng_seed)
+
+    bounds = (
+        np.array(ps._petab_problem.get_lb(free=True, fixed=False)),
+        np.array(ps._petab_problem.get_ub(free=True, fixed=False)),
+    )
 
     # find a point where the derivative can be computed
     for _ in range(5):
@@ -804,6 +633,9 @@ def test_nominal_parameters_llh_v2(problem_id):
                 np.random.randn(len(point)) * point * cur_settings.noise_level
             )
         point += point_noise  # avoid small gradients at nominal value
+        # Jittering can push a point outside its own bounds; clip before
+        # passing both to fiddy.
+        point = np.clip(point, bounds[0], bounds[1])
 
         try:
             expected_derivative = amici_derivative(point)
@@ -814,41 +646,15 @@ def test_nominal_parameters_llh_v2(problem_id):
     else:
         raise RuntimeError("Could not compute expected derivative.")
 
-    derivative = get_derivative(
-        function=amici_function,
-        point=point,
-        sizes=cur_settings.step_sizes,
-        direction_ids=parameter_ids,
-        method_ids=[MethodId.CENTRAL, MethodId.FORWARD, MethodId.BACKWARD],
-        success_checker=RobustConsistency(
-            rtol=cur_settings.rtol_consistency,
-            atol=cur_settings.atol_consistency,
-        ),
-        expected_result=expected_derivative,
-        relative_sizes=not scale,
-    )
-
     print()
     print("Testing at:", point)
     print("Expected derivative (amici):", expected_derivative)
-    print("Print actual derivative (fiddy):", derivative.series.values)
 
-    # if debug:
-    #     write_debug_output(
-    #         debug_path / f"{request.node.callspec.id}.tsv",
-    #         derivative,
-    #         expected_derivative,
-    #         parameter_ids,
-    #     )
-
-    assert_gradient_check_success(
-        derivative,
-        expected_derivative,
-        point,
-        rtol=cur_settings.rtol_check,
-        atol=cur_settings.atol_check,
-        always_print=True,
+    result = check_gradient(
+        amici_function, point, expected_derivative, bounds=bounds
     )
+    result.assert_success(always_print=True)
+    assert_gradient_check_confirms_something(result)
 
 
 def compare_to_reference(problem_id: str, llh: float):

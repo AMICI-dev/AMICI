@@ -10,7 +10,6 @@ package for finite difference checks.
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable
 from functools import partial
 from inspect import signature
@@ -18,9 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import petab.v1 as petab
-from fiddy import CachedFunction, Type, fiddy_array
-from fiddy.directional_derivative import DirectionalDerivative
-from fiddy.success import Consistency
+from fiddy import CachedFunction, Type
 from petab.v1.C import LIN, LOG, LOG10
 
 from amici.sim.sundials import (
@@ -41,226 +38,13 @@ if TYPE_CHECKING:
     from amici.sim.sundials.petab import PetabSimulationResult, PetabSimulator
 
 __all__ = [
-    "RobustConsistency",
-    "run_simulation_to_cached_functions",
-    "simulate_petab_to_cached_functions",
-    "simulate_petab_v2_to_cached_functions",
+    "run_simulation_to_function_and_derivative",
+    "simulate_petab_to_function_and_derivative",
+    "simulate_petab_v2_to_function_and_derivative",
+    "output_labels_for_derivatives",
 ]
 
 LOG_E_10 = np.log(10)
-
-
-class RobustConsistency(Consistency):
-    """`Consistency`, plus rejection of step sizes that are self-consistent
-    but inconsistent with the majority of other step sizes.
-
-    `Consistency` checks whether the requested methods (e.g.
-    forward/backward/central) agree with each other at each step size
-    ("self-consistent"), then blends every self-consistent size's mean into
-    the final value. Self-consistency alone is not a strong guarantee on its
-    own: a step size can be small enough that all methods sample points
-    within the target function's floating-point noise floor and become
-    correlated (affected by the same rounding/cancellation error) --
-    self-consistent, yet biased away from the truth. Symmetrically, a step
-    size can also be large enough that all methods are biased the same way
-    by higher-order/truncation effects.
-
-    To guard against this, self-consistent step sizes are additionally
-    required to agree with the majority of other self-consistent step sizes,
-    via iterative outlier rejection (order-independent; step size magnitude
-    is not used as a proxy for trustworthiness): repeatedly compute the
-    median and a robust (MAD-based) spread of the current candidates, and
-    drop the single worst-deviating one if it exceeds ``trend_n_sigma``
-    scaled MADs from the median, until nothing looks anomalous. This only
-    activates once there are at least ``min_trend_samples`` self-consistent
-    step sizes; below that, there isn't enough data to estimate a spread, and
-    all self-consistent step sizes are used, as in `Consistency`. A
-    `UserWarning` is emitted whenever one or more step sizes are rejected
-    this way.
-
-    This addresses a long-standing intermittent CI failure in AMICI's PEtab
-    benchmark gradient test
-    (``test_benchmark_gradient[Weber_BMC2015-*-unscaled]``, see
-    https://github.com/AMICI-dev/AMICI/issues/3078): that test uses
-    `Consistency` to finite-difference-check an analytically computed
-    gradient for a model parameter (``a32``) several orders of magnitude
-    smaller than the model's other free parameters, and a small step size
-    could become spuriously self-consistent while biased away from the true
-    derivative.
-
-    Note that this is a majority-vote style method: like any check based
-    purely on the agreement of the values themselves (no independent ground
-    truth), it has a breakdown point of roughly 50% (a property of the
-    underlying median/MAD statistics) -- if close to half (or more) of the
-    self-consistent step sizes are corrupted, this check cannot reliably
-    tell which subset is trustworthy. This is a fundamental limitation of
-    any purely data-driven consistency check, not something this
-    implementation can detect or work around; sufficient step sizes with a
-    real chance of being individually trustworthy should be provided.
-
-    This was originally proposed upstream, in fiddy, as
-    https://github.com/ICB-DCM/fiddy/pull/77, but was not merged; it lives
-    here instead.
-    """
-
-    id = "robust_consistency"
-
-    def __init__(
-        self,
-        *args,
-        trend_n_sigma: float = 5.0,
-        min_trend_samples: int = 3,
-        **kwargs,
-    ):
-        """Construct.
-
-        :param trend_n_sigma:
-            The number of scaled median-absolute-deviations a
-            self-consistent step size's estimate may deviate from the
-            median of the other trusted step sizes' estimates, before it
-            is rejected as an outlier.
-        :param min_trend_samples:
-            The minimum number of self-consistent step sizes required
-            before the cross-step-size outlier rejection is attempted.
-            Below this, all self-consistent step sizes are trusted, same
-            as in `Consistency`.
-        :param args:
-            Positional arguments passed to `Consistency.__init__`.
-        :param kwargs:
-            Keyword arguments passed to `Consistency.__init__`
-            (e.g. ``rtol``, ``atol``, ``equal_nan``).
-        """
-        super().__init__(*args, **kwargs)
-        self.trend_n_sigma = trend_n_sigma
-        self.min_trend_samples = min_trend_samples
-
-    def _self_consistent_means(
-        self, directional_derivative: DirectionalDerivative
-    ) -> list[Type.DIRECTIONAL_DERIVATIVE]:
-        """Group results by step size, and return the per-size mean for
-        every step size whose requested methods agree with each other
-        ("self-consistent") within ``rtol/2``, ``atol/2``."""
-        computer_results = directional_derivative.get_computer_results()
-        analysis_results = directional_derivative.get_analysis_results()
-        results_by_size = {}
-        for result in [*computer_results, *analysis_results]:
-            size = result.metadata.get("size_absolute", None)
-            if size is None:
-                continue
-            if size not in results_by_size:
-                results_by_size[size] = {}
-            if result.method_id in results_by_size[size]:
-                raise ValueError(
-                    f"Duplicate, and possibly conflicting, results for method "
-                    f'"{result.method_id}" and size "{size}".',
-                )
-            results_by_size[size][result.method_id] = result.value
-
-        self_consistent_means = []
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", "Mean of empty slice", RuntimeWarning
-            )
-            for results in results_by_size.values():
-                values = list(results.values())
-                mean = np.nanmean(values, axis=0)
-                is_self_consistent = np.isclose(
-                    values,
-                    mean,
-                    rtol=self.rtol / 2,
-                    atol=self.atol / 2,
-                    equal_nan=self.equal_nan,
-                ).all()
-                if is_self_consistent:
-                    self_consistent_means.append(mean)
-        return self_consistent_means
-
-    def method(
-        self, directional_derivative: DirectionalDerivative
-    ) -> tuple[bool, float]:
-        self_consistent_means = self._self_consistent_means(
-            directional_derivative
-        )
-
-        if not self_consistent_means:
-            return False, np.nan
-
-        trusted_means = self._reject_outliers(self_consistent_means)
-
-        if not trusted_means:
-            return False, np.nan
-
-        n_rejected = len(self_consistent_means) - len(trusted_means)
-        if n_rejected:
-            warnings.warn(
-                f"{n_rejected} step size(s) were self-consistent (the "
-                "requested methods agreed with each other) but were "
-                "rejected as inconsistent with the majority of other step "
-                "sizes; see `RobustConsistency`'s docstring.",
-                stacklevel=2,
-            )
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", "Mean of empty slice", RuntimeWarning
-            )
-            value = np.nanmean(trusted_means, axis=0)
-
-        success = (
-            np.isclose(
-                trusted_means,
-                value,
-                rtol=self.rtol,
-                atol=self.atol,
-                equal_nan=self.equal_nan,
-            ).all()
-            and not np.isnan(trusted_means).all()
-        )
-        return success, value
-
-    def _reject_outliers(
-        self, means: list[Type.DIRECTIONAL_DERIVATIVE]
-    ) -> list[Type.DIRECTIONAL_DERIVATIVE]:
-        """Iteratively reject step sizes whose estimate is an outlier.
-
-        See the class docstring for the rationale. Order-independent: does
-        not assume larger (or smaller) step sizes are inherently more
-        trustworthy.
-
-        :param means:
-            The per-step-size mean estimates that passed the
-            within-step-size self-consistency check.
-        :return:
-            The subset of `means` that are also mutually consistent with
-            each other.
-        """
-        trusted = list(means)
-        if len(trusted) < self.min_trend_samples:
-            return trusted
-
-        floor = max(self.atol / 2, np.finfo(float).tiny)
-        while len(trusted) >= self.min_trend_samples:
-            stacked = np.asarray(trusted, dtype=float)
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", "All-NaN", RuntimeWarning)
-                center = np.nanmedian(stacked, axis=0)
-                mad = np.nanmedian(np.abs(stacked - center), axis=0)
-                scale = np.maximum(mad * 1.4826, floor)
-                # One badness score per candidate, reduced across all
-                # output dimensions (a candidate is an outlier if it
-                # deviates too much in *any* output element).
-                badness = np.nanmax(
-                    (np.abs(stacked - center) / scale).reshape(
-                        len(trusted), -1
-                    ),
-                    axis=1,
-                )
-                worst = int(np.nanargmax(badness))
-            if badness[worst] > self.trend_n_sigma:
-                trusted.pop(worst)
-            else:
-                break
-        return trusted
 
 
 def _transform_gradient_lin_to_lin(gradient_value, _):
@@ -326,8 +110,73 @@ default_derivatives = {
     if v not in ["sz", "srz", "ssigmaz", "s2llh"]
 }
 
+# Entities to id type mapping
+_entity_ids_by_variable = {
+    "x": "state",
+    "x0": "state",
+    "x_ss": "state",
+    "y": "observable",
+    "sigmay": "observable",
+    "res": "observable",
+}
+# Entities that have a time
+_has_timepoint_axis = {"x", "y", "sigmay", "res"}
 
-def run_simulation_to_cached_functions(
+
+def output_labels_for_derivatives(
+    amici_model: AmiciModel,
+    derivative_variables: list[str] = None,
+    timepoints: list[float] = None,
+) -> list[str]:
+    """Per-flat-row labels for fiddy's `function`/`derivative`'s bundled output.
+
+    :param amici_model: The AMICI model (for state/observable IDs).
+    :param derivative_variables: Same meaning/default as
+        :func:`run_simulation_to_function_and_derivative`.
+    :param timepoints: Output timepoints, for variables with a timepoint
+        axis. Defaults to `amici_model.get_timepoints()`.
+    :return: One label per flat output row, in bundling order.
+    :raises NotImplementedError: For a variable with no label source
+        (``z``, ``rz``, ``sigmaz``, or second-order ``sllh``).
+    """
+    variables = list(
+        default_derivatives
+        if derivative_variables is None
+        else derivative_variables
+    )
+    unsupported = [v for v in variables if v not in default_derivatives]
+    if unsupported:
+        raise NotImplementedError(
+            f"No output labels available for {unsupported} -- only "
+            f"{list(default_derivatives)} are supported."
+        )
+    if timepoints is None:
+        timepoints = list(amici_model.get_timepoints())
+    ids_by_kind = {
+        "state": list(amici_model.get_state_ids()),
+        "observable": list(amici_model.get_observable_ids()),
+    }
+
+    labels = []
+    for variable in variables:
+        if variable == "llh":
+            labels.append("llh")
+            continue
+        entity_ids = ids_by_kind[_entity_ids_by_variable[variable]]
+        if variable in _has_timepoint_axis:
+            labels.extend(
+                f"{variable}[t={t:g}, id={entity_id}]"
+                for t in timepoints
+                for entity_id in entity_ids
+            )
+        else:
+            labels.extend(
+                f"{variable}[id={entity_id}]" for entity_id in entity_ids
+            )
+    return labels
+
+
+def run_simulation_to_function_and_derivative(
     amici_model: AmiciModel,
     *,
     cache: bool = True,
@@ -336,7 +185,15 @@ def run_simulation_to_cached_functions(
     amici_edata: AmiciExpData = None,
     derivative_variables: list[str] = None,
 ):
-    """Convert `run_simulation` to fiddy functions.
+    """Convert `run_simulation` to a fiddy-checkable ``(function,
+    derivative)`` pair, e.g. for :func:`fiddy.check_jacobian`.
+
+    Both `function` and `derivative` return a dict keyed by
+    `derivative_variables` (or `default_derivatives`' keys, if not given)
+    -- one simulation output per key for `function` (`x`, `y`, `llh`, ...),
+    its forward-sensitivity counterpart for `derivative` (`sx`, `sy`,
+    `sllh`, ..., with the parameter axis moved last, and sliced/reordered to
+    `free_parameter_ids` from each simulation's `rdata.plist`.
 
     :param amici_model:
         The AMICI model to simulate.
@@ -349,17 +206,18 @@ def run_simulation_to_cached_functions(
         The variables that derivatives will be computed or approximated for.
         See the keys of `all_rdata_derivatives` for options.
     :param free_parameter_ids:
-        The IDs that correspond to the values in the free parameter vector that is
-        simulated.
+        IDs for the values in the simulated free parameter vector. Each
+        must be in the resolved `plist` (`amici_model` or `amici_edata`),
+        or `derivative` raises `ValueError`.
     :param cache:
         Whether to cache the function calls.
-    :returns: function, derivatives and structure
+    :returns: A tuple of `(function, derivative)`.
     """
     if amici_solver is None:
         amici_solver = amici_model.create_solver()
     if free_parameter_ids is None:
         free_parameter_ids = amici_model.get_free_parameter_ids()
-    if amici_edata is not None and amici_edata.free_parameters is not None:
+    if amici_edata is not None and amici_edata.free_parameters:
         raise NotImplementedError(
             "Customization of parameter values inside AMICI ExpData."
         )
@@ -368,6 +226,7 @@ def run_simulation_to_cached_functions(
         chosen_derivatives = {
             k: all_rdata_derivatives[k] for k in derivative_variables
         }
+    amici_free_parameter_ids = amici_model.get_free_parameter_ids()
 
     def run_amici_simulation(
         point: Type.POINT, order: SensitivityOrder
@@ -380,84 +239,56 @@ def run_simulation_to_cached_functions(
         )
         return rdata
 
-    def function(point: Type.POINT):
+    def function(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.none)
-        outputs = {
-            variable: fiddy_array(getattr(rdata, variable))
-            for variable in chosen_derivatives
-        }
-        rdata_flat = np.concatenate(
-            [output.flat for output in outputs.values()]
-        )
-        return rdata_flat
+        outputs = {}
+        for variable in chosen_derivatives:
+            value = getattr(rdata, variable)
+            # AMICI represents a structurally empty field (e.g. `x` for a
+            # model with zero states) as `None`, not an empty array --
+            # `np.asarray(None, dtype=float)` would silently produce a 0-d
+            # NaN scalar instead, which is both the wrong shape and would
+            # spuriously fail fiddy's non-finite-value check.
+            if value is not None:
+                outputs[variable] = np.asarray(value, dtype=float)
+        return outputs
 
-    def derivative(point: Type.POINT, return_dict: bool = False):
+    def derivative(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.first)
-        outputs = {
-            variable: _rdata_array_transpose(
-                array=fiddy_array(getattr(rdata, derivative_variable)),
-                variable=derivative_variable,
-            )
-            for variable, derivative_variable in chosen_derivatives.items()
-        }
-        rdata_flat = np.concatenate(
-            [
-                output_array.reshape(-1, output_array.shape[-1])
-                for output_array in outputs.values()
-            ],
-            axis=0,
-        )
-        if return_dict:
-            return outputs
-        return rdata_flat
+        rdata_free_parameter_ids = [
+            amici_free_parameter_ids[i] for i in rdata.plist
+        ]
+        try:
+            parameter_indices = [
+                rdata_free_parameter_ids.index(parameter_id)
+                for parameter_id in free_parameter_ids
+            ]
+        except ValueError as error:
+            raise ValueError(
+                f"{error}. `free_parameter_ids` requested a parameter "
+                "whose sensitivity was not computed by this simulation "
+                "-- check `amici_model.get_parameter_list()` and "
+                "`amici_edata.plist` (if `amici_edata` is given, its own "
+                "`plist` takes priority over the model's whenever it is "
+                "non-empty)."
+            ) from error
+        outputs = {}
+        for variable, derivative_variable in chosen_derivatives.items():
+            value = getattr(rdata, derivative_variable)
+            if value is not None:  # see `function`'s comment above
+                outputs[variable] = _rdata_array_transpose(
+                    array=np.asarray(value, dtype=float),
+                    variable=derivative_variable,
+                )[..., parameter_indices]
+        return outputs
 
     if cache:
         function = CachedFunction(function)
-        derivative = CachedFunction(derivative)
 
-    # Get structure
-    dummy_point = fiddy_array(
-        [
-            amici_model.get_free_parameter_by_id(par_id)
-            for par_id in free_parameter_ids
-        ]
-    )
-    dummy_rdata = run_amici_simulation(
-        point=dummy_point, order=SensitivityOrder.first
-    )
-
-    structures = {
-        "function": {variable: None for variable in chosen_derivatives},
-        "derivative": {variable: None for variable in chosen_derivatives},
-    }
-    function_position = 0
-    derivative_position = 0
-    for variable, derivative_variable in chosen_derivatives.items():
-        function_array = fiddy_array(getattr(dummy_rdata, variable))
-        derivative_array = fiddy_array(
-            getattr(dummy_rdata, derivative_variable)
-        )
-        structures["function"][variable] = (
-            function_position,
-            function_position + function_array.size,
-            function_array.shape,
-        )
-        structures["derivative"][variable] = (
-            derivative_position,
-            derivative_position + derivative_array.size,
-            derivative_array.shape,
-        )
-        function_position += function_array.size
-        derivative_position += derivative_array.size
-
-    return function, derivative, structures
+    return function, derivative
 
 
-# (start, stop, shape)
-TYPE_STRUCTURE = tuple[int, int, tuple[int, ...]]
-
-
-def simulate_petab_to_cached_functions(
+def simulate_petab_to_function_and_derivative(
     petab_problem: petab.Problem,
     *,
     amici_model: Model,
@@ -470,7 +301,8 @@ def simulate_petab_to_cached_functions(
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:
     """
     Convert :func:`amici.sim.sundials.petab.v1.simulate_petab`
-    (PEtab v1 simulations) to fiddy functions.
+    (PEtab v1 simulations) to a fiddy-checkable ``(function, derivative)``
+    pair, e.g. for :func:`fiddy.check_gradient`.
 
     Note that all gradients are provided on linear scale. The correction from
     `'log10'` scale is automatically done.
@@ -576,18 +408,18 @@ def simulate_petab_to_cached_functions(
 
     if cache:
         function = CachedFunction(function)
-        derivative = CachedFunction(derivative)
 
     return function, derivative
 
 
-def simulate_petab_v2_to_cached_functions(
+def simulate_petab_v2_to_function_and_derivative(
     petab_simulator: PetabSimulator,
     *,
     free_parameter_ids: list[str] = None,
     cache: bool = True,
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:
-    r"""Create fiddy functions for PetabSimulator.
+    r"""Create a fiddy-checkable ``(function, derivative)`` pair for a
+    `PetabSimulator`, e.g. for :func:`fiddy.check_gradient`.
 
     :param petab_simulator:
         The PEtab simulator to use.
@@ -634,6 +466,5 @@ def simulate_petab_v2_to_cached_functions(
 
     if cache:
         function = CachedFunction(function)
-        derivative = CachedFunction(derivative)
 
     return function, derivative
