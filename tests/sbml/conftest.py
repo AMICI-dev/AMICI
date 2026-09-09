@@ -16,22 +16,35 @@ script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:
     sys.path.insert(0, str(script_dir))
 
-# the two independently-reported checks per SBML semantic test suite case
+# the independently-reported checks per SBML semantic test suite case
 SIMULATION_CHECK = "test_sbml_testsuite_case"
-SENSITIVITY_CHECK = "test_sbml_testsuite_case_sensitivity"
+SENSITIVITY_FORWARD_CHECK = "test_sbml_testsuite_case_sensitivity_forward"
+SENSITIVITY_ADJOINT_CHECK = "test_sbml_testsuite_case_sensitivity_adjoint"
+SENSITIVITY_CONSISTENCY_CHECK = (
+    "test_sbml_testsuite_case_sensitivity_consistency"
+)
+CHECKS = (
+    SIMULATION_CHECK,
+    SENSITIVITY_FORWARD_CHECK,
+    SENSITIVITY_ADJOINT_CHECK,
+    SENSITIVITY_CONSISTENCY_CHECK,
+)
+# short suffix per check, used for the `results.json` field names
+_CHECK_SUFFIXES = {
+    SIMULATION_CHECK: "simulation",
+    SENSITIVITY_FORWARD_CHECK: "sensitivity_forward",
+    SENSITIVITY_ADJOINT_CHECK: "sensitivity_adjoint",
+    SENSITIVITY_CONSISTENCY_CHECK: "sensitivity_consistency",
+}
 
 # stores passed SBML semantic test suite IDs, by check
-passed_ids: dict[str, list[str]] = {
-    SIMULATION_CHECK: [],
-    SENSITIVITY_CHECK: [],
-}
+passed_ids: dict[str, list[str]] = {check: [] for check in CHECKS}
 # test tags we encountered (from the simulation check only -- that's what
 # the SBML test suite's own tag-support semantics are about)
 encountered_tags: set[str] = set()
 # failed/skipped tests with error message, by check
 failed_or_skipped_ids: dict[str, dict[str, str]] = {
-    SIMULATION_CHECK: {},
-    SENSITIVITY_CHECK: {},
+    check: {} for check in CHECKS
 }
 
 SBML_SEMANTIC_CASES_DIR = (
@@ -171,29 +184,25 @@ def write_passed_tags(passed_simulation_ids, out=sys.stdout):
         )
         out.write("  " + "\n  ".join(sorted(passed_test_tags)))
 
-    with open(RESULT_PATH / "results.json", "w") as f:
-        json.dump(
-            {
-                "supported_tags": sorted(
-                    passed_test_tags | passed_component_tags
-                ),
-                "encountered_tags": sorted(encountered_tags),
-                "passed_tests_simulation": sorted(passed_simulation_ids),
-                "passed_tests_sensitivity": sorted(
-                    passed_ids[SENSITIVITY_CHECK]
-                ),
-                "failed_or_skipped_simulation": {
-                    k: failed_or_skipped_ids[SIMULATION_CHECK][k]
-                    for k in sorted(failed_or_skipped_ids[SIMULATION_CHECK])
-                },
-                "failed_or_skipped_sensitivity": {
-                    k: failed_or_skipped_ids[SENSITIVITY_CHECK][k]
-                    for k in sorted(failed_or_skipped_ids[SENSITIVITY_CHECK])
-                },
-            },
-            f,
-            indent=2,
+    result = {
+        "supported_tags": sorted(passed_test_tags | passed_component_tags),
+        "encountered_tags": sorted(encountered_tags),
+    }
+    for check in CHECKS:
+        suffix = _CHECK_SUFFIXES[check]
+        ids = (
+            passed_simulation_ids
+            if check == SIMULATION_CHECK
+            else passed_ids[check]
         )
+        result[f"passed_tests_{suffix}"] = sorted(ids)
+        result[f"failed_or_skipped_{suffix}"] = {
+            k: failed_or_skipped_ids[check][k]
+            for k in sorted(failed_or_skipped_ids[check])
+        }
+
+    with open(RESULT_PATH / "results.json", "w") as f:
+        json.dump(result, f, indent=2)
 
 
 def pytest_runtest_logreport(report: "TestReport") -> None:
@@ -201,7 +210,8 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
     if report.when != "call":
         return
     match = re.search(
-        r"::(test_sbml_testsuite_case(?:_sensitivity)?)\[(\d+)\]",
+        r"::(test_sbml_testsuite_case"
+        r"(?:_sensitivity_(?:forward|adjoint|consistency))?)\[(\d+)\]",
         report.nodeid,
     )
     if not match:
