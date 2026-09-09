@@ -141,35 +141,6 @@ def test_sbml_testsuite_case(test_id, compiled_case, result_path):
     write_result_file(simulated, test_id, result_path)
 
 
-def _ast_has_piecewise(node: libsbml.ASTNode | None) -> bool:
-    """Recursively check whether a libsbml math AST contains a `piecewise`
-    function anywhere in its tree."""
-    if node is None:
-        return False
-    if node.getType() == libsbml.AST_FUNCTION_PIECEWISE:
-        return True
-    return any(
-        _ast_has_piecewise(node.getChild(i))
-        for i in range(node.getNumChildren())
-    )
-
-
-def _model_has_event_jump_risk(sbml_model: libsbml.Model) -> bool:
-    """Whether this model has an event, or a piecewise formula."""
-    if sbml_model.getNumEvents() > 0:
-        return True
-    for reaction in sbml_model.getListOfReactions():
-        kinetic_law = reaction.getKineticLaw()
-        if kinetic_law is not None and _ast_has_piecewise(
-            kinetic_law.getMath()
-        ):
-            return True
-    return any(
-        _ast_has_piecewise(rule.getMath())
-        for rule in sbml_model.getListOfRules()
-    )
-
-
 # FIXME: Skip list - to be investigated further
 #  test_id -> adjoint_only (whether forward is unaffected)
 _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES = {
@@ -211,10 +182,6 @@ def _sensitivity_preflight_checks(
     if uses_adjoint and model.nx_rdata == 0:
         pytest.skip(
             "Adjoint sensitivities for zero-state models are known to crash."
-        )
-    if uses_adjoint and _model_has_event_jump_risk(sbml_model):
-        pytest.skip(
-            "Adjoint sensitivities for (some) events are known to be wrong (https://github.com/AMICI-dev/AMICI/pull/3258)."
         )
     if test_id in _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES:
         adjoint_only = _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES[test_id]
