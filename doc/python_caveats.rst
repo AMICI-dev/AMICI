@@ -7,7 +7,7 @@ Caveats
 This section lists some caveats that are important to be aware of when using
 AMICI.
 
-See also the `list of known bugs <https://github.com/AMICI-dev/AMICI/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug>`__.
+See also the `list of known bugs <https://github.com/AMICI-dev/AMICI/issues?q=is%3Aissue%20state%3Aopen%20(label%3Abug%20OR%20type%3ABug)>`__.
 
 Sensitivity analysis
 ====================
