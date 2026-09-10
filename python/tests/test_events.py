@@ -940,15 +940,6 @@ def test_event_priorities(tempdir):
     edata = ExpData(rdata, 1, 0)
 
     # check forward sensitivities against finite differences
-    # FIXME: sensitivities w.r.t. the bolus parameter are not correct
-    model.set_parameter_list(
-        [
-            ip
-            for ip, par in enumerate(model.get_free_parameter_ids())
-            if par != "two"
-        ]
-    )
-
     check_derivatives(
         model,
         solver=solver,
