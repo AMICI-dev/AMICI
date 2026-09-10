@@ -841,6 +841,17 @@ class Solver {
         = 0;
 
     /**
+     * @brief Records which root indices were just processed at the
+     * preceding call to reinit() so they can be ignored if redetected.
+     *
+     * @param roots_found root/direction info as obtained from
+     * get_root_info(), non-zero for indices that were just handled
+     */
+    void ignore_roots_after_reinit(std::vector<int> roots_found) const {
+        roots_ignored_after_reinit_ = std::move(roots_found);
+    }
+
+    /**
      * @brief Reinitializes the state sensitivities in the solver after an
      * event occurrence
      *
@@ -1217,8 +1228,10 @@ class Solver {
      * forward problem
      *
      * @param tnext next timepoint (defines integration direction)
+     * @return whether a root was found immediately after reinitialization
+     * that must be treated as a genuine event
      */
-    virtual void reinit_post_process_f(realtype tnext) const = 0;
+    virtual bool reinit_post_process_f(realtype tnext) const = 0;
 
     /**
      * @brief Postprocess the solver memory after a discontinuity in the
@@ -2009,6 +2022,14 @@ class Solver {
 
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_{false};
+
+    /**
+     * Root/direction info (as from get_root_info()) for the root indices
+     * that were just processed at the preceding reinit().
+     * Used to distinguish a spurious re-detection of the same discontinuity
+     * from a genuine new event.
+     */
+    mutable std::vector<int> roots_ignored_after_reinit_;
 
     /** flag indicating whether sensInit1 was called */
     mutable bool sens_initialized_{false};

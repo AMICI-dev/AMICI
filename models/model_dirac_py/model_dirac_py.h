@@ -528,7 +528,7 @@ class Model_model_dirac_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "5d6d457fc1e217075c7074c8f844ac64b2a75084";
+        return "5c664ac95b9a6912777e4dae2e02ef1ab5fc01ef";
     }
 
     bool has_quadratic_llh() const override {

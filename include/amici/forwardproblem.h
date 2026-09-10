@@ -159,6 +159,15 @@ struct FwdSimWorkspace {
     /** Timepoint, at which the last root was found */
     realtype tlastroot{0.0};
 
+    /**
+     * Number of consecutive times handle_events() was called at exactly
+     * `tlastroot` (as opposed to after genuine forward progress in time).
+     * Used to distinguish genuinely distinct (near-)simultaneous events,
+     * discovered one at a time immediately after a reinitialization, from
+     * a true infinite loop.
+     */
+    int same_time_event_count{0};
+
     /** Events that are waiting to be handled at the current timepoint. */
     EventQueue pending_events;
 

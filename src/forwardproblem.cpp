@@ -393,13 +393,23 @@ void EventHandlingSimulator::handle_events(
     // be applied, or an event observable to process.
 
     if (!initial_event && ws_->sol.t == ws_->tlastroot) {
-        throw AmiException(
-            "AMICI is stuck in an event at time %g, as the initial "
-            "step-size after the event is too small. "
-            "To fix this, increase absolute and relative "
-            "tolerances!",
-            ws_->sol.t
-        );
+        // We may legitimately get here repeatedly for genuinely distinct,
+        // (near-)simultaneous events that are discovered one at a time
+        // immediately after a reinitialization.
+        // There can be at most `ne` distinct roots to discover this way,
+        // so allow that many before concluding that we are stuck in a
+        // genuine infinite loop.
+        if (++ws_->same_time_event_count > model_->ne) {
+            throw AmiException(
+                "AMICI is stuck in an event at time %g, as the initial "
+                "step-size after the event is too small. "
+                "To fix this, increase absolute and relative "
+                "tolerances!",
+                ws_->sol.t
+            );
+        }
+    } else {
+        ws_->same_time_event_count = 0;
     }
     ws_->tlastroot = ws_->sol.t;
 
@@ -516,6 +526,11 @@ void EventHandlingSimulator::handle_events(
         }
     }
     store_post_event_info();
+
+    // Remember which roots were just processed at this discontinuity, so
+    // that a root reported for exactly those indices immediately after the
+    // reinitialization below can be recognized as a spurious re-detection.
+    solver_->ignore_roots_after_reinit(ws_->roots_found);
 
     // reinitialize the solver after all events have been processed
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
