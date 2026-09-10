@@ -403,9 +403,8 @@ void EventHandlingSimulator::handle_events(
     }
     ws_->tlastroot = ws_->sol.t;
 
-    // store the event info and pre-event simulation state
-    // whenever a new event is triggered
-    auto store_pre_event_info
+    // start a new discontinuity record whenever a new event is triggered
+    auto record_new_discontinuity
         = [this, initial_event, edata](bool const seflag) {
               // store Heaviside information at event occurrence
               model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
@@ -422,21 +421,7 @@ void EventHandlingSimulator::handle_events(
               store_pre_event_state(seflag, initial_event);
           };
 
-    // store post-event information that is to be saved
-    //  not after processing every single event, but after processing all events
-    //  that did not trigger a secondary event
-    auto store_post_event_info = [this]() {
-        if (solver_->computing_asa()) {
-            // store updated x to compute jump in discontinuity
-            result.discs.back().x_post = ws_->sol.x;
-            result.discs.back().dx_post = ws_->sol.dx;
-            // Update xdot after the state update
-            model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
-            result.discs.back().xdot_post = ws_->xdot;
-        }
-    };
-
-    store_pre_event_info(false);
+    record_new_discontinuity(false);
 
     if (!initial_event) {
         model_->update_heaviside(ws_->roots_found);
@@ -488,6 +473,28 @@ void EventHandlingSimulator::handle_events(
         AmiVector const x_old_event
             = state_old.has_value() ? state_old->sol.x : ws_->sol.x;
 
+        // For adjoint sensitivities, `deltaxB`/`deltaqB` need this event's
+        // own pre-/post-application state. store pre-event state.
+        std::optional<EventApplication> event_application;
+        if (solver_->computing_asa()) {
+            event_application.emplace();
+            event_application->ie = ie;
+            event_application->x_pre = x_old_event;
+            if (result.discs.back().event_applications.empty()) {
+                // First event applied for this discontinuity: `update_heaviside`
+                // above already flipped `h` for the *whole* simultaneous-event
+                // group atomically, before any of its events were applied, so a
+                // fresh `fxdot` call here would incorrectly use post-flip `h`
+                // for what must be a pre-flip rate. `ws_->xdot_old` was already
+                // computed (in `store_pre_event_state`) at this same pre-flip,
+                // pre-cascade state, so reuse it instead of recomputing.
+                event_application->xdot_pre = ws_->xdot_old;
+            } else {
+                model_->fxdot(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
+                event_application->xdot_pre = ws_->xdot;
+            }
+        }
+
         // Execute the event
         // Apply bolus to the state and the sensitivities
         model_->add_state_event_update(
@@ -504,18 +511,25 @@ void EventHandlingSimulator::handle_events(
                 ws_->stau
             );
         }
+        // store post-event state
+        if (event_application) {
+            event_application->x_post = ws_->sol.x;
+            event_application->dx_post = ws_->sol.dx;
+            model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+            event_application->xdot_post = ws_->xdot;
+            result.discs.back().event_applications.push_back(
+                *std::move(event_application)
+            );
+        }
 
         // check if the event assignment triggered another event
         // and add it to the list of pending events if necessary
         if (detect_secondary_events()) {
-            store_post_event_info();
-
-            store_pre_event_info(true);
+            record_new_discontinuity(true);
 
             model_->update_heaviside(ws_->roots_found);
         }
     }
-    store_post_event_info();
 
     // reinitialize the solver after all events have been processed
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
@@ -616,8 +630,6 @@ void EventHandlingSimulator::store_pre_event_state(
             std::ranges::fill(ws_->stau, 0.0);
         }
     } else if (solver_->computing_asa()) {
-        result.discs.back().xdot_pre = ws_->xdot_old;
-        result.discs.back().x_pre = ws_->x_old;
         result.discs.back().h_pre = model_->get_model_state().h;
         result.discs.back().total_cl_pre = model_->get_model_state().total_cl;
     }

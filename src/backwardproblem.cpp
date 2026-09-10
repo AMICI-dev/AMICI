@@ -7,6 +7,8 @@
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 
+#include <ranges>
+
 namespace amici {
 constexpr realtype conv_thresh = 1.0;
 
@@ -182,19 +184,20 @@ void BackwardProblem::handle_postequilibration() {
 void EventHandlingBwdSimulator::handle_event_b(
     Discontinuity const& disc, std::vector<realtype> const* dJzdx
 ) {
-    for (int ie = 0; ie < model_->ne; ie++) {
-
-        if (disc.root_info[ie] != 1) {
-            continue;
-        }
+    // Undo events in the reverse of the order they were applied going
+    // forward (which is not necessarily their index order)
+    for (auto const& application :
+         std::ranges::reverse_view(disc.event_applications)) {
+        auto const ie = application.ie;
 
         model_->add_adjoint_quadrature_event_update(
-            ws_->xQB_, ie, t_, disc.x_post, ws_->xB_, disc.xdot_post,
-            disc.xdot_pre, disc.x_pre, disc.dx_post
+            ws_->xQB_, ie, t_, application.x_post, ws_->xB_,
+            application.xdot_post, application.xdot_pre, application.x_pre,
+            application.dx_post
         );
         model_->add_adjoint_state_event_update(
-            ws_->xB_, ie, t_, disc.x_post, disc.xdot_post, disc.xdot_pre,
-            disc.x_pre, disc.dx_post
+            ws_->xB_, ie, t_, application.x_post, application.xdot_post,
+            application.xdot_pre, application.x_pre, application.dx_post
         );
 
         if (model_->nz > 0) {

@@ -18,6 +18,37 @@ class SteadyStateProblem;
 class FinalStateStorer;
 
 /**
+ * @brief Pre-/post-application state snapshot for a single event within a
+ * `Discontinuity`.
+ *
+ * A `Discontinuity` can represent several events that trigger
+ * simultaneously (a single time point may satisfy more than one event's
+ * trigger condition). Each such event is applied in turn (e.g., in order
+ * of priority), and -- for adjoint sensitivities -- `deltaxB`/`deltaqB`
+ * need *this* event's own pre-/post-application state, not the
+ * pre-/post-state of the whole simultaneous-event group.
+ */
+struct EventApplication {
+    /** Index of the applied event. */
+    int ie{0};
+
+    /** State immediately before this event's own bolus was applied. */
+    AmiVector x_pre;
+
+    /** `xdot` evaluated at `x_pre`. */
+    AmiVector xdot_pre;
+
+    /** State immediately after this event's own bolus was applied. */
+    AmiVector x_post;
+
+    /** `xdot` evaluated at `x_post`. */
+    AmiVector xdot_post;
+
+    /** State derivative after this event's own bolus (DAE only). */
+    AmiVector dx_post;
+};
+
+/**
  * @brief Data structure to store some state of a simulation at a discontinuity.
  */
 struct Discontinuity {
@@ -26,46 +57,22 @@ struct Discontinuity {
      *
      * @param time
      * @param root_info
-     * @param x_pre
-     * @param xdot_pre
-     * @param x_post
-     * @param xdot_post
      * @param h_pre
      * @param total_cl_pre
      */
     explicit Discontinuity(
         realtype const time,
         std::vector<int> const& root_info = std::vector<int>(),
-        AmiVector const& x_pre = AmiVector(),
-        AmiVector const& xdot_pre = AmiVector(),
-        AmiVector const& x_post = AmiVector(),
-        AmiVector const& xdot_post = AmiVector(),
         std::vector<realtype> const& h_pre = std::vector<realtype>(),
         std::vector<realtype> const& total_cl_pre = std::vector<realtype>(0)
     )
         : time(time)
-        , x_post(x_post)
-        , x_pre(x_pre)
-        , xdot_post(xdot_post)
-        , xdot_pre(xdot_pre)
         , root_info(root_info)
         , h_pre(h_pre)
         , total_cl_pre(total_cl_pre) {}
 
     /** Time of discontinuity. */
     realtype time;
-
-    /** Post-event state vector (dimension nx). */
-    AmiVector x_post;
-
-    /** Pre-event state vector (dimension nx). */
-    AmiVector x_pre;
-
-    /** Post-event differential state vectors (dimension nx). */
-    AmiVector xdot_post;
-
-    /** Pre-event differential state vectors (dimension nx). */
-    AmiVector xdot_pre;
 
     /**
      * @brief Array of flags indicating which root has been found.
@@ -82,12 +89,18 @@ struct Discontinuity {
      */
     std::vector<realtype> h_pre;
 
-    /** time derivative of state (DAE only) post-event */
-    AmiVector dx_post;
-
     /** Total abundances for conservation laws
      (dimension: `nx_rdata - nx_solver`) */
     std::vector<realtype> total_cl_pre;
+
+    /**
+     * @brief Per-event pre-/post-bolus state snapshots, one entry per
+     * event in the exact order in which they were applied (as opposed to
+     * `root_info`, which only records *which* events fired, but neither order
+     * nor intermediate state.)
+     * Only populated when adjoint sensitivities are being computed.
+     */
+    std::vector<EventApplication> event_applications;
 };
 
 /**
