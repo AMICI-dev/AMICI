@@ -534,6 +534,7 @@ void IDASolver::reinit(
     ida_mem->ida_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;
+    roots_ignored_after_reinit_.clear();
     x_.copy(yy0);
     dx_.copy(yp0);
     reset_state(ida_mem, x_.get_nvector(), xB_.get_nvector());

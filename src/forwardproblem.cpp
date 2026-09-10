@@ -527,13 +527,14 @@ void EventHandlingSimulator::handle_events(
     }
     store_post_event_info();
 
-    // Remember which roots were just processed at this discontinuity, so
-    // that a root reported for exactly those indices immediately after the
-    // reinitialization below can be recognized as a spurious re-detection.
-    solver_->ignore_roots_after_reinit(ws_->roots_found);
-
     // reinitialize the solver after all events have been processed
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
+
+    // Remember which roots were just processed at this discontinuity, so
+    // that a root reported for exactly those indices immediately after the
+    // reinitialization above can be recognized as a spurious re-detection.
+    solver_->ignore_roots_after_reinit(ws_->roots_found);
+
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
     }
