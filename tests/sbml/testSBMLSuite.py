@@ -15,7 +15,6 @@ Usage:
 
 from __future__ import annotations
 
-import logging
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -569,11 +568,6 @@ def _run_sensitivity_check(
     at looser solver tolerance (event-triggered models only) if the
     simulation itself fails to produce a finite value.
 
-    An FD-perturbed parameter point can turn a clean event trigger crossing
-    into a near-tangent one (confirmed on cases 00375/00754), triggering
-    AMICI's "root after reinitialization" error. To avoid this error,
-    we retry the check at a looser solver tolerance.
-
     :param model: The AMICI model.
     :param settings: This case's parsed `{test_id}-settings.txt`.
     :param test_id: The SBML semantic test suite case ID.
@@ -633,31 +627,12 @@ def _run_sensitivity_check(
             )
         sensi_solver.set_sensitivity_order(SensitivityOrder.first)
 
-        # Skip, not fail on "root after reinitialization" errors during FD
-        # checks that occur at any tolerance
-        # (e.g., for 00369/00754/00755/00756/00883/00885).
-        root_after_reinit_messages = []
-        log_handler = logging.Handler()
-        log_handler.emit = lambda record: (
-            root_after_reinit_messages.append(record.getMessage())
-            if "root after reinitialization" in record.getMessage()
-            else None
-        )
-        amici_logger = logging.getLogger("amici.sim.sundials._swig_wrappers")
-        amici_logger.addHandler(log_handler)
         try:
             if check(sensi_solver, point, bounds, multiplier != 1) is None:
                 return
         except FunctionEvaluationError as err:
-            if root_after_reinit_messages:
-                pytest.skip(
-                    "AMICI/CVODES cannot integrate through a near-tangent "
-                    f"event crossing: {root_after_reinit_messages[0]}"
-                )
             error = err
             continue
-        finally:
-            amici_logger.removeHandler(log_handler)
         return
     raise error
 
