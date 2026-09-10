@@ -179,7 +179,7 @@ def output_labels_for_derivatives(
 def run_simulation_to_function_and_derivative(
     amici_model: AmiciModel,
     *,
-    cache: bool = True,
+    cache: bool = False,
     free_parameter_ids: list[str] = None,
     amici_solver: AmiciSolver = None,
     amici_edata: AmiciExpData = None,
@@ -293,7 +293,7 @@ def simulate_petab_to_function_and_derivative(
     *,
     amici_model: Model,
     free_parameter_ids: list[str] = None,
-    cache: bool = True,
+    cache: bool = False,
     precreate_edatas: bool = True,
     precreate_parameter_mapping: bool = True,
     simulate_petab: Callable[[Any], str] = None,
@@ -416,7 +416,7 @@ def simulate_petab_v2_to_function_and_derivative(
     petab_simulator: PetabSimulator,
     *,
     free_parameter_ids: list[str] = None,
-    cache: bool = True,
+    cache: bool = False,
 ) -> tuple[Type.FUNCTION, Type.FUNCTION]:
     r"""Create a fiddy-checkable ``(function, derivative)`` pair for a
     `PetabSimulator`, e.g. for :func:`fiddy.check_gradient`.
