@@ -97,10 +97,6 @@ def _fresh_model_and_solver(
     atol, rtol = apply_settings(settings, solver, model, test_id)
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
-    if test_id == "00885":
-        # 00885: root-after-reinitialization with FSA with default settings
-        solver.set_absolute_tolerance(1e-16)
-        solver.set_relative_tolerance(1e-15)
     return model, solver, atol, rtol
 
 
