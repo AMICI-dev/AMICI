@@ -57,6 +57,15 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   the sensitivity update used a stale, pre-cascade state instead of that
   already-updated state. The state trajectory itself was unaffected.
 
+* Fixed some spurious "root after reinitialization" simulation failures
+  after event handling: CVODES/IDAS could re-detect an event immediately
+  after it was just handled and treat that as a fatal simulation error,
+  even though the crossing had already been processed. A re-detection of
+  exactly the just-processed root is now ignored, and any other,
+  genuinely new root (e.g. from a second, near-simultaneous event) is
+  handled normally instead of aborting the simulation (#2861, #3266).
+
+
 ### v1.1 (2026-09-03)
 
 **BREAKING CHANGES**
