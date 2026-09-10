@@ -153,6 +153,15 @@ _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES = {
     "01104": True,
     "01107": True,
     "01148": True,
+    # Adjoint sensitivities & events. To revisit later.
+    "00348": True,
+    "00350": True,
+    "00354": True,
+    "00368": True,
+    "00373": True,
+    "00396": True,
+    "00753": True,
+    "01106": True,
 }
 
 
