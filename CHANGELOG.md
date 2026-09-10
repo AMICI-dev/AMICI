@@ -4,7 +4,7 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 ## v1.X Series
 
-### v1.1.1 (unreleased)
+### v1.2.0 (unreleased)
 
 **Features**
 
@@ -49,6 +49,13 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   spline with an event trigger that depends on it now raise a clear error
   at import time instead of silently generating incorrect C++, since
   simulating such models is not yet supported (#3245).
+
+* Fixed incorrect forward sensitivities for models with SBML events that
+  have explicit priorities and can trigger simultaneously.
+  Whenever a lower-priority event's assignment depended on a state that a
+  higher-priority event, triggering at the same instant, had just updated,
+  the sensitivity update used a stale, pre-cascade state instead of that
+  already-updated state. The state trajectory itself was unaffected.
 
 ### v1.1 (2026-09-03)
 
