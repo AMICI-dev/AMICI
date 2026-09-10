@@ -208,15 +208,6 @@ def _sensitivity_preflight_checks(
             "be wrong -- see "
             "https://github.com/AMICI-dev/AMICI/issues/3250"
         )
-    if any(
-        species.getBoundaryCondition() or species.getConstant()
-        for species in sbml_model.getListOfSpecies()
-    ):
-        pytest.skip(
-            "Sensitivities for boundary-condition/constant species "
-            "are known to be wrong -- see "
-            "https://github.com/AMICI-dev/AMICI/issues/3249"
-        )
     if uses_adjoint and model.nx_rdata == 0:
         pytest.skip(
             "Adjoint sensitivities for zero-state models are known to crash."
