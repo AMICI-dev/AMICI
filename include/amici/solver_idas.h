@@ -38,7 +38,7 @@ class IDASolver : public Solver {
 
     std::string get_class_name() const override { return "IDASolver"; };
 
-    void reinit_post_process_f(realtype tnext) const override;
+    bool reinit_post_process_f(realtype tnext) const override;
 
     void reinit_post_process_b(realtype tnext) const override;
 
@@ -119,8 +119,11 @@ class IDASolver : public Solver {
      * @param yout new state vector
      * @param ypout new state derivative vector
      * @param tout anticipated next integration timepoint.
+     * @return the IDAS status of the mandatory post-reinitialization step
+     * (\c IDA_SUCCESS or \c IDA_ROOT_RETURN); other statuses raise an
+     * exception
      */
-    void reinit_post_process(
+    int reinit_post_process(
         void* ida_mem, realtype* t, AmiVector* yout, AmiVector* ypout,
         realtype tout
     ) const;

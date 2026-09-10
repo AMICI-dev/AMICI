@@ -1238,16 +1238,15 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
     assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
 
     # Pre-simulation + main simulation. Both E1 and E2 trigger.
-    # FIXME: this is currently not supported
-    #  (root-after-reinitialization when switching from pre-simulation#
-    #   to main simulation)
-    # edata = ExpData(rdata, 1, 0, 0)
-    # edata.fixedParametersPresimulation = [1]
-    # edata.t_presim = 10
-    # rdata = runAmiciSimulation(model, solver, edata=edata)
-    # assert rdata.status == AMICI_SUCCESS
-    # assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
-    # assert list(rdata.by_id("target2")) == [1.0, 1.0, 1.0]
+    # E2 (which triggers shortly after t=0) has not fired yet at the first
+    # main-simulation timepoint.
+    edata = ExpData(rdata, 1, 0, 0)
+    edata.fixed_parameters_presimulation = [1]
+    edata.t_presim = 10
+    rdata = run_simulation(model, solver, edata=edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert list(rdata.by_id("target1")) == [1.0, 1.0, 1.0]
+    assert list(rdata.by_id("target2")) == [0.0, 1.0, 1.0]
 
     # Pre-equilibration + pre-simulation + main simulation.
     # Both E1 and E2 trigger.

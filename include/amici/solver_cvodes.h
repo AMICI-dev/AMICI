@@ -109,7 +109,7 @@ class CVodeSolver : public Solver {
 
     void get_quad_dky(realtype t, int k) const override;
 
-    void reinit_post_process_f(realtype tnext) const override;
+    bool reinit_post_process_f(realtype tnext) const override;
 
     void reinit_post_process_b(realtype tnext) const override;
 
@@ -120,8 +120,11 @@ class CVodeSolver : public Solver {
      * @param t pointer to integration time
      * @param yout  new state vector
      * @param tout  anticipated next integration timepoint.
+     * @return the CVODES status of the mandatory post-reinitialization
+     * step (\c CV_SUCCESS or \c CV_ROOT_RETURN); other statuses raise an
+     * exception
      */
-    void reInit_post_process(
+    int reInit_post_process(
         void* cv_mem, realtype* t, AmiVector* yout, realtype tout
     ) const;
 
