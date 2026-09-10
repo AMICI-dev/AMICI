@@ -1092,14 +1092,11 @@ def test_event_uses_values_from_trigger_time(tempdir):
                 ]
             )
         elif sens_method == SensitivityMethod.adjoint:
-            # FIXME: adjoint sensitivities w.r.t. the bolus parameter `three`
-            #  are wrong.
-            #  maybe related to https://github.com/AMICI-dev/AMICI/issues/2805
             model.set_parameter_list(
                 [
                     ip
                     for ip, par in enumerate(model.get_free_parameter_ids())
-                    if par not in ["one", "three"]
+                    if par not in ["one"]
                 ]
             )
 

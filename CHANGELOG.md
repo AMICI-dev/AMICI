@@ -67,6 +67,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   terms were evaluated using the post-event state instead of the pre-event
   state. The state trajectory was unaffected (#3257).
 
+* Fixed incorrect adjoint sensitivities for models with multiple events
+  that can trigger at the same time point. Previously, all such
+  simultaneously-triggered events incorrectly shared a single pre-/post-event
+  state snapshot for the adjoint update (#2805).
+
+
 ### v1.1 (2026-09-03)
 
 **BREAKING CHANGES**
