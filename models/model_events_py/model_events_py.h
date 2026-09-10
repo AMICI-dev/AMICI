@@ -563,7 +563,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "5d6d457fc1e217075c7074c8f844ac64b2a75084";
+        return "f04344fe181ed0b63917c93672370d76e427fb22";
     }
 
     bool has_quadratic_llh() const override {

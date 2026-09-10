@@ -27,6 +27,7 @@ from amici.importers.utils import (
     ObservableTransformation,
     _default_simplify,
     amici_time_symbol,
+    smart_subs_dict,
     symbol_with_assumptions,
     toposort_symbols,
     unique_preserve_order,
@@ -1459,6 +1460,20 @@ class DEModel:
             self._sparsesyms[name] = symbol_list
             self._syms[name] = sparse_matrix
 
+    def _pre_event_eqs(self, name: str) -> list[sp.Matrix]:
+        """Re-express `dtaudx`/`dtaudp` purely in terms of the pre-event
+        state, for use inside `deltaxB`/`deltaqB` only.
+
+        `w` is eliminated first (not available in the C++ functions),
+        then `x -> x_old` is substituted.
+        """
+        w_to_expr = dict(zip(self.sym("w"), self.eq("w")))
+        x_to_x_old = dict(zip(self.sym("x"), self.sym("x_old")))
+        return [
+            smart_subs_dict(smart_subs_dict(expr, w_to_expr), x_to_x_old)
+            for expr in self.eq(name)
+        ]
+
     def _compute_equation(self, name: str) -> None:
         """
         Computes the symbolic formula for a symbolic variable
@@ -1867,18 +1882,20 @@ class DEModel:
             self._eqs[name] = event_eqs
 
         elif name == "deltaxB":
+            # express in terms of pre-event state
+            dtaudx_pre = self._pre_event_eqs("dtaudx")
             event_eqs = []
             for ie, event in enumerate(self._events):
                 # ==== 1st group of terms: Heaviside functions ===========
                 tmp_eq = smart_multiply(
                     self.sym("xdot") - self.sym("xdot_old"),
-                    self.eq("dtaudx")[ie],
+                    dtaudx_pre[ie],
                 )
                 if event.updates_state:
                     # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
-                        self.eq("ddeltaxdt")[ie], self.eq("dtaudx")[ie]
+                        self.eq("ddeltaxdt")[ie], dtaudx_pre[ie]
                     )
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
@@ -1887,7 +1904,7 @@ class DEModel:
                             + self.eq("ddeltaxdx_old")[ie],
                             self.sym("xdot_old"),
                         ),
-                        self.eq("dtaudx")[ie],
+                        dtaudx_pre[ie],
                     )
                     # ==== 3rd group of terms: Dirac deltas ==================
                     tmp_eq += (
@@ -1898,18 +1915,20 @@ class DEModel:
             self._eqs[name] = event_eqs
 
         elif name == "deltaqB":
+            # express in terms of pre-event state
+            dtaudp_pre = self._pre_event_eqs("dtaudp")
             event_eqs = []
             for ie, event in enumerate(self._events):
                 # ==== 1st group of terms: Heaviside functions ===========
                 tmp_eq = smart_multiply(
                     self.sym("xdot") - self.sym("xdot_old"),
-                    self.eq("dtaudp")[ie],
+                    dtaudp_pre[ie],
                 )
                 if event.updates_state:
                     # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
-                        self.eq("ddeltaxdt")[ie], self.eq("dtaudp")[ie]
+                        self.eq("ddeltaxdt")[ie], dtaudp_pre[ie]
                     )
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
@@ -1918,7 +1937,7 @@ class DEModel:
                             + self.eq("ddeltaxdx_old")[ie],
                             self.sym("xdot_old"),
                         ),
-                        self.eq("dtaudp")[ie],
+                        dtaudp_pre[ie],
                     )
                     # ==== 3rd group of terms: Dirac deltas ==================
                     tmp_eq += self.eq("ddeltaxdp")[ie]

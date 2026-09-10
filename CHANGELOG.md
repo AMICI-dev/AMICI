@@ -50,12 +50,22 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   at import time instead of silently generating incorrect C++, since
   simulating such models is not yet supported (#3245).
 
+* Fixed incorrect sensitivities for models with a single-species
+  conservation law -- a boundary-condition or `constant=true` species with
+  no counteracting rate rule -- whose total abundance depends on a free
+  parameter via an `InitialAssignment` (#3249).
+
 * Fixed incorrect forward sensitivities for models with SBML events that
   have explicit priorities and can trigger simultaneously.
   Whenever a lower-priority event's assignment depended on a state that a
   higher-priority event, triggering at the same instant, had just updated,
   the sensitivity update used a stale, pre-cascade state instead of that
   already-updated state. The state trajectory itself was unaffected.
+
+* Fixed incorrect adjoint sensitivities for models with SBML events that
+  are both state-triggered and state-updating. The trigger-time-sensitivity
+  terms were evaluated using the post-event state instead of the pre-event
+  state. The state trajectory was unaffected (#3257).
 
 ### v1.1 (2026-09-03)
 
