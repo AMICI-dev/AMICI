@@ -414,15 +414,28 @@ void EventHandlingSimulator::handle_events(
     // be applied, or an event observable to process.
 
     if (!initial_event && ws_->sol.t == ws_->tlastroot) {
-        throw AmiException(
-            "AMICI is stuck in an event at time %g, as the initial "
-            "step-size after the event is too small. "
-            "To fix this, increase absolute and relative "
-            "tolerances!",
-            ws_->sol.t
-        );
+        // We may legitimately get here repeatedly for genuinely distinct,
+        // (near-)simultaneous events that are discovered one at a time
+        // immediately after a reinitialization.
+        // There can be at most `ne` distinct roots to discover this way,
+        // so allow that many before concluding that we are stuck in a
+        // genuine infinite loop.
+        if (++ws_->same_time_event_count > model_->ne) {
+            throw AmiException(
+                "AMICI is stuck in an event at time %g, as the initial "
+                "step-size after the event is too small. "
+                "To fix this, increase absolute and relative "
+                "tolerances!",
+                ws_->sol.t
+            );
+        }
+    } else {
+        ws_->same_time_event_count = 0;
     }
     ws_->tlastroot = ws_->sol.t;
+
+    // Roots found in this discontinuity
+    std::vector<int> roots_for_ignore = ws_->roots_found;
 
     // start a new discontinuity record whenever a new event is triggered
     auto record_new_discontinuity
@@ -469,6 +482,10 @@ void EventHandlingSimulator::handle_events(
         auto const& pending_event = ws_->pending_events.pop();
         auto const ie = pending_event.idx;
         auto const& state_old = pending_event.state_old;
+
+        // capture this root's direction for the ignore-list before
+        // `detect_secondary_events()` resets it to 0 below
+        roots_for_ignore.at(ie) = ws_->roots_found.at(ie);
 
         gsl_Assert(
             // storing the old state is not always necessary,
@@ -550,10 +567,22 @@ void EventHandlingSimulator::handle_events(
 
             model_->update_heaviside(ws_->roots_found);
         }
+
+        // record any newly-found roots
+        for (int ie_new = 0; ie_new < model_->ne; ++ie_new) {
+            if (ws_->roots_found.at(ie_new) != 0)
+                roots_for_ignore.at(ie_new) = ws_->roots_found.at(ie_new);
+        }
     }
 
     // reinitialize the solver after all events have been processed
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
+
+    // Remember encountered roots so that an identical root reported
+    // immediately after the reinitialization can be recognized as
+    // a spurious re-detection rather than a genuine new event.
+    solver_->ignore_roots_after_reinit(std::move(roots_for_ignore));
+
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
     }

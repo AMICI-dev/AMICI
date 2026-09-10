@@ -1296,6 +1296,122 @@ def test_gh2926(tempdir):
 
 
 @skip_on_valgrind
+def test_root_after_reinit_direction_is_checked(tempdir):
+    """A root reported immediately after reinitialization must only be
+    ignored if it matches the *direction* of a root recorded during the
+    preceding discontinuity handling, not just the index.
+
+    ``EA`` fires periodically and its assignment sets ``y`` to just
+    below ``EB``'s threshold, causing a down-crossing of ``EB`` to be
+    recorded as part of ``EA``'s own discontinuity handling.
+    Within the post-reinitialization solver step, ``y`` increases,
+    and `EB` immediately crosses back over the threshold,
+    triggering ``EB``. If the post-reinit check skips all roots of a given
+    event, ``EB`` would never fire, and ``y`` would never be reset.
+    """
+    model_name = "test_root_after_reinit_direction_is_checked"
+    eps = 1e-15
+    antimony2amici(
+        rf"""
+        x = 0
+        x' = 1
+        y = 5
+        y' = 1
+
+        n_fired_A = 0
+        n_fired_B = 0
+
+        EA: at x >= 1:
+            n_fired_A = n_fired_A + 1,
+            x = 0,
+            y = 1 - {eps};
+
+        EB: at y >= 1:
+            n_fired_B = n_fired_B + 1,
+            y = 5;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    n_periods = 5
+    model.set_timepoints([n_periods + 0.5])
+    solver = model.create_solver()
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.by_id("n_fired_A")[-1] == n_periods
+    assert rdata.by_id("n_fired_B")[-1] == n_periods
+
+
+@skip_on_valgrind
+def test_root_after_reinit_ignores_just_fired_event(tempdir):
+    """A root reported immediately after reinitialization, for the exact
+    same index and direction as the event just fired, is treated as a
+    spurious re-detection and ignored -- even though, read literally, the
+    dynamics below really do cross the threshold, drop back below it, and
+    cross again, i.e. two distinct trigger events did occur.
+
+    Whether an immediate same-index, same-direction root reflects a
+    genuine retrigger or floating-point noise is undecidable from inside
+    the solver once the recurrence interval is below what the current
+    tolerances can resolve.
+
+    ``recovering`` is set by ``E1`` itself and never reset, so once ``x``
+    is assigned a value just below the threshold, its derivative switches
+    to an enormous rate, so the "immediate re-trigger" reliably falls
+    within the first post-reinitialization solver step.
+
+    ``E2`` is a second, independent event whose own threshold is crossed
+    (for the first, genuine time) at the very same instant as ``E1``'s
+    "spurious" repeat. It must still fire normally: suppression is scoped
+    to the exact (index, direction) pair that was just handled, not to
+    "anything reported in this step".
+    """
+    model_name = "test_root_after_reinit_ignores_just_fired_event"
+    margin_below_threshold = 1e-13
+    antimony2amici(
+        rf"""
+        x = 0
+        y = 0
+        recovering = 0
+        recovering' = 0
+        x' = piecewise(1e10, recovering >= 1, 1)
+        y' = piecewise(1e10, recovering >= 1, 0)
+
+        n_fired_1 = 0
+        n_fired_2 = 0
+        threshold = 1
+
+        E1: at x >= threshold:
+            n_fired_1 = n_fired_1 + 1,
+            recovering = 1,
+            x = {1.0 - margin_below_threshold},
+            y = {1.0 - margin_below_threshold};
+
+        E2: at y >= threshold:
+            n_fired_2 = n_fired_2 + 1;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    model.set_timepoints([1.5])
+    solver = model.create_solver()
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    # E1's own immediate repeat is (deliberately) suppressed.
+    assert rdata.by_id("n_fired_1")[-1] == 1
+    # E2's genuine, simultaneous first crossing is still correctly handled.
+    assert rdata.by_id("n_fired_2")[-1] == 1
+
+
+@skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on
     cascading expressions in `w`."""

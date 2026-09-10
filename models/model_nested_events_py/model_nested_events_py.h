@@ -536,7 +536,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "088c23bd7aa5411508ed82dc4f1ed8b565a69713";
+        return "37e4b550661dd24a74532e308f137befe1a46b76";
     }
 
     bool has_quadratic_llh() const override {
