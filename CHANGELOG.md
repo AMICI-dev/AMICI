@@ -147,6 +147,14 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   PEtab v1 never formally specified a grammar for these expressions; in
   rare cases, some formulas may now be interpreted differently (#3281).
 
+* Fixed spurious "root after reinitialization" simulation failures
+  after event handling: CVODES/IDAS could re-detect an event immediately
+  after it was just handled and treat that as a fatal simulation error,
+  even though the crossing had already been processed. A re-detection of
+  exactly the just-processed root is now ignored, and any other,
+  genuinely new root (e.g. from a second, near-simultaneous event) is
+  handled normally instead of aborting the simulation (#2861, #3266).
+
 ### v1.1 (2026-09-03)
 
 **BREAKING CHANGES**
