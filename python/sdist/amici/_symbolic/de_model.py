@@ -1167,22 +1167,7 @@ class DEModel:
             )
             return
         elif name == "dtcldp":
-            # check, whether the CL consists of only one state. Then,
-            # sensitivities drop out, otherwise generate symbols
-            self._syms[name] = sp.Matrix(
-                [
-                    [
-                        sp.Symbol(
-                            f"s{tcl.get_id()}__{par.get_id()}",
-                            real=True,
-                        )
-                        for par in self._free_parameters
-                    ]
-                    if self.conservation_law_has_multispecies(tcl)
-                    else [0] * self.num_par()
-                    for tcl in self._conservation_laws
-                ]
-            )
+            self._syms[name] = self._dtcldp_symbols()
             return
         elif name == "x_old":
             length = len(self.eq("xdot"))
@@ -2473,6 +2458,49 @@ class DEModel:
         state_set = set(self.sym("x_rdata"))
         n_species = len(state_set.intersection(tcl.get_val().free_symbols))
         return n_species > 1
+
+    def _dtcldp_symbols(self) -> sp.Matrix:
+        """
+        Builds the symbol matrix for ``dtcldp``, the sensitivity of each
+        conservation law's total abundance w.r.t. the free parameters.
+
+        Multi-species conservation laws keep every entry as a live symbol:
+        if only some of their states get reinitialized after
+        preequilibration while others keep their (formula-less,
+        dynamics-derived) preequilibration values, the recomputed total can
+        depend on parameters invisible to the model's own ``x0``/``sx0``
+        formulas. Single-species conservation laws only ever arise from
+        states with ``dx/dt == 0`` identically, so they're never touched by
+        dynamics in the first place: their sensitivity is fully determined
+        by the free parameters in their own initial-value formula, and all
+        other entries can stay a literal zero. This keeps ``dtcldp`` (and
+        downstream quantities like ``dwdp``) sparse for models with many
+        trivial single-species conservation laws.
+
+        :return:
+            symbol matrix, one row per conservation law
+        """
+        state_by_sym = {
+            state.get_sym(): state for state in self._differential_states
+        }
+
+        def row(tcl: ConservationLaw) -> list[sp.Expr]:
+            if self.conservation_law_has_multispecies(tcl):
+                return [
+                    symbol_with_assumptions(f"s{tcl.get_id()}__{par.get_id()}")
+                    for par in self._free_parameters
+                ]
+
+            (state_sym,) = tcl.get_val().free_symbols
+            init_free_syms = state_by_sym[state_sym].get_val().free_symbols
+            return [
+                symbol_with_assumptions(f"s{tcl.get_id()}__{par.get_id()}")
+                if par.get_sym() in init_free_syms
+                else 0
+                for par in self._free_parameters
+            ]
+
+        return sp.Matrix([row(tcl) for tcl in self._conservation_laws])
 
     def _expr_is_time_dependent(self, expr: sp.Expr) -> bool:
         """Determine whether an expression is time-dependent.
