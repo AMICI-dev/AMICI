@@ -242,14 +242,35 @@ void EventHandlingSimulator::run_steady_state(
 void ForwardProblem::run() {
     handle_preequilibration();
 
-    {
-        FinalStateStorer fss(this);
-
+    try {
         handle_presimulation();
         handle_main_simulation();
+    } catch (...) {
+        // Best-effort state capture for diagnostics; swallow secondary
+        // failures here so they don't mask the original exception.
+        try {
+            store_final_state();
+        } catch (std::exception const&) {
+        }
+        throw;
     }
+    store_final_state();
 
     handle_postequilibration();
+}
+
+void ForwardProblem::store_final_state() {
+    main_simulator_.result.final_state_ = main_simulator_.get_simulation_state();
+
+    // backfill timepoint_states_ if the final time coincides with an output
+    // timepoint not yet recorded there (e.g. error right at a timepoint)
+    auto const final_time = get_final_time();
+    auto const timepoints = model->get_timepoints();
+    if (!main_simulator_.result.timepoint_states_.contains(final_time)
+        && std::ranges::find(timepoints, final_time) != timepoints.cend()) {
+        main_simulator_.result.timepoint_states_[final_time]
+            = main_simulator_.result.final_state_;
+    }
 }
 
 void ForwardProblem::handle_preequilibration() {
