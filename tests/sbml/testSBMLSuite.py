@@ -153,12 +153,15 @@ _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES = {
     "00350": True,
     "00354": True,
     "00368": True,
+    "00369": True,
     "00373": True,
     "00376": True,
     "00379": True,
     "00380": True,
     "00396": True,
+    "00744": True,
     "00753": True,
+    "00885": True,
     "01106": True,
 }
 
