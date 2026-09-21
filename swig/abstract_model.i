@@ -47,7 +47,6 @@
 %ignore fdzdp;
 %ignore fdzdx;
 %ignore frz;
-%ignore fsdx0;
 %ignore fsigmay;
 %ignore fsigmaz;
 %ignore fsrz;
@@ -56,8 +55,6 @@
 %ignore fw;
 %ignore fy;
 %ignore fz;
-%ignore fdwdp;
-%ignore fdwdx;
 %ignore fx0;
 %ignore fx0_fixedParameters;
 %ignore fsx0;

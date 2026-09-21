@@ -11,7 +11,7 @@ namespace std {
      %clear pointer Ptr;
      unique_ptr (unique_ptr&& Right);
 
-     template<class Type2, Class Del2> unique_ptr( unique_ptr<Type2, Del2>&& Right );
+     template<class Type2, class Del2> unique_ptr( unique_ptr<Type2, Del2>&& Right );
      unique_ptr( const unique_ptr& Right) = delete;
 
 
