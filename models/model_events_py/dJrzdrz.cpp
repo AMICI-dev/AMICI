@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_events_py {
 
-void dJrzdsigma_model_events_py(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz){
+void dJrzdrz_model_events_py(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz){
     const realtype rz1_ = rz[0];
     const realtype rz2_ = rz[1];
     const realtype sigma_z1_ = sigmaz[0];
@@ -14,10 +14,10 @@ void dJrzdsigma_model_events_py(realtype *dJrzdsigma, const int iz, const realty
 
     switch(iz) {
         case 0:
-            dJrzdsigma[0] = -1.0*std::pow(rz1_, 2)/std::pow(sigma_z1_, 3) + 1.0/sigma_z1_;
+            dJrzdrz[0] = 1.0*rz1_/std::pow(sigma_z1_, 2);
             break;
         case 1:
-            dJrzdsigma[1] = -1.0*std::pow(rz2_, 2)/std::pow(sigma_z2_, 3) + 1.0/sigma_z2_;
+            dJrzdrz[1] = 1.0*rz2_/std::pow(sigma_z2_, 2);
             break;
     }
 }

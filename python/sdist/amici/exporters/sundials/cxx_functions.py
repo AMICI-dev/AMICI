@@ -104,8 +104,8 @@ functions = {
         "const realtype *k, const realtype *y, const realtype *sigmay, "
         "const realtype *my"
     ),
-    "dJydsigma": _FunctionInfo(
-        "realtype *dJydsigma, const int iy, const realtype *p, "
+    "dJydsigmay": _FunctionInfo(
+        "realtype *dJydsigmay, const int iy, const realtype *p, "
         "const realtype *k, const realtype *y, const realtype *sigmay, "
         "const realtype *my"
     ),
@@ -119,8 +119,8 @@ functions = {
         "realtype *Jz, const int iz, const realtype *p, const realtype *k, "
         "const realtype *z, const realtype *sigmaz, const realtype *mz"
     ),
-    "dJzdsigma": _FunctionInfo(
-        "realtype *dJzdsigma, const int iz, const realtype *p, "
+    "dJzdsigmaz": _FunctionInfo(
+        "realtype *dJzdsigmaz, const int iz, const realtype *p, "
         "const realtype *k, const realtype *z, const realtype *sigmaz, "
         "const realtype *mz"
     ),
@@ -133,12 +133,12 @@ functions = {
         "realtype *Jrz, const int iz, const realtype *p, "
         "const realtype *k, const realtype *rz, const realtype *sigmaz"
     ),
-    "dJrzdsigma": _FunctionInfo(
-        "realtype *dJrzdsigma, const int iz, const realtype *p, "
+    "dJrzdsigmaz": _FunctionInfo(
+        "realtype *dJrzdsigmaz, const int iz, const realtype *p, "
         "const realtype *k, const realtype *rz, const realtype *sigmaz"
     ),
-    "dJrzdz": _FunctionInfo(
-        "realtype *dJrzdz, const int iz, const realtype *p, "
+    "dJrzdrz": _FunctionInfo(
+        "realtype *dJrzdrz, const int iz, const realtype *p, "
         "const realtype *k, const realtype *rz, const realtype *sigmaz",
     ),
     "root": _FunctionInfo(

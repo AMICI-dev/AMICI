@@ -67,7 +67,7 @@ set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 set(SRC_LIST_LIB Jy.cpp 
 create_splines.cpp 
-dJydsigma.cpp 
+dJydsigmay.cpp 
 dJydy.cpp 
 dsigmaydp.cpp 
 dspline_valuesdp.cpp 

@@ -79,14 +79,14 @@ enum class ModelQuantity {
     dsigmaydp,
     dsigmaydy,
     dsigmazdp,
-    dJydsigma,
+    dJydsigmay,
     dJydx,
     dzdx,
     dzdp,
-    dJrzdsigma,
-    dJrzdz,
+    dJrzdsigmaz,
+    dJrzdrz,
     dJrzdx,
-    dJzdsigma,
+    dJzdsigmaz,
     dJzdz,
     dJzdx,
     drzdp,
@@ -167,13 +167,13 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdeltasx;
     using AbstractModel::fdeltax;
     using AbstractModel::fdeltaxB;
-    using AbstractModel::fdJrzdsigma;
-    using AbstractModel::fdJrzdz;
-    using AbstractModel::fdJydsigma;
+    using AbstractModel::fdJrzdrz;
+    using AbstractModel::fdJrzdsigmaz;
+    using AbstractModel::fdJydsigmay;
     using AbstractModel::fdJydy;
     using AbstractModel::fdJydy_colptrs;
     using AbstractModel::fdJydy_rowvals;
-    using AbstractModel::fdJzdsigma;
+    using AbstractModel::fdJzdsigmaz;
     using AbstractModel::fdJzdz;
     using AbstractModel::fdrzdp;
     using AbstractModel::fdrzdx;
@@ -1881,13 +1881,13 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy w.r.t. standard deviation sigma.
+     * Jy w.r.t. standard deviation sigmay.
      *
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJydsigma(int it, AmiVector const& x, ExpData const& edata);
+    void fdJydsigmay(int it, AmiVector const& x, ExpData const& edata);
 
     /**
      * @brief Compute sensitivity of time-resolved measurement negative
@@ -2014,7 +2014,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x State variables
      * @param edata Pointer to experimental data instance
      */
-    void fdJzdsigma(
+    void fdJzdsigmaz(
         int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
@@ -2056,7 +2056,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x State variables
      * @param edata Experimental data
      */
-    void fdJrzdz(
+    void fdJrzdrz(
         int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 
@@ -2070,7 +2070,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJrzdsigma(
+    void fdJrzdsigmaz(
         int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
     );
 

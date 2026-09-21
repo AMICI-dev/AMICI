@@ -768,9 +768,9 @@ class AbstractModel {
     virtual void fdJydy_rowvals(SUNMatrixWrapper& dJydy, int index);
 
     /**
-     * @brief Model-specific implementation of fdJydsigma
+     * @brief Model-specific implementation of fdJydsigmay
      *
-     * @param dJydsigma Sensitivity of time-resolved measurement negative
+     * @param dJydsigmay Sensitivity of time-resolved measurement negative
      * log-likelihood Jy w.r.t. standard deviation sigmay
      * @param iy output index
      * @param p parameter vector
@@ -779,8 +779,8 @@ class AbstractModel {
      * @param sigmay measurement standard deviation at timepoint
      * @param my measurement at timepoint
      */
-    virtual void fdJydsigma(
-        realtype* dJydsigma, int iy, realtype const* p, realtype const* k,
+    virtual void fdJydsigmay(
+        realtype* dJydsigmay, int iy, realtype const* p, realtype const* k,
         realtype const* y, realtype const* sigmay, realtype const* my
     );
 
@@ -802,9 +802,9 @@ class AbstractModel {
     );
 
     /**
-     * @brief Model-specific implementation of fdJzdsigma
+     * @brief Model-specific implementation of fdJzdsigmaz
      *
-     * @param dJzdsigma Sensitivity of event measurement negative log-likelihood
+     * @param dJzdsigmaz Sensitivity of event measurement negative log-likelihood
      * Jz w.r.t. standard deviation sigmaz
      * @param iz event output index
      * @param p parameter vector
@@ -813,30 +813,30 @@ class AbstractModel {
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurement at timepoint
      */
-    virtual void fdJzdsigma(
-        realtype* dJzdsigma, int iz, realtype const* p, realtype const* k,
+    virtual void fdJzdsigmaz(
+        realtype* dJzdsigmaz, int iz, realtype const* p, realtype const* k,
         realtype const* z, realtype const* sigmaz, realtype const* mz
     );
 
     /**
-     * @brief Model-specific implementation of fdJrzdz
+     * @brief Model-specific implementation of fdJrzdrz
      *
-     * @param dJrzdz partial derivative of event penalization Jrz
+     * @param dJrzdrz partial derivative of event penalization Jrz
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
      * @param rz model root output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      */
-    virtual void fdJrzdz(
-        realtype* dJrzdz, int iz, realtype const* p, realtype const* k,
+    virtual void fdJrzdrz(
+        realtype* dJrzdrz, int iz, realtype const* p, realtype const* k,
         realtype const* rz, realtype const* sigmaz
     );
 
     /**
-     * @brief Model-specific implementation of fdJrzdsigma
+     * @brief Model-specific implementation of fdJrzdsigmaz
      *
-     * @param dJrzdsigma Sensitivity of event penalization Jrz w.r.t. standard
+     * @param dJrzdsigmaz Sensitivity of event penalization Jrz w.r.t. standard
      * deviation sigmaz
      * @param iz event output index
      * @param p parameter vector
@@ -844,8 +844,8 @@ class AbstractModel {
      * @param rz model root output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      */
-    virtual void fdJrzdsigma(
-        realtype* dJrzdsigma, int iz, realtype const* p, realtype const* k,
+    virtual void fdJrzdsigmaz(
+        realtype* dJrzdsigmaz, int iz, realtype const* p, realtype const* k,
         realtype const* rz, realtype const* sigmaz
     );
 

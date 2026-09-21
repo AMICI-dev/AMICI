@@ -6,14 +6,14 @@
 namespace amici {
 namespace model_model_events_py {
 
-void dJydsigma_model_events_py(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+void dJydsigmay_model_events_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
     const realtype y1_ = y[0];
     const realtype sigma_y1_ = sigmay[0];
     const realtype my1_ = my[0];
 
     switch(iy) {
         case 0:
-            dJydsigma[0] = 1.0/sigma_y1_ - 1.0*std::pow(-my1_ + y1_, 2)/std::pow(sigma_y1_, 3);
+            dJydsigmay[0] = 1.0/sigma_y1_ - 1.0*std::pow(-my1_ + y1_, 2)/std::pow(sigma_y1_, 3);
             break;
     }
 }
