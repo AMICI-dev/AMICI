@@ -1295,7 +1295,7 @@ def test_gh2926(tempdir):
 
 
 @skip_on_valgrind
-def test_root_after_reinit_direction_is_checked(tempdir):
+def test_root_after_reinit_direction_is_checked(tempdir, caplog):
     """A root reported immediately after reinitialization must only be
     ignored if it matches the *direction* of a root recorded during the
     preceding discontinuity handling, not just the index.
@@ -1343,10 +1343,11 @@ def test_root_after_reinit_direction_is_checked(tempdir):
     assert rdata.status == AMICI_SUCCESS
     assert rdata.by_id("n_fired_A")[-1] == n_periods
     assert rdata.by_id("n_fired_B")[-1] == n_periods
+    assert "ROOT_AFTER_REINIT" not in caplog.text
 
 
 @skip_on_valgrind
-def test_root_after_reinit_ignores_just_fired_event(tempdir):
+def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
     """A root reported immediately after reinitialization, for the exact
     same index and direction as the event just fired, is treated as a
     spurious re-detection and ignored -- even though, read literally, the
@@ -1408,6 +1409,7 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir):
     assert rdata.by_id("n_fired_1")[-1] == 1
     # E2's genuine, simultaneous first crossing is still correctly handled.
     assert rdata.by_id("n_fired_2")[-1] == 1
+    assert "ROOT_AFTER_REINIT" in caplog.text
 
 
 @skip_on_valgrind

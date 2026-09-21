@@ -537,7 +537,22 @@ bool CVodeSolver::reinit_post_process_f(realtype const tnext) const {
             continue;
         if (ie < gsl::narrow<int>(roots_ignored_after_reinit_.size())
             && roots_ignored_after_reinit_[ie] == rootsfound[ie]) {
-            // spurious re-detection of a root already accounted for
+            // spurious re-detection of a root already accounted for.
+            // Only an up-crossing (rootsfound[ie] == 1) is ever a genuine
+            // trigger, so only warn about suppressing one of those --
+            // suppressing a repeated down-crossing is always inconsequential.
+            if (rootsfound[ie] == 1 && get_logger()) {
+                std::stringstream msg;
+                msg << "Ignored a root immediately after reinitialization "
+                       "that matches the just-processed event at index "
+                    << ie << ", time " << t_
+                    << ". If this event is expected to retrigger faster "
+                       "than the solver's current tolerances can resolve, "
+                       "this repeat will not be detected.";
+                get_logger()->log(
+                    LogSeverity::warning, "ROOT_AFTER_REINIT", msg.str()
+                );
+            }
             rootsfound[ie] = 0;
         } else {
             genuine = true;
