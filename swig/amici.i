@@ -28,7 +28,6 @@ nonstandard type conversions.
 %typemap(doctype) std::vector< amici::ExpData *,std::allocator< amici::ExpData * > > "ExpDataPtrVector";
 %typemap(doctype) std::vector< std::unique_ptr< amici::ReturnData >,std::allocator< std::unique_ptr< amici::ReturnData > > > "Iterable[ReturnData]";
 %typemap(doctype) void "None";
-%typemap(doctype) std::unique_ptr< amici::Solver > "Solver";
 %typemap(doctype) amici::InternalSensitivityMethod "InternalSensitivityMethod";
 %typemap(doctype) amici::InterpolationType "InterpolationType";
 %typemap(doctype) amici::LinearMultistepMethod "LinearMultistepMethod";

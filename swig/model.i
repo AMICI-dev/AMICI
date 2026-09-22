@@ -8,7 +8,6 @@ using namespace amici;
 
 // remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
-%ignore add_adjoint_quadrature_eventUpdate;
 %ignore add_adjoint_state_event_update;
 %ignore add_event_objective;
 %ignore add_event_objective_regularization;
@@ -25,79 +24,31 @@ using namespace amici;
 %ignore get_event_time_sensitivity;
 %ignore get_adjoint_state_observable_update;
 %ignore get_event;
-%ignore get_events;
 %ignore get_event_regularization;
 %ignore get_event_regularization_sensitivity;
 %ignore get_event_sensitivity;
-%ignore get_event_time_sensitivity;
 %ignore get_explicit_roots;
 %ignore get_observable;
 %ignore get_observable_sensitivity;
 %ignore get_expression;
-%ignore init_events;
 %ignore reinit_events;
 %ignore initialize;
 %ignore initialize_b;
 %ignore initialize_state_sensitivities;
 %ignore initialize_state;
 %ignore reinitialize;
-%ignore ModelState;
 %ignore get_model_state;
 %ignore set_model_state;
-%ignore fx0;
-%ignore fx0_fixedParameters;
-%ignore fsx0;
-%ignore fsx0_fixedParameters;
-%ignore get_dxdotdp;
+// fx0, fJrz, fdydx, etc. are declared on AbstractModel and already ignored
+// (for all derived classes, including Model) in abstract_model.i.
 %ignore get_dxdotdp_full;
-%ignore check_inite;
-%ignore fJrz;
-%ignore fJy;
-%ignore fJz;
-%ignore fdJrzdsigmaz;
-%ignore fdJrzdrz;
-%ignore fdJzdsigmaz;
-%ignore fdJzdz;
-%ignore fdJydsigmay;
-%ignore fdeltaqB;
-%ignore fdeltasx;
-%ignore fdeltax;
-%ignore fdeltaxB;
-%ignore fdrzdp;
-%ignore fdrzdx;
-%ignore fdsigmaydp;
-%ignore fdsigmazdp;
-%ignore fdydp;
-%ignore fdydx;
-%ignore fdzdp;
-%ignore fdzdx;
-%ignore frz;
 %ignore fsdx0;
-%ignore fsigmay;
-%ignore fsigmaz;
-%ignore fsrz;
-%ignore fstau;
-%ignore fsz;
-%ignore fw;
-%ignore fy;
-%ignore fz;
 %ignore update_heaviside;
-%ignore update_heaviside_b;
 %ignore get_event_sigma;
 %ignore get_event_sigma_sensitivity;
 %ignore get_observable_sigma;
 %ignore get_observable_sigma_sensitivity;
 %ignore get_unobserved_event_sensitivity;
-%ignore fdsigmaydy;
-%ignore fdspline_slopesdp;
-%ignore fdspline_valuesdp;
-%ignore fdtotal_cldp;
-%ignore fdtotal_cldx_rdata;
-%ignore fdx_rdatadp;
-%ignore fdx_rdatadtcl;
-%ignore fdx_rdatadx_solver;
-%ignore fdsigmaydy;
-%ignore get_steadystate_mask_av;
 %ignore initialize_splines;
 %ignore initialize_spline_sensitivities;
 %ignore initialize_events;
@@ -110,10 +61,12 @@ using namespace amici;
 %rename(create_solver) amici::Model::get_solver;
 %rename(_cpp_model_clone) amici::Model::clone;
 
-%extend amici::Model {
+// Shared implementation for the Model/ModelPtr convenience methods below.
+// `amici::Model` and `std::unique_ptr<amici::Model>` are distinct SWIG proxy
+// classes (the latter does not inherit from the former), so the methods
+// need to be defined on both, but their bodies can be shared here.
 %pythoncode %{
-def clone(self):
-    """Clone the model instance."""
+def _model_clone_impl(self):
     clone = self._cpp_model_clone()
     try:
         # copy module reference if present
@@ -123,10 +76,8 @@ def clone(self):
 
     return clone
 
-def __deepcopy__(self, memo):
-    return self.clone()
 
-def __reduce__(self):
+def _model_reduce_impl(self):
     from amici.sim.sundials._swig_wrappers import restore_model, get_model_settings, file_checksum
 
     return (
@@ -139,6 +90,42 @@ def __reduce__(self):
         ),
         {}
     )
+
+
+def _model_simulate_impl(
+    self,
+    *,
+    solver=None,
+    edata=None,
+    failfast=True,
+    num_threads=1,
+    sensi_method=None,
+    sensi_order=None,
+):
+    from amici.sim.sundials._swig_wrappers import _Model__simulate
+
+    return _Model__simulate(
+        self,
+        solver=solver,
+        edata=edata,
+        failfast=failfast,
+        num_threads=num_threads,
+        sensi_method=sensi_method,
+        sensi_order=sensi_order,
+    )
+%}
+
+%extend amici::Model {
+%pythoncode %{
+def clone(self):
+    """Clone the model instance."""
+    return _model_clone_impl(self)
+
+def __deepcopy__(self, memo):
+    return self.clone()
+
+def __reduce__(self):
+    return _model_reduce_impl(self)
 
 @overload
 def simulate(
@@ -202,9 +189,7 @@ def simulate(
         If `edata` is a sequence of :class:`ExpData` instances, a list of
         :class:`ReturnDataView` instances is returned.
     """
-    from amici.sim.sundials._swig_wrappers import _Model__simulate
-
-    return _Model__simulate(
+    return _model_simulate_impl(
         self,
         solver=solver,
         edata=edata,
@@ -220,31 +205,13 @@ def simulate(
 %pythoncode %{
 def clone(self):
     """Clone the model instance."""
-    clone = self._cpp_model_clone()
-    try:
-        # copy module reference if present
-        clone.module = self.module
-    except Exception:
-        pass
-
-    return clone
+    return _model_clone_impl(self)
 
 def __deepcopy__(self, memo):
     return self.clone()
 
 def __reduce__(self):
-    from amici.sim.sundials._swig_wrappers import restore_model, get_model_settings, file_checksum
-
-    return (
-        restore_model,
-        (
-            self.get_name(),
-            Path(self.module.__spec__.origin).parent,
-            get_model_settings(self),
-            file_checksum(self.module.extension_path),
-        ),
-        {}
-    )
+    return _model_reduce_impl(self)
 
 
 @overload
@@ -284,7 +251,7 @@ def simulate(
     """Simulate model with given solver and experimental data.
 
     :param solver:
-        Solver to use for simulation. Defaults to :meth:`Model.get_solver`.
+        Solver to use for simulation. Defaults to :meth:`Model.create_solver`.
     :param edata:
         Experimental data to use for simulation.
         A single :class:`ExpData` instance or a sequence of such instances.
@@ -309,9 +276,7 @@ def simulate(
         If `edata` is a sequence of :class:`ExpData` instances, a list of
         :class:`ReturnDataView` instances is returned.
     """
-    from amici.sim.sundials._swig_wrappers import _Model__simulate
-
-    return _Model__simulate(
+    return _model_simulate_impl(
         self,
         solver=solver,
         edata=edata,

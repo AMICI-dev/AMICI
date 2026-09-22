@@ -3,7 +3,7 @@
 %ignore amici::printf_to_string;
 %ignore amici::regex_error_to_string;
 %ignore amici::write_slice;
-%ignore ContextManager;
+// ContextManager is already ignored globally in amici.i
 %ignore amici::scale_parameters;
 %ignore amici::unscale_parameters;
 

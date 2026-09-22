@@ -10,14 +10,11 @@ using namespace amici;
 
 // remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
-%ignore get_adjoit_derivative_state;
 %ignore get_adjoint_quadrature;
 %ignore get_quadrature;
-%ignore get_adjointState;
 %ignore get_derivative_state;
 %ignore get_state;
 %ignore get_state_sensitivity;
-%ignore quad_reinit_b;
 %ignore reinit;
 %ignore reinit_b;
 %ignore sens_reinit;
@@ -54,7 +51,6 @@ using namespace amici;
 %ignore start_timer;
 %ignore switch_forward_sensis_off;
 %ignore time_exceeded;
-%ignore getSunContext;
 %ignore get_adjoint_state;
 %ignore get_adjoint_derivative_state;
 %ignore reinit_quad_b;
