@@ -175,11 +175,6 @@ settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     rtol_sim=1e-14,
     noise_level=0.01,
 )
-settings["Oliveira_NatCommun2021"] = GradientCheckSettings(
-    # Avoid "root after reinitialization"
-    atol_sim=1e-12,
-    rtol_sim=1e-12,
-)
 settings["SalazarCavazos_MBoC2020"] = GradientCheckSettings(
     atol_sim=1e-12,
     rtol_sim=1e-12,

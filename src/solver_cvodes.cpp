@@ -13,6 +13,7 @@
 #include <colamd.h>
 #include <klu.h>
 
+#include <algorithm>
 #include <sstream>
 
 #define ZERO SUN_RCONST(0.0)
@@ -132,6 +133,7 @@ void CVodeSolver::init(
 ) const {
     solver_was_called_F_ = false;
     force_reinit_postprocess_F_ = false;
+    root_info_override_.reset();
     t_ = t0;
     x_ = x0;
     int status;
@@ -362,6 +364,11 @@ void CVodeSolver::set_quad_err_con(bool const flag) const {
 }
 
 void CVodeSolver::get_root_info(int* rootsfound) const {
+    if (root_info_override_) {
+        std::ranges::copy(*root_info_override_, rootsfound);
+        root_info_override_.reset();
+        return;
+    }
     int status = CVodeGetRootInfo(solver_memory_.get(), rootsfound);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetRootInfo");
@@ -504,9 +511,56 @@ void CVodeSolver::reset_state(void* ami_mem, const_N_Vector y0) const {
     N_VScale(ONE, const_cast<N_Vector>(y0), cv_mem->cv_zn[0]);
 }
 
-void CVodeSolver::reinit_post_process_f(realtype const tnext) const {
-    reInit_post_process(solver_memory_.get(), &t_, &x_, tnext);
+bool CVodeSolver::reinit_post_process_f(realtype const tnext) const {
+    int const status = reInit_post_process(solver_memory_.get(), &t_, &x_, tnext);
     force_reinit_postprocess_F_ = false;
+
+    if (status != CV_ROOT_RETURN)
+        return false;
+
+    // If a root was found after reinitialization, this may be a spurious
+    // re-detection of a root already accounted for during the preceding
+    // discontinuity handling, rather than a genuine new event. Suppress
+    // exactly those entries that match (same index *and* same direction)
+    // a root recorded there, in a local copy of the root-info array --
+    // not the solver's own -- so that a *different*, genuinely new root
+    // reported at the very same instant is still correctly surfaced on
+    // its own, rather than the whole step being reported (or suppressed)
+    // as one all-or-nothing unit. The filtered copy is then reported to
+    // the next caller of get_root_info() via root_info_override_.
+    auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+    std::vector<int> rootsfound(cv_mem->cv_nrtfn, 0);
+    get_root_info(rootsfound.data());
+    bool genuine = false;
+    for (int ie = 0; ie < cv_mem->cv_nrtfn; ++ie) {
+        if (rootsfound[ie] == 0)
+            continue;
+        if (ie < gsl::narrow<int>(roots_ignored_after_reinit_.size())
+            && roots_ignored_after_reinit_[ie] == rootsfound[ie]) {
+            // spurious re-detection of a root already accounted for.
+            // Only an up-crossing (rootsfound[ie] == 1) is ever a genuine
+            // trigger, so only warn about suppressing one of those --
+            // suppressing a repeated down-crossing is always inconsequential.
+            if (rootsfound[ie] == 1 && get_logger()) {
+                std::stringstream msg;
+                msg << "Ignored a root immediately after reinitialization "
+                       "that matches the just-processed event at index "
+                    << ie << ", time " << t_
+                    << ". If this event is expected to retrigger faster "
+                       "than the solver's current tolerances can resolve, "
+                       "this repeat will not be detected.";
+                get_logger()->log(
+                    LogSeverity::warning, "ROOT_AFTER_REINIT", msg.str()
+                );
+            }
+            rootsfound[ie] = 0;
+        } else {
+            genuine = true;
+        }
+    }
+    if (genuine)
+        root_info_override_ = std::move(rootsfound);
+    return genuine;
 }
 
 void CVodeSolver::reinit_post_process_b(realtype const tnext) const {
@@ -528,7 +582,7 @@ void CVodeSolver::reinit_post_process_b(realtype const tnext) const {
     force_reinit_postprocess_B_ = false;
 }
 
-void CVodeSolver::reInit_post_process(
+int CVodeSolver::reInit_post_process(
     void* ami_mem, realtype* t, AmiVector* yout, realtype const tout
 ) const {
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
@@ -541,16 +595,7 @@ void CVodeSolver::reInit_post_process(
 
     status = CVode(ami_mem, tout, yout->get_nvector(), t, CV_ONE_STEP);
 
-    if (status == CV_ROOT_RETURN) {
-        auto message
-            = std::string("CVode returned a root after reinitialization at t=")
-              + std::to_string(*t)
-              + ". The initial step-size after the event or "
-                "Heaviside function is too small. To fix this, adjust "
-                "absolute or relative tolerances!";
-        throw CvodeException(status, message.c_str());
-    }
-    if (status != CV_SUCCESS) {
+    if (status != CV_SUCCESS && status != CV_ROOT_RETURN) {
         std::stringstream msg;
         msg << "tout: " << tout << ", t: " << *t << ".";
         throw CvodeException(status, "reInitPostProcess", msg.str().c_str());
@@ -581,6 +626,8 @@ void CVodeSolver::reInit_post_process(
         /* tfinal is now set to *tret */
         ca_mem->ca_tfinal = *t;
     }
+
+    return status;
 }
 
 void CVodeSolver::reinit(
@@ -590,6 +637,7 @@ void CVodeSolver::reinit(
     cv_mem->cv_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;
+    roots_ignored_after_reinit_.clear();
     x_.copy(yy0);
     reset_state(cv_mem, x_.get_nvector());
 }
@@ -808,8 +856,13 @@ void CVodeSolver::get_b(int const which) const {
 }
 
 int CVodeSolver::solve(realtype const tout, int const itask) const {
-    if (force_reinit_postprocess_F_)
-        reinit_post_process_f(tout);
+    if (force_reinit_postprocess_F_) {
+        if (reinit_post_process_f(tout)) {
+            // report that a genuine root was found
+            solver_was_called_F_ = true;
+            return CV_ROOT_RETURN;
+        }
+    }
     int status
         = CVode(solver_memory_.get(), tout, x_.get_nvector(), &t_, itask);
     if (status < 0) // status > 0 is okay and is used for e.g. root return
@@ -821,8 +874,13 @@ int CVodeSolver::solve(realtype const tout, int const itask) const {
 int CVodeSolver::solve_f(
     realtype const tout, int const itask, int* ncheckPtr
 ) const {
-    if (force_reinit_postprocess_F_)
-        reinit_post_process_f(tout);
+    if (force_reinit_postprocess_F_) {
+        if (reinit_post_process_f(tout)) {
+            // report that a genuine root was found
+            solver_was_called_F_ = true;
+            return CV_ROOT_RETURN;
+        }
+    }
     int status = CVodeF(
         solver_memory_.get(), tout, x_.get_nvector(), &t_, itask, ncheckPtr
     );

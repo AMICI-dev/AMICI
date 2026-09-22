@@ -12,6 +12,9 @@
 #include <colamd.h>
 #include <klu.h>
 
+#include <algorithm>
+#include <sstream>
+
 namespace amici {
 
 constexpr auto ONE = SUN_RCONST(1.0);
@@ -132,6 +135,7 @@ void IDASolver::init(
 ) const {
     int status;
     solver_was_called_F_ = false;
+    root_info_override_.reset();
     t_ = t0;
     x_ = x0;
     dx_ = dx0;
@@ -362,6 +366,11 @@ void IDASolver::set_quad_err_con(bool const flag) const {
 }
 
 void IDASolver::get_root_info(int* rootsfound) const {
+    if (root_info_override_) {
+        std::ranges::copy(*root_info_override_, rootsfound);
+        root_info_override_.reset();
+        return;
+    }
     int status = IDAGetRootInfo(solver_memory_.get(), rootsfound);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetRootInfo");
@@ -431,8 +440,56 @@ void IDASolver::reset_state(
     ida_mem->ida_kk = 0;
 }
 
-void IDASolver::reinit_post_process_f(realtype const tnext) const {
-    reinit_post_process(solver_memory_.get(), &t_, &x_, &dx_, tnext);
+bool IDASolver::reinit_post_process_f(realtype const tnext) const {
+    int const status
+        = reinit_post_process(solver_memory_.get(), &t_, &x_, &dx_, tnext);
+
+    if (status != IDA_ROOT_RETURN)
+        return false;
+
+    // If a root was found after reinitialization, this may be a spurious
+    // re-detection of a root already accounted for during the preceding
+    // discontinuity handling, rather than a genuine new event. Suppress
+    // exactly those entries that match (same index *and* same direction)
+    // a root recorded there, in a local copy of the root-info array --
+    // not the solver's own -- so that a *different*, genuinely new root
+    // reported at the very same instant is still correctly surfaced on
+    // its own, rather than the whole step being reported (or suppressed)
+    // as one all-or-nothing unit. The filtered copy is then reported to
+    // the next caller of get_root_info() via root_info_override_.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    std::vector<int> rootsfound(ida_mem->ida_nrtfn, 0);
+    get_root_info(rootsfound.data());
+    bool genuine = false;
+    for (int ie = 0; ie < ida_mem->ida_nrtfn; ++ie) {
+        if (rootsfound[ie] == 0)
+            continue;
+        if (ie < gsl::narrow<int>(roots_ignored_after_reinit_.size())
+            && roots_ignored_after_reinit_[ie] == rootsfound[ie]) {
+            // spurious re-detection of a root already accounted for.
+            // Only an up-crossing (rootsfound[ie] == 1) is ever a genuine
+            // trigger, so only warn about suppressing one of those --
+            // suppressing a repeated down-crossing is always inconsequential.
+            if (rootsfound[ie] == 1 && get_logger()) {
+                std::stringstream msg;
+                msg << "Ignored a root immediately after reinitialization "
+                       "that matches the just-processed event at index "
+                    << ie << ", time " << t_
+                    << ". If this event is expected to retrigger faster "
+                       "than the solver's current tolerances can resolve, "
+                       "this repeat will not be detected.";
+                get_logger()->log(
+                    LogSeverity::warning, "ROOT_AFTER_REINIT", msg.str()
+                );
+            }
+            rootsfound[ie] = 0;
+        } else {
+            genuine = true;
+        }
+    }
+    if (genuine)
+        root_info_override_ = std::move(rootsfound);
+    return genuine;
 }
 
 void IDASolver::reinit_post_process_b(realtype const tnext) const {
@@ -454,7 +511,7 @@ void IDASolver::reinit_post_process_b(realtype const tnext) const {
     force_reinit_postprocess_B_ = false;
 }
 
-void IDASolver::reinit_post_process(
+int IDASolver::reinit_post_process(
     void* ami_mem, realtype* t, AmiVector* yout, AmiVector* ypout, realtype tout
 ) const {
     auto ida_mem = static_cast<IDAMem>(ami_mem);
@@ -470,7 +527,7 @@ void IDASolver::reinit_post_process(
         IDA_ONE_STEP
     );
 
-    if (status != IDA_SUCCESS)
+    if (status != IDA_SUCCESS && status != IDA_ROOT_RETURN)
         throw IDAException(status, "reInitPostProcess");
 
     ida_mem->ida_nst = nst_tmp + 1;
@@ -500,6 +557,8 @@ void IDASolver::reinit_post_process(
         /* tfinal is now set to *tret */
         ia_mem->ia_tfinal = *t;
     }
+
+    return status;
 }
 
 void IDASolver::reinit(
@@ -510,6 +569,7 @@ void IDASolver::reinit(
     ida_mem->ida_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;
+    roots_ignored_after_reinit_.clear();
     x_.copy(yy0);
     dx_.copy(yp0);
     reset_state(ida_mem, x_.get_nvector(), xB_.get_nvector());
@@ -728,8 +788,13 @@ void IDASolver::quad_ss_tolerances(
 }
 
 int IDASolver::solve(realtype const tout, int const itask) const {
-    if (force_reinit_postprocess_F_)
-        reinit_post_process_f(tout);
+    if (force_reinit_postprocess_F_) {
+        if (reinit_post_process_f(tout)) {
+            // report that a genuine root was found
+            solver_was_called_F_ = true;
+            return IDA_ROOT_RETURN;
+        }
+    }
     int status = IDASolve(
         solver_memory_.get(), tout, &t_, x_.get_nvector(), dx_.get_nvector(),
         itask
@@ -743,8 +808,13 @@ int IDASolver::solve(realtype const tout, int const itask) const {
 int IDASolver::solve_f(
     realtype const tout, int const itask, int* ncheckPtr
 ) const {
-    if (force_reinit_postprocess_F_)
-        reinit_post_process_f(tout);
+    if (force_reinit_postprocess_F_) {
+        if (reinit_post_process_f(tout)) {
+            // report that a genuine root was found
+            solver_was_called_F_ = true;
+            return IDA_ROOT_RETURN;
+        }
+    }
     int status = IDASolveF(
         solver_memory_.get(), tout, &t_, x_.get_nvector(), xB_.get_nvector(),
         itask, ncheckPtr
