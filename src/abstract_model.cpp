@@ -373,8 +373,8 @@ void AbstractModel::
     );
 }
 
-void AbstractModel::fdJydsigma(
-    realtype* /*dJydsigma*/, int const /*iy*/, realtype const* /*p*/,
+void AbstractModel::fdJydsigmay(
+    realtype* /*dJydsigmay*/, int const /*iy*/, realtype const* /*p*/,
     realtype const* /*k*/, realtype const* /*y*/, realtype const* /*sigmay*/,
     realtype const* /*my*/
 ) {
@@ -397,8 +397,8 @@ void AbstractModel::fdJzdz(
     );
 }
 
-void AbstractModel::fdJzdsigma(
-    realtype* /*dJzdsigma*/, int const /*iz*/, realtype const* /*p*/,
+void AbstractModel::fdJzdsigmaz(
+    realtype* /*dJzdsigmaz*/, int const /*iz*/, realtype const* /*p*/,
     realtype const* /*k*/, realtype const* /*z*/, realtype const* /*sigmaz*/,
     realtype const* /*mz*/
 ) {
@@ -409,8 +409,8 @@ void AbstractModel::fdJzdsigma(
     );
 }
 
-void AbstractModel::fdJrzdz(
-    realtype* /*dJrzdz*/, int const /*iz*/, realtype const* /*p*/,
+void AbstractModel::fdJrzdrz(
+    realtype* /*dJrzdrz*/, int const /*iz*/, realtype const* /*p*/,
     realtype const* /*k*/, realtype const* /*rz*/, realtype const* /*sigmaz*/
 ) {
     throw AmiException(
@@ -420,8 +420,8 @@ void AbstractModel::fdJrzdz(
     );
 }
 
-void AbstractModel::fdJrzdsigma(
-    realtype* /*dJrzdsigma*/, int const /*iz*/, realtype const* /*p*/,
+void AbstractModel::fdJrzdsigmaz(
+    realtype* /*dJrzdsigmaz*/, int const /*iz*/, realtype const* /*p*/,
     realtype const* /*k*/, realtype const* /*rz*/, realtype const* /*sigmaz*/
 ) {
     throw AmiException(

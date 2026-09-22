@@ -15,7 +15,37 @@ namespace amici {
 class ExpData;
 class Solver;
 class SteadyStateProblem;
-class FinalStateStorer;
+
+/**
+ * @brief Pre-/post-application state snapshot for a single event within a
+ * `Discontinuity`.
+ *
+ * A `Discontinuity` can represent several events that trigger
+ * simultaneously (a single time point may satisfy more than one event's
+ * trigger condition). Each such event is applied in turn (e.g., in order
+ * of priority), and -- for adjoint sensitivities -- `deltaxB`/`deltaqB`
+ * need *this* event's own pre-/post-application state, not the
+ * pre-/post-state of the whole simultaneous-event group.
+ */
+struct EventApplication {
+    /** Index of the applied event. */
+    int ie{0};
+
+    /** State immediately before this event's own bolus was applied. */
+    AmiVector x_pre;
+
+    /** `xdot` evaluated at `x_pre`. */
+    AmiVector xdot_pre;
+
+    /** State immediately after this event's own bolus was applied. */
+    AmiVector x_post;
+
+    /** `xdot` evaluated at `x_post`. */
+    AmiVector xdot_post;
+
+    /** State derivative after this event's own bolus (DAE only). */
+    AmiVector dx_post;
+};
 
 /**
  * @brief Data structure to store some state of a simulation at a discontinuity.
@@ -26,46 +56,22 @@ struct Discontinuity {
      *
      * @param time
      * @param root_info
-     * @param x_pre
-     * @param xdot_pre
-     * @param x_post
-     * @param xdot_post
      * @param h_pre
      * @param total_cl_pre
      */
     explicit Discontinuity(
         realtype const time,
         std::vector<int> const& root_info = std::vector<int>(),
-        AmiVector const& x_pre = AmiVector(),
-        AmiVector const& xdot_pre = AmiVector(),
-        AmiVector const& x_post = AmiVector(),
-        AmiVector const& xdot_post = AmiVector(),
         std::vector<realtype> const& h_pre = std::vector<realtype>(),
         std::vector<realtype> const& total_cl_pre = std::vector<realtype>(0)
     )
         : time(time)
-        , x_post(x_post)
-        , x_pre(x_pre)
-        , xdot_post(xdot_post)
-        , xdot_pre(xdot_pre)
         , root_info(root_info)
         , h_pre(h_pre)
         , total_cl_pre(total_cl_pre) {}
 
     /** Time of discontinuity. */
     realtype time;
-
-    /** Post-event state vector (dimension nx). */
-    AmiVector x_post;
-
-    /** Pre-event state vector (dimension nx). */
-    AmiVector x_pre;
-
-    /** Post-event differential state vectors (dimension nx). */
-    AmiVector xdot_post;
-
-    /** Pre-event differential state vectors (dimension nx). */
-    AmiVector xdot_pre;
 
     /**
      * @brief Array of flags indicating which root has been found.
@@ -82,12 +88,18 @@ struct Discontinuity {
      */
     std::vector<realtype> h_pre;
 
-    /** time derivative of state (DAE only) post-event */
-    AmiVector dx_post;
-
     /** Total abundances for conservation laws
      (dimension: `nx_rdata - nx_solver`) */
     std::vector<realtype> total_cl_pre;
+
+    /**
+     * @brief Per-event pre-/post-bolus state snapshots, one entry per
+     * event in the exact order in which they were applied (as opposed to
+     * `root_info`, which only records *which* events fired, but neither order
+     * nor intermediate state.)
+     * Only populated when adjoint sensitivities are being computed.
+     */
+    std::vector<EventApplication> event_applications;
 };
 
 /**
@@ -666,9 +678,6 @@ class ForwardProblem {
 
     ~ForwardProblem() = default;
 
-    /** allow FinalStateStorer to access private members and functions */
-    friend ::amici::FinalStateStorer;
-
     /**
      * @brief Solve the forward problem.
      *
@@ -900,6 +909,16 @@ class ForwardProblem {
      */
     void handle_postequilibration();
 
+    /**
+     * @brief Store the current simulation state as the main simulation's
+     * final state, backfilling the timepoint state at the final time if
+     * missing.
+     *
+     * May throw in `CVodeSolver::getSens` due to
+     * https://github.com/LLNL/sundials/issues/82.
+     */
+    void store_final_state();
+
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype> dJzdx_;
@@ -924,67 +943,6 @@ class ForwardProblem {
     FwdSimWorkspace ws_;
     EventHandlingSimulator main_simulator_;
     EventHandlingSimulator pre_simulator_;
-};
-
-/**
- * @brief stores the stimulation state when it goes out of scope
- */
-class FinalStateStorer : public ContextManager {
-  public:
-    /**
-     * @brief constructor, attaches problem pointer
-     *
-     * @param fwd problem from which the simulation state is to be stored
-     */
-    explicit FinalStateStorer(ForwardProblem* fwd)
-        : fwd_(fwd) {}
-
-    FinalStateStorer& operator=(FinalStateStorer const& other) = delete;
-
-    /**
-     * @brief destructor, stores simulation state
-     */
-    ~FinalStateStorer() noexcept(false) {
-        if (fwd_) {
-            try {
-                // This may throw in `CVodeSolver::getSens`
-                // due to https://github.com/LLNL/sundials/issues/82.
-                // Therefore, this dtor must be `noexcept(false)` to avoid
-                // program termination.
-                fwd_->main_simulator_.result.final_state_
-                    = fwd_->main_simulator_.get_simulation_state();
-                // if there is an associated output timepoint, also store it in
-                // timepoint_states if it's not present there.
-                // this may happen if there is an error just at
-                // (or indistinguishably before) an output timepoint
-                auto const final_time = fwd_->get_final_time();
-                auto const timepoints = fwd_->model->get_timepoints();
-                if (!fwd_->main_simulator_.result.timepoint_states_.contains(
-                        final_time
-                    )
-                    && std::ranges::find(timepoints, final_time)
-                           != timepoints.cend()) {
-                    fwd_->main_simulator_.result.timepoint_states_[final_time]
-                        = fwd_->main_simulator_.result.final_state_;
-                }
-            } catch (std::exception const&) {
-                // We must not throw in case we are already in the stack
-                // unwinding phase due to some other active exception, otherwise
-                // this will also lead to termination.
-                //
-                // In case there is another active exception,
-                // `fwd_->{final_state_,timepoint_states_}` won't be set,
-                // and we assume that they are either not accessed anymore, or
-                // that there is appropriate error handling in place.
-                if (!std::uncaught_exceptions()) {
-                    throw;
-                }
-            }
-        }
-    }
-
-  private:
-    ForwardProblem* fwd_;
 };
 
 } // namespace amici
