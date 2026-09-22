@@ -30,7 +30,7 @@ extern const std::array<std::string_view const, 0> expression_ids;
 extern std::array<int, 2> state_idxs_solver;
 
 extern void Jy_model_dirac_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
-extern void dJydsigma_model_dirac_py(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
+extern void dJydsigmay_model_dirac_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_model_dirac_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_colptrs_model_dirac_py(SUNMatrixWrapper &colptrs, int index);
 extern void dJydy_rowvals_model_dirac_py(SUNMatrixWrapper &rowvals, int index);
@@ -176,18 +176,18 @@ class Model_model_dirac_py : public amici::Model_ODE {
     void fJz(realtype *Jz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
 
 
-    void fdJrzdsigma(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fdJrzdsigmaz(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fdJrzdrz(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fdJydsigma(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
-        dJydsigma_model_dirac_py(dJydsigma, iy, p, k, y, sigmay, my);
+    void fdJydsigmay(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
+        dJydsigmay_model_dirac_py(dJydsigmay, iy, p, k, y, sigmay, my);
     }
 
 
-    void fdJzdsigma(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
+    void fdJzdsigmaz(realtype *dJzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
 
 
     void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const double *mz) override {}
@@ -528,7 +528,7 @@ class Model_model_dirac_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "f04344fe181ed0b63917c93672370d76e427fb22";
+        return "088c23bd7aa5411508ed82dc4f1ed8b565a69713";
     }
 
     bool has_quadratic_llh() const override {

@@ -29,11 +29,11 @@
 %ignore fJrz;
 %ignore fJy;
 %ignore fJz;
-%ignore fdJrzdsigma;
-%ignore fdJrzdz;
-%ignore fdJzdsigma;
+%ignore fdJrzdsigmaz;
+%ignore fdJrzdrz;
+%ignore fdJzdsigmaz;
 %ignore fdJzdz;
-%ignore fdJydsigma;
+%ignore fdJydsigmay;
 %ignore fdeltaqB;
 %ignore fdeltasx;
 %ignore fdeltax;

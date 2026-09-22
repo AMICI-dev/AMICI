@@ -69,11 +69,11 @@ set(SRC_LIST_LIB Jrz.cpp
 Jy.cpp 
 Jz.cpp 
 create_splines.cpp 
-dJrzdsigma.cpp 
-dJrzdz.cpp 
-dJydsigma.cpp 
+dJrzdrz.cpp 
+dJrzdsigmaz.cpp 
+dJydsigmay.cpp 
 dJydy.cpp 
-dJzdsigma.cpp 
+dJzdsigmaz.cpp 
 dJzdz.cpp 
 deltaqB.cpp 
 deltasx.cpp 

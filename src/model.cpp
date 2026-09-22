@@ -61,15 +61,15 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
     {ModelQuantity::dsigmaydp, "dsigmaydp"},
     {ModelQuantity::dsigmaydy, "dsigmaydy"},
     {ModelQuantity::dsigmazdp, "dsigmazdp"},
-    {ModelQuantity::dJydsigma, "dJydsigma"},
+    {ModelQuantity::dJydsigmay, "dJydsigmay"},
     {ModelQuantity::dJydx, "dJydx"},
     {ModelQuantity::dJrzdx, "dJrzdx"},
     {ModelQuantity::dJzdx, "dJzdx"},
     {ModelQuantity::dzdp, "dzdp"},
     {ModelQuantity::dzdx, "dzdx"},
-    {ModelQuantity::dJrzdsigma, "dJrzdsigma"},
-    {ModelQuantity::dJrzdz, "dJrzdz"},
-    {ModelQuantity::dJzdsigma, "dJzdsigma"},
+    {ModelQuantity::dJrzdsigmaz, "dJrzdsigmaz"},
+    {ModelQuantity::dJrzdrz, "dJrzdrz"},
+    {ModelQuantity::dJzdsigmaz, "dJzdsigmaz"},
     {ModelQuantity::dJzdz, "dJzdz"},
     {ModelQuantity::drzdp, "drzdp"},
     {ModelQuantity::drzdx, "drzdx"},
@@ -1761,7 +1761,7 @@ int Model::check_finite(
             );
         break;
     case ModelQuantity::dJydy:
-    case ModelQuantity::dJydsigma:
+    case ModelQuantity::dJydsigmay:
         if (has_observable_ids())
             col_id.append(" ").append(get_observable_ids()[col]);
         break;
@@ -2270,10 +2270,10 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     fy(edata.get_timepoint(it), x);
     fsigmay(it, &edata);
 
-    fdJydsigma(it, x, edata);
+    fdJydsigmay(it, x, edata);
     fdsigmaydy(it, &edata);
 
-    set_nan_to_zero(derived_state_.dJydsigma_);
+    set_nan_to_zero(derived_state_.dJydsigmay_);
     set_nan_to_zero(derived_state_.dsigmaydy_);
     for (int iyt = 0; iyt < nytrue; iyt++) {
         if (!derived_state_.dJydy_.at(iyt).capacity())
@@ -2293,14 +2293,14 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
             edata.get_measurements_ptr(it)
         );
 
-        // dJydy += dJydsigma * dsigmaydy
+        // dJydy += dJydsigmay * dsigmaydy
         // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
         // sparse    dense       dense
         derived_state_.dJydy_dense_.zero();
         amici_dgemm(
             BLASLayout::colMajor, BLASTranspose::noTrans,
             BLASTranspose::noTrans, nJ, ny, ny, 1.0,
-            &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
+            &derived_state_.dJydsigmay_.at(iyt * nJ * ny), nJ,
             derived_state_.dsigmaydy_.data(), ny, 1.0,
             derived_state_.dJydy_dense_.data(), nJ
         );
@@ -2325,20 +2325,20 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     }
 }
 
-void Model::fdJydsigma(int const it, AmiVector const& x, ExpData const& edata) {
+void Model::fdJydsigmay(int const it, AmiVector const& x, ExpData const& edata) {
     if (!ny)
         return;
 
-    derived_state_.dJydsigma_.assign(nytrue * ny * nJ, 0.0);
+    derived_state_.dJydsigmay_.assign(nytrue * ny * nJ, 0.0);
 
     fy(edata.get_timepoint(it), x);
     fsigmay(it, &edata);
 
     for (int iyt = 0; iyt < nytrue; iyt++) {
         if (edata.is_set_measurement(it, iyt)) {
-            // get dJydsigma slice (ny) for current timepoint and observable
-            fdJydsigma(
-                &derived_state_.dJydsigma_.at(iyt * ny * nJ), iyt,
+            // get dJydsigmay slice (ny) for current timepoint and observable
+            fdJydsigmay(
+                &derived_state_.dJydsigmay_.at(iyt * ny * nJ), iyt,
                 state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.y_.data(),
                 derived_state_.sigmay_.data(), edata.get_measurements_ptr(it)
@@ -2346,9 +2346,9 @@ void Model::fdJydsigma(int const it, AmiVector const& x, ExpData const& edata) {
             if (always_check_finite_) {
                 check_finite(
                     gsl::span<realtype>(
-                        &derived_state_.dJydsigma_.at(iyt * ny * nJ), ny * nJ
+                        &derived_state_.dJydsigmay_.at(iyt * ny * nJ), ny * nJ
                     ),
-                    ModelQuantity::dJydsigma, ny
+                    ModelQuantity::dJydsigmay, ny
                 );
             }
         }
@@ -2367,10 +2367,10 @@ void Model::fdJydp(int const it, AmiVector const& x, ExpData const& edata) {
     fdJydy(it, x, edata);
     fdydp(edata.get_timepoint(it), x);
 
-    fdJydsigma(it, x, edata);
+    fdJydsigmay(it, x, edata);
     fdsigmaydp(it, &edata);
 
-    set_nan_to_zero(derived_state_.dJydsigma_);
+    set_nan_to_zero(derived_state_.dJydsigmay_);
     set_nan_to_zero(derived_state_.dsigmaydp_);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (!edata.is_set_measurement(it, iyt))
@@ -2386,11 +2386,11 @@ void Model::fdJydp(int const it, AmiVector const& x, ExpData const& edata) {
             );
         }
 
-        // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
+        // dJydp = 1.0 * dJydp +  1.0 * dJydsigmay * dsigmaydp
         amici_dgemm(
             BLASLayout::colMajor, BLASTranspose::noTrans,
             BLASTranspose::noTrans, nJ, nplist(), ny, 1.0,
-            &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
+            &derived_state_.dJydsigmay_.at(iyt * nJ * ny), nJ,
             derived_state_.dsigmaydp_.data(), ny, 1.0,
             derived_state_.dJydp_.data(), nJ
         );
@@ -2625,22 +2625,22 @@ void Model::fdJzdz(
     }
 }
 
-void Model::fdJzdsigma(
+void Model::fdJzdsigmaz(
     int const ie, int const nroots, realtype const t, AmiVector const& x,
     ExpData const& edata
 ) {
     if (!nz)
         return;
 
-    derived_state_.dJzdsigma_.assign(nztrue * nz * nJ, 0.0);
+    derived_state_.dJzdsigmaz_.assign(nztrue * nz * nJ, 0.0);
 
     fz(ie, t, x);
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (edata.is_set_event_measurement(nroots, iztrue)) {
-            fdJzdsigma(
-                &derived_state_.dJzdsigma_.at(iztrue * nz * nJ), iztrue,
+            fdJzdsigmaz(
+                &derived_state_.dJzdsigmaz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.z_.data(),
                 derived_state_.sigmaz_.data(),
@@ -2649,9 +2649,9 @@ void Model::fdJzdsigma(
             if (always_check_finite_) {
                 check_finite(
                     gsl::span<realtype>(
-                        &derived_state_.dJzdsigma_.at(iztrue * nz * nJ), nz * nJ
+                        &derived_state_.dJzdsigmaz_.at(iztrue * nz * nJ), nz * nJ
                     ),
-                    ModelQuantity::dJzdsigma, nz
+                    ModelQuantity::dJzdsigmaz, nz
                 );
             }
         }
@@ -2665,7 +2665,7 @@ void Model::fdJzdp(
     if (!nz)
         return;
     // dJzdz         nJ x nz x nztrue
-    // dJzdsigma     nJ x nz x nztrue
+    // dJzdsigmaz     nJ x nz x nztrue
     // dzdp          nz x nplist()
     // dJzdp         nJ x nplist()
 
@@ -2674,16 +2674,16 @@ void Model::fdJzdp(
     fdzdp(ie, t, x);
     fdsigmazdp(ie, nroots, t, &edata);
     fdJzdz(ie, nroots, t, x, edata);
-    fdJrzdz(ie, nroots, t, x, edata);
-    fdJzdsigma(ie, nroots, t, x, edata);
-    fdJrzdsigma(ie, nroots, t, x, edata);
+    fdJrzdrz(ie, nroots, t, x, edata);
+    fdJzdsigmaz(ie, nroots, t, x, edata);
+    fdJrzdsigmaz(ie, nroots, t, x, edata);
 
     set_nan_to_zero(derived_state_.dzdp_);
     set_nan_to_zero(derived_state_.dsigmazdp_);
     set_nan_to_zero(derived_state_.dJzdz_);
-    set_nan_to_zero(derived_state_.dJrzdz_);
-    set_nan_to_zero(derived_state_.dJzdsigma_);
-    set_nan_to_zero(derived_state_.dJrzdsigma_);
+    set_nan_to_zero(derived_state_.dJrzdrz_);
+    set_nan_to_zero(derived_state_.dJzdsigmaz_);
+    set_nan_to_zero(derived_state_.dJrzdsigmaz_);
     for (int izt = 0; izt < nztrue; ++izt) {
         if (!edata.is_set_event_measurement(nroots, izt))
             continue;
@@ -2702,7 +2702,7 @@ void Model::fdJzdp(
             amici_dgemm(
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-                &derived_state_.dJrzdsigma_.at(izt * nz * nJ), nJ,
+                &derived_state_.dJrzdsigmaz_.at(izt * nz * nJ), nJ,
                 derived_state_.dsigmazdp_.data(), nz, 1.0,
                 derived_state_.dJzdp_.data(), nJ
             );
@@ -2710,7 +2710,7 @@ void Model::fdJzdp(
             amici_dgemm(
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-                &derived_state_.dJrzdz_.at(izt * nz * nJ), nJ,
+                &derived_state_.dJrzdrz_.at(izt * nz * nJ), nJ,
                 derived_state_.dzdp_.data(), nz, 1.0,
                 derived_state_.dJzdp_.data(), nJ
             );
@@ -2719,7 +2719,7 @@ void Model::fdJzdp(
         amici_dgemm(
             BLASLayout::colMajor, BLASTranspose::noTrans,
             BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-            &derived_state_.dJzdsigma_.at(izt * nz * nJ), nJ,
+            &derived_state_.dJzdsigmaz_.at(izt * nz * nJ), nJ,
             derived_state_.dsigmazdp_.data(), nz, 1.0,
             derived_state_.dJzdp_.data(), nJ
         );
@@ -2739,12 +2739,12 @@ void Model::fdJzdx(
     derived_state_.dJzdx_.assign(nJ * nx_solver, 0.0);
 
     fdJzdz(ie, nroots, t, x, edata);
-    fdJrzdz(ie, nroots, t, x, edata);
+    fdJrzdrz(ie, nroots, t, x, edata);
     fdzdx(ie, t, x);
     fdrzdx(ie, t, x);
 
     set_nan_to_zero(derived_state_.dJzdz_);
-    set_nan_to_zero(derived_state_.dJrzdz_);
+    set_nan_to_zero(derived_state_.dJrzdrz_);
     set_nan_to_zero(derived_state_.dzdx_);
     set_nan_to_zero(derived_state_.drzdx_);
 
@@ -2766,7 +2766,7 @@ void Model::fdJzdx(
             amici_dgemm(
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
-                &derived_state_.dJrzdz_.at(izt * nz * nJ), nJ,
+                &derived_state_.dJrzdrz_.at(izt * nz * nJ), nJ,
                 derived_state_.drzdx_.data(), nz, 1.0,
                 derived_state_.dJzdx_.data(), nJ
             );
@@ -2774,22 +2774,22 @@ void Model::fdJzdx(
     }
 }
 
-void Model::fdJrzdz(
+void Model::fdJrzdrz(
     int const ie, int const nroots, realtype const t, AmiVector const& x,
     ExpData const& edata
 ) {
     if (!nz)
         return;
 
-    derived_state_.dJrzdz_.assign(nztrue * nz * nJ, 0.0);
+    derived_state_.dJrzdrz_.assign(nztrue * nz * nJ, 0.0);
 
     frz(ie, t, x);
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (edata.is_set_event_measurement(nroots, iztrue)) {
-            fdJrzdz(
-                &derived_state_.dJrzdz_.at(iztrue * nz * nJ), iztrue,
+            fdJrzdrz(
+                &derived_state_.dJrzdrz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.rz_.data(),
                 derived_state_.sigmaz_.data()
@@ -2797,31 +2797,31 @@ void Model::fdJrzdz(
             if (always_check_finite_) {
                 check_finite(
                     gsl::span<realtype>(
-                        &derived_state_.dJrzdz_.at(iztrue * nz * nJ), nz * nJ
+                        &derived_state_.dJrzdrz_.at(iztrue * nz * nJ), nz * nJ
                     ),
-                    ModelQuantity::dJrzdz, nz
+                    ModelQuantity::dJrzdrz, nz
                 );
             }
         }
     }
 }
 
-void Model::fdJrzdsigma(
+void Model::fdJrzdsigmaz(
     int const ie, int const nroots, realtype const t, AmiVector const& x,
     ExpData const& edata
 ) {
     if (!nz)
         return;
 
-    derived_state_.dJrzdsigma_.assign(nztrue * nz * nJ, 0.0);
+    derived_state_.dJrzdsigmaz_.assign(nztrue * nz * nJ, 0.0);
 
     frz(ie, t, x);
     fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (edata.is_set_event_measurement(nroots, iztrue)) {
-            fdJrzdsigma(
-                &derived_state_.dJrzdsigma_.at(iztrue * nz * nJ), iztrue,
+            fdJrzdsigmaz(
+                &derived_state_.dJrzdsigmaz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.rz_.data(),
                 derived_state_.sigmaz_.data()
@@ -2829,10 +2829,10 @@ void Model::fdJrzdsigma(
             if (always_check_finite_) {
                 check_finite(
                     gsl::span<realtype>(
-                        &derived_state_.dJrzdsigma_.at(iztrue * nz * nJ),
+                        &derived_state_.dJrzdsigmaz_.at(iztrue * nz * nJ),
                         nz * nJ
                     ),
-                    ModelQuantity::dJrzdsigma, nz
+                    ModelQuantity::dJrzdsigmaz, nz
                 );
             }
         }

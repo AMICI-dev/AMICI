@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_calvetti_py {
 
-void dJydsigma_model_calvetti_py(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+void dJydsigmay_model_calvetti_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
     const realtype obs_V1_ = y[0];
     const realtype obs_V2_ = y[1];
     const realtype obs_V3_ = y[2];
@@ -28,22 +28,22 @@ void dJydsigma_model_calvetti_py(realtype *dJydsigma, const int iy, const realty
 
     switch(iy) {
         case 0:
-            dJydsigma[0] = 1.0/sigma_obs_V1_ - 1.0*std::pow(-mobs_V1_ + obs_V1_, 2)/std::pow(sigma_obs_V1_, 3);
+            dJydsigmay[0] = 1.0/sigma_obs_V1_ - 1.0*std::pow(-mobs_V1_ + obs_V1_, 2)/std::pow(sigma_obs_V1_, 3);
             break;
         case 1:
-            dJydsigma[1] = 1.0/sigma_obs_V2_ - 1.0*std::pow(-mobs_V2_ + obs_V2_, 2)/std::pow(sigma_obs_V2_, 3);
+            dJydsigmay[1] = 1.0/sigma_obs_V2_ - 1.0*std::pow(-mobs_V2_ + obs_V2_, 2)/std::pow(sigma_obs_V2_, 3);
             break;
         case 2:
-            dJydsigma[2] = 1.0/sigma_obs_V3_ - 1.0*std::pow(-mobs_V3_ + obs_V3_, 2)/std::pow(sigma_obs_V3_, 3);
+            dJydsigmay[2] = 1.0/sigma_obs_V3_ - 1.0*std::pow(-mobs_V3_ + obs_V3_, 2)/std::pow(sigma_obs_V3_, 3);
             break;
         case 3:
-            dJydsigma[3] = 1.0/sigma_obs_f0_ - 1.0*std::pow(-mobs_f0_ + obs_f0_, 2)/std::pow(sigma_obs_f0_, 3);
+            dJydsigmay[3] = 1.0/sigma_obs_f0_ - 1.0*std::pow(-mobs_f0_ + obs_f0_, 2)/std::pow(sigma_obs_f0_, 3);
             break;
         case 4:
-            dJydsigma[4] = 1.0/sigma_obs_f1_ - 1.0*std::pow(-mobs_f1_ + obs_f1_, 2)/std::pow(sigma_obs_f1_, 3);
+            dJydsigmay[4] = 1.0/sigma_obs_f1_ - 1.0*std::pow(-mobs_f1_ + obs_f1_, 2)/std::pow(sigma_obs_f1_, 3);
             break;
         case 5:
-            dJydsigma[5] = 1.0/sigma_obs_f2_ - 1.0*std::pow(-mobs_f2_ + obs_f2_, 2)/std::pow(sigma_obs_f2_, 3);
+            dJydsigmay[5] = 1.0/sigma_obs_f2_ - 1.0*std::pow(-mobs_f2_ + obs_f2_, 2)/std::pow(sigma_obs_f2_, 3);
             break;
     }
 }

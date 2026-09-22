@@ -106,13 +106,13 @@ struct ModelStateDerived {
         , dtotal_cldx_rdata(other.dtotal_cldx_rdata)
         , dxdotdp(other.dxdotdp)
         , dJydy_(other.dJydy_)
-        , dJydsigma_(other.dJydsigma_)
+        , dJydsigmay_(other.dJydsigmay_)
         , dJydx_(other.dJydx_)
         , dJydp_(other.dJydp_)
         , dJzdz_(other.dJzdz_)
-        , dJzdsigma_(other.dJzdsigma_)
-        , dJrzdz_(other.dJrzdz_)
-        , dJrzdsigma_(other.dJrzdsigma_)
+        , dJzdsigmaz_(other.dJzdsigmaz_)
+        , dJrzdrz_(other.dJrzdrz_)
+        , dJrzdsigmaz_(other.dJrzdsigmaz_)
         , dJzdx_(other.dJzdx_)
         , dJzdp_(other.dJzdp_)
         , dzdx_(other.dzdx_)
@@ -291,7 +291,7 @@ struct ModelStateDerived {
     /** Observable sigma derivative of data likelihood
      * (dimension nJ x ny x nytrue, row-major)
      */
-    std::vector<realtype> dJydsigma_;
+    std::vector<realtype> dJydsigmay_;
 
     /** State derivative of data likelihood
      * (dimension `nJ` x `nx_solver`, row-major)
@@ -311,17 +311,17 @@ struct ModelStateDerived {
     /** event sigma derivative of event likelihood
      * (dimension nJ x nz x nztrue, row-major)
      */
-    std::vector<realtype> dJzdsigma_;
+    std::vector<realtype> dJzdsigmaz_;
 
     /** event output derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
-    std::vector<realtype> dJrzdz_;
+    std::vector<realtype> dJrzdrz_;
 
     /** event sigma derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
-    std::vector<realtype> dJrzdsigma_;
+    std::vector<realtype> dJrzdsigmaz_;
 
     /** state derivative of event likelihood
      * (dimension `nJ` x `nx_solver`, row-major)
