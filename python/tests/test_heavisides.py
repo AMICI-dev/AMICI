@@ -78,8 +78,16 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
-    # FIXME: For a few parameters of these models, adjoint sensitivities
-    # are somewhat off. This needs to be investigated further.
+    # FIXME: for `state_and_param_dep_heavisides`, `sllh` w.r.t. `beta`
+    # differs between FSA and ASA by ~0.035% relative (1.9e-5 absolute) --
+    # `beta` only affects the post-switch decay rate of `x_1`, whose switch
+    # time (`x_2`) is itself state- and parameter-dependent. Not resolved by
+    # PR #3258 (adjoint sensitivities for state-triggered-and-state-updating
+    # events).
+    # Root-caused to a CVODES backward-integration order-1 restart on every
+    # per-datapoint adjoint reinit, which doesn't fully recover before the
+    # nearby switch time -- see
+    # https://github.com/AMICI-dev/AMICI/issues/3274.
     asa_xfail = amici_model.get_name() in ("state_and_param_dep_heavisides",)
     check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
 

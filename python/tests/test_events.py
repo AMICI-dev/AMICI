@@ -724,11 +724,16 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
-    # FIXME: For a few parameters of these models, adjoint sensitivities
-    # are somewhat off. This needs to be investigated further.
+    # FIXME: for `events_plus_heavisides`, `sllh` w.r.t. `beta` differs
+    # between FSA and ASA by ~4.8e-5 relative.
+    # For `nested_events`, `sllh` w.r.t. `decay_2` differs by ~0.26%
+    # relative.
+    # Root-caused to a CVODES backward-integration order-1 restart on every
+    # per-datapoint adjoint reinit, which doesn't fully recover before a
+    # discontinuity that happens to sit close to a datapoint here -- see
+    # https://github.com/AMICI-dev/AMICI/issues/3274.
     asa_xfail = amici_model.get_name() in (
         "events_plus_heavisides",
-        "piecewise_plus_event_semi_complicated",
         "nested_events",
     )
     check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
