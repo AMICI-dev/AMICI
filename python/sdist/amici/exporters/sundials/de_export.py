@@ -898,7 +898,7 @@ class DEExporter:
     def _get_explicit_roots_body(self) -> list[str]:
         events = self.model.events()
         lines = []
-        static_syms = self.model._static_symbols(["k", "p", "w"])
+        static_syms = self.model.static_symbols
 
         for event_idx, event in enumerate(events):
             if not (

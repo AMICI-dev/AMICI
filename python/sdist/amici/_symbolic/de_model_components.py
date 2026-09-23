@@ -874,7 +874,7 @@ class Event(ModelQuantity):
         return self._t_root[0]
 
     def has_explicit_trigger_times(
-        self, allowed_symbols: set[sp.Symbol] | None = None
+        self, allowed_symbols: set[sp.Symbol]
     ) -> bool:
         """Check whether the event has explicit trigger times.
 
@@ -883,12 +883,10 @@ class Event(ModelQuantity):
 
         :param allowed_symbols:
             The set of symbols that are allowed in the trigger time
-            expressions. If `None`, any symbols are allowed.
-            If empty, only numeric values are allowed.
+            expressions -- in practice, a model's static symbols (see
+            :py:attr:`DEModel.static_symbols`), i.e. those not depending
+            on time or state, directly or indirectly.
         """
-        if allowed_symbols is None:
-            return len(self._t_root) > 0
-
         return len(self._t_root) > 0 and all(
             t.is_Number or t.free_symbols.issubset(allowed_symbols)
             for t in self._t_root

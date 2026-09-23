@@ -33,6 +33,18 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   gradient; `rdata.sx0` is now empty (`None` in Python), consistent with
   other fields that are unavailable for the chosen settings (#1184).
 
+* Fixed the JAX backend attributing a root/discontinuity crossing to the
+  wrong Heaviside variable whenever a model had an event whose *solved*
+  trigger time still referenced a state (e.g. a trigger comparing `time`
+  directly to a state, `time >= x` — `sympy.solve` happily returns `[x]`
+  even though `x` is dynamic, not static). `DEModel._reorder_events()`
+  (which determines the physical event/Heaviside-array order) and the JAX
+  exporter's `iroot`/`eroot`/`ih`/`eh` classification (which determines
+  the root-detection order) used two different criteria for "does this
+  event have an explicit (precomputable) trigger time", which could
+  silently permute the two orderings relative to each other, causing
+  state updates to be gated by the wrong event's condition (#3286).
+
 * There are no more reserved names: previously, model import or
   compilation could fail — or silently generate incorrect code, with no
   indication of the actual cause — whenever a model entity's ID collided
