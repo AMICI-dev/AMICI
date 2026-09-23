@@ -894,3 +894,10 @@ def test_preequilibration_events(tempdir):
             rtol=1e-6,
             epsilon=1e-8,
         )
+
+        # sx0 is not computed (and not meaningful) when pre-equilibration
+        # is run with adjoint sensitivities (see gh-1184)
+        if sensi_meth_preeq == SensitivityMethod.adjoint:
+            assert rdata.sx0 is None
+        else:
+            assert rdata.sx0 is not None

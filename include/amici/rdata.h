@@ -8,9 +8,9 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
-#include <vector>
 #include <span>
 #include <string_view>
+#include <vector>
 
 namespace amici {
 class ReturnData;
@@ -455,7 +455,8 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Initial state sensitivities for the main simulation.
      *
-     * (shape `nplist` x `nx_rdata`, row-major).
+     * Shape `nplist` x `nx_rdata` (row-major). Empty if pre-equilibration
+     * used adjoint sensitivities, in which case these are not computed.
      */
     std::vector<realtype> sx0;
 
@@ -669,9 +670,11 @@ class ReturnData : public ModelDimensions {
      * @param fwd forward problem
      * @param model model that was used for forward simulation
      * @param edata ExpData instance containing observable data
+     * @param store_sx0 whether to compute and store `sx0`
      */
     void process_forward_problem(
-        ForwardProblem const& fwd, Model& model, ExpData const* edata
+        ForwardProblem const& fwd, Model& model, ExpData const* edata,
+        bool store_sx0
     );
 
     /**
