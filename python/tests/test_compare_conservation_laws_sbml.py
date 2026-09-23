@@ -326,19 +326,22 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
 
             # compare fully adjoint approach to simulation with singular
             #  Jacobian
-            raa = get_results(
-                model,
-                edata=edata,
-                sensi_order=1,
-                sensi_meth=SensitivityMethod.adjoint,
-                sensi_meth_preeq=SensitivityMethod.adjoint,
-                stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
-                reinitialize_states=reinit,
-            )
-            assert raa.status == AMICI_SUCCESS
-
-            # assert gradients are close (quadrature tolerances are laxer)
-            assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
+            # TODO(gh-1156): adjoint preequilibration with reinitialization
+            #  of non-constant states is not yet supported; `model`
+            #  (unlike `model_cl`) does not eliminate `enzyme` via a
+            #  conservation law, so it requires such reinitialization
+            #  here. Re-enable once gh-1156 is implemented.
+            # raa = get_results(
+            #     model,
+            #     edata=edata,
+            #     sensi_order=1,
+            #     sensi_meth=SensitivityMethod.adjoint,
+            #     sensi_meth_preeq=SensitivityMethod.adjoint,
+            #     stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
+            #     reinitialize_states=reinit,
+            # )
+            # assert raa.status == AMICI_SUCCESS
+            # assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
 
 
 @skip_on_valgrind

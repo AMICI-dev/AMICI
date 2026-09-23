@@ -605,9 +605,13 @@ class DEModel:
         :return:
             number of state variable symbols with reinitialization
         """
-        reinit_states = self.eq("x0_fixedParameters")
-        solver_states = self.eq("x_solver")
-        return sum(ix in solver_states for ix in reinit_states)
+        # populates self._x0_fixedParameters_idx as a side effect
+        self.eq("x0_fixedParameters")
+        states = self.states()
+        return sum(
+            not states[ix].has_conservation_law()
+            for ix in self._x0_fixedParameters_idx
+        )
 
     def num_obs(self) -> int:
         """
