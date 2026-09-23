@@ -6,7 +6,9 @@ import itertools
 import amici
 import numpy as np
 import pytest
+from amici.adapters.fiddy import run_simulation_to_function_and_derivative
 from amici.importers.antimony import antimony2amici
+from amici.importers.utils import MeasurementChannel
 from amici.sim.sundials import (
     AMICI_ERROR,
     AMICI_SUCCESS,
@@ -22,13 +24,13 @@ from amici.sim.sundials import (
     parameter_scaling_from_int_vector,
     run_simulation,
 )
-from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import (
     TemporaryDirectoryWinSafe as TemporaryDirectory,
 )
 from amici.testing import (
     skip_on_valgrind,
 )
+from fiddy import check_gradient, check_jacobian
 from numpy.testing import assert_allclose, assert_equal
 from test_pysb import get_data
 
@@ -815,11 +817,23 @@ def test_preequilibration_events(tempdir):
     end
     """
     module_name = "test_preequilibration_events"
+    # Exclude the unbounded `some_time` clock -- not a meaningful sensitivity
+    # target.
+    observation_model = [
+        MeasurementChannel(
+            id_=f"obs_{target}",
+            formula=target,
+            noise_distribution="normal",
+            sigma=1.0,
+        )
+        for target in ("target1", "target2", "target3", "target4")
+    ]
     antimony2amici(
         ant_str,
         model_name=module_name,
         output_dir=tempdir,
         fixed_parameters=["is_preeq"],
+        observation_model=observation_model,
     )
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
@@ -872,25 +886,22 @@ def test_preequilibration_events(tempdir):
     ):
         amici_solver.set_sensitivity_method(sensi_meth)
         amici_solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+        amici_model.require_sensitivities_for_all_parameters()
 
-        # amici_model.requireSensitivitiesForAllParameters()
-        # FIXME: finite differences w.r.t. trigger time are off
-        #   need different epsilon for trigger time
-        amici_model.set_parameter_list(
-            [
-                i
-                for i, p in enumerate(amici_model.get_free_parameter_ids())
-                if p != "trigger_time2"
-            ]
-        )
         rdata = run_simulation(amici_model, amici_solver, edata)
         assert rdata.status == AMICI_SUCCESS
 
-        check_derivatives(
-            amici_model,
-            solver=amici_solver,
-            edata=edata,
-            atol=1e-6,
-            rtol=1e-6,
-            epsilon=1e-8,
+        # `x`/`x0`/`x_ss` still expose `some_time`, unlike the observables.
+        point = amici_model.get_free_parameters()
+        function, derivative = run_simulation_to_function_and_derivative(
+            amici_model=amici_model,
+            amici_solver=amici_solver,
+            amici_edata=edata,
+            derivative_variables=["y", "res", "llh"],
         )
+        expected = derivative(point)
+        if list(expected) == ["llh"]:
+            result = check_gradient(function, point, expected["llh"])
+        else:
+            result = check_jacobian(function, point, expected)
+        result.assert_success(always_print=True)
