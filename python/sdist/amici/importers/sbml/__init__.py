@@ -67,6 +67,7 @@ from amici.importers.utils import (
     sbml_time_symbol,
     smart_subs,
     smart_subs_dict,
+    substitute_local_symbols,
     symbol_with_assumptions,
     toposort_symbols,
 )
@@ -2945,24 +2946,10 @@ class SbmlImporter:
                 else sp.Float(var_or_math)
             )
 
-        def subs_locals(expr: sp.Basic) -> sp.Basic:
-            """
-            Substitute free symbols to match assumptions of other model
-            entities where necessary, and replace parameters by values in case
-            of hardcoded parameters.
-            """
-            return expr.subs(
-                {
-                    sym: local
-                    for sym in expr.free_symbols
-                    if (local := self._local_symbols.get(str(sym), sym)) != sym
-                }
-            )
-
         # already a sympy object
         if isinstance(var_or_math, sp.Basic):
             ele_name = "SymPy expression"
-            expr = subs_locals(var_or_math)
+            expr = substitute_local_symbols(var_or_math, self._local_symbols)
 
         # an expression string
         elif isinstance(var_or_math, str):
@@ -3016,7 +3003,7 @@ class SbmlImporter:
             #  which will later be replaced by `amici_time_symbol`
             expr = expr.replace(TimeSymbol, lambda *args: sbml_time_symbol)
             expr = expr.subs(avogadro, avogadro.evalf())
-            expr = subs_locals(expr)
+            expr = substitute_local_symbols(expr, self._local_symbols)
         else:
             raise ValueError(
                 f"Unsupported input: {var_or_math}, type: {type(var_or_math)}"
