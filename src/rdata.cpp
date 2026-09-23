@@ -549,6 +549,9 @@ void ReturnData::process_backward_problem(
             llhS0
         );
     } else if (preeq
+               && preeq->get_solver()
+                          ->get_sensitivity_method_pre_equilibration()
+                      == SensitivityMethod::adjoint
                && preeq->get_steady_state_status()[1]
                       != SteadyStateStatus::not_run) {
         // Pre-equilibration with ASA backward simulation
