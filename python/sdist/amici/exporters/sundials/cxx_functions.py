@@ -351,6 +351,15 @@ functions = {
         "const int ip, gsl::span<const int> reinitialization_state_idxs",
         header=["#include <gsl/gsl-lite.hpp>"],
     ),
+    "deltaxB_fixedParameters": _FunctionInfo(
+        "realtype *deltaxB_fixedParameters, const realtype t, "
+        "const realtype *p, const realtype *k, const realtype *xB"
+    ),
+    "deltaqB_fixedParameters": _FunctionInfo(
+        "realtype *deltaqB_fixedParameters, const realtype t, "
+        "const realtype *p, const realtype *k, const realtype *xB, "
+        "const int ip"
+    ),
     "xdot": _FunctionInfo(
         "realtype *xdot, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
@@ -434,7 +443,7 @@ sensi_functions = [
     func_name
     for func_name, func_info in functions.items()
     if "const int ip" in func_info.arguments()
-] + ["deltaxB", "dzdx", "drzdx"]
+] + ["deltaxB", "deltaxB_fixedParameters", "dzdx", "drzdx"]
 
 #: list of sparse sensitivity functions
 sparse_sensi_functions = [
