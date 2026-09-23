@@ -602,16 +602,41 @@ class DEModel:
         Number of solver states which would be reinitialized after
         preequilibration
 
+        Only counts states that are not eliminated via a conservation law
+        (i.e., that still correspond to an independent solver-space state),
+        matching the ``nx_solver_reinit <= nx_solver`` invariant of
+        `amici.ModelDimensions`.
+
         :return:
             number of state variable symbols with reinitialization
         """
-        # populates self._x0_fixedParameters_idx as a side effect
+        # populates `self._x0_fixedParameters_idx` as a side effect
         self.eq("x0_fixedParameters")
         states = self.states()
         return sum(
             not states[ix].has_conservation_law()
             for ix in self._x0_fixedParameters_idx
         )
+
+    def num_state_reinits_rdata(self) -> int:
+        """
+        Number of states (in rdata space, i.e. before elimination via
+        conservation laws) with a fixed-parameter-dependent initial
+        condition.
+
+        Unlike `num_state_reinits`, this also counts states that are
+        eliminated via a conservation law. Comparing the two values lets
+        the C++ core detect whether a fixed-parameter-dependent state is
+        being eliminated via a conservation law (currently not supported
+        for adjoint preequilibration, see
+        `Model::add_adjoint_state_preeq_reinit_update`).
+
+        :return:
+            number of state variable symbols with reinitialization
+        """
+        # populates `self._x0_fixedParameters_idx` as a side effect
+        self.eq("x0_fixedParameters")
+        return len(self._x0_fixedParameters_idx)
 
     def num_obs(self) -> int:
         """
@@ -1545,13 +1570,9 @@ class DEModel:
             # if x0_fixedParameters>0 else 0
             # sx0_fixedParameters = sx+deltasx =
             # dx0_fixed_parametersdx*sx+dx0_fixedParametersdp
-            self._eqs[name] = smart_jacobian(
-                self.eq("x0_fixedParameters"), self.sym("p")
-            )
+            self._eqs[name] = self.eq("dx0_fixedParametersdp")
 
-            dx0_fixed_parametersdx = smart_jacobian(
-                self.eq("x0_fixedParameters"), self.sym("x")
-            )
+            dx0_fixed_parametersdx = self.eq("dx0_fixedParametersdx")
 
             if not smart_is_zero_matrix(dx0_fixed_parametersdx):
                 if isinstance(self._eqs[name], ImmutableDenseMatrix):
@@ -1571,6 +1592,79 @@ class DEModel:
             self._eqs[name] = sp.Matrix(
                 [eq[ix] for ix in self._x0_fixedParameters_idx]
             )
+
+        elif name == "dx0_fixedParametersdp":
+            # jacobian of `x0_fixedParameters` w.r.t. `p`, restricted to the
+            # rows in `_x0_fixedParameters_idx` (populated as a side effect
+            # of computing `x0_fixedParameters` above).
+            self._eqs[name] = smart_jacobian(
+                self.eq("x0_fixedParameters"), self.sym("p")
+            )
+
+        elif name == "dx0_fixedParametersdx":
+            # jacobian of `x0_fixedParameters` w.r.t. `x`, see
+            # `dx0_fixedParametersdp`. `x0_fixedParameters` is a subset of
+            # `x0`, which is only a function of `t`, `p`, `k` -- so this is
+            # zero for every currently supported model. Kept as a proper
+            # Jacobian (rather than assumed zero) so `sx0_fixedParameters`
+            # and `deltaxB_fixedParameters`/`deltaqB_fixedParameters` remain
+            # correct if that ever changes.
+            self._eqs[name] = smart_jacobian(
+                self.eq("x0_fixedParameters"), self.sym("x")
+            )
+
+        elif name in ("deltaxB_fixedParameters", "deltaqB_fixedParameters"):
+            # Adjoint (reverse-mode) counterpart of `sx0_fixedParameters`:
+            # given the incoming adjoint state `xB` (pre-masked by the
+            # caller, see `Model::add_adjoint_state_preeq_reinit_update`, to
+            # zero out entries at indices that are not actually being
+            # reinitialized in the current simulation), computes the
+            # vector-Jacobian-product contributions to be added to `xB`/
+            # `xQB`, respectively:
+            #   deltaqB_fixedParameters = xB[idx]^T @ dx0_fixedParametersdp
+            #   deltaxB_fixedParameters = xB[idx]^T @ dx0_fixedParametersdx
+            #                             - (xB[j] if j in idx else 0)
+            # `idx` is `_x0_fixedParameters_idx`, populated as a side effect
+            # of the `eq(...)` call below.
+            #
+            # The trailing "-xB[j] if j in idx" term in
+            # `deltaxB_fixedParameters` implements the "reset" (rather than
+            # "add") semantics of the forward-mode `x0_fixedParameters`
+            # (mirroring how the forward `sx0_fixedParameters` *overwrites*
+            # `sx[idx]` rather than adding to it, see the comment there).
+            # Since it only ever reads the already-masked `xB[j]`, this
+            # requires no separate knowledge of runtime-vs-compile-time
+            # reinitialization state at the C++ call site: adding
+            # `xB[j] + deltaxB_fixedParameters[j]` in `Model::
+            # add_adjoint_state_preeq_reinit_update` then correctly reduces
+            # to 0 for indices that were actually reinitialized this run,
+            # and to the original (unmodified) `xB[j]` everywhere else.
+            is_x = name == "deltaxB_fixedParameters"
+            jac_name = (
+                "dx0_fixedParametersdx" if is_x else "dx0_fixedParametersdp"
+            )
+            jac = self.eq(jac_name)
+            idx = self._x0_fixedParameters_idx
+            xB = self.sym("xB")
+            # `idx` is in rdata space and may contain indices beyond `xB`'s
+            # solver-space dimension (states eliminated via a conservation
+            # law). This whole feature is guarded to `ncl() == 0` models at
+            # runtime (see `Model::add_adjoint_state_preeq_reinit_update`),
+            # so out-of-range entries here are unreachable at runtime;
+            # substituting 0 keeps code generation well-defined instead of
+            # raising a sympy IndexError for `ncl() > 0` models.
+            nxb = xB.shape[0]
+            xB_idx = sp.Matrix(
+                [[xB[i] if i < nxb else sp.Integer(0) for i in idx]]
+            )
+            result = smart_multiply(xB_idx, jac)
+            if is_x and idx and result.shape[1]:
+                if isinstance(result, ImmutableDenseMatrix):
+                    result = MutableDenseMatrix(result)
+                for i in idx:
+                    if i < result.shape[1]:
+                        result[0, i] -= xB[i]
+            self._eqs[name] = result
 
         elif name == "dtotal_cldx_rdata":
             x_rdata = self.sym("x_rdata")

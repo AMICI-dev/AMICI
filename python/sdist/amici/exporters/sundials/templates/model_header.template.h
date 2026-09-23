@@ -84,6 +84,8 @@ TPL_DELTAX_DEF
 TPL_DELTASX_DEF
 TPL_DELTAXB_DEF
 TPL_DELTAQB_DEF
+TPL_DELTAXB_FIXEDPARAMETERS_DEF
+TPL_DELTAQB_FIXEDPARAMETERS_DEF
 TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
@@ -118,6 +120,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   .nx_solver = TPL_NX_SOLVER,
                   .nxtrue_solver = TPL_NXTRUE_SOLVER,
                   .nx_solver_reinit = TPL_NX_SOLVER_REINIT,
+                  .nx_rdata_reinit = TPL_NX_RDATA_REINIT,
                   .np = TPL_NP,
                   .nk = TPL_NK,
                   .ny = TPL_NY,
@@ -186,6 +189,10 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     TPL_DELTAXB_IMPL
 
     TPL_DELTAQB_IMPL
+
+    TPL_DELTAXB_FIXEDPARAMETERS_IMPL
+
+    TPL_DELTAQB_FIXEDPARAMETERS_IMPL
 
     TPL_DRZDP_IMPL
 

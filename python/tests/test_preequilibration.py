@@ -396,6 +396,71 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
             )
 
 
+def test_adjoint_preequilibration_reinit_with_conservation_laws(
+    tempdir, monkeypatch
+):
+    """Adjoint preequilibration with solver-state reinitialization is not
+    yet supported for models with conservation laws; verify this fails with
+    a clear error rather than silently producing wrong results.
+    """
+    from amici.importers.antimony import antimony2amici
+
+    # conservation-law detection for non-constant species (as opposed to
+    # SBML boundary/constant species) is still experimental and off by
+    # default; enable it so `A + B` is actually recognized as conserved
+    # below.
+    monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+
+    ant_str = """
+    model test_adjoint_preeq_reinit_cl
+        kinit = 2
+        k1 = 0.5
+        k2 = 0.3
+        A = kinit
+        B = 1
+        A -> B; k1 * A
+        B -> A; k2 * B
+    end
+    """
+    module_name = "test_adjoint_preeq_reinit_cl"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["kinit"],
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    amici_model = model_module.get_model()
+    assert amici_model.ncl() > 0
+    amici_model.set_reinitialize_fixed_parameter_initial_states(True)
+    amici_model.set_timepoints([0.0, 1.0])
+
+    amici_solver = amici_model.create_solver()
+    amici_solver.set_sensitivity_order(SensitivityOrder.first)
+    amici_solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    amici_solver.set_sensitivity_method_pre_equilibration(
+        SensitivityMethod.adjoint
+    )
+
+    edata = ExpData(amici_model)
+    edata.set_timepoints([0.0, 1.0])
+    edata.fixed_parameters = [2.0]
+    edata.fixed_parameters_pre_equilibration = [5.0]
+    # `ConditionContext` re-derives the live reinit flag/index-list from
+    # `edata` at simulation time, overriding whatever was set directly on
+    # `amici_model` above -- so this must also be set here.
+    edata.reinitialize_fixed_parameter_initial_states = True
+
+    rdata = run_simulation(amici_model, amici_solver, edata)
+    assert rdata.status != AMICI_SUCCESS
+    assert any(
+        "conservation law" in message.message
+        for message in rdata._swigptr.messages
+    )
+
+
 def test_newton_solver_equilibration(preeq_fixture):
     """Test newton solver for equilibration"""
 
@@ -899,9 +964,11 @@ def test_preequilibration_events(tempdir):
 
 
 def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
-    """Regression test for GH#3278: wrong gradients when the main simulation
-    uses adjoint sensitivities, pre-equilibration uses forward sensitivities,
-    and fixed-parameter-dependent state reinitialization is enabled."""
+    """Regression test for GH#3278 (wrong gradients when the main
+    simulation uses adjoint sensitivities, pre-equilibration uses forward
+    sensitivities, and fixed-parameter-dependent state reinitialization is
+    enabled) and GH#1156 (adjoint preequilibration itself with such
+    reinitialization)."""
     ant_str = """
     model test_preequilibration_reinit_adjoint_sensitivities
         kinit = 5
@@ -923,6 +990,7 @@ def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
     )
     model = model_module.get_model()
     model.set_reinitialize_fixed_parameter_initial_states(True)
+    assert model.nx_reinit() > 0
     model.set_timepoints([0.0, 1.0, 2.0])
     solver = model.create_solver()
     solver.set_sensitivity_order(SensitivityOrder.first)
@@ -948,11 +1016,15 @@ def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
     for sensi_meth, sensi_meth_preeq in (
         (SensitivityMethod.forward, SensitivityMethod.forward),
         (SensitivityMethod.adjoint, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
     ):
+        # check_jacobian leaves the solver's sensitivity order at `none`
+        # from its own zero-order function evaluations -- restore it.
+        solver.set_sensitivity_order(SensitivityOrder.first)
         solver.set_sensitivity_method(sensi_meth)
         solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
         rdata = run_simulation(model, solver, edata)
-        assert rdata.status == AMICI_SUCCESS
+        assert rdata.status == AMICI_SUCCESS, (sensi_meth, sensi_meth_preeq)
 
         function, derivative = run_simulation_to_function_and_derivative(
             amici_model=model,
@@ -971,14 +1043,3 @@ def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
             output_labels=["llh"],
         )
         result.assert_success(always_print=True)
-
-    # adjoint pre-equilibration with state reinitialization is not (yet)
-    # supported (GH#1156) and must fail cleanly rather than silently produce
-    # wrong gradients
-    # (check_jacobian above leaves the solver's sensitivity order at `none`
-    # from its own zero-order function evaluations -- restore it.)
-    solver.set_sensitivity_order(SensitivityOrder.first)
-    solver.set_sensitivity_method(SensitivityMethod.adjoint)
-    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
-    rdata = run_simulation(model, solver, edata)
-    assert rdata.status == AMICI_ERROR

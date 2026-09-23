@@ -299,49 +299,73 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 sensi_meth_preeq=SensitivityMethod.forward,
                 reinitialize_states=reinit,
             )
-            # adjoint preequilibration, adjoint simulation
-            raa_cl = get_results(
-                model_cl,
+            assert rff_cl.status == AMICI_SUCCESS
+            assert rfa_cl.status == AMICI_SUCCESS
+            # bounded by forward-vs-adjoint main-simulation sensitivity
+            # integration noise, not by preequilibration correctness
+            assert_allclose(
+                rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+            )
+
+            # `edata_post` (see `edata_fixture`) has no
+            # `fixed_parameters_pre_equilibration`, i.e. no preequilibration
+            # phase at all -- reinitialization only ever applies at a
+            # preequilibration boundary, so for that edata `reinit` has no
+            # effect and the guard below never triggers.
+            uses_preeq = len(edata.fixed_parameters_pre_equilibration) > 0
+
+            if reinit and uses_preeq:
+                # Adjoint preequilibration with reinitialization is not
+                # supported for models with conservation laws (#1156) --
+                # here, `model_cl` eliminates `enzyme` via a (trivial,
+                # constant-species) conservation law, and `enzyme`'s
+                # initial value depends on the fixed parameter
+                # `init_enzyme`.
+                raa_cl = get_results(
+                    model_cl,
+                    edata=edata,
+                    sensi_order=1,
+                    sensi_meth=SensitivityMethod.adjoint,
+                    sensi_meth_preeq=SensitivityMethod.adjoint,
+                    reinitialize_states=reinit,
+                )
+                assert raa_cl.status != AMICI_SUCCESS
+            else:
+                # adjoint preequilibration, adjoint simulation
+                raa_cl = get_results(
+                    model_cl,
+                    edata=edata,
+                    sensi_order=1,
+                    sensi_meth=SensitivityMethod.adjoint,
+                    sensi_meth_preeq=SensitivityMethod.adjoint,
+                    reinitialize_states=reinit,
+                )
+                assert raa_cl.status == AMICI_SUCCESS
+
+                assert_allclose(
+                    rfa_cl["sllh"], raa_cl["sllh"], rtol=1.0e-9, atol=1.0e-11
+                )
+                assert_allclose(
+                    raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+                )
+
+            # compare fully adjoint approach to simulation with singular
+            #  Jacobian
+            raa = get_results(
+                model,
                 edata=edata,
                 sensi_order=1,
                 sensi_meth=SensitivityMethod.adjoint,
                 sensi_meth_preeq=SensitivityMethod.adjoint,
+                stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
                 reinitialize_states=reinit,
             )
+            assert raa.status == AMICI_SUCCESS
 
-            assert rff_cl.status == AMICI_SUCCESS
-            assert rfa_cl.status == AMICI_SUCCESS
-            assert raa_cl.status == AMICI_SUCCESS
-
-            # assert all are close
-            assert_allclose(
-                rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
-            )
-            assert_allclose(
-                rfa_cl["sllh"], raa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
-            )
-            assert_allclose(
-                raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
-            )
-
-            # compare fully adjoint approach to simulation with singular
-            #  Jacobian
-            # TODO(gh-1156): adjoint preequilibration with reinitialization
-            #  of non-constant states is not yet supported; `model`
-            #  (unlike `model_cl`) does not eliminate `enzyme` via a
-            #  conservation law, so it requires such reinitialization
-            #  here. Re-enable once gh-1156 is implemented.
-            # raa = get_results(
-            #     model,
-            #     edata=edata,
-            #     sensi_order=1,
-            #     sensi_meth=SensitivityMethod.adjoint,
-            #     sensi_meth_preeq=SensitivityMethod.adjoint,
-            #     stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
-            #     reinitialize_states=reinit,
-            # )
-            # assert raa.status == AMICI_SUCCESS
-            # assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
+            if not (reinit and uses_preeq):
+                assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
+            else:
+                assert_allclose(raa["sllh"], rff_cl["sllh"], 1e-5, 1e-5)
 
 
 @skip_on_valgrind

@@ -316,10 +316,7 @@ def test_num_state_reinits(tempdir):
 
     A solver state whose initial value depends on a fixed parameter, and
     which is not eliminated via a conservation law, must be counted by
-    ``Model.nx_reinit()``. This in turn gates adjoint preequilibration
-    with reinitialization, which is not supported and must fail loudly
-    instead of silently simulating an unsupported (and potentially
-    wrong) combination.
+    ``Model.nx_reinit()``.
     """
     from amici.importers.antimony import antimony2amici
 
@@ -354,8 +351,7 @@ def test_num_state_reinits(tempdir):
     edata.fixed_parameters_pre_equilibration = [2.0]
 
     rdata = run_simulation(model, solver, edata)
-    assert rdata.status != AMICI_SUCCESS
-    assert any("not yet implemented" in msg.message for msg in rdata.messages)
+    assert rdata.status == AMICI_SUCCESS
 
 
 @pytest.mark.filterwarnings(

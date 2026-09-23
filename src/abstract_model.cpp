@@ -41,6 +41,21 @@ void AbstractModel::fsx0_fixedParameters(
     // no-op default implementation
 }
 
+void AbstractModel::fdeltaxB_fixedParameters(
+    realtype* /*deltaxB_fixedParameters*/, realtype const /*t*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*xB*/
+) {
+    // no-op default implementation
+}
+
+void AbstractModel::fdeltaqB_fixedParameters(
+    realtype* /*deltaqB_fixedParameters*/, realtype const /*t*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*xB*/,
+    int const /*ip*/
+) {
+    // no-op default implementation
+}
+
 void AbstractModel::fsx0(
     realtype* /*sx0*/, realtype const /*t*/, realtype const* /*x0*/,
     realtype const* /*p*/, realtype const* /*k*/, int const /*ip*/

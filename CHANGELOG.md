@@ -24,6 +24,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   were redesigned, making finite-difference gradient checks much more
   robust and requiring few, if any, hyperparameters.
 
+* Adjoint preequilibration is now supported for models with
+  fixed-parameter-dependent solver-state reinitialization
+  (`reinitialize_fixed_parameter_initial_states`); this previously raised
+  `AMICI_NOT_IMPLEMENTED`. Models with conservation laws, remain unsupported
+  for this combination and now raise a clear error instead (#1156).
+
 **Fixes**
 
 * There are no more reserved names: previously, model import or
@@ -64,13 +70,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 * Fixed `DEModel.num_state_reinits()` always returning 0, regardless of
   whether the model actually has solver states with fixed-parameter-
   dependent initial values. This fed into `Model::nx_reinit()`, which
-  guards two currently-unsupported combinations (adjoint preequilibration
-  with state reinitialization, see #1156; and the analogous case for
-  adjoint presimulation) — since the count was always 0, those guards
-  never triggered, silently allowing unsupported (and potentially
-  incorrect) simulations to run instead of raising an error. Models that
-  hit either combination now correctly fail with a clear error message
-  (#3277).
+  guards adjoint presimulation with state reinitialization (still
+  unsupported) and, before it was implemented (#1156), also adjoint
+  preequilibration with state reinitialization — since the count was
+  always 0, these guards never triggered, silently allowing the
+  unsupported combination to run instead of raising an error (#3277).
 * Fixed `ForwardProblem::handle_presimulation()` rejecting presimulation
   with state reinitialization for any sensitivity method, even though
   only adjoint sensitivity analysis is actually affected. This was

@@ -82,17 +82,26 @@ void BackwardProblem::workBackwardProblem() {
             model_, edata_, FixedParameterContext::preequilibration
         );
 
-        // If we need to reinitialize solver states, this won't work yet
-        // (gh-1156).
-        if (model_->nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
-            );
-
         auto const t0 = std::isnan(model_->t0_preeq()) ? model_->t0()
                                                        : model_->t0_preeq();
+
+        // If solver states were reinitialized based on fixed parameters at
+        // this preequilibration boundary, apply the corresponding adjoint
+        // correction to `xB`/`xQB` before proceeding. `cc2` (opened above)
+        // does not itself set `reinitialization_state_idxs` on the model
+        // (`ConditionContext::set()` only does so for the `simulation`/
+        // `presimulation` cases) -- so this reads whatever list is still
+        // "live" from the outer `FixedParameterContext::simulation` context
+        // (opened for the whole `run_simulation()` call, see amici.cpp),
+        // which is correct for the preequilibration -> main-simulation
+        // transition handled here. NOTE: if presimulation is used
+        // (`edata_->t_presim > 0`), this would need to use
+        // `edata_->reinitialization_state_idxs_presim` instead -- that case
+        // is not yet supported (a separate limitation of
+        // `ForwardProblem::handle_presimulation`).
+        model_->add_adjoint_state_preeq_reinit_update(
+            ws_.xB_, ws_.xQB_, t0, model_->get_reinitialization_state_idxs()
+        );
 
         auto const& preeq_result = preeq_problem_->get_result();
 

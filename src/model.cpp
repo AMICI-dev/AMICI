@@ -238,7 +238,8 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata)
            && (a.nx_solver == b.nx_solver)
            && (a.nxtrue_solver == b.nxtrue_solver)
-           && (a.nx_solver_reinit == b.nx_solver_reinit) && (a.np == b.np)
+           && (a.nx_solver_reinit == b.nx_solver_reinit)
+           && (a.nx_rdata_reinit == b.nx_rdata_reinit) && (a.np == b.np)
            && (a.nk == b.nk) && (a.ny == b.ny) && (a.nytrue == b.nytrue)
            && (a.nz == b.nz) && (a.nztrue == b.nztrue) && (a.ne == b.ne)
            && (a.ne_solver == b.ne_solver) && (a.nspl == b.nspl)
@@ -2008,6 +2009,87 @@ void Model::fsx0_fixedParameters(
             derived_state_.x_rdata_.data(), state_.unscaled_parameters.data(),
             state_.fixed_parameters.data(), state_.total_cl.data()
         );
+    }
+}
+
+void Model::add_adjoint_state_preeq_reinit_update(
+    AmiVector& xB, AmiVector& xQB, realtype const t,
+    std::vector<int> const& reinitialization_state_idxs
+) {
+    if (reinitialization_state_idxs.empty())
+        return;
+
+    // `nx_rdata_reinit` counts states (in rdata space) with a
+    // fixed-parameter-dependent initial condition, regardless of whether
+    // they are later eliminated via a conservation law -- unlike
+    // `nx_reinit()` (`nx_solver_reinit`), which excludes those to satisfy
+    // the `nx_solver_reinit <= nx_solver` invariant (see
+    // `DEModel.num_state_reinits()`/`num_state_reinits_rdata()`). Used
+    // here (rather than `reinitialization_state_idxs` alone, which may be
+    // populated with every rdata index by "reinitialize all" regardless
+    // of whether any of them are actually fixed-parameter-dependent) to
+    // determine whether this model has any genuine reinit target at all
+    // that this function would need to act on.
+    if (nx_rdata_reinit == 0)
+        return;
+
+    // Conservative: models with ANY conservation law are not supported
+    // here, once a genuine reinit target exists (checked above) -- not
+    // just when the reinitialized state itself is the one eliminated.
+    // This sidesteps a subtler issue: below, `reinitialization_state_idxs`
+    // (rdata-space indices) are used directly as solver-space indices,
+    // which silently breaks (index shift) as soon as any *other*,
+    // lower-indexed rdata state is eliminated via a conservation law, even
+    // if the reinitialized state itself is not.
+    if (ncl() > 0)
+        throw AmiException(
+            "Adjoint preequilibration with reinitialization of "
+            "non-constant states is not yet supported for models with "
+            "conservation laws."
+        );
+
+    if (nJ != 1)
+        throw AmiException(
+            "Adjoint preequilibration with reinitialization of "
+            "non-constant states is not yet supported for models with "
+            "nJ != 1 (multiple simultaneous objectives / full second-order "
+            "adjoint sensitivities)."
+        );
+
+    // `xB`, masked to zero outside the indices actually being
+    // reinitialized in the current simulation. Since the generated
+    // `deltaxB_fixedParameters`/`deltaqB_fixedParameters` only ever
+    // reference `xB` entries at (compile-time-fixed) indices with a
+    // nontrivial `x0_fixedParameters` formula, this correctly restricts
+    // their contributions to the runtime-live intersection of those
+    // indices and `reinitialization_state_idxs`, without needing that
+    // compile-time index set here. See the corresponding comment in
+    // `de_model.py`.
+    std::vector<realtype> xB_masked(nx_solver, 0.0);
+    for (auto const idx : reinitialization_state_idxs) {
+        if (idx >= 0 && idx < nx_solver)
+            xB_masked[idx] = xB.at(idx);
+    }
+
+    derived_state_.deltaxB_fixedParameters_.assign(nx_solver, 0.0);
+    fdeltaxB_fixedParameters(
+        derived_state_.deltaxB_fixedParameters_.data(), t,
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        xB_masked.data()
+    );
+    amici_daxpy(
+        nx_solver, 1.0, derived_state_.deltaxB_fixedParameters_.data(), 1,
+        xB.data(), 1
+    );
+
+    for (int ip = 0; ip < nplist(); ++ip) {
+        derived_state_.deltaqB_fixedParameters_.assign(1, 0.0);
+        fdeltaqB_fixedParameters(
+            derived_state_.deltaqB_fixedParameters_.data(), t,
+            state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+            xB_masked.data(), plist(ip)
+        );
+        xQB.at(ip) += derived_state_.deltaqB_fixedParameters_.at(0);
     }
 }
 
