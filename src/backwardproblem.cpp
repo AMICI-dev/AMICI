@@ -82,7 +82,8 @@ void BackwardProblem::workBackwardProblem() {
             model_, edata_, FixedParameterContext::preequilibration
         );
 
-        // If we need to reinitialize solver states, this won't work yet.
+        // If we need to reinitialize solver states, this won't work yet
+        // (gh-1156).
         if (model_->nx_reinit() > 0)
             throw NewtonFailure(
                 AMICI_NOT_IMPLEMENTED,

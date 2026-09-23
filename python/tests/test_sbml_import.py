@@ -310,6 +310,54 @@ def test_presimulation(sbml_example_presimulation_module):
     check_derivatives(model, solver=solver, edata=edata, epsilon=1e-4)
 
 
+@skip_on_valgrind
+def test_num_state_reinits(tempdir):
+    """Regression test for gh-3277.
+
+    A solver state whose initial value depends on a fixed parameter, and
+    which is not eliminated via a conservation law, must be counted by
+    ``Model.nx_reinit()``. This in turn gates adjoint preequilibration
+    with reinitialization, which is not supported and must fail loudly
+    instead of silently simulating an unsupported (and potentially
+    wrong) combination.
+    """
+    from amici.importers.antimony import antimony2amici
+
+    ant_model = """
+    model test_num_state_reinits
+        species A
+        A = k_init
+        A -> ; k1 * A
+        k_init = 1
+        k1 = 0.1
+    end
+    """
+    model = antimony2amici(
+        ant_model,
+        model_name="test_num_state_reinits",
+        output_dir=tempdir,
+        fixed_parameters=["k_init"],
+        observation_model=[MC("obs_A", formula="A")],
+    )
+    assert model.nx_reinit() == 1
+
+    model.set_reinitialize_fixed_parameter_initial_states(True)
+    model.set_timepoints(np.linspace(0, 2, 3))
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
+
+    edata = ExpData(run_simulation(model, solver), 0.1, 0.0)
+    edata.fixed_parameters = [1.0]
+    edata.fixed_parameters_pre_equilibration = [2.0]
+
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status != AMICI_SUCCESS
+    assert any("not yet implemented" in msg.message for msg in rdata.messages)
+
+
 @pytest.mark.filterwarnings(
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
 )
