@@ -233,8 +233,15 @@ void ReturnData::process_simulation_objects(
     if (preeq)
         process_pre_equilibration(*preeq, preeq_bwd, model);
 
+    // sx0 is not computed, and not needed for the gradient, if
+    // pre-equilibration was run with adjoint sensitivities (see
+    // process_backward_problem for the rationale).
+    bool const store_sx0 = !preeq
+                           || solver.get_sensitivity_method_pre_equilibration()
+                                  != SensitivityMethod::adjoint;
+
     if (fwd)
-        process_forward_problem(*fwd, model, edata);
+        process_forward_problem(*fwd, model, edata, store_sx0);
     else
         invalidate(0);
 
@@ -313,7 +320,8 @@ void ReturnData::process_post_equilibration(
 }
 
 void ReturnData::process_forward_problem(
-    ForwardProblem const& fwd, Model& model, ExpData const* edata
+    ForwardProblem const& fwd, Model& model, ExpData const* edata,
+    bool store_sx0
 ) {
     if (edata)
         initialize_objective_function(model.has_quadratic_llh());
@@ -329,7 +337,11 @@ void ReturnData::process_forward_problem(
     }
 
     if (!sx0.empty()) {
-        model.fsx_rdata(sx0, initialState.sol.sx, initialState.sol.x);
+        if (store_sx0) {
+            model.fsx_rdata(sx0, initialState.sol.sx, initialState.sol.x);
+        } else {
+            std::vector<realtype>().swap(sx0);
+        }
     }
 
     // process timepoint data
