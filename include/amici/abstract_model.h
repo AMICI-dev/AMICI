@@ -286,6 +286,47 @@ class AbstractModel {
     );
 
     /**
+     * @brief Model-specific implementation of fdeltaxB_fixedParameters
+     *
+     * Adjoint-mode (reverse-mode) counterpart of fsx0_fixedParameters:
+     * computes the contribution to be added to the adjoint state at a
+     * preequilibration boundary where solver states were reinitialized
+     * based on fixed parameters.
+     *
+     * @param deltaxB_fixedParameters adjoint state update
+     * @param t current time
+     * @param p parameter vector
+     * @param k constant vector
+     * @param xB adjoint state, pre-masked by the caller to zero out entries
+     * that were not actually reinitialized in the current simulation
+     */
+    virtual void fdeltaxB_fixedParameters(
+        realtype* deltaxB_fixedParameters, realtype t, realtype const* p,
+        realtype const* k, realtype const* xB
+    );
+
+    /**
+     * @brief Model-specific implementation of fdeltaqB_fixedParameters
+     *
+     * Adjoint-mode (reverse-mode) counterpart of fsx0_fixedParameters's
+     * parameter-derivative contribution: computes the contribution to be
+     * added to the adjoint quadrature at a preequilibration boundary where
+     * solver states were reinitialized based on fixed parameters.
+     *
+     * @param deltaqB_fixedParameters adjoint quadrature update
+     * @param t current time
+     * @param p parameter vector
+     * @param k constant vector
+     * @param xB adjoint state, pre-masked by the caller to zero out entries
+     * that were not actually reinitialized in the current simulation
+     * @param ip sensitivity index
+     */
+    virtual void fdeltaqB_fixedParameters(
+        realtype* deltaqB_fixedParameters, realtype t, realtype const* p,
+        realtype const* k, realtype const* xB, int ip
+    );
+
+    /**
      * @brief Model-specific implementation of fsx0
      *
      * @param sx0 initial state sensitivities

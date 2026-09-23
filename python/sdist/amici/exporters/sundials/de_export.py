@@ -621,6 +621,8 @@ class DEExporter:
         if not self.allow_reinit_fixpar_initcond and function in {
             "sx0_fixedParameters",
             "x0_fixedParameters",
+            "deltaxB_fixedParameters",
+            "deltaqB_fixedParameters",
         }:
             return lines
 
@@ -719,6 +721,14 @@ class DEExporter:
 
         elif (
             function in sensi_functions
+            # deltaxB_fixedParameters has no `ip` argument (it is a single
+            # combined nx_solver-length vector, unlike every other member of
+            # `sensi_functions`) -- it is only in `sensi_functions` so that
+            # it is skipped when `generate_sensitivity_code` is off, not
+            # because it should be printed as a per-parameter switch here.
+            # Without this exclusion, models where nx_solver happens to
+            # equal num_par() would wrongly match this branch.
+            and function != "deltaxB_fixedParameters"
             and equations.shape[1] == self.model.num_par()
         ):
             cases = {
@@ -983,6 +993,7 @@ class DEExporter:
             "NX_SOLVER": self.model.num_states_solver(),
             "NXTRUE_SOLVER": self.model.num_states_solver(),
             "NX_SOLVER_REINIT": self.model.num_state_reinits(),
+            "NX_RDATA_REINIT": self.model.num_state_reinits_rdata(),
             "NY": self.model.num_obs(),
             "NYTRUE": self.model.num_obs(),
             "NZ": self.model.num_eventobs(),

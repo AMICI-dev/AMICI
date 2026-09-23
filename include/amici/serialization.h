@@ -289,6 +289,7 @@ void serialize(
     ar & m.nx_solver;
     ar & m.nxtrue_solver;
     ar & m.nx_solver_reinit;
+    ar & m.nx_rdata_reinit;
     ar & m.np;
     ar & m.nk;
     ar & m.ny;

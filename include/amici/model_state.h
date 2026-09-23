@@ -138,6 +138,8 @@ struct ModelStateDerived {
         , deltasx_(other.deltasx_)
         , deltaxB_(other.deltaxB_)
         , deltaqB_(other.deltaqB_)
+        , deltaxB_fixedParameters_(other.deltaxB_fixedParameters_)
+        , deltaqB_fixedParameters_(other.deltaqB_fixedParameters_)
         , sspl_(other.sspl_)
         , x_pos_tmp_(other.x_pos_tmp_)
         , spl_(other.spl_)
@@ -430,6 +432,18 @@ struct ModelStateDerived {
      * (dimension: nJ)
      */
     std::vector<realtype> deltaqB_;
+
+    /** temporary storage for the adjoint-state correction from
+     * fixed-parameter-dependent solver-state reinitialization at a
+     * preequilibration boundary (dimension: `nx_solver`)
+     */
+    std::vector<realtype> deltaxB_fixedParameters_;
+
+    /** temporary storage for the adjoint-quadrature correction from
+     * fixed-parameter-dependent solver-state reinitialization at a
+     * preequilibration boundary (dimension: 1)
+     */
+    std::vector<realtype> deltaqB_fixedParameters_;
 
     /** temporary storage for sensitivity values of splines */
     SUNMatrixWrapper sspl_;

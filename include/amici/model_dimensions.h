@@ -23,6 +23,9 @@ struct ModelDimensions {
         Expects(nxtrue_solver <= nx_solver);
         Expects(nx_solver_reinit >= 0);
         Expects(nx_solver_reinit <= nx_solver);
+        Expects(nx_rdata_reinit >= 0);
+        Expects(nx_rdata_reinit >= nx_solver_reinit);
+        Expects(nx_rdata_reinit <= nx_rdata);
         Expects(np >= 0);
         Expects(nk >= 0);
         Expects(nytrue <= ny);
@@ -72,6 +75,15 @@ struct ModelDimensions {
 
     /** Number of solver state variables subject to reinitialization */
     int nx_solver_reinit{0};
+
+    /**
+     * Number of state variables (in rdata space, i.e. before elimination
+     * via conservation laws) with a fixed-parameter-dependent initial
+     * condition. `nx_rdata_reinit > nx_solver_reinit` indicates that at
+     * least one such state is eliminated via a conservation law (and thus
+     * not counted in `nx_solver_reinit`).
+     */
+    int nx_rdata_reinit{0};
 
     /** Number of parameters */
     int np{0};

@@ -309,8 +309,13 @@ void ForwardProblem::handle_presimulation() {
     // Are there dedicated condition preequilibration parameters provided?
     ConditionContext cond(model, edata, FixedParameterContext::presimulation);
 
-    // If we need to reinitialize solver states, this won't work yet.
-    if (model->nx_reinit() > 0)
+    // If we need to reinitialize solver states, this won't work yet for
+    // adjoint sensitivity analysis. The analogous preequilibration
+    // restriction (gh-1156) now only fires for conservation-law models
+    // (or nJ != 1) -- see Model::add_adjoint_state_preeq_reinit_update --
+    // but presimulation isn't handled there, so this check still rejects
+    // every case unconditionally.
+    if (solver->computing_asa() && model->nx_reinit() > 0)
         throw AmiException(
             "Adjoint presimulation with reinitialization of "
             "non-constant states is not yet implemented. Stopping."

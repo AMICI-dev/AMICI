@@ -24,6 +24,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   were redesigned, making finite-difference gradient checks much more
   robust and requiring few, if any, hyperparameters.
 
+* Adjoint preequilibration is now supported for models with
+  fixed-parameter-dependent solver-state reinitialization
+  (`reinitialize_fixed_parameter_initial_states`); this previously raised
+  `AMICI_NOT_IMPLEMENTED`. Models with conservation laws, remain unsupported
+  for this combination and now raise a clear error instead (#1156).
+
 **Fixes**
 
 * There are no more reserved names: previously, model import or
@@ -61,6 +67,30 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   spline with an event trigger that depends on it now raise a clear error
   at import time instead of silently generating incorrect C++, since
   simulating such models is not yet supported (#3245).
+* Fixed `DEModel.num_state_reinits()` always returning 0, regardless of
+  whether the model actually has solver states with fixed-parameter-
+  dependent initial values. This fed into `Model::nx_reinit()`, which
+  guards adjoint presimulation with state reinitialization (still
+  unsupported) and, before it was implemented (#1156), also adjoint
+  preequilibration with state reinitialization — since the count was
+  always 0, these guards never triggered, silently allowing the
+  unsupported combination to run instead of raising an error (#3277).
+* Fixed `ForwardProblem::handle_presimulation()` rejecting presimulation
+  with state reinitialization for any sensitivity method, even though
+  only adjoint sensitivity analysis is actually affected. This was
+  masked by the `num_state_reinits()` bug above and incorrectly blocked
+  forward-sensitivity presimulation with reinitialization.
+* Fixed wrong gradients when the main simulation used adjoint
+  sensitivities, pre-equilibration used forward sensitivities, and
+  fixed-parameter-dependent state reinitialization was enabled.
+  `ReturnData::process_backward_problem()` misclassified this
+  combination as "pre-equilibration with adjoint sensitivities via
+  backward simulation" whenever pre-equilibration happened to require
+  actual integration (e.g. due to the default
+  `SteadyStateSensitivityMode::integrationOnly`), and then used the
+  pre-equilibrium steady state's sensitivity instead of the
+  reinitialized main-simulation initial-state sensitivity as the
+  gradient's boundary term (#3278).
 
 * Fixed incorrect sensitivities for models with a single-species
   conservation law -- a boundary-condition or `constant=true` species with
