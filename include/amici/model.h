@@ -164,9 +164,11 @@ class Model : public AbstractModel, public ModelDimensions {
 
     // Overloaded base class methods
     using AbstractModel::fdeltaqB;
+    using AbstractModel::fdeltaqB_fixedParameters;
     using AbstractModel::fdeltasx;
     using AbstractModel::fdeltax;
     using AbstractModel::fdeltaxB;
+    using AbstractModel::fdeltaxB_fixedParameters;
     using AbstractModel::fdJrzdrz;
     using AbstractModel::fdJrzdsigmaz;
     using AbstractModel::fdJydsigmay;
@@ -1596,6 +1598,38 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void
     fsx0_fixedParameters(realtype t, AmiVectorArray& sx, AmiVector const& x);
+
+    /**
+     * @brief Apply the adjoint-mode correction to `xB`/`xQB` for the
+     * solver-state reinitialization (`amici::Model::fx0_fixedParameters`)
+     * applied on the forward pass at a preequilibration boundary.
+     *
+     * Adjoint (reverse-mode) counterpart of
+     * `amici::Model::fsx0_fixedParameters`: for the runtime-live set of
+     * reinitialized state indices, zeroes the corresponding entries of
+     * `xB` (the forward reset does not depend on the incoming state) and
+     * adds the vector-Jacobian-product contributions of
+     * `x0_fixedParameters` with respect to `x` and `p` to `xB` and `xQB`,
+     * respectively.
+     *
+     * Only supported for models without conservation laws
+     * (`amici::Model::ncl() == 0`) and with `nJ == 1` (a single objective;
+     * full second-order adjoint sensitivities are not supported); throws
+     * otherwise.
+     *
+     * @param xB Adjoint state at the preequilibration boundary (will be
+     * updated in place).
+     * @param xQB Adjoint quadrature (will be updated in place).
+     * @param t Timepoint at which the reinitialization occurred.
+     * @param reinitialization_state_idxs Indices of states that were
+     * reinitialized for the main-simulation transition being handled, see
+     * `amici::BackwardProblem::workBackwardProblem` (the analogous
+     * presimulation transition is not yet supported here).
+     */
+    void add_adjoint_state_preeq_reinit_update(
+        AmiVector& xB, AmiVector& xQB, realtype t,
+        std::vector<int> const& reinitialization_state_idxs
+    );
 
     /**
      * @brief Compute sensitivity of derivative initial states sensitivities

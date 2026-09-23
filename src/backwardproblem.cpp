@@ -78,24 +78,50 @@ void BackwardProblem::workBackwardProblem() {
                == SensitivityMethod::adjoint) {
         auto preeq_solver = preeq_problem_->get_solver();
 
-        // Reinitialization of non-constant states is not yet supported here
-        // (gh-1156). Reinitialization settings for the main simulation are
-        // only applied to the model in the simulation context, so check
-        // before switching to the preequilibration context.
-        if (model_->get_reinitialize_fixed_parameter_initial_states()
-            && model_->nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
+        // Reinitialization settings for the main simulation are only
+        // applied to the model in the simulation context; opening the
+        // preequilibration `ConditionContext` below would otherwise clear a
+        // manually-specified index list (`ConditionContext::apply_condition()`
+        // only restores `reinitialization_state_idxs` for the `simulation`/
+        // `presimulation` cases, not `preequilibration`). Capture what's
+        // needed before switching context.
+        bool const reinit_sim
+            = model_->get_reinitialize_fixed_parameter_initial_states();
+        auto const reinitialization_state_idxs
+            = model_->get_reinitialization_state_idxs();
+
+        auto const t0 = std::isnan(model_->t0_preeq()) ? model_->t0()
+                                                       : model_->t0_preeq();
+
+        // If solver states were reinitialized based on fixed parameters at
+        // this preequilibration boundary, apply the corresponding adjoint
+        // correction to `xB`/`xQB` before proceeding (gh-1156); see
+        // `Model::add_adjoint_state_preeq_reinit_update` for which models
+        // this supports. The analogous presimulation transition is not yet
+        // supported.
+        //
+        // This must run with the *main simulation's* fixed parameters
+        // still active -- the reinitialization formula is evaluated with
+        // those (matching `ForwardProblem::handle_main_simulation`'s
+        // `update_and_reinit_states_and_sensitivities` call, which runs
+        // after the preequilibration `ConditionContext` has already gone
+        // out of scope) -- so this must happen before `cc2` below switches
+        // to the preequilibration fixed parameters.
+        if (reinit_sim && model_->nx_reinit() > 0) {
+            model_->add_adjoint_state_preeq_reinit_update(
+                ws_.xB_, ws_.xQB_, t0, reinitialization_state_idxs
             );
+            // `ReturnData::process_backward_problem`'s steady-state-shortcut
+            // path rebuilds its own baseline from the *_pre_preeq_ snapshot
+            // above rather than from the live `ws_.xB_`/`ws_.xQB_` -- keep
+            // both in sync so that path also sees this correction.
+            xB_pre_preeq_ = ws_.xB_;
+            xQB_pre_preeq_ = ws_.xQB_;
+        }
 
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
         );
-
-        auto const t0 = std::isnan(model_->t0_preeq()) ? model_->t0()
-                                                       : model_->t0_preeq();
 
         auto const& preeq_result = preeq_problem_->get_result();
 

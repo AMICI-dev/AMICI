@@ -2010,6 +2010,70 @@ void Model::fsx0_fixedParameters(
     }
 }
 
+void Model::add_adjoint_state_preeq_reinit_update(
+    AmiVector& xB, AmiVector& xQB, realtype const t,
+    std::vector<int> const& reinitialization_state_idxs
+) {
+    if (reinitialization_state_idxs.empty())
+        return;
+
+    // Below, `reinitialization_state_idxs` (rdata-space indices) are used
+    // directly as solver-space indices, which is only valid when rdata and
+    // solver spaces coincide -- i.e. no state was eliminated via a
+    // conservation law, whether or not that state is itself among the ones
+    // being reinitialized.
+    if (ncl() > 0)
+        throw AmiException(
+            "Adjoint preequilibration with reinitialization of "
+            "non-constant states is not yet supported for models with "
+            "conservation laws."
+        );
+
+    if (nJ != 1)
+        throw AmiException(
+            "Adjoint preequilibration with reinitialization of "
+            "non-constant states is not yet supported for models with "
+            "nJ != 1 (multiple simultaneous objectives / full second-order "
+            "adjoint sensitivities)."
+        );
+
+    // `xB`, masked to zero outside the indices actually being
+    // reinitialized in the current simulation. Since the generated
+    // `deltaxB_fixedParameters`/`deltaqB_fixedParameters` only ever
+    // reference `xB` entries at (compile-time-fixed) indices with a
+    // nontrivial `x0_fixedParameters` formula, this correctly restricts
+    // their contributions to the runtime-live intersection of those
+    // indices and `reinitialization_state_idxs`, without needing that
+    // compile-time index set here. See the corresponding comment in
+    // `de_model.py`.
+    std::vector<realtype> xB_masked(nx_solver, 0.0);
+    for (auto const idx : reinitialization_state_idxs) {
+        if (idx >= 0 && idx < nx_solver)
+            xB_masked[idx] = xB.at(idx);
+    }
+
+    derived_state_.deltaxB_fixedParameters_.assign(nx_solver, 0.0);
+    fdeltaxB_fixedParameters(
+        derived_state_.deltaxB_fixedParameters_.data(), t,
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        xB_masked.data()
+    );
+    amici_daxpy(
+        nx_solver, 1.0, derived_state_.deltaxB_fixedParameters_.data(), 1,
+        xB.data(), 1
+    );
+
+    for (int ip = 0; ip < nplist(); ++ip) {
+        derived_state_.deltaqB_fixedParameters_.assign(1, 0.0);
+        fdeltaqB_fixedParameters(
+            derived_state_.deltaqB_fixedParameters_.data(), t,
+            state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+            xB_masked.data(), plist(ip)
+        );
+        xQB.at(ip) += derived_state_.deltaqB_fixedParameters_.at(0);
+    }
+}
+
 void Model::fsdx0() {}
 
 void Model::fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x) {

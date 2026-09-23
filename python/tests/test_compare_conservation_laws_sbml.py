@@ -303,6 +303,25 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 sensi_meth_preeq=SensitivityMethod.forward,
                 reinitialize_states=reinit,
             )
+            assert rff_cl.status == AMICI_SUCCESS
+            assert rfa_cl.status == AMICI_SUCCESS
+            # bounded by forward-vs-adjoint main-simulation sensitivity
+            # integration noise, not by preequilibration correctness
+            assert_allclose(
+                rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+            )
+
+            # `model_cl` eliminates `enzyme` via a conservation law, and
+            # `enzyme`'s initial value depends on the fixed parameter
+            # `init_enzyme` -- but `enzyme` is a constant species (a
+            # trivial, single-state conservation law), so reinitializing it
+            # only changes a constant and needs no adjoint correction at
+            # the preequilibration boundary (`Model.nx_reinit()` excludes
+            # such states for exactly this reason). This case is therefore
+            # unaffected by the conservation-law restriction on adjoint
+            # preequilibration with reinitialization of non-constant
+            # states that otherwise still applies under #1156.
+
             # adjoint preequilibration, adjoint simulation
             raa_cl = get_results(
                 model_cl,
@@ -312,29 +331,14 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 sensi_meth_preeq=SensitivityMethod.adjoint,
                 reinitialize_states=reinit,
             )
-
-            assert rff_cl.status == AMICI_SUCCESS
-            assert rfa_cl.status == AMICI_SUCCESS
             assert raa_cl.status == AMICI_SUCCESS
 
-            # assert all are close
             assert_allclose(
-                rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
-            )
-            assert_allclose(
-                rfa_cl["sllh"], raa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+                rfa_cl["sllh"], raa_cl["sllh"], rtol=1.0e-9, atol=1.0e-11
             )
             assert_allclose(
                 raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
             )
-
-            if reinit:
-                # TODO(gh-1156): adjoint preequilibration with
-                #  reinitialization of non-constant states is not yet
-                #  supported; `model` (unlike `model_cl`) does not eliminate
-                #  `enzyme` via a conservation law, so it requires such
-                #  reinitialization here.
-                continue
 
             # compare fully adjoint approach to simulation with singular
             #  Jacobian
@@ -349,7 +353,6 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
             )
             assert raa.status == AMICI_SUCCESS
 
-            # assert gradients are close (quadrature tolerances are laxer)
             assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
 
 
