@@ -1173,6 +1173,30 @@ def symbol_with_assumptions(name: str):
     return sp.Symbol(name, real=True)
 
 
+def substitute_local_symbols(
+    expr: sp.Basic, local_symbols: dict[str, sp.Basic]
+) -> sp.Basic:
+    """
+    Substitute free symbols to match assumptions of other model
+    entities where necessary, and replace parameters by values in case
+    of hardcoded parameters.
+
+    :param expr:
+        Expression to substitute into.
+    :param local_symbols:
+        Mapping of symbol names to their substitute expression.
+    :return:
+        ``expr`` with matching free symbols replaced.
+    """
+    return expr.subs(
+        {
+            sym: local
+            for sym in expr.free_symbols
+            if (local := local_symbols.get(str(sym), sym)) != sym
+        }
+    )
+
+
 def unique_preserve_order(seq: Sequence) -> list:
     """Return a list of unique elements in Sequence, keeping only the first
     occurrence of each element

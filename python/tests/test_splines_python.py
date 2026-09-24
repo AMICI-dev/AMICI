@@ -6,10 +6,16 @@ the true analytical values.
 """
 
 import math
+import xml.etree.ElementTree as ET
 
+import pytest
 import sympy as sp
-from amici.importers.sbml.splines import CubicHermiteSpline, UniformGrid
-from amici.importers.utils import amici_time_symbol
+from amici.importers.sbml.splines import (
+    AbstractSpline,
+    CubicHermiteSpline,
+    UniformGrid,
+)
+from amici.importers.utils import amici_time_symbol, symbol_with_assumptions
 from amici.testing import skip_on_valgrind
 
 
@@ -374,3 +380,69 @@ def test_SplineLogarithmicSensitivity():
         rel_tol=1e-5,
     )
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
+
+
+@skip_on_valgrind
+def test_construction_from_strings_matches_canonical_symbols():
+    """Node/value strings referencing model symbols must resolve to the
+    same ``Symbol`` objects as :func:`symbol_with_assumptions`, not to a
+    plain, non-matching ``sp.sympify`` result."""
+    p1 = symbol_with_assumptions("p1")
+    spline = CubicHermiteSpline(
+        sbml_id="f",
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=2),
+        values_at_nodes=["p1", 2.0],
+    )
+    assert spline.values_at_nodes[0] == p1
+    assert spline._parameters() == {p1}
+
+
+@skip_on_valgrind
+def test_construction_from_strings_avoids_sympy_builtin_clash():
+    """A node/value string like ``"I"`` must not be silently reinterpreted
+    as a sympy builtin (``ImaginaryUnit``, ``Exp1``, ...)."""
+    i_sym = symbol_with_assumptions("I")
+    spline = CubicHermiteSpline(
+        sbml_id="f",
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=2),
+        values_at_nodes=["I", 2.0],
+    )
+    assert spline.values_at_nodes[0] == i_sym
+    assert spline.values_at_nodes[0].is_Symbol
+
+
+@skip_on_valgrind
+def test_construction_from_invalid_string_raises_value_error():
+    with pytest.raises(ValueError):
+        CubicHermiteSpline(
+            sbml_id="f",
+            evaluate_at=amici_time_symbol,
+            nodes=UniformGrid(0, 1, number_of_nodes=2),
+            values_at_nodes=["1 +", 2.0],
+        )
+
+
+@skip_on_valgrind
+def test_from_annotation_substitutes_local_symbols():
+    """``locals_`` passed to ``AbstractSpline.from_annotation`` must be
+    substituted into the parsed formulas, analogous to
+    ``SbmlImporter._sympify``."""
+    my_reaction = symbol_with_assumptions("my_reaction")
+    kinetic_law = sp.sympify("2 * p1 * p2")
+
+    original = CubicHermiteSpline(
+        sbml_id="f",
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=2),
+        values_at_nodes=[my_reaction, 2.0],
+    )
+    annotation = ET.fromstring(original.amici_annotation)
+    parsed = AbstractSpline.from_annotation(
+        symbol_with_assumptions("f"),
+        annotation,
+        locals_={"my_reaction": kinetic_law},
+    )
+    assert parsed.values_at_nodes[0] == kinetic_law
+    assert float(parsed.values_at_nodes[1]) == 2.0
