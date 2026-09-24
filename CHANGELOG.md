@@ -84,6 +84,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   simultaneously-triggered events incorrectly shared a single pre-/post-event
   state snapshot for the adjoint update (#2805).
 
+* PEtab v1 import now parses observable and noise formulas using PEtab
+  v2's math grammar instead of a plain, ill-defined `sympy.sympify` call.
+  PEtab v1 never formally specified a grammar for these expressions; in
+  rare cases, some formulas may now be interpreted differently (#3281).
+
 
 ### v1.1 (2026-09-03)
 

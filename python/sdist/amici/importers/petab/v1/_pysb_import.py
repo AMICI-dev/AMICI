@@ -19,6 +19,7 @@ from petab.v1.C import (
     OBSERVABLE_FORMULA,
 )
 from petab.v1.models.pysb_model import PySBModel
+from petab.v2.math import petab_math_str, sympify_petab
 
 from amici import MeasurementChannel
 from amici.logging import get_logger, log_execution_time, set_log_level
@@ -45,6 +46,20 @@ def _add_observation_model(
         for comp in pysb_model.components
         if isinstance(comp, sp.Symbol)
     }
+
+    def _sympify(formula: str) -> sp.Expr:
+        """Parse a PEtab math expression, resolving any identifiers that
+        are already known PySB components to those exact objects (as
+        ``sympy.sympify(..., locals=local_syms)`` would)."""
+        sym = sympify_petab(formula)
+        return sym.subs(
+            {
+                s: local_syms[s.name]
+                for s in sym.free_symbols
+                if s.name in local_syms
+            }
+        )
+
     obs_df = petab_problem.observable_df.copy()
     for col, placeholder_pattern in (
         (OBSERVABLE_FORMULA, r"^(observableParameter\d+)_\w+$"),
@@ -55,7 +70,7 @@ def _add_observation_model(
                 continue
 
             changed_formula = False
-            sym = sp.sympify(formula, locals=local_syms)
+            sym = _sympify(formula)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
                     if jax:
@@ -78,7 +93,9 @@ def _add_observation_model(
             # update forum
             if jax and changed_formula:
                 obs_df.at[ir, col] = (
-                    sym.name if isinstance(sym, sp.Symbol) else str(sym)
+                    sym.name
+                    if isinstance(sym, sp.Symbol)
+                    else petab_math_str(sym)
                 )
 
     # add observables and sigmas to pysb model
@@ -88,7 +105,7 @@ def _add_observation_model(
         obs_df[NOISE_FORMULA],
         strict=True,
     ):
-        obs_symbol = sp.sympify(observable_formula, locals=local_syms)
+        obs_symbol = _sympify(observable_formula)
         if observable_id in pysb_model.expressions.keys():
             obs_expr = pysb_model.expressions[observable_id]
         else:
@@ -97,7 +114,7 @@ def _add_observation_model(
         local_syms[observable_id] = obs_expr
 
         sigma_id = f"{observable_id}_sigma"
-        sigma_symbol = sp.sympify(noise_formula, locals=local_syms)
+        sigma_symbol = _sympify(noise_formula)
         sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
         pysb_model.add_component(sigma_expr)
         local_syms[sigma_id] = sigma_expr
