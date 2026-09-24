@@ -12,6 +12,28 @@ coverage:
   precision: 2
   round: down
   range: "70...100"
+  status:
+    project:
+      # sbmlsuite/sbmlsuite-jax only run on pull_request when SBML-suite
+      # paths change, relying on carryforward otherwise; keep them out of
+      # the blocking check so a stale carryforward can't fail unrelated PRs.
+      default:
+        threshold: 0.15%
+        flags:
+          - python
+          - cpp
+          - cpp_python
+          - petab
+          - petab_sciml
+          - petab_sciml_benchmarks
+      sbmlsuite:
+        flags:
+          - sbmlsuite
+          - sbmlsuite-jax
+        informational: true
+    patch:
+      default:
+        threshold: 0.15%
 
 parsers:
   gcov:
@@ -41,6 +63,11 @@ flags:
     carryforward: false
   sbmlsuite:
     paths:
-      - python/amici/importers/sbml/**
-      - python/amici/exporters/sundials/de_export.py
+      - python/sdist/amici/importers/sbml/**
+      - python/sdist/amici/exporters/sundials/de_export.py
+    carryforward: true
+  sbmlsuite-jax:
+    paths:
+      - python/sdist/amici/exporters/jax/**
+      - python/sdist/amici/sim/jax/**
     carryforward: true
