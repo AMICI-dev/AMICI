@@ -84,12 +84,6 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   simultaneously-triggered events incorrectly shared a single pre-/post-event
   state snapshot for the adjoint update (#2805).
 
-* PySB import no longer special-cases an SBML-L3-style flattened
-  `piecewise(...)` function call, which BioNetGen cannot produce (it has
-  no `piecewise` function). Genuine `sympy.Piecewise` expressions, as
-  produced by BioNetGen's `if(...)` and comparison operators, are
-  unaffected (#3281).
-
 
 ### v1.1 (2026-09-03)
 
