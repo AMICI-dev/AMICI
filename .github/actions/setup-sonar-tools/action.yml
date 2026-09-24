@@ -3,7 +3,7 @@ description: Download and install sonar-scanner and build-wrapper
 runs:
   using: "composite"
   steps:
-    - run: echo "SONAR_SCANNER_VERSION=7.3.0.5189" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_VERSION=8.1.0.6389" >> $GITHUB_ENV
       shell: bash
     - run: echo "SONAR_SCANNER_HOME=${HOME}/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux-x64" >> $GITHUB_ENV
       shell: bash
