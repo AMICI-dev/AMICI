@@ -26,7 +26,12 @@ from typing import (
 import libsbml
 import numpy as np
 import sympy as sp
-from sbmlmath import SBMLMathMLParser, TimeSymbol, avogadro
+from sbmlmath import (
+    SBMLMathMLParser,
+    TimeSymbol,
+    avogadro,
+    sbml_math_to_sympy,
+)
 from sympy.logic.boolalg import Boolean, BooleanFalse, BooleanTrue
 from sympy.matrices.dense import MutableDenseMatrix
 
@@ -3441,9 +3446,10 @@ def assignment_rules_to_observables(
             observables[target_id] = MeasurementChannel(
                 id_=target_id,
                 name=p.getName() if p.isSetName() else target_id,
-                formula=sbml_model.getAssignmentRuleByVariable(
-                    target_id
-                ).getFormula(),
+                formula=sbml_math_to_sympy(
+                    sbml_model.getAssignmentRuleByVariable(target_id),
+                    ignore_units=True,
+                ),
             )
 
     for target_id in observables:
