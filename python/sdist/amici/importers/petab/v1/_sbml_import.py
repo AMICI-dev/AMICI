@@ -9,7 +9,7 @@ import libsbml
 import petab.v1 as petab
 import sympy as sp
 from petab.v1.models import MODEL_TYPE_SBML
-from sympy.abc import _clash
+from petab.v2.math import sympify_petab
 
 import amici
 from amici import MeasurementChannel
@@ -172,7 +172,7 @@ def _workaround_observable_parameters(
     for formula in formulas:
         # we want reproducible parameter ordering upon repeated import
         free_syms = sorted(
-            sp.sympify(formula, locals=_clash).free_symbols,
+            sympify_petab(formula).free_symbols,
             key=lambda symbol: symbol.name,
         )
         for free_sym in free_syms:
@@ -180,22 +180,17 @@ def _workaround_observable_parameters(
             if jax and (m := re.match(r"(noiseParameter\d+)_(\w+)", sym)):
                 # group1 is the noise parameter, group2 is the observable, don't add to sbml but replace with generic
                 # noise parameter
-                # FIXME: get rid of those str(sympify(...)) here and below
-                id_to_observable[m.group(2)].sigma = str(
-                    sp.sympify(
-                        id_to_observable[m.group(2)].sigma, locals=_clash
-                    ).subs(free_sym, sp.Symbol(m.group(1)))
-                )
+                id_to_observable[m.group(2)].sigma = sympify_petab(
+                    id_to_observable[m.group(2)].sigma
+                ).subs(free_sym, sp.Symbol(m.group(1)))
             elif jax and (
                 m := re.match(r"(observableParameter\d+)_(\w+)", sym)
             ):
                 # group1 is the noise parameter, group2 is the observable, don't add to sbml but replace with generic
                 # observable parameter
-                id_to_observable[m.group(2)].formula = str(
-                    sp.sympify(
-                        id_to_observable[m.group(2)].formula, locals=_clash
-                    ).subs(free_sym, sp.Symbol(m.group(1)))
-                )
+                id_to_observable[m.group(2)].formula = sympify_petab(
+                    id_to_observable[m.group(2)].formula
+                ).subs(free_sym, sp.Symbol(m.group(1)))
             elif (
                 sbml_model.getElementBySId(sym) is None
                 and sym != "time"
