@@ -82,7 +82,7 @@ jobs:
       - name: Install PEtab benchmark collection
         run: |
           git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/problems/" \
             && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
 
       - name: Install petab
@@ -182,7 +182,7 @@ jobs:
 #      - name: Install PEtab benchmark collection
 #        run: |
 #          git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-#            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+#            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/problems/" \
 #            && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
 
       - name: Install petab
