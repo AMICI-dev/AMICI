@@ -2,14 +2,10 @@
 model format"""
 
 import enum
-import itertools as itt
 import numbers
 import sys
 from collections.abc import Callable, Iterable, Sequence
-from typing import (
-    Any,
-    SupportsFloat,
-)
+from typing import SupportsFloat
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
@@ -733,13 +729,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
-    args = tuple(
-        arg
-        if arg.__class__.__name__ == "piecewise"
-        and sym.__class__.__name__ == "piecewise"
-        else _parse_special_functions(arg, False)
-        for arg in sym.args
-    )
+    args = tuple(_parse_special_functions(arg, False) for arg in sym.args)
 
     fun_mappings = {
         "times": sp.Mul,
@@ -771,16 +761,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ in fun_mappings:
         return fun_mappings[sym.__class__.__name__](*args)
 
-    elif sym.__class__.__name__ == "piecewise" or isinstance(
-        sym, sp.Piecewise
-    ):
-        if isinstance(sym, sp.Piecewise):
-            # this is sympy piecewise, can't be nested
-            denested_args = args
-        else:
-            # this is sbml piecewise, can be nested
-            denested_args = _denest_piecewise(args)
-        return _parse_piecewise_to_heaviside(denested_args)
+    elif isinstance(sym, sp.Piecewise):
+        return _parse_piecewise_to_heaviside(args)
 
     if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
@@ -797,69 +779,18 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     return sym
 
 
-def _denest_piecewise(
-    args: Sequence[sp.Expr | sp.logic.boolalg.Boolean | bool],
-) -> tuple[sp.Expr | sp.logic.boolalg.Boolean | bool]:
-    """
-    Denest piecewise functions that contain piecewise as condition
-
-    :param args:
-        Arguments to the piecewise function
-
-    :return:
-        Arguments where conditions no longer contain piecewise functions and
-        the conditional dependency is flattened out
-    """
-    args_out = []
-    for coeff, cond in grouper(args, 2, True):
-        # handling of this case is explicitely disabled in
-        # _parse_special_functions as keeping track of coeff/cond
-        # arguments is tricky. Simpler to just parse them out here
-        if coeff.__class__.__name__ == "piecewise":
-            coeff = _parse_special_functions(coeff, False)
-
-        # we can have conditions that are piecewise function
-        # returning True or False
-        if cond.__class__.__name__ == "piecewise":
-            # this keeps track of conditional that the previous
-            # piece was picked
-            previous_was_picked = sp.false
-            # recursively denest those first
-            for sub_coeff, sub_cond in grouper(
-                _denest_piecewise(cond.args), 2, True
-            ):
-                # flatten the individual pieces
-                pick_this = sp.And(sp.Not(previous_was_picked), sub_cond)
-                if sub_coeff == sp.true:
-                    args_out.extend([coeff, pick_this])
-                previous_was_picked = pick_this
-
-        else:
-            args_out.extend([coeff, cond])
-    # cut off last condition as that's the default
-    return tuple(args_out[:-1])
-
-
-def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
+def _parse_piecewise_to_heaviside(args: Iterable[ExprCondPair]) -> sp.Expr:
     """
     Piecewise functions cannot be transformed into C++ right away, but AMICI
     has a special interface for Heaviside functions, so we transform them.
 
     :param args:
-        symbolic expressions for arguments of the piecewise function
+        condition-expression pairs of the piecewise function
     """
-    # how many condition-expression pairs will we have?
     formula = sp.Integer(0)
     not_condition = sp.Integer(1)
 
-    if all(isinstance(arg, ExprCondPair) for arg in args):
-        # sympy piecewise
-        grouped_args = args
-    else:
-        # smbl piecewise
-        grouped_args = grouper(args, 2, True)
-
-    for coeff, trigger in grouped_args:
+    for coeff, trigger in args:
         if isinstance(coeff, BooleanAtom):
             coeff = sp.Integer(int(bool(coeff)))
 
@@ -976,29 +907,6 @@ def _ne_to_or(*args):
     """
     x, y = args
     return (x > y) | (x < y)
-
-
-def grouper(
-    iterable: Iterable, n: int, fillvalue: Any = None
-) -> Iterable[tuple[Any]]:
-    """
-    Collect data into fixed-length chunks or blocks
-
-    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-
-    :param iterable:
-        any iterable
-
-    :param n:
-        chunk length
-
-    :param fillvalue:
-        padding for last chunk if length < n
-
-    :return: itertools.zip_longest of requested chunks
-    """
-    args = [iter(iterable)] * n
-    return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
 def _check_unsupported_functions(
