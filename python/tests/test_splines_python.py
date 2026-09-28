@@ -8,9 +8,15 @@ the true analytical values.
 import math
 
 import sympy as sp
-from amici.importers.sbml.splines import CubicHermiteSpline, UniformGrid
-from amici.importers.utils import amici_time_symbol
+from amici.importers.sbml.splines import (
+    AbstractSpline,
+    CubicHermiteSpline,
+    UniformGrid,
+)
+from amici.importers.sbml.utils import create_sbml_model
+from amici.importers.utils import amici_time_symbol, sbml_time_symbol
 from amici.testing import skip_on_valgrind
+from sbmlmath import TimeSymbol, sbml_math_to_sympy
 
 
 @skip_on_valgrind
@@ -333,6 +339,74 @@ def test_SplineExplicitSensitivity():
         rel_tol=1e-5,
     )
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
+
+
+@skip_on_valgrind
+def test_spline_annotation_roundtrip():
+    """A spline's AMICI annotation round-trips through SBML unchanged,
+    including rational node/value literals, which must come back as
+    ``sp.Rational`` (``is_Number == True``) for
+    ``AbstractSpline.__init__``'s validation checks to apply."""
+    spline = CubicHermiteSpline(
+        "spline1",
+        nodes=[0, sp.Rational(1, 3), 2],
+        values_at_nodes=[0, sp.Rational(2, 7), 4],
+        derivatives_at_nodes=[1, 2, 3],
+    )
+
+    _, model = create_sbml_model("test_model")
+    spline.add_to_sbml_model(model, auto_add="spline")
+
+    rule = model.getRuleByVariable("spline1")
+    assert rule is not None
+
+    annotation = AbstractSpline.get_annotation(rule)
+    assert annotation is not None
+    spline_read = AbstractSpline.from_annotation(
+        sp.Symbol("spline1", real=True), annotation, locals_={}
+    )
+
+    assert list(spline_read.nodes) == list(spline.nodes)
+    assert list(spline_read.values_at_nodes) == list(spline.values_at_nodes)
+    assert list(spline_read.derivatives_at_nodes) == list(
+        spline.derivatives_at_nodes
+    )
+    assert all(n.is_Number for n in spline_read.nodes)
+    assert all(v.is_Number for v in spline_read.values_at_nodes)
+
+
+@skip_on_valgrind
+def test_spline_fallback_formula_roundtrip():
+    """A spline's fallback assignment-rule formula round-trips to an
+    equivalent function, with model time as a proper SBML `<csymbol>`."""
+    spline = CubicHermiteSpline(
+        "spline1",
+        nodes=[0, 1, 2],
+        values_at_nodes=[0, 1, 4],
+        derivatives_at_nodes=[1, 2, 3],
+    )
+
+    _, model = create_sbml_model("test_model")
+    spline.add_to_sbml_model(model, auto_add="spline")
+    rule = model.getRuleByVariable("spline1")
+
+    parsed = sbml_math_to_sympy(
+        rule.getMath(),
+        symbol_kwargs={"real": True},
+        ignore_units=True,
+        evaluate=False,
+    )
+    # time must be a proper `<csymbol>`, not just a symbol named "time"
+    assert parsed.atoms(TimeSymbol) == {TimeSymbol("time")}
+    read_back = parsed.replace(TimeSymbol, lambda *args: sbml_time_symbol)
+
+    # mathml_formula already has `sbml_time_symbol` substituted in
+    original = spline.mathml_formula
+
+    for t in [-0.5, 0, 0.3, 1.0, 1.7, 2.0, 2.5]:
+        expected = float(original.subs(sbml_time_symbol, t))
+        actual = float(read_back.subs(sbml_time_symbol, t))
+        assert actual == expected, (t, actual, expected)
 
 
 @skip_on_valgrind

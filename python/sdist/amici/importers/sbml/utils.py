@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 import xml.dom.minidom
 
 import libsbml
+from sbmlmath import SBMLMathMLPrinter, TimeSymbol
 from sympy.core.parameters import evaluate
-from sympy.printing.mathml import MathMLContentPrinter
 
 from amici.importers.utils import (
     SBMLException,
@@ -395,51 +395,23 @@ def pretty_xml(ugly_xml: str) -> str:
     return pretty_xml[pretty_xml.index("\n") + 1 :]
 
 
-# TODO: replace by sbmlmath.SBMLMathMLPrinter
-class MathMLSbmlPrinter(MathMLContentPrinter):
-    """Prints a SymPy expression to a MathML expression parsable by libSBML.
-
-    Differences from `sympy.MathMLContentPrinter`:
-    1. underscores in symbol names are not converted to subscripts
-    2. symbols with name 'time' are converted to the SBML time symbol
-    """
-
-    def _print_Symbol(self, sym: sp.Symbol) -> xml.dom.minidom.Element:
-        ci = self.dom.createElement(self.mathml_tag(sym))
-        ci.appendChild(self.dom.createTextNode(sym.name))
-        return ci
-
-    def doprint(self, expr, *, pretty: bool = False) -> str:
-        mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
-        mathml += super().doprint(expr)
-        mathml += "</math>"
-        mathml = mathml.replace(
-            "<ci>time</ci>",
-            '<csymbol encoding="text" definitionURL='
-            '"http://www.sbml.org/sbml/symbols/time"> time </csymbol>',
-        )
-        return pretty_xml(mathml) if pretty else mathml
-
-
-def sbml_mathml(
-    expr, *, replace_time: bool = False, pretty: bool = False, **settings
-) -> str:
+def sbml_mathml(expr, *, pretty: bool = False, **settings) -> str:
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
 
     :param expr:
         expression to be converted to MathML (will be sympified).
-
-    :param replace_time:
-        replace the AMICI time symbol with the SBML time symbol.
 
     :param pretty:
         prettify the resulting MathML.
     """
     with evaluate(False):
         expr = sp.sympify(expr)
-        if replace_time:
-            expr = expr.subs(amici_time_symbol, sbml_time_symbol)
-    return MathMLSbmlPrinter(settings).doprint(expr, pretty=pretty)
+        # either time symbol may occur; both must become an SBML `<csymbol>`
+        expr = expr.subs(amici_time_symbol, TimeSymbol("time"))
+        expr = expr.subs(sbml_time_symbol, TimeSymbol("time"))
+    # no prolog: result may be embedded as a fragment in a larger document
+    mathml = SBMLMathMLPrinter(settings).doprint(expr, with_prolog=False)
+    return pretty_xml(mathml) if pretty else mathml
 
 
 def sbml_math_ast(expr, **kwargs) -> libsbml.ASTNode:
