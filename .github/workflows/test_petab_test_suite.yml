@@ -56,41 +56,33 @@ jobs:
       - name: Install python package
         run: scripts/installAmiciSource.sh
 
-      - name: Install petab
+      - name: Install test dependencies
         run: |
           source ./venv/bin/activate \
-            && pip3 install wheel pytest shyaml pytest-cov pysb>=1.16
+            && pip3 install --group python/sdist/pyproject.toml:test
 
       # retrieve test models
       - name: Download and install PEtab test suite
         # FIXME: Until we have proper PEtab v2 import
         #  (https://github.com/AMICI-dev/AMICI/issues/2662),
-        #  we need `10ffb050380933b60ac192962bf9550a9df65a9c`
-        #  with the pseudo-v2 format instead of `main`
-#        run: |
-#          git clone --depth 1 --branch main \
-#            https://github.com/PEtab-dev/petab_test_suite \
-#            && source ./venv/bin/activate \
-#            && cd petab_test_suite && pip3 install -e .
+        #  we need the pseudo-v2-format commit pinned in
+        #  python/sdist/pyproject.toml's petab-test-suite-v1 group
+        #  instead of `main`.
         run: |
-          git clone https://github.com/PEtab-dev/petab_test_suite \
-            && source ./venv/bin/activate \
-            && cd petab_test_suite \
-            && git checkout 10ffb050380933b60ac192962bf9550a9df65a9c \
-            && pip3 install -e .
+          source ./venv/bin/activate \
+            && pip3 install --group python/sdist/pyproject.toml:petab-test-suite-v1
 
       - name: Install PEtab benchmark collection
         run: |
-          git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/problems/" \
-            && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
+          source venv/bin/activate \
+            && python -m pip install --group python/sdist/pyproject.toml:benchmark-models-petab
 
-      - name: Install petab
+      - name: Install petab (dev)
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@1b8599dd1eb9bda74853255b4cc4baf75b7e4d63 \
-            && python3 -m pip install git+https://github.com/pysb/pysb@master \
+            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
+            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev \
             && python3 -m pip install sympy>=1.12.1
 
 
@@ -165,32 +157,29 @@ jobs:
       - name: Install python package
         run: scripts/installAmiciSource.sh
 
-      - name: Install petab
+      - name: Install test dependencies
         run: |
           source ./venv/bin/activate \
-            && pip3 install wheel pytest shyaml pytest-cov pysb>=1.16
+            && pip3 install --group python/sdist/pyproject.toml:test
 
       # retrieve test models
       - name: Download and install PEtab test suite
         run: |
-          git clone https://github.com/PEtab-dev/petab_test_suite \
-            && source ./venv/bin/activate \
-            && cd petab_test_suite \
-            && pip3 install -e .
+          source ./venv/bin/activate \
+            && pip3 install --group python/sdist/pyproject.toml:petab-test-suite-v2
 
 # TODO: once there is a PEtab v2 benchmark collection
 #      - name: Install PEtab benchmark collection
 #        run: |
-#          git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-#            && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/problems/" \
-#            && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
+#          source venv/bin/activate \
+#            && pip install --group python/sdist/pyproject.toml:benchmark-models-petab
 
-      - name: Install petab
+      - name: Install petab (dev)
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
-            && python3 -m pip install git+https://github.com/pysb/pysb@master \
+            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
+            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev \
             && python3 -m pip install sympy>=1.12.1
 
       # run test models

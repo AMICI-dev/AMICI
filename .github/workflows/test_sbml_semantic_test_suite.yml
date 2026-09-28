@@ -48,7 +48,7 @@ jobs:
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
 
     - name: Install test dependencies
-      run: python3 -m pip install --upgrade git+https://github.com/ICB-DCM/fiddy.git@main
+      run: python3 -m pip install --upgrade --group python/sdist/pyproject.toml:fiddy
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
     - run: mv tests/sbml/amici-semantic-results/results.json tests/sbml/amici-semantic-results/results_${{ matrix.cases }}.json

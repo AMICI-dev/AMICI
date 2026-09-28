@@ -52,7 +52,7 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     # install pysb before sympy to allow for sympy>=1.12 (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
-    - run: source venv/bin/activate && pip3 install git+https://github.com/pysb/pysb
+    - run: source venv/bin/activate && pip3 install --group python/sdist/pyproject.toml:pysb-dev
 
     - run: source venv/bin/activate && pip3 install "sympy>1.12"
 

@@ -33,7 +33,8 @@ jobs:
       - name: Install AMICI
         shell: bash -l {0}
         run: |
-          pip3 install -v ./python/sdist[test]
+          pip3 install --upgrade pip
+          pip3 install -v --group python/sdist/pyproject.toml:test ./python/sdist
       - name: Show environment
         shell: bash -l {0}
         run: |
