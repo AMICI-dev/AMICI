@@ -33,6 +33,7 @@ from numbers import Integral, Real
 import libsbml
 import numpy as np
 import sympy as sp
+from sympy.abc import _clash
 from sympy.core.parameters import evaluate
 
 from amici.constants import SymbolId
@@ -42,6 +43,7 @@ from ..utils import (
     amici_time_symbol,
     annotation_namespace,
     sbml_time_symbol,
+    substitute_local_symbols,
     symbol_with_assumptions,
 )
 from .utils import (
@@ -63,9 +65,34 @@ logger = get_logger(__name__, logging.WARNING)
 
 
 def _sympify_noeval(x):
-    """Sympify without evaluating the expression."""
+    """Sympify without evaluating the expression.
+
+    For string input, unlike a bare ``sp.sympify(x)``, this avoids silently
+    reinterpreting single-letter symbol names (e.g. ``I``, ``E``, ``S``) as
+    sympy builtins, and canonicalizes resulting free symbols via
+    :func:`symbol_with_assumptions`, so that e.g. a node or value string
+    referencing a model parameter or species by name compares equal to the
+    symbol used for that entity elsewhere in AMICI. Non-string input (e.g.
+    an already-constructed sympy expression) is left untouched, preserving
+    whatever symbols/assumptions the caller used.
+    """
     with evaluate(False):
-        return sp.sympify(x)
+        if not isinstance(x, str):
+            return sp.sympify(x)
+
+        try:
+            expr = sp.sympify(x, locals=_clash)
+        except (sp.SympifyError, TypeError, SyntaxError) as err:
+            raise ValueError(f"Could not sympify {x!r}: {err}.") from err
+        if isinstance(expr, sp.Basic) and expr.free_symbols:
+            expr = expr.subs(
+                {
+                    sym: canonical
+                    for sym in expr.free_symbols
+                    if (canonical := symbol_with_assumptions(sym.name)) != sym
+                }
+            )
+        return expr
 
 
 ###############################################################################
@@ -120,8 +147,8 @@ class UniformGrid(collections.abc.Sequence):
             ``start + k * step``, with ``k`` integer, which is
             smaller than or equal to ``stop``.
         """
-        start = sp.nsimplify(sp.sympify(start))
-        stop = sp.nsimplify(sp.sympify(stop))
+        start = sp.nsimplify(_sympify_noeval(start))
+        stop = sp.nsimplify(_sympify_noeval(stop))
         if step is None:
             if number_of_nodes is None:
                 raise ValueError(
@@ -137,7 +164,7 @@ class UniformGrid(collections.abc.Sequence):
                 "Only one of step/number_of_nodes can be specified!"
             )
         else:
-            step = sp.nsimplify(sp.sympify(step))
+            step = sp.nsimplify(_sympify_noeval(step))
 
         if start > stop:
             raise ValueError(
@@ -1228,6 +1255,10 @@ class AbstractSpline(ABC):
         ``_from_annotation``.
         However, the mapping between method strings and subclasses
         must be hard-coded into this function here (at the moment).
+
+        ``locals_`` is substituted into every parsed formula, so that
+        formulas referencing such names are consistent with the rest of
+        the model.
         """
         if annotation.tag != f"{{{annotation_namespace}}}spline":
             raise ValueError(
@@ -1261,8 +1292,11 @@ class AbstractSpline(ABC):
                 )
             key = child.tag[len(annotation_namespace) + 2 :]
             value = [
-                mathml_parser.parse_str(ET.tostring(gc).decode()).replace(
-                    TimeSymbol, lambda *args: sbml_time_symbol
+                substitute_local_symbols(
+                    mathml_parser.parse_str(ET.tostring(gc).decode()).replace(
+                        TimeSymbol, lambda *args: sbml_time_symbol
+                    ),
+                    locals_,
                 )
                 for gc in child
             ]
