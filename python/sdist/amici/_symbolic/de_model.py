@@ -599,17 +599,34 @@ class DEModel:
 
     def num_state_reinits(self) -> int:
         """
-        Number of solver states which would be reinitialized after
-        preequilibration
+        Number of non-constant states subject to fixed-parameter
+        reinitialization.
+
+        Counts the states whose initial value depends on fixed parameters,
+        excluding constant species, i.e., states that were eliminated via a
+        conservation law that does not involve any other state.
+        Reinitializing a constant species only changes a constant, whereas
+        reinitializing any other state changes the solver state or makes a
+        conserved total depend on the remaining states.
 
         :return:
-            number of state variable symbols with reinitialization
+            number of non-constant states with fixed-parameter-dependent
+            initial values
         """
         # populates self._x0_fixedParameters_idx as a side effect
         self.eq("x0_fixedParameters")
         states = self.states()
+        constant_species = set()
+        for cl in self._conservation_laws:
+            members = [
+                state.get_sym()
+                for state in states
+                if cl.get_ncoeff(state.get_sym()) != 0
+            ]
+            if len(members) == 1:
+                constant_species.add(members[0])
         return sum(
-            not states[ix].has_conservation_law()
+            states[ix].get_sym() not in constant_species
             for ix in self._x0_fixedParameters_idx
         )
 

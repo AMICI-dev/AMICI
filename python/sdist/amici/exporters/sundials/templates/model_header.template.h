@@ -117,7 +117,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   .nxtrue_rdata = TPL_NXTRUE_RDATA,
                   .nx_solver = TPL_NX_SOLVER,
                   .nxtrue_solver = TPL_NXTRUE_SOLVER,
-                  .nx_solver_reinit = TPL_NX_SOLVER_REINIT,
+                  .nx_reinit = TPL_NX_REINIT,
                   .np = TPL_NP,
                   .nk = TPL_NK,
                   .ny = TPL_NY,

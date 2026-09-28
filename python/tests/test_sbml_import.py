@@ -341,7 +341,6 @@ def test_num_state_reinits(tempdir):
     )
     assert model.nx_reinit() == 1
 
-    model.set_reinitialize_fixed_parameter_initial_states(True)
     model.set_timepoints(np.linspace(0, 2, 3))
 
     solver = model.create_solver()
@@ -352,10 +351,71 @@ def test_num_state_reinits(tempdir):
     edata = ExpData(run_simulation(model, solver), 0.1, 0.0)
     edata.fixed_parameters = [1.0]
     edata.fixed_parameters_pre_equilibration = [2.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
 
     rdata = run_simulation(model, solver, edata)
     assert rdata.status != AMICI_SUCCESS
     assert any("not yet implemented" in msg.message for msg in rdata.messages)
+
+    # without reinitialization, adjoint preequilibration is supported
+    edata.reinitialize_fixed_parameter_initial_states = False
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+
+
+@skip_on_valgrind
+def test_num_state_reinits_conservation_law(tempdir, monkeypatch):
+    """A reinitialized state that was eliminated via a conservation law
+    involving other states is counted by ``Model.nx_reinit()``, since the
+    conserved total then depends on the remaining states."""
+    from amici.importers.antimony import antimony2amici
+
+    monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+
+    # E + C is conserved; E is eliminated and reinitialized from init_E
+    ant_model = """
+    model test_num_state_reinits_conservation_law
+        species S = 0, E, C = 0, P = 0
+        E = init_E
+        -> S; ks
+        S + E -> C; k1 * S * E
+        C -> E + P; k2 * C
+        P -> ; k3 * P
+        init_E = 3
+        ks = 1; k1 = 1; k2 = 1; k3 = 1
+    end
+    """
+    model = antimony2amici(
+        ant_model,
+        model_name="test_num_state_reinits_conservation_law",
+        output_dir=tempdir,
+        fixed_parameters=["init_E"],
+        observation_model=[MC("obs_P", formula="P")],
+    )
+    assert model.ncl() == 1
+    assert "E" not in model.get_state_ids_solver()
+    assert model.nx_reinit() == 1
+
+    model.set_timepoints(np.linspace(0, 2, 3))
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
+
+    edata = ExpData(run_simulation(model, solver), 0.1, 0.0)
+    edata.fixed_parameters = [1.0]
+    edata.fixed_parameters_pre_equilibration = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status != AMICI_SUCCESS
+    assert any("not yet implemented" in msg.message for msg in rdata.messages)
+
+    # forward preequilibration with reinitialization is supported
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
 
 
 @pytest.mark.filterwarnings(
@@ -564,10 +624,7 @@ def test_solver_reuse(model_steadystate_module):
 
             val1 = getattr(rdata1, attr)
             val2 = getattr(rdata2, attr)
-            msg = (
-                f"Values for {attr} do not match for sensitivity "
-                f"method {sensi_method}"
-            )
+            msg = f"Values for {attr} do not match for sensitivity method {sensi_method}"
             if isinstance(val1, np.ndarray):
                 assert_array_equal(val1, val2, err_msg=msg)
             elif isinstance(val1, Number) and np.isnan(val1):

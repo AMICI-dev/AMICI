@@ -69,8 +69,9 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   adjoint presimulation) — since the count was always 0, those guards
   never triggered, silently allowing unsupported (and potentially
   incorrect) simulations to run instead of raising an error. Models that
-  hit either combination now correctly fail with a clear error message
-  (#3277).
+  hit either combination now correctly fail with a clear error message.
+  The guards now only apply if reinitialization is actually enabled for
+  the respective condition (#3277).
 * Fixed `ForwardProblem::handle_presimulation()` rejecting presimulation
   with state reinitialization for any sensitivity method, even though
   only adjoint sensitivity analysis is actually affected. This was

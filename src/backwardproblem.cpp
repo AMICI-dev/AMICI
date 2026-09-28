@@ -78,18 +78,21 @@ void BackwardProblem::workBackwardProblem() {
                == SensitivityMethod::adjoint) {
         auto preeq_solver = preeq_problem_->get_solver();
 
-        ConditionContext cc2(
-            model_, edata_, FixedParameterContext::preequilibration
-        );
-
-        // If we need to reinitialize solver states, this won't work yet
-        // (gh-1156).
-        if (model_->nx_reinit() > 0)
+        // Reinitialization of non-constant states is not yet supported here
+        // (gh-1156). Reinitialization settings for the main simulation are
+        // only applied to the model in the simulation context, so check
+        // before switching to the preequilibration context.
+        if (model_->get_reinitialize_fixed_parameter_initial_states()
+            && model_->nx_reinit() > 0)
             throw NewtonFailure(
                 AMICI_NOT_IMPLEMENTED,
                 "Adjoint preequilibration with reinitialization of "
                 "non-constant states is not yet implemented. Stopping."
             );
+
+        ConditionContext cc2(
+            model_, edata_, FixedParameterContext::preequilibration
+        );
 
         auto const t0 = std::isnan(model_->t0_preeq()) ? model_->t0()
                                                        : model_->t0_preeq();

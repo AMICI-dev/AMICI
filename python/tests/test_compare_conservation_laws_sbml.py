@@ -167,6 +167,10 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     model_with_cl, model_without_cl = models
 
     assert model_with_cl.ncl() > 0
+    # `enzyme` is reinitialized from `init_enzyme`. It is a constant species
+    #  that is eliminated in `model_with_cl` and a solver state otherwise.
+    assert model_with_cl.nx_reinit() == 0
+    assert model_without_cl.nx_reinit() == 1
     assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
     assert model_with_cl.nx_solver < model_without_cl.nx_solver
     assert len(model_with_cl.get_state_ids_solver()) == model_with_cl.nx_solver
@@ -324,24 +328,29 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
                 raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
             )
 
+            if reinit:
+                # TODO(gh-1156): adjoint preequilibration with
+                #  reinitialization of non-constant states is not yet
+                #  supported; `model` (unlike `model_cl`) does not eliminate
+                #  `enzyme` via a conservation law, so it requires such
+                #  reinitialization here.
+                continue
+
             # compare fully adjoint approach to simulation with singular
             #  Jacobian
-            # TODO(gh-1156): adjoint preequilibration with reinitialization
-            #  of non-constant states is not yet supported; `model`
-            #  (unlike `model_cl`) does not eliminate `enzyme` via a
-            #  conservation law, so it requires such reinitialization
-            #  here. Re-enable once gh-1156 is implemented.
-            # raa = get_results(
-            #     model,
-            #     edata=edata,
-            #     sensi_order=1,
-            #     sensi_meth=SensitivityMethod.adjoint,
-            #     sensi_meth_preeq=SensitivityMethod.adjoint,
-            #     stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
-            #     reinitialize_states=reinit,
-            # )
-            # assert raa.status == AMICI_SUCCESS
-            # assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
+            raa = get_results(
+                model,
+                edata=edata,
+                sensi_order=1,
+                sensi_meth=SensitivityMethod.adjoint,
+                sensi_meth_preeq=SensitivityMethod.adjoint,
+                stst_sensi_mode=SteadyStateSensitivityMode.integrateIfNewtonFails,
+                reinitialize_states=reinit,
+            )
+            assert raa.status == AMICI_SUCCESS
+
+            # assert gradients are close (quadrature tolerances are laxer)
+            assert_allclose(raa_cl["sllh"], raa["sllh"], 1e-5, 1e-5)
 
 
 @skip_on_valgrind

@@ -117,7 +117,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
                   .nxtrue_rdata = 3,
                   .nx_solver = 3,
                   .nxtrue_solver = 3,
-                  .nx_solver_reinit = 0,
+                  .nx_reinit = 1,
                   .np = 3,
                   .nk = 1,
                   .ny = 3,
@@ -520,7 +520,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "088c23bd7aa5411508ed82dc4f1ed8b565a69713";
+        return "bb129ae336f22f2fd5439bdb439b513981070383";
     }
 
     bool has_quadratic_llh() const override {
