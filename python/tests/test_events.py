@@ -1376,10 +1376,13 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
         rf"""
         x = 0
         y = 0
+        z = 0
         recovering = 0
         recovering' = 0
-        x' = piecewise(1e10, recovering >= 1, 1)
+        k = 1
+        x' = piecewise(1e10, recovering >= 1, k)
         y' = piecewise(1e10, recovering >= 1, 0)
+        z' = k - z
 
         n_fired_1 = 0
         n_fired_2 = 0
@@ -1389,13 +1392,16 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
             n_fired_1 = n_fired_1 + 1,
             recovering = 1,
             x = {1.0 - margin_below_threshold},
-            y = {1.0 - margin_below_threshold};
+            y = {1.0 - margin_below_threshold},
+            z = z + 1;
 
         E2: at y >= threshold:
-            n_fired_2 = n_fired_2 + 1;
+            n_fired_2 = n_fired_2 + 1,
+            z = z + 2;
         """,
         model_name=model_name,
         output_dir=tempdir,
+        observation_model=[MC("obs_z", formula="z")],
     )
 
     model_module = import_model_module(model_name, tempdir)
@@ -1410,6 +1416,28 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
     # E2's genuine, simultaneous first crossing is still correctly handled.
     assert rdata.by_id("n_fired_2")[-1] == 1
     assert "ROOT_AFTER_REINIT" in caplog.text
+
+    # forward and adjoint sensitivities must agree
+    edata = ExpData(rdata, 1, 0, 0)
+    sllh = {}
+    for sens_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        sllh[sens_method] = np.array(rdata.sllh)
+    assert np.all(np.isfinite(sllh[SensitivityMethod.forward]))
+    assert np.any(sllh[SensitivityMethod.forward] != 0)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+        atol=1e-8,
+    )
 
 
 @skip_on_valgrind

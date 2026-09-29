@@ -153,7 +153,10 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   even though the crossing had already been processed. A re-detection of
   exactly the just-processed root is now ignored, and any other,
   genuinely new root (e.g. from a second, near-simultaneous event) is
-  handled normally instead of aborting the simulation (#2861, #3266).
+  handled normally instead of aborting the simulation. This also covers
+  discontinuities less than one solver step apart, which previously made
+  the simulation fail with `reInitPostProcess failed with error code 1`
+  (#2861, #3266).
 
 ### v1.1 (2026-09-03)
 

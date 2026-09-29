@@ -595,7 +595,10 @@ int CVodeSolver::reInit_post_process(
 
     status = CVode(ami_mem, tout, yout->get_nvector(), t, CV_ONE_STEP);
 
-    if (status != CV_SUCCESS && status != CV_ROOT_RETURN) {
+    // CV_TSTOP_RETURN: the next stop time (e.g. the next discontinuity to
+    // be handled) lies within the first step after reinitialization.
+    if (status != CV_SUCCESS && status != CV_ROOT_RETURN
+        && status != CV_TSTOP_RETURN) {
         std::stringstream msg;
         msg << "tout: " << tout << ", t: " << *t << ".";
         throw CvodeException(status, "reInitPostProcess", msg.str().c_str());

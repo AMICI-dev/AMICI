@@ -120,8 +120,8 @@ class IDASolver : public Solver {
      * @param ypout new state derivative vector
      * @param tout anticipated next integration timepoint.
      * @return the IDAS status of the mandatory post-reinitialization step
-     * (\c IDA_SUCCESS or \c IDA_ROOT_RETURN); other statuses raise an
-     * exception
+     * (\c IDA_SUCCESS, \c IDA_ROOT_RETURN or \c IDA_TSTOP_RETURN);
+     * other statuses raise an exception
      */
     int reinit_post_process(
         void* ida_mem, realtype* t, AmiVector* yout, AmiVector* ypout,

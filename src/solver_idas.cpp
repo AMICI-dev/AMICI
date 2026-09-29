@@ -527,7 +527,10 @@ int IDASolver::reinit_post_process(
         IDA_ONE_STEP
     );
 
-    if (status != IDA_SUCCESS && status != IDA_ROOT_RETURN)
+    // IDA_TSTOP_RETURN: the next stop time (e.g. the next discontinuity to
+    // be handled) lies within the first step after reinitialization.
+    if (status != IDA_SUCCESS && status != IDA_ROOT_RETURN
+        && status != IDA_TSTOP_RETURN)
         throw IDAException(status, "reInitPostProcess");
 
     ida_mem->ida_nst = nst_tmp + 1;

@@ -121,8 +121,8 @@ class CVodeSolver : public Solver {
      * @param yout  new state vector
      * @param tout  anticipated next integration timepoint.
      * @return the CVODES status of the mandatory post-reinitialization
-     * step (\c CV_SUCCESS or \c CV_ROOT_RETURN); other statuses raise an
-     * exception
+     * step (\c CV_SUCCESS, \c CV_ROOT_RETURN or \c CV_TSTOP_RETURN);
+     * other statuses raise an exception
      */
     int reInit_post_process(
         void* cv_mem, realtype* t, AmiVector* yout, realtype tout
