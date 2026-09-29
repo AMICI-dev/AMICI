@@ -17,7 +17,7 @@ void checkReturnDataEqual(
     ASSERT_EQ(r.nx_rdata, s.nx_rdata);
     ASSERT_EQ(r.nxtrue_rdata, s.nxtrue_rdata);
     ASSERT_EQ(r.nx_solver, s.nx_solver);
-    ASSERT_EQ(r.nx_solver_reinit, s.nx_solver_reinit);
+    ASSERT_EQ(r.nx_reinit, s.nx_reinit);
     ASSERT_EQ(r.ny, s.ny);
     ASSERT_EQ(r.nytrue, s.nytrue);
     ASSERT_EQ(r.nz, s.nz);
@@ -150,7 +150,7 @@ TEST(ModelSerializationTest, ToFile) {
             .nxtrue_rdata = nx,
             .nx_solver = nx,
             .nxtrue_solver = nx,
-            .nx_solver_reinit = 0,
+            .nx_reinit = 0,
             .np = np,
             .nk = nk,
             .ny = ny,
@@ -224,7 +224,7 @@ TEST(ReturnDataSerializationTest, ToString) {
             .nxtrue_rdata = nx,
             .nx_solver = nx,
             .nxtrue_solver = nx,
-            .nx_solver_reinit = 0,
+            .nx_reinit = 0,
             .np = np,
             .nk = nk,
             .ny = ny,

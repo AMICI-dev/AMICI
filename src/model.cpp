@@ -238,7 +238,7 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata)
            && (a.nx_solver == b.nx_solver)
            && (a.nxtrue_solver == b.nxtrue_solver)
-           && (a.nx_solver_reinit == b.nx_solver_reinit) && (a.np == b.np)
+           && (a.nx_reinit == b.nx_reinit) && (a.np == b.np)
            && (a.nk == b.nk) && (a.ny == b.ny) && (a.nytrue == b.nytrue)
            && (a.nz == b.nz) && (a.nztrue == b.nztrue) && (a.ne == b.ne)
            && (a.ne_solver == b.ne_solver) && (a.nspl == b.nspl)
@@ -501,7 +501,7 @@ int Model::nk() const {
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
 
-int Model::nx_reinit() const { return nx_solver_reinit; }
+int Model::nx_reinit() const { return ModelDimensions::nx_reinit; }
 
 double const* Model::k() const { return state_.fixed_parameters.data(); }
 

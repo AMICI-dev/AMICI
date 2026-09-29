@@ -167,6 +167,10 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     model_with_cl, model_without_cl = models
 
     assert model_with_cl.ncl() > 0
+    # `enzyme` is reinitialized from `init_enzyme`. It is a constant species
+    #  that is eliminated in `model_with_cl` and a solver state otherwise.
+    assert model_with_cl.nx_reinit() == 0
+    assert model_without_cl.nx_reinit() == 1
     assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
     assert model_with_cl.nx_solver < model_without_cl.nx_solver
     assert len(model_with_cl.get_state_ids_solver()) == model_with_cl.nx_solver
@@ -323,6 +327,14 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
             assert_allclose(
                 raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
             )
+
+            if reinit:
+                # TODO(gh-1156): adjoint preequilibration with
+                #  reinitialization of non-constant states is not yet
+                #  supported; `model` (unlike `model_cl`) does not eliminate
+                #  `enzyme` via a conservation law, so it requires such
+                #  reinitialization here.
+                continue
 
             # compare fully adjoint approach to simulation with singular
             #  Jacobian

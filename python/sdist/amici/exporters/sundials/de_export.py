@@ -982,7 +982,7 @@ class DEExporter:
             "NXTRUE_RDATA": self.model.num_states_rdata(),
             "NX_SOLVER": self.model.num_states_solver(),
             "NXTRUE_SOLVER": self.model.num_states_solver(),
-            "NX_SOLVER_REINIT": self.model.num_state_reinits(),
+            "NX_REINIT": self.model.num_state_reinits(),
             "NY": self.model.num_obs(),
             "NYTRUE": self.model.num_obs(),
             "NZ": self.model.num_eventobs(),
