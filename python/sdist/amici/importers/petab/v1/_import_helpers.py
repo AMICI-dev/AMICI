@@ -23,7 +23,7 @@ from petab.v1.C import (
     OBSERVABLE_TRANSFORMATION,
 )
 from petab.v1.parameters import get_valid_parameters_for_parameter_table
-from sympy.abc import _clash
+from petab.v2.math import sympify_petab
 
 import amici
 from amici.importers.utils import MeasurementChannel
@@ -55,9 +55,8 @@ def get_observation_model(
         name = re.sub(nan_pat, "", str(observable.get(OBSERVABLE_NAME, "")))
         formula_obs = re.sub(nan_pat, "", str(observable[OBSERVABLE_FORMULA]))
         formula_noise = re.sub(nan_pat, "", str(observable[NOISE_FORMULA]))
-        # FIXME: use PEtab's formula parser here
-        formula_noise_sym = sp.sympify(formula_noise, locals=_clash)
-        formula_obs_sym = sp.sympify(formula_obs, locals=_clash)
+        formula_noise_sym = sympify_petab(formula_noise)
+        formula_obs_sym = sympify_petab(formula_obs)
         # PEtab does currently not allow observables in noiseFormula, and
         #  AMICI cannot handle state variables in sigma expressions.
         #  Therefore, where possible, replace state variables occurring in
@@ -72,8 +71,7 @@ def get_observation_model(
                 id_=oid,
                 name=name,
                 formula=formula_obs,
-                # FIXME: get rid of the string conversion here
-                sigma=str(formula_noise_sym),
+                sigma=formula_noise_sym,
                 noise_distribution=petab_noise_distribution_to_amici(
                     observable
                 ),
