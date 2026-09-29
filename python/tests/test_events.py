@@ -1380,8 +1380,8 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
         recovering = 0
         recovering' = 0
         k = 1
-        x' = piecewise(1e10, recovering >= 1, k)
-        y' = piecewise(1e10, recovering >= 1, 0)
+        x' = k + 1e10 * recovering
+        y' = 1e10 * recovering
         z' = k - z
 
         n_fired_1 = 0
@@ -1406,7 +1406,8 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
 
     model_module = import_model_module(model_name, tempdir)
     model = model_module.get_model()
-    model.set_timepoints([1.5])
+    t_end = 1.5
+    model.set_timepoints([t_end])
     solver = model.create_solver()
 
     rdata = run_simulation(model, solver)
@@ -1417,9 +1418,24 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
     assert rdata.by_id("n_fired_2")[-1] == 1
     assert "ROOT_AFTER_REINIT" in caplog.text
 
-    # forward and adjoint sensitivities must agree
+    # Analytical solution: `z` jumps by 3 at t1 = threshold / k (1 from E1,
+    # 2 from E2), so z(T) = k + (3 - k exp(-t1)) exp(-(T - t1)).
+    k, threshold = model.get_free_parameters()
+    assert list(model.get_free_parameter_ids()) == ["k", "threshold"]
+    t1 = threshold / k
+    z_end = k + (3 - k * np.exp(-t1)) * np.exp(-(t_end - t1))
+    dz_dt1 = 3 * np.exp(-(t_end - t1))
+    dz_dp = np.array(
+        [1 - np.exp(-t_end) - dz_dt1 * threshold / k**2, dz_dt1 / k]
+    )
+    assert_allclose(rdata.by_id("z")[-1], z_end, rtol=1e-6)
+
+    # Forward and adjoint sensitivities must both include E2's event-time
+    # sensitivity, i.e., match the analytical gradient.
+    measurement = 3.0
     edata = ExpData(rdata, 1, 0, 0)
-    sllh = {}
+    edata.set_measurements([measurement])
+    expected_sllh = (measurement - z_end) * dz_dp
     for sens_method in (
         SensitivityMethod.forward,
         SensitivityMethod.adjoint,
@@ -1427,17 +1443,13 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
         solver = model.create_solver()
         solver.set_sensitivity_order(SensitivityOrder.first)
         solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-14)
         rdata = run_simulation(model, solver, edata=edata)
         assert rdata.status == AMICI_SUCCESS
-        sllh[sens_method] = np.array(rdata.sllh)
-    assert np.all(np.isfinite(sllh[SensitivityMethod.forward]))
-    assert np.any(sllh[SensitivityMethod.forward] != 0)
-    assert_allclose(
-        sllh[SensitivityMethod.adjoint],
-        sllh[SensitivityMethod.forward],
-        rtol=1e-6,
-        atol=1e-8,
-    )
+        assert_allclose(
+            rdata.sllh, expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
 
 
 @skip_on_valgrind
