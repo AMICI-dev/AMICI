@@ -9,6 +9,7 @@ import libsbml
 import petab.v1 as petab
 import sympy as sp
 from petab.v1.models import MODEL_TYPE_SBML
+from sbmlmath import sbml_math_to_sympy
 from sympy.abc import _clash
 
 import amici
@@ -518,9 +519,6 @@ def _get_fixed_parameters_sbml(
 
     # exclude targets of rules or initial assignments that are not numbers
     sbml_model = petab_problem.model.sbml_model
-    parser_settings = libsbml.L3ParserSettings()
-    parser_settings.setModel(sbml_model)
-    parser_settings.setParseUnits(libsbml.L3P_NO_UNITS)
 
     for fixed_parameter in fixed_parameters.copy():
         # check global parameters
@@ -528,11 +526,7 @@ def _get_fixed_parameters_sbml(
             fixed_parameters.remove(fixed_parameter)
             continue
         if ia := sbml_model.getInitialAssignmentBySymbol(fixed_parameter):
-            sym_math = sp.sympify(
-                libsbml.formulaToL3StringWithSettings(
-                    ia.getMath(), parser_settings
-                )
-            )
+            sym_math = sbml_math_to_sympy(ia, ignore_units=True)
             if not sym_math.evalf().is_Number:
                 fixed_parameters.remove(fixed_parameter)
                 continue

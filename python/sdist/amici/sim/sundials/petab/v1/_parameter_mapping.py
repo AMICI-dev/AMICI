@@ -33,7 +33,7 @@ from petab.v1.C import (
     SIMULATION_CONDITION_ID,
 )
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
-from sympy.abc import _clash
+from sbmlmath import sbml_math_to_sympy
 
 from amici.importers.petab.v1 import PREEQ_INDICATOR_ID
 from amici.importers.petab.v1._util import get_states_in_condition_table
@@ -482,9 +482,8 @@ def _get_initial_state_sbml(
         element_id
     )
     if initial_assignment:
-        initial_assignment = sp.sympify(
-            libsbml.formulaToL3String(initial_assignment.getMath()),
-            locals=_clash,
+        initial_assignment = sbml_math_to_sympy(
+            initial_assignment, ignore_units=True
         )
     if type_code == libsbml.SBML_SPECIES:
         value = (
