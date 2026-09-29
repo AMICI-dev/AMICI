@@ -887,6 +887,7 @@ def test_preequilibration_events(tempdir):
         amici_solver.set_sensitivity_method(sensi_meth)
         amici_solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
         amici_model.require_sensitivities_for_all_parameters()
+        amici_solver.set_sensitivity_order(SensitivityOrder.first)
 
         rdata = run_simulation(amici_model, amici_solver, edata)
         assert rdata.status == AMICI_SUCCESS
@@ -905,3 +906,10 @@ def test_preequilibration_events(tempdir):
         else:
             result = check_jacobian(function, point, expected)
         result.assert_success(always_print=True)
+
+        # sx0 is not computed (and not meaningful) when pre-equilibration
+        # is run with adjoint sensitivities (see gh-1184)
+        if sensi_meth_preeq == SensitivityMethod.adjoint:
+            assert rdata.sx0 is None
+        else:
+            assert rdata.sx0 is not None
