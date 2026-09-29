@@ -618,17 +618,19 @@ int CVodeSolver::reInit_post_process(
             throw CvodeException(AMICI_ERROR, "reInitPostProcess");
         }
 
-        /* Load next point in dt_mem */
-        dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]->t = *t;
+        /* Load next point in dt_mem. As in CVodeF, the stored data belongs
+         to the end of the internal step (cv_tn), not to the root time *t
+         on a root return. */
+        dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]->t = cv_mem->cv_tn;
         ca_mem->ca_IMstore(cv_mem, dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]);
 
         /* Set t1 field of the current check point structure
          for the case in which there will be no future
          check points */
-        ca_mem->ck_mem->ck_t1 = *t;
+        ca_mem->ck_mem->ck_t1 = cv_mem->cv_tn;
 
-        /* tfinal is now set to *tret */
-        ca_mem->ca_tfinal = *t;
+        /* tfinal is now set to tn */
+        ca_mem->ca_tfinal = cv_mem->cv_tn;
     }
 
     return status;
