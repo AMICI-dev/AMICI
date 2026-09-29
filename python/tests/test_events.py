@@ -1452,6 +1452,48 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
         )
 
 
+def test_root_after_reinit_ignores_all_simultaneous_events(tempdir):
+    """Spurious re-detections are suppressed for every event of a
+    simultaneous group, not only for the first one processed.
+
+    ``E1`` and ``E2`` share the same trigger and fire together. ``E1``
+    resets ``x`` to just below the threshold and switches on an enormous
+    rate, so the solver re-reports *both* roots right after
+    reinitialization. Both must be recognized as already handled.
+    """
+    model_name = "test_root_after_reinit_ignores_all_simultaneous_events"
+    antimony2amici(
+        """
+        x = 0
+        recovering = 0
+        recovering' = 0
+        x' = 1 + 1e10 * recovering
+
+        n_fired_1 = 0
+        n_fired_2 = 0
+
+        E1: at x >= 1:
+            n_fired_1 = n_fired_1 + 1,
+            recovering = 1,
+            x = 1 - 1e-13;
+
+        E2: at x >= 1:
+            n_fired_2 = n_fired_2 + 1;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    model.set_timepoints([1.5])
+
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.by_id("n_fired_1")[-1] == 1
+    assert rdata.by_id("n_fired_2")[-1] == 1
+
+
 @skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on

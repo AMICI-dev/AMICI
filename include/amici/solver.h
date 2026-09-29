@@ -847,12 +847,28 @@ class Solver {
      * This information allows recognizing a spurious re-detection of
      * exactly the same root, immediately following reinit().
      *
-     * @param roots_found root/direction info for every root involved in
-     * the discontinuity just handled, whether or not it triggered a state
-     * update
+     * @param root_directions per-root bitmask of the crossing directions
+     * (see root_direction_bit()) seen during the discontinuity just
+     * handled, whether or not they triggered a state update
      */
-    void ignore_roots_after_reinit(std::vector<int> roots_found) const {
-        roots_ignored_after_reinit_ = std::move(roots_found);
+    void ignore_roots_after_reinit(std::vector<int> root_directions) const {
+        roots_ignored_after_reinit_ = std::move(root_directions);
+    }
+
+    /**
+     * @brief Bit representing a root crossing direction.
+     *
+     * Used for the per-root bitmasks passed to ignore_roots_after_reinit(),
+     * where the same root may have crossed in both directions within one
+     * discontinuity, e.g. when an event assignment moves the state back
+     * across the event's own trigger.
+     *
+     * @param direction root direction as reported by the solver
+     * (1: up-crossing, -1: down-crossing, 0: no crossing)
+     * @return 1 for an up-crossing, 2 for a down-crossing, 0 otherwise
+     */
+    static constexpr int root_direction_bit(int const direction) {
+        return direction == 1 ? 1 : direction == -1 ? 2 : 0;
     }
 
     /**
@@ -2028,10 +2044,11 @@ class Solver {
     mutable bool force_reinit_postprocess_B_{false};
 
     /**
-     * Root/direction info for every root involved in the discontinuity
-     * handled at the preceding reinit(), whether or not it triggered a
-     * state update. Used to distinguish a spurious re-detection of the
-     * same discontinuity from a genuine new event.
+     * Per-root bitmask of the crossing directions (see
+     * root_direction_bit()) seen during the discontinuity handled at the
+     * preceding reinit(), whether or not they triggered a state update.
+     * Used to distinguish a spurious re-detection of the same
+     * discontinuity from a genuine new event.
      */
     mutable std::vector<int> roots_ignored_after_reinit_;
 

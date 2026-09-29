@@ -444,8 +444,19 @@ void EventHandlingSimulator::handle_events(
     }
     ws_->tlastroot = ws_->sol.t;
 
-    // Roots found in this discontinuity
-    std::vector<int> roots_for_ignore = ws_->roots_found;
+    // Crossing directions of all roots found in this discontinuity, as a
+    // per-root bitmask. The same root may cross in both directions here,
+    // e.g. when an event assignment moves the state back across the
+    // event's own trigger, and `detect_secondary_events()` resets
+    // `roots_found` entries, so directions are accumulated rather than
+    // copied.
+    std::vector<int> roots_for_ignore(model_->ne, 0);
+    auto const record_roots_for_ignore = [this, &roots_for_ignore]() {
+        for (int ie = 0; ie < model_->ne; ++ie)
+            roots_for_ignore.at(ie)
+                |= Solver::root_direction_bit(ws_->roots_found.at(ie));
+    };
+    record_roots_for_ignore();
 
     // start a new discontinuity record whenever a new event is triggered
     auto record_new_discontinuity
@@ -492,10 +503,6 @@ void EventHandlingSimulator::handle_events(
         auto const& pending_event = ws_->pending_events.pop();
         auto const ie = pending_event.idx;
         auto const& state_old = pending_event.state_old;
-
-        // capture this root's direction for the ignore-list before
-        // `detect_secondary_events()` resets it to 0 below
-        roots_for_ignore.at(ie) = ws_->roots_found.at(ie);
 
         gsl_Assert(
             // storing the old state is not always necessary,
@@ -579,10 +586,7 @@ void EventHandlingSimulator::handle_events(
         }
 
         // record any newly-found roots
-        for (int ie_new = 0; ie_new < model_->ne; ++ie_new) {
-            if (ws_->roots_found.at(ie_new) != 0)
-                roots_for_ignore.at(ie_new) = ws_->roots_found.at(ie_new);
-        }
+        record_roots_for_ignore();
     }
 
     // reinitialize the solver after all events have been processed

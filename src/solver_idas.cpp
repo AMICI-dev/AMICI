@@ -465,7 +465,8 @@ bool IDASolver::reinit_post_process_f(realtype const tnext) const {
         if (rootsfound[ie] == 0)
             continue;
         if (ie < gsl::narrow<int>(roots_ignored_after_reinit_.size())
-            && roots_ignored_after_reinit_[ie] == rootsfound[ie]) {
+            && (roots_ignored_after_reinit_[ie]
+                & root_direction_bit(rootsfound[ie]))) {
             // spurious re-detection of a root already accounted for.
             // Only an up-crossing (rootsfound[ie] == 1) is ever a genuine
             // trigger, so only warn about suppressing one of those --
