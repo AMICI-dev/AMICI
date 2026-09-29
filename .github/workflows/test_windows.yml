@@ -56,12 +56,13 @@ jobs:
     - name: Install sdist
       working-directory: python/sdist
       shell: bash
-      run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab,test,jax]
+      run: |
+        pip install -v --group pyproject.toml:test \
+          $(ls -t dist/amici-*.tar.gz | head -1)[petab,jax]
 
-    # TODO: switch back to PyPI once the fiddy redesign is released
     - name: Install fiddy from GitHub
       shell: bash
-      run: pip install git+https://github.com/ICB-DCM/fiddy.git@main
+      run: pip install --group python/sdist/pyproject.toml:fiddy
 
     - run: python -m amici
 

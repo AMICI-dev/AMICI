@@ -31,10 +31,11 @@ jobs:
       run: |
         python3 -m venv venv --clear
         source venv/bin/activate
-        pip install --upgrade pip wheel
-        pip install numpy sympy cmake-build-extension==0.6.0 swig cython pkgconfig
+        pip install --upgrade pip
+        pip install --group python/sdist/pyproject.toml:build
         AMICI_BUILD_TEMP="python/sdist/build/temp" \
-          pip install --verbose -e python/sdist[test] --no-build-isolation
+          pip install --verbose --group python/sdist/pyproject.toml:test \
+            -e python/sdist --no-build-isolation
     - run: source venv/bin/activate && pip3 install "sympy>1.12"
     - name: Python tests
       env:

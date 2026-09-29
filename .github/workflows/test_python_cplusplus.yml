@@ -243,7 +243,7 @@ jobs:
     - name: Install torch (for PEtab-SciML notebook)
       run: |
         source ./venv/bin/activate \
-          && python -m pip install "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5"
+          && python -m pip install --group python/sdist/pyproject.toml:petab-sciml-torch
 
     - name: example notebooks
       run: scripts/runNotebook.sh doc/examples/example_*/
@@ -369,9 +369,8 @@ jobs:
 
     - name: Install PEtab benchmark collection
       run: |
-        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/problems/" \
-          && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
+        source venv/bin/activate \
+          && python -m pip install --group python/sdist/pyproject.toml:benchmark-models-petab
 
     - name: Python tests
       run: |

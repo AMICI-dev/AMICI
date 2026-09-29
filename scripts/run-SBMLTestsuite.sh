@@ -10,8 +10,6 @@ if [[ ! -d "tests/sbml/sbml-test-suite" ]]; then
 fi
 
 source venv/bin/activate
-pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
-pip install coverage pytest-cov
 
 BACKEND="python"
 if [[ "$1" == "--jax" ]]; then
