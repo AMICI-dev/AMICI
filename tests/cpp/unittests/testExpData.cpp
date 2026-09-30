@@ -40,7 +40,7 @@ class ExpDataTest : public ::testing::Test {
             .nxtrue_rdata = nx,
             .nx_solver = nx,
             .nxtrue_solver = nx,
-            .nx_solver_reinit = 0,
+            .nx_reinit = 0,
             .np = 1,
             .nk = 3,
             .ny = ny,

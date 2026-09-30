@@ -32,19 +32,18 @@ fi
 # set python executable for cmake
 export PYTHON_EXECUTABLE="${AMICI_PATH}/venv/bin/python"
 
-python -m pip install --upgrade pip wheel
-# we need to install all build-system.requires manually, because of
-#  --no-build-isolation below.
-#  The latter is necessary for code coverage to work.
-python -m pip install --upgrade pip setuptools cmake_build_extension==0.6.0 numpy petab swig
-python -m pip install git+https://github.com/pysb/pysb@master # for SPM with compartments
-python -m pip install git+https://github.com/patrick-kidger/diffrax@main # for events with direction
+python -m pip install --upgrade pip
+DEP_GROUPS="${AMICI_PATH}/python/sdist/pyproject.toml"
+python -m pip install \
+  --group "${DEP_GROUPS}:build" \
+  --group "${DEP_GROUPS}:pysb-dev" \
+  --group "${DEP_GROUPS}:diffrax-dev" \
+  --group "${DEP_GROUPS}:libpetab" \
+  --group "${DEP_GROUPS}:petab-sciml"
 python -m pip install optax # for jax petab notebook
-python -m pip install "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5"
-python -m pip uninstall petab -y
-python -m pip install git+https://github.com/petab-dev/libpetab-python.git@main
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
-  python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis,jax]" --no-build-isolation
-# TODO: switch back to PyPI once the fiddy redesign is released
-python -m pip install git+https://github.com/ICB-DCM/fiddy.git@main
+  python -m pip install --verbose \
+    --group "${DEP_GROUPS}:test" \
+    -e "${AMICI_PATH}/python/sdist[petab,vis,jax]" --no-build-isolation
+python -m pip install --group "${DEP_GROUPS}:fiddy"
 deactivate

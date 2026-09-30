@@ -913,3 +913,83 @@ def test_preequilibration_events(tempdir):
             assert rdata.sx0 is None
         else:
             assert rdata.sx0 is not None
+
+
+def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
+    """Regression test for GH#3278: wrong gradients when the main simulation
+    uses adjoint sensitivities, pre-equilibration uses forward sensitivities,
+    and fixed-parameter-dependent state reinitialization is enabled."""
+    ant_str = """
+    model test_preequilibration_reinit_adjoint_sensitivities
+        kinit = 5
+        kdecay = 0.7
+        ksyn = 2
+        x1 = kinit
+        x1' = ksyn - kdecay * x1
+    end
+    """
+    module_name = "test_preequilibration_reinit_adjoint_sensitivities"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["kinit"],
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    model = model_module.get_model()
+    model.set_reinitialize_fixed_parameter_initial_states(True)
+    model.set_timepoints([0.0, 1.0, 2.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance(1e-10)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-10)
+    solver.set_absolute_tolerance_quadratures(1e-14)
+
+    edata_gen = ExpData(model)
+    edata_gen.fixed_parameters = [10.0]
+    edata_gen.set_timepoints(model.get_timepoints())
+    rdata_gen = run_simulation(model, solver, edata_gen)
+    assert rdata_gen.status == AMICI_SUCCESS
+
+    edata = ExpData(rdata_gen, 0.05, 0.0, 1)
+    edata.fixed_parameters = [10.0]
+    edata.fixed_parameters_pre_equilibration = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+
+    point = np.array(model.get_free_parameters())
+
+    for sensi_meth, sensi_meth_preeq in (
+        (SensitivityMethod.forward, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.forward),
+    ):
+        # the gradient check's zero-order evaluations leave the sensitivity
+        # order at `none`
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+
+        function, derivative = run_simulation_to_function_and_derivative(
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=["llh"],
+        )
+        expected = derivative(point)
+        # not a degenerate all-zero-gradient check
+        assert not np.allclose(expected["llh"], 0)
+        result = check_gradient(function, point, expected["llh"])
+        result.assert_success(always_print=True)
+
+    # adjoint pre-equilibration with state reinitialization is not (yet)
+    # supported (GH#1156) and must fail cleanly rather than silently produce
+    # wrong gradients
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_ERROR

@@ -1,6 +1,7 @@
 # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 # https://setuptools.pypa.io/en/latest/userguide/index.html
 [build-system]
+# Keep in sync with [dependency-groups].build below
 requires = [
     "setuptools>=77",
     "wheel",
@@ -60,23 +61,6 @@ classifiers = [
 #  Invalid value for requires_dist. Error: Can't have direct dependency: ...
 petab = ["petab>=0.7.0"]
 pysb = ["pysb>=1.17.0"]
-test = [
-    "fiddy>=0.0.3",
-    "h5py!=3.15",
-    "pytest",
-    "pytest-cov",
-    # v16.0: https://github.com/pytest-dev/pytest-rerunfailures/issues/302
-    "pytest-rerunfailures!=16.0",
-    "coverage",
-    "shyaml",
-    "antimony>=2.13",
-    # see https://github.com/sys-bio/antimony/issues/92
-    #  unsupported x86_64 / x86_64h
-    "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
-    "scipy",
-    "pooch",
-    "beartype",
-]
 vis = [
     "matplotlib",
     "seaborn",
@@ -94,6 +78,75 @@ jax = [
 ]
 sciml = [
     "h5py"
+]
+
+[dependency-groups]
+# Packages required to build AMICI with --no-build-isolation
+# Keep in sync with [build-system].requires above.
+build = [
+    "setuptools>=77",
+    "wheel",
+    "numpy>=2.0",
+    "cmake-build-extension==0.6.0",
+    "scipy-openblas64==0.3.30.0.1; platform_system!='Darwin'",
+    "swig",
+]
+
+benchmark-models-petab = [
+    "benchmark_models_petab @ git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python",
+]
+diffrax-dev = [
+    # for events with direction; see https://github.com/patrick-kidger/diffrax/issues/654
+    "diffrax @ git+https://github.com/patrick-kidger/diffrax@main",
+]
+fiddy = [
+    # TODO: switch back to a PyPI release once the fiddy redesign ships
+    "fiddy @ git+https://github.com/ICB-DCM/fiddy.git@main",
+]
+libpetab = [
+    "petab @ git+https://github.com/petab-dev/libpetab-python.git@main",
+]
+# pinned: c84ce473133cd3979b55a725891fee45f248ddde (merge of PR #84,
+# "update_api_page") dropped Layer/Node from petab_sciml's top-level
+# exports, breaking amici/exporters/jax/nn.py's `from petab_sciml
+# import Layer`. 3a712be6 is the last commit before that merge.
+petab-sciml = [
+    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5",
+]
+petab-sciml-torch = [
+    # torch pulls in its own bundled OpenMP, which can crash/deadlock
+    # when loaded alongside AMICI's own OpenMP-linked native extension
+    # (observed on macOS) - only install it where actually needed.
+    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5",
+]
+# TODO: PEtab test suite: v1 is intentionally pinned to a pre-v2 commit until
+# proper PEtab v2 import support lands (https://github.com/AMICI-dev/AMICI/issues/2662).
+petab-test-suite-v1 = [
+    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@10ffb050380933b60ac192962bf9550a9df65a9c",
+]
+petab-test-suite-v2 = [
+    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@main",
+]
+pysb-dev = [
+    # master, not the PyPI release, to allow a more recent sympy
+    # (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
+    "pysb @ git+https://github.com/pysb/pysb@master",
+]
+test = [
+    "fiddy>=0.0.3",
+    "h5py!=3.15",
+    "pytest",
+    "pytest-cov",
+    "pytest-rerunfailures!=16.0",
+    "pytest-xdist",
+    "coverage",
+    "shyaml",
+    "antimony>=2.13",
+    "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
+    "scipy",
+    "pooch",
+    "beartype",
+    "wheel",
 ]
 
 [project.scripts]

@@ -363,9 +363,9 @@ class Model : public AbstractModel, public ModelDimensions {
     int ncl() const;
 
     /**
-     * @brief Get number of solver states subject to reinitialization.
+     * @brief Get number of non-constant states subject to reinitialization.
      *
-     * @return Model member `nx_solver_reinit`
+     * @return Model member `nx_reinit`
      */
     int nx_reinit() const;
 

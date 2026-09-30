@@ -41,8 +41,10 @@ jobs:
 
       - name: Install AMICI (JAX extras)
         run: |
+          pip install --upgrade pip
           AMICI_PARALLEL_COMPILE="" pip install --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
+            --group python/sdist/pyproject.toml:test \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,vis,jax]
 
       # ── Run regression suite ──────────────────────────────────────────
       - name: Run JAX regression tests
