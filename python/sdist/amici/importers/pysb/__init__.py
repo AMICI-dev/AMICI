@@ -389,7 +389,7 @@ def ode_model_from_pysb_importer(
 
     # species/conservation-law/sigma/log-likelihood symbols are all
     # synthetically prefixed (__s{ix}, tcl_s{ix}, sigma_{name}, llh_{name})
-    # so they can never literally match a reserved name (single letters);
+    # so they can never literally match a reserved name (`t`);
     # only parameter and expression/observable names need checking
     #
     # `all_names` is threaded through the rest of this import and mutated
