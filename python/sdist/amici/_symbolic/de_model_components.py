@@ -6,6 +6,7 @@ from typing import SupportsFloat
 
 import sympy as sp
 
+from amici._symbolic.sympy_utils import solve_minmax_trigger_for_t
 from amici.constants import SymbolId
 from amici.importers.utils import (
     RESERVED_SYMBOLS,
@@ -799,8 +800,14 @@ class Event(ModelQuantity):
             try:
                 self._t_root = sp.solve(self.get_val(), amici_time_symbol)
             except NotImplementedError:
-                # the trigger can't be solved for `t`
-                pass
+                # `sympy.solve` cannot handle Min/Max (And/Or-combined)
+                # triggers directly -- fall back to a more limited solver
+                # that understands that structure
+                t_root = solve_minmax_trigger_for_t(
+                    self.get_val(), amici_time_symbol
+                )
+                if t_root is not None:
+                    self._t_root = [t_root]
 
         self._is_negative_event = is_negative_event
 
@@ -892,12 +899,19 @@ class Event(ModelQuantity):
             for t in self._t_root
         )
 
-    def _has_implicit_triggers(
-        self, allowed_symbols: set[sp.Symbol] | None = None
-    ) -> bool:
-        """Check whether the event has implicit triggers."""
-        t = self.get_val()
-        return not t.free_symbols.issubset(allowed_symbols)
+    def _has_implicit_triggers(self, allowed_symbols: set[sp.Symbol]) -> bool:
+        """Check whether the trigger references anything outside
+        ``allowed_symbols``.
+
+        Unlike :py:meth:`has_explicit_trigger_times`, this looks at the
+        trigger expression itself rather than at any solved trigger time,
+        so a trigger that cannot be solved for ``t`` (e.g. a periodic one)
+        is not implicit as long as its symbols are allowed.
+
+        :param allowed_symbols:
+            The set of symbols that are allowed in the trigger expression.
+        """
+        return not self.get_val().free_symbols.issubset(allowed_symbols)
 
     def get_trigger_times(self) -> set[sp.Expr]:
         """Get the time points at which the event triggers.

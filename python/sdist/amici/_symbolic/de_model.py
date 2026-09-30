@@ -2930,16 +2930,16 @@ class DEModel:
 
     def has_implicit_event_assignments(self) -> bool:
         """
-        Checks whether the model has event assignments with implicit triggers
-        (i.e. triggers that are not time based).
+        Checks whether the model has state-updating events whose trigger
+        depends on the state.
+
+        Such an event fires at a time that is not a function of time and
+        parameters alone, but of the trajectory itself.
 
         :return:
             boolean indicating if event assignments with implicit triggers are present
         """
-        fixed_symbols = set([k._symbol for k in self._fixed_parameters])
-        allowed_symbols = fixed_symbols | {amici_time_symbol}
-        # TODO: update to use has_explicit_trigger_times once
-        # https://github.com/AMICI-dev/AMICI/issues/3126 is resolved
+        allowed_symbols = self.static_symbols | {amici_time_symbol}
         return any(
             event.updates_state
             and event._has_implicit_triggers(allowed_symbols)

@@ -24,6 +24,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   were redesigned, making finite-difference gradient checks much more
   robust and requiring few, if any, hyperparameters.
 
+* The JAX backend now accepts state-updating events whose trigger depends
+  on parameters or on static expressions, not only on constants and time.
+  Previously, any such model was rejected with "The JAX backend does not
+  support event assignments with implicit triggers", even though only
+  *state*-dependent trigger times are actually unsupported.
+
 **Fixes**
 
 * `ReturnData.sx0` is no longer populated with meaningless values when
@@ -131,6 +137,17 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   v2's math grammar instead of a plain, ill-defined `sympy.sympify` call.
   PEtab v1 never formally specified a grammar for these expressions; in
   rare cases, some formulas may now be interpreted differently (#3281).
+
+**Performance**
+
+* Events whose trigger combines multiple conditions via `And`/`Or` (as
+  generated, e.g., for PEtab v2 experiment/period-start events) now have
+  their explicit trigger time(s) resolved where possible, enabling the
+  "skip numerical root-finding" optimization for such events. Such
+  triggers are represented internally as `Min`/`Max` expressions, which
+  `sympy.solve` cannot solve for `t`; previously, this silently disabled
+  that optimization, always falling back to the slower root-finding path
+  (#3126).
 
 ### v1.1 (2026-09-03)
 
