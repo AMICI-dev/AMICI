@@ -24,6 +24,12 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   were redesigned, making finite-difference gradient checks much more
   robust and requiring few, if any, hyperparameters.
 
+* The JAX backend now accepts state-updating events whose trigger depends
+  on parameters or on static expressions, not only on constants and time.
+  Previously, any such model was rejected with "The JAX backend does not
+  support event assignments with implicit triggers", even though only
+  *state*-dependent trigger times are actually unsupported.
+
 **Fixes**
 
 * `ReturnData.sx0` is no longer populated with meaningless values when
@@ -32,6 +38,18 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   never actually computed in that case and were not used for the
   gradient; `rdata.sx0` is now empty (`None` in Python), consistent with
   other fields that are unavailable for the chosen settings (#1184).
+
+* Fixed the JAX backend attributing a root/discontinuity crossing to the
+  wrong Heaviside variable whenever a model had an event whose *solved*
+  trigger time still referenced a state (e.g. a trigger comparing `time`
+  directly to a state, `time >= x` — `sympy.solve` happily returns `[x]`
+  even though `x` is dynamic, not static). `DEModel._reorder_events()`
+  (which determines the physical event/Heaviside-array order) and the JAX
+  exporter's `iroot`/`eroot`/`ih`/`eh` classification (which determines
+  the root-detection order) used two different criteria for "does this
+  event have an explicit (precomputable) trigger time", which could
+  silently permute the two orderings relative to each other, causing
+  state updates to be gated by the wrong event's condition (#3286).
 
 * There are no more reserved names: previously, model import or
   compilation could fail — or silently generate incorrect code, with no
@@ -146,6 +164,17 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   v2's math grammar instead of a plain, ill-defined `sympy.sympify` call.
   PEtab v1 never formally specified a grammar for these expressions; in
   rare cases, some formulas may now be interpreted differently (#3281).
+
+**Performance**
+
+* Events whose trigger combines multiple conditions via `And`/`Or` (as
+  generated, e.g., for PEtab v2 experiment/period-start events) now have
+  their explicit trigger time(s) resolved where possible, enabling the
+  "skip numerical root-finding" optimization for such events. Such
+  triggers are represented internally as `Min`/`Max` expressions, which
+  `sympy.solve` cannot solve for `t`; previously, this silently disabled
+  that optimization, always falling back to the slower root-finding path
+  (#3126).
 
 ### v1.1 (2026-09-03)
 

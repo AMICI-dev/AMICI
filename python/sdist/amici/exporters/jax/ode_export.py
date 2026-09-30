@@ -366,7 +366,7 @@ class ODEExporter:
         alone and are excluded here; they are still handled correctly at
         runtime via root-finding in ``_root_cond_fn``.
         """
-        static_syms = self.model._static_symbols(["k", "p", "w"])
+        static_syms = self.model.static_symbols
         p_k_syms = set(self.model.sym("p")) | set(self.model.sym("k"))
         w_subs = dict(
             zip(self.model.sym("w"), self.model.eq("w"), strict=True)
