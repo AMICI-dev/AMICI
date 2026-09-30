@@ -48,7 +48,7 @@ H5::H5File create_or_open_for_writing(std::string const& hdf5filename);
  * @param datasetPath Path inside the HDF5 file
  */
 void read_solver_settings_from_hdf5(
-    const H5::H5File& file, Solver& solver, std::string const& datasetPath
+    H5::H5File const& file, Solver& solver, std::string const& datasetPath
 );
 
 /**
@@ -165,7 +165,7 @@ void write_log_items_to_hdf5(
  * @param recursively Create intermediary groups
  */
 void create_group(
-    const H5::H5File& file, std::string const& groupPath,
+    H5::H5File const& file, std::string const& groupPath,
     bool recursively = true
 );
 
@@ -325,7 +325,7 @@ std::string get_string_attribute(
  * @return Attribute value
  */
 double get_double_scalar_attribute(
-    const H5::H5File& file, std::string const& optionsObject,
+    H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 );
 
@@ -339,7 +339,7 @@ double get_double_scalar_attribute(
  */
 
 int get_int_scalar_attribute(
-    const H5::H5File& file, std::string const& optionsObject,
+    H5::H5File const& file, std::string const& optionsObject,
     std::string const& attributeName
 );
 
@@ -351,7 +351,7 @@ int get_int_scalar_attribute(
  * @return Data read
  */
 std::vector<int>
-get_int_1d_dataset(const H5::H5File& file, std::string const& name);
+get_int_1d_dataset(H5::H5File const& file, std::string const& name);
 
 /**
  * @brief Read 1-dimensional native double dataset from HDF5 file.
@@ -362,7 +362,7 @@ get_int_1d_dataset(const H5::H5File& file, std::string const& name);
  */
 
 std::vector<double>
-get_double_1d_dataset(const H5::H5File& file, std::string const& name);
+get_double_1d_dataset(H5::H5File const& file, std::string const& name);
 
 /**
  * @brief Read 2-dimensional native double dataset from HDF5 file.
@@ -375,7 +375,7 @@ get_double_1d_dataset(const H5::H5File& file, std::string const& name);
  */
 
 std::vector<double> get_double_2d_dataset(
-    const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n
+    H5::H5File const& file, std::string const& name, hsize_t& m, hsize_t& n
 );
 
 /**
@@ -390,7 +390,7 @@ std::vector<double> get_double_2d_dataset(
  */
 
 std::vector<double> get_double_3d_dataset(
-    const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n,
+    H5::H5File const& file, std::string const& name, hsize_t& m, hsize_t& n,
     hsize_t& o
 );
 

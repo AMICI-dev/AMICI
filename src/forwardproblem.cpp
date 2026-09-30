@@ -198,7 +198,7 @@ void EventHandlingSimulator::run_steady_state(
                         ? next_t_event
                         : std::max(ws_->sol.t, 1.0) * 10;
 
-        if(!std::isfinite(tout)) {
+        if (!std::isfinite(tout)) {
             // tout overflowed
             throw IntegrationFailure(AMICI_T_OVERFLOW, tout);
         }
@@ -260,7 +260,8 @@ void ForwardProblem::run() {
 }
 
 void ForwardProblem::store_final_state() {
-    main_simulator_.result.final_state_ = main_simulator_.get_simulation_state();
+    main_simulator_.result.final_state_
+        = main_simulator_.get_simulation_state();
 
     // backfill timepoint_states_ if the final time coincides with an output
     // timepoint not yet recorded there (e.g. error right at a timepoint)
@@ -536,13 +537,14 @@ void EventHandlingSimulator::handle_events(
             event_application->ie = ie;
             event_application->x_pre = x_old_event;
             if (result.discs.back().event_applications.empty()) {
-                // First event applied for this discontinuity: `update_heaviside`
-                // above already flipped `h` for the *whole* simultaneous-event
-                // group atomically, before any of its events were applied, so a
-                // fresh `fxdot` call here would incorrectly use post-flip `h`
-                // for what must be a pre-flip rate. `ws_->xdot_old` was already
-                // computed (in `store_pre_event_state`) at this same pre-flip,
-                // pre-cascade state, so reuse it instead of recomputing.
+                // First event applied for this discontinuity:
+                // `update_heaviside` above already flipped `h` for the *whole*
+                // simultaneous-event group atomically, before any of its events
+                // were applied, so a fresh `fxdot` call here would incorrectly
+                // use post-flip `h` for what must be a pre-flip rate.
+                // `ws_->xdot_old` was already computed (in
+                // `store_pre_event_state`) at this same pre-flip, pre-cascade
+                // state, so reuse it instead of recomputing.
                 event_application->xdot_pre = ws_->xdot_old;
             } else {
                 model_->fxdot(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
@@ -560,8 +562,8 @@ void EventHandlingSimulator::handle_events(
             // compute the new xdot
             model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             model_->add_state_sensitivity_event_update(
-                ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event,
-                ws_->xdot, ws_->xdot_old,
+                ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event, ws_->xdot,
+                ws_->xdot_old,
                 state_old.has_value() ? state_old->sol.sx : ws_->sol.sx,
                 ws_->stau
             );

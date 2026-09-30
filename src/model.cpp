@@ -238,9 +238,9 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata)
            && (a.nx_solver == b.nx_solver)
            && (a.nxtrue_solver == b.nxtrue_solver)
-           && (a.nx_reinit == b.nx_reinit) && (a.np == b.np)
-           && (a.nk == b.nk) && (a.ny == b.ny) && (a.nytrue == b.nytrue)
-           && (a.nz == b.nz) && (a.nztrue == b.nztrue) && (a.ne == b.ne)
+           && (a.nx_reinit == b.nx_reinit) && (a.np == b.np) && (a.nk == b.nk)
+           && (a.ny == b.ny) && (a.nytrue == b.nytrue) && (a.nz == b.nz)
+           && (a.nztrue == b.nztrue) && (a.ne == b.ne)
            && (a.ne_solver == b.ne_solver) && (a.nspl == b.nspl)
            && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) && (a.ndwdp == b.ndwdp)
            && (a.ndwdw == b.ndwdw) && (a.ndxdotdw == b.ndxdotdw)
@@ -1590,8 +1590,7 @@ void Model::add_adjoint_quadrature_event_update(
             derived_state_.deltaqB_.data(), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
             state_.h.data(), derived_state_.w_.data(), dx.data(), plist(ip), ie,
-            xdot.data(),
-            xdot_old.data(), x_old.data(), xB.data()
+            xdot.data(), xdot_old.data(), x_old.data(), xB.data()
         );
 
         for (int iJ = 0; iJ < nJ; ++iJ)
@@ -2325,7 +2324,9 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
     }
 }
 
-void Model::fdJydsigmay(int const it, AmiVector const& x, ExpData const& edata) {
+void Model::fdJydsigmay(
+    int const it, AmiVector const& x, ExpData const& edata
+) {
     if (!ny)
         return;
 
@@ -2649,7 +2650,8 @@ void Model::fdJzdsigmaz(
             if (always_check_finite_) {
                 check_finite(
                     gsl::span<realtype>(
-                        &derived_state_.dJzdsigmaz_.at(iztrue * nz * nJ), nz * nJ
+                        &derived_state_.dJzdsigmaz_.at(iztrue * nz * nJ),
+                        nz * nJ
                     ),
                     ModelQuantity::dJzdsigmaz, nz
                 );

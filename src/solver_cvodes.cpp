@@ -512,7 +512,8 @@ void CVodeSolver::reset_state(void* ami_mem, const_N_Vector y0) const {
 }
 
 bool CVodeSolver::reinit_post_process_f(realtype const tnext) const {
-    int const status = reInit_post_process(solver_memory_.get(), &t_, &x_, tnext);
+    int const status
+        = reInit_post_process(solver_memory_.get(), &t_, &x_, tnext);
     force_reinit_postprocess_F_ = false;
 
     if (status != CV_ROOT_RETURN)
@@ -1241,7 +1242,6 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void* user_data) {
     if (solver->time_exceeded(500)) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
-
 
     model->fxdot(t, x, xdot);
     return model->check_finite(gsl::make_span(xdot), ModelQuantity::xdot, t);

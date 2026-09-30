@@ -804,8 +804,8 @@ class AbstractModel {
     /**
      * @brief Model-specific implementation of fdJzdsigmaz
      *
-     * @param dJzdsigmaz Sensitivity of event measurement negative log-likelihood
-     * Jz w.r.t. standard deviation sigmaz
+     * @param dJzdsigmaz Sensitivity of event measurement negative
+     * log-likelihood Jz w.r.t. standard deviation sigmaz
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
