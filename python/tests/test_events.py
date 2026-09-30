@@ -2469,9 +2469,9 @@ def test_explicit_trigger_time_changed_by_events(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     # E0, E1, and two root functions for each of the piecewise switches,
-    #  of which only the trigger of E0 requires root-finding
+    #  none of which requires root-finding
     assert model.ne == 6
-    assert model.ne_solver == 1
+    assert model.ne_solver == 0
 
     def create_edatas():
         """Create ExpData objects without and with pre-equilibration."""
@@ -2567,9 +2567,9 @@ def test_explicit_trigger_time_preequilibration(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     # E_rate, E_late, and two root functions for the piecewise switch of
-    #  `u`, of which only the trigger of E_rate requires root-finding
+    #  `u`, none of which requires root-finding
     assert model.ne == 4
-    assert model.ne_solver == 1
+    assert model.ne_solver == 0
     model.set_steady_state_computation_mode(
         SteadyStateComputationMode.integrationOnly
     )
