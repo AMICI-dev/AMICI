@@ -9,7 +9,7 @@ from __future__ import annotations
 import collections
 import copy
 import itertools
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from numbers import Number
 from typing import Literal
 
@@ -184,12 +184,16 @@ class SwigPtrView(collections.abc.Mapping):
     :ivar _swigptr: pointer to the C++ object
     :ivar _field_names: names of members that will be exposed as numpy arrays
     :ivar _field_dimensions: dimensions of numpy arrays
+    :ivar _field_getters: optional per-field accessors for fields that are
+        not directly available as an attribute of ``_swigptr`` (e.g.
+        because the underlying C++ getter has a different name)
     :ivar _cache: dictionary with cached values
     """
 
     _swigptr = None
     _field_names: list[str] = []
     _field_dimensions: dict[str, list[int]] = dict()
+    _field_getters: dict[str, Callable] = {}
 
     def __getitem__(self, item: str) -> np.ndarray | float:
         """
@@ -211,7 +215,10 @@ class SwigPtrView(collections.abc.Mapping):
 
         if item in self._field_names:
             value = _field_as_numpy(
-                self._field_dimensions, item, self._swigptr
+                self._field_dimensions,
+                item,
+                self._swigptr,
+                self._field_getters.get(item),
             )
             self._cache[item] = value
 
@@ -279,6 +286,7 @@ class SwigPtrView(collections.abc.Mapping):
         other = SwigPtrView(self._swigptr)
         other._field_names = self._field_names
         other._field_dimensions = self._field_dimensions
+        other._field_getters = self._field_getters
         other._cache = self._cache
         return other
 
@@ -526,8 +534,9 @@ class ExpDataView(SwigPtrView):
     Interface class for C++ Exp Data objects that avoids possibly costly
     copies of member data.
 
-    NOTE: This currently assumes that the underlying :class:`ExpData`
-    does not change after instantiating an :class:`ExpDataView`.
+    NOTE: Field values are cached on first access (see
+    :class:`SwigPtrView`), so this assumes the underlying :class:`ExpData`
+    does not change after a field has been read from this view.
     """
 
     _field_names = [
@@ -540,6 +549,14 @@ class ExpDataView(SwigPtrView):
         "fixed_parameters_pre_equilibration",
         "fixed_parameters_presimulation",
     ]
+    # Accessors for fields that have no matching attribute on ExpData
+    _field_getters = {
+        "ts": lambda edata: edata.get_timepoints(),
+        "measurements": lambda edata: edata.get_measurements(),
+        "noise_scales": lambda edata: edata.get_noise_scales(),
+        "event_measurements": lambda edata: edata.get_event_measurements(),
+        "event_noise_scales": lambda edata: edata.get_event_noise_scales(),
+    }
 
     def __init__(self, edata: ExpDataPtr | ExpData):
         """
@@ -568,16 +585,14 @@ class ExpDataView(SwigPtrView):
                 len(edata.fixed_parameters_presimulation)
             ],
         }
-        edata.ts = edata.timepoints
-        edata.measurements = edata.get_measurements()
-        edata.noise_scales = edata.get_noise_scales()
-        edata.event_measurements = edata.get_event_measurements()
-        edata.event_noise_scales = edata.get_event_noise_scales()
         super().__init__(edata)
 
 
 def _field_as_numpy(
-    field_dimensions: dict[str, list[int]], field: str, data: SwigPtrView
+    field_dimensions: dict[str, list[int]],
+    field: str,
+    data: SwigPtrView,
+    getter: Callable | None = None,
 ) -> np.ndarray | float | None:
     """
     Convert data object field to numpy array with dimensions according to
@@ -587,11 +602,13 @@ def _field_as_numpy(
                 ``dict({field: list([dim1, dim2, ...])})``
     :param data: object with fields
     :param field: Name of field
+    :param getter: optional callable to retrieve the field value from
+        ``data``; if not given, ``field`` is used as an attribute name
 
     :returns: Field Data as numpy array with dimensions according to
     specified field dimensions
     """
-    attr = getattr(data, field)
+    attr = getter(data) if getter is not None else getattr(data, field)
     if field_dim := field_dimensions.get(field, None):
         return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
 
