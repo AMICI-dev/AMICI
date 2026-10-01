@@ -316,8 +316,13 @@ void ForwardProblem::handle_presimulation() {
     ConditionContext cond(model, edata, FixedParameterContext::presimulation);
 
     // Reinitialization of non-constant states is not yet supported for
-    // adjoint sensitivity analysis (analogous to the restriction on adjoint
-    // preequilibration in BackwardProblem::workBackwardProblem, gh-1156).
+    // adjoint sensitivity analysis during presimulation. Unlike the
+    // analogous preequilibration restriction in
+    // `BackwardProblem::workBackwardProblem` -- which now only fires for
+    // conservation-law models or `nJ != 1`, see
+    // `Model::add_adjoint_state_preeq_reinit_update` -- presimulation isn't
+    // handled there, so this check still rejects every case
+    // unconditionally (gh-1156).
     if (solver->computing_asa()
         && (reinit_sim
             || model->get_reinitialize_fixed_parameter_initial_states())

@@ -35,9 +35,11 @@
 %ignore fdJzdz;
 %ignore fdJydsigmay;
 %ignore fdeltaqB;
+%ignore fdeltaqB_fixedParameters;
 %ignore fdeltasx;
 %ignore fdeltax;
 %ignore fdeltaxB;
+%ignore fdeltaxB_fixedParameters;
 %ignore fdrzdp;
 %ignore fdrzdx;
 %ignore fdsigmaydp;
