@@ -26,6 +26,10 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Fixes**
 
+* `ExpDataView` no longer writes cached arrays as attributes onto the
+  wrapped `ExpData`, which previously broke pickling of `ExpData` objects
+  after being viewed (ICB-DCM/pyPESTO#1771).
+
 * `ReturnData.sx0` is no longer populated with meaningless values when
   pre-equilibration is run with adjoint sensitivities together with
   adjoint sensitivity analysis of the main simulation. These values were
