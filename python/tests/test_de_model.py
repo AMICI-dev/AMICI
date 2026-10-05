@@ -93,18 +93,18 @@ def test_spline_derivative_in_event_not_supported():
 
 @skip_on_valgrind
 def test_model_quantity_reserved_name():
-    """`t` and the fixed array-parameter names (x, p, k, h, w, y) are
-    reserved for ModelQuantity symbols: the JAX exporter has no mangling of
-    its own and relies on these being renamed before codegen ever sees
-    them (unlike the C++ backend, whose printer mangles every identifier).
-    A name that only collides with a C++ keyword/macro (e.g. NULL) is
-    handled by that mangling instead and doesn't need to be rejected
-    here."""
-    FreeParameter(symbol=sp.Symbol("NULL"), name="NULL", value=1.0)
+    """`t` is reserved for ModelQuantity symbols: it denotes simulation time
+    symbolically, so importers must rename any model entity of that name
+    before it reaches the model. Names that are merely unsafe in generated
+    code -- amici's fixed array-parameter names (x, p, k, h, w, y), C++
+    keywords/macros (e.g. NULL), Python keywords -- are handled by each
+    backend's code printer mangling every identifier instead, and must not
+    be rejected here."""
+    for name in ("NULL", "x", "p", "k", "h", "w", "y", "class"):
+        FreeParameter(symbol=sp.Symbol(name), name=name, value=1.0)
 
-    for name in ("t", "x", "p", "k", "h", "w", "y"):
-        with pytest.raises(ValueError, match="Cannot add"):
-            FreeParameter(symbol=sp.Symbol(name), name=name, value=1.0)
+    with pytest.raises(ValueError, match="Cannot add"):
+        FreeParameter(symbol=sp.Symbol("t"), name="t", value=1.0)
 
 
 @skip_on_valgrind

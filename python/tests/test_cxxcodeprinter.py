@@ -1,3 +1,5 @@
+import re
+
 import pytest
 import sympy as sp
 from amici.exporters.sundials.cxxcodeprinter import AmiciCxxCodePrinter
@@ -91,6 +93,15 @@ def test_mangle_identifier():
 
     # an internal `__` run collapses to a single `_` before suffixing
     assert cp.mangle_identifier(sp.Symbol("my__species")) == "my_species_"
+
+    # `_` followed by an uppercase letter is reserved in C++ in any scope
+    # (also after collapsing a leading `__` run)
+    for name in ("_X", "__X", "_Xyz"):
+        mangled = cp.mangle_identifier(sp.Symbol(name))
+        assert not re.match(r"_[A-Z]", mangled), mangled
+        assert "__" not in mangled
+    # ... while `_` followed by a lowercase letter is fine for locals
+    assert cp.mangle_identifier(sp.Symbol("_x")) == "_x_"
 
     # C++ keywords and stdlib macros mangle to something distinct from the
     # original token

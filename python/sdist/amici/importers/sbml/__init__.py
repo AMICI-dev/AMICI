@@ -1988,6 +1988,48 @@ class SbmlImporter:
                         f"name {channel.name or channel.id}."
                     )
 
+            # FIXME: that name-based approach is a bit fragile
+            noise_pars = list(
+                {
+                    name
+                    for channel in observation_model
+                    if channel.is_time_resolved and channel.sigma is not None
+                    for symbol in self._sympify(channel.sigma).free_symbols
+                    if re.match(r"noiseParameter\d+$", (name := str(symbol)))
+                }
+            )
+            self._symbols[SymbolId.NOISE_PARAMETER] = {
+                symbol_with_assumptions(noise_par): {"name": noise_par}
+                for noise_par in noise_pars
+            }
+
+            observable_pars = list(
+                {
+                    name
+                    for channel in observation_model
+                    if channel.is_time_resolved and channel.sigma is not None
+                    for symbol in self._sympify(channel.formula).free_symbols
+                    if re.match(
+                        r"observableParameter\d+$", (name := str(symbol))
+                    )
+                }
+            )
+            self._symbols[SymbolId.OBSERVABLE_PARAMETER] = {
+                symbol_with_assumptions(obs_par): {"name": obs_par}
+                for obs_par in observable_pars
+            }
+
+            # Make the placeholders resolve to the very symbols registered
+            # above when the observable and sigma formulas are parsed below,
+            # like any other model entity -- whatever symbol they were
+            # written with (a plain string, or a sympy expression built
+            # without amici's canonical assumptions). Otherwise the formulas
+            # would refer to a different symbol than the one the generated
+            # code binds the placeholder's value to.
+            for name in (*noise_pars, *observable_pars):
+                if name not in self._local_symbols:
+                    self._add_local_symbol(name, symbol_with_assumptions(name))
+
             # Add time-resolved observables
             self._symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(channel.id): {
@@ -2035,38 +2077,6 @@ class SbmlImporter:
             _check_symbol_nesting(
                 self._symbols[SymbolId.EVENT_OBSERVABLE], "eventObservable"
             )
-
-            # FIXME: that name-based approach is a bit fragile
-            noise_pars = list(
-                {
-                    name
-                    for channel in observation_model
-                    if channel.is_time_resolved and channel.sigma is not None
-                    for symbol in self._sympify(channel.sigma).free_symbols
-                    if re.match(r"noiseParameter\d+$", (name := str(symbol)))
-                }
-            )
-
-            self._symbols[SymbolId.NOISE_PARAMETER] = {
-                symbol_with_assumptions(noise_par): {"name": noise_par}
-                for noise_par in noise_pars
-            }
-
-            observable_pars = list(
-                {
-                    name
-                    for channel in observation_model
-                    if channel.is_time_resolved and channel.sigma is not None
-                    for symbol in self._sympify(channel.formula).free_symbols
-                    if re.match(
-                        r"observableParameter\d+$", (name := str(symbol))
-                    )
-                }
-            )
-            self._symbols[SymbolId.OBSERVABLE_PARAMETER] = {
-                symbol_with_assumptions(obs_par): {"name": obs_par}
-                for obs_par in observable_pars
-            }
 
         elif observation_model is None:
             self._generate_default_observables()
