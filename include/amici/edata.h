@@ -83,10 +83,8 @@ class ExpData : public SimulationParameters {
      */
     ExpData(
         int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-        std::vector<realtype> const& my,
-        std::vector<realtype> const& sigma_y,
-        std::vector<realtype> const& mz,
-        std::vector<realtype> const& sigma_z
+        std::vector<realtype> const& my, std::vector<realtype> const& sigma_y,
+        std::vector<realtype> const& mz, std::vector<realtype> const& sigma_z
     );
 
     /**
@@ -303,11 +301,11 @@ class ExpData : public SimulationParameters {
      * @param mz event measurements (dimension: nmaxevent)
      * @param iz event observable index
      */
-    void
-    set_event_measurements(std::vector<realtype> const& mz, int iz);
+    void set_event_measurements(std::vector<realtype> const& mz, int iz);
 
     /**
-     * @brief Check whether an event measurement is defined at the given indices.
+     * @brief Check whether an event measurement is defined at the given
+     * indices.
      *
      * @param ie event index
      * @param iz event observable index
@@ -363,7 +361,8 @@ class ExpData : public SimulationParameters {
     void set_event_noise_scales(realtype sigma, int iz);
 
     /**
-     * @brief Check whether an event noise scale is defined at the given indices.
+     * @brief Check whether an event noise scale is defined at the given
+     * indices.
      *
      * @param ie event occurence
      * @param iz event observable index
@@ -484,9 +483,7 @@ inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
            && is_equal(lhs.measurements_, rhs.measurements_)
            && is_equal(lhs.noise_scales_, rhs.noise_scales_)
            && is_equal(lhs.event_measurements_, rhs.event_measurements_)
-           && is_equal(
-               lhs.event_noise_scales_, rhs.event_noise_scales_
-           );
+           && is_equal(lhs.event_noise_scales_, rhs.event_noise_scales_);
 }
 
 /**

@@ -220,7 +220,7 @@ void verifyReturnData(
 );
 
 void verifyReturnDataSensitivities(
-    const H5::H5File& file, std::string const& resultPath,
+    H5::H5File const& file, std::string const& resultPath,
     ReturnData const* rdata, Model const* model, double atol, double rtol
 );
 

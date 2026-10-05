@@ -894,11 +894,19 @@ def test_preequilibration_events(tempdir):
 
         # `x`/`x0`/`x_ss` still expose `some_time`, unlike the observables.
         point = amici_model.get_free_parameters()
+        # Adjoint sensitivities only provide `sllh`. `check_gradient`
+        # differentiates the first output of `function`, so `function` must
+        # not return anything but `llh` in that case.
+        derivative_variables = (
+            ["llh"]
+            if sensi_meth == SensitivityMethod.adjoint
+            else ["y", "res", "llh"]
+        )
         function, derivative = run_simulation_to_function_and_derivative(
             amici_model=amici_model,
             amici_solver=amici_solver,
             amici_edata=edata,
-            derivative_variables=["y", "res", "llh"],
+            derivative_variables=derivative_variables,
         )
         expected = derivative(point)
         if list(expected) == ["llh"]:

@@ -12,6 +12,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace amici {
 
@@ -841,6 +842,36 @@ class Solver {
         = 0;
 
     /**
+     * @brief Records the roots of the discontinuity just handled.
+     *
+     * This information allows recognizing a spurious re-detection of
+     * exactly the same root, immediately following reinit().
+     *
+     * @param root_directions per-root bitmask of the crossing directions
+     * (see root_direction_bit()) seen during the discontinuity just
+     * handled, whether or not they triggered a state update
+     */
+    void ignore_roots_after_reinit(std::vector<int> root_directions) const {
+        roots_ignored_after_reinit_ = std::move(root_directions);
+    }
+
+    /**
+     * @brief Bit representing a root crossing direction.
+     *
+     * Used for the per-root bitmasks passed to ignore_roots_after_reinit(),
+     * where the same root may have crossed in both directions within one
+     * discontinuity, e.g. when an event assignment moves the state back
+     * across the event's own trigger.
+     *
+     * @param direction root direction as reported by the solver
+     * (1: up-crossing, -1: down-crossing, 0: no crossing)
+     * @return 1 for an up-crossing, 2 for a down-crossing, 0 otherwise
+     */
+    static constexpr int root_direction_bit(int const direction) {
+        return direction == 1 ? 1 : direction == -1 ? 2 : 0;
+    }
+
+    /**
      * @brief Reinitializes the state sensitivities in the solver after an
      * event occurrence
      *
@@ -1217,8 +1248,10 @@ class Solver {
      * forward problem
      *
      * @param tnext next timepoint (defines integration direction)
+     * @return whether a root was found immediately after reinitialization
+     * that must be treated as a genuine event
      */
-    virtual void reinit_post_process_f(realtype tnext) const = 0;
+    virtual bool reinit_post_process_f(realtype tnext) const = 0;
 
     /**
      * @brief Postprocess the solver memory after a discontinuity in the
@@ -2009,6 +2042,29 @@ class Solver {
 
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_{false};
+
+    /**
+     * Per-root bitmask of the crossing directions (see
+     * root_direction_bit()) seen during the discontinuity handled at the
+     * preceding reinit(), whether or not they triggered a state update.
+     * Used to distinguish a spurious re-detection of the same
+     * discontinuity from a genuine new event.
+     */
+    mutable std::vector<int> roots_ignored_after_reinit_;
+
+    /**
+     * Root/direction info to report on the next call to get_root_info(),
+     * in place of actually querying the solver, consumed (reset to
+     * `nullopt`) as soon as it is read.
+     *
+     * Set by reinit_post_process_f() when it has determined that some,
+     * but not all, of the roots the solver just found are spurious
+     * re-detections: the solver's own root-info array cannot be
+     * selectively corrected from here (only entirely re-queried), so this
+     * lets the *next* caller of get_root_info() see the already-filtered
+     * result without AMICI reaching into solver-internal state.
+     */
+    mutable std::optional<std::vector<int>> root_info_override_;
 
     /** flag indicating whether sensInit1 was called */
     mutable bool sens_initialized_{false};

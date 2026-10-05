@@ -198,7 +198,7 @@ void EventHandlingSimulator::run_steady_state(
                         ? next_t_event
                         : std::max(ws_->sol.t, 1.0) * 10;
 
-        if(!std::isfinite(tout)) {
+        if (!std::isfinite(tout)) {
             // tout overflowed
             throw IntegrationFailure(AMICI_T_OVERFLOW, tout);
         }
@@ -260,7 +260,8 @@ void ForwardProblem::run() {
 }
 
 void ForwardProblem::store_final_state() {
-    main_simulator_.result.final_state_ = main_simulator_.get_simulation_state();
+    main_simulator_.result.final_state_
+        = main_simulator_.get_simulation_state();
 
     // backfill timepoint_states_ if the final time coincides with an output
     // timepoint not yet recorded there (e.g. error right at a timepoint)
@@ -424,15 +425,39 @@ void EventHandlingSimulator::handle_events(
     // be applied, or an event observable to process.
 
     if (!initial_event && ws_->sol.t == ws_->tlastroot) {
-        throw AmiException(
-            "AMICI is stuck in an event at time %g, as the initial "
-            "step-size after the event is too small. "
-            "To fix this, increase absolute and relative "
-            "tolerances!",
-            ws_->sol.t
-        );
+        // We may legitimately get here repeatedly for genuinely distinct,
+        // (near-)simultaneous events that are discovered one at a time
+        // immediately after a reinitialization.
+        // There can be at most `ne` distinct roots to discover this way,
+        // so allow that many before concluding that we are stuck in a
+        // genuine infinite loop.
+        if (++ws_->same_time_event_count > model_->ne) {
+            throw AmiException(
+                "AMICI is stuck in an event at time %g, as the initial "
+                "step-size after the event is too small. "
+                "To fix this, increase absolute and relative "
+                "tolerances!",
+                ws_->sol.t
+            );
+        }
+    } else {
+        ws_->same_time_event_count = 0;
     }
     ws_->tlastroot = ws_->sol.t;
+
+    // Crossing directions of all roots found in this discontinuity, as a
+    // per-root bitmask. The same root may cross in both directions here,
+    // e.g. when an event assignment moves the state back across the
+    // event's own trigger, and `detect_secondary_events()` resets
+    // `roots_found` entries, so directions are accumulated rather than
+    // copied.
+    std::vector<int> roots_for_ignore(model_->ne, 0);
+    auto const record_roots_for_ignore = [this, &roots_for_ignore]() {
+        for (int ie = 0; ie < model_->ne; ++ie)
+            roots_for_ignore.at(ie)
+                |= Solver::root_direction_bit(ws_->roots_found.at(ie));
+    };
+    record_roots_for_ignore();
 
     // start a new discontinuity record whenever a new event is triggered
     auto record_new_discontinuity
@@ -512,13 +537,14 @@ void EventHandlingSimulator::handle_events(
             event_application->ie = ie;
             event_application->x_pre = x_old_event;
             if (result.discs.back().event_applications.empty()) {
-                // First event applied for this discontinuity: `update_heaviside`
-                // above already flipped `h` for the *whole* simultaneous-event
-                // group atomically, before any of its events were applied, so a
-                // fresh `fxdot` call here would incorrectly use post-flip `h`
-                // for what must be a pre-flip rate. `ws_->xdot_old` was already
-                // computed (in `store_pre_event_state`) at this same pre-flip,
-                // pre-cascade state, so reuse it instead of recomputing.
+                // First event applied for this discontinuity:
+                // `update_heaviside` above already flipped `h` for the *whole*
+                // simultaneous-event group atomically, before any of its events
+                // were applied, so a fresh `fxdot` call here would incorrectly
+                // use post-flip `h` for what must be a pre-flip rate.
+                // `ws_->xdot_old` was already computed (in
+                // `store_pre_event_state`) at this same pre-flip, pre-cascade
+                // state, so reuse it instead of recomputing.
                 event_application->xdot_pre = ws_->xdot_old;
             } else {
                 model_->fxdot(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
@@ -536,8 +562,8 @@ void EventHandlingSimulator::handle_events(
             // compute the new xdot
             model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             model_->add_state_sensitivity_event_update(
-                ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event,
-                ws_->xdot, ws_->xdot_old,
+                ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event, ws_->xdot,
+                ws_->xdot_old,
                 state_old.has_value() ? state_old->sol.sx : ws_->sol.sx,
                 ws_->stau
             );
@@ -560,10 +586,19 @@ void EventHandlingSimulator::handle_events(
 
             model_->update_heaviside(ws_->roots_found);
         }
+
+        // record any newly-found roots
+        record_roots_for_ignore();
     }
 
     // reinitialize the solver after all events have been processed
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
+
+    // Remember encountered roots so that an identical root reported
+    // immediately after the reinitialization can be recognized as
+    // a spurious re-detection rather than a genuine new event.
+    solver_->ignore_roots_after_reinit(std::move(roots_for_ignore));
+
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
     }

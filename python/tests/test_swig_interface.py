@@ -761,6 +761,27 @@ def test_pickle_edata():
     assert edata == edata_pickled
 
 
+def test_pickle_edata_after_expdataview():
+    """`ExpData` must remain picklable after being wrapped in
+    `ExpDataView` (regression test for
+    https://github.com/ICB-DCM/pyPESTO/issues/1771)."""
+    ny = 2
+    nz = 3
+    ne = 4
+    nt = 5
+    edata = ExpData(ny, nz, ne, range(nt))
+    edata.set_measurements(list(np.arange(ny * nt, dtype=float)))
+
+    # accessing fields via ExpDataView used to monkey-patch attributes
+    # onto `edata` itself, which then leaked into `edata`'s pickled state
+    view = ExpDataView(edata)
+    assert view.ts is not None
+    assert view.measurements is not None
+
+    edata_pickled = pickle.loads(pickle.dumps(edata))
+    assert edata == edata_pickled
+
+
 @pytest.mark.skipif(
     not amici.sim.sundials.hdf5_enabled,
     reason="AMICI build without HDF5 support",

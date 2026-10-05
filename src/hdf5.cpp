@@ -310,9 +310,8 @@ void write_exp_data_to_hdf5(
         );
     if (!edata.get_event_noise_scales().empty())
         create_and_write_double_2d_dataset(
-            file, hdf5Location + "/Sigma_Z",
-            edata.get_event_noise_scales(), edata.nmaxevent(),
-            edata.nztrue()
+            file, hdf5Location + "/Sigma_Z", edata.get_event_noise_scales(),
+            edata.nmaxevent(), edata.nztrue()
         );
 
     int int_attr = edata.reinitialize_fixed_parameter_initial_states;
@@ -755,7 +754,7 @@ void write_log_items_to_hdf5(
 
     try {
         hsize_t dims[1] = {logItems.size()};
-        const H5::DataSpace dataspace(1, dims);
+        H5::DataSpace const dataspace(1, dims);
 
         // works on Ubuntu, but segfaults on macos:
         /*
@@ -910,7 +909,7 @@ void create_and_write_int_1d_dataset(
 }
 
 void create_and_write_double_1d_dataset(
-    const H5::H5File& file, std::string const& datasetName,
+    H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> buffer
 ) {
     hsize_t const size = buffer.size();
@@ -922,7 +921,7 @@ void create_and_write_double_1d_dataset(
 }
 
 void create_and_write_double_2d_dataset(
-    const H5::H5File& file, std::string const& datasetName,
+    H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> const buffer, hsize_t const m, hsize_t const n
 ) {
     Expects(buffer.size() == m * n);
@@ -1467,7 +1466,7 @@ void read_model_data_from_hdf5(
 }
 
 void read_model_data_from_hdf5(
-    const H5::H5File& file, Model& model, std::string const& datasetPath
+    H5::H5File const& file, Model& model, std::string const& datasetPath
 ) {
     if (attribute_exists(file, datasetPath, "tstart")) {
         model.set_t0(get_double_scalar_attribute(file, datasetPath, "tstart"));
@@ -1594,7 +1593,7 @@ H5::H5File create_or_open_for_writing(std::string const& hdf5filename) {
     }
 }
 
-bool location_exists(const H5::H5File& file, std::string const& location) {
+bool location_exists(H5::H5File const& file, std::string const& location) {
     AMICI_H5_SAVE_ERROR_HANDLER;
     auto result = H5Lexists(file.getId(), location.c_str(), H5P_DEFAULT) > 0;
     AMICI_H5_RESTORE_ERROR_HANDLER;
@@ -1607,7 +1606,7 @@ bool location_exists(std::string const& filename, std::string const& location) {
 }
 
 std::vector<int>
-get_int_1d_dataset(const H5::H5File& file, std::string const& name) {
+get_int_1d_dataset(H5::H5File const& file, std::string const& name) {
     auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
@@ -1624,7 +1623,7 @@ get_int_1d_dataset(const H5::H5File& file, std::string const& name) {
 }
 
 std::vector<double>
-get_double_1d_dataset(const H5::H5File& file, std::string const& name) {
+get_double_1d_dataset(H5::H5File const& file, std::string const& name) {
     auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
@@ -1642,7 +1641,7 @@ get_double_1d_dataset(const H5::H5File& file, std::string const& name) {
 }
 
 std::vector<double> get_double_2d_dataset(
-    const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n
+    H5::H5File const& file, std::string const& name, hsize_t& m, hsize_t& n
 ) {
     m = n = 0;
 
@@ -1666,7 +1665,7 @@ std::vector<double> get_double_2d_dataset(
 }
 
 std::vector<double> get_double_3d_dataset(
-    const H5::H5File& file, std::string const& name, hsize_t& m, hsize_t& n,
+    H5::H5File const& file, std::string const& name, hsize_t& m, hsize_t& n,
     hsize_t& o
 ) {
     m = n = o = 0;

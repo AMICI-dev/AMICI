@@ -45,8 +45,7 @@ ExpData::ExpData(
 ExpData::ExpData(
     int const nytrue, int const nztrue, int const nmaxevent,
     std::vector<realtype> ts, std::vector<realtype> const& my,
-    std::vector<realtype> const& sigma_y,
-    std::vector<realtype> const& mz,
+    std::vector<realtype> const& sigma_y, std::vector<realtype> const& mz,
     std::vector<realtype> const& sigma_z
 )
     : SimulationParameters(ts)
@@ -191,9 +190,7 @@ realtype const* ExpData::get_measurements_ptr(int const it) const {
     return nullptr;
 }
 
-void ExpData::set_noise_scales(
-    std::vector<realtype> const& sigma_y
-) {
+void ExpData::set_noise_scales(std::vector<realtype> const& sigma_y) {
     check_data_dimension(sigma_y, "sigma_y");
     check_sigma_positivity(sigma_y, "sigma_y");
 
@@ -213,14 +210,13 @@ void ExpData::set_noise_scales(
 ) {
     if (sigma_y.size() != static_cast<unsigned>(nt()))
         throw AmiException(
-            "Input sigma_y did not match dimensions nt (%i), was %i",
-            nt(), sigma_y.size()
+            "Input sigma_y did not match dimensions nt (%i), was %i", nt(),
+            sigma_y.size()
         );
     check_sigma_positivity(sigma_y, "sigma_y");
 
     for (int it = 0; it < nt(); ++it)
-        noise_scales_.at(iy + it * nytrue_)
-            = sigma_y.at(it);
+        noise_scales_.at(iy + it * nytrue_) = sigma_y.at(it);
 }
 
 void ExpData::set_noise_scales(realtype const sigma, int const iy) {
@@ -245,10 +241,13 @@ realtype const* ExpData::get_noise_scales_ptr(int const it) const {
     return nullptr;
 }
 
-void ExpData::set_event_measurements(std::vector<realtype> const& event_measurements) {
+void ExpData::set_event_measurements(
+    std::vector<realtype> const& event_measurements
+) {
     check_events_dimension(event_measurements, "event_measurements");
 
-    if (event_measurements.size() == static_cast<unsigned>(nmaxevent_) * nztrue_)
+    if (event_measurements.size()
+        == static_cast<unsigned>(nmaxevent_) * nztrue_)
         event_measurements_ = event_measurements;
     else if (event_measurements.empty())
         event_measurements_.clear();
@@ -259,7 +258,8 @@ void ExpData::set_event_measurements(
 ) {
     if (event_measurements.size() != static_cast<unsigned>(nmaxevent_)) {
         throw AmiException(
-            "Input event_measurements did not match dimensions nmaxevent (%i), was "
+            "Input event_measurements did not match dimensions nmaxevent (%i), "
+            "was "
             "%i",
             nmaxevent_, event_measurements.size()
         );
@@ -285,9 +285,7 @@ realtype const* ExpData::get_event_measurements_ptr(int const ie) const {
     return nullptr;
 }
 
-void ExpData::set_event_noise_scales(
-    std::vector<realtype> const& sigma_z
-) {
+void ExpData::set_event_noise_scales(std::vector<realtype> const& sigma_z) {
     check_events_dimension(sigma_z, "sigma_z");
     check_sigma_positivity(sigma_z, "sigma_z");
 
@@ -314,8 +312,7 @@ void ExpData::set_event_noise_scales(
     check_sigma_positivity(sigma_z, "sigma_z");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        event_noise_scales_.at(iz + ie * nztrue_)
-            = sigma_z.at(ie);
+        event_noise_scales_.at(iz + ie * nztrue_) = sigma_z.at(ie);
 }
 
 void ExpData::set_event_noise_scales(realtype const sigma, int const iz) {

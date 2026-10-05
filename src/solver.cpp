@@ -4,8 +4,8 @@
 #include "amici/exception.h"
 #include "amici/model.h"
 
-#include <sundials/sundials_context.h>
 #include <gsl/gsl-lite.hpp>
+#include <sundials/sundials_context.h>
 
 #include <cstdio>
 #include <filesystem>

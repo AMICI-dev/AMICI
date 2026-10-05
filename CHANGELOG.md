@@ -26,12 +26,28 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Fixes**
 
+* `ExpDataView` no longer writes cached arrays as attributes onto the
+  wrapped `ExpData`, which previously broke pickling of `ExpData` objects
+  after being viewed (ICB-DCM/pyPESTO#1771).
+
 * `ReturnData.sx0` is no longer populated with meaningless values when
   pre-equilibration is run with adjoint sensitivities together with
   adjoint sensitivity analysis of the main simulation. These values were
   never actually computed in that case and were not used for the
   gradient; `rdata.sx0` is now empty (`None` in Python), consistent with
   other fields that are unavailable for the chosen settings (#1184).
+
+* Fixed the JAX backend attributing a root/discontinuity crossing to the
+  wrong Heaviside variable whenever a model had an event whose *solved*
+  trigger time still referenced a state (e.g. a trigger comparing `time`
+  directly to a state, `time >= x` — `sympy.solve` happily returns `[x]`
+  even though `x` is dynamic, not static). `DEModel._reorder_events()`
+  (which determines the physical event/Heaviside-array order) and the JAX
+  exporter's `iroot`/`eroot`/`ih`/`eh` classification (which determines
+  the root-detection order) used two different criteria for "does this
+  event have an explicit (precomputable) trigger time", which could
+  silently permute the two orderings relative to each other, causing
+  state updates to be gated by the wrong event's condition (#3286).
 
 * Model entity IDs no longer have to avoid names used by AMICI or its
   generated code, for either backend: previously, model
@@ -153,6 +169,17 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   v2's math grammar instead of a plain, ill-defined `sympy.sympify` call.
   PEtab v1 never formally specified a grammar for these expressions; in
   rare cases, some formulas may now be interpreted differently (#3281).
+
+* Fixed spurious "root after reinitialization" simulation failures
+  after event handling: CVODES/IDAS could re-detect an event immediately
+  after it was just handled and treat that as a fatal simulation error,
+  even though the crossing had already been processed. A re-detection of
+  exactly the just-processed root is now ignored, and any other,
+  genuinely new root (e.g. from a second, near-simultaneous event) is
+  handled normally instead of aborting the simulation. This also covers
+  discontinuities less than one solver step apart, which previously made
+  the simulation fail with `reInitPostProcess failed with error code 1`
+  (#2861, #3266).
 
 ### v1.1 (2026-09-03)
 
