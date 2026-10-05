@@ -30,7 +30,9 @@ def mangle_name(name: str) -> str:
     fixed argument/variable names of the generated functions). Collapses
     any SBML-legal `__` run first, and uses `v` instead of `_` as the
     marker for names already ending in `_`, so the result never contains
-    `__` either (reserved in C++; class-private in Python).
+    `__` either (reserved in C++; class-private in Python). A name starting
+    with `_` followed by an uppercase letter (reserved in C++ in any scope)
+    is prefixed with `v`.
 
     This is not injective and does not guarantee a unique result on its
     own (e.g. `"a__b"` and `"a_b"` both collapse to the same string) --
@@ -38,6 +40,8 @@ def mangle_name(name: str) -> str:
     separately (see :class:`IdentifierMangler`).
     """
     name = re.sub(r"_{2,}", "_", name)
+    if re.match(r"_[A-Z]", name):
+        name = f"v{name}"
     return f"{name}v" if name.endswith("_") else f"{name}_"
 
 

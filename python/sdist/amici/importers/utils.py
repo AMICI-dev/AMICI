@@ -20,9 +20,13 @@ __all__ = [
 #
 # `t` is merged into the model's expression graph as an actual sympy.Symbol
 # (amici.importers.sbml._process_time), so it must never collide with a
-# model entity: a model entity named `t` would not merely *print* like the
-# time symbol, it would *be* the very same sympy symbol, and no amount of
-# mangling downstream could tell the two apart again.
+# model entity: created with amici's canonical assumptions, a model entity
+# named `t` would not merely *print* like the time symbol, it would *be* the
+# very same sympy symbol. The two could in principle be kept apart by giving
+# them different assumptions (as sbmlmath does, before the time symbol is
+# substituted), but every symbol for a given name having the same
+# assumptions is an invariant the rest of amici relies on, so the entity is
+# renamed instead.
 #
 # Nothing else needs reserving. A name that's merely unsafe *in the
 # generated code* -- a keyword, a stdlib macro, one of the fixed argument

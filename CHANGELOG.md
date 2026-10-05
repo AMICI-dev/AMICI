@@ -33,7 +33,8 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   gradient; `rdata.sx0` is now empty (`None` in Python), consistent with
   other fields that are unavailable for the chosen settings (#1184).
 
-* There are no more reserved names, for either backend: previously, model
+* Model entity IDs no longer have to avoid names used by AMICI or its
+  generated code, for either backend: previously, model
   import or compilation could fail — or silently generate incorrect code,
   with no indication of the actual cause — whenever a model entity's ID
   collided with something the generated code already used. That was a C++
