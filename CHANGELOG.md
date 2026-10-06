@@ -26,6 +26,10 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Fixes**
 
+* AMICI's logger setup no longer calls `socket.getfqdn()`, which could block
+  for more than 30 seconds per process on hosts whose hostname does not
+  resolve quickly (e.g., GitHub-hosted macOS 15/26 runners).
+
 * `ExpDataView` no longer writes cached arrays as attributes onto the
   wrapped `ExpData`, which previously broke pickling of `ExpData` objects
   after being viewed (ICB-DCM/pyPESTO#1771).
