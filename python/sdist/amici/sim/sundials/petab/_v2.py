@@ -7,7 +7,7 @@ import numbers
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, get_args
 
 import numpy as np
 import sympy as sp
@@ -140,11 +140,12 @@ class ExperimentManager:
                 "Parameter scales were provided for parameters that are not "
                 f"PEtab problem parameters: {sorted(unknown)}"
             )
+        valid_scales = get_args(ParameterScale)
         for par_id, scale in parameter_scales.items():
-            if scale not in ("lin", "log", "log10"):
+            if scale not in valid_scales:
                 raise ValueError(
                     f"Invalid scale {scale!r} for parameter {par_id!r}. "
-                    "Must be one of 'lin', 'log', 'log10'."
+                    f"Must be one of {', '.join(map(repr, valid_scales))}."
                 )
         return {
             par_id: parameter_scales.get(par_id, "lin")

@@ -9,7 +9,7 @@ import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from pprint import pprint
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -30,6 +30,8 @@ from .v1._sbml_import import _add_global_parameter
 
 if TYPE_CHECKING:
     import pysb
+
+    from amici.sim.sundials.petab._v2 import ParameterScale
 
 __all__ = [
     "PetabImporter",
@@ -858,8 +860,7 @@ class PetabImporter:
         self,
         force_import: bool = False,
         *,
-        parameter_scales: Mapping[str, Literal["lin", "log", "log10"]]
-        | None = None,
+        parameter_scales: Mapping[str, ParameterScale] | None = None,
     ) -> amici.sim.sundials.petab.PetabSimulator | amici.sim.jax.JAXProblem:
         """
         Create a PEtab simulator for the imported model.
