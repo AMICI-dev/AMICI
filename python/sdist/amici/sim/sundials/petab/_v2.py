@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 import numbers
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Literal
 
 import numpy as np
 import sympy as sp
@@ -16,12 +17,24 @@ from petab.v2 import ExperimentPeriod
 import amici
 from amici.logging import get_logger
 from amici.sim.sundials import (
+    ParameterScaling,
     RDataReporting,
     SensitivityMethod,
     SensitivityOrder,
+    parameter_scaling_from_int_vector,
+)
+
+from .v1._parameter_scaling import (
+    petab_to_amici_scale,
+    scale_parameter,
+    unscale_parameter,
 )
 
 logger = get_logger(__name__, log_level=logging.INFO)
+
+#: Scale of a PEtab problem parameter: linear, natural logarithm, or
+#: decadic logarithm.
+ParameterScale = Literal["lin", "log", "log10"]
 
 __all__ = [
     "PetabSimulator",
@@ -31,7 +44,6 @@ __all__ = [
 
 
 class ExperimentManager:
-    # TODO: support for pscale?
     """
     Handles the creation of :class:`ExpData` objects for a given model and
     PEtab problem.
@@ -41,6 +53,13 @@ class ExperimentManager:
     Those are updated based on a set of global parameters (PEtab
     problem parameters, as opposed to model parameters for a single experiment
     period).
+
+    PEtab v2 does not specify on which scale parameters are estimated.
+    By default, all problem parameters are on linear scale. Other scales can
+    be chosen via the `parameter_scales` argument. All problem parameter
+    values passed to or returned by this class are then on the respective
+    scale, and so are the sensitivities computed for the resulting
+    :class:`ExpData` objects.
     """
 
     # TODO debug, remove
@@ -50,6 +69,8 @@ class ExperimentManager:
         self,
         model: amici.sim.sundials.Model,
         petab_problem: v2.Problem,
+        *,
+        parameter_scales: Mapping[str, ParameterScale] | None = None,
     ):
         """
         Initialize the `ExperimentManager`.
@@ -61,9 +82,22 @@ class ExperimentManager:
             equivalent problem.
             This object must not be modified after the creation of this
             :class:`ExperimentManager` instance.
+        :param parameter_scales:
+            The scales of the PEtab problem parameters, as a mapping from
+            problem parameter IDs to ``"lin"``, ``"log"`` (natural
+            logarithm), or ``"log10"``. Parameters not included are on
+            linear scale.
         """
         self._model: amici.sim.sundials.Model = model
         self._petab_problem: v2.Problem = petab_problem
+        self._parameter_scales: dict[str, ParameterScale] = (
+            self._get_parameter_scales(parameter_scales)
+        )
+        # problem parameter IDs to AMICI parameter scales
+        self._amici_scales: dict[str, ParameterScaling] = {
+            par_id: petab_to_amici_scale(scale)
+            for par_id, scale in self._parameter_scales.items()
+        }
         self._state_ids: tuple[str, ...] = tuple(self._model.get_state_ids())
         self._free_parameter_ids: tuple[str, ...] = tuple(
             self._model.get_free_parameter_ids()
@@ -89,6 +123,34 @@ class ExperimentManager:
         self._original_p = np.array(model0.get_free_parameters())
         self._original_k = np.array(model0.get_fixed_parameters())
 
+    def _get_parameter_scales(
+        self, parameter_scales: Mapping[str, ParameterScale] | None
+    ) -> dict[str, ParameterScale]:
+        """Get the scales of all problem parameters.
+
+        :param parameter_scales:
+            The user-provided scales of (a subset of) the problem parameters.
+        :return:
+            The scales of all problem parameters, in the order of
+            ``Problem.x_ids``.
+        """
+        parameter_scales = dict(parameter_scales or {})
+        if unknown := set(parameter_scales) - set(self._petab_problem.x_ids):
+            raise ValueError(
+                "Parameter scales were provided for parameters that are not "
+                f"PEtab problem parameters: {sorted(unknown)}"
+            )
+        for par_id, scale in parameter_scales.items():
+            if scale not in ("lin", "log", "log10"):
+                raise ValueError(
+                    f"Invalid scale {scale!r} for parameter {par_id!r}. "
+                    "Must be one of 'lin', 'log', 'log10'."
+                )
+        return {
+            par_id: parameter_scales.get(par_id, "lin")
+            for par_id in self._petab_problem.x_ids
+        }
+
     def create_edatas(self) -> list[amici.sim.sundials.ExpData]:
         """Create ExpData objects for all experiments."""
         return [
@@ -110,8 +172,8 @@ class ExperimentManager:
             The experiment or experiment ID to create the `ExpData` for.
         :param problem_parameters:
             Optional dictionary of problem parameters to apply to the
-            `ExpData`. If `None`, the nominal parameters of the PEtab problem
-            are used.
+            `ExpData`, on the scales given by :attr:`parameter_scales`.
+            If `None`, the nominal parameters of the PEtab problem are used.
         :return:
             The created `ExpData` object for the given experiment.
         """
@@ -140,7 +202,9 @@ class ExperimentManager:
             )
 
         if problem_parameters is None:
-            problem_parameters = self._petab_problem.get_x_nominal_dict()
+            problem_parameters = self.scale_parameters(
+                self._petab_problem.get_x_nominal_dict()
+            )
         self.apply_parameters(edata, problem_parameters=problem_parameters)
 
         return edata
@@ -316,9 +380,16 @@ class ExperimentManager:
         * and the PEtab problem was not modified since the creation of this
           :class:`ExperimentManager` instance.
 
+        Each model parameter takes the scale of the problem parameter it is
+        mapped to in the given experiment, and model parameters that are
+        not mapped to any problem parameter are on linear scale.
+        Fixed model parameters are always on linear scale, so the values of
+        the problem parameters they are mapped to are unscaled.
+
         :param edata: The :class:`ExpData` instance to be updated.
             In case of errors, the state of `edata` is undefined.
-        :param problem_parameters: Problem parameters to be applied.
+        :param problem_parameters: Problem parameters to be applied,
+            on the scales given by :attr:`parameter_scales`.
         """
         # TODO: support ndarray in addition to dict?
 
@@ -363,19 +434,28 @@ class ExperimentManager:
         edata.plist = plist
 
         # Update fixed parameters in case they are affected by problem
-        #  parameters (i.e., parameter table parameters)
+        #  parameters (i.e., parameter table parameters).
+        #  Fixed parameters are always on linear scale.
+        fixed_par_updates = {
+            p_idx: unscale_parameter(p_val, self._parameter_scales[p_id])
+            for p_id, p_val in problem_parameters.items()
+            if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None
+        }
         fixed_par_vals = np.asarray(edata.fixed_parameters)
-        for p_id, p_val in problem_parameters.items():
-            if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None:
-                fixed_par_vals[p_idx] = p_val
+        for p_idx, p_val in fixed_par_updates.items():
+            fixed_par_vals[p_idx] = p_val
         edata.fixed_parameters = fixed_par_vals
 
         if edata.fixed_parameters_pre_equilibration:
             fixed_par_vals = np.array(edata.fixed_parameters_pre_equilibration)
-            for p_id, p_val in problem_parameters.items():
-                if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None:
-                    fixed_par_vals[p_idx] = p_val
+            for p_idx, p_val in fixed_par_updates.items():
+                fixed_par_vals[p_idx] = p_val
             edata.fixed_parameters_pre_equilibration = fixed_par_vals
+
+        # Scales of the model parameters. Each model parameter takes the
+        #  scale of the problem parameter it is mapped to, all others
+        #  (model defaults, numeric overrides) are on linear scale.
+        pscale = [ParameterScaling.none] * len(par_vals)
 
         # Apply problem parameter values to identical model parameters.
         #  Any other parameter mapping, except for output parameter
@@ -383,6 +463,7 @@ class ExperimentManager:
         for k, v in problem_parameters.items():
             if (idx := pid_to_idx.get(k)) is not None:
                 par_vals[idx] = v
+                pscale[idx] = self._amici_scales[k]
 
         # Handle measurement-specific mappings to placeholders
         measurements = self._petab_problem.get_measurements_for_experiment(
@@ -394,8 +475,10 @@ class ExperimentManager:
             if (idx := pid_to_idx.get(placeholder)) is not None:
                 if override.is_Number:
                     par_vals[idx] = float(override)
+                    pscale[idx] = ParameterScaling.none
                 elif override.is_Symbol:
                     par_vals[idx] = problem_parameters[str(override)]
+                    pscale[idx] = self._amici_scales[str(override)]
                 else:
                     raise AssertionError(
                         f"Unexpected override type: {override} for {placeholder} in experiment {experiment_id}"
@@ -447,6 +530,7 @@ class ExperimentManager:
 
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
         edata.free_parameters = par_vals
+        edata.pscale = parameter_scaling_from_int_vector(pscale)
 
         if self._debug:
             logger.debug("ExperimentManager.apply_parameters:")
@@ -467,6 +551,46 @@ class ExperimentManager:
     def model(self) -> amici.sim.sundials.Model:
         """The AMICI model used by this ExperimentManager."""
         return self._model
+
+    @property
+    def parameter_scales(self) -> dict[str, ParameterScale]:
+        """The scales of all PEtab problem parameters.
+
+        A mapping from problem parameter IDs to ``"lin"``, ``"log"``, or
+        ``"log10"``, in the order of ``Problem.x_ids``.
+        """
+        return self._parameter_scales.copy()
+
+    def scale_parameters(
+        self, problem_parameters: Mapping[str, float]
+    ) -> dict[str, float]:
+        """Bring problem parameters from linear scale to their scales.
+
+        :param problem_parameters:
+            Values of (a subset of) the problem parameters on linear scale.
+        :return:
+            The values on the scales given by :attr:`parameter_scales`.
+        """
+        return {
+            par_id: scale_parameter(value, self._parameter_scales[par_id])
+            for par_id, value in problem_parameters.items()
+        }
+
+    def unscale_parameters(
+        self, problem_parameters: Mapping[str, float]
+    ) -> dict[str, float]:
+        """Bring problem parameters from their scales to linear scale.
+
+        :param problem_parameters:
+            Values of (a subset of) the problem parameters on the scales
+            given by :attr:`parameter_scales`.
+        :return:
+            The values on linear scale.
+        """
+        return {
+            par_id: unscale_parameter(value, self._parameter_scales[par_id])
+            for par_id, value in problem_parameters.items()
+        }
 
     def _get_placeholder_mapping(
         self, experiment: v2.Experiment
@@ -521,6 +645,9 @@ class PetabSimulationResult:
 
     Holds the per-experiment AMICI data objects and aggregated metrics
     produced by :class:`PetabSimulator.simulate`.
+
+    All sensitivities are with respect to the PEtab problem parameters on
+    the scales given by :attr:`ExperimentManager.parameter_scales`.
     """
 
     #: List of :class:`amici.sim.sundials.ExpData` instances, one per
@@ -649,6 +776,10 @@ class PetabSimulator:
         # TODO params: dict|np.ndarray|None?
         """Simulate all experiments of the given PEtab problem.
 
+        :param problem_parameters:
+            Values of the PEtab problem parameters, on the scales given by
+            :attr:`ExperimentManager.parameter_scales`. Nominal values are
+            used for all parameters that are not specified.
         :return:
             A :class:`PetabSimulationResult` instance containing the
             per-experiment data objects and aggregated results.
@@ -663,7 +794,9 @@ class PetabSimulator:
             problem_parameters = {}
 
         # use nominal values for all unspecified parameters
-        problem_parameters_default = self._petab_problem.get_x_nominal_dict()
+        problem_parameters_default = self._exp_man.scale_parameters(
+            self._petab_problem.get_x_nominal_dict()
+        )
         problem_parameters = problem_parameters_default | problem_parameters
 
         # TODO cache edatas
