@@ -877,7 +877,13 @@ class PetabImporter:
             :class:`amici.sim.jax.JAXProblem`.
         :return: The created PEtab simulator.
         """
+        from amici.sim._parameter_scales import get_parameter_scales
         from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
+
+        # validate before the possibly expensive model import
+        parameter_scales = get_parameter_scales(
+            self.petab_problem, parameter_scales
+        )
 
         if self._jax:
             model_module = self.import_module(force_import=force_import)
