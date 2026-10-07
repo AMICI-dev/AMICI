@@ -998,6 +998,12 @@ def test_parameter_scales_jax(
 
         # unspecified parameters take their nominal values, on their scales
         np.testing.assert_allclose(llh(jp), llh(jp_lin), rtol=1e-12)
+        # integer-valued parameters are accepted, too
+        np.testing.assert_allclose(
+            llh(jp.update_parameters(jnp.array([-1, 0]))),
+            llh(jp_lin.update_parameters(jnp.array([0.1, 1.0]))),
+            rtol=1e-12,
+        )
 
         llh_lin, grad_lin = eqx.filter_value_and_grad(llh)(
             jp_lin.update_parameters(jnp.array([x["k1"], x["s"]]))

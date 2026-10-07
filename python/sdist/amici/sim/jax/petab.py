@@ -116,7 +116,8 @@ def jax_unscale(
     if scale_str == petabv2.C.LOG:
         return jnp.exp(parameter)
     if scale_str == petabv2.C.LOG10:
-        return jnp.power(10, parameter)
+        # float base, as integers cannot be raised to negative powers
+        return jnp.power(10.0, parameter)
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
