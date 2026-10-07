@@ -1,10 +1,11 @@
 """PEtab wrappers for JAX models.""" ""
 
+import json
 import logging
 import os
 import re
 import shutil
-from collections.abc import Callable, Iterable, Sized
+from collections.abc import Callable, Iterable, Mapping, Sized
 from pathlib import Path
 
 import diffrax
@@ -21,6 +22,7 @@ from optimistix import AbstractRootFinder
 
 from amici import _module_from_path
 from amici.logging import get_logger
+from amici.sim._parameter_scales import ParameterScale, get_parameter_scales
 from amici.sim.jax.model import JAXModel, ReturnValue
 
 DEFAULT_CONTROLLER_SETTINGS = {
@@ -134,8 +136,15 @@ class JAXProblem(eqx.Module):
     """
     PEtab problem wrapper for JAX models.
 
+    PEtab v2 does not specify on which scale parameters are estimated.
+    By default, all problem parameters are on linear scale. Other scales can
+    be chosen via the `parameter_scales` argument. :attr:`parameters` are then
+    on the respective scales, and so are derivatives with respect to them.
+
     :ivar parameters:
-        Values for the model parameters. Do not change dimensions, values may be changed during, e.g. model training.
+        Values for the estimated PEtab problem parameters, on the scales
+        given by :attr:`parameter_scales`. Do not change dimensions, values
+        may be changed during, e.g. model training.
     :ivar model:
         JAXModel instance to use for simulation.
     :ivar _parameter_mappings:
@@ -165,12 +174,15 @@ class JAXProblem(eqx.Module):
     _petab_measurement_indices: np.ndarray
     _petab_problem: petabv2.Problem
     _unconverted_problem: petabv2.Problem | None
+    _parameter_scales: dict[str, ParameterScale]
 
     def __init__(
         self,
         model: JAXModel,
         petab_problem: petabv1.Problem | petabv2.Problem,
         unconverted_problem: petabv2.Problem | None = None,
+        *,
+        parameter_scales: Mapping[str, ParameterScale] | None = None,
     ):
         """
         Initialize a JAXProblem instance with a model and a PEtab problem.
@@ -179,6 +191,13 @@ class JAXProblem(eqx.Module):
             JAXModel instance to use for simulation.
         :param petab_problem:
             PEtab problem to simulate.
+        :param parameter_scales:
+            The scales of the PEtab problem parameters, as a mapping from
+            problem parameter IDs to ``"lin"``, ``"log"`` (natural
+            logarithm), or ``"log10"``. Parameters not included are on
+            linear scale. Only the estimated parameters in
+            :attr:`parameters` are affected, all other parameters always
+            take their nominal values.
         """
         if isinstance(petab_problem, petabv1.Problem):
             raise TypeError(
@@ -191,6 +210,19 @@ class JAXProblem(eqx.Module):
         self.simulation_conditions = scs.conditionId.to_list()
         self._petab_problem = petab_problem
         self._unconverted_problem = unconverted_problem
+        self._parameter_scales = get_parameter_scales(
+            petab_problem, parameter_scales
+        )
+        if array_scaled := [
+            p.id
+            for p in petab_problem.parameters
+            if p.nominal_value == "array"
+            and self._parameter_scales[p.id] != petabv2.C.LIN
+        ]:
+            raise NotImplementedError(
+                "Parameter scales are not supported for array-valued "
+                f"parameters: {array_scaled}"
+            )
         self.parameters, self.model = (
             self._initialize_model_with_nominal_values(model)
         )
@@ -225,6 +257,8 @@ class JAXProblem(eqx.Module):
         self._petab_problem.config.filepath = "problem.yaml"
         self._petab_problem.to_files(base_path=directory)
         shutil.copy(self.model.jax_py_file, directory / "jax_py_file.py")
+        with open(directory / "parameter_scales.json", "w") as f:
+            json.dump(self.parameter_scales, f)
         with open(directory / "parameters.pkl", "wb") as f:
             eqx.tree_serialise_leaves(f, self)
 
@@ -243,7 +277,13 @@ class JAXProblem(eqx.Module):
             directory / "problem.yaml",
         )
         model = _module_from_path("jax", directory / "jax_py_file.py").Model()
-        problem = cls(model, petab_problem)
+        parameter_scales_file = directory / "parameter_scales.json"
+        parameter_scales = (
+            json.loads(parameter_scales_file.read_text())
+            if parameter_scales_file.exists()
+            else None
+        )
+        problem = cls(model, petab_problem, parameter_scales=parameter_scales)
         with open(directory / "parameters.pkl", "rb") as f:
             return eqx.tree_deserialise_leaves(f, problem)
 
@@ -564,13 +604,13 @@ class JAXProblem(eqx.Module):
 
         A condition table target value may be a numeric literal, or a
         reference to another PEtab parameter id (to be substituted with
-        that parameter's current value, e.g. to share an estimated
-        parameter's value across multiple conditions).
+        that parameter's current linear-scale value, e.g. to share an
+        estimated parameter's value across multiple conditions).
         """
         if not target_value.is_number:
             pname = str(target_value)
             if pname in self.parameter_ids:
-                return self.parameters[self.parameter_ids.index(pname)]
+                return self._unscaled_parameter(pname)
             _petab_param_map = {
                 param.id: param.nominal_value
                 for param in self._petab_problem.parameters
@@ -920,7 +960,8 @@ class JAXProblem(eqx.Module):
         - Extracts nominal values from PEtab problem
         - Sets parameter values in the model
         - Sets input arrays in the model
-        - Creates scaled parameter array to initialized to nominal values
+        - Creates parameter array initialized to the nominal values on the
+          scales given by :attr:`parameter_scales`
 
         :param model:
             JAX model to initialize
@@ -945,7 +986,12 @@ class JAXProblem(eqx.Module):
         # Create scaled parameter array
         param_map = self._petab_problem.get_x_nominal_dict()
         parameter_array = jnp.array(
-            [float(param_map[pval]) for pval in self.parameter_ids]
+            [
+                petabv1.scale(
+                    float(param_map[pid]), self._parameter_scales[pid]
+                )
+                for pid in self.parameter_ids
+            ]
         )
 
         return parameter_array, model
@@ -991,6 +1037,19 @@ class JAXProblem(eqx.Module):
             and parts[1].startswith("output")
         ]
 
+    @property
+    def parameter_scales(self) -> dict[str, ParameterScale]:
+        """The scales of all PEtab problem parameters.
+
+        A mapping from problem parameter IDs to ``"lin"``, ``"log"``, or
+        ``"log10"``, in the order of ``Problem.x_ids``.
+        """
+        # pytree operations (e.g., `update_parameters`) sort dict keys
+        return {
+            par_id: self._parameter_scales[par_id]
+            for par_id in self._petab_problem.x_ids
+        }
+
     def get_petab_parameter_by_id(self, name: str) -> jnp.float_:
         """
         Get the value of a PEtab parameter by name.
@@ -998,25 +1057,28 @@ class JAXProblem(eqx.Module):
         :param name:
             PEtab parameter id, as returned by :attr:`parameter_ids`.
         :return:
-            Value of the parameter
+            Value of the parameter, on the scale given by
+            :attr:`parameter_scales`.
         """
         return self.parameters[self.parameter_ids.index(name)]
 
-    def _unscale(
-        self, p: jt.Float[jt.Array, "np"], scales: tuple[str, ...]
-    ) -> jt.Float[jt.Array, "np"]:
+    def _unscaled_parameter(self, name: str) -> jnp.float_:
         """
-        Unscaling of parameters.
+        Get the linear-scale value of an estimated PEtab parameter.
 
-        :param p:
-            Parameter values
-        :param scales:
-            Parameter scalings
+        Model quantities are always computed from linear-scale values.
+        Reading :attr:`parameters` through this method inside the traced
+        region keeps derivatives with respect to :attr:`parameters` on the
+        scales given by :attr:`parameter_scales`.
+
+        :param name:
+            PEtab parameter id, as returned by :attr:`parameter_ids`.
         :return:
-            Unscaled parameter values
+            Value of the parameter on linear scale.
         """
-        return jnp.array(
-            [jax_unscale(pval, scale) for pval, scale in zip(p, scales)]
+        return jax_unscale(
+            self.parameters[self.parameter_ids.index(name)],
+            self._parameter_scales[name],
         )
 
     def _find_unconverted_period(
@@ -1134,7 +1196,9 @@ class JAXProblem(eqx.Module):
         petab_ids = set(model_id_map.values())
 
         parameters_map = self._petab_problem.get_x_nominal_dict()
-        parameters_map.update(zip(self.parameter_ids, self.parameters))
+        parameters_map.update(
+            {pid: self._unscaled_parameter(pid) for pid in self.parameter_ids}
+        )
 
         condition_input_map = {
             pid: parameters_map[pid]
@@ -1203,9 +1267,9 @@ class JAXProblem(eqx.Module):
         :param is_preeq:
             Whether to load preequilibration or simulation parameters.
         :return:
-            Parameters for the experiment.
+            Linear-scale model parameters for the experiment.
         """
-        p = jnp.stack(
+        return jnp.stack(
             [
                 self._map_experiment_model_parameter_value(
                     pname, ind, experiment, is_preeq
@@ -1213,9 +1277,6 @@ class JAXProblem(eqx.Module):
                 for ind, pname in enumerate(self.model.parameter_ids)
             ]
         )
-        pscale = tuple([petabv2.C.LIN for _ in self.model.parameter_ids])
-
-        return self._unscale(p, pscale)
 
     def _map_experiment_model_parameter_value(
         self,
@@ -1231,7 +1292,7 @@ class JAXProblem(eqx.Module):
         :param p_index: Index of the parameter in the model's parameter list
         :param experiment: PEtab experiment
         :param is_preeq: Whether to get preequilibration or simulation parameter value
-        :return: Value of the parameter
+        :return: Linear-scale value of the parameter
         """
         # Find the first period matching the requested phase (preeq vs. sim)
         condition_ids = []
@@ -1245,7 +1306,7 @@ class JAXProblem(eqx.Module):
             for param in self._petab_problem.parameters
         }
         if pname in self.parameter_ids:
-            init_val = self.parameters[self.parameter_ids.index(pname)]
+            init_val = self._unscaled_parameter(pname)
         elif pname in _petab_param_map:
             init_val = _petab_param_map[pname]
         else:
@@ -1302,7 +1363,7 @@ class JAXProblem(eqx.Module):
             return jnp.asarray(val_float, dtype=self.model.parameters.dtype)
         elif param_entry in self.parameter_ids:
             return jnp.asarray(
-                self.parameters[self.parameter_ids.index(param_entry)],
+                self._unscaled_parameter(param_entry),
                 dtype=self.model.parameters.dtype,
             )
         else:
@@ -1455,6 +1516,9 @@ class JAXProblem(eqx.Module):
         Update parameters for the model.
 
         :param p:
+            New values for :attr:`parameters`, on the scales given by
+            :attr:`parameter_scales`.
+        :return:
             New problem instance with updated parameters.
         """
         return eqx.tree_at(lambda p: p.parameters, self, p)
@@ -1534,25 +1598,9 @@ class JAXProblem(eqx.Module):
         )
 
         if self.parameters.size:
-            if isinstance(self._petab_problem, petabv2.Problem):
-                unscaled_parameters = jnp.stack(
-                    [
-                        self.parameters[ip]
-                        for ip, p_id in enumerate(self.parameter_ids)
-                    ]
-                )
-            else:
-                unscaled_parameters = jnp.stack(
-                    [
-                        jax_unscale(
-                            self.parameters[ip],
-                            self._petab_problem.parameter_df.loc[
-                                p_id, petabv2.C.PARAMETER_SCALE
-                            ],
-                        )
-                        for ip, p_id in enumerate(self.parameter_ids)
-                    ]
-                )
+            unscaled_parameters = jnp.stack(
+                [self._unscaled_parameter(p_id) for p_id in self.parameter_ids]
+            )
         else:
             unscaled_parameters = jnp.zeros((*self._ts_masks.shape[:2], 0))
 

@@ -908,3 +908,109 @@ def test_parameter_scales_invalid(parameter_scales_test_importer):
         parameter_scales_test_importer.create_simulator(
             parameter_scales={"k1": "ln"}
         )
+
+
+@pytest.fixture(scope="module")
+def parameter_scales_test_jax_importer() -> PetabImporter:
+    """JAX importer for the model of :func:`_parameter_scales_test_problem`."""
+    from petab.v2.core import ProblemConfig
+
+    problem = _parameter_scales_test_problem()
+    problem.config = ProblemConfig()
+    with TemporaryDirectoryWinSafe(
+        prefix="petab_v2_pscale_jax_"
+    ) as output_dir:
+        pi = PetabImporter(
+            problem,
+            jax=True,
+            module_name="test_petab_v2_pscale_jax",
+            output_dir=output_dir,
+            verbose=False,
+        )
+        pi.import_module(force_import=True)
+        yield pi
+
+
+def test_parameter_scales_jax(
+    parameter_scales_test_importer, parameter_scales_test_jax_importer
+):
+    """JAX simulation results on non-linear parameter scales are consistent
+    with those on linear scale, and with SUNDIALS on the same scales."""
+    import diffrax
+    import equinox as eqx
+    import jax
+    import jax.numpy as jnp
+    import numpy as np
+    from amici.sim.jax import run_simulations
+    from amici.sim.sundials import SensitivityMethod
+
+    scales = {"k1": "log10", "s": "log", "k2": "log10", "sigma": "log10"}
+    x = {"k1": 0.4, "s": 1.5}
+    x_scaled = {"k1": np.log10(x["k1"]), "s": np.log(x["s"])}
+    # d x_lin / d x_scaled
+    dlin_dscaled = np.array([x["k1"] * np.log(10), x["s"]])
+    controller = diffrax.PIDController(atol=1e-14, rtol=1e-12)
+
+    with jax.enable_x64(True):
+        jp_lin = parameter_scales_test_jax_importer.create_simulator()
+        jp = parameter_scales_test_jax_importer.create_simulator(
+            parameter_scales=scales
+        )
+        assert jp_lin.parameter_scales == dict.fromkeys(scales, "lin")
+        assert jp.parameter_scales == scales
+        # in the order of `Problem.x_ids`, also after pytree operations
+        assert list(
+            jp.update_parameters(jp.parameters).parameter_scales
+        ) == list(scales)
+        assert jp.parameter_ids == ["k1", "s"]
+        # nominal values on their scales
+        np.testing.assert_allclose(
+            jp.parameters, [np.log10(0.5), np.log(2.0)], rtol=1e-15
+        )
+
+        def llh(problem):
+            return run_simulations(problem, controller=controller)[0]
+
+        # unspecified parameters take their nominal values, on their scales
+        np.testing.assert_allclose(llh(jp), llh(jp_lin), rtol=1e-12)
+
+        llh_lin, grad_lin = eqx.filter_value_and_grad(llh)(
+            jp_lin.update_parameters(jnp.array([x["k1"], x["s"]]))
+        )
+        p_scaled = jnp.array([x_scaled["k1"], x_scaled["s"]])
+        llh_scaled, grad = eqx.filter_value_and_grad(llh)(
+            jp.update_parameters(p_scaled)
+        )
+        sllh = jax.grad(lambda p: llh(jp.update_parameters(p)))(p_scaled)
+        sllh_lin = np.asarray(grad_lin.parameters)
+        sllh_filter_grad = np.asarray(grad.parameters)
+        sllh = np.asarray(sllh)
+
+    # same likelihood, and gradients related by the chain rule
+    np.testing.assert_allclose(llh_scaled, llh_lin, rtol=1e-12)
+    np.testing.assert_allclose(sllh, sllh_lin * dlin_dscaled, rtol=1e-8)
+    np.testing.assert_allclose(sllh_filter_grad, sllh, rtol=1e-12)
+
+    # same results as SUNDIALS on the same scales
+    ps = parameter_scales_test_importer.create_simulator(
+        parameter_scales=scales
+    )
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    ps.solver.set_absolute_tolerance(1e-14)
+    ps.solver.set_relative_tolerance(1e-12)
+    result = ps.simulate(x_scaled)
+    np.testing.assert_allclose(llh_scaled, result.llh, rtol=1e-8)
+    np.testing.assert_allclose(
+        sllh, [result.sllh[par_id] for par_id in jp.parameter_ids], rtol=1e-6
+    )
+
+    # invalid parameter scales are rejected
+    with pytest.raises(ValueError, match="not PEtab problem parameters"):
+        parameter_scales_test_jax_importer.create_simulator(
+            parameter_scales={"observableParameter1_obs_B": "log"}
+        )
+    with pytest.raises(ValueError, match="Invalid scale"):
+        parameter_scales_test_jax_importer.create_simulator(
+            parameter_scales={"k1": "ln"}
+        )

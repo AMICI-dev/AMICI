@@ -872,19 +872,13 @@ class PetabImporter:
             logarithm), or ``"log10"``. Parameters not included are on
             linear scale. Parameter values passed to the simulator, and the
             sensitivities it returns, are on these scales.
-            See :class:`amici.sim.sundials.petab.ExperimentManager`.
-            Not supported for JAX models.
+            See :class:`amici.sim.sundials.petab.ExperimentManager` and
+            :class:`amici.sim.jax.JAXProblem`.
         :return: The created PEtab simulator.
         """
         from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
 
         if self._jax:
-            if any(
-                scale != "lin" for scale in (parameter_scales or {}).values()
-            ):
-                raise NotImplementedError(
-                    "Parameter scales are not supported for JAX models."
-                )
             model_module = self.import_module(force_import=force_import)
             model = model_module.Model()
 
@@ -896,6 +890,7 @@ class PetabImporter:
                 unconverted_problem=getattr(
                     self, "_unconverted_problem", None
                 ),
+                parameter_scales=parameter_scales,
             )
 
         model = self.import_module(force_import=force_import).get_model()
