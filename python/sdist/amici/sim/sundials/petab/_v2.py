@@ -7,7 +7,6 @@ import numbers
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, get_args
 
 import numpy as np
 import sympy as sp
@@ -16,6 +15,7 @@ from petab.v2 import ExperimentPeriod
 
 import amici
 from amici.logging import get_logger
+from amici.sim._parameter_scales import ParameterScale, get_parameter_scales
 from amici.sim.sundials import (
     ParameterScaling,
     RDataReporting,
@@ -31,10 +31,6 @@ from .v1._parameter_scaling import (
 )
 
 logger = get_logger(__name__, log_level=logging.INFO)
-
-#: Scale of a PEtab problem parameter: linear, natural logarithm, or
-#: decadic logarithm.
-ParameterScale = Literal["lin", "log", "log10"]
 
 __all__ = [
     "PetabSimulator",
@@ -91,7 +87,7 @@ class ExperimentManager:
         self._model: amici.sim.sundials.Model = model
         self._petab_problem: v2.Problem = petab_problem
         self._parameter_scales: dict[str, ParameterScale] = (
-            self._get_parameter_scales(parameter_scales)
+            get_parameter_scales(petab_problem, parameter_scales)
         )
         # problem parameter IDs to AMICI parameter scales
         self._amici_scales: dict[str, ParameterScaling] = {
@@ -122,35 +118,6 @@ class ExperimentManager:
         model0 = model.module.get_model()
         self._original_p = np.array(model0.get_free_parameters())
         self._original_k = np.array(model0.get_fixed_parameters())
-
-    def _get_parameter_scales(
-        self, parameter_scales: Mapping[str, ParameterScale] | None
-    ) -> dict[str, ParameterScale]:
-        """Get the scales of all problem parameters.
-
-        :param parameter_scales:
-            The user-provided scales of (a subset of) the problem parameters.
-        :return:
-            The scales of all problem parameters, in the order of
-            ``Problem.x_ids``.
-        """
-        parameter_scales = dict(parameter_scales or {})
-        if unknown := set(parameter_scales) - set(self._petab_problem.x_ids):
-            raise ValueError(
-                "Parameter scales were provided for parameters that are not "
-                f"PEtab problem parameters: {sorted(unknown)}"
-            )
-        valid_scales = get_args(ParameterScale)
-        for par_id, scale in parameter_scales.items():
-            if scale not in valid_scales:
-                raise ValueError(
-                    f"Invalid scale {scale!r} for parameter {par_id!r}. "
-                    f"Must be one of {', '.join(map(repr, valid_scales))}."
-                )
-        return {
-            par_id: parameter_scales.get(par_id, "lin")
-            for par_id in self._petab_problem.x_ids
-        }
 
     def create_edatas(self) -> list[amici.sim.sundials.ExpData]:
         """Create ExpData objects for all experiments."""

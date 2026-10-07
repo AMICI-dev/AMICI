@@ -894,6 +894,14 @@ def test_parameter_scales(parameter_scales_test_importer):
         rtol=1e-12,
     )
 
+    # integer-valued inputs, including negative exponents
+    x_int = {"k1": -1, "s": 0, "k2": -1, "sigma": -1}
+    x_int_lin = {"k1": 0.1, "s": 1.0, "k2": 0.1, "sigma": 0.1}
+    assert ps.exp_man.unscale_parameters(x_int) == pytest.approx(x_int_lin)
+    np.testing.assert_allclose(
+        ps.simulate(x_int).llh, ps_lin.simulate(x_int_lin).llh, rtol=1e-12
+    )
+
 
 def test_parameter_scales_invalid(parameter_scales_test_importer):
     """Invalid parameter scales are rejected."""
@@ -908,3 +916,22 @@ def test_parameter_scales_invalid(parameter_scales_test_importer):
         parameter_scales_test_importer.create_simulator(
             parameter_scales={"k1": "ln"}
         )
+
+
+def test_parameter_scales_invalid_jax():
+    """Invalid parameter scales are rejected for JAX models, too, before
+    the model is imported."""
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_pscale_jax_") as tmp:
+        pi = PetabImporter(
+            _parameter_scales_test_problem(),
+            module_name="test_petab_v2_pscale_jax",
+            output_dir=tmp,
+            jax=True,
+            verbose=False,
+        )
+        with pytest.raises(ValueError, match="not PEtab problem parameters"):
+            pi.create_simulator(parameter_scales={"typo": "lin"})
+        with pytest.raises(ValueError, match="Invalid scale"):
+            pi.create_simulator(parameter_scales={"k1": "ln"})
+        with pytest.raises(NotImplementedError):
+            pi.create_simulator(parameter_scales={"k1": "log10"})

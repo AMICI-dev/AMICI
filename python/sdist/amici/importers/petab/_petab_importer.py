@@ -31,7 +31,7 @@ from .v1._sbml_import import _add_global_parameter
 if TYPE_CHECKING:
     import pysb
 
-    from amici.sim.sundials.petab._v2 import ParameterScale
+    from amici.sim._parameter_scales import ParameterScale
 
 __all__ = [
     "PetabImporter",
@@ -877,12 +877,16 @@ class PetabImporter:
             Not supported for JAX models.
         :return: The created PEtab simulator.
         """
+        from amici.sim._parameter_scales import get_parameter_scales
         from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
 
+        # validate before the possibly expensive model import
+        parameter_scales = get_parameter_scales(
+            self.petab_problem, parameter_scales
+        )
+
         if self._jax:
-            if any(
-                scale != "lin" for scale in (parameter_scales or {}).values()
-            ):
+            if any(scale != "lin" for scale in parameter_scales.values()):
                 raise NotImplementedError(
                     "Parameter scales are not supported for JAX models."
                 )
