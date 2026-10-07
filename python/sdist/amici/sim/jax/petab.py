@@ -72,6 +72,30 @@ class SteadyStateEvent(eqx.Module):
         )
 
 
+def jax_scale(
+    parameter: jnp.float_,
+    scale_str: str,
+) -> jnp.float_:
+    """Scale parameter according to ``scale_str``.
+
+    Arguments:
+        parameter:
+            Parameter to be scaled.
+        scale_str:
+            One of ``petabv2.C.LIN``, ``petabv2.C.LOG``, ``petabv2.C.LOG10``.
+
+    Returns:
+        The scaled parameter.
+    """
+    if scale_str == petabv2.C.LIN or not scale_str:
+        return parameter
+    if scale_str == petabv2.C.LOG:
+        return jnp.log(parameter)
+    if scale_str == petabv2.C.LOG10:
+        return jnp.log10(parameter)
+    raise ValueError(f"Invalid parameter scaling: {scale_str}")
+
+
 def jax_unscale(
     parameter: jnp.float_,
     scale_str: str,
@@ -987,9 +1011,7 @@ class JAXProblem(eqx.Module):
         param_map = self._petab_problem.get_x_nominal_dict()
         parameter_array = jnp.array(
             [
-                petabv1.scale(
-                    float(param_map[pid]), self._parameter_scales[pid]
-                )
+                jax_scale(float(param_map[pid]), self._parameter_scales[pid])
                 for pid in self.parameter_ids
             ]
         )
