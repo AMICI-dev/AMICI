@@ -108,7 +108,8 @@ def _setup_logger(
 
     log.debug("OS Platform: %s", platform.platform())
     log.debug("Python version: %s", platform.python_version())
-    log.debug("Hostname: %s", socket.getfqdn())
+    # not `getfqdn()`, which can block for >30s on DNS/mDNS lookups
+    log.debug("Hostname: %s", socket.gethostname())
 
     if capture_warnings:
         logging.captureWarnings(capture_warnings)
