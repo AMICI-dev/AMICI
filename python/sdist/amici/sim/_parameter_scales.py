@@ -31,8 +31,8 @@ def get_parameter_scales(
         The user-provided scales of (a subset of) the problem parameters.
         Parameters not included are on linear scale.
     :return:
-        The scales of all problem parameters, in the order of
-        ``Problem.x_ids``.
+        A mapping from the IDs of all problem parameters to their scales.
+        The keys are ordered like ``Problem.x_ids``.
     :raises ValueError:
         If ``parameter_scales`` contains IDs that are not problem parameters,
         or invalid scales.
