@@ -1065,7 +1065,7 @@ class JAXProblem(eqx.Module):
         """The scales of all PEtab problem parameters.
 
         A mapping from problem parameter IDs to ``"lin"``, ``"log"``, or
-        ``"log10"``, in the order of ``Problem.x_ids``.
+        ``"log10"``. The keys are ordered like ``Problem.x_ids``.
         """
         # pytree operations (e.g., `update_parameters`) sort dict keys
         return {

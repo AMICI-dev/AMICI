@@ -1012,82 +1012,148 @@ def parameter_scales_test_jax_importer() -> PetabImporter:
         yield pi
 
 
-def test_parameter_scales_jax(
-    parameter_scales_test_importer, parameter_scales_test_jax_importer
-):
-    """JAX simulation results on non-linear parameter scales are consistent
-    with those on linear scale, and with SUNDIALS on the same scales."""
+@pytest.fixture
+def parameter_scales_jax_problems(parameter_scales_test_jax_importer):
+    """JAX problems for :func:`_parameter_scales_test_problem` on linear scale
+    and on the scales :data:`_PSCALE_TEST_SCALES`.
+
+    Double precision stays enabled until the end of the test using this
+    fixture.
+    """
+    import jax
+
+    with jax.enable_x64(True):
+        yield (
+            parameter_scales_test_jax_importer.create_simulator(),
+            parameter_scales_test_jax_importer.create_simulator(
+                parameter_scales=_PSCALE_TEST_SCALES
+            ),
+        )
+
+
+def _pscale_jax_llh(jax_problem):
+    """Log-likelihood of a JAX problem, computed with tight tolerances."""
     import diffrax
+    from amici.sim.jax import run_simulations
+
+    return run_simulations(
+        jax_problem,
+        controller=diffrax.PIDController(atol=1e-14, rtol=1e-12),
+    )[0]
+
+
+def test_parameter_scales_jax_default_to_linear(
+    parameter_scales_jax_problems, parameter_scales_test_jax_importer
+):
+    """Parameters of JAX problems without an explicitly chosen scale are on
+    linear scale."""
+    jp_lin, _ = parameter_scales_jax_problems
+    assert jp_lin.parameter_scales == dict.fromkeys(_PSCALE_TEST_SCALES, "lin")
+
+    jp = parameter_scales_test_jax_importer.create_simulator(
+        parameter_scales={"s": "log10"}
+    )
+    assert jp.parameter_scales == {
+        "k1": "lin",
+        "s": "log10",
+        "k2": "lin",
+        "sigma": "lin",
+    }
+
+
+def test_parameter_scales_jax_nominal_values(parameter_scales_jax_problems):
+    """JAX problem parameters are initialised to the nominal values on the
+    chosen scales."""
+    import numpy as np
+
+    jp_lin, jp = parameter_scales_jax_problems
+    assert jp.parameter_scales == _PSCALE_TEST_SCALES
+    # keys ordered like `Problem.x_ids`, also after pytree operations
+    assert list(jp.update_parameters(jp.parameters).parameter_scales) == list(
+        _PSCALE_TEST_SCALES
+    )
+
+    assert jp.parameter_ids == ["k1", "s"]
+    np.testing.assert_allclose(
+        jp.parameters, [np.log10(0.5), np.log(2.0)], rtol=1e-15
+    )
+    np.testing.assert_allclose(
+        _pscale_jax_llh(jp), _pscale_jax_llh(jp_lin), rtol=1e-12
+    )
+
+
+def test_parameter_scales_jax_integer_values(parameter_scales_jax_problems):
+    """Integer-valued JAX problem parameters are accepted, including negative
+    exponents on log10 scale."""
+    import jax.numpy as jnp
+    import numpy as np
+
+    jp_lin, jp = parameter_scales_jax_problems
+    np.testing.assert_allclose(
+        _pscale_jax_llh(jp.update_parameters(jnp.array([-1, 0]))),
+        _pscale_jax_llh(jp_lin.update_parameters(jnp.array([0.1, 1.0]))),
+        rtol=1e-12,
+    )
+
+
+def test_parameter_scales_jax_gradients(parameter_scales_jax_problems):
+    """JAX log-likelihoods on non-linear parameter scales equal those on
+    linear scale, and their gradients are related by the chain rule."""
     import equinox as eqx
     import jax
     import jax.numpy as jnp
     import numpy as np
-    from amici.sim.jax import run_simulations
-    from amici.sim.sundials import SensitivityMethod
 
-    scales = {"k1": "log10", "s": "log", "k2": "log10", "sigma": "log10"}
-    x = {"k1": 0.4, "s": 1.5}
-    x_scaled = {"k1": np.log10(x["k1"]), "s": np.log(x["s"])}
+    jp_lin, jp = parameter_scales_jax_problems
+    x = _PSCALE_TEST_X
+    p_lin = jnp.array([x["k1"], x["s"]])
+    p_scaled = jnp.array([np.log10(x["k1"]), np.log(x["s"])])
+
+    llh_lin, grad_lin = eqx.filter_value_and_grad(_pscale_jax_llh)(
+        jp_lin.update_parameters(p_lin)
+    )
+    llh, grad = eqx.filter_value_and_grad(_pscale_jax_llh)(
+        jp.update_parameters(p_scaled)
+    )
+    np.testing.assert_allclose(llh, llh_lin, rtol=1e-12)
     # d x_lin / d x_scaled
     dlin_dscaled = np.array([x["k1"] * np.log(10), x["s"]])
-    controller = diffrax.PIDController(atol=1e-14, rtol=1e-12)
-
-    with jax.enable_x64(True):
-        jp_lin = parameter_scales_test_jax_importer.create_simulator()
-        jp = parameter_scales_test_jax_importer.create_simulator(
-            parameter_scales=scales
-        )
-        assert jp_lin.parameter_scales == dict.fromkeys(scales, "lin")
-        assert jp.parameter_scales == scales
-        # in the order of `Problem.x_ids`, also after pytree operations
-        assert list(
-            jp.update_parameters(jp.parameters).parameter_scales
-        ) == list(scales)
-        assert jp.parameter_ids == ["k1", "s"]
-        # nominal values on their scales
-        np.testing.assert_allclose(
-            jp.parameters, [np.log10(0.5), np.log(2.0)], rtol=1e-15
-        )
-
-        def llh(problem):
-            return run_simulations(problem, controller=controller)[0]
-
-        # unspecified parameters take their nominal values, on their scales
-        np.testing.assert_allclose(llh(jp), llh(jp_lin), rtol=1e-12)
-        # integer-valued parameters are accepted, too
-        np.testing.assert_allclose(
-            llh(jp.update_parameters(jnp.array([-1, 0]))),
-            llh(jp_lin.update_parameters(jnp.array([0.1, 1.0]))),
-            rtol=1e-12,
-        )
-
-        llh_lin, grad_lin = eqx.filter_value_and_grad(llh)(
-            jp_lin.update_parameters(jnp.array([x["k1"], x["s"]]))
-        )
-        p_scaled = jnp.array([x_scaled["k1"], x_scaled["s"]])
-        llh_scaled, grad = eqx.filter_value_and_grad(llh)(
-            jp.update_parameters(p_scaled)
-        )
-        sllh = jax.grad(lambda p: llh(jp.update_parameters(p)))(p_scaled)
-        sllh_lin = np.asarray(grad_lin.parameters)
-        sllh_filter_grad = np.asarray(grad.parameters)
-        sllh = np.asarray(sllh)
-
-    # same likelihood, and gradients related by the chain rule
-    np.testing.assert_allclose(llh_scaled, llh_lin, rtol=1e-12)
-    np.testing.assert_allclose(sllh, sllh_lin * dlin_dscaled, rtol=1e-8)
-    np.testing.assert_allclose(sllh_filter_grad, sllh, rtol=1e-12)
-
-    # same results as SUNDIALS on the same scales
-    ps = parameter_scales_test_importer.create_simulator(
-        parameter_scales=scales
-    )
-    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
-    ps.solver.set_sensitivity_order(SensitivityOrder.first)
-    ps.solver.set_absolute_tolerance(1e-14)
-    ps.solver.set_relative_tolerance(1e-12)
-    result = ps.simulate(x_scaled)
-    np.testing.assert_allclose(llh_scaled, result.llh, rtol=1e-8)
     np.testing.assert_allclose(
-        sllh, [result.sllh[par_id] for par_id in jp.parameter_ids], rtol=1e-6
+        grad.parameters, grad_lin.parameters * dlin_dscaled, rtol=1e-8
+    )
+    # `jax.grad` w.r.t. the parameter array gives the same gradient
+    np.testing.assert_allclose(
+        jax.grad(lambda p: _pscale_jax_llh(jp.update_parameters(p)))(p_scaled),
+        grad.parameters,
+        rtol=1e-12,
+    )
+
+
+def test_parameter_scales_jax_matches_sundials(
+    parameter_scales_jax_problems, parameter_scales_simulators
+):
+    """JAX log-likelihoods and gradients on non-linear parameter scales
+    match those of the SUNDIALS simulator on the same scales."""
+    import equinox as eqx
+    import jax.numpy as jnp
+    import numpy as np
+
+    _, jp = parameter_scales_jax_problems
+    _, ps = parameter_scales_simulators
+    # only the estimated parameters, the others take their nominal values
+    x_scaled = ps.exp_man.scale_parameters(
+        {par_id: _PSCALE_TEST_X[par_id] for par_id in jp.parameter_ids}
+    )
+    llh, grad = eqx.filter_value_and_grad(_pscale_jax_llh)(
+        jp.update_parameters(
+            jnp.array([x_scaled[par_id] for par_id in jp.parameter_ids])
+        )
+    )
+    result = ps.simulate(x_scaled)
+
+    np.testing.assert_allclose(llh, result.llh, rtol=1e-8)
+    np.testing.assert_allclose(
+        grad.parameters,
+        [result.sllh[par_id] for par_id in jp.parameter_ids],
+        rtol=1e-6,
     )
