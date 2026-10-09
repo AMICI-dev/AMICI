@@ -989,5 +989,171 @@ def test_parameter_scales_invalid_jax():
             pi.create_simulator(parameter_scales={"typo": "lin"})
         with pytest.raises(ValueError, match="Invalid scale"):
             pi.create_simulator(parameter_scales={"k1": "ln"})
-        with pytest.raises(NotImplementedError):
-            pi.create_simulator(parameter_scales={"k1": "log10"})
+
+
+@pytest.fixture(scope="module")
+def parameter_scales_test_jax_importer() -> PetabImporter:
+    """JAX importer for the model of :func:`_parameter_scales_test_problem`."""
+    from petab.v2.core import ProblemConfig
+
+    problem = _parameter_scales_test_problem()
+    problem.config = ProblemConfig()
+    with TemporaryDirectoryWinSafe(
+        prefix="petab_v2_pscale_jax_"
+    ) as output_dir:
+        pi = PetabImporter(
+            problem,
+            jax=True,
+            module_name="test_petab_v2_pscale_jax",
+            output_dir=output_dir,
+            verbose=False,
+        )
+        pi.import_module(force_import=True)
+        yield pi
+
+
+@pytest.fixture
+def parameter_scales_jax_problems(parameter_scales_test_jax_importer):
+    """JAX problems for :func:`_parameter_scales_test_problem` on linear scale
+    and on the scales :data:`_PSCALE_TEST_SCALES`.
+
+    Double precision stays enabled until the end of the test using this
+    fixture.
+    """
+    import jax
+
+    with jax.enable_x64(True):
+        yield (
+            parameter_scales_test_jax_importer.create_simulator(),
+            parameter_scales_test_jax_importer.create_simulator(
+                parameter_scales=_PSCALE_TEST_SCALES
+            ),
+        )
+
+
+def _pscale_jax_llh(jax_problem):
+    """Log-likelihood of a JAX problem, computed with tight tolerances."""
+    import diffrax
+    from amici.sim.jax import run_simulations
+
+    return run_simulations(
+        jax_problem,
+        controller=diffrax.PIDController(atol=1e-14, rtol=1e-12),
+    )[0]
+
+
+def test_parameter_scales_jax_default_to_linear(
+    parameter_scales_jax_problems, parameter_scales_test_jax_importer
+):
+    """Parameters of JAX problems without an explicitly chosen scale are on
+    linear scale."""
+    jp_lin, _ = parameter_scales_jax_problems
+    assert jp_lin.parameter_scales == dict.fromkeys(_PSCALE_TEST_SCALES, "lin")
+
+    jp = parameter_scales_test_jax_importer.create_simulator(
+        parameter_scales={"s": "log10"}
+    )
+    assert jp.parameter_scales == {
+        "k1": "lin",
+        "s": "log10",
+        "k2": "lin",
+        "sigma": "lin",
+    }
+
+
+def test_parameter_scales_jax_nominal_values(parameter_scales_jax_problems):
+    """JAX problem parameters are initialised to the nominal values on the
+    chosen scales."""
+    import numpy as np
+
+    jp_lin, jp = parameter_scales_jax_problems
+    assert jp.parameter_scales == _PSCALE_TEST_SCALES
+    # keys ordered like `Problem.x_ids`, also after pytree operations
+    assert list(jp.update_parameters(jp.parameters).parameter_scales) == list(
+        _PSCALE_TEST_SCALES
+    )
+
+    assert jp.parameter_ids == ["k1", "s"]
+    np.testing.assert_allclose(
+        jp.parameters, [np.log10(0.5), np.log(2.0)], rtol=1e-15
+    )
+    np.testing.assert_allclose(
+        _pscale_jax_llh(jp), _pscale_jax_llh(jp_lin), rtol=1e-12
+    )
+
+
+def test_parameter_scales_jax_integer_values(parameter_scales_jax_problems):
+    """Integer-valued JAX problem parameters are accepted, including negative
+    exponents on log10 scale."""
+    import jax.numpy as jnp
+    import numpy as np
+
+    jp_lin, jp = parameter_scales_jax_problems
+    np.testing.assert_allclose(
+        _pscale_jax_llh(jp.update_parameters(jnp.array([-1, 0]))),
+        _pscale_jax_llh(jp_lin.update_parameters(jnp.array([0.1, 1.0]))),
+        rtol=1e-12,
+    )
+
+
+def test_parameter_scales_jax_gradients(parameter_scales_jax_problems):
+    """JAX log-likelihoods on non-linear parameter scales equal those on
+    linear scale, and their gradients are related by the chain rule."""
+    import equinox as eqx
+    import jax
+    import jax.numpy as jnp
+    import numpy as np
+
+    jp_lin, jp = parameter_scales_jax_problems
+    x = _PSCALE_TEST_X
+    p_lin = jnp.array([x["k1"], x["s"]])
+    p_scaled = jnp.array([np.log10(x["k1"]), np.log(x["s"])])
+
+    llh_lin, grad_lin = eqx.filter_value_and_grad(_pscale_jax_llh)(
+        jp_lin.update_parameters(p_lin)
+    )
+    llh, grad = eqx.filter_value_and_grad(_pscale_jax_llh)(
+        jp.update_parameters(p_scaled)
+    )
+    np.testing.assert_allclose(llh, llh_lin, rtol=1e-12)
+    # d x_lin / d x_scaled
+    dlin_dscaled = np.array([x["k1"] * np.log(10), x["s"]])
+    np.testing.assert_allclose(
+        grad.parameters, grad_lin.parameters * dlin_dscaled, rtol=1e-8
+    )
+    # `jax.grad` w.r.t. the parameter array gives the same gradient
+    np.testing.assert_allclose(
+        jax.grad(lambda p: _pscale_jax_llh(jp.update_parameters(p)))(p_scaled),
+        grad.parameters,
+        rtol=1e-12,
+    )
+
+
+def test_parameter_scales_jax_matches_sundials(
+    parameter_scales_jax_problems, parameter_scales_simulators
+):
+    """JAX log-likelihoods and gradients on non-linear parameter scales
+    match those of the SUNDIALS simulator on the same scales."""
+    import equinox as eqx
+    import jax.numpy as jnp
+    import numpy as np
+
+    _, jp = parameter_scales_jax_problems
+    _, ps = parameter_scales_simulators
+    # only the estimated parameters, the others take their nominal values
+    x_scaled = ps.exp_man.scale_parameters(
+        {par_id: _PSCALE_TEST_X[par_id] for par_id in jp.parameter_ids}
+    )
+    llh, grad = eqx.filter_value_and_grad(_pscale_jax_llh)(
+        jp.update_parameters(
+            jnp.array([x_scaled[par_id] for par_id in jp.parameter_ids])
+        )
+    )
+    result = ps.simulate(x_scaled)
+
+    np.testing.assert_allclose(llh, result.llh, rtol=1e-8)
+    np.testing.assert_allclose(
+        grad.parameters,
+        [result.sllh[par_id] for par_id in jp.parameter_ids],
+        rtol=1e-6,
+    )

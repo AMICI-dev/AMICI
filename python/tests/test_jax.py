@@ -357,6 +357,41 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 
 
 @skip_on_valgrind
+def test_serialisation_parameter_scales(lotka_volterra):  # noqa: F811
+    """Parameter scales survive a save/load round-trip."""
+    petab_problem = lotka_volterra
+    parameter_scales = {"alpha": "log10", "gamma": "log"}
+    with TemporaryDirectoryWinSafe(
+        prefix=petab_problem.model.model_id
+    ) as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        jax_problem = JAXProblem(
+            jax_problem.model,
+            jax_problem._petab_problem,
+            parameter_scales=parameter_scales,
+        )
+        jax_problem = jax_problem.update_parameters(
+            jax_problem.parameters + 0.1
+        )
+
+        with TemporaryDirectoryWinSafe() as outdir:
+            outdir = Path(outdir)
+            jax_problem.save(outdir)
+            jax_problem_loaded = JAXProblem.load(outdir)
+
+        assert jax_problem.parameter_scales == parameter_scales
+        assert jax_problem_loaded.parameter_scales == parameter_scales
+        assert_allclose(jax_problem_loaded.parameters, jax_problem.parameters)
+        assert_allclose(
+            run_simulations(jax_problem_loaded)[0],
+            run_simulations(jax_problem)[0],
+            rtol=1e-12,
+        )
+
+
+@skip_on_valgrind
 def test_condition_table_initial_value_is_differentiable(tmp_path):
     """A parameter used as a species initial value via the condition table
     must stay a live function of ``JAXProblem.parameters``.
@@ -468,6 +503,100 @@ def test_condition_table_parameter_override_is_differentiable(tmp_path):
         jax_problem.update_parameters(p0)
     )
     assert_allclose(float(grad.parameters[ik]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_condition_table_parameter_scales(tmp_path):
+    """Estimated parameters on non-linear scales are unscaled wherever they
+    enter the model: as initial values and model parameter overrides via the
+    condition table, and as noise parameter overrides.
+
+    The log-likelihood must not depend on the scales, and its gradient
+    w.r.t. ``JAXProblem.parameters`` must follow the chain rule.
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    for par_id, nominal_value in (("a0", 2.0), ("k1_c0", 0.8), ("sd_b", 0.5)):
+        problem.add_parameter(
+            par_id,
+            estimate=True,
+            nominal_value=nominal_value,
+            scale="lin",
+            lb=0.1,
+            ub=10,
+        )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    problem.add_observable("obs_b", "B", noise_formula="noiseParameter1_obs_b")
+    # `a0` initialises species `A`, and `k1_c0` replaces model parameter `k1`
+    problem.add_condition("c0", A="a0", k1="k1_c0")
+    problem.add_measurement("obs_a", "c0", 0.0, 0.7)
+    problem.add_measurement("obs_a", "c0", 10.0, 0.1)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3, noise_parameters=["sd_b"])
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4, noise_parameters=["sd_b"])
+
+    jax_problem_lin = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    parameter_scales = {"a0": "log10", "k1_c0": "log", "sd_b": "log10"}
+    jax_problem = JAXProblem(
+        jax_problem_lin.model,
+        jax_problem_lin._petab_problem,
+        parameter_scales=parameter_scales,
+    )
+    par_ids = jax_problem.parameter_ids
+    assert par_ids == ["a0", "k1_c0", "sd_b"]
+    assert jax_problem.parameter_scales == parameter_scales
+
+    x = {"a0": 2.5, "k1_c0": 0.5, "sd_b": 0.4}
+    p_lin = jnp.array([x[par_id] for par_id in par_ids])
+    p_scaled = jnp.array(
+        [
+            petab.scale(x[par_id], parameter_scales[par_id])
+            for par_id in par_ids
+        ]
+    )
+    # d x_lin / d x_scaled
+    dlin_dscaled = np.array(
+        [
+            x[par_id]
+            * (np.log(10) if parameter_scales[par_id] == "log10" else 1.0)
+            for par_id in par_ids
+        ]
+    )
+
+    def llh(jp):
+        return run_simulations(jp)[0]
+
+    # nominal values on their scales
+    assert_allclose(
+        jax_problem.parameters,
+        [np.log10(2.0), np.log(0.8), np.log10(0.5)],
+        rtol=1e-15,
+    )
+    assert_allclose(llh(jax_problem), llh(jax_problem_lin), rtol=1e-10)
+
+    llh_lin, grad_lin = eqx.filter_value_and_grad(llh)(
+        jax_problem_lin.update_parameters(p_lin)
+    )
+    llh_scaled, grad = eqx.filter_value_and_grad(llh)(
+        jax_problem.update_parameters(p_scaled)
+    )
+    assert_allclose(llh_scaled, llh_lin, rtol=1e-10)
+    assert_allclose(
+        grad.parameters, grad_lin.parameters * dlin_dscaled, rtol=1e-8
+    )
+    assert np.all(np.abs(np.asarray(grad.parameters)) > 1e-3)
 
 
 @skip_on_valgrind
