@@ -70,7 +70,7 @@ def unscale_parameter(
     if petab_scale == LIN:
         return value
     if petab_scale == LOG10:
-        return np.power(10, value)
+        return np.power(10.0, value)
     if petab_scale == LOG:
         return np.exp(value)
     raise ValueError(

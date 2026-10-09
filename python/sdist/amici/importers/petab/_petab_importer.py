@@ -6,7 +6,7 @@ import copy
 import logging
 import numbers
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from pprint import pprint
 from typing import TYPE_CHECKING
@@ -30,6 +30,8 @@ from .v1._sbml_import import _add_global_parameter
 
 if TYPE_CHECKING:
     import pysb
+
+    from amici.sim._parameter_scales import ParameterScale
 
 __all__ = [
     "PetabImporter",
@@ -855,18 +857,39 @@ class PetabImporter:
         return self.import_module().get_model()
 
     def create_simulator(
-        self, force_import: bool = False
+        self,
+        force_import: bool = False,
+        *,
+        parameter_scales: Mapping[str, ParameterScale] | None = None,
     ) -> amici.sim.sundials.petab.PetabSimulator | amici.sim.jax.JAXProblem:
         """
         Create a PEtab simulator for the imported model.
 
         :param force_import:
             Whether to force re-import even if the model module already exists.
+        :param parameter_scales:
+            The scales of the PEtab problem parameters, as a mapping from
+            problem parameter IDs to ``"lin"``, ``"log"`` (natural
+            logarithm), or ``"log10"``. Parameters not included are on
+            linear scale. Parameter values passed to the simulator, and the
+            sensitivities it returns, are on these scales.
+            See :class:`amici.sim.sundials.petab.ExperimentManager`.
+            Not supported for JAX models.
         :return: The created PEtab simulator.
         """
+        from amici.sim._parameter_scales import get_parameter_scales
         from amici.sim.sundials.petab import ExperimentManager, PetabSimulator
 
+        # validate before the possibly expensive model import
+        parameter_scales = get_parameter_scales(
+            self.petab_problem, parameter_scales
+        )
+
         if self._jax:
+            if any(scale != "lin" for scale in parameter_scales.values()):
+                raise NotImplementedError(
+                    "Parameter scales are not supported for JAX models."
+                )
             model_module = self.import_module(force_import=force_import)
             model = model_module.Model()
 
@@ -881,7 +904,11 @@ class PetabImporter:
             )
 
         model = self.import_module(force_import=force_import).get_model()
-        em = ExperimentManager(model=model, petab_problem=self.petab_problem)
+        em = ExperimentManager(
+            model=model,
+            petab_problem=self.petab_problem,
+            parameter_scales=parameter_scales,
+        )
         return PetabSimulator(em=em)
 
 

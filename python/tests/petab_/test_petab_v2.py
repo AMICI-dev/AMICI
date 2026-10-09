@@ -721,3 +721,273 @@ def test_jax_matches_sundials_with_arbitrarily_named_noise_placeholders():
         .llh
     )
     np.testing.assert_allclose(float(llh_jax), float(llh_sundials), rtol=1e-5)
+
+
+def _parameter_scales_test_problem() -> Problem:
+    """A small two-experiment problem for parameter scale tests.
+
+    The scaling factor ``s`` and the noise parameter ``sigma`` enter via
+    placeholders that are overridden by problem parameters in ``e1``, but by
+    numbers in ``e2``. ``k1`` is an estimated model parameter, ``k2`` a
+    non-estimated one, which is turned into a fixed model parameter.
+    """
+    problem = Problem()
+    problem.model = SbmlModel.from_antimony(
+        """
+        A = 1; B = 0
+        k1 = 0.5; k2 = 0.1
+        R1: A -> B; k1 * A
+        R2: B -> A; k2 * B
+        """
+    )
+    problem.add_observable(
+        "obs_B",
+        "observableParameter1_obs_B * B",
+        noise_formula="noiseParameter1_obs_B",
+        observable_placeholders=["observableParameter1_obs_B"],
+        noise_placeholders=["noiseParameter1_obs_B"],
+    )
+    problem.add_parameter(
+        "k1", estimate=True, nominal_value=0.5, lb=1e-3, ub=1e3
+    )
+    problem.add_parameter(
+        "s", estimate=True, nominal_value=2.0, lb=1e-3, ub=1e3
+    )
+    problem.add_parameter("k2", estimate=False, nominal_value=0.1)
+    problem.add_parameter("sigma", estimate=False, nominal_value=0.1)
+    problem.add_condition("c0", A=1.0)
+    problem.add_experiment("e1", 0, "c0")
+    problem.add_experiment("e2", 0, "c0")
+    for t, y in ((1.0, 0.8), (2.0, 1.0), (5.0, 1.4)):
+        problem.add_measurement(
+            "obs_B",
+            experiment_id="e1",
+            time=t,
+            measurement=y,
+            observable_parameters=["s"],
+            noise_parameters=["sigma"],
+        )
+        problem.add_measurement(
+            "obs_B",
+            experiment_id="e2",
+            time=t,
+            measurement=y / 2,
+            observable_parameters=[1.0],
+            noise_parameters=[0.2],
+        )
+    problem.assert_valid()
+    return problem
+
+
+@pytest.fixture(scope="module")
+def parameter_scales_test_importer() -> PetabImporter:
+    """Importer for the model of :func:`_parameter_scales_test_problem`."""
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_pscale_") as output_dir:
+        pi = PetabImporter(
+            _parameter_scales_test_problem(),
+            module_name="test_petab_v2_pscale",
+            output_dir=output_dir,
+            verbose=False,
+        )
+        pi.import_module(force_import=True)
+        yield pi
+
+
+#: Parameter scales for the tests based on
+#: :func:`_parameter_scales_test_problem`
+_PSCALE_TEST_SCALES = {
+    "k1": "log10",
+    "s": "log",
+    "k2": "log10",
+    "sigma": "log10",
+}
+#: Linear parameter values for the tests based on
+#: :func:`_parameter_scales_test_problem`
+_PSCALE_TEST_X = {"k1": 0.4, "s": 1.5, "k2": 0.2, "sigma": 0.3}
+
+
+@pytest.fixture
+def parameter_scales_simulators(parameter_scales_test_importer):
+    """Simulators for :func:`_parameter_scales_test_problem` on linear scale
+    and on the scales :data:`_PSCALE_TEST_SCALES`, with forward
+    sensitivities and tight tolerances."""
+    from amici.sim.sundials import SensitivityMethod
+
+    simulators = (
+        parameter_scales_test_importer.create_simulator(),
+        parameter_scales_test_importer.create_simulator(
+            parameter_scales=_PSCALE_TEST_SCALES
+        ),
+    )
+    for ps in simulators:
+        ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+        ps.solver.set_sensitivity_order(SensitivityOrder.first)
+        ps.solver.set_absolute_tolerance(1e-14)
+        ps.solver.set_relative_tolerance(1e-12)
+    return simulators
+
+
+def test_parameter_scales_default_to_linear(parameter_scales_test_importer):
+    """Parameters without an explicitly chosen scale are on linear scale."""
+    em = parameter_scales_test_importer.create_simulator().exp_man
+    assert em.parameter_scales == dict.fromkeys(_PSCALE_TEST_SCALES, "lin")
+
+    em = parameter_scales_test_importer.create_simulator(
+        parameter_scales={"s": "log10"}
+    ).exp_man
+    assert em.parameter_scales == {
+        "k1": "lin",
+        "s": "log10",
+        "k2": "lin",
+        "sigma": "lin",
+    }
+
+
+def test_scale_unscale_parameters(parameter_scales_test_importer):
+    """Parameter values are converted between linear scale and the chosen
+    scales."""
+    import numpy as np
+
+    em = parameter_scales_test_importer.create_simulator(
+        parameter_scales=_PSCALE_TEST_SCALES
+    ).exp_man
+    assert em.parameter_scales == _PSCALE_TEST_SCALES
+
+    x_scaled = em.scale_parameters(_PSCALE_TEST_X)
+    assert x_scaled == pytest.approx(
+        {
+            "k1": np.log10(0.4),
+            "s": np.log(1.5),
+            "k2": np.log10(0.2),
+            "sigma": np.log10(0.3),
+        }
+    )
+    assert em.unscale_parameters(x_scaled) == pytest.approx(_PSCALE_TEST_X)
+    # integer-valued inputs, including negative exponents
+    assert em.unscale_parameters(
+        {"k1": -1, "s": 0, "k2": -2}
+    ) == pytest.approx({"k1": 0.1, "s": 1.0, "k2": 0.01})
+
+
+def test_parameter_scales_apply_parameters(parameter_scales_test_importer):
+    """Each model parameter takes the scale of the problem parameter it is
+    mapped to in the respective experiment. Everything else, including the
+    fixed parameters, is on linear scale."""
+    from amici.sim.sundials import ParameterScaling
+
+    em = parameter_scales_test_importer.create_simulator(
+        parameter_scales=_PSCALE_TEST_SCALES
+    ).exp_man
+    model = em.model
+    pscales = {}
+    for edata in em.create_edatas():
+        em.apply_parameters(edata, em.scale_parameters(_PSCALE_TEST_X))
+        pscales[edata.id] = dict(
+            zip(model.get_free_parameter_ids(), edata.pscale)
+        )
+        fixed_parameters = dict(
+            zip(model.get_fixed_parameter_ids(), edata.fixed_parameters)
+        )
+        assert fixed_parameters["k2"] == pytest.approx(_PSCALE_TEST_X["k2"])
+
+    # `s` and `sigma` override the placeholders in `e1`, numbers in `e2`
+    assert pscales == {
+        "e1": {
+            "k1": ParameterScaling.log10,
+            "observableParameter1_obs_B": ParameterScaling.ln,
+            "noiseParameter1_obs_B": ParameterScaling.log10,
+        },
+        "e2": {
+            "k1": ParameterScaling.log10,
+            "observableParameter1_obs_B": ParameterScaling.none,
+            "noiseParameter1_obs_B": ParameterScaling.none,
+        },
+    }
+
+
+def test_parameter_scales_sensitivities(parameter_scales_simulators):
+    """Simulation results on non-linear parameter scales equal those on
+    linear scale, and their sensitivities are related by the chain rule."""
+    import numpy as np
+
+    ps_lin, ps = parameter_scales_simulators
+    x = _PSCALE_TEST_X
+    result_lin = ps_lin.simulate(x)
+    result = ps.simulate(ps.exp_man.scale_parameters(x))
+
+    np.testing.assert_allclose(result.llh, result_lin.llh, rtol=1e-12)
+    np.testing.assert_allclose(result.res, result_lin.res, rtol=1e-12)
+
+    x_free_ids = ps.exp_man.petab_problem.x_free_ids
+    assert x_free_ids == ["k1", "s"]
+    # d x_lin / d x_scaled
+    dlin_dscaled = np.array([x["k1"] * np.log(10), x["s"]])
+    np.testing.assert_allclose(
+        [result.sllh[par_id] for par_id in x_free_ids],
+        [result_lin.sllh[par_id] for par_id in x_free_ids] * dlin_dscaled,
+        rtol=1e-8,
+    )
+    np.testing.assert_allclose(
+        result.sres, result_lin.sres * dlin_dscaled, rtol=1e-8, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        result.s2llh,
+        result_lin.s2llh * np.outer(dlin_dscaled, dlin_dscaled),
+        rtol=1e-8,
+    )
+
+
+def test_parameter_scales_simulate(parameter_scales_simulators):
+    """Parameter values passed to the simulator are on the chosen scales,
+    and unspecified parameters take their nominal values on those scales."""
+    import numpy as np
+
+    ps_lin, ps = parameter_scales_simulators
+    np.testing.assert_allclose(
+        ps.simulate().llh, ps_lin.simulate().llh, rtol=1e-12
+    )
+    np.testing.assert_allclose(
+        ps.simulate({"k1": np.log10(0.4)}).llh,
+        ps_lin.simulate({"k1": 0.4}).llh,
+        rtol=1e-12,
+    )
+    # integer-valued inputs, including negative exponents
+    np.testing.assert_allclose(
+        ps.simulate({"k1": -1, "s": 0, "k2": -1, "sigma": -1}).llh,
+        ps_lin.simulate({"k1": 0.1, "s": 1.0, "k2": 0.1, "sigma": 0.1}).llh,
+        rtol=1e-12,
+    )
+
+
+def test_parameter_scales_invalid(parameter_scales_test_importer):
+    """Invalid parameter scales are rejected."""
+    with pytest.raises(ValueError, match="not PEtab problem parameters"):
+        parameter_scales_test_importer.create_simulator(
+            parameter_scales={
+                "k1": "log10",
+                "observableParameter1_obs_B": "log",
+            }
+        )
+    with pytest.raises(ValueError, match="Invalid scale"):
+        parameter_scales_test_importer.create_simulator(
+            parameter_scales={"k1": "ln"}
+        )
+
+
+def test_parameter_scales_invalid_jax():
+    """Invalid parameter scales are rejected for JAX models, too, before
+    the model is imported."""
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_pscale_jax_") as tmp:
+        pi = PetabImporter(
+            _parameter_scales_test_problem(),
+            module_name="test_petab_v2_pscale_jax",
+            output_dir=tmp,
+            jax=True,
+            verbose=False,
+        )
+        with pytest.raises(ValueError, match="not PEtab problem parameters"):
+            pi.create_simulator(parameter_scales={"typo": "lin"})
+        with pytest.raises(ValueError, match="Invalid scale"):
+            pi.create_simulator(parameter_scales={"k1": "ln"})
+        with pytest.raises(NotImplementedError):
+            pi.create_simulator(parameter_scales={"k1": "log10"})
