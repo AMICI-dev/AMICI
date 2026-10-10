@@ -1263,6 +1263,76 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
 
 
 @skip_on_valgrind
+def test_heaviside_reinit_after_preeq(tempdir):
+    """Test that event triggers are re-evaluated from the re-initialized
+    state after pre-equilibration / pre-simulation.
+
+    A ``piecewise`` trigger reads a state that is re-initialized from a fixed
+    parameter at the beginning of the main simulation. The trigger state must
+    be computed from the re-initialized state, not from the
+    pre-equilibration / pre-simulation state (gh-3316).
+    """
+    model_name = "test_heaviside_reinit_after_preeq"
+    antimony2amici(
+        r"""
+        drug_level_0 = 0
+        switch_time_0 = 0
+        species drug_level = drug_level_0
+        species switch_time = switch_time_0
+        species readout_y = 0
+        k_prod = 1
+        k_deg = 1
+        input := k_prod * drug_level * piecewise(0, time < switch_time, 1)
+        readout_y' = input - k_deg * readout_y
+        """,
+        fixed_parameters=["drug_level_0", "switch_time_0"],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model_module = import_model_module(model_name, tempdir)
+    model = model_module.get_model()
+    model.set_reinitialize_fixed_parameter_initial_states(True)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    timepoints = np.array([0.0, 1.0, 2.0, 3.0, 5.0])
+    model.set_timepoints(timepoints)
+    solver = model.create_solver()
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance(1e-10)
+
+    # pre-equilibration: no drug, switch at t=0
+    # main simulation: drug on, switched on at t=2
+    edata = ExpData(model)
+    edata.fixed_parameters = [1.0, 2.0]
+    edata.fixed_parameters_pre_equilibration = [0.0, 0.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+
+    y_expected = np.where(timepoints < 2, 0.0, 1 - np.exp(-(timepoints - 2)))
+
+    rdata = run_simulation(model, solver, edata=edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("readout_y"), y_expected, atol=1e-8)
+
+    # pre-equilibration + pre-simulation + main simulation
+    edata.t_presim = 1.0
+    edata.fixed_parameters_presimulation = [0.0, 0.0]
+    rdata = run_simulation(model, solver, edata=edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("readout_y"), y_expected, atol=1e-8)
+
+    # forward sensitivities
+    edata.t_presim = 0.0
+    edata.fixed_parameters_presimulation = []
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
 def test_gh2926(tempdir):
     """Two simultaneous events. Event `E1` changes the root function
     for the piecewise-switch from 0 to <0."""
