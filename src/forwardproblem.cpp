@@ -113,8 +113,9 @@ void EventHandlingSimulator::run(
                 if (status == AMICI_ILL_INPUT) {
                     // clustering of roots => turn off root-finding
                     solver_->turn_off_root_finding();
-                } else if (status == AMICI_ROOT_RETURN
-                           || ws_->sol.t == next_t_event) {
+                } else if (
+                    status == AMICI_ROOT_RETURN || ws_->sol.t == next_t_event
+                ) {
                     // solver-tracked or time-triggered event
                     solver_->get_root_info(ws_->roots_found.data());
 
@@ -337,15 +338,20 @@ void ForwardProblem::handle_presimulation() {
             solver->get_sensitivity_order() >= SensitivityOrder::first,
             ws_.roots_found
         );
-    } else if (model->ne) {
+    }
+    solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
+    solver->update_and_reinit_states_and_sensitivities(model);
+
+    if (preequilibrated_ && model->ne) {
+        // Re-evaluate the event triggers based on the state after applying
+        // the re-initialization of the presimulation condition.
+        ws_.sol.x = solver->get_state(ws_.sol.t);
         // copy, since model state will be updated in reinit_events
         auto h_old = model->get_model_state().h;
         model->reinit_events(
             ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
         );
     }
-    solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
-    solver->update_and_reinit_states_and_sensitivities(model);
 
     std::vector<realtype> const timepoints{model->t0()};
     pre_simulator_.run(ws_.sol.t, edata, timepoints, false);
@@ -382,17 +388,20 @@ void ForwardProblem::handle_main_simulation() {
     if (preequilibrated_ || uses_presimulation_) {
         // Reset the time and re-initialize events for the main simulation
         solver->update_and_reinit_states_and_sensitivities(model);
-        if (model->ne) {
-            // copy, since model state will be updated in reinit_events
-            auto h_old = model->get_model_state().h;
-            model->reinit_events(
-                ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
-            );
-        }
     }
 
     // update x0 after computing consistence IC/reinitialization
     ws_.sol.x = solver->get_state(model->t0());
+
+    if ((preequilibrated_ || uses_presimulation_) && model->ne) {
+        // Re-evaluate the event triggers based on the state after applying
+        // the re-initialization of the main simulation condition.
+        // copy, since model state will be updated in reinit_events
+        auto h_old = model->get_model_state().h;
+        model->reinit_events(
+            ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
+        );
+    }
     // When computing forward sensitivities, we generally want to update sx
     // after presimulation/preequilibration, and if we didn't do either this
     // also won't harm. when computing ASA, we only want to update here if we
