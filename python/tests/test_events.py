@@ -1318,17 +1318,34 @@ def test_heaviside_reinit_after_preeq(tempdir):
     assert_allclose(rdata.by_id("readout_y"), y_expected, atol=1e-8)
 
     # pre-equilibration + pre-simulation + main simulation
+    # pre-simulation on [-1, 0]: drug on, switched on at t=-2, i.e., the
+    # input is on throughout the pre-simulation. With the pre-equilibration
+    # state (switch at t=0), the trigger would evaluate to "off" at t=-1.
+    # Similarly, at the start of the main simulation (switch at t=2), the
+    # trigger is "off", while it would be "on" based on the pre-simulation
+    # state (switch at t=-2).
     edata.t_presim = 1.0
-    edata.fixed_parameters_presimulation = [0.0, 0.0]
+    edata.fixed_parameters_presimulation = [1.0, -2.0]
+    y_presim_end = 1 - np.exp(-1)
+    y_expected_presim = y_presim_end * np.exp(-timepoints) + y_expected
     rdata = run_simulation(model, solver, edata=edata)
     assert rdata.status == AMICI_SUCCESS
-    assert_allclose(rdata.by_id("readout_y"), y_expected, atol=1e-8)
+    # state at the end of the pre-simulation
+    # (= initial state of the main simulation)
+    assert_allclose(
+        rdata.x0[model.get_state_ids().index("readout_y")],
+        y_presim_end,
+        atol=1e-8,
+    )
+    assert_allclose(rdata.by_id("readout_y"), y_expected_presim, atol=1e-8)
 
     # forward sensitivities
-    edata.t_presim = 0.0
-    edata.fixed_parameters_presimulation = []
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
+    check_derivatives(model, solver=solver, edata=edata)
+
+    edata.t_presim = 0.0
+    edata.fixed_parameters_presimulation = []
     check_derivatives(model, solver=solver, edata=edata)
 
 
