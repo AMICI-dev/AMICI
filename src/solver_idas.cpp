@@ -135,6 +135,7 @@ void IDASolver::init(
 ) const {
     int status;
     solver_was_called_F_ = false;
+    force_reinit_postprocess_F_ = false;
     root_info_override_.reset();
     t_ = t0;
     x_ = x0;
@@ -195,6 +196,8 @@ void IDASolver::b_init(
     AmiVector const& dxB0
 ) const {
     int status;
+    solver_was_called_B_ = false;
+    force_reinit_postprocess_B_ = false;
     xB_ = xB0;
     dxB_ = dxB0;
     if (get_init_done_b(which))
@@ -441,8 +444,17 @@ void IDASolver::reset_state(
 }
 
 bool IDASolver::reinit_post_process_f(realtype const tnext) const {
+    // After reinitialization (e.g., event assignments), the algebraic states
+    // and the derivatives of the differential states are generally
+    // inconsistent. Recompute them from the differential states.
+    if (int const ic_status
+        = IDACalcIC(solver_memory_.get(), IDA_YA_YDP_INIT, tnext);
+        ic_status != IDA_SUCCESS)
+        throw IDAException(ic_status, "IDACalcIC");
+
     int const status
         = reinit_post_process(solver_memory_.get(), &t_, &x_, &dx_, tnext);
+    force_reinit_postprocess_F_ = false;
 
     if (status != IDA_ROOT_RETURN)
         return false;
@@ -576,7 +588,7 @@ void IDASolver::reinit(
     roots_ignored_after_reinit_.clear();
     x_.copy(yy0);
     dx_.copy(yp0);
-    reset_state(ida_mem, x_.get_nvector(), xB_.get_nvector());
+    reset_state(ida_mem, x_.get_nvector(), dx_.get_nvector());
 }
 
 void IDASolver::sens_reinit(
