@@ -2,6 +2,8 @@
 
 import os
 import subprocess
+import sys
+import warnings
 from pathlib import Path
 
 import amici
@@ -126,3 +128,70 @@ def test_get_default_argument():
 
     # okay
     assert amici._get_default_argument(lambda x=1: x, "x") == 1
+
+
+def _write_fake_swig(path: Path) -> Path:
+    """Create a fake ``swig`` executable that only reports its version."""
+    path.mkdir(parents=True, exist_ok=True)
+    swig = path / "swig"
+    swig.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = "-version" ]; then echo "SWIG Version 1.2.3"; exit 0; fi\n'
+        "exit 1\n"
+    )
+    swig.chmod(0o755)
+    return swig
+
+
+@skip_on_valgrind
+@pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
+def test_model_build_uses_env_swig(tmp_path, monkeypatch):
+    """Check that model compilation uses the SWIG of the current Python
+    environment, not the first one on PATH."""
+    from amici.exporters.sundials import compile as compile_module
+
+    if (env_swig := compile_module._get_env_swig()) is None:
+        pytest.skip("no swig in the current Python environment")
+
+    fake_swig = _write_fake_swig(tmp_path / "bin")
+    monkeypatch.delenv("SWIG", raising=False)
+    monkeypatch.setenv(
+        "PATH", f"{fake_swig.parent}{os.pathsep}{os.environ['PATH']}"
+    )
+
+    # record the environment of the build command instead of building
+    build_envs = []
+    orig_run = subprocess.run
+
+    def run(args, **kwargs):
+        if args[0] == sys.executable:
+            build_envs.append(kwargs["env"])
+            return subprocess.CompletedProcess(args, 0, stdout=b"")
+        return orig_run(args, **kwargs)
+
+    monkeypatch.setattr(compile_module.subprocess, "run", run)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        compile_module.build_model_extension(tmp_path)
+
+    assert len(build_envs) == 1
+    assert build_envs[0]["SWIG"] == env_swig != str(fake_swig)
+
+
+@skip_on_valgrind
+@pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
+def test_model_build_swig_version_mismatch(tmp_path, monkeypatch):
+    """Check that a mismatching SWIG version is reported before
+    compilation."""
+    from amici.exporters.sundials.compile import build_model_extension
+
+    fake_swig = _write_fake_swig(tmp_path / "bin")
+    monkeypatch.setenv("SWIG", str(fake_swig))
+
+    # There is nothing to build, so the build fails after the check
+    with (
+        pytest.warns(RuntimeWarning, match=r"SWIG version mismatch.*1\.2\.3"),
+        pytest.raises(subprocess.CalledProcessError),
+    ):
+        build_model_extension(tmp_path)
