@@ -4,7 +4,7 @@ model format"""
 import enum
 import numbers
 import sys
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from typing import SupportsFloat
 
 import sympy as sp
@@ -714,6 +714,51 @@ def toposort_symbols(
         for symbol_group in sorted_symbols
         for s in sorted(symbol_group, key=str)
     }
+
+
+def maximum_bipartite_matching[L: Hashable, R: Hashable](
+    edges: Mapping[L, Iterable[R]],
+) -> dict[L, R]:
+    """Find a maximum matching in a bipartite graph.
+
+    Uses augmenting paths (Kuhn's algorithm), without recursion.
+
+    :param edges:
+        For each left vertex, the right vertices it is connected to.
+    :return:
+        The matching as a mapping from left to right vertices.
+    """
+    # right vertex -> left vertex
+    match_right: dict[R, L] = {}
+    _NONE = object()
+
+    for root in edges:
+        # depth-first search for an augmenting path starting at `root`
+        visited = set()
+        stack = [(root, iter(edges[root]))]
+        # the edges (left, right) leading to the left vertices on the stack
+        path = []
+        while stack:
+            left, neighbors = stack[-1]
+            right = next((r for r in neighbors if r not in visited), _NONE)
+            if right is _NONE:
+                stack.pop()
+                if path:
+                    path.pop()
+                continue
+            visited.add(right)
+            if right in match_right:
+                path.append((left, right))
+                next_left = match_right[right]
+                stack.append((next_left, iter(edges[next_left])))
+                continue
+            # free right vertex found: flip the edges along the path
+            match_right[right] = left
+            for path_left, path_right in path:
+                match_right[path_right] = path_left
+            break
+
+    return {left: right for right, left in match_right.items()}
 
 
 def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:

@@ -15,7 +15,7 @@ import pytest
 import sympy as sp
 from amici import import_model_module
 from amici.importers.antimony import antimony2sbml
-from amici.importers.sbml import SbmlImporter, SymbolId
+from amici.importers.sbml import SBMLException, SbmlImporter, SymbolId
 from amici.importers.utils import (
     MeasurementChannel as MC,
 )
@@ -1370,6 +1370,33 @@ def test_dae_forward_sensitivities_default_tolerances(tempdir):
         rtol=1e-5,
         atol=1e-8,
     )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "algebraic_rules",
+    [
+        # underdetermined: `p` is not constant
+        "0 = y - p * x",
+        # structurally singular: two rules for `y`, one for `z` and `w`
+        "0 = y - x; 0 = y - 2 * x; 0 = z + w - x",
+    ],
+)
+def test_algebraic_rules_not_determined(algebraic_rules):
+    """Test that import fails if algebraic rules don't determine all
+    variables."""
+    ant_model = f"""
+        k = 0.5; const k
+        p = 2
+        x = 1; y = 2; z = 0.5; w = 0.5
+        x' = -k * x
+        {algebraic_rules}
+    """
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    with pytest.raises(
+        SBMLException, match="algebraic rules do not determine"
+    ):
+        sbml_importer._build_ode_model()
 
 
 @skip_on_valgrind

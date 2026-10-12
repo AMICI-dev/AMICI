@@ -11,7 +11,10 @@ from pathlib import Path
 import amici
 import pytest
 import sympy as sp
-from amici.importers.utils import smart_subs_dict
+from amici.importers.utils import (
+    maximum_bipartite_matching,
+    smart_subs_dict,
+)
 from amici.sim.sundials import (
     ParameterScaling,
     parameter_scaling_from_int_vector,
@@ -248,3 +251,41 @@ def test_model_build_swig_version_mismatch(tmp_path, monkeypatch):
         pytest.raises(subprocess.CalledProcessError),
     ):
         build_model_extension(tmp_path)
+
+
+def _assert_valid_matching(edges, matching):
+    assert all(right in edges[left] for left, right in matching.items())
+    assert len(set(matching.values())) == len(matching)
+
+
+@pytest.mark.parametrize(
+    "edges, expected_size",
+    [
+        ({}, 0),
+        ({"a": []}, 0),
+        ({"a": [1], "b": []}, 1),
+        # `b` needs `a` to switch from 1 to 2
+        ({"a": [1, 2], "b": [1]}, 2),
+        # `c` needs `b` to switch to 3, `b` needs `a` to switch to 2
+        ({"a": [1, 2], "b": [1, 3], "c": [1]}, 3),
+        # two left vertices compete for a single right vertex
+        ({"a": [1], "b": [1]}, 1),
+        ({"a": [1, 2], "b": [1, 2], "c": [1, 2]}, 2),
+    ],
+)
+def test_maximum_bipartite_matching(edges, expected_size):
+    matching = maximum_bipartite_matching(edges)
+    _assert_valid_matching(edges, matching)
+    assert len(matching) == expected_size
+
+
+def test_maximum_bipartite_matching_long_augmenting_path():
+    """Test that long augmenting paths don't hit the recursion limit."""
+    n = 5000
+    # left i is first matched to right i; the last left vertex then needs
+    # all others to shift by one
+    edges = {i: [i, i + 1] for i in range(n - 1)}
+    edges[n - 1] = [0]
+    matching = maximum_bipartite_matching(edges)
+    _assert_valid_matching(edges, matching)
+    assert len(matching) == n
