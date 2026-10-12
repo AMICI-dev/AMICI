@@ -59,6 +59,13 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
   gradient; `rdata.sx0` is now empty (`None` in Python), consistent with
   other fields that are unavailable for the chosen settings (#1184).
 
+* Fixed event triggers (including `piecewise` Heaviside functions) not being
+  re-evaluated from the re-initialized state at the start of the main
+  simulation (or pre-simulation) after pre-equilibration. If a trigger
+  depended on a state that was re-initialized by the simulation condition,
+  the trigger state from pre-equilibration was kept, and the subsequent
+  crossing was counted twice (#3316).
+
 * Fixed the JAX backend attributing a root/discontinuity crossing to the
   wrong Heaviside variable whenever a model had an event whose *solved*
   trigger time still referenced a state (e.g. a trigger comparing `time`
