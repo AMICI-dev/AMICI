@@ -26,6 +26,7 @@ from amici.sim.sundials import (
     AMICI_SUCCESS,
     Constraint,
     ExpData,
+    InternalSensitivityMethod,
     ModelModule,
     ParameterScaling,
     ReturnDataView,
@@ -1442,3 +1443,48 @@ def test_minmax_piecewise_is_converted_to_minmax():
     xdot = de_model.eq("xdot")
     assert xdot.has(sp.Min)
     assert xdot.has(sp.Max)
+
+
+@skip_on_valgrind
+def test_dae_staggered_forward_sensitivities(tempdir):
+    """Staggered and simultaneous forward sensitivities agree for DAEs."""
+    ant_model = """
+    model dae_staggered
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 2
+        x' = -k * x + q
+        0 = y - p * x * x
+    end
+    """
+    module_name = "dae_staggered"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2amici(
+        module_name, tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 5, 6))
+
+    sx = {}
+    for ism in (
+        InternalSensitivityMethod.simultaneous,
+        InternalSensitivityMethod.staggered,
+    ):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        solver.set_internal_sensitivity_method(ism)
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS
+        sx[ism] = rdata.sx
+
+    # all parameters have an effect
+    assert np.all(
+        np.any(sx[InternalSensitivityMethod.simultaneous] != 0, axis=(0, 2))
+    )
+    assert_allclose(
+        sx[InternalSensitivityMethod.staggered],
+        sx[InternalSensitivityMethod.simultaneous],
+        rtol=1e-6,
+        atol=1e-10,
+    )
