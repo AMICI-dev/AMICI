@@ -1,9 +1,18 @@
 if(DEFINED ENV{SWIG})
+  # don't reuse cached values from a different SWIG executable
+  unset(SWIG_VERSION CACHE)
+  unset(SWIG_DIR CACHE)
   set(SWIG_EXECUTABLE $ENV{SWIG})
 endif()
 
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
+
+# Rerun SWIG if the SWIG executable or version changes.
+# (file(CONFIGURE) only rewrites the file if its content changes.)
+set(SWIG_STAMP_FILE ${CMAKE_CURRENT_BINARY_DIR}/swig_version.stamp)
+file(CONFIGURE OUTPUT ${SWIG_STAMP_FILE}
+     CONTENT "${SWIG_EXECUTABLE}\n${SWIG_VERSION}\n")
 
 if(DEFINED ENV{PYTHON_EXECUTABLE})
     set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
@@ -30,6 +39,7 @@ swig_add_library(${SWIG_LIBRARY_NAME}
 set_target_properties(${SWIG_LIBRARY_NAME}
     PROPERTIES
     SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
+    SWIG_DEPENDS ${SWIG_STAMP_FILE}
     PREFIX ""
 )
 
