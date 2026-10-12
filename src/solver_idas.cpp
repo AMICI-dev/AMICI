@@ -911,6 +911,18 @@ void IDASolver::calc_ic(realtype tout1) const {
     );
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetConsistentIC");
+
+    // IDACalcIC also computes consistent sensitivity initial conditions
+    if (get_sensitivity_order() >= SensitivityOrder::first
+        && get_sensitivity_method() == SensitivityMethod::forward
+        && nplist() > 0 && get_sens_init_done()) {
+        status = IDAGetSensConsistentIC(
+            solver_memory_.get(), sx_.get_nvector_array(),
+            sdx_.get_nvector_array()
+        );
+        if (status != IDA_SUCCESS)
+            throw IDAException(status, "IDAGetSensConsistentIC");
+    }
 }
 
 void IDASolver::calc_ic_b(int const which, realtype const tout1) const {
