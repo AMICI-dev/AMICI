@@ -104,7 +104,6 @@ struct ModelStateDerived {
         , dx_rdatadx_solver(other.dx_rdatadx_solver)
         , dx_rdatadtcl(other.dx_rdatadtcl)
         , dtotal_cldx_rdata(other.dtotal_cldx_rdata)
-        , dxdotdp(other.dxdotdp)
         , dJydy_(other.dJydy_)
         , dJydsigmay_(other.dJydsigmay_)
         , dJydx_(other.dJydx_)
@@ -161,7 +160,6 @@ struct ModelStateDerived {
         dx_rdatadx_solver.set_ctx(sunctx_);
         dx_rdatadtcl.set_ctx(sunctx_);
         dtotal_cldx_rdata.set_ctx(sunctx_);
-        dxdotdp.set_ctx(sunctx_);
 
         for (auto& dJydy : dJydy_) {
             dJydy.set_ctx(sunctx_);
@@ -275,12 +273,6 @@ struct ModelStateDerived {
      * type: `CSC_MAT`)
      */
     SUNMatrixWrapper dtotal_cldx_rdata;
-
-    /**
-     * Temporary storage of `dxdotdp` data across functions
-     * (dimension: `nplist` x `nx_solver` , row-major)
-     */
-    AmiVectorArray dxdotdp;
 
     /**
      * Sparse observable derivative of data likelihood

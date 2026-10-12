@@ -407,26 +407,6 @@ class Model_DAE : public Model {
     ) = 0;
 
     /**
-     * @brief Model specific implementation of fdxdotdp
-     *
-     * @param dxdotdp partial derivative xdot wrt p
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param ip parameter index
-     * @param dx Vector with the derivative states
-     * @param w vector with helper variables
-     * @param dwdp derivative of w wrt p
-     */
-    virtual void fdxdotdp(
-        realtype* dxdotdp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, realtype const* dx,
-        realtype const* w, realtype const* dwdp
-    );
-
-    /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule
      *
      * @param dxdotdp_explicit partial derivative xdot wrt p

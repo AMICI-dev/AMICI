@@ -820,7 +820,7 @@ int IDASolver::solve_f(
         }
     }
     int status = IDASolveF(
-        solver_memory_.get(), tout, &t_, x_.get_nvector(), xB_.get_nvector(),
+        solver_memory_.get(), tout, &t_, x_.get_nvector(), dx_.get_nvector(),
         itask, ncheckPtr
     );
     solver_was_called_F_ = true;
@@ -839,7 +839,7 @@ void IDASolver::solve_b(realtype const tBout, int const itaskB) const {
     // https://github.com/LLNL/sundials/issues/580
     if (status != IDA_SUCCESS && status != IDA_TSTOP_RETURN) {
         gsl_Expects(status < 0);
-        throw IntegrationFailure(status, tBout);
+        throw IntegrationFailureB(status, tBout);
     }
 }
 
@@ -955,7 +955,7 @@ void IDASolver::set_linear_solver() const {
 
 void IDASolver::set_linear_solver_b(int const which) const {
     int status = IDASetLinearSolverB(
-        solver_memory_B_[which].get(), which, linear_solver_B_->get(),
+        solver_memory_.get(), which, linear_solver_B_->get(),
         linear_solver_B_->getMatrix()
     );
     if (status != IDA_SUCCESS)
