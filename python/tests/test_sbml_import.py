@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+import subprocess
 import sys
 from numbers import Number
 from pathlib import Path
@@ -1653,3 +1654,39 @@ def test_dae_free_solver_after_failed_adjoint_setup(tmp_path):
         solver.set_sensitivity_method(SensitivityMethod.adjoint)
         assert run_simulation(model, solver, edata).status == AMICI_ERROR
         del solver
+
+
+@skip_on_valgrind
+def test_algebraic_state_order_is_deterministic():
+    """Test that the order of algebraic states is deterministic.
+
+    The order must not depend on string hashing (``PYTHONHASHSEED``).
+    """
+    # `z` is declared before `y`, so sorting by ID differs from the
+    # declaration order
+    sbml_str = antimony2sbml("""
+        model test_algebraic_state_order
+            const k = 0.5
+            x = 1; z = 0.5; y = 0.5
+            x' = -k * x
+            0 = y + z - x
+            0 = y - z
+        end
+    """)
+    script = """
+import sys
+from amici.importers.sbml import SbmlImporter
+
+de_model = SbmlImporter(sys.stdin.read(), from_file=False)._build_ode_model()
+print(",".join(str(s.get_id()) for s in de_model.states()))
+"""
+    for seed in range(6):
+        res = subprocess.run(
+            [sys.executable, "-c", script],
+            input=sbml_str,
+            env={**os.environ, "PYTHONHASHSEED": str(seed)},
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        assert res.stdout.strip() == "x,y,z", f"PYTHONHASHSEED={seed}"

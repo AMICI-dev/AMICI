@@ -1507,14 +1507,15 @@ class SbmlImporter:
         if formula is None:
             return
 
-        free_variables = set()
+        free_variables = []
         # SBML L3V2 spec, p. 61:
         # "Therefore, if an algebraic rule is introduced in a model,
         # for at least one of the entities referenced in the rule’s
         # math element the value of that entity must not be
         # completely determined by other constructs in the model"
-        # find those elements:
-        for symbol in formula.free_symbols:
+        # find those elements
+        # (sorted for a deterministic order of algebraic states):
+        for symbol in sorted(formula.free_symbols, key=str):
             if symbol == sbml_time_symbol:
                 continue
             sbml_var = self.sbml_model.getElementBySId(str(symbol))
@@ -1560,7 +1561,7 @@ class SbmlImporter:
                 and is_involved_in_reaction
             ):
                 continue
-            free_variables.add(symbol)
+            free_variables.append(symbol)
 
         # this should be guaranteed by sbml validation, so better check to make sure
         # we don't mess anything up
