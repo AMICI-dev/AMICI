@@ -44,6 +44,11 @@ See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioni
 
 **Fixes**
 
+* Fixed an out-of-bounds read, typically causing a crash, when computing
+  forward sensitivities with `InternalSensitivityMethod.staggered` for DAE
+  models. The nonlinear solver for the sensitivities was created for one
+  vector too many.
+
 * AMICI's logger setup no longer calls `socket.getfqdn()`, which could block
   for more than 30 seconds per process on hosts whose hostname does not
   resolve quickly (e.g., GitHub-hosted macOS 15/26 runners).

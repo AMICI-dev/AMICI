@@ -1193,7 +1193,13 @@ void Solver::initialize_non_linear_solver_sens(Model const* model) const {
     case NonlinearSolverIteration::newton:
         switch (ism_) {
         case InternalSensitivityMethod::staggered:
+            // sensitivities only
+            non_linear_solver_sens_ = std::make_unique<SUNNonLinSolNewton>(
+                model->nplist(), x_.get_nvector()
+            );
+            break;
         case InternalSensitivityMethod::simultaneous:
+            // states and sensitivities
             non_linear_solver_sens_ = std::make_unique<SUNNonLinSolNewton>(
                 1 + model->nplist(), x_.get_nvector()
             );
@@ -1211,7 +1217,13 @@ void Solver::initialize_non_linear_solver_sens(Model const* model) const {
     case NonlinearSolverIteration::fixedpoint:
         switch (ism_) {
         case InternalSensitivityMethod::staggered:
+            // sensitivities only
+            non_linear_solver_sens_ = std::make_unique<SUNNonLinSolFixedPoint>(
+                model->nplist(), x_.get_nvector()
+            );
+            break;
         case InternalSensitivityMethod::simultaneous:
+            // states and sensitivities
             non_linear_solver_sens_ = std::make_unique<SUNNonLinSolFixedPoint>(
                 1 + model->nplist(), x_.get_nvector()
             );
