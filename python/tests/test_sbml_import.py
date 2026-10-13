@@ -1488,3 +1488,45 @@ def test_dae_staggered_forward_sensitivities(tempdir):
         rtol=1e-6,
         atol=1e-10,
     )
+
+
+@skip_on_valgrind
+def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
+    """Test that state sensitivities of algebraic states are consistent at
+    the initial time point."""
+    sbml_str = antimony2sbml("""
+        model test_dae_sx0
+            const k1 = 1, k2 = 0.5
+            x = 0.5; y = 0.5
+            x' = k2 * y
+            0 = x + y - k1
+        end
+    """)
+    model_name = "test_dae_sx0"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
+    model = import_model_module(model_name, tmp_path).get_model()
+    t = np.linspace(0, 5, 6)
+    model.set_timepoints(t)
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # y(t) = (k1 - x(0)) * exp(-k2 * t), x(t) = k1 - y(t)
+    assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k1", "k2")
+    k1, k2, x0 = 1.0, 0.5, 0.5
+    e = np.exp(-k2 * t)
+    dy_dk1 = e
+    dy_dk2 = -(k1 - x0) * t * e
+    sx_expected = np.empty((len(t), 2, 2))
+    sx_expected[:, 0, 0] = 1 - dy_dk1
+    sx_expected[:, 0, 1] = dy_dk1
+    sx_expected[:, 1, 0] = -dy_dk2
+    sx_expected[:, 1, 1] = dy_dk2
+    assert_allclose(rdata.sx, sx_expected, rtol=1e-8, atol=1e-10)
+    assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)

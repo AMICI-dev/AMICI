@@ -163,6 +163,9 @@ _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES = {
     "00753": True,
     "00885": True,
     "01106": True,
+    # Forward sensitivities & events in DAE models.
+    "00663": False,
+    "00762": False,
 }
 
 
@@ -180,14 +183,13 @@ def _sensitivity_preflight_checks(
         pytest.skip("No free parameters to differentiate w.r.t.")
 
     sbml_model = sbml_importer.sbml_model
-    if any(
+    if uses_adjoint and any(
         rule.getTypeCode() == libsbml.SBML_ALGEBRAIC_RULE
         for rule in sbml_model.getListOfRules()
     ):
         pytest.skip(
-            "Sensitivities for AlgebraicRule models are known to "
-            "be wrong -- see "
-            "https://github.com/AMICI-dev/AMICI/issues/3250"
+            "Adjoint sensitivities for AlgebraicRule models are known to "
+            "fail -- see https://github.com/AMICI-dev/AMICI/issues/3320"
         )
     if uses_adjoint and model.nx_rdata == 0:
         pytest.skip(
@@ -550,7 +552,8 @@ def _run_sensitivity_check(
     :param settings: This case's parsed `{test_id}-settings.txt`.
     :param test_id: The SBML semantic test suite case ID.
     :param has_events: Whether the model has any SBML events -- gates the
-        tolerance-retry loop; non-event models get exactly one attempt.
+        tolerance-retry loop, together with the model being a DAE;
+        other models get exactly one attempt.
     :param check: Called as `check(sensi_solver, point, bounds, retried)`
         (`retried` is `True` once a looser-than-default tolerance was
         needed to get this far) -- responsible for configuring
@@ -570,7 +573,12 @@ def _run_sensitivity_check(
     # all -- confirmed on cases 00026/00041/00074/00745/00746/00747/
     # 00789/00845/00945 (all fail with CVodeB's error-test repeatedly
     # failing/`|h| = hmin` up to 1e4x, several needing up to 1e8x).
-    tolerance_multipliers = (1, 10, 100, 1e4, 1e6, 1e8) if has_events else (1,)
+    # IDAS may fail at the initial tolerances close to machine precision
+    # (e.g. 00039).
+    is_dae = any(i == 0.0 for i in model.get_id_list())
+    tolerance_multipliers = (
+        (1, 10, 100, 1e4, 1e6, 1e8) if has_events or is_dae else (1,)
+    )
     param_ids = model.get_free_parameter_ids()
     point = np.asarray(
         [
