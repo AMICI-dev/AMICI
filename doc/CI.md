@@ -49,6 +49,13 @@ To run the SBML Test Suite test cases, the easiest way is:
    Once the test cases are available locally, for debugging it might be easier
    to directly use `pytest` with `tests/sbml/testSBMLSuite.py`.
 
+   By default, the test suite is cloned to `tests/sbml/sbml-test-suite`.
+   To share a single checkout across multiple clones or worktrees, set the
+   `SBML_TEST_SUITE_ROOT` environment variable to its location
+   (e.g., `export SBML_TEST_SUITE_ROOT=~/src/sbml-test-suite`).
+   If that directory does not exist yet, `scripts/run-SBMLTestsuite.sh` will
+   clone the test suite there.
+
 ## Model simulation integration tests
 
 Many of our integration tests are model simulations. The simulation results

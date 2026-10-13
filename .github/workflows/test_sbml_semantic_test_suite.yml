@@ -14,6 +14,7 @@ on:
       - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuite.py
       - tests/sbml/conftest.py
+      - tests/sbml/utils.py
   check_suite:
    types: [requested]
   workflow_dispatch:
