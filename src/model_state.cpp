@@ -18,7 +18,6 @@ ModelStateDerived::ModelStateDerived(ModelDimensions const& dim)
           dim.nx_rdata - dim.nx_solver, dim.nx_rdata, dim.ndtotal_cldx_rdata,
           CSC_MAT, sunctx_
       )
-    , dxdotdp(0, 0, sunctx_)
     , w_(dim.nw)
     , x_rdata_(dim.nx_rdata, 0.0)
     , sx_rdata_(dim.nx_rdata, 0.0)
