@@ -697,9 +697,11 @@ class Solver {
     /**
      * @brief sets the internal sensitivity method
      *
+     * `InternalSensitivityMethod::staggered1` is only supported by CVODES.
+     *
      * @param ism internal sensitivity method
      */
-    void set_internal_sensitivity_method(InternalSensitivityMethod ism);
+    virtual void set_internal_sensitivity_method(InternalSensitivityMethod ism);
 
     /**
      * @brief returns the ReturnData reporting mode

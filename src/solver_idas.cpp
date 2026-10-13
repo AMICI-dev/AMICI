@@ -323,6 +323,17 @@ void IDASolver::apply_max_step_size() const {
 
 Solver* IDASolver::clone() const { return new IDASolver(*this); }
 
+void IDASolver::set_internal_sensitivity_method(
+    InternalSensitivityMethod const ism
+) {
+    if (ism == InternalSensitivityMethod::staggered1)
+        throw AmiException(
+            "InternalSensitivityMethod::staggered1 is not supported for DAE "
+            "models (IDAS). Use simultaneous or staggered."
+        );
+    Solver::set_internal_sensitivity_method(ism);
+}
+
 void IDASolver::allocate_solver() const {
     if (!solver_memory_)
         solver_memory_ = std::unique_ptr<void, std::function<void(void*)>>(

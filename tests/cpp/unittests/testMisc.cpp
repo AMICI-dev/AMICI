@@ -218,6 +218,27 @@ TEST(SolverIdasTest, CopyCtor) {
     IDASolver solver2(solver1);
 }
 
+TEST(SolverIdasTest, Staggered1NotSupported) {
+    IDASolver solver;
+    ASSERT_THROW(
+        solver.set_internal_sensitivity_method(
+            InternalSensitivityMethod::staggered1
+        ),
+        AmiException
+    );
+    ASSERT_EQ(
+        solver.get_internal_sensitivity_method(),
+        InternalSensitivityMethod::simultaneous
+    );
+    solver.set_internal_sensitivity_method(
+        InternalSensitivityMethod::staggered
+    );
+    ASSERT_EQ(
+        solver.get_internal_sensitivity_method(),
+        InternalSensitivityMethod::staggered
+    );
+}
+
 class SolverTest : public ::testing::Test {
   protected:
     void SetUp() override {
