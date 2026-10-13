@@ -1503,6 +1503,64 @@ def test_dae_consistent_initial_conditions_single_timepoint(tempdir):
 
 
 @skip_on_valgrind
+def test_dae_steady_state(tmp_path):
+    """Test steady-state computation and steady-state sensitivities for
+    DAEs."""
+    sbml_str = antimony2sbml("""
+        model test_dae_steady_state
+            const k = 0.5, p = 2, q = 0.3
+            x = 0.8; y = 1.6
+            x' = -k * y + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_steady_state"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
+    model = import_model_module(model_name, tmp_path).get_model()
+    assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k", "p", "q")
+    model.set_parameter_scale(ParameterScaling.none)
+    # post-equilibration
+    model.set_timepoints([np.inf])
+
+    k, p, q = 0.5, 2, 0.3
+    x_ss_expected = [q / (k * p), q / k]
+    sx_ss_expected = [
+        [-q / (k**2 * p), -q / k**2],
+        [-q / (k * p**2), 0],
+        [1 / (k * p), 1 / k],
+    ]
+    for computation_mode, sensitivity_mode, sensi_order in (
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+            SensitivityOrder.none,
+        ),
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+            SensitivityOrder.first,
+        ),
+        (
+            SteadyStateComputationMode.newtonOnly,
+            SteadyStateSensitivityMode.newtonOnly,
+            SensitivityOrder.first,
+        ),
+    ):
+        model.set_steady_state_computation_mode(computation_mode)
+        model.set_steady_state_sensitivity_mode(sensitivity_mode)
+        solver = model.create_solver()
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(sensi_order)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS, computation_mode
+        assert_allclose(rdata.x[0], x_ss_expected, rtol=1e-5)
+        if sensi_order == SensitivityOrder.first:
+            assert_allclose(rdata.sx[0], sx_ss_expected, rtol=1e-4, atol=1e-5)
+
+
+@skip_on_valgrind
 def test_minmax_piecewise_is_converted_to_minmax():
     """Test that _piecewise_to_minmax is applied during SBML import."""
     sbml_str = antimony2sbml("""
