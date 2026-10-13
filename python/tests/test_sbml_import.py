@@ -1565,6 +1565,45 @@ def test_dae_staggered_forward_sensitivities(tempdir):
     )
 
 
+@pytest.mark.parametrize(
+    "timepoints",
+    [[0.0, 0.0, 1.0], [1.0, np.nextafter(1.0, 2.0), 2.0]],
+    ids=["duplicate", "within_roundoff"],
+)
+def test_dae_output_time_close_to_t0(tmp_path, timepoints):
+    """Test DAE simulation with the first two output times within roundoff
+    distance."""
+    sbml_str = antimony2sbml("""
+        model test_dae_tout1
+            const k1 = 1, k2 = 0.5
+            x = 0.5; y = 0.5
+            x' = k2 * y
+            0 = x + y - k1
+        end
+    """)
+    model_name = "test_dae_tout1"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
+    model = import_model_module(model_name, tmp_path).get_model()
+    model.set_t0(timepoints[0])
+    model.set_timepoints(timepoints)
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # y(t) = (k1 - x(t0)) * exp(-k2 * (t - t0)), x(t) = k1 - y(t)
+    k1, k2, x0 = 1.0, 0.5, 0.5
+    e = np.exp(-k2 * (np.asarray(timepoints) - timepoints[0]))
+    y = (k1 - x0) * e
+    assert_allclose(rdata.x, np.column_stack((k1 - y, y)), rtol=1e-8)
+    # dy/dk1 = exp(-k2 * (t - t0)), nonzero
+    assert_allclose(rdata.sx[:, 0, 1], e, rtol=1e-8)
+
+
 @skip_on_valgrind
 def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     """Test that state sensitivities of algebraic states are consistent at
