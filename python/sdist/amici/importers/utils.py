@@ -730,7 +730,7 @@ def maximum_bipartite_matching[L: Hashable, R: Hashable](
     """
     # right vertex -> left vertex
     match_right: dict[R, L] = {}
-    _NONE = object()
+    no_neighbor = object()
 
     for root in edges:
         # depth-first search for an augmenting path starting at `root`
@@ -740,8 +740,10 @@ def maximum_bipartite_matching[L: Hashable, R: Hashable](
         path = []
         while stack:
             left, neighbors = stack[-1]
-            right = next((r for r in neighbors if r not in visited), _NONE)
-            if right is _NONE:
+            right = next(
+                (r for r in neighbors if r not in visited), no_neighbor
+            )
+            if right is no_neighbor:
                 stack.pop()
                 if path:
                     path.pop()

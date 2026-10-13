@@ -1372,30 +1372,62 @@ def test_dae_forward_sensitivities_default_tolerances(tempdir):
     )
 
 
+def _algebraic_rule_model(algebraic_rules: list[str]) -> str:
+    """SBML model with `x' = -k * x` and the given algebraic rules.
+
+    Built with libsbml, since depending on the version, antimony rejects
+    overdetermined models.
+    """
+    doc = libsbml.SBMLDocument(3, 2)
+    model = doc.createModel()
+    for par_id, value, constant in [
+        ("k", 0.5, True),
+        ("p", 2, False),
+        ("x", 1, False),
+        ("y", 2, False),
+        ("z", 0.5, False),
+        ("w", 0.5, False),
+    ]:
+        par = model.createParameter()
+        par.setId(par_id)
+        par.setValue(value)
+        par.setConstant(constant)
+    rule = model.createRateRule()
+    rule.setVariable("x")
+    rule.setMath(libsbml.parseL3Formula("-k * x"))
+    for formula in algebraic_rules:
+        model.createAlgebraicRule().setMath(libsbml.parseL3Formula(formula))
+    return libsbml.writeSBMLToString(doc)
+
+
 @skip_on_valgrind
 @pytest.mark.parametrize(
-    "algebraic_rules",
+    "algebraic_rules, match",
     [
         # underdetermined: `p` is not constant
-        "0 = y - p * x",
-        # structurally singular: two rules for `y`, one for `z` and `w`
-        "0 = y - x; 0 = y - 2 * x; 0 = z + w - x",
+        (
+            ["y - p * x"],
+            r"Underdetermined: 1 algebraic rule\(s\) \[0 = -p\*x \+ y\] "
+            r"for 2 variable\(s\) \[p, y\]",
+        ),
+        # structurally singular (invalid SBML, overdetermined in `y`):
+        # two rules for `y`, one for `z` and `w`
+        (
+            ["y - x", "y - 2 * x", "z + w - x"],
+            r"Underdetermined: 1 algebraic rule\(s\) .* for 2 variable\(s\) "
+            r"\[w, z\].* Overdetermined: 2 algebraic rule\(s\) .* for 1 "
+            r"variable\(s\) \[y\]",
+        ),
     ],
+    ids=["underdetermined", "singular"],
 )
-def test_algebraic_rules_not_determined(algebraic_rules):
+def test_algebraic_rules_not_determined(algebraic_rules, match):
     """Test that import fails if algebraic rules don't determine all
     variables."""
-    ant_model = f"""
-        k = 0.5; const k
-        p = 2
-        x = 1; y = 2; z = 0.5; w = 0.5
-        x' = -k * x
-        {algebraic_rules}
-    """
-    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
-    with pytest.raises(
-        SBMLException, match="algebraic rules do not determine"
-    ):
+    sbml_importer = SbmlImporter(
+        _algebraic_rule_model(algebraic_rules), from_file=False
+    )
+    with pytest.raises(SBMLException, match=match):
         sbml_importer._build_ode_model()
 
 
