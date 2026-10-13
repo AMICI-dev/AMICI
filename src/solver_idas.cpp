@@ -948,6 +948,24 @@ void IDASolver::calc_ic(realtype tout1) const {
     }
 }
 
+void IDASolver::calc_consistent_state(
+    realtype const t, AmiVector& x, AmiVector& dx, realtype const tout1
+) const {
+    reinit(t, x, dx);
+    // The sensitivities are not up to date at this point; they are made
+    // consistent after the subsequent `sens_reinit`.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    auto const sensi = ida_mem->ida_sensi;
+    ida_mem->ida_sensi = SUNFALSE;
+    int const status = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, tout1);
+    ida_mem->ida_sensi = sensi;
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDACalcIC");
+    // `IDAGetConsistentIC` is only available before the first step
+    N_VScale(ONE, ida_mem->ida_phi[0], x.get_nvector());
+    N_VScale(ONE, ida_mem->ida_phi[1], dx.get_nvector());
+}
+
 void IDASolver::calc_ic_b(int const which, realtype const tout1) const {
     int status = IDACalcICB(
         solver_memory_.get(), which, tout1, xB_.get_nvector(),

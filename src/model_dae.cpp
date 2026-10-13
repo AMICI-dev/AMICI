@@ -124,6 +124,19 @@ void Model_DAE::fxdot(
     );
 }
 
+void Model_DAE::fdxdt(
+    realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+) {
+    // residual of the differential equations: f(x) - dx
+    fxdot(t, x, dx, dxdt);
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (get_id_list().at(ix) == 1.0)
+            dxdt[ix] += dx[ix];
+        else
+            dxdt[ix] = dx[ix];
+    }
+}
+
 void Model_DAE::fJDiag(
     realtype const t, AmiVector& JDiag, realtype const /*cj*/,
     AmiVector const& x, AmiVector const& dx

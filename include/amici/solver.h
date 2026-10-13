@@ -844,6 +844,23 @@ class Solver {
         = 0;
 
     /**
+     * @brief Make the algebraic states and the derivatives of the
+     * differential states consistent (DAE only).
+     *
+     * Reinitializes the solver at `t` and computes consistent values
+     * without the sensitivities. For ODEs, this does nothing.
+     *
+     * @param t timepoint
+     * @param x state, algebraic components are updated
+     * @param dx derivative of the state, updated
+     * @param tout1 next timepoint to be computed (sets timescale)
+     */
+    virtual void calc_consistent_state(
+        realtype t, AmiVector& x, AmiVector& dx, realtype tout1
+    ) const
+        = 0;
+
+    /**
      * @brief Records the roots of the discontinuity just handled.
      *
      * This information allows recognizing a spurious re-detection of

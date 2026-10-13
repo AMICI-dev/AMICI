@@ -1684,3 +1684,67 @@ def test_dae_event_reinitialization(tempdir):
         assert_allclose(
             rdata.x[:, 1], y_expected, rtol=100 * rtol, err_msg=str(rtol)
         )
+
+
+@skip_on_valgrind
+def test_dae_event_forward_sensitivities(tempdir):
+    """Forward sensitivities of a DAE with a state-dependent event.
+
+    The event changes a differential state that the algebraic state depends
+    on, so the algebraic state and the time derivative of the differential
+    state jump at the event.
+    """
+    ant_model = """
+    model dae_event_fsa
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 2
+        x' = -k * y + q
+        0 = y - p * x
+        at (x < 0.5): x = x + 1
+    end
+    """
+    module_name = "dae_event_fsa"
+    antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
+    model = import_model_module(module_name, tempdir).get_model()
+    # output times before the second event at t ~ 3.04
+    t = np.linspace(0.1, 2.5, 25)
+    model.set_timepoints(t)
+
+    def analytical_solution(k, p, q):
+        # x' = -k * p * x + q, x(t_event) = 0.5
+        a = k * p
+        x_inf = q / a
+        t_event = np.log((1.0 - x_inf) / (0.5 - x_inf)) / a
+        x = np.where(
+            t < t_event,
+            x_inf + (1.0 - x_inf) * np.exp(-a * t),
+            x_inf + (1.5 - x_inf) * np.exp(-a * (t - t_event)),
+        )
+        return np.stack([x, p * x], axis=1)
+
+    pars = np.array([0.5, 2.0, 0.3])
+    assert model.get_free_parameter_ids() == ("k", "p", "q")
+    h = 1e-6
+    sx_expected = np.stack(
+        [
+            (
+                analytical_solution(*(pars + h * e))
+                - analytical_solution(*(pars - h * e))
+            )
+            / (2 * h)
+            for e in np.eye(len(pars))
+        ],
+        axis=1,
+    )
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_relative_tolerance_fsa(1e-10)
+    solver.set_absolute_tolerance_fsa(1e-10)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x, analytical_solution(*pars), rtol=1e-8)
+    assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-8)

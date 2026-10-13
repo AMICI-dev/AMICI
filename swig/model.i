@@ -18,6 +18,7 @@ using namespace amici;
 %ignore add_partial_observable_objective_sensitivity;
 %ignore add_state_event_update;
 %ignore add_state_sensitivity_event_update;
+%ignore fdxdt;
 %ignore fsx_rdata;
 %ignore fx_rdata;
 %ignore get_adjoint_state_event_update;
