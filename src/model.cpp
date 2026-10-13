@@ -250,7 +250,7 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
 
 void Model::initialize(
     realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
-    AmiVectorArray& /*sdx*/, bool const computeSensitivities,
+    AmiVectorArray& sdx, bool const computeSensitivities,
     std::vector<int>& roots_found
 ) {
     initialize_state(t, x);
@@ -259,10 +259,6 @@ void Model::initialize(
         initialize_state_sensitivities(t, sx, x);
         initialize_spline_sensitivities();
     }
-
-    fdx0(x, dx);
-    if (computeSensitivities)
-        fsdx0();
 
     if (ne)
         initialize_events(t, x, dx, roots_found);
@@ -275,6 +271,19 @@ void Model::initialize(
     if (computeSensitivities) {
         fdwdp(t, x_pos, true);
     }
+
+    // requires the static expressions
+    initialize_state_derivatives(t, x, dx, sx, sdx, computeSensitivities);
+}
+
+void Model::initialize_state_derivatives(
+    realtype const /*t*/, AmiVector& x, AmiVector& dx,
+    AmiVectorArray const& /*sx*/, AmiVectorArray& /*sdx*/,
+    bool const computeSensitivities
+) {
+    fdx0(x, dx);
+    if (computeSensitivities)
+        fsdx0();
 }
 
 void Model::reinitialize(

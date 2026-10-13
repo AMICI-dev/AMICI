@@ -186,6 +186,30 @@ void Model_DAE::fdxdotdp(
     );
 }
 
+void Model_DAE::initialize_state_derivatives(
+    realtype const t, AmiVector& x, AmiVector& dx, AmiVectorArray const& sx,
+    AmiVectorArray& sdx, bool const computeSensitivities
+) {
+    auto const& id = get_id_list();
+    // For the differential states (mass matrix entry 1), the residual for
+    // zero derivatives is the right-hand side.
+    dx.zero();
+    AmiVector residual(dx);
+    fxdot(t, x, dx, residual);
+    for (int ix = 0; ix < nx_solver; ++ix)
+        dx[ix] = id[ix] != 0.0 ? residual[ix] : 0.0;
+
+    if (!computeSensitivities)
+        return;
+
+    AmiVector const zero(nx_solver, dx.get_ctx());
+    for (int ip = 0; ip < nplist(); ++ip) {
+        fsxdot(t, x, dx, ip, sx[ip], zero, residual);
+        for (int ix = 0; ix < nx_solver; ++ix)
+            sdx[ip][ix] = id[ix] != 0.0 ? residual[ix] : 0.0;
+    }
+}
+
 void Model_DAE::fM(realtype const /*t*/, const_N_Vector /*x*/) {
     /*
      * non-algebraic states in python generated code always have factor

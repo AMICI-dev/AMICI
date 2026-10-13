@@ -351,6 +351,28 @@ class Model_DAE : public Model {
 
   protected:
     /**
+     * @brief Compute consistent initial derivatives of the differential
+     * states and of their sensitivities.
+     *
+     * These are the right-hand sides of the differential equations at the
+     * given states. The derivatives of the algebraic states are set to zero.
+     * If the algebraic states are consistent, this saves `IDACalcIC` from
+     * correcting the derivatives, which can fail for forward sensitivities
+     * at tight sensitivity tolerances.
+     *
+     * @param t Timepoint
+     * @param x Solver states
+     * @param dx Output buffer for the state derivatives
+     * @param sx Solver state sensitivities
+     * @param sdx Output buffer for the state sensitivity derivatives
+     * @param computeSensitivities Whether to compute `sdx`
+     */
+    void initialize_state_derivatives(
+        realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray const& sx,
+        AmiVectorArray& sdx, bool computeSensitivities
+    ) override;
+
+    /**
      * @brief Model specific implementation for fJSparse
      *
      * @param JSparse Matrix to which the Jacobian will be written

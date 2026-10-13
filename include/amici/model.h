@@ -1764,6 +1764,25 @@ class Model : public AbstractModel, public ModelDimensions {
 
   protected:
     /**
+     * @brief Compute the initial derivatives of the solver states and,
+     * optionally, of the state sensitivities.
+     *
+     * Only relevant for DAEs. The default implementation calls
+     * `fdx0` and `fsdx0`.
+     *
+     * @param t Timepoint
+     * @param x Solver states
+     * @param dx Output buffer for the state derivatives
+     * @param sx Solver state sensitivities
+     * @param sdx Output buffer for the state sensitivity derivatives
+     * @param computeSensitivities Whether to compute `sdx`
+     */
+    virtual void initialize_state_derivatives(
+        realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray const& sx,
+        AmiVectorArray& sdx, bool computeSensitivities
+    );
+
+    /**
      * @brief Write part of a slice to a buffer according to indices specified
      * in z2event.
      *

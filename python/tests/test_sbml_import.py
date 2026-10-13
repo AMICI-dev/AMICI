@@ -1328,6 +1328,49 @@ def test_initial_assignment_parameter_not_constant_folded():
 
 
 @skip_on_valgrind
+def test_dae_forward_sensitivities_default_tolerances(tempdir):
+    """Forward sensitivities of a DAE with consistent initial values.
+
+    `IDACalcIC` used to fail to converge for this model with the default
+    sensitivity tolerances.
+    """
+    ant_model = """
+    model dae_fsa_calcic
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 2
+        x' = -k * y + q
+        0 = y - p * x
+    end
+    """
+    module_name = "dae_fsa_calcic"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2amici(
+        module_name, tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    t = np.linspace(0, 5, 6)
+    model.set_timepoints(t)
+    model.set_parameter_list([model.get_free_parameter_ids().index("k")])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # x = c + (1 - c) * exp(-a * t), y = p * x, with a = k * p, c = q / a
+    k, p, q = 0.5, 2, 0.3
+    a, c = k * p, q / (k * p)
+    dx_da = c / a * (np.exp(-a * t) - 1) - (1 - c) * t * np.exp(-a * t)
+    dx_dk = p * dx_da
+    assert np.all(np.abs(dx_dk[1:]) > 0.1)
+    assert_allclose(
+        rdata.sx[:, 0, :],
+        np.column_stack([dx_dk, p * dx_dk]),
+        rtol=1e-5,
+        atol=1e-8,
+    )
+
+
+@skip_on_valgrind
 def test_chained_initial_assignment_parameter_not_constant_folded():
     """Regression test for #3214 (chained-parameter variant).
 
