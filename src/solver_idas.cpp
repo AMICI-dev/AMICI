@@ -941,22 +941,21 @@ void IDASolver::calc_ic(realtype tout1) const {
     int status = IDACalcIC(solver_memory_.get(), IDA_YA_YDP_INIT, tout1);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACalcIC");
-    status = IDAGetConsistentIC(
-        solver_memory_.get(), x_.get_nvector(), dx_.get_nvector()
-    );
-    if (status != IDA_SUCCESS)
-        throw IDAException(status, "IDAGetConsistentIC");
+
+    // IDAGetConsistentIC and IDAGetSensConsistentIC only work before the
+    // first step, so read the consistent values directly
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    N_VScale(ONE, ida_mem->ida_phi[0], x_.get_nvector());
+    N_VScale(ONE, ida_mem->ida_phi[1], dx_.get_nvector());
 
     // IDACalcIC also computes consistent sensitivity initial conditions
     if (get_sensitivity_order() >= SensitivityOrder::first
         && get_sensitivity_method() == SensitivityMethod::forward
         && nplist() > 0 && get_sens_init_done()) {
-        status = IDAGetSensConsistentIC(
-            solver_memory_.get(), sx_.get_nvector_array(),
-            sdx_.get_nvector_array()
-        );
-        if (status != IDA_SUCCESS)
-            throw IDAException(status, "IDAGetSensConsistentIC");
+        for (int ip = 0; ip < nplist(); ++ip) {
+            N_VScale(ONE, ida_mem->ida_phiS[0][ip], sx_.get_nvector(ip));
+            N_VScale(ONE, ida_mem->ida_phiS[1][ip], sdx_.get_nvector(ip));
+        }
     }
 }
 

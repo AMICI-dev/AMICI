@@ -402,6 +402,13 @@ void ForwardProblem::handle_main_simulation() {
     if (preequilibrated_ || uses_presimulation_) {
         // Reset the time and re-initialize events for the main simulation
         solver->update_and_reinit_states_and_sensitivities(model);
+        if (model->get_reinitialize_fixed_parameter_initial_states()
+            && model->nx_reinit() > 0) {
+            // For DAEs, the algebraic states (and their sensitivities) have
+            // to be made consistent with the re-initialized differential
+            // states before the initial output is stored.
+            solver->calc_ic(next_output_timepoint(*model, ws_.sol.t));
+        }
     }
 
     // update x0 after computing consistence IC/reinitialization
