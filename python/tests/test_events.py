@@ -1635,3 +1635,52 @@ def test_event_with_w_dependent_trigger(tempdir):
             rtol=1e-6,
             epsilon=1e-8,
         )
+
+
+@skip_on_valgrind
+def test_dae_event_reinitialization(tempdir):
+    """Simulation of a DAE with an event assignment to a differential state.
+
+    After the event, the algebraic state and the derivatives have to be
+    consistent with the updated differential state.
+    """
+    ant_model = """
+    model dae_event_reinit
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 2
+        x' = -k * y + q
+        0 = y - p * x
+        at (time >= 2.2): x = x + q
+    end
+    """
+    module_name = "dae_event_reinit"
+    antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
+    model = import_model_module(module_name, tempdir).get_model()
+    t = np.linspace(0, 5, 11)
+    model.set_timepoints(t)
+
+    # analytical solution: x' = -k * p * x + q
+    k, p, q = 0.5, 2.0, 0.3
+    a = k * p
+    x_inf = q / a
+    t_event = 2.2
+    x_pre_event = x_inf + (1.0 - x_inf) * np.exp(-a * t_event)
+    x_expected = np.where(
+        t < t_event,
+        x_inf + (1.0 - x_inf) * np.exp(-a * t),
+        x_inf + (x_pre_event + q - x_inf) * np.exp(-a * (t - t_event)),
+    )
+    y_expected = p * x_expected
+
+    for rtol in (1e-6, 1e-12):
+        solver = model.create_solver()
+        solver.set_relative_tolerance(rtol)
+        solver.set_absolute_tolerance(rtol / 100)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS, rtol
+        assert_allclose(
+            rdata.x[:, 0], x_expected, rtol=100 * rtol, err_msg=str(rtol)
+        )
+        assert_allclose(
+            rdata.x[:, 1], y_expected, rtol=100 * rtol, err_msg=str(rtol)
+        )
