@@ -1540,6 +1540,51 @@ def test_dae_reinitialization_after_preequilibration(tmp_path):
 
 
 @skip_on_valgrind
+def test_dae_fixed_parameters_changed_after_presimulation(tmp_path):
+    """Test that algebraic states and their sensitivities are consistent
+    with the fixed parameters of the main simulation after
+    pre-equilibration or presimulation without re-initialization."""
+    sbml_str = antimony2sbml("""
+        model test_dae_presim_p
+            const k = 0.5, q = 0.3, p = 2
+            x = 1; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_presim_p"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, fixed_parameters=["p"]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    assert model.get_state_ids() == ("x", "y")
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    for pre in ("preequilibration", "presimulation"):
+        edata = ExpData(model)
+        edata.fixed_parameters = [3.0]
+        if pre == "preequilibration":
+            edata.fixed_parameters_pre_equilibration = [1.0]
+        else:
+            edata.fixed_parameters_presimulation = [1.0]
+            edata.t_presim = 2.0
+        edata.reinitialize_fixed_parameter_initial_states = False
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, pre
+        # y = p * x with p = 3
+        assert_allclose(
+            rdata.x[:, 1], 3 * rdata.x[:, 0], rtol=1e-6, err_msg=pre
+        )
+        assert np.all(np.abs(rdata.sx[:, :, 0]) > 0.1), pre
+        assert_allclose(
+            rdata.sx[:, :, 1], 3 * rdata.sx[:, :, 0], rtol=1e-6, err_msg=pre
+        )
+
+
+@skip_on_valgrind
 def test_chained_initial_assignment_parameter_stays_expression():
     """A chain of parameter initial assignments must not create states.
 
