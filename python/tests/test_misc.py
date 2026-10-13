@@ -1,6 +1,8 @@
 """Miscellaneous AMICI Python interface tests"""
 
 import os
+import re
+import shutil
 import subprocess
 import sys
 import warnings
@@ -87,6 +89,57 @@ def test_cmake_compilation(sbml_example_presimulation_module):
         print(e.stdout.decode())
         print(e.stderr.decode())
         raise
+
+
+@skip_on_valgrind
+@pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
+@pytest.mark.filterwarnings("ignore:SWIG version mismatch:RuntimeWarning")
+def test_model_rebuild_reruns_swig_on_swig_change(tmp_path, monkeypatch):
+    """Check that rebuilding a model reruns SWIG if the SWIG version changed,
+    even if the SWIG executable path and the interface file didn't."""
+    from amici.exporters.sundials.compile import build_model_extension
+    from amici.importers.antimony import antimony2amici
+
+    real_swig = os.environ.get("SWIG") or shutil.which("swig")
+
+    # SWIG wrapper that can report a fake version and logs code generation
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake_version_file = bin_dir / "fake_version"
+    swig_runs_file = bin_dir / "swig_runs"
+    swig = bin_dir / "swig"
+    swig.write_text(
+        "#!/bin/sh\n"
+        f'if [ "$1" = "-version" ] && [ -f "{fake_version_file}" ]; then\n'
+        f'  echo "SWIG Version $(cat "{fake_version_file}")"; exit 0\n'
+        "fi\n"
+        f'case " $* " in *" -python "*) echo run >> "{swig_runs_file}";; esac\n'
+        f'exec "{real_swig}" "$@"\n'
+    )
+    swig.chmod(0o755)
+    monkeypatch.setenv("SWIG", str(swig))
+
+    module_name = "test_model_rebuild_reruns_swig"
+    model_dir = tmp_path / module_name
+    antimony2amici(
+        "x = 1; x' = -x",
+        model_name=module_name,
+        output_dir=model_dir,
+    )
+    assert swig_runs_file.read_text().count("run") == 1
+
+    # rebuild with a "different" SWIG version, without regenerating the model
+    fake_version_file.write_text("9.9.9")
+    build_model_extension(model_dir)
+    assert swig_runs_file.read_text().count("run") == 2
+
+    # the CMake cache must not keep the previous SWIG version
+    (cmake_cache,) = model_dir.rglob("CMakeCache.txt")
+    assert re.search(
+        r"^SWIG_VERSION:STRING=9\.9\.9$",
+        cmake_cache.read_text(),
+        re.MULTILINE,
+    )
 
 
 @skip_on_valgrind
