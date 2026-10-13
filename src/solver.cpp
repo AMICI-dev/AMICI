@@ -7,6 +7,8 @@
 #include <gsl/gsl-lite.hpp>
 #include <sundials/sundials_context.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <memory>
@@ -250,9 +252,14 @@ void Solver::setup(
 
     set_id(model);
     set_suppress_alg(true);
-    /* calculate consistent DAE initial conditions (no effect for ODE) */
-    if (model->nt() > 1)
-        calc_ic(model->get_timepoint(1));
+    /* calculate consistent DAE initial conditions (no effect for ODE).
+     * The first output time after t0 only sets the direction and scale of
+     * the initial step for the computation; without one, use t0 + 1. */
+    auto const& ts = model->get_timepoints();
+    auto const tout1 = std::ranges::find_if(ts, [t0](realtype const t) {
+        return std::isfinite(t) && t > t0;
+    });
+    calc_ic(tout1 != ts.end() ? *tout1 : t0 + 1.0);
 
     apply_max_nonlin_iters();
     apply_max_conv_fails();

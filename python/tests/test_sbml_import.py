@@ -1471,6 +1471,36 @@ def test_chained_initial_assignment_parameter_stays_expression():
 
 
 @skip_on_valgrind
+def test_dae_consistent_initial_conditions_single_timepoint(tempdir):
+    """Inconsistent algebraic initial states are corrected for any `ts`."""
+    ant_model = """
+    model dae_single_timepoint
+        const k = 0.5, p = 2
+        x = 1; y = 1.5
+        x' = -k * x
+        0 = y - p * x
+    end
+    """
+    module_name = "dae_single_timepoint"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2amici(
+        module_name, tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+
+    for ts in ([0.0], [5.0], [0.0, 5.0]):
+        model.set_timepoints(ts)
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS, ts
+        x_exact = np.exp(-0.5 * np.asarray(ts))
+        assert_allclose(
+            rdata.x, np.column_stack([x_exact, 2 * x_exact]), rtol=1e-8
+        )
+
+
+@skip_on_valgrind
 def test_minmax_piecewise_is_converted_to_minmax():
     """Test that _piecewise_to_minmax is applied during SBML import."""
     sbml_str = antimony2sbml("""
