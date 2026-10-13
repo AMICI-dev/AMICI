@@ -15,10 +15,9 @@ import pytest
 from amici.exporters.jax import generate_equinox
 from amici.importers.petab import *
 from amici.sim.jax import petab_simulate, run_simulations
+from petab import v2
 from petab_sciml import NNModelStandard
 from yaml import safe_load
-
-from petab import v2
 
 
 @contextmanager
@@ -221,16 +220,15 @@ def test_ml_model_import(test):
                     )
 
             if test in ("019", "020", "021", "022"):
-                iters = solutions.get("dropout", 40000)
-                res = net.forward(
-                    input, key=jr.PRNGKey(np.random.randint(0, 2**31))
-                )
-                for _ in range(iters):
-                    res += net.forward(
-                        input, key=jr.PRNGKey(np.random.randint(0, 2**31))
-                    )
+                # Monte Carlo estimate of the expected output. The reference
+                # is itself a Monte Carlo estimate, so use a fixed seed and
+                # enough samples to keep the tolerance well above the
+                # combined sampling error.
+                iters = max(solutions.get("dropout", 0), 200_000)
+                keys = jr.split(jr.PRNGKey(0), iters)
+                res = jax.vmap(lambda k: net.forward(input, key=k))(keys)
                 np.testing.assert_allclose(
-                    res / iters,
+                    res.mean(axis=0),
                     output,
                     atol=2e-2,
                     rtol=2e-2,
