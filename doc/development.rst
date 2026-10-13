@@ -30,12 +30,17 @@ process described below:
 
 -  Implement your changes
 
--  Update ``CHANGELOG.md`` with a short, user-facing description of your
+-  Add a changelog entry with a short, user-facing description of your
    changes — this includes new features, bug fixes, breaking changes, and
    performance or build-system changes that affect model import or build
    times. It should be omitted if the change has no user-visible effect,
    e.g. fixing typos or formatting issues, CI-only changes, or private
    refactoring.
+   Changelog entries are not added to ``CHANGELOG.md`` directly, but as
+   separate files in ``changelog.d/``, to avoid merge conflicts between
+   pull requests. See
+   `changelog.d/README.md <https://github.com/AMICI-dev/AMICI/blob/main/changelog.d/README.md>`__
+   for details.
 
 -  Submit a pull request to the ``main`` branch
 
@@ -146,8 +151,22 @@ To create a new release, please follow these steps:
 1. Ensure that all changes intended for the new release are merged
    into ``main``.
 
-2. Update ``CHANGELOG.md`` with a short description of the changes
-   included in the new release. Focus on user-relevant changes.
+2. Collect the changelog entries from ``changelog.d/`` into
+   ``CHANGELOG.md`` by running
+   `towncrier <https://towncrier.readthedocs.io/>`__
+   (included in the ``test`` dependency group of
+   ``python/sdist/pyproject.toml``) from the repository root:
+
+   .. code-block:: shell
+
+      towncrier build --version X.Y.Z
+
+   This adds a new section for the release to ``CHANGELOG.md``, and removes
+   the collected fragments (``git rm``). Run with ``--draft`` to only preview
+   the result. Review the new section, and edit it as necessary
+   (e.g., reorder entries, which are sorted alphabetically within each
+   category, add a summary, or add a section header for a new
+   major version). Focus on user-relevant changes.
 
 3. Bump the version number in `version.txt` according to
    `Semantic Versioning <https://semver.org/>`__.
@@ -180,7 +199,8 @@ In rare cases, it might be necessary to create a hotfix release for a
 critical bug in an existing release. In this case, create a new branch
 from the respective tag, apply the fix (usually a backport from ``main``),
 and follow the same steps as above, starting from step 2.
-Merge the updated CHANGELOG and version bump back into ``main`` afterwards.
+Merge the updated CHANGELOG and version bump back into ``main`` afterwards,
+and remove the changelog fragments of the backported changes from ``main``.
 
 
 Further topics

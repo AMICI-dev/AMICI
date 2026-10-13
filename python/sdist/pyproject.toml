@@ -147,6 +147,8 @@ test = [
     "pooch",
     "beartype",
     "wheel",
+    # for collecting changelog entries, see changelog.d/README.md
+    "towncrier",
 ]
 
 [project.scripts]
