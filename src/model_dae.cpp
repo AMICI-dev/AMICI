@@ -1,6 +1,8 @@
 #include "amici/model_dae.h"
 #include "amici/solver_idas.h"
 
+#include <sundials/sundials_dense.h>
+
 namespace amici {
 
 void Model_DAE::fJ(
@@ -220,6 +222,103 @@ void Model_DAE::initialize_state_derivatives(
         fsxdot(t, x, dx, ip, sx[ip], zero, residual);
         for (int ix = 0; ix < nx_solver; ++ix)
             sdx[ip][ix] = id[ix] != 0.0 ? residual[ix] : 0.0;
+    }
+}
+
+void Model_DAE::project_algebraic_objective_derivatives(
+    realtype const t, AmiVector const& x, gsl::span<realtype> dJydx,
+    gsl::span<realtype> dJydp
+) {
+    // For F(x, z) = [f_d(x, z); f_a(x, z)] with algebraic states z defined by
+    // 0 = f_a(x, z), a measurement h(x, z) has the total derivatives
+    //   dh/dx = h_x - f_a,x^T mu,  dh/dp = h_p - f_a,p^T mu,
+    // with  f_a,z^T mu = h_z.
+    // Algebraic equations and algebraic states share the same indices.
+    auto const& id = get_id_list();
+    std::vector<int> alg_idx(nx_solver, -1);
+    std::vector<int> alg;
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (id[ix] == 0.0) {
+            alg_idx[ix] = gsl::narrow<int>(alg.size());
+            alg.push_back(ix);
+        }
+    }
+    auto const na = gsl::narrow<int>(alg.size());
+    if (na == 0)
+        return;
+
+    // only first-order sensitivities are handled here (iJ == 0)
+    std::vector<realtype> mu(na);
+    bool any_nonzero = false;
+    for (int ia = 0; ia < na; ++ia) {
+        mu[ia] = dJydx[alg[ia] * nJ];
+        any_nonzero = any_nonzero || mu[ia] != 0.0;
+    }
+    if (!any_nonzero)
+        return;
+
+    // df/dx (and below df/dp). The algebraic equations do not depend on dx.
+    AmiVector dx(nx_solver, derived_state_.sunctx_);
+    dx.zero();
+    fJSparse(t, 0.0, x.get_nvector(), dx.get_nvector(), derived_state_.J_);
+    derived_state_.J_.refresh();
+    auto const& J = derived_state_.J_;
+
+    // dense column-major f_a,z^T: (row r, col c) = J(alg[c], alg[r])
+    std::vector<realtype> KT(na * na, 0.0);
+    std::vector<realtype*> KT_cols(na);
+    for (int c = 0; c < na; ++c)
+        KT_cols[c] = &KT[c * na];
+    for (int col = 0; col < nx_solver; ++col) {
+        auto const r = alg_idx[col];
+        if (r < 0)
+            continue;
+        for (auto idx = J.get_indexptr(col); idx < J.get_indexptr(col + 1);
+             ++idx) {
+            auto const c = alg_idx[J.get_indexval(idx)];
+            if (c >= 0)
+                KT_cols[c][r] = J.get_data(idx);
+        }
+    }
+    std::vector<sunindextype> pivots(na);
+    if (SUNDlsMat_denseGETRF(KT_cols.data(), na, na, pivots.data()) != 0) {
+        throw AmiException(
+            "Singular algebraic Jacobian at t = %g: cannot map objective "
+            "derivatives w.r.t. algebraic states.",
+            t
+        );
+    }
+    SUNDlsMat_denseGETRS(KT_cols.data(), na, pivots.data(), mu.data());
+
+    // dJydx_d -= f_a,x^T mu; derivatives w.r.t. algebraic states are now
+    // accounted for via mu
+    for (int col = 0; col < nx_solver; ++col) {
+        if (alg_idx[col] >= 0) {
+            dJydx[col * nJ] = 0.0;
+            continue;
+        }
+        for (auto idx = J.get_indexptr(col); idx < J.get_indexptr(col + 1);
+             ++idx) {
+            auto const ia = alg_idx[J.get_indexval(idx)];
+            if (ia >= 0)
+                dJydx[col * nJ] -= J.get_data(idx) * mu[ia];
+        }
+    }
+
+    if (dJydp.empty())
+        return;
+
+    // dJydp -= f_a,p^T mu
+    fdxdotdp(t, x.get_nvector(), dx.get_nvector());
+    auto const& dfdp = derived_state_.dxdotdp_full;
+    for (int ip = 0; ip < nplist(); ++ip) {
+        auto const col = plist(ip);
+        for (auto idx = dfdp.get_indexptr(col);
+             idx < dfdp.get_indexptr(col + 1); ++idx) {
+            auto const ia = alg_idx[dfdp.get_indexval(idx)];
+            if (ia >= 0)
+                dJydp[ip * nJ] -= dfdp.get_data(idx) * mu[ia];
+        }
     }
 }
 

@@ -1463,6 +1463,50 @@ def test_chained_initial_assignment_parameter_not_constant_folded():
 
 
 @skip_on_valgrind
+def test_dae_adjoint_sensitivities_observed_algebraic_state(tmp_path):
+    """Test adjoint sensitivities of a DAE with a measured algebraic
+    state."""
+    sbml_str = antimony2sbml("""
+        model test_dae_asa_observed_algebraic
+            const k = 0.5, p = 2, q = 0.3
+            x = 1; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_asa_observed_algebraic"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, observation_model=[MC("obs_y", formula="y")]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    t = np.linspace(0, 5, 11)
+    model.set_timepoints(t)
+    model.set_parameter_scale(ParameterScaling.none)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t), 1.0))
+    edata.set_noise_scales(np.full(len(t), 1.0))
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+
+    # all parameters have an effect
+    assert np.all(np.abs(sllh[SensitivityMethod.forward]) > 1e-2)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
+
+
+@skip_on_valgrind
 def test_initial_assignment_fixed_parameter_not_constant_folded():
     """Regression test for #3214 (fixed-parameter variant).
 

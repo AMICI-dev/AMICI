@@ -1215,6 +1215,28 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Map objective derivatives w.r.t. algebraic states to the
+     * differential states and parameters.
+     *
+     * For index-1 DAEs, the algebraic states are functions of the
+     * differential states and parameters. This replaces the derivatives of
+     * the objective w.r.t. the algebraic states by the corresponding total
+     * derivatives w.r.t. the differential states and parameters, as required
+     * for adjoint sensitivity analysis. No-op for ODE models.
+     *
+     * @param t Timepoint
+     * @param x State variables
+     * @param dJydx State derivative of the objective (shape `nJ` x
+     * `nx_solver`), updated in place.
+     * @param dJydp Parameter derivative of the objective (shape `nJ` x
+     * `nplist`), incremented. May be empty.
+     */
+    virtual void project_algebraic_objective_derivatives(
+        realtype /*t*/, AmiVector const& /*x*/, gsl::span<realtype> /*dJydx*/,
+        gsl::span<realtype> /*dJydp*/
+    ) {}
+
+    /**
      * @brief Get event-resolved observables.
      *
      * @param z Output buffer (shape `nz`)
