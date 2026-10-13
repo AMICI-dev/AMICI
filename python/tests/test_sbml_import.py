@@ -1375,8 +1375,9 @@ def test_dae_forward_sensitivities_default_tolerances(tempdir):
 def _algebraic_rule_model(algebraic_rules: list[str]) -> str:
     """SBML model with `x' = -k * x` and the given algebraic rules.
 
-    Built with libsbml, since depending on the version, antimony rejects
-    overdetermined models.
+    Built with libsbml instead of antimony, as the overdetermined test case
+    is invalid SBML, which antimony 3.1 rejects, whereas antimony 3.2
+    accepts it.
     """
     doc = libsbml.SBMLDocument(3, 2)
     model = doc.createModel()
