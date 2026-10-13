@@ -283,12 +283,19 @@ void EventHandlingBwdSimulator::run(
 
     t_ = t_start;
 
+    // If there is nothing to integrate, only the updates at `t_start` are
+    // applied. The backward solver is not set up in this case, as IDAS
+    // requires that the forward problem was integrated before.
+    bool const integrate = t_start > t_end;
+
     // datapoint at t_start?
     if (it >= 0 && timepoints[it] == t_start) {
         handle_datapoint_b(it, dJydx);
-        solver_->setup_b(
-            &ws_->which, timepoints[it], model_, ws_->xB_, ws_->dxB_, ws_->xQB_
-        );
+        if (integrate)
+            solver_->setup_b(
+                &ws_->which, timepoints[it], model_, ws_->xB_, ws_->dxB_,
+                ws_->xQB_
+            );
         // for the initial datapoint, diagnosis needs to be stored after setup
         // as it is not called in handleDataPointB
         solver_->store_diagnosis_b(ws_->which);
@@ -296,9 +303,10 @@ void EventHandlingBwdSimulator::run(
     } else {
         // no data points, only discontinuities, just set up the solver
         // (e.g., during presimulation)
-        solver_->setup_b(
-            &ws_->which, t_start, model_, ws_->xB_, ws_->dxB_, ws_->xQB_
-        );
+        if (integrate)
+            solver_->setup_b(
+                &ws_->which, t_start, model_, ws_->xB_, ws_->dxB_, ws_->xQB_
+            );
     }
 
     // DAEs: make the algebraic adjoint states and the derivatives of the
@@ -335,9 +343,11 @@ void EventHandlingBwdSimulator::run(
         }
 
         // reinitialize state
-        solver_->reinit_b(ws_->which, t_, ws_->xB_, ws_->dxB_);
-        solver_->reinit_quad_b(ws_->which, ws_->xQB_);
-        calc_ic_b();
+        if (integrate) {
+            solver_->reinit_b(ws_->which, t_, ws_->xB_, ws_->dxB_);
+            solver_->reinit_quad_b(ws_->which, ws_->xQB_);
+            calc_ic_b();
+        }
     }
 
     // we still need to integrate from first datapoint to t_start
