@@ -52,19 +52,20 @@ STATIC_ASSERT_EQUAL(amici::AMICI_WARNING, IDA_WARNING);
  * @brief Get an output time for `IDACalcIC` that is distinct from `t`.
  *
  * `IDACalcIC` only uses `tout1` for the direction and scale of the first
- * step, but fails if it is within roundoff of the current time.
+ * step, but fails if it is within roundoff of the current time or not
+ * finite.
  *
  * @param t Current time
  * @param tout1 Next output time
  * @param direction Integration direction (1: forward, -1: backward)
- * @return `tout1` if it is sufficiently distinct from `t`, otherwise a time
- * in the integration direction from `t`.
+ * @return `tout1` if it is finite and sufficiently distinct from `t`,
+ * otherwise a time in the integration direction from `t`.
  */
 static realtype
 distinct_tout1(realtype const t, realtype const tout1, int const direction) {
     auto const min_dist
         = 100 * SUN_UNIT_ROUNDOFF * (std::abs(t) + std::abs(tout1));
-    if (std::abs(tout1 - t) > min_dist)
+    if (std::isfinite(tout1) && std::abs(tout1 - t) > min_dist)
         return tout1;
     return t + direction * std::max(1.0, 1e-6 * std::abs(t));
 }

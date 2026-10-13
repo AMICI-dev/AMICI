@@ -1567,12 +1567,16 @@ def test_dae_staggered_forward_sensitivities(tempdir):
 
 @pytest.mark.parametrize(
     "timepoints",
-    [[0.0, 0.0, 1.0], [1.0, np.nextafter(1.0, 2.0), 2.0]],
-    ids=["duplicate", "within_roundoff"],
+    [
+        [0.0, 0.0, 1.0],
+        [1.0, np.nextafter(1.0, 2.0), 2.0],
+        [1.0, np.inf],
+    ],
+    ids=["duplicate", "within_roundoff", "infinite"],
 )
 def test_dae_output_time_close_to_t0(tmp_path, timepoints):
-    """Test DAE simulation with the first two output times within roundoff
-    distance."""
+    """Test DAE simulation with the second output time within roundoff
+    distance of the first one or infinite."""
     sbml_str = antimony2sbml("""
         model test_dae_tout1
             const k1 = 1, k2 = 0.5
@@ -1599,9 +1603,11 @@ def test_dae_output_time_close_to_t0(tmp_path, timepoints):
     k1, k2, x0 = 1.0, 0.5, 0.5
     e = np.exp(-k2 * (np.asarray(timepoints) - timepoints[0]))
     y = (k1 - x0) * e
-    assert_allclose(rdata.x, np.column_stack((k1 - y, y)), rtol=1e-8)
-    # dy/dk1 = exp(-k2 * (t - t0)), nonzero
-    assert_allclose(rdata.sx[:, 0, 1], e, rtol=1e-8)
+    assert_allclose(
+        rdata.x, np.column_stack((k1 - y, y)), rtol=1e-8, atol=1e-12
+    )
+    # dy/dk1 = exp(-k2 * (t - t0)), nonzero at t0
+    assert_allclose(rdata.sx[:, 0, 1], e, rtol=1e-8, atol=1e-12)
 
 
 @skip_on_valgrind
