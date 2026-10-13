@@ -38,6 +38,16 @@ class IDASolver : public Solver {
 
     std::string get_class_name() const override { return "IDASolver"; };
 
+    /**
+     * @brief sets the internal sensitivity method
+     *
+     * @param ism internal sensitivity method
+     * @throws AmiException for `InternalSensitivityMethod::staggered1`,
+     * which is not supported by IDAS
+     */
+    void
+    set_internal_sensitivity_method(InternalSensitivityMethod ism) override;
+
     bool reinit_post_process_f(realtype tnext) const override;
 
     void reinit_post_process_b(realtype tnext) const override;
