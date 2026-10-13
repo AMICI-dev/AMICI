@@ -29,6 +29,7 @@ from amici.sim.sundials import (
     SensitivityOrder,
     run_simulation,
 )
+from amici.sim.sundials._swig_wrappers import _solver_settings
 from amici.sim.sundials.petab.v1 import LLH, SLLH, create_edatas
 from amici.sim.sundials.petab.v1._parameter_mapping import (
     create_parameter_mapping,
@@ -232,12 +233,15 @@ def run_simulation_to_function_and_derivative(
         point: Type.POINT, order: SensitivityOrder
     ) -> ReturnData:
         problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
-        amici_model.set_free_parameter_by_id(problem_parameters)
-        amici_solver.set_sensitivity_order(order)
-        rdata = run_simulation(
-            model=amici_model, solver=amici_solver, edata=amici_edata
-        )
-        return rdata
+        original_parameters = amici_model.get_free_parameters()
+        try:
+            amici_model.set_free_parameter_by_id(problem_parameters)
+            with _solver_settings(amici_solver, sensi_order=order):
+                return run_simulation(
+                    model=amici_model, solver=amici_solver, edata=amici_edata
+                )
+        finally:
+            amici_model.set_free_parameters(original_parameters)
 
     def function(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.none)
@@ -372,7 +376,9 @@ def simulate_petab_to_function_and_derivative(
         k: v for k, v in precreated_kwargs.items() if v is not None
     }
 
-    amici_solver = kwargs.pop("solver", amici_model.create_solver())
+    amici_solver = kwargs.pop("solver", None)
+    if amici_solver is None:
+        amici_solver = amici_model.create_solver()
 
     simulate_petab_partial = partial(
         simulate_petab,
@@ -383,12 +389,11 @@ def simulate_petab_to_function_and_derivative(
 
     def simulate_petab_full(point: Type.POINT, order: SensitivityOrder):
         problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
-        amici_solver.set_sensitivity_order(order)
-        result = simulate_petab_partial(
-            problem_parameters=problem_parameters,
-            solver=amici_solver,
-        )
-        return result
+        with _solver_settings(amici_solver, sensi_order=order):
+            return simulate_petab_partial(
+                problem_parameters=problem_parameters,
+                solver=amici_solver,
+            )
 
     def function(point: Type.POINT):
         output = simulate_petab_full(point, order=SensitivityOrder.none)
@@ -441,12 +446,10 @@ def simulate_petab_v2_to_function_and_derivative(
         point: Type.POINT, order: SensitivityOrder
     ) -> PetabSimulationResult:
         problem_parameters = dict(zip(free_parameter_ids, point, strict=True))
-        petab_simulator.solver.set_sensitivity_order(order)
-
-        result = petab_simulator.simulate(
-            problem_parameters=problem_parameters,
-        )
-        return result
+        with _solver_settings(petab_simulator.solver, sensi_order=order):
+            return petab_simulator.simulate(
+                problem_parameters=problem_parameters,
+            )
 
     def function(point: Type.POINT) -> np.ndarray:
         output = simulate(point, order=SensitivityOrder.none)
