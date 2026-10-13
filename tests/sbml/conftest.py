@@ -1,6 +1,7 @@
 """Pytest configuration for SBML test suite"""
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -47,9 +48,12 @@ failed_or_skipped_ids: dict[str, dict[str, str]] = {
     check: {} for check in CHECKS
 }
 
-SBML_SEMANTIC_CASES_DIR = (
-    Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
+# checkout of https://github.com/sbmlteam/sbml-test-suite/
+SBML_TEST_SUITE_ROOT = Path(
+    os.environ.get("SBML_TEST_SUITE_ROOT")
+    or Path(__file__).parent / "sbml-test-suite"
 )
+SBML_SEMANTIC_CASES_DIR = SBML_TEST_SUITE_ROOT / "cases" / "semantic"
 
 RESULT_PATH = Path(__file__).parent / "amici-semantic-results"
 
