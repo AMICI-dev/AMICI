@@ -302,6 +302,8 @@ void Solver::setup_b(
     apply_quad_tolerances_asa(*which);
 
     set_stab_lim_det_b(*which, stldet_);
+
+    set_id_b(*which, model);
 }
 
 void Solver::setup_steady_state(

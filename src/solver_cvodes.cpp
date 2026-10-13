@@ -473,6 +473,8 @@ void CVodeSolver::set_stab_lim_det_b(int const which, int const stldet) const {
 
 void CVodeSolver::set_id(Model const* /*model*/) const {}
 
+void CVodeSolver::set_id_b(int /*which*/, Model const* /*model*/) const {}
+
 void CVodeSolver::set_suppress_alg(bool const /*flag*/) const {}
 
 void CVodeSolver::reset_state(void* ami_mem, const_N_Vector y0) const {
