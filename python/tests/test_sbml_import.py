@@ -1403,32 +1403,25 @@ def _algebraic_rule_model(algebraic_rules: list[str]) -> str:
 
 @skip_on_valgrind
 @pytest.mark.parametrize(
-    "algebraic_rules, match",
+    "algebraic_rules",
     [
         # underdetermined: `p` is not constant
-        (
-            ["y - p * x"],
-            r"Underdetermined: 1 algebraic rule\(s\) \[0 = -p\*x \+ y\] "
-            r"for 2 variable\(s\) \[p, y\]",
-        ),
-        # structurally singular (invalid SBML, overdetermined in `y`):
+        ["y - p * x"],
+        # structurally singular (overdetermined, invalid SBML):
         # two rules for `y`, one for `z` and `w`
-        (
-            ["y - x", "y - 2 * x", "z + w - x"],
-            r"Underdetermined: 1 algebraic rule\(s\) .* for 2 variable\(s\) "
-            r"\[w, z\].* Overdetermined: 2 algebraic rule\(s\) .* for 1 "
-            r"variable\(s\) \[y\]",
-        ),
+        ["y - x", "y - 2 * x", "z + w - x"],
     ],
     ids=["underdetermined", "singular"],
 )
-def test_algebraic_rules_not_determined(algebraic_rules, match):
+def test_algebraic_rules_not_determined(algebraic_rules):
     """Test that import fails if algebraic rules don't determine all
     variables."""
     sbml_importer = SbmlImporter(
         _algebraic_rule_model(algebraic_rules), from_file=False
     )
-    with pytest.raises(SBMLException, match=match):
+    with pytest.raises(
+        SBMLException, match="algebraic rules do not determine"
+    ):
         sbml_importer._build_ode_model()
 
 

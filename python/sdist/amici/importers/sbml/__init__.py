@@ -1545,67 +1545,23 @@ class SbmlImporter:
             return dependencies
 
         dependencies = {
-            eq_id: sorted(state_dependencies(eq["value"]), key=str)
+            eq_id: state_dependencies(eq["value"])
             for eq_id, eq in equations.items()
         }
         matching = maximum_bipartite_matching(dependencies)
         if len(matching) == len(equations) == len(states):
             return
 
-        # Collect the deficient parts of the system via alternating paths
-        # from the unmatched vertices (Dulmage-Mendelsohn decomposition).
-        # These don't depend on the choice of the maximum matching.
-        equation_of_state = {state: eq for eq, state in matching.items()}
-        dependents = {state: [] for state in states}
-        for eq_id, eq_states in dependencies.items():
-            for state in eq_states:
-                dependents[state].append(eq_id)
-
-        under_states = {s for s in states if s not in equation_of_state}
-        under_eqs = set()
-        to_visit = list(under_states)
-        while to_visit:
-            for eq_id in dependents[to_visit.pop()]:
-                if eq_id not in under_eqs:
-                    under_eqs.add(eq_id)
-                    if matching[eq_id] not in under_states:
-                        under_states.add(matching[eq_id])
-                        to_visit.append(matching[eq_id])
-
-        over_eqs = {eq_id for eq_id in equations if eq_id not in matching}
-        over_states = set()
-        to_visit = list(over_eqs)
-        while to_visit:
-            for state in dependencies[to_visit.pop()]:
-                if state not in over_states:
-                    over_states.add(state)
-                    if equation_of_state[state] not in over_eqs:
-                        over_eqs.add(equation_of_state[state])
-                        to_visit.append(equation_of_state[state])
-
-        def describe(eq_ids, state_ids) -> str:
-            rules = ", ".join(
-                f"0 = {equations[eq_id]['value']}"
-                for eq_id in equations
-                if eq_id in eq_ids
-            )
-            variables = ", ".join(sorted(map(str, state_ids)))
-            return (
-                f"{len(eq_ids)} algebraic rule(s) [{rules}] for "
-                f"{len(state_ids)} variable(s) [{variables}]"
-            )
-
-        msg = "The algebraic rules do not determine the variables they reference."
-        if under_states:
-            msg += (
-                f" Underdetermined: {describe(under_eqs, under_states)}. "
-                "Variables that are not supposed to be determined by "
-                "algebraic rules must be constant, or be determined by other "
-                "rules or, for species, by reactions."
-            )
-        if over_eqs:
-            msg += f" Overdetermined: {describe(over_eqs, over_states)}."
-        raise SBMLException(msg)
+        raise SBMLException(
+            "The algebraic rules do not determine the variables they "
+            f"reference. Algebraic rules ({len(equations)}): "
+            + ", ".join(f"0 = {eq['value']}" for eq in equations.values())
+            + f". Variables to be determined ({len(states)}): "
+            + ", ".join(map(str, states))
+            + ". Variables that are not supposed to be determined by "
+            "algebraic rules must be constant, or be determined by other "
+            "rules or, for species, by reactions."
+        )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
         formula = self._sympify(rule)
