@@ -1656,7 +1656,8 @@ def test_dae_event_reinitialization(tempdir):
     module_name = "dae_event_reinit"
     antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
     model = import_model_module(module_name, tempdir).get_model()
-    t = np.linspace(0, 5, 11)
+    # including an output at the event time
+    t = np.sort(np.append(np.linspace(0, 5, 11), 2.2))
     model.set_timepoints(t)
 
     # analytical solution: x' = -k * p * x + q
@@ -1748,3 +1749,49 @@ def test_dae_event_forward_sensitivities(tempdir):
     assert rdata.status == AMICI_SUCCESS
     assert_allclose(rdata.x, analytical_solution(*pars), rtol=1e-8)
     assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-8)
+
+
+@skip_on_valgrind
+def test_dae_event_adjoint_sensitivities(tempdir):
+    """Adjoint sensitivities of a DAE with an event that changes a
+    differential state the algebraic state depends on."""
+    ant_model = """
+    model dae_event_asa
+        const k = 0.5, p = 2, q = 0.1
+        x = 1; y = 2
+        x' = -k * x + q
+        0 = y - p * x
+        at (time > 1.3): x = x + 1
+    end
+    """
+    module_name = "dae_event_asa"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    t = np.linspace(0.5, 4.5, 9)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t), 1.0))
+    edata.set_noise_scales(np.ones(len(t)))
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+    assert np.all(np.abs(sllh[SensitivityMethod.forward][[0, 2]]) > 0.1)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+        atol=1e-8,
+    )

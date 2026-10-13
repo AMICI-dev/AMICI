@@ -581,14 +581,13 @@ void EventHandlingSimulator::handle_events(
             ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_old, x_old_event,
             state_old.has_value() ? state_old->mod : model_->get_model_state()
         );
-        if (solver_->computing_fsa() || event_application) {
-            // For DAEs, the post-event time derivative of the differential
-            // states depends on the post-event algebraic states.
-            solver_->calc_consistent_state(
-                ws_->sol.t, ws_->sol.x, ws_->sol.dx,
-                next_output_timepoint(*model_, ws_->sol.t)
-            );
-        }
+        // For DAEs, the algebraic states and the state derivatives have to be
+        // made consistent with the post-event differential states before
+        // they are stored or used for sensitivity updates.
+        solver_->calc_consistent_state(
+            ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+            next_output_timepoint(*model_, ws_->sol.t)
+        );
         if (solver_->computing_fsa()) {
             // compute the new xdot
             model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
