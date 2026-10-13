@@ -887,7 +887,6 @@ def test_preequilibration_events(tempdir):
         amici_solver.set_sensitivity_method(sensi_meth)
         amici_solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
         amici_model.require_sensitivities_for_all_parameters()
-        amici_solver.set_sensitivity_order(SensitivityOrder.first)
 
         rdata = run_simulation(amici_model, amici_solver, edata)
         assert rdata.status == AMICI_SUCCESS
@@ -973,9 +972,6 @@ def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
         (SensitivityMethod.forward, SensitivityMethod.forward),
         (SensitivityMethod.adjoint, SensitivityMethod.forward),
     ):
-        # the gradient check's zero-order evaluations leave the sensitivity
-        # order at `none`
-        solver.set_sensitivity_order(SensitivityOrder.first)
         solver.set_sensitivity_method(sensi_meth)
         solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
         rdata = run_simulation(model, solver, edata)

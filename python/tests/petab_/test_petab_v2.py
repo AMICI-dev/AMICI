@@ -525,6 +525,29 @@ def test_aggregated_residuals_failed_simulation(residual_test_importer):
     assert result.s2llh is None
 
 
+def test_fiddy_derivative_check_leaves_solver_unchanged(
+    residual_test_importer,
+):
+    """The fiddy adapter restores the simulator's solver settings."""
+    import numpy as np
+    from amici.adapters.fiddy import (
+        simulate_petab_v2_to_function_and_derivative,
+    )
+    from fiddy import check_gradient
+
+    ps = residual_test_importer.create_simulator()
+    ps.solver.set_absolute_tolerance(1e-14)
+    ps.solver.set_relative_tolerance(1e-12)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+
+    function, derivative = simulate_petab_v2_to_function_and_derivative(ps)
+    point = np.array([0.4, 1.5])
+    expected = derivative(point)
+    assert not np.allclose(expected, 0)
+    check_gradient(function, point, expected).assert_success(always_print=True)
+    assert ps.solver.get_sensitivity_order() == SensitivityOrder.first
+
+
 def test_aggregated_residual_sensitivities_non_gaussian_noise():
     """No residuals are computed for non-Gaussian noise models, but the
     log-likelihood and its sensitivities are."""
