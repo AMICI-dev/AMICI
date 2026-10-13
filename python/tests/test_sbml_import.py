@@ -1520,8 +1520,9 @@ def test_dae_steady_state(tmp_path):
     assert model.get_state_ids() == ("x", "y")
     assert model.get_free_parameter_ids() == ("k", "p", "q")
     model.set_parameter_scale(ParameterScaling.none)
-    # post-equilibration
-    model.set_timepoints([np.inf])
+    # post-equilibration, after simulating to t=1, so that the state
+    # derivative is nonzero when the steady-state computation starts
+    model.set_timepoints([0, 1, np.inf])
 
     k, p, q = 0.5, 2, 0.3
     x_ss_expected = [q / (k * p), q / k]
@@ -1555,9 +1556,9 @@ def test_dae_steady_state(tmp_path):
         solver.set_sensitivity_method(SensitivityMethod.forward)
         rdata = run_simulation(model, solver)
         assert rdata.status == AMICI_SUCCESS, computation_mode
-        assert_allclose(rdata.x[0], x_ss_expected, rtol=1e-5)
+        assert_allclose(rdata.x[-1], x_ss_expected, rtol=1e-5)
         if sensi_order == SensitivityOrder.first:
-            assert_allclose(rdata.sx[0], sx_ss_expected, rtol=1e-4, atol=1e-5)
+            assert_allclose(rdata.sx[-1], sx_ss_expected, rtol=1e-4, atol=1e-5)
 
 
 @skip_on_valgrind
