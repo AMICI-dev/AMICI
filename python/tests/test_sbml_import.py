@@ -1467,14 +1467,14 @@ def test_dae_adjoint_sensitivities_observed_algebraic_state(tmp_path):
     """Test adjoint sensitivities of a DAE with a measured algebraic
     state."""
     sbml_str = antimony2sbml("""
-        model test_dae_asa_observed_algebraic
+        model dae_asa_obs_alg
             const k = 0.5, p = 2, q = 0.3
             x = 1; y = 2
             x' = -k * x + q
             0 = y - p * x
         end
     """)
-    model_name = "test_dae_asa_observed_algebraic"
+    model_name = "dae_asa_obs_alg"
     SbmlImporter(sbml_str, from_file=False).sbml2amici(
         model_name, tmp_path, observation_model=[MC("obs_y", formula="y")]
     )

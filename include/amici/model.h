@@ -1232,8 +1232,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * `nplist`), incremented. May be empty.
      */
     virtual void project_algebraic_objective_derivatives(
-        realtype /*t*/, AmiVector const& /*x*/, gsl::span<realtype> /*dJydx*/,
-        gsl::span<realtype> /*dJydp*/
+        [[maybe_unused]] realtype t, [[maybe_unused]] AmiVector const& x,
+        [[maybe_unused]] gsl::span<realtype> dJydx,
+        [[maybe_unused]] gsl::span<realtype> dJydp
     ) {}
 
     /**
