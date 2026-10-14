@@ -2089,11 +2089,11 @@ void Model::write_sensitivity_slice_event(
     gsl::span<realtype const> slice, gsl::span<realtype> buffer, int const ie
 ) {
     check_buffer_size(buffer, slice.size());
-    check_buffer_size(buffer, z2event_.size() * nplist());
+    check_buffer_size(buffer, nz * nplist());
     for (int ip = 0; ip < nplist(); ++ip)
-        for (unsigned izt = 0; izt < z2event_.size(); ++izt)
-            if (z2event_.at(izt) == ie)
-                buffer[ip * nztrue + izt] = slice[ip * nztrue + izt];
+        for (int iz = 0; iz < nz; ++iz)
+            if (z2event_.at(iz) == ie)
+                buffer[ip * nz + iz] = slice[ip * nz + iz];
 }
 
 void Model::write_llh_sensitivity_slice(
