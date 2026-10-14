@@ -571,6 +571,30 @@ def test_steadystate_computation_mode(preeq_fixture):
         )
 
 
+def test_newton_only_without_sensitivities(preeq_fixture):
+    """Test that steady-state computation mode `newtonOnly` and steady-state
+    sensitivity mode `integrationOnly` are only rejected with sensitivities."""
+    model, solver, edata, *_ = preeq_fixture
+
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.newtonOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_newton_max_steps(10)
+
+    solver.set_sensitivity_order(SensitivityOrder.none)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.preeq_status[0] == SteadyStateStatus.success
+
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status != AMICI_SUCCESS
+
+
 def test_simulation_errors(preeq_fixture):
     (
         model,
