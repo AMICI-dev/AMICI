@@ -1268,8 +1268,8 @@ void SteadyStateProblem::find_steady_state_by_newtons_method(
         ws_->sol.t = INFINITY;
     }
 
-    // For DAEs, Newton's method solves for the root of the residual, which
-    // is only the steady-state condition for `dx = 0`.
+    // At steady state, `dx = 0`. Store a consistent state for the subsequent
+    // simulation.
     ws_->sol.dx.zero();
 
     int const stage = newton_retry ? 2 : 0;
