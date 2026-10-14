@@ -32,6 +32,7 @@ from amici.sim.sundials import (
     ReturnDataView,
     SensitivityMethod,
     SensitivityOrder,
+    SteadyStateComputationMode,
     SteadyStateSensitivityMode,
     parameter_scaling_from_int_vector,
     run_simulation,
@@ -1603,3 +1604,52 @@ def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     sx_expected[:, 1, 1] = dy_dk2
     assert_allclose(rdata.sx, sx_expected, rtol=1e-8, atol=1e-10)
     assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)
+
+
+def test_dae_free_solver_after_failed_adjoint_setup(tmp_path):
+    """Test that an IDAS solver can be freed after an adjoint simulation
+    that failed before the first integration step."""
+    sbml_str = antimony2sbml("""
+        model test_dae_free_solver
+            const k = 0.5, p = 2, q = 0.3, x0 = 1
+            x = x0; y = 2
+            x' = -k * y + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_free_solver"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, fixed_parameters=["x0"]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    model.set_timepoints([0.0, 1.0])
+    edata = ExpData(model)
+    edata.fixed_parameters_pre_equilibration = [0.8]
+    edata.fixed_parameters = [0.8]
+
+    for _ in range(5):
+        # a successful run to leave non-zero freed memory on the heap
+        model.set_steady_state_computation_mode(
+            SteadyStateComputationMode.integrationOnly
+        )
+        model.set_steady_state_sensitivity_mode(
+            SteadyStateSensitivityMode.integrationOnly
+        )
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        assert run_simulation(model, solver, edata).status == AMICI_SUCCESS
+
+        # pre-equilibration fails before the first call to IDASolveF
+        model.set_steady_state_computation_mode(
+            SteadyStateComputationMode.newtonOnly
+        )
+        model.set_steady_state_sensitivity_mode(
+            SteadyStateSensitivityMode.newtonOnly
+        )
+        solver = model.create_solver()
+        solver.set_newton_max_steps(0)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        assert run_simulation(model, solver, edata).status == AMICI_ERROR
+        del solver

@@ -2368,7 +2368,10 @@ static void IDAAdataFree(IDAMem IDA_mem)
   if (IDAADJ_mem == NULL) { return; }
 
   /* Destroy data points by calling the interpolation's 'free' routine. */
-  IDAADJ_mem->ia_free(IDA_mem);
+  /* AMICI: The interpolation data is only allocated in the first call to
+     IDASolveF. Freeing it unconditionally destroys uninitialized vectors if
+     IDASolveF was never called (as checked in CVodeAdjFree). */
+  if (IDAADJ_mem->ia_mallocDone) { IDAADJ_mem->ia_free(IDA_mem); }
 
   for (i = 0; i <= IDAADJ_mem->ia_nsteps; i++)
   {
