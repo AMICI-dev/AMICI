@@ -1617,7 +1617,7 @@ def _event_output_fd(model, solver, edata, h=1e-6):
 @skip_on_valgrind
 def test_adjoint_sensitivities_event_outputs(tempdir):
     """Adjoint sensitivities for event outputs, with fewer events than
-    `n_max_event`."""
+    `n_max_event` and with as many events as `n_max_event`."""
     model_name = "test_adjoint_sensitivities_event_outputs"
     antimony2amici(
         """
@@ -1636,20 +1636,28 @@ def test_adjoint_sensitivities_event_outputs(tempdir):
     model = import_model_module(model_name, tempdir).get_model()
     model.set_timepoints(np.linspace(0.5, 4.5, 9))
     assert model.n_max_event() > 1
-    edata = _event_output_problem(model, [0.3])
 
     solver = model.create_solver()
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
     solver.set_sensitivity_order(SensitivityOrder.first)
-    sllh_fd, _ = _event_output_fd(model, solver, edata)
-    assert np.all(np.abs(sllh_fd) > 0.1)
 
-    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
-        solver.set_sensitivity_method(sensi_meth)
-        rdata = run_simulation(model, solver, edata)
-        assert rdata.status == AMICI_SUCCESS, sensi_meth
-        assert_allclose(rdata.sllh, sllh_fd, rtol=1e-5, err_msg=sensi_meth)
+    # E1 occurs once
+    for n_max_event in (model.n_max_event(), 1):
+        model.set_n_max_event(n_max_event)
+        edata = _event_output_problem(model, [0.3])
+        sllh_fd, _ = _event_output_fd(model, solver, edata)
+        assert np.all(np.abs(sllh_fd) > 0.1)
+
+        for sensi_meth in (
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
+            solver.set_sensitivity_method(sensi_meth)
+            rdata = run_simulation(model, solver, edata)
+            msg = f"{sensi_meth=}, {n_max_event=}"
+            assert rdata.status == AMICI_SUCCESS, msg
+            assert_allclose(rdata.sllh, sllh_fd, rtol=1e-5, err_msg=msg)
 
 
 @skip_on_valgrind
