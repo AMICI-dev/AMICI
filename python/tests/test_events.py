@@ -15,6 +15,7 @@ from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     AMICI_SUCCESS,
     ExpData,
+    InterpolationType,
     SensitivityMethod,
     SensitivityOrder,
     SteadyStateComputationMode,
@@ -1154,14 +1155,20 @@ def test_event_uses_values_from_trigger_time(tempdir):
 
 
 @skip_on_valgrind
+@pytest.mark.parametrize(
+    "interpolation_type",
+    [InterpolationType.hermite, InterpolationType.polynomial],
+)
 @pytest.mark.parametrize("t_end", [4.5, 5.0])
-def test_adjoint_sensitivities_state_dependent_event(tempdir, t_end):
+def test_adjoint_sensitivities_state_dependent_event(
+    tempdir, t_end, interpolation_type
+):
     """Test adjoint sensitivities for a parameter whose right-hand side
     derivative jumps at a state-dependent event.
 
     For `t_end = 5`, the event fires twice.
     """
-    model_name = "test_adjoint_sensitivities_state_dependent_event"
+    model_name = f"state_dependent_event_asa_{interpolation_type.name}"
     antimony2amici(
         """
         k = 0.5; q = 0.1
@@ -1185,6 +1192,7 @@ def test_adjoint_sensitivities_state_dependent_event(tempdir, t_end):
         solver = model.create_solver()
         solver.set_sensitivity_order(SensitivityOrder.first)
         solver.set_sensitivity_method(sensi_meth)
+        solver.set_interpolation_type(interpolation_type)
         solver.set_relative_tolerance(1e-12)
         solver.set_absolute_tolerance(1e-12)
         rdata = run_simulation(model, solver, edata)

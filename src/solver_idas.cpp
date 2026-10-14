@@ -640,7 +640,9 @@ bool IDASolver::store_pre_discontinuity_point(realtype const t0) const {
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
     auto ia_mem = ida_mem->ida_adj_mem;
     if (ida_mem->ida_nst % ia_mem->ia_nsteps == 0) {
-        // This is the first point of a check point, keep it.
+        // This is the first point of a check point, keep it. This only
+        // happens before the first step, since the check point
+        // interval (maxsteps + 1) exceeds the total number of steps.
         return false;
     }
     if (t0 > ida_mem->ida_tn || t0 < ida_mem->ida_tn - ida_mem->ida_hused) {
@@ -678,6 +680,8 @@ void IDASolver::store_post_discontinuity_point() const {
     if ((ida_mem->ida_nst + 1) % ia_mem->ia_nsteps == 0) {
         // This would require a new check point (see reinit_post_process).
         // Skip the point, interpolation will span the discontinuity.
+        // Only possible close to maxsteps, since the check point
+        // interval is maxsteps + 1.
         return;
     }
     ++ida_mem->ida_nst;
