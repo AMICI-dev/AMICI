@@ -2600,7 +2600,7 @@ void Model::fdsigmazdp(
     if (edata) {
         for (int iz = 0; iz < nztrue; iz++) {
             if (z2event_.at(iz) == ie
-                && !edata->is_set_event_noise_scale(nroots, iz)) {
+                && edata->is_set_event_noise_scale(nroots, iz)) {
                 for (int ip = 0; ip < nplist(); ip++)
                     derived_state_.dsigmazdp_.at(iz + nz * ip) = 0;
             }
