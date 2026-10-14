@@ -1092,9 +1092,11 @@ def test_import_same_model_name(tempdir):
         assert model_module_1c.get_model().module is model_module_1c
 
 
-@pytest.mark.parametrize("model_name", ["x0", "Xdot", "main", "wrapfunctions"])
+@pytest.mark.parametrize(
+    "model_name", ["x0", "Xdot", "main", "wrapfunctions", "swig"]
+)
 def test_model_name_of_generated_file(tempdir, model_name):
-    """Model names must not be names of generated source files."""
+    """Model names must not be names of generated files or directories."""
     from amici.importers.antimony import antimony2amici
 
     with pytest.raises(ValueError, match="generated source file"):
