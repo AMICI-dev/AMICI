@@ -1406,7 +1406,8 @@ void Model::add_event_objective(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurement(nroots, iztrue)) {
+        if (z2event_.at(iztrue) == ie
+            && edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJz(nllh.data(), iztrue, state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.z_.data(),
@@ -1426,7 +1427,8 @@ void Model::add_event_objective_regularization(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurement(nroots, iztrue)) {
+        if (z2event_.at(iztrue) == ie
+            && edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJrz(
                 nllh.data(), iztrue, state_.unscaled_parameters.data(),
@@ -2708,7 +2710,8 @@ void Model::fdJzdp(
     set_nan_to_zero(derived_state_.dJzdsigmaz_);
     set_nan_to_zero(derived_state_.dJrzdsigmaz_);
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.is_set_event_measurement(nroots, izt))
+        if (z2event_.at(izt) != ie
+            || !edata.is_set_event_measurement(nroots, izt))
             continue;
 
         if (t < edata.get_timepoint(edata.nt() - 1)) {
@@ -2772,7 +2775,8 @@ void Model::fdJzdx(
     set_nan_to_zero(derived_state_.drzdx_);
 
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.is_set_event_measurement(nroots, izt))
+        if (z2event_.at(izt) != ie
+            || !edata.is_set_event_measurement(nroots, izt))
             continue;
 
         if (t < edata.get_timepoint(edata.nt() - 1)) {
