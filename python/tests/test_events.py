@@ -1581,6 +1581,77 @@ def test_root_after_reinit_ignores_all_simultaneous_events(tempdir):
     assert rdata.by_id("n_fired_2")[-1] == 1
 
 
+def _event_output_problem(model, event_measurements):
+    """Experimental data with measurements only for the event outputs."""
+    nt = model.nt()
+    edata = ExpData(model)
+    edata.set_measurements(np.full(nt * model.nytrue, np.nan))
+    edata.set_noise_scales(np.ones(nt * model.nytrue))
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[: len(event_measurements)] = event_measurements
+    edata.set_event_measurements(mz)
+    edata.set_event_noise_scales(np.ones_like(mz))
+    return edata
+
+
+def _event_output_fd(model, solver, edata, h=1e-6):
+    """Central finite differences of `llh` and `z[0]`."""
+    solver = deepcopy(solver)
+    solver.set_sensitivity_order(SensitivityOrder.none)
+    p0 = np.array(model.get_free_parameters())
+    sllh, sz = [], []
+    for ip in range(len(p0)):
+        rdatas = []
+        for step in (h, -h):
+            p = p0.copy()
+            p[ip] += step
+            model.set_free_parameters(p)
+            rdatas.append(run_simulation(model, solver, edata))
+            assert rdatas[-1].status == AMICI_SUCCESS
+        sllh.append((rdatas[0].llh - rdatas[1].llh) / (2 * h))
+        sz.append((rdatas[0].z[0] - rdatas[1].z[0]) / (2 * h))
+    model.set_free_parameters(p0)
+    return np.array(sllh), np.array(sz)
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_event_outputs(tempdir):
+    """Adjoint sensitivities for event outputs, with fewer events than
+    `n_max_event`."""
+    model_name = "test_adjoint_sensitivities_event_outputs"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (time > 1.3): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 4.5, 9))
+    assert model.n_max_event() > 1
+    edata = _event_output_problem(model, [0.3])
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    sllh_fd, _ = _event_output_fd(model, solver, edata)
+    assert np.all(np.abs(sllh_fd) > 0.1)
+
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert_allclose(rdata.sllh, sllh_fd, rtol=1e-5, err_msg=sensi_meth)
+
+
 @skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on
