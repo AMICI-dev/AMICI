@@ -254,6 +254,7 @@ def test_model_build_swig_version_mismatch(tmp_path, monkeypatch):
 
 
 def _assert_valid_matching(edges, matching):
+    """Check that `matching` is a matching in the bipartite graph `edges`."""
     assert all(right in edges[left] for left, right in matching.items())
     assert len(set(matching.values())) == len(matching)
 

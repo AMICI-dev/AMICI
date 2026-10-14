@@ -721,7 +721,8 @@ def maximum_bipartite_matching[L: Hashable, R: Hashable](
 ) -> dict[L, R]:
     """Find a maximum matching in a bipartite graph.
 
-    Uses augmenting paths (Kuhn's algorithm), without recursion.
+    Uses depth-first search for augmenting paths, without recursion, cf.
+    `Duff (1981) <https://doi.org/10.1145/355958.355963>`_.
 
     :param edges:
         For each left vertex, the right vertices it is connected to.
