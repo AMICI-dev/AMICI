@@ -1018,6 +1018,69 @@ def test_event_priorities(tempdir):
 
 
 @skip_on_valgrind
+def test_event_output_parameter_derivatives(tempdir):
+    """Test forward sensitivities of event outputs that depend explicitly on
+    the parameters, and of the root function value of an event that does
+    not trigger."""
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_event_output_parameter_derivatives"
+    model = antimony2amici(
+        """
+        k = 0.5; p = 0.1
+        x = 1; y = 0
+        x' = -k * x
+        y' = 0
+        E1: at time > 1.3: y = y + 1
+        E2: at x < p: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="p * x", event_id="E1"),
+            MC("z2", formula="time", event_id="E2"),
+        ],
+    )
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.linspace(0.5, 2, 4)
+    model.set_timepoints(t)
+    assert model.get_free_parameter_ids() == ("k", "p")
+
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t), np.nan))
+    edata.set_noise_scales(np.ones(len(t)))
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[:2] = [1.0, 3.0]
+    edata.set_event_measurements(mz)
+    edata.set_event_noise_scales(np.ones_like(mz))
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+
+    # E1 triggers at t1, E2 does not trigger until the last output time T
+    k, p, t1, T = 0.5, 0.1, 1.3, t[-1]
+    x1, xT = np.exp(-k * t1), np.exp(-k * T)
+    z1 = p * x1
+    dz1 = np.array([-p * t1 * x1, x1])
+    rz2 = p - xT
+    drz2 = np.array([T * xT, 1.0])
+    assert_allclose(rdata.z[0], [z1, T], rtol=1e-8)
+    assert_allclose(rdata.sz[0][:, 0], dz1, rtol=1e-6)
+    assert_allclose(rdata.rz[0][1], rz2, rtol=1e-8)
+    assert_allclose(rdata.srz[0][:, 1], drz2, rtol=1e-6)
+    # Jz(z2) does not depend on the parameters (z2 = T)
+    sllh_expected = -(z1 - mz[0]) * dz1 - rz2 * drz2
+    assert np.all(np.abs(sllh_expected) > 0.1)
+    assert_allclose(rdata.sllh, sllh_expected, rtol=1e-6)
+
+
+@skip_on_valgrind
 def test_random_event_ordering(tempdir):
     """For simultaneously executed events, the order of execution
     must be random."""
