@@ -169,6 +169,23 @@ class CVodeSolver : public Solver {
      */
     void reset_state(void* cv_mem, const_N_Vector y0) const;
 
+    /**
+     * @brief Store the forward solution before a discontinuity for
+     * interpolation during adjoint integration.
+     * @param t0 time of the discontinuity
+     * @return whether the post-discontinuity solution can be stored
+     */
+    bool store_pre_discontinuity_point(realtype t0) const;
+
+    /**
+     * @brief Store the forward solution after a discontinuity for
+     * interpolation during adjoint integration.
+     */
+    void store_post_discontinuity_point() const;
+
+    /** Whether the post-discontinuity solution still needs to be stored */
+    mutable bool store_post_discontinuity_point_{false};
+
     void set_sens_params(
         realtype const* p, realtype const* pbar, int const* plist
     ) const override;

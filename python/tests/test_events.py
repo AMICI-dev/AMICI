@@ -298,7 +298,6 @@ def model_definition_nested_events():
         "k2": 0,
         "inflow_1": 4,
         "decay_1": 2,
-        # FIXME adjoint sensitivities w.r.t. decay_2 are slightly off
         "decay_2": 5,
         "bolus": 0,  # for bolus != 0, nested event sensitivities are off!
     }
@@ -726,19 +725,10 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
-    # FIXME: for `events_plus_heavisides`, `sllh` w.r.t. `beta` differs
-    # between FSA and ASA by ~4.8e-5 relative.
-    # For `nested_events`, `sllh` w.r.t. `decay_2` differs by ~0.26%
-    # relative.
-    # Root-caused to a CVODES backward-integration order-1 restart on every
-    # per-datapoint adjoint reinit, which doesn't fully recover before a
-    # discontinuity that happens to sit close to a datapoint here -- see
-    # https://github.com/AMICI-dev/AMICI/issues/3274.
-    asa_xfail = amici_model.get_name() in (
-        "events_plus_heavisides",
-        "nested_events",
-    )
-    check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
+    # For `nested_events`, `llh` is discontinuous in `bolus` at 0: for
+    # `bolus < 0`, `event_1` triggers again right after its first occurrence.
+    skip_fd = ("bolus",) if amici_model.get_name() == "nested_events" else ()
+    check_trajectories_with_adjoint_sensitivities(amici_model, skip_fd)
 
 
 def expm(x):
@@ -1161,6 +1151,51 @@ def test_event_uses_values_from_trigger_time(tempdir):
             # smaller than the offset from the trigger time
             epsilon=1e-8,
         )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("t_end", [4.5, 5.0])
+def test_adjoint_sensitivities_state_dependent_event(tempdir, t_end):
+    """Test adjoint sensitivities for a parameter whose right-hand side
+    derivative jumps at a state-dependent event.
+
+    For `t_end = 5`, the event fires twice.
+    """
+    model_name = "test_adjoint_sensitivities_state_dependent_event"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (x < 0.5): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    t = np.linspace(0.5, t_end, 10)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t), 0.5))
+    edata.set_noise_scales(np.ones(len(t)))
+
+    sllh = {}
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        sllh[sensi_meth] = rdata.sllh
+    assert np.all(np.abs(sllh[SensitivityMethod.forward]) > 0.1)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
 
 
 @skip_on_valgrind

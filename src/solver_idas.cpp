@@ -498,6 +498,13 @@ bool IDASolver::reinit_post_process_f(realtype const tnext) const {
         ic_status != IDA_SUCCESS)
         throw IDAException(ic_status, "IDACalcIC");
 
+    if (store_post_discontinuity_point_) {
+        store_post_discontinuity_point_ = false;
+        if (static_cast<IDAMem>(solver_memory_.get())->ida_adjMallocDone
+            == SUNTRUE)
+            store_post_discontinuity_point();
+    }
+
     int const status
         = reinit_post_process(solver_memory_.get(), &t_, &x_, &dx_, tnext);
     force_reinit_postprocess_F_ = false;
@@ -605,8 +612,10 @@ int IDASolver::reinit_post_process(
             throw IDAException(AMICI_ERROR, "reInitPostProcess");
         }
 
-        /* Load next point in dt_mem */
-        dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]->t = *t;
+        /* Load next point in dt_mem. As in IDASolveF, the stored data belongs
+         to the end of the internal step (ida_tn), not to the root time *t
+         on a root return. */
+        dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]->t = ida_mem->ida_tn;
         ia_mem->ia_storePnt(
             ida_mem, dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]
         );
@@ -614,13 +623,73 @@ int IDASolver::reinit_post_process(
         /* Set t1 field of the current ckeck point structure
          for the case in which there will be no future
          check points */
-        ia_mem->ck_mem->ck_t1 = *t;
+        ia_mem->ck_mem->ck_t1 = ida_mem->ida_tn;
 
-        /* tfinal is now set to *tret */
-        ia_mem->ia_tfinal = *t;
+        /* tfinal is now set to tn */
+        ia_mem->ia_tfinal = ida_mem->ida_tn;
     }
 
     return status;
+}
+
+bool IDASolver::store_pre_discontinuity_point(realtype const t0) const {
+    // The interpolation data of the forward solution for the adjoint
+    // problem must not span the discontinuity. The last stored point
+    // belongs to the end of the step in which the discontinuity was
+    // located (ida_tn >= t0). Replace it by the solution at t0.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    auto ia_mem = ida_mem->ida_adj_mem;
+    if (ida_mem->ida_nst % ia_mem->ia_nsteps == 0) {
+        // This is the first point of a check point, keep it.
+        return false;
+    }
+    auto const dt_pnt = ia_mem->dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps];
+    if (dt_pnt->t == t0)
+        return true;
+
+    N_Vector y;
+    if (ia_mem->ia_interpType == IDA_HERMITE) {
+        auto content = static_cast<IDAhermiteDataMem>(dt_pnt->content);
+        if (auto const status = IDAGetDky(ida_mem, t0, 1, content->yd);
+            status != IDA_SUCCESS)
+            throw IDAException(status, "IDAGetDky");
+        y = content->y;
+    } else {
+        y = static_cast<IDApolynomialDataMem>(dt_pnt->content)->y;
+    }
+    if (auto const status = IDAGetDky(ida_mem, t0, 0, y); status != IDA_SUCCESS)
+        throw IDAException(status, "IDAGetDky");
+    dt_pnt->t = t0;
+    return true;
+}
+
+void IDASolver::store_post_discontinuity_point() const {
+    // Add the (consistent) post-discontinuity solution at the time of the
+    // discontinuity (ida_tn), following the pre-discontinuity point at the
+    // same time. Before the first step after reinitialization, phi[0] and
+    // phi[1] hold y and y'.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    auto ia_mem = ida_mem->ida_adj_mem;
+    if ((ida_mem->ida_nst + 1) % ia_mem->ia_nsteps == 0) {
+        // This would require a new check point (see reinit_post_process).
+        // Skip the point, interpolation will span the discontinuity.
+        return;
+    }
+    ++ida_mem->ida_nst;
+    auto const dt_pnt = ia_mem->dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps];
+    dt_pnt->t = ida_mem->ida_tn;
+    if (ia_mem->ia_interpType == IDA_HERMITE) {
+        auto content = static_cast<IDAhermiteDataMem>(dt_pnt->content);
+        N_VScale(ONE, ida_mem->ida_phi[0], content->y);
+        N_VScale(ONE, ida_mem->ida_phi[1], content->yd);
+    } else {
+        auto content = static_cast<IDApolynomialDataMem>(dt_pnt->content);
+        N_VScale(ONE, ida_mem->ida_phi[0], content->y);
+        // must not be interpolated together with the preceding points
+        content->order = 0;
+    }
+    ia_mem->ck_mem->ck_t1 = ida_mem->ida_tn;
+    ia_mem->ia_tfinal = ida_mem->ida_tn;
 }
 
 void IDASolver::reinit(
@@ -628,6 +697,9 @@ void IDASolver::reinit(
 ) const {
 
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    if (solver_was_called_F_ && ida_mem->ida_adjMallocDone == SUNTRUE) {
+        store_post_discontinuity_point_ = store_pre_discontinuity_point(t0);
+    }
     ida_mem->ida_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;
