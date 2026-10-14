@@ -469,17 +469,18 @@ void ReturnData::get_event_output(
                     slice(sigmaz, nroots_.at(ie), nz), ie, nroots_.at(ie),
                     sol.t, edata
                 );
-            if (!isnan(llh))
-                model.add_event_objective(
-                    llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
-                );
-
-            /* if called from fillEvent at last timepoint,
-               add regularization based on rz */
-            if (sol.t == model.get_timepoint(nt - 1) && !isnan(llh)) {
-                model.add_event_objective_regularization(
-                    llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
-                );
+            if (!isnan(llh)) {
+                if (sol.t == model.get_timepoint(nt - 1)) {
+                    // The event did not occur until the last timepoint: only
+                    // the root function value enters the likelihood.
+                    model.add_event_objective_regularization(
+                        llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
+                    );
+                } else {
+                    model.add_event_objective(
+                        llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
+                    );
+                }
             }
         }
 

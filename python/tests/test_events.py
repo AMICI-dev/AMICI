@@ -1450,6 +1450,52 @@ def test_heaviside_reinit_after_preeq(tempdir):
 
 
 @skip_on_valgrind
+def test_event_measurement_without_event(tempdir):
+    """Test the likelihood and its sensitivities for a measurement of an
+    event that does not occur until the last output time.
+
+    Only the root function value at the last output time enters the
+    likelihood, not the event output.
+    """
+    model_name = "event_measurement_without_event"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (x < 0.1): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="2 * x", event_id="E1"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 2, 4))
+    edata = _event_output_problem(model, [0.3])
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    sllh_fd, _ = _event_output_fd(model, solver, edata)
+    assert np.all(np.abs(sllh_fd) > 0.01)
+
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        rz = rdata.rz[0, 0]
+        assert abs(rz) > 0.1
+        assert np.isclose(
+            rdata.llh, -0.5 * np.log(2 * np.pi) - 0.5 * rz**2, rtol=1e-12
+        )
+        assert_allclose(rdata.sllh, sllh_fd, rtol=1e-5, err_msg=sensi_meth)
+
+
+@skip_on_valgrind
 def test_gh2926(tempdir):
     """Two simultaneous events. Event `E1` changes the root function
     for the piecewise-switch from 0 to <0."""
