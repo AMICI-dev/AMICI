@@ -301,7 +301,7 @@ void EventHandlingBwdSimulator::run(
         solver_->store_diagnosis_b(ws_->which);
         --it;
     } else {
-        // no data points, only discontinuities, just set up the solver
+        // no data point at t_start, only set up the solver if needed
         // (e.g., during presimulation)
         if (integrate)
             solver_->setup_b(
