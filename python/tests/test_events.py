@@ -882,6 +882,40 @@ def test_multiple_event_assignment_with_compartment(tempdir):
     )
 
 
+@skip_on_valgrind
+def test_event_outputs_llh(tempdir):
+    """Test the likelihood for multiple outputs of the same event."""
+    model_name = "test_event_outputs_llh"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (time > 1.3): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="2 * x", event_id="E1"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 4.5, 9))
+    edata = ExpData(model)
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[:2] = [0.3, 0.6]
+    edata.set_event_measurements(mz)
+    edata.set_event_noise_scales(np.ones_like(mz))
+    rdata = run_simulation(model, model.create_solver(), edata)
+    assert rdata.status == AMICI_SUCCESS
+
+    res = rdata.z[0] - mz[:2]
+    expected_llh = -np.sum(0.5 * np.log(2 * np.pi) + 0.5 * res**2)
+    assert np.isclose(rdata.llh, expected_llh, rtol=1e-12)
+
+
 @pytest.mark.filterwarnings(
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
 )

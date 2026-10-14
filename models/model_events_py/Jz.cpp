@@ -17,7 +17,9 @@ void Jz_model_events_py(realtype *Jz, const int iz, const realtype *p, const rea
     switch(iz) {
         case 0:
             Jz[0] = 0.5*std::log(2*amici::pi*std::pow(sigma_z1_, 2)) + 0.5*std::pow(-mz1_ + z1_, 2)/std::pow(sigma_z1_, 2);
-            Jz[1] = 0.5*std::log(2*amici::pi*std::pow(sigma_z2_, 2)) + 0.5*std::pow(-mz2_ + z2_, 2)/std::pow(sigma_z2_, 2);
+            break;
+        case 1:
+            Jz[0] = 0.5*std::log(2*amici::pi*std::pow(sigma_z2_, 2)) + 0.5*std::pow(-mz2_ + z2_, 2)/std::pow(sigma_z2_, 2);
             break;
     }
 }
