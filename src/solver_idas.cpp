@@ -643,6 +643,11 @@ bool IDASolver::store_pre_discontinuity_point(realtype const t0) const {
         // This is the first point of a check point, keep it.
         return false;
     }
+    if (t0 > ida_mem->ida_tn || t0 < ida_mem->ida_tn - ida_mem->ida_hused) {
+        // Not a discontinuity within the last step, e.g., reinitialization
+        // after pre-equilibration.
+        return false;
+    }
     auto const dt_pnt = ia_mem->dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps];
     if (dt_pnt->t == t0)
         return true;
