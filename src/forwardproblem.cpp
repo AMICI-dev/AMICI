@@ -893,6 +893,7 @@ SteadyStateProblem::SteadyStateProblem(
           solver.get_newton_step_steady_state_check()
       )
     , newton_step_conv_(solver.get_newton_step_steady_state_check())
+    , dx_zero_(model.nx_solver, solver.get_sun_context())
     , solver_(&solver)
     , model_(&model) {
     // Check for compatibility of options
@@ -1098,8 +1099,8 @@ realtype SteadyStateProblem::get_wrms_fsa(WRMSComputer& wrms_computer_sx) {
     xdot_updated_ = false;
     for (int ip = 0; ip < model_->nplist(); ++ip) {
         model_->fsxdot(
-            ws_->sol.t, ws_->sol.x, ws_->sol.dx, ip, ws_->sol.sx[ip],
-            ws_->sol.dx, ws_->xdot
+            ws_->sol.t, ws_->sol.x, dx_zero_, ip, ws_->sol.sx[ip], dx_zero_,
+            ws_->xdot
         );
         if (newton_step_conv_) {
             newton_solver_.solve_linear_system(ws_->xdot);
@@ -1289,6 +1290,10 @@ void SteadyStateProblem::find_steady_state_by_newtons_method(
         ws_->sol.t = INFINITY;
     }
 
+    // At steady state, `dx = 0`. Store a consistent state for the subsequent
+    // simulation.
+    ws_->sol.dx.zero();
+
     int const stage = newton_retry ? 2 : 0;
     try {
         update_rhs();
@@ -1338,7 +1343,7 @@ void SteadyStateProblem::update_sensi_simulation() {
 void SteadyStateProblem::update_rhs() {
     if (xdot_updated_)
         return;
-    model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+    model_->fxdot(ws_->sol.t, ws_->sol.x, dx_zero_, ws_->xdot);
     xdot_updated_ = true;
 }
 
