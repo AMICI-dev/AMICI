@@ -432,3 +432,57 @@ def test_nested_piecewise_in_condition(tempdir):
         rtol=1e-8,
         atol=1e-14,
     )
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_heaviside_dependent_observable(tempdir):
+    """Test adjoint sensitivities for an observable that depends on a
+    Heaviside function that changes during the simulation."""
+    from amici import MeasurementChannel as MC
+    from amici.sim.sundials import (
+        ExpData,
+        ParameterScaling,
+        SensitivityMethod,
+        SensitivityOrder,
+    )
+
+    model_name = "test_adjoint_sensitivities_heaviside_dependent_observable"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1
+        x' = -k * x
+        o := piecewise(p * x, time < 2, x)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs", formula="o")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    assert model.get_free_parameter_ids() == ("k", "p")
+    t = np.linspace(0.5, 4, 8)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.ones(len(t)))
+    edata.set_noise_scales(np.ones(len(t)))
+
+    # analytical solution
+    k, p = 0.5, 3
+    x = np.exp(-k * t)
+    y = np.where(t < 2, p * x, x)
+    dydk = -t * y
+    dydp = np.where(t < 2, x, 0)
+    sllh_expected = -np.array([(y - 1) @ dydk, (y - 1) @ dydp])
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(
+            rdata.sllh, sllh_expected, rtol=1e-8, err_msg=sensi_meth
+        )
