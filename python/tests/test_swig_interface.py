@@ -802,3 +802,41 @@ def test_pickle_solver():
             solver.get_sensitivity_order()
             == solver_pickled.get_sensitivity_order()
         )
+
+
+@skip_on_valgrind
+def test_fsa_settings_after_simulation_without_states(tmp_path):
+    """Test changing sensitivity settings after a simulation of a model
+    without state variables."""
+    from amici.importers.antimony import antimony2amici
+    from amici.importers.sbml import MeasurementChannel as MC
+
+    model = antimony2amici(
+        """
+        model test_fsa_settings_no_states
+            p1 = 2
+            p2 = 3
+        end
+        """,
+        model_name="test_fsa_settings_no_states",
+        output_dir=tmp_path,
+        observation_model=[MC("obs", formula="p1 * p2")],
+    )
+    assert model.nx_solver == 0
+    model.set_timepoints([0.0, 1.0])
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    np.testing.assert_allclose(rdata.sy[:, :, 0], [[3.0, 2.0]] * 2)
+
+    # there is no sensitivity memory to apply the tolerances to
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance_fsa(1e-10)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    np.testing.assert_allclose(rdata.sy[:, :, 0], [[3.0, 2.0]] * 2)

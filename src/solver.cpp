@@ -720,7 +720,7 @@ void Solver::apply_sensitivity_tolerances() const {
     if (sensi_ < SensitivityOrder::first)
         return;
 
-    if (sensi_meth_ == SensitivityMethod::forward)
+    if (sensi_meth_ == SensitivityMethod::forward && get_sens_init_done())
         apply_tolerances_fsa();
     else if (sensi_meth_ == SensitivityMethod::adjoint && get_adj_init_done()) {
         for (int iMem = 0; iMem < (int)solver_memory_B_.size(); ++iMem)
