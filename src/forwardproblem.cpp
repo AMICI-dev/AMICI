@@ -888,7 +888,8 @@ SteadyStateProblem::SteadyStateProblem(
         && model.get_steady_state_computation_mode()
                == SteadyStateComputationMode::newtonOnly
         && model.get_steady_state_sensitivity_mode()
-               == SteadyStateSensitivityMode::integrationOnly)
+               == SteadyStateSensitivityMode::integrationOnly
+        && solver.get_sensitivity_order() > SensitivityOrder::none)
         throw AmiException(
             "For forward sensitivity analysis steady-state "
             "computation mode 'newtonOnly' and steady-state "
