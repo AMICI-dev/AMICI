@@ -163,9 +163,6 @@ _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES = {
     "00753": True,
     "00885": True,
     "01106": True,
-    # Forward sensitivities & events in DAE models.
-    "00663": False,
-    "00762": False,
 }
 
 

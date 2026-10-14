@@ -24,6 +24,7 @@ using namespace amici;
 %ignore write_solution;
 %ignore write_solution_b;
 %ignore calc_ic;
+%ignore calc_consistent_state;
 %ignore calc_ic_b;
 %ignore sens_toggle_off;
 %ignore solve_b;

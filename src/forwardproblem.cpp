@@ -37,6 +37,20 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
     return false;
 }
 
+/**
+ * @brief First finite output timepoint after `t`, or `t + 1` if there is none.
+ * @param model Model
+ * @param t Current time.
+ * @return Timepoint
+ */
+realtype next_output_timepoint(Model const& model, realtype t) {
+    for (auto const tp : model.get_timepoints()) {
+        if (tp > t && std::isfinite(tp))
+            return tp;
+    }
+    return t + 1.0;
+}
+
 ForwardProblem::ForwardProblem(
     ExpData const* edata, gsl::not_null<Model*> model,
     gsl::not_null<Solver*> solver
@@ -556,7 +570,7 @@ void EventHandlingSimulator::handle_events(
                 // state, so reuse it instead of recomputing.
                 event_application->xdot_pre = ws_->xdot_old;
             } else {
-                model_->fxdot(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
+                model_->fdxdt(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
                 event_application->xdot_pre = ws_->xdot;
             }
         }
@@ -567,9 +581,16 @@ void EventHandlingSimulator::handle_events(
             ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_old, x_old_event,
             state_old.has_value() ? state_old->mod : model_->get_model_state()
         );
+        // For DAEs, the algebraic states and the state derivatives have to be
+        // made consistent with the post-event differential states before
+        // they are stored or used for sensitivity updates.
+        solver_->calc_consistent_state(
+            ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+            next_output_timepoint(*model_, ws_->sol.t)
+        );
         if (solver_->computing_fsa()) {
             // compute the new xdot
-            model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+            model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             model_->add_state_sensitivity_event_update(
                 ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event, ws_->xdot,
                 ws_->xdot_old,
@@ -581,7 +602,7 @@ void EventHandlingSimulator::handle_events(
         if (event_application) {
             event_application->x_post = ws_->sol.x;
             event_application->dx_post = ws_->sol.dx;
-            model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+            model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             event_application->xdot_post = ws_->xdot;
             result.discs.back().event_applications.push_back(
                 *std::move(event_application)
@@ -681,7 +702,7 @@ void EventHandlingSimulator::store_pre_event_state(
     if (solver_->get_sensitivity_order() >= SensitivityOrder::first) {
         // store x and xdot to compute jump in sensitivities
         ws_->x_old.copy(ws_->sol.x);
-        model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+        model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
         ws_->xdot_old.copy(ws_->xdot);
     }
     if (solver_->computing_fsa()) {

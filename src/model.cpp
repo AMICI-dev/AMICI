@@ -1511,6 +1511,12 @@ void Model::get_event_time_sensitivity(
     }
 }
 
+void Model::fdxdt(
+    realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+) {
+    fxdot(t, x, dx, dxdt);
+}
+
 void Model::add_state_event_update(
     AmiVector& x, int const ie, realtype const t, AmiVector const& xdot,
     AmiVector const& xdot_old, AmiVector const& x_old, ModelState const& state
