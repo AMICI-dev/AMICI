@@ -4,6 +4,7 @@
 #include "amici/exception.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/rdata.h"
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 
@@ -794,13 +795,20 @@ std::vector<realtype>
 ForwardProblem::get_adjoint_updates(Model& model, ExpData const& edata) {
     std::vector<realtype> dJydx(model.nJ * model.nx_solver * model.nt(), 0.0);
 
-    for (int it = 0; it < model.nt(); it++) {
-        if (std::isinf(model.get_timepoint(it)))
-            break;
-        model.get_adjoint_state_observable_update(
-            slice(dJydx, it, model.nx_solver * model.nJ), it,
-            get_simulation_state_timepoint(it).sol.x, edata
-        );
+    {
+        // The model state (e.g., Heaviside variables) at each output time may
+        // differ from the final one, which is restored afterwards.
+        ModelContext const mc(&model);
+        for (int it = 0; it < model.nt(); it++) {
+            if (std::isinf(model.get_timepoint(it)))
+                break;
+            auto const& state = get_simulation_state_timepoint(it);
+            model.set_model_state(state.mod);
+            model.get_adjoint_state_observable_update(
+                slice(dJydx, it, model.nx_solver * model.nJ), it, state.sol.x,
+                edata
+            );
+        }
     }
 
     if (posteq_problem_.has_value()) {
