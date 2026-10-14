@@ -1279,9 +1279,7 @@ void Model::add_partial_observable_objective_sensitivity(
         return;
 
     fdJydp(it, x, edata);
-    if (std::ranges::any_of(get_id_list(), [](realtype const id) {
-            return id == 0.0;
-        })) {
+    if (has_algebraic_states()) {
         // DAEs: measurements of algebraic states depend on the parameters
         // via the algebraic equations
         fdJydx(it, x, edata);
