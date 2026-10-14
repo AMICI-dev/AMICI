@@ -15,7 +15,7 @@ import pytest
 import sympy as sp
 from amici import import_model_module
 from amici.importers.antimony import antimony2sbml
-from amici.importers.sbml import SbmlImporter, SymbolId
+from amici.importers.sbml import SBMLException, SbmlImporter, SymbolId
 from amici.importers.utils import (
     MeasurementChannel as MC,
 )
@@ -1370,6 +1370,59 @@ def test_dae_forward_sensitivities_default_tolerances(tempdir):
         rtol=1e-5,
         atol=1e-8,
     )
+
+
+def _algebraic_rule_model(algebraic_rules: list[str]) -> str:
+    """SBML model with `x' = -k * x` and the given algebraic rules.
+
+    Built with libsbml instead of antimony, as the overdetermined test case
+    is invalid SBML, which antimony 3.1 rejects, whereas antimony 3.2
+    accepts it.
+    """
+    doc = libsbml.SBMLDocument(3, 2)
+    model = doc.createModel()
+    for par_id, value, constant in [
+        ("k", 0.5, True),
+        ("p", 2, False),
+        ("x", 1, False),
+        ("y", 2, False),
+        ("z", 0.5, False),
+        ("w", 0.5, False),
+    ]:
+        par = model.createParameter()
+        par.setId(par_id)
+        par.setValue(value)
+        par.setConstant(constant)
+    rule = model.createRateRule()
+    rule.setVariable("x")
+    rule.setMath(libsbml.parseL3Formula("-k * x"))
+    for formula in algebraic_rules:
+        model.createAlgebraicRule().setMath(libsbml.parseL3Formula(formula))
+    return libsbml.writeSBMLToString(doc)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "algebraic_rules",
+    [
+        # underdetermined: `p` is not constant
+        ["y - p * x"],
+        # structurally singular (overdetermined, invalid SBML):
+        # two rules for `y`, one for `z` and `w`
+        ["y - x", "y - 2 * x", "z + w - x"],
+    ],
+    ids=["underdetermined", "singular"],
+)
+def test_algebraic_rules_not_determined(algebraic_rules):
+    """Test that import fails if algebraic rules don't determine all
+    variables."""
+    sbml_importer = SbmlImporter(
+        _algebraic_rule_model(algebraic_rules), from_file=False
+    )
+    with pytest.raises(
+        SBMLException, match="algebraic rules do not determine"
+    ):
+        sbml_importer._build_ode_model()
 
 
 @skip_on_valgrind

@@ -66,6 +66,7 @@ from amici.importers.utils import (
     annotation_namespace,
     generate_flux_symbol,
     make_name_unique,
+    maximum_bipartite_matching,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
     resolve_reserved_symbol_renames,
@@ -1470,6 +1471,7 @@ class SbmlImporter:
         self._symbols[SymbolId.EXPRESSION] = toposort_symbols(
             self._symbols[SymbolId.EXPRESSION], "value"
         )
+        self._check_algebraic_rules_determined()
 
         # substitute symbols that must not occur in the definition of x0
         # allowed symbols: amici model parameters and time
@@ -1501,6 +1503,65 @@ class SbmlImporter:
                     raise AssertionError(
                         f"Infinite loop detected in _process_rules {species}."
                     )
+
+    def _check_algebraic_rules_determined(self) -> None:
+        """Check that the algebraic rules determine the algebraic states.
+
+        Each algebraic equation has to be matched to a distinct algebraic
+        state it depends on, and vice versa. Otherwise, the DAE is
+        structurally singular and cannot be solved.
+
+        This is a perfect matching in the bipartite graph of algebraic
+        equations and the algebraic states they depend on. It exists iff
+        the Jacobian of the algebraic equations w.r.t. the algebraic states
+        has full structural rank, i.e., is non-singular for generic values
+        of its non-zero entries. The size of a maximum matching is that
+        structural rank. The check is necessary, not sufficient: the
+        Jacobian can still be singular for specific values.
+
+        :raises SBMLException: if no such matching exists.
+        """
+        equations = self._symbols[SymbolId.ALGEBRAIC_EQUATION]
+        states = self._symbols[SymbolId.ALGEBRAIC_STATE]
+        if not equations:
+            return
+
+        expressions = self._symbols[SymbolId.EXPRESSION]
+
+        def state_dependencies(expr: sp.Expr) -> set[sp.Symbol]:
+            # algebraic states `expr` depends on, also via expressions
+            dependencies = set()
+            to_visit = list(expr.free_symbols)
+            visited = set()
+            while to_visit:
+                sym = to_visit.pop()
+                if sym in visited:
+                    continue
+                visited.add(sym)
+                if sym in states:
+                    dependencies.add(sym)
+                elif sym in expressions:
+                    to_visit.extend(expressions[sym]["value"].free_symbols)
+            return dependencies
+
+        dependencies = {
+            eq_id: state_dependencies(eq["value"])
+            for eq_id, eq in equations.items()
+        }
+        matching = maximum_bipartite_matching(dependencies)
+        if len(matching) == len(equations) == len(states):
+            return
+
+        raise SBMLException(
+            "The algebraic rules do not determine the variables they "
+            f"reference. Algebraic rules ({len(equations)}): "
+            + ", ".join(f"0 = {eq['value']}" for eq in equations.values())
+            + f". Variables to be determined ({len(states)}): "
+            + ", ".join(map(str, states))
+            + ". Variables that are not supposed to be determined by "
+            "algebraic rules must be constant, or be determined by other "
+            "rules or, for species, by reactions."
+        )
 
     def _process_rule_algebraic(self, rule: libsbml.AlgebraicRule):
         formula = self._sympify(rule)
@@ -1563,9 +1624,11 @@ class SbmlImporter:
                 continue
             free_variables.append(symbol)
 
-        # this should be guaranteed by sbml validation, so better check to make sure
-        # we don't mess anything up
-        assert len(free_variables) >= 1
+        if not free_variables:
+            raise SBMLException(
+                f"The algebraic rule `0 = {formula}` does not reference any "
+                "variable that is not already determined otherwise."
+            )
 
         self._symbols[SymbolId.ALGEBRAIC_EQUATION][
             symbol_with_assumptions(
