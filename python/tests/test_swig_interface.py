@@ -840,3 +840,33 @@ def test_fsa_settings_after_simulation_without_states(tmp_path):
     rdata = run_simulation(model, solver)
     assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
     np.testing.assert_allclose(rdata.sy[:, :, 0], [[3.0, 2.0]] * 2)
+
+
+def test_get_initial_state_sensitivities(tmp_path):
+    """Test computed initial state sensitivities for multiple parameters."""
+    from amici import import_model_module
+    from amici.importers.antimony import antimony2amici
+
+    ant_model = """
+    model test_sx0_getter
+        a = 2; b = 3; c = 5
+        x1 = a; x2 = b * c
+        x1' = -x1
+        x2' = -x2
+    end
+    """
+    module_name = "test_sx0_getter"
+    antimony2amici(ant_model, model_name=module_name, output_dir=tmp_path)
+    model = import_model_module(module_name, tmp_path).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_timepoints([0.0, 1.0])
+    assert model.get_free_parameter_ids() == ("a", "b", "c")
+
+    # d(x1, x2)/da, d(x1, x2)/db, d(x1, x2)/dc
+    expected = (1.0, 0.0, 0.0, 5.0, 0.0, 3.0)
+    assert model.get_initial_state_sensitivities() == expected
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    assert np.array_equal(rdata.sx0.flatten(), expected)
