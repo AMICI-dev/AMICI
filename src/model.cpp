@@ -248,6 +248,12 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
            && (a.ubw == b.ubw) && (a.lbw == b.lbw);
 }
 
+bool Model::has_algebraic_states() const {
+    return std::ranges::any_of(id_list_, [](realtype const id) {
+        return id == 0.0;
+    });
+}
+
 void Model::initialize(
     realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
     AmiVectorArray& sdx, bool const computeSensitivities,
@@ -1503,6 +1509,12 @@ void Model::get_event_time_sensitivity(
             state_.total_cl.data(), sx.data(ip), plist(ip), ie
         );
     }
+}
+
+void Model::fdxdt(
+    realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+) {
+    fxdot(t, x, dx, dxdt);
 }
 
 void Model::add_state_event_update(

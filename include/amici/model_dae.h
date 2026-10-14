@@ -212,6 +212,10 @@ class Model_DAE : public Model {
         realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& xdot
     ) override;
 
+    void fdxdt(
+        realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+    ) override;
+
     /**
      * @brief Residual function of the DAE
      *

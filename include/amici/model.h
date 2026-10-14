@@ -1418,13 +1418,28 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Compute the time derivative of the state vector.
+     *
+     * For ODE models, this is the right-hand side. For DAE models, the
+     * derivatives of the differential states are computed from the residual
+     * and `dx`; for the algebraic states, `dx` is returned.
+     *
+     * @param t Timepoint
+     * @param x State
+     * @param dx Time derivative of the state (DAE only)
+     * @param dxdt Output: time derivative of the state
+     */
+    virtual void
+    fdxdt(realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt);
+
+    /**
      * @brief Update state variables after event.
      *
      * @param x Current state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param x_old Current or old state from which to compute the state update
      * @param state The model state based on which to compute the update.
      */
@@ -1442,8 +1457,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param x Current state
      * @param x_old Pre-event state
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param sx_old Pre-event state sensitivity
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
@@ -1462,8 +1477,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param x_old Pre-event state
      * @param dx Current derivative of state (DAE only)
      */
@@ -1481,8 +1496,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param x Current state
      * @param xB Current adjoint state
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param x_old Pre-event state
      * @param dx Current derivative of state (DAE only)
      */
@@ -1729,6 +1744,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @return Flag array for DAE equations
      */
     std::vector<realtype> const& get_id_list() const { return id_list_; }
+
+    /**
+     * @brief Check whether the model has algebraic states.
+     *
+     * @return `true` if any state is algebraic (DAE models only)
+     */
+    [[nodiscard]] bool has_algebraic_states() const;
 
     /**
      * @brief Get second-order sensitivity mode.

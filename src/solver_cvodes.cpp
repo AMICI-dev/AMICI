@@ -978,6 +978,11 @@ void* CVodeSolver::get_adj_b_mem(void* ami_mem, int which) const {
 
 void CVodeSolver::calc_ic(realtype const /*tout1*/) const {};
 
+void CVodeSolver::calc_consistent_state(
+    realtype const /*t*/, AmiVector& /*x*/, AmiVector& /*dx*/,
+    realtype const /*tout1*/
+) const {}
+
 void CVodeSolver::
     calc_ic_b(int const /*which*/, realtype const /*tout1*/) const {};
 
