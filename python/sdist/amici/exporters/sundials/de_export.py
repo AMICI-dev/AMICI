@@ -1331,13 +1331,24 @@ class DEExporter:
 
         :param model_name:
             name of the model (may only contain upper and lower case letters,
-            digits and underscores, and must not start with a digit)
+            digits and underscores, and must not start with a digit). It must
+            not be the name of a generated source file (e.g., ``x0``),
+            independent of the case.
         """
         if not is_valid_identifier(model_name):
             raise ValueError(
                 f"'{model_name}' is not a valid model name. "
                 "Model name may only contain upper and lower case letters, "
                 "digits and underscores, and must not start with a digit."
+            )
+        # the model name is used for source files in the same directory as
+        #  the generated function files (case-insensitive file systems)
+        reserved_names = {*functions, "main", "wrapfunctions"}
+        if model_name.casefold() in {n.casefold() for n in reserved_names}:
+            raise ValueError(
+                f"'{model_name}' is not a valid model name. "
+                "Model name must not be the name of a generated source file "
+                "(case-insensitive), such as 'x0', 'xdot' or 'main'."
             )
 
         self.model_name = model_name
