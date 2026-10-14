@@ -2033,10 +2033,23 @@ class DEModel:
             raise ValueError(f"Unknown equation {name}")
 
         if name in ("sigmay", "sigmaz"):
-            # check for states in sigma{y,z}, which is currently not supported
+            # sigma{y,z} are evaluated without access to `w`, so expressions
+            #  (e.g., targets of SBML assignment rules) have to be replaced
+            #  by their definitions. Expressions are acyclic, so this
+            #  terminates.
+            w_to_expr = dict(zip(self.sym("w"), self.eq("w"), strict=True))
+
+            def substitute_w(expr: sp.Expr) -> sp.Expr:
+                while syms_w := expr.free_symbols & w_to_expr.keys():
+                    expr = expr.subs({w: w_to_expr[w] for w in syms_w})
+                return expr
+
+            self._eqs[name] = self._eqs[name].applyfunc(substitute_w)
+
+            # states in sigma{y,z} are currently only supported if they can be
+            #  expressed in terms of the respective observable
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
-            xs_in_sigma = {}
             for i, (sym_yz, eq_sigma_yz) in enumerate(
                 zip(
                     syms_yz,
@@ -2049,7 +2062,7 @@ class DEModel:
                     # Can we replace x symbols by an equivalent observable?
                     #  (currently, only the matching observable is supported)
                     x_to_eliminate = next(iter(tmp))
-                    eq_yz = (
+                    eq_yz = substitute_w(
                         self.eq("y")[i]
                         if name == "sigmay"
                         else self.eq("z")[self._z2event[i]][i]
@@ -2069,21 +2082,34 @@ class DEModel:
                         self._eqs[name][i] = self._eqs[name][i].subs(
                             x_to_eliminate, replacement[0]
                         )
-                        if not any(
-                            x in self._eqs[name][i].free_symbols
-                            for x in syms_x
-                        ):
-                            # successfully eliminated x symbols
-                            continue
 
-                    # Report all x symbols that cannot be replaced
-                    xs_in_sigma[sym_yz] = tmp
-            if xs_in_sigma:
+            # Report all symbols that are not available in sigma{y,z}: states
+            #  that could not be replaced, and anything else the substituted
+            #  expressions may have introduced
+            syms_unavailable = {
+                *syms_x,
+                *self.sym("tcl"),
+                *self.sym("h"),
+                *self.sym("spl"),
+            }
+            unavailable_in_sigma = {
+                sym_yz: syms
+                for sym_yz, eq_sigma_yz in zip(
+                    syms_yz, self._eqs[name], strict=True
+                )
+                if (syms := eq_sigma_yz.free_symbols & syms_unavailable)
+            }
+            if unavailable_in_sigma:
                 msg = ", ".join(
-                    [f"{yz} depends on {xs}" for yz, xs in xs_in_sigma.items()]
+                    f"the sigma of {yz} depends on {syms}"
+                    for yz, syms in unavailable_in_sigma.items()
                 )
                 raise NotImplementedError(
-                    f"State-dependent observables are not supported, but {msg}."
+                    "Sigmas may only depend on parameters, time, and the "
+                    "respective observable. States are only supported if "
+                    "they can be expressed in terms of the respective "
+                    "observable. Conservation law totals, events, and "
+                    f"splines are not supported. However, {msg}."
                 )
 
         if name == "root":

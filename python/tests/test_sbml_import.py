@@ -20,6 +20,7 @@ from amici.importers.utils import (
     MeasurementChannel as MC,
 )
 from amici.importers.utils import (
+    SBMLException,
     symbol_with_assumptions,
 )
 from amici.sim.sundials import (
@@ -219,6 +220,75 @@ def test_sbml2amici_observable_dependent_error(
     # ASA
     solver.set_sensitivity_method(SensitivityMethod.adjoint)
     check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+def test_sigma_depending_on_assignment_rules(tempdir):
+    """Check sigmas that depend on targets of assignment rules.
+
+    https://github.com/AMICI-dev/AMICI/issues/3384
+    """
+    ant_model = """
+    model test_sigma_depending_on_assignment_rules
+        compartment C = 1
+        species A in C = 1
+        species B in C = 0
+        k = 0.3; sd = 0.1; scale = 2
+        R1: A => B; k * A
+        readout := A
+        sd_rule := 2 * sd
+    end
+    """
+    model_name = "test_sigma_depending_on_assignment_rules"
+
+    # a state-dependent sigma that cannot be expressed in terms of the
+    #  respective observable is rejected at import
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    with pytest.raises(SBMLException) as excinfo:
+        sbml_importer.sbml2amici(
+            model_name=model_name,
+            output_dir=tempdir,
+            observation_model=[MC("obs_b", formula="B", sigma="sd * readout")],
+            compile=False,
+        )
+    assert "the sigma of obs_b depends on {A}" in str(excinfo.value.__cause__)
+
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    sbml_importer.sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            # state-dependent assignment rule
+            MC("obs_a", formula="readout", sigma="sd * readout"),
+            # state- and parameter-dependent assignment rules
+            MC(
+                "obs_a_scaled",
+                formula="scale * readout",
+                sigma="sd_rule * readout",
+            ),
+        ],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 10, 11))
+    solver = model.create_solver()
+    # the sigmas are small and proportional to the observables, which makes
+    #  the finite-difference check sensitive to integration errors
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    a = rdata.by_id("A")
+    assert_allclose(rdata.sigmay[:, 0], 0.1 * a, rtol=1e-10, atol=1e-14)
+    assert_allclose(rdata.sigmay[:, 1], 0.2 * a, rtol=1e-10, atol=1e-14)
+
+    # model sigmas are used, as no noise scales are set
+    edata = ExpData(model)
+    edata.set_measurements((1.1 * rdata.y).flatten())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_method)
+        check_derivatives(model, solver=solver, edata=edata)
 
 
 @skip_on_valgrind
