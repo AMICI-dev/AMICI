@@ -248,6 +248,12 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
            && (a.ubw == b.ubw) && (a.lbw == b.lbw);
 }
 
+bool Model::has_algebraic_states() const {
+    return std::ranges::any_of(id_list_, [](realtype const id) {
+        return id == 0.0;
+    });
+}
+
 void Model::initialize(
     realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
     AmiVectorArray& sdx, bool const computeSensitivities,

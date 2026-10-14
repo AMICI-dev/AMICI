@@ -1731,6 +1731,13 @@ class Model : public AbstractModel, public ModelDimensions {
     std::vector<realtype> const& get_id_list() const { return id_list_; }
 
     /**
+     * @brief Check whether the model has algebraic states.
+     *
+     * @return `true` if any state is algebraic (DAE models only)
+     */
+    [[nodiscard]] bool has_algebraic_states() const;
+
+    /**
      * @brief Get second-order sensitivity mode.
      *
      * @return Flag indicating whether for `SensitivityOrder::second`
