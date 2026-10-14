@@ -1360,6 +1360,10 @@ def test_event_noise_parameter_derivative(tempdir):
             expected = -1 / sd + res**2 / sd**3
             assert abs(expected) > 1
         assert np.isclose(rdata.sllh[1], expected, atol=1e-6), sigma_from_edata
+        # d sigma_z1 / d (k, sd)
+        assert_allclose(
+            rdata.ssigmaz[0, :, 0], [0, 0 if sigma_from_edata else 1]
+        )
 
 
 @skip_on_valgrind
