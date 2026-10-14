@@ -987,6 +987,10 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get the initial state sensitivities.
      *
+     * Sensitivities are with respect to the unscaled parameters, i.e.,
+     * without the chain rule for parameter scaling applied (see
+     * set_unscaled_initial_state_sensitivities()).
+     *
      * @return vector of initial state sensitivities
      */
     std::vector<realtype> get_initial_state_sensitivities() {
@@ -995,6 +999,10 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial states sensitivities.
+     *
+     * Sensitivities are with respect to the unscaled parameters, i.e.,
+     * without the chain rule for parameter scaling applied (see
+     * set_unscaled_initial_state_sensitivities()).
      *
      * @param t0 Custom t0 for which to get initial states.
      * @return vector of initial state sensitivities

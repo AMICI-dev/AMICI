@@ -1009,8 +1009,9 @@ std::vector<realtype> Model::get_initial_state_sensitivities(realtype t0) {
     auto x0 = get_initial_state(t0);
     for (int ip = 0; ip < nplist(); ip++) {
         fsx0(
-            sx0.data(), t0, x0.data(), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), plist(ip)
+            &sx0.at(ip * nx_rdata), t0, x0.data(),
+            state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+            plist(ip)
         );
     }
     return sx0;
