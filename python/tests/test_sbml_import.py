@@ -222,6 +222,47 @@ def test_sbml2amici_observable_dependent_error(
 
 
 @skip_on_valgrind
+def test_noise_formula_with_expression(tempdir):
+    """Test noise formulas that refer to model expressions."""
+    from amici import MeasurementChannel as MC
+    from amici.importers.antimony import antimony2amici
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_noise_formula_with_expression"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1
+        x' = -k * x
+        s := 0.1 * p
+        E1: at time > 1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x", sigma="s"),
+            MC("z1", formula="x", event_id="E1", sigma="2 * s"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_timepoints([0.5, 2])
+    assert model.get_free_parameter_ids() == ("k", "p")
+    edata = ExpData(model)
+    edata.set_measurements([1.0, 1.0])
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[0] = 1.0
+    edata.set_event_measurements(mz)
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.sigmay[:, 0], 0.3)
+    assert_allclose(rdata.ssigmay[:, :, 0], [[0, 0.1], [0, 0.1]])
+    assert_allclose(rdata.sigmaz[0, 0], 0.6)
+
+
+@skip_on_valgrind
 def test_logging_works(observable_dependent_error_model, caplog):
     """Check that warnings are forwarded to Python logging"""
     model_module = observable_dependent_error_model

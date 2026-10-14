@@ -2033,6 +2033,17 @@ class DEModel:
             raise ValueError(f"Unknown equation {name}")
 
         if name in ("sigmay", "sigmaz"):
+            # sigma{y,z} are evaluated without the expressions, substitute
+            #  them
+            if self.num_expr():
+                w_to_expr = dict(zip(self.sym("w"), self.eq("w")))
+                self._eqs[name] = self._eqs[name].applyfunc(
+                    lambda eq: (
+                        smart_subs_dict(eq, w_to_expr)
+                        if eq.free_symbols & w_to_expr.keys()
+                        else eq
+                    )
+                )
             # check for states in sigma{y,z}, which is currently not supported
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
