@@ -446,7 +446,7 @@ def test_adjoint_sensitivities_heaviside_dependent_observable(tempdir):
         SensitivityOrder,
     )
 
-    model_name = "test_adjoint_sensitivities_heaviside_dependent_observable"
+    model_name = "heaviside_observable_asa"
     antimony2amici(
         """
         k = 0.5; p = 3
