@@ -2035,15 +2035,18 @@ class DEModel:
         if name in ("sigmay", "sigmaz"):
             # sigma{y,z} are evaluated without the expressions, substitute
             #  them
-            if self.num_expr():
-                w_to_expr = dict(zip(self.sym("w"), self.eq("w")))
-                self._eqs[name] = self._eqs[name].applyfunc(
-                    lambda eq: (
-                        smart_subs_dict(eq, w_to_expr)
-                        if eq.free_symbols & w_to_expr.keys()
-                        else eq
-                    )
-                )
+            w_to_expr = (
+                dict(zip(self.sym("w"), self.eq("w")))
+                if self.num_expr()
+                else {}
+            )
+
+            def subs_w(eq: sp.Expr) -> sp.Expr:
+                if eq.free_symbols & w_to_expr.keys():
+                    return smart_subs_dict(eq, w_to_expr)
+                return eq
+
+            self._eqs[name] = self._eqs[name].applyfunc(subs_w)
             # check for states in sigma{y,z}, which is currently not supported
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
@@ -2060,7 +2063,7 @@ class DEModel:
                     # Can we replace x symbols by an equivalent observable?
                     #  (currently, only the matching observable is supported)
                     x_to_eliminate = next(iter(tmp))
-                    eq_yz = (
+                    eq_yz = subs_w(
                         self.eq("y")[i]
                         if name == "sigmay"
                         else self.eq("z")[self._z2event[i]][i]

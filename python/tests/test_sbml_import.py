@@ -223,7 +223,8 @@ def test_sbml2amici_observable_dependent_error(
 
 @skip_on_valgrind
 def test_noise_formula_with_expression(tempdir):
-    """Test noise formulas that refer to model expressions."""
+    """Test noise formulas that refer to model expressions, including
+    expressions that depend on the states."""
     from amici import MeasurementChannel as MC
     from amici.importers.antimony import antimony2amici
     from amici.sim.sundials import ParameterScaling
@@ -235,12 +236,14 @@ def test_noise_formula_with_expression(tempdir):
         x = 1
         x' = -k * x
         s := 0.1 * p
+        r := 2 * x
         E1: at time > 1: x = x + 1
         """,
         model_name=model_name,
         output_dir=tempdir,
         observation_model=[
             MC("obs_x", formula="x", sigma="s"),
+            MC("obs_r", formula="r", sigma="p * r"),
             MC("z1", formula="x", event_id="E1", sigma="2 * s"),
         ],
     )
@@ -249,7 +252,7 @@ def test_noise_formula_with_expression(tempdir):
     model.set_timepoints([0.5, 2])
     assert model.get_free_parameter_ids() == ("k", "p")
     edata = ExpData(model)
-    edata.set_measurements([1.0, 1.0])
+    edata.set_measurements(np.ones(4))
     mz = np.full(model.n_max_event() * model.nztrue, np.nan)
     mz[0] = 1.0
     edata.set_event_measurements(mz)
@@ -259,6 +262,13 @@ def test_noise_formula_with_expression(tempdir):
     assert rdata.status == AMICI_SUCCESS
     assert_allclose(rdata.sigmay[:, 0], 0.3)
     assert_allclose(rdata.ssigmay[:, :, 0], [[0, 0.1], [0, 0.1]])
+    # sigma_r = p * r = p * obs_r
+    assert_allclose(rdata.sigmay[:, 1], 3 * rdata.y[:, 1])
+    assert np.all(np.abs(rdata.sy[:, 0, 1]) > 0.1)
+    assert_allclose(
+        rdata.ssigmay[:, :, 1],
+        3 * rdata.sy[:, :, 1] + np.column_stack([np.zeros(2), rdata.y[:, 1]]),
+    )
     assert_allclose(rdata.sigmaz[0, 0], 0.6)
 
 
