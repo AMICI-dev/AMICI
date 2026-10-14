@@ -1752,6 +1752,57 @@ def test_dae_event_forward_sensitivities(tempdir):
 
 
 @skip_on_valgrind
+def test_dae_algebraic_rule_piecewise(tempdir):
+    """Forward sensitivities of a DAE with a state-dependent `piecewise` in
+    an algebraic rule."""
+    ant_model = """
+    model dae_algebraic_rule_piecewise
+        const k = 0.5, p = 3
+        x = 1; y = 3
+        x' = -k * y
+        0 = y - piecewise(p * x, x > 0.3, x)
+    end
+    """
+    module_name = "dae_algebraic_rule_piecewise"
+    antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
+    model = import_model_module(module_name, tempdir).get_model()
+    # the switch is handled as an event
+    assert model.ne > 0
+    t = np.linspace(0, 4, 9)
+    model.set_timepoints(t)
+    assert model.get_free_parameter_ids() == ("k", "p")
+    assert model.get_state_ids() == ("x", "y")
+
+    # analytical solution: x' = -k * p * x until x = 0.3, then x' = -k * x
+    k, p = 0.5, 3.0
+    t_switch = np.log(1 / 0.3) / (k * p)
+    assert t[0] < t_switch < t[-1]
+    before = t < t_switch
+    x = np.where(before, np.exp(-k * p * t), 0.3 * np.exp(-k * (t - t_switch)))
+    dxdk = np.where(before, -p * t * x, -t * x)
+    dxdp = np.where(before, -k * t * x, -k * t_switch * x / p)
+    y = np.where(before, p * x, x)
+    dydk = np.where(before, p * dxdk, dxdk)
+    dydp = np.where(before, x + p * dxdp, dxdp)
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_relative_tolerance_fsa(1e-10)
+    solver.set_absolute_tolerance_fsa(1e-10)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x, np.stack([x, y], axis=1), rtol=1e-8)
+    sx_expected = np.stack(
+        [np.stack([dxdk, dydk], axis=1), np.stack([dxdp, dydp], axis=1)],
+        axis=1,
+    )
+    assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-8)
+
+
+@skip_on_valgrind
 def test_dae_event_adjoint_sensitivities(tempdir):
     """Adjoint sensitivities of a DAE with an event that changes a
     differential state the algebraic state depends on."""
