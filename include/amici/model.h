@@ -1219,17 +1219,18 @@ class Model : public AbstractModel, public ModelDimensions {
      * differential states and parameters.
      *
      * For index-1 DAEs, the algebraic states are functions of the
-     * differential states and parameters. This replaces the derivatives of
-     * the objective w.r.t. the algebraic states by the corresponding total
-     * derivatives w.r.t. the differential states and parameters, as required
-     * for adjoint sensitivity analysis. No-op for ODE models.
+     * differential states and parameters. This adds the contributions of the
+     * derivatives of the objective w.r.t. the algebraic states to the
+     * derivatives w.r.t. the differential states and parameters, and sets
+     * the former to zero. Only the first-order derivatives are updated.
+     * No-op for ODE models.
      *
      * @param t Timepoint
      * @param x State variables
      * @param dJydx State derivative of the objective (shape `nJ` x
      * `nx_solver`), updated in place.
      * @param dJydp Parameter derivative of the objective (shape `nJ` x
-     * `nplist`), incremented. May be empty.
+     * `nplist`), updated in place. May be empty.
      */
     virtual void project_algebraic_objective_derivatives(
         [[maybe_unused]] realtype t, [[maybe_unused]] AmiVector const& x,
