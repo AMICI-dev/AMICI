@@ -301,6 +301,16 @@ void EventHandlingBwdSimulator::run(
         );
     }
 
+    // DAEs: make the algebraic adjoint states and the derivatives of the
+    // differential adjoint states consistent
+    auto const calc_ic_b = [&]() {
+        auto const tout1
+            = (it >= 0 || !ws_->discs_.empty()) ? get_next_t(it) : t_end;
+        if (tout1 < t_)
+            solver_->calc_ic_b(ws_->which, tout1);
+    };
+    calc_ic_b();
+
     while (it >= 0 || !ws_->discs_.empty()) {
         // check if next timepoint is a discontinuity or a data-point
         double const tnext = get_next_t(it);
@@ -327,6 +337,7 @@ void EventHandlingBwdSimulator::run(
         // reinitialize state
         solver_->reinit_b(ws_->which, t_, ws_->xB_, ws_->dxB_);
         solver_->reinit_quad_b(ws_->which, ws_->xQB_);
+        calc_ic_b();
     }
 
     // we still need to integrate from first datapoint to t_start

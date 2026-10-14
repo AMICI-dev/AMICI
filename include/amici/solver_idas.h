@@ -163,6 +163,8 @@ class IDASolver : public Solver {
 
     void set_id(Model const* model) const override;
 
+    void set_id_b(int which, Model const* model) const override;
+
     void set_suppress_alg(bool flag) const override;
 
     /**

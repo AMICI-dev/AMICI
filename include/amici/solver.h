@@ -1529,6 +1529,15 @@ class Solver {
     virtual void set_id(Model const* model) const = 0;
 
     /**
+     * @brief Specify algebraic/differential components of the backward
+     * problem (DAE only)
+     *
+     * @param which identifier of the backwards problem
+     * @param model model specification
+     */
+    virtual void set_id_b(int which, Model const* model) const = 0;
+
+    /**
      * @brief deactivates error control for algebraic components (DAE only)
      *
      * @param flag deactivation flag

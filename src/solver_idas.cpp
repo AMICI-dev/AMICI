@@ -427,6 +427,18 @@ void IDASolver::set_id(Model const* model) const {
     N_VDestroy_Serial(id);
 }
 
+void IDASolver::set_id_b(int const which, Model const* model) const {
+    N_Vector id = N_VMake_Serial(
+        model->nx_solver, const_cast<realtype*>(model->get_id_list().data()),
+        sunctx_
+    );
+
+    int status = IDASetIdB(solver_memory_.get(), which, id);
+    N_VDestroy_Serial(id);
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetIdB");
+}
+
 void IDASolver::set_suppress_alg(bool const flag) const {
     int status = IDASetSuppressAlg(solver_memory_.get(), flag);
     if (status != IDA_SUCCESS)
@@ -949,9 +961,20 @@ void IDASolver::calc_ic(realtype tout1) const {
 }
 
 void IDASolver::calc_ic_b(int const which, realtype const tout1) const {
-    int status = IDACalcICB(
-        solver_memory_.get(), which, tout1, xB_.get_nvector(),
-        dxB_.get_nvector()
+    // IDACalcICB requires the forward solution at the current backward time
+    auto const tB
+        = static_cast<IDAMem>(IDAGetAdjIDABmem(solver_memory_.get(), which))
+              ->ida_tn;
+    AmiVector x(x_.size(), sunctx_);
+    AmiVector dx(x_.size(), sunctx_);
+    int status = IDAGetAdjY(
+        solver_memory_.get(), tB, x.get_nvector(), dx.get_nvector()
+    );
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDAGetAdjY");
+
+    status = IDACalcICB(
+        solver_memory_.get(), which, tout1, x.get_nvector(), dx.get_nvector()
     );
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACalcICB");
