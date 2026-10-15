@@ -1503,6 +1503,26 @@ class DEModel:
             + list(self.sym("dx")[len(differential) :])
         )
 
+    def _get_expression_substituter(
+        self,
+    ) -> Callable[[sp.Expr], sp.Expr]:
+        """Get a function that replaces expressions by their definitions.
+
+        For equations that are evaluated without access to `w`, expressions
+        (e.g., targets of SBML assignment rules) have to be replaced
+        recursively until none remain. Only the expressions that occur are
+        substituted.
+        """
+        w_to_expr = dict(zip(self.sym("w"), self.eq("w"), strict=True))
+
+        def substitute_w(expr: sp.Expr) -> sp.Expr:
+            # expressions are acyclic, so this terminates
+            while syms_w := expr.free_symbols & w_to_expr.keys():
+                expr = expr.subs({w: w_to_expr[w] for w in syms_w})
+            return expr
+
+        return substitute_w
+
     def _pre_event_eqs(self, name: str) -> list[sp.Matrix]:
         """Re-express `dtaudx`/`dtaudp` purely in terms of the pre-event
         state, for use inside `deltaxB`/`deltaqB` only.
@@ -1750,9 +1770,13 @@ class DEModel:
             # fill boluses for Heaviside functions, as empty state updates
             # would cause problems when writing the function file later
             event_eqs = []
+            # deltax is evaluated without access to `w`
+            substitute_w = self._get_expression_substituter()
             for event in self._events:
                 state_update = event.get_state_update(
-                    x=self.sym("x"), x_old=self.sym("x_old")
+                    x=self.sym("x"),
+                    x_old=self.sym("x_old"),
+                    substitute_expressions=substitute_w,
                 )
                 if state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
@@ -2054,17 +2078,8 @@ class DEModel:
             raise ValueError(f"Unknown equation {name}")
 
         if name in ("sigmay", "sigmaz"):
-            # sigma{y,z} are evaluated without access to `w`, so expressions
-            #  (e.g., targets of SBML assignment rules) have to be replaced
-            #  by their definitions. Expressions are acyclic, so this
-            #  terminates.
-            w_to_expr = dict(zip(self.sym("w"), self.eq("w"), strict=True))
-
-            def substitute_w(expr: sp.Expr) -> sp.Expr:
-                while syms_w := expr.free_symbols & w_to_expr.keys():
-                    expr = expr.subs({w: w_to_expr[w] for w in syms_w})
-                return expr
-
+            # sigma{y,z} are evaluated without access to `w`
+            substitute_w = self._get_expression_substituter()
             self._eqs[name] = self._eqs[name].applyfunc(substitute_w)
 
             # states in sigmay are currently only supported if they can be

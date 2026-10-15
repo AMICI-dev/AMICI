@@ -2,6 +2,7 @@
 
 import abc
 import numbers
+from collections.abc import Callable
 from typing import SupportsFloat
 
 import sympy as sp
@@ -805,7 +806,10 @@ class Event(ModelQuantity):
         self._is_negative_event = is_negative_event
 
     def get_state_update(
-        self, x: sp.Matrix, x_old: sp.Matrix
+        self,
+        x: sp.Matrix,
+        x_old: sp.Matrix,
+        substitute_expressions: Callable[[sp.Expr], sp.Expr] | None = None,
     ) -> sp.Matrix | None:
         """
         Get the state update (bolus) expression for the event assignment.
@@ -813,6 +817,10 @@ class Event(ModelQuantity):
         :param x: The current state vector.
         :param x_old: The previous state vector.
             If ``use_values_from_trigger_time=True``, this is equal to `x`.
+        :param substitute_expressions: Function replacing expressions (`w`)
+            by their definitions in terms of `x`, which is applied before
+            substituting `x` by `x_old`. The state update is evaluated
+            without access to `w`.
         :return: State-update matrix or ``None`` if no state update is defined.
         """
         if len(self._assignments) == 0:
@@ -828,6 +836,8 @@ class Event(ModelQuantity):
             :return: bolus expression
             """
             if (assignment := self._assignments.get(x_i)) is not None:
+                if substitute_expressions is not None:
+                    assignment = substitute_expressions(assignment)
                 return assignment.subs(x_to_x_old) - x_i
             else:
                 return sp.Float(0.0)
