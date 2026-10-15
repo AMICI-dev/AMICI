@@ -10,6 +10,7 @@ from amici import (
 from amici import (
     import_model_module,
 )
+from amici.adapters.fiddy import run_simulation_to_function_and_derivative
 from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     AMICI_SUCCESS,
@@ -23,6 +24,7 @@ from amici.sim.sundials import (
 from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
 from amici.testing.models import create_amici_model, create_sbml_model
+from fiddy import check_gradient
 from numpy.testing import assert_allclose
 from util import (
     check_trajectories_with_adjoint_sensitivities,
@@ -1594,26 +1596,6 @@ def _event_output_problem(model, event_measurements):
     return edata
 
 
-def _event_output_fd(model, solver, edata, h=1e-6):
-    """Central finite differences of `llh` and `z[0]`."""
-    solver = deepcopy(solver)
-    solver.set_sensitivity_order(SensitivityOrder.none)
-    p0 = np.array(model.get_free_parameters())
-    sllh, sz = [], []
-    for ip in range(len(p0)):
-        rdatas = []
-        for step in (h, -h):
-            p = p0.copy()
-            p[ip] += step
-            model.set_free_parameters(p)
-            rdatas.append(run_simulation(model, solver, edata))
-            assert rdatas[-1].status == AMICI_SUCCESS
-        sllh.append((rdatas[0].llh - rdatas[1].llh) / (2 * h))
-        sz.append((rdatas[0].z[0] - rdatas[1].z[0]) / (2 * h))
-    model.set_free_parameters(p0)
-    return np.array(sllh), np.array(sz)
-
-
 @skip_on_valgrind
 def test_adjoint_sensitivities_event_outputs(tempdir):
     """Adjoint sensitivities for event outputs, with fewer events than
@@ -1646,8 +1628,13 @@ def test_adjoint_sensitivities_event_outputs(tempdir):
     for n_max_event in (model.n_max_event(), 1):
         model.set_n_max_event(n_max_event)
         edata = _event_output_problem(model, [0.3])
-        sllh_fd, _ = _event_output_fd(model, solver, edata)
-        assert np.all(np.abs(sllh_fd) > 0.1)
+        function, _ = run_simulation_to_function_and_derivative(
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=["llh"],
+        )
+        point = np.asarray(model.get_free_parameters())
 
         for sensi_meth in (
             SensitivityMethod.forward,
@@ -1657,7 +1644,11 @@ def test_adjoint_sensitivities_event_outputs(tempdir):
             rdata = run_simulation(model, solver, edata)
             msg = f"{sensi_meth=}, {n_max_event=}"
             assert rdata.status == AMICI_SUCCESS, msg
-            assert_allclose(rdata.sllh, sllh_fd, rtol=1e-5, err_msg=msg)
+            if sensi_meth == SensitivityMethod.forward:
+                assert np.all(np.abs(rdata.sllh) > 0.1), msg
+            check_gradient(function, point, rdata.sllh).assert_success(
+                always_print=True
+            )
 
 
 @skip_on_valgrind
