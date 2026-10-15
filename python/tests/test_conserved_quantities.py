@@ -125,6 +125,22 @@ def test_conservation_laws_float_stoichiometry():
     )
 
 
+def test_conservation_laws_large_coefficients():
+    """Stoichiometries spanning many orders of magnitude result in large
+    integer coefficients."""
+    # A -> 1e-10 B; B -> 1e-10 C
+    S = sp.Matrix([[-1, 0], [sp.Float(1e-10), -1], [0, sp.Float(1e-10)]])
+    raw_cls = _conservation_laws_from_stoichiometry(S)
+    assert raw_cls == [(0, [0, 1, 2], [1, 10**10, 10**20])]
+
+
+def test_conservation_laws_non_finite():
+    """Non-finite stoichiometries are rejected."""
+    for value in (sp.nan, sp.oo):
+        with pytest.raises(ValueError, match="Non-finite"):
+            _conservation_laws_from_stoichiometry(sp.Matrix([[-1], [value]]))
+
+
 def test_conservation_laws_none():
     """No conservation laws for full-rank stoichiometric matrices."""
     assert (
@@ -204,4 +220,44 @@ def test_conservation_laws_variable_stoichiometry():
     assert importer._stoichiometric_matrix.free_symbols
 
     with pytest.warns(UserWarning, match="parameterized stoichiometric"):
-        assert importer._get_conservation_laws_rref() == []
+        assert importer._get_conservation_laws_nullspace() == []
+
+
+@skip_on_valgrind
+def test_conservation_laws_de_model(monkeypatch):
+    """Conservation laws for non-integer stoichiometries and species in
+    compartments of different sizes are consistent with the full model."""
+    from amici.importers.antimony import antimony2sbml
+
+    monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+    sbml = antimony2sbml("""
+        compartment c1 = 2, c2 = 0.5;
+        species A in c1 = 1, B in c2 = 2, C in c2 = 3, D in c1 = 1;
+        substanceOnly species E in c2 = 1;
+        r1: A -> 0.1 B; A
+        r2: 0.3 B -> C + 2.5 E; B
+        r3: C + D -> A; C * D
+        r4: E -> 1e-10 F; E
+        r5: F -> 1e-10 G; F
+    """)
+    full_model = SbmlImporter(sbml, from_file=False)._build_ode_model(
+        compute_conservation_laws=False
+    )
+    reduced_model = SbmlImporter(sbml, from_file=False)._build_ode_model(
+        compute_conservation_laws=True
+    )
+    xdot = dict(zip(full_model.sym("x_rdata"), full_model.eq("xdot")))
+    fluxes = {
+        flux: sp.Rational(i + 1, 7)
+        for i, flux in enumerate(sorted(full_model.sym("w"), key=str))
+    }
+    cls = reduced_model.get_conservation_laws()
+    assert len(cls) == 2
+    for state, expr in cls:
+        # time derivative of the eliminated state's expression
+        dexpr_dt = sum(
+            sp.diff(expr, x) * xdot[x] for x in expr.free_symbols & xdot.keys()
+        )
+        assert float((dexpr_dt - xdot[state]).subs(fluxes)) == pytest.approx(
+            0, abs=1e-12
+        )

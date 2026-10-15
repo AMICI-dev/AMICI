@@ -2631,7 +2631,7 @@ class SbmlImporter:
             )
         return raw_cls
 
-    def _get_conservation_laws_rref(
+    def _get_conservation_laws_nullspace(
         self,
     ) -> list[tuple[int, list[int], list[sp.Rational]]]:
         """Identify conservation laws based on the left nullspace of the
@@ -2661,6 +2661,14 @@ class SbmlImporter:
                 stacklevel=1,
             )
             return []
+        if not all(x.is_finite for x in S.todok().values()):
+            warnings.warn(
+                "Conservation laws for non-constant species in "
+                "combination with non-finite stoichiometric "
+                "coefficients are not supported and will be turned off.",
+                stacklevel=1,
+            )
+            return []
 
         if not _non_const_conservation_laws_supported(self.sbml_model):
             return []
@@ -2686,7 +2694,7 @@ class SbmlImporter:
         if algorithm.lower() == "demartino":
             raw_cls = self._get_conservation_laws_demartino(model)
         else:
-            raw_cls = self._get_conservation_laws_rref()
+            raw_cls = self._get_conservation_laws_nullspace()
 
         if not raw_cls:
             # no conservation laws identified
@@ -3665,9 +3673,9 @@ def _conservation_laws_from_stoichiometry(
 
     Computes the left nullspace of the species x reactions stoichiometric
     matrix in exact rational arithmetic and brings it to reduced row echelon
-    form. Floating-point entries are converted to the rational number given
-    by their shortest decimal representation, so that, e.g., ``0.1`` is
-    treated as ``1/10``.
+    form. Other entries are converted to double precision and then to the
+    rational number given by their shortest decimal representation, so that,
+    e.g., ``0.1`` is treated as ``1/10``.
 
     :param stoichiometric_matrix:
         Species x reactions stoichiometric matrix without free symbols.
@@ -3683,6 +3691,8 @@ def _conservation_laws_from_stoichiometry(
     def to_rational(x: sp.Expr) -> sp.Rational:
         if x.is_Rational:
             return x
+        if not x.is_finite:
+            raise ValueError(f"Non-finite stoichiometric coefficient: {x}")
         return sp.Rational(repr(float(x)))
 
     n_species, n_reactions = stoichiometric_matrix.shape
