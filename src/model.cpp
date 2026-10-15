@@ -1613,6 +1613,9 @@ void Model::add_adjoint_state_event_update(
         // differential states and parameters, cf. R. Serban, A. Recuero,
         // Sensitivity Analysis for Hybrid Systems and Systems with Memory,
         // arXiv:1904.08734, 2019, Sec. 4, footnote 3.
+        // This relies on the algebraic components of `xdot - xdot_old` in
+        // `deltaxB` being zero: `IDACalcIC` with `IDA_YA_YDP_INIT` does not
+        // change the derivatives of the algebraic states at events.
         // `project_algebraic_objective_derivatives` expects the layout
         // `iJ + ix * nJ`.
         std::vector<realtype> deltaxB(nx_solver * nJ, 0.0);
