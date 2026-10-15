@@ -20,18 +20,18 @@ extern const std::array<std::string_view const, 9> state_names;
 extern const std::array<std::string_view const, 9> state_names_solver;
 extern const std::array<std::string_view const, 3> observable_names;
 extern std::array<const ObservableScaling, 3> observable_scalings;
-extern const std::array<std::string_view const, 1> expression_names;
+extern const std::array<std::string_view const, 1 + 0> expression_names;
 extern const std::array<std::string_view const, 17> free_parameter_ids;
 extern const std::array<std::string_view const, 2> fixed_parameter_ids;
 extern const std::array<std::string_view const, 9> state_ids;
 extern const std::array<std::string_view const, 9> state_ids_solver;
 extern const std::array<std::string_view const, 3> observable_ids;
-extern const std::array<std::string_view const, 1> expression_ids;
+extern const std::array<std::string_view const, 1 + 0> expression_ids;
 extern std::array<int, 9> state_idxs_solver;
 
-extern void Jy_model_jakstat_adjoint_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
-extern void dJydsigmay_model_jakstat_adjoint_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
-extern void dJydy_model_jakstat_adjoint_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
+extern void Jy_model_jakstat_adjoint_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my);
+extern void dJydsigmay_model_jakstat_adjoint_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my);
+extern void dJydy_model_jakstat_adjoint_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs, int index);
 extern void dJydy_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals, int index);
 
@@ -41,7 +41,7 @@ extern void dJydy_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals, in
 
 
 
-extern void dwdp_model_jakstat_adjoint_py(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl, bool include_static);
+extern void dwdp_model_jakstat_adjoint_py(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl, bool include_static);
 extern void dwdp_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs);
 extern void dwdp_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals);
 
@@ -50,33 +50,35 @@ extern void dwdp_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals);
 
 
 
-extern void dxdotdw_model_jakstat_adjoint_py(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void dxdotdw_model_jakstat_adjoint_py(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w);
 extern void dxdotdw_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdw_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals);
-extern void dxdotdp_explicit_model_jakstat_adjoint_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void dxdotdp_explicit_model_jakstat_adjoint_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w);
 extern void dxdotdp_explicit_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdp_explicit_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals);
-extern void dxdotdx_explicit_model_jakstat_adjoint_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void dxdotdx_explicit_model_jakstat_adjoint_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals);
-extern void dydx_model_jakstat_adjoint_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
-extern void dydp_model_jakstat_adjoint_py(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl);
+extern void dydx_model_jakstat_adjoint_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w);
+extern void dydp_model_jakstat_adjoint_py(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const int ip, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl);
 
 
 
 
-extern void sigmay_model_jakstat_adjoint_py(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y);
+extern void sigmay_model_jakstat_adjoint_py(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const realtype *y);
 
-extern void dsigmaydp_model_jakstat_adjoint_py(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *y, const int ip);
+extern void dsigmaydp_model_jakstat_adjoint_py(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const int ip);
 
 
-extern void w_model_jakstat_adjoint_py(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl, bool include_static);
-extern void x0_model_jakstat_adjoint_py(realtype *x0, const realtype t, const realtype *p, const realtype *k);
+extern void w_model_jakstat_adjoint_py(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *tcl, const realtype *spl, bool include_static);
 
-extern void sx0_model_jakstat_adjoint_py(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip);
 
-extern void xdot_model_jakstat_adjoint_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
-extern void y_model_jakstat_adjoint_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void x0_model_jakstat_adjoint_py(realtype *x0, const realtype t, const realtype *p, const realtype *k, const realtype *ws);
+
+extern void sx0_model_jakstat_adjoint_py(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const int ip);
+
+extern void xdot_model_jakstat_adjoint_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w);
+extern void y_model_jakstat_adjoint_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w);
 
 
 
@@ -102,8 +104,8 @@ extern void x_solver_model_jakstat_adjoint_py(realtype *x_solver, const realtype
 
 
 
-extern std::vector<HermiteSpline> create_splines_model_jakstat_adjoint_py(const realtype *p, const realtype *k);
-extern void dspline_valuesdp_model_jakstat_adjoint_py(realtype *dspline_valuesdp, const realtype *p, const realtype *k, const int ip);
+extern std::vector<HermiteSpline> create_splines_model_jakstat_adjoint_py(const realtype *p, const realtype *k, const realtype *ws);
+extern void dspline_valuesdp_model_jakstat_adjoint_py(realtype *dspline_valuesdp, const realtype *p, const realtype *k, const realtype *ws, const int ip);
 
 
 /**
@@ -132,6 +134,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
                   .ne_solver = 0,
                   .nspl = 1,
                   .nw = 1,
+                  .nws = 0,
                   .ndwdx = 0,
                   .ndwdp = 5,
                   .ndwdw = 0,
@@ -167,77 +170,77 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
         return new Model_model_jakstat_adjoint_py(*this);
     }
 
-    void fJrz(realtype *Jrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fJrz(realtype *Jrz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fJy(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
-        Jy_model_jakstat_adjoint_py(Jy, iy, p, k, y, sigmay, my);
+    void fJy(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my) override {
+        Jy_model_jakstat_adjoint_py(Jy, iy, p, k, ws, y, sigmay, my);
     }
 
 
-    void fJz(realtype *Jz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
+    void fJz(realtype *Jz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
 
 
-    void fdJrzdsigmaz(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fdJrzdsigmaz(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fdJrzdrz(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fdJrzdrz(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fdJydsigmay(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
-        dJydsigmay_model_jakstat_adjoint_py(dJydsigmay, iy, p, k, y, sigmay, my);
+    void fdJydsigmay(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my) override {
+        dJydsigmay_model_jakstat_adjoint_py(dJydsigmay, iy, p, k, ws, y, sigmay, my);
     }
 
 
-    void fdJzdsigmaz(realtype *dJzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
+    void fdJzdsigmaz(realtype *dJzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
 
 
-    void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const double *mz) override {}
+    void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *z, const realtype *sigmaz, const double *mz) override {}
 
 
-    void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval) override {}
+    void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval) override {}
 
 
-    void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval) override {}
+    void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval) override {}
 
 
-    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
+    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
 
 
-    void fdeltaxB_at_trigger(realtype *deltaxB_at_trigger, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
+    void fdeltaxB_at_trigger(realtype *deltaxB_at_trigger, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
 
 
-    void fstauB(realtype *stauB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
+    void fstauB(realtype *stauB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
 
 
-    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB) override {}
+    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB) override {}
 
 
-    void fdtaudx(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie) override {}
+    void fdtaudx(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie) override {}
 
 
-    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie) override {}
+    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie) override {}
 
 
-    void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
+    void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const int ip) override {}
 
 
-    void fdrzdx(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
+    void fdrzdx(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h) override {}
 
 
-    void fdsigmaydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *y, const int ip) override {
-        dsigmaydp_model_jakstat_adjoint_py(dsigmaydp, t, p, k, y, ip);
+    void fdsigmaydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const int ip) override {
+        dsigmaydp_model_jakstat_adjoint_py(dsigmaydp, t, p, k, ws, y, ip);
     }
 
 
-    void fdsigmaydy(realtype *dsigmaydy, const realtype t, const realtype *p, const realtype *k, const realtype *y) override {}
+    void fdsigmaydy(realtype *dsigmaydy, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const realtype *y) override {}
 
 
-    void fdsigmazdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {}
+    void fdsigmazdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const int ip) override {}
 
 
-    void fdJydy(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
-        dJydy_model_jakstat_adjoint_py(dJydy, iy, p, k, y, sigmay, my);
+    void fdJydy(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my) override {
+        dJydy_model_jakstat_adjoint_py(dJydy, iy, p, k, ws, y, sigmay, my);
     }
 
     void fdJydy_colptrs(SUNMatrixWrapper &colptrs, int index) override {
@@ -249,19 +252,19 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    std::vector<HermiteSpline> fcreate_splines(const realtype *p, const realtype *k) override {
-        return create_splines_model_jakstat_adjoint_py(p, k);
+    std::vector<HermiteSpline> fcreate_splines(const realtype *p, const realtype *k, const realtype *ws) override {
+        return create_splines_model_jakstat_adjoint_py(p, k, ws);
     }
 
-    void fdspline_valuesdp(realtype *dspline_valuesdp, const realtype *p, const realtype *k, const int ip) override {
-        dspline_valuesdp_model_jakstat_adjoint_py(dspline_valuesdp, p, k, ip);
+    void fdspline_valuesdp(realtype *dspline_valuesdp, const realtype *p, const realtype *k, const realtype *ws, const int ip) override {
+        dspline_valuesdp_model_jakstat_adjoint_py(dspline_valuesdp, p, k, ws, ip);
     }
 
-    void fdspline_slopesdp(realtype *dspline_slopesdp, const realtype *p, const realtype *k, const int ip) override {}
+    void fdspline_slopesdp(realtype *dspline_slopesdp, const realtype *p, const realtype *k, const realtype *ws, const int ip) override {}
 
 
-    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl, bool include_static) override {
-        dwdp_model_jakstat_adjoint_py(dwdp, t, x, p, k, h, w, tcl, dtcldp, spl, sspl, include_static);
+    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl, bool include_static) override {
+        dwdp_model_jakstat_adjoint_py(dwdp, t, x, p, k, ws, h, w, tcl, dtcldp, spl, sspl, include_static);
     }
 
     void fdwdp_colptrs(SUNMatrixWrapper &colptrs) override {
@@ -273,22 +276,22 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl, bool include_static) override {}
+    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl, bool include_static) override {}
 
     void fdwdx_colptrs(SUNMatrixWrapper &colptrs) override {}
 
     void fdwdx_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    void fdwdw(realtype *dwdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, bool include_static) override {}
+    void fdwdw(realtype *dwdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *tcl, bool include_static) override {}
 
     void fdwdw_colptrs(SUNMatrixWrapper &colptrs) override {}
 
     void fdwdw_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    void fdxdotdw(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        dxdotdw_model_jakstat_adjoint_py(dxdotdw, t, x, p, k, h, w);
+    void fdxdotdw(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w) override {
+        dxdotdw_model_jakstat_adjoint_py(dxdotdw, t, x, p, k, ws, h, w);
     }
 
     void fdxdotdw_colptrs(SUNMatrixWrapper &colptrs) override {
@@ -300,8 +303,8 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    void fdxdotdp_explicit(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        dxdotdp_explicit_model_jakstat_adjoint_py(dxdotdp_explicit, t, x, p, k, h, w);
+    void fdxdotdp_explicit(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w) override {
+        dxdotdp_explicit_model_jakstat_adjoint_py(dxdotdp_explicit, t, x, p, k, ws, h, w);
     }
 
     void fdxdotdp_explicit_colptrs(SUNMatrixWrapper &colptrs) override {
@@ -313,8 +316,8 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    void fdxdotdx_explicit(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        dxdotdx_explicit_model_jakstat_adjoint_py(dxdotdx_explicit, t, x, p, k, h, w);
+    void fdxdotdx_explicit(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w) override {
+        dxdotdx_explicit_model_jakstat_adjoint_py(dxdotdx_explicit, t, x, p, k, ws, h, w);
     }
 
     void fdxdotdx_explicit_colptrs(SUNMatrixWrapper &colptrs) override {
@@ -326,69 +329,75 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        dydx_model_jakstat_adjoint_py(dydx, t, x, p, k, h, w);
+    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w) override {
+        dydx_model_jakstat_adjoint_py(dydx, t, x, p, k, ws, h, w);
     }
 
 
-    void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl) override {
-        dydp_model_jakstat_adjoint_py(dydp, t, x, p, k, h, ip, w, tcl, dtcldp, spl, sspl);
+    void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const int ip, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl) override {
+        dydp_model_jakstat_adjoint_py(dydp, t, x, p, k, ws, h, ip, w, tcl, dtcldp, spl, sspl);
     }
 
 
-    void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
+    void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const int ip) override {}
 
 
-    void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
+    void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h) override {}
 
 
-    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {}
+    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *tcl) override {}
 
 
-    void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
+    void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h) override {}
 
 
-    void fsigmay(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y) override {
-        sigmay_model_jakstat_adjoint_py(sigmay, t, p, k, y);
+    void fsigmay(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const realtype *y) override {
+        sigmay_model_jakstat_adjoint_py(sigmay, t, p, k, ws, y);
     }
 
 
-    void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) override {}
+    void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k, const realtype *ws) override {}
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
 
-    void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {
-        sx0_model_jakstat_adjoint_py(sx0, t, x, p, k, ip);
+    void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const int ip) override {
+        sx0_model_jakstat_adjoint_py(sx0, t, x, p, k, ws, ip);
     }
 
-    void fsx0_fixedParameters(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip, gsl::span<const int> reinitialization_state_idxs) override {}
+    void fsx0_fixedParameters(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const realtype *ws, const int ip, gsl::span<const int> reinitialization_state_idxs) override {}
 
 
-    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl, bool include_static) override {
-        w_model_jakstat_adjoint_py(w, t, x, p, k, h, tcl, spl, include_static);
-    }
-
-
-    void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {
-        x0_model_jakstat_adjoint_py(x0, t, p, k);
+    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *tcl, const realtype *spl, bool include_static) override {
+        w_model_jakstat_adjoint_py(w, t, x, p, k, ws, h, tcl, spl, include_static);
     }
 
 
-    void fx0_fixedParameters(realtype *x0_fixedParameters, const realtype t, const realtype *p, const realtype *k, gsl::span<const int> reinitialization_state_idxs) override {}
+    void fws(realtype *ws, const realtype t, const realtype *p, const realtype *k) override {}
 
 
-    void fxdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        xdot_model_jakstat_adjoint_py(xdot, t, x, p, k, h, w);
+    void fws_fixedParameters(realtype *ws_fixedParameters, const realtype t, const realtype *p, const realtype *k) override {}
+
+
+    void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k, const realtype *ws) override {
+        x0_model_jakstat_adjoint_py(x0, t, p, k, ws);
     }
 
 
-    void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        y_model_jakstat_adjoint_py(y, t, x, p, k, h, w);
+    void fx0_fixedParameters(realtype *x0_fixedParameters, const realtype t, const realtype *p, const realtype *k, const realtype *ws, gsl::span<const int> reinitialization_state_idxs) override {}
+
+
+    void fxdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w) override {
+        xdot_model_jakstat_adjoint_py(xdot, t, x, p, k, ws, h, w);
     }
 
 
-    void fz(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
+    void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w) override {
+        y_model_jakstat_adjoint_py(y, t, x, p, k, ws, h, w);
+    }
+
+
+    void fz(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h) override {}
 
 
     
@@ -398,37 +407,37 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    void ftotal_cl(realtype *total_cl, const realtype *x_rdata, const realtype *p, const realtype *k) override {}
+    void ftotal_cl(realtype *total_cl, const realtype *x_rdata, const realtype *p, const realtype *k, const realtype *ws) override {}
 
 
-    void fdx_rdatadx_solver(realtype *dx_rdatadx_solver, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k) override {}
+    void fdx_rdatadx_solver(realtype *dx_rdatadx_solver, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws) override {}
 
     void fdx_rdatadx_solver_colptrs(SUNMatrixWrapper &colptrs) override {}
 
     void fdx_rdatadx_solver_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    void fdx_rdatadp(realtype *dx_rdatadp, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k, const int ip) override {}
+    void fdx_rdatadp(realtype *dx_rdatadp, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws, const int ip) override {}
 
 
-    void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k) override {}
+    void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws) override {}
 
     void fdx_rdatadtcl_colptrs(SUNMatrixWrapper &colptrs) override {}
 
     void fdx_rdatadtcl_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    void fdtotal_cldp(realtype *dtotal_cldp, const realtype *x_rdata, const realtype *p, const realtype *k, const int ip) override {}
+    void fdtotal_cldp(realtype *dtotal_cldp, const realtype *x_rdata, const realtype *p, const realtype *k, const realtype *ws, const int ip) override {}
 
 
-    void fdtotal_cldx_rdata(realtype *dtotal_cldx_rdata, const realtype *x_rdata, const realtype *p, const realtype *k, const realtype *tcl) override {}
+    void fdtotal_cldx_rdata(realtype *dtotal_cldx_rdata, const realtype *x_rdata, const realtype *p, const realtype *k, const realtype *ws, const realtype *tcl) override {}
 
     void fdtotal_cldx_rdata_colptrs(SUNMatrixWrapper &colptrs) override {}
 
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *w) override { return {}; }
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *w) override { return {}; }
 
 
     std::string get_name() const override {
@@ -554,7 +563,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "46a7a00ab9f0aec6603785f7e1a9d878d6dcaa0d";
+        return "c3a618bff6e426fd48e2cde41b7d2fff3a920f9e";
     }
 
     bool has_quadratic_llh() const override {

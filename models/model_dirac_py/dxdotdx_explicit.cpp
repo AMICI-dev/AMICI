@@ -49,7 +49,7 @@ void dxdotdx_explicit_rowvals_model_dirac_py(SUNMatrixWrapper &dxdotdx_explicit)
 namespace amici {
 namespace model_model_dirac_py {
 
-void dxdotdx_explicit_model_dirac_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
+void dxdotdx_explicit_model_dirac_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w){
     const realtype p1_ = p[0];
     const realtype p3_ = p[2];
     const realtype p4_ = p[3];

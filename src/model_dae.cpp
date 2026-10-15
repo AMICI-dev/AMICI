@@ -47,7 +47,7 @@ void Model_DAE::fJSparse(
         fdxdotdx_explicit(
             derived_state_.dxdotdx_explicit.data(), t,
             N_VGetArrayPointerConst(x_pos), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.h.data(),
+            state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
             N_VGetArrayPointerConst(dx), derived_state_.w_.data()
         );
     }
@@ -106,7 +106,8 @@ void Model_DAE::froot(
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), derived_state_.w_.data(), N_VGetArrayPointerConst(dx)
+        state_.ws.data(), state_.h.data(), derived_state_.w_.data(),
+        N_VGetArrayPointerConst(dx)
     );
 }
 
@@ -125,7 +126,8 @@ void Model_DAE::fxdot(
     fxdot(
         N_VGetArrayPointer(xdot), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), N_VGetArrayPointerConst(dx), derived_state_.w_.data()
+        state_.ws.data(), state_.h.data(), N_VGetArrayPointerConst(dx),
+        derived_state_.w_.data()
     );
 }
 
@@ -166,7 +168,7 @@ void Model_DAE::fdxdotdw(
         fdxdotdw(
             derived_state_.dxdotdw_.data(), t, N_VGetArrayPointerConst(x_pos),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), N_VGetArrayPointerConst(dx),
+            state_.ws.data(), state_.h.data(), N_VGetArrayPointerConst(dx),
             derived_state_.w_.data()
         );
     }
@@ -186,7 +188,7 @@ void Model_DAE::fdxdotdp(
         fdxdotdp_explicit(
             derived_state_.dxdotdp_explicit.data(), t,
             N_VGetArrayPointerConst(x_pos), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.h.data(),
+            state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
             N_VGetArrayPointerConst(dx), derived_state_.w_.data()
         );
     }
@@ -356,9 +358,9 @@ std::unique_ptr<Solver> Model_DAE::create_solver() {
 
 void Model_DAE::fJSparse(
     SUNMatrixContent_Sparse /*JSparse*/, realtype /*t*/, realtype const* /*x*/,
-    double const* /*p*/, double const* /*k*/, realtype const* /*h*/,
-    realtype /*cj*/, realtype const* /*dx*/, realtype const* /*w*/,
-    realtype const* /*dwdx*/
+    double const* /*p*/, double const* /*k*/, double const* /*ws*/,
+    realtype const* /*h*/, realtype /*cj*/, realtype const* /*dx*/,
+    realtype const* /*w*/, realtype const* /*dwdx*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -369,8 +371,8 @@ void Model_DAE::fJSparse(
 
 void Model_DAE::froot(
     realtype* /*root*/, realtype const /*t*/, realtype const* /*x*/,
-    double const* /*p*/, double const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*dx*/
+    double const* /*p*/, double const* /*k*/, double const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*w*/, realtype const* /*dx*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is not "
@@ -381,8 +383,8 @@ void Model_DAE::froot(
 
 void Model_DAE::fdxdotdp_explicit(
     realtype* /*dxdotdp_explicit*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/, realtype const* /*w*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*dx*/, realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -409,8 +411,8 @@ void Model_DAE::fdxdotdp_explicit_rowvals(SUNMatrixWrapper& /*dxdotdp*/) {
 
 void Model_DAE::fdxdotdx_explicit(
     realtype* /*dxdotdx_explicit*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/, realtype const* /*w*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*dx*/, realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -437,8 +439,8 @@ void Model_DAE::fdxdotdx_explicit_rowvals(SUNMatrixWrapper& /*dxdotdx*/) {
 
 void Model_DAE::fdxdotdw(
     realtype* /*dxdotdw*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*dx*/, realtype const* /*w*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*dx*/, realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -465,7 +467,7 @@ void Model_DAE::fdxdotdw_rowvals(SUNMatrixWrapper& /*dxdotdw*/) {
 
 void Model_DAE::
     fM(realtype* /*M*/, realtype const /*t*/, realtype const* /*x*/,
-       realtype const* /*p*/, realtype const* /*k*/) {}
+       realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/) {}
 
 void Model_DAE::fJB(
     realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,

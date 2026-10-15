@@ -27,6 +27,7 @@ from amici.importers.utils import (
     ObservableTransformation,
     _default_simplify,
     amici_time_symbol,
+    make_name_unique,
     symbol_with_assumptions,
     toposort_symbols,
     unique_preserve_order,
@@ -55,6 +56,7 @@ from .de_model_components import (
     SigmaY,
     SigmaZ,
     State,
+    StaticExpression,
 )
 from .sympy_utils import (
     _parallel_applyfunc,
@@ -237,6 +239,7 @@ class DEModel:
         self._noise_parameters: list[NoiseParameter] = []
         self._observable_parameters: list[ObservableParameter] = []
         self._expressions: list[Expression] = []
+        self._static_expressions: list[StaticExpression] = []
         self._conservation_laws: list[ConservationLaw] = []
         self._events: list[Event] = []
         self._splines: list[AbstractSpline] = []
@@ -276,6 +279,7 @@ class DEModel:
             "Jz": self.log_likelihood_zs,
             "Jrz": self.log_likelihood_rzs,
             "w": self.expressions,
+            "ws": self.static_expressions,
             "root": self.events,
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
@@ -288,6 +292,7 @@ class DEModel:
             "p": self.free_parameters,
             "k": self.fixed_parameters,
             "w": self.expressions,
+            "ws": self.static_expressions,
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
             "h": self.events,
@@ -343,6 +348,7 @@ class DEModel:
 
             self._simplify = cached_simplify
         self._x0_fixedParameters_idx: None | Sequence[int]
+        self._ws_fixedParameters_idx: None | Sequence[int]
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
@@ -376,6 +382,10 @@ class DEModel:
     def expressions(self) -> list[Expression]:
         """Get all expressions."""
         return self._expressions
+
+    def static_expressions(self) -> list[StaticExpression]:
+        """Get all static expressions."""
+        return self._static_expressions
 
     def events(self) -> list[Event]:
         """Get all events."""
@@ -441,6 +451,7 @@ class DEModel:
         if type(component) not in {
             Observable,
             Expression,
+            StaticExpression,
             FreeParameter,
             FixedParameter,
             DifferentialState,
@@ -674,6 +685,15 @@ class DEModel:
             number of expression symbols
         """
         return len(self.sym("w"))
+
+    def num_static_expr(self) -> int:
+        """
+        Number of static expressions.
+
+        :return:
+            number of static expression symbols
+        """
+        return len(self.sym("ws"))
 
     def num_events(self) -> int:
         """
@@ -1072,7 +1092,7 @@ class DEModel:
         result = set()
 
         for name in names:
-            if name in ("k", "p"):
+            if name in ("k", "p", "ws"):
                 result |= set(self.sym(name))
             elif name == "w":
                 static_indices = self.static_indices("w")
@@ -1088,16 +1108,16 @@ class DEModel:
     @property
     def static_symbols(self) -> set[sp.Symbol]:
         """
-        The model's static symbols: those in ``k``, ``p``, and the entries
-        of ``w`` that do not depend on time or state, neither directly nor
-        indirectly.
+        The model's static symbols: those in ``k``, ``p``, ``ws``, and the
+        entries of ``w`` that do not depend on time or state, neither
+        directly nor indirectly.
 
         This is the set of symbols a quantity may depend on and still be
         evaluable without a live simulation state -- e.g. what the JAX
         backend's known-discontinuity (``jump_ts``) hints can actually take
         as arguments.
         """
-        return self._static_symbols(["k", "p", "w"])
+        return self._static_symbols(["k", "p", "ws", "w"])
 
     @property
     def constant_state_symbols(self) -> set[sp.Symbol]:
@@ -1303,6 +1323,7 @@ class DEModel:
         Generates the symbolic identifiers for all variables in
         ``DEModel._variable_prototype``
         """
+        self._toposort_static_expressions()
         self.parse_events()
         self._reorder_events()
 
@@ -1632,8 +1653,8 @@ class DEModel:
             # if x0_fixedParameters>0 else 0
             # sx0_fixedParameters = sx+deltasx =
             # dx0_fixed_parametersdx*sx+dx0_fixedParametersdp
-            self._eqs[name] = smart_jacobian(
-                self.eq("x0_fixedParameters"), self.sym("p")
+            self._eqs[name] = self._jacobian_p_through_ws(
+                self.eq("x0_fixedParameters")
             )
 
             dx0_fixed_parametersdx = smart_jacobian(
@@ -1648,16 +1669,56 @@ class DEModel:
                     self._eqs[name][:, ip] += tmp
 
         elif name == "x0_fixedParameters":
-            k = self.sym("k")
+            k = set(self.sym("k"))
             self._x0_fixedParameters_idx = [
                 ix
                 for ix, eq in enumerate(self.eq("x0"))
-                if any(sym in eq.free_symbols for sym in k)
+                if self._free_symbols_through_ws(eq) & k
             ]
             eq = self.eq("x0")
             self._eqs[name] = sp.Matrix(
                 [eq[ix] for ix in self._x0_fixedParameters_idx]
             )
+
+        elif name == "ws_fixedParameters":
+            # static expressions that (possibly indirectly) depend on fixed
+            #  parameters and therefore need to be re-evaluated after
+            #  fixed-parameter-dependent reinitialization; any other static
+            #  expressions they depend on are read from the current values
+            k = set(self.sym("k"))
+            ws_eqs = self.eq("ws")
+            self._ws_fixedParameters_idx = [
+                iws
+                for iws, eq in enumerate(ws_eqs)
+                if self._free_symbols_through_ws(eq) & k
+            ]
+            self._eqs[name] = sp.Matrix(
+                [ws_eqs[iws] for iws in self._ws_fixedParameters_idx]
+            )
+
+        elif name == "dwsdp":
+            # total derivative of the static expressions with respect to the
+            #  free parameters, accounting for dependencies among static
+            #  expressions (`dwsdws` is nilpotent after topological sorting)
+            dwsdp = smart_jacobian(self.eq("ws"), self.sym("p"))
+            dwsdws = self.eq("dwsdws")
+            if not smart_is_zero_matrix(dwsdws) and not smart_is_zero_matrix(
+                dwsdp
+            ):
+                total = dwsdp
+                term = dwsdp
+                for _ in range(self.num_static_expr()):
+                    term = smart_multiply(dwsdws, term)
+                    if smart_is_zero_matrix(term):
+                        break
+                    total = total + term
+                else:
+                    raise RuntimeError(
+                        "dwsdws is not nilpotent. Static expressions must "
+                        "not depend on each other cyclically."
+                    )
+                dwsdp = total
+            self._eqs[name] = dwsdp
 
         elif name == "dtotal_cldx_rdata":
             x_rdata = self.sym("x_rdata")
@@ -1697,8 +1758,8 @@ class DEModel:
 
         elif name == "dx_rdatadp":
             if self.num_cons_law():
-                self._eqs[name] = smart_jacobian(
-                    self.eq("x_rdata"), self.sym("p")
+                self._eqs[name] = self._jacobian_p_through_ws(
+                    self.eq("x_rdata")
                 )
             else:
                 # so far, dx_rdatadp is only required for sx_rdata
@@ -1828,10 +1889,16 @@ class DEModel:
             else:
                 var = self.sym(match_deriv[2])
 
-            self._eqs[name] = [
-                smart_jacobian(self.eq(match_deriv[1])[ie], var)
-                for ie in range(self.num_events())
-            ]
+            if match_deriv[2] == "p":
+                self._eqs[name] = [
+                    self._jacobian_p_through_ws(self.eq(match_deriv[1])[ie])
+                    for ie in range(self.num_events())
+                ]
+            else:
+                self._eqs[name] = [
+                    smart_jacobian(self.eq(match_deriv[1])[ie], var)
+                    for ie in range(self.num_events())
+                ]
             if name == "dzdx":
                 dtaudx = self.eq("dtaudx")
                 for ie in range(self.num_events()):
@@ -1882,7 +1949,7 @@ class DEModel:
             ]
 
         elif name == "dtaudp":
-            drootdp_explicit = smart_jacobian(self.eq("root"), self.sym("p"))
+            drootdp_explicit = self._jacobian_p_through_ws(self.eq("root"))
             drootdt_total = self.eq("drootdt_total")
             drootdw = self.eq("drootdw")
             drootdp = self.eq("drootdp")
@@ -2228,12 +2295,18 @@ class DEModel:
             ("root", "w"): "tcl",  # dtcldw = 0
         }
         # automatically detect chainrule
+        # `ws` only depends on `p` (and `k`), so a chain rule through `ws`
+        #  is only needed for derivatives with respect to `p`. Derivatives
+        #  with respect to `ws` itself are always partial derivatives: the
+        #  `w`-dependence on `ws` is already accounted for by `dwdp`.
         chainvars = [
             cv
-            for cv in ["w", "tcl"]
+            for cv in ["w", "tcl", "ws"]
             if var_in_function_signature(eq, cv, self.is_ode())
             and cv not in self._lock_total_derivative
             and var != cv
+            and var != "ws"
+            and (cv != "ws" or var == "p")
             and min(self.sym(cv).shape)
             and (
                 (eq, var) not in ignore_chainrule
@@ -2342,13 +2415,10 @@ class DEModel:
             self._eqs[name] = self._eqs[name].copy()
 
         for chainvar in chainvars:
-            if dydx_name is None:
-                dydx_name = f"d{eq}d{chainvar}"
-            if dxdz_name is None:
-                dxdz_name = f"d{chainvar}d{var}"
-
-            dydx = self.sym_or_eq(name, dydx_name)
-            dxdz = self.sym_or_eq(name, dxdz_name)
+            # explicit names only make sense for a single chain variable;
+            #  otherwise, derive the names from the current chain variable
+            dydx = self.sym_or_eq(name, dydx_name or f"d{eq}d{chainvar}")
+            dxdz = self.sym_or_eq(name, dxdz_name or f"d{chainvar}d{var}")
             # Save time for large models if one multiplicand is zero,
             # which is not checked for by sympy
             if not smart_is_zero_matrix(dydx) and not smart_is_zero_matrix(
@@ -2508,10 +2578,8 @@ class DEModel:
         ic = self.states()[ix].get_val()
         if not isinstance(ic, sp.Basic):
             return False
-        return any(
-            fp in (c.get_sym() for c in self._fixed_parameters)
-            for fp in ic.free_symbols
-        )
+        fixed_parameter_syms = {c.get_sym() for c in self._fixed_parameters}
+        return bool(self._free_symbols_through_ws(ic) & fixed_parameter_syms)
 
     def state_has_conservation_law(self, ix: int) -> bool:
         """
@@ -2606,7 +2674,9 @@ class DEModel:
                 ]
 
             (state_sym,) = tcl.get_val().free_symbols
-            init_free_syms = state_by_sym[state_sym].get_val().free_symbols
+            init_free_syms = self._free_symbols_through_ws(
+                state_by_sym[state_sym].get_val()
+            )
             return [
                 symbol_with_assumptions(f"s{tcl.get_id()}__{par.get_id()}")
                 if par.get_sym() in init_free_syms
@@ -2772,6 +2842,7 @@ class DEModel:
             + self._event_observables
             + self._events
             + self._expressions
+            + self._static_expressions
             + self._log_likelihood_ys
             + self._log_likelihood_zs
             + self._log_likelihood_rzs
@@ -3104,3 +3175,109 @@ class DEModel:
         self._eqs["w"] = sp.Matrix(list(w_toposorted.values()))
 
         return w_toposorted
+
+    def _toposort_static_expressions(self) -> None:
+        """
+        Sort static expressions in topological order.
+
+        Static expressions may depend on each other; they are evaluated
+        sequentially, so dependencies must come first.
+        """
+        if not self._static_expressions:
+            return
+
+        generated = {"ws", "dwsdws", "dwsdp", "ws_fixedParameters"} & (
+            set(self._syms) | set(self._eqs)
+        )
+
+        # Static expressions are evaluated at the initial time point, but
+        #  their (inlined) parameter derivatives are evaluated at arbitrary
+        #  time points. Any dependence on the initial time must therefore go
+        #  through a static expression holding the initial time itself,
+        #  rather than through the time symbol.
+        if any(
+            e.get_val().has(amici_time_symbol)
+            for e in self._static_expressions
+        ):
+            if generated:
+                raise AssertionError(
+                    "Static expressions must be processed before any related "
+                    f"symbols/equations are generated, but got {generated}."
+                )
+            taken = {c.get_sym().name for c in self._components}
+            t0 = symbol_with_assumptions(make_name_unique("t0", taken))
+            for e in self._static_expressions:
+                e.set_val(e.get_val().subs(amici_time_symbol, t0))
+            self._static_expressions.append(
+                StaticExpression(t0, "t0", amici_time_symbol)
+            )
+
+        ws_toposorted = toposort_symbols(
+            {e.get_sym(): e.get_val() for e in self._static_expressions}
+        )
+        by_sym = {e.get_sym(): e for e in self._static_expressions}
+        sorted_expressions = [by_sym[sym] for sym in ws_toposorted]
+        if sorted_expressions == self._static_expressions:
+            # already sorted (e.g., repeated call)
+            return
+        if generated:
+            raise AssertionError(
+                "Static expressions must be sorted before any related "
+                f"symbols/equations are generated, but got {generated}."
+            )
+        self._static_expressions = sorted_expressions
+
+    def _free_symbols_through_ws(self, expr: sp.Expr) -> set[sp.Symbol]:
+        """
+        Free symbols of an expression, with static expressions resolved.
+
+        Any static expression symbol in ``expr`` is replaced by the free
+        symbols of its (recursively resolved) definition, so the result only
+        contains parameters, states, time, etc.
+
+        :param expr:
+            expression
+        :return:
+            free symbols of ``expr`` after resolving static expressions
+        """
+        if not isinstance(expr, sp.Basic):
+            return set()
+        free_symbols = set(expr.free_symbols)
+        if not self._static_expressions:
+            return free_symbols
+
+        ws_defs = {e.get_sym(): e.get_val() for e in self._static_expressions}
+        result = set()
+        pending = free_symbols
+        seen = set()
+        while pending:
+            sym = pending.pop()
+            if sym in ws_defs:
+                if sym in seen:
+                    continue
+                seen.add(sym)
+                pending |= ws_defs[sym].free_symbols
+            else:
+                result.add(sym)
+        return result
+
+    def _jacobian_p_through_ws(self, eqs: sp.Matrix) -> sp.Matrix:
+        """
+        Jacobian of ``eqs`` with respect to the free parameters, including the
+        chain rule through the static expressions.
+
+        :param eqs:
+            column vector of expressions
+        :return:
+            total derivative ``d eqs / d p``
+        """
+        jac = smart_jacobian(eqs, self.sym("p"))
+        if not self.num_static_expr():
+            return jac
+        deqsdws = smart_jacobian(eqs, self.sym("ws"))
+        if smart_is_zero_matrix(deqsdws):
+            return jac
+        dwsdp = self.eq("dwsdp")
+        if smart_is_zero_matrix(dwsdp):
+            return jac
+        return jac + smart_multiply(deqsdws, dwsdp)

@@ -165,7 +165,7 @@ void ReturnData::initialize_full_reporting(bool quadratic_llh) {
 
     rz.resize(nmaxevent * nz, 0.0);
     x.resize(nt * nx_rdata, 0.0);
-    w.resize(nt * nw, 0.0);
+    w.resize(nt * (nw + nws), 0.0);
 
     preeq_numsteps.resize(3, 0);
     preeq_status.resize(3, SteadyStateStatus::not_run);
@@ -395,7 +395,7 @@ void ReturnData::get_data_output(
         model.fx_rdata(slice(x, it, nx_rdata), sol.x);
     }
     if (!w.empty())
-        model.get_expression(slice(w, it, nw), ts[it], sol.x);
+        model.get_expression(slice(w, it, nw + nws), ts[it], sol.x);
     if (!y.empty())
         model.get_observable(slice(y, it, ny), ts[it], sol.x);
     if (!sigmay.empty())
@@ -725,7 +725,7 @@ void ReturnData::invalidate(int const it_start) {
     if (!y.empty())
         std::fill(y.begin() + ny * it_start, y.end(), get_nan());
     if (!w.empty())
-        std::fill(w.begin() + nw * it_start, w.end(), get_nan());
+        std::fill(w.begin() + (nw + nws) * it_start, w.end(), get_nan());
 
     if (!sx.empty())
         std::fill(

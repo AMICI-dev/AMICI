@@ -53,7 +53,7 @@ void dJydy_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &dJydy, int index){
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-void dJydy_model_jakstat_adjoint_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+void dJydy_model_jakstat_adjoint_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my){
     const realtype obs_pSTAT_ = y[0];
     const realtype obs_tSTAT_ = y[1];
     const realtype obs_spline_ = y[2];

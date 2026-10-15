@@ -7,7 +7,7 @@
 namespace amici {
 namespace model_model_neuron_py {
 
-void sx0_fixedParameters_model_neuron_py(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip, gsl::span<const int> reinitialization_state_idxs){
+void sx0_fixedParameters_model_neuron_py(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const realtype *ws, const int ip, gsl::span<const int> reinitialization_state_idxs){
     const realtype v0_ = k[0];
 
     static const std::array<int, 2> _x0_fixedParameters_idxs = {

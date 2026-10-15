@@ -232,15 +232,46 @@ class AbstractModel {
     [[nodiscard]] virtual std::string get_amici_commit() const;
 
     /**
+     * @brief Model-specific implementation of fws
+     *
+     * Static expressions are derived quantities that are evaluated once at
+     * the initial time point and may depend on parameters, constants, the
+     * initial time, and other static expressions.
+     *
+     * @param ws static expressions
+     * @param t initial time
+     * @param p parameter vector
+     * @param k constant vector
+     */
+    virtual void
+    fws(realtype* ws, realtype t, realtype const* p, realtype const* k);
+
+    /**
+     * @brief Model-specific implementation of fws_fixedParameters
+     *
+     * Re-evaluates only those static expressions that depend on constants.
+     *
+     * @param ws static expressions
+     * @param t time
+     * @param p parameter vector
+     * @param k constant vector
+     */
+    virtual void fws_fixedParameters(
+        realtype* ws, realtype t, realtype const* p, realtype const* k
+    );
+
+    /**
      * @brief Model-specific implementation of fx0
      *
      * @param x0 initial state
      * @param t initial time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      */
     virtual void
-    fx0(realtype* x0, realtype t, realtype const* p, realtype const* k);
+    fx0(realtype* x0, realtype t, realtype const* p, realtype const* k,
+        realtype const* ws);
 
     /**
      * @brief Function indicating whether reinitialization of states depending
@@ -259,12 +290,13 @@ class AbstractModel {
      * @param t initial time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param reinitialization_state_idxs Indices of states to be reinitialized
      * based on provided constants / fixed parameters.
      */
     virtual void fx0_fixedParameters(
         realtype* x0, realtype t, realtype const* p, realtype const* k,
-        gsl::span<int const> reinitialization_state_idxs
+        realtype const* ws, gsl::span<int const> reinitialization_state_idxs
     );
 
     /**
@@ -275,13 +307,14 @@ class AbstractModel {
      * @param x0 initial state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param ip sensitivity index
      * @param reinitialization_state_idxs Indices of states to be reinitialized
      * based on provided constants / fixed parameters.
      */
     virtual void fsx0_fixedParameters(
         realtype* sx0, realtype t, realtype const* x0, realtype const* p,
-        realtype const* k, int ip,
+        realtype const* k, realtype const* ws, int ip,
         gsl::span<int const> reinitialization_state_idxs
     );
 
@@ -293,11 +326,12 @@ class AbstractModel {
      * @param x0 initial state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param ip sensitivity index
      */
     virtual void fsx0(
         realtype* sx0, realtype t, realtype const* x0, realtype const* p,
-        realtype const* k, int ip
+        realtype const* k, realtype const* ws, int ip
     );
 
     /**
@@ -318,6 +352,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
@@ -328,9 +363,9 @@ class AbstractModel {
      */
     virtual void fstau(
         realtype* stau, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, realtype const* tcl, realtype const* sx, int ip,
-        int ie
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* dx, realtype const* tcl,
+        realtype const* sx, int ip, int ie
     );
 
     /**
@@ -341,12 +376,14 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w repeating elements vector
      */
     virtual void
     fy(realtype* y, realtype t, realtype const* x, realtype const* p,
-       realtype const* k, realtype const* h, realtype const* w);
+       realtype const* k, realtype const* ws, realtype const* h,
+       realtype const* w);
 
     /**
      * @brief Model-specific implementation of fdydp
@@ -356,6 +393,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      * @param w repeating elements vector
@@ -367,9 +405,9 @@ class AbstractModel {
      */
     virtual void fdydp(
         realtype* dydp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, realtype const* w,
-        realtype const* tcl, realtype const* dtcldp, realtype const* spl,
-        realtype const* sspl
+        realtype const* k, realtype const* ws, realtype const* h, int ip,
+        realtype const* w, realtype const* tcl, realtype const* dtcldp,
+        realtype const* spl, realtype const* sspl
     );
 
     /**
@@ -380,12 +418,14 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w repeating elements vector
      */
     virtual void fdydx(
         realtype* dydx, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w
     );
 
     /**
@@ -397,11 +437,12 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      */
     virtual void
     fz(realtype* z, int ie, realtype t, realtype const* x, realtype const* p,
-       realtype const* k, realtype const* h);
+       realtype const* k, realtype const* ws, realtype const* h);
 
     /**
      * @brief Model-specific implementation of fsz
@@ -412,13 +453,15 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param sx current state sensitivity
      * @param ip sensitivity index
      */
     virtual void
     fsz(realtype* sz, int ie, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* sx, int ip);
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* sx, int ip);
 
     /**
      * @brief Model-specific implementation of frz
@@ -430,11 +473,12 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      */
     virtual void
     frz(realtype* rz, int ie, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h);
+        realtype const* k, realtype const* ws, realtype const* h);
 
     /**
      * @brief Model-specific implementation of fsrz
@@ -445,13 +489,15 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param sx current state sensitivity
      * @param h Heaviside vector
      * @param ip sensitivity index
      */
     virtual void fsrz(
         realtype* srz, int ie, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* sx, int ip
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* sx, int ip
     );
 
     /**
@@ -464,12 +510,14 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      */
     virtual void fdzdp(
         realtype* dzdp, int ie, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h, int ip
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, int ip
     );
 
     /**
@@ -482,11 +530,13 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      */
     virtual void fdzdx(
         realtype* dzdx, int ie, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h
     );
 
     /**
@@ -499,12 +549,14 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      */
     virtual void fdrzdp(
         realtype* drzdp, int ie, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h, int ip
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, int ip
     );
 
     /**
@@ -516,11 +568,13 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      */
     virtual void fdrzdx(
         realtype* drzdx, int ie, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h
     );
 
     /**
@@ -531,6 +585,7 @@ class AbstractModel {
      * @param x state before the event
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
@@ -539,8 +594,8 @@ class AbstractModel {
      */
     virtual void fdeltax(
         realtype* deltax, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ie, realtype const* xdot,
-        realtype const* xdot_eval, realtype const* x_eval
+        realtype const* k, realtype const* ws, realtype const* h, int ie,
+        realtype const* xdot, realtype const* xdot_eval, realtype const* x_eval
     );
 
     /**
@@ -551,6 +606,7 @@ class AbstractModel {
      * @param x state after the event
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w repeating elements vector
      * @param ip sensitivity index
@@ -566,10 +622,11 @@ class AbstractModel {
      */
     virtual void fdeltasx(
         realtype* deltasx, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w, int ip, int ie,
-        realtype const* xdot, realtype const* xdot_eval,
-        realtype const* xdot_pre, realtype const* sx, realtype const* sx_eval,
-        realtype const* stau, realtype const* tcl, realtype const* x_eval
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, int ip, int ie, realtype const* xdot,
+        realtype const* xdot_eval, realtype const* xdot_pre, realtype const* sx,
+        realtype const* sx_eval, realtype const* stau, realtype const* tcl,
+        realtype const* x_eval
     );
 
     /**
@@ -584,6 +641,7 @@ class AbstractModel {
      * @param x state after the event
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param dx time derivative of state (DAE only)
      * @param ie event index
@@ -593,8 +651,9 @@ class AbstractModel {
      */
     virtual void fdeltaxB(
         realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx, int ie,
-        realtype const* x_eval, realtype const* xB, realtype const* tcl
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* dx, int ie, realtype const* x_eval, realtype const* xB,
+        realtype const* tcl
     );
 
     /**
@@ -618,9 +677,9 @@ class AbstractModel {
      */
     virtual void fdeltaxB_at_trigger(
         realtype* deltaxB_at_trigger, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* dx, int ie, realtype const* x_eval, realtype const* xB,
-        realtype const* tcl
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, realtype const* dx, int ie, realtype const* x_eval,
+        realtype const* xB, realtype const* tcl
     );
 
     /**
@@ -646,10 +705,10 @@ class AbstractModel {
      */
     virtual void fstauB(
         realtype* stauB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx, int ie,
-        realtype const* xdot, realtype const* xdot_eval,
-        realtype const* xdot_pre, realtype const* x_eval, realtype const* xB,
-        realtype const* tcl
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* dx, int ie, realtype const* xdot,
+        realtype const* xdot_eval, realtype const* xdot_pre,
+        realtype const* x_eval, realtype const* xB, realtype const* tcl
     );
 
     /**
@@ -672,8 +731,9 @@ class AbstractModel {
      */
     virtual void fdeltaqB(
         realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx, int ip,
-        int ie, realtype const* x_eval, realtype const* xB
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* dx, int ip, int ie, realtype const* x_eval,
+        realtype const* xB
     );
 
     /**
@@ -685,6 +745,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
@@ -693,8 +754,8 @@ class AbstractModel {
      */
     virtual void fdtaudx(
         realtype* dtaudx, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, realtype const* tcl, int ie
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* dx, realtype const* tcl, int ie
     );
 
     /**
@@ -715,8 +776,9 @@ class AbstractModel {
      */
     virtual void fdtaudp(
         realtype* dtaudp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, realtype const* tcl, int ip, int ie
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* dx, realtype const* tcl, int ip,
+        int ie
     );
 
     /**
@@ -726,11 +788,12 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param y model output at timepoint t
      */
     virtual void fsigmay(
         realtype* sigmay, realtype t, realtype const* p, realtype const* k,
-        realtype const* y
+        realtype const* ws, realtype const* y
     );
 
     /**
@@ -740,12 +803,13 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param y model output at timepoint t
      * @param ip sensitivity index
      */
     virtual void fdsigmaydp(
         realtype* dsigmaydp, realtype t, realtype const* p, realtype const* k,
-        realtype const* y, int ip
+        realtype const* ws, realtype const* y, int ip
     );
     /**
      * @brief Model-specific implementation of fsigmay
@@ -755,11 +819,12 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param y model output at timepoint t
      */
     virtual void fdsigmaydy(
         realtype* dsigmaydy, realtype t, realtype const* p, realtype const* k,
-        realtype const* y
+        realtype const* ws, realtype const* y
     );
 
     /**
@@ -769,9 +834,12 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      */
-    virtual void
-    fsigmaz(realtype* sigmaz, realtype t, realtype const* p, realtype const* k);
+    virtual void fsigmaz(
+        realtype* sigmaz, realtype t, realtype const* p, realtype const* k,
+        realtype const* ws
+    );
 
     /**
      * @brief Model-specific implementation of fsigmaz
@@ -781,11 +849,12 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param ip sensitivity index
      */
     virtual void fdsigmazdp(
         realtype* dsigmazdp, realtype t, realtype const* p, realtype const* k,
-        int ip
+        realtype const* ws, int ip
     );
 
     /**
@@ -795,13 +864,15 @@ class AbstractModel {
      * @param iy output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param y model output at timepoint
      * @param sigmay measurement standard deviation at timepoint
      * @param my measurements at timepoint
      */
     virtual void
     fJy(realtype* nllh, int iy, realtype const* p, realtype const* k,
-        realtype const* y, realtype const* sigmay, realtype const* my);
+        realtype const* ws, realtype const* y, realtype const* sigmay,
+        realtype const* my);
 
     /**
      * @brief Model-specific implementation of fJz
@@ -810,13 +881,15 @@ class AbstractModel {
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurements at timepoint
      */
     virtual void
     fJz(realtype* nllh, int iz, realtype const* p, realtype const* k,
-        realtype const* z, realtype const* sigmaz, realtype const* mz);
+        realtype const* ws, realtype const* z, realtype const* sigmaz,
+        realtype const* mz);
 
     /**
      * @brief Model-specific implementation of fJrz
@@ -825,12 +898,13 @@ class AbstractModel {
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      */
     virtual void fJrz(
         realtype* nllh, int iz, realtype const* p, realtype const* k,
-        realtype const* z, realtype const* sigmaz
+        realtype const* ws, realtype const* z, realtype const* sigmaz
     );
 
     /**
@@ -841,13 +915,15 @@ class AbstractModel {
      * @param iy output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param y model output at timepoint
      * @param sigmay measurement standard deviation at timepoint
      * @param my measurement at timepoint
      */
     virtual void fdJydy(
         realtype* dJydy, int iy, realtype const* p, realtype const* k,
-        realtype const* y, realtype const* sigmay, realtype const* my
+        realtype const* ws, realtype const* y, realtype const* sigmay,
+        realtype const* my
     );
 
     /**
@@ -874,13 +950,15 @@ class AbstractModel {
      * @param iy output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param y model output at timepoint
      * @param sigmay measurement standard deviation at timepoint
      * @param my measurement at timepoint
      */
     virtual void fdJydsigmay(
         realtype* dJydsigmay, int iy, realtype const* p, realtype const* k,
-        realtype const* y, realtype const* sigmay, realtype const* my
+        realtype const* ws, realtype const* y, realtype const* sigmay,
+        realtype const* my
     );
 
     /**
@@ -891,13 +969,15 @@ class AbstractModel {
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurement at timepoint
      */
     virtual void fdJzdz(
         realtype* dJzdz, int iz, realtype const* p, realtype const* k,
-        realtype const* z, realtype const* sigmaz, realtype const* mz
+        realtype const* ws, realtype const* z, realtype const* sigmaz,
+        realtype const* mz
     );
 
     /**
@@ -908,13 +988,15 @@ class AbstractModel {
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurement at timepoint
      */
     virtual void fdJzdsigmaz(
         realtype* dJzdsigmaz, int iz, realtype const* p, realtype const* k,
-        realtype const* z, realtype const* sigmaz, realtype const* mz
+        realtype const* ws, realtype const* z, realtype const* sigmaz,
+        realtype const* mz
     );
 
     /**
@@ -924,12 +1006,13 @@ class AbstractModel {
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param rz model root output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      */
     virtual void fdJrzdrz(
         realtype* dJrzdrz, int iz, realtype const* p, realtype const* k,
-        realtype const* rz, realtype const* sigmaz
+        realtype const* ws, realtype const* rz, realtype const* sigmaz
     );
 
     /**
@@ -940,12 +1023,13 @@ class AbstractModel {
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param rz model root output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      */
     virtual void fdJrzdsigmaz(
         realtype* dJrzdsigmaz, int iz, realtype const* p, realtype const* k,
-        realtype const* rz, realtype const* sigmaz
+        realtype const* ws, realtype const* rz, realtype const* sigmaz
     );
 
     /**
@@ -956,6 +1040,7 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param tcl total abundances for conservation laws
      * @param spl spline value vector
@@ -966,8 +1051,8 @@ class AbstractModel {
      */
     virtual void
     fw(realtype* w, realtype t, realtype const* x, realtype const* p,
-       realtype const* k, realtype const* h, realtype const* tcl,
-       realtype const* spl, bool include_static = true);
+       realtype const* k, realtype const* ws, realtype const* h,
+       realtype const* tcl, realtype const* spl, bool include_static = true);
 
     /**
      * @brief Model-specific sparse implementation of dwdp
@@ -977,6 +1062,7 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
@@ -991,9 +1077,9 @@ class AbstractModel {
      */
     virtual void fdwdp(
         realtype* dwdp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl, realtype const* stcl, realtype const* spl,
-        realtype const* sspl, bool include_static = true
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* tcl, realtype const* stcl,
+        realtype const* spl, realtype const* sspl, bool include_static = true
     );
 
     /**
@@ -1018,6 +1104,7 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
@@ -1029,8 +1116,9 @@ class AbstractModel {
      */
     virtual void fdwdx(
         realtype* dwdx, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl, realtype const* spl, bool include_static = true
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* tcl, realtype const* spl,
+        bool include_static = true
     );
 
     /**
@@ -1055,6 +1143,7 @@ class AbstractModel {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
@@ -1065,8 +1154,8 @@ class AbstractModel {
      */
     virtual void fdwdw(
         realtype* dwdw, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl, bool include_static = true
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* tcl, bool include_static = true
     );
 
     /**
@@ -1089,12 +1178,13 @@ class AbstractModel {
      * @param dx_rdatadx_solver dx_rdata / dx_solver
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param x State variables with conservation laws applied
      * @param tcl Total abundances for conservation laws
      */
     virtual void fdx_rdatadx_solver(
         realtype* dx_rdatadx_solver, realtype const* x, realtype const* tcl,
-        realtype const* p, realtype const* k
+        realtype const* p, realtype const* k, realtype const* ws
     );
 
     /**
@@ -1117,13 +1207,14 @@ class AbstractModel {
      * @param dx_rdatadp dx_rdata / dp
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param x State variables with conservation laws applied
      * @param tcl Total abundances for conservation laws
      * @param ip Sensitivity index
      */
     virtual void fdx_rdatadp(
         realtype* dx_rdatadp, realtype const* x, realtype const* tcl,
-        realtype const* p, realtype const* k, int ip
+        realtype const* p, realtype const* k, realtype const* ws, int ip
     );
 
     /**
@@ -1132,12 +1223,13 @@ class AbstractModel {
      * @param dx_rdatadtcl dx_rdata / dtcl
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param x State variables with conservation laws applied
      * @param tcl Total abundances for conservation laws
      */
     virtual void fdx_rdatadtcl(
         realtype* dx_rdatadtcl, realtype const* x, realtype const* tcl,
-        realtype const* p, realtype const* k
+        realtype const* p, realtype const* k, realtype const* ws
     );
 
     /**
@@ -1161,11 +1253,12 @@ class AbstractModel {
      * @param x_rdata State variables with conservation laws applied
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param ip Sensitivity index
      */
     virtual void fdtotal_cldp(
         realtype* dtotal_cldp, realtype const* x_rdata, realtype const* p,
-        realtype const* k, int ip
+        realtype const* k, realtype const* ws, int ip
     );
 
     /**
@@ -1175,11 +1268,12 @@ class AbstractModel {
      * @param x_rdata State variables with conservation laws applied
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param tcl Total abundances for conservation laws
      */
     virtual void fdtotal_cldx_rdata(
         realtype* dtotal_cldx_rdata, realtype const* x_rdata, realtype const* p,
-        realtype const* k, realtype const* tcl
+        realtype const* k, realtype const* ws, realtype const* tcl
     );
 
     /**
@@ -1203,10 +1297,11 @@ class AbstractModel {
      *
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @return Vector of splines used in the model
      */
     virtual std::vector<HermiteSpline>
-    fcreate_splines(realtype const* p, realtype const* k);
+    fcreate_splines(realtype const* p, realtype const* k, realtype const* ws);
 
     /**
      * @brief Model-specific implementation the parametric derivatives
@@ -1215,10 +1310,12 @@ class AbstractModel {
      * @param dspline_valuesdp vector to which derivatives will be written
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param ip Sensitivity index
      */
     virtual void fdspline_valuesdp(
-        realtype* dspline_valuesdp, realtype const* p, realtype const* k, int ip
+        realtype* dspline_valuesdp, realtype const* p, realtype const* k,
+        realtype const* ws, int ip
     );
 
     /**
@@ -1228,10 +1325,12 @@ class AbstractModel {
      * @param dspline_slopesdp vector to which derivatives will be written
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param ip Sensitivity index
      */
     virtual void fdspline_slopesdp(
-        realtype* dspline_slopesdp, realtype const* p, realtype const* k, int ip
+        realtype* dspline_slopesdp, realtype const* p, realtype const* k,
+        realtype const* ws, int ip
     );
 
     /**
@@ -1243,13 +1342,15 @@ class AbstractModel {
      * @param x state vector
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param w vector with helper variables
      * @return A vector of length ne - ne_solver, each containing a vector of
      * explicit roots for the corresponding event.
      */
     virtual std::vector<std::vector<realtype>> fexplicit_roots(
         [[maybe_unused]] realtype const* x, [[maybe_unused]] realtype const* p,
-        [[maybe_unused]] realtype const* k, [[maybe_unused]] realtype const* w
+        [[maybe_unused]] realtype const* k, [[maybe_unused]] realtype const* ws,
+        [[maybe_unused]] realtype const* w
     ) = 0;
 };
 

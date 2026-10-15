@@ -67,7 +67,7 @@ ObservableScaling::lin, // y[1]
 ObservableScaling::lin, // y[2]
 };
 
-extern const std::array<std::string_view const, 1> expression_names = {
+extern const std::array<std::string_view const, 1 + 0> expression_names = {
     "u", // w[0]
 };
 
@@ -126,7 +126,7 @@ extern const std::array<std::string_view const, 3> observable_ids = {
 "obs_spline", // y[2]
 };
 
-extern const std::array<std::string_view const, 1> expression_ids = {
+extern const std::array<std::string_view const, 1 + 0> expression_ids = {
     "u", // w[0]
 };
 

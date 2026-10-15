@@ -7,7 +7,7 @@
 namespace amici {
 namespace model_model_steadystate_py {
 
-void sx0_fixedParameters_model_steadystate_py(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip, gsl::span<const int> reinitialization_state_idxs){
+void sx0_fixedParameters_model_steadystate_py(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const realtype *ws, const int ip, gsl::span<const int> reinitialization_state_idxs){
     static const std::array<int, 3> _x0_fixedParameters_idxs = {
         0, 1, 2
     };

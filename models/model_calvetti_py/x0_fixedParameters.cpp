@@ -7,7 +7,7 @@
 namespace amici {
 namespace model_model_calvetti_py {
 
-void x0_fixedParameters_model_calvetti_py(realtype *x0_fixedParameters, const realtype t, const realtype *p, const realtype *k, gsl::span<const int> reinitialization_state_idxs){
+void x0_fixedParameters_model_calvetti_py(realtype *x0_fixedParameters, const realtype t, const realtype *p, const realtype *k, const realtype *ws, gsl::span<const int> reinitialization_state_idxs){
     const realtype V1ss_ = k[0];
     const realtype V2ss_ = k[2];
     const realtype V3ss_ = k[4];

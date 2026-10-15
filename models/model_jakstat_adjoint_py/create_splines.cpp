@@ -8,7 +8,7 @@
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-std::vector<HermiteSpline> create_splines_model_jakstat_adjoint_py(const realtype *p, const realtype *k){
+std::vector<HermiteSpline> create_splines_model_jakstat_adjoint_py(const realtype *p, const realtype *k, const realtype *ws){
     const realtype sp1_ = p[5];
     const realtype sp2_ = p[6];
     const realtype sp3_ = p[7];
