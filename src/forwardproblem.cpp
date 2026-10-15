@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <ranges>
 
 namespace amici {
@@ -39,17 +40,17 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
 }
 
 /**
- * @brief First finite output timepoint after `t`, or `t + 1` if there is none.
+ * @brief First output time after `t`.
  * @param model Model
  * @param t Current time.
- * @return Timepoint
+ * @return Output time, or infinity if there is none.
  */
-realtype next_output_timepoint(Model const& model, realtype t) {
+realtype next_output_time(Model const& model, realtype t) {
     for (auto const tp : model.get_timepoints()) {
-        if (tp > t && std::isfinite(tp))
+        if (tp > t)
             return tp;
     }
-    return t + 1.0;
+    return std::numeric_limits<realtype>::infinity();
 }
 
 ForwardProblem::ForwardProblem(
@@ -592,7 +593,7 @@ void EventHandlingSimulator::handle_events(
         // they are stored or used for sensitivity updates.
         solver_->calc_consistent_state(
             ws_->sol.t, ws_->sol.x, ws_->sol.dx,
-            next_output_timepoint(*model_, ws_->sol.t)
+            next_output_time(*model_, ws_->sol.t)
         );
         if (solver_->computing_fsa()) {
             // compute the new xdot

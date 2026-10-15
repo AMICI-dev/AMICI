@@ -1856,6 +1856,38 @@ def test_dae_event_reinitialization(tempdir):
 
 
 @skip_on_valgrind
+def test_dae_event_close_to_output_time(tempdir):
+    """DAE event within roundoff of the next output time."""
+    ant_model = """
+    model dae_event_close_to_output_time
+        const k = 0.5
+        x = 1; y = 1
+        x' = -k * y
+        0 = y - x
+        at (time >= 0.3): x = x + 1
+    end
+    """
+    module_name = "dae_event_close_to_output_time"
+    antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
+    model = import_model_module(module_name, tempdir).get_model()
+    t_event = 0.3
+    # 0.1 + 0.2 == 0.30000000000000004
+    t = np.array([0.0, 0.1 + 0.2, 1.0])
+    assert t_event < t[1]
+    model.set_timepoints(t)
+
+    x_expected = np.where(
+        t < t_event,
+        np.exp(-0.5 * t),
+        np.exp(-0.5 * t) + np.exp(-0.5 * (t - t_event)),
+    )
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x[:, 0], x_expected, rtol=1e-5)
+    assert_allclose(rdata.x[:, 1], x_expected, rtol=1e-5)
+
+
+@skip_on_valgrind
 def test_dae_event_forward_sensitivities(tempdir):
     """Forward sensitivities of a DAE with a state-dependent event.
 
