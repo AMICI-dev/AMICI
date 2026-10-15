@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <ranges>
 
 namespace amici {
@@ -39,17 +40,17 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
 }
 
 /**
- * @brief First finite output timepoint after `t`, or `t + 1` if there is none.
+ * @brief First output time after `t`.
  * @param model Model
  * @param t Current time.
- * @return Timepoint
+ * @return Output time, or infinity if there is none.
  */
 realtype next_output_timepoint(Model const& model, realtype t) {
     for (auto const tp : model.get_timepoints()) {
-        if (tp > t && std::isfinite(tp))
+        if (tp > t)
             return tp;
     }
-    return t + 1.0;
+    return std::numeric_limits<realtype>::infinity();
 }
 
 ForwardProblem::ForwardProblem(

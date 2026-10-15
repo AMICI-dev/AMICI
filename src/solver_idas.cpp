@@ -994,7 +994,8 @@ void IDASolver::calc_consistent_state(
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
     auto const sensi = ida_mem->ida_sensi;
     ida_mem->ida_sensi = SUNFALSE;
-    int const status = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, tout1);
+    int const status
+        = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, distinct_tout1(t, tout1, 1));
     ida_mem->ida_sensi = sensi;
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACalcIC");

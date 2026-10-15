@@ -853,7 +853,8 @@ class Solver {
      * @param t timepoint
      * @param x state, algebraic components are updated
      * @param dx derivative of the state, updated
-     * @param tout1 next timepoint to be computed (sets timescale)
+     * @param tout1 next timepoint to be computed (sets timescale); may be
+     * infinite or within roundoff of `t`
      */
     virtual void calc_consistent_state(
         realtype t, AmiVector& x, AmiVector& dx, realtype tout1
