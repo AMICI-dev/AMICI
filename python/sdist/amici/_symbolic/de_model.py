@@ -1509,6 +1509,24 @@ class DEModel:
             self._sparsesyms[name] = symbol_list
             self._syms[name] = sparse_matrix
 
+    def _state_time_derivative(self) -> sp.Matrix:
+        """Time derivative of the solver states.
+
+        For DAEs, `xdot` is the residual. Use the right-hand side for the
+        differential states and the solver's `dx` for the algebraic states.
+        """
+        if self.is_ode():
+            return self.eq("xdot")
+        differential = [
+            s
+            for s in self._differential_states
+            if not s.has_conservation_law()
+        ]
+        return sp.Matrix(
+            [s.get_dt() for s in differential]
+            + list(self.sym("dx")[len(differential) :])
+        )
+
     def _pre_event_eqs(self, name: str) -> list[sp.Matrix]:
         """Re-express `dtaudx`/`dtaudp` purely in terms of the pre-event
         state, for use inside `deltaxB`/`deltaqB` only.
@@ -1733,7 +1751,7 @@ class DEModel:
             # drootdt_total = drootdt + drootdx * dxdt + drootdw * dwdt_total
             # dwdt_total = dwdt + dwdx * dxdt
             self._eqs[name] = self.eq("drootdt")
-            xdot = self.eq("xdot")
+            xdot = self._state_time_derivative()
 
             # += drootdx * dxdt
             if self.num_states_solver() and not smart_is_zero_matrix(
@@ -2118,7 +2136,7 @@ class DEModel:
             # Equations are there, but symbols for roots must be added
             self.sym("h")
 
-        if name in {"Jy", "dydx"}:
+        if name in {"Jy", "Jz", "Jrz", "dydx"}:
             # do not transpose if we compute the partial derivative as part of
             # a total derivative
             if not len(self._lock_total_derivative):
@@ -2198,7 +2216,7 @@ class DEModel:
             # `Function`-call form for sympy to apply the correct chain
             # rule (see `_eq_raw`)
             sym_eq = self._eq_raw(eq)
-        elif eq == "Jy":
+        elif eq in ("Jy", "Jz", "Jrz"):
             sym_eq = self.eq(eq).transpose()
         else:
             sym_eq = self.eq(eq)

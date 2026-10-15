@@ -15,7 +15,7 @@ import pytest
 import sympy as sp
 from amici import import_model_module
 from amici.importers.antimony import antimony2sbml
-from amici.importers.sbml import SbmlImporter, SymbolId
+from amici.importers.sbml import SBMLException, SbmlImporter, SymbolId
 from amici.importers.utils import (
     MeasurementChannel as MC,
 )
@@ -1092,6 +1092,22 @@ def test_import_same_model_name(tempdir):
         assert model_module_1c.get_model().module is model_module_1c
 
 
+@pytest.mark.parametrize(
+    "model_name", ["x0", "Xdot", "main", "wrapfunctions", "swig"]
+)
+def test_model_name_of_generated_file(tempdir, model_name):
+    """Model names must not be names of generated files or directories."""
+    from amici.importers.antimony import antimony2amici
+
+    with pytest.raises(ValueError, match="generated source file"):
+        antimony2amici(
+            "x = 1; x' = -x",
+            model_name=model_name,
+            output_dir=tempdir,
+            compile=False,
+        )
+
+
 @skip_on_valgrind
 def test_regression_2642(tempdir):
     sbml_file = Path(__file__).parent / "sbml_models" / "regression_2642.xml"
@@ -1372,6 +1388,59 @@ def test_dae_forward_sensitivities_default_tolerances(tempdir):
     )
 
 
+def _algebraic_rule_model(algebraic_rules: list[str]) -> str:
+    """SBML model with `x' = -k * x` and the given algebraic rules.
+
+    Built with libsbml instead of antimony, as the overdetermined test case
+    is invalid SBML, which antimony 3.1 rejects, whereas antimony 3.2
+    accepts it.
+    """
+    doc = libsbml.SBMLDocument(3, 2)
+    model = doc.createModel()
+    for par_id, value, constant in [
+        ("k", 0.5, True),
+        ("p", 2, False),
+        ("x", 1, False),
+        ("y", 2, False),
+        ("z", 0.5, False),
+        ("w", 0.5, False),
+    ]:
+        par = model.createParameter()
+        par.setId(par_id)
+        par.setValue(value)
+        par.setConstant(constant)
+    rule = model.createRateRule()
+    rule.setVariable("x")
+    rule.setMath(libsbml.parseL3Formula("-k * x"))
+    for formula in algebraic_rules:
+        model.createAlgebraicRule().setMath(libsbml.parseL3Formula(formula))
+    return libsbml.writeSBMLToString(doc)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "algebraic_rules",
+    [
+        # underdetermined: `p` is not constant
+        ["y - p * x"],
+        # structurally singular (overdetermined, invalid SBML):
+        # two rules for `y`, one for `z` and `w`
+        ["y - x", "y - 2 * x", "z + w - x"],
+    ],
+    ids=["underdetermined", "singular"],
+)
+def test_algebraic_rules_not_determined(algebraic_rules):
+    """Test that import fails if algebraic rules don't determine all
+    variables."""
+    sbml_importer = SbmlImporter(
+        _algebraic_rule_model(algebraic_rules), from_file=False
+    )
+    with pytest.raises(
+        SBMLException, match="algebraic rules do not determine"
+    ):
+        sbml_importer._build_ode_model()
+
+
 @skip_on_valgrind
 def test_chained_initial_assignment_parameter_not_constant_folded():
     """Regression test for #3214 (chained-parameter variant).
@@ -1407,6 +1476,50 @@ def test_chained_initial_assignment_parameter_not_constant_folded():
     (x0_x,) = de_model.eq("x0")
     assert x0_x == symbol_with_assumptions("X1")
     assert sp.diff(x0_x, symbol_with_assumptions("X1")) == 1
+
+
+@skip_on_valgrind
+def test_dae_adjoint_sensitivities_observed_algebraic_state(tmp_path):
+    """Test adjoint sensitivities of a DAE with a measured algebraic
+    state."""
+    sbml_str = antimony2sbml("""
+        model dae_asa_obs_alg
+            const k = 0.5, p = 2, q = 0.3
+            x = 1; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "dae_asa_obs_alg"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, observation_model=[MC("obs_y", formula="y")]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    t = np.linspace(0, 5, 11)
+    model.set_timepoints(t)
+    model.set_parameter_scale(ParameterScaling.none)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t), 1.0))
+    edata.set_noise_scales(np.full(len(t), 1.0))
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+
+    # all parameters have an effect
+    assert np.all(np.abs(sllh[SensitivityMethod.forward]) > 1e-2)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
 
 
 @skip_on_valgrind
@@ -1503,6 +1616,65 @@ def test_dae_consistent_initial_conditions_single_timepoint(tempdir):
 
 
 @skip_on_valgrind
+def test_dae_steady_state(tmp_path):
+    """Test steady-state computation and steady-state sensitivities for
+    DAEs."""
+    sbml_str = antimony2sbml("""
+        model test_dae_steady_state
+            const k = 0.5, p = 2, q = 0.3
+            x = 0.8; y = 1.6
+            x' = -k * y + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_steady_state"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
+    model = import_model_module(model_name, tmp_path).get_model()
+    assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k", "p", "q")
+    model.set_parameter_scale(ParameterScaling.none)
+    # post-equilibration, after simulating to t=1, so that the state
+    # derivative is nonzero when the steady-state computation starts
+    model.set_timepoints([0, 1, np.inf])
+
+    k, p, q = 0.5, 2, 0.3
+    x_ss_expected = [q / (k * p), q / k]
+    sx_ss_expected = [
+        [-q / (k**2 * p), -q / k**2],
+        [-q / (k * p**2), 0],
+        [1 / (k * p), 1 / k],
+    ]
+    for computation_mode, sensitivity_mode, sensi_order in (
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+            SensitivityOrder.none,
+        ),
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+            SensitivityOrder.first,
+        ),
+        (
+            SteadyStateComputationMode.newtonOnly,
+            SteadyStateSensitivityMode.newtonOnly,
+            SensitivityOrder.first,
+        ),
+    ):
+        model.set_steady_state_computation_mode(computation_mode)
+        model.set_steady_state_sensitivity_mode(sensitivity_mode)
+        solver = model.create_solver()
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(sensi_order)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS, computation_mode
+        assert_allclose(rdata.x[-1], x_ss_expected, rtol=1e-5)
+        if sensi_order == SensitivityOrder.first:
+            assert_allclose(rdata.sx[-1], sx_ss_expected, rtol=1e-4, atol=1e-5)
+
+
+@skip_on_valgrind
 def test_minmax_piecewise_is_converted_to_minmax():
     """Test that _piecewise_to_minmax is applied during SBML import."""
     sbml_str = antimony2sbml("""
@@ -1565,6 +1737,51 @@ def test_dae_staggered_forward_sensitivities(tempdir):
     )
 
 
+@pytest.mark.parametrize(
+    "timepoints",
+    [
+        [0.0, 0.0, 1.0],
+        [1.0, np.nextafter(1.0, 2.0), 2.0],
+        [1.0, np.inf],
+    ],
+    ids=["duplicate", "within_roundoff", "infinite"],
+)
+def test_dae_output_time_close_to_t0(tmp_path, timepoints):
+    """Test DAE simulation with the second output time within roundoff
+    distance of the first one or infinite."""
+    sbml_str = antimony2sbml("""
+        model test_dae_tout1
+            const k1 = 1, k2 = 0.5
+            x = 0.5; y = 0.5
+            x' = k2 * y
+            0 = x + y - k1
+        end
+    """)
+    model_name = "test_dae_tout1"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
+    model = import_model_module(model_name, tmp_path).get_model()
+    model.set_t0(timepoints[0])
+    model.set_timepoints(timepoints)
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # y(t) = (k1 - x(t0)) * exp(-k2 * (t - t0)), x(t) = k1 - y(t)
+    k1, k2, x0 = 1.0, 0.5, 0.5
+    e = np.exp(-k2 * (np.asarray(timepoints) - timepoints[0]))
+    y = (k1 - x0) * e
+    assert_allclose(
+        rdata.x, np.column_stack((k1 - y, y)), rtol=1e-8, atol=1e-12
+    )
+    # dy/dk1 = exp(-k2 * (t - t0)), nonzero at t0
+    assert_allclose(rdata.sx[:, 0, 1], e, rtol=1e-8, atol=1e-12)
+
+
 @skip_on_valgrind
 def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     """Test that state sensitivities of algebraic states are consistent at
@@ -1605,6 +1822,55 @@ def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     sx_expected[:, 1, 1] = dy_dk2
     assert_allclose(rdata.sx, sx_expected, rtol=1e-8, atol=1e-10)
     assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("timepoints", [[0.0], [np.inf]], ids=["t0", "inf"])
+def test_dae_adjoint_without_forward_integration(tmp_path, timepoints):
+    """Test adjoint sensitivities for DAEs if the forward problem is not
+    integrated (all outputs at t0, or post-equilibration by Newton's
+    method)."""
+    sbml_str = antimony2sbml("""
+        model test_dae_asa_t0
+            const k = 0.5, p = 2, q = 0.3, x0 = 1
+            x = x0; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_asa_t0"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, observation_model=[MC("obs_x", formula="x")]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    model.set_timepoints(timepoints)
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.newtonOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(timepoints), 2.0))
+    edata.set_noise_scales(np.ones(len(timepoints)))
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+    assert np.any(np.abs(sllh[SensitivityMethod.forward]) > 0.1)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+        atol=1e-8,
+    )
 
 
 def test_dae_free_solver_after_failed_adjoint_setup(tmp_path):

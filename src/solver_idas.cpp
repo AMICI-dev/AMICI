@@ -13,6 +13,7 @@
 #include <klu.h>
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 
 namespace amici {
@@ -46,6 +47,28 @@ STATIC_ASSERT_EQUAL(amici::AMICI_LINESEARCH_FAIL, IDA_LINESEARCH_FAIL);
 // This does not match the CVODE code, we need separate return values
 STATIC_ASSERT_EQUAL(amici::AMICI_IDAS_CONSTR_FAIL, IDA_CONSTR_FAIL);
 STATIC_ASSERT_EQUAL(amici::AMICI_WARNING, IDA_WARNING);
+
+/**
+ * @brief Get an output time for `IDACalcIC` that is distinct from `t`.
+ *
+ * `IDACalcIC` only uses `tout1` for the direction and scale of the first
+ * step, but fails if it is within roundoff of the current time or not
+ * finite.
+ *
+ * @param t Current time
+ * @param tout1 Next output time
+ * @param direction Integration direction (1: forward, -1: backward)
+ * @return `tout1` if it is finite and sufficiently distinct from `t`,
+ * otherwise a time in the integration direction from `t`.
+ */
+static realtype
+distinct_tout1(realtype const t, realtype const tout1, int const direction) {
+    auto const min_dist
+        = 100 * SUN_UNIT_ROUNDOFF * (std::abs(t) + std::abs(tout1));
+    if (std::isfinite(tout1) && std::abs(tout1 - t) > min_dist)
+        return tout1;
+    return t + direction * std::max(1.0, 1e-6 * std::abs(t));
+}
 
 /*
  * The following static members are callback function to IDAS.
@@ -938,7 +961,10 @@ void* IDASolver::get_adj_b_mem(void* ami_mem, int which) const {
 }
 
 void IDASolver::calc_ic(realtype tout1) const {
-    int status = IDACalcIC(solver_memory_.get(), IDA_YA_YDP_INIT, tout1);
+    auto const t = static_cast<IDAMem>(solver_memory_.get())->ida_tn;
+    int status = IDACalcIC(
+        solver_memory_.get(), IDA_YA_YDP_INIT, distinct_tout1(t, tout1, 1)
+    );
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACalcIC");
     status = IDAGetConsistentIC(
@@ -960,6 +986,24 @@ void IDASolver::calc_ic(realtype tout1) const {
     }
 }
 
+void IDASolver::calc_consistent_state(
+    realtype const t, AmiVector& x, AmiVector& dx, realtype const tout1
+) const {
+    reinit(t, x, dx);
+    // The sensitivities are not up to date at this point; they are made
+    // consistent after the subsequent `sens_reinit`.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    auto const sensi = ida_mem->ida_sensi;
+    ida_mem->ida_sensi = SUNFALSE;
+    int const status = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, tout1);
+    ida_mem->ida_sensi = sensi;
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDACalcIC");
+    // `IDAGetConsistentIC` is only available before the first step
+    N_VScale(ONE, ida_mem->ida_phi[0], x.get_nvector());
+    N_VScale(ONE, ida_mem->ida_phi[1], dx.get_nvector());
+}
+
 void IDASolver::calc_ic_b(int const which, realtype const tout1) const {
     // IDACalcICB requires the forward solution at the current backward time
     auto const tB
@@ -974,7 +1018,8 @@ void IDASolver::calc_ic_b(int const which, realtype const tout1) const {
         throw IDAException(status, "IDAGetAdjY");
 
     status = IDACalcICB(
-        solver_memory_.get(), which, tout1, x.get_nvector(), dx.get_nvector()
+        solver_memory_.get(), which, distinct_tout1(tB, tout1, -1),
+        x.get_nvector(), dx.get_nvector()
     );
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACalcICB");

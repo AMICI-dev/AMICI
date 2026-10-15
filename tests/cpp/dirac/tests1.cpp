@@ -15,3 +15,9 @@ TEST(ExampleDirac, SensitivityForward)
 {
     amici::simulateVerifyWrite("/model_dirac/sensiforward/");
 }
+
+TEST(ExampleDirac, HasAlgebraicStates)
+{
+    auto model = amici::generic_model::get_model();
+    ASSERT_FALSE(model->has_algebraic_states());
+}

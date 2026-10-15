@@ -660,6 +660,13 @@ class SteadyStateProblem {
      */
     bool newton_step_conv_{false};
 
+    /**
+     * Zero state derivative. For DAEs, the right-hand side for the
+     * convergence checks has to be evaluated at `dx = 0`, otherwise it is the
+     * residual, which vanishes along any consistent trajectory.
+     */
+    AmiVector dx_zero_;
+
     /** flag indicating whether xdot_ has been computed for the current state */
     bool xdot_updated_{false};
     /**

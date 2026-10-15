@@ -992,6 +992,10 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get the initial state sensitivities.
      *
+     * Sensitivities are with respect to the unscaled parameters, i.e.,
+     * without the chain rule for parameter scaling applied (see
+     * set_unscaled_initial_state_sensitivities()).
+     *
      * @return vector of initial state sensitivities
      */
     std::vector<realtype> get_initial_state_sensitivities() {
@@ -1000,6 +1004,10 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial states sensitivities.
+     *
+     * Sensitivities are with respect to the unscaled parameters, i.e.,
+     * without the chain rule for parameter scaling applied (see
+     * set_unscaled_initial_state_sensitivities()).
      *
      * @param t0 Custom t0 for which to get initial states.
      * @return vector of initial state sensitivities
@@ -1220,6 +1228,30 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Map objective derivatives w.r.t. algebraic states to the
+     * differential states and parameters.
+     *
+     * For index-1 DAEs, the algebraic states are functions of the
+     * differential states and parameters. This adds the contributions of the
+     * derivatives of the objective w.r.t. the algebraic states to the
+     * derivatives w.r.t. the differential states and parameters, and sets
+     * the former to zero. Only the first-order derivatives are updated.
+     * No-op for ODE models.
+     *
+     * @param t Timepoint
+     * @param x State variables
+     * @param dJydx State derivative of the objective (shape `nJ` x
+     * `nx_solver`), updated in place.
+     * @param dJydp Parameter derivative of the objective (shape `nJ` x
+     * `nplist`), updated in place. May be empty.
+     */
+    virtual void project_algebraic_objective_derivatives(
+        [[maybe_unused]] realtype t, [[maybe_unused]] AmiVector const& x,
+        [[maybe_unused]] gsl::span<realtype> dJydx,
+        [[maybe_unused]] gsl::span<realtype> dJydp
+    ) {}
+
+    /**
      * @brief Get event-resolved observables.
      *
      * @param z Output buffer (shape `nz`)
@@ -1423,13 +1455,28 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Compute the time derivative of the state vector.
+     *
+     * For ODE models, this is the right-hand side. For DAE models, the
+     * derivatives of the differential states are computed from the residual
+     * and `dx`; for the algebraic states, `dx` is returned.
+     *
+     * @param t Timepoint
+     * @param x State
+     * @param dx Time derivative of the state (DAE only)
+     * @param dxdt Output: time derivative of the state
+     */
+    virtual void
+    fdxdt(realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt);
+
+    /**
      * @brief Update state variables after event.
      *
      * @param x Current state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param x_old Current or old state from which to compute the state update
      * @param state The model state based on which to compute the update.
      */
@@ -1447,8 +1494,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param x Current state
      * @param x_old Pre-event state
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param sx_old Pre-event state sensitivity
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
@@ -1467,8 +1514,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param x_old Pre-event state
      * @param dx Current derivative of state (DAE only)
      */
@@ -1486,8 +1533,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Current timepoint
      * @param x Current state
      * @param xB Current adjoint state
-     * @param xdot Current residual function values
-     * @param xdot_old Value of residual function before event
+     * @param xdot Current time derivative of the state (see `fdxdt`)
+     * @param xdot_old Time derivative of the state before the event
      * @param x_old Pre-event state
      * @param dx Current derivative of state (DAE only)
      */
@@ -1735,6 +1782,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @return Flag array for DAE equations
      */
     std::vector<realtype> const& get_id_list() const { return id_list_; }
+
+    /**
+     * @brief Check whether the model has algebraic states.
+     *
+     * @return `true` if any state is algebraic (DAE models only)
+     */
+    [[nodiscard]] bool has_algebraic_states() const;
 
     /**
      * @brief Get second-order sensitivity mode.

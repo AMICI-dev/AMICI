@@ -49,6 +49,10 @@ class CVodeSolver : public Solver {
         AmiVectorArray const& yyS0, AmiVectorArray const& ypS0
     ) const override;
 
+    void calc_consistent_state(
+        realtype t, AmiVector& x, AmiVector& dx, realtype tout1
+    ) const override;
+
     void sens_toggle_off() const override;
 
     void reinit_b(

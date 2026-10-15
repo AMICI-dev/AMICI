@@ -248,6 +248,12 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
            && (a.ubw == b.ubw) && (a.lbw == b.lbw);
 }
 
+bool Model::has_algebraic_states() const {
+    return std::ranges::any_of(id_list_, [](realtype const id) {
+        return id == 0.0;
+    });
+}
+
 void Model::initialize(
     realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray& sx,
     AmiVectorArray& sdx, bool const computeSensitivities,
@@ -1018,8 +1024,9 @@ std::vector<realtype> Model::get_initial_state_sensitivities(realtype t0) {
     auto x0 = get_initial_state(t0);
     for (int ip = 0; ip < nplist(); ip++) {
         fsx0(
-            sx0.data(), t0, x0.data(), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), plist(ip)
+            &sx0.at(ip * nx_rdata), t0, x0.data(),
+            state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+            plist(ip)
         );
     }
     return sx0;
@@ -1288,6 +1295,14 @@ void Model::add_partial_observable_objective_sensitivity(
         return;
 
     fdJydp(it, x, edata);
+    if (has_algebraic_states()) {
+        // DAEs: measurements of algebraic states depend on the parameters
+        // via the algebraic equations
+        fdJydx(it, x, edata);
+        project_algebraic_objective_derivatives(
+            get_timepoint(it), x, derived_state_.dJydx_, derived_state_.dJydp_
+        );
+    }
 
     write_llh_sensitivity_slice(derived_state_.dJydp_, sllh, s2llh);
 }
@@ -1297,6 +1312,9 @@ void Model::get_adjoint_state_observable_update(
     ExpData const& edata
 ) {
     fdJydx(it, x, edata);
+    project_algebraic_objective_derivatives(
+        get_timepoint(it), x, derived_state_.dJydx_, {}
+    );
     write_slice(derived_state_.dJydx_, dJydx);
 }
 
@@ -1415,7 +1433,8 @@ void Model::add_event_objective(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurement(nroots, iztrue)) {
+        if (z2event_.at(iztrue) == ie
+            && edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJz(nllh.data(), iztrue, state_.unscaled_parameters.data(),
                 state_.fixed_parameters.data(), derived_state_.z_.data(),
@@ -1435,7 +1454,8 @@ void Model::add_event_objective_regularization(
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.is_set_event_measurement(nroots, iztrue)) {
+        if (z2event_.at(iztrue) == ie
+            && edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJrz(
                 nllh.data(), iztrue, state_.unscaled_parameters.data(),
@@ -1518,6 +1538,12 @@ void Model::get_event_time_sensitivity(
             state_.total_cl.data(), sx.data(ip), plist(ip), ie
         );
     }
+}
+
+void Model::fdxdt(
+    realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+) {
+    fxdot(t, x, dx, dxdt);
 }
 
 void Model::add_state_event_update(
@@ -2603,7 +2629,7 @@ void Model::fdsigmazdp(
     if (edata) {
         for (int iz = 0; iz < nztrue; iz++) {
             if (z2event_.at(iz) == ie
-                && !edata->is_set_event_noise_scale(nroots, iz)) {
+                && edata->is_set_event_noise_scale(nroots, iz)) {
                 for (int ip = 0; ip < nplist(); ip++)
                     derived_state_.dsigmazdp_.at(iz + nz * ip) = 0;
             }
@@ -2711,7 +2737,8 @@ void Model::fdJzdp(
     set_nan_to_zero(derived_state_.dJzdsigmaz_);
     set_nan_to_zero(derived_state_.dJrzdsigmaz_);
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.is_set_event_measurement(nroots, izt))
+        if (z2event_.at(izt) != ie
+            || !edata.is_set_event_measurement(nroots, izt))
             continue;
 
         if (t < edata.get_timepoint(edata.nt() - 1)) {
@@ -2775,7 +2802,8 @@ void Model::fdJzdx(
     set_nan_to_zero(derived_state_.drzdx_);
 
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.is_set_event_measurement(nroots, izt))
+        if (z2event_.at(izt) != ie
+            || !edata.is_set_event_measurement(nroots, izt))
             continue;
 
         if (t < edata.get_timepoint(edata.nt() - 1)) {

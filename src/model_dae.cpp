@@ -1,5 +1,8 @@
 #include "amici/model_dae.h"
 #include "amici/solver_idas.h"
+#include "amici/sundials_linsol_wrapper.h"
+
+#include <numeric>
 
 namespace amici {
 
@@ -124,6 +127,19 @@ void Model_DAE::fxdot(
     );
 }
 
+void Model_DAE::fdxdt(
+    realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+) {
+    // residual of the differential equations: f(x) - dx
+    fxdot(t, x, dx, dxdt);
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (get_id_list().at(ix) == 1.0)
+            dxdt[ix] += dx[ix];
+        else
+            dxdt[ix] = dx[ix];
+    }
+}
+
 void Model_DAE::fJDiag(
     realtype const t, AmiVector& JDiag, realtype const /*cj*/,
     AmiVector const& x, AmiVector const& dx
@@ -208,6 +224,109 @@ void Model_DAE::initialize_state_derivatives(
         for (int ix = 0; ix < nx_solver; ++ix)
             sdx[ip][ix] = id[ix] != 0.0 ? residual[ix] : 0.0;
     }
+}
+
+void Model_DAE::project_algebraic_objective_derivatives(
+    realtype const t, AmiVector const& x, gsl::span<realtype> dJydx,
+    gsl::span<realtype> dJydp
+) {
+    // With differential states x_d and algebraic states x_a determined by
+    // 0 = f_a(x_d, x_a, p), the objective J(x_d, x_a, p) has the total
+    // derivatives
+    //   dJ/dx_d = J_{x_d} - (df_a/dx_d)^T mu,
+    //   dJ/dp   = J_p     - (df_a/dp)^T mu,
+    // where (df_a/dx_a)^T mu = J_{x_a}.
+    // Algebraic equation i determines algebraic state i. Only first-order
+    // derivatives (entries iJ == 0, stride nJ) are handled.
+    auto const& id = get_id_list();
+    // position among the algebraic states, or -1 for differential states
+    std::vector<int> alg_pos(nx_solver, -1);
+    std::vector<int> alg_states;
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (id[ix] == 0.0) {
+            alg_pos[ix] = gsl::narrow<int>(alg_states.size());
+            alg_states.push_back(ix);
+        }
+    }
+    auto const n_alg = gsl::narrow<int>(alg_states.size());
+    if (n_alg == 0)
+        return;
+
+    AmiVector mu(n_alg, derived_state_.sunctx_);
+    bool any_nonzero = false;
+    for (int ia = 0; ia < n_alg; ++ia) {
+        mu[ia] = dJydx[alg_states[ia] * nJ];
+        any_nonzero = any_nonzero || mu[ia] != 0.0;
+    }
+    if (!any_nonzero)
+        return;
+
+    // dF/dx; the algebraic equations do not depend on dx
+    AmiVector dx(nx_solver, derived_state_.sunctx_);
+    dx.zero();
+    fJSparse(t, 0.0, x.get_nvector(), dx.get_nvector(), derived_state_.J_);
+    derived_state_.J_.refresh();
+    auto const& J = derived_state_.J_;
+
+    // solve (df_a/dx_a)^T mu = J_{x_a}
+    SUNLinSolDense linsol(mu);
+    auto& dfa_dxa_T = linsol.getMatrix();
+    dfa_dxa_T.zero();
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        auto const ia = alg_pos[ix];
+        if (ia < 0)
+            continue;
+        for (auto idx = J.get_indexptr(ix); idx < J.get_indexptr(ix + 1);
+             ++idx) {
+            if (auto const ja = alg_pos[J.get_indexval(idx)]; ja >= 0)
+                dfa_dxa_T.set_data(ia, ja, J.get_data(idx));
+        }
+    }
+    try {
+        linsol.setup();
+    } catch (AmiException const&) {
+        throw AmiException(
+            "Singular algebraic Jacobian at t = %g: cannot map objective "
+            "derivatives w.r.t. algebraic states.",
+            t
+        );
+    }
+    if (auto const status
+        = linsol.solve(mu.get_nvector(), mu.get_nvector(), 0.0);
+        status != SUN_SUCCESS) {
+        throw AmiException(
+            "Mapping objective derivatives w.r.t. algebraic states failed "
+            "with code %d",
+            status
+        );
+    }
+
+    // mu as a full-length vector (zero for the differential equations)
+    std::vector<realtype> mu_full(nx_solver, 0.0);
+    for (int ia = 0; ia < n_alg; ++ia)
+        mu_full[alg_states[ia]] = mu[ia];
+
+    // dJ/dx_d -= (df_a/dx_d)^T mu; dJ/dx_a is now accounted for via mu
+    std::vector<int> all_states(nx_solver);
+    std::iota(all_states.begin(), all_states.end(), 0);
+    std::vector<realtype> correction(nx_solver, 0.0);
+    J.multiply(correction, mu_full, all_states, true);
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        dJydx[ix * nJ]
+            = alg_pos[ix] >= 0 ? 0.0 : dJydx[ix * nJ] - correction[ix];
+    }
+
+    if (dJydp.empty())
+        return;
+
+    // dJ/dp -= (df_a/dp)^T mu
+    fdxdotdp(t, x.get_nvector(), dx.get_nvector());
+    correction.assign(nplist(), 0.0);
+    derived_state_.dxdotdp_full.multiply(
+        correction, mu_full, state_.plist, true
+    );
+    for (int ip = 0; ip < nplist(); ++ip)
+        dJydp[ip * nJ] -= correction[ip];
 }
 
 void Model_DAE::fM(realtype const /*t*/, const_N_Vector /*x*/) {

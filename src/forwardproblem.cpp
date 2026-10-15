@@ -4,6 +4,7 @@
 #include "amici/exception.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/rdata.h"
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 
@@ -34,6 +35,20 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
         return true;
 
     return false;
+}
+
+/**
+ * @brief First finite output timepoint after `t`, or `t + 1` if there is none.
+ * @param model Model
+ * @param t Current time.
+ * @return Timepoint
+ */
+realtype next_output_timepoint(Model const& model, realtype t) {
+    for (auto const tp : model.get_timepoints()) {
+        if (tp > t && std::isfinite(tp))
+            return tp;
+    }
+    return t + 1.0;
 }
 
 ForwardProblem::ForwardProblem(
@@ -507,7 +522,7 @@ void EventHandlingSimulator::handle_events(
                 // state, so reuse it instead of recomputing.
                 event_application->xdot_pre = ws_->xdot_old;
             } else {
-                model_->fxdot(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
+                model_->fdxdt(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
                 event_application->xdot_pre = ws_->xdot;
             }
         }
@@ -518,9 +533,16 @@ void EventHandlingSimulator::handle_events(
             ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_old, x_old_event,
             state_old.has_value() ? state_old->mod : model_->get_model_state()
         );
+        // For DAEs, the algebraic states and the state derivatives have to be
+        // made consistent with the post-event differential states before
+        // they are stored or used for sensitivity updates.
+        solver_->calc_consistent_state(
+            ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+            next_output_timepoint(*model_, ws_->sol.t)
+        );
         if (solver_->computing_fsa()) {
             // compute the new xdot
-            model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+            model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             model_->add_state_sensitivity_event_update(
                 ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event, ws_->xdot,
                 ws_->xdot_old,
@@ -532,7 +554,7 @@ void EventHandlingSimulator::handle_events(
         if (event_application) {
             event_application->x_post = ws_->sol.x;
             event_application->dx_post = ws_->sol.dx;
-            model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+            model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             event_application->xdot_post = ws_->xdot;
             result.discs.back().event_applications.push_back(
                 *std::move(event_application)
@@ -638,7 +660,7 @@ void EventHandlingSimulator::store_pre_event_state(
     if (solver_->get_sensitivity_order() >= SensitivityOrder::first) {
         // store x and xdot to compute jump in sensitivities
         ws_->x_old.copy(ws_->sol.x);
-        model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+        model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
         ws_->xdot_old.copy(ws_->xdot);
     }
     if (solver_->computing_fsa()) {
@@ -756,13 +778,20 @@ std::vector<realtype>
 ForwardProblem::get_adjoint_updates(Model& model, ExpData const& edata) {
     std::vector<realtype> dJydx(model.nJ * model.nx_solver * model.nt(), 0.0);
 
-    for (int it = 0; it < model.nt(); it++) {
-        if (std::isinf(model.get_timepoint(it)))
-            break;
-        model.get_adjoint_state_observable_update(
-            slice(dJydx, it, model.nx_solver * model.nJ), it,
-            get_simulation_state_timepoint(it).sol.x, edata
-        );
+    {
+        // The model state (e.g., Heaviside variables) at each output time may
+        // differ from the final one, which is restored afterwards.
+        ModelContext const mc(&model);
+        for (int it = 0; it < model.nt(); it++) {
+            if (std::isinf(model.get_timepoint(it)))
+                break;
+            auto const& state = get_simulation_state_timepoint(it);
+            model.set_model_state(state.mod);
+            model.get_adjoint_state_observable_update(
+                slice(dJydx, it, model.nx_solver * model.nJ), it, state.sol.x,
+                edata
+            );
+        }
     }
 
     if (posteq_problem_.has_value()) {
@@ -855,6 +884,7 @@ SteadyStateProblem::SteadyStateProblem(
           solver.get_newton_step_steady_state_check()
       )
     , newton_step_conv_(solver.get_newton_step_steady_state_check())
+    , dx_zero_(model.nx_solver, solver.get_sun_context())
     , solver_(&solver)
     , model_(&model) {
     // Check for compatibility of options
@@ -871,7 +901,8 @@ SteadyStateProblem::SteadyStateProblem(
         && model.get_steady_state_computation_mode()
                == SteadyStateComputationMode::newtonOnly
         && model.get_steady_state_sensitivity_mode()
-               == SteadyStateSensitivityMode::integrationOnly)
+               == SteadyStateSensitivityMode::integrationOnly
+        && solver.get_sensitivity_order() > SensitivityOrder::none)
         throw AmiException(
             "For forward sensitivity analysis steady-state "
             "computation mode 'newtonOnly' and steady-state "
@@ -1059,8 +1090,8 @@ realtype SteadyStateProblem::get_wrms_fsa(WRMSComputer& wrms_computer_sx) {
     xdot_updated_ = false;
     for (int ip = 0; ip < model_->nplist(); ++ip) {
         model_->fsxdot(
-            ws_->sol.t, ws_->sol.x, ws_->sol.dx, ip, ws_->sol.sx[ip],
-            ws_->sol.dx, ws_->xdot
+            ws_->sol.t, ws_->sol.x, dx_zero_, ip, ws_->sol.sx[ip], dx_zero_,
+            ws_->xdot
         );
         if (newton_step_conv_) {
             newton_solver_.solve_linear_system(ws_->xdot);
@@ -1250,6 +1281,10 @@ void SteadyStateProblem::find_steady_state_by_newtons_method(
         ws_->sol.t = INFINITY;
     }
 
+    // At steady state, `dx = 0`. Store a consistent state for the subsequent
+    // simulation.
+    ws_->sol.dx.zero();
+
     int const stage = newton_retry ? 2 : 0;
     try {
         update_rhs();
@@ -1299,7 +1334,7 @@ void SteadyStateProblem::update_sensi_simulation() {
 void SteadyStateProblem::update_rhs() {
     if (xdot_updated_)
         return;
-    model_->fxdot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+    model_->fxdot(ws_->sol.t, ws_->sol.x, dx_zero_, ws_->xdot);
     xdot_updated_ = true;
 }
 
