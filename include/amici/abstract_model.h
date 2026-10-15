@@ -1138,15 +1138,19 @@ class AbstractModel {
     /**
      * @brief Compute explicit roots of the model.
      *
+     * The explicit roots may only depend on parameters, constants, static
+     * helper variables, and state variables with zero time derivative.
+     *
+     * @param x state vector
      * @param p parameter vector
      * @param k constant vector
      * @param w vector with helper variables
-     * @return A vector of length ne_solver, each containing a vector of
+     * @return A vector of length ne - ne_solver, each containing a vector of
      * explicit roots for the corresponding event.
      */
     virtual std::vector<std::vector<realtype>> fexplicit_roots(
-        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k,
-        [[maybe_unused]] realtype const* w
+        [[maybe_unused]] realtype const* x, [[maybe_unused]] realtype const* p,
+        [[maybe_unused]] realtype const* k, [[maybe_unused]] realtype const* w
     ) = 0;
 };
 

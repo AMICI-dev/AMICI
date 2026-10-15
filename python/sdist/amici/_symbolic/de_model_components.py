@@ -883,9 +883,9 @@ class Event(ModelQuantity):
 
         :param allowed_symbols:
             The set of symbols that are allowed in the trigger time
-            expressions -- in practice, a model's static symbols (see
-            :py:attr:`DEModel.static_symbols`), i.e. those not depending
-            on time or state, directly or indirectly.
+            expressions -- in practice, a model's
+            :py:attr:`DEModel.explicit_trigger_symbols`, i.e. symbols that
+            do not change between events.
         """
         return len(self._t_root) > 0 and all(
             t.is_Number or t.free_symbols.issubset(allowed_symbols)

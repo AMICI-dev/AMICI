@@ -691,13 +691,10 @@ class DEModel:
         :return:
             number of event symbols (length of the root vector in AMICI)
         """
-        # TODO(performance): we could include constant `x` here as well
-        #   (dx/dt = 0 AND not target of event assignments)
-        #   this will require passing `x` to `fexplicit_roots`
         # TODO(performance): cache result, and don't repeat list symbols
-        static_syms = self.static_symbols
+        trigger_syms = self.explicit_trigger_symbols
         return sum(
-            not event.has_explicit_trigger_times(static_syms)
+            not event.has_explicit_trigger_times(trigger_syms)
             for event in self.events()
         )
 
@@ -1096,13 +1093,43 @@ class DEModel:
         indirectly.
 
         This is the set of symbols a quantity may depend on and still be
-        evaluable without a live simulation state -- e.g. what
-        :py:meth:`amici._symbolic.de_model_components.Event.has_explicit_trigger_times`
-        checks a trigger time against, and what the sundials backend's
-        ``fexplicit_roots(p, k, w)`` and the JAX backend's known-discontinuity
-        (``jump_ts``) hints can actually take as arguments.
+        evaluable without a live simulation state -- e.g. what the JAX
+        backend's known-discontinuity (``jump_ts``) hints can actually take
+        as arguments.
         """
         return self._static_symbols(["k", "p", "w"])
+
+    @property
+    def constant_state_symbols(self) -> set[sp.Symbol]:
+        """
+        The symbols of the differential states with zero time derivative.
+
+        These states only change at events or upon reinitialization, e.g.,
+        model parameters that are targets of event assignments, which are
+        converted to state variables.
+        """
+        return {
+            state.get_sym()
+            for state in self._differential_states
+            if not state.has_conservation_law() and state.get_dt().is_zero
+        }
+
+    @property
+    def explicit_trigger_symbols(self) -> set[sp.Symbol]:
+        """
+        The symbols that explicit event trigger times may depend on.
+
+        These are the static symbols (see :py:attr:`static_symbols`) and the
+        constant states (see :py:attr:`constant_state_symbols`).
+        Events whose trigger times only depend on these symbols do not
+        require root-finding, but are handled at their trigger times as
+        computed by the sundials backend's ``fexplicit_roots(x, p, k, w)``.
+        Since constant states may be changed by events, the trigger times
+        are re-evaluated after each event.
+        See also
+        :py:meth:`amici._symbolic.de_model_components.Event.has_explicit_trigger_times`.
+        """
+        return self.static_symbols | self.constant_state_symbols
 
     def dynamic_indices(self, name: str) -> list[int]:
         """
@@ -1241,22 +1268,22 @@ class DEModel:
             )
             return
         elif name == "ih":
-            static_syms = self.static_symbols
+            trigger_syms = self.explicit_trigger_symbols
             self._syms[name] = sp.Matrix(
                 [
                     sym
                     for sym, event in zip(self.sym("h"), self._events)
-                    if not event.has_explicit_trigger_times(static_syms)
+                    if not event.has_explicit_trigger_times(trigger_syms)
                 ]
             )
             return
         elif name == "eh":
-            static_syms = self.static_symbols
+            trigger_syms = self.explicit_trigger_symbols
             self._syms[name] = sp.Matrix(
                 [
                     sym
                     for sym, event in zip(self.sym("h"), self._events)
-                    if event.has_explicit_trigger_times(static_syms)
+                    if event.has_explicit_trigger_times(trigger_syms)
                 ]
             )
             return
@@ -1327,7 +1354,7 @@ class DEModel:
         if not self.events():
             return
 
-        static_syms = self.static_symbols
+        trigger_syms = self.explicit_trigger_symbols
 
         # ensure that we don't have computed any root-related symbols/equations
         #  yet, because the re-ordering might invalidate them
@@ -1355,11 +1382,11 @@ class DEModel:
         self._events = list(
             chain(
                 itertools.filterfalse(
-                    lambda e: e.has_explicit_trigger_times(static_syms),
+                    lambda e: e.has_explicit_trigger_times(trigger_syms),
                     self._events,
                 ),
                 filter(
-                    lambda e: e.has_explicit_trigger_times(static_syms),
+                    lambda e: e.has_explicit_trigger_times(trigger_syms),
                     self._events,
                 ),
             )
@@ -2003,26 +2030,26 @@ class DEModel:
             self._eqs[name] = smart_jacobian(self._eq_raw("w"), time_symbol)
 
         elif name == "iroot":
-            static_syms = self.static_symbols
+            trigger_syms = self.explicit_trigger_symbols
             self._eqs[name] = sp.Matrix(
                 [
                     eq
                     for eq, event in zip(
                         self.eq("root"), self._events, strict=True
                     )
-                    if not event.has_explicit_trigger_times(static_syms)
+                    if not event.has_explicit_trigger_times(trigger_syms)
                 ]
             )
 
         elif name == "eroot":
-            static_syms = self.static_symbols
+            trigger_syms = self.explicit_trigger_symbols
             self._eqs[name] = sp.Matrix(
                 [
                     eq
                     for eq, event in zip(
                         self.eq("root"), self._events, strict=True
                     )
-                    if event.has_explicit_trigger_times(static_syms)
+                    if event.has_explicit_trigger_times(trigger_syms)
                 ]
             )
 
@@ -2899,11 +2926,11 @@ class DEModel:
         :return:
             list of symbolic roots
         """
-        static_syms = self.static_symbols
+        trigger_syms = self.explicit_trigger_symbols
         return [
             root
             for e in self._events
-            if e.has_explicit_trigger_times(static_syms)
+            if e.has_explicit_trigger_times(trigger_syms)
             for root in e.get_trigger_times()
         ]
 
@@ -2915,11 +2942,11 @@ class DEModel:
         :return:
             list of symbolic roots
         """
-        static_syms = self.static_symbols
+        trigger_syms = self.explicit_trigger_symbols
         return [
             e.get_val()
             for e in self._events
-            if not e.has_explicit_trigger_times(static_syms)
+            if not e.has_explicit_trigger_times(trigger_syms)
         ]
 
     def has_algebraic_states(self) -> bool:

@@ -394,7 +394,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k, const realtype *w) override { return {}; }
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *w) override { return {}; }
 
 
     std::string get_name() const override {

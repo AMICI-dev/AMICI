@@ -353,6 +353,30 @@ class EventHandlingSimulator {
     int detect_secondary_events();
 
     /**
+     * @brief Get the next trigger timepoint of the events with explicit
+     * trigger times after the current time.
+     *
+     * The trigger timepoints may change after events, since they may depend
+     * on state variables that are only changed by event assignments.
+     *
+     * @return The next trigger timepoint, or infinity if there is none.
+     */
+    [[nodiscard]] realtype get_next_trigger_timepoint() const;
+
+    /**
+     * @brief Collect the roots found at the current time in
+     * `ws_->roots_found`.
+     *
+     * Sets the roots reported by the solver, and, if the current time is
+     * the given trigger timepoint, the roots of the events with explicit
+     * trigger times at that timepoint.
+     *
+     * @param t_trigger The current trigger timepoint of the events with
+     * explicit trigger times.
+     */
+    void collect_roots(realtype t_trigger);
+
+    /**
      * @brief Extract output information for events
      */
     void store_event(ExpData const* edata);

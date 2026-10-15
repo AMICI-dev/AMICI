@@ -464,19 +464,20 @@ void Model::reinit_events(
         }
     }
 
-    // re-compute parameter-dependent but state-independent roots
-    reinit_explicit_roots();
+    // re-compute the roots that don't require root-finding
+    reinit_explicit_roots(x);
 }
 
-void Model::reinit_explicit_roots() {
+void Model::reinit_explicit_roots(AmiVector const& x) {
     explicit_roots_.clear();
 
     // Evaluate event trigger timepoints.
-    // This assumes that `fw` was called before.
+    // This assumes that `fw` was called before, as the trigger timepoints
+    // may depend on static expressions.
     // That happens during model initialization or pre-equilibration.
     auto const exp_roots = fexplicit_roots(
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        derived_state_.w_.data()
+        compute_x_pos(x), state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data(), derived_state_.w_.data()
     );
     Expects(exp_roots.size() == gsl::narrow<size_t>(ne - ne_solver));
 
@@ -488,6 +489,20 @@ void Model::reinit_explicit_roots() {
         auto const& cur_roots = exp_roots[iee];
         Expects(!cur_roots.empty());
         for (auto const& root : cur_roots) {
+            if (!std::isfinite(root)) {
+                // the event does not trigger at any finite time for the
+                // current parameters and state, e.g., `time * k >= 1` for
+                // `k = 0`
+                if (std::isnan(root) && logger_) {
+                    logger_->log(
+                        LogSeverity::warning, "AMICI:NaN",
+                        "The trigger time of event %s is NaN. The event will "
+                        "not trigger.",
+                        events_.at(ie).get_id().c_str()
+                    );
+                }
+                continue;
+            }
             auto it = explicit_roots_.find(root);
             if (it != explicit_roots_.end()) {
                 it->second.push_back(ie);

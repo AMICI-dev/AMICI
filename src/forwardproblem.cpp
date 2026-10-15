@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <ranges>
 
 namespace amici {
 
@@ -67,17 +66,6 @@ void EventHandlingSimulator::run(
     // store root information at t0
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
 
-    // get list of trigger timepoints for fixed-time triggered events
-    // and filter for timepoints that are within the simulation time range
-    auto trigger_timepoints_tmp = model_->get_trigger_timepoints();
-    auto trigger_timepoints = std::ranges::views::filter(
-        trigger_timepoints_tmp, [this, timepoints](auto t) {
-            return t > ws_->sol.t && !timepoints.empty()
-                   && t <= timepoints.at(timepoints.size() - 1);
-        }
-    );
-    auto it_trigger_timepoints = trigger_timepoints.begin();
-
     // loop over timepoints
     for (it_ = 0; it_ < gsl::narrow<int>(timepoints.size()); it_++) {
         // next output time-point
@@ -99,10 +87,7 @@ void EventHandlingSimulator::run(
 
                 // next stop time is next output timepoint or next
                 // time-triggered event
-                auto next_t_event
-                    = it_trigger_timepoints != trigger_timepoints.end()
-                          ? *it_trigger_timepoints
-                          : std::numeric_limits<realtype>::infinity();
+                auto const next_t_event = get_next_trigger_timepoint();
                 auto const next_t_stop = std::min(next_t_out, next_t_event);
 
                 int const status = solver_->run(next_t_stop);
@@ -117,21 +102,7 @@ void EventHandlingSimulator::run(
                     status == AMICI_ROOT_RETURN || ws_->sol.t == next_t_event
                 ) {
                     // solver-tracked or time-triggered event
-                    solver_->get_root_info(ws_->roots_found.data());
-
-                    // check if we are at a trigger timepoint.
-                    // if so, set the root-found flag
-                    if (ws_->sol.t == next_t_event) {
-                        for (auto const ie :
-                             model_->get_explicit_roots().at(ws_->sol.t)) {
-                            // determine the direction of root crossing from
-                            // root function value at the previous event
-                            ws_->roots_found[ie]
-                                = std::copysign(1, -ws_->rootvals[ie]);
-                        }
-                        ++it_trigger_timepoints;
-                    }
-
+                    collect_roots(next_t_event);
                     handle_events(false, edata);
                 }
             }
@@ -159,17 +130,12 @@ void EventHandlingSimulator::run_steady_state(
     // so we do not reinitialize this->result here
     ws_->tlastroot = ws_->sol.t;
 
-    // get list of trigger timepoints for fixed-time triggered events
-    // and filter for timepoints that are within the simulation time range
-    auto trigger_timepoints_tmp = model_->get_trigger_timepoints();
-    auto trigger_timepoints
-        = std::ranges::views::filter(trigger_timepoints_tmp, [this](auto t) {
-              return t > ws_->sol.t;
-          });
-    auto it_trigger_timepoints = trigger_timepoints.begin();
-    auto next_t_event = it_trigger_timepoints != trigger_timepoints.end()
-                            ? *it_trigger_timepoints
-                            : std::numeric_limits<realtype>::infinity();
+    // root function values at the start, for determining the direction of
+    // the crossings of roots with explicit trigger times
+    model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+
+    // next trigger timepoint of fixed-time triggered events
+    auto next_t_event = get_next_trigger_timepoint();
 
     while (true) {
         if (sim_steps % convergence_check_frequency == 0) {
@@ -216,24 +182,9 @@ void EventHandlingSimulator::run_steady_state(
             }
 
             // solver-tracked or time-triggered event
-            solver_->get_root_info(ws_->roots_found.data());
-
-            // check if we are at a trigger timepoint.
-            // if so, set the root-found flag
-            if (ws_->sol.t == next_t_event) {
-                for (auto const ie :
-                     model_->get_explicit_roots().at(ws_->sol.t)) {
-                    // determine the direction of root crossing from
-                    // root function value at the previous event
-                    ws_->roots_found[ie] = std::copysign(1, -ws_->rootvals[ie]);
-                }
-                ++it_trigger_timepoints;
-                next_t_event = it_trigger_timepoints != trigger_timepoints.end()
-                                   ? *it_trigger_timepoints
-                                   : std::numeric_limits<realtype>::infinity();
-            }
-
+            collect_roots(next_t_event);
             handle_events(false, nullptr);
+            next_t_event = get_next_trigger_timepoint();
         }
     }
 
@@ -600,6 +551,12 @@ void EventHandlingSimulator::handle_events(
         record_roots_for_ignore();
     }
 
+    // The explicit trigger timepoints may depend on states that were changed
+    // by the event assignments
+    if (model_->ne > model_->ne_solver) {
+        model_->reinit_explicit_roots(ws_->sol.x);
+    }
+
     // reinitialize the solver after all events have been processed
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
 
@@ -760,6 +717,32 @@ int EventHandlingSimulator::detect_secondary_events() {
     }
 
     return secondevent;
+}
+
+void EventHandlingSimulator::collect_roots(realtype const t_trigger) {
+    // roots of the root functions tracked by the solver
+    solver_->get_root_info(ws_->roots_found.data());
+
+    // Roots of the events with explicit trigger times. Reset first, as
+    // these entries may still hold values from the previous discontinuity.
+    std::fill(
+        ws_->roots_found.begin() + model_->ne_solver, ws_->roots_found.end(), 0
+    );
+    if (ws_->sol.t == t_trigger) {
+        for (auto const ie : model_->get_explicit_roots().at(ws_->sol.t)) {
+            // determine the direction of root crossing from
+            // root function value at the previous event
+            ws_->roots_found[ie] = std::copysign(1, -ws_->rootvals[ie]);
+        }
+    }
+}
+
+realtype EventHandlingSimulator::get_next_trigger_timepoint() const {
+    auto const& explicit_roots = model_->get_explicit_roots();
+    auto const it = explicit_roots.upper_bound(ws_->sol.t);
+    return it != explicit_roots.end()
+               ? it->first
+               : std::numeric_limits<realtype>::infinity();
 }
 
 void EventHandlingSimulator::handle_datapoint(realtype t) {

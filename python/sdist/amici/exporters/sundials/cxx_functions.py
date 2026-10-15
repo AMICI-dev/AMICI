@@ -408,7 +408,8 @@ functions = {
         "const realtype *p, const realtype *k, const realtype *h"
     ),
     "explicit_roots": _FunctionInfo(
-        "const realtype *p, const realtype *k, const realtype *w",
+        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *w",
         return_type="std::vector<std::vector<realtype>>",
         default_return_value="{}",
         header=[

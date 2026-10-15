@@ -1582,6 +1582,193 @@ def test_root_after_reinit_ignores_all_simultaneous_events(tempdir):
 
 
 @skip_on_valgrind
+def test_explicit_trigger_time_changed_by_events(tempdir):
+    """Trigger times that depend on parameters changed by events.
+
+    ``level``, ``switch_time``, and ``other_switch_time`` are targets of
+    event assignments and are thus converted to state variables with zero
+    time derivative. The trigger times of the switches of ``u`` and ``v``
+    therefore only change at events, and the switches are handled at their
+    precomputed trigger times instead of by root-finding (gh-3365).
+
+    The structure mimics a PEtab v2 problem with time-dependent stimuli:
+    The condition changes are applied by ``E0`` at ``t = 0``, after
+    pre-equilibration without the stimuli. ``v`` is switched on before
+    ``u``, which must not affect ``u``. ``E1`` postpones the switch of
+    ``u``, switching ``u`` off and on again.
+
+    The fast state ``x`` makes the solver reduce the step size below the
+    floating point resolution of ``t`` right after the switch of ``u``. For
+    root functions that are exactly zero at that time, root-finding can
+    report a spurious reverse crossing.
+    """
+    model_name = "test_explicit_trigger_time_changed_by_events"
+    antimony2amici(
+        r"""
+        preeq_indicator = 0
+        level = 0
+        level_on = 3
+        switch_time = 0
+        other_switch_time = 0
+        t_on = 60
+        t_other = 30
+        t_off = 70
+        t_on2 = 100
+        k = 1
+        x = 0
+        u := level * piecewise(0, time < switch_time, 1)
+        v := piecewise(0, time < other_switch_time, 1)
+        x' = k * (u - x)
+        E0: at (preeq_indicator < 0.5 && time >= 0), t0 = false:
+            level = level_on, switch_time = t_on,
+            other_switch_time = t_other;
+        E1: at time >= t_off: switch_time = t_on2;
+        """,
+        fixed_parameters=["preeq_indicator"],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E0, E1, and two root functions for each of the piecewise switches,
+    #  of which only the trigger of E0 requires root-finding
+    assert model.ne == 6
+    assert model.ne_solver == 1
+
+    def create_edatas():
+        """Create ExpData objects without and with pre-equilibration."""
+        edata = ExpData(model)
+        edata.fixed_parameters = [0.0]
+        edata_preeq = ExpData(edata)
+        edata_preeq.fixed_parameters_pre_equilibration = [1.0]
+        return edata, edata_preeq
+
+    # fast `x`, and tight tolerances, as in gh-3365
+    model.set_free_parameter_by_id("k", 1e8)
+    timepoints = np.array(
+        [0, 29.99, 30, 30.01, 59.99, 60, 60.01, 61, 69.99, 70, 70.01]
+        + [99.99, 100, 100.01]
+    )
+    model.set_timepoints(timepoints)
+    u_expected = np.where(
+        ((60 <= timepoints) & (timepoints < 70)) | (timepoints >= 100), 3, 0
+    )
+    v_expected = np.where(timepoints < 30, 0, 1)
+    solver = model.create_solver()
+    solver.set_absolute_tolerance(1e-16)
+    solver.set_relative_tolerance(1e-8)
+    for edata in create_edatas():
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.by_id("u"), u_expected)
+        assert_allclose(rdata.by_id("v"), v_expected)
+
+    # analytical solution and sensitivities
+    model.set_free_parameter_by_id("k", 1.0)
+    timepoints = np.array([0, 45, 65, 69, 75, 99, 105, 120], dtype=float)
+    model.set_timepoints(timepoints)
+    x_70 = 3 * (1 - np.exp(-10))
+    x_100 = x_70 * np.exp(-30)
+    x_expected = np.select(
+        [timepoints < 60, timepoints < 70, timepoints < 100],
+        [
+            0,
+            3 * (1 - np.exp(-(timepoints - 60))),
+            x_70 * np.exp(-(timepoints - 70)),
+        ],
+        3 + (x_100 - 3) * np.exp(-(timepoints - 100)),
+    )
+    solver = model.create_solver()
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance(1e-10)
+    edata, edata_preeq = create_edatas()
+    for cur_edata in (edata, edata_preeq):
+        rdata = run_simulation(model, solver, cur_edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.by_id("x"), x_expected, rtol=1e-8, atol=1e-12)
+
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sens_method)
+        check_derivatives(model, solver=solver, edata=edata)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    check_derivatives(model, solver=solver, edata=edata_preeq)
+
+
+@skip_on_valgrind
+def test_explicit_trigger_time_preequilibration(tempdir):
+    """Explicit trigger times that depend on parameters changed by events,
+    during pre-equilibration by simulation and the main simulation.
+
+    During pre-equilibration, ``u`` is switched on at ``switch_time``.
+    The direction of this crossing is determined from the root function
+    values at the start of the pre-equilibration.
+
+    The trigger time of ``E_late`` is ``1 / rate``, i.e., infinite, until
+    ``E_rate`` sets ``rate`` at the start of the main simulation.
+    """
+    model_name = "test_explicit_trigger_time_preequilibration"
+    antimony2amici(
+        r"""
+        preeq_indicator = 0
+        switch_time = 5
+        rate = 0
+        rate_main = 0.05
+        n_late = 0
+        k = 1
+        x = 2
+        u := piecewise(0, time < switch_time, 1)
+        x' = u - k * x
+        E_rate: at (preeq_indicator < 0.5 && time >= 0), t0 = false:
+            rate = rate_main;
+        E_late: at time * rate >= 1: n_late = n_late + 1;
+        """,
+        fixed_parameters=["preeq_indicator"],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E_rate, E_late, and two root functions for the piecewise switch of
+    #  `u`, of which only the trigger of E_rate requires root-finding
+    assert model.ne == 4
+    assert model.ne_solver == 1
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    timepoints = np.array([0, 4, 6, 10, 19, 21, 30], dtype=float)
+    model.set_timepoints(timepoints)
+    edata = ExpData(model)
+    edata.fixed_parameters = [0.0]
+    edata.fixed_parameters_pre_equilibration = [1.0]
+
+    solver = model.create_solver()
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance(1e-10)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+
+    # pre-equilibration: `u` switched on at t=5 -> x = 1 / k
+    # main simulation: x(0) = 1, `u` switched on at t=5 again
+    x_5 = np.exp(-5)
+    x_expected = np.where(
+        timepoints < 5,
+        np.exp(-timepoints),
+        1 + (x_5 - 1) * np.exp(-(timepoints - 5)),
+    )
+    assert_allclose(rdata.by_id("x"), x_expected, rtol=1e-6, atol=1e-8)
+    # E_late triggers at 1 / rate_main = 20
+    assert_allclose(
+        rdata.by_id("n_late"), np.where(timepoints < 20, 0, 1), atol=0
+    )
+
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on
     cascading expressions in `w`."""

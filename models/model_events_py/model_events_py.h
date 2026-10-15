@@ -101,7 +101,7 @@ extern void x_solver_model_events_py(realtype *x_solver, const realtype *x_rdata
 extern std::vector<HermiteSpline> create_splines_model_events_py(const realtype *p, const realtype *k);
 
 
-extern std::vector<std::vector<realtype>> explicit_roots_model_events_py(const realtype *p, const realtype *k, const realtype *w);
+extern std::vector<std::vector<realtype>> explicit_roots_model_events_py(const realtype *x, const realtype *p, const realtype *k, const realtype *w);
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -435,8 +435,8 @@ class Model_model_events_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k, const realtype *w) override {
-        return explicit_roots_model_events_py(p, k, w);
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *w) override {
+        return explicit_roots_model_events_py(x, p, k, w);
     }
 
 
