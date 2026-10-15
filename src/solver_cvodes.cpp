@@ -653,9 +653,9 @@ bool CVodeSolver::store_pre_discontinuity_point(realtype const t0) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     auto ca_mem = cv_mem->cv_adj_mem;
     if (cv_mem->cv_nst % ca_mem->ca_nsteps == 0) {
-        // This is the first point of a check point, keep it. This only
-        // happens before the first step, since the check point
-        // interval (maxsteps + 1) exceeds the total number of steps.
+        // This is the initial point, keep it. All forward data is kept in
+        // a single check point (see adj_init), so this only happens before
+        // the first step.
         return false;
     }
     if (t0 > cv_mem->cv_tn || t0 < cv_mem->cv_tn - cv_mem->cv_hu) {
@@ -691,8 +691,7 @@ void CVodeSolver::store_post_discontinuity_point() const {
     if ((cv_mem->cv_nst + 1) % ca_mem->ca_nsteps == 0) {
         // This would require a new check point (see reInit_post_process).
         // Skip the point, interpolation will span the discontinuity.
-        // Only possible close to maxsteps, since the check point
-        // interval is maxsteps + 1.
+        // Only possible close to maxsteps (see adj_init).
         return;
     }
     ++cv_mem->cv_nst;
