@@ -2077,3 +2077,58 @@ def test_dae_event_adjoint_sensitivities(tempdir):
         rtol=1e-6,
         atol=1e-8,
     )
+
+
+@skip_on_valgrind
+def test_event_assignment_with_expressions(tempdir):
+    """Event assignments using (chains of) assignment rule variables."""
+    model_name = "test_event_assignment_with_expressions"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1; v = 0
+        y := p * x
+        z := y + 1
+        x' = -k * x
+        v' = 0
+        E1: at time > 1: v = v + z
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_v", formula="v"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 4.5, 9))
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    k, p = model.get_free_parameters()
+    v_expected = np.where(rdata.ts >= 1, p * np.exp(-k) + 1, 0)
+    assert_allclose(rdata.by_id("v"), v_expected, rtol=1e-8)
+
+    edata = ExpData(rdata, 1.0, 0.0, 42)
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert np.all(np.abs(rdata.sllh) > 0.1), sensi_meth
+        check_gradient(function, point, rdata.sllh).assert_success(
+            always_print=True
+        )
