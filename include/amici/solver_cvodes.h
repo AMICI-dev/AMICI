@@ -172,14 +172,32 @@ class CVodeSolver : public Solver {
     /**
      * @brief Store the forward solution before a discontinuity for
      * interpolation during adjoint integration.
-     * @param t0 time of the discontinuity
-     * @return whether the post-discontinuity solution can be stored
+     *
+     * Modifies CVODES' adjoint memory directly: the data point that
+     * was stored for the end of the last step (after `t_disc`) is
+     * overwritten by the solution interpolated at `t_disc`, and its time is
+     * set to `t_disc`. Must be called before the solver is reinitialized at
+     * `t_disc`.
+     *
+     * @param t_disc time of the discontinuity
+     * @return whether the post-discontinuity solution can be stored via
+     * `store_post_discontinuity_point`
      */
-    bool store_pre_discontinuity_point(realtype t0) const;
+    bool store_pre_discontinuity_point(realtype t_disc) const;
 
     /**
      * @brief Store the forward solution after a discontinuity for
      * interpolation during adjoint integration.
+     *
+     * Modifies CVODES' adjoint memory directly: adds a data point for
+     * the reinitialized solution at the current time, taken from
+     * the Nordsieck array (`cv_zn[0]`) and, for Hermite interpolation, the
+     * right-hand side evaluated there. For this, `cv_nst` is incremented, so
+     * the point counts as a step (`numsteps`, `maxsteps`). The end time of the
+     * check point and `ca_tfinal` are updated accordingly. For polynomial
+     * interpolation, the order of the point is set to zero, so that it is
+     * not interpolated together with the preceding points. Must be called
+     * after reinitialization and before the next step.
      */
     void store_post_discontinuity_point() const;
 

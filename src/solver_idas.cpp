@@ -632,11 +632,11 @@ int IDASolver::reinit_post_process(
     return status;
 }
 
-bool IDASolver::store_pre_discontinuity_point(realtype const t0) const {
+bool IDASolver::store_pre_discontinuity_point(realtype const t_disc) const {
     // The interpolation data of the forward solution for the adjoint
     // problem must not span the discontinuity. The last stored point
     // belongs to the end of the step in which the discontinuity was
-    // located (ida_tn >= t0). Replace it by the solution at t0.
+    // located (ida_tn >= t_disc). Replace it by the solution at t_disc.
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
     auto ia_mem = ida_mem->ida_adj_mem;
     if (ida_mem->ida_nst % ia_mem->ia_nsteps == 0) {
@@ -645,28 +645,30 @@ bool IDASolver::store_pre_discontinuity_point(realtype const t0) const {
         // the first step.
         return false;
     }
-    if (t0 > ida_mem->ida_tn || t0 < ida_mem->ida_tn - ida_mem->ida_hused) {
+    if (t_disc > ida_mem->ida_tn
+        || t_disc < ida_mem->ida_tn - ida_mem->ida_hused) {
         // Not a discontinuity within the last step, e.g., reinitialization
         // after pre-equilibration.
         return false;
     }
     auto const dt_pnt = ia_mem->dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps];
-    if (dt_pnt->t == t0)
+    if (dt_pnt->t == t_disc)
         return true;
 
     N_Vector y;
     if (ia_mem->ia_interpType == IDA_HERMITE) {
         auto content = static_cast<IDAhermiteDataMem>(dt_pnt->content);
-        if (auto const status = IDAGetDky(ida_mem, t0, 1, content->yd);
+        if (auto const status = IDAGetDky(ida_mem, t_disc, 1, content->yd);
             status != IDA_SUCCESS)
             throw IDAException(status, "IDAGetDky");
         y = content->y;
     } else {
         y = static_cast<IDApolynomialDataMem>(dt_pnt->content)->y;
     }
-    if (auto const status = IDAGetDky(ida_mem, t0, 0, y); status != IDA_SUCCESS)
+    if (auto const status = IDAGetDky(ida_mem, t_disc, 0, y);
+        status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetDky");
-    dt_pnt->t = t0;
+    dt_pnt->t = t_disc;
     return true;
 }
 
