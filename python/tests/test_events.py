@@ -1480,8 +1480,13 @@ def test_event_measurement_without_event(tempdir):
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
     solver.set_sensitivity_order(SensitivityOrder.first)
-    sllh_fd, _ = _event_output_fd(model, solver, edata)
-    assert np.all(np.abs(sllh_fd) > 0.01)
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
 
     for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
         solver.set_sensitivity_method(sensi_meth)
@@ -1492,7 +1497,11 @@ def test_event_measurement_without_event(tempdir):
         assert np.isclose(
             rdata.llh, -0.5 * np.log(2 * np.pi) - 0.5 * rz**2, rtol=1e-12
         )
-        assert_allclose(rdata.sllh, sllh_fd, rtol=1e-5, err_msg=sensi_meth)
+        if sensi_meth == SensitivityMethod.forward:
+            assert np.all(np.abs(rdata.sllh) > 0.01)
+        check_gradient(function, point, rdata.sllh).assert_success(
+            always_print=True
+        )
 
 
 @skip_on_valgrind
