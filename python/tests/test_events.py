@@ -10,6 +10,7 @@ from amici import (
 from amici import (
     import_model_module,
 )
+from amici.adapters.fiddy import run_simulation_to_function_and_derivative
 from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     AMICI_SUCCESS,
@@ -23,6 +24,7 @@ from amici.sim.sundials import (
 from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
 from amici.testing.models import create_amici_model, create_sbml_model
+from fiddy import check_gradient
 from numpy.testing import assert_allclose
 from util import (
     check_trajectories_with_adjoint_sensitivities,
@@ -1677,6 +1679,74 @@ def test_root_after_reinit_ignores_all_simultaneous_events(tempdir):
     assert rdata.status == AMICI_SUCCESS
     assert rdata.by_id("n_fired_1")[-1] == 1
     assert rdata.by_id("n_fired_2")[-1] == 1
+
+
+def _event_output_problem(model, event_measurements):
+    """Experimental data with measurements only for the event outputs."""
+    nt = model.nt()
+    edata = ExpData(model)
+    edata.set_measurements(np.full(nt * model.nytrue, np.nan))
+    edata.set_noise_scales(np.ones(nt * model.nytrue))
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[: len(event_measurements)] = event_measurements
+    edata.set_event_measurements(mz)
+    edata.set_event_noise_scales(np.ones_like(mz))
+    return edata
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_event_outputs(tempdir):
+    """Adjoint sensitivities for event outputs, with fewer events than
+    `n_max_event` and with as many events as `n_max_event`."""
+    model_name = "test_adjoint_sensitivities_event_outputs"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (time > 1.3): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 4.5, 9))
+    assert model.n_max_event() > 1
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    # E1 occurs once
+    for n_max_event in (model.n_max_event(), 1):
+        model.set_n_max_event(n_max_event)
+        edata = _event_output_problem(model, [0.3])
+        function, _ = run_simulation_to_function_and_derivative(
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=["llh"],
+        )
+        point = np.asarray(model.get_free_parameters())
+
+        for sensi_meth in (
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
+            solver.set_sensitivity_method(sensi_meth)
+            rdata = run_simulation(model, solver, edata)
+            msg = f"{sensi_meth=}, {n_max_event=}"
+            assert rdata.status == AMICI_SUCCESS, msg
+            if sensi_meth == SensitivityMethod.forward:
+                assert np.all(np.abs(rdata.sllh) > 0.1), msg
+            check_gradient(function, point, rdata.sllh).assert_success(
+                always_print=True
+            )
 
 
 @skip_on_valgrind

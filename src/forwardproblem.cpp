@@ -836,9 +836,8 @@ SimulationState EventHandlingSimulator::get_simulation_state() {
     return {.sol = ws_->sol, .mod = model_->get_model_state()};
 }
 
-std::vector<int> compute_nroots(
-    std::vector<Discontinuity> const& discs, int ne, int nmaxevents
-) {
+std::vector<int>
+compute_nroots(std::vector<Discontinuity> const& discs, int ne) {
     auto size = gsl::narrow<std::vector<int>::size_type>(ne);
     std::vector<int> nroots(size, 0);
     for (auto const& disc : discs) {
@@ -846,12 +845,6 @@ std::vector<int> compute_nroots(
             if (disc.root_info[i] == 1) {
                 nroots[i]++;
             }
-        }
-    }
-
-    for (auto& n : nroots) {
-        if (n > nmaxevents) {
-            n = nmaxevents;
         }
     }
     return nroots;
