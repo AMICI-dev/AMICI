@@ -1513,11 +1513,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_old Time derivative of the state before the event
      * @param x_old Pre-event state
      * @param dx Current derivative of state (DAE only)
+     * @param xQB Current quadrature state (will be overwritten). For DAEs,
+     * receives the contributions of the algebraic states to the update.
+     * @param h_old Heaviside variables of the pre-event state (DAE only)
      */
     void add_adjoint_state_event_update(
         AmiVector& xB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_old,
-        AmiVector const& x_old, AmiVector const& dx
+        AmiVector const& x_old, AmiVector const& dx, AmiVector& xQB,
+        std::vector<realtype> const& h_old
     );
 
     /**

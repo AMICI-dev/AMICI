@@ -1589,7 +1589,7 @@ void Model::add_state_sensitivity_event_update(
 void Model::add_adjoint_state_event_update(
     AmiVector& xB, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& xdot, AmiVector const& xdot_old, AmiVector const& x_old,
-    AmiVector const& dx
+    AmiVector const& dx, AmiVector& xQB, std::vector<realtype> const& h_old
 ) {
 
     derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
@@ -1604,6 +1604,33 @@ void Model::add_adjoint_state_event_update(
 
     if (always_check_finite_) {
         check_finite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
+    }
+
+    if (has_algebraic_states()) {
+        // The pre-event algebraic states are determined by the pre-event
+        // algebraic equations. Map the update w.r.t. the algebraic states
+        // (e.g., from algebraic-state-dependent triggers) to the
+        // differential states and parameters, cf. R. Serban, A. Recuero,
+        // Sensitivity Analysis for Hybrid Systems and Systems with Memory,
+        // arXiv:1904.08734, 2019, Sec. 4, footnote 3.
+        // `project_algebraic_objective_derivatives` expects the layout
+        // `iJ + ix * nJ`.
+        std::vector<realtype> deltaxB(nx_solver * nJ, 0.0);
+        for (int ix = 0; ix < nxtrue_solver; ++ix)
+            for (int iJ = 0; iJ < nJ; ++iJ)
+                deltaxB[iJ + ix * nJ]
+                    = derived_state_.deltaxB_[ix + iJ * nxtrue_solver];
+        std::vector<realtype> deltaqB(nplist() * nJ, 0.0);
+        auto h = state_.h;
+        state_.h = h_old;
+        project_algebraic_objective_derivatives(t, x_old, deltaxB, deltaqB);
+        state_.h = std::move(h);
+        for (int ix = 0; ix < nxtrue_solver; ++ix)
+            for (int iJ = 0; iJ < nJ; ++iJ)
+                derived_state_.deltaxB_[ix + iJ * nxtrue_solver]
+                    = deltaxB[iJ + ix * nJ];
+        for (int i = 0; i < nplist() * nJ; ++i)
+            xQB[i] += deltaqB[i];
     }
 
     // apply update
