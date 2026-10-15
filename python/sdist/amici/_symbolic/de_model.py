@@ -1303,6 +1303,9 @@ class DEModel:
         for expr in self._expressions:
             expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
+        for eq in self._algebraic_equations:
+            eq.set_val(self._process_heavisides(eq.get_val(), roots))
+
         # Now add the found roots to the model components
         for root in roots:
             # skip roots of SBML events, as these have already been added
