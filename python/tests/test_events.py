@@ -1824,9 +1824,6 @@ def test_dae_event_reinitialization(tempdir):
     module_name = "dae_event_reinit"
     antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
     model = import_model_module(module_name, tempdir).get_model()
-    # including an output at the event time
-    t = np.sort(np.append(np.linspace(0, 5, 11), 2.2))
-    model.set_timepoints(t)
 
     # analytical solution: x' = -k * p * x + q
     k, p, q = 0.5, 2.0, 0.3
@@ -1834,57 +1831,31 @@ def test_dae_event_reinitialization(tempdir):
     x_inf = q / a
     t_event = 2.2
     x_pre_event = x_inf + (1.0 - x_inf) * np.exp(-a * t_event)
-    x_expected = np.where(
-        t < t_event,
-        x_inf + (1.0 - x_inf) * np.exp(-a * t),
-        x_inf + (x_pre_event + q - x_inf) * np.exp(-a * (t - t_event)),
-    )
-    y_expected = p * x_expected
 
-    for rtol in (1e-6, 1e-12):
-        solver = model.create_solver()
-        solver.set_relative_tolerance(rtol)
-        solver.set_absolute_tolerance(rtol / 100)
-        rdata = run_simulation(model, solver)
-        assert rdata.status == AMICI_SUCCESS, rtol
-        assert_allclose(
-            rdata.x[:, 0], x_expected, rtol=100 * rtol, err_msg=str(rtol)
+    # including an output at the event time, or within roundoff after it
+    for t_output in (t_event, np.nextafter(t_event, np.inf)):
+        t = np.sort(np.append(np.linspace(0, 5, 11), t_output))
+        model.set_timepoints(t)
+        x_expected = np.where(
+            t < t_event,
+            x_inf + (1.0 - x_inf) * np.exp(-a * t),
+            x_inf + (x_pre_event + q - x_inf) * np.exp(-a * (t - t_event)),
         )
-        assert_allclose(
-            rdata.x[:, 1], y_expected, rtol=100 * rtol, err_msg=str(rtol)
-        )
+        y_expected = p * x_expected
 
-
-@skip_on_valgrind
-def test_dae_event_close_to_output_time(tempdir):
-    """DAE event within roundoff of the next output time."""
-    ant_model = """
-    model dae_event_close_to_output_time
-        const k = 0.5
-        x = 1; y = 1
-        x' = -k * y
-        0 = y - x
-        at (time >= 0.3): x = x + 1
-    end
-    """
-    module_name = "dae_event_close_to_output_time"
-    antimony2amici(ant_model, model_name=module_name, output_dir=tempdir)
-    model = import_model_module(module_name, tempdir).get_model()
-    t_event = 0.3
-    # 0.1 + 0.2 == 0.30000000000000004
-    t = np.array([0.0, 0.1 + 0.2, 1.0])
-    assert t_event < t[1]
-    model.set_timepoints(t)
-
-    x_expected = np.where(
-        t < t_event,
-        np.exp(-0.5 * t),
-        np.exp(-0.5 * t) + np.exp(-0.5 * (t - t_event)),
-    )
-    rdata = run_simulation(model, model.create_solver())
-    assert rdata.status == AMICI_SUCCESS
-    assert_allclose(rdata.x[:, 0], x_expected, rtol=1e-5)
-    assert_allclose(rdata.x[:, 1], x_expected, rtol=1e-5)
+        for rtol in (1e-6, 1e-12):
+            msg = f"{t_output=}, {rtol=}"
+            solver = model.create_solver()
+            solver.set_relative_tolerance(rtol)
+            solver.set_absolute_tolerance(rtol / 100)
+            rdata = run_simulation(model, solver)
+            assert rdata.status == AMICI_SUCCESS, msg
+            assert_allclose(
+                rdata.x[:, 0], x_expected, rtol=100 * rtol, err_msg=msg
+            )
+            assert_allclose(
+                rdata.x[:, 1], y_expected, rtol=100 * rtol, err_msg=msg
+            )
 
 
 @skip_on_valgrind
