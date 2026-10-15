@@ -514,6 +514,9 @@ void CVodeSolver::reset_state(void* ami_mem, const_N_Vector y0) const {
 }
 
 bool CVodeSolver::reinit_post_process_f(realtype const tnext) const {
+    // The new initial state is set (see `reinit`). Store it for the adjoint
+    // interpolation before `reInit_post_process` takes the first step, which
+    // stores the next data point.
     if (store_post_discontinuity_point_) {
         store_post_discontinuity_point_ = false;
         if (static_cast<CVodeMem>(solver_memory_.get())->cv_adjMallocDone
@@ -646,10 +649,20 @@ int CVodeSolver::reInit_post_process(
 }
 
 bool CVodeSolver::store_pre_discontinuity_point(realtype const t_disc) const {
-    // The interpolation data of the forward solution for the adjoint
-    // problem must not span the discontinuity. The last stored point
-    // belongs to the end of the step in which the discontinuity was
-    // located (cv_tn >= t_disc). Replace it by the solution at t_disc.
+    // Background: For adjoint sensitivity analysis, CVODES stores a data
+    // point of the forward solution after each internal step, in
+    // `ca_mem->dt_mem[cv_nst % ca_nsteps]`, where `cv_nst` is the number of
+    // steps taken so far. Each data point holds the time `t`, the state `y`,
+    // and, depending on the interpolation type, the time derivative `yd`
+    // (Hermite) or the method order of the step that ended at this point
+    // (polynomial). During backward integration, the forward solution at
+    // time t in (t_{i-1}, t_i] is interpolated from data point i and
+    // its predecessor(s).
+    //
+    // The interpolation data must not span the discontinuity. The last
+    // stored point belongs to the end of the step in which the
+    // discontinuity was located (cv_tn >= t_disc). Replace it by the
+    // solution at t_disc.
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     auto ca_mem = cv_mem->cv_adj_mem;
     if (cv_mem->cv_nst % ca_mem->ca_nsteps == 0) {
@@ -663,18 +676,27 @@ bool CVodeSolver::store_pre_discontinuity_point(realtype const t_disc) const {
         // after pre-equilibration.
         return false;
     }
+    // The data point stored at the end of the last step
     auto const dt_pnt = ca_mem->dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps];
-    if (dt_pnt->t == t_disc)
+    if (dt_pnt->t == t_disc) {
+        // The last step ended exactly at the discontinuity, nothing to do
         return true;
+    }
 
+    // Overwrite the data point with the solution at t_disc. `CVodeGetDky`
+    // evaluates the interpolating polynomial of the last step, which is
+    // valid within that step, i.e., for t_disc in [cv_tn - cv_hu, cv_tn].
     N_Vector y;
     if (ca_mem->ca_IMtype == CV_HERMITE) {
+        // Hermite: also replace the derivative (k=1)
         auto content = static_cast<CVhermiteDataMem>(dt_pnt->content);
         if (auto const status = CVodeGetDky(cv_mem, t_disc, 1, content->yd);
             status != CV_SUCCESS)
             throw CvodeException(status, "CVodeGetDky");
         y = content->y;
     } else {
+        // Polynomial: only the state is replaced. The order of the last
+        // step is kept, the preceding points are all before t_disc.
         y = static_cast<CVpolynomialDataMem>(dt_pnt->content)->y;
     }
     if (auto const status = CVodeGetDky(cv_mem, t_disc, 0, y);
@@ -686,7 +708,11 @@ bool CVodeSolver::store_pre_discontinuity_point(realtype const t_disc) const {
 
 void CVodeSolver::store_post_discontinuity_point() const {
     // Add the post-discontinuity solution at the time of the discontinuity
-    // (cv_tn), following the pre-discontinuity point at the same time.
+    // (cv_tn), following the pre-discontinuity point at the same time (see
+    // `store_pre_discontinuity_point` for the layout of the data points).
+    // Backward integration then interpolates from the post-discontinuity
+    // point and its successors for t > t_disc, and from the
+    // pre-discontinuity point and its predecessors for t < t_disc.
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     auto ca_mem = cv_mem->cv_adj_mem;
     if ((cv_mem->cv_nst + 1) % ca_mem->ca_nsteps == 0) {
@@ -695,10 +721,24 @@ void CVodeSolver::store_post_discontinuity_point() const {
         // Only possible close to maxsteps (see adj_init).
         return;
     }
+    // Storing the point follows `CVodeF` (cvodea.c), which stores a point
+    // after each step, and `CVAhermiteStorePnt`/`CVApolynomialStorePnt`.
+    // Forward sensitivities are not stored, since they are not computed
+    // during forward integration for adjoint sensitivity analysis
+    // (`ca_IMstoreSensi` is false).
+    //
+    // The data point index is derived from the step counter. Count the
+    // new point as a step, so that the point stored after the next step
+    // (`reInit_post_process`) follows it instead of overwriting it.
     ++cv_mem->cv_nst;
     auto const dt_pnt = ca_mem->dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps];
     dt_pnt->t = cv_mem->cv_tn;
+    // After `reinit`, the first column of the Nordsieck array, `cv_zn[0]`,
+    // holds the new state.
     if (ca_mem->ca_IMtype == CV_HERMITE) {
+        // Hermite: state and its derivative, i.e., the right-hand side, as
+        // in `CVAhermiteStorePnt` for a point before the first step
+        // (`cv_nst == 0`)
         auto content = static_cast<CVhermiteDataMem>(dt_pnt->content);
         N_VScale(ONE, cv_mem->cv_zn[0], content->y);
         if (cv_mem->cv_f(
@@ -707,11 +747,19 @@ void CVodeSolver::store_post_discontinuity_point() const {
             != 0)
             throw CvodeException(AMICI_ERROR, "store_post_discontinuity_point");
     } else {
+        // Polynomial: interpolation for t in (t_{i-1}, t_i] uses point i and
+        // as many predecessors as point i's order. With order 0 (instead of
+        // the order of the last step, `cv_qu`, as in
+        // `CVApolynomialStorePnt`), this point is not interpolated together
+        // with the pre-discontinuity point.
         auto content = static_cast<CVpolynomialDataMem>(dt_pnt->content);
         N_VScale(ONE, cv_mem->cv_zn[0], content->y);
-        // must not be interpolated together with the preceding points
         content->order = 0;
     }
+    // The stored forward data now end at this point. The end time of the
+    // current check point and the final time of the forward integration
+    // were set to the end of the last step (>= t_disc) and bound the times
+    // for which the forward solution can be interpolated. As in `CVodeF`.
     ca_mem->ck_mem->ck_t1 = cv_mem->cv_tn;
     ca_mem->ca_tfinal = cv_mem->cv_tn;
 }
@@ -721,6 +769,10 @@ void CVodeSolver::reinit(
 ) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     if (solver_was_called_F_ && cv_mem->cv_adjMallocDone == SUNTRUE) {
+        // Reinitialization during forward integration with adjoint memory,
+        // i.e., a discontinuity at t0. Fix the last stored data point while
+        // the interpolating polynomial of the last step is still available.
+        // The post-discontinuity point is stored in `reinit_post_process_f`.
         store_post_discontinuity_point_ = store_pre_discontinuity_point(t0);
     }
     cv_mem->cv_tn = t0;
