@@ -498,6 +498,16 @@ bool IDASolver::reinit_post_process_f(realtype const tnext) const {
         ic_status != IDA_SUCCESS)
         throw IDAException(ic_status, "IDACalcIC");
 
+    // The new consistent initial state is set. Store it for the adjoint
+    // interpolation before `reinit_post_process` takes the first step,
+    // which stores the next data point.
+    if (store_post_discontinuity_point_) {
+        store_post_discontinuity_point_ = false;
+        if (static_cast<IDAMem>(solver_memory_.get())->ida_adjMallocDone
+            == SUNTRUE)
+            store_post_discontinuity_point();
+    }
+
     int const status
         = reinit_post_process(solver_memory_.get(), &t_, &x_, &dx_, tnext);
     force_reinit_postprocess_F_ = false;
@@ -605,8 +615,10 @@ int IDASolver::reinit_post_process(
             throw IDAException(AMICI_ERROR, "reInitPostProcess");
         }
 
-        /* Load next point in dt_mem */
-        dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]->t = *t;
+        /* Load next point in dt_mem. As in IDASolveF, the stored data belongs
+         to the end of the internal step (ida_tn), not to the root time *t
+         on a root return. */
+        dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]->t = ida_mem->ida_tn;
         ia_mem->ia_storePnt(
             ida_mem, dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]
         );
@@ -614,13 +626,129 @@ int IDASolver::reinit_post_process(
         /* Set t1 field of the current ckeck point structure
          for the case in which there will be no future
          check points */
-        ia_mem->ck_mem->ck_t1 = *t;
+        ia_mem->ck_mem->ck_t1 = ida_mem->ida_tn;
 
-        /* tfinal is now set to *tret */
-        ia_mem->ia_tfinal = *t;
+        /* tfinal is now set to tn */
+        ia_mem->ia_tfinal = ida_mem->ida_tn;
     }
 
     return status;
+}
+
+bool IDASolver::store_pre_discontinuity_point(realtype const t_disc) const {
+    // Background: For adjoint sensitivity analysis, IDAS stores a data
+    // point of the forward solution after each internal step, in
+    // `ia_mem->dt_mem[ida_nst % ia_nsteps]`, where `ida_nst` is the number
+    // of steps taken so far. Each data point holds the time `t`, the state
+    // `y`, and, depending on the interpolation type, the time derivative
+    // `yd` (Hermite) or the method order of the step that ended at this
+    // point (polynomial). During backward integration, the forward solution
+    // at time t in (t_{i-1}, t_i] is interpolated from data point i and its
+    // predecessor(s).
+    //
+    // The interpolation data must not span the discontinuity. The last
+    // stored point belongs to the end of the step in which the
+    // discontinuity was located (ida_tn >= t_disc). Replace it by the
+    // solution at t_disc.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    auto ia_mem = ida_mem->ida_adj_mem;
+    if (ida_mem->ida_nst % ia_mem->ia_nsteps == 0) {
+        // This is the initial point, keep it. All forward data is kept in
+        // a single check point (see adj_init), so this only happens before
+        // the first step.
+        return false;
+    }
+    if (t_disc > ida_mem->ida_tn
+        || t_disc < ida_mem->ida_tn - ida_mem->ida_hused) {
+        // Not a discontinuity within the last step, e.g., reinitialization
+        // after pre-equilibration.
+        return false;
+    }
+    // The data point stored at the end of the last step
+    auto const dt_pnt = ia_mem->dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps];
+    if (dt_pnt->t == t_disc) {
+        // The last step ended exactly at the discontinuity, nothing to do
+        return true;
+    }
+
+    // Overwrite the data point with the solution at t_disc. `IDAGetDky`
+    // evaluates the interpolating polynomial of the last step, which is
+    // valid within that step, i.e., for t_disc in [ida_tn - ida_hused,
+    // ida_tn].
+    N_Vector y;
+    if (ia_mem->ia_interpType == IDA_HERMITE) {
+        // Hermite: also replace the derivative (k=1)
+        auto content = static_cast<IDAhermiteDataMem>(dt_pnt->content);
+        if (auto const status = IDAGetDky(ida_mem, t_disc, 1, content->yd);
+            status != IDA_SUCCESS)
+            throw IDAException(status, "IDAGetDky");
+        y = content->y;
+    } else {
+        // Polynomial: only the state is replaced. The order of the last
+        // step is kept, the preceding points are all before t_disc.
+        y = static_cast<IDApolynomialDataMem>(dt_pnt->content)->y;
+    }
+    if (auto const status = IDAGetDky(ida_mem, t_disc, 0, y);
+        status != IDA_SUCCESS)
+        throw IDAException(status, "IDAGetDky");
+    dt_pnt->t = t_disc;
+    return true;
+}
+
+void IDASolver::store_post_discontinuity_point() const {
+    // Add the (consistent) post-discontinuity solution at the time of the
+    // discontinuity (ida_tn), following the pre-discontinuity point at the
+    // same time (see `store_pre_discontinuity_point` for the layout of the
+    // data points). Backward integration then interpolates from the
+    // post-discontinuity point and its successors for t > t_disc, and from
+    // the pre-discontinuity point and its predecessors for t < t_disc.
+    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    auto ia_mem = ida_mem->ida_adj_mem;
+    if ((ida_mem->ida_nst + 1) % ia_mem->ia_nsteps == 0) {
+        // This would require a new check point (see reinit_post_process).
+        // Skip the point, interpolation will span the discontinuity.
+        // Only possible close to maxsteps (see adj_init).
+        return;
+    }
+    // Storing the point follows `IDASolveF` (idaa.c), which stores a point
+    // after each step, and `IDAAhermiteStorePnt`/`IDAApolynomialStorePnt`.
+    // Forward sensitivities are not stored, since they are not computed
+    // during forward integration for adjoint sensitivity analysis
+    // (`ia_storeSensi` is false).
+    //
+    // The data point index is derived from the step counter. Count the
+    // new point as a step, so that the point stored after the next step
+    // (`reinit_post_process`) follows it instead of overwriting it.
+    ++ida_mem->ida_nst;
+    auto const dt_pnt = ia_mem->dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps];
+    dt_pnt->t = ida_mem->ida_tn;
+    // Before the first step after reinitialization, the first two columns
+    // of IDAS' history array, `ida_phi[0]` and `ida_phi[1]`, hold y and y'
+    // (set by `reinit` and `IDACalcIC`).
+    if (ia_mem->ia_interpType == IDA_HERMITE) {
+        // Hermite: state and its derivative, as in `IDAAhermiteStorePnt`
+        // and `IDAAGettnSolutionYp` for a point before the first step
+        // (`ida_nst == 0`)
+        auto content = static_cast<IDAhermiteDataMem>(dt_pnt->content);
+        N_VScale(ONE, ida_mem->ida_phi[0], content->y);
+        N_VScale(ONE, ida_mem->ida_phi[1], content->yd);
+    } else {
+        // Polynomial: interpolation for t in (t_{i-1}, t_i] uses point i and
+        // as many predecessors as point i's order. With order 0 (instead of
+        // the order of the last step, `ida_kused`, as in
+        // `IDAApolynomialStorePnt`), this point is not interpolated together
+        // with the pre-discontinuity point.
+        auto content = static_cast<IDApolynomialDataMem>(dt_pnt->content);
+        N_VScale(ONE, ida_mem->ida_phi[0], content->y);
+        content->order = 0;
+    }
+    // The stored forward data now end at this point. The end time of the
+    // current check point and the final time of the forward integration
+    // were set to the end of the last step (>= t_disc) and bound the times
+    // for which the forward solution can be interpolated. As in
+    // `IDASolveF`.
+    ia_mem->ck_mem->ck_t1 = ida_mem->ida_tn;
+    ia_mem->ia_tfinal = ida_mem->ida_tn;
 }
 
 void IDASolver::reinit(
@@ -628,6 +756,13 @@ void IDASolver::reinit(
 ) const {
 
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    if (solver_was_called_F_ && ida_mem->ida_adjMallocDone == SUNTRUE) {
+        // Reinitialization during forward integration with adjoint memory,
+        // i.e., a discontinuity at t0. Fix the last stored data point while
+        // the interpolating polynomial of the last step is still available.
+        // The post-discontinuity point is stored in `reinit_post_process_f`.
+        store_post_discontinuity_point_ = store_pre_discontinuity_point(t0);
+    }
     ida_mem->ida_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;

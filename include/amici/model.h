@@ -1420,7 +1420,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, row-major)
+     * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, column-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
