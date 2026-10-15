@@ -2450,6 +2450,127 @@ def test_explicit_trigger_time_preequilibration(tempdir):
 
 
 @skip_on_valgrind
+def test_adjoint_sensitivities_outputs_of_multiple_events(tempdir):
+    """Test adjoint sensitivities for measurements of the outputs of
+    different events with the same occurrence index."""
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_adjoint_sensitivities_outputs_of_multiple_events"
+    model = antimony2amici(
+        """
+        k = 0.5; x0 = 1
+        x = x0; y = 0
+        x' = -k * x
+        y' = 0
+        E1: at time > 1.3: y = y + 1
+        E2: at x < 0.1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="time", event_id="E2"),
+        ],
+    )
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.linspace(0.5, 2, 4)
+    model.set_timepoints(t)
+    assert model.get_free_parameter_ids() == ("k", "x0")
+
+    # E1 triggers at t1, E2 does not trigger until the last output time T
+    k, x0, t1, T = 0.5, 1.0, 1.3, t[-1]
+    x1, xT = x0 * np.exp(-k * t1), x0 * np.exp(-k * T)
+    dx1 = np.array([-t1 * x1, x1 / x0])
+    dxT = np.array([-T * xT, xT / x0])
+
+    # measurements of z1 only, of rz2 only, and of both
+    for mz_set in ([1.0, np.nan], [np.nan, 3.0], [1.0, 3.0]):
+        edata = ExpData(model)
+        edata.set_measurements(np.full(len(t), np.nan))
+        edata.set_noise_scales(np.ones(len(t)))
+        mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+        mz[:2] = mz_set
+        edata.set_event_measurements(mz)
+        edata.set_event_noise_scales(np.ones_like(mz))
+
+        # Jz(z2) does not depend on the parameters (z2 = T),
+        # the root function value of E2 is +-(x - 0.1)
+        sllh_expected = np.zeros(2)
+        if not np.isnan(mz_set[0]):
+            sllh_expected -= (x1 - mz_set[0]) * dx1
+        if not np.isnan(mz_set[1]):
+            sllh_expected -= (xT - 0.1) * dxT
+        assert np.all(np.abs(sllh_expected) > 0.05)
+
+        for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+            solver = model.create_solver()
+            solver.set_relative_tolerance(1e-12)
+            solver.set_absolute_tolerance(1e-12)
+            solver.set_sensitivity_order(SensitivityOrder.first)
+            solver.set_sensitivity_method(method)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS
+            assert_allclose(
+                rdata.sllh,
+                sllh_expected,
+                rtol=1e-6,
+                err_msg=f"{method.name}, {mz_set=}",
+            )
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_outputs_of_repeated_events(tempdir):
+    """Test adjoint sensitivities for measurements of several outputs of
+    several events that occur more often than `n_max_event`."""
+    model_name = "test_adjoint_sensitivities_outputs_of_repeated_events"
+    antimony2amici(
+        """
+        k = 0.1; q = 0.2
+        x = 1; y = 0; c1 = 0; c2 = 0.5
+        x' = -k * x
+        y' = q * x
+        c1' = 1
+        c2' = 1
+        E1: at c1 > 1: c1 = 0, x = x + 1
+        E2: at c2 > 1: c2 = 0, y = y / 2
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1a", formula="y", event_id="E1"),
+            MC("z1b", formula="x * y", event_id="E1"),
+            MC("z2", formula="y", event_id="E2"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E1 occurs at t = 1, 2, 3, 4, E2 at t = 0.5, 1.5, 2.5, 3.5
+    model.set_timepoints(np.linspace(0.2, 4.2, 10))
+    model.set_n_max_event(3)
+    edata = _event_output_problem(
+        model, np.arange(model.n_max_event() * model.nztrue) / 10
+    )
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    rdatas = {}
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdatas[sensi_meth] = run_simulation(model, solver, edata)
+        assert rdatas[sensi_meth].status == AMICI_SUCCESS
+
+    rdata = rdatas[SensitivityMethod.forward]
+    assert np.all(np.abs(rdata.sllh) > 1)
+    assert_allclose(
+        rdatas[SensitivityMethod.adjoint].sllh, rdata.sllh, rtol=1e-6
+    )
+
+
+@skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on
     cascading expressions in `w`."""

@@ -371,7 +371,7 @@ class BackwardProblem {
     std::vector<realtype> dJydx_;
     /**
      * state derivative of event likelihood
-     * dimensions: nJ * nx_solver * nmaxevent
+     * dimensions: nJ x nx_solver x n_max_event x ne (column-major)
      */
     std::vector<realtype> const dJzdx_;
 
