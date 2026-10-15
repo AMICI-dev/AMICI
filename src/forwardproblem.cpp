@@ -44,7 +44,7 @@ bool is_next_t_too_close(realtype cur_t, realtype t_next) {
  * @param t Current time.
  * @return Output time, or infinity if there is none.
  */
-realtype next_output_time(Model const& model, realtype t) {
+realtype next_output_timepoint(Model const& model, realtype t) {
     for (auto const tp : model.get_timepoints()) {
         if (tp > t)
             return tp;
@@ -544,7 +544,7 @@ void EventHandlingSimulator::handle_events(
         // they are stored or used for sensitivity updates.
         solver_->calc_consistent_state(
             ws_->sol.t, ws_->sol.x, ws_->sol.dx,
-            next_output_time(*model_, ws_->sol.t)
+            next_output_timepoint(*model_, ws_->sol.t)
         );
         if (solver_->computing_fsa()) {
             // compute the new xdot
