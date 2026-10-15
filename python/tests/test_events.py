@@ -2102,6 +2102,64 @@ def test_dae_algebraic_rule_piecewise_adjoint(tempdir, trigger_state):
 
 
 @skip_on_valgrind
+@pytest.mark.parametrize("from_trigger", [True, False])
+def test_dae_simultaneous_events_adjoint(tempdir, from_trigger):
+    """Adjoint sensitivities of a DAE with simultaneous events, triggered by
+    an algebraic state, with assignments depending on an algebraic state
+    whose equation switches at the same time."""
+    module_name = f"dae_simultaneous_events_asa_{from_trigger}"
+    antimony2amici(
+        f"""
+        model {module_name}
+            const k = 0.5, p = 3
+            x = 1; y = 3; z = 3; w = 0; v = 0
+            x' = -k * z
+            w' = 0
+            v' = 0
+            0 = y - p * x
+            0 = z - piecewise(y, y > 0.9, 2 * y - 0.9)
+            E1: at y < 0.9, priority=2, fromTrigger={str(from_trigger).lower()}:
+                w = w + z
+            E2: at y < 0.9, priority=1, fromTrigger={str(from_trigger).lower()}:
+                v = v + 2 * z
+        end
+        """,
+        model_name=module_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_w", formula="w"),
+            MC("obs_v", formula="v"),
+        ],
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    t = np.linspace(0, 4, 9)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t) * 3, 0.1))
+    edata.set_noise_scales(np.ones(len(t) * 3))
+
+    rdatas = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdatas[method] = run_simulation(model, solver, edata)
+        assert rdatas[method].status == AMICI_SUCCESS
+
+    rdata = rdatas[SensitivityMethod.forward]
+    # both events fire once
+    assert rdata.by_id("w")[-1] == pytest.approx(0.9)
+    assert rdata.by_id("v")[-1] == pytest.approx(1.8)
+    assert np.all(np.abs(rdata.sllh) > 0.05)
+    assert_allclose(
+        rdatas[SensitivityMethod.adjoint].sllh, rdata.sllh, rtol=1e-6
+    )
+
+
+@skip_on_valgrind
 def test_dae_event_adjoint_sensitivities(tempdir):
     """Adjoint sensitivities of a DAE with an event that changes a
     differential state the algebraic state depends on."""
