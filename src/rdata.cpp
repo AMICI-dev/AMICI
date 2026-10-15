@@ -492,6 +492,11 @@ void ReturnData::get_event_output(
                     sllh, s2llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
                 );
             }
+            if (edata && !ssigmaz.empty())
+                model.get_event_sigma_sensitivity(
+                    slice(ssigmaz, nroots_.at(ie), nz * nplist), ie,
+                    nroots_.at(ie), sol.t, edata
+                );
         }
         nroots_.at(ie)++;
     }
