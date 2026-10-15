@@ -46,8 +46,7 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     ws_.discs_ = discs_main_;
-    ws_.nroots_
-        = compute_nroots(discs_main_, model_->ne, model_->n_max_event());
+    ws_.nroots_ = compute_nroots(discs_main_, model_->ne);
     simulator_.run(
         t_, model_->t0(), it, model_->get_timepoints(), &dJydx_, &dJzdx_
     );
@@ -58,8 +57,7 @@ void BackwardProblem::workBackwardProblem() {
             model_, edata_, FixedParameterContext::presimulation
         );
         ws_.discs_ = presim_result.discs;
-        ws_.nroots_
-            = compute_nroots(ws_.discs_, model_->ne, model_->n_max_event());
+        ws_.nroots_ = compute_nroots(ws_.discs_, model_->ne);
         simulator_.run(
             model_->t0(), model_->t0() - edata_->t_presim, -1, {}, &dJydx_,
             &dJzdx_
@@ -117,8 +115,7 @@ void BackwardProblem::workBackwardProblem() {
             // backward integration of the pre-equilibration problem
             // (only if preequilibration was done via simulation)
             ws_.discs_ = preeq_result.discs;
-            ws_.nroots_
-                = compute_nroots(ws_.discs_, model_->ne, model_->n_max_event());
+            ws_.nroots_ = compute_nroots(ws_.discs_, model_->ne);
             EventHandlingBwdSimulator preeq_simulator(
                 model_, preeq_solver, &ws_
             );
@@ -169,8 +166,7 @@ void BackwardProblem::handle_postequilibration() {
         // backward integration of the post-equilibration problem
         // (only if post-equilibration was done via simulation)
         ws_.discs_ = posteq_result.discs;
-        ws_.nroots_
-            = compute_nroots(ws_.discs_, model_->ne, model_->n_max_event());
+        ws_.nroots_ = compute_nroots(ws_.discs_, model_->ne);
         EventHandlingBwdSimulator posteq_simulator(model_, solver_, &ws_);
         posteq_simulator.run(
             posteq_result.final_state_.sol.t,
@@ -203,20 +199,26 @@ void EventHandlingBwdSimulator::handle_event_b(
             ws_->xB_, ie, t_, application.x_post, application.xdot_post,
             application.xdot_pre, application.x_pre, application.dx_post
         );
+    }
 
-        if (model_->nz > 0) {
-            Expects(ws_->nroots_[ie] >= 0);
-            for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
-                for (int iJ = 0; iJ < model_->nJ; ++iJ) {
-                    ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx)
-                        [iJ
-                         + (ix + ws_->nroots_[ie] * model_->nx_solver)
-                               * model_->nJ];
-                }
+    // Event outputs were evaluated at the pre-event state, also for events
+    // without state updates and for the events filled in at the last
+    // timepoint.
+    for (int ie = 0; ie < model_->ne; ie++) {
+        if (disc.root_info[ie] != 1)
+            continue;
+
+        auto const iroot = --ws_->nroots_[ie];
+        Expects(iroot >= 0);
+        if (model_->nz == 0 || iroot >= model_->n_max_event())
+            continue;
+
+        for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
+            for (int iJ = 0; iJ < model_->nJ; ++iJ) {
+                ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx)
+                    [iJ + (ix + iroot * model_->nx_solver) * model_->nJ];
             }
         }
-
-        ws_->nroots_[ie]--;
     }
 
     // apply pre-event state
@@ -283,22 +285,30 @@ void EventHandlingBwdSimulator::run(
 
     t_ = t_start;
 
+    // If there is nothing to integrate, only the updates at `t_start` are
+    // applied. The backward solver is not set up in this case, as IDAS
+    // requires that the forward problem was integrated before.
+    bool const integrate = t_start > t_end;
+
     // datapoint at t_start?
     if (it >= 0 && timepoints[it] == t_start) {
         handle_datapoint_b(it, dJydx);
-        solver_->setup_b(
-            &ws_->which, timepoints[it], model_, ws_->xB_, ws_->dxB_, ws_->xQB_
-        );
+        if (integrate)
+            solver_->setup_b(
+                &ws_->which, timepoints[it], model_, ws_->xB_, ws_->dxB_,
+                ws_->xQB_
+            );
         // for the initial datapoint, diagnosis needs to be stored after setup
         // as it is not called in handleDataPointB
         solver_->store_diagnosis_b(ws_->which);
         --it;
     } else {
-        // no data points, only discontinuities, just set up the solver
+        // no data point at t_start, only set up the solver if needed
         // (e.g., during presimulation)
-        solver_->setup_b(
-            &ws_->which, t_start, model_, ws_->xB_, ws_->dxB_, ws_->xQB_
-        );
+        if (integrate)
+            solver_->setup_b(
+                &ws_->which, t_start, model_, ws_->xB_, ws_->dxB_, ws_->xQB_
+            );
     }
 
     // DAEs: make the algebraic adjoint states and the derivatives of the
@@ -335,9 +345,11 @@ void EventHandlingBwdSimulator::run(
         }
 
         // reinitialize state
-        solver_->reinit_b(ws_->which, t_, ws_->xB_, ws_->dxB_);
-        solver_->reinit_quad_b(ws_->which, ws_->xQB_);
-        calc_ic_b();
+        if (integrate) {
+            solver_->reinit_b(ws_->which, t_, ws_->xB_, ws_->dxB_);
+            solver_->reinit_quad_b(ws_->which, ws_->xQB_);
+            calc_ic_b();
+        }
     }
 
     // we still need to integrate from first datapoint to t_start

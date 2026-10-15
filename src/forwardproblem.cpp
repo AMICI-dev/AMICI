@@ -4,6 +4,7 @@
 #include "amici/exception.h"
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/rdata.h"
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 
@@ -402,6 +403,11 @@ void ForwardProblem::handle_main_simulation() {
     if (preequilibrated_ || uses_presimulation_) {
         // Reset the time and re-initialize events for the main simulation
         solver->update_and_reinit_states_and_sensitivities(model);
+        // For DAEs, the algebraic states (and their sensitivities) have to be
+        // made consistent with the re-initialized differential states and the
+        // fixed parameters of the main simulation before the initial output
+        // is stored.
+        solver->calc_ic(next_output_timepoint(*model, ws_.sol.t));
     }
 
     // update x0 after computing consistence IC/reinitialization
@@ -794,13 +800,20 @@ std::vector<realtype>
 ForwardProblem::get_adjoint_updates(Model& model, ExpData const& edata) {
     std::vector<realtype> dJydx(model.nJ * model.nx_solver * model.nt(), 0.0);
 
-    for (int it = 0; it < model.nt(); it++) {
-        if (std::isinf(model.get_timepoint(it)))
-            break;
-        model.get_adjoint_state_observable_update(
-            slice(dJydx, it, model.nx_solver * model.nJ), it,
-            get_simulation_state_timepoint(it).sol.x, edata
-        );
+    {
+        // The model state (e.g., Heaviside variables) at each output time may
+        // differ from the final one, which is restored afterwards.
+        ModelContext const mc(&model);
+        for (int it = 0; it < model.nt(); it++) {
+            if (std::isinf(model.get_timepoint(it)))
+                break;
+            auto const& state = get_simulation_state_timepoint(it);
+            model.set_model_state(state.mod);
+            model.get_adjoint_state_observable_update(
+                slice(dJydx, it, model.nx_solver * model.nJ), it, state.sol.x,
+                edata
+            );
+        }
     }
 
     if (posteq_problem_.has_value()) {
@@ -823,9 +836,8 @@ SimulationState EventHandlingSimulator::get_simulation_state() {
     return {.sol = ws_->sol, .mod = model_->get_model_state()};
 }
 
-std::vector<int> compute_nroots(
-    std::vector<Discontinuity> const& discs, int ne, int nmaxevents
-) {
+std::vector<int>
+compute_nroots(std::vector<Discontinuity> const& discs, int ne) {
     auto size = gsl::narrow<std::vector<int>::size_type>(ne);
     std::vector<int> nroots(size, 0);
     for (auto const& disc : discs) {
@@ -833,12 +845,6 @@ std::vector<int> compute_nroots(
             if (disc.root_info[i] == 1) {
                 nroots[i]++;
             }
-        }
-    }
-
-    for (auto& n : nroots) {
-        if (n > nmaxevents) {
-            n = nmaxevents;
         }
     }
     return nroots;

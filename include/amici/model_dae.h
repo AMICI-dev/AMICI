@@ -316,6 +316,11 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      */
     void fdxdotdp(realtype t, const_N_Vector x, const_N_Vector dx);
+
+    void project_algebraic_objective_derivatives(
+        realtype t, AmiVector const& x, gsl::span<realtype> dJydx,
+        gsl::span<realtype> dJydp
+    ) override;
     void fdxdotdp(
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {

@@ -1303,6 +1303,9 @@ class DEModel:
         for expr in self._expressions:
             expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
+        for eq in self._algebraic_equations:
+            eq.set_val(self._process_heavisides(eq.get_val(), roots))
+
         # Now add the found roots to the model components
         for root in roots:
             # skip roots of SBML events, as these have already been added
@@ -2143,7 +2146,7 @@ class DEModel:
             # Equations are there, but symbols for roots must be added
             self.sym("h")
 
-        if name in {"Jy", "dydx"}:
+        if name in {"Jy", "Jz", "Jrz", "dydx"}:
             # do not transpose if we compute the partial derivative as part of
             # a total derivative
             if not len(self._lock_total_derivative):
@@ -2223,7 +2226,7 @@ class DEModel:
             # `Function`-call form for sympy to apply the correct chain
             # rule (see `_eq_raw`)
             sym_eq = self._eq_raw(eq)
-        elif eq == "Jy":
+        elif eq in ("Jy", "Jz", "Jrz"):
             sym_eq = self.eq(eq).transpose()
         else:
             sym_eq = self.eq(eq)

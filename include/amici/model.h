@@ -987,6 +987,10 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get the initial state sensitivities.
      *
+     * Sensitivities are with respect to the unscaled parameters, i.e.,
+     * without the chain rule for parameter scaling applied (see
+     * set_unscaled_initial_state_sensitivities()).
+     *
      * @return vector of initial state sensitivities
      */
     std::vector<realtype> get_initial_state_sensitivities() {
@@ -995,6 +999,10 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get the initial states sensitivities.
+     *
+     * Sensitivities are with respect to the unscaled parameters, i.e.,
+     * without the chain rule for parameter scaling applied (see
+     * set_unscaled_initial_state_sensitivities()).
      *
      * @param t0 Custom t0 for which to get initial states.
      * @return vector of initial state sensitivities
@@ -1213,6 +1221,30 @@ class Model : public AbstractModel, public ModelDimensions {
         gsl::span<realtype> dJydx, int it, AmiVector const& x,
         ExpData const& edata
     );
+
+    /**
+     * @brief Map objective derivatives w.r.t. algebraic states to the
+     * differential states and parameters.
+     *
+     * For index-1 DAEs, the algebraic states are functions of the
+     * differential states and parameters. This adds the contributions of the
+     * derivatives of the objective w.r.t. the algebraic states to the
+     * derivatives w.r.t. the differential states and parameters, and sets
+     * the former to zero. Only the first-order derivatives are updated.
+     * No-op for ODE models.
+     *
+     * @param t Timepoint
+     * @param x State variables
+     * @param dJydx State derivative of the objective (shape `nJ` x
+     * `nx_solver`), updated in place.
+     * @param dJydp Parameter derivative of the objective (shape `nJ` x
+     * `nplist`), updated in place. May be empty.
+     */
+    virtual void project_algebraic_objective_derivatives(
+        [[maybe_unused]] realtype t, [[maybe_unused]] AmiVector const& x,
+        [[maybe_unused]] gsl::span<realtype> dJydx,
+        [[maybe_unused]] gsl::span<realtype> dJydp
+    ) {}
 
     /**
      * @brief Get event-resolved observables.
