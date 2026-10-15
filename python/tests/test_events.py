@@ -882,6 +882,50 @@ def test_multiple_event_assignment_with_compartment(tempdir):
     )
 
 
+@skip_on_valgrind
+def test_event_outputs_llh(tempdir):
+    """Test the likelihood for multiple event outputs.
+
+    Two outputs of an event that fires, and one output of an event that
+    does not fire until the last output time, which contributes via its
+    output and root function value at that time.
+    """
+    model_name = "test_event_outputs_llh"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (time > 1.3): x = x + 1
+        E2: at (x > 2): x = 0
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="2 * x", event_id="E1"),
+            MC("z3", formula="x", event_id="E2"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 4.5, 9))
+    edata = ExpData(model)
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[:3] = [0.3, 0.6, 0.2]
+    edata.set_event_measurements(mz)
+    edata.set_event_noise_scales(np.ones_like(mz))
+    rdata = run_simulation(model, model.create_solver(), edata)
+    assert rdata.status == AMICI_SUCCESS
+
+    z, rz = rdata.z[0], rdata.rz[0]
+    assert np.all(np.abs(z - mz[:3]) > 0.1)
+    assert np.abs(rz[2]) > 0.1
+    res = np.append(z - mz[:3], rz[2])
+    expected_llh = -np.sum(0.5 * np.log(2 * np.pi) + 0.5 * res**2)
+    assert np.isclose(rdata.llh, expected_llh, rtol=1e-12)
+
+
 @pytest.mark.filterwarnings(
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
 )
