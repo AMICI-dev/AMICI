@@ -78,8 +78,10 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         return self.mangle_identifier(expr)
 
     def _print_Integer(self, expr: sp.Integer) -> str:
-        # integer literals outside the `int` range would be (silently)
-        # truncated, e.g. as coefficients of exact conservation laws
+        # Integer literals outside the 64-bit range are truncated, with only
+        # a compiler warning (e.g., coefficients of exact conservation laws).
+        # Anything outside the `int` range is printed as floating-point
+        # literal to be safe.
         if abs(expr.p) > 2**31 - 1:
             return f"{expr.p}.0"
         return super()._print_Integer(expr)
