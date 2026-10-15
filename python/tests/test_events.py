@@ -1307,6 +1307,60 @@ def test_preeq_presim_preserve_heaviside_state(tempdir):
 
 
 @skip_on_valgrind
+def test_event_noise_parameter_derivative(tempdir):
+    """Test the sensitivity of the likelihood with respect to a parameter of
+    an event noise formula, with the noise scale from the model and from
+    the measurements."""
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_event_noise_parameter_derivative"
+    antimony2amici(
+        """
+        k = 0.5; sd = 0.3
+        x = 1
+        x' = -k * x
+        E1: at time > 1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1", sigma="sd"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.linspace(0.5, 2, 4)
+    model.set_timepoints(t)
+    assert model.get_free_parameter_ids() == ("k", "sd")
+    sd = 0.3
+
+    for sigma_from_edata in (False, True):
+        edata = ExpData(model)
+        mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+        mz[0] = 1.0
+        edata.set_event_measurements(mz)
+        sigma_z = np.full_like(mz, np.nan)
+        if sigma_from_edata:
+            sigma_z[0] = sd
+        edata.set_event_noise_scales(sigma_z)
+
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+
+        if sigma_from_edata:
+            expected = 0.0
+        else:
+            res = rdata.z[0, 0] - mz[0]
+            expected = -1 / sd + res**2 / sd**3
+            assert abs(expected) > 1
+        assert np.isclose(rdata.sllh[1], expected, atol=1e-6), sigma_from_edata
+
+
+@skip_on_valgrind
 def test_heaviside_reinit_after_preeq(tempdir):
     """Test that event triggers are re-evaluated from the re-initialized
     state after pre-equilibration / pre-simulation.
