@@ -1552,6 +1552,99 @@ def test_initial_assignment_fixed_parameter_not_constant_folded():
 
 
 @skip_on_valgrind
+def test_dae_reinitialization_after_preequilibration(tmp_path):
+    """Test that algebraic states and their sensitivities are consistent
+    with the re-initialized differential states after pre-equilibration or
+    presimulation."""
+    sbml_str = antimony2sbml("""
+        model test_dae_preeq_reinit
+            const k = 0.5, p = 2, q = 0.3, x0 = 1
+            x = x0; y = 2
+            x' = -k * y + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_preeq_reinit"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, fixed_parameters=["x0"]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    assert model.get_state_ids() == ("x", "y")
+    model.set_timepoints([0.0, 1.0, 2.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    edata_ref = ExpData(model)
+    edata_ref.fixed_parameters = [1.0]
+    rdata_ref = run_simulation(model, solver, edata_ref)
+    assert rdata_ref.status == AMICI_SUCCESS
+    assert_allclose(rdata_ref.x[0], [1.0, 2.0])
+    # d(x, y)(t=0)/d(k, p, q)
+    assert_allclose(rdata_ref.sx[0], [[0, 0], [0, 1], [0, 0]], atol=1e-12)
+
+    for pre in ("preequilibration", "presimulation"):
+        edata = ExpData(edata_ref)
+        if pre == "preequilibration":
+            edata.fixed_parameters_pre_equilibration = [0.8]
+        else:
+            edata.fixed_parameters_presimulation = [0.8]
+            edata.t_presim = 2.0
+        edata.reinitialize_fixed_parameter_initial_states = True
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, pre
+        assert_allclose(rdata.x, rdata_ref.x, rtol=1e-6, err_msg=pre)
+        assert_allclose(
+            rdata.sx, rdata_ref.sx, rtol=1e-6, atol=1e-8, err_msg=pre
+        )
+
+
+@skip_on_valgrind
+def test_dae_fixed_parameters_changed_after_presimulation(tmp_path):
+    """Test that algebraic states and their sensitivities are consistent
+    with the fixed parameters of the main simulation after
+    pre-equilibration or presimulation without re-initialization."""
+    sbml_str = antimony2sbml("""
+        model test_dae_presim_p
+            const k = 0.5, q = 0.3, p = 2
+            x = 1; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_presim_p"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, fixed_parameters=["p"]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    assert model.get_state_ids() == ("x", "y")
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    for pre in ("preequilibration", "presimulation"):
+        edata = ExpData(model)
+        edata.fixed_parameters = [3.0]
+        if pre == "preequilibration":
+            edata.fixed_parameters_pre_equilibration = [1.0]
+        else:
+            edata.fixed_parameters_presimulation = [1.0]
+            edata.t_presim = 2.0
+        edata.reinitialize_fixed_parameter_initial_states = False
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, pre
+        # y = p * x with p = 3
+        assert_allclose(
+            rdata.x[:, 1], 3 * rdata.x[:, 0], rtol=1e-6, err_msg=pre
+        )
+        assert np.all(np.abs(rdata.sx[:, :, 0]) > 0.1), pre
+        assert_allclose(
+            rdata.sx[:, :, 1], 3 * rdata.sx[:, :, 0], rtol=1e-6, err_msg=pre
+        )
+
+
+@skip_on_valgrind
 def test_chained_initial_assignment_parameter_stays_expression():
     """A chain of parameter initial assignments must not create states.
 
