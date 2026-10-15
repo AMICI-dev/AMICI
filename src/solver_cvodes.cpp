@@ -514,6 +514,12 @@ void CVodeSolver::reset_state(void* ami_mem, const_N_Vector y0) const {
 }
 
 bool CVodeSolver::reinit_post_process_f(realtype const tnext) const {
+    if (store_post_discontinuity_point_) {
+        store_post_discontinuity_point_ = false;
+        if (static_cast<CVodeMem>(solver_memory_.get())->cv_adjMallocDone
+            == SUNTRUE)
+            store_post_discontinuity_point();
+    }
     int const status
         = reInit_post_process(solver_memory_.get(), &t_, &x_, tnext);
     force_reinit_postprocess_F_ = false;
@@ -639,10 +645,84 @@ int CVodeSolver::reInit_post_process(
     return status;
 }
 
+bool CVodeSolver::store_pre_discontinuity_point(realtype const t_disc) const {
+    // The interpolation data of the forward solution for the adjoint
+    // problem must not span the discontinuity. The last stored point
+    // belongs to the end of the step in which the discontinuity was
+    // located (cv_tn >= t_disc). Replace it by the solution at t_disc.
+    auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+    auto ca_mem = cv_mem->cv_adj_mem;
+    if (cv_mem->cv_nst % ca_mem->ca_nsteps == 0) {
+        // This is the initial point, keep it. All forward data is kept in
+        // a single check point (see adj_init), so this only happens before
+        // the first step.
+        return false;
+    }
+    if (t_disc > cv_mem->cv_tn || t_disc < cv_mem->cv_tn - cv_mem->cv_hu) {
+        // Not a discontinuity within the last step, e.g., reinitialization
+        // after pre-equilibration.
+        return false;
+    }
+    auto const dt_pnt = ca_mem->dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps];
+    if (dt_pnt->t == t_disc)
+        return true;
+
+    N_Vector y;
+    if (ca_mem->ca_IMtype == CV_HERMITE) {
+        auto content = static_cast<CVhermiteDataMem>(dt_pnt->content);
+        if (auto const status = CVodeGetDky(cv_mem, t_disc, 1, content->yd);
+            status != CV_SUCCESS)
+            throw CvodeException(status, "CVodeGetDky");
+        y = content->y;
+    } else {
+        y = static_cast<CVpolynomialDataMem>(dt_pnt->content)->y;
+    }
+    if (auto const status = CVodeGetDky(cv_mem, t_disc, 0, y);
+        status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeGetDky");
+    dt_pnt->t = t_disc;
+    return true;
+}
+
+void CVodeSolver::store_post_discontinuity_point() const {
+    // Add the post-discontinuity solution at the time of the discontinuity
+    // (cv_tn), following the pre-discontinuity point at the same time.
+    auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+    auto ca_mem = cv_mem->cv_adj_mem;
+    if ((cv_mem->cv_nst + 1) % ca_mem->ca_nsteps == 0) {
+        // This would require a new check point (see reInit_post_process).
+        // Skip the point, interpolation will span the discontinuity.
+        // Only possible close to maxsteps (see adj_init).
+        return;
+    }
+    ++cv_mem->cv_nst;
+    auto const dt_pnt = ca_mem->dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps];
+    dt_pnt->t = cv_mem->cv_tn;
+    if (ca_mem->ca_IMtype == CV_HERMITE) {
+        auto content = static_cast<CVhermiteDataMem>(dt_pnt->content);
+        N_VScale(ONE, cv_mem->cv_zn[0], content->y);
+        if (cv_mem->cv_f(
+                cv_mem->cv_tn, content->y, content->yd, cv_mem->cv_user_data
+            )
+            != 0)
+            throw CvodeException(AMICI_ERROR, "store_post_discontinuity_point");
+    } else {
+        auto content = static_cast<CVpolynomialDataMem>(dt_pnt->content);
+        N_VScale(ONE, cv_mem->cv_zn[0], content->y);
+        // must not be interpolated together with the preceding points
+        content->order = 0;
+    }
+    ca_mem->ck_mem->ck_t1 = cv_mem->cv_tn;
+    ca_mem->ca_tfinal = cv_mem->cv_tn;
+}
+
 void CVodeSolver::reinit(
     realtype const t0, AmiVector const& yy0, AmiVector const& /*yp0*/
 ) const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+    if (solver_was_called_F_ && cv_mem->cv_adjMallocDone == SUNTRUE) {
+        store_post_discontinuity_point_ = store_pre_discontinuity_point(t0);
+    }
     cv_mem->cv_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;

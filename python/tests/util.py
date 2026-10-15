@@ -86,15 +86,15 @@ def check_trajectories_with_forward_sensitivities(
 
 
 def check_trajectories_with_adjoint_sensitivities(
-    amici_model: AmiciModel, asa_xfail: bool = False
+    amici_model: AmiciModel, skip_fd: tuple[str, ...] = ()
 ):
     """
     Check whether adjoint sensitivities match forward sensitivities and finite
     differences.
 
     :param amici_model: AMICI model to test
-    :param asa_xfail: If True, deviations between adjoint and forward
-        sensitivities will not raise an AssertionError.
+    :param skip_fd: IDs of parameters for which forward sensitivities are not
+        compared to finite differences.
     """
     # First compute dummy experimental data to use adjoints
     solver = amici_model.create_solver()
@@ -118,7 +118,7 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.set_absolute_tolerance_b(1e-16)
     solver.set_relative_tolerance_b(1e-15)
     solver.set_absolute_tolerance_quadratures(1e-14)
-    solver.set_relative_tolerance_quadratures(1e-8)
+    solver.set_relative_tolerance_quadratures(1e-10)
     rdata_asa = run_simulation(amici_model, solver=solver, edata=edata)
     assert rdata_asa.status == AMICI_SUCCESS
 
@@ -165,18 +165,10 @@ def check_trajectories_with_adjoint_sensitivities(
     ):
         print(df)
 
-    if asa_xfail:
-        if df["asa_matches_fsa"].all():
-            # Note that this is machine-dependent...
-            print("Incorrectly marked as xfail?")
-        print(
-            "FIXME: Ignoring differences between adjoint and forward sensitivities."
-        )
-        return
-
+    check_fd = ~df.index.isin(skip_fd)
     assert_allclose(
-        sllh_fd,
-        rdata_fsa["sllh"],
+        df["fd"][check_fd],
+        df["fsa"][check_fd],
         rtol=1e-5,
         atol=1e-8,
         err_msg="Finite differences and forward sensitivities do not match.",
@@ -190,8 +182,8 @@ def check_trajectories_with_adjoint_sensitivities(
         err_msg="Adjoint and forward sensitivities do not match.",
     )
     assert_allclose(
-        sllh_fd,
-        rdata_asa["sllh"],
+        df["fd"][check_fd],
+        df["asa"][check_fd],
         rtol=1e-5,
         atol=1e-6,
         err_msg="Finite differences and adjoint sensitivities do not match.",

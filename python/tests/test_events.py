@@ -15,6 +15,7 @@ from amici.importers.antimony import antimony2amici
 from amici.sim.sundials import (
     AMICI_SUCCESS,
     ExpData,
+    InterpolationType,
     SensitivityMethod,
     SensitivityOrder,
     SteadyStateComputationMode,
@@ -298,7 +299,6 @@ def model_definition_nested_events():
         "k2": 0,
         "inflow_1": 4,
         "decay_1": 2,
-        # FIXME adjoint sensitivities w.r.t. decay_2 are slightly off
         "decay_2": 5,
         "bolus": 0,  # for bolus != 0, nested event sensitivities are off!
     }
@@ -726,19 +726,10 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
-    # FIXME: for `events_plus_heavisides`, `sllh` w.r.t. `beta` differs
-    # between FSA and ASA by ~4.8e-5 relative.
-    # For `nested_events`, `sllh` w.r.t. `decay_2` differs by ~0.26%
-    # relative.
-    # Root-caused to a CVODES backward-integration order-1 restart on every
-    # per-datapoint adjoint reinit, which doesn't fully recover before a
-    # discontinuity that happens to sit close to a datapoint here -- see
-    # https://github.com/AMICI-dev/AMICI/issues/3274.
-    asa_xfail = amici_model.get_name() in (
-        "events_plus_heavisides",
-        "nested_events",
-    )
-    check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
+    # For `nested_events`, `llh` is discontinuous in `bolus` at 0: for
+    # `bolus < 0`, `event_1` triggers again right after its first occurrence.
+    skip_fd = ("bolus",) if amici_model.get_name() == "nested_events" else ()
+    check_trajectories_with_adjoint_sensitivities(amici_model, skip_fd)
 
 
 def expm(x):
@@ -1161,6 +1152,64 @@ def test_event_uses_values_from_trigger_time(tempdir):
             # smaller than the offset from the trigger time
             epsilon=1e-8,
         )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "interpolation_type",
+    [InterpolationType.hermite, InterpolationType.polynomial],
+)
+@pytest.mark.parametrize("t_end", [4.5, 5.0])
+@pytest.mark.parametrize("dae", [False, True], ids=["ode", "dae"])
+def test_adjoint_sensitivities_state_dependent_event(
+    tempdir, t_end, interpolation_type, dae
+):
+    """Test adjoint sensitivities for a parameter whose right-hand side
+    derivative jumps at a state-dependent event.
+
+    For `t_end = 5`, the event fires twice. The DAE variant has an additional
+    algebraic state `y = x`.
+    """
+    model_name = (
+        f"state_dependent_event_asa_{interpolation_type.name}"
+        f"{'_dae' if dae else ''}"
+    )
+    rhs = "y = 1; x' = -k * y + q; 0 = y - x" if dae else "x' = -k * x + q"
+    antimony2amici(
+        f"""
+        k = 0.5; q = 0.1
+        x = 1
+        {rhs}
+        E1: at (x < 0.5): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    t = np.linspace(0.5, t_end, 10)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t), 0.5))
+    edata.set_noise_scales(np.ones(len(t)))
+
+    sllh = {}
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_interpolation_type(interpolation_type)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        sllh[sensi_meth] = rdata.sllh
+    assert np.all(np.abs(sllh[SensitivityMethod.forward]) > 0.1)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
 
 
 @skip_on_valgrind
@@ -1968,6 +2017,146 @@ def test_dae_algebraic_rule_piecewise(tempdir):
         axis=1,
     )
     assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-8)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "trigger_state",
+    ["differential", "algebraic"],
+)
+def test_dae_algebraic_rule_piecewise_adjoint(tempdir, trigger_state):
+    """Adjoint sensitivities of a DAE with a state-dependent `piecewise` in
+    an algebraic rule, triggered by a differential or an algebraic state."""
+    if trigger_state == "differential":
+        equations = """
+            x = 1; z = 3
+            x' = -k * z
+            0 = z - piecewise(p * x, x > 0.3, x)
+        """
+    else:
+        equations = """
+            x = 1; y = 3; z = 3
+            x' = -k * z
+            0 = y - p * x
+            0 = z - piecewise(y, y > 0.9, x)
+        """
+    ant_model = f"""
+    model dae_algebraic_rule_piecewise_asa
+        const k = 0.5, p = 3
+        {equations}
+    end
+    """
+    module_name = f"dae_algebraic_rule_piecewise_asa_{trigger_state}"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    assert model.ne > 0
+    t = np.linspace(0, 4, 9)
+    model.set_timepoints(t)
+    assert model.get_free_parameter_ids() == ("k", "p")
+
+    # analytical solution: x' = -k * p * x until x = x_switch,
+    # then x' = -k * x
+    k, p = 0.5, 3.0
+    # x_switch and d log(x_switch) / dp
+    x_switch, dlogx_switch_dp = (
+        (0.3, 0.0) if trigger_state == "differential" else (0.9 / p, -1 / p)
+    )
+    t_switch = -np.log(x_switch) / (k * p)
+    assert t[0] < t_switch < t[-1]
+    before = t < t_switch
+    x = np.where(
+        before, np.exp(-k * p * t), x_switch * np.exp(-k * (t - t_switch))
+    )
+    dxdk = np.where(before, -p * t * x, -t * x)
+    dxdp = np.where(
+        before,
+        -k * t * x,
+        x * (dlogx_switch_dp * (1 - 1 / p) - k * t_switch / p),
+    )
+
+    measurements = np.full(len(t), 0.1)
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones(len(t)))
+    sllh_expected = -np.array(
+        [np.sum((x - measurements) * dxdk), np.sum((x - measurements) * dxdp)]
+    )
+    assert np.all(np.abs(sllh_expected) > 0.05)
+
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(
+            rdata.sllh, sllh_expected, rtol=1e-6, err_msg=method.name
+        )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("from_trigger", [True, False])
+def test_dae_simultaneous_events_adjoint(tempdir, from_trigger):
+    """Adjoint sensitivities of a DAE with simultaneous events, triggered by
+    an algebraic state, with assignments depending on an algebraic state
+    whose equation switches at the same time."""
+    module_name = f"dae_simultaneous_events_asa_{from_trigger}"
+    antimony2amici(
+        f"""
+        model {module_name}
+            const k = 0.5, p = 3
+            x = 1; y = 3; z = 3; w = 0; v = 0
+            x' = -k * z
+            w' = 0
+            v' = 0
+            0 = y - p * x
+            0 = z - piecewise(y, y > 0.9, 2 * y - 0.9)
+            E1: at y < 0.9, priority=2, fromTrigger={str(from_trigger).lower()}:
+                w = w + z
+            E2: at y < 0.9, priority=1, fromTrigger={str(from_trigger).lower()}:
+                v = v + 2 * z
+        end
+        """,
+        model_name=module_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_w", formula="w"),
+            MC("obs_v", formula="v"),
+        ],
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    t = np.linspace(0, 4, 9)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(t) * 3, 0.1))
+    edata.set_noise_scales(np.ones(len(t) * 3))
+
+    rdatas = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdatas[method] = run_simulation(model, solver, edata)
+        assert rdatas[method].status == AMICI_SUCCESS
+
+    rdata = rdatas[SensitivityMethod.forward]
+    # both events fire once
+    assert rdata.by_id("w")[-1] == pytest.approx(0.9)
+    assert rdata.by_id("v")[-1] == pytest.approx(1.8)
+    assert np.all(np.abs(rdata.sllh) > 0.05)
+    assert_allclose(
+        rdatas[SensitivityMethod.adjoint].sllh, rdata.sllh, rtol=1e-6
+    )
 
 
 @skip_on_valgrind

@@ -195,9 +195,12 @@ void EventHandlingBwdSimulator::handle_event_b(
             application.xdot_post, application.xdot_pre, application.x_pre,
             application.dx_post
         );
+        // The pre-discontinuity Heaviside values also apply to events
+        // applied after other events of the same discontinuity.
         model_->add_adjoint_state_event_update(
             ws_->xB_, ie, t_, application.x_post, application.xdot_post,
-            application.xdot_pre, application.x_pre, application.dx_post
+            application.xdot_pre, application.x_pre, application.dx_post,
+            ws_->xQB_, disc.h_pre
         );
     }
 
