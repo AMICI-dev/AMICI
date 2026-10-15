@@ -77,6 +77,13 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
             return "t"
         return self.mangle_identifier(expr)
 
+    def _print_Integer(self, expr: sp.Integer) -> str:
+        # integer literals outside the `int` range would be (silently)
+        # truncated, e.g. as coefficients of exact conservation laws
+        if abs(expr.p) > 2**31 - 1:
+            return f"{expr.p}.0"
+        return super()._print_Integer(expr)
+
     def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         if self._fpoptimizer:
             if isinstance(expr, list):
