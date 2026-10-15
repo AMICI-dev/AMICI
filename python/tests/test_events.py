@@ -1869,6 +1869,57 @@ def test_adjoint_sensitivities_outputs_of_multiple_events(tempdir):
 
 
 @skip_on_valgrind
+def test_adjoint_sensitivities_outputs_of_repeated_events(tempdir):
+    """Test adjoint sensitivities for measurements of several outputs of
+    several events that occur more often than `n_max_event`."""
+    model_name = "test_adjoint_sensitivities_outputs_of_repeated_events"
+    antimony2amici(
+        """
+        k = 0.1; q = 0.2
+        x = 1; y = 0; c1 = 0; c2 = 0.5
+        x' = -k * x
+        y' = q * x
+        c1' = 1
+        c2' = 1
+        E1: at c1 > 1: c1 = 0, x = x + 1
+        E2: at c2 > 1: c2 = 0, y = y / 2
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1a", formula="y", event_id="E1"),
+            MC("z1b", formula="x * y", event_id="E1"),
+            MC("z2", formula="y", event_id="E2"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E1 occurs at t = 1, 2, 3, 4, E2 at t = 0.5, 1.5, 2.5, 3.5
+    model.set_timepoints(np.linspace(0.2, 4.2, 10))
+    model.set_n_max_event(3)
+    edata = _event_output_problem(
+        model, np.arange(model.n_max_event() * model.nztrue) / 10
+    )
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    rdatas = {}
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdatas[sensi_meth] = run_simulation(model, solver, edata)
+        assert rdatas[sensi_meth].status == AMICI_SUCCESS
+
+    rdata = rdatas[SensitivityMethod.forward]
+    assert np.all(np.abs(rdata.sllh) > 1)
+    assert_allclose(
+        rdatas[SensitivityMethod.adjoint].sllh, rdata.sllh, rtol=1e-6
+    )
+
+
+@skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on
     cascading expressions in `w`."""
