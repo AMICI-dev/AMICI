@@ -59,7 +59,9 @@ ForwardProblem::ForwardProblem(
     : model(model)
     , solver(solver)
     , edata(edata)
-    , dJzdx_(model->nJ * model->nx_solver * model->n_max_event(), 0.0)
+    , dJzdx_(
+          model->nJ * model->nx_solver * model->n_max_event() * model->ne, 0.0
+      )
     , uses_presimulation_(edata && edata->t_presim > 0)
     , ws_(model, solver)
     , main_simulator_(model, solver, &ws_, &dJzdx_)
@@ -685,7 +687,8 @@ void EventHandlingSimulator::store_event(ExpData const* edata) {
             Expects(dJzdx_ != nullptr);
             model_->get_adjoint_state_event_update(
                 slice(
-                    *dJzdx_, ws_->nroots.at(ie), model_->nx_solver * model_->nJ
+                    *dJzdx_, ie * model_->n_max_event() + ws_->nroots.at(ie),
+                    model_->nx_solver * model_->nJ
                 ),
                 ie, ws_->nroots.at(ie), ws_->sol.t, ws_->sol.x, *edata
             );

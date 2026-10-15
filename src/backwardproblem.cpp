@@ -213,10 +213,12 @@ void EventHandlingBwdSimulator::handle_event_b(
         if (model_->nz == 0 || iroot >= model_->n_max_event())
             continue;
 
+        auto const offset = (ie * model_->n_max_event() + iroot)
+                            * model_->nx_solver * model_->nJ;
         for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model_->nJ; ++iJ) {
-                ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx)
-                    [iJ + (ix + iroot * model_->nx_solver) * model_->nJ];
+                ws_->xB_[ix + iJ * model_->nxtrue_solver]
+                    += (*dJzdx)[offset + iJ + ix * model_->nJ];
             }
         }
     }
