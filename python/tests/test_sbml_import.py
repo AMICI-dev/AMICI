@@ -1824,6 +1824,55 @@ def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)
 
 
+@skip_on_valgrind
+@pytest.mark.parametrize("timepoints", [[0.0], [np.inf]], ids=["t0", "inf"])
+def test_dae_adjoint_without_forward_integration(tmp_path, timepoints):
+    """Test adjoint sensitivities for DAEs if the forward problem is not
+    integrated (all outputs at t0, or post-equilibration by Newton's
+    method)."""
+    sbml_str = antimony2sbml("""
+        model test_dae_asa_t0
+            const k = 0.5, p = 2, q = 0.3, x0 = 1
+            x = x0; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_asa_t0"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, tmp_path, observation_model=[MC("obs_x", formula="x")]
+    )
+    model = import_model_module(model_name, tmp_path).get_model()
+    model.set_timepoints(timepoints)
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.newtonOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(timepoints), 2.0))
+    edata.set_noise_scales(np.ones(len(timepoints)))
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+    assert np.any(np.abs(sllh[SensitivityMethod.forward]) > 0.1)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+        atol=1e-8,
+    )
+
+
 def test_dae_free_solver_after_failed_adjoint_setup(tmp_path):
     """Test that an IDAS solver can be freed after an adjoint simulation
     that failed before the first integration step."""
