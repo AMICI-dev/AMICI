@@ -2483,7 +2483,7 @@ void Model::fdzdp(int const ie, realtype const t, AmiVector const& x) {
 
     for (int ip = 0; ip < nplist(); ip++) {
         fdzdp(
-            derived_state_.dzdp_.data(), ie, t, compute_x_pos(x),
+            &derived_state_.dzdp_.at(ip * nz), ie, t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
             state_.h.data(), plist(ip)
         );
@@ -2528,7 +2528,7 @@ void Model::fdrzdp(int const ie, realtype const t, AmiVector const& x) {
 
     for (int ip = 0; ip < nplist(); ip++) {
         fdrzdp(
-            derived_state_.drzdp_.data(), ie, t, compute_x_pos(x),
+            &derived_state_.drzdp_.at(ip * nz), ie, t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
             state_.h.data(), plist(ip)
         );
@@ -2704,11 +2704,13 @@ void Model::fdJzdp(
     // dJzdz         nJ x nz x nztrue
     // dJzdsigmaz     nJ x nz x nztrue
     // dzdp          nz x nplist()
+    // drzdp         nz x nplist()
     // dJzdp         nJ x nplist()
 
     derived_state_.dJzdp_.assign(nJ * nplist(), 0.0);
 
     fdzdp(ie, t, x);
+    fdrzdp(ie, t, x);
     fdsigmazdp(ie, nroots, t, &edata);
     fdJzdz(ie, nroots, t, x, edata);
     fdJrzdrz(ie, nroots, t, x, edata);
@@ -2716,6 +2718,7 @@ void Model::fdJzdp(
     fdJrzdsigmaz(ie, nroots, t, x, edata);
 
     set_nan_to_zero(derived_state_.dzdp_);
+    set_nan_to_zero(derived_state_.drzdp_);
     set_nan_to_zero(derived_state_.dsigmazdp_);
     set_nan_to_zero(derived_state_.dJzdz_);
     set_nan_to_zero(derived_state_.dJrzdrz_);
@@ -2749,7 +2752,7 @@ void Model::fdJzdp(
                 BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
                 &derived_state_.dJrzdrz_.at(izt * nz * nJ), nJ,
-                derived_state_.dzdp_.data(), nz, 1.0,
+                derived_state_.drzdp_.data(), nz, 1.0,
                 derived_state_.dJzdp_.data(), nJ
             );
         }
