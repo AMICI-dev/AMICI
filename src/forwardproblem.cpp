@@ -354,6 +354,11 @@ void ForwardProblem::handle_main_simulation() {
     if (preequilibrated_ || uses_presimulation_) {
         // Reset the time and re-initialize events for the main simulation
         solver->update_and_reinit_states_and_sensitivities(model);
+        // For DAEs, the algebraic states (and their sensitivities) have to be
+        // made consistent with the re-initialized differential states and the
+        // fixed parameters of the main simulation before the initial output
+        // is stored.
+        solver->calc_ic(next_output_timepoint(*model, ws_.sol.t));
     }
 
     // update x0 after computing consistence IC/reinitialization
@@ -814,9 +819,8 @@ SimulationState EventHandlingSimulator::get_simulation_state() {
     return {.sol = ws_->sol, .mod = model_->get_model_state()};
 }
 
-std::vector<int> compute_nroots(
-    std::vector<Discontinuity> const& discs, int ne, int nmaxevents
-) {
+std::vector<int>
+compute_nroots(std::vector<Discontinuity> const& discs, int ne) {
     auto size = gsl::narrow<std::vector<int>::size_type>(ne);
     std::vector<int> nroots(size, 0);
     for (auto const& disc : discs) {
@@ -824,12 +828,6 @@ std::vector<int> compute_nroots(
             if (disc.root_info[i] == 1) {
                 nroots[i]++;
             }
-        }
-    }
-
-    for (auto& n : nroots) {
-        if (n > nmaxevents) {
-            n = nmaxevents;
         }
     }
     return nroots;

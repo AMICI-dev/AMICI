@@ -108,11 +108,11 @@ struct Discontinuity {
  *
  * @param discs Encountered discontinuities.
  * @param ne Number of root functions (ne).
- * @param nmaxevents Maximum number of events to track (nmaxevents).
- * @return The number of roots for each root function.
+ * @return The number of roots for each root function, including those
+ * exceeding the maximum number of events.
  */
 std::vector<int>
-compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
+compute_nroots(std::vector<Discontinuity> const& discs, int ne);
 
 /**
  * @brief The FwdSimWorkspace class is used to store temporary simulation
@@ -400,7 +400,12 @@ class EventHandlingSimulator {
             }))
             return;
 
-        result.discs.emplace_back(ws_->sol.t);
+        auto& disc = result.discs.emplace_back(ws_->sol.t);
+        if (solver_->computing_asa()) {
+            // no event is applied, the backward problem keeps the state
+            disc.h_pre = model_->get_model_state().h;
+            disc.total_cl_pre = model_->get_model_state().total_cl;
+        }
         store_event(edata);
     }
 
