@@ -2738,6 +2738,13 @@ void Model::fdJzdp(
                 derived_state_.dzdp_.data(), nz, 1.0,
                 derived_state_.dJzdp_.data(), nJ
             );
+            amici_dgemm(
+                BLASLayout::colMajor, BLASTranspose::noTrans,
+                BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
+                &derived_state_.dJzdsigmaz_.at(izt * nz * nJ), nJ,
+                derived_state_.dsigmazdp_.data(), nz, 1.0,
+                derived_state_.dJzdp_.data(), nJ
+            );
         } else {
             // with rz
             amici_dgemm(
@@ -2756,14 +2763,6 @@ void Model::fdJzdp(
                 derived_state_.dJzdp_.data(), nJ
             );
         }
-
-        amici_dgemm(
-            BLASLayout::colMajor, BLASTranspose::noTrans,
-            BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-            &derived_state_.dJzdsigmaz_.at(izt * nz * nJ), nJ,
-            derived_state_.dsigmazdp_.data(), nz, 1.0,
-            derived_state_.dJzdp_.data(), nJ
-        );
     }
 }
 

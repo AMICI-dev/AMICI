@@ -889,8 +889,8 @@ def test_event_outputs_llh(tempdir):
     """Test the likelihood for multiple event outputs.
 
     Two outputs of an event that fires, and one output of an event that
-    does not fire until the last output time, which contributes via its
-    output and root function value at that time.
+    does not fire until the last output time, which contributes only via
+    its root function value at that time.
     """
     model_name = "test_event_outputs_llh"
     antimony2amici(
@@ -923,7 +923,7 @@ def test_event_outputs_llh(tempdir):
     z, rz = rdata.z[0], rdata.rz[0]
     assert np.all(np.abs(z - mz[:3]) > 0.1)
     assert np.abs(rz[2]) > 0.1
-    res = np.append(z - mz[:3], rz[2])
+    res = np.append(z[:2] - mz[:2], rz[2])
     expected_llh = -np.sum(0.5 * np.log(2 * np.pi) + 0.5 * res**2)
     assert np.isclose(rdata.llh, expected_llh, rtol=1e-12)
 
@@ -1510,6 +1510,61 @@ def test_heaviside_reinit_after_preeq(tempdir):
     edata.t_presim = 0.0
     edata.fixed_parameters_presimulation = []
     check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+def test_event_measurement_without_event(tempdir):
+    """Test the likelihood and its sensitivities for a measurement of an
+    event that does not occur until the last output time.
+
+    Only the root function value at the last output time enters the
+    likelihood, not the event output.
+    """
+    model_name = "event_measurement_without_event"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1
+        x = 1
+        x' = -k * x + q
+        E1: at (x < 0.1): x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="2 * x", event_id="E1"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0.5, 2, 4))
+    edata = _event_output_problem(model, [0.3])
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        rz = rdata.rz[0, 0]
+        assert abs(rz) > 0.1
+        assert np.isclose(
+            rdata.llh, -0.5 * np.log(2 * np.pi) - 0.5 * rz**2, rtol=1e-12
+        )
+        if sensi_meth == SensitivityMethod.forward:
+            assert np.all(np.abs(rdata.sllh) > 0.01)
+        check_gradient(function, point, rdata.sllh).assert_success(
+            always_print=True
+        )
 
 
 @skip_on_valgrind
