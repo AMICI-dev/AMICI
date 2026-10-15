@@ -3673,9 +3673,11 @@ def _conservation_laws_from_stoichiometry(
 
     Computes the left nullspace of the species x reactions stoichiometric
     matrix in exact rational arithmetic and brings it to reduced row echelon
-    form. Other entries are converted to double precision and then to the
-    rational number given by their shortest decimal representation, so that,
-    e.g., ``0.1`` is treated as ``1/10``.
+    form. Integer and rational entries are used as is. Any other numeric
+    entries (floating-point numbers or expressions such as ``sqrt(2)``) are
+    evaluated in double precision and converted to the rational number given
+    by their shortest decimal representation, so that, e.g., ``0.1`` is
+    treated as ``1/10``.
 
     :param stoichiometric_matrix:
         Species x reactions stoichiometric matrix without free symbols.

@@ -2,19 +2,25 @@
 matrix"""
 
 import math
+from collections.abc import Iterator
 
-import libsbml
 import numpy as np
 import pytest
 import sympy as sp
+from amici.importers.antimony import antimony2sbml
 from amici.importers.sbml import (
     SbmlImporter,
     _conservation_laws_from_stoichiometry,
 )
 from amici.testing import skip_on_valgrind
 
+#: Conservation laws as returned by ``_conservation_laws_from_stoichiometry``
+RawConservationLaws = list[tuple[int, list[int], list[sp.Rational]]]
 
-def random_stoichiometry_generator(max_dim, count):
+
+def random_stoichiometry_generator(
+    max_dim: int, count: int
+) -> Iterator[np.ndarray]:
     """Generate random sparse integer species x reactions matrices"""
     rng = np.random.default_rng(12345)
     for n_species, n_reactions in rng.integers(2, max_dim, [count, 2]):
@@ -26,7 +32,7 @@ def random_stoichiometry_generator(max_dim, count):
         yield stoich
 
 
-def cls_to_matrix(raw_cls, n_species):
+def cls_to_matrix(raw_cls: RawConservationLaws, n_species: int) -> sp.Matrix:
     """Assemble conservation laws into a matrix with one row per law"""
     mat = sp.zeros(len(raw_cls), n_species)
     for i_cl, (_, state_idxs, coefficients) in enumerate(raw_cls):
@@ -35,7 +41,10 @@ def cls_to_matrix(raw_cls, n_species):
     return mat
 
 
-def assert_exact_conservation_laws(stoichiometric_matrix, raw_cls):
+def assert_exact_conservation_laws(
+    stoichiometric_matrix: sp.MatrixBase | np.ndarray | list[list],
+    raw_cls: RawConservationLaws,
+) -> None:
     """Check that ``raw_cls`` is the reduced row echelon form of a basis of
     the left nullspace of ``stoichiometric_matrix``"""
     S = sp.Matrix(stoichiometric_matrix)
@@ -61,7 +70,7 @@ def assert_exact_conservation_laws(stoichiometric_matrix, raw_cls):
 @pytest.mark.parametrize(
     "stoichiometric_matrix", tuple(random_stoichiometry_generator(25, 50))
 )
-def test_conservation_laws_random(stoichiometric_matrix):
+def test_conservation_laws_random(stoichiometric_matrix: np.ndarray) -> None:
     """Conservation laws for random stoichiometric matrices are exact."""
     raw_cls = _conservation_laws_from_stoichiometry(
         sp.Matrix(stoichiometric_matrix)
@@ -97,7 +106,9 @@ def test_conservation_laws_random(stoichiometric_matrix):
         ],
     ],
 )
-def test_conservation_laws_previous_failures(transposed_stoichiometric_matrix):
+def test_conservation_laws_previous_failures(
+    transposed_stoichiometric_matrix: list[list[int]],
+) -> None:
     """Stoichiometric matrices for which the previous floating-point
     implementation missed conservation laws or returned wrong ones
     (https://github.com/AMICI-dev/AMICI/issues/3366)."""
@@ -106,7 +117,7 @@ def test_conservation_laws_previous_failures(transposed_stoichiometric_matrix):
     assert_exact_conservation_laws(S, raw_cls)
 
 
-def test_conservation_laws_float_stoichiometry():
+def test_conservation_laws_float_stoichiometry() -> None:
     """Floating-point stoichiometries are interpreted as their decimal
     representation."""
     # A -> 0.1 B
@@ -125,7 +136,7 @@ def test_conservation_laws_float_stoichiometry():
     )
 
 
-def test_conservation_laws_large_coefficients():
+def test_conservation_laws_large_coefficients() -> None:
     """Stoichiometries spanning many orders of magnitude result in large
     integer coefficients."""
     # A -> 1e-10 B; B -> 1e-10 C
@@ -134,14 +145,14 @@ def test_conservation_laws_large_coefficients():
     assert raw_cls == [(0, [0, 1, 2], [1, 10**10, 10**20])]
 
 
-def test_conservation_laws_non_finite():
+def test_conservation_laws_non_finite() -> None:
     """Non-finite stoichiometries are rejected."""
     for value in (sp.nan, sp.oo):
         with pytest.raises(ValueError, match="Non-finite"):
             _conservation_laws_from_stoichiometry(sp.Matrix([[-1], [value]]))
 
 
-def test_conservation_laws_none():
+def test_conservation_laws_none() -> None:
     """No conservation laws for full-rank stoichiometric matrices."""
     assert (
         _conservation_laws_from_stoichiometry(sp.Matrix([[1, 0], [0, -1]]))
@@ -150,7 +161,9 @@ def test_conservation_laws_none():
 
 
 @skip_on_valgrind
-def test_conservation_laws_demartino2014(data_demartino2014):
+def test_conservation_laws_demartino2014(
+    data_demartino2014: tuple[list[int], list[str]],
+) -> None:
     """Conservation laws for the E. coli network from De Martino et al.
     (2014)"""
     S_list, row_names = data_demartino2014
@@ -177,45 +190,14 @@ def test_conservation_laws_demartino2014(data_demartino2014):
     assert np.count_nonzero(cls[:, pivots]) == len(pivots)
 
 
-def _sbml_variable_stoichiometry() -> str:
-    """SBML model for ``A -> sr B``, with stoichiometry ``sr`` given by an
-    assignment rule"""
-    doc = libsbml.SBMLDocument(3, 2)
-    model = doc.createModel()
-    c = model.createCompartment()
-    c.setId("c")
-    c.setSize(1)
-    c.setConstant(True)
-    for species_id in "AB":
-        s = model.createSpecies()
-        s.setId(species_id)
-        s.setCompartment("c")
-        s.setInitialAmount(1)
-        s.setHasOnlySubstanceUnits(True)
-        s.setBoundaryCondition(False)
-        s.setConstant(False)
-    r = model.createReaction()
-    r.setId("r")
-    r.setReversible(False)
-    reactant = r.createReactant()
-    reactant.setSpecies("A")
-    reactant.setStoichiometry(1)
-    reactant.setConstant(True)
-    product = r.createProduct()
-    product.setSpecies("B")
-    product.setId("sr")
-    product.setStoichiometry(1)
-    product.setConstant(False)
-    r.createKineticLaw().setMath(libsbml.parseL3Formula("A"))
-    rule = model.createAssignmentRule()
-    rule.setVariable("sr")
-    rule.setMath(libsbml.parseL3Formula("1 + time"))
-    return libsbml.writeSBMLToString(doc)
-
-
-def test_conservation_laws_variable_stoichiometry():
+def test_conservation_laws_variable_stoichiometry() -> None:
     """No conservation laws for non-numeric stoichiometries."""
-    importer = SbmlImporter(_sbml_variable_stoichiometry(), from_file=False)
+    sbml = antimony2sbml("""
+        species A = 1, B = 1;
+        r1: A -> sr B; A
+        sr := 1 + time
+    """)
+    importer = SbmlImporter(sbml, from_file=False)
     importer._process_sbml(hardcode_symbols=[])
     assert importer._stoichiometric_matrix.free_symbols
 
@@ -224,11 +206,9 @@ def test_conservation_laws_variable_stoichiometry():
 
 
 @skip_on_valgrind
-def test_conservation_laws_de_model(monkeypatch):
+def test_conservation_laws_de_model(monkeypatch: pytest.MonkeyPatch) -> None:
     """Conservation laws for non-integer stoichiometries and species in
     compartments of different sizes are consistent with the full model."""
-    from amici.importers.antimony import antimony2sbml
-
     monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
     sbml = antimony2sbml("""
         compartment c1 = 2, c2 = 0.5;
