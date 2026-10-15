@@ -60,7 +60,14 @@ ForwardProblem::ForwardProblem(
     , solver(solver)
     , edata(edata)
     , dJzdx_(
-          model->nJ * model->nx_solver * model->n_max_event() * model->ne, 0.0
+          // only needed for adjoint sensitivities of event outputs
+          edata && model->nz > 0
+                  && solver->get_sensitivity_order() >= SensitivityOrder::first
+                  && solver->get_sensitivity_method()
+                         == SensitivityMethod::adjoint
+              ? model->nJ * model->nx_solver * model->n_max_event() * model->ne
+              : 0,
+          0.0
       )
     , uses_presimulation_(edata && edata->t_presim > 0)
     , ws_(model, solver)
