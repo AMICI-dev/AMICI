@@ -14,13 +14,12 @@ import numpy as np
 import pytest
 import sympy as sp
 from amici import import_model_module
-from amici.importers.antimony import antimony2sbml
-from amici.importers.sbml import SBMLException, SbmlImporter, SymbolId
+from amici.importers.antimony import antimony2amici, antimony2sbml
+from amici.importers.sbml import SBMLException, SbmlImporter, SymbolId, splines
 from amici.importers.utils import (
     MeasurementChannel as MC,
 )
 from amici.importers.utils import (
-    SBMLException,
     symbol_with_assumptions,
 )
 from amici.sim.sundials import (
@@ -311,6 +310,115 @@ def test_sigma_depending_on_assignment_rules(tempdir, monkeypatch):
     for sensi_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
         solver.set_sensitivity_method(sensi_method)
         check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+def test_noise_formula_with_expression(tempdir):
+    """Test noise formulas that refer to model expressions, including
+    expressions that depend on the states, and event noise formulas.
+
+    https://github.com/AMICI-dev/AMICI/issues/3377
+    """
+    model_name = "test_noise_formula_with_expression"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1
+        x' = -k * x
+        s := 0.1 * p
+        r := 2 * x
+        E1: at time > 1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x", sigma="s"),
+            MC("obs_r", formula="r", sigma="p * r"),
+            MC("z1", formula="x", event_id="E1", sigma="2 * s"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_timepoints([0.5, 2])
+    assert model.get_free_parameter_ids() == ("k", "p")
+    edata = ExpData(model)
+    edata.set_measurements(np.ones(4))
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[0] = 1.0
+    edata.set_event_measurements(mz)
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.sigmay[:, 0], 0.3)
+    assert_allclose(rdata.ssigmay[:, :, 0], [[0, 0.1], [0, 0.1]])
+    # sigma_r = p * r = p * obs_r
+    assert_allclose(rdata.sigmay[:, 1], 3 * rdata.y[:, 1])
+    assert np.all(np.abs(rdata.sy[:, 0, 1]) > 0.1)
+    assert_allclose(
+        rdata.ssigmay[:, :, 1],
+        3 * rdata.sy[:, :, 1] + np.column_stack([np.zeros(2), rdata.y[:, 1]]),
+    )
+    assert_allclose(rdata.sigmaz[0, 0], 0.6)
+
+
+def test_unsupported_sigmas_rejected(tempdir):
+    """Noise formulas that depend on quantities that are not available for
+    their evaluation are rejected at import.
+
+    https://github.com/AMICI-dev/AMICI/issues/3389
+    """
+
+    def assert_rejected(sbml_model, observation_model, expected):
+        sbml_importer = SbmlImporter(sbml_model, from_file=False)
+        with pytest.raises(SBMLException) as excinfo:
+            sbml_importer.sbml2amici(
+                model_name="test_unsupported_sigmas_rejected",
+                output_dir=tempdir,
+                observation_model=observation_model,
+                compile=False,
+            )
+        assert expected in str(excinfo.value.__cause__)
+
+    # piecewise functions
+    assert_rejected(
+        antimony2sbml("p = 3; x = 1; x' = -x; s := piecewise(1, time < 1, 2)"),
+        [MC("obs_x", formula="x", sigma="p * s")],
+        "the sigma of obs_x depends on Heaviside_",
+    )
+
+    # splines
+    sbml_doc = libsbml.SBMLReader().readSBMLFromString(
+        antimony2sbml("p = 3; x = 1; x' = -x; spl = 0")
+    )
+    sbml_model = sbml_doc.getModel()
+    splines.CubicHermiteSpline(
+        sbml_id="spl",
+        nodes=[0, 1, 2],
+        values_at_nodes=[sp.Symbol("p"), 4, 5],
+    ).add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spl").setConstant(False)
+    assert_rejected(
+        sbml_model,
+        [MC("obs_x", formula="x", sigma="spl")],
+        "the sigma of obs_x depends on spl_0.",
+    )
+
+    # event noise formulas that depend on the states or on the event
+    #  observable itself
+    ant_model_event = "p = 3; x = 1; x' = -x; E1: at time > 1: x = x + 1"
+    for sigma, expected in (
+        ("x * p", "the sigma of z1 depends on x."),
+        ("z1 * p", "the sigma of z1 depends on z1."),
+    ):
+        assert_rejected(
+            antimony2sbml(ant_model_event),
+            [
+                MC("obs_x", formula="x"),
+                MC("z1", formula="x", event_id="E1", sigma=sigma),
+            ],
+            expected,
+        )
 
 
 @skip_on_valgrind

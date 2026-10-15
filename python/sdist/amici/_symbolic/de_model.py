@@ -2064,33 +2064,29 @@ class DEModel:
 
             self._eqs[name] = self._eqs[name].applyfunc(substitute_w)
 
-            # states in sigma{y,z} are currently only supported if they can be
-            #  expressed in terms of the respective observable
+            # states in sigmay are currently only supported if they can be
+            #  expressed in terms of the respective observable. sigmaz is
+            #  evaluated without the event observables, so states are not
+            #  supported there.
             syms_x = self.sym("x")
             syms_yz = self.sym(name.removeprefix("sigma"))
-            for i, (sym_yz, eq_sigma_yz) in enumerate(
-                zip(
-                    syms_yz,
-                    self._eqs[name],
-                    strict=True,
-                )
-            ):
-                yz_free_syms = eq_sigma_yz.free_symbols
-                if tmp := {x for x in syms_x if x in yz_free_syms}:
+            if name == "sigmay":
+                for i, (sym_y, eq_sigma_y) in enumerate(
+                    zip(syms_yz, self._eqs[name], strict=True)
+                ):
+                    free_syms = eq_sigma_y.free_symbols
+                    if not (xs := [x for x in syms_x if x in free_syms]):
+                        continue
                     # Can we replace x symbols by an equivalent observable?
                     #  (currently, only the matching observable is supported)
-                    x_to_eliminate = next(iter(tmp))
-                    eq_yz = substitute_w(
-                        self.eq("y")[i]
-                        if name == "sigmay"
-                        else self.eq("z")[self._z2event[i]][i]
-                    )
+                    x_to_eliminate = xs[0]
+                    eq_y = substitute_w(self.eq("y")[i])
 
                     try:
                         # solve for the next best x symbol and substitute
                         #  (maybe try another one if we fail?)
                         replacement = sp.solve(
-                            sp.Eq(sym_yz, eq_yz), x_to_eliminate
+                            sp.Eq(sym_y, eq_y), x_to_eliminate
                         )
                     except NotImplementedError:
                         # can't solve
@@ -2110,6 +2106,8 @@ class DEModel:
                 *self.sym("h"),
                 *self.sym("spl"),
             }
+            if name == "sigmaz":
+                syms_unavailable |= set(syms_yz)
             unavailable_in_sigma = {
                 sym_yz: syms
                 for sym_yz, eq_sigma_yz in zip(
@@ -2123,11 +2121,20 @@ class DEModel:
                     f"{', '.join(sorted(map(str, syms)))}"
                     for yz, syms in unavailable_in_sigma.items()
                 )
+                if name == "sigmay":
+                    supported = (
+                        "Sigmas may only depend on parameters, time, and the "
+                        "respective observable. States are only supported if "
+                        "they can be expressed in terms of the respective "
+                        "observable."
+                    )
+                else:
+                    supported = (
+                        "Sigmas of event observables may only depend on "
+                        "parameters and time."
+                    )
                 raise NotImplementedError(
-                    "Sigmas may only depend on parameters, time, and the "
-                    "respective observable. States are only supported if "
-                    "they can be expressed in terms of the respective "
-                    "observable. Conservation law totals, events, and "
+                    f"{supported} Conservation law totals, events, and "
                     f"splines are not supported. However, {msg}."
                 )
 
