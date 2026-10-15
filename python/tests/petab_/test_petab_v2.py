@@ -83,9 +83,9 @@ def test_flatten_timepoint_specific_output_overrides():
 
     # new observable IDs
     #  (obs${i_obs}_${i_obsParOverride}_${i_noiseParOverride})
-    obs1_1_1 = "obs1__obsParOverride1_1_00000000000000__noiseParOverride1"
-    obs1_2_1 = "obs1__obsParOverride2_1_00000000000000__noiseParOverride1"
-    obs1_2_2 = "obs1__obsParOverride2_1_00000000000000__noiseParOverride2"
+    obs1_1_1 = "obs1__obsParOverride1_1__noiseParOverride1"
+    obs1_2_1 = "obs1__obsParOverride2_1__noiseParOverride1"
+    obs1_2_2 = "obs1__obsParOverride2_1__noiseParOverride2"
 
     for obs_id in (obs1_1_1, obs1_2_1, obs1_2_2):
         problem_expected.add_observable(
