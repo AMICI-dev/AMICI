@@ -4,7 +4,6 @@ import os
 from time import perf_counter
 
 import numpy as np
-import pytest
 import sympy as sp
 from amici.importers.sbml.conserved_quantities_demartino import (
     _fill,
@@ -153,40 +152,6 @@ demartino2014_kernel_engaged_species = [
     1556,
     1644,
 ]
-
-
-@pytest.fixture(scope="session")
-def data_demartino2014():
-    """Get tests from DeMartino2014 Suppl. Material"""
-    import gzip
-
-    import pooch
-
-    # stoichiometric matrix
-    data = gzip.GzipFile(
-        pooch.retrieve(
-            "https://github.com/AMICI-dev/AMICI/files/11430971/DeMartinoDe2014_test-ecoli.dat.gz",
-            known_hash="md5:899873f8f1c413d13c3f8e94c1496b7e",
-        )
-    )
-    S = [
-        int(item)
-        for sl in [
-            entry.decode("ascii").strip().split("\t")
-            for entry in data.readlines()
-        ]
-        for item in sl
-    ]
-
-    # metabolite / row names
-    with open(
-        pooch.retrieve(
-            "https://github.com/AMICI-dev/AMICI/files/11430970/test-ecoli-met.txt",
-            known_hash="md5:d71e711a3655311390b38d00dcd6aa7f",
-        )
-    ) as f:
-        row_names = [entry.strip() for entry in f.readlines()]
-    return S, row_names
 
 
 @skip_on_valgrind

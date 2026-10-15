@@ -141,7 +141,7 @@ test = [
     "pytest-xdist",
     "coverage",
     "shyaml",
-    "antimony>=2.13",
+    "antimony>=2.13.1",
     "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
     "scipy",
     "pooch",
