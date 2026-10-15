@@ -20,6 +20,7 @@ using namespace amici;
 %ignore add_state_sensitivity_event_update;
 %ignore fdxdt;
 %ignore fsx_rdata;
+%ignore project_algebraic_objective_derivatives;
 %ignore fx_rdata;
 %ignore get_adjoint_state_event_update;
 %ignore get_event_time_sensitivity;

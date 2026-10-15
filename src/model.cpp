@@ -1280,6 +1280,14 @@ void Model::add_partial_observable_objective_sensitivity(
         return;
 
     fdJydp(it, x, edata);
+    if (has_algebraic_states()) {
+        // DAEs: measurements of algebraic states depend on the parameters
+        // via the algebraic equations
+        fdJydx(it, x, edata);
+        project_algebraic_objective_derivatives(
+            get_timepoint(it), x, derived_state_.dJydx_, derived_state_.dJydp_
+        );
+    }
 
     write_llh_sensitivity_slice(derived_state_.dJydp_, sllh, s2llh);
 }
@@ -1289,6 +1297,9 @@ void Model::get_adjoint_state_observable_update(
     ExpData const& edata
 ) {
     fdJydx(it, x, edata);
+    project_algebraic_objective_derivatives(
+        get_timepoint(it), x, derived_state_.dJydx_, {}
+    );
     write_slice(derived_state_.dJydx_, dJydx);
 }
 
