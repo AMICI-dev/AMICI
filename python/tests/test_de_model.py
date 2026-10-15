@@ -150,6 +150,88 @@ def test_event_trigger_time():
     assert e.triggers_at_fixed_timepoint() is False
 
 
+@skip_on_valgrind
+def test_event_trigger_time_minmax():
+    """``Min``/``Max``-based event triggers (as generated for ``And``/``Or``
+    SBML triggers, and for PEtab v2 period-start events) could not
+    previously be solved for ``t`` at all (AMICI#3126), since
+    ``sympy.solve`` raises ``NotImplementedError`` on ``Min``/``Max``."""
+    t = amici_time_symbol
+    preeq, e0 = sp.symbols("preeq e0")
+    static_syms = {preeq, e0}
+
+    def make_event(value):
+        return Event(
+            symbol=sp.Symbol("event1"),
+            name="event name",
+            value=value,
+            assignments=sp.Float(1),
+            use_values_from_trigger_time=False,
+        )
+
+    # the exact trigger from the issue / PEtab v2 period-start events:
+    # `And(preeq <= 1/2, e0 >= 1/2, t >= 10)`
+    e = make_event(
+        sp.Min(sp.Rational(1, 2) - preeq, e0 - sp.Rational(1, 2), t - 10)
+    )
+    assert e.has_explicit_trigger_times(static_syms)
+    (t_root,) = e.get_trigger_times()
+    expected = {
+        (0, 0): sp.oo,
+        (0, 1): 10,
+        (1, 0): sp.oo,
+        (1, 1): sp.oo,
+    }
+    for (preeq_v, e0_v), exp in expected.items():
+        assert t_root.subs({preeq: preeq_v, e0: e0_v}) == exp
+
+    # a pure gating `Min` (no time-dependence at all, as for the
+    # preequilibration-period trigger) has no trigger *time* to compute
+    e = make_event(sp.Min(e0 - sp.Rational(1, 2), preeq - sp.Rational(1, 2)))
+    assert not e.has_explicit_trigger_times(static_syms)
+
+    # `Or` of purely time-dependent, differently-scaled conditions:
+    # triggers at the earliest
+    e = make_event(sp.Max(t - 5, 2 * t - 20))
+    assert e.has_explicit_trigger_times(static_syms)
+    assert e.get_trigger_times() == {5}
+
+    # `Max`/`Or` with a gating (time-independent) leaf is out of scope
+    e = make_event(sp.Max(t - 5, e0 - sp.Rational(1, 2)))
+    assert not e.has_explicit_trigger_times(static_syms)
+
+    # decreasing leaves (e.g. from `t < 10`) are fine as long as every
+    # time-dependent leaf goes the same way: the `Min` starts non-negative
+    # and drops below zero as soon as the *first* condition fails
+    e = make_event(sp.Min(10 - t, 20 - 2 * t, e0 - sp.Rational(1, 2)))
+    assert e.has_explicit_trigger_times(static_syms)
+    (t_root,) = e.get_trigger_times()
+    assert t_root.subs({e0: 1}) == 10
+    assert t_root.subs({e0: 0}) == sp.oo
+
+    # ... but mixed monotonicity is not, since the expression may then
+    # cross zero more than once
+    e = make_event(sp.Min(t - 5, 10 - t))
+    assert not e.has_explicit_trigger_times(static_syms)
+
+    # a trigger and its negated counterpart (AMICI tracks both for
+    # persisted Heaviside variables) must resolve to the same time, or
+    # `_reorder_events` would separate the pair (AMICI#3126 follow-up)
+    trigger = sp.Min(sp.Rational(1, 2) - preeq, e0 - sp.Rational(1, 2), t - 10)
+    pos, neg = make_event(trigger), make_event(-trigger)
+    assert pos.has_explicit_trigger_times(static_syms)
+    assert neg.has_explicit_trigger_times(static_syms)
+    assert pos.get_trigger_times() == neg.get_trigger_times()
+
+    # a non-affine leaf is out of scope
+    e = make_event(sp.Min(t**2 - 100, e0 - sp.Rational(1, 2)))
+    assert not e.has_explicit_trigger_times(static_syms)
+
+    # nested Min-inside-Max (or vice versa) is not (yet) supported
+    e = make_event(sp.Max(t - 5, sp.Min(t - 10, e0 - sp.Rational(1, 2))))
+    assert not e.has_explicit_trigger_times(static_syms)
+
+
 def _build_event_model(trigger: str):
     """Build a minimal one-state, one-observable `DEModel` with a single
     event using the given Antimony trigger expression."""
@@ -255,3 +337,18 @@ def test_event_ordering_consistent_across_classifications():
     assert [e.get_sym() for e in iroot_events + eroot_events] == [
         e.get_sym() for e in model.events()
     ]
+
+
+@skip_on_valgrind
+def test_has_implicit_event_assignments():
+    """`has_implicit_event_assignments` gates JAX export of state-updating
+    events. What it must reject is a trigger whose firing time depends on
+    the trajectory; a trigger referencing only time and parameters is
+    fine, whether or not it can be solved for `t`."""
+    for trigger in ("time >= 10", "time >= p1", "sin(time) > 0.5"):
+        model = _build_event_model(trigger)
+        assert not model.has_implicit_event_assignments(), trigger
+
+    for trigger in ("time >= x", "x > 0.5"):
+        model = _build_event_model(trigger)
+        assert model.has_implicit_event_assignments(), trigger

@@ -26,6 +26,7 @@ __all__ = [
     "_monkeypatch_sympy",
     "_parallel_applyfunc",
     "_piecewise_to_minmax",
+    "solve_minmax_trigger_for_t",
 ]
 
 # Number of matrix elements below which the inter-process communication
@@ -355,3 +356,88 @@ def _piecewise_to_minmax(
         elif cond1.args == (expr1, expr2) and cond1.func in (sp.Gt, sp.Ge):
             return sp.Max(expr1, expr2)
     return sp.Piecewise(*expr_cond_pairs)
+
+
+def solve_minmax_trigger_for_t(expr: sp.Basic, t: sp.Symbol) -> sp.Expr | None:
+    """Solve a ``Min``/``Max`` event trigger root function for ``t``.
+
+    ``sympy.solve`` cannot handle ``Min``/``Max`` expressions directly (it
+    raises ``NotImplementedError``), but that is exactly how AMICI encodes
+    ``And``/``Or``-combined event triggers as real-valued root functions
+    (see ``_parse_event_trigger`` in the SBML importer, and the PEtab v2
+    importer's period-start events): ``And`` becomes ``Min``, ``Or``
+    becomes ``Max``, and each leaf is the (possibly negated) difference of
+    a relational trigger atom, so every leaf that depends on ``t`` is
+    affine in ``t``, and therefore monotonic with a single root.
+
+    All ``t``-dependent leaves must be monotonic in the same direction, so
+    that the expression as a whole crosses zero exactly once. With
+    increasing leaves, a ``Min`` (``And``) turns non-negative once the
+    *last* condition does and a ``Max`` (``Or``) once the *first* does;
+    with decreasing leaves the expression starts out non-negative and the
+    two roles swap. A purely ``t``-independent ("gating") leaf of a ``Min``
+    must be non-negative for the crossing to happen at all; otherwise the
+    ``Min`` never reaches zero and the event never triggers, represented
+    here by ``sp.oo``.
+
+    A negated expression is solved by negating it first: AMICI tracks a
+    persisted Heaviside trigger together with its negated counterpart, and
+    both cross zero at the same time. Handling them through the same code
+    path is what keeps the pair classified alike -- were only one of them
+    to resolve, :py:meth:`DEModel._reorder_events` would separate them.
+
+    Returns ``None`` whenever the trigger time cannot be established this
+    way: a leaf that isn't affine in ``t``, leaves of mixed monotonicity,
+    nested ``Min``-inside-``Max`` (or vice versa), or a ``Max`` with a
+    gating leaf.
+    """
+    # a trigger and its negated counterpart cross zero at the same time
+    if expr.could_extract_minus_sign():
+        expr = -expr
+
+    if not isinstance(expr, sp.Min | sp.Max):
+        return None
+
+    gating = []
+    roots = []
+    increasing = None
+    for arg in expr.args:
+        if t not in arg.free_symbols:
+            gating.append(arg)
+            continue
+        if isinstance(arg, sp.Min | sp.Max):
+            # deeper mixed Min/Max nesting is not (yet) supported
+            return None
+        deriv = sp.diff(arg, t)
+        if t in deriv.free_symbols:
+            return None
+        if deriv.is_positive:
+            arg_increasing = True
+        elif deriv.is_negative:
+            arg_increasing = False
+        else:
+            return None
+        if increasing is None:
+            increasing = arg_increasing
+        elif increasing is not arg_increasing:
+            # not monotonic as a whole -- may cross zero more than once
+            return None
+        sol = sp.solve(arg, t)
+        if len(sol) != 1:
+            return None
+        roots.append(sol[0])
+
+    if not roots:
+        return None
+
+    if isinstance(expr, sp.Max) and gating:
+        return None
+
+    take_latest = isinstance(expr, sp.Min) == increasing
+    crossing = sp.Max(*roots) if take_latest else sp.Min(*roots)
+
+    if not gating:
+        return crossing
+    return sp.Piecewise(
+        (crossing, sp.And(*(g >= 0 for g in gating))), (sp.oo, True)
+    )
