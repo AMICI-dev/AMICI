@@ -1160,20 +1160,26 @@ def test_event_uses_values_from_trigger_time(tempdir):
     [InterpolationType.hermite, InterpolationType.polynomial],
 )
 @pytest.mark.parametrize("t_end", [4.5, 5.0])
+@pytest.mark.parametrize("dae", [False, True], ids=["ode", "dae"])
 def test_adjoint_sensitivities_state_dependent_event(
-    tempdir, t_end, interpolation_type
+    tempdir, t_end, interpolation_type, dae
 ):
     """Test adjoint sensitivities for a parameter whose right-hand side
     derivative jumps at a state-dependent event.
 
-    For `t_end = 5`, the event fires twice.
+    For `t_end = 5`, the event fires twice. The DAE variant has an additional
+    algebraic state `y = x`.
     """
-    model_name = f"state_dependent_event_asa_{interpolation_type.name}"
+    model_name = (
+        f"state_dependent_event_asa_{interpolation_type.name}"
+        f"{'_dae' if dae else ''}"
+    )
+    rhs = "y = 1; x' = -k * y + q; 0 = y - x" if dae else "x' = -k * x + q"
     antimony2amici(
-        """
+        f"""
         k = 0.5; q = 0.1
         x = 1
-        x' = -k * x + q
+        {rhs}
         E1: at (x < 0.5): x = x + 1
         """,
         model_name=model_name,
