@@ -217,12 +217,17 @@ void EventHandlingBwdSimulator::handle_event_b(
             );
             xB_at_trigger_earlier_.back().zero();
         }
+        // `x_eval` of the first event is the state before the discontinuity,
+        // later events start from the post-discontinuity Heaviside values.
+        auto const& h_eval = &application == &disc.event_applications.front()
+                                 ? disc.h_at_trigger
+                                 : model_->get_model_state().h;
         model_->add_adjoint_event_update(
             ws_->xB_, ws_->xQB_,
             offset == 0 ? xB_at_trigger : xB_at_trigger_earlier_.at(offset - 1),
             stauB, application.ie, t_, application.x_post,
             application.xdot_post, application.xdot_eval, application.xdot_pre,
-            application.x_eval, application.dx_post
+            application.x_eval, application.dx_post, h_eval
         );
     }
     for (int i = 0; i < ws_->xB_.size(); ++i)

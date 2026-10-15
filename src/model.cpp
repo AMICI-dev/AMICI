@@ -1611,7 +1611,8 @@ void Model::add_adjoint_event_update(
     AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
     std::vector<realtype>& stauB, int const ie, realtype const t,
     AmiVector const& x, AmiVector const& xdot, AmiVector const& xdot_eval,
-    AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx
+    AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx,
+    std::vector<realtype> const& h_eval
 ) {
     auto const* x_pos = compute_x_pos(x);
 
@@ -1657,6 +1658,9 @@ void Model::add_adjoint_event_update(
                 derived_state_.deltaxB_, ModelQuantity::deltaxB_at_trigger, t
             );
         }
+        project_algebraic_adjoint_event_update(
+            t, x_eval, h_eval, derived_state_.deltaxB_, xQB
+        );
         for (int i = 0; i < nxtrue_solver * nJ; ++i)
             xB_at_trigger.at(i) += derived_state_.deltaxB_.at(i);
     }
@@ -1671,6 +1675,9 @@ void Model::add_adjoint_event_update(
     if (always_check_finite_) {
         check_finite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
     }
+    project_algebraic_adjoint_event_update(
+        t, x_eval, h_eval, derived_state_.deltaxB_, xQB
+    );
     for (int i = 0; i < nxtrue_solver * nJ; ++i)
         xB.at(i) += derived_state_.deltaxB_.at(i);
 }
@@ -1694,9 +1701,21 @@ void Model::add_adjoint_event_time_update(
     if (always_check_finite_) {
         check_finite(dtaudx, ModelQuantity::dtaudx, t);
     }
+    derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
     for (int ix = 0; ix < nxtrue_solver; ++ix)
         for (int iJ = 0; iJ < nJ; ++iJ)
-            xB.at(ix + iJ * nxtrue_solver) += stauB.at(iJ) * dtaudx.at(ix);
+            derived_state_.deltaxB_.at(ix + iJ * nxtrue_solver)
+                = stauB.at(iJ) * dtaudx.at(ix);
+    // For algebraic-state-dependent triggers, `dtaudx` has nonzero
+    // algebraic components. This relies on the algebraic components of the
+    // differences of `xdot` in `stauB` being zero: `IDACalcIC` with
+    // `IDA_YA_YDP_INIT` does not change the derivatives of the algebraic
+    // states at events.
+    project_algebraic_adjoint_event_update(
+        t, x, state_.h, derived_state_.deltaxB_, xQB
+    );
+    for (int i = 0; i < nxtrue_solver * nJ; ++i)
+        xB.at(i) += derived_state_.deltaxB_.at(i);
 
     for (int ip = 0; ip < nplist(); ip++) {
         realtype dtaudp = 0.0;
@@ -1714,6 +1733,35 @@ void Model::add_adjoint_event_time_update(
         for (int iJ = 0; iJ < nJ; ++iJ)
             xQB.at(ip * nJ + iJ) += stauB.at(iJ) * dtaudp;
     }
+}
+
+void Model::project_algebraic_adjoint_event_update(
+    realtype const t, AmiVector const& x, std::vector<realtype> const& h,
+    std::vector<realtype>& deltaxB, AmiVector& xQB
+) {
+    if (!has_algebraic_states())
+        return;
+
+    // The algebraic states before the event are determined by the algebraic
+    // equations, cf. R. Serban, A. Recuero, Sensitivity Analysis for Hybrid
+    // Systems and Systems with Memory, arXiv:1904.08734, 2019, Sec. 4,
+    // footnote 3.
+    // `project_algebraic_objective_derivatives` expects the layout
+    // `iJ + ix * nJ`.
+    std::vector<realtype> dJdx(nx_solver * nJ, 0.0);
+    for (int ix = 0; ix < nxtrue_solver; ++ix)
+        for (int iJ = 0; iJ < nJ; ++iJ)
+            dJdx[iJ + ix * nJ] = deltaxB[ix + iJ * nxtrue_solver];
+    std::vector<realtype> dJdp(nplist() * nJ, 0.0);
+    auto h_current = state_.h;
+    state_.h = h;
+    project_algebraic_objective_derivatives(t, x, dJdx, dJdp);
+    state_.h = std::move(h_current);
+    for (int ix = 0; ix < nxtrue_solver; ++ix)
+        for (int iJ = 0; iJ < nJ; ++iJ)
+            deltaxB[ix + iJ * nxtrue_solver] = dJdx[iJ + ix * nJ];
+    for (int i = 0; i < nplist() * nJ; ++i)
+        xQB[i] += dJdp[i];
 }
 
 void Model::update_heaviside(std::vector<int> const& rootsfound) {

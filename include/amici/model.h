@@ -1528,7 +1528,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * Adjoint of `add_state_sensitivity_event_update`, except for the terms
      * depending on the event-time sensitivity, which are accumulated in
      * `stauB` and applied by `add_adjoint_event_time_update` at the trigger
-     * state. All updates are computed from the current `xB`.
+     * state. All updates are computed from the current `xB`. For DAEs, the
+     * algebraic components of the updates are mapped to the differential
+     * states and parameters.
      *
      * @param xB Adjoint state after the event, updated to the adjoint state
      * right before the event
@@ -1545,12 +1547,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_pre Time derivative of the state right before the event
      * @param x_eval State at which the event assignments are evaluated
      * @param dx Derivative of the state after the event (DAE only)
+     * @param h_eval Heaviside variables at which the algebraic states at
+     * `x_eval` are determined (DAE only)
      */
     void add_adjoint_event_update(
         AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
         std::vector<realtype>& stauB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_eval,
-        AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx
+        AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx,
+        std::vector<realtype> const& h_eval
     );
 
     /**
@@ -1558,7 +1563,9 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Adds `stauB` times the state and parameter derivatives of the event
      * time to the adjoint state and quadratures. The model state (e.g.,
-     * Heaviside variables) has to be the one at the trigger state.
+     * Heaviside variables) has to be the one at the trigger state. For DAEs,
+     * the algebraic components are mapped to the differential states and
+     * parameters.
      *
      * @param xB Adjoint state at the trigger state (will be updated)
      * @param xQB Adjoint quadratures (will be updated)
@@ -1854,6 +1861,27 @@ class Model : public AbstractModel, public ModelDimensions {
     }
 
   protected:
+    /**
+     * @brief Map the algebraic components of an adjoint event update to the
+     * differential states and parameters.
+     *
+     * The algebraic states before the event are determined by the algebraic
+     * equations at `x` with the Heaviside variables `h`.
+     * No-op for models without algebraic states.
+     *
+     * @param t Event time
+     * @param x State w.r.t. which `deltaxB` is the derivative
+     * @param h Heaviside variables before the discontinuity
+     * @param deltaxB Update of the adjoint state (shape `nJ` x
+     * `nxtrue_solver`), updated in place.
+     * @param xQB Adjoint quadratures, to which the parameter derivatives
+     * are added
+     */
+    void project_algebraic_adjoint_event_update(
+        realtype t, AmiVector const& x, std::vector<realtype> const& h,
+        std::vector<realtype>& deltaxB, AmiVector& xQB
+    );
+
     /**
      * @brief Compute the initial derivatives of the solver states and,
      * optionally, of the state sensitivities.
