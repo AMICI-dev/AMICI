@@ -6,4 +6,4 @@ and negative numbers or numbers in exponential notation resulted in invalid
 IDs. Numbers are now written in their shortest exact representation, with
 `p` for the decimal point and `m` for minus signs, e.g., `obs1__1p5__m2` for
 the overrides `1.5` and `-2.0` of `obs1`. An error is raised if different
-overrides would still result in the same observable ID.
+overrides would still result in the same observable ID (#3398).
