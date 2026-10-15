@@ -81,6 +81,22 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             return f"{expr.p}.0"
         return super()._print_Integer(expr)
 
+    def _print_logical_chain(self, expr: sp.Expr, fun: str) -> str:
+        # NumPyPrinter emits `numpy.logical_and.reduce((a, b, ...))`, which
+        # `jax.numpy` rejects (tuple argument), so nest binary calls instead
+        fun = self._module_format(f"numpy.{fun}")
+        args = [self._print(arg) for arg in expr.args]
+        code = args[0]
+        for arg in args[1:]:
+            code = f"{fun}({code}, {arg})"
+        return code
+
+    def _print_And(self, expr: sp.And) -> str:
+        return self._print_logical_chain(expr, "logical_and")
+
+    def _print_Or(self, expr: sp.Or) -> str:
+        return self._print_logical_chain(expr, "logical_or")
+
     def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         try:
             code = super().doprint(expr, assign_to)
