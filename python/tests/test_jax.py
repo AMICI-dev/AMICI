@@ -67,19 +67,6 @@ def test_code_printer_floats_roundtrip():
 
 
 @skip_on_valgrind
-def test_code_printer_and_or():
-    """`And`/`Or` with more than two arguments are valid JAX code."""
-    printer = AmiciJaxCodePrinter()
-    a, b, c = sp.symbols("a b c")
-    for expr, expected in (
-        (sp.And(a > 0, b > 0, c > 0), False),
-        (sp.Or(a > 0, b > 0, c > 0), True),
-    ):
-        fun = eval(f"lambda a_, b_, c_: {printer.doprint(expr)}", {"jnp": jnp})
-        assert bool(jax.jit(fun)(1.0, 1.0, -1.0)) is expected
-
-
-@skip_on_valgrind
 def test_conversion():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True

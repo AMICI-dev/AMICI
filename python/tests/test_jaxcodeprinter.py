@@ -6,7 +6,8 @@ import pytest
 import sympy as sp
 from amici.testing import skip_on_valgrind
 
-pytest.importorskip("jax")
+jax = pytest.importorskip("jax")
+jnp = pytest.importorskip("jax.numpy")
 
 from amici.exporters.jax.jaxcodeprinter import (  # noqa: E402
     AmiciJaxCodePrinter,
@@ -111,3 +112,16 @@ def test_print_large_integers():
     code = cp.doprint(10**20 * x)
     assert code == "100000000000000000000.0*x_"
     assert eval(code, {"x_": jnp.array(1.0)}) == pytest.approx(1e20)
+
+
+@skip_on_valgrind
+def test_code_printer_and_or():
+    """`And`/`Or` with more than two arguments are valid JAX code."""
+    printer = AmiciJaxCodePrinter()
+    a, b, c = sp.symbols("a b c")
+    for expr, expected in (
+        (sp.And(a > 0, b > 0, c > 0), False),
+        (sp.Or(a > 0, b > 0, c > 0), True),
+    ):
+        fun = eval(f"lambda a_, b_, c_: {printer.doprint(expr)}", {"jnp": jnp})
+        assert bool(jax.jit(fun)(1.0, 1.0, -1.0)) is expected
