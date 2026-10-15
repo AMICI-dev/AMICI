@@ -361,8 +361,8 @@ class SbmlImporter:
             ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
             to use the algorithm proposed by De Martino et al. (2014)
             https://doi.org/10.1371/journal.pone.0100750, or to any other value
-            to use the deterministic algorithm implemented in
-            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            to compute the left nullspace of the stoichiometric matrix in
+            exact rational arithmetic. In some cases, the ``demartino`` may
             run for a very long time. This has been observed for example in the
             case of stoichiometric coefficients with many significant digits.
 
@@ -506,8 +506,8 @@ class SbmlImporter:
             ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
             to use the algorithm proposed by De Martino et al. (2014)
             https://doi.org/10.1371/journal.pone.0100750, or to any other value
-            to use the deterministic algorithm implemented in
-            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            to compute the left nullspace of the stoichiometric matrix in
+            exact rational arithmetic. In some cases, the ``demartino`` may
             run for a very long time. This has been observed for example in the
             case of stoichiometric coefficients with many significant digits.
 
@@ -2633,9 +2633,9 @@ class SbmlImporter:
 
     def _get_conservation_laws_rref(
         self,
-    ) -> list[tuple[int, list[int], list[float]]]:
-        """Identify conservation laws based on left nullspace of the
-        stoichiometric matrix, computed through (numeric) Gaussian elimination
+    ) -> list[tuple[int, list[int], list[sp.Rational]]]:
+        """Identify conservation laws based on the left nullspace of the
+        stoichiometric matrix.
 
         :returns: List of one tuple per conservation law, each containing:
             (0) the index of the (solver-)species to eliminate,
@@ -2649,22 +2649,10 @@ class SbmlImporter:
             # no species or no reactions -> no conservation laws
             return []
 
-        import numpy as np
-        from numpy.linalg import matrix_rank
-
-        from .conserved_quantities_rref import nullspace_by_rref, rref
-
-        try:
-            S = np.asarray(
-                self._stoichiometric_matrix[
-                    : len(self._symbols[SymbolId.SPECIES]), :
-                ],
-                dtype=float,
-            )
-        except TypeError:
-            # Due to the numerical algorithm currently used to identify
-            #  conserved quantities, we can't have symbols in the
-            #  stoichiometric matrix
+        S = self._stoichiometric_matrix[
+            : len(self._symbols[SymbolId.SPECIES]), :
+        ]
+        if S.free_symbols:
             warnings.warn(
                 "Conservation laws for non-constant species in "
                 "combination with parameterized stoichiometric "
@@ -2677,30 +2665,7 @@ class SbmlImporter:
         if not _non_const_conservation_laws_supported(self.sbml_model):
             return []
 
-        # Determine rank via SVD
-        rank = matrix_rank(S) if S.shape[0] else 0
-        if rank == S.shape[0]:
-            return []
-        kernel = nullspace_by_rref(S.T)
-        # Check dimensions - due to numerical errors, nullspace_by_rref may
-        #  fail in certain situations
-        if kernel.shape[0] != S.shape[0] - rank:
-            raise AssertionError(
-                "Failed to determine all conserved quantities "
-                f"(found {kernel.shape[0]}, expected {S.shape[0] - rank}). "
-                "Try another algorithm, disable detection of conservation "
-                "laws, or submit a bug report along with the model."
-            )
-        kernel = rref(kernel)
-        raw_cls = []
-        for row in kernel:
-            state_idxs = [i for i, coeff in enumerate(row) if coeff]
-            coefficients = [coeff for coeff in row if coeff]
-            raw_cls.append(
-                (state_idxs[0], state_idxs, coefficients),
-            )
-
-        return raw_cls
+        return _conservation_laws_from_stoichiometry(S)
 
     def _add_conservation_for_non_constant_species(
         self, model: DEModel, conservation_laws: list[ConservationLaw]
@@ -3691,6 +3656,53 @@ def _check_symbol_nesting(
                 f"but {symbol_type} `{obs['name']} = {obs['value']}` "
                 "references another observable."
             )
+
+
+def _conservation_laws_from_stoichiometry(
+    stoichiometric_matrix: sp.Matrix,
+) -> list[tuple[int, list[int], list[sp.Rational]]]:
+    """Compute conservation laws from a numeric stoichiometric matrix.
+
+    Computes the left nullspace of the species x reactions stoichiometric
+    matrix in exact rational arithmetic and brings it to reduced row echelon
+    form. Floating-point entries are converted to the rational number given
+    by their shortest decimal representation, so that, e.g., ``0.1`` is
+    treated as ``1/10``.
+
+    :param stoichiometric_matrix:
+        Species x reactions stoichiometric matrix without free symbols.
+    :returns: List of one tuple per conservation law, each containing:
+        (0) the index of the species to eliminate (the pivot),
+        (1) indices of all species engaged in the conserved quantity
+        (including the eliminated one)
+        (2) coefficients for the species in (1)
+    """
+    from sympy.polys.domains import QQ
+    from sympy.polys.matrices import DomainMatrix
+
+    def to_rational(x: sp.Expr) -> sp.Rational:
+        if x.is_Rational:
+            return x
+        return sp.Rational(repr(float(x)))
+
+    n_species, n_reactions = stoichiometric_matrix.shape
+    # transposed stoichiometric matrix as {row: {col: value}}
+    rows = {}
+    for (i_row, i_col), value in stoichiometric_matrix.todok().items():
+        if value:
+            rows.setdefault(i_col, {})[i_row] = QQ.from_sympy(
+                to_rational(value)
+            )
+    kernel, pivots = (
+        DomainMatrix(rows, (n_reactions, n_species), QQ).nullspace().rref()
+    )
+
+    raw_cls = []
+    for pivot, row in zip(pivots, kernel.to_Matrix().tolist(), strict=True):
+        state_idxs = [i for i, coeff in enumerate(row) if coeff]
+        coefficients = [coeff for coeff in row if coeff]
+        raw_cls.append((pivot, state_idxs, coefficients))
+    return raw_cls
 
 
 def _non_const_conservation_laws_supported(sbml_model: libsbml.Model) -> bool:
