@@ -889,8 +889,8 @@ def test_event_outputs_llh(tempdir):
     """Test the likelihood for multiple event outputs.
 
     Two outputs of an event that fires, and one output of an event that
-    does not fire until the last output time, which contributes via its
-    output and root function value at that time.
+    does not fire until the last output time, which contributes only via
+    its root function value at that time.
     """
     model_name = "test_event_outputs_llh"
     antimony2amici(
@@ -923,7 +923,7 @@ def test_event_outputs_llh(tempdir):
     z, rz = rdata.z[0], rdata.rz[0]
     assert np.all(np.abs(z - mz[:3]) > 0.1)
     assert np.abs(rz[2]) > 0.1
-    res = np.append(z - mz[:3], rz[2])
+    res = np.append(z[:2] - mz[:2], rz[2])
     expected_llh = -np.sum(0.5 * np.log(2 * np.pi) + 0.5 * res**2)
     assert np.isclose(rdata.llh, expected_llh, rtol=1e-12)
 
