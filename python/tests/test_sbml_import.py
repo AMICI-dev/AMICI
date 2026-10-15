@@ -1478,29 +1478,61 @@ def test_chained_initial_assignment_parameter_not_constant_folded():
     assert sp.diff(x0_x, symbol_with_assumptions("X1")) == 1
 
 
-@skip_on_valgrind
-def test_dae_adjoint_sensitivities_observed_algebraic_state(tmp_path):
-    """Test adjoint sensitivities of a DAE with a measured algebraic
-    state."""
+@pytest.fixture(scope="session")
+def dae_model_module(tmp_path_factory):
+    """A DAE model with an algebraic state that enters the differential
+    equation.
+
+    Free parameters ``k``, ``p``, ``q``, fixed parameters ``x0``, ``r``,
+    observables ``obs_x``, ``obs_y``.
+    """
     sbml_str = antimony2sbml("""
-        model dae_asa_obs_alg
-            const k = 0.5, p = 2, q = 0.3
-            x = 1; y = 2
-            x' = -k * x + q
-            0 = y - p * x
+        model dae_shared
+            const k = 0.5, p = 2, q = 0.3, x0 = 1, r = 1
+            x = x0; y = 2
+            x' = -k * y + q
+            0 = y - r * p * x
         end
     """)
-    model_name = "dae_asa_obs_alg"
+    model_name = "dae_shared"
+    outdir = tmp_path_factory.mktemp(model_name)
     SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, observation_model=[MC("obs_y", formula="y")]
+        model_name,
+        outdir,
+        fixed_parameters=["x0", "r"],
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_y", formula="y"),
+        ],
     )
-    model = import_model_module(model_name, tmp_path).get_model()
+    return import_model_module(model_name, outdir)
+
+
+def _dae_model_edata(model, observable_ids, value):
+    """Create ExpData for `dae_model_module`.
+
+    Measurements are `value` for the given observables and NaN for the
+    others.
+    """
+    measured = [oid in observable_ids for oid in model.get_observable_ids()]
+    measurements = np.tile(np.where(measured, value, np.nan), model.nt())
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    return edata
+
+
+@skip_on_valgrind
+def test_dae_adjoint_sensitivities_observed_algebraic_state(
+    dae_model_module,
+):
+    """Test adjoint sensitivities of a DAE with a measured algebraic
+    state."""
+    model = dae_model_module.get_model()
     t = np.linspace(0, 5, 11)
     model.set_timepoints(t)
     model.set_parameter_scale(ParameterScaling.none)
-    edata = ExpData(model)
-    edata.set_measurements(np.full(len(t), 1.0))
-    edata.set_noise_scales(np.full(len(t), 1.0))
+    edata = _dae_model_edata(model, ["obs_y"], 1.0)
 
     sllh = {}
     for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
@@ -1552,23 +1584,11 @@ def test_initial_assignment_fixed_parameter_not_constant_folded():
 
 
 @skip_on_valgrind
-def test_dae_reinitialization_after_preequilibration(tmp_path):
+def test_dae_reinitialization_after_preequilibration(dae_model_module):
     """Test that algebraic states and their sensitivities are consistent
     with the re-initialized differential states after pre-equilibration or
     presimulation."""
-    sbml_str = antimony2sbml("""
-        model test_dae_preeq_reinit
-            const k = 0.5, p = 2, q = 0.3, x0 = 1
-            x = x0; y = 2
-            x' = -k * y + q
-            0 = y - p * x
-        end
-    """)
-    model_name = "test_dae_preeq_reinit"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, fixed_parameters=["x0"]
-    )
-    model = import_model_module(model_name, tmp_path).get_model()
+    model = dae_model_module.get_model()
     assert model.get_state_ids() == ("x", "y")
     model.set_timepoints([0.0, 1.0, 2.0])
     solver = model.create_solver()
@@ -1576,7 +1596,8 @@ def test_dae_reinitialization_after_preequilibration(tmp_path):
     solver.set_sensitivity_method(SensitivityMethod.forward)
 
     edata_ref = ExpData(model)
-    edata_ref.fixed_parameters = [1.0]
+    # x0, r
+    edata_ref.fixed_parameters = [1.0, 1.0]
     rdata_ref = run_simulation(model, solver, edata_ref)
     assert rdata_ref.status == AMICI_SUCCESS
     assert_allclose(rdata_ref.x[0], [1.0, 2.0])
@@ -1586,9 +1607,9 @@ def test_dae_reinitialization_after_preequilibration(tmp_path):
     for pre in ("preequilibration", "presimulation"):
         edata = ExpData(edata_ref)
         if pre == "preequilibration":
-            edata.fixed_parameters_pre_equilibration = [0.8]
+            edata.fixed_parameters_pre_equilibration = [0.8, 1.0]
         else:
-            edata.fixed_parameters_presimulation = [0.8]
+            edata.fixed_parameters_presimulation = [0.8, 1.0]
             edata.t_presim = 2.0
         edata.reinitialize_fixed_parameter_initial_states = True
         rdata = run_simulation(model, solver, edata)
@@ -1600,48 +1621,39 @@ def test_dae_reinitialization_after_preequilibration(tmp_path):
 
 
 @skip_on_valgrind
-def test_dae_fixed_parameters_changed_after_presimulation(tmp_path):
+def test_dae_fixed_parameters_changed_after_presimulation(dae_model_module):
     """Test that algebraic states and their sensitivities are consistent
     with the fixed parameters of the main simulation after
     pre-equilibration or presimulation without re-initialization."""
-    sbml_str = antimony2sbml("""
-        model test_dae_presim_p
-            const k = 0.5, q = 0.3, p = 2
-            x = 1; y = 2
-            x' = -k * x + q
-            0 = y - p * x
-        end
-    """)
-    model_name = "test_dae_presim_p"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, fixed_parameters=["p"]
-    )
-    model = import_model_module(model_name, tmp_path).get_model()
+    model = dae_model_module.get_model()
     assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k", "p", "q")
     model.set_timepoints([0.0, 1.0])
     solver = model.create_solver()
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
 
+    p, r = 2, 3
     for pre in ("preequilibration", "presimulation"):
         edata = ExpData(model)
-        edata.fixed_parameters = [3.0]
+        # x0, r
+        edata.fixed_parameters = [1.0, r]
         if pre == "preequilibration":
-            edata.fixed_parameters_pre_equilibration = [1.0]
+            edata.fixed_parameters_pre_equilibration = [1.0, 1.0]
         else:
-            edata.fixed_parameters_presimulation = [1.0]
+            edata.fixed_parameters_presimulation = [1.0, 1.0]
             edata.t_presim = 2.0
         edata.reinitialize_fixed_parameter_initial_states = False
         rdata = run_simulation(model, solver, edata)
         assert rdata.status == AMICI_SUCCESS, pre
-        # y = p * x with p = 3
-        assert_allclose(
-            rdata.x[:, 1], 3 * rdata.x[:, 0], rtol=1e-6, err_msg=pre
-        )
-        assert np.all(np.abs(rdata.sx[:, :, 0]) > 0.1), pre
-        assert_allclose(
-            rdata.sx[:, :, 1], 3 * rdata.sx[:, :, 0], rtol=1e-6, err_msg=pre
-        )
+        x, y = rdata.x.T
+        sx, sy = rdata.sx[:, :, 0], rdata.sx[:, :, 1]
+        # y = r * p * x
+        assert_allclose(y, r * p * x, rtol=1e-6, err_msg=pre)
+        assert np.all(np.abs(sx) > 0.05), pre
+        sy_expected = r * p * sx
+        sy_expected[:, 1] += r * x
+        assert_allclose(sy, sy_expected, rtol=1e-6, err_msg=pre)
 
 
 @skip_on_valgrind
@@ -1709,20 +1721,10 @@ def test_dae_consistent_initial_conditions_single_timepoint(tempdir):
 
 
 @skip_on_valgrind
-def test_dae_steady_state(tmp_path):
+def test_dae_steady_state(dae_model_module):
     """Test steady-state computation and steady-state sensitivities for
     DAEs."""
-    sbml_str = antimony2sbml("""
-        model test_dae_steady_state
-            const k = 0.5, p = 2, q = 0.3
-            x = 0.8; y = 1.6
-            x' = -k * y + q
-            0 = y - p * x
-        end
-    """)
-    model_name = "test_dae_steady_state"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
-    model = import_model_module(model_name, tmp_path).get_model()
+    model = dae_model_module.get_model()
     assert model.get_state_ids() == ("x", "y")
     assert model.get_free_parameter_ids() == ("k", "p", "q")
     model.set_parameter_scale(ParameterScaling.none)
@@ -1830,18 +1832,8 @@ def test_dae_staggered_forward_sensitivities(tempdir):
     )
 
 
-@pytest.mark.parametrize(
-    "timepoints",
-    [
-        [0.0, 0.0, 1.0],
-        [1.0, np.nextafter(1.0, 2.0), 2.0],
-        [1.0, np.inf],
-    ],
-    ids=["duplicate", "within_roundoff", "infinite"],
-)
-def test_dae_output_time_close_to_t0(tmp_path, timepoints):
-    """Test DAE simulation with the second output time within roundoff
-    distance of the first one or infinite."""
+@pytest.fixture(scope="module")
+def dae_tout1_module(tmp_path_factory):
     sbml_str = antimony2sbml("""
         model test_dae_tout1
             const k1 = 1, k2 = 0.5
@@ -1851,8 +1843,24 @@ def test_dae_output_time_close_to_t0(tmp_path, timepoints):
         end
     """)
     model_name = "test_dae_tout1"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
-    model = import_model_module(model_name, tmp_path).get_model()
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, outdir)
+    return import_model_module(model_name, outdir)
+
+
+@pytest.mark.parametrize(
+    "timepoints",
+    [
+        [0.0, 0.0, 1.0],
+        [1.0, np.nextafter(1.0, 2.0), 2.0],
+        [1.0, np.inf],
+    ],
+    ids=["duplicate", "within_roundoff", "infinite"],
+)
+def test_dae_output_time_close_to_t0(dae_tout1_module, timepoints):
+    """Test DAE simulation with the second output time within roundoff
+    distance of the first one or infinite."""
+    model = dae_tout1_module.get_model()
     model.set_t0(timepoints[0])
     model.set_timepoints(timepoints)
     model.set_parameter_scale(ParameterScaling.none)
@@ -1917,12 +1925,9 @@ def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)
 
 
-@skip_on_valgrind
-@pytest.mark.parametrize("timepoints", [[0.0], [np.inf]], ids=["t0", "inf"])
-def test_dae_adjoint_without_forward_integration(tmp_path, timepoints):
-    """Test adjoint sensitivities for DAEs if the forward problem is not
-    integrated (all outputs at t0, or post-equilibration by Newton's
-    method)."""
+@pytest.fixture(scope="module")
+def dae_asa_t0_module(tmp_path_factory):
+    """A DAE model whose differential initial state is a free parameter."""
     sbml_str = antimony2sbml("""
         model test_dae_asa_t0
             const k = 0.5, p = 2, q = 0.3, x0 = 1
@@ -1932,10 +1937,23 @@ def test_dae_adjoint_without_forward_integration(tmp_path, timepoints):
         end
     """)
     model_name = "test_dae_asa_t0"
+    outdir = tmp_path_factory.mktemp(model_name)
     SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, observation_model=[MC("obs_x", formula="x")]
+        model_name, outdir, observation_model=[MC("obs_x", formula="x")]
     )
-    model = import_model_module(model_name, tmp_path).get_model()
+    return import_model_module(model_name, outdir)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("timepoints", [[0.0], [np.inf]], ids=["t0", "inf"])
+def test_dae_adjoint_without_forward_integration(
+    dae_asa_t0_module, timepoints
+):
+    """Test adjoint sensitivities for DAEs if the forward problem is not
+    integrated (all outputs at t0, or post-equilibration by Newton's
+    method)."""
+    model = dae_asa_t0_module.get_model()
+    assert model.get_free_parameter_ids() == ("k", "p", "q", "x0")
     model.set_timepoints(timepoints)
     model.set_parameter_scale(ParameterScaling.none)
     model.set_steady_state_computation_mode(
@@ -1966,26 +1984,15 @@ def test_dae_adjoint_without_forward_integration(tmp_path, timepoints):
     )
 
 
-def test_dae_free_solver_after_failed_adjoint_setup(tmp_path):
+def test_dae_free_solver_after_failed_adjoint_setup(dae_model_module):
     """Test that an IDAS solver can be freed after an adjoint simulation
     that failed before the first integration step."""
-    sbml_str = antimony2sbml("""
-        model test_dae_free_solver
-            const k = 0.5, p = 2, q = 0.3, x0 = 1
-            x = x0; y = 2
-            x' = -k * y + q
-            0 = y - p * x
-        end
-    """)
-    model_name = "test_dae_free_solver"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, fixed_parameters=["x0"]
-    )
-    model = import_model_module(model_name, tmp_path).get_model()
+    model = dae_model_module.get_model()
     model.set_timepoints([0.0, 1.0])
     edata = ExpData(model)
-    edata.fixed_parameters_pre_equilibration = [0.8]
-    edata.fixed_parameters = [0.8]
+    # x0, r
+    edata.fixed_parameters_pre_equilibration = [0.8, 1.0]
+    edata.fixed_parameters = [0.8, 1.0]
 
     for _ in range(5):
         # a successful run to leave non-zero freed memory on the heap
@@ -2051,28 +2058,14 @@ print(",".join(str(s.get_id()) for s in de_model.states()))
         assert res.stdout.strip() == "x,y,z", f"PYTHONHASHSEED={seed}"
 
 
-def test_dae_adjoint_sensitivities_algebraic_feedback(tmp_path):
+def test_dae_adjoint_sensitivities_algebraic_feedback(dae_model_module):
     """Test adjoint sensitivities of a DAE whose algebraic state enters the
     differential equation."""
-    sbml_str = antimony2sbml("""
-        model test_dae_asa_feedback
-            const k = 0.5, p = 2, q = 0.3
-            x = 1; y = 2
-            x' = -k * x * y + q
-            0 = y - p * x
-        end
-    """)
-    model_name = "test_dae_asa_feedback"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, observation_model=[MC("obs_x", formula="x")]
-    )
-    model = import_model_module(model_name, tmp_path).get_model()
+    model = dae_model_module.get_model()
     t = np.linspace(0, 5, 11)
     model.set_timepoints(t)
     model.set_parameter_scale(ParameterScaling.none)
-    edata = ExpData(model)
-    edata.set_measurements(np.full(len(t), 1.0))
-    edata.set_noise_scales(np.full(len(t), 1.0))
+    edata = _dae_model_edata(model, ["obs_x"], 1.0)
 
     sllh = {}
     for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
