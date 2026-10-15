@@ -1103,6 +1103,65 @@ def has_timepoint_specific_overrides(
     return len(grouped_df) != len(grouped_df2)
 
 
+def _override_to_id_part(override: sp.Basic) -> str:
+    """Convert an observable or noise parameter override to a string that
+    can be used as part of a PEtab identifier.
+
+    Parameter IDs are kept as they are. Numbers are written in their shortest
+    representation that round-trips, with ``p`` for the decimal point and
+    ``m`` for minus signs (``-1.5e-07`` → ``m1p5em07``), and integer-valued
+    numbers without decimal point (``1.0`` → ``1``). Thus, distinct values
+    result in distinct strings.
+
+    :param override:
+        A number or parameter ID.
+    :returns:
+        The string representation of the override.
+    """
+    if override.is_Symbol:
+        return override.name
+
+    if override.is_number:
+        return (
+            repr(float(override))
+            .removesuffix(".0")
+            .replace(".", "p")
+            .replace("-", "m")
+            .replace("+", "")
+        )
+
+    raise ValueError(
+        f"Unsupported override `{override}'. "
+        "Overrides must be numbers or parameter IDs."
+    )
+
+
+def _get_flattened_observable_id(measurement: v2.Measurement) -> str:
+    """Get the ID of the observable of the given measurement in the flattened
+    problem.
+
+    The ID consists of the original observable ID and the observable and
+    noise parameter overrides of the measurement, e.g.,
+    ``obs1__scale_1p5__sigma`` for observable ``obs1`` with observable
+    parameters ``scale;1.5`` and noise parameter ``sigma``.
+
+    :param measurement:
+        A measurement of the unflattened PEtab problem.
+    :returns:
+        The flattened observable ID.
+    """
+    flattened_id = measurement.observable_id
+    for overrides in (
+        measurement.observable_parameters,
+        measurement.noise_parameters,
+    ):
+        if overrides:
+            flattened_id += "__" + "_".join(
+                map(_override_to_id_part, overrides)
+            )
+    return flattened_id
+
+
 def _get_flattened_id_mappings(
     petab_problem: v2.Problem,
 ) -> dict[str, str]:
@@ -1113,39 +1172,50 @@ def _get_flattened_id_mappings(
     :returns:
         A mapping from flattened ID to original observable ID.
     """
-    from petab.v1.core import (
-        get_notnull_columns,
-        get_observable_replacement_id,
-    )
 
-    groupvars = get_notnull_columns(
-        petab_problem.measurement_df, _POSSIBLE_GROUPVARS_FLATTENED_PROBLEM
-    )
-    mappings: dict[str, str] = {}
-
-    old_observable_ids = {obs.id for obs in petab_problem.observables}
-    for groupvar, _ in petab_problem.measurement_df.groupby(
-        groupvars, dropna=False
-    ):
-        observable_id = groupvar[groupvars.index(v2.C.OBSERVABLE_ID)]
-        observable_replacement_id = get_observable_replacement_id(
-            groupvars, groupvar
+    def normalize(overrides: list[sp.Basic]) -> tuple[str, ...]:
+        # compare numbers by value, independent of their type (e.g., 1 and 1.0)
+        return tuple(
+            repr(float(override)) if override.is_number else str(override)
+            for override in overrides
         )
 
-        logger.debug(f"Creating synthetic observable {observable_id}")
+    # the observable ID and overrides that each flattened ID was created for
+    sources: dict[str, tuple] = {}
+
+    old_observable_ids = {obs.id for obs in petab_problem.observables}
+    for measurement in petab_problem.measurements:
+        observable_id = measurement.observable_id
+        flattened_id = _get_flattened_observable_id(measurement)
+
         if (
-            observable_id != observable_replacement_id
-            and observable_replacement_id in old_observable_ids
+            observable_id != flattened_id
+            and flattened_id in old_observable_ids
         ):
             raise RuntimeError(
                 "could not create synthetic observables "
-                f"since {observable_replacement_id} was "
+                f"since {flattened_id} was "
                 "already present in observable table"
             )
 
-        mappings[observable_replacement_id] = observable_id
+        # different overrides may still result in the same ID,
+        #  e.g. `a_b;c` and `a;b_c`
+        source = (
+            observable_id,
+            normalize(measurement.observable_parameters),
+            normalize(measurement.noise_parameters),
+        )
+        if sources.setdefault(flattened_id, source) != source:
+            raise RuntimeError(
+                "could not create synthetic observables "
+                f"since {flattened_id} would be used for different "
+                f"overrides: {sources[flattened_id]} and {source}"
+            )
 
-    return mappings
+    return {
+        flattened_id: observable_id
+        for flattened_id, (observable_id, *_) in sources.items()
+    }
 
 
 def flatten_timepoint_specific_output_overrides(
@@ -1164,10 +1234,6 @@ def flatten_timepoint_specific_output_overrides(
     :param petab_problem:
         PEtab problem to work on. Modified in place.
     """
-    from petab.v1.core import (
-        get_notnull_columns,
-        get_observable_replacement_id,
-    )
 
     # Update observables
     def create_new_observable(old_id, new_id) -> Observable:
@@ -1224,20 +1290,8 @@ def flatten_timepoint_specific_output_overrides(
     ]
 
     # Update measurements
-    groupvars = get_notnull_columns(
-        petab_problem.measurement_df, _POSSIBLE_GROUPVARS_FLATTENED_PROBLEM
-    )
-    for measurement_table in petab_problem.measurement_tables:
-        for measurement in measurement_table.measurements:
-            # TODO: inefficient, but ok for a start
-            group_vals = (
-                v2.MeasurementTable([measurement])
-                .to_df()
-                .iloc[0][groupvars]
-                .tolist()
-            )
-            new_obs_id = get_observable_replacement_id(groupvars, group_vals)
-            measurement.observable_id = new_obs_id
+    for measurement in petab_problem.measurements:
+        measurement.observable_id = _get_flattened_observable_id(measurement)
 
 
 def unflatten_simulation_df(

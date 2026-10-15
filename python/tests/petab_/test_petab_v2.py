@@ -1,4 +1,5 @@
 import copy
+import math
 
 import pytest
 from amici.importers.petab import (
@@ -83,9 +84,9 @@ def test_flatten_timepoint_specific_output_overrides():
 
     # new observable IDs
     #  (obs${i_obs}_${i_obsParOverride}_${i_noiseParOverride})
-    obs1_1_1 = "obs1__obsParOverride1_1_00000000000000__noiseParOverride1"
-    obs1_2_1 = "obs1__obsParOverride2_1_00000000000000__noiseParOverride1"
-    obs1_2_2 = "obs1__obsParOverride2_1_00000000000000__noiseParOverride2"
+    obs1_1_1 = "obs1__obsParOverride1_1__noiseParOverride1"
+    obs1_2_1 = "obs1__obsParOverride2_1__noiseParOverride1"
+    obs1_2_2 = "obs1__obsParOverride2_1__noiseParOverride2"
 
     for obs_id in (obs1_1_1, obs1_2_1, obs1_2_2):
         problem_expected.add_observable(
@@ -297,6 +298,86 @@ def test_flatten_timepoint_specific_output_overrides_special_cases():
     assert problem_expected.observables == problem.observables
     assert problem_expected.measurements == problem.measurements
     problem.assert_valid()
+
+
+def test_flatten_timepoint_specific_output_overrides_numeric():
+    """Test flatten_timepoint_specific_output_overrides for numeric
+    overrides: distinct values result in distinct valid observable IDs,
+    equal values in the same ID."""
+    problem = Problem()
+    problem.model = SbmlModel.from_antimony("""x = 1""")
+    problem.add_observable(
+        "obs1",
+        formula="observableParameter1_obs1 * x",
+        noise_formula="noiseParameter1_obs1",
+        observable_placeholders=["observableParameter1_obs1"],
+        noise_placeholders=["noiseParameter1_obs1"],
+    )
+    # observable parameter, noise parameter, expected flattened ID
+    cases = [
+        (2.0, 0.1, "obs1__2__0p1"),
+        # numbers are compared by value, independent of their type
+        (2, 0.1, "obs1__2__0p1"),
+        # the next larger double after 0.1
+        (2.0, math.nextafter(0.1, 1), "obs1__2__0p10000000000000002"),
+        (-1.5, 1e-20, "obs1__m1p5__1em20"),
+        (1e20, 1.5e300, "obs1__1e20__1p5e300"),
+    ]
+    for time, (observable_parameter, noise_parameter, _) in enumerate(cases):
+        problem.add_measurement(
+            "obs1",
+            time=time,
+            measurement=0.1,
+            observable_parameters=[observable_parameter],
+            noise_parameters=[noise_parameter],
+        )
+    problem.assert_valid()
+    unflattened_problem = copy.deepcopy(problem)
+
+    flatten_timepoint_specific_output_overrides(problem)
+
+    expected_ids = [expected_id for *_, expected_id in cases]
+    assert [m.observable_id for m in problem.measurements] == expected_ids
+    assert [o.id for o in problem.observables] == list(
+        dict.fromkeys(expected_ids)
+    )
+    problem.assert_valid()
+
+    unflattened_simulation_df = unflatten_simulation_df(
+        simulation_df=problem.measurement_df.rename(
+            columns={C.MEASUREMENT: C.SIMULATION}
+        ),
+        petab_problem=unflattened_problem,
+    )
+    assert (unflattened_simulation_df[C.OBSERVABLE_ID] == "obs1").all()
+
+
+def test_flatten_timepoint_specific_output_overrides_ambiguous():
+    """Test that flatten_timepoint_specific_output_overrides fails if
+    different overrides would result in the same observable ID."""
+    problem = Problem()
+    problem.model = SbmlModel.from_antimony("""x = 1""")
+    for par_id in ("a", "a_b", "b_c", "c"):
+        problem.add_parameter(par_id, estimate=False, nominal_value=1)
+    problem.add_observable(
+        "obs1",
+        formula="observableParameter1_obs1 * x + observableParameter2_obs1",
+        noise_formula="1",
+        observable_placeholders=[
+            "observableParameter1_obs1",
+            "observableParameter2_obs1",
+        ],
+    )
+    problem.add_measurement(
+        "obs1", time=1.0, measurement=0.1, observable_parameters=["a_b", "c"]
+    )
+    problem.add_measurement(
+        "obs1", time=2.0, measurement=0.1, observable_parameters=["a", "b_c"]
+    )
+    problem.assert_valid()
+
+    with pytest.raises(RuntimeError, match="obs1__a_b_c"):
+        flatten_timepoint_specific_output_overrides(problem)
 
 
 def test_petab_simulator_deepcopy_and_pickle():
