@@ -1509,8 +1509,11 @@ def dae_model_module(tmp_path_factory):
 
 
 def _dae_model_edata(model, observable_ids, value):
-    """Create ExpData for `dae_model_module` with measurements `value`
-    for the given observables and NaN for the others."""
+    """Create ExpData for `dae_model_module`.
+
+    Measurements are `value` for the given observables and NaN for the
+    others.
+    """
     measured = [oid in observable_ids for oid in model.get_observable_ids()]
     measurements = np.tile(np.where(measured, value, np.nan), model.nt())
     edata = ExpData(model)
@@ -1922,13 +1925,35 @@ def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
     assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)
 
 
+@pytest.fixture(scope="module")
+def dae_asa_t0_module(tmp_path_factory):
+    """A DAE model whose differential initial state is a free parameter."""
+    sbml_str = antimony2sbml("""
+        model test_dae_asa_t0
+            const k = 0.5, p = 2, q = 0.3, x0 = 1
+            x = x0; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_asa_t0"
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, outdir, observation_model=[MC("obs_x", formula="x")]
+    )
+    return import_model_module(model_name, outdir)
+
+
 @skip_on_valgrind
 @pytest.mark.parametrize("timepoints", [[0.0], [np.inf]], ids=["t0", "inf"])
-def test_dae_adjoint_without_forward_integration(dae_model_module, timepoints):
+def test_dae_adjoint_without_forward_integration(
+    dae_asa_t0_module, timepoints
+):
     """Test adjoint sensitivities for DAEs if the forward problem is not
     integrated (all outputs at t0, or post-equilibration by Newton's
     method)."""
-    model = dae_model_module.get_model()
+    model = dae_asa_t0_module.get_model()
+    assert model.get_free_parameter_ids() == ("k", "p", "q", "x0")
     model.set_timepoints(timepoints)
     model.set_parameter_scale(ParameterScaling.none)
     model.set_steady_state_computation_mode(
@@ -1937,7 +1962,9 @@ def test_dae_adjoint_without_forward_integration(dae_model_module, timepoints):
     model.set_steady_state_sensitivity_mode(
         SteadyStateSensitivityMode.newtonOnly
     )
-    edata = _dae_model_edata(model, ["obs_x", "obs_y"], 1.0)
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(timepoints), 2.0))
+    edata.set_noise_scales(np.ones(len(timepoints)))
 
     sllh = {}
     for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
@@ -1957,26 +1984,15 @@ def test_dae_adjoint_without_forward_integration(dae_model_module, timepoints):
     )
 
 
-def test_dae_free_solver_after_failed_adjoint_setup(tmp_path):
+def test_dae_free_solver_after_failed_adjoint_setup(dae_model_module):
     """Test that an IDAS solver can be freed after an adjoint simulation
     that failed before the first integration step."""
-    sbml_str = antimony2sbml("""
-        model test_dae_free_solver
-            const k = 0.5, p = 2, q = 0.3, x0 = 1
-            x = x0; y = 2
-            x' = -k * y + q
-            0 = y - p * x
-        end
-    """)
-    model_name = "test_dae_free_solver"
-    SbmlImporter(sbml_str, from_file=False).sbml2amici(
-        model_name, tmp_path, fixed_parameters=["x0"]
-    )
-    model = import_model_module(model_name, tmp_path).get_model()
+    model = dae_model_module.get_model()
     model.set_timepoints([0.0, 1.0])
     edata = ExpData(model)
-    edata.fixed_parameters_pre_equilibration = [0.8]
-    edata.fixed_parameters = [0.8]
+    # x0, r
+    edata.fixed_parameters_pre_equilibration = [0.8, 1.0]
+    edata.fixed_parameters = [0.8, 1.0]
 
     for _ in range(5):
         # a successful run to leave non-zero freed memory on the heap
