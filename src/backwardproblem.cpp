@@ -207,6 +207,7 @@ void EventHandlingBwdSimulator::handle_event_b(
         xB_at_trigger.copy(xB_at_trigger_earlier_.front());
         xB_at_trigger_earlier_.erase(xB_at_trigger_earlier_.begin());
     }
+    Expects(!ws_->discs_.empty() && &disc == &ws_->discs_.back());
     for (auto const& application :
          std::ranges::reverse_view(disc.event_applications)) {
         auto const offset = application.trigger_disc_offset;
@@ -217,11 +218,12 @@ void EventHandlingBwdSimulator::handle_event_b(
             );
             xB_at_trigger_earlier_.back().zero();
         }
-        // `x_eval` of the first event is the state before the discontinuity,
-        // later events start from the post-discontinuity Heaviside values.
-        auto const& h_eval = &application == &disc.event_applications.front()
-                                 ? disc.h_at_trigger
-                                 : model_->get_model_state().h;
+        // The pre-discontinuity Heaviside values also apply to events
+        // applied after other events of the same discontinuity. For events
+        // using the state at which an earlier discontinuity was reached,
+        // these are the ones of that discontinuity.
+        auto const& h_eval
+            = ws_->discs_.at(ws_->discs_.size() - 1 - offset).h_at_trigger;
         model_->add_adjoint_event_update(
             ws_->xB_, ws_->xQB_,
             offset == 0 ? xB_at_trigger : xB_at_trigger_earlier_.at(offset - 1),
