@@ -1092,6 +1092,22 @@ def test_import_same_model_name(tempdir):
         assert model_module_1c.get_model().module is model_module_1c
 
 
+@pytest.mark.parametrize(
+    "model_name", ["x0", "Xdot", "main", "wrapfunctions", "swig"]
+)
+def test_model_name_of_generated_file(tempdir, model_name):
+    """Model names must not be names of generated files or directories."""
+    from amici.importers.antimony import antimony2amici
+
+    with pytest.raises(ValueError, match="generated source file"):
+        antimony2amici(
+            "x = 1; x' = -x",
+            model_name=model_name,
+            output_dir=tempdir,
+            compile=False,
+        )
+
+
 @skip_on_valgrind
 def test_regression_2642(tempdir):
     sbml_file = Path(__file__).parent / "sbml_models" / "regression_2642.xml"
