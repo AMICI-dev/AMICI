@@ -223,7 +223,7 @@ def test_sbml2amici_observable_dependent_error(
 
 
 @skip_on_valgrind
-def test_sigma_depending_on_assignment_rules(tempdir):
+def test_sigma_depending_on_assignment_rules(tempdir, monkeypatch):
     """Check sigmas that depend on targets of assignment rules.
 
     https://github.com/AMICI-dev/AMICI/issues/3384
@@ -240,33 +240,55 @@ def test_sigma_depending_on_assignment_rules(tempdir):
     end
     """
     model_name = "test_sigma_depending_on_assignment_rules"
+    observation_model = [
+        # state-dependent assignment rule
+        MC("obs_a", formula="readout", sigma="sd * readout"),
+        # state- and parameter-dependent assignment rules
+        MC(
+            "obs_a_scaled",
+            formula="scale * readout",
+            sigma="sd_rule * readout",
+        ),
+    ]
 
-    # a state-dependent sigma that cannot be expressed in terms of the
-    #  respective observable is rejected at import
-    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
-    with pytest.raises(SBMLException) as excinfo:
-        sbml_importer.sbml2amici(
-            model_name=model_name,
-            output_dir=tempdir,
-            observation_model=[MC("obs_b", formula="B", sigma="sd * readout")],
-            compile=False,
+    # With conservation laws, `A` is replaced by `tcl_A - B`, where `tcl_A`
+    #  is the conservation law total. Enable conservation laws for
+    #  non-constant species, so that this is independent of the environment.
+    monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+    for compute_cls, unavailable in ((False, "A"), (True, "tcl_A")):
+        # a state-dependent sigma that cannot be expressed in terms of the
+        #  respective observable is rejected at import
+        sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+        with pytest.raises(SBMLException) as excinfo:
+            sbml_importer.sbml2amici(
+                model_name=model_name,
+                output_dir=tempdir,
+                observation_model=[
+                    MC("obs_b", formula="B", sigma="sd * readout")
+                ],
+                compute_conservation_laws=compute_cls,
+                compile=False,
+            )
+        assert str(excinfo.value.__cause__).endswith(
+            f"the sigma of obs_b depends on {unavailable}."
         )
-    assert "the sigma of obs_b depends on {A}" in str(excinfo.value.__cause__)
+
+    # sigmas of observables of `A` can be expressed without `tcl_A`
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    sbml_importer.sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=observation_model,
+        compute_conservation_laws=True,
+        compile=False,
+    )
 
     sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observation_model=[
-            # state-dependent assignment rule
-            MC("obs_a", formula="readout", sigma="sd * readout"),
-            # state- and parameter-dependent assignment rules
-            MC(
-                "obs_a_scaled",
-                formula="scale * readout",
-                sigma="sd_rule * readout",
-            ),
-        ],
+        observation_model=observation_model,
+        compute_conservation_laws=False,
     )
     model = amici.import_model_module(model_name, tempdir).get_model()
     model.set_timepoints(np.linspace(0, 10, 11))

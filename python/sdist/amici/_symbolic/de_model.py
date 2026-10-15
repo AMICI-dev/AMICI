@@ -2118,8 +2118,9 @@ class DEModel:
                 if (syms := eq_sigma_yz.free_symbols & syms_unavailable)
             }
             if unavailable_in_sigma:
-                msg = ", ".join(
-                    f"the sigma of {yz} depends on {syms}"
+                msg = "; ".join(
+                    f"the sigma of {yz} depends on "
+                    f"{', '.join(sorted(map(str, syms)))}"
                     for yz, syms in unavailable_in_sigma.items()
                 )
                 raise NotImplementedError(
