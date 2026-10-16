@@ -73,13 +73,27 @@ void EventHandlingSimulator::run(
     t0_ = t0;
     ws_->sol.t = t0;
     ws_->tlastroot = t0;
+    ws_->t_roots_for_ignore = NAN;
+    t_last_trigger_.assign(
+        model_->ne, -std::numeric_limits<realtype>::infinity()
+    );
 
     handle_initial_events(edata);
 
+    // Events triggering after the last output timepoint are not handled
+    // here, but, e.g., during post-equilibration.
+    auto t_end = t0;
+    for (auto const t : timepoints) {
+        if (std::isfinite(t))
+            t_end = std::max(t_end, t);
+    }
+
+    // As for initial events, the initial state includes the updates of
+    // events triggering within roundoff of the initial time.
+    handle_close_trigger_timepoints(t_end, edata);
+
     // store initial state and sensitivity
     result.initial_state_ = get_simulation_state();
-    // store root information at t0
-    model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
 
     // loop over timepoints
     for (it_ = 0; it_ < gsl::narrow<int>(timepoints.size()); it_++) {
@@ -91,35 +105,40 @@ void EventHandlingSimulator::run(
             break;
         }
 
-        if (next_t_out > t0) {
-            // Solve for next output timepoint
-            while (ws_->sol.t < next_t_out) {
-                if (is_next_t_too_close(ws_->sol.t, next_t_out)) {
-                    // the next timepoint is too close to the current timepoint.
-                    // we use the state of the current timepoint.
-                    break;
-                }
+        // Solve for next output timepoint
+        while (true) {
+            // Before recording a datapoint, so that, as for events
+            // triggering exactly at an output timepoint, the output includes
+            // the updates of events triggering within roundoff of it.
+            handle_close_trigger_timepoints(t_end, edata);
 
-                // next stop time is next output timepoint or next
-                // time-triggered event
-                auto const next_t_event = get_next_trigger_timepoint();
-                auto const next_t_stop = std::min(next_t_out, next_t_event);
+            if (ws_->sol.t >= next_t_out
+                || is_next_t_too_close(ws_->sol.t, next_t_out)) {
+                // We reached the next output timepoint, or it is too close
+                // to the current timepoint, in which case we use the state of
+                // the current timepoint.
+                break;
+            }
 
-                int const status = solver_->run(next_t_stop);
-                // sx will be copied from solver on demand if sensitivities
-                // are computed
-                solver_->write_solution(ws_->sol);
+            // next stop time is next output timepoint or next
+            // time-triggered event
+            auto const next_t_event = get_next_trigger_timepoint();
+            auto const next_t_stop = std::min(next_t_out, next_t_event);
 
-                if (status == AMICI_ILL_INPUT) {
-                    // clustering of roots => turn off root-finding
-                    solver_->turn_off_root_finding();
-                } else if (
-                    status == AMICI_ROOT_RETURN || ws_->sol.t == next_t_event
-                ) {
-                    // solver-tracked or time-triggered event
-                    collect_roots(next_t_event);
-                    handle_events(false, edata);
-                }
+            int const status = solver_->run(next_t_stop);
+            // sx will be copied from solver on demand if sensitivities
+            // are computed
+            solver_->write_solution(ws_->sol);
+
+            if (status == AMICI_ILL_INPUT) {
+                // clustering of roots => turn off root-finding
+                solver_->turn_off_root_finding();
+            } else if (
+                status == AMICI_ROOT_RETURN || ws_->sol.t == next_t_event
+            ) {
+                // solver-tracked or time-triggered event
+                collect_roots(next_t_event);
+                handle_events(false, edata);
             }
         }
         handle_datapoint(next_t_out);
@@ -144,15 +163,18 @@ void EventHandlingSimulator::run_steady_state(
     // NOTE: initial events are assumed to be handled elsewhere
     // so we do not reinitialize this->result here
     ws_->tlastroot = ws_->sol.t;
-
-    // root function values at the start, for determining the direction of
-    // the crossings of roots with explicit trigger times
-    model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
-
-    // next trigger timepoint of fixed-time triggered events
-    auto next_t_event = get_next_trigger_timepoint();
+    t_last_trigger_.assign(
+        model_->ne, -std::numeric_limits<realtype>::infinity()
+    );
 
     while (true) {
+        handle_close_trigger_timepoints(
+            std::numeric_limits<realtype>::infinity(), nullptr
+        );
+
+        // next trigger timepoint of fixed-time triggered events
+        auto const next_t_event = get_next_trigger_timepoint();
+
         if (sim_steps % convergence_check_frequency == 0) {
             // Check for convergence (already before simulation, since we might
             // start in steady state)
@@ -199,7 +221,6 @@ void EventHandlingSimulator::run_steady_state(
             // solver-tracked or time-triggered event
             collect_roots(next_t_event);
             handle_events(false, nullptr);
-            next_t_event = get_next_trigger_timepoint();
         }
     }
 
@@ -430,8 +451,13 @@ void EventHandlingSimulator::handle_events(
     // e.g. when an event assignment moves the state back across the
     // event's own trigger, and `detect_secondary_events()` resets
     // `roots_found` entries, so directions are accumulated rather than
-    // copied.
-    std::vector<int> roots_for_ignore(model_->ne, 0);
+    // copied. This includes the roots of preceding discontinuities at the
+    // same time, as the solver forgets them on reinitialization.
+    if (ws_->sol.t != ws_->t_roots_for_ignore) {
+        std::ranges::fill(ws_->roots_for_ignore, 0);
+        ws_->t_roots_for_ignore = ws_->sol.t;
+    }
+    auto& roots_for_ignore = ws_->roots_for_ignore;
     auto const record_roots_for_ignore = [this, &roots_for_ignore]() {
         for (int ie = 0; ie < model_->ne; ++ie)
             roots_for_ignore.at(ie)
@@ -590,7 +616,7 @@ void EventHandlingSimulator::handle_events(
     // Remember encountered roots so that an identical root reported
     // immediately after the reinitialization can be recognized as
     // a spurious re-detection rather than a genuine new event.
-    solver_->ignore_roots_after_reinit(std::move(roots_for_ignore));
+    solver_->ignore_roots_after_reinit(roots_for_ignore);
 
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
@@ -756,20 +782,55 @@ void EventHandlingSimulator::collect_roots(realtype const t_trigger) {
         ws_->roots_found.begin() + model_->ne_solver, ws_->roots_found.end(), 0
     );
     if (ws_->sol.t == t_trigger) {
-        for (auto const ie : model_->get_explicit_roots().at(ws_->sol.t)) {
-            // determine the direction of root crossing from
-            // root function value at the previous event
-            ws_->roots_found[ie] = std::copysign(1, -ws_->rootvals[ie]);
+        set_explicit_roots_found(t_trigger);
+    }
+}
+
+void EventHandlingSimulator::set_explicit_roots_found(
+    realtype const t_trigger
+) {
+    auto const& h = model_->get_model_state().h;
+    for (auto const ie : model_->get_explicit_roots().at(t_trigger)) {
+        if (t_last_trigger_.at(ie) >= t_trigger) {
+            // already handled at this trigger timepoint
+            continue;
         }
+        // The direction of the root crossing follows from the Heaviside
+        // variable. The root function value at the current time may already
+        // be zero if the trigger timepoint is within roundoff of it.
+        ws_->roots_found[ie] = h.at(ie) > 0.0 ? -1 : 1;
+        t_last_trigger_.at(ie) = t_trigger;
+    }
+}
+
+void EventHandlingSimulator::handle_close_trigger_timepoints(
+    realtype const t_end, ExpData const* edata
+) {
+    for (auto t_trigger = get_next_trigger_timepoint();
+         t_trigger <= t_end && is_next_t_too_close(ws_->sol.t, t_trigger);
+         t_trigger = get_next_trigger_timepoint()) {
+        // no roots of the root functions tracked by the solver
+        std::ranges::fill(ws_->roots_found, 0);
+        set_explicit_roots_found(t_trigger);
+        handle_events(false, edata);
     }
 }
 
 realtype EventHandlingSimulator::get_next_trigger_timepoint() const {
     auto const& explicit_roots = model_->get_explicit_roots();
-    auto const it = explicit_roots.upper_bound(ws_->sol.t);
-    return it != explicit_roots.end()
-               ? it->first
-               : std::numeric_limits<realtype>::infinity();
+    for (auto it = explicit_roots.upper_bound(ws_->sol.t);
+         it != explicit_roots.end(); ++it) {
+        // Events at trigger timepoints within roundoff after the current time
+        // are handled before these timepoints are reached. Skip those, unless
+        // an event assignment moved another event's trigger timepoint there.
+        auto const t_trigger = it->first;
+        if (std::ranges::any_of(it->second, [this, t_trigger](int const ie) {
+                return t_last_trigger_.at(ie) < t_trigger;
+            })) {
+            return t_trigger;
+        }
+    }
+    return std::numeric_limits<realtype>::infinity();
 }
 
 void EventHandlingSimulator::handle_datapoint(realtype t) {
