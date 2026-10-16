@@ -74,6 +74,13 @@ class AmiciJaxCodePrinter(NumPyPrinter):
             return super()._print_Float(expr)
         return repr(value)
 
+    def _print_Integer(self, expr: sp.Integer) -> str:
+        # JAX can't handle Python integers outside the int32 range (int64
+        # with x64 enabled), e.g. coefficients of exact conservation laws
+        if abs(expr.p) > 2**31 - 1:
+            return f"{expr.p}.0"
+        return super()._print_Integer(expr)
+
     def doprint(self, expr: sp.Expr, assign_to: str | None = None) -> str:
         try:
             code = super().doprint(expr, assign_to)
