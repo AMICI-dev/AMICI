@@ -59,6 +59,14 @@ To address these issues, we use the built-in rootfinding functionality in
 SUNDIALS, which pauses the solver at the locations of discontinuities and
 avoids overstepping or ignoring of discontinuities.
 
+Root-finding is not required if the trigger time of a discontinuity can be
+computed in advance, e.g., for `time >= t_on`. This applies if the trigger
+time only depends on parameters, constants, expressions thereof, and state
+variables with zero time derivative (e.g., parameters that are changed by
+events, which are converted to state variables). For such triggers, AMICI
+stops the integration exactly at the trigger time. The trigger times are
+re-evaluated after each event.
+
 Another difficulty comes with the evaluation of Heaviside functions. After
 or during processing of discontinuities, Heaviside functions need to be
 evaluated at the left and right hand limit of discontinuities.

@@ -898,22 +898,19 @@ class DEExporter:
     def _get_explicit_roots_body(self) -> list[str]:
         events = self.model.events()
         lines = []
-        static_syms = self.model.static_symbols
+        trigger_syms = self.model.explicit_trigger_symbols
 
         for event_idx, event in enumerate(events):
-            if not (
-                tigger_times := {
-                    tt
-                    for tt in event.get_trigger_times()
-                    if tt.free_symbols.issubset(static_syms)
-                }
-            ):
+            # one entry per event with explicit trigger times, matching
+            #  `DEModel.num_events_solver`
+            if not event.has_explicit_trigger_times(trigger_syms):
                 continue
 
             line = (
                 "    {"
                 + ", ".join(
-                    self._code_printer.doprint(tt) for tt in tigger_times
+                    self._code_printer.doprint(tt)
+                    for tt in event.get_trigger_times()
                 )
                 + "},"
             )

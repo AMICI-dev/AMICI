@@ -329,9 +329,14 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Re-compute the explicit roots.
      *
-     * Re-compute the explicit roots based on the current model parameters.
+     * Re-compute the explicit roots based on the current model parameters
+     * and the given state. Must be called whenever any of these changes,
+     * as the explicit roots may depend on state variables with zero time
+     * derivative that are only changed by events.
+     *
+     * @param x Reference to state variables
      */
-    void reinit_explicit_roots();
+    void reinit_explicit_roots(AmiVector const& x);
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
@@ -1705,7 +1710,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get trigger times for events that don't require root-finding.
      *
-     * To be called only after Model::initialize.
+     * To be called only after Model::initialize. The trigger times may
+     * change at events, see Model::reinit_explicit_roots.
      *
      * @return List of unique trigger points for events that don't require
      * root-finding (i.e. that trigger at predetermined timepoints),
@@ -1758,8 +1764,8 @@ class Model : public AbstractModel, public ModelDimensions {
     }
 
     [[nodiscard]] std::vector<std::vector<realtype>> fexplicit_roots(
-        [[maybe_unused]] realtype const* p, [[maybe_unused]] realtype const* k,
-        [[maybe_unused]] realtype const* w
+        [[maybe_unused]] realtype const* x, [[maybe_unused]] realtype const* p,
+        [[maybe_unused]] realtype const* k, [[maybe_unused]] realtype const* w
     ) override {
         if (ne != ne_solver) {
             throw AmiException(

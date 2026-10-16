@@ -7,7 +7,7 @@
 namespace amici {
 namespace model_model_dirac_py {
 
-std::vector<std::vector<realtype>> explicit_roots_model_dirac_py(const realtype *p, const realtype *k, const realtype *w){
+std::vector<std::vector<realtype>> explicit_roots_model_dirac_py(const realtype *x, const realtype *p, const realtype *k, const realtype *w){
     const realtype p2_ = p[1];
 
     return {

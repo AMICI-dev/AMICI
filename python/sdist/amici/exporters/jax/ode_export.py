@@ -299,7 +299,9 @@ class ODEExporter:
                 sorted(self._get_known_discs()), self._code_printer
             ),
             "N_IEVENTS": str(len(self.model.get_implicit_roots())),
-            "N_EEVENTS": str(len(self.model.get_explicit_roots())),
+            "N_EEVENTS": str(
+                self.model.num_events() - self.model.num_events_solver()
+            ),
             "EVENT_INITIAL_VALUES": _jnp_array_str(
                 [e.get_initial_value() for e in self.model._events],
                 self._code_printer,

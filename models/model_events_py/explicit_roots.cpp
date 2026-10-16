@@ -7,7 +7,7 @@
 namespace amici {
 namespace model_model_events_py {
 
-std::vector<std::vector<realtype>> explicit_roots_model_events_py(const realtype *p, const realtype *k, const realtype *w){
+std::vector<std::vector<realtype>> explicit_roots_model_events_py(const realtype *x, const realtype *p, const realtype *k, const realtype *w){
     const realtype p4_ = p[3];
 
     return {

@@ -1194,6 +1194,82 @@ def test_explicit_discontinuity(tmp_path):
 
 
 @skip_on_valgrind
+def test_discontinuity_time_changed_by_events(tmp_path):
+    """Discontinuities whose trigger times depend on parameters that are
+    changed by events (converted to states with zero derivative, e.g.,
+    PEtab v2 condition changes) are located at their updated trigger times
+    (gh-3365).
+
+    For the sundials backend, these triggers are explicit (precomputed trigger
+    times); here, they are located by root-finding and are not known
+    discontinuities, since ``_known_discs`` only depends on ``p``.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    # `x` integrates the switch, which is on for t >= switch_time:
+    # E0 advances the switch from t=10 to t=3, E1 moves it from t=3 to t=4
+    # after it was switched on. Neither event switches it on or off.
+    ant_model = """
+    model disc_time_changed_by_events
+        switch_time = 10
+        x = 0
+        x' = piecewise(0, time < switch_time, 1)
+        E0: at time >= 1: switch_time = 3
+        E1: at time >= 5: switch_time = 4
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("disc_time_changed_by_events", output_dir=tmp_path)
+
+    module = amici._module_from_path(
+        "disc_time_changed_by_events", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    # E0, E1, and the two root functions of the switch
+    assert model.n_events == 4
+    assert len(model._root_cond_fns()) == model.n_events
+
+    p = jnp.array([])
+    # only the trigger times of E0 and E1 are known in advance
+    assert_allclose(jnp.sort(model._known_discs(p)), [1.0, 5.0])
+
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 0.5, 2.0, 4.0, 6.0, 9.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    x = ys[:, list(model.state_ids).index("x")]
+    assert_allclose(x, jnp.clip(ts - 3.0, min=0.0), atol=1e-5)
+
+
+@skip_on_valgrind
 def test_event_assignments_odd_root_count(tmp_path):
     """Event assignments are applied for every event, even when the total
     number of roots is odd.

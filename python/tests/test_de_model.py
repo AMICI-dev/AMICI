@@ -217,6 +217,29 @@ def test_event_trigger_time_purely_static_is_explicit():
 
 
 @skip_on_valgrind
+def test_event_trigger_time_constant_state_is_explicit():
+    """A trigger comparing `time` to a state with zero time derivative
+    -- here, the parameter `y` that is converted to a state because it is
+    the target of an event assignment -- has an explicit trigger time that
+    only changes at events, so it does not require root-finding
+    (AMICI#3365)."""
+    model = _build_event_model("time >= y")
+    (event,) = model.events()
+
+    (y,) = (s for s in model.sym("x") if s.name == "y")
+    assert model.constant_state_symbols == {y}
+    assert event.get_trigger_times() == {y}
+
+    assert model.num_events_solver() == 0
+    assert len(model.eq("iroot")) == 0
+    assert len(model.eq("eroot")) == 1
+    assert model.sym("ih").shape == (0, 0)
+    assert model.sym("eh").shape == (1, 1)
+    assert model.get_explicit_roots() == [y]
+    assert model.get_implicit_roots() == []
+
+
+@skip_on_valgrind
 def test_event_ordering_consistent_across_classifications():
     """Direct regression test for AMICI#3286: the physical event order
     (`DEModel._reorder_events`, used for `h`/`event_initial_values`/

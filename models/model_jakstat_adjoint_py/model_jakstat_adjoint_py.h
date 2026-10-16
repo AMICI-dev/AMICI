@@ -412,7 +412,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *p, const realtype *k, const realtype *w) override { return {}; }
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *w) override { return {}; }
 
 
     std::string get_name() const override {
