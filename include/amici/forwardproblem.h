@@ -9,6 +9,7 @@
 #include "amici/steadystateproblem.h"
 #include "amici/vector.h"
 
+#include <limits>
 #include <optional>
 #include <vector>
 namespace amici {
@@ -354,7 +355,8 @@ class EventHandlingSimulator {
 
     /**
      * @brief Get the next trigger timepoint of the events with explicit
-     * trigger times after the current time.
+     * trigger times after the current time and after the last handled
+     * trigger timepoint.
      *
      * The trigger timepoints may change after events, since they may depend
      * on state variables that are only changed by event assignments.
@@ -362,6 +364,27 @@ class EventHandlingSimulator {
      * @return The next trigger timepoint, or infinity if there is none.
      */
     [[nodiscard]] realtype get_next_trigger_timepoint() const;
+
+    /**
+     * @brief Set the root-found flags of the events with explicit trigger
+     * times that trigger at the given trigger timepoint, and mark that
+     * trigger timepoint as handled.
+     *
+     * @param t_trigger The trigger timepoint.
+     */
+    void set_explicit_roots_found(realtype t_trigger);
+
+    /**
+     * @brief Handle the events of the trigger timepoints within roundoff
+     * after the current time.
+     *
+     * The solver cannot step to those trigger timepoints, so their events are
+     * handled at the current time, one trigger timepoint at a time.
+     *
+     * @param t_end Trigger timepoints after this time are not handled.
+     * @param edata experimental data
+     */
+    void handle_close_trigger_timepoints(realtype t_end, ExpData const* edata);
 
     /**
      * @brief Collect the roots found at the current time in
@@ -411,6 +434,13 @@ class EventHandlingSimulator {
 
     /** Initial time of the current period. */
     realtype t0_{NAN};
+
+    /**
+     * The last handled trigger timepoint of the events with explicit trigger
+     * times. This may be after the current time if the trigger timepoint was
+     * within roundoff of the current time.
+     */
+    realtype t_last_trigger_{-std::numeric_limits<realtype>::infinity()};
 
     /** The model to simulate. */
     Model* model_{nullptr};

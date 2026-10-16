@@ -2323,3 +2323,161 @@ def test_dae_event_adjoint_sensitivities(tempdir):
         rtol=1e-6,
         atol=1e-8,
     )
+
+
+@skip_on_valgrind
+def test_explicit_trigger_times_within_roundoff(tempdir):
+    """Explicit trigger times within roundoff of each other or of the time
+    the solver stopped at (gh-3393).
+
+    The solver cannot step to a stop time within roundoff of the current
+    time, so such events are handled at the current time.
+    """
+    model_name = "test_explicit_trigger_times_within_roundoff"
+    antimony2amici(
+        r"""
+        p1 = 0.1
+        p2 = 0.2
+        p3 = 0.3
+        s = 0
+        x = 1
+        x' = s - x
+        E1: at time >= p1 + p2: s = s + 1
+        E2: at time >= p3: s = s + 10
+        """,
+        observation_model=[MC("obs_x", formula="x")],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E1 triggers 1 ulp after 0.3
+    assert 0.1 + 0.2 == np.nextafter(0.3, 1)
+
+    def expected(t, t_e2):
+        """Analytical s(t), x(t) and dx(t)/dp, for E1 at 0.3 and E2 at
+        t_e2 >= 0.3."""
+        s, x, t_prev, dx_dp = 0.0, 1.0, 0.0, np.zeros(3)
+        for t_e, ds, dt_e_dp in ((0.3, 1, [1, 1, 0]), (t_e2, 10, [0, 0, 1])):
+            if t_e > t:
+                break
+            x = s + (x - s) * np.exp(-(t_e - t_prev))
+            t_prev, s = t_e, s + ds
+            # the jump in x' = s - x shifts x by -ds * dt_e
+            dx_dp -= ds * np.exp(-(t - t_e)) * np.array(dt_e_dp)
+        return s, s + (x - s) * np.exp(-(t - t_prev)), dx_dp
+
+    def check(timepoints, t_e2):
+        model.set_timepoints(timepoints)
+        edata = ExpData(model)
+        # measure only at the last timepoint, where x is differentiable
+        # w.r.t. the trigger times
+        measurements = np.full(len(timepoints), np.nan)
+        measurements[-1] = 5.0
+        edata.set_measurements(measurements)
+        edata.set_noise_scales(np.ones(len(timepoints)))
+        s_expected, x_expected, dx_dp = zip(
+            *(expected(t, t_e2) for t in timepoints), strict=True
+        )
+        sllh_expected = -(x_expected[-1] - 5.0) * dx_dp[-1]
+
+        for sensi_method in (
+            SensitivityMethod.none,
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
+            solver = model.create_solver()
+            solver.set_sensitivity_order(SensitivityOrder.first)
+            solver.set_sensitivity_method(sensi_method)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS, sensi_method
+            assert_allclose(rdata.by_id("s"), s_expected, rtol=0, atol=0)
+            assert_allclose(rdata.by_id("x"), x_expected, rtol=1e-6)
+            if sensi_method != SensitivityMethod.none:
+                assert_allclose(
+                    rdata.sllh, sllh_expected, rtol=1e-5, err_msg=sensi_method
+                )
+
+    # (a) two trigger times 1 ulp apart
+    model.set_free_parameter_by_id("p3", 0.3)
+    check([0.0, 1.0], t_e2=0.3)
+
+    # (b) trigger time 1 ulp after an output timepoint: E1 is handled
+    #  before the output at t=0.3 is recorded
+    model.set_free_parameter_by_id("p3", 0.7)
+    check([0.0, 0.3, 1.0], t_e2=0.7)
+
+    # (c) trigger time 1 ulp after the initial time
+    model.set_t0(0.3)
+    model.set_timepoints([0.3, 1.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("s"), [1.0, 11.0], rtol=0, atol=0)
+    model.set_t0(0.0)
+
+    # (d) post-equilibration, two trigger times 1 ulp apart
+    model.set_free_parameter_by_id("p3", 0.3)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_timepoints([0.0, np.inf])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("s"), [0.0, 11.0], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("x")[-1], 11.0, rtol=1e-4)
+
+    # (e) post-equilibration after a trigger time 1 ulp after the last
+    #  finite output timepoint: E1 is handled once, during
+    #  post-equilibration
+    model.set_free_parameter_by_id("p3", 0.7)
+    model.set_timepoints([0.0, 0.3, np.inf])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("s"), [0.0, 0.0, 11.0], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("x")[-1], 11.0, rtol=1e-4)
+
+    # (f) as (e), but with the trigger time 1 ulp after the initial time.
+    #  After E1, x = s = 1 is a steady state, so post-equilibration ends
+    #  before E2.
+    model.set_t0(0.3)
+    model.set_timepoints([0.3, np.inf])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("s"), [0.0, 1.0], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("x"), [1.0, 1.0], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+def test_explicit_trigger_time_within_roundoff_zero_root(tempdir):
+    """An event whose explicit trigger time is within roundoff after the
+    current time fires, even if its root function is exactly zero at the
+    current time (gh-3393)."""
+    model_name = "test_explicit_trigger_time_within_roundoff_zero_root"
+    antimony2amici(
+        r"""
+        pa = 1
+        k = 1
+        c = 1
+        s = 0
+        x = 0
+        x' = 1
+        Ea: at time >= pa: s = s + 1
+        Eb: at time / k >= c: s = s + 10
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # Eb triggers at c * k, 1 ulp after Ea, and its root function
+    # `time / k - c` is zero at the trigger time of Ea. The parameter values
+    # are set here, as they would be rounded in the SBML model.
+    pa, k, c = 1.7099052299459676, 3.3554874394253624, 0.5095847505955183
+    assert c * k == np.nextafter(pa, np.inf)
+    assert pa / k - c == 0.0
+    model.set_free_parameter_by_id("pa", pa)
+    model.set_free_parameter_by_id("k", k)
+    model.set_free_parameter_by_id("c", c)
+
+    model.set_timepoints([0.0, 6.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("s"), [0.0, 11.0], rtol=0, atol=0)
