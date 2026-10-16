@@ -2447,29 +2447,36 @@ def test_explicit_trigger_times_within_roundoff(tempdir):
 
 
 @skip_on_valgrind
-def test_explicit_trigger_time_within_roundoff_zero_root(tempdir):
-    """An event whose explicit trigger time is within roundoff after the
-    current time fires, even if its root function is exactly zero at the
-    current time (gh-3393)."""
-    model_name = "test_explicit_trigger_time_within_roundoff_zero_root"
+def test_explicit_trigger_times_handled_before_reached(tempdir):
+    """Events whose explicit trigger times are within roundoff after the
+    current time are handled before these times are reached (gh-3393).
+
+    They fire even if their root function is already zero at the current
+    time, and also if an event assignment moves another event's trigger time
+    to such a time.
+    """
+    model_name = "test_explicit_trigger_times_handled_before_reached"
     antimony2amici(
         r"""
         pa = 1
         k = 1
         c = 1
+        tc = 100
         s = 0
         x = 0
         x' = 1
         Ea: at time >= pa: s = s + 1
-        Eb: at time / k >= c: s = s + 10
+        Eb: at time / k >= c: s = s + 10, tc = c * k
+        Ec: at time >= tc: s = s + 100
         """,
         model_name=model_name,
         output_dir=tempdir,
     )
     model = import_model_module(model_name, tempdir).get_model()
     # Eb triggers at c * k, 1 ulp after Ea, and its root function
-    # `time / k - c` is zero at the trigger time of Ea. The parameter values
-    # are set here, as they would be rounded in the SBML model.
+    # `time / k - c` is zero at the trigger time of Ea. Eb moves the trigger
+    # time of Ec to its own trigger time. The parameter values are set here,
+    # as they would be rounded in the SBML model.
     pa, k, c = 1.7099052299459676, 3.3554874394253624, 0.5095847505955183
     assert c * k == np.nextafter(pa, np.inf)
     assert pa / k - c == 0.0
@@ -2480,4 +2487,4 @@ def test_explicit_trigger_time_within_roundoff_zero_root(tempdir):
     model.set_timepoints([0.0, 6.0])
     rdata = run_simulation(model, model.create_solver())
     assert rdata.status == AMICI_SUCCESS
-    assert_allclose(rdata.by_id("s"), [0.0, 11.0], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("s"), [0.0, 111.0], rtol=0, atol=0)

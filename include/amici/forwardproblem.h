@@ -9,7 +9,6 @@
 #include "amici/steadystateproblem.h"
 #include "amici/vector.h"
 
-#include <limits>
 #include <optional>
 #include <vector>
 namespace amici {
@@ -139,6 +138,7 @@ struct FwdSimWorkspace {
         , rval_tmp(gsl::narrow<decltype(rval_tmp)::size_type>(model->ne), 0.0)
         , nroots(gsl::narrow<decltype(nroots)::size_type>(model->ne), 0)
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
+        , roots_for_ignore(model->ne, 0)
 
     {}
     /** Current solution state */
@@ -194,6 +194,16 @@ struct FwdSimWorkspace {
 
     /** array of values of the root function (dimension: ne) */
     std::vector<realtype> rootvals;
+
+    /**
+     * Crossing directions of the roots found in the discontinuities at time
+     * `t_roots_for_ignore`, as a per-root bitmask (dimension: ne), see
+     * Solver::ignore_roots_after_reinit.
+     */
+    std::vector<int> roots_for_ignore;
+
+    /** Time of the discontinuities that `roots_for_ignore` refers to */
+    realtype t_roots_for_ignore{NAN};
 };
 
 /**
@@ -355,8 +365,8 @@ class EventHandlingSimulator {
 
     /**
      * @brief Get the next trigger timepoint of the events with explicit
-     * trigger times after the current time and after the last handled
-     * trigger timepoint.
+     * trigger times after the current time, at which not all events have
+     * been handled yet.
      *
      * The trigger timepoints may change after events, since they may depend
      * on state variables that are only changed by event assignments.
@@ -367,8 +377,8 @@ class EventHandlingSimulator {
 
     /**
      * @brief Set the root-found flags of the events with explicit trigger
-     * times that trigger at the given trigger timepoint, and mark that
-     * trigger timepoint as handled.
+     * times that trigger at the given trigger timepoint and have not been
+     * handled there yet, and mark them as handled.
      *
      * @param t_trigger The trigger timepoint.
      */
@@ -436,11 +446,12 @@ class EventHandlingSimulator {
     realtype t0_{NAN};
 
     /**
-     * The last handled trigger timepoint of the events with explicit trigger
-     * times. This may be after the current time if the trigger timepoint was
-     * within roundoff of the current time.
+     * The last trigger timepoint at which each event with an explicit
+     * trigger time was handled (dimension: ne). This may be after the
+     * current time if the trigger timepoint was within roundoff of the
+     * current time.
      */
-    realtype t_last_trigger_{-std::numeric_limits<realtype>::infinity()};
+    std::vector<realtype> t_last_trigger_;
 
     /** The model to simulate. */
     Model* model_{nullptr};

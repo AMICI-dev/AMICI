@@ -73,7 +73,10 @@ void EventHandlingSimulator::run(
     t0_ = t0;
     ws_->sol.t = t0;
     ws_->tlastroot = t0;
-    t_last_trigger_ = -std::numeric_limits<realtype>::infinity();
+    ws_->t_roots_for_ignore = NAN;
+    t_last_trigger_.assign(
+        model_->ne, -std::numeric_limits<realtype>::infinity()
+    );
 
     handle_initial_events(edata);
 
@@ -160,7 +163,9 @@ void EventHandlingSimulator::run_steady_state(
     // NOTE: initial events are assumed to be handled elsewhere
     // so we do not reinitialize this->result here
     ws_->tlastroot = ws_->sol.t;
-    t_last_trigger_ = -std::numeric_limits<realtype>::infinity();
+    t_last_trigger_.assign(
+        model_->ne, -std::numeric_limits<realtype>::infinity()
+    );
 
     while (true) {
         handle_close_trigger_timepoints(
@@ -446,8 +451,13 @@ void EventHandlingSimulator::handle_events(
     // e.g. when an event assignment moves the state back across the
     // event's own trigger, and `detect_secondary_events()` resets
     // `roots_found` entries, so directions are accumulated rather than
-    // copied.
-    std::vector<int> roots_for_ignore(model_->ne, 0);
+    // copied. This includes the roots of preceding discontinuities at the
+    // same time, as the solver forgets them on reinitialization.
+    if (ws_->sol.t != ws_->t_roots_for_ignore) {
+        std::ranges::fill(ws_->roots_for_ignore, 0);
+        ws_->t_roots_for_ignore = ws_->sol.t;
+    }
+    auto& roots_for_ignore = ws_->roots_for_ignore;
     auto const record_roots_for_ignore = [this, &roots_for_ignore]() {
         for (int ie = 0; ie < model_->ne; ++ie)
             roots_for_ignore.at(ie)
@@ -606,7 +616,7 @@ void EventHandlingSimulator::handle_events(
     // Remember encountered roots so that an identical root reported
     // immediately after the reinitialization can be recognized as
     // a spurious re-detection rather than a genuine new event.
-    solver_->ignore_roots_after_reinit(std::move(roots_for_ignore));
+    solver_->ignore_roots_after_reinit(roots_for_ignore);
 
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
@@ -781,12 +791,16 @@ void EventHandlingSimulator::set_explicit_roots_found(
 ) {
     auto const& h = model_->get_model_state().h;
     for (auto const ie : model_->get_explicit_roots().at(t_trigger)) {
+        if (t_last_trigger_.at(ie) >= t_trigger) {
+            // already handled at this trigger timepoint
+            continue;
+        }
         // The direction of the root crossing follows from the Heaviside
         // variable. The root function value at the current time may already
         // be zero if the trigger timepoint is within roundoff of it.
         ws_->roots_found[ie] = h.at(ie) > 0.0 ? -1 : 1;
+        t_last_trigger_.at(ie) = t_trigger;
     }
-    t_last_trigger_ = t_trigger;
 }
 
 void EventHandlingSimulator::handle_close_trigger_timepoints(
@@ -804,11 +818,19 @@ void EventHandlingSimulator::handle_close_trigger_timepoints(
 
 realtype EventHandlingSimulator::get_next_trigger_timepoint() const {
     auto const& explicit_roots = model_->get_explicit_roots();
-    auto const it
-        = explicit_roots.upper_bound(std::max(ws_->sol.t, t_last_trigger_));
-    return it != explicit_roots.end()
-               ? it->first
-               : std::numeric_limits<realtype>::infinity();
+    for (auto it = explicit_roots.upper_bound(ws_->sol.t);
+         it != explicit_roots.end(); ++it) {
+        // Events at trigger timepoints within roundoff after the current time
+        // are handled before these timepoints are reached. Skip those, unless
+        // an event assignment moved another event's trigger timepoint there.
+        auto const t_trigger = it->first;
+        if (std::ranges::any_of(it->second, [this, t_trigger](int const ie) {
+                return t_last_trigger_.at(ie) < t_trigger;
+            })) {
+            return t_trigger;
+        }
+    }
+    return std::numeric_limits<realtype>::infinity();
 }
 
 void EventHandlingSimulator::handle_datapoint(realtype t) {
