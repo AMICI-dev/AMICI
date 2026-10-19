@@ -55,7 +55,7 @@ def build_model_extension(
             f"--build-lib={package_dir}",
             # This is generally not required, but helps to reduce the path
             # length of intermediate build files, that may easily become
-            # problematic on Windows, due to its ridiculous 255-character path
+            # problematic on Windows, due to its 260-character path
             # length limit.
             f"--build-temp={package_dir / 'build'}",
         ]
