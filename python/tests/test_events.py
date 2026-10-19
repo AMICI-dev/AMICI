@@ -2194,6 +2194,66 @@ def test_simultaneous_events_heaviside_crossed_by_assignment(tempdir):
     )
 
 
+@skip_on_valgrind
+def test_trigger_time_values_after_secondary_event(tempdir):
+    """Sensitivities for an event using values from the trigger time, which
+    is executed after a secondary event was triggered."""
+    model_name = "test_trigger_time_values_after_secondary_event"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1; v = 0; w = 0
+        x' = -k * p * x
+        v' = 0
+        w' = 0
+        E1: at p * x < 0.9, priority=3, fromTrigger=false: x = x / 4
+        E2: at p * x < 0.9, priority=2, fromTrigger=true: v = v + 2 * p * x
+        E3: at x < 0.1, priority=1, fromTrigger=false: w = w + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_v", formula="v"),
+            MC("obs_w", formula="w"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 4, 9))
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    # E1 triggers E3, E2 uses the value of x before E1
+    assert_allclose(rdata.by_id("v")[-1], 2 * 0.9, rtol=1e-8)
+    assert_allclose(rdata.by_id("w")[-1], 1.0)
+
+    edata = ExpData(rdata, 1.0, 0.0)
+    # fixed offset, so that the gradient is non-zero
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert np.all(np.abs(rdata.sllh) > 0.05), sensi_meth
+        check_gradient(function, point, rdata.sllh, atol=1e-4).assert_success(
+            always_print=True
+        )
+
+
 def _event_output_problem(model, event_measurements):
     """Experimental data with measurements only for the event outputs."""
     nt = model.nt()

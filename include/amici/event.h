@@ -5,6 +5,7 @@
 #include "amici/model_state.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <list>
 #include <optional>
@@ -132,6 +133,11 @@ struct PendingEvent {
      * `state_at_trigger` is set and sensitivities are computed.
      */
     std::optional<AmiVector> xdot_at_trigger;
+    /**
+     * Index of the discontinuity that was reached at `state_at_trigger`, if
+     * `state_at_trigger` is set.
+     */
+    std::size_t trigger_disc_idx{0};
 };
 
 /**

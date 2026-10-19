@@ -567,6 +567,11 @@ void EventHandlingSimulator::handle_events(
             event_application->x_eval = x_eval;
             event_application->xdot_eval = xdot_eval;
             event_application->xdot_pre = xdot_pre;
+            if (state_at_trigger.has_value()) {
+                event_application->trigger_disc_offset = gsl::narrow<int>(
+                    result.discs.size() - 1 - pending_event.trigger_disc_idx
+                );
+            }
         }
 
         // Execute the event
@@ -756,7 +761,8 @@ void EventHandlingSimulator::queue_triggered_events() {
                             && (solver_->computing_fsa()
                                 || solver_->computing_asa())
                         ? std::optional<AmiVector>(ws_->xdot_at_trigger)
-                        : std::nullopt)}
+                        : std::nullopt),
+                 .trigger_disc_idx = result.discs.size() - 1}
             );
         }
     }

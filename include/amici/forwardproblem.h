@@ -61,6 +61,14 @@ struct EventApplication {
 
     /** State derivative after this event's own bolus (DAE only). */
     AmiVector dx_post;
+
+    /**
+     * How many discontinuities before the one this event belongs to is the
+     * one that was reached at `x_eval`. Non-zero for events using values
+     * from the trigger time that are executed after secondary events were
+     * triggered.
+     */
+    int trigger_disc_offset{0};
 };
 
 /**

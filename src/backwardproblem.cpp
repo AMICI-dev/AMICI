@@ -201,12 +201,28 @@ void EventHandlingBwdSimulator::handle_event_b(
     }
     AmiVector xB_at_trigger(ws_->xB_.size(), solver_->get_sun_context());
     xB_at_trigger.zero();
+    // Events of later discontinuities may use the state at which this one
+    // was reached.
+    if (!xB_at_trigger_earlier_.empty()) {
+        xB_at_trigger.copy(xB_at_trigger_earlier_.front());
+        xB_at_trigger_earlier_.erase(xB_at_trigger_earlier_.begin());
+    }
     for (auto const& application :
          std::ranges::reverse_view(disc.event_applications)) {
+        auto const offset = application.trigger_disc_offset;
+        Expects(offset >= 0);
+        while (gsl::narrow<int>(xB_at_trigger_earlier_.size()) < offset) {
+            xB_at_trigger_earlier_.emplace_back(
+                ws_->xB_.size(), solver_->get_sun_context()
+            );
+            xB_at_trigger_earlier_.back().zero();
+        }
         model_->add_adjoint_event_update(
-            ws_->xB_, ws_->xQB_, xB_at_trigger, stauB, application.ie, t_,
-            application.x_post, application.xdot_post, application.xdot_eval,
-            application.xdot_pre, application.x_eval, application.dx_post
+            ws_->xB_, ws_->xQB_,
+            offset == 0 ? xB_at_trigger : xB_at_trigger_earlier_.at(offset - 1),
+            stauB, application.ie, t_, application.x_post,
+            application.xdot_post, application.xdot_eval, application.xdot_pre,
+            application.x_eval, application.dx_post
         );
     }
     for (int i = 0; i < ws_->xB_.size(); ++i)
