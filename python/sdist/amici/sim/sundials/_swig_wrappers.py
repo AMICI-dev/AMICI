@@ -14,7 +14,6 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-import amici
 import amici._installation.amici as amici_swig
 from amici._installation.amici import (
     AmiciExpData,
@@ -333,7 +332,7 @@ def _Model__simulate(
 
 def restore_model(
     module_name: str, module_path: Path, settings: dict, checksum: str = None
-) -> amici.Model:
+) -> amici_swig.Model:
     """
     Recreate a model instance with given settings.
 

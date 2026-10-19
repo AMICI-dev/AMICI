@@ -8,7 +8,7 @@ import pandas as pd
 import petab.v1 as petab
 from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
-import amici
+from amici.sim.sundials import AmiciExpData, AmiciModel
 from amici.sim.sundials.petab.v1._conditions import (
     create_edatas,
     fill_in_parameters,
@@ -43,7 +43,7 @@ class PetabProblem:
     def __init__(
         self,
         petab_problem: petab.Problem,
-        amici_model: amici.Model | None = None,
+        amici_model: AmiciModel | None = None,
         problem_parameters: dict[str, float] | None = None,
         scaled_parameters: bool = False,
         simulation_conditions: pd.DataFrame | list[dict] = None,
@@ -153,7 +153,7 @@ class PetabProblem:
 
     def get_edata(
         self, condition_id: str, preequilibration_condition_id: str = None
-    ) -> amici.ExpData:
+    ) -> AmiciExpData:
         """Get ExpData object for a given condition.
 
         NOTE: If ``store_edatas=True`` was passed to the constructor and the
@@ -207,7 +207,7 @@ class PetabProblem:
 
     def _create_edata(
         self, condition_id: str, preequilibration_condition_id: str
-    ) -> amici.ExpData:
+    ) -> AmiciExpData:
         """Create ExpData object for a given condition.
 
         :param condition_id: PEtab condition ID
@@ -280,6 +280,6 @@ class PetabProblem:
         }
 
     @property
-    def model(self) -> amici.Model:
+    def model(self) -> AmiciModel:
         """AMICI model."""
         return self._amici_model
