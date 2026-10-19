@@ -433,6 +433,9 @@ class DEExporter:
                 and function not in ("deltaxB", "deltaqB")
                 and not (
                     (sym == "y" and "Jy" in function)
+                    # used for events triggered by event assignments,
+                    # even if `stau` is zero for all events
+                    or (sym == "stau" and function == "deltasx")
                     or (
                         sym in "w"
                         and "xdot" in function

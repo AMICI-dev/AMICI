@@ -1939,8 +1939,14 @@ class DEModel:
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
 
                 # need to check if equations are zero since we are using
-                # symbols
-                stau_is_zero = smart_is_zero_matrix(self.eq("stau")[ie])
+                # symbols.
+                # Events whose root function does not change between events
+                # are only triggered by other events' assignments, and take
+                # the event time sensitivity of the triggering event.
+                stau_is_zero = (
+                    smart_is_zero_matrix(self.eq("stau")[ie])
+                    and not self.eq("drootdt_total")[ie].is_zero
+                )
                 if not stau_is_zero and not xdot_is_zero:
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_pre"),
