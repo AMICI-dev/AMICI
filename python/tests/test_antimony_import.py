@@ -43,3 +43,18 @@ def test_antimony_example(tempdir):
     amici_solver = amici_model.create_solver()
     rdata = run_simulation(amici_model, amici_solver)
     assert rdata.status == AMICI_SUCCESS
+
+
+@skip_on_valgrind
+def test_long_model_name(tempdir):
+    """Models with long names can be compiled (Windows path length limit)."""
+    from amici import import_model_module
+    from amici.sim.sundials import AMICI_SUCCESS, run_simulation
+
+    module_name = "test_long_model_name_" + "x" * 40
+    antimony2amici(
+        "x = 1; x' = -x", model_name=module_name, output_dir=tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS

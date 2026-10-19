@@ -53,6 +53,13 @@ def get_extension() -> CMakeExtension:
             f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
+            # Avoid exceeding the Windows path length limit with long model
+            #  names (CMake>=4.2, ignored otherwise)
+            *(
+                ["-DCMAKE_INTERMEDIATE_DIR_STRATEGY=SHORT"]
+                if sys.platform == "win32"
+                else []
+            ),
         ],
         cmake_build_type="Debug" if debug_build else "Release",
     )
