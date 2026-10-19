@@ -2358,7 +2358,9 @@ def test_event_assignment_with_expressions(tempdir):
     v_expected = np.where(rdata.ts >= 1, p * np.exp(-k) + 1, 0)
     assert_allclose(rdata.by_id("v"), v_expected, rtol=1e-8)
 
-    edata = ExpData(rdata, 1.0, 0.0, 42)
+    edata = ExpData(rdata, 1.0, 0.0)
+    # fixed offset, so that the gradient is non-zero
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
     function, _ = run_simulation_to_function_and_derivative(
         amici_model=model,
         amici_solver=solver,
