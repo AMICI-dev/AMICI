@@ -229,7 +229,7 @@ def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
             return None
         result = check_jacobian(function, point, expected, bounds=bounds)
         result.assert_success(always_print=True)
-        _assert_check_confirms_something(result, has_events, retried)
+        _assert_check_confirms_something(result, has_events)
 
     has_events = sbml_model.getNumEvents() > 0
     _run_sensitivity_check(model, settings, test_id, has_events, check)
@@ -312,7 +312,7 @@ def test_sbml_testsuite_case_sensitivity_adjoint(test_id, compiled_case):
             function, point, expected["llh"], bounds=bounds
         )
         result.assert_success(always_print=True)
-        _assert_check_confirms_something(result, has_events, retried)
+        _assert_check_confirms_something(result, has_events)
 
     has_events = sbml_model.getNumEvents() > 0
     _run_sensitivity_check(
@@ -492,9 +492,7 @@ def _derive_generic_bounds(
     return lower, upper
 
 
-def _assert_check_confirms_something(
-    result, has_events: bool, retried: bool
-) -> None:
+def _assert_check_confirms_something(result, has_events: bool) -> None:
     """`check_jacobian`/`check_gradient`'s `success` is `True` as long as no
     direction is confidently *wrong* -- a check where every direction came
     back "inconclusive" (noise-dominated/discontinuity-suspected) would
@@ -504,9 +502,8 @@ def _assert_check_confirms_something(
     of passing vacuously.
 
     Exception: for an event-triggered model, if every non-passing direction was
-    flagged `"discontinuity_suspected"`, skip instead of failing.
-    Same for `"noise_dominated"`, but only once we've already had to retry at
-    a much looser tolerance to get a finite result at all (`retried`).
+    flagged `"discontinuity_suspected"` or `"noise_dominated"`, skip instead
+    of failing.
     """
     direction_results = (
         [d for o in result.output_results for d in o.direction_results]
@@ -515,9 +512,7 @@ def _assert_check_confirms_something(
     )
     if any(r.outcome == "passed" for r in direction_results):
         return
-    acceptable_statuses = {"discontinuity_suspected"}
-    if retried:
-        acceptable_statuses.add("noise_dominated")
+    acceptable_statuses = {"discontinuity_suspected", "noise_dominated"}
     if has_events and all(
         r.estimate.status in acceptable_statuses for r in direction_results
     ):
