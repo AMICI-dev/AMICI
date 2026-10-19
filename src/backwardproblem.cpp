@@ -192,18 +192,18 @@ void EventHandlingBwdSimulator::handle_event_b(
 
         model_->add_adjoint_quadrature_event_update(
             ws_->xQB_, ie, t_, application.x_post, ws_->xB_,
-            application.xdot_post, application.xdot_pre, application.x_pre,
+            application.xdot_post, application.xdot_eval, application.x_eval,
             application.dx_post
         );
         model_->add_adjoint_state_event_update(
             ws_->xB_, ie, t_, application.x_post, application.xdot_post,
-            application.xdot_pre, application.x_pre, application.dx_post
+            application.xdot_eval, application.x_eval, application.dx_post
         );
     }
 
-    // Event outputs were evaluated at the pre-event state, also for events
-    // without state updates and for the events filled in at the last
-    // timepoint.
+    // Event outputs were evaluated at the state at which the discontinuity
+    // was reached, also for events without state updates and for the events
+    // filled in at the last timepoint.
     for (int ie = 0; ie < model_->ne; ie++) {
         if (disc.root_info[ie] != 1)
             continue;
@@ -221,10 +221,10 @@ void EventHandlingBwdSimulator::handle_event_b(
         }
     }
 
-    // apply pre-event state
+    // restore the state at which the discontinuity was reached
     auto state = model_->get_model_state();
-    state.h = disc.h_pre;
-    state.total_cl = disc.total_cl_pre;
+    state.h = disc.h_at_trigger;
+    state.total_cl = disc.total_cl_at_trigger;
     model_->set_model_state(state);
 }
 

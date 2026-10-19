@@ -134,7 +134,7 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_ALL_P_SYMS = p
         TPL_TCL_SYMS = tcl
         # FIXME: workaround until state from event time is properly passed
-        TPL_X_OLD_SYMS = y
+        TPL_X_EVAL_SYMS = y
 
         TPL_DELTAX_EQ
 

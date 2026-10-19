@@ -202,8 +202,8 @@ void AbstractModel::fdrzdx(
 void AbstractModel::fdeltax(
     realtype* /*deltax*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    int const /*ie*/, realtype const* /*xdot*/, realtype const* /*xdot_old*/,
-    realtype const* /*x_old*/
+    int const /*ie*/, realtype const* /*xdot*/, realtype const* /*xdot_eval*/,
+    realtype const* /*x_eval*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -216,9 +216,9 @@ void AbstractModel::fdeltasx(
     realtype* /*deltasx*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, int const /*ip*/, int const /*ie*/,
-    realtype const* /*xdot*/, realtype const* /*xdot_old*/,
+    realtype const* /*xdot*/, realtype const* /*xdot_eval*/,
     realtype const* /*sx*/, realtype const* /*stau*/, realtype const* /*tcl*/,
-    realtype const* /*x_old*/
+    realtype const* /*x_eval*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -231,8 +231,8 @@ void AbstractModel::fdeltaxB(
     realtype* /*deltaxB*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, realtype const* /*dx*/, int const /*ie*/,
-    realtype const* /*xdot*/, realtype const* /*xdot_old*/,
-    realtype const* /*x_old*/, realtype const* /*xB*/, realtype const* /*tcl*/
+    realtype const* /*xdot*/, realtype const* /*xdot_eval*/,
+    realtype const* /*x_eval*/, realtype const* /*xB*/, realtype const* /*tcl*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -245,8 +245,8 @@ void AbstractModel::fdeltaqB(
     realtype* /*deltaqB*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, realtype const* /*dx*/, int const /*ip*/,
-    int const /*ie*/, realtype const* /*xdot*/, realtype const* /*xdot_old*/,
-    realtype const* /*x_old*/, realtype const* /*xB*/
+    int const /*ie*/, realtype const* /*xdot*/, realtype const* /*xdot_eval*/,
+    realtype const* /*x_eval*/, realtype const* /*xB*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "

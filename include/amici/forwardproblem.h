@@ -17,25 +17,30 @@ class Solver;
 class SteadyStateProblem;
 
 /**
- * @brief Pre-/post-application state snapshot for a single event within a
+ * @brief States around the application of a single event within a
  * `Discontinuity`.
  *
  * A `Discontinuity` can represent several events that trigger
  * simultaneously (a single time point may satisfy more than one event's
  * trigger condition). Each such event is applied in turn (e.g., in order
  * of priority), and -- for adjoint sensitivities -- `deltaxB`/`deltaqB`
- * need *this* event's own pre-/post-application state, not the
- * pre-/post-state of the whole simultaneous-event group.
+ * need the states around *this* event's application, not those of the
+ * whole simultaneous-event group.
  */
 struct EventApplication {
     /** Index of the applied event. */
     int ie{0};
 
-    /** State immediately before this event's own bolus was applied. */
-    AmiVector x_pre;
+    /**
+     * State at which this event's assignments were evaluated: for events
+     * using values from the trigger time, the state at which the
+     * discontinuity in which the event triggered was reached, otherwise the
+     * state right before this event was applied.
+     */
+    AmiVector x_eval;
 
-    /** `xdot` evaluated at `x_pre`. */
-    AmiVector xdot_pre;
+    /** `xdot` evaluated at `x_eval`. */
+    AmiVector xdot_eval;
 
     /** State immediately after this event's own bolus was applied. */
     AmiVector x_post;
@@ -49,6 +54,18 @@ struct EventApplication {
 
 /**
  * @brief Data structure to store some state of a simulation at a discontinuity.
+ *
+ * Naming of the states around a discontinuity:
+ * - `*_at_trigger`: the state at which the discontinuity was reached, i.e.,
+ *   when its events triggered, before the Heaviside variables were updated
+ *   and before any event was applied. For events triggered by the
+ *   assignments of other events, this is the state right after those
+ *   assignments.
+ * - `*_pre`/`*_post`: the state right before/after the assignments of a
+ *   single event were applied (see `EventApplication`).
+ * - `*_eval`: the state at which the assignments of an event are evaluated:
+ *   `*_at_trigger` for events using values from the trigger time, otherwise
+ *   `*_pre`.
  */
 struct Discontinuity {
     /**
@@ -56,19 +73,20 @@ struct Discontinuity {
      *
      * @param time
      * @param root_info
-     * @param h_pre
-     * @param total_cl_pre
+     * @param h_at_trigger
+     * @param total_cl_at_trigger
      */
     explicit Discontinuity(
         realtype const time,
         std::vector<int> const& root_info = std::vector<int>(),
-        std::vector<realtype> const& h_pre = std::vector<realtype>(),
-        std::vector<realtype> const& total_cl_pre = std::vector<realtype>(0)
+        std::vector<realtype> const& h_at_trigger = std::vector<realtype>(),
+        std::vector<realtype> const& total_cl_at_trigger
+        = std::vector<realtype>(0)
     )
         : time(time)
         , root_info(root_info)
-        , h_pre(h_pre)
-        , total_cl_pre(total_cl_pre) {}
+        , h_at_trigger(h_at_trigger)
+        , total_cl_at_trigger(total_cl_at_trigger) {}
 
     /** Time of discontinuity. */
     realtype time;
@@ -83,14 +101,14 @@ struct Discontinuity {
     std::vector<int> root_info;
 
     /**
-     * Flag indicating whether a certain Heaviside function should be active or
-     * not, pre-event value (dimension: `ne`)
+     * Heaviside variables at which the discontinuity was reached, i.e.,
+     * before they were updated (dimension: `ne`)
      */
-    std::vector<realtype> h_pre;
+    std::vector<realtype> h_at_trigger;
 
-    /** Total abundances for conservation laws
-     (dimension: `nx_rdata - nx_solver`) */
-    std::vector<realtype> total_cl_pre;
+    /** Total abundances for conservation laws at which the discontinuity was
+     reached (dimension: `nx_rdata - nx_solver`) */
+    std::vector<realtype> total_cl_at_trigger;
 
     /**
      * @brief Per-event pre-/post-bolus state snapshots, one entry per
@@ -129,9 +147,8 @@ struct FwdSimWorkspace {
         gsl::not_null<Model*> const& model, gsl::not_null<Solver*> solver
     )
         : sol(NAN, model->nx_solver, model->nplist(), solver->get_sun_context())
-        , x_old(model->nx_solver, solver->get_sun_context())
         , xdot(model->nx_solver, solver->get_sun_context())
-        , xdot_old(model->nx_solver, solver->get_sun_context())
+        , xdot_at_trigger(model->nx_solver, solver->get_sun_context())
         , sdx(model->nx_solver, model->nplist(), solver->get_sun_context())
         , stau(model->nplist())
         , roots_found(model->ne, 0)
@@ -144,14 +161,12 @@ struct FwdSimWorkspace {
     /** Current solution state */
     SolutionState sol;
 
-    /** old state vector (dimension: nx_solver) */
-    AmiVector x_old;
-
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot;
 
-    /** old time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_old;
+    /** time derivative at which the latest discontinuity was reached,
+     * before the Heaviside variables were updated (dimension: nx_solver) */
+    AmiVector xdot_at_trigger;
 
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
@@ -349,12 +364,15 @@ class EventHandlingSimulator {
 
   private:
     /**
-     * @brief Store pre-event model state
+     * @brief Store the state at which the latest discontinuity was reached.
+     *
+     * For forward sensitivities, this also computes the event time
+     * sensitivity.
      *
      * @param seflag Secondary event flag
      * @param initial_event initial event flag
      */
-    void store_pre_event_state(bool seflag, bool initial_event);
+    void store_state_at_trigger(bool seflag, bool initial_event);
 
     /**
      * @brief Check for, and if applicable, handle any secondary events
@@ -436,8 +454,8 @@ class EventHandlingSimulator {
         auto& disc = result.discs.emplace_back(ws_->sol.t);
         if (solver_->computing_asa()) {
             // no event is applied, the backward problem keeps the state
-            disc.h_pre = model_->get_model_state().h;
-            disc.total_cl_pre = model_->get_model_state().total_cl;
+            disc.h_at_trigger = model_->get_model_state().h;
+            disc.total_cl_at_trigger = model_->get_model_state().total_cl;
         }
         store_event(edata);
     }

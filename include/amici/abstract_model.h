@@ -528,19 +528,19 @@ class AbstractModel {
      *
      * @param deltax state update
      * @param t current time
-     * @param x current state
+     * @param x state before the event
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param x_old pre-event state
+     * @param xdot_eval model right hand side at `x_eval`
+     * @param x_eval state at which the event assignments are evaluated
      */
     virtual void fdeltax(
         realtype* deltax, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, int ie, realtype const* xdot,
-        realtype const* xdot_old, realtype const* x_old
+        realtype const* xdot_eval, realtype const* x_eval
     );
 
     /**
@@ -548,7 +548,7 @@ class AbstractModel {
      *
      * @param deltasx sensitivity update
      * @param t current time
-     * @param x current state
+     * @param x state after the event
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
@@ -556,17 +556,17 @@ class AbstractModel {
      * @param ip sensitivity index
      * @param ie event index
      * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param sx state sensitivity
+     * @param xdot_eval model right hand side at `x_eval`
+     * @param sx state sensitivity at `x_eval`
      * @param stau event-time sensitivity
      * @param tcl total abundances for conservation laws
-     * @param x_old pre-event state
+     * @param x_eval state at which the event assignments are evaluated
      */
     virtual void fdeltasx(
         realtype* deltasx, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w, int ip, int ie,
-        realtype const* xdot, realtype const* xdot_old, realtype const* sx,
-        realtype const* stau, realtype const* tcl, realtype const* x_old
+        realtype const* xdot, realtype const* xdot_eval, realtype const* sx,
+        realtype const* stau, realtype const* tcl, realtype const* x_eval
     );
 
     /**
@@ -574,7 +574,7 @@ class AbstractModel {
      *
      * @param deltaxB adjoint state update
      * @param t current time
-     * @param x current state
+     * @param x state after the event
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
@@ -582,8 +582,8 @@ class AbstractModel {
      * @param dx time derivative of state (DAE only)
      * @param ie event index
      * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param x_old pre-event state
+     * @param xdot_eval model right hand side at `x_eval`
+     * @param x_eval state at which the event assignments are evaluated
      * @param xB current adjoint state
      * @param tcl total abundances for conservation laws
      */
@@ -591,7 +591,7 @@ class AbstractModel {
         realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
         realtype const* dx, int ie, realtype const* xdot,
-        realtype const* xdot_old, realtype const* x_old, realtype const* xB,
+        realtype const* xdot_eval, realtype const* x_eval, realtype const* xB,
         realtype const* tcl
     );
 
@@ -600,7 +600,7 @@ class AbstractModel {
      *
      * @param deltaqB sensitivity update
      * @param t current time
-     * @param x current state
+     * @param x state after the event
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
@@ -609,15 +609,15 @@ class AbstractModel {
      * @param ip sensitivity index
      * @param ie event index
      * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     * @param x_old pre-event state
+     * @param xdot_eval model right hand side at `x_eval`
+     * @param x_eval state at which the event assignments are evaluated
      * @param xB adjoint state
      */
     virtual void fdeltaqB(
         realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
         realtype const* dx, int ip, int ie, realtype const* xdot,
-        realtype const* xdot_old, realtype const* x_old, realtype const* xB
+        realtype const* xdot_eval, realtype const* x_eval, realtype const* xB
     );
 
     /**
