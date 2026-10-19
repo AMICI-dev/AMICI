@@ -557,7 +557,9 @@ class AbstractModel {
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_eval model right hand side at `x_eval`
-     * @param sx state sensitivity at `x_eval`
+     * @param xdot_pre model right hand side right before this event
+     * @param sx state sensitivity right before this event
+     * @param sx_eval state sensitivity at `x_eval`
      * @param stau event-time sensitivity
      * @param tcl total abundances for conservation laws
      * @param x_eval state at which the event assignments are evaluated
@@ -565,7 +567,8 @@ class AbstractModel {
     virtual void fdeltasx(
         realtype* deltasx, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w, int ip, int ie,
-        realtype const* xdot, realtype const* xdot_eval, realtype const* sx,
+        realtype const* xdot, realtype const* xdot_eval,
+        realtype const* xdot_pre, realtype const* sx, realtype const* sx_eval,
         realtype const* stau, realtype const* tcl, realtype const* x_eval
     );
 

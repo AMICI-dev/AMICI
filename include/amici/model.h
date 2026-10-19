@@ -1490,13 +1490,19 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Update state sensitivity after event.
      *
-     * @param sx State sensitivity before the event (will be overwritten)
+     * For simultaneous events, the state right before this event may differ
+     * from the state at which the event assignments are evaluated
+     * (`x_eval`).
+     *
+     * @param sx State sensitivity right before this event (will be
+     * overwritten)
      * @param ie Event index
      * @param t Current timepoint
      * @param x State after the event
      * @param x_eval State at which the event assignments are evaluated
      * @param xdot Time derivative of the state after the event
      * @param xdot_eval Time derivative of the state at `x_eval`
+     * @param xdot_pre Time derivative of the state right before this event
      * @param sx_eval State sensitivity at `x_eval`
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
@@ -1504,8 +1510,8 @@ class Model : public AbstractModel, public ModelDimensions {
     void add_state_sensitivity_event_update(
         AmiVectorArray& sx, int ie, realtype t, AmiVector const& x,
         AmiVector const& x_eval, AmiVector const& xdot,
-        AmiVector const& xdot_eval, AmiVectorArray const& sx_eval,
-        std::vector<realtype> const& stau
+        AmiVector const& xdot_eval, AmiVector const& xdot_pre,
+        AmiVectorArray const& sx_eval, std::vector<realtype> const& stau
     );
 
     /**

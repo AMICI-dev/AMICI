@@ -307,7 +307,8 @@ functions = {
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const int ip, const int ie, "
         "const realtype *xdot, const realtype *xdot_eval, "
-        "const realtype *sx, const realtype *stau, const realtype *tcl, "
+        "const realtype *xdot_pre, const realtype *sx, "
+        "const realtype *sx_eval, const realtype *stau, const realtype *tcl, "
         "const realtype *x_eval"
     ),
     "deltaxB": _FunctionInfo(
@@ -361,6 +362,7 @@ functions = {
         assume_pow_positivity=True,
     ),
     "xdot_eval": _FunctionInfo(generate_body=False),
+    "xdot_pre": _FunctionInfo(generate_body=False),
     "y": _FunctionInfo(
         "realtype *y, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, "
