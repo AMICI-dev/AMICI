@@ -73,6 +73,9 @@ deltaqB.cpp
 deltasx.cpp 
 deltax.cpp 
 deltaxB.cpp 
+deltaxB_at_trigger.cpp 
+dtaudp.cpp 
+dtaudx.cpp 
 dxdotdp_explicit.cpp 
 dxdotdx_explicit.cpp 
 dydx.cpp 
@@ -82,6 +85,7 @@ model_nested_events_py.h
 root.cpp 
 sigmay.cpp 
 stau.cpp 
+stauB.cpp 
 sx0.cpp 
 wrapfunctions.cpp 
 wrapfunctions.h 

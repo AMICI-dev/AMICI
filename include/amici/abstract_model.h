@@ -575,31 +575,88 @@ class AbstractModel {
     /**
      * @brief Model-specific implementation of fdeltaxB
      *
+     * Adjoint state update for the state sensitivity update w.r.t. the
+     * state right before the event, without event-time terms
+     * (see `fstauB`).
+     *
      * @param deltaxB adjoint state update
      * @param t current time
      * @param x state after the event
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
-     * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_eval model right hand side at `x_eval`
      * @param x_eval state at which the event assignments are evaluated
      * @param xB current adjoint state
      * @param tcl total abundances for conservation laws
      */
     virtual void fdeltaxB(
         realtype* deltaxB, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, int ie, realtype const* xdot,
-        realtype const* xdot_eval, realtype const* x_eval, realtype const* xB,
+        realtype const* k, realtype const* h, realtype const* dx, int ie,
+        realtype const* x_eval, realtype const* xB, realtype const* tcl
+    );
+
+    /**
+     * @brief Model-specific implementation of fdeltaxB_at_trigger
+     *
+     * Adjoint state update for the state sensitivity update w.r.t. the
+     * state at the trigger time, for events using values from the trigger
+     * time, without event-time terms (see `fstauB`).
+     *
+     * @param deltaxB_at_trigger adjoint state update
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param dx time derivative of state (DAE only)
+     * @param ie event index
+     * @param x_eval state at which the event assignments are evaluated
+     * @param xB current adjoint state
+     * @param tcl total abundances for conservation laws
+     */
+    virtual void fdeltaxB_at_trigger(
+        realtype* deltaxB_at_trigger, realtype t, realtype const* x,
+        realtype const* p, realtype const* k, realtype const* h,
+        realtype const* dx, int ie, realtype const* x_eval, realtype const* xB,
+        realtype const* tcl
+    );
+
+    /**
+     * @brief Model-specific implementation of fstauB
+     *
+     * Adjoint state times the derivative of the state sensitivity update
+     * w.r.t. the event-time sensitivity.
+     *
+     * @param stauB adjoint of the event-time sensitivity
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param dx time derivative of state (DAE only)
+     * @param ie event index
+     * @param xdot model right hand side after the event
+     * @param xdot_eval model right hand side at `x_eval`
+     * @param xdot_pre model right hand side right before the event
+     * @param x_eval state at which the event assignments are evaluated
+     * @param xB current adjoint state
+     * @param tcl total abundances for conservation laws
+     */
+    virtual void fstauB(
+        realtype* stauB, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* dx, int ie,
+        realtype const* xdot, realtype const* xdot_eval,
+        realtype const* xdot_pre, realtype const* x_eval, realtype const* xB,
         realtype const* tcl
     );
 
     /**
      * @brief Model-specific implementation of fdeltaqB
+     *
+     * Adjoint quadrature update for the explicit parameter dependence of the
+     * state update.
      *
      * @param deltaqB sensitivity update
      * @param t current time
@@ -607,20 +664,59 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
-     * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param ip sensitivity index
      * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_eval model right hand side at `x_eval`
      * @param x_eval state at which the event assignments are evaluated
      * @param xB adjoint state
      */
     virtual void fdeltaqB(
         realtype* deltaqB, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* dx, int ip,
+        int ie, realtype const* x_eval, realtype const* xB
+    );
+
+    /**
+     * @brief Model-specific implementation of fdtaudx
+     *
+     * @param dtaudx derivative of the event time w.r.t. the state, with the
+     * sign convention of `fstau`
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param w vector with helper variables
+     * @param dx time derivative of state (DAE only)
+     * @param tcl total abundances for conservation laws
+     * @param ie event index
+     */
+    virtual void fdtaudx(
+        realtype* dtaudx, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, int ip, int ie, realtype const* xdot,
-        realtype const* xdot_eval, realtype const* x_eval, realtype const* xB
+        realtype const* dx, realtype const* tcl, int ie
+    );
+
+    /**
+     * @brief Model-specific implementation of fdtaudp
+     *
+     * @param dtaudp derivative of the event time w.r.t. the parameter, with
+     * the sign convention of `fstau`
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param w vector with helper variables
+     * @param dx time derivative of state (DAE only)
+     * @param tcl total abundances for conservation laws
+     * @param ip sensitivity index
+     * @param ie event index
+     */
+    virtual void fdtaudp(
+        realtype* dtaudp, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* dx, realtype const* tcl, int ip, int ie
     );
 
     /**

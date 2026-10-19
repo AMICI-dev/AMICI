@@ -79,6 +79,7 @@ model_calvetti_py.cpp
 model_calvetti_py.h 
 root.cpp 
 sigmay.cpp 
+stauB.cpp 
 w.cpp 
 wrapfunctions.cpp 
 wrapfunctions.h 

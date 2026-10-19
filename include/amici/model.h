@@ -91,6 +91,10 @@ enum class ModelQuantity {
     dJzdx,
     drzdp,
     drzdx,
+    deltaxB_at_trigger,
+    stauB,
+    dtaudx,
+    dtaudp,
 };
 
 extern std::map<ModelQuantity, std::string> const model_quantity_to_str;
@@ -167,6 +171,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdeltasx;
     using AbstractModel::fdeltax;
     using AbstractModel::fdeltaxB;
+    using AbstractModel::fdeltaxB_at_trigger;
     using AbstractModel::fdJrzdrz;
     using AbstractModel::fdJrzdsigmaz;
     using AbstractModel::fdJydsigmay;
@@ -180,6 +185,8 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdsigmaydp;
     using AbstractModel::fdsigmaydy;
     using AbstractModel::fdsigmazdp;
+    using AbstractModel::fdtaudp;
+    using AbstractModel::fdtaudx;
     using AbstractModel::fdtotal_cldp;
     using AbstractModel::fdtotal_cldx_rdata;
     using AbstractModel::fdtotal_cldx_rdata_colptrs;
@@ -212,6 +219,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fsigmaz;
     using AbstractModel::fsrz;
     using AbstractModel::fstau;
+    using AbstractModel::fstauB;
     using AbstractModel::fsx0;
     using AbstractModel::fsx0_fixedParameters;
     using AbstractModel::fsz;
@@ -1515,40 +1523,56 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
-     * @brief Update adjoint state after event.
+     * @brief Update adjoint state and quadratures for undoing one event.
      *
-     * @param xB Current adjoint state (will be overwritten)
+     * Adjoint of `add_state_sensitivity_event_update`, except for the terms
+     * depending on the event-time sensitivity, which are accumulated in
+     * `stauB` and applied by `add_adjoint_event_time_update` at the trigger
+     * state. All updates are computed from the current `xB`.
+     *
+     * @param xB Adjoint state after the event, updated to the adjoint state
+     * right before the event
+     * @param xQB Adjoint quadratures (will be updated)
+     * @param xB_at_trigger Accumulated adjoint state at the trigger time for
+     * events using values from the trigger time (will be updated)
+     * @param stauB Accumulated adjoint of the event-time sensitivity
+     * (dimension `nJ`, will be updated)
      * @param ie Event index
      * @param t Current timepoint
      * @param x State after the event
      * @param xdot Time derivative of the state after the event
      * @param xdot_eval Time derivative of the state at `x_eval`
+     * @param xdot_pre Time derivative of the state right before the event
      * @param x_eval State at which the event assignments are evaluated
      * @param dx Derivative of the state after the event (DAE only)
      */
-    void add_adjoint_state_event_update(
-        AmiVector& xB, int ie, realtype t, AmiVector const& x,
+    void add_adjoint_event_update(
+        AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
+        std::vector<realtype>& stauB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_eval,
-        AmiVector const& x_eval, AmiVector const& dx
+        AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx
     );
 
     /**
-     * @brief Update adjoint quadratures after event.
+     * @brief Apply the event-time terms of the adjoint event updates.
      *
-     * @param xQB Current quadrature state (will be overwritten)
-     * @param ie Event index
-     * @param t Current timepoint
-     * @param x State after the event
-     * @param xB Current adjoint state
-     * @param xdot Time derivative of the state after the event
-     * @param xdot_eval Time derivative of the state at `x_eval`
-     * @param x_eval State at which the event assignments are evaluated
-     * @param dx Derivative of the state after the event (DAE only)
+     * Adds `stauB` times the state and parameter derivatives of the event
+     * time to the adjoint state and quadratures. The model state (e.g.,
+     * Heaviside variables) has to be the one at the trigger state.
+     *
+     * @param xB Adjoint state at the trigger state (will be updated)
+     * @param xQB Adjoint quadratures (will be updated)
+     * @param stauB Accumulated adjoint of the event-time sensitivity
+     * (dimension `nJ`)
+     * @param ie Index of the event that defines the event time
+     * @param t Event time
+     * @param x State at which the discontinuity was reached
+     * @param dx Derivative of the state at which the discontinuity was
+     * reached (DAE only)
      */
-    void add_adjoint_quadrature_event_update(
-        AmiVector& xQB, int ie, realtype t, AmiVector const& x,
-        AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_eval,
-        AmiVector const& x_eval, AmiVector const& dx
+    void add_adjoint_event_time_update(
+        AmiVector& xB, AmiVector& xQB, std::vector<realtype> const& stauB,
+        int ie, realtype t, AmiVector const& x, AmiVector const& dx
     );
 
     /**

@@ -430,7 +430,8 @@ class DEExporter:
 
             if (
                 iszero
-                and function not in ("deltaxB", "deltaqB")
+                and function
+                not in ("deltaxB", "deltaxB_at_trigger", "stauB", "deltaqB")
                 and not (
                     (sym == "y" and "Jy" in function)
                     # used for events triggered by event assignments,

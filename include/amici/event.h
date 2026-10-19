@@ -129,7 +129,7 @@ struct PendingEvent {
     std::optional<SimulationState> state_at_trigger;
     /**
      * The time derivative of the state at `state_at_trigger`, if
-     * `state_at_trigger` is set and forward sensitivities are computed.
+     * `state_at_trigger` is set and sensitivities are computed.
      */
     std::optional<AmiVector> xdot_at_trigger;
 };

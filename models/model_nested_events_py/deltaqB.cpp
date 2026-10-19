@@ -6,9 +6,7 @@
 namespace amici {
 namespace model_model_nested_events_py {
 
-void deltaqB_model_nested_events_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval, const realtype *xB){
-    const realtype dVirusdt_ = xdot[0];
-    const realtype xdot_eval0_ = xdot_eval[0];
+void deltaqB_model_nested_events_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB){
     const realtype xB0_ = xB[0];
 
     switch(ie) {
@@ -16,9 +14,6 @@ void deltaqB_model_nested_events_py(realtype *deltaqB, const realtype t, const r
             switch(ip) {
                 case 1:
                     deltaqB[0] = xB0_;
-                    break;
-                case 2:
-                    deltaqB[0] = xB0_*(-dVirusdt_ + xdot_eval0_);
                     break;
             }
             break;

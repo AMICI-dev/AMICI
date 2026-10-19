@@ -477,6 +477,12 @@ void EventHandlingSimulator::handle_events(
               // function
               result.discs.emplace_back(ws_->sol.t, ws_->roots_found);
               ws_->rval_tmp = ws_->rootvals;
+              if (solver_->computing_asa()) {
+                  result.discs.back().x_at_trigger = ws_->sol.x;
+                  result.discs.back().dx_at_trigger = ws_->sol.dx;
+                  result.discs.back().initial_event = initial_event;
+                  result.discs.back().secondary_event = seflag;
+              }
 
               if (model_->nz > 0)
                   store_event(edata);
@@ -506,7 +512,9 @@ void EventHandlingSimulator::handle_events(
                         : std::nullopt),
                  // computed before the Heaviside variables were updated
                  .xdot_at_trigger
-                 = (uses_trigger_values && solver_->computing_fsa()
+                 = (uses_trigger_values
+                            && (solver_->computing_fsa()
+                                || solver_->computing_asa())
                         ? std::optional<AmiVector>(ws_->xdot_at_trigger)
                         : std::nullopt)}
             );
@@ -517,7 +525,7 @@ void EventHandlingSimulator::handle_events(
     // i.e., the Heaviside variables were just updated.
     bool first_since_discontinuity = true;
     // Time derivative of the state right before the current event, only
-    // computed for forward sensitivities
+    // computed for sensitivities
     AmiVector xdot_pre(ws_->xdot_at_trigger);
 
     while (!ws_->pending_events.empty()) {
@@ -548,7 +556,7 @@ void EventHandlingSimulator::handle_events(
                                      ? state_at_trigger->sol.x
                                      : ws_->sol.x;
 
-        if (solver_->computing_fsa()) {
+        if (solver_->computing_fsa() || solver_->computing_asa()) {
             if (first_since_discontinuity) {
                 // `update_heaviside` already flipped `h`, but the jump in
                 // the right-hand side due to the Heaviside update is part of
@@ -562,6 +570,15 @@ void EventHandlingSimulator::handle_events(
             }
         }
         first_since_discontinuity = false;
+        // `xdot_at_trigger` is only set if sensitivities are computed
+        gsl_AssertDebug(
+            pending_event.xdot_at_trigger.has_value()
+            || !state_at_trigger.has_value()
+            || !(solver_->computing_fsa() || solver_->computing_asa())
+        );
+        AmiVector const& xdot_eval = pending_event.xdot_at_trigger.has_value()
+                                         ? *pending_event.xdot_at_trigger
+                                         : xdot_pre;
 
         // For adjoint sensitivities, `deltaxB`/`deltaqB` need the states
         // around this event's application.
@@ -570,20 +587,8 @@ void EventHandlingSimulator::handle_events(
             event_application.emplace();
             event_application->ie = ie;
             event_application->x_eval = x_eval;
-            if (result.discs.back().event_applications.empty()) {
-                // First event applied for this discontinuity:
-                // `update_heaviside` above already flipped `h` for the *whole*
-                // simultaneous-event group atomically, before any of its events
-                // were applied, so a fresh `fxdot` call here would incorrectly
-                // use post-flip `h` for what must be a pre-flip rate.
-                // `ws_->xdot_at_trigger` was already computed (in
-                // `store_state_at_trigger`) at this same pre-flip, pre-cascade
-                // state, so reuse it instead of recomputing.
-                event_application->xdot_eval = ws_->xdot_at_trigger;
-            } else {
-                model_->fdxdt(ws_->sol.t, x_eval, ws_->sol.dx, ws_->xdot);
-                event_application->xdot_eval = ws_->xdot;
-            }
+            event_application->xdot_eval = xdot_eval;
+            event_application->xdot_pre = xdot_pre;
         }
 
         // Execute the event
@@ -608,9 +613,7 @@ void EventHandlingSimulator::handle_events(
             // right before this event if other events were applied before.
             model_->add_state_sensitivity_event_update(
                 ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_eval, ws_->xdot,
-                state_at_trigger.has_value() ? *pending_event.xdot_at_trigger
-                                             : xdot_pre,
-                xdot_pre,
+                xdot_eval, xdot_pre,
                 state_at_trigger.has_value() ? state_at_trigger->sol.sx
                                              : ws_->sol.sx,
                 ws_->stau
@@ -770,7 +773,9 @@ int EventHandlingSimulator::detect_secondary_events() {
                     auto const uses_trigger_values
                         = event.uses_values_from_trigger_time();
                     std::optional<AmiVector> xdot_at_trigger;
-                    if (uses_trigger_values && solver_->computing_fsa()) {
+                    if (uses_trigger_values
+                        && (solver_->computing_fsa()
+                            || solver_->computing_asa())) {
                         // the right-hand side after the event that
                         // triggered this one, computed in `handle_events`
                         // (the Heaviside variables are not updated yet)

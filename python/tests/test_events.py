@@ -1119,7 +1119,10 @@ def test_switches_triggered_by_event_assignments(tempdir):
         edata = ExpData(model)
         edata.set_measurements(measurements)
         edata.set_noise_scales(np.ones_like(measurements))
-        for sens_method in (SensitivityMethod.forward,):
+        for sens_method in (
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
             solver = model.create_solver()
             solver.set_sensitivity_order(SensitivityOrder.first)
             solver.set_sensitivity_method(sens_method)
@@ -1136,6 +1139,45 @@ def test_switches_triggered_by_event_assignments(tempdir):
             assert_allclose(
                 rdata.sllh[ik], expected_sllh, rtol=1e-6, err_msg=err_msg
             )
+
+    # Simultaneous events that each flip a switch
+    model_name = "test_switches_simultaneous"
+    antimony2amici(
+        """
+        k = 1.5
+        x = 0; x' = k
+        s = 0; u = 0
+        z = 0; z' = piecewise(1, s >= 1, 0) + piecewise(3, u >= 1, 0)
+        Ea: at x >= 1, priority=2: s = 1
+        Eb: at x >= 1, priority=1: u = 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_z", formula="z")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([t_end])
+    y = np.array([4 * (t_end - t1)])
+    dy_dk = np.array([4 / k**2])
+    measurements = np.array([0.0])
+    expected_sllh = -np.sum((y - measurements) * dy_dk)
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.y[-1], y, rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1, 0], dy_dk, rtol=1e-6)
+        assert_allclose(
+            rdata.sllh[0], expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
 
     # Only fixed-time events, i.e., the event time sensitivities are zero
     model_name = "test_switches_triggered_by_event_assignments_fixed"
@@ -2012,22 +2054,32 @@ def test_root_after_reinit_ignores_all_simultaneous_events(tempdir):
 
 
 @skip_on_valgrind
-@pytest.mark.parametrize("from_trigger", [True, False])
+@pytest.mark.parametrize(
+    "from_trigger",
+    [(True, True), (False, False), (False, True), (True, False)],
+    ids=["true", "false", "false_true", "true_false"],
+)
 @pytest.mark.parametrize("e1_first", [True, False])
 def test_simultaneous_events_sensitivities(tempdir, from_trigger, e1_first):
     """Sensitivities for simultaneous events, where the earlier one changes a
-    state used by the later one."""
-    model_name = f"test_simultaneous_events_{int(from_trigger)}{int(e1_first)}"
+    state used by the later one.
+
+    `from_trigger` is the `fromTrigger` attribute of `E1` and `E2`.
+    """
+    ft1, ft2 = from_trigger
+    ft1_str, ft2_str = str(ft1).lower(), str(ft2).lower()
+    model_name = (
+        f"test_simultaneous_events_{int(ft1)}{int(ft2)}{int(e1_first)}"
+    )
     prio1, prio2 = (2, 1) if e1_first else (1, 2)
-    ft = str(from_trigger).lower()
     antimony2amici(
         f"""
         k = 0.5; p = 3
         x = 1; v = 0
         x' = -k * p * x
         v' = 0
-        E1: at p * x < 0.9, priority={prio1}, fromTrigger={ft}: x = x - 0.05
-        E2: at p * x < 0.9, priority={prio2}, fromTrigger={ft}: v = v + 2 * p * x
+        E1: at p * x < 0.9, priority={prio1}, fromTrigger={ft1_str}: x = 0.8 * x
+        E2: at p * x < 0.9, priority={prio2}, fromTrigger={ft2_str}: v = v + 2 * p * x
         """,
         model_name=model_name,
         output_dir=tempdir,
@@ -2046,7 +2098,7 @@ def test_simultaneous_events_sensitivities(tempdir, from_trigger, e1_first):
     assert rdata.status == AMICI_SUCCESS
     # E2 uses the value of x before E1, unless E1 is executed first and
     #  E2's assignment is evaluated at execution time
-    x_e2 = 0.9 / 3 - (0.05 if e1_first and not from_trigger else 0)
+    x_e2 = 0.9 / 3 * (0.8 if e1_first and not ft2 else 1)
     assert_allclose(rdata.by_id("v")[-1], 2 * 3 * x_e2, rtol=1e-8)
 
     edata = ExpData(rdata, 1.0, 0.0)
@@ -2060,14 +2112,85 @@ def test_simultaneous_events_sensitivities(tempdir, from_trigger, e1_first):
     )
     point = np.asarray(model.get_free_parameters())
     solver.set_sensitivity_order(SensitivityOrder.first)
-    solver.set_sensitivity_method(SensitivityMethod.forward)
-    rdata = run_simulation(model, solver, edata)
+    sllh = {}
+    for sensi_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert np.all(np.abs(rdata.sllh) > 0.1), sensi_meth
+        sllh[sensi_meth] = rdata.sllh
+        # Explicit tolerance: the auto-derived one is too loose here, as the
+        #  largest finite-difference steps cross the event.
+        check_gradient(function, point, rdata.sllh, atol=1e-4).assert_success(
+            always_print=True
+        )
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
+
+
+@skip_on_valgrind
+def test_simultaneous_events_heaviside_crossed_by_assignment(tempdir):
+    """Adjoint sensitivities for simultaneous events, where the assignment of
+    the first one crosses a `piecewise` switch before the second one is
+    executed.
+
+    The switch gets its own discontinuity, but shares the event time of the
+    triggering events.
+    """
+    model_name = "test_simultaneous_events_heaviside_crossed"
+    antimony2amici(
+        """
+        k = 0.5; p = 2.1
+        x = 1; y = 0; z = 0
+        x' = -k * x
+        y' = piecewise(1, x > 2, 0)
+        z' = 0
+        E1: at time > p, priority=2: x = x + 2
+        E2: at time > p, priority=1, fromTrigger=false: z = z + x
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_y", formula="y"),
+            MC("obs_z", formula="z"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 6, 13))
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
     assert rdata.status == AMICI_SUCCESS
-    assert np.all(np.abs(rdata.sllh) > 0.1)
-    # Explicit tolerance: the auto-derived one is too loose here, as the
-    #  largest finite-difference steps cross the event.
-    check_gradient(function, point, rdata.sllh, atol=1e-4).assert_success(
-        always_print=True
+    # the switch is on right after the events
+    assert rdata.by_id("y")[-1] > 0
+
+    edata = ExpData(rdata, 1.0, 0.0)
+    # fixed offset, so that the gradient is non-zero
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    sllh = {}
+    for sensi_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert np.all(np.abs(rdata.sllh) > 0.1), sensi_meth
+        sllh[sensi_meth] = rdata.sllh
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
     )
 
 

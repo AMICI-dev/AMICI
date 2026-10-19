@@ -80,6 +80,7 @@ deltasx.cpp
 deltax.cpp 
 deltaxB.cpp 
 drzdx.cpp 
+dtaudx.cpp 
 dxdotdp_explicit.cpp 
 dxdotdx_explicit.cpp 
 dydx.cpp 
@@ -91,6 +92,7 @@ rz.cpp
 sigmay.cpp 
 sigmaz.cpp 
 stau.cpp 
+stauB.cpp 
 sx0.cpp 
 sx0_fixedParameters.cpp 
 wrapfunctions.cpp 

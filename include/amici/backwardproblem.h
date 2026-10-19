@@ -135,6 +135,13 @@ class EventHandlingBwdSimulator {
 
     /** current time */
     realtype t_{0};
+
+    /**
+     * Adjoint of the event time sensitivity (see `handle_event_b`) of
+     * secondary discontinuities, to be applied at the discontinuity that
+     * triggered them.
+     */
+    std::vector<realtype> stauB_secondary_;
 };
 
 /**
