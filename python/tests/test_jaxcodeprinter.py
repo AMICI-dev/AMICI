@@ -96,3 +96,18 @@ def test_assignment_targets_are_mangled_consistently():
         f"{cp.doprint(jnp_)} = 3*{cp.doprint(class_)}",
     ]
     compile("\n".join(lines), "<generated>", "exec")
+
+
+@skip_on_valgrind
+def test_print_large_integers():
+    """Integers outside the int32 range are printed as floating-point
+    literals, which JAX can handle."""
+    import jax.numpy as jnp
+
+    cp = AmiciJaxCodePrinter()
+    x = sp.Symbol("x")
+    assert cp.doprint(3 * x) == "3*x_"
+    assert cp.doprint(sp.Integer(2**31 - 1)) == "2147483647"
+    code = cp.doprint(10**20 * x)
+    assert code == "100000000000000000000.0*x_"
+    assert eval(code, {"x_": jnp.array(1.0)}) == pytest.approx(1e20)

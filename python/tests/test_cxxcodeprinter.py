@@ -253,3 +253,16 @@ def test_sym_lines_symbols_output_reference_reused():
     assert expected == cp._get_sym_lines_symbols(
         symbols=syms, equations=eqs, variable="x", indent_level=2
     )
+
+
+@skip_on_valgrind
+def test_print_large_integers():
+    """Integers outside the `int` range are printed as floating-point
+    literals."""
+    cp = AmiciCxxCodePrinter()
+    x = sp.Symbol("x")
+    assert cp.doprint(3 * x) == "3*x_"
+    assert cp.doprint(sp.Integer(2**31 - 1)) == "2147483647"
+    assert cp.doprint(10**20 * x) == "100000000000000000000.0*x_"
+    assert cp.doprint(-(10**20) * x) == "-100000000000000000000.0*x_"
+    assert cp.doprint(x ** (10**20)) == "std::pow(x_, 100000000000000000000.0)"
