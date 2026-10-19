@@ -241,7 +241,7 @@ class ODEExporter:
             "sigmay",
             "x_rdata",
             "iroot",
-            "x_old",
+            "x_eval",
         )
 
         indent = 8

@@ -1231,9 +1231,9 @@ class DEModel:
         elif name == "dtcldp":
             self._syms[name] = self._dtcldp_symbols()
             return
-        elif name == "x_old":
+        elif name == "x_eval":
             length = len(self.eq("xdot"))
-        elif name == "xdot_old":
+        elif name == "xdot_eval":
             length = len(self.eq("xdot"))
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
@@ -1550,17 +1550,18 @@ class DEModel:
 
         return substitute_w
 
-    def _pre_event_eqs(self, name: str) -> list[sp.Matrix]:
-        """Re-express `dtaudx`/`dtaudp` purely in terms of the pre-event
-        state, for use inside `deltaxB`/`deltaqB` only.
+    def _eval_state_eqs(self, name: str) -> list[sp.Matrix]:
+        """Re-express `dtaudx`/`dtaudp` purely in terms of the state at
+        which the event assignments are evaluated, for use inside
+        `deltaxB`/`deltaqB` only.
 
         `w` is eliminated first (not available in the C++ functions),
-        then `x -> x_old` is substituted.
+        then `x -> x_eval` is substituted.
         """
         w_to_expr = dict(zip(self.sym("w"), self.eq("w")))
-        x_to_x_old = dict(zip(self.sym("x"), self.sym("x_old")))
+        x_to_x_eval = dict(zip(self.sym("x"), self.sym("x_eval")))
         return [
-            smart_subs_dict(smart_subs_dict(expr, w_to_expr), x_to_x_old)
+            smart_subs_dict(smart_subs_dict(expr, w_to_expr), x_to_x_eval)
             for expr in self.eq(name)
         ]
 
@@ -1802,7 +1803,7 @@ class DEModel:
             for event in self._events:
                 state_update = event.get_state_update(
                     x=self.sym("x"),
-                    x_old=self.sym("x_old"),
+                    x_eval=self.sym("x_eval"),
                     substitute_expressions=substitute_w,
                 )
                 if state_update is None:
@@ -1831,7 +1832,7 @@ class DEModel:
 
         elif name in [
             "ddeltaxdx",
-            "ddeltaxdx_old",
+            "ddeltaxdx_eval",
             "ddeltaxdp",
             "ddeltaxdt",
             "dzdp",
@@ -1931,7 +1932,7 @@ class DEModel:
                 stau_is_zero = smart_is_zero_matrix(self.eq("stau")[ie])
                 if not stau_is_zero and not xdot_is_zero:
                     tmp_eq += smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.sym("xdot") - self.sym("xdot_eval"),
                         self.sym("stau").T,
                     )
 
@@ -1954,14 +1955,14 @@ class DEModel:
 
                         # additional part of chain rule state variables
                         tmp_dxdp += smart_multiply(
-                            self.sym("xdot_old"),
+                            self.sym("xdot_eval"),
                             -self.sym("stau").T,
                         )
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
                         self.eq("ddeltaxdx")[ie]
-                        + self.eq("ddeltaxdx_old")[ie],
+                        + self.eq("ddeltaxdx_eval")[ie],
                         tmp_dxdp,
                     )
                 event_eqs.append(tmp_eq)
@@ -1969,69 +1970,70 @@ class DEModel:
             self._eqs[name] = event_eqs
 
         elif name == "deltaxB":
-            # express in terms of pre-event state
-            dtaudx_pre = self._pre_event_eqs("dtaudx")
+            # express in terms of the evaluation state
+            dtaudx_eval = self._eval_state_eqs("dtaudx")
             event_eqs = []
             for ie, event in enumerate(self._events):
                 # ==== 1st group of terms: Heaviside functions ===========
                 tmp_eq = smart_multiply(
-                    self.sym("xdot") - self.sym("xdot_old"),
-                    dtaudx_pre[ie],
+                    self.sym("xdot") - self.sym("xdot_eval"),
+                    dtaudx_eval[ie],
                 )
                 if event.updates_state:
                     # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
-                        self.eq("ddeltaxdt")[ie], dtaudx_pre[ie]
+                        self.eq("ddeltaxdt")[ie], dtaudx_eval[ie]
                     )
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         smart_multiply(
                             self.eq("ddeltaxdx")[ie]
-                            + self.eq("ddeltaxdx_old")[ie],
-                            self.sym("xdot_old"),
+                            + self.eq("ddeltaxdx_eval")[ie],
+                            self.sym("xdot_eval"),
                         ),
-                        dtaudx_pre[ie],
+                        dtaudx_eval[ie],
                     )
                     # ==== 3rd group of terms: Dirac deltas ==================
                     tmp_eq += (
-                        self.eq("ddeltaxdx")[ie] + self.eq("ddeltaxdx_old")[ie]
+                        self.eq("ddeltaxdx")[ie]
+                        + self.eq("ddeltaxdx_eval")[ie]
                     )
                 tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
                 event_eqs.append(tmp_eq)
             self._eqs[name] = event_eqs
 
         elif name == "deltaqB":
-            # express in terms of pre-event state
-            dtaudp_pre = self._pre_event_eqs("dtaudp")
+            # express in terms of the evaluation state
+            dtaudp_eval = self._eval_state_eqs("dtaudp")
             event_eqs = []
             for ie, event in enumerate(self._events):
                 # ==== 1st group of terms: Heaviside functions ===========
                 tmp_eq = smart_multiply(
-                    self.sym("xdot") - self.sym("xdot_old"),
-                    dtaudp_pre[ie],
+                    self.sym("xdot") - self.sym("xdot_eval"),
+                    dtaudp_eval[ie],
                 )
                 if event.updates_state:
                     # ==== 2nd group of terms: Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
-                        self.eq("ddeltaxdt")[ie], dtaudp_pre[ie]
+                        self.eq("ddeltaxdt")[ie], dtaudp_eval[ie]
                     )
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         smart_multiply(
                             self.eq("ddeltaxdx")[ie]
-                            + self.eq("ddeltaxdx_old")[ie],
-                            self.sym("xdot_old"),
+                            + self.eq("ddeltaxdx_eval")[ie],
+                            self.sym("xdot_eval"),
                         ),
-                        dtaudp_pre[ie],
+                        dtaudp_eval[ie],
                     )
                     # ==== 3rd group of terms: Dirac deltas ==================
                     tmp_eq += self.eq("ddeltaxdp")[ie]
                 event_eqs.append(smart_multiply(self.sym("xB").T, tmp_eq))
             self._eqs[name] = event_eqs
 
-        elif name == "xdot_old":
+        elif name == "xdot_eval":
             # force symbols
             self._eqs[name] = self.sym(name)
 

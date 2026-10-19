@@ -481,7 +481,7 @@ void EventHandlingSimulator::handle_events(
               if (model_->nz > 0)
                   store_event(edata);
 
-              store_pre_event_state(seflag, initial_event);
+              store_state_at_trigger(seflag, initial_event);
           };
 
     record_new_discontinuity(false);
@@ -498,7 +498,7 @@ void EventHandlingSimulator::handle_events(
             ws_->pending_events.push(
                 {.event = event,
                  .idx = ie,
-                 .state_old
+                 .state_at_trigger
                  = (event.uses_values_from_trigger_time()
                         ? std::optional<SimulationState>(get_simulation_state())
                         : std::nullopt)}
@@ -510,13 +510,13 @@ void EventHandlingSimulator::handle_events(
         // get the next event to be handled
         auto const& pending_event = ws_->pending_events.pop();
         auto const ie = pending_event.idx;
-        auto const& state_old = pending_event.state_old;
+        auto const& state_at_trigger = pending_event.state_at_trigger;
 
         gsl_Assert(
-            // storing the old state is not always necessary,
+            // storing the state at the trigger is not always necessary,
             // (e.g., if there is only 1 single event and there are no delays)
             // but for now, that's the assumption
-            state_old.has_value()
+            state_at_trigger.has_value()
             || !pending_event.event.uses_values_from_trigger_time()
         );
 
@@ -524,46 +524,45 @@ void EventHandlingSimulator::handle_events(
         // attribute of the event trigger, re-evaluate the trigger if necessary
         // and process or just remove the event from the queue
 
-        // State right before this event's own bolus is applied: either the
-        // state at the time the trigger was originally evaluated (for
-        // `useValuesFromTriggerTime="true"`), or the live state -- which,
-        // for a lower-priority event in a simultaneous-event cascade,
-        // already reflects the updates applied by earlier, higher-priority
-        // events processed earlier in this same `while` loop. This must be
-        // captured *before* `add_state_event_update` overwrites `ws_->sol.x`
-        // below, and is deliberately not `ws_->x_old`, which is fixed to the
-        // state before the whole cascade started.
-        AmiVector const x_old_event
-            = state_old.has_value() ? state_old->sol.x : ws_->sol.x;
+        // State at which this event's assignments are evaluated: for
+        // `useValuesFromTriggerTime="true"`, the state at which the
+        // discontinuity in which this event triggered was reached; otherwise,
+        // the current state, which includes the updates of the events applied
+        // before in this loop. Captured before `add_state_event_update`
+        // overwrites `ws_->sol.x`.
+        AmiVector const x_eval = state_at_trigger.has_value()
+                                     ? state_at_trigger->sol.x
+                                     : ws_->sol.x;
 
-        // For adjoint sensitivities, `deltaxB`/`deltaqB` need this event's
-        // own pre-/post-application state. store pre-event state.
+        // For adjoint sensitivities, `deltaxB`/`deltaqB` need the states
+        // around this event's application.
         std::optional<EventApplication> event_application;
         if (solver_->computing_asa()) {
             event_application.emplace();
             event_application->ie = ie;
-            event_application->x_pre = x_old_event;
+            event_application->x_eval = x_eval;
             if (result.discs.back().event_applications.empty()) {
                 // First event applied for this discontinuity:
                 // `update_heaviside` above already flipped `h` for the *whole*
                 // simultaneous-event group atomically, before any of its events
                 // were applied, so a fresh `fxdot` call here would incorrectly
                 // use post-flip `h` for what must be a pre-flip rate.
-                // `ws_->xdot_old` was already computed (in
-                // `store_pre_event_state`) at this same pre-flip, pre-cascade
+                // `ws_->xdot_at_trigger` was already computed (in
+                // `store_state_at_trigger`) at this same pre-flip, pre-cascade
                 // state, so reuse it instead of recomputing.
-                event_application->xdot_pre = ws_->xdot_old;
+                event_application->xdot_eval = ws_->xdot_at_trigger;
             } else {
-                model_->fdxdt(ws_->sol.t, x_old_event, ws_->sol.dx, ws_->xdot);
-                event_application->xdot_pre = ws_->xdot;
+                model_->fdxdt(ws_->sol.t, x_eval, ws_->sol.dx, ws_->xdot);
+                event_application->xdot_eval = ws_->xdot;
             }
         }
 
         // Execute the event
         // Apply bolus to the state and the sensitivities
         model_->add_state_event_update(
-            ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_old, x_old_event,
-            state_old.has_value() ? state_old->mod : model_->get_model_state()
+            ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_at_trigger, x_eval,
+            state_at_trigger.has_value() ? state_at_trigger->mod
+                                         : model_->get_model_state()
         );
         // For DAEs, the algebraic states and the state derivatives have to be
         // made consistent with the post-event differential states before
@@ -576,9 +575,10 @@ void EventHandlingSimulator::handle_events(
             // compute the new xdot
             model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             model_->add_state_sensitivity_event_update(
-                ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_old_event, ws_->xdot,
-                ws_->xdot_old,
-                state_old.has_value() ? state_old->sol.sx : ws_->sol.sx,
+                ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_eval, ws_->xdot,
+                ws_->xdot_at_trigger,
+                state_at_trigger.has_value() ? state_at_trigger->sol.sx
+                                             : ws_->sol.sx,
                 ws_->stau
             );
         }
@@ -684,16 +684,13 @@ void EventHandlingSimulator::store_event(ExpData const* edata) {
     }
 }
 
-void EventHandlingSimulator::store_pre_event_state(
+void EventHandlingSimulator::store_state_at_trigger(
     bool seflag, bool const initial_event
 ) {
-    // If we need to do forward sensitivities later on, we need to store the old
-    // x and the old xdot.
+    // `xdot` is needed to compute the jumps in the sensitivities
     if (solver_->get_sensitivity_order() >= SensitivityOrder::first) {
-        // store x and xdot to compute jump in sensitivities
-        ws_->x_old.copy(ws_->sol.x);
         model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
-        ws_->xdot_old.copy(ws_->xdot);
+        ws_->xdot_at_trigger.copy(ws_->xdot);
     }
     if (solver_->computing_fsa()) {
         // compute event-time derivative only for primary events, we get
@@ -716,8 +713,9 @@ void EventHandlingSimulator::store_pre_event_state(
             std::ranges::fill(ws_->stau, 0.0);
         }
     } else if (solver_->computing_asa()) {
-        result.discs.back().h_pre = model_->get_model_state().h;
-        result.discs.back().total_cl_pre = model_->get_model_state().total_cl;
+        result.discs.back().h_at_trigger = model_->get_model_state().h;
+        result.discs.back().total_cl_at_trigger
+            = model_->get_model_state().total_cl;
     }
 }
 
@@ -737,7 +735,7 @@ int EventHandlingSimulator::detect_secondary_events() {
                     ws_->pending_events.push(
                         {.event = event,
                          .idx = ie,
-                         .state_old
+                         .state_at_trigger
                          = (event.uses_values_from_trigger_time()
                                 ? std::optional<SimulationState>(
                                       get_simulation_state()

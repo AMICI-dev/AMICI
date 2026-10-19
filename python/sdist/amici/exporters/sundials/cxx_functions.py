@@ -295,27 +295,27 @@ functions = {
     "deltax": _FunctionInfo(
         "double *deltax, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const int ie, const realtype *xdot, const realtype *xdot_old, "
-        "const realtype *x_old"
+        "const int ie, const realtype *xdot, const realtype *xdot_eval, "
+        "const realtype *x_eval"
     ),
     "ddeltaxdx": _FunctionInfo(generate_body=False),
-    "ddeltaxdx_old": _FunctionInfo(generate_body=False),
+    "ddeltaxdx_eval": _FunctionInfo(generate_body=False),
     "ddeltaxdt": _FunctionInfo(generate_body=False),
     "ddeltaxdp": _FunctionInfo(generate_body=False),
     "deltasx": _FunctionInfo(
         "realtype *deltasx, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const int ip, const int ie, "
-        "const realtype *xdot, const realtype *xdot_old, "
+        "const realtype *xdot, const realtype *xdot_eval, "
         "const realtype *sx, const realtype *stau, const realtype *tcl, "
-        "const realtype *x_old"
+        "const realtype *x_eval"
     ),
     "deltaxB": _FunctionInfo(
         "realtype *deltaxB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const realtype *dx, "
-        "const int ie, const realtype *xdot, const realtype *xdot_old, "
-        "const realtype *x_old, "
+        "const int ie, const realtype *xdot, const realtype *xdot_eval, "
+        "const realtype *x_eval, "
         "const realtype *xB, const realtype *tcl"
     ),
     "deltaqB": _FunctionInfo(
@@ -323,7 +323,7 @@ functions = {
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const realtype *dx, "
         "const int ip, const int ie, const realtype *xdot, "
-        "const realtype *xdot_old, const realtype *x_old, const realtype *xB"
+        "const realtype *xdot_eval, const realtype *x_eval, const realtype *xB"
     ),
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "
@@ -360,7 +360,7 @@ functions = {
         "const realtype *dx, const realtype *w",
         assume_pow_positivity=True,
     ),
-    "xdot_old": _FunctionInfo(generate_body=False),
+    "xdot_eval": _FunctionInfo(generate_body=False),
     "y": _FunctionInfo(
         "realtype *y, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, "

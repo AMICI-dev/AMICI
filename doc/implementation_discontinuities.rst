@@ -94,7 +94,25 @@ Accordingly, the value of of the second helper variable is incorrect when
 simulation starts when the respective Heaviside function evaluates to zero
 at initialization and should generally not be used.
 
+States Around Discontinuities
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+At a discontinuity, several events may trigger at the same time and are
+applied one after another, and their assignments may trigger further events.
+The implementation distinguishes the following states, which all belong to
+the same timepoint:
+
+- ``*_at_trigger``: the state at which a discontinuity was reached, i.e.,
+  when its events triggered, before the Heaviside helper variables were
+  updated and before any event was applied. For events that are triggered
+  by the assignments of other events, this is the state right after those
+  assignments.
+- ``*_pre`` / ``*_post``: the state right before / after the assignments of
+  a single event were applied.
+- ``*_eval``: the state at which the assignments of an event are evaluated.
+  This is the ``*_at_trigger`` state for events that use values from the
+  trigger time (SBML ``useValuesFromTriggerTime="true"``), and the ``*_pre``
+  state otherwise.
 
 Right-Hand-Side Removable Discontinuities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

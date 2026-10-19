@@ -1472,38 +1472,39 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Update state variables after event.
      *
-     * @param x Current state (will be overwritten)
+     * @param x State before the event (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
      * @param xdot Current time derivative of the state (see `fdxdt`)
-     * @param xdot_old Time derivative of the state before the event
-     * @param x_old Current or old state from which to compute the state update
-     * @param state The model state based on which to compute the update.
+     * @param xdot_eval Time derivative of the state at `x_eval`
+     * @param x_eval State at which the event assignments are evaluated
+     * @param state The model state at which the event assignments are
+     * evaluated
      */
     void add_state_event_update(
         AmiVector& x, int ie, realtype t, AmiVector const& xdot,
-        AmiVector const& xdot_old, AmiVector const& x_old,
+        AmiVector const& xdot_eval, AmiVector const& x_eval,
         ModelState const& state
     );
 
     /**
      * @brief Update state sensitivity after event.
      *
-     * @param sx Current state sensitivity (will be overwritten)
+     * @param sx State sensitivity before the event (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param x Current state
-     * @param x_old Pre-event state
-     * @param xdot Current time derivative of the state (see `fdxdt`)
-     * @param xdot_old Time derivative of the state before the event
-     * @param sx_old Pre-event state sensitivity
+     * @param x State after the event
+     * @param x_eval State at which the event assignments are evaluated
+     * @param xdot Time derivative of the state after the event
+     * @param xdot_eval Time derivative of the state at `x_eval`
+     * @param sx_eval State sensitivity at `x_eval`
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
      */
     void add_state_sensitivity_event_update(
         AmiVectorArray& sx, int ie, realtype t, AmiVector const& x,
-        AmiVector const& x_old, AmiVector const& xdot,
-        AmiVector const& xdot_old, AmiVectorArray const& sx_old,
+        AmiVector const& x_eval, AmiVector const& xdot,
+        AmiVector const& xdot_eval, AmiVectorArray const& sx_eval,
         std::vector<realtype> const& stau
     );
 
@@ -1513,16 +1514,16 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xB Current adjoint state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param x Current state
-     * @param xdot Current time derivative of the state (see `fdxdt`)
-     * @param xdot_old Time derivative of the state before the event
-     * @param x_old Pre-event state
-     * @param dx Current derivative of state (DAE only)
+     * @param x State after the event
+     * @param xdot Time derivative of the state after the event
+     * @param xdot_eval Time derivative of the state at `x_eval`
+     * @param x_eval State at which the event assignments are evaluated
+     * @param dx Derivative of the state after the event (DAE only)
      */
     void add_adjoint_state_event_update(
         AmiVector& xB, int ie, realtype t, AmiVector const& x,
-        AmiVector const& xdot, AmiVector const& xdot_old,
-        AmiVector const& x_old, AmiVector const& dx
+        AmiVector const& xdot, AmiVector const& xdot_eval,
+        AmiVector const& x_eval, AmiVector const& dx
     );
 
     /**
@@ -1531,17 +1532,17 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xQB Current quadrature state (will be overwritten)
      * @param ie Event index
      * @param t Current timepoint
-     * @param x Current state
+     * @param x State after the event
      * @param xB Current adjoint state
-     * @param xdot Current time derivative of the state (see `fdxdt`)
-     * @param xdot_old Time derivative of the state before the event
-     * @param x_old Pre-event state
-     * @param dx Current derivative of state (DAE only)
+     * @param xdot Time derivative of the state after the event
+     * @param xdot_eval Time derivative of the state at `x_eval`
+     * @param x_eval State at which the event assignments are evaluated
+     * @param dx Derivative of the state after the event (DAE only)
      */
     void add_adjoint_quadrature_event_update(
         AmiVector& xQB, int ie, realtype t, AmiVector const& x,
-        AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
-        AmiVector const& x_old, AmiVector const& dx
+        AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_eval,
+        AmiVector const& x_eval, AmiVector const& dx
     );
 
     /**
