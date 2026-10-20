@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -704,12 +702,7 @@ def create_amici_model(
     if output_dir is None:
         sbml_test_models_output_dir = Path("amici_models")
         sbml_test_models_output_dir.mkdir(parents=True, exist_ok=True)
-        # try not to exceed the stupid maximum path length on windows 💩
-        output_dir = (
-            sbml_test_models_output_dir / model_name
-            if sys.platform != "win32"
-            else tempfile.mkdtemp()
-        )
+        output_dir = sbml_test_models_output_dir / model_name
 
     sbml_importer.sbml2amici(
         model_name=model_name, output_dir=output_dir, **kwargs
