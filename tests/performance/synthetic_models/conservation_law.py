@@ -27,7 +27,7 @@ SIGMA = 0.05
 class ConservationLaw(JAXModel):
     """Two-state reversible system with one conservation law."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
@@ -86,7 +86,7 @@ class ConservationLaw(JAXModel):
     def _root_cond_fn(self, t, y, args, **_):
         return jnp.array([])
 
-    def _delta_x(self, y, p, tcl):
+    def _delta_x(self, t, y, p, tcl, h):
         return jnp.array([])
 
     @property

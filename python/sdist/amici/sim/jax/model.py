@@ -47,7 +47,7 @@ class JAXModel(eqx.Module):
         Path to the JAX model file.
     """
 
-    MODEL_API_VERSION = "0.0.4"
+    MODEL_API_VERSION = "0.0.5"
     api_version: str
     jax_py_file: Path
     nns: dict
@@ -297,15 +297,28 @@ class JAXModel(eqx.Module):
 
     @abstractmethod
     def _delta_x(
-        self, y: jt.Float[jt.Array, "nxs"]
-    ) -> jt.Float[jt.Array, "nxs"]:
+        self,
+        t: jt.Float[jt.Scalar, ""],
+        y: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
+    ) -> jt.Float[jt.Array, "ne*nxs"]:
         """
         Compute the state vector changes at discontinuities.
 
+        :param t:
+            time point
         :param y:
             state vector
+        :param p:
+            parameters
+        :param tcl:
+            total values for conservation laws
+        :param h:
+            Heaviside variables, after the update for the discontinuity
         :return:
-            changes in the state vector at discontinuities
+            changes in the state vector for each event
         """
         ...
 
@@ -1024,6 +1037,7 @@ class JAXModel(eqx.Module):
         roots_found = jnp.sign(rfx) != jnp.sign(rf0)
 
         y0_next, h_next = _apply_event_assignments(
+            t0_next,
             roots_found,
             roots_dir,
             y0_next,
@@ -1031,6 +1045,7 @@ class JAXModel(eqx.Module):
             tcl,
             h,
             delta_x,
+            h_mask,
         )
 
         roots_zero = jnp.isclose(

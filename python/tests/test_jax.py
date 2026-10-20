@@ -1449,3 +1449,98 @@ def test_nested_piecewise_in_condition(tmp_path):
         rtol=1e-5,
         atol=1e-12,
     )
+
+
+@pytest.mark.parametrize(
+    "assignment_expr,factor,inline",
+    [
+        # time in the assignment
+        ("p * time * x", 1, False),
+        # Heaviside variable of a state-dependent condition
+        ("p * piecewise(3, x > 0.5, 1) * x", 3, False),
+        # Heaviside variable of a condition that switches at the same time
+        ("p * piecewise(3, time >= 1, 1) * x", 3, False),
+        # the same, written directly in the event assignment
+        ("p * piecewise(3, time >= 1, 1) * x", 3, True),
+    ],
+    ids=[
+        "time",
+        "piecewise",
+        "piecewise_same_time",
+        "piecewise_same_time_inline",
+    ],
+)
+def test_event_assignments_time_heaviside(
+    tmp_path, request, assignment_expr, factor, inline
+):
+    """Event assignments may depend on time and on Heaviside variables
+    (gh-3423).
+
+    The assignments are evaluated with the Heaviside variables updated for
+    the discontinuity, as in the C++ backend.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    ant_model = f"""
+    model event_assignment_time_heaviside
+        k = 0.5
+        p = 2
+        x = 1
+        v = 0
+        x' = -k * x
+        v' = 0
+        y := {assignment_expr}
+        at time > 1: v = v + {assignment_expr if inline else "y"}
+    end
+    """
+    model_name = f"event_assignment_{request.node.callspec.id}"
+    importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    importer.sbml2jax(
+        model_name,
+        output_dir=tmp_path,
+        observation_model=[MC("obs_v", formula="v")],
+    )
+    module = amici._module_from_path(model_name, tmp_path / "__init__.py")
+    model = module.Model()
+
+    ts = jnp.array([0.0, 0.5, 1.5, 2.0])
+
+    def simulate(p):
+        x0_full = model._x0(0.0, p)
+        tcl = model._tcl(x0_full, p)
+        x0 = model._x_solver(x0_full)
+        h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+        ys, _, _ = solve(
+            p,
+            ts[0],
+            ts,
+            tcl,
+            h,
+            x0,
+            jnp.ones_like(h),
+            diffrax.Kvaerno5(),
+            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            optimistix.Newton(atol=1e-10, rtol=1e-10),
+            1000,
+            diffrax.DirectAdjoint(),
+            diffrax.ODETerm(model._xdot),
+            model._root_cond_fns(),
+            model._root_cond_fn,
+            model._delta_x,
+            model._known_discs(p),
+            model.observable_ids,
+        )
+        return ys[:, 0]
+
+    ik, ip = (model.parameter_ids.index(pid) for pid in ("k", "p"))
+    p = jnp.zeros(len(model.parameter_ids)).at[ik].set(0.5).at[ip].set(2.0)
+    # `v` after the event at t = 1
+    v = factor * 2.0 * np.exp(-0.5)
+    assert_allclose(simulate(p), [0.0, 0.0, v, v], rtol=1e-6)
+
+    sv = jax.jacfwd(simulate)(p)
+    assert_allclose(sv[-1, ip], v / 2.0, rtol=1e-6)
+    assert_allclose(sv[-1, ik], -v, rtol=1e-6)
