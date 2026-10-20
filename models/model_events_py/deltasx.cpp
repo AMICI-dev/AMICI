@@ -20,6 +20,8 @@ void deltasx_model_events_py(realtype *deltasx, const realtype t, const realtype
         case 1:
         case 2:
         case 3:
+        case 4:
+        case 5:
             switch(ip) {
                 case 0:
                 case 1:

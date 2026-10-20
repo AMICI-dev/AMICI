@@ -1068,61 +1068,74 @@ def test_event_priorities(tempdir):
 def test_switches_triggered_by_event_assignments(tempdir):
     """Sensitivities of switches that are only triggered by events.
 
-    The triggers of `E2` and of the `piecewise` conditions only depend on
-    event-assigned variables, i.e., they don't change between events. They
-    are only triggered by `E1` and share its event time sensitivity.
+    The `piecewise` conditions only depend on event-assigned variables,
+    i.e., they don't change between events. They are only triggered by `E1`
+    and share its event time sensitivity. The same holds for `E2`, whose
+    trigger is either constant between events or depends on time only via
+    a switch.
     """
-    model_name = "test_switches_triggered_by_event_assignments"
-    antimony2amici(
-        """
-        k = 1.5
-        x = 0; x' = k
-        s1 = 0; s2 = 0
-        acc = 0
-        z_on = 0; z_on' = piecewise(1, s2 >= 1, 0)
-        z_off = 0; z_off' = piecewise(1, s2 < 1, 0)
-        E1: at x >= 1: s1 = 1
-        E2: at s1 >= 1: s2 = 1, acc = acc + time
-        """,
-        model_name=model_name,
-        output_dir=tempdir,
-        observation_model=[
-            MC("obs_z_on", formula="z_on"),
-            MC("obs_z_off", formula="z_off"),
-            MC("obs_acc", formula="acc"),
-        ],
-    )
-    model = import_model_module(model_name, tempdir).get_model()
-    t_end = 3.0
-    model.set_timepoints([t_end])
-    ik = model.get_free_parameter_ids().index("k")
-    k = model.get_free_parameters()[ik]
-
-    # Both events fire at t1 = 1 / k
-    t1 = 1 / k
-    y = np.array([t_end - t1, t1, t1])
-    dy_dk = np.array([1, -1, -1]) / k**2
-    measurements = np.array([0.0, 1.0, 2.0])
-    expected_sllh = -np.sum((y - measurements) * dy_dk)
-    assert abs(expected_sllh) > 1
-
-    edata = ExpData(model)
-    edata.set_measurements(measurements)
-    edata.set_noise_scales(np.ones_like(measurements))
-    for sens_method in (SensitivityMethod.forward,):
-        solver = model.create_solver()
-        solver.set_sensitivity_order(SensitivityOrder.first)
-        solver.set_sensitivity_method(sens_method)
-        solver.set_relative_tolerance(1e-12)
-        solver.set_absolute_tolerance(1e-12)
-        rdata = run_simulation(model, solver, edata=edata)
-        assert rdata.status == AMICI_SUCCESS
-        assert_allclose(rdata.y[-1], y, rtol=1e-8)
-        if sens_method == SensitivityMethod.forward:
-            assert_allclose(rdata.sy[-1, ik], dy_dk, rtol=1e-6)
-        assert_allclose(
-            rdata.sllh[ik], expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+    triggers = {
+        "constant": "s1 >= 1",
+        "switched_time": "w >= 0.5",
+    }
+    for trigger_id, trigger in triggers.items():
+        model_name = (
+            f"test_switches_triggered_by_event_assignments_{trigger_id}"
         )
+        antimony2amici(
+            f"""
+            k = 1.5
+            x = 0; x' = k
+            s1 = 0; s2 = 0
+            acc = 0
+            w := piecewise(time, s1 >= 1, 0)
+            z_on = 0; z_on' = piecewise(1, s2 >= 1, 0)
+            z_off = 0; z_off' = piecewise(1, s2 < 1, 0)
+            E1: at x >= 1: s1 = 1
+            E2: at {trigger}: s2 = 1, acc = acc + time
+            """,
+            model_name=model_name,
+            output_dir=tempdir,
+            observation_model=[
+                MC("obs_z_on", formula="z_on"),
+                MC("obs_z_off", formula="z_off"),
+                MC("obs_acc", formula="acc"),
+            ],
+        )
+        model = import_model_module(model_name, tempdir).get_model()
+        t_end = 3.0
+        model.set_timepoints([t_end])
+        ik = model.get_free_parameter_ids().index("k")
+        k = model.get_free_parameters()[ik]
+
+        # Both events fire at t1 = 1 / k
+        t1 = 1 / k
+        y = np.array([t_end - t1, t1, t1])
+        dy_dk = np.array([1, -1, -1]) / k**2
+        measurements = np.array([0.0, 1.0, 2.0])
+        expected_sllh = -np.sum((y - measurements) * dy_dk)
+        assert abs(expected_sllh) > 1
+
+        edata = ExpData(model)
+        edata.set_measurements(measurements)
+        edata.set_noise_scales(np.ones_like(measurements))
+        for sens_method in (SensitivityMethod.forward,):
+            solver = model.create_solver()
+            solver.set_sensitivity_order(SensitivityOrder.first)
+            solver.set_sensitivity_method(sens_method)
+            solver.set_relative_tolerance(1e-12)
+            solver.set_absolute_tolerance(1e-12)
+            rdata = run_simulation(model, solver, edata=edata)
+            err_msg = f"{trigger_id}, {sens_method}"
+            assert rdata.status == AMICI_SUCCESS, err_msg
+            assert_allclose(rdata.y[-1], y, rtol=1e-8, err_msg=err_msg)
+            if sens_method == SensitivityMethod.forward:
+                assert_allclose(
+                    rdata.sy[-1, ik], dy_dk, rtol=1e-6, err_msg=err_msg
+                )
+            assert_allclose(
+                rdata.sllh[ik], expected_sllh, rtol=1e-6, err_msg=err_msg
+            )
 
     # Only fixed-time events, i.e., the event time sensitivities are zero
     model_name = "test_switches_triggered_by_event_assignments_fixed"
