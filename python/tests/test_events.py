@@ -2882,3 +2882,34 @@ def test_explicit_trigger_times_handled_before_reached(tempdir):
     rdata = run_simulation(model, model.create_solver())
     assert rdata.status == AMICI_SUCCESS
     assert_allclose(rdata.by_id("s"), [0.0, 111.0], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+def test_secondary_event_heaviside_at_trigger(tempdir):
+    """Assignments of events triggered by other events see the updated
+    Heaviside variables (gh-3429)."""
+    model_name = "test_secondary_event_heaviside_at_trigger"
+    antimony2amici(
+        r"""
+        s = 0
+        z1 = 0
+        z2 = 0
+        x = 1
+        u = 0
+        w := piecewise(1, s >= 1, 0)
+        x' = -0.1 * x
+        u' = w
+        A: at time >= 1, priority=2: s = 1
+        B1: at s >= 1, priority=1, fromTrigger=true: z1 = w
+        B2: at s >= 1, priority=1, fromTrigger=false: z2 = w
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("s"), [0.0, 1.0], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("z1"), [0.0, 1.0], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("z2"), [0.0, 1.0], rtol=0, atol=0)

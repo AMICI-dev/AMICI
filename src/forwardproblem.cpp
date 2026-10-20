@@ -497,29 +497,7 @@ void EventHandlingSimulator::handle_events(
     }
 
     // Collect all triggered events waiting for execution
-    for (int ie = 0; ie < model_->ne; ie++) {
-        // only consider transitions false -> true
-        if (ws_->roots_found.at(ie) == 1) {
-            auto const& event = model_->get_event(ie);
-            auto const uses_trigger_values
-                = event.uses_values_from_trigger_time();
-            ws_->pending_events.push(
-                {.event = event,
-                 .idx = ie,
-                 .state_at_trigger
-                 = (uses_trigger_values
-                        ? std::optional<SimulationState>(get_simulation_state())
-                        : std::nullopt),
-                 // computed before the Heaviside variables were updated
-                 .xdot_at_trigger
-                 = (uses_trigger_values
-                            && (solver_->computing_fsa()
-                                || solver_->computing_asa())
-                        ? std::optional<AmiVector>(ws_->xdot_at_trigger)
-                        : std::nullopt)}
-            );
-        }
-    }
+    queue_triggered_events();
 
     // Whether no event has been applied since the last discontinuity record,
     // i.e., the Heaviside variables were just updated.
@@ -637,6 +615,7 @@ void EventHandlingSimulator::handle_events(
 
             model_->update_heaviside(ws_->roots_found);
             first_since_discontinuity = true;
+            queue_triggered_events();
         }
 
         // record any newly-found roots
@@ -757,6 +736,32 @@ void EventHandlingSimulator::store_state_at_trigger(
     }
 }
 
+void EventHandlingSimulator::queue_triggered_events() {
+    for (int ie = 0; ie < model_->ne; ie++) {
+        // only consider transitions false -> true
+        if (ws_->roots_found.at(ie) == 1) {
+            auto const& event = model_->get_event(ie);
+            auto const uses_trigger_values
+                = event.uses_values_from_trigger_time();
+            ws_->pending_events.push(
+                {.event = event,
+                 .idx = ie,
+                 .state_at_trigger
+                 = (uses_trigger_values
+                        ? std::optional<SimulationState>(get_simulation_state())
+                        : std::nullopt),
+                 // computed before the Heaviside variables were updated
+                 .xdot_at_trigger
+                 = (uses_trigger_values
+                            && (solver_->computing_fsa()
+                                || solver_->computing_asa())
+                        ? std::optional<AmiVector>(ws_->xdot_at_trigger)
+                        : std::nullopt)}
+            );
+        }
+    }
+}
+
 int EventHandlingSimulator::detect_secondary_events() {
     int secondevent = 0;
 
@@ -767,34 +772,8 @@ int EventHandlingSimulator::detect_secondary_events() {
         if (ws_->roots_found.at(ie) == 0) {
             // check whether the value of the Heaviside function changed
             if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
-                if (ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie)) {
-                    ws_->roots_found.at(ie) = 1;
-                    auto const& event = model_->get_event(ie);
-                    auto const uses_trigger_values
-                        = event.uses_values_from_trigger_time();
-                    std::optional<AmiVector> xdot_at_trigger;
-                    if (uses_trigger_values
-                        && (solver_->computing_fsa()
-                            || solver_->computing_asa())) {
-                        // the right-hand side after the event that
-                        // triggered this one, computed in `handle_events`
-                        // (the Heaviside variables are not updated yet)
-                        xdot_at_trigger.emplace(ws_->xdot);
-                    }
-                    ws_->pending_events.push(
-                        {.event = event,
-                         .idx = ie,
-                         .state_at_trigger
-                         = (uses_trigger_values
-                                ? std::optional<SimulationState>(
-                                      get_simulation_state()
-                                  )
-                                : std::nullopt),
-                         .xdot_at_trigger = std::move(xdot_at_trigger)}
-                    );
-                } else {
-                    ws_->roots_found.at(ie) = -1;
-                }
+                ws_->roots_found.at(ie)
+                    = ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie) ? 1 : -1;
                 secondevent++;
             } else {
                 ws_->roots_found.at(ie) = 0;
