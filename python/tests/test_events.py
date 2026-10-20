@@ -1071,11 +1071,12 @@ def test_switches_triggered_by_event_assignments(tempdir):
     The `piecewise` conditions only depend on event-assigned variables,
     i.e., they don't change between events. They are only triggered by `E1`
     and share its event time sensitivity. The same holds for `E2`, whose
-    trigger is either constant between events or depends on time only via
-    a switch.
+    trigger is either constant between events, depends on a state but is
+    crossed only due to `E1`, or depends on time only via a switch.
     """
     triggers = {
         "constant": "s1 >= 1",
+        "state": "s1 + x >= 1.5",
         "switched_time": "w >= 0.5",
     }
     for trigger_id, trigger in triggers.items():
@@ -1194,13 +1195,25 @@ def test_switches_triggered_by_event_assignments(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     model.set_timepoints([t_end])
-    solver = model.create_solver()
-    solver.set_sensitivity_order(SensitivityOrder.first)
-    solver.set_sensitivity_method(SensitivityMethod.forward)
-    rdata = run_simulation(model, solver)
-    assert rdata.status == AMICI_SUCCESS
-    assert_allclose(rdata.y[-1], [k * (t_end - 1)], rtol=1e-8)
-    assert_allclose(rdata.sy[-1, 0], [t_end - 1], rtol=1e-6)
+    y = np.array([k * (t_end - 1)])
+    dy_dk = np.array([t_end - 1])
+    measurements = np.array([0.0])
+    expected_sllh = -np.sum((y - measurements) * dy_dk)
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.y[-1], y, rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1, 0], dy_dk, rtol=1e-6)
+        assert_allclose(
+            rdata.sllh[0], expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
 
 
 @skip_on_valgrind

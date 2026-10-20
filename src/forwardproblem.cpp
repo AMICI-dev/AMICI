@@ -792,14 +792,15 @@ int EventHandlingSimulator::detect_secondary_events() {
 
     // fire the secondary event?
     if (secondevent > 0) {
-        // Secondary events may result in wrong forward sensitivities
-        // if the secondary event has a bolus...
-        if (solver_->computing_fsa() && solver_->get_logger())
+        // Known limitations of sensitivities at secondary events
+        if (solver_->get_sensitivity_order() >= SensitivityOrder::first
+            && (model_->has_algebraic_states() || model_->nz > 0)
+            && solver_->get_logger())
             solver_->get_logger()->log(
                 LogSeverity::warning, "SECONDARY_EVENT",
-                "Secondary event was triggered. Depending on "
-                "the bolus of the secondary event, forward "
-                "sensitivities can be incorrect."
+                "Secondary event was triggered. Sensitivities can be "
+                "incorrect for models with algebraic states and for event "
+                "outputs of secondary events."
             );
     }
 
