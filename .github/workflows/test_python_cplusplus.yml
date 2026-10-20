@@ -109,7 +109,8 @@ jobs:
         && lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
-        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        && lcov --ignore-errors inconsistent \
+        -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
       if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
@@ -195,7 +196,8 @@ jobs:
         && lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
-        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        && lcov --ignore-errors inconsistent \
+        -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
       if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
