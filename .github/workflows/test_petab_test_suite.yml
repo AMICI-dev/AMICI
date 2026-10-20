@@ -14,7 +14,7 @@ jobs:
   petab_v1:
     name: PEtab Testsuite
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     env:
       ENABLE_GCOV_COVERAGE: TRUE
@@ -115,7 +115,7 @@ jobs:
   petab_v2:
     name: PEtab v2 Testsuite
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     env:
       ENABLE_GCOV_COVERAGE: TRUE

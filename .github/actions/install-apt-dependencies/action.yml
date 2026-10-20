@@ -7,7 +7,7 @@ runs:
         sudo apt-get update \
           && sudo apt-get install -y \
               g++ \
-              libatlas-base-dev \
+              libopenblas-dev \
               libboost-chrono-dev \
               libboost-math-dev \
               libboost-serialization-dev \
