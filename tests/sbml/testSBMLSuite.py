@@ -492,6 +492,23 @@ def _derive_generic_bounds(
     return lower, upper
 
 
+#: Maximum relative difference between finite difference and sensitivity for
+#: an inconclusive direction to count as confirmed.
+_AGREEMENT_RTOL = 1e-6
+
+
+def _agrees_closely(direction_result) -> bool:
+    """Check whether a direction's finite difference and sensitivity agree.
+
+    Exactly matching zeros don't count.
+    """
+    scale = max(abs(direction_result.test), abs(direction_result.expectation))
+    return (
+        abs(direction_result.test - direction_result.expectation)
+        < _AGREEMENT_RTOL * scale
+    )
+
+
 def _assert_check_confirms_something(result, has_events: bool) -> None:
     """`check_jacobian`/`check_gradient`'s `success` is `True` as long as no
     direction is confidently *wrong* -- a check where every direction came
@@ -500,6 +517,11 @@ def _assert_check_confirms_something(result, has_events: bool) -> None:
     least one direction, in at least one output component, to have been
     confirmed converged, so a silent coverage regression fails loudly instead
     of passing vacuously.
+
+    An inconclusive direction also counts as confirmed if the finite
+    difference and the sensitivity agree to within a relative difference of
+    `_AGREEMENT_RTOL`. fiddy's classification of well-resolved directions as
+    converged is sensitive to round-off errors, e.g., on different CPUs.
 
     Exception: for an event-triggered model, if every non-passing direction was
     flagged `"discontinuity_suspected"` or `"noise_dominated"`, skip instead
@@ -510,7 +532,11 @@ def _assert_check_confirms_something(result, has_events: bool) -> None:
         if hasattr(result, "output_results")
         else result.direction_results
     )
-    if any(r.outcome == "passed" for r in direction_results):
+    if any(
+        r.outcome == "passed"
+        or (r.outcome == "inconclusive" and _agrees_closely(r))
+        for r in direction_results
+    ):
         return
     acceptable_statuses = {"discontinuity_suspected", "noise_dominated"}
     if has_events and all(
