@@ -39,8 +39,19 @@ struct EventApplication {
      */
     AmiVector x_eval;
 
-    /** `xdot` evaluated at `x_eval`. */
+    /**
+     * `xdot` evaluated at `x_eval`. For events using values from the trigger
+     * time, this is evaluated with the Heaviside variables before the
+     * discontinuity; otherwise, it equals `xdot_pre`.
+     */
     AmiVector xdot_eval;
+
+    /**
+     * `xdot` right before this event's own bolus was applied. For the first
+     * event of a discontinuity, this is evaluated with the Heaviside
+     * variables before the discontinuity.
+     */
+    AmiVector xdot_pre;
 
     /** State immediately after this event's own bolus was applied. */
     AmiVector x_post;
@@ -118,6 +129,24 @@ struct Discontinuity {
      * Only populated when adjoint sensitivities are being computed.
      */
     std::vector<EventApplication> event_applications;
+
+    /**
+     * State at the time the discontinuity was recorded, before any of its
+     * events were applied. Only populated for adjoint sensitivities.
+     */
+    AmiVector x_at_trigger;
+
+    /** State derivative corresponding to `x_at_trigger` (DAE only). */
+    AmiVector dx_at_trigger;
+
+    /** Whether this discontinuity is due to events at the initial time. */
+    bool initial_event{false};
+
+    /**
+     * Whether this discontinuity is due to the event assignments of the
+     * preceding one (at the same time), whose event time it shares.
+     */
+    bool secondary_event{false};
 };
 
 /**

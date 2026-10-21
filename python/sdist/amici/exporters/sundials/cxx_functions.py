@@ -314,17 +314,39 @@ functions = {
     "deltaxB": _FunctionInfo(
         "realtype *deltaxB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *w, const realtype *dx, "
-        "const int ie, const realtype *xdot, const realtype *xdot_eval, "
-        "const realtype *x_eval, "
+        "const realtype *dx, const int ie, const realtype *x_eval, "
         "const realtype *xB, const realtype *tcl"
+    ),
+    "deltaxB_at_trigger": _FunctionInfo(
+        "realtype *deltaxB_at_trigger, const realtype t, const realtype *x, "
+        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *dx, const int ie, const realtype *x_eval, "
+        "const realtype *xB, const realtype *tcl"
+    ),
+    "stauB": _FunctionInfo(
+        "realtype *stauB, const realtype t, const realtype *x, "
+        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *dx, const int ie, const realtype *xdot, "
+        "const realtype *xdot_eval, const realtype *xdot_pre, "
+        "const realtype *x_eval, const realtype *xB, const realtype *tcl"
     ),
     "deltaqB": _FunctionInfo(
         "realtype *deltaqB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *w, const realtype *dx, "
-        "const int ip, const int ie, const realtype *xdot, "
-        "const realtype *xdot_eval, const realtype *x_eval, const realtype *xB"
+        "const realtype *dx, const int ip, const int ie, "
+        "const realtype *x_eval, const realtype *xB"
+    ),
+    "dtaudx": _FunctionInfo(
+        "realtype *dtaudx, const realtype t, const realtype *x, "
+        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *w, const realtype *dx, const realtype *tcl, "
+        "const int ie"
+    ),
+    "dtaudp": _FunctionInfo(
+        "realtype *dtaudp, const realtype t, const realtype *x, "
+        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *w, const realtype *dx, const realtype *tcl, "
+        "const int ip, const int ie"
     ),
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "
@@ -437,7 +459,7 @@ sensi_functions = [
     func_name
     for func_name, func_info in functions.items()
     if "const int ip" in func_info.arguments()
-] + ["deltaxB", "dzdx", "drzdx"]
+] + ["deltaxB", "deltaxB_at_trigger", "stauB", "dtaudx", "dzdx", "drzdx"]
 
 #: list of sparse sensitivity functions
 sparse_sensi_functions = [

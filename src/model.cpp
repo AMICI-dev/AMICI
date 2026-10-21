@@ -73,6 +73,10 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
     {ModelQuantity::dJzdz, "dJzdz"},
     {ModelQuantity::drzdp, "drzdp"},
     {ModelQuantity::drzdx, "drzdx"},
+    {ModelQuantity::deltaxB_at_trigger, "deltaxB_at_trigger"},
+    {ModelQuantity::stauB, "stauB"},
+    {ModelQuantity::dtaudx, "dtaudx"},
+    {ModelQuantity::dtaudp, "dtaudp"},
 
 };
 
@@ -1603,54 +1607,112 @@ void Model::add_state_sensitivity_event_update(
     }
 }
 
-void Model::add_adjoint_state_event_update(
-    AmiVector& xB, int const ie, realtype const t, AmiVector const& x,
-    AmiVector const& xdot, AmiVector const& xdot_eval, AmiVector const& x_eval,
-    AmiVector const& dx
+void Model::add_adjoint_event_update(
+    AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
+    std::vector<realtype>& stauB, int const ie, realtype const t,
+    AmiVector const& x, AmiVector const& xdot, AmiVector const& xdot_eval,
+    AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx
 ) {
+    auto const* x_pos = compute_x_pos(x);
 
-    derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
-
-    // compute update
-    fdeltaxB(
-        derived_state_.deltaxB_.data(), t, compute_x_pos(x),
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), derived_state_.w_.data(), dx.data(), ie, xdot.data(),
-        xdot_eval.data(), x_eval.data(), xB.data(), state_.total_cl.data()
-    );
-
-    if (always_check_finite_) {
-        check_finite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
-    }
-
-    // apply update
-    for (int ix = 0; ix < nxtrue_solver; ++ix)
-        for (int iJ = 0; iJ < nJ; ++iJ)
-            xB.at(ix + iJ * nxtrue_solver)
-                += derived_state_.deltaxB_.at(ix + iJ * nxtrue_solver);
-}
-
-void Model::add_adjoint_quadrature_event_update(
-    AmiVector& xQB, int const ie, realtype const t, AmiVector const& x,
-    AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_eval,
-    AmiVector const& x_eval, AmiVector const& dx
-) {
+    // all updates use the adjoint state after the event
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
-
         fdeltaqB(
-            derived_state_.deltaqB_.data(), t, compute_x_pos(x),
+            derived_state_.deltaqB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), derived_state_.w_.data(), dx.data(), plist(ip), ie,
-            xdot.data(), xdot_eval.data(), x_eval.data(), xB.data()
+            state_.h.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
         );
-
+        if (always_check_finite_) {
+            check_finite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
+        }
         for (int iJ = 0; iJ < nJ; ++iJ)
             xQB.at(ip * nJ + iJ) += derived_state_.deltaqB_.at(iJ);
     }
 
+    std::vector<realtype> stauB_ie(nJ, 0.0);
+    fstauB(
+        stauB_ie.data(), t, x_pos, state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data(), state_.h.data(), dx.data(), ie,
+        xdot.data(), xdot_eval.data(), xdot_pre.data(), x_eval.data(),
+        xB.data(), state_.total_cl.data()
+    );
     if (always_check_finite_) {
-        check_finite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
+        check_finite(stauB_ie, ModelQuantity::stauB, t);
+    }
+    for (int iJ = 0; iJ < nJ; ++iJ)
+        stauB.at(iJ) += stauB_ie.at(iJ);
+
+    // only non-zero for events using values from the trigger time
+    if (get_event(ie).uses_values_from_trigger_time()) {
+        derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
+        fdeltaxB_at_trigger(
+            derived_state_.deltaxB_.data(), t, x_pos,
+            state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+            state_.h.data(), dx.data(), ie, x_eval.data(), xB.data(),
+            state_.total_cl.data()
+        );
+        if (always_check_finite_) {
+            check_finite(
+                derived_state_.deltaxB_, ModelQuantity::deltaxB_at_trigger, t
+            );
+        }
+        for (int i = 0; i < nxtrue_solver * nJ; ++i)
+            xB_at_trigger.at(i) += derived_state_.deltaxB_.at(i);
+    }
+
+    derived_state_.deltaxB_.assign(nxtrue_solver * nJ, 0.0);
+    fdeltaxB(
+        derived_state_.deltaxB_.data(), t, x_pos,
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        state_.h.data(), dx.data(), ie, x_eval.data(), xB.data(),
+        state_.total_cl.data()
+    );
+    if (always_check_finite_) {
+        check_finite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
+    }
+    for (int i = 0; i < nxtrue_solver * nJ; ++i)
+        xB.at(i) += derived_state_.deltaxB_.at(i);
+}
+
+void Model::add_adjoint_event_time_update(
+    AmiVector& xB, AmiVector& xQB, std::vector<realtype> const& stauB,
+    int const ie, realtype const t, AmiVector const& x, AmiVector const& dx
+) {
+    if (std::ranges::all_of(stauB, [](realtype v) { return v == 0.0; }))
+        return;
+
+    auto const* x_pos = compute_x_pos(x);
+    fw(t, x_pos, false);
+
+    std::vector<realtype> dtaudx(nx_solver, 0.0);
+    fdtaudx(
+        dtaudx.data(), t, x_pos, state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data(), state_.h.data(),
+        derived_state_.w_.data(), dx.data(), state_.total_cl.data(), ie
+    );
+    if (always_check_finite_) {
+        check_finite(dtaudx, ModelQuantity::dtaudx, t);
+    }
+    for (int ix = 0; ix < nxtrue_solver; ++ix)
+        for (int iJ = 0; iJ < nJ; ++iJ)
+            xB.at(ix + iJ * nxtrue_solver) += stauB.at(iJ) * dtaudx.at(ix);
+
+    for (int ip = 0; ip < nplist(); ip++) {
+        realtype dtaudp = 0.0;
+        fdtaudp(
+            &dtaudp, t, x_pos, state_.unscaled_parameters.data(),
+            state_.fixed_parameters.data(), state_.h.data(),
+            derived_state_.w_.data(), dx.data(), state_.total_cl.data(),
+            plist(ip), ie
+        );
+        if (always_check_finite_) {
+            check_finite(
+                gsl::span<realtype const>(&dtaudp, 1), ModelQuantity::dtaudp, t
+            );
+        }
+        for (int iJ = 0; iJ < nJ; ++iJ)
+            xQB.at(ip * nJ + iJ) += stauB.at(iJ) * dtaudp;
     }
 }
 
@@ -1696,6 +1758,8 @@ int Model::check_finite(
     case ModelQuantity::JDiag:
     case ModelQuantity::deltax:
     case ModelQuantity::deltaxB:
+    case ModelQuantity::deltaxB_at_trigger:
+    case ModelQuantity::dtaudx:
         if (has_state_ids()) {
             element_id = get_state_ids_solver()[flat_index];
         }

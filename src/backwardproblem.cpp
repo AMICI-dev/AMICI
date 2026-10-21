@@ -185,21 +185,32 @@ void EventHandlingBwdSimulator::handle_event_b(
     Discontinuity const& disc, std::vector<realtype> const* dJzdx
 ) {
     // Undo events in the reverse of the order they were applied going
-    // forward (which is not necessarily their index order)
+    // forward (which is not necessarily their index order).
+    // All events of this discontinuity share the event time, so the terms
+    // depending on the event-time sensitivity are accumulated and applied
+    // at the trigger state below. The same holds for the dependence on the
+    // state at the trigger time for events using values from the trigger
+    // time.
+    std::vector<realtype> stauB(model_->nJ, 0.0);
+    // This also applies to the secondary discontinuities triggered by this
+    // one, which were handled right before.
+    if (!stauB_secondary_.empty()) {
+        Expects(!disc.event_applications.empty());
+        stauB = std::move(stauB_secondary_);
+        stauB_secondary_.clear();
+    }
+    AmiVector xB_at_trigger(ws_->xB_.size(), solver_->get_sun_context());
+    xB_at_trigger.zero();
     for (auto const& application :
          std::ranges::reverse_view(disc.event_applications)) {
-        auto const ie = application.ie;
-
-        model_->add_adjoint_quadrature_event_update(
-            ws_->xQB_, ie, t_, application.x_post, ws_->xB_,
-            application.xdot_post, application.xdot_eval, application.x_eval,
-            application.dx_post
-        );
-        model_->add_adjoint_state_event_update(
-            ws_->xB_, ie, t_, application.x_post, application.xdot_post,
-            application.xdot_eval, application.x_eval, application.dx_post
+        model_->add_adjoint_event_update(
+            ws_->xB_, ws_->xQB_, xB_at_trigger, stauB, application.ie, t_,
+            application.x_post, application.xdot_post, application.xdot_eval,
+            application.xdot_pre, application.x_eval, application.dx_post
         );
     }
+    for (int i = 0; i < ws_->xB_.size(); ++i)
+        ws_->xB_[i] += xB_at_trigger[i];
 
     // Event outputs were evaluated at the state at which the discontinuity
     // was reached, also for events without state updates and for the events
@@ -226,6 +237,27 @@ void EventHandlingBwdSimulator::handle_event_b(
     state.h = disc.h_at_trigger;
     state.total_cl = disc.total_cl_at_trigger;
     model_->set_model_state(state);
+
+    // The event time doesn't depend on the parameters for events at the
+    // initial time. Otherwise, it's defined by the triggering root function
+    // (if several were triggered simultaneously, the last one, as for
+    // forward sensitivities). Secondary discontinuities share the event time
+    // of the discontinuity that triggered them.
+    if (disc.secondary_event) {
+        stauB_secondary_ = std::move(stauB);
+    } else if (!disc.initial_event && !disc.event_applications.empty()) {
+        int ie_tau = -1;
+        for (int ie = 0; ie < model_->ne; ie++) {
+            if (disc.root_info[ie] == 1)
+                ie_tau = ie;
+        }
+        if (ie_tau >= 0) {
+            model_->add_adjoint_event_time_update(
+                ws_->xB_, ws_->xQB_, stauB, ie_tau, t_, disc.x_at_trigger,
+                disc.dx_at_trigger
+            );
+        }
+    }
 }
 
 void EventHandlingBwdSimulator::handle_datapoint_b(

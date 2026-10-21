@@ -69,9 +69,11 @@ set(SRC_LIST_LIB Jy.cpp
 create_splines.cpp 
 dJydsigmay.cpp 
 dJydy.cpp 
-deltaqB.cpp 
 deltasx.cpp 
 deltax.cpp 
+deltaxB.cpp 
+deltaxB_at_trigger.cpp 
+dtaudp.cpp 
 dxdotdp_explicit.cpp 
 dxdotdx_explicit.cpp 
 dydx.cpp 
@@ -81,6 +83,7 @@ model_dirac_py.h
 root.cpp 
 sigmay.cpp 
 stau.cpp 
+stauB.cpp 
 wrapfunctions.cpp 
 wrapfunctions.h 
 x_rdata.cpp 

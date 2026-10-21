@@ -38,6 +38,10 @@
 %ignore fdeltasx;
 %ignore fdeltax;
 %ignore fdeltaxB;
+%ignore fdeltaxB_at_trigger;
+%ignore fdtaudp;
+%ignore fdtaudx;
+%ignore fstauB;
 %ignore fdrzdp;
 %ignore fdrzdx;
 %ignore fdsigmaydp;

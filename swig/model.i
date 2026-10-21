@@ -8,7 +8,8 @@ using namespace amici;
 
 // remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
-%ignore add_adjoint_state_event_update;
+%ignore add_adjoint_event_time_update;
+%ignore add_adjoint_event_update;
 %ignore add_event_objective;
 %ignore add_event_objective_regularization;
 %ignore add_event_objective_sensitivity;

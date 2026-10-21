@@ -75,10 +75,10 @@ dJydsigmay.cpp
 dJydy.cpp 
 dJzdsigmaz.cpp 
 dJzdz.cpp 
-deltaqB.cpp 
 deltasx.cpp 
-deltaxB.cpp 
 drzdx.cpp 
+dtaudp.cpp 
+dtaudx.cpp 
 dxdotdp_explicit.cpp 
 dxdotdx_explicit.cpp 
 dydp.cpp 
@@ -92,6 +92,7 @@ rz.cpp
 sigmay.cpp 
 sigmaz.cpp 
 stau.cpp 
+stauB.cpp 
 sx0_fixedParameters.cpp 
 wrapfunctions.cpp 
 wrapfunctions.h 
