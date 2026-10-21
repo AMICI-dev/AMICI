@@ -1938,10 +1938,11 @@ class DEModel:
             for ie, event in enumerate(self._events):
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
 
-                # need to check if equations are zero since we are using
-                # symbols
-                stau_is_zero = smart_is_zero_matrix(self.eq("stau")[ie])
-                if not stau_is_zero and not xdot_is_zero:
+                # The event-time terms can't be dropped based on the symbolic
+                # `stau`: events triggered by other events' assignments take
+                # the event time sensitivity of the triggering event at
+                # runtime, also if their own `stau` is symbolically zero.
+                if not xdot_is_zero:
                     tmp_eq += smart_multiply(
                         self.sym("xdot") - self.sym("xdot_pre"),
                         self.sym("stau").T,
@@ -1958,24 +1959,21 @@ class DEModel:
                         1, self.num_par()
                     )
 
-                    # need to check if equations are zero since we are using
-                    # symbols
-                    if not stau_is_zero:
-                        # chain rule for the time point
-                        tmp_eq += smart_multiply(
-                            self.eq("ddeltaxdt")[ie],
-                            -self.sym("stau").T,
-                        )
+                    # chain rule for the time point
+                    tmp_eq += smart_multiply(
+                        self.eq("ddeltaxdt")[ie],
+                        -self.sym("stau").T,
+                    )
 
-                        # additional part of chain rule state variables
-                        tmp_dxdp += smart_multiply(
-                            self.sym("xdot_pre"),
-                            -self.sym("stau").T,
-                        )
-                        tmp_dxdp_eval += smart_multiply(
-                            self.sym("xdot_eval"),
-                            -self.sym("stau").T,
-                        )
+                    # additional part of chain rule state variables
+                    tmp_dxdp += smart_multiply(
+                        self.sym("xdot_pre"),
+                        -self.sym("stau").T,
+                    )
+                    tmp_dxdp_eval += smart_multiply(
+                        self.sym("xdot_eval"),
+                        -self.sym("stau").T,
+                    )
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
