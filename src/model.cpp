@@ -1573,7 +1573,8 @@ void Model::add_state_event_update(
 void Model::add_state_sensitivity_event_update(
     AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& x_eval, AmiVector const& xdot, AmiVector const& xdot_eval,
-    AmiVectorArray const& sx_eval, std::vector<realtype> const& stau
+    AmiVector const& xdot_pre, AmiVectorArray const& sx_eval,
+    std::vector<realtype> const& stau
 ) {
     fw(t, x_eval.data(), false);
 
@@ -1586,8 +1587,9 @@ void Model::add_state_sensitivity_event_update(
             derived_state_.deltasx_.data(), t, x.data(),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
             state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
-            xdot.data(), xdot_eval.data(), sx_eval.data(ip), &stau.at(ip),
-            state_.total_cl.data(), x_eval.data()
+            xdot.data(), xdot_eval.data(), xdot_pre.data(), sx.data(ip),
+            sx_eval.data(ip), &stau.at(ip), state_.total_cl.data(),
+            x_eval.data()
         );
         if (always_check_finite_) {
             check_finite(

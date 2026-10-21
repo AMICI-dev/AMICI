@@ -248,6 +248,7 @@ class DEModel:
         self.reserved_symbol_original_ids: dict[str, str] = {}
         self._symboldim_funs: dict[str, Callable[[], int]] = {
             "sx": self.num_states_solver,
+            "sx_eval": self.num_states_solver,
             "v": self.num_states_solver,
             "vB": self.num_states_solver,
             "xB": self.num_states_solver,
@@ -1233,7 +1234,7 @@ class DEModel:
             return
         elif name == "x_eval":
             length = len(self.eq("xdot"))
-        elif name == "xdot_eval":
+        elif name in ("xdot_eval", "xdot_pre"):
             length = len(self.eq("xdot"))
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
@@ -1922,7 +1923,17 @@ class DEModel:
                 return
 
             xdot_is_zero = smart_is_zero_matrix(self.eq("xdot"))
-
+            # `sx`/`xdot_pre`: sensitivities and right-hand side right before
+            #  this event (which, for simultaneous events, may differ from
+            #  those before the first one).
+            # `sx_eval`/`xdot_eval`: at the state the event assignments are
+            #  evaluated at (`x_eval`). For `useValuesFromTriggerTime=true`,
+            #  that's the state when the event was triggered, otherwise
+            #  the same as `sx`/`xdot_pre`.
+            # The event time is shared, so `stau` refers to the original
+            #  trigger.
+            # deltax = assignment(x_eval) - x, so `ddeltaxdx` applies to `sx`,
+            #  `ddeltaxdx_eval` to `sx_eval`.
             event_eqs = []
             for ie, event in enumerate(self._events):
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
@@ -1932,7 +1943,7 @@ class DEModel:
                 stau_is_zero = smart_is_zero_matrix(self.eq("stau")[ie])
                 if not stau_is_zero and not xdot_is_zero:
                     tmp_eq += smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_eval"),
+                        self.sym("xdot") - self.sym("xdot_pre"),
                         self.sym("stau").T,
                     )
 
@@ -1943,6 +1954,9 @@ class DEModel:
 
                     # initial part of chain rule state variables
                     tmp_dxdp = self.sym("sx") * sp.ones(1, self.num_par())
+                    tmp_dxdp_eval = self.sym("sx_eval") * sp.ones(
+                        1, self.num_par()
+                    )
 
                     # need to check if equations are zero since we are using
                     # symbols
@@ -1955,15 +1969,19 @@ class DEModel:
 
                         # additional part of chain rule state variables
                         tmp_dxdp += smart_multiply(
+                            self.sym("xdot_pre"),
+                            -self.sym("stau").T,
+                        )
+                        tmp_dxdp_eval += smart_multiply(
                             self.sym("xdot_eval"),
                             -self.sym("stau").T,
                         )
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(
-                        self.eq("ddeltaxdx")[ie]
-                        + self.eq("ddeltaxdx_eval")[ie],
-                        tmp_dxdp,
+                        self.eq("ddeltaxdx")[ie], tmp_dxdp
+                    ) + smart_multiply(
+                        self.eq("ddeltaxdx_eval")[ie], tmp_dxdp_eval
                     )
                 event_eqs.append(tmp_eq)
 
@@ -2033,7 +2051,7 @@ class DEModel:
                 event_eqs.append(smart_multiply(self.sym("xB").T, tmp_eq))
             self._eqs[name] = event_eqs
 
-        elif name == "xdot_eval":
+        elif name in ("xdot_eval", "xdot_pre"):
             # force symbols
             self._eqs[name] = self.sym(name)
 

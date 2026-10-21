@@ -495,16 +495,30 @@ void EventHandlingSimulator::handle_events(
         // only consider transitions false -> true
         if (ws_->roots_found.at(ie) == 1) {
             auto const& event = model_->get_event(ie);
+            auto const uses_trigger_values
+                = event.uses_values_from_trigger_time();
             ws_->pending_events.push(
                 {.event = event,
                  .idx = ie,
                  .state_at_trigger
-                 = (event.uses_values_from_trigger_time()
+                 = (uses_trigger_values
                         ? std::optional<SimulationState>(get_simulation_state())
+                        : std::nullopt),
+                 // computed before the Heaviside variables were updated
+                 .xdot_at_trigger
+                 = (uses_trigger_values && solver_->computing_fsa()
+                        ? std::optional<AmiVector>(ws_->xdot_at_trigger)
                         : std::nullopt)}
             );
         }
     }
+
+    // Whether no event has been applied since the last discontinuity record,
+    // i.e., the Heaviside variables were just updated.
+    bool first_since_discontinuity = true;
+    // Time derivative of the state right before the current event, only
+    // computed for forward sensitivities
+    AmiVector xdot_pre(ws_->xdot_at_trigger);
 
     while (!ws_->pending_events.empty()) {
         // get the next event to be handled
@@ -533,6 +547,21 @@ void EventHandlingSimulator::handle_events(
         AmiVector const x_eval = state_at_trigger.has_value()
                                      ? state_at_trigger->sol.x
                                      : ws_->sol.x;
+
+        if (solver_->computing_fsa()) {
+            if (first_since_discontinuity) {
+                // `update_heaviside` already flipped `h`, but the jump in
+                // the right-hand side due to the Heaviside update is part of
+                // this event's sensitivity update, so use the pre-flip
+                // right-hand side from `store_state_at_trigger`.
+                xdot_pre.copy(ws_->xdot_at_trigger);
+            } else {
+                // for simultaneous events, the right-hand side after the
+                // previous event, computed below
+                xdot_pre.copy(ws_->xdot);
+            }
+        }
+        first_since_discontinuity = false;
 
         // For adjoint sensitivities, `deltaxB`/`deltaqB` need the states
         // around this event's application.
@@ -574,9 +603,14 @@ void EventHandlingSimulator::handle_events(
         if (solver_->computing_fsa()) {
             // compute the new xdot
             model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+            // The event assignments are evaluated at `x_eval`, which,
+            // for `useValuesFromTriggerTime=true`, may differ from the state
+            // right before this event if other events were applied before.
             model_->add_state_sensitivity_event_update(
                 ws_->sol.sx, ie, ws_->sol.t, ws_->sol.x, x_eval, ws_->xdot,
-                ws_->xdot_at_trigger,
+                state_at_trigger.has_value() ? *pending_event.xdot_at_trigger
+                                             : xdot_pre,
+                xdot_pre,
                 state_at_trigger.has_value() ? state_at_trigger->sol.sx
                                              : ws_->sol.sx,
                 ws_->stau
@@ -599,6 +633,7 @@ void EventHandlingSimulator::handle_events(
             record_new_discontinuity(true);
 
             model_->update_heaviside(ws_->roots_found);
+            first_since_discontinuity = true;
         }
 
         // record any newly-found roots
@@ -732,15 +767,25 @@ int EventHandlingSimulator::detect_secondary_events() {
                 if (ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie)) {
                     ws_->roots_found.at(ie) = 1;
                     auto const& event = model_->get_event(ie);
+                    auto const uses_trigger_values
+                        = event.uses_values_from_trigger_time();
+                    std::optional<AmiVector> xdot_at_trigger;
+                    if (uses_trigger_values && solver_->computing_fsa()) {
+                        // the right-hand side after the event that
+                        // triggered this one, computed in `handle_events`
+                        // (the Heaviside variables are not updated yet)
+                        xdot_at_trigger.emplace(ws_->xdot);
+                    }
                     ws_->pending_events.push(
                         {.event = event,
                          .idx = ie,
                          .state_at_trigger
-                         = (event.uses_values_from_trigger_time()
+                         = (uses_trigger_values
                                 ? std::optional<SimulationState>(
                                       get_simulation_state()
                                   )
-                                : std::nullopt)}
+                                : std::nullopt),
+                         .xdot_at_trigger = std::move(xdot_at_trigger)}
                     );
                 } else {
                     ws_->roots_found.at(ie) = -1;

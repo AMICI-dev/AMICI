@@ -217,8 +217,9 @@ void AbstractModel::fdeltasx(
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, int const /*ip*/, int const /*ie*/,
     realtype const* /*xdot*/, realtype const* /*xdot_eval*/,
-    realtype const* /*sx*/, realtype const* /*stau*/, realtype const* /*tcl*/,
-    realtype const* /*x_eval*/
+    realtype const* /*xdot_pre*/, realtype const* /*sx*/,
+    realtype const* /*sx_eval*/, realtype const* /*stau*/,
+    realtype const* /*tcl*/, realtype const* /*x_eval*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "

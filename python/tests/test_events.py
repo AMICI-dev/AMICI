@@ -1914,6 +1914,66 @@ def test_root_after_reinit_ignores_all_simultaneous_events(tempdir):
     assert rdata.by_id("n_fired_2")[-1] == 1
 
 
+@skip_on_valgrind
+@pytest.mark.parametrize("from_trigger", [True, False])
+@pytest.mark.parametrize("e1_first", [True, False])
+def test_simultaneous_events_sensitivities(tempdir, from_trigger, e1_first):
+    """Sensitivities for simultaneous events, where the earlier one changes a
+    state used by the later one."""
+    model_name = f"test_simultaneous_events_{int(from_trigger)}{int(e1_first)}"
+    prio1, prio2 = (2, 1) if e1_first else (1, 2)
+    ft = str(from_trigger).lower()
+    antimony2amici(
+        f"""
+        k = 0.5; p = 3
+        x = 1; v = 0
+        x' = -k * p * x
+        v' = 0
+        E1: at p * x < 0.9, priority={prio1}, fromTrigger={ft}: x = x - 0.05
+        E2: at p * x < 0.9, priority={prio2}, fromTrigger={ft}: v = v + 2 * p * x
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_v", formula="v"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 4, 9))
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    # E2 uses the value of x before E1, unless E1 is executed first and
+    #  E2's assignment is evaluated at execution time
+    x_e2 = 0.9 / 3 - (0.05 if e1_first and not from_trigger else 0)
+    assert_allclose(rdata.by_id("v")[-1], 2 * 3 * x_e2, rtol=1e-8)
+
+    edata = ExpData(rdata, 1.0, 0.0)
+    # fixed offset, so that the gradient is non-zero
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert np.all(np.abs(rdata.sllh) > 0.1)
+    # Explicit tolerance: the auto-derived one is too loose here, as the
+    #  largest finite-difference steps cross the event.
+    check_gradient(function, point, rdata.sllh, atol=1e-4).assert_success(
+        always_print=True
+    )
+
+
 def _event_output_problem(model, event_measurements):
     """Experimental data with measurements only for the event outputs."""
     nt = model.nt()
