@@ -947,7 +947,7 @@ def example_spline_1(
         tols = (
             dict(llh_rtol=1e-15),
             dict(llh_rtol=1e-15),
-            dict(llh_rtol=1e-15, sllh_atol=5e-8),
+            dict(llh_rtol=1e-15, sllh_atol=5e-8, x_rtol=1e-10, x_atol=5e-10),
         )
 
     return spline, params, tols
