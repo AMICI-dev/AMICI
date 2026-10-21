@@ -123,8 +123,8 @@ struct PendingEvent {
      * The simulation state at which the discontinuity in which `event`
      * triggered was reached.
      * Only set if `event.uses_values_from_trigger_time()` is true.
-     * For primary events, the Heaviside variables in `mod` were already
-     * updated for this discontinuity.
+     * The Heaviside variables in `mod` were already updated for this
+     * discontinuity.
      */
     std::optional<SimulationState> state_at_trigger;
     /**

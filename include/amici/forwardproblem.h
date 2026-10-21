@@ -404,11 +404,24 @@ class EventHandlingSimulator {
     void store_state_at_trigger(bool seflag, bool initial_event);
 
     /**
-     * @brief Check for, and if applicable, handle any secondary events
+     * @brief Check for secondary events.
+     *
+     * Updates `roots_found` for the roots crossed due to the preceding event
+     * assignment.
      *
      * @return the number of secondary events found
      */
     int detect_secondary_events();
+
+    /**
+     * @brief Add the events that triggered in the latest discontinuity to the
+     * queue of pending events.
+     *
+     * Must be called after the Heaviside variables have been updated for
+     * this discontinuity, since the stored trigger-time state is used for
+     * evaluating the event assignments.
+     */
+    void queue_triggered_events();
 
     /**
      * @brief Get the next trigger timepoint of the events with explicit
