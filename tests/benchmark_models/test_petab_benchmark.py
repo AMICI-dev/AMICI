@@ -175,6 +175,9 @@ settings["Okuonghae_ChaosSolitonsFractals2020"] = GradientCheckSettings(
     rtol_sim=1e-14,
     noise_level=0.01,
 )
+settings["Raia_CancerResearch2011"] = GradientCheckSettings(
+    rtol_sim=1e-13,
+)
 settings["SalazarCavazos_MBoC2020"] = GradientCheckSettings(
     atol_sim=1e-12,
     rtol_sim=1e-12,

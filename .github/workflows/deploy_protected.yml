@@ -12,7 +12,7 @@ on:
 
 jobs:
   check-secret:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       secrets-defined: ${{ steps.secret-check.outputs.defined }}
     steps:
@@ -32,7 +32,7 @@ jobs:
     name: Deploy Docker Hub
     needs: [check-secret]
     if: needs.check-secret.outputs.secrets-defined == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:

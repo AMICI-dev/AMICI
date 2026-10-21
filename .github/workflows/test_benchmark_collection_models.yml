@@ -16,7 +16,7 @@ jobs:
   cpp:
     name: Benchmark Collection CPP
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       fail-fast: false
@@ -129,7 +129,7 @@ jobs:
 
   jax:
     name: Benchmark Collection JAX
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:

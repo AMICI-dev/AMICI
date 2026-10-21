@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.13", "3.14"]
-        os: [ubuntu-24.04, macos-latest]
+        os: [ubuntu-26.04, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -25,7 +25,7 @@ jobs:
             sudo apt-get update \
             && sudo apt-get install -y \
               g++ \
-              libatlas-base-dev \
+              libopenblas-dev \
               libhdf5-serial-dev \
               swig
           fi
