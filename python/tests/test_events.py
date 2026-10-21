@@ -1073,10 +1073,12 @@ def test_switches_triggered_by_event_assignments(tempdir):
     and share its event time sensitivity. The same holds for `E2`, whose
     trigger is either constant between events, depends on a state but is
     crossed only due to `E1`, or depends on time only via a switch.
+    `v` doesn't depend on `k`, so `E2`'s own event time sensitivity
+    w.r.t. `k` would be 0.
     """
     triggers = {
         "constant": "s1 >= 1",
-        "state": "s1 + x >= 1.5",
+        "state": "s1 + v >= 1.5",
         "switched_time": "w >= 0.5",
     }
     for trigger_id, trigger in triggers.items():
@@ -1087,6 +1089,7 @@ def test_switches_triggered_by_event_assignments(tempdir):
             f"""
             k = 1.5
             x = 0; x' = k
+            v = 0; v' = 1
             s1 = 0; s2 = 0
             acc = 0
             w := piecewise(time, s1 >= 1, 0)
@@ -2254,6 +2257,7 @@ def test_trigger_time_values_after_secondary_event(tempdir):
     )
     point = np.asarray(model.get_free_parameters())
     solver.set_sensitivity_order(SensitivityOrder.first)
+    sllh = {}
     for sensi_meth in (
         SensitivityMethod.forward,
         SensitivityMethod.adjoint,
@@ -2265,6 +2269,13 @@ def test_trigger_time_values_after_secondary_event(tempdir):
         check_gradient(function, point, rdata.sllh, atol=1e-4).assert_success(
             always_print=True
         )
+        sllh[sensi_meth] = rdata.sllh
+    # the finite difference check is not conclusive for all parameters
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
 
 
 def _event_output_problem(model, event_measurements):

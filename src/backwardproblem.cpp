@@ -227,6 +227,8 @@ void EventHandlingBwdSimulator::handle_event_b(
     }
     for (int i = 0; i < ws_->xB_.size(); ++i)
         ws_->xB_[i] += xB_at_trigger[i];
+    // There is no earlier discontinuity at this time
+    Expects(disc.secondary_event || xB_at_trigger_earlier_.empty());
 
     // Event outputs were evaluated at the state at which the discontinuity
     // was reached, also for events without state updates and for the events
