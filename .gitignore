@@ -163,6 +163,7 @@ python/sdist/amici/_installation/include/
 python/sdist/amici/_installation/lib/
 python/sdist/amici/_installation/share/
 python/sdist/build/*
+python/sdist/output/*
 python/sdist/amici/git_version.txt
 
 python/sdist/dist

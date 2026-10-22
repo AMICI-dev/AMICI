@@ -1,0 +1,126 @@
+schema_version: 1
+
+context:
+  name: amici
+  version: 0.34.2
+
+package:
+  name: ${{ name|lower }}
+  version: ${{ version }}
+
+source:
+  url: https://pypi.io/packages/source/${{ name[0] }}/${{ name }}/${{ name }}-${{ version }}.tar.gz
+  sha256: 7d9097ea971ea751167269e246ca3a224b069a29a4b820e35faab214e2ecb15a
+
+build:
+  # python:
+  #   entry_points:
+  #     - amici_import_petab = amici.petab.cli.import_petab:_main
+  #     - amici_import_petab.py = amici.petab.cli.import_petab:_main
+  skip: match(python, "<3.11")
+  script:
+    # env:
+    #   BLAS_LIBS: "-lopenblas"
+    content: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  build:
+    - ${{ stdlib('c') }}
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - python>=3.11
+    - if: build_platform != target_platform
+      then:
+        - cross-python_{{ target_platform }}
+    - cmake-build-extension==0.6.0
+    - numpy>=2.0
+    - setuptools>=77
+    - pip
+    - wheel
+    - swig>=4
+    - libopenblas
+    - libboost
+    - hdf5
+    - pkg-config
+    - mkl
+    # - if: linux
+    #   then:
+    #   - libgomp
+    # - if: win
+    #   then:
+    - llvm-openmp
+  host:
+    - cmake-build-extension==0.6.0
+    - python>=3.11
+    - numpy>=2.0
+    - setuptools>=77
+    - pip
+    - wheel
+    - swig>=4
+    - libboost
+    - hdf5
+    - pkg-config
+    - mkl
+  run:
+    - numpy>=2.0
+    - pip
+    - setuptools >=77
+    - cmake-build-extension==0.6.0
+    - python>=3.11
+    - swig>=4
+    - pandas>=2.0.2
+    - sympy>=1.12.1
+    - python-libsbml
+    - toposort
+    - mpmath
+    - pyarrow
+    - sbmlmath
+    - xarray
+
+tests:
+  - python:
+      imports:
+        - amici
+        - amici.amici
+      pip_check: false # cmake-build-extension is buggy
+  - script:
+      - python -m amici
+      # - amici_import_petab --help
+      # - amici_import_petab.py --help
+      # - pytest -v
+    requirements:
+      run:
+        # - fiddy>=0.0.3 # fiddy is not on conda-forge!
+        - h5py!=3.15
+        - pytest
+        - pytest-cov
+        - pytest-rerunfailures!=16.0  # v16.0: https://github.com/pytest-dev/pytest-rerunfailures/issues/302
+        - coverage
+        - shyaml
+        # - antimony!=2.14 # not on conda-forge!
+        - scipy
+        - pooch
+        - beartype
+        # - petab #petab not available on conda-forge
+        # - pysb # pysb is not on conda-forge
+
+about:
+  license: BSD-3-Clause
+  #license_file: LICENSE.txt
+  summary: Advanced Multilanguage Interface to CVODES and IDAS
+  # The remaining entries in this section are optional, but recommended.
+  description: |
+    AMICI provides a multi-language (Python, C++, Matlab) interface for the
+    SUNDIALS solvers CVODES (for ordinary differential equations) and IDAS
+    (for algebraic differential equations). AMICI allows the user to read
+    differential equation models specified as SBML or PySB and automatically
+    compiles such models into .mex simulation files (Matlab), C++ executables
+    or Python modules.
+  homepage: https://github.com/amici-dev/amici
+  repository: https://github.com/amici-dev/amici
+  documentation: https://amici.readthedocs.io/en/latest/
+
+extra:
+  recipe-maintainers:
+    - dweindl
+
