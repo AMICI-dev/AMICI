@@ -142,6 +142,14 @@ class EventHandlingBwdSimulator {
      * triggered them.
      */
     std::vector<realtype> stauB_secondary_;
+
+    /**
+     * Adjoint contributions of the dependence on `x_eval` (see
+     * `handle_event_b`) of events whose `x_eval` is the state at which an
+     * earlier discontinuity was reached. While handling discontinuity `j`,
+     * the `i`th entry is to be applied at discontinuity `j - i - 1`.
+     */
+    std::vector<AmiVector> xB_at_trigger_earlier_;
 };
 
 /**

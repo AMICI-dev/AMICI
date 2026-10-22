@@ -1071,11 +1071,14 @@ def test_switches_triggered_by_event_assignments(tempdir):
     The `piecewise` conditions only depend on event-assigned variables,
     i.e., they don't change between events. They are only triggered by `E1`
     and share its event time sensitivity. The same holds for `E2`, whose
-    trigger is either constant between events or depends on time only via
-    a switch.
+    trigger is either constant between events, depends on a state but is
+    crossed only due to `E1`, or depends on time only via a switch.
+    `v` doesn't depend on `k`, so `E2`'s own event time sensitivity
+    w.r.t. `k` would be 0.
     """
     triggers = {
         "constant": "s1 >= 1",
+        "state": "s1 + v >= 1.5",
         "switched_time": "w >= 0.5",
     }
     for trigger_id, trigger in triggers.items():
@@ -1086,6 +1089,7 @@ def test_switches_triggered_by_event_assignments(tempdir):
             f"""
             k = 1.5
             x = 0; x' = k
+            v = 0; v' = 1
             s1 = 0; s2 = 0
             acc = 0
             w := piecewise(time, s1 >= 1, 0)
@@ -1194,13 +1198,25 @@ def test_switches_triggered_by_event_assignments(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     model.set_timepoints([t_end])
-    solver = model.create_solver()
-    solver.set_sensitivity_order(SensitivityOrder.first)
-    solver.set_sensitivity_method(SensitivityMethod.forward)
-    rdata = run_simulation(model, solver)
-    assert rdata.status == AMICI_SUCCESS
-    assert_allclose(rdata.y[-1], [k * (t_end - 1)], rtol=1e-8)
-    assert_allclose(rdata.sy[-1, 0], [t_end - 1], rtol=1e-6)
+    y = np.array([k * (t_end - 1)])
+    dy_dk = np.array([t_end - 1])
+    measurements = np.array([0.0])
+    expected_sllh = -np.sum((y - measurements) * dy_dk)
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.y[-1], y, rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1, 0], dy_dk, rtol=1e-6)
+        assert_allclose(
+            rdata.sllh[0], expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
 
 
 @skip_on_valgrind
@@ -2186,6 +2202,93 @@ def test_simultaneous_events_heaviside_crossed_by_assignment(tempdir):
         rdata = run_simulation(model, solver, edata)
         assert rdata.status == AMICI_SUCCESS, sensi_meth
         assert np.all(np.abs(rdata.sllh) > 0.1), sensi_meth
+        sllh[sensi_meth] = rdata.sllh
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("levels", [1, 2])
+def test_trigger_time_values_after_secondary_event(tempdir, levels):
+    """Sensitivities for an event using values from the trigger time, which
+    is executed after secondary events were triggered.
+
+    `E1` triggers `E3`, which, for two levels, triggers `E4` (otherwise,
+    `E4` triggers later). `E2` is executed last and uses the value of `x`
+    before `E1`, i.e., `v = 0.9 / p`.
+    """
+    model_name = f"test_trigger_time_values_after_secondary_event_{levels}"
+    e3_x = ", x = x / 2" if levels == 2 else ""
+    antimony2amici(
+        f"""
+        k = 0.5; p = 3
+        x = 1; v = 0; w = 0; y = 0
+        x' = -k * p * x
+        v' = 0
+        w' = 0
+        y' = 0
+        E1: at p * x < 0.9, priority=5, fromTrigger=false: x = x / 4
+        E2: at p * x < 0.9, priority=1, fromTrigger=true: v = v + x
+        E3: at x < 0.1, priority=4, fromTrigger=false: w = w + 1{e3_x}
+        E4: at x < 0.05, priority=3, fromTrigger=false: y = y + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_v", formula="v"),
+            MC("obs_w", formula="w"),
+            MC("obs_y", formula="y"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 4, 9))
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("v")[-1], 0.9 / 3, rtol=1e-8)
+    assert_allclose(rdata.by_id("w")[-1], 1.0)
+    assert_allclose(rdata.by_id("y")[-1], 1.0)
+
+    # dv/dk = 0, dv/dp = -0.9 / p^2
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert model.get_free_parameter_ids() == ("k", "p")
+    ix_v = model.get_state_ids().index("v")
+    assert_allclose(rdata.sx[-1, :, ix_v], [0.0, -0.1], rtol=1e-6, atol=1e-10)
+    solver.set_sensitivity_order(SensitivityOrder.none)
+
+    edata = ExpData(rdata, 1.0, 0.0)
+    # fixed offset, so that the gradient is non-zero
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    sllh = {}
+    for sensi_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert np.all(np.abs(rdata.sllh) > 0.05), sensi_meth
+        check_gradient(function, point, rdata.sllh, atol=1e-4).assert_success(
+            always_print=True
+        )
         sllh[sensi_meth] = rdata.sllh
     assert_allclose(
         sllh[SensitivityMethod.adjoint],
