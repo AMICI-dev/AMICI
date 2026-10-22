@@ -1449,3 +1449,76 @@ def test_nested_piecewise_in_condition(tmp_path):
         rtol=1e-5,
         atol=1e-12,
     )
+
+
+def test_parameter_dependent_trigger_time_state_assignment(tmp_path):
+    """Derivatives for a state-updating event whose trigger time is a
+    parameter.
+
+    `x' = -k * x` with `at time >= T: v = v + x, x = x + d`, so
+    `v(tf) = exp(-k T)` and `x(tf) = exp(-k tf) + d exp(-k (tf - T))`.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model parameter_trigger_time
+        k = 0.5; T = 1.5; d = 2
+        x = 1; v = 0
+        x' = -k * x
+        v' = 0
+        at time >= T: v = v + x, x = x + d
+    end
+    """
+    model_name = "parameter_trigger_time"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2jax(
+        model_name, output_dir=tmp_path
+    )
+    model = amici._module_from_path(
+        model_name, tmp_path / "__init__.py"
+    ).Model()
+
+    ts = jnp.array([0.0, 1.0, 3.0])
+
+    def simulate(p):
+        x, _ = model.simulate_condition(
+            p,
+            ts,
+            jnp.array([]),
+            jnp.zeros_like(ts),
+            jnp.zeros_like(ts, dtype=int),
+            jnp.zeros_like(ts, dtype=int),
+            jnp.zeros((ts.shape[0], 0)),
+            jnp.zeros((ts.shape[0], 0)),
+            diffrax.Kvaerno5(),
+            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+            diffrax.DirectAdjoint(),
+            SteadyStateEvent(),
+            1000,
+            ret=ReturnValue.x,
+        )
+        return x[-1]
+
+    ik, iT, id_ = (model.parameter_ids.index(pid) for pid in ("k", "T", "d"))
+    ix, iv = (model.state_ids.index(sid) for sid in ("x", "v"))
+    p = jnp.array(model.parameters, dtype=float)
+    k, T, d, tf = 0.5, 1.5, 2.0, 3.0
+    assert_allclose(np.asarray(p)[[ik, iT, id_]], [k, T, d])
+
+    x = simulate(p)
+    assert_allclose(x[iv], np.exp(-k * T), rtol=1e-6)
+    assert_allclose(
+        x[ix], np.exp(-k * tf) + d * np.exp(-k * (tf - T)), rtol=1e-6
+    )
+
+    sx = jax.jacfwd(simulate)(p)
+    assert_allclose(sx[iv, iT], -k * np.exp(-k * T), rtol=1e-5)
+    assert_allclose(sx[iv, ik], -T * np.exp(-k * T), rtol=1e-5)
+    assert_allclose(sx[ix, iT], d * k * np.exp(-k * (tf - T)), rtol=1e-5)
+    assert_allclose(sx[ix, id_], np.exp(-k * (tf - T)), rtol=1e-5)
