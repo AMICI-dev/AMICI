@@ -56,7 +56,7 @@ def _reshape_flat_array(array_flat):
             array_flat["ix"].str.split(";").apply(np.array).to_list(),
             index=array_flat.index,
         ).astype(int)
-    array_flat.sort_values(by=ix_cols, inplace=True)
+    array_flat = array_flat.sort_values(by=ix_cols)
     array_shape = tuple(array_flat[ix_cols].max().astype(int) + 1)
     array = np.array(array_flat["value"].values).reshape(array_shape)
     return array

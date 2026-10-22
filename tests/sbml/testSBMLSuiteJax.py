@@ -124,9 +124,8 @@ def test_sbml_testsuite_case_jax(
         current_test_path = sbml_semantic_cases_dir / test_id
         results_file = current_test_path / f"{test_id}-results.csv"
         results = pd.read_csv(results_file, delimiter=",")
-        results.rename(
+        results = results.rename(
             columns={c: c.replace(" ", "") for c in results.columns},
-            inplace=True,
         )
 
         model, wrapper = compile_model_jax(

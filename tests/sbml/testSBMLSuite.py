@@ -118,9 +118,8 @@ def test_sbml_testsuite_case(test_id, compiled_case, result_path):
     # parse expected results
     results_file = current_test_path / f"{test_id}-results.csv"
     results = pd.read_csv(results_file, delimiter=",")
-    results.rename(
+    results = results.rename(
         columns={c: c.replace(" ", "") for c in results.columns},
-        inplace=True,
     )
 
     # simulate model
