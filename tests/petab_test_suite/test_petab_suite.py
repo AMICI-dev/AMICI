@@ -135,8 +135,8 @@ def _test_case(case, model_type, version, jax):
         simulation_df = petab_simulate(
             jax_problem, steady_state_event=steady_state_event
         )
-        simulation_df.rename(
-            columns={petab.SIMULATION: petab.MEASUREMENT}, inplace=True
+        simulation_df = simulation_df.rename(
+            columns={petab.SIMULATION: petab.MEASUREMENT}
         )
         # the JAX backend simulates via the (upgraded) PEtab v2 problem and
         # thus reports the v2-style `experimentId` (e.g. the synthetic

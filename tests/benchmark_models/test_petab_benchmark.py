@@ -292,9 +292,7 @@ def test_nominal_parameters_llh(benchmark_problem):
             model=amici_model,
             measurement_df=petab_problem.measurement_df,
         )
-        sim_df.rename(
-            columns={petab.MEASUREMENT: petab.SIMULATION}, inplace=True
-        )
+        sim_df = sim_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION})
         sim_df.to_csv(
             benchmark_outdir / problem_id / f"{problem_id}_simulation.tsv",
             index=False,

@@ -76,7 +76,7 @@ def integrate_spline(
 def create_condition_table() -> pd.DataFrame:
     """Create a PEtab condition table."""
     condition_df = pd.DataFrame({"conditionId": ["condition1"]})
-    condition_df.set_index(["conditionId"], inplace=True)
+    condition_df = condition_df.set_index(["conditionId"])
     return condition_df
 
 
@@ -87,7 +87,7 @@ def create_parameter_table(**columns) -> pd.DataFrame:
     columns.setdefault("parameterScale", "lin")
     columns.setdefault("estimate", 1)
     parameter_df = pd.DataFrame(columns)
-    parameter_df.set_index(["parameterId"], inplace=True)
+    parameter_df = parameter_df.set_index(["parameterId"])
     return parameter_df
 
 
@@ -98,7 +98,7 @@ def create_observable_table(**columns) -> pd.DataFrame:
     columns.setdefault("observableTransformation", "lin")
     columns.setdefault("noiseDistribution", "normal")
     observable_df = pd.DataFrame(columns)
-    observable_df.set_index(["observableId"], inplace=True)
+    observable_df = observable_df.set_index(["observableId"])
     return observable_df
 
 

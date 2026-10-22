@@ -26,7 +26,7 @@ df = pd.concat(
         if f != outfile
     ]
 )
-df.sort_values("np", inplace=True)
+df = df.sort_values("np")
 
 df.to_csv(outfile)
 
