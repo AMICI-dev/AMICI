@@ -430,13 +430,13 @@ def create_edatas(
     measurement_groupvar = [SIMULATION_CONDITION_ID]
     if PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
         measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
-    measurement_dfs = dict(
-        list(
-            petab_problem.measurement_df.fillna(
-                {PREEQUILIBRATION_CONDITION_ID: ""}
-            ).groupby(measurement_groupvar)
-        )
-    )
+    measurement_df = petab_problem.measurement_df
+    if PREEQUILIBRATION_CONDITION_ID in measurement_df:
+        # the column is float64 if all values are missing
+        measurement_df = measurement_df.astype(
+            {PREEQUILIBRATION_CONDITION_ID: object}
+        ).fillna({PREEQUILIBRATION_CONDITION_ID: ""})
+    measurement_dfs = dict(list(measurement_df.groupby(measurement_groupvar)))
 
     edatas = []
     for _, condition in simulation_conditions.iterrows():

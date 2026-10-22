@@ -71,7 +71,7 @@ class PetabProblem:
             preeq_id := PREEQUILIBRATION_CONDITION_ID
         ) in self._simulation_conditions:
             self._simulation_conditions[preeq_id] = (
-                self._simulation_conditions[preeq_id].fillna("")
+                self._simulation_conditions[preeq_id].astype(object).fillna("")
             )
 
         if problem_parameters is None:
