@@ -2211,20 +2211,29 @@ def test_simultaneous_events_heaviside_crossed_by_assignment(tempdir):
 
 
 @skip_on_valgrind
-def test_trigger_time_values_after_secondary_event(tempdir):
+@pytest.mark.parametrize("levels", [1, 2])
+def test_trigger_time_values_after_secondary_event(tempdir, levels):
     """Sensitivities for an event using values from the trigger time, which
-    is executed after a secondary event was triggered."""
-    model_name = "test_trigger_time_values_after_secondary_event"
+    is executed after secondary events were triggered.
+
+    `E1` triggers `E3`, which, for two levels, triggers `E4` (otherwise,
+    `E4` triggers later). `E2` is executed last and uses the value of `x`
+    before `E1`, i.e., `v = 0.9 / p`.
+    """
+    model_name = f"test_trigger_time_values_after_secondary_event_{levels}"
+    e3_x = ", x = x / 2" if levels == 2 else ""
     antimony2amici(
-        """
+        f"""
         k = 0.5; p = 3
-        x = 1; v = 0; w = 0
+        x = 1; v = 0; w = 0; y = 0
         x' = -k * p * x
         v' = 0
         w' = 0
-        E1: at p * x < 0.9, priority=3, fromTrigger=false: x = x / 4
-        E2: at p * x < 0.9, priority=2, fromTrigger=true: v = v + 2 * p * x
-        E3: at x < 0.1, priority=1, fromTrigger=false: w = w + 1
+        y' = 0
+        E1: at p * x < 0.9, priority=5, fromTrigger=false: x = x / 4
+        E2: at p * x < 0.9, priority=1, fromTrigger=true: v = v + x
+        E3: at x < 0.1, priority=4, fromTrigger=false: w = w + 1{e3_x}
+        E4: at x < 0.05, priority=3, fromTrigger=false: y = y + 1
         """,
         model_name=model_name,
         output_dir=tempdir,
@@ -2232,6 +2241,7 @@ def test_trigger_time_values_after_secondary_event(tempdir):
             MC("obs_x", formula="x"),
             MC("obs_v", formula="v"),
             MC("obs_w", formula="w"),
+            MC("obs_y", formula="y"),
         ],
     )
     model = import_model_module(model_name, tempdir).get_model()
@@ -2242,9 +2252,19 @@ def test_trigger_time_values_after_secondary_event(tempdir):
     solver.set_absolute_tolerance(1e-12)
     rdata = run_simulation(model, solver)
     assert rdata.status == AMICI_SUCCESS
-    # E1 triggers E3, E2 uses the value of x before E1
-    assert_allclose(rdata.by_id("v")[-1], 2 * 0.9, rtol=1e-8)
+    assert_allclose(rdata.by_id("v")[-1], 0.9 / 3, rtol=1e-8)
     assert_allclose(rdata.by_id("w")[-1], 1.0)
+    assert_allclose(rdata.by_id("y")[-1], 1.0)
+
+    # dv/dk = 0, dv/dp = -0.9 / p^2
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert model.get_free_parameter_ids() == ("k", "p")
+    ix_v = model.get_state_ids().index("v")
+    assert_allclose(rdata.sx[-1, :, ix_v], [0.0, -0.1], rtol=1e-6, atol=1e-10)
+    solver.set_sensitivity_order(SensitivityOrder.none)
 
     edata = ExpData(rdata, 1.0, 0.0)
     # fixed offset, so that the gradient is non-zero
@@ -2270,7 +2290,6 @@ def test_trigger_time_values_after_secondary_event(tempdir):
             always_print=True
         )
         sllh[sensi_meth] = rdata.sllh
-    # the finite difference check is not conclusive for all parameters
     assert_allclose(
         sllh[SensitivityMethod.adjoint],
         sllh[SensitivityMethod.forward],

@@ -770,9 +770,8 @@ void EventHandlingSimulator::queue_triggered_events() {
 
 int EventHandlingSimulator::detect_secondary_events() {
     int secondevent = 0;
-    // whether an event assignment crossed a root function in the
-    // negative direction
-    bool crossed_back = false;
+    // whether an event assignment triggered another event
+    bool triggered_event = false;
 
     // check whether we need to fire a secondary event
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
@@ -783,8 +782,8 @@ int EventHandlingSimulator::detect_secondary_events() {
             if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
                 ws_->roots_found.at(ie)
                     = ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie) ? 1 : -1;
-                if (ws_->roots_found.at(ie) == -1)
-                    crossed_back = true;
+                if (ws_->roots_found.at(ie) == 1)
+                    triggered_event = true;
                 secondevent++;
             } else {
                 ws_->roots_found.at(ie) = 0;
@@ -797,17 +796,24 @@ int EventHandlingSimulator::detect_secondary_events() {
 
     // fire the secondary event?
     if (secondevent > 0) {
-        // Known limitations of sensitivities at secondary events
+        // Known limitations of sensitivities at secondary events.
+        // If no further event is executed at this time, the event
+        // assignment only changed the sign of root functions, and the
+        // resulting jump in the right-hand side is not accounted for in the
+        // sensitivities.
+        bool const no_further_event
+            = !triggered_event && ws_->pending_events.empty();
         if ((solver_->computing_fsa() || solver_->computing_asa())
             && (model_->has_algebraic_states() || model_->nz > 0
-                || crossed_back)
+                || no_further_event)
             && solver_->get_logger())
             solver_->get_logger()->log(
                 LogSeverity::warning, "SECONDARY_EVENT",
                 "Secondary event was triggered. Sensitivities can be "
                 "incorrect for models with algebraic states, for event "
                 "outputs of secondary events, and if an event assignment "
-                "crosses a root function in the negative direction."
+                "changes the sign of a root function without triggering "
+                "another event."
             );
     }
 
