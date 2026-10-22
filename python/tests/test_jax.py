@@ -1462,12 +1462,17 @@ def test_nested_piecewise_in_condition(tmp_path):
         ("p * piecewise(3, time >= 1, 1) * x", 3, False),
         # the same, written directly in the event assignment
         ("p * piecewise(3, time >= 1, 1) * x", 3, True),
+        # a strict condition, i.e., `1 - h` of the negated root
+        ("p * piecewise(3, time > 1, 1) * x", 3, False),
+        ("p * piecewise(3, time > 1, 1) * x", 3, True),
     ],
     ids=[
         "time",
         "piecewise",
         "piecewise_same_time",
         "piecewise_same_time_inline",
+        "piecewise_same_time_strict",
+        "piecewise_same_time_strict_inline",
     ],
 )
 def test_event_assignments_time_heaviside(
@@ -1544,3 +1549,69 @@ def test_event_assignments_time_heaviside(
     sv = jax.jacfwd(simulate)(p)
     assert_allclose(sv[-1, ip], v / 2.0, rtol=1e-6)
     assert_allclose(sv[-1, ik], -v, rtol=1e-6)
+
+
+@pytest.mark.parametrize(
+    "events",
+    [
+        # `E2` reads a condition that the simultaneous `E1` flips
+        """
+        E1: at time >= 1, fromTrigger=false: x = x + 10
+        E2: at time >= 1, fromTrigger=false: v = piecewise(3, x >= 5, 1)
+        """,
+        # an event at t0 reads a condition whose root is zero at t0
+        """
+        E1: at time > -1, t0=false, fromTrigger=false:
+            v = piecewise(3, time >= 0, 1)
+        """,
+    ],
+    ids=["simultaneous", "t0"],
+)
+def test_event_assignments_updated_heaviside(tmp_path, request, events):
+    """Event assignments use the Heaviside variables after the preceding
+    assignments of simultaneous events and, at t0, after the switch."""
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = f"""
+    model event_assignment_updated_heaviside
+        x = 0; v = 0; z = 0
+        x' = 0
+        v' = 0
+        z' = piecewise(1, x >= 5, 0) + piecewise(1, time >= 0, 0)
+        {events}
+    end
+    """
+    model_name = f"event_assignment_updated_h_{request.node.callspec.id}"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2jax(
+        model_name, output_dir=tmp_path
+    )
+    model = amici._module_from_path(
+        model_name, tmp_path / "__init__.py"
+    ).Model()
+
+    ts = jnp.array([0.0, 0.5, 2.0])
+    x, _ = model.simulate_condition(
+        jnp.array(model.parameters),
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.DirectAdjoint(),
+        SteadyStateEvent(),
+        1000,
+        ret=ReturnValue.x,
+    )
+    # same as the C++ backend
+    assert np.asarray(x)[-1, model.state_ids.index("v")] == 3.0

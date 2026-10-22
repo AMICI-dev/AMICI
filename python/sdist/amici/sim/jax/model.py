@@ -1035,6 +1035,28 @@ class JAXModel(eqx.Module):
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)
         roots_found = jnp.sign(rfx) != jnp.sign(rf0)
+        roots_zero = jnp.isclose(
+            rfx, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
+        )
+
+        def droot_dt_at(y):
+            return (
+                # ∂root_cond_fn/∂t
+                jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y, args)
+                +
+                # ∂root_cond_fn/∂y * ∂y/∂t
+                jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y, args)
+                @ self._xdot(t0_next, y, args)
+            )
+
+        # The assignments are evaluated with the Heaviside variables after
+        # t0, i.e., for roots that are zero at t0, given by their direction.
+        h_assign = jnp.where(
+            roots_zero,
+            droot_dt_at(y0_next) >= 0.0,
+            jnp.where(roots_found, jnp.logical_not(h), h),
+        )
+        h_assign = jnp.where(h_mask, h_assign, h).astype(h.dtype)
 
         y0_next, h_next = _apply_event_assignments(
             t0_next,
@@ -1046,22 +1068,13 @@ class JAXModel(eqx.Module):
             h,
             delta_x,
             h_mask,
+            root_cond_fn,
+            h_eval=h_assign,
         )
 
-        roots_zero = jnp.isclose(
-            rfx, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
-        )
-        droot_dt = (
-            # ∂root_cond_fn/∂t
-            jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y0_next, args)
-            +
-            # ∂root_cond_fn/∂y * ∂y/∂t
-            jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y0_next, args)
-            @ self._xdot(t0_next, y0_next, args)
-        )
         h_next = jnp.where(
             roots_zero,
-            droot_dt >= 0.0,
+            droot_dt_at(y0_next) >= 0.0,
             h_next,
         )
 
