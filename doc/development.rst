@@ -42,7 +42,10 @@ process described below:
    `changelog.d/README.md <https://github.com/AMICI-dev/AMICI/blob/main/changelog.d/README.md>`__
    for details.
 
--  Submit a pull request to the ``main`` branch
+-  Submit a pull request to the ``main`` branch. Please read our
+   `contribution policy <https://github.com/AMICI-dev/AMICI/blob/main/CONTRIBUTING.md#contribution-policy>`__
+   first; in particular, any use of AI tools has to be disclosed in the pull
+   request description.
 
 -  Ensure all tests pass
 

@@ -15,6 +15,10 @@ assignees: ''
 *Steps to reproduce the behavior*
 *Ideally include minimal code examples here*
 
+**Use of AI tools**
+*State which AI tools were used to prepare this report (if any) and for what;
+see "Use of AI tools" in CONTRIBUTING.md. Write "None" if none were used.*
+
 **AMICI version and system environment**
  - OS and version: [e.g. Ubuntu, iOS, Windows]
  - AMICI interface: [e.g. Python, C++]
