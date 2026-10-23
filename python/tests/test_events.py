@@ -1220,6 +1220,61 @@ def test_switches_triggered_by_event_assignments(tempdir):
 
 
 @skip_on_valgrind
+@pytest.mark.parametrize("from_trigger", [True, False])
+def test_event_assignment_switch_flipped_before_execution(
+    tempdir, from_trigger
+):
+    """Sensitivities of event assignments depending on a switch that is
+    flipped by a simultaneous event executed before.
+
+    For `fromTrigger=true`, the assignment of `E2` uses the switch value from
+    the trigger time, otherwise the one after `E1`.
+    """
+    ft = str(from_trigger).lower()
+    model_name = f"test_switch_flipped_before_execution_{ft}"
+    antimony2amici(
+        f"""
+        k = 1.5
+        x = 0; x' = k
+        s = 0; v = 0
+        r := piecewise(2, s >= 1, 1)
+        E1: at x >= 1, priority=2: s = 1
+        E2: at x >= 1, priority=1, fromTrigger={ft}: v = v + r * time
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_v", formula="v")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([2.0])
+    k = model.get_free_parameters()[0]
+
+    # both events fire at t1 = 1 / k
+    r = 1 if from_trigger else 2
+    v = r / k
+    dv_dk = -r / k**2
+    expected_sllh = -v * dv_dk
+
+    edata = ExpData(model)
+    edata.set_measurements([0.0])
+    edata.set_noise_scales([1.0])
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.y[-1], [v], rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1, 0], [dv_dk], rtol=1e-6)
+        assert_allclose(
+            rdata.sllh[0], expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
+
+
+@skip_on_valgrind
 def test_event_output_parameter_derivatives(tempdir):
     """Test forward sensitivities of event outputs that depend explicitly on
     the parameters, and of the root function value of an event that does
