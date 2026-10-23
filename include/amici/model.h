@@ -1514,12 +1514,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx_eval State sensitivity at `x_eval`
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
+     * @param h_assign Heaviside variables with which the event assignments
+     * are evaluated
      */
     void add_state_sensitivity_event_update(
         AmiVectorArray& sx, int ie, realtype t, AmiVector const& x,
         AmiVector const& x_eval, AmiVector const& xdot,
         AmiVector const& xdot_eval, AmiVector const& xdot_pre,
-        AmiVectorArray const& sx_eval, std::vector<realtype> const& stau
+        AmiVectorArray const& sx_eval, std::vector<realtype> const& stau,
+        std::vector<realtype> const& h_assign
     );
 
     /**
@@ -1546,6 +1549,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_eval Time derivative of the state at `x_eval`
      * @param xdot_pre Time derivative of the state right before the event
      * @param x_eval State at which the event assignments are evaluated
+     * @param h_assign Heaviside variables with which the event assignments
+     * are evaluated
      * @param dx Derivative of the state after the event (DAE only)
      * @param h_eval Heaviside variables at which the algebraic states at
      * `x_eval` are determined (DAE only)
@@ -1554,7 +1559,8 @@ class Model : public AbstractModel, public ModelDimensions {
         AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
         std::vector<realtype>& stauB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_eval,
-        AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx,
+        AmiVector const& xdot_pre, AmiVector const& x_eval,
+        std::vector<realtype> const& h_assign, AmiVector const& dx,
         std::vector<realtype> const& h_eval
     );
 

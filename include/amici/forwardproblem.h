@@ -47,6 +47,12 @@ struct EventApplication {
     AmiVector xdot_eval;
 
     /**
+     * Heaviside variables with which this event's assignments were
+     * evaluated (see `x_eval`).
+     */
+    std::vector<realtype> h_assign;
+
+    /**
      * `xdot` right before this event's own bolus was applied. For the first
      * event of a discontinuity, this is evaluated with the Heaviside
      * variables before the discontinuity.

@@ -229,7 +229,8 @@ void EventHandlingBwdSimulator::handle_event_b(
             offset == 0 ? xB_at_trigger : xB_at_trigger_earlier_.at(offset - 1),
             stauB, application.ie, t_, application.x_post,
             application.xdot_post, application.xdot_eval, application.xdot_pre,
-            application.x_eval, application.dx_post, h_eval
+            application.x_eval, application.h_assign, application.dx_post,
+            h_eval
         );
     }
     for (int i = 0; i < ws_->xB_.size(); ++i)

@@ -1578,9 +1578,16 @@ void Model::add_state_sensitivity_event_update(
     AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& x_eval, AmiVector const& xdot, AmiVector const& xdot_eval,
     AmiVector const& xdot_pre, AmiVectorArray const& sx_eval,
-    std::vector<realtype> const& stau
+    std::vector<realtype> const& stau, std::vector<realtype> const& h_assign
 ) {
-    fw(t, x_eval.data(), false);
+    fspl(t);
+    fw(derived_state_.w_.data(), t, x_eval.data(),
+       state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+       h_assign.data(), state_.total_cl.data(), derived_state_.spl_.data(),
+       false);
+    if (always_check_finite_) {
+        check_finite(derived_state_.w_, ModelQuantity::w, t);
+    }
 
     for (int ip = 0; ip < nplist(); ip++) {
 
@@ -1590,7 +1597,7 @@ void Model::add_state_sensitivity_event_update(
         fdeltasx(
             derived_state_.deltasx_.data(), t, x.data(),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
+            h_assign.data(), derived_state_.w_.data(), plist(ip), ie,
             xdot.data(), xdot_eval.data(), xdot_pre.data(), sx.data(ip),
             sx_eval.data(ip), &stau.at(ip), state_.total_cl.data(),
             x_eval.data()
@@ -1611,18 +1618,20 @@ void Model::add_adjoint_event_update(
     AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
     std::vector<realtype>& stauB, int const ie, realtype const t,
     AmiVector const& x, AmiVector const& xdot, AmiVector const& xdot_eval,
-    AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx,
+    AmiVector const& xdot_pre, AmiVector const& x_eval,
+    std::vector<realtype> const& h_assign, AmiVector const& dx,
     std::vector<realtype> const& h_eval
 ) {
     auto const* x_pos = compute_x_pos(x);
 
-    // all updates use the adjoint state after the event
+    // all updates use the adjoint state after the event, and the Heaviside
+    // variables with which the event assignments were evaluated
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
         fdeltaqB(
             derived_state_.deltaqB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
+            h_assign.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
         );
         if (always_check_finite_) {
             check_finite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
@@ -1634,7 +1643,7 @@ void Model::add_adjoint_event_update(
     std::vector<realtype> stauB_ie(nJ, 0.0);
     fstauB(
         stauB_ie.data(), t, x_pos, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), state_.h.data(), dx.data(), ie,
+        state_.fixed_parameters.data(), h_assign.data(), dx.data(), ie,
         xdot.data(), xdot_eval.data(), xdot_pre.data(), x_eval.data(),
         xB.data(), state_.total_cl.data()
     );
@@ -1650,7 +1659,7 @@ void Model::add_adjoint_event_update(
         fdeltaxB_at_trigger(
             derived_state_.deltaxB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), ie, x_eval.data(), xB.data(),
+            h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
             state_.total_cl.data()
         );
         if (always_check_finite_) {
@@ -1669,7 +1678,7 @@ void Model::add_adjoint_event_update(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, x_pos,
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), dx.data(), ie, x_eval.data(), xB.data(),
+        h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
         state_.total_cl.data()
     );
     if (always_check_finite_) {

@@ -557,6 +557,10 @@ void EventHandlingSimulator::handle_events(
         AmiVector const& xdot_eval = pending_event.xdot_at_trigger.has_value()
                                          ? *pending_event.xdot_at_trigger
                                          : xdot_pre;
+        // Heaviside variables with which the event assignments are evaluated
+        auto const h_assign = state_at_trigger.has_value()
+                                  ? state_at_trigger->mod.h
+                                  : model_->get_model_state().h;
 
         // For adjoint sensitivities, `deltaxB`/`deltaqB` need the states
         // around this event's application.
@@ -566,6 +570,7 @@ void EventHandlingSimulator::handle_events(
             event_application->ie = ie;
             event_application->x_eval = x_eval;
             event_application->xdot_eval = xdot_eval;
+            event_application->h_assign = h_assign;
             event_application->xdot_pre = xdot_pre;
             if (state_at_trigger.has_value()) {
                 event_application->trigger_disc_offset = gsl::narrow<int>(
@@ -599,7 +604,7 @@ void EventHandlingSimulator::handle_events(
                 xdot_eval, xdot_pre,
                 state_at_trigger.has_value() ? state_at_trigger->sol.sx
                                              : ws_->sol.sx,
-                ws_->stau
+                ws_->stau, h_assign
             );
         }
         // store post-event state
