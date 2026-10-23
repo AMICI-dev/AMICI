@@ -1462,7 +1462,8 @@ def test_nested_piecewise_in_condition(tmp_path):
         ("p * piecewise(3, time >= 1, 1) * x", 3, False),
         # the same, written directly in the event assignment
         ("p * piecewise(3, time >= 1, 1) * x", 3, True),
-        # a strict condition, i.e., `1 - h` of the negated root
+        # a strict condition, i.e., the Heaviside function of the negated
+        # root
         ("p * piecewise(3, time > 1, 1) * x", 3, False),
         ("p * piecewise(3, time > 1, 1) * x", 3, True),
     ],
@@ -1564,12 +1565,18 @@ def test_event_assignments_time_heaviside(
         E1: at time > -1, t0=false, fromTrigger=false:
             v = piecewise(3, time >= 0, 1)
         """,
+        # the same for the negated root, which is also zero at t0
+        """
+        E1: at time > -1, t0=false, fromTrigger=false:
+            v = piecewise(3, time <= 0, 1)
+        """,
     ],
-    ids=["simultaneous", "t0"],
+    ids=["simultaneous", "t0", "t0_negated"],
 )
 def test_event_assignments_updated_heaviside(tmp_path, request, events):
     """Event assignments use the Heaviside variables after the preceding
-    assignments of simultaneous events and, at t0, after the switch."""
+    assignments of simultaneous events and, at t0, evaluate conditions whose
+    root is zero at t0 itself."""
     from amici.importers.antimony import antimony2sbml
     from amici.importers.sbml import SbmlImporter
     from amici.sim.jax.petab import (

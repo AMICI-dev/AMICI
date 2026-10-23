@@ -441,9 +441,12 @@ class ODEExporter:
 
         def to_h(heaviside: sp.Heaviside) -> sp.Expr:
             arg = heaviside.args[0]
+            # Prefer the Heaviside variable of the negated root over `1 - h`,
+            # which differs if the root is zero, e.g., at t0.
             for root, h in roots:
                 if (arg - root).is_zero:
                     return h
+            for root, h in roots:
                 if (arg + root).is_zero:
                     return 1 - h
             return heaviside

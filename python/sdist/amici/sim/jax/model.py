@@ -1049,11 +1049,11 @@ class JAXModel(eqx.Module):
                 @ self._xdot(t0_next, y, args)
             )
 
-        # The assignments are evaluated with the Heaviside variables after
-        # t0, i.e., for roots that are zero at t0, given by their direction.
+        # As in the C++ backend, the assignments evaluate conditions whose
+        # roots are zero at t0 at t0 itself, i.e., as `heaviside(root, 1)`.
         h_assign = jnp.where(
             roots_zero,
-            droot_dt_at(y0_next) >= 0.0,
+            jnp.heaviside(rfx, 1.0),
             jnp.where(roots_found, jnp.logical_not(h), h),
         )
         h_assign = jnp.where(h_mask, h_assign, h).astype(h.dtype)
