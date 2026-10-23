@@ -316,7 +316,7 @@ struct ModelStateDerived {
     std::vector<realtype> dJrzdsigmaz_;
 
     /** state derivative of event likelihood
-     * (dimension `nJ` x `nx_solver`, row-major)
+     * (dimension `nJ` x `nx_solver`, column-major)
      */
     std::vector<realtype> dJzdx_;
 

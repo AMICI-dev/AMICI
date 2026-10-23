@@ -1485,12 +1485,10 @@ void Model::add_event_objective_sensitivity(
 
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
-    // dJzdx         nmaxevent x nJ        x nx_solver
-    // sx            rdata->nt x nx_solver x nplist()
+    // dJzdx         nJ x nx_solver
+    // sx            nx_solver x nplist()
 
     // Compute dJzdx*sx for current 'ie'
-    // dJzdx        rdata->nt x nJ        x nx_solver
-    // sx           rdata->nt x nx_solver x nplist()
     sx.flatten_to_vector(derived_state_.sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
@@ -2901,7 +2899,7 @@ void Model::fdJzdx(
 ) {
     // dJzdz         nJ x nz        x nztrue
     // dzdx          nz x nx_solver
-    // dJzdx         nJ x nx_solver x nmaxevent
+    // dJzdx         nJ x nx_solver
     if (!nz)
         return;
 

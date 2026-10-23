@@ -292,7 +292,7 @@ class EventHandlingSimulator {
      * @param solver The solver to use for the simulation.
      * @param ws The workspace to use for the simulation.
      * @param dJzdx State-derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?)
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major)
      */
     EventHandlingSimulator(
         gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
@@ -531,7 +531,7 @@ class EventHandlingSimulator {
     gsl::not_null<FwdSimWorkspace*> ws_;
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major) */
     std::vector<realtype>* dJzdx_ = nullptr;
 };
 
@@ -1074,7 +1074,7 @@ class ForwardProblem {
     void store_final_state();
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major) */
     std::vector<realtype> dJzdx_;
 
     /** flag to indicate whether solver was pre-initialized via
