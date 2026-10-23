@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <ranges>
 
 namespace amici {
 
@@ -148,7 +149,9 @@ void EventHandlingSimulator::run(
             ) {
                 // solver-tracked or time-triggered event
                 collect_roots(next_t_event);
-                handle_events(false, edata);
+                filter_zero_roots_after_discontinuity(next_t_stop);
+                if (any_roots_found())
+                    handle_events(false, edata);
             }
         }
         handle_datapoint(next_t_out);
@@ -230,7 +233,9 @@ void EventHandlingSimulator::run_steady_state(
 
             // solver-tracked or time-triggered event
             collect_roots(next_t_event);
-            handle_events(false, nullptr);
+            filter_zero_roots_after_discontinuity(tout);
+            if (any_roots_found())
+                handle_events(false, nullptr);
         }
     }
 
@@ -895,6 +900,45 @@ void EventHandlingSimulator::collect_roots(realtype const t_trigger) {
     if (ws_->sol.t == t_trigger) {
         set_explicit_roots_found(t_trigger);
     }
+}
+
+void EventHandlingSimulator::filter_zero_roots_after_discontinuity(
+    realtype const t_stop
+) {
+    auto const t_disc = ws_->t_roots_for_ignore;
+    auto const t = ws_->sol.t;
+    // Upper bound of the root-finding tolerances of CVODES and IDAS,
+    // `100 * uround * (|t| + |h|)`, as the step size `h` is limited by the
+    // stop time.
+    auto const ttol = 100.0 * std::numeric_limits<realtype>::epsilon()
+                      * (std::fabs(t_disc) + std::fabs(t_stop - t_disc));
+    // no preceding discontinuity, or too far from it for a spurious root
+    if (std::isnan(t_disc) || std::fabs(t - t_disc) > ttol)
+        return;
+
+    auto const is_candidate = [this](int const ie) {
+        return ws_->roots_found.at(ie) != 0
+               && ws_->roots_for_ignore.at(ie) != 0;
+    };
+    // no root of a root function that was zero at the discontinuity
+    if (std::ranges::none_of(
+            std::views::iota(0, model_->ne_solver), is_candidate
+        ))
+        return;
+
+    // drop candidates whose root function is still exactly zero
+    std::vector<realtype> rootvals(model_->ne, 0.0);
+    model_->froot(t, ws_->sol.x, ws_->sol.dx, rootvals);
+    for (int ie = 0; ie < model_->ne_solver; ++ie) {
+        if (is_candidate(ie) && rootvals.at(ie) == 0.0)
+            ws_->roots_found.at(ie) = 0;
+    }
+}
+
+bool EventHandlingSimulator::any_roots_found() const {
+    return std::ranges::any_of(ws_->roots_found, [](int const r) {
+        return r != 0;
+    });
 }
 
 void EventHandlingSimulator::set_explicit_roots_found(
