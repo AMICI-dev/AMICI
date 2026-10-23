@@ -313,6 +313,28 @@ def test_sigma_depending_on_assignment_rules(tempdir, monkeypatch):
 
 
 @skip_on_valgrind
+def test_root_depending_on_zero_assignment_rule(tempdir):
+    """Check roots that depend on an assignment rule with value zero."""
+    ant_model = """
+    model test_root_depending_on_zero_assignment_rule
+        c := 0
+        z = 0; z' = piecewise(1, c >= 0, 0)
+        v = 0; v' = 0
+        E: at (time >= 5) && (c >= 0), t0=false: v = 1
+    end
+    """
+    model_name = "test_root_depending_on_zero_assignment_rule"
+    antimony2amici(ant_model, model_name=model_name, output_dir=tempdir)
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    assert model.get_expression_ids() == ("c",)
+    model.set_timepoints([0, 10])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("z")[-1], 10, rtol=1e-6)
+    assert_array_equal(rdata.by_id("v"), [0, 1])
+
+
+@skip_on_valgrind
 def test_noise_formula_with_expression(tempdir):
     """Test noise formulas that refer to model expressions, including
     expressions that depend on the states, and event noise formulas.

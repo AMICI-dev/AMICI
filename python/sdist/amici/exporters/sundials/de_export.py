@@ -437,11 +437,9 @@ class DEExporter:
                     # used for events triggered by event assignments,
                     # even if `stau` is zero for all events
                     or (sym == "stau" and function == "deltasx")
-                    or (
-                        sym in "w"
-                        and "xdot" in function
-                        and len(self.model.sym(sym))
-                    )
+                    # even if all expressions are zero, they may be
+                    # referenced, e.g., in root functions
+                    or sym == "w"
                 )
             ):
                 continue
