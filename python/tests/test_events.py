@@ -2954,6 +2954,60 @@ def test_dae_algebraic_rule_piecewise(tempdir):
 
 @skip_on_valgrind
 @pytest.mark.parametrize(
+    "previous_period",
+    ["preequilibration", "presim", "preequilibration_presim"],
+)
+def test_dae_algebraic_rule_piecewise_switch_at_period_start(
+    tempdir, previous_period
+):
+    """The algebraic states at the start of the main simulation are
+    consistent with the Heaviside variables of the main simulation.
+
+    The previous period ends exactly at the switching point, so that both
+    root functions of the `piecewise` condition are zero, and, for the main
+    simulation, only one Heaviside variable flips from 1 to 0, without any
+    root function triggering.
+    """
+    ant_model = """
+    model dae_piecewise_period_start
+        const k = 1, p = 1
+        x = 1; y = 3
+        x' = p - x
+        0 = y - piecewise(1, x > k, 3)
+    end
+    """
+    module_name = "dae_piecewise_period_start"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    model.set_timepoints([0.0, 1.0])
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    solver = model.create_solver()
+
+    edata = ExpData(model)
+    edata.fixed_parameters = [0.5]
+    if previous_period.startswith("preequilibration"):
+        edata.fixed_parameters_pre_equilibration = [1.0]
+    if previous_period.endswith("presim"):
+        edata.fixed_parameters_presimulation = (
+            [0.5] if previous_period == "preequilibration_presim" else [1.0]
+        )
+        edata.t_presim = 1.0
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # x = 1 > k = 0.5 -> y = 1
+    assert_allclose(rdata.x0, [1.0, 1.0], rtol=1e-12)
+    assert_allclose(rdata.x, [[1.0, 1.0], [1.0, 1.0]], rtol=1e-12)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
     "trigger_state",
     ["differential", "algebraic"],
 )

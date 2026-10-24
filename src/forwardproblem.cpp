@@ -337,14 +337,32 @@ void ForwardProblem::handle_presimulation() {
         );
     }
     solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
-    solver->update_and_reinit_states_and_sensitivities(model);
+    // Heaviside variables at the end of pre-equilibration (copy, since the
+    // model state is updated in reinit_events)
+    auto const h_old = model->get_model_state().h;
+    // Without pre-equilibration, the model was just initialized with the
+    // fixed parameters of the presimulation, and reinitializing would
+    // overwrite a custom initial state.
+    if (preequilibrated_)
+        solver->update_and_reinit_states_and_sensitivities(model);
+    if (preequilibrated_ && model->ne) {
+        // The consistent algebraic states depend on the Heaviside
+        // variables, so update those first.
+        ws_.sol.x = solver->get_state(ws_.sol.t);
+        model->reinit_events(
+            ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
+        );
+    }
+    // For DAEs, the algebraic states (and their sensitivities) have to be
+    // made consistent with the re-initialized differential states and the
+    // fixed parameters of the presimulation.
+    solver->calc_ic(model->t0());
+    solver->write_solution(ws_.sol.t, ws_.sol);
 
     if (preequilibrated_ && model->ne) {
         // Re-evaluate the event triggers based on the state after applying
-        // the re-initialization of the presimulation condition.
-        ws_.sol.x = solver->get_state(ws_.sol.t);
-        // copy, since model state will be updated in reinit_events
-        auto h_old = model->get_model_state().h;
+        // the re-initialization of the presimulation condition and making
+        // the algebraic states consistent.
         model->reinit_events(
             ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
         );
@@ -382,9 +400,21 @@ void ForwardProblem::handle_main_simulation() {
         );
     }
 
-    if (preequilibrated_ || uses_presimulation_) {
+    bool const continued = preequilibrated_ || uses_presimulation_;
+    // Heaviside variables at the end of the previous period (copy, since the
+    // model state is updated in reinit_events)
+    auto const h_old = model->get_model_state().h;
+    if (continued) {
         // Reset the time and re-initialize events for the main simulation
         solver->update_and_reinit_states_and_sensitivities(model);
+        if (model->ne) {
+            // The consistent algebraic states depend on the Heaviside
+            // variables, so update those first.
+            ws_.sol.x = solver->get_state(model->t0());
+            model->reinit_events(
+                ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
+            );
+        }
         // For DAEs, the algebraic states (and their sensitivities) have to be
         // made consistent with the re-initialized differential states and the
         // fixed parameters of the main simulation before the initial output
@@ -394,12 +424,12 @@ void ForwardProblem::handle_main_simulation() {
 
     // update x0 after computing consistence IC/reinitialization
     ws_.sol.x = solver->get_state(model->t0());
+    ws_.sol.dx = solver->get_derivative_state(model->t0());
 
-    if ((preequilibrated_ || uses_presimulation_) && model->ne) {
+    if (continued && model->ne) {
         // Re-evaluate the event triggers based on the state after applying
-        // the re-initialization of the main simulation condition.
-        // copy, since model state will be updated in reinit_events
-        auto h_old = model->get_model_state().h;
+        // the re-initialization of the main simulation condition and making
+        // the algebraic states consistent.
         model->reinit_events(
             ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
         );

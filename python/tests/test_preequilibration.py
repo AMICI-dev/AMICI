@@ -1270,3 +1270,104 @@ def test_adjoint_condition_differs_from_main_simulation(
     assert_allclose(asa.y, fsa.y, rtol=1e-10)
     assert_allclose(asa.llh, fsa.llh, rtol=1e-10)
     assert_allclose(asa.sllh, fsa.sllh, rtol=1e-6)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("dae", [False, True])
+def test_presimulation_reinitialization_after_preequilibration(tempdir, dae):
+    """State reinitialization at the start of presimulation after
+    pre-equilibration.
+
+    `x` is reinitialized to `p * k` at the start of presimulation, so
+    `x = a + (2 p - a) exp(-(t + 1))` and `dx/dp = 2 exp(-(t + 1))`.
+    For the ODE, the reinitialization triggers an event at the start of
+    presimulation. For the DAE, the algebraic state `z` has to be made
+    consistent with the reinitialized `x`.
+    """
+    if dae:
+        ant_str = """
+        a = 1; p = 1.5; k = 1
+        x = p * k; x' = a - z / 2
+        z = 0; 0 = z - 2 * x
+        """
+    else:
+        ant_str = """
+        a = 1; p = 1.5; k = 1
+        x = p * k; x' = a - x
+        y = 0; y' = 0
+        E: at x > 2: y = y + 1
+        """
+    module_name = f"test_presim_reinit_{'dae' if dae else 'ode'}"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    model = model_module.get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.array([0.0, 1.0])
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.fixed_parameters_pre_equilibration = [1.0]
+    edata.fixed_parameters_presimulation = [2.0]
+    edata.fixed_parameters = [2.0]
+    edata.t_presim = 1.0
+    ix = model.get_state_ids().index("x")
+    edata.reinitialization_state_idxs_presim = [ix]
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+
+    if not dae:
+        # the event was triggered at the start of presimulation
+        iy = model.get_state_ids().index("y")
+        assert_allclose(rdata.x[:, iy], 1.0)
+    ip = model.get_free_parameter_ids().index("p")
+    assert_allclose(rdata.x[:, ix], 1 + 2 * np.exp(-(t + 1)), rtol=1e-8)
+    assert_allclose(rdata.sx[:, ip, ix], 2 * np.exp(-(t + 1)), rtol=1e-6)
+    if dae:
+        iz = model.get_state_ids().index("z")
+        assert_allclose(rdata.x[:, iz], 2 * rdata.x[:, ix], rtol=1e-8)
+        assert_allclose(
+            rdata.sx[:, ip, iz], 2 * rdata.sx[:, ip, ix], rtol=1e-6
+        )
+
+
+@skip_on_valgrind
+def test_presimulation_without_preequilibration_custom_initial_state(tempdir):
+    """Without pre-equilibration, a custom initial state is kept at the start
+    of presimulation, and states are reinitialized only at the start of the
+    main simulation."""
+    model_name = "test_presim_custom_x0"
+    antimony2amici(
+        """
+        k = 1
+        x1 = k; x1' = 0
+        x2 = 0; x2' = x1 - x2
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0])
+    model.set_initial_state([5.0, 0.0])
+    solver = model.create_solver()
+    edata = ExpData(model)
+    edata.fixed_parameters_presimulation = [2.0]
+    edata.t_presim = 1.0
+    edata.fixed_parameters = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # x1 = 5 during presimulation, reinitialized to k = 3 at t = 0
+    assert_allclose(rdata.x[0], [3.0, 5.0 * (1 - np.exp(-1.0))], rtol=1e-6)
