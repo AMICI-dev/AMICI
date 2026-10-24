@@ -7,6 +7,7 @@ using namespace amici;
 %}
 
 %ignore fM;
+%ignore fdxdotdt;
 
 // Process symbols in header
 
