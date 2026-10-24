@@ -75,6 +75,12 @@ struct EventApplication {
      * triggered.
      */
     int trigger_disc_offset{0};
+
+    /**
+     * Heaviside variables with which the algebraic states of `x_eval` were
+     * determined (DAE only).
+     */
+    std::vector<realtype> h_eval;
 };
 
 /**

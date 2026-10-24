@@ -13,6 +13,7 @@ namespace amici {
 
 class ExpData;
 class IDASolver;
+class SUNLinSolDense;
 
 /**
  * @brief The Model class represents an AMICI DAE model.
@@ -321,6 +322,11 @@ class Model_DAE : public Model {
         realtype t, AmiVector const& x, gsl::span<realtype> dJydx,
         gsl::span<realtype> dJydp
     ) override;
+
+    void make_algebraic_derivatives_consistent(
+        realtype t, AmiVector const& x, AmiVector& dx, AmiVectorArray* sx
+    ) override;
+
     void fdxdotdp(
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {
@@ -554,6 +560,54 @@ class Model_DAE : public Model {
     virtual void
     fM(realtype* M, realtype t, realtype const* x, realtype const* p,
        realtype const* k);
+
+  private:
+    /**
+     * @brief Set up a solver for the Jacobian of the algebraic equations
+     * w.r.t. the algebraic states.
+     *
+     * Evaluates the full Jacobian into `derived_state_.J_`.
+     *
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param alg_pos Position of each state among the algebraic states, or
+     * -1 for differential states
+     * @param transpose Whether to factorize the transposed Jacobian
+     * @param purpose What the solver is used for, for error messages
+     * @param linsol Dense solver of the size of the algebraic states
+     */
+    void setup_algebraic_jacobian_solver(
+        realtype t, AmiVector const& x, std::vector<int> const& alg_pos,
+        bool transpose, char const* purpose, SUNLinSolDense& linsol
+    );
+
+    /**
+     * @brief Explicit time derivative of the algebraic equations.
+     *
+     * Partial derivative with respect to time at fixed states and Heaviside
+     * variables, including the time dependence via `w`.
+     * The components for the differential equations are zero.
+     * Time derivatives of splines are approximated by one-sided finite
+     * differences towards larger `t`.
+     *
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param dxdotdt output vector
+     */
+    void fdxdotdt(realtype t, AmiVector const& x, AmiVector& dxdotdt);
+
+    /**
+     * @brief Time derivatives of the splines.
+     *
+     * Approximated by one-sided finite differences towards larger `t`,
+     * or towards smaller `t` at the last node of a spline without
+     * extrapolation.
+     *
+     * @param t timepoint
+     * @return time derivatives of the splines at `t`
+     */
+    [[nodiscard]] std::vector<realtype>
+    spline_time_derivatives(realtype t) const;
 };
 } // namespace amici
 
