@@ -246,9 +246,29 @@ def set_model_settings(
         Keys are callable attributes (setters) of an AMICI model,
         values are provided to the setters.
     """
+    settings = dict(settings)
+    # Non-empty reinitialization indices fully determine the reinitialization
+    # behavior, and `get_reinitialize_fixed_parameter_initial_states` then
+    # returns `True`. Setting that flag to `True` resets the indices to all
+    # states, or fails if reinitialization was disabled at import.
+    # Therefore, set the flag to `True` only if it reproduces the indices,
+    # and otherwise set the indices last.
+    reinit_idxs = settings.pop("reinitialization_state_idxs", None)
+    reinit_all = False
+    if reinit_idxs is not None and len(reinit_idxs):
+        reinit_all = (
+            settings.pop("reinitialize_fixed_parameter_initial_states", False)
+            and tuple(reinit_idxs) == tuple(range(model.nx_rdata))
+            and model.is_fixed_parameter_state_reinitialization_allowed()
+        )
+        model.set_reinitialize_fixed_parameter_initial_states(reinit_all)
+
     for setting, value in settings.items():
         setter = setting[1] if isinstance(setting, tuple) else f"set_{setting}"
         getattr(model, setter)(value)
+
+    if reinit_idxs is not None and not reinit_all:
+        model.set_reinitialization_state_idxs(reinit_idxs)
 
 
 def _log_simulation(rdata: amici_swig.ReturnData):
