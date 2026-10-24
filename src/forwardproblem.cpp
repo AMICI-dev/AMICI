@@ -338,11 +338,15 @@ void ForwardProblem::handle_presimulation() {
     }
     solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
     solver->update_and_reinit_states_and_sensitivities(model);
+    // For DAEs, the algebraic states (and their sensitivities) have to be
+    // made consistent with the re-initialized differential states and the
+    // fixed parameters of the presimulation.
+    solver->calc_ic(model->t0());
+    solver->write_solution(ws_.sol.t, ws_.sol);
 
     if (preequilibrated_ && model->ne) {
         // Re-evaluate the event triggers based on the state after applying
         // the re-initialization of the presimulation condition.
-        ws_.sol.x = solver->get_state(ws_.sol.t);
         // copy, since model state will be updated in reinit_events
         auto h_old = model->get_model_state().h;
         model->reinit_events(
@@ -394,6 +398,7 @@ void ForwardProblem::handle_main_simulation() {
 
     // update x0 after computing consistence IC/reinitialization
     ws_.sol.x = solver->get_state(model->t0());
+    ws_.sol.dx = solver->get_derivative_state(model->t0());
 
     if ((preequilibrated_ || uses_presimulation_) && model->ne) {
         // Re-evaluate the event triggers based on the state after applying
