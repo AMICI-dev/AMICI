@@ -277,6 +277,14 @@ void ForwardProblem::handle_preequilibration() {
         return;
     }
 
+    // Adjoint pre-equilibration requires the adjoint of the reinitialization
+    // at the start of the main simulation. Check before simulating, while
+    // the reinitialization settings of the main simulation are applied.
+    if (solver->computing_asa()
+        && solver->get_sensitivity_method_pre_equilibration()
+               == SensitivityMethod::adjoint)
+        model->check_reinitialize_b_supported();
+
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
     preeq_problem_.emplace(&ws_, *solver, *model, true);
@@ -314,8 +322,7 @@ void ForwardProblem::handle_presimulation() {
     ConditionContext cond(model, edata, FixedParameterContext::presimulation);
 
     // Reinitialization of non-constant states is not yet supported for
-    // adjoint sensitivity analysis (analogous to the restriction on adjoint
-    // preequilibration in BackwardProblem::workBackwardProblem, gh-1156).
+    // adjoint presimulation (gh-1156).
     if (solver->computing_asa()
         && (reinit_sim
             || model->get_reinitialize_fixed_parameter_initial_states())
