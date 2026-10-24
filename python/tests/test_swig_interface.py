@@ -160,6 +160,9 @@ def same_or_nan(a, b):
     return a == b or (isinstance(a, float) and np.isnan(a) and np.isnan(b))
 
 
+@pytest.mark.filterwarnings(
+    "ignore:`Model.set_t0_preeq` is deprecated:DeprecationWarning"
+)
 def test_model_instance_settings(pysb_example_presimulation_module):
     model0 = pysb_example_presimulation_module.get_model()
 
