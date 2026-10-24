@@ -15,6 +15,7 @@ import pytest
 import xarray
 from amici.sim.sundials import (
     AMICI_FIRST_RHSFUNC_ERR,
+    AMICI_NOT_RUN,
     CVodeSolver,
     ExpData,
     ExpDataPtr,
@@ -748,6 +749,43 @@ def test_cpu_timer_uses_thread_clock():
     assert CpuTimer.uses_thread_clock is (sys.platform != "win32")
     timer = CpuTimer()
     assert 0.0 <= timer.elapsed_seconds() < 1.0
+
+
+def test_run_simulations_failfast_skipped(sbml_example_presimulation_module):
+    """Skipped simulations return invalid results matching their ExpData."""
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_return_data_reporting_mode(RDataReporting.full)
+    solver.set_max_steps(10)
+
+    edata_fail = ExpData(model)
+    edata_fail.set_timepoints([1e8])
+    edata_fail.id = "fail"
+    edata_skip = ExpData(model)
+    edata_skip.set_timepoints([0.0, 1.0, 2.0])
+    edata_skip.plist = [1]
+    edata_skip.id = "skip"
+
+    rdatas = run_simulations(
+        model, solver, [edata_fail, edata_skip], failfast=True
+    )
+    assert rdatas[0].status < 0
+    assert rdatas[1].status == AMICI_NOT_RUN
+    assert rdatas[1].id == "skip"
+    assert np.array_equal(rdatas[1].ts, edata_skip.get_timepoints())
+    assert rdatas[1].sx.shape[1] == 1
+    # skipped results must not look like valid outputs or a perfect fit
+    assert np.isnan(rdatas[1].llh)
+    assert np.isnan(rdatas[1].chi2)
+    for field in ("x", "y", "sx", "sy", "res", "sres", "sllh"):
+        values = np.asarray(rdatas[1][field])
+        assert values.size > 0, field
+        assert np.isnan(values).all(), field
+    # the model is unchanged
+    assert np.array_equal(model.get_timepoints(), [0.0, 1.0])
 
 
 def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
