@@ -1,9 +1,12 @@
 /* -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
+ * Programmer(s): Daniel R. Reynolds @ UMBC
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -34,9 +37,11 @@ struct _SUNAdaptControllerContent_ImExGus
   sunrealtype k2i;
   sunrealtype k1e;
   sunrealtype k2e;
-  sunrealtype bias;         /* error bias factor */
-  sunrealtype ep;           /* error from previous step */
-  sunrealtype hp;           /* previous step size */
+  sunrealtype bias; /* error bias factor */
+  sunrealtype ep;   /* error from previous step */
+  sunrealtype hp;   /* previous step size */
+  /* TODO(SRB): Consider removing firststep. We can use a negative ep to
+   * indicate we are on the first step */
   sunbooleantype firststep; /* flag indicating first step */
 };
 
@@ -53,6 +58,7 @@ SUNDIALS_EXPORT
 SUNErrCode SUNAdaptController_SetParams_ImExGus(SUNAdaptController C,
                                                 sunrealtype k1e, sunrealtype k2e,
                                                 sunrealtype k1i, sunrealtype k2i);
+
 SUNDIALS_EXPORT
 SUNAdaptController_Type SUNAdaptController_GetType_ImExGus(SUNAdaptController C);
 
@@ -61,6 +67,7 @@ SUNErrCode SUNAdaptController_EstimateStep_ImExGus(SUNAdaptController C,
                                                    sunrealtype h, int p,
                                                    sunrealtype dsm,
                                                    sunrealtype* hnew);
+
 SUNDIALS_EXPORT
 SUNErrCode SUNAdaptController_Reset_ImExGus(SUNAdaptController C);
 
@@ -77,7 +84,8 @@ SUNDIALS_EXPORT
 SUNErrCode SUNAdaptController_UpdateH_ImExGus(SUNAdaptController C,
                                               sunrealtype h, sunrealtype dsm);
 
-SUNDIALS_EXPORT
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+  "Work space functions will be removed in version 8.0.0")
 SUNErrCode SUNAdaptController_Space_ImExGus(SUNAdaptController C,
                                             long int* lenrw, long int* leniw);
 

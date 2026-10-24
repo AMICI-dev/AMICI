@@ -70,10 +70,6 @@ long SUNLinSolWrapper::get_last_flag() const {
     return gsl::narrow<long>(SUNLinSolLastFlag(solver_));
 }
 
-int SUNLinSolWrapper::space(long* lenrwLS, long* leniwLS) const {
-    return SUNLinSolSpace(solver_, lenrwLS, leniwLS);
-}
-
 SUNMatrixWrapper& SUNLinSolWrapper::getMatrix() { return A_; }
 
 SUNNonLinSolWrapper::SUNNonLinSolWrapper(SUNNonlinearSolver sol)
