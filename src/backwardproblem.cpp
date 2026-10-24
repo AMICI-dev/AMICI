@@ -18,6 +18,7 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , edata_(fwd.edata)
     , t_(fwd.get_final_time())
     , discs_main_(fwd.get_discontinuities())
+    , main_final_state_(fwd.get_final_simulation_state())
     , dJydx_(fwd.get_adjoint_updates(*model_, *edata_))
     , dJzdx_(fwd.get_dJzdx())
     , preeq_problem_(fwd.get_preeq_problem())
@@ -45,6 +46,7 @@ void BackwardProblem::workBackwardProblem() {
         --it;
     }
 
+    model_->restore_trajectory_state(main_final_state_);
     ws_.discs_ = discs_main_;
     ws_.nroots_ = compute_nroots(discs_main_, model_->ne);
     simulator_.run(
@@ -56,6 +58,7 @@ void BackwardProblem::workBackwardProblem() {
         ConditionContext cc(
             model_, edata_, FixedParameterContext::presimulation
         );
+        model_->restore_trajectory_state(presim_result.final_state_);
         ws_.discs_ = presim_result.discs;
         ws_.nroots_ = compute_nroots(ws_.discs_, model_->ne);
         simulator_.run(
@@ -96,6 +99,7 @@ void BackwardProblem::workBackwardProblem() {
                                                        : model_->t0_preeq();
 
         auto const& preeq_result = preeq_problem_->get_result();
+        model_->restore_trajectory_state(preeq_result.final_state_);
 
         // If there were no discontinuities or no simulation was performed,
         // we can use the steady-state shortcuts.
@@ -131,6 +135,10 @@ void BackwardProblem::workBackwardProblem() {
             );
         }
     }
+
+    // Leave the model in its state at the end of the main simulation, which
+    // is used for computing the outputs in ReturnData.
+    model_->restore_trajectory_state(main_final_state_);
 }
 
 void BackwardProblem::handle_postequilibration() {
@@ -147,6 +155,7 @@ void BackwardProblem::handle_postequilibration() {
     }
 
     auto const& posteq_result = posteq_problem_->get_result();
+    model_->restore_trajectory_state(posteq_result.final_state_);
 
     // If there were no discontinuities or no simulation was performed,
     // we can use the steady-state shortcuts.

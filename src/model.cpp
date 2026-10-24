@@ -1771,6 +1771,28 @@ void Model::project_algebraic_adjoint_event_update(
         xQB[i] += dJdp[i];
 }
 
+void Model::restore_trajectory_state(SimulationState const& sim_state) {
+    auto const& state = sim_state.mod;
+    if (gsl::narrow<int>(state.h.size()) != ne)
+        throw AmiException("Mismatch in Heaviside size");
+    if (gsl::narrow<int>(state.total_cl.size()) != ncl())
+        throw AmiException("Mismatch in conservation law size");
+    if (state.stotal_cl.size() != state_.stotal_cl.size())
+        throw AmiException("Mismatch in conservation law sensitivity size");
+    state_.h = state.h;
+    state_.total_cl = state.total_cl;
+    state_.stotal_cl = state.stotal_cl;
+
+    // re-evaluate static expressions
+    auto const t = sim_state.sol.t;
+    auto x_pos = compute_x_pos(sim_state.sol.x);
+    fw(t, x_pos, true);
+    fdwdw(t, x_pos, true);
+    fdwdx(t, x_pos, true);
+    if (nplist() > 0)
+        fdwdp(t, x_pos, true);
+}
+
 void Model::update_heaviside(std::vector<int> const& rootsfound) {
     for (int ie = 0; ie < ne; ie++) {
         state_.h.at(ie) += rootsfound.at(ie);
