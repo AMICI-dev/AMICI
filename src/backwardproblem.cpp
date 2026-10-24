@@ -19,6 +19,7 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , t_(fwd.get_final_time())
     , discs_main_(fwd.get_discontinuities())
     , main_final_state_(fwd.get_final_simulation_state())
+    , x_main_initial_(fwd.get_initial_simulation_state().sol.x)
     , dJydx_(fwd.get_adjoint_updates(*model_, *edata_))
     , dJzdx_(fwd.get_dJzdx())
     , preeq_problem_(fwd.get_preeq_problem())
@@ -53,6 +54,19 @@ void BackwardProblem::workBackwardProblem() {
         t_, model_->t0(), it, model_->get_timepoints(), &dJydx_, &dJzdx_
     );
 
+    bool const asa_preeq = preeq_problem_
+                           && preeq_problem_->get_solver()
+                                      ->get_sensitivity_method_pre_equilibration()
+                                  == SensitivityMethod::adjoint;
+    if (asa_preeq) {
+        // Reinitialization at the start of the main simulation. With forward
+        // pre-equilibration, this is part of the state sensitivities instead.
+        // ASA presimulation with reinitialization is not supported.
+        model_->reinitialize_b(
+            model_->t0(), x_main_initial_, ws_.xB_, ws_.xQB_
+        );
+    }
+
     // handle presimulation
     if (edata_ && edata_->t_presim > 0) {
         ConditionContext cc(
@@ -73,23 +87,8 @@ void BackwardProblem::workBackwardProblem() {
     xQB_pre_preeq_ = ws_.xQB_;
 
     // handle pre-equilibration
-    if (preeq_problem_
-        && preeq_problem_->get_solver()
-                   ->get_sensitivity_method_pre_equilibration()
-               == SensitivityMethod::adjoint) {
+    if (asa_preeq) {
         auto preeq_solver = preeq_problem_->get_solver();
-
-        // Reinitialization of non-constant states is not yet supported here
-        // (gh-1156). Reinitialization settings for the main simulation are
-        // only applied to the model in the simulation context, so check
-        // before switching to the preequilibration context.
-        if (model_->get_reinitialize_fixed_parameter_initial_states()
-            && model_->nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
-            );
 
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration

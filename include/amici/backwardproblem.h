@@ -376,6 +376,9 @@ class BackwardProblem {
     /** The simulation state at the end of the main simulation. */
     SimulationState main_final_state_;
 
+    /** The state at the start of the main simulation. */
+    AmiVector x_main_initial_;
+
     /**
      * state derivative of data likelihood
      * dimensions: nt * nJ * nx_solver
