@@ -20,8 +20,8 @@ if ( BLA_VENDOR MATCHES "Intel10" )
 endif ( )
 set ( SuiteSparse_BLAS_integer "int64_t" )
 
-# determine the BLAS properties (single/multi-thread and set local threads)
-include ( SuiteSparse__blas_threading )
+# AMICI: BLAS properties are not determined, since AMICI builds SuiteSparse
+# without BLAS (SuiteSparse__blas_threading.cmake is not included).
 
 #-------------------------------------------------------------------------------
 # Examine the suffix appended to the Fortran 64-bit BLAS+LAPACK functions

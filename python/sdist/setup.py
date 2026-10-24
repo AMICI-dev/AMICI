@@ -64,10 +64,9 @@ def get_extensions():
             "-DBUILD_SHARED_LIBS=OFF",
             "-DBUILD_TESTING=OFF",
             # None of the SuiteSparse packages we build require a BLAS.
-            #  BLA_VENDOR is still required by SuiteSparse_config's CMake
-            #  setup, but its value is not used.
+            #  SUITESPARSE_USE_64BIT_BLAS has to stay ON, as the bundled
+            #  SuiteSparse only includes SuiteSparseBLAS64.cmake.
             "-DSUITESPARSE_REQUIRE_BLAS=OFF",
-            "-DBLA_VENDOR=Generic",
             "-DSUITESPARSE_USE_64BIT_BLAS=ON",
             "-DSUITESPARSE_ENABLE_PROJECTS=amd;btf;colamd;klu",
             "-DSUITESPARSE_USE_CUDA=OFF",
