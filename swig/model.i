@@ -41,6 +41,7 @@ using namespace amici;
 %ignore initialize_state;
 %ignore reinitialize;
 %ignore reinitialize_b;
+%ignore check_reinitialize_b_supported;
 %ignore get_model_state;
 %ignore set_model_state;
 // fx0, fJrz, fdydx, etc. are declared on AbstractModel and already ignored
