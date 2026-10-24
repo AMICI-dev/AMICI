@@ -1340,3 +1340,34 @@ def test_presimulation_reinitialization_after_preequilibration(tempdir, dae):
         assert_allclose(
             rdata.sx[:, ip, iz], 2 * rdata.sx[:, ip, ix], rtol=1e-6
         )
+
+
+@skip_on_valgrind
+def test_presimulation_without_preequilibration_custom_initial_state(tempdir):
+    """Without pre-equilibration, a custom initial state is kept at the start
+    of presimulation, and states are reinitialized only at the start of the
+    main simulation."""
+    model_name = "test_presim_custom_x0"
+    antimony2amici(
+        """
+        k = 1
+        x1 = k; x1' = 0
+        x2 = 0; x2' = x1 - x2
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0])
+    model.set_initial_state([5.0, 0.0])
+    solver = model.create_solver()
+    edata = ExpData(model)
+    edata.fixed_parameters_presimulation = [2.0]
+    edata.t_presim = 1.0
+    edata.fixed_parameters = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # x1 = 5 during presimulation, reinitialized to k = 3 at t = 0
+    assert_allclose(rdata.x[0], [3.0, 5.0 * (1 - np.exp(-1.0))], rtol=1e-6)

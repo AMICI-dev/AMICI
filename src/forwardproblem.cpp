@@ -340,11 +340,15 @@ void ForwardProblem::handle_presimulation() {
     // Heaviside variables at the end of pre-equilibration (copy, since the
     // model state is updated in reinit_events)
     auto const h_old = model->get_model_state().h;
-    solver->update_and_reinit_states_and_sensitivities(model);
+    // Without pre-equilibration, the model was just initialized with the
+    // fixed parameters of the presimulation, and reinitializing would
+    // overwrite a custom initial state.
+    if (preequilibrated_)
+        solver->update_and_reinit_states_and_sensitivities(model);
     if (preequilibrated_ && model->ne) {
         // The consistent algebraic states depend on the Heaviside
         // variables, so update those first.
-        ws_.sol.x = solver->get_state(model->t0());
+        ws_.sol.x = solver->get_state(ws_.sol.t);
         model->reinit_events(
             ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
         );
