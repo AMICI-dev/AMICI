@@ -241,16 +241,23 @@ std::vector<std::unique_ptr<ReturnData>> run_simulations(
             auto mySolver = std::unique_ptr<Solver>(solver.clone());
             auto myModel = std::unique_ptr<Model>(model.clone());
 
-            // If we fail, we need to write empty ReturnDatas for the Python
-            // interface
+            // If we fail, we need to write invalid (NaN-filled) ReturnDatas
+            // for the Python interface
             if (skipThrough) {
                 ConditionContext conditionContext(myModel.get(), edatas[i]);
-                results[i] = std::make_unique<ReturnData>(solver, model);
+                results[i] = std::make_unique<ReturnData>(solver, *myModel);
+                results[i]->invalidate(0);
+                if (edatas[i])
+                    results[i]->id = edatas[i]->id;
             } else {
                 results[i] = run_simulation(*mySolver, edatas[i], *myModel);
             }
         } catch (std::exception const& ex) {
+            // the condition may be invalid, so we don't apply it here
             results[i] = std::make_unique<ReturnData>(solver, model);
+            results[i]->invalidate(0);
+            if (edatas[i])
+                results[i]->id = edatas[i]->id;
             results[i]->status = AMICI_ERROR;
             results[i]->messages.emplace_back(
                 LogSeverity::error, "OTHER", ex.what()
