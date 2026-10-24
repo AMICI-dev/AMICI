@@ -63,11 +63,11 @@ def get_extensions():
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DBUILD_TESTING=OFF",
-            # Building SuiteSparse_config does not require a BLAS
-            #  we just set BLAS_LIBRARIES to skip the search,
-            #  the value is not used
-            # "-DBLA_VENDOR=All",
-            "-DBLAS_LIBRARIES=dummy",
+            # None of the SuiteSparse packages we build require a BLAS.
+            #  BLA_VENDOR is still required by SuiteSparse_config's CMake
+            #  setup, but its value is not used.
+            "-DSUITESPARSE_REQUIRE_BLAS=OFF",
+            "-DBLA_VENDOR=Generic",
             "-DSUITESPARSE_USE_64BIT_BLAS=ON",
             "-DSUITESPARSE_ENABLE_PROJECTS=amd;btf;colamd;klu",
             "-DSUITESPARSE_USE_CUDA=OFF",
