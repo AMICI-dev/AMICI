@@ -322,6 +322,54 @@ void Model::initialize_b(
         xQB.zero();
 }
 
+void Model::reinitialize_b(
+    realtype const t, AmiVector const& x, AmiVector& xB, AmiVector& xQB
+) {
+    if (!get_reinitialize_fixed_parameter_initial_states() || nx_reinit() == 0)
+        return;
+
+    if (ncl() > 0)
+        throw AmiException(
+            "Adjoint pre-equilibration with reinitialization of non-constant "
+            "states is not supported for models with conservation laws."
+        );
+    if (has_algebraic_states())
+        throw AmiException(
+            "Adjoint pre-equilibration with reinitialization of non-constant "
+            "states is not supported for DAE models."
+        );
+    if (nJ != 1)
+        throw AmiException(
+            "Adjoint pre-equilibration with reinitialization of non-constant "
+            "states is not supported for nJ != 1."
+        );
+
+    auto const& idxs = simulation_parameters_.reinitialization_state_idxs_sim;
+    auto const* p = state_.unscaled_parameters.data();
+    auto const* k = state_.fixed_parameters.data();
+    auto const* x_pos = compute_x_pos(x);
+
+    // xQB += (dx0/dp)^T xB for the reinitialized states
+    auto& sx0 = derived_state_.sx_rdata_;
+    for (int ip = 0; ip < nplist(); ++ip) {
+        std::ranges::fill(sx0, 0.0);
+        fsx0_fixedParameters(sx0.data(), t, x_pos, p, k, plist(ip), idxs);
+        xQB.at(ip) += std::inner_product(
+            sx0.cbegin(), sx0.cend(), xB.get_vector().cbegin(), 0.0
+        );
+    }
+
+    // xB <- P xB, the reinitialized states don't depend on the previous ones.
+    // fx0_fixedParameters only writes the reinitialized states.
+    auto& x0 = derived_state_.x_rdata_;
+    std::ranges::fill(x0, NAN);
+    fx0_fixedParameters(x0.data(), t, p, k, idxs);
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (!std::isnan(x0[ix]))
+            xB.at(ix) = 0.0;
+    }
+}
+
 void Model::initialize_state(realtype t, AmiVector& x) {
     if (x0data_.empty()) {
         fx0(t, x);
