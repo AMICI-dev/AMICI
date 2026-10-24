@@ -242,8 +242,8 @@ struct FwdSimWorkspace {
     /** Events that are waiting to be handled at the current timepoint. */
     EventQueue pending_events;
 
-    /** temporary rootval storage to check crossing in secondary event
-     * (dimension: ne) */
+    /** root function values before the latest event assignment, to check
+     * which root functions it changed (dimension: ne) */
     std::vector<realtype> rval_tmp;
 
     /** array of number of found roots for a certain event type
@@ -421,11 +421,24 @@ class EventHandlingSimulator {
      * @brief Check for secondary events.
      *
      * Updates `roots_found` for the roots crossed due to the preceding event
-     * assignment.
+     * assignment, in either direction, including roots that were crossed
+     * earlier in the same discontinuity.
      *
      * @return the number of secondary events found
      */
     int detect_secondary_events();
+
+    /**
+     * @brief Estimate the change of the root functions within the integration
+     * tolerances at the current state.
+     *
+     * Computes `|g(x + d) - g(x)|` with `d_i = atol + rtol * |x_i|` (likewise
+     * for `dx`). Afterwards, re-evaluates the root functions at the current
+     * state, which also restores the model's derived state.
+     *
+     * @return the estimated change for each root function
+     */
+    std::vector<realtype> compute_root_noise();
 
     /**
      * @brief Add the events that triggered in the latest discontinuity to the
