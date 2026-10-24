@@ -1270,3 +1270,67 @@ def test_adjoint_condition_differs_from_main_simulation(
     assert_allclose(asa.y, fsa.y, rtol=1e-10)
     assert_allclose(asa.llh, fsa.llh, rtol=1e-10)
     assert_allclose(asa.sllh, fsa.sllh, rtol=1e-6)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "with_event", [False, True], ids=["no_event", "event"]
+)
+def test_dae_posteq_forward_sensitivities_newton(tempdir, with_event):
+    """Forward sensitivities for post-equilibration of a DAE by simulation,
+    with steady-state sensitivities from the Newton solver.
+
+    Forward sensitivities are switched off during post-equilibration. With
+    `with_event`, an event occurs during post-equilibration. Re-using the
+    solver must give the same results as a fresh one.
+    """
+    model_name = f"dae_posteq_fsa{'_event' if with_event else ''}"
+    event = "E1: at time > 5: x = x + 1" if with_event else ""
+    antimony2amici(
+        f"""
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 0.3
+        x' = p - k * x + y
+        0 = y - q * x
+        {event}
+        """,
+        observation_model=[MeasurementChannel("obs_y", formula="y")],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([1.0, np.inf])
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    edata = ExpData(model)
+    edata.set_measurements([0.5, 1.0])
+    edata.set_noise_scales([1.0, 1.0])
+
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    if with_event:
+        # the event only occurs during post-equilibration
+        assert rdata.posteq_t > 5
+
+    # y_ss = p * q / (k - q), independent of the event
+    k, p, q = 0.5, 2.0, 0.3
+    sy_ss = [-p * q / (k - q) ** 2, q / (k - q), p * k / (k - q) ** 2]
+    assert_allclose(rdata.sy[1, :, 0], sy_ss, rtol=1e-6)
+
+    # the sensitivities and their error control are re-enabled
+    rdata2 = run_simulation(model, solver, edata)
+    rdata_fresh = run_simulation(model, solver.clone(), edata)
+    assert rdata2.status == AMICI_SUCCESS
+    assert rdata_fresh.status == AMICI_SUCCESS
+    assert_equal(rdata2.numsteps, rdata_fresh.numsteps)
+    assert_allclose(rdata2.sy, rdata_fresh.sy, rtol=1e-10)
+    assert_allclose(rdata2.sy, rdata.sy, rtol=1e-10)
