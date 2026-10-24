@@ -391,6 +391,26 @@ def solve_minmax_trigger_for_t(expr: sp.Basic, t: sp.Symbol) -> sp.Expr | None:
     way: a leaf that isn't affine in ``t``, leaves of mixed monotonicity,
     nested ``Min``-inside-``Max`` (or vice versa), or a ``Max`` with a
     gating leaf.
+
+    Examples:
+
+    >>> from sympy import Max, Min
+    >>> from sympy.abc import a, b, p, t
+    >>> # t >= a && t >= b
+    >>> solve_minmax_trigger_for_t(Min(t - a, t - b), t)
+    Max(a, b)
+    >>> # t >= a || t >= b
+    >>> solve_minmax_trigger_for_t(Max(t - a, t - b), t)
+    Min(a, b)
+    >>> # t <= a && t <= b (decreasing leaves)
+    >>> solve_minmax_trigger_for_t(Min(a - t, b - t), t)
+    Min(a, b)
+    >>> # t >= a && p >= 0 (gating leaf)
+    >>> solve_minmax_trigger_for_t(Min(t - a, p), t)
+    Piecewise((a, p >= 0), (oo, True))
+    >>> # t >= a && t <= b (mixed monotonicity) -> not supported
+    >>> solve_minmax_trigger_for_t(Min(t - a, b - t), t) is None
+    True
     """
     # a trigger and its negated counterpart cross zero at the same time
     negated = expr.could_extract_minus_sign()
