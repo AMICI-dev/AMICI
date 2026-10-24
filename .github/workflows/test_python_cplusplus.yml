@@ -78,7 +78,8 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           --durations=10 \
-          ${AMICI_DIR}/python/tests
+          ${AMICI_DIR}/python/tests \
+          ${AMICI_DIR}/python/sdist/amici
 
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}

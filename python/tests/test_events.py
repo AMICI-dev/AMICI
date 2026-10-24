@@ -2469,9 +2469,9 @@ def test_explicit_trigger_time_changed_by_events(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     # E0, E1, and two root functions for each of the piecewise switches,
-    #  of which only the trigger of E0 requires root-finding
+    #  none of which requires root-finding
     assert model.ne == 6
-    assert model.ne_solver == 1
+    assert model.ne_solver == 0
 
     def create_edatas():
         """Create ExpData objects without and with pre-equilibration."""
@@ -2567,9 +2567,9 @@ def test_explicit_trigger_time_preequilibration(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     # E_rate, E_late, and two root functions for the piecewise switch of
-    #  `u`, of which only the trigger of E_rate requires root-finding
+    #  `u`, none of which requires root-finding
     assert model.ne == 4
-    assert model.ne_solver == 1
+    assert model.ne_solver == 0
     model.set_steady_state_computation_mode(
         SteadyStateComputationMode.integrationOnly
     )
@@ -2605,6 +2605,106 @@ def test_explicit_trigger_time_preequilibration(tempdir):
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
     check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("order", ["first", "second", "tie"])
+def test_explicit_trigger_time_and_or(tempdir, order):
+    """Sensitivities of ``And``/``Or``-combined trigger times.
+
+    The triggers are handled at their explicit trigger times
+    ``max(T1, T2)``, ``min(T3, T4)``, and ``T5`` (gated by ``g``). For equal
+    times, the root function's derivative gives the trigger time
+    sensitivity ``1/2`` with respect to each of them.
+    """
+    model_name = "test_explicit_trigger_time_and_or"
+    antimony2amici(
+        r"""
+        T1 = 2; T2 = 3; T3 = 4; T4 = 5; T5 = 1.5; g = 1; k = 0.5
+        xa = 0; xo = 0; xg = 0
+        xa' = -k * xa
+        xo' = -k * xo
+        xg' = -k * xg
+        Ea: at (time >= T1 && time >= T2): xa = xa + 1;
+        Eo: at (time >= T3 || time >= T4): xo = xo + 1;
+        Eg: at (time >= T5 && g > 0.5): xg = xg + 1;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_xa", formula="xa"),
+            MC("obs_xo", formula="xo"),
+            MC("obs_xg", formula="xg"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver == 0
+
+    T = {"first": (2, 3, 4, 5), "second": (3, 2, 5, 4), "tie": (2, 2, 4, 4)}[
+        order
+    ]
+    for pid, val in zip(("T1", "T2", "T3", "T4"), T, strict=True):
+        model.set_free_parameter_by_id(pid, val)
+    k = model.get_free_parameter_by_id("k")
+    T5 = model.get_free_parameter_by_id("T5")
+    timepoints = np.array([1.0, 6.0, 10.0])
+    model.set_timepoints(timepoints)
+
+    # trigger times and their derivatives w.r.t. T1, ..., T5
+    weights = {"first": (0, 1), "second": (1, 0), "tie": (0.5, 0.5)}[order]
+    tau_a, dtau_a = max(T[:2]), [*weights, 0, 0, 0]
+    tau_o, dtau_o = min(T[2:]), [0, 0, *weights[::-1], 0]
+    tau_g, dtau_g = T5, [0, 0, 0, 0, 1]
+    par_ids = list(model.get_free_parameter_ids())
+    x_expected = []
+    sx_expected = []
+    trigger_times = {
+        "xa": (tau_a, dtau_a),
+        "xo": (tau_o, dtau_o),
+        "xg": (tau_g, dtau_g),
+    }
+    for state_id in model.get_state_ids():
+        tau, dtau = trigger_times[state_id]
+        x = np.where(timepoints > tau, np.exp(-k * (timepoints - tau)), 0)
+        sx = np.zeros((len(timepoints), len(par_ids)))
+        for pid, d in zip(("T1", "T2", "T3", "T4", "T5"), dtau, strict=True):
+            sx[:, par_ids.index(pid)] = d * k * x
+        sx[:, par_ids.index("k")] = -(timepoints - tau) * x
+        x_expected.append(x)
+        sx_expected.append(sx)
+    x_expected = np.stack(x_expected, axis=-1)
+    sx_expected = np.stack(sx_expected, axis=-1)
+    # the trigger time sensitivities of the active leaves are non-zero
+    for pid, *d in zip(
+        ("T1", "T2", "T3", "T4", "T5"), dtau_a, dtau_o, dtau_g, strict=True
+    ):
+        assert np.any(sx_expected[:, par_ids.index(pid), :] != 0) == any(d)
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x, x_expected, rtol=1e-8, atol=1e-12)
+    assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-10)
+
+    # adjoint: offset measurements, sllh = 0.5 * sum(sy)
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    sllh_expected = 0.5 * sx_expected.sum(axis=(0, 2))
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert_allclose(
+            rdata.sllh,
+            sllh_expected,
+            rtol=1e-6,
+            atol=1e-10,
+            err_msg=sensi_meth,
+        )
 
 
 @skip_on_valgrind
