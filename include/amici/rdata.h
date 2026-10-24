@@ -709,6 +709,8 @@ class ReturnData : public ModelDimensions {
     template <class T>
     void store_jacobian_and_derivative(T const& problem, Model& model) {
         auto const& simulation_state = problem.get_final_simulation_state();
+        if (!simulation_state.has_solution())
+            return;
         model.set_model_state(simulation_state.mod);
         auto const& sol = simulation_state.sol;
         sundials::Context sunctx;

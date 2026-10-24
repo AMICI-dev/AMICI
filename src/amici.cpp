@@ -78,6 +78,9 @@ std::unique_ptr<ReturnData> run_simulation(
 
     CpuTimer cpu_timer;
     solver.start_timer();
+    // Don't report the diagnostics of the previous simulation if this one
+    // fails before the solver is set up.
+    solver.reset_diagnosis();
 
     // Applies condition-specific model settings and restores them when going
     // out of scope. (This also sets `plist`, which is required for initializing
