@@ -47,6 +47,7 @@ using namespace amici;
 %ignore get_dxdotdp_full;
 %ignore fsdx0;
 %ignore update_heaviside;
+%ignore restore_trajectory_state;
 %ignore get_event_sigma;
 %ignore get_event_sigma_sensitivity;
 %ignore get_observable_sigma;

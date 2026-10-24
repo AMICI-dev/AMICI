@@ -303,7 +303,8 @@ class BackwardProblem {
      *
      * If adjoint sensitivities are enabled, this will also compute
      * sensitivities. workForwardProblem must be called before this function is
-     * called.
+     * called. On return, the model is in its state at the end of the main
+     * simulation.
      */
     void workBackwardProblem();
 
@@ -371,6 +372,9 @@ class BackwardProblem {
 
     /** The discontinuities encountered during the main simulation. */
     std::vector<Discontinuity> discs_main_;
+
+    /** The simulation state at the end of the main simulation. */
+    SimulationState main_final_state_;
 
     /**
      * state derivative of data likelihood

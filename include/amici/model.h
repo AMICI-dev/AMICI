@@ -1598,6 +1598,18 @@ class Model : public AbstractModel, public ModelDimensions {
     void update_heaviside(std::vector<int> const& rootsfound);
 
     /**
+     * @brief Restore the trajectory-dependent parts of a simulation state.
+     *
+     * Restores the parts of the model state that evolve during a simulation,
+     * i.e., the Heaviside variables and the conservation law totals and their
+     * sensitivities, and keeps the current parameters and fixed parameters.
+     * Re-evaluates the static expressions, which may depend on both.
+     *
+     * @param state Simulation state to restore from
+     */
+    void restore_trajectory_state(SimulationState const& state);
+
+    /**
      * @brief Check if the given array has only finite elements.
      *
      * For (1D) spans.
