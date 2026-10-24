@@ -2,8 +2,11 @@
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -21,6 +24,7 @@
 
 #include <cvodes/cvodes.h>
 #include <sundials/priv/sundials_context_impl.h>
+#include <sundials/priv/sundials_errors_impl.h>
 #include <sundials/sundials_math.h>
 
 #include "cvodes_proj_impl.h"
@@ -31,17 +35,9 @@
 extern "C" {
 #endif
 
-#if defined(SUNDIALS_EXTENDED_PRECISION)
-#define RSYM  ".32Lg"
-#define RSYMW "19.32Lg"
-#else
-#define RSYM  ".16g"
-#define RSYMW "23.16g"
-#endif
-
-/*=================================================================*/
-/* Shortcuts                                                       */
-/*=================================================================*/
+/*===============================================================
+  SHORTCUTS
+  ===============================================================*/
 
 #define CV_PROFILER cv_mem->cv_sunctx->profiler
 #define CV_LOGGER   cv_mem->cv_sunctx->logger
@@ -126,9 +122,10 @@ extern "C" {
  * MXNEF1  max no. of error test failures before forcing a reduction of order
  */
 
-#define MXNCF  10
-#define MXNEF  7
-#define MXNEF1 3
+#define MXNCF                10
+#define MXNEF                7
+#define MXNEF1               3
+#define MAX_CONSTRAINT_FAILS 10
 
 /* Control constants for lower-level functions used by cvStep
  * ----------------------------------------------------------
@@ -185,19 +182,18 @@ extern "C" {
 #define PREV_ERR_FAIL  +9
 
 #define RHSFUNC_RECVR    +10
-#define CONSTR_RECVR     +11
-#define CONSTRFUNC_RECVR +12
-#define PROJFUNC_RECVR   +13
+#define CONSTRFUNC_RECVR +11
+#define PROJFUNC_RECVR   +12
 
-#define QRHSFUNC_RECVR  +14
-#define SRHSFUNC_RECVR  +15
-#define QSRHSFUNC_RECVR +16
+#define QRHSFUNC_RECVR  +13
+#define SRHSFUNC_RECVR  +14
+#define QSRHSFUNC_RECVR +15
 
 /* nonlinear solver constants
    NLS_MAXCOR  maximum no. of corrector iterations for the nonlinear solver
    CRDOWN      constant used in the estimation of the convergence rate (crate)
                of the iterates for the nonlinear equation
-   RDIV        declare divergence if ratio del/delp > RDIV
+   RDIV        declare divergence if ratio delnrm/delnrm_p > RDIV
 */
 #define NLS_MAXCOR 3
 #define CRDOWN     SUN_RCONST(0.3)
@@ -233,6 +229,8 @@ typedef struct CVodeMemRec
 {
   SUNContext cv_sunctx;
 
+  void* python;
+
   sunrealtype cv_uround; /* machine unit roundoff */
 
   /*--------------------------
@@ -251,9 +249,6 @@ typedef struct CVodeMemRec
   sunbooleantype cv_user_efun; /* SUNTRUE if user sets efun                     */
   CVEwtFn cv_efun; /* function to set ewt                           */
   void* cv_e_data; /* user pointer passed to efun                   */
-
-  sunbooleantype cv_constraintsSet; /* constraints vector present:
-                                    do constraints calc                       */
 
   /*-----------------------
     Quadrature Related Data
@@ -305,7 +300,7 @@ typedef struct CVodeMemRec
     Quadrature Sensitivity Related Data
     -----------------------------------*/
 
-  sunbooleantype cv_quadr_sensi; /* SUNTRUE if computing sensitivties of quadrs. */
+  sunbooleantype cv_quadr_sensi; /* SUNTRUE if computing sensitivities of quadrs. */
 
   CVQuadSensRhsFn cv_fQS;  /* fQS = (dfQ/dy)*yS + (dfQ/dp)                 */
   void* cv_fQS_data;       /* data pointer passed to fQS                   */
@@ -344,8 +339,6 @@ typedef struct CVodeMemRec
   N_Vector cv_vtemp1; /* temporary storage vector                            */
   N_Vector cv_vtemp2; /* temporary storage vector                            */
   N_Vector cv_vtemp3; /* temporary storage vector                            */
-
-  N_Vector cv_constraints; /* vector of inequality constraint options         */
 
   /*--------------------------
     Quadrature Related Vectors
@@ -424,13 +417,15 @@ typedef struct CVodeMemRec
   sunrealtype cv_crate;        /* estimated corrector convergence rate        */
   sunrealtype cv_crateS;       /* estimated corrector convergence rate (Stgr) */
   sunrealtype cv_delp;         /* norm of previous nonlinear solver update    */
+  sunrealtype cv_delnrm;       /* norm of current nonlinear solver update     */
+  sunrealtype cv_delnrmS;      /* norm of current NLS update (Sens)           */
   sunrealtype cv_acnrm;        /* | acor |                                    */
   sunbooleantype cv_acnrmcur;  /* is | acor | current?                        */
   sunrealtype cv_acnrmQ;       /* | acorQ |                                   */
   sunrealtype cv_acnrmS;       /* | acorS |                                   */
   sunbooleantype cv_acnrmScur; /* is | acorS | current?                       */
   sunrealtype cv_acnrmQS;      /* | acorQS |                                  */
-  sunrealtype cv_nlscoef;      /* coeficient in nonlinear convergence test    */
+  sunrealtype cv_nlscoef;      /* coefficient in nonlinear convergence test   */
   int* cv_ncfS1;               /* Array of Ns local counters for conv.
                                 * failures (used in CVStep for STAGGERED1)    */
 
@@ -482,7 +477,7 @@ typedef struct CVodeMemRec
   long int cv_nniS;   /* number of total sensi. nonlinear iterations     */
   long int* cv_nniS1; /* number of sensi. nonlinear iterations           */
 
-  long int cv_nnf;    /* number of nonlinear convergence fails           */
+  long int cv_nnf;    /* number of nonlinear convergence failures        */
   long int cv_nnfS;   /* number of total sensi. nonlinear conv. fails    */
   long int* cv_nnfS1; /* number of sensi. nonlinear conv. fails          */
 
@@ -566,6 +561,8 @@ typedef struct CVodeMemRec
   /* Linear Solver functions to be called */
 
   int (*cv_linit)(struct CVodeMemRec* cv_mem);
+
+  int (*cv_lreinit)(struct CVodeMemRec* cv_mem);
 
   int (*cv_lsetup)(struct CVodeMemRec* cv_mem, int convfail, N_Vector ypred,
                    N_Vector fpred, sunbooleantype* jcurPtr, N_Vector vtemp1,
@@ -651,13 +648,20 @@ typedef struct CVodeMemRec
   sunrealtype* cv_glo;   /* saved array of g values at t = tlo              */
   sunrealtype* cv_ghi;   /* saved array of g values at t = thi              */
   sunrealtype* cv_grout; /* array of g values at t = trout                  */
-  sunrealtype cv_toutc;  /* copy of tout (if NORMAL mode)                   */
   sunrealtype cv_ttol;   /* tolerance on root location trout                */
-  int cv_taskc;          /* copy of parameter itask                         */
   int cv_irfnd;          /* flag showing whether last step had a root       */
   long int cv_nge;       /* counter for g evaluations                       */
   sunbooleantype* cv_gactive; /* array with active/inactive event functions      */
   int cv_mxgnull; /* number of warning messages about possible g==0  */
+
+  /*---------------------------
+    Inequality Constraints Data
+    ---------------------------*/
+
+  N_Vector cv_constraints;         /* vector of constraint flags     */
+  long int constraint_corrections; /* total constraint corrections   */
+  long int constraint_fails;       /* total constraint failures      */
+  int max_constraint_fails;        /* max failures allowed in a step */
 
   /*---------------
     Projection Data
@@ -675,6 +679,12 @@ typedef struct CVodeMemRec
   sunrealtype* cv_cvals; /* array of scalars */
   N_Vector* cv_Xvecs;    /* array of vectors */
   N_Vector* cv_Zvecs;    /* array of vectors */
+
+  /*----------------
+    Resizing History
+    ----------------*/
+
+  sunbooleantype first_step_after_resize; /* Flag to signal a resize happened */
 
   /*------------------------
     Adjoint sensitivity data
@@ -881,7 +891,7 @@ struct CVodeBMemRec
  * Type : struct CVadjMemRec
  * -----------------------------------------------------------------
  * The type CVadjMem is type pointer to struct CVadjMemRec.
- * This structure contins fields to store all information
+ * This structure contains fields to store all information
  * necessary for adjoint sensitivity analysis.
  * -----------------------------------------------------------------
  */
@@ -1182,37 +1192,25 @@ int cvSensRhs1InternalDQ(int Ns, sunrealtype t, N_Vector y, N_Vector ydot,
                          int is, N_Vector yS, N_Vector ySdot, void* fS_data,
                          N_Vector tempv, N_Vector ftemp);
 
+/* Function to destroy function table allocated by the Python binding code */
+
+#if defined(SUNDIALS_ENABLE_PYTHON)
+void cvode_user_supplied_fn_table_destroy(void* ptr);
+#endif
+
 /*
  * =================================================================
  *    E R R O R    M E S S A G E S
  * =================================================================
  */
 
-#if defined(SUNDIALS_EXTENDED_PRECISION)
-
-#define MSG_TIME       "t = %Lg"
-#define MSG_TIME_H     "t = %Lg and h = %Lg"
-#define MSG_TIME_INT   "t = %Lg is not between tcur - hu = %Lg and tcur = %Lg."
-#define MSG_TIME_TOUT  "tout = %Lg"
-#define MSG_TIME_TSTOP "tstop = %Lg"
-
-#elif defined(SUNDIALS_DOUBLE_PRECISION)
-
-#define MSG_TIME       "t = %lg"
-#define MSG_TIME_H     "t = %lg and h = %lg"
-#define MSG_TIME_INT   "t = %lg is not between tcur - hu = %lg and tcur = %lg."
-#define MSG_TIME_TOUT  "tout = %lg"
-#define MSG_TIME_TSTOP "tstop = %lg"
-
-#else
-
-#define MSG_TIME       "t = %g"
-#define MSG_TIME_H     "t = %g and h = %g"
-#define MSG_TIME_INT   "t = %g is not between tcur - hu = %g and tcur = %g."
-#define MSG_TIME_TOUT  "tout = %g"
-#define MSG_TIME_TSTOP "tstop = %g"
-
-#endif
+#define MSG_TIME   "t = " SUN_FORMAT_G
+#define MSG_TIME_H "t = " SUN_FORMAT_G " and h = " SUN_FORMAT_G
+#define MSG_TIME_INT                                                \
+  "t = " SUN_FORMAT_G " is not between tcur - hold = " SUN_FORMAT_G \
+  " and tcur = " SUN_FORMAT_G
+#define MSG_TIME_TOUT  "tout = " SUN_FORMAT_G
+#define MSG_TIME_TSTOP "tstop = " SUN_FORMAT_G
 
 /* Initialization and I/O error messages */
 
@@ -1446,8 +1444,9 @@ int cvSensRhs1InternalDQ(int Ns, sunrealtype t, N_Vector y, N_Vector ydot,
 #define MSGCV_BAD_TBOUT                                                  \
   "The final time tBout is outside the interval over which the forward " \
   "problem was solved."
-#define MSGCV_BACK_ERROR  "Error occured while integrating backward problem # %d"
-#define MSGCV_BAD_TINTERP "Bad t = %g for interpolation."
+#define MSGCV_BACK_ERROR \
+  "Error occurred while integrating backward problem # %d"
+#define MSGCV_BAD_TINTERP "Bad t = " SUN_FORMAT_G " for interpolation."
 #define MSGCV_WRONG_INTERP \
   "This function cannot be called for the specified interp type."
 
