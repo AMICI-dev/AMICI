@@ -2,8 +2,11 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2024, Lawrence Livermore National Security
+# Copyright (c) 2025-2026, Lawrence Livermore National Security,
+# University of Maryland Baltimore County, and the SUNDIALS contributors.
+# Copyright (c) 2013-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
+# Copyright (c) 2002-2013, Lawrence Livermore National Security.
 # All rights reserved.
 #
 # See the top-level LICENSE and NOTICE files for details.
@@ -11,7 +14,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # SUNDIALS Copyright End
 # ---------------------------------------------------------------
-# SUNDIALS build options that are interepreted prior to any
+# SUNDIALS build options that are interpreted prior to any
 # other CMake configuration.
 # ---------------------------------------------------------------
 
@@ -33,7 +36,9 @@ endif()
 set(DOCSTR "single, double, or extended")
 sundials_option(SUNDIALS_PRECISION STRING "${DOCSTR}" "DOUBLE")
 string(TOUPPER ${SUNDIALS_PRECISION} _upper_SUNDIALS_PRECISION)
-force_variable(SUNDIALS_PRECISION STRING "${DOCSTR}" ${_upper_SUNDIALS_PRECISION})
+set(SUNDIALS_PRECISION
+    "${_upper_SUNDIALS_PRECISION}"
+    CACHE STRING "${DOCSTR}" FORCE)
 
 # ---------------------------------------------------------------
 # Option to specify index type
@@ -51,51 +56,76 @@ set(DOCSTR "Integer type to use for indices in SUNDIALS")
 sundials_option(SUNDIALS_INDEX_TYPE STRING "${DOCSTR}" "" ADVANCED)
 
 # ---------------------------------------------------------------
+# Option to specify counter type
+# ---------------------------------------------------------------
+
+set(DOCSTR "Integer type to use for counters in SUNDIALS")
+# TODO(DJG): Once all counters use suncountertype replace the set line with:
+# sundials_option(SUNDIALS_COUNTER_TYPE STRING "${DOCSTR}" "long int" ADVANCED)
+set(SUNDIALS_COUNTER_TYPE
+    "long int"
+    CACHE STRING "${DOCSTR}" FORCE)
+
+# ---------------------------------------------------------------
 # Option to enable monitoring
 # ---------------------------------------------------------------
 
-set(DOCSTR "Build with simulation monitoring capabilities enabled")
-sundials_option(SUNDIALS_BUILD_WITH_MONITORING BOOL "${DOCSTR}" OFF)
+set(DOCSTR "Enable simulation monitoring capabilities")
+sundials_option(SUNDIALS_ENABLE_MONITORING BOOL "${DOCSTR}" OFF
+                DEPRECATED_NAMES SUNDIALS_BUILD_WITH_MONITORING)
 
 # ---------------------------------------------------------------
 # Option to enable profiling
 # ---------------------------------------------------------------
 
-set(DOCSTR "Build with simulation profiling capabilities enabled")
-sundials_option(SUNDIALS_BUILD_WITH_PROFILING BOOL "${DOCSTR}" OFF)
+set(DOCSTR "Enable profiling (may affect performance)")
+sundials_option(SUNDIALS_ENABLE_PROFILING BOOL "${DOCSTR}" OFF DEPRECATED_NAMES
+                SUNDIALS_BUILD_WITH_PROFILING)
 
-if(SUNDIALS_BUILD_WITH_PROFILING)
-  message(WARNING "SUNDIALS built with profiling turned on, performance may be affected.")
+if(SUNDIALS_ENABLE_PROFILING)
+  message(
+    WARNING
+      "SUNDIALS built with profiling turned on, performance may be affected.")
 endif()
 
 # ---------------------------------------------------------------
 # Option to enable/disable error checking
 # ---------------------------------------------------------------
 
-if(CMAKE_BUILD_TYPE MATCHES "Release|RelWithDebInfo")
-  set(_default_err_checks OFF)
-else()
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(_default_err_checks ON)
+else()
+  set(_default_err_checks OFF)
 endif()
 
-set(DOCSTR "Build with error checking enabled/disabled. Enabling error checks may affect performance.")
-sundials_option(SUNDIALS_ENABLE_ERROR_CHECKS BOOL "${DOCSTR}" ${_default_err_checks})
+sundials_option(
+  SUNDIALS_ENABLE_ERROR_CHECKS BOOL
+  "Enable error checking (may affect performance)" ${_default_err_checks})
 if(SUNDIALS_ENABLE_ERROR_CHECKS)
   message(STATUS "SUNDIALS error checking enabled")
-  message(WARNING "SUNDIALS is being built with extensive error checks, performance may be affected.")
+  message(
+    WARNING
+      "SUNDIALS is being built with extensive error checks, performance may be affected."
+  )
 endif()
 
 # ---------------------------------------------------------------
 # Option to enable logging
 # ---------------------------------------------------------------
 
-set(DOCSTR "Build with logging capabilities enabled (0 = no logging, 1 = errors, 2 = +warnings, 3 = +info, 4 = +debug, 5 = +extras")
-sundials_option(SUNDIALS_LOGGING_LEVEL STRING "${DOCSTR}" 2
-                OPTIONS "0;1;2;3;4;5")
+sundials_option(
+  SUNDIALS_LOGGING_LEVEL
+  STRING
+  "Enable logging (0 = none, 1 = errors, 2 = +warnings, 3 = +info, 4 = +debug, 5 = +extras)"
+  2
+  OPTIONS "0;1;2;3;4;5")
 
 if(SUNDIALS_LOGGING_LEVEL GREATER_EQUAL 3)
   message(STATUS "SUNDIALS logging level set to ${SUNDIALS_LOGGING_LEVEL}")
-  message(WARNING "SUNDIALS built with additional logging turned on, performance may be affected.")
+  message(
+    WARNING
+      "SUNDIALS built with additional logging turned on, performance may be affected."
+  )
 endif()
 
 # ---------------------------------------------------------------
@@ -103,9 +133,11 @@ endif()
 # ---------------------------------------------------------------
 
 if(UNIX)
-  sundials_option(SUNDIALS_MATH_LIBRARY PATH "Which math library (e.g., libm) to link to" "-lm" ADVANCED)
+  sundials_option(SUNDIALS_MATH_LIBRARY PATH
+                  "Which math library (e.g., libm) to link to" "-lm" ADVANCED)
 else()
-  sundials_option(SUNDIALS_MATH_LIBRARY PATH "Which math library (e.g., libm) to link to" "" ADVANCED)
+  sundials_option(SUNDIALS_MATH_LIBRARY PATH
+                  "Which math library (e.g., libm) to link to" "" ADVANCED)
 endif()
 # all executables will be linked against the math library
 set(EXE_EXTRA_LINK_LIBS "${SUNDIALS_MATH_LIBRARY}")
@@ -119,70 +151,94 @@ sundials_option(BUILD_SHARED_LIBS BOOL "Build shared libraries" ON)
 
 # Make sure we build at least one type of libraries
 if(NOT BUILD_STATIC_LIBS AND NOT BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "Both static and shared library generation were disabled.")
+  message(
+    FATAL_ERROR "Both static and shared library generation were disabled.")
 endif()
 
 # ---------------------------------------------------------------
 # Options to enable SUNDIALS packages and modules
 # ---------------------------------------------------------------
 
-# For each SUNDIALS package available (i.e. for which we have the
-# sources), give the user the option of enabling/disabling it.
+# For each SUNDIALS package available (i.e. for which we have the sources), give
+# the user the option of enabling/disabling it.
 
 if(IS_DIRECTORY "${SUNDIALS_SOURCE_DIR}/src/arkode")
-  sundials_option(BUILD_ARKODE BOOL "Build the ARKODE library" ON)
-  list(APPEND SUNDIALS_BUILD_LIST "BUILD_ARKODE")
+  sundials_option(SUNDIALS_ENABLE_ARKODE BOOL "Enable the ARKODE library" ON
+                  DEPRECATED_NAMES BUILD_ARKODE)
+  list(APPEND SUNDIALS_BUILD_LIST "SUNDIALS_ENABLE_ARKODE")
 else()
-  set(BUILD_ARKODE OFF)
+  set(SUNDIALS_ENABLE_ARKODE OFF)
 endif()
 
 if(IS_DIRECTORY "${SUNDIALS_SOURCE_DIR}/src/cvode")
-  sundials_option(BUILD_CVODE BOOL "Build the CVODE library" ON)
-  list(APPEND SUNDIALS_BUILD_LIST "BUILD_CVODE")
+  sundials_option(SUNDIALS_ENABLE_CVODE BOOL "Enable the CVODE library" ON
+                  DEPRECATED_NAMES BUILD_CVODE)
+  list(APPEND SUNDIALS_BUILD_LIST "SUNDIALS_ENABLE_CVODE")
 else()
-  set(BUILD_CVODE OFF)
+  set(SUNDIALS_ENABLE_CVODE OFF)
 endif()
 
 if(IS_DIRECTORY "${SUNDIALS_SOURCE_DIR}/src/cvodes")
-  sundials_option(BUILD_CVODES BOOL "Build the CVODES library" ON)
-  list(APPEND SUNDIALS_BUILD_LIST "BUILD_CVODES")
+  sundials_option(SUNDIALS_ENABLE_CVODES BOOL "Enable the CVODES library" ON
+                  DEPRECATED_NAMES BUILD_CVODES)
+  list(APPEND SUNDIALS_BUILD_LIST "SUNDIALS_ENABLE_CVODES")
 else()
-  set(BUILD_CVODES OFF)
+  set(SUNDIALS_ENABLE_CVODES OFF)
 endif()
 
 if(IS_DIRECTORY "${SUNDIALS_SOURCE_DIR}/src/ida")
-  sundials_option(BUILD_IDA BOOL "Build the IDA library" ON)
-  list(APPEND SUNDIALS_BUILD_LIST "BUILD_IDA")
+  sundials_option(SUNDIALS_ENABLE_IDA BOOL "Enable the IDA library" ON
+                  DEPRECATED_NAMES BUILD_IDA)
+  list(APPEND SUNDIALS_BUILD_LIST "SUNDIALS_ENABLE_IDA")
 else()
-  set(BUILD_IDA OFF)
+  set(SUNDIALS_ENABLE_IDA OFF)
 endif()
 
 if(IS_DIRECTORY "${SUNDIALS_SOURCE_DIR}/src/idas")
-  sundials_option(BUILD_IDAS BOOL "Build the IDAS library" ON)
-  list(APPEND SUNDIALS_BUILD_LIST "BUILD_IDAS")
+  sundials_option(SUNDIALS_ENABLE_IDAS BOOL "Enable the IDAS library" ON
+                  DEPRECATED_NAMES BUILD_IDAS)
+  list(APPEND SUNDIALS_BUILD_LIST "SUNDIALS_ENABLE_IDAS")
 else()
-  set(BUILD_IDAS OFF)
+  set(SUNDIALS_ENABLE_IDAS OFF)
 endif()
 
 if(IS_DIRECTORY "${SUNDIALS_SOURCE_DIR}/src/kinsol")
-  sundials_option(BUILD_KINSOL BOOL "Build the KINSOL library" ON)
-  list(APPEND SUNDIALS_BUILD_LIST "BUILD_KINSOL")
+  sundials_option(SUNDIALS_ENABLE_KINSOL BOOL "Enable the KINSOL library" ON
+                  DEPRECATED_NAMES BUILD_KINSOL)
+  list(APPEND SUNDIALS_BUILD_LIST "SUNDIALS_ENABLE_KINSOL")
 else()
-  set(BUILD_KINSOL OFF)
+  set(SUNDIALS_ENABLE_KINSOL OFF)
 endif()
 
 # ---------------------------------------------------------------
 # Options to enable Fortran interfaces.
 # ---------------------------------------------------------------
 
-# Fortran 2003 interface is disabled by default
-set(DOCSTR "Enable Fortran 2003 modules")
-sundials_option(BUILD_FORTRAN_MODULE_INTERFACE BOOL "${DOCSTR}" OFF)
+# Fortran interfaces are disabled by default
+sundials_option(
+  SUNDIALS_ENABLE_FORTRAN
+  BOOL
+  "Enable Fortran interfaces"
+  OFF
+  DEPRECATED_NAMES
+  F2003_INTERFACE_ENABLE
+  BUILD_FORTRAN_MODULE_INTERFACE)
 
-if(BUILD_FORTRAN_MODULE_INTERFACE)
-  # F2003 interface only supports double precision
+if(SUNDIALS_ENABLE_FORTRAN)
+  # Fortran interfaces only support double precision
   if(NOT (SUNDIALS_PRECISION MATCHES "DOUBLE"))
-    message(FATAL_ERROR "F2003 interface is not compatible with ${SUNDIALS_PRECISION} precision")
+    message(
+      FATAL_ERROR
+        "Fortran interfaces are not compatible with ${SUNDIALS_PRECISION} precision"
+    )
+  endif()
+
+  # F2003 interface only supports long int counters
+  if(NOT (SUNDIALS_COUNTER_TYPE MATCHES "long int"))
+    message(
+      FATAL_ERROR
+        "Fortran interfaces are only compatible with long int SUNDIALS_COUNTER_TYPE"
+    )
   endif()
 
   # Allow a user to set where the Fortran modules will be installed
@@ -191,12 +247,11 @@ if(BUILD_FORTRAN_MODULE_INTERFACE)
 endif()
 
 # ---------------------------------------------------------------
-# Options for benchmark suite
+# Options to enable Python interfaces.
 # ---------------------------------------------------------------
 
-sundials_option(BUILD_BENCHMARKS BOOL "Build the SUNDIALS benchmark suite" OFF)
-
-sundials_option(BENCHMARKS_INSTALL_PATH PATH "Output directory for installing benchmark executables" "${CMAKE_INSTALL_PREFIX}/benchmarks")
+set(DOCSTR "Enable Python interfaces")
+sundials_option(SUNDIALS_ENABLE_PYTHON BOOL "${DOCSTR}" OFF)
 
 # ---------------------------------------------------------------
 # Options for CMake config installation
@@ -210,14 +265,64 @@ sundials_option(SUNDIALS_INSTALL_CMAKEDIR STRING "${DOCSTR}"
 # Options to enable compiler warnings, address sanitizer
 # ---------------------------------------------------------------
 
-sundials_option(ENABLE_ALL_WARNINGS BOOL
-  "Enable all compiler warnings" OFF ADVANCED)
+sundials_option(
+  SUNDIALS_ENABLE_ALL_WARNINGS
+  BOOL
+  "Enable all compiler warnings"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  ENABLE_ALL_WARNINGS)
 
-sundials_option(ENABLE_WARNINGS_AS_ERRORS BOOL
-  "Enable compiler warnings as errors" OFF ADVANCED)
+sundials_option(
+  SUNDIALS_ENABLE_DEPRECATED_WARNINGS BOOL
+  "Enable compiler warnings for deprecated SUNDIALS APIs" ON ADVANCED)
 
-sundials_option(ENABLE_ADDRESS_SANITIZER BOOL
-  "Enable address sanitizer" OFF ADVANCED)
+# CMake 3.24 added the native option, CMAKE_COMPILE_WARNING_AS_ERROR
+sundials_option(
+  CMAKE_COMPILE_WARNING_AS_ERROR
+  BOOL
+  "Treat compiler warnings as errors"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  ENABLE_WARNINGS_AS_ERRORS)
+
+sundials_option(
+  SUNDIALS_ENABLE_ADDRESS_SANITIZER
+  BOOL
+  "Enable address sanitizer"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  ENABLE_ADDRESS_SANITIZER)
+
+sundials_option(
+  SUNDIALS_ENABLE_MEMORY_SANITIZER
+  BOOL
+  "Enable memory sanitizer"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  ENABLE_MEMORY_SANITIZER)
+
+sundials_option(
+  SUNDIALS_ENABLE_LEAK_SANITIZER
+  BOOL
+  "Enable leak sanitizer"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  ENABLE_LEAK_SANITIZER)
+
+sundials_option(
+  SUNDIALS_ENABLE_UNDEFINED_BEHAVIOR_SANITIZER
+  BOOL
+  "Enable undefined behavior sanitizer"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  ENABLE_UNDEFINED_BEHAVIOR_SANITIZER)
 
 # ---------------------------------------------------------------
 # Options to enable SUNDIALS debugging
@@ -225,111 +330,239 @@ sundials_option(ENABLE_ADDRESS_SANITIZER BOOL
 
 # List of debugging options (used to add preprocessor directives)
 set(_SUNDIALS_DEBUG_OPTIONS
-  SUNDIALS_DEBUG
-  SUNDIALS_DEBUG_ASSERT
-  SUNDIALS_DEBUG_CUDA_LASTERROR
-  SUNDIALS_DEBUG_HIP_LASTERROR
-  SUNDIALS_DEBUG_PRINTVEC)
+    SUNDIALS_DEBUG SUNDIALS_DEBUG_ASSERT SUNDIALS_DEBUG_CUDA_LASTERROR
+    SUNDIALS_DEBUG_HIP_LASTERROR SUNDIALS_DEBUG_PRINTVEC)
 
 sundials_option(SUNDIALS_DEBUG BOOL
-  "Enable additional debugging output and options" OFF
-  ADVANCED)
+                "Enable additional debugging output and options" OFF ADVANCED)
 
 if(SUNDIALS_DEBUG AND SUNDIALS_LOGGING_LEVEL LESS 4)
   set(DOCSTR "SUNDIALS_DEBUG=ON forced the logging level to 4")
   message(STATUS "${DOCSTR}")
-  set(SUNDIALS_LOGGING_LEVEL "4" CACHE STRING "${DOCSTR}" FORCE)
+  set(SUNDIALS_LOGGING_LEVEL
+      "4"
+      CACHE STRING "${DOCSTR}" FORCE)
 endif()
 
-sundials_option(SUNDIALS_DEBUG_ASSERT BOOL
-  "Enable assert when debugging" OFF
+sundials_option(
+  SUNDIALS_DEBUG_ASSERT BOOL "Enable assert when debugging" OFF
   DEPENDS_ON SUNDIALS_DEBUG
   ADVANCED)
 
-sundials_option(SUNDIALS_DEBUG_CUDA_LASTERROR BOOL
+sundials_option(
+  SUNDIALS_DEBUG_CUDA_LASTERROR BOOL
   "Enable CUDA last error checks when debugging" OFF
-  DEPENDS_ON SUNDIALS_DEBUG ENABLE_CUDA
+  DEPENDS_ON SUNDIALS_DEBUG SUNDIALS_ENABLE_CUDA
   ADVANCED)
 
-sundials_option(SUNDIALS_DEBUG_HIP_LASTERROR BOOL
+sundials_option(
+  SUNDIALS_DEBUG_HIP_LASTERROR BOOL
   "Enable HIP last error checks when debugging" OFF
-  DEPENDS_ON SUNDIALS_DEBUG ENABLE_HIP
+  DEPENDS_ON SUNDIALS_DEBUG SUNDIALS_ENABLE_HIP
   ADVANCED)
 
-sundials_option(SUNDIALS_DEBUG_PRINTVEC BOOL
-  "Enable vector printing when debugging" OFF
+sundials_option(
+  SUNDIALS_DEBUG_PRINTVEC BOOL "Enable vector printing when debugging" OFF
   DEPENDS_ON SUNDIALS_DEBUG
   ADVANCED)
 
 if(SUNDIALS_DEBUG_PRINTVEC AND SUNDIALS_LOGGING_LEVEL LESS 5)
   set(DOCSTR "SUNDIALS_DEBUG_PRINTVEC=ON forced the logging level to 5")
   message(STATUS "${DOCSTR}")
-  set(SUNDIALS_LOGGING_LEVEL "5" CACHE STRING "${DOCSTR}" FORCE)
+  set(SUNDIALS_LOGGING_LEVEL
+      "5"
+      CACHE STRING "${DOCSTR}" FORCE)
 endif()
 
 # ---------------------------------------------------------------
 # Options for SUNDIALS external
 # ---------------------------------------------------------------
 
-sundials_option(SUNDIALS_ENABLE_EXTERNAL_ADDONS BOOL
+sundials_option(
+  SUNDIALS_ENABLE_EXTERNAL_ADDONS BOOL
   "Enables including EXTERNALLY MAINTAINED addons in the SUNDIALS build." OFF)
 if(SUNDIALS_ENABLE_EXTERNAL_ADDONS)
-  message(WARNING "SUNDIALS_ENABLE_EXTERNAL_ADDONS=TRUE. External addons are not maintained by the SUNDIALS team. Use at your own risk.")
+  message(
+    WARNING
+      "SUNDIALS_ENABLE_EXTERNAL_ADDONS=TRUE. External addons are not maintained by the SUNDIALS team. Use at your own risk."
+  )
 endif()
 
 # ---------------------------------------------------------------
 # Options for SUNDIALS testing
 # ---------------------------------------------------------------
 
-sundials_option(SUNDIALS_TEST_FLOAT_PRECISION STRING
-  "Precision for floating point comparisons (number of digits)" "-1" ADVANCED)
+sundials_option(
+  SUNDIALS_TEST_ENABLE_DEV_TESTS
+  BOOL
+  "Enable development tests"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_TEST_DEVTESTS)
 
-sundials_option(SUNDIALS_TEST_INTEGER_PRECISION STRING
-  "Precision for integer comparisons (percent difference)" "-1" ADVANCED)
+sundials_option(
+  SUNDIALS_TEST_ENABLE_UNIT_TESTS
+  BOOL
+  "Enable unit tests"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_TEST_UNITTESTS)
 
-sundials_option(SUNDIALS_TEST_OUTPUT_DIR PATH
-  "Location to write testing output files" "" ADVANCED)
+if(SUNDIALS_TEST_ENABLE_UNIT_TESTS)
+  set(_default_gtest ON)
+else()
+  set(_default_gtest OFF)
+endif()
 
-sundials_option(SUNDIALS_TEST_ANSWER_DIR PATH
-  "Location of testing answer files" "" ADVANCED)
+sundials_option(SUNDIALS_TEST_ENABLE_GTEST BOOL "Include GTest unit tests"
+                ${_default_gtest} ADVANCED)
 
-sundials_option(SUNDIALS_TEST_PROFILE BOOL
-  "Use Caliper to profile SUNDIALS tests" OFF ADVANCED)
+if(SUNDIALS_TEST_ENABLE_GTEST AND NOT SUNDIALS_TEST_ENABLE_UNIT_TESTS)
+  message(
+    FATAL_ERROR "Unit tests with Google test are enabled but unit tests are OFF"
+  )
+endif()
 
-sundials_option(SUNDIALS_TEST_NODIFF BOOL
-  "Disable output comparison in the regression test suite" OFF ADVANCED)
+if(SUNDIALS_TEST_ENABLE_UNIT_TESTS AND NOT SUNDIALS_TEST_ENABLE_GTEST)
+  message(
+    WARNING
+      "Unit tests are enabled but unit tests with Google test are OFF. Some "
+      "unit test will not be run.")
+endif()
 
-sundials_option(SUNDIALS_TEST_CONTAINER_EXE PATH
-  "Path to docker or podman" "" ADVANCED)
+if(SUNDIALS_TEST_ENABLE_DEV_TESTS OR SUNDIALS_TEST_ENABLE_UNIT_TESTS)
+  set(_default_diff_output ON)
+else()
+  set(_default_diff_output OFF)
+endif()
 
-sundials_option(SUNDIALS_TEST_CONTAINER_RUN_EXTRA_ARGS STRING
-  "Extra arguments to pass to docker/podman run command" "--tls-verify=false" ADVANCED)
+sundials_option(
+  SUNDIALS_TEST_ENABLE_DIFF_OUTPUT
+  BOOL
+  "Compare test output with saved answer files"
+  ${_default_diff_output}
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_TEST_NODIFF
+  NEGATE_DEPRECATED)
 
-sundials_option(SUNDIALS_TEST_CONTAINER_MNT STRING
+if((SUNDIALS_TEST_ENABLE_DEV_TESTS OR SUNDIALS_TEST_ENABLE_UNIT_TESTS)
+   AND NOT SUNDIALS_TEST_ENABLE_DIFF_OUTPUT)
+  message(
+    WARNING "Development or unit tests are enabled but output comparison is OFF"
+  )
+endif()
+
+sundials_option(
+  SUNDIALS_TEST_FLOAT_PRECISION STRING
+  "Precision for floating point comparisons (number of digits)" "4" ADVANCED)
+
+sundials_option(
+  SUNDIALS_TEST_INTEGER_PRECISION STRING
+  "Precision for integer comparisons (percent difference)" "10" ADVANCED)
+
+sundials_option(
+  SUNDIALS_TEST_OUTPUT_DIR PATH "Location to write test output files"
+  "${PROJECT_BINARY_DIR}/Testing/output" ADVANCED)
+
+sundials_option(SUNDIALS_TEST_ANSWER_DIR PATH "Location of test answer files"
+                "" ADVANCED)
+
+if(SUNDIALS_TEST_ENABLE_DIFF_OUTPUT AND NOT SUNDIALS_TEST_ANSWER_DIR)
+  message(
+    WARNING
+      "Test output comparison is enabled but an answer directory was not "
+      "supplied. Using the default answer files may produce erroneous test "
+      "failures due to hardware or round-off differences.")
+endif()
+
+sundials_option(
+  SUNDIALS_TEST_ENABLE_PROFILING
+  BOOL
+  "Profile tests"
+  OFF
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_TEST_PROFILE)
+
+sundials_option(
+  SUNDIALS_TEST_CALIPER_OUTPUT_DIR PATH "Location to write test Caliper files"
+  "${PROJECT_BINARY_DIR}/Testing/caliper" ADVANCED)
+
+# ---------------------------------------------------------------
+# Options for SUNDIALS testing with containers
+# ---------------------------------------------------------------
+
+sundials_option(SUNDIALS_TEST_CONTAINER_EXE PATH "Path to docker or podman" ""
+                ADVANCED)
+
+sundials_option(
+  SUNDIALS_TEST_CONTAINER_RUN_EXTRA_ARGS STRING
+  "Extra arguments to pass to docker/podman run command" "--tls-verify=false"
+  ADVANCED)
+
+sundials_option(
+  SUNDIALS_TEST_CONTAINER_MNT STRING
   "Path to project root inside the container" "/sundials" ADVANCED)
 
-# Include development examples in regression tests
-sundials_option(SUNDIALS_TEST_DEVTESTS BOOL
-  "Include development tests in make test" OFF ADVANCED)
+# ---------------------------------------------------------------
+# Options for SUNDIALS development
+# ---------------------------------------------------------------
 
-# Include unit tests in regression tests
-sundials_option(SUNDIALS_TEST_UNITTESTS BOOL
-  "Include unit tests in make test" OFF ADVANCED)
+sundials_option(SUNDIALS_DEV_IWYU BOOL "Enable include-what-you-use" OFF
+                ADVANCED)
 
-# Include googletest unit tests in regression tests
-sundials_option(SUNDIALS_TEST_ENABLE_GTEST BOOL
-  "Disable GTest unit tests" ON ADVANCED)
+sundials_option(SUNDIALS_DEV_CLANG_TIDY BOOL "Enable clang-tidy" OFF ADVANCED)
 
-sundials_option(SUNDIALS_DEV_IWYU BOOL
-  "Enable include-what-you-use" OFF ADVANCED)
+# ---------------------------------------------------------------
+# Options for SUNDIALS benchmarks
+# ---------------------------------------------------------------
 
-sundials_option(SUNDIALS_DEV_CLANG_TIDY BOOL
-  "Enable clang-tidy" OFF ADVANCED)
+sundials_option(SUNDIALS_ENABLE_BENCHMARKS BOOL "Enable the benchmark suite"
+                OFF DEPRECATED_NAMES BUILD_BENCHMARKS)
 
-sundials_option(SUNDIALS_SCHEDULER_COMMAND STRING "Job scheduler command to use to launch SUNDIALS MPI tests" "" ADVANCED)
+sundials_option(
+  SUNDIALS_BENCHMARKS_INSTALL_PATH PATH
+  "Output directory for installing benchmark executables"
+  "${CMAKE_INSTALL_PREFIX}/benchmarks" DEPRECATED_NAMES BENCHMARKS_INSTALL_PATH)
 
-sundials_option(SUNDIALS_CALIPER_OUTPUT_DIR PATH "Location to write caliper output files" "" ADVANCED)
+sundials_option(SUNDIALS_SCHEDULER_COMMAND STRING
+                "Job scheduler command to use to launch MPI tests" "" ADVANCED)
 
-sundials_option(SUNDIALS_BENCHMARK_NUM_CPUS STRING "Number of CPU cores to run benchmarks with" "40" ADVANCED)
+sundials_option(
+  SUNDIALS_BENCHMARKS_OUTPUT_DIR
+  PATH
+  "Location to write benchmark output files"
+  "${PROJECT_BINARY_DIR}/Benchmarking/output"
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_BENCHMARK_OUTPUT_DIR)
 
-sundials_option(SUNDIALS_BENCHMARK_NUM_GPUS STRING "Number of GPUs to run benchmarks with" "4" ADVANCED)
+sundials_option(
+  SUNDIALS_BENCHMARKS_CALIPER_OUTPUT_DIR
+  PATH
+  "Location to write benchmark caliper files"
+  "${PROJECT_BINARY_DIR}/Benchmarking/caliper"
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_BENCHMARK_CALIPER_OUTPUT_DIR)
+
+sundials_option(
+  SUNDIALS_BENCHMARKS_NUM_CPUS
+  STRING
+  "Number of CPU cores to run benchmarks with"
+  "40"
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_BENCHMARK_NUM_CPUS)
+
+sundials_option(
+  SUNDIALS_BENCHMARKS_NUM_GPUS
+  STRING
+  "Number of GPUs to run benchmarks with"
+  "4"
+  ADVANCED
+  DEPRECATED_NAMES
+  SUNDIALS_BENCHMARK_NUM_GPUS)

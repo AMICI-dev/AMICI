@@ -1,11 +1,14 @@
 /* -----------------------------------------------------------------
  * Programmer(s): Radu Serban, Aaron Collier, and
  *                David J. Gardner @ LLNL
- *                Daniel R. Reynolds @ SMU
+ *                Daniel R. Reynolds @ UMBC
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -28,7 +31,7 @@
 #include "sundials/sundials_errors.h"
 #include "sundials/sundials_types.h"
 
-#if defined(SUNDIALS_BUILD_WITH_PROFILING)
+#if defined(SUNDIALS_ENABLE_PROFILING)
 static inline SUNProfiler getSUNProfiler(N_Vector v)
 {
   return (v->sunctx->profiler);
@@ -75,6 +78,7 @@ N_Vector N_VNewEmpty(SUNContext sunctx)
   ops->nvgetarraypointer       = NULL;
   ops->nvgetdevicearraypointer = NULL;
   ops->nvsetarraypointer       = NULL;
+  ops->nvsetdevicearraypointer = NULL;
   ops->nvgetcommunicator       = NULL;
   ops->nvgetlength             = NULL;
 
@@ -102,7 +106,7 @@ N_Vector N_VNewEmpty(SUNContext sunctx)
   /*
    * OPTIONAL operations.
    *
-   * These operations provide default implementations that may be overriden.
+   * These operations provide default implementations that may be overridden.
    */
 
   /* fused vector operations (optional) */
@@ -198,6 +202,7 @@ SUNErrCode N_VCopyOps(N_Vector w, N_Vector v)
   v->ops->nvgetarraypointer       = w->ops->nvgetarraypointer;
   v->ops->nvgetdevicearraypointer = w->ops->nvgetdevicearraypointer;
   v->ops->nvsetarraypointer       = w->ops->nvsetarraypointer;
+  v->ops->nvsetdevicearraypointer = w->ops->nvsetdevicearraypointer;
   v->ops->nvgetcommunicator       = w->ops->nvgetcommunicator;
   v->ops->nvgetlength             = w->ops->nvgetlength;
   v->ops->nvgetlocallength        = w->ops->nvgetlocallength;
@@ -226,7 +231,7 @@ SUNErrCode N_VCopyOps(N_Vector w, N_Vector v)
   /*
    * OPTIONAL operations.
    *
-   * These operations provide default implementations that may be overriden.
+   * These operations provide default implementations that may be overridden.
    */
 
   /* fused vector operations */
@@ -305,7 +310,7 @@ void N_VDestroy(N_Vector v)
   if (v == NULL) { return; }
 
   /* if the destroy operation exists use it */
-  if (v->ops->nvdestroy) { v->ops->nvdestroy(v); }
+  if (v->ops && v->ops->nvdestroy) { v->ops->nvdestroy(v); }
   else
   {
     /* if we reach this point, either ops == NULL or nvdestroy == NULL,
@@ -335,7 +340,7 @@ void N_VSpace(N_Vector v, sunindextype* lrw, sunindextype* liw)
 
 sunrealtype* N_VGetArrayPointer(N_Vector v)
 {
-  if (v->ops->nvgetarraypointer)
+  if (v->ops && v->ops->nvgetarraypointer)
   {
     return (sunrealtype*)v->ops->nvgetarraypointer(v);
   }
@@ -354,6 +359,15 @@ sunrealtype* N_VGetDeviceArrayPointer(N_Vector v)
 void N_VSetArrayPointer(sunrealtype* v_data, N_Vector v)
 {
   if (v->ops->nvsetarraypointer) { v->ops->nvsetarraypointer(v_data, v); }
+  return;
+}
+
+void N_VSetDeviceArrayPointer(sunrealtype* d_vdata, N_Vector v)
+{
+  if (v->ops->nvsetdevicearraypointer)
+  {
+    v->ops->nvsetdevicearraypointer(d_vdata, v);
+  }
   return;
 }
 
@@ -1074,7 +1088,6 @@ void N_VDestroyVectorArray(N_Vector* vs, int count)
   }
 
   free(vs);
-  vs = NULL;
 
   return;
 }

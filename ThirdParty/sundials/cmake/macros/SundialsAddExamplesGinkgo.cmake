@@ -2,8 +2,11 @@
 # Programmer(s): David J. Gardner @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2024, Lawrence Livermore National Security
+# Copyright (c) 2025-2026, Lawrence Livermore National Security,
+# University of Maryland Baltimore County, and the SUNDIALS contributors.
+# Copyright (c) 2013-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
+# Copyright (c) 2002-2013, Lawrence Livermore National Security.
 # All rights reserved.
 #
 # See the top-level LICENSE and NOTICE files for details.
@@ -40,8 +43,8 @@ macro(sundials_add_examples_ginkgo EXAMPLES_VAR)
   set(multiValueArgs TARGETS BACKENDS)
 
   # Parse keyword arguments and options
-  cmake_parse_arguments(arg
-    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}"
+                        ${ARGN})
 
   foreach(example_tuple ${${EXAMPLES_VAR}})
     foreach(backend ${arg_BACKENDS})
@@ -57,11 +60,9 @@ macro(sundials_add_examples_ginkgo EXAMPLES_VAR)
 
       set(float_precision "default")
       if(backend MATCHES "CUDA")
-        set_source_files_properties(${example} PROPERTIES LANGUAGE CUDA)
         set(vector nveccuda)
         set(float_precision "4")
       elseif(backend MATCHES "HIP")
-        set_source_files_properties(${example} PROPERTIES LANGUAGE CXX)
         set(vector nvechip)
       elseif(backend MATCHES "SYCL")
         set(vector nvecsycl)
@@ -69,6 +70,12 @@ macro(sundials_add_examples_ginkgo EXAMPLES_VAR)
         set(vector nvecopenmp)
       elseif(backend MATCHES "REF")
         set(vector nvecserial)
+      endif()
+
+      if(backend MATCHES "CUDA")
+        set_source_files_properties(${example} PROPERTIES LANGUAGE CUDA)
+      else()
+        set_source_files_properties(${example} PROPERTIES LANGUAGE CXX)
       endif()
 
       # extract the file name without extension
@@ -87,17 +94,13 @@ macro(sundials_add_examples_ginkgo EXAMPLES_VAR)
         target_compile_definitions(${example_target} PRIVATE USE_${backend})
 
         # directories to include
-        target_include_directories(${example_target}
-          PRIVATE
-          "${PROJECT_SOURCE_DIR}/examples/utilities")
+        target_include_directories(
+          ${example_target} PRIVATE "${PROJECT_SOURCE_DIR}/examples/utilities")
 
         # libraries to link against
-        target_link_libraries(${example_target}
-          PRIVATE
-          ${arg_TARGETS}
-          sundials_${vector}
-          Ginkgo::ginkgo
-          ${EXTRA_LINK_LIBS})
+        target_link_libraries(
+          ${example_target} PRIVATE ${arg_TARGETS} sundials_${vector}
+                                    Ginkgo::ginkgo ${EXTRA_LINK_LIBS})
 
       endif()
 
@@ -105,17 +108,20 @@ macro(sundials_add_examples_ginkgo EXAMPLES_VAR)
       if("${example_args}" STREQUAL "")
         set(test_name ${example_target})
       else()
-        string(REGEX REPLACE " " "_" test_name ${example_target}_${example_args})
+        string(REGEX REPLACE " " "_" test_name
+                             ${example_target}_${example_args})
       endif()
 
       # add example to regression tests
       if(${arg_UNIT_TEST})
-        sundials_add_test(${test_name} ${example_target}
+        sundials_add_test(
+          ${test_name} ${example_target}
           EXAMPLE_TYPE ${example_type}
           TEST_ARGS ${example_args}
           NODIFF)
       else()
-        sundials_add_test(${test_name} ${example_target}
+        sundials_add_test(
+          ${test_name} ${example_target}
           EXAMPLE_TYPE ${example_type}
           TEST_ARGS ${example_args}
           ANSWER_DIR ${CMAKE_CURRENT_SOURCE_DIR}

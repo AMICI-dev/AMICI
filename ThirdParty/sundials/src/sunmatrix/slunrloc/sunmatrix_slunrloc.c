@@ -3,8 +3,11 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * ----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -13,7 +16,7 @@
  * SUNDIALS Copyright End
  * ----------------------------------------------------------------------------
  * This is the implementation file for the SuperLU SuperMatrix SLU_NR_loc
- * format compatibile SUNMatrix.
+ * format compatible SUNMatrix.
  * ----------------------------------------------------------------------------
  */
 
@@ -21,13 +24,39 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include <superlu_ddefs.h>
-
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_mpi_types.h>
 #include <sunmatrix/sunmatrix_slunrloc.h>
 
 #include "sundials_macros.h"
+
+#if defined(SUNDIALS_DOUBLE_PRECISION)
+#include <superlu_ddefs.h>
+#define SLU_X                              SLU_D
+#define pxgsmv_init                        pdgsmv_init
+#define pxgsmv_finalize                    pdgsmv_finalize
+#define pxgsmv                             pdgsmv
+#define file_xPrint_CompRowLoc_Matrix_dist file_dPrint_CompRowLoc_Matrix_dist
+#define xClone_CompRowLoc_Matrix_dist      dClone_CompRowLoc_Matrix_dist
+#define xZero_CompRowLoc_Matrix_dist       dZero_CompRowLoc_Matrix_dist
+#define xCopy_CompRowLoc_Matrix_dist       dCopy_CompRowLoc_Matrix_dist
+#define xScaleAdd_CompRowLoc_Matrix_dist   dScaleAdd_CompRowLoc_Matrix_dist
+#define xScaleAddId_CompRowLoc_Matrix_dist dScaleAddId_CompRowLoc_Matrix_dist
+#elif defined(SUNDIALS_SINGLE_PRECISION)
+#include <superlu_sdefs.h>
+#define SLU_X                              SLU_S
+#define pxgsmv_init                        psgsmv_init
+#define pxgsmv_finalize                    psgsmv_finalize
+#define pxgsmv                             psgsmv
+#define file_xPrint_CompRowLoc_Matrix_dist file_sPrint_CompRowLoc_Matrix_dist
+#define xClone_CompRowLoc_Matrix_dist      sClone_CompRowLoc_Matrix_dist
+#define xZero_CompRowLoc_Matrix_dist       sZero_CompRowLoc_Matrix_dist
+#define xCopy_CompRowLoc_Matrix_dist       sCopy_CompRowLoc_Matrix_dist
+#define xScaleAdd_CompRowLoc_Matrix_dist   sScaleAdd_CompRowLoc_Matrix_dist
+#define xScaleAddId_CompRowLoc_Matrix_dist sScaleAddId_CompRowLoc_Matrix_dist
+#else
+#error "Incompatible sunrealtype for SuperLU_DIST"
+#endif
 
 /*
  * ----------------------------------------------------------------------------
@@ -63,15 +92,6 @@
 
 #define SM_FSTROW_SLUNRLOC(A) (SM_SUPERSTORE_SLUNRLOC(A)->fst_row)
 
-#define SM_DATA_SLUNRLOC(A) ((sunrealtype*)SM_SUPERSTORE_SLUNRLOC(A)->nzval)
-
-#define SM_COLIND_SLUNRLOC(A) (SM_SUPERSTORE_SLUNRLOC(A)->colind)
-
-#define SM_ROWPTRS_SLUNRLOC(A) (SM_SUPERSTORE_SLUNRLOC(A)->rowptr)
-
-/* constants */
-#define ZERO SUN_RCONST(0.0)
-
 /* Private function prototypes */
 static sunbooleantype SMCompatible_SLUNRloc(SUNMatrix A, SUNMatrix B);
 
@@ -87,10 +107,10 @@ SUNMatrix SUNMatrix_SLUNRloc(SuperMatrix* A_super, gridinfo_t* grid,
   SUNMatrix A;
   SUNMatrixContent_SLUNRloc content;
 
-  /* Check for valid intputs */
+  /* Check for valid inputs */
   if (A_super == NULL || grid == NULL) { return (NULL); }
 
-  if (A_super->Stype != SLU_NR_loc || A_super->Dtype != SLU_D ||
+  if (A_super->Stype != SLU_NR_loc || A_super->Dtype != SLU_X ||
       A_super->Mtype != SLU_GE)
   {
     return (NULL);
@@ -143,7 +163,7 @@ void SUNMatrix_SLUNRloc_Print(SUNMatrix A, FILE* fp)
   fprintf(fp, "A->content->A_super = %p\n", (void*)SM_SUPERMATRIX_SLUNRLOC(A));
 
   /* Call SuperLU_DIST print routine */
-  file_dPrint_CompRowLoc_Matrix_dist(fp, SM_SUPERMATRIX_SLUNRLOC(A));
+  file_xPrint_CompRowLoc_Matrix_dist(fp, SM_SUPERMATRIX_SLUNRLOC(A));
 
   fprintf(fp, "======= END SUNMatrix_SLUNRloc_Print %p  =======\n", (void*)A);
 }
@@ -191,7 +211,7 @@ SUNMatrix SUNMatClone_SLUNRloc(SUNMatrix A)
   if (B_super == NULL) { return (NULL); }
 
   /* call the SuperLU-DIST clone function */
-  dClone_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), B_super);
+  xClone_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), B_super);
 
   /* create the new SUNMatrix */
   B = NULL;
@@ -228,7 +248,7 @@ void SUNMatDestroy_SLUNRloc(SUNMatrix A)
          it by calling the SuperLU DIST pdgsmv_finalize routine to free up
          memory allocated */
 
-      pdgsmv_finalize(SM_COMMPATTERN_SLUNRLOC(A));
+      pxgsmv_finalize(SM_COMMPATTERN_SLUNRLOC(A));
       Destroy_CompRowLoc_Matrix_dist(SM_COLSORTED_SLUNRLOC(A));
       free(SM_COLSORTED_SLUNRLOC(A));
       SM_COLSORTED_SLUNRLOC(A) = NULL;
@@ -262,14 +282,14 @@ void SUNMatDestroy_SLUNRloc(SUNMatrix A)
 SUNErrCode SUNMatZero_SLUNRloc(SUNMatrix A)
 {
   /* call SuperLU-DIST clone function */
-  dZero_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A));
+  xZero_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A));
   return (SUN_SUCCESS);
 }
 
 SUNErrCode SUNMatCopy_SLUNRloc(SUNMatrix A, SUNMatrix B)
 {
   /* call SuperLU-DIST copy function */
-  dCopy_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A),
+  xCopy_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A),
                                SM_SUPERMATRIX_SLUNRLOC(B));
   return (SUN_SUCCESS);
 }
@@ -280,7 +300,7 @@ SUNErrCode SUNMatScaleAdd_SLUNRloc(sunrealtype c, SUNMatrix A, SUNMatrix B)
   if (!SMCompatible_SLUNRloc(A, B)) { return (SUN_ERR_ARG_INCOMPATIBLE); }
 
   /* call SuperLU-DIST ScaleAdd function */
-  dScaleAdd_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A),
+  xScaleAdd_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A),
                                    SM_SUPERMATRIX_SLUNRLOC(B), c);
   return (SUN_SUCCESS);
 }
@@ -288,7 +308,7 @@ SUNErrCode SUNMatScaleAdd_SLUNRloc(sunrealtype c, SUNMatrix A, SUNMatrix B)
 SUNErrCode SUNMatScaleAddI_SLUNRloc(sunrealtype c, SUNMatrix A)
 {
   /* call SuperLU-DIST ScaleAddI function */
-  dScaleAddId_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), c);
+  xScaleAddId_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), c);
   return (SUN_SUCCESS);
 }
 
@@ -313,7 +333,7 @@ SUNErrCode SUNMatMatvec_SLUNRloc(SUNMatrix A, N_Vector x, N_Vector y)
   if (xdata == NULL || ydata == NULL) { return (SUN_ERR_MEM_FAIL); }
 
   /* Call SuperLU-DIST Matvec routine to perform the actual Matvec. */
-  pdgsmv(0, ACS, SM_GRID_SLUNRLOC(A), SM_COMMPATTERN_SLUNRLOC(A), xdata, ydata);
+  pxgsmv(0, ACS, SM_GRID_SLUNRLOC(A), SM_COMMPATTERN_SLUNRLOC(A), xdata, ydata);
 
   return (SUN_SUCCESS);
 }
@@ -335,8 +355,8 @@ SUNErrCode SUNMatMatvecSetup_SLUNRloc(SUNMatrix A)
     /* Clone and copy A to create ACS which will be A but with column-sorted
        column indices to [internal, external]. ACS is used with the Matvec
        routine. */
-    dClone_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), ACS);
-    dCopy_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), ACS);
+    xClone_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), ACS);
+    xCopy_CompRowLoc_Matrix_dist(SM_SUPERMATRIX_SLUNRLOC(A), ACS);
 
     SM_ROWTOPROC_SLUNRLOC(A) =
       (sunindextype*)malloc(SM_GLOBALROWS_SLUNRLOC(A) * sizeof(sunindextype));
@@ -347,7 +367,7 @@ SUNErrCode SUNMatMatvecSetup_SLUNRloc(SUNMatrix A)
       return (SUN_ERR_MEM_FAIL);
     }
 
-    SM_COMMPATTERN_SLUNRLOC(A) = (pdgsmv_comm_t*)malloc(sizeof(pdgsmv_comm_t));
+    SM_COMMPATTERN_SLUNRLOC(A) = (pxgsmv_comm_t*)malloc(sizeof(pxgsmv_comm_t));
     if (SM_COMMPATTERN_SLUNRLOC(A) == NULL)
     {
       free(SM_ROWTOPROC_SLUNRLOC(A));
@@ -362,7 +382,7 @@ SUNErrCode SUNMatMatvecSetup_SLUNRloc(SUNMatrix A)
   {
     /* if ACS has already been created, we can reuse it to save allocations,
        but we must finalize the last matvec to avoid leaking memory.*/
-    pdgsmv_finalize(SM_COMMPATTERN_SLUNRLOC(A));
+    pxgsmv_finalize(SM_COMMPATTERN_SLUNRLOC(A));
   }
 
   /* calculate the number of processes the matrix is spread across */
@@ -389,7 +409,7 @@ SUNErrCode SUNMatMatvecSetup_SLUNRloc(SUNMatrix A)
   /* Call SuperLU-DIST routine to establish communication pattern for the
      Matvec. WARNING: This will overwrite the matrix provided. It is modified
      with colind permuted to [internal, external]. */
-  pdgsmv_init(ACS, SM_ROWTOPROC_SLUNRLOC(A), SM_GRID_SLUNRLOC(A),
+  pxgsmv_init(ACS, SM_ROWTOPROC_SLUNRLOC(A), SM_GRID_SLUNRLOC(A),
               SM_COMMPATTERN_SLUNRLOC(A));
 
   return (SUN_SUCCESS);
