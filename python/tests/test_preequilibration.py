@@ -792,21 +792,41 @@ def test_preequilibration_t0(tempdir):
     edata.set_timepoints([0.0, 10_000.0])
     edata.fixed_parameters_pre_equilibration = [1.0]
     edata.fixed_parameters = [0.0]
-    amici_model.set_t0_preeq(-10_000.0)
-    amici_model.set_t0(-2.0)
+    edata.t_start = -2.0
+    edata.t_start_preeq = -10_000.0
     amici_solver = amici_model.create_solver()
     amici_solver.set_relative_tolerance_steady_state(1e-5)
     amici_model.set_steady_state_computation_mode(
         SteadyStateComputationMode.integrationOnly
     )
-
-    rdata = run_simulation(amici_model, amici_solver, edata)
-    assert rdata.status == AMICI_SUCCESS
-    assert set(rdata.by_id("t0_preeq")) == {-10_000.0}
     idx_time_integral = amici_model.get_state_ids().index("T")
-    assert np.isclose(
-        rdata.x_ss[idx_time_integral], rdata.preeq_t - amici_model.t0_preeq()
-    )
+
+    def check_preeq_start(t0_preeq):
+        rdata = run_simulation(amici_model, amici_solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert set(rdata.by_id("t0_preeq")) == {t0_preeq}
+        assert np.isclose(
+            rdata.x_ss[idx_time_integral], rdata.preeq_t - t0_preeq
+        )
+        return rdata
+
+    check_preeq_start(-10_000.0)
+
+    # without ExpData.t_start_preeq, pre-equilibration starts at t_start
+    edata.t_start_preeq = np.nan
+    check_preeq_start(-2.0)
+
+    # deprecated: Model.t0_preeq() is used if ExpData.t_start_preeq is NaN
+    with pytest.warns(DeprecationWarning, match="set_t0_preeq"):
+        amici_model.set_t0_preeq(-5_000.0)
+    rdata = check_preeq_start(-5_000.0)
+    assert any(msg.identifier == "DEPRECATION" for msg in rdata.messages)
+
+    # ExpData.t_start_preeq takes precedence over Model.t0_preeq()
+    edata.t_start_preeq = -10_000.0
+    rdata = check_preeq_start(-10_000.0)
+    assert not any(msg.identifier == "DEPRECATION" for msg in rdata.messages)
+    assert amici_model.t0_preeq() == -5_000.0
 
 
 def test_preequilibration_events(tempdir):

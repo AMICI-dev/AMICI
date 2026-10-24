@@ -836,15 +836,20 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get the initial time to use for pre-equilibration.
      *
-     * @return Initial time, or NAN to use the model's t0.
+     * @deprecated Use ExpData::t_start_preeq.
+     *
+     * @return Initial time, or NAN if not set.
      */
     double t0_preeq() const;
 
     /**
      * @brief Set the initial time to use for pre-equilibration.
      *
-     * @param t0_preeq The initial time for pre-equilibration or NAN to use the
-     * model's t0.
+     * Only used if ExpData::t_start_preeq is NAN.
+     *
+     * @deprecated Use ExpData::t_start_preeq.
+     *
+     * @param t0_preeq The initial time for pre-equilibration or NAN to unset.
      */
     void set_t0_preeq(double t0_preeq);
 

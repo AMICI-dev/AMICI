@@ -546,6 +546,8 @@ void ConditionContext::apply_condition(
     }
 
     model_->set_t0(edata->t_start);
+    if (!std::isnan(edata->t_start_preeq))
+        model_->set_t0_preeq(edata->t_start_preeq);
     if (edata->nt()) {
         // fixed parameter in model are superseded by those provided in edata
         model_->set_timepoints(edata->get_timepoints());
