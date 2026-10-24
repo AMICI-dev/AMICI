@@ -1486,3 +1486,77 @@ def test_presimulation_without_preequilibration_custom_initial_state(tempdir):
     assert rdata.status == AMICI_SUCCESS
     # x1 = 5 during presimulation, reinitialized to k = 3 at t = 0
     assert_allclose(rdata.x[0], [3.0, 5.0 * (1 - np.exp(-1.0))], rtol=1e-6)
+
+
+@pytest.fixture(scope="module")
+def dae_posteq_event_module(tmp_path_factory):
+    """A DAE model with a steady state and an event at `t_event`."""
+    model_name = "dae_posteq_event"
+    outdir = tmp_path_factory.mktemp(model_name)
+    antimony2amici(
+        """
+        const k = 0.5, p = 2, q = 0.3, t_event = 5
+        x = 1; y = 0.3
+        x' = p - k * x + y
+        0 = y - q * x
+        E1: at time > t_event: x = x + 1
+        """,
+        observation_model=[MeasurementChannel("obs_y", formula="y")],
+        fixed_parameters=["t_event"],
+        model_name=model_name,
+        output_dir=outdir,
+    )
+    return amici.import_model_module(model_name, outdir)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "with_event", [False, True], ids=["no_event", "event"]
+)
+def test_dae_posteq_forward_sensitivities_newton(
+    dae_posteq_event_module, with_event
+):
+    """Forward sensitivities for post-equilibration of a DAE by simulation,
+    with steady-state sensitivities from the Newton solver.
+
+    Forward sensitivities are switched off during post-equilibration. With
+    `with_event`, an event occurs during post-equilibration. Re-using the
+    solver must give the same results as a fresh one.
+    """
+    model = dae_posteq_event_module.get_model()
+    t_event = 5.0 if with_event else 1e10
+    model.set_fixed_parameter_by_id("t_event", t_event)
+    model.set_timepoints([1.0, np.inf])
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    edata = ExpData(model)
+    edata.set_measurements([0.5, 1.0])
+    edata.set_noise_scales([1.0, 1.0])
+
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # the event only occurs during post-equilibration, if at all
+    assert (rdata.posteq_t > t_event) == with_event
+
+    # y_ss = p * q / (k - q), independent of the event
+    k, p, q = 0.5, 2.0, 0.3
+    sy_ss = [-p * q / (k - q) ** 2, q / (k - q), p * k / (k - q) ** 2]
+    assert_allclose(rdata.sy[1, :, 0], sy_ss, rtol=1e-6)
+
+    # the sensitivities and their error control are re-enabled
+    rdata2 = run_simulation(model, solver, edata)
+    rdata_fresh = run_simulation(model, solver.clone(), edata)
+    assert rdata2.status == AMICI_SUCCESS
+    assert rdata_fresh.status == AMICI_SUCCESS
+    assert_equal(rdata2.numsteps, rdata_fresh.numsteps)
+    assert_allclose(rdata2.sy, rdata_fresh.sy, rtol=1e-10)
+    assert_allclose(rdata2.sy, rdata.sy, rtol=1e-10)
