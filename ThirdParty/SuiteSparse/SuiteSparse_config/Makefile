@@ -14,7 +14,7 @@
 
 # To compile with an alternate compiler:
 #
-#       make CC=gcc CXX=g++
+#       make CC=gcc CXX=g++ FC=gfortran
 #
 # To compile/install for system-wide usage and for local usage in
 # SuiteSparse/lib and SuiteSparse/include:

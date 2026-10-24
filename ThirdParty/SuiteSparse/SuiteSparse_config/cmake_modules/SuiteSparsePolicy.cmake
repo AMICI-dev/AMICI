@@ -2,7 +2,7 @@
 # SuiteSparse/SuiteSparse_config/cmake_modules/SuiteSparsePolicy.cmake
 #-------------------------------------------------------------------------------
 
-# Copyright (c) 2022-2023, Timothy A. Davis.  All Rights Reserved.
+# Copyright (c) 2022-2025, Timothy A. Davis.  All Rights Reserved.
 # SPDX-License-Identifier: BSD-3-clause
 
 #-------------------------------------------------------------------------------
@@ -35,10 +35,10 @@
 #                       GraphBLAS is false.
 #
 #   SUITESPARSE_CUDA_ARCHITECTURES:  a string, such as "all" or
-#                       "35;50;75;80" that lists the CUDA architectures to use
+#                       "75;80" that lists the CUDA architectures to use
 #                       when compiling CUDA kernels with nvcc.  The "all"
 #                       option requires cmake 3.23 or later.
-#                       Default: "52;75;80".
+#                       Default: "all".
 #
 #   BLA_VENDOR and BLA_SIZEOF_INTEGER: By default, SuiteSparse searches for
 #                       the BLAS library in a specific order.  If you wish to
@@ -56,6 +56,26 @@
 #                       will be searched for.  Ignored if BLA_VENDOR and
 #                       BLA_SIZEOF_INTEGER are defined.
 #
+#   BLAS_LIBRARIES and BLAS_INCLUDE_DIRS      if defined, then this is an
+#                       explicit list of the BLAS libraries and/or include
+#                       directories to use.  This skips the use of the cmake
+#                       command "find_package (BLAS REQUIRED)".  You must also
+#                       set BLA_VENDOR to define for SuiteSparse which BLAS
+#                       library you are using.  This variable is not used by
+#                       FindBLAS.cmake, but it is used to tell SuiteSparse
+#                       which BLAS is being used so that it can be configured
+#                       to exploit the particular properties of each vendor
+#                       BLAS library (threading control, 32/64 bit integers,
+#                       etc).  You must also set SUITESPARSE_USE_64BIT_BLAS to
+#                       true if your BLAS libraries expect 64-bit integers, or
+#                       to false if they expect 32-bit integers (or leave it
+#                       undefined in which case it assumes 32-bit integers).
+#
+#   LAPACK_LIBRARIES and LAPACK_INCLUDE_DIRS    if defined, then this is an
+#                       explicit list of the LAPACK libraries and/or include
+#                       directories to use.  This skips the use of the cmake
+#                       command "find_package ( LAPACK REQUIRED )".
+#
 #   SUITESPARSE_C_TO_FORTRAN:  a string that defines how C calls Fortran.
 #                       Defaults to "(name,NAME) name" for Windows (lower case,
 #                       no underscore appended to the name), which is the
@@ -71,6 +91,18 @@
 #                       defined explicitly, if the defaults are not appropriate
 #                       for your system.
 #                       Default: ON
+#
+#       *** WARNING:  Using the Intel icx compiler, the Intel MKL BLAS, and the
+#       GNU Fortran compiler together will result in two OpenMP libraries
+#       linked to the UMFPACK, CHOLMOD, ParU, and SPQR libraries.  This will
+#       cause serious performance issues.  This cmake file detects if icx and
+#       gfortran are in use, and issues a fatal error.  Otherwise, if the C,
+#       C++, and Fortran compilers have a different compiler ID (which may work
+#       but is not recommend), then you must ensure that you are linking with
+#       just one OpenMP library.  If this occurs, disable the use of Fortran by
+#       setting SUITESPARSE_USE_FORTRAN to OFF, use a suite of C/C++/Fortran
+#       compilers with the same ID, or ensure that all your compiled libraries
+#       link against a single OpenMP library.
 #
 #   SUITESPARSE_PKGFILEDIR: Directory where CMake Config and pkg-config files
 #                       will be installed.  By default, CMake Config files will
@@ -111,10 +143,10 @@ endif ( )
 # readability (such as "/* do nothing */ ;" in SuiteSparse_config.c).  Disable
 # the clang warning for these statements:
 if ( CMAKE_C_COMPILER_ID STREQUAL "Clang" )
-    set ( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-extra-semi-stmt" )
+    set ( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-extra-semi" )
 endif ( )
 if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
-    set ( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-extra-semi-stmt" )
+    set ( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-extra-semi" )
 endif ( )
 
 if ( WIN32 )
@@ -243,6 +275,13 @@ if ( INSIDE_SUITESPARSE )
     list ( APPEND CMAKE_BUILD_RPATH ${SUITESPARSE_LIBDIR} )
 endif ( )
 
+if ( APPLE )
+    # append /usr/local/lib to the install and build runpaths
+    message ( STATUS "Add to Mac rpath: " ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR} )
+    list ( APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR} )
+    list ( APPEND CMAKE_BUILD_RPATH   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR} )
+endif ( )
+
 set ( SUITESPARSE_PKGFILEDIR ${SUITESPARSE_LIBDIR} CACHE STRING
     "Directory where CMake Config and pkg-config files will be installed" )
 
@@ -281,11 +320,31 @@ endif ( )
 include ( CheckLanguage )
 option ( SUITESPARSE_USE_FORTRAN "ON (default): use Fortran. OFF: do not use Fortran" ON )
 if ( SUITESPARSE_USE_FORTRAN )
+    message ( STATUS "Checking if Fortran is available and compatible with C/C++" )
     check_language ( Fortran )
     if ( CMAKE_Fortran_COMPILER )
+        # Fortran is available; ensure that it is compatible with C/C++
+        enable_language ( CXX )
         enable_language ( Fortran )
-        message ( STATUS "Fortran:          ${CMAKE_Fortran_COMPILER}" )
         set ( SUITESPARSE_HAS_FORTRAN ON )
+        if ( NOT "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "${CMAKE_C_COMPILER_ID}" OR
+             NOT "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "${CMAKE_CXX_COMPILER_ID}" )
+            if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM" )
+                message ( STATUS " " )
+                message ( STATUS "Incompatible Fortran/C/C++ compilers detected:" )
+                message ( STATUS "    Fortran:          ${CMAKE_Fortran_COMPILER}" )
+                message ( STATUS "    Fortran id:       ${CMAKE_Fortran_COMPILER_ID}" )
+                message ( STATUS "    C                 ${CMAKE_C_COMPILER}" )
+                message ( STATUS "    C       id:       ${CMAKE_C_COMPILER_ID}" )
+                message ( STATUS "    C++               ${CMAKE_CXX_COMPILER}" )
+                message ( STATUS "    C++     id:       ${CMAKE_CXX_COMPILER_ID}" )
+                # icx/icpx cannot be used with gfortran: this is a fatal error
+                message ( FATAL_ERROR "ERROR: Using Fortran with SuiteSparse requires that "
+                " it has the same compiler ID as the C/C++ compilers."
+                "  Use a compatible Fortran compiler, or set SUITESPARSE_USE_FORTRAN to OFF." )
+            endif ( )
+        endif ( )
+        message ( STATUS "Fortran:          enabled" )
     else ( )
         # Fortran not available:
         set ( SUITESPARSE_HAS_FORTRAN OFF )
@@ -356,7 +415,7 @@ endif ( )
 
 if ( SUITESPARSE_HAS_CUDA )
     message ( STATUS "CUDA:             enabled" )
-    set ( SUITESPARSE_CUDA_ARCHITECTURES "52;75;80" CACHE STRING "CUDA architectures" )
+    set ( SUITESPARSE_CUDA_ARCHITECTURES "all" CACHE STRING "CUDA architectures" )
     set ( CMAKE_CUDA_ARCHITECTURES ${SUITESPARSE_CUDA_ARCHITECTURES} )
 else ( )
     message ( STATUS "CUDA:             not enabled" )

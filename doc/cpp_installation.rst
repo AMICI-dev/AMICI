@@ -16,6 +16,7 @@ Prerequisites:
 * CBLAS compatible BLAS library
 * a C++20 compatible compiler
 * a C compiler
+* CMake>=3.23
 * Optional:
 
   * HDF5 libraries
