@@ -67,6 +67,10 @@ ExpData::ExpData(Model const& model)
     reinitialize_fixed_parameter_initial_states
         = model.get_reinitialize_fixed_parameter_initial_states()
           && model.get_reinitialization_state_idxs().empty();
+    // The model's reinitialization setting applies to the start of both
+    // presimulation and the main simulation.
+    reinitialization_state_idxs_presim
+        = model.get_reinitialization_state_idxs();
     reinitialization_state_idxs_sim = model.get_reinitialization_state_idxs();
 }
 
@@ -502,11 +506,13 @@ void ConditionContext::apply_condition(
                     model_->nk(), edata->fixed_parameters.size()
                 );
             model_->set_fixed_parameters(edata->fixed_parameters);
-            if (!edata->reinitialize_fixed_parameter_initial_states)
-                model_->set_reinitialization_state_idxs(
-                    edata->reinitialization_state_idxs_sim
-                );
         }
+        // Applies independently of whether fixed parameters are provided,
+        // consistent with `reinitialize_fixed_parameter_initial_states`.
+        if (!edata->reinitialize_fixed_parameter_initial_states)
+            model_->set_reinitialization_state_idxs(
+                edata->reinitialization_state_idxs_sim
+            );
         break;
     case FixedParameterContext::preequilibration:
         if (!edata->fixed_parameters_pre_equilibration.empty()) {
@@ -537,11 +543,12 @@ void ConditionContext::apply_condition(
                     model_->nk(), edata->fixed_parameters_presimulation.size()
                 );
             model_->set_fixed_parameters(edata->fixed_parameters_presimulation);
-            if (!edata->reinitialize_fixed_parameter_initial_states)
-                model_->set_reinitialization_state_idxs(
-                    edata->reinitialization_state_idxs_presim
-                );
         }
+        // Applies also if presimulation uses the main fixed parameters.
+        if (!edata->reinitialize_fixed_parameter_initial_states)
+            model_->set_reinitialization_state_idxs(
+                edata->reinitialization_state_idxs_presim
+            );
         break;
     }
 

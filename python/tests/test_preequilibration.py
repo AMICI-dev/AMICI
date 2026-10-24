@@ -1270,3 +1270,65 @@ def test_adjoint_condition_differs_from_main_simulation(
     assert_allclose(asa.y, fsa.y, rtol=1e-10)
     assert_allclose(asa.llh, fsa.llh, rtol=1e-10)
     assert_allclose(asa.sllh, fsa.sllh, rtol=1e-6)
+
+
+def test_expdata_from_model_reinitialization_presim(tempdir):
+    """`ExpData(model)` keeps the model's reinitialization at presimulation
+    start.
+
+    Also without presimulation fixed parameters, in which case
+    presimulation uses the main simulation fixed parameters.
+    """
+    ant_str = """
+    k = 1
+    x1 = k; x1' = 0
+    x2 = 0; x2' = x1 - x2
+    """
+    module_name = "test_expdata_reinit_presim"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model = amici.import_model_module(module_name, tempdir).get_model()
+    model.set_timepoints([0.0])
+    solver = model.create_solver()
+    k_sim = 3.0
+
+    def simulate(edata, k_presim):
+        edata.fixed_parameters_pre_equilibration = [1.0]
+        if k_presim is not None:
+            edata.fixed_parameters_presimulation = [k_presim]
+        edata.t_presim = 1.0
+        edata.fixed_parameters = [k_sim]
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        return rdata.x[0]
+
+    model.set_reinitialize_fixed_parameter_initial_states(True)
+    reinit_idxs = list(model.get_reinitialization_state_idxs())
+    assert reinit_idxs
+    edata = ExpData(model)
+    assert list(edata.reinitialization_state_idxs_presim) == reinit_idxs
+    assert list(edata.reinitialization_state_idxs_sim) == reinit_idxs
+
+    for k_presim in (2.0, None):
+        model.set_reinitialize_fixed_parameter_initial_states(True)
+        x_model_setting = simulate(ExpData(model), k_presim)
+
+        model.set_reinitialize_fixed_parameter_initial_states(False)
+        edata = ExpData(model)
+        edata.reinitialize_fixed_parameter_initial_states = True
+        x_edata_setting = simulate(edata, k_presim)
+
+        # x1 is reinitialized at the start of presimulation and of the main
+        # simulation; x2 relaxes from its pre-equilibrium value 1 towards x1
+        # during presimulation.
+        k_pre = k_sim if k_presim is None else k_presim
+        assert_allclose(
+            x_edata_setting,
+            [k_sim, k_pre - (k_pre - 1.0) * np.exp(-1.0)],
+            rtol=1e-6,
+        )
+        assert_allclose(x_model_setting, x_edata_setting, rtol=1e-6)
