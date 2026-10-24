@@ -274,6 +274,25 @@ class Model : public AbstractModel, public ModelDimensions {
     ) const;
 
     /**
+     * @brief Apply the adjoint of `reinitialize` to the adjoint state.
+     *
+     * `reinitialize` sets the reinitialized states to `x0(p, k)`, i.e.,
+     * `sx <- P sx + dx0/dp`, where `P` zeroes the reinitialized states.
+     * Accordingly, this computes `xQB += (dx0/dp)^T xB` and `xB <- P xB`.
+     * Must be called with the fixed parameters that were used in
+     * `reinitialize`. Not supported for models with conservation laws,
+     * DAE models, or `nJ != 1`.
+     *
+     * @param t Timepoint of the reinitialization
+     * @param x State variables after the reinitialization
+     * @param xB Adjoint state variables
+     * @param xQB Adjoint quadratures
+     */
+    void reinitialize_b(
+        realtype t, AmiVector const& x, AmiVector& xB, AmiVector& xQB
+    );
+
+    /**
      * @brief Initialize model state.
      *
      * @param t Initial timepoint
