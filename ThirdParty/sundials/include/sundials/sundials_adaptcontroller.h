@@ -1,9 +1,12 @@
 /* -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
+ * Programmer(s): Daniel R. Reynolds @ UMBC
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -31,17 +34,22 @@ extern "C" {
 #endif
 
 /* -----------------------------------------------------------------
- * SUNAdaptController types (currently, only "H" is implemented;
- * others are planned):
+ * SUNAdaptController types:
  *    NONE - empty controller (does nothing)
  *    H    - controls a single-rate step size
+ *    MRI_H_TOL - controls slow step and fast relative tolerances
  * ----------------------------------------------------------------- */
 
-typedef enum
+enum SUNAdaptController_Type
 {
   SUN_ADAPTCONTROLLER_NONE,
-  SUN_ADAPTCONTROLLER_H
-} SUNAdaptController_Type;
+  SUN_ADAPTCONTROLLER_H,
+  SUN_ADAPTCONTROLLER_MRI_H_TOL
+};
+
+#ifndef SWIG
+typedef enum SUNAdaptController_Type SUNAdaptController_Type;
+#endif
 
 /* -----------------------------------------------------------------
  * Generic definition of SUNAdaptController
@@ -63,13 +71,24 @@ struct _generic_SUNAdaptController_Ops
   SUNErrCode (*estimatestep)(SUNAdaptController C, sunrealtype h, int p,
                              sunrealtype dsm, sunrealtype* hnew);
 
+  /* REQUIRED for controllers of SUN_ADAPTCONTROLLER_MRI_H_TOL type. */
+  SUNErrCode (*estimatesteptol)(SUNAdaptController C, sunrealtype H,
+                                sunrealtype tolfac, int P, sunrealtype DSM,
+                                sunrealtype dsm, sunrealtype* Hnew,
+                                sunrealtype* tolfacnew);
+
   /* OPTIONAL for all SUNAdaptController implementations. */
   SUNErrCode (*destroy)(SUNAdaptController C);
   SUNErrCode (*reset)(SUNAdaptController C);
+  SUNErrCode (*setoptions)(SUNAdaptController C, const char* Cid,
+                           const char* file_name, int argc, char* argv[]);
   SUNErrCode (*setdefaults)(SUNAdaptController C);
   SUNErrCode (*write)(SUNAdaptController C, FILE* fptr);
   SUNErrCode (*seterrorbias)(SUNAdaptController C, sunrealtype bias);
   SUNErrCode (*updateh)(SUNAdaptController C, sunrealtype h, sunrealtype dsm);
+  SUNErrCode (*updatemrihtol)(SUNAdaptController C, sunrealtype H,
+                              sunrealtype tolfac, sunrealtype DSM,
+                              sunrealtype dsm);
   SUNErrCode (*space)(SUNAdaptController C, long int* lenrw, long int* leniw);
 };
 
@@ -118,10 +137,30 @@ SUNErrCode SUNAdaptController_EstimateStep(SUNAdaptController C, sunrealtype h,
                                            int p, sunrealtype dsm,
                                            sunrealtype* hnew);
 
+/* Combined slow step/fast tolerance multirate controller function.
+   This is called following a slow multirate time step with size 'H'
+   and fast/slow relative tolerance ratio 'tolfac', and error factors
+   'DSM' and 'dsm' (slow and fast, resp.).  The controller should
+   estimate slow stepsize 'Hnew' and updated relative tolerance ratio
+   'tolfacnew', so that the ensuing step will have 'DSM' and 'dsm'
+   values JUST BELOW 1 with minimal computational effort. */
+SUNDIALS_EXPORT
+SUNErrCode SUNAdaptController_EstimateStepTol(SUNAdaptController C,
+                                              sunrealtype H, sunrealtype tolfac,
+                                              int P, sunrealtype DSM,
+                                              sunrealtype dsm, sunrealtype* Hnew,
+                                              sunrealtype* tolfacnew);
+
 /* Function to reset the controller to its initial state, e.g., if
    it stores a small number of previous dsm or step size values. */
 SUNDIALS_EXPORT
 SUNErrCode SUNAdaptController_Reset(SUNAdaptController C);
+
+/* Function to update internal controller parameters from the command line. */
+SUNDIALS_EXPORT
+SUNErrCode SUNAdaptController_SetOptions(SUNAdaptController C, const char* Cid,
+                                         const char* file_name, int argc,
+                                         char* argv[]);
 
 /* Function to set the controller parameters to their default values. */
 SUNDIALS_EXPORT
@@ -145,8 +184,18 @@ SUNDIALS_EXPORT
 SUNErrCode SUNAdaptController_UpdateH(SUNAdaptController C, sunrealtype h,
                                       sunrealtype dsm);
 
-/* Function to return the memory requirements of the controller object. */
+/* Function to notify the controller of a successful multirate time step
+   with size H and fast tolerance factor tolfac, and local error factors
+   DSM and dsm, indicating that the step size, tolerance factor, or local
+   error factors can be saved for subsequent controller functions. */
 SUNDIALS_EXPORT
+SUNErrCode SUNAdaptController_UpdateMRIHTol(SUNAdaptController C, sunrealtype H,
+                                            sunrealtype tolfac, sunrealtype DSM,
+                                            sunrealtype dsm);
+
+/* Function to return the memory requirements of the controller object. */
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+  "Work space functions will be removed in version 8.0.0")
 SUNErrCode SUNAdaptController_Space(SUNAdaptController C, long int* lenrw,
                                     long int* leniw);
 

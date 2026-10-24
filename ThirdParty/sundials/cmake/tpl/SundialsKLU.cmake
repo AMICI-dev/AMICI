@@ -2,8 +2,11 @@
 # Programmer(s): Steven Smith and Cody J. Balos @ LLNL
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2024, Lawrence Livermore National Security
+# Copyright (c) 2025-2026, Lawrence Livermore National Security,
+# University of Maryland Baltimore County, and the SUNDIALS contributors.
+# Copyright (c) 2013-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
+# Copyright (c) 2002-2013, Lawrence Livermore National Security.
 # All rights reserved.
 #
 # See the top-level LICENSE and NOTICE files for details.
@@ -11,26 +14,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # SUNDIALS Copyright End
 # -----------------------------------------------------------------------------
-# Module to find and setup KLU correctly.
-# Created from the SundialsTPL.cmake template.
-# All SUNDIALS modules that find and setup a TPL must:
-#
-# 1. Check to make sure the SUNDIALS configuration and the TPL is compatible.
-# 2. Find the TPL.
-# 3. Check if the TPL works with SUNDIALS, UNLESS the override option
-# TPL_WORKS is TRUE - in this case the tests should not be performed and it
-# should be assumed that the TPL works with SUNDIALS.
+# Module to find and setup KLU.
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
 # Section 1: Include guard
 # -----------------------------------------------------------------------------
 
-if(NOT DEFINED SUNDIALS_KLU_INCLUDED)
-  set(SUNDIALS_KLU_INCLUDED)
-else()
-  return()
-endif()
+include_guard(GLOBAL)
 
 # -----------------------------------------------------------------------------
 # Section 2: Check to make sure options are compatible
@@ -38,7 +29,8 @@ endif()
 
 # KLU does not support single or extended precision
 if(SUNDIALS_PRECISION MATCHES "SINGLE" OR SUNDIALS_PRECISION MATCHES "EXTENDED")
-  message(FATAL_ERROR "KLU is not compatible with ${SUNDIALS_PRECISION} precision")
+  message(
+    FATAL_ERROR "KLU is not compatible with ${SUNDIALS_PRECISION} precision")
 endif()
 
 # -----------------------------------------------------------------------------
@@ -54,8 +46,9 @@ message(STATUS "KLU_INCLUDE_DIR: ${KLU_INCLUDE_DIR}")
 # Section 4: Test the TPL
 # -----------------------------------------------------------------------------
 
-if(KLU_FOUND AND (NOT KLU_WORKS))
-  # Do any checks which don't require compilation first.
+if(SUNDIALS_ENABLE_KLU_CHECKS)
+
+  message(CHECK_START "Testing KLU")
 
   if(SUNDIALS_INDEX_SIZE MATCHES "64")
     # Check size of SuiteSparse_long
@@ -69,59 +62,51 @@ if(KLU_FOUND AND (NOT KLU_WORKS))
     set(CMAKE_REQUIRED_INCLUDES ${save_CMAKE_REQUIRED_INCLUDES})
     message(STATUS "Size of SuiteSparse_long is ${SIZEOF_SUITESPARSE_LONG}")
     if(NOT SIZEOF_SUITESPARSE_LONG EQUAL "8")
-      message(FATAL_ERROR "Size of 'sunindextype' is 8 but size of 'SuiteSparse_long' is ${SIZEOF_SUITESPARSE_LONG}. KLU cannot be used.")
+      message(CHECK_FAIL "failed")
+      message(
+        FATAL_ERROR
+          "Size of 'sunindextype' is 8 but size of 'SuiteSparse_long' is ${SIZEOF_SUITESPARSE_LONG}. KLU cannot be used."
+      )
     endif()
   endif()
 
-  # Create the KLU_TEST directory
-  set(KLU_TEST_DIR ${PROJECT_BINARY_DIR}/KLU_TEST)
-  file(MAKE_DIRECTORY ${KLU_TEST_DIR})
-
-  # Create a CMakeLists.txt file
-  file(WRITE ${KLU_TEST_DIR}/CMakeLists.txt
-  "CMAKE_MINIMUM_REQUIRED(VERSION ${CMAKE_VERSION})\n"
-  "PROJECT(ltest C)\n"
-  "SET(CMAKE_VERBOSE_MAKEFILE ON)\n"
-  "SET(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")\n"
-  "SET(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\")\n"
-  "SET(CMAKE_C_STANDARD \"${CMAKE_C_STANDARD}\")\n"
-  "SET(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS}\")\n"
-  "SET(CMAKE_C_FLAGS_RELEASE \"${CMAKE_C_FLAGS_RELEASE}\")\n"
-  "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"
-  "SET(CMAKE_C_FLAGS_RELWITHDEBUGINFO \"${CMAKE_C_FLAGS_RELWITHDEBUGINFO}\")\n"
-  "SET(CMAKE_C_FLAGS_MINSIZE \"${CMAKE_C_FLAGS_MINSIZE}\")\n"
-  "INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})\n"
-  "ADD_EXECUTABLE(ltest ltest.c)\n"
-  "TARGET_LINK_LIBRARIES(ltest ${KLU_LIBRARIES})\n")
+  # Create the test directory
+  set(TEST_DIR ${PROJECT_BINARY_DIR}/KLU_TEST)
 
   # Create a C source file which calls a KLU function
-  file(WRITE ${KLU_TEST_DIR}/ltest.c
-  "\#include \"klu.h\"\n"
-  "int main(void) {\n"
-  "klu_common Common;\n"
-  "klu_defaults (&Common);\n"
-  "return(0);\n"
-  "}\n")
+  file(
+    WRITE ${TEST_DIR}/test.c
+    "#include <klu.h>\n" "int main(void) {\n"
+    "  klu_common Common; (void)Common;\n"
+    "  return klu_defaults(&Common) ? 0 : 1;\n" "}\n")
 
-  # To ensure we do not use stuff from the previous attempts,
-  # we must remove the CMakeFiles directory.
-  file(REMOVE_RECURSE ${KLU_TEST_DIR}/CMakeFiles)
+  # CMake versions supported by SUNDIALS cannot use an alias to an imported
+  # target in try_compile, so resolve the underlying target before linking.
+  get_target_property(_KLU_ALIASED_TARGET SUNDIALS::KLU ALIASED_TARGET)
+  if(_KLU_ALIASED_TARGET)
+    set(_KLU_TARGET "${_KLU_ALIASED_TARGET}")
+  else()
+    set(_KLU_TARGET SUNDIALS::KLU)
+  endif()
 
-  # Attempt to build and link the "ltest" executable
-  try_compile(COMPILE_OK ${KLU_TEST_DIR} ${KLU_TEST_DIR} ltest
+  set(TEST_BINARY_DIR "${TEST_DIR}/build")
+  try_compile(
+    COMPILE_OK "${TEST_BINARY_DIR}"
+    "${TEST_DIR}/test.c"
+    LINK_LIBRARIES ${_KLU_TARGET}
     OUTPUT_VARIABLE COMPILE_OUTPUT)
 
   # Process test result
   if(COMPILE_OK)
-    message(STATUS "Checking if KLU works... OK")
-    set(KLU_WORKS TRUE CACHE BOOL "KLU works with SUNDIALS as configured" FORCE)
+    message(CHECK_PASS "success")
   else()
-    message(STATUS "Checking if KLU works... FAILED")
-    message(STATUS "Check output: ")
-    message("${COMPILE_OUTPUT}")
-    message(FATAL_ERROR "SUNDIALS interface to KLU is not functional.")
+    message(CHECK_FAIL "failed")
+    file(WRITE ${TEST_DIR}/compile.out "${COMPILE_OUTPUT}")
+    message(
+      FATAL_ERROR
+        "Could not compile KLU test. Check output in ${TEST_DIR}/compile.out")
   endif()
 
-elseif(KLU_FOUND AND KLU_WORKS)
-  message(STATUS "Skipped KLU tests, assuming KLU works with SUNDIALS. Set KLU_WORKS=FALSE to (re)run compatibility test.")
+else()
+  message(STATUS "Skipped KLU checks.")
 endif()

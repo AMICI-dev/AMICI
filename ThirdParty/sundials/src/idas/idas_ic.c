@@ -2,8 +2,11 @@
  * Programmers: Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -62,7 +65,6 @@ extern int IDAInitialSetup(IDAMem IDA_mem);
 extern int IDASensEwtSet(IDAMem IDA_mem, N_Vector* yScur, N_Vector* weightS);
 
 static int IDANlsIC(IDAMem IDA_mem);
-
 static int IDANewtonIC(IDAMem IDA_mem);
 static int IDALineSrch(IDAMem IDA_mem, sunrealtype* delnorm, sunrealtype* fnorm);
 static int IDAfnorm(IDAMem IDA_mem, sunrealtype* fnorm);
@@ -357,7 +359,6 @@ int IDACalcIC(void* ida_mem, int icopt, sunrealtype tout1)
     }
 
     icret = IDAICFailFlag(IDA_mem, retval);
-
     SUNDIALS_MARK_FUNCTION_END(IDA_PROFILER);
     return (icret);
   }
@@ -567,7 +568,12 @@ static int IDANlsIC(IDAMem IDA_mem)
     }
 
     /* Call the Newton iteration routine, and return if successful.  */
+    SUNLogInfo(IDA_LOGGER, "begin-initial-condition-solve-list",
+               "attempt = %i, sensitivities = %i", nj, sensi_sim);
     retval = IDANewtonIC(IDA_mem);
+    SUNLogInfo(IDA_LOGGER, "end-initial-condition-solve-list",
+               "status = %s, retval = %i",
+               retval == IDA_SUCCESS ? "success" : "failed", retval);
     if (retval == IDA_SUCCESS) { return (IDA_SUCCESS); }
 
     /* If converging slowly and lsetup is nontrivial, retry. */
@@ -631,11 +637,20 @@ static int IDANewtonIC(IDAMem IDA_mem)
   IDA_mem->ida_delnew = IDA_mem->ida_phi[2];
 
   /* Call the linear solve function to get the Newton step, delta. */
+  SUNLogInfo(IDA_LOGGER, "begin-iterations-list", "");
   retval = IDA_mem->ida_lsolve(IDA_mem, IDA_mem->ida_delta, IDA_mem->ida_ewt,
                                IDA_mem->ida_yy0, IDA_mem->ida_yp0,
                                IDA_mem->ida_savres);
-  if (retval < 0) { return (IDA_LSOLVE_FAIL); }
-  if (retval > 0) { return (IC_FAIL_RECOV); }
+  if (retval < 0)
+  {
+    SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+    return (IDA_LSOLVE_FAIL);
+  }
+  if (retval > 0)
+  {
+    SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+    return (IC_FAIL_RECOV);
+  }
 
   /* Compute the norm of the step. */
   fnorm = IDAWrmsNorm(IDA_mem, IDA_mem->ida_delta, IDA_mem->ida_ewt, SUNFALSE);
@@ -645,11 +660,24 @@ static int IDANewtonIC(IDAMem IDA_mem)
   {
     for (is = 0; is < IDA_mem->ida_Ns; is++)
     {
+      SUNLogInfo(IDA_LOGGER, "begin-sensitivity-linear-solve-list",
+                 "index = %i", is);
       retval = IDA_mem->ida_lsolve(IDA_mem, IDA_mem->ida_deltaS[is],
                                    IDA_mem->ida_ewtS[is], IDA_mem->ida_yy0,
                                    IDA_mem->ida_yp0, IDA_mem->ida_savres);
-      if (retval < 0) { return (IDA_LSOLVE_FAIL); }
-      if (retval > 0) { return (IC_FAIL_RECOV); }
+      SUNLogInfo(IDA_LOGGER, "end-sensitivity-linear-solve-list",
+                 "status = %s, retval = %i",
+                 retval == IDA_SUCCESS ? "success" : "failed", retval);
+      if (retval < 0)
+      {
+        SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+        return (IDA_LSOLVE_FAIL);
+      }
+      if (retval > 0)
+      {
+        SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+        return (IC_FAIL_RECOV);
+      }
     }
     /* Update the norm of delta. */
     fnorm = IDASensWrmsNormUpdate(IDA_mem, fnorm, IDA_mem->ida_deltaS,
@@ -661,7 +689,11 @@ static int IDANewtonIC(IDAMem IDA_mem)
   {
     fnorm *= IDA_mem->ida_tscale * SUNRabs(IDA_mem->ida_cj);
   }
-  if (fnorm <= IDA_mem->ida_epsNewt) { return (IDA_SUCCESS); }
+  if (fnorm <= IDA_mem->ida_epsNewt)
+  {
+    SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = success");
+    return (IDA_SUCCESS);
+  }
   fnorm0 = fnorm;
 
   /* Initialize rate to avoid compiler warning message */
@@ -671,19 +703,31 @@ static int IDANewtonIC(IDAMem IDA_mem)
 
   for (mnewt = 0; mnewt < IDA_mem->ida_maxnit; mnewt++)
   {
+    SUNLogInfoIf(mnewt > 0, IDA_LOGGER, "begin-iterations-list", "");
+
     IDA_mem->ida_nni++;
     delnorm = fnorm;
     oldfnrm = fnorm;
 
     /* Call the Linesearch function and return if it failed. */
     retval = IDALineSrch(IDA_mem, &delnorm, &fnorm);
-    if (retval != IDA_SUCCESS) { return (retval); }
+    if (retval != IDA_SUCCESS)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+      return (retval);
+    }
 
     /* Set the observed convergence rate and test for convergence. */
     rate = fnorm / oldfnrm;
-    if (fnorm <= IDA_mem->ida_epsNewt) { return (IDA_SUCCESS); }
+    if (fnorm <= IDA_mem->ida_epsNewt)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = success");
+      return (IDA_SUCCESS);
+    }
 
     /* If not converged, copy new step vector, and loop. */
+    SUNLogInfoIf(mnewt < IDA_mem->ida_maxnit - 1, IDA_LOGGER,
+                 "end-iterations-list", "status = continue");
     N_VScale(ONE, IDA_mem->ida_delnew, IDA_mem->ida_delta);
 
     if (sensi_sim)
@@ -698,7 +742,13 @@ static int IDANewtonIC(IDAMem IDA_mem)
   } /* End of Newton iteration loop */
 
   /* Return either IC_SLOW_CONVRG or recoverable fail flag. */
-  if (rate <= ICRATEMAX || fnorm < PT1 * fnorm0) { return (IC_SLOW_CONVRG); }
+  if (rate <= ICRATEMAX || fnorm < PT1 * fnorm0)
+  {
+    SUNLogInfo(IDA_LOGGER, "end-iterations-list",
+               "status = failed slow convergence");
+    return (IC_SLOW_CONVRG);
+  }
+  SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed max iters");
   return (IC_CONV_FAIL);
 }
 
@@ -748,7 +798,7 @@ static int IDALineSrch(IDAMem IDA_mem, sunrealtype* delnorm, sunrealtype* fnorm)
   ratio              = ONE;
 
   /* If there are constraints, check and reduce step if necessary. */
-  if (IDA_mem->ida_constraintsSet)
+  if (IDA_mem->ida_constraints)
   {
     /* Update y and check constraints. */
     IDANewy(IDA_mem);
@@ -796,19 +846,38 @@ static int IDALineSrch(IDAMem IDA_mem, sunrealtype* delnorm, sunrealtype* fnorm)
     if (nbacks == IDA_mem->ida_maxbacks) { return (IC_LINESRCH_FAILED); }
     /* Get new (y,y') = (ynew,ypnew) and norm of new function value. */
     IDANewyyp(IDA_mem, lambda);
+    SUNLogInfo(IDA_LOGGER, "begin-line-search-list", "lambda = " SUN_FORMAT_G,
+               lambda);
     retval = IDAfnorm(IDA_mem, &fnormp);
-    if (retval != IDA_SUCCESS) { return (retval); }
+    if (retval != IDA_SUCCESS)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = failed");
+      return (retval);
+    }
 
     /* If lsoff option is on, break out. */
-    if (IDA_mem->ida_lsoff) { break; }
+    if (IDA_mem->ida_lsoff)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = success");
+      break;
+    }
 
     /* Do alpha-condition test. */
     f1normp = fnormp * fnormp * HALF;
-    if (f1normp <= f1norm + ALPHALS * slpi * lambda) { break; }
-    if (lambda < minlam) { return (IC_LINESRCH_FAILED); }
+    if (f1normp <= f1norm + ALPHALS * slpi * lambda)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = success");
+      break;
+    }
+    if (lambda < minlam)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = failed");
+      return (IC_LINESRCH_FAILED);
+    }
     lambda /= TWO;
     IDA_mem->ida_nbacktr++;
     nbacks++;
+    SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = continue");
 
   } /* End of breakout linesearch loop */
 
@@ -1060,7 +1129,12 @@ static int IDASensNlsIC(IDAMem IDA_mem)
   for (nj = 1; nj <= 2; nj++)
   {
     /* Call the Newton iteration routine */
+    SUNLogInfo(IDA_LOGGER, "begin-sensitivity-initial-condition-solve-list",
+               "attempt = %i, sensitivities = 1", nj);
     retval = IDASensNewtonIC(IDA_mem);
+    SUNLogInfo(IDA_LOGGER, "end-sensitivity-initial-condition-solve-list",
+               "status = %s, retval = %i",
+               retval == IDA_SUCCESS ? "success" : "failed", retval);
     if (retval == IDA_SUCCESS) { return (IDA_SUCCESS); }
 
     /* If converging slowly and lsetup is nontrivial and this is the first pass,
@@ -1118,14 +1192,29 @@ static int IDASensNewtonIC(IDAMem IDA_mem)
   int retval, is, mnewt;
   sunrealtype delnorm, fnorm, fnorm0, oldfnrm, rate;
 
+  SUNLogInfo(IDA_LOGGER, "begin-iterations-list", "");
+
   for (is = 0; is < IDA_mem->ida_Ns; is++)
   {
     /* Call the linear solve function to get the Newton step, delta. */
+    SUNLogInfo(IDA_LOGGER, "begin-sensitivity-linear-solve-list", "index = %i",
+               is);
     retval = IDA_mem->ida_lsolve(IDA_mem, IDA_mem->ida_deltaS[is],
                                  IDA_mem->ida_ewtS[is], IDA_mem->ida_yy0,
                                  IDA_mem->ida_yp0, IDA_mem->ida_delta);
-    if (retval < 0) { return (IDA_LSOLVE_FAIL); }
-    if (retval > 0) { return (IC_FAIL_RECOV); }
+    SUNLogInfo(IDA_LOGGER, "end-sensitivity-linear-solve-list",
+               "status = %s, retval = %i",
+               retval == IDA_SUCCESS ? "success" : "failed", retval);
+    if (retval < 0)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+      return (IDA_LSOLVE_FAIL);
+    }
+    if (retval > 0)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+      return (IC_FAIL_RECOV);
+    }
   }
   /* Compute the norm of the step and return if it is small enough */
   fnorm = IDASensWrmsNorm(IDA_mem, IDA_mem->ida_deltaS, IDA_mem->ida_ewtS,
@@ -1134,7 +1223,11 @@ static int IDASensNewtonIC(IDAMem IDA_mem)
   {
     fnorm *= IDA_mem->ida_tscale * SUNRabs(IDA_mem->ida_cj);
   }
-  if (fnorm <= IDA_mem->ida_epsNewt) { return (IDA_SUCCESS); }
+  if (fnorm <= IDA_mem->ida_epsNewt)
+  {
+    SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = success");
+    return (IDA_SUCCESS);
+  }
   fnorm0 = fnorm;
 
   rate = ZERO;
@@ -1142,19 +1235,31 @@ static int IDASensNewtonIC(IDAMem IDA_mem)
   /* Newton iteration loop */
   for (mnewt = 0; mnewt < IDA_mem->ida_maxnit; mnewt++)
   {
+    SUNLogInfoIf(mnewt > 0, IDA_LOGGER, "begin-iterations-list", "");
+
     IDA_mem->ida_nniS++;
     delnorm = fnorm;
     oldfnrm = fnorm;
 
     /* Call the Linesearch function and return if it failed. */
     retval = IDASensLineSrch(IDA_mem, &delnorm, &fnorm);
-    if (retval != IDA_SUCCESS) { return (retval); }
+    if (retval != IDA_SUCCESS)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed");
+      return (retval);
+    }
 
     /* Set the observed convergence rate and test for convergence. */
     rate = fnorm / oldfnrm;
-    if (fnorm <= IDA_mem->ida_epsNewt) { return (IDA_SUCCESS); }
+    if (fnorm <= IDA_mem->ida_epsNewt)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = success");
+      return (IDA_SUCCESS);
+    }
 
     /* If not converged, copy new step vectors, and loop. */
+    SUNLogInfoIf(mnewt < IDA_mem->ida_maxnit - 1, IDA_LOGGER,
+                 "end-iterations-list", "status = continue");
     for (is = 0; is < IDA_mem->ida_Ns; is++)
     {
       N_VScale(ONE, IDA_mem->ida_delnewS[is], IDA_mem->ida_deltaS[is]);
@@ -1163,7 +1268,13 @@ static int IDASensNewtonIC(IDAMem IDA_mem)
   } /* End of Newton iteration loop */
 
   /* Return either IC_SLOW_CONVRG or recoverable fail flag. */
-  if (rate <= ICRATEMAX || fnorm < PT1 * fnorm0) { return (IC_SLOW_CONVRG); }
+  if (rate <= ICRATEMAX || fnorm < PT1 * fnorm0)
+  {
+    SUNLogInfo(IDA_LOGGER, "end-iterations-list",
+               "status = failed slow convergence");
+    return (IC_SLOW_CONVRG);
+  }
+  SUNLogInfo(IDA_LOGGER, "end-iterations-list", "status = failed max iters");
   return (IC_CONV_FAIL);
 }
 
@@ -1222,19 +1333,38 @@ static int IDASensLineSrch(IDAMem IDA_mem, sunrealtype* delnorm,
     IDASensNewyyp(IDA_mem, lambda);
 
     /* Get the norm of new function value. */
+    SUNLogInfo(IDA_LOGGER, "begin-line-search-list", "lambda = " SUN_FORMAT_G,
+               lambda);
     retval = IDASensfnorm(IDA_mem, &fnormp);
-    if (retval != IDA_SUCCESS) { return retval; }
+    if (retval != IDA_SUCCESS)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = failed");
+      return retval;
+    }
 
     /* If lsoff option is on, break out. */
-    if (IDA_mem->ida_lsoff) { break; }
+    if (IDA_mem->ida_lsoff)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = success");
+      break;
+    }
 
     /* Do alpha-condition test. */
     f1normp = fnormp * fnormp * HALF;
-    if (f1normp <= f1norm + ALPHALS * slpi * lambda) { break; }
-    if (lambda < minlam) { return (IC_LINESRCH_FAILED); }
+    if (f1normp <= f1norm + ALPHALS * slpi * lambda)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = success");
+      break;
+    }
+    if (lambda < minlam)
+    {
+      SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = failed");
+      return (IC_LINESRCH_FAILED);
+    }
     lambda /= TWO;
     IDA_mem->ida_nbacktr++;
     nbacks++;
+    SUNLogInfo(IDA_LOGGER, "end-line-search-list", "status = continue");
   }
 
   /* Update yyS0, ypS0 and fnorm and return. */
