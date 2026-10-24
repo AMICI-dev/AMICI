@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -63,7 +64,9 @@ def _jax_variable_equations(
     eq_names: tuple[str, ...],
     subs: dict,
     indent: int,
+    transforms: dict[str, Callable[[sp.Matrix], sp.Matrix]] | None = None,
 ) -> dict:
+    transforms = transforms or {}
     return {
         f"{eq_name.upper()}_EQ": "\n".join(
             code_printer._get_sym_lines(
@@ -71,7 +74,9 @@ def _jax_variable_equations(
                 # target symbols against the free symbols of other equations
                 model.sym(eq_name),
                 # sp.Matrix to support event assignments which are lists
-                sp.Matrix(model.eq(eq_name)).subs(subs),
+                transforms.get(eq_name, lambda eq: eq)(
+                    sp.Matrix(model.eq(eq_name)).subs(subs)
+                ),
                 indent,
             )
         )[indent:]  # remove indent for first line
@@ -267,7 +272,12 @@ class ODEExporter:
         tpl_data = {
             # assign named variable using corresponding algebraic formula (function body)
             **_jax_variable_equations(
-                self.model, self._code_printer, eq_names, subs, indent
+                self.model,
+                self._code_printer,
+                eq_names,
+                subs,
+                indent,
+                transforms={"deltax": self._root_heavisides_to_h},
             ),
             # create jax array from concatenation of named variables
             **_jax_return_variables(self.model, self._code_printer, eq_names),
@@ -409,6 +419,39 @@ class ODEExporter:
                         break
                     resolved = resolved.subs(w_subs)
         return known_discs
+
+    def _root_heavisides_to_h(self, expr: sp.Matrix) -> sp.Matrix:
+        """Replace Heaviside functions of root functions by Heaviside
+        variables.
+
+        Event assignments are evaluated at the root found by the solver,
+        which may lie just before the switch. The Heaviside variables are
+        updated for the discontinuity, so conditions that switch at the event
+        time take their value after the switch, as in the C++ backend.
+        """
+        substitute_w = self.model._get_expression_substituter()
+        x_to_x_eval = dict(
+            zip(self.model.sym("x"), self.model.sym("x_eval"), strict=True)
+        )
+        roots = []
+        for event, h in zip(self.model._events, self.model.sym("h")):
+            root = substitute_w(event.get_val())
+            # `x_eval` in assignments using values from the trigger time
+            roots.extend([(root, h), (root.subs(x_to_x_eval), h)])
+
+        def to_h(heaviside: sp.Heaviside) -> sp.Expr:
+            arg = heaviside.args[0]
+            # Prefer the Heaviside variable of the negated root over `1 - h`,
+            # which differs if the root is zero, e.g., at t0.
+            for root, h in roots:
+                if (arg - root).is_zero:
+                    return h
+            for root, h in roots:
+                if (arg + root).is_zero:
+                    return 1 - h
+            return heaviside
+
+        return expr.replace(lambda e: isinstance(e, sp.Heaviside), to_h)
 
     def _generate_nn_code(self) -> None:
         for net_name, net in self.hybridization.items():
