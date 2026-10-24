@@ -277,6 +277,17 @@ void ForwardProblem::handle_preequilibration() {
         return;
     }
 
+    if (std::isnan(edata->t_start_preeq) && !std::isnan(model->t0_preeq())
+        && model->get_logger()) {
+        model->get_logger()->log(
+            LogSeverity::warning, "DEPRECATION",
+            "Pre-equilibration starts at Model.t0_preeq() since "
+            "ExpData.t_start_preeq is not set. Model.t0_preeq is deprecated "
+            "and will no longer be used in a future release. Set "
+            "ExpData.t_start_preeq instead."
+        );
+    }
+
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
     preeq_problem_.emplace(&ws_, *solver, *model, true);
