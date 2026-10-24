@@ -47,7 +47,7 @@ class JAXModel(eqx.Module):
         Path to the JAX model file.
     """
 
-    MODEL_API_VERSION = "0.0.4"
+    MODEL_API_VERSION = "0.0.5"
     api_version: str
     jax_py_file: Path
     nns: dict
@@ -297,15 +297,28 @@ class JAXModel(eqx.Module):
 
     @abstractmethod
     def _delta_x(
-        self, y: jt.Float[jt.Array, "nxs"]
-    ) -> jt.Float[jt.Array, "nxs"]:
+        self,
+        t: jt.Float[jt.Scalar, ""],
+        y: jt.Float[jt.Array, "nxs"],
+        p: jt.Float[jt.Array, "np"],
+        tcl: jt.Float[jt.Array, "ncl"],
+        h: jt.Float[jt.Array, "ne"],
+    ) -> jt.Float[jt.Array, "ne*nxs"]:
         """
         Compute the state vector changes at discontinuities.
 
+        :param t:
+            time point
         :param y:
             state vector
+        :param p:
+            parameters
+        :param tcl:
+            total values for conservation laws
+        :param h:
+            Heaviside variables, after the update for the discontinuity
         :return:
-            changes in the state vector at discontinuities
+            changes in the state vector for each event
         """
         ...
 
@@ -1022,8 +1035,31 @@ class JAXModel(eqx.Module):
         rfx = root_cond_fn(t0_next, y0_next, args)
         roots_dir = jnp.sign(rfx - rf0)
         roots_found = jnp.sign(rfx) != jnp.sign(rf0)
+        roots_zero = jnp.isclose(
+            rfx, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
+        )
+
+        def droot_dt_at(y):
+            return (
+                # ∂root_cond_fn/∂t
+                jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y, args)
+                +
+                # ∂root_cond_fn/∂y * ∂y/∂t
+                jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y, args)
+                @ self._xdot(t0_next, y, args)
+            )
+
+        # As in the C++ backend, the assignments evaluate conditions whose
+        # roots are zero at t0 at t0 itself, i.e., as `heaviside(root, 1)`.
+        h_assign = jnp.where(
+            roots_zero,
+            jnp.heaviside(rfx, 1.0),
+            jnp.where(roots_found, jnp.logical_not(h), h),
+        )
+        h_assign = jnp.where(h_mask, h_assign, h).astype(h.dtype)
 
         y0_next, h_next = _apply_event_assignments(
+            t0_next,
             roots_found,
             roots_dir,
             y0_next,
@@ -1031,22 +1067,14 @@ class JAXModel(eqx.Module):
             tcl,
             h,
             delta_x,
+            h_mask,
+            root_cond_fn,
+            h_eval=h_assign,
         )
 
-        roots_zero = jnp.isclose(
-            rfx, 0.0, atol=root_finder.atol, rtol=root_finder.rtol
-        )
-        droot_dt = (
-            # ∂root_cond_fn/∂t
-            jax.jacfwd(root_cond_fn, argnums=0)(t0_next, y0_next, args)
-            +
-            # ∂root_cond_fn/∂y * ∂y/∂t
-            jax.jacfwd(root_cond_fn, argnums=1)(t0_next, y0_next, args)
-            @ self._xdot(t0_next, y0_next, args)
-        )
         h_next = jnp.where(
             roots_zero,
-            droot_dt >= 0.0,
+            droot_dt_at(y0_next) >= 0.0,
             h_next,
         )
 
