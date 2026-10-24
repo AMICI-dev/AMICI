@@ -746,6 +746,48 @@ def test_pickle_model(sbml_example_presimulation_module):
     pickle.loads(pickle.dumps(model_clone))
 
 
+def test_pickle_model_reinitialization(
+    sbml_example_presimulation_module, tempdir
+):
+    """Pickling preserves the reinitialization settings."""
+    from amici.importers.antimony import antimony2amici
+
+    model = sbml_example_presimulation_module.get_model()
+    model.set_reinitialization_state_idxs([1])
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == (1,)
+    assert model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+    # reinitialization of all states
+    model.set_reinitialize_fixed_parameter_initial_states(True)
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == tuple(
+        range(model.nx_rdata)
+    )
+    assert model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+    # no reinitialization
+    model.set_reinitialize_fixed_parameter_initial_states(False)
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == ()
+    assert not model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+    # reinitialization of all states disabled at import
+    model_name = "test_pickle_no_reinit"
+    antimony2amici(
+        "k1 = 1; x1 = k1; x1' = 0; x2 = 0; x2' = 0",
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k1"],
+        allow_reinit_fixpar_initcond=False,
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_reinitialization_state_idxs([0])
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == (0,)
+    assert model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+
 def test_pickle_edata():
     ny = 2
     nz = 3
