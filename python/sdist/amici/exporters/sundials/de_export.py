@@ -272,6 +272,12 @@ class DEExporter:
             ):
                 continue
 
+            # only required for sensitivities of DAE models
+            if func_name in ("dxdotdt_explicit", "dwdt") and (
+                self.model.is_ode() or not self.generate_sensitivity_code
+            ):
+                continue
+
             if func_info.generate_body:
                 dec = log_execution_time(f"writing {func_name}.cpp", logger)
                 try:

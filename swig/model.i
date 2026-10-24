@@ -22,6 +22,7 @@ using namespace amici;
 %ignore fdxdt;
 %ignore fsx_rdata;
 %ignore project_algebraic_objective_derivatives;
+%ignore make_algebraic_derivatives_consistent;
 %ignore fx_rdata;
 %ignore get_adjoint_state_event_update;
 %ignore get_event_time_sensitivity;

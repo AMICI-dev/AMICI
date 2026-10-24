@@ -1260,6 +1260,29 @@ class Model : public AbstractModel, public ModelDimensions {
     ) {}
 
     /**
+     * @brief Make the algebraic components of the state derivatives and,
+     * optionally, of the state sensitivities consistent with the
+     * differential components.
+     *
+     * Sets the algebraic components of `dx` and `sx` to the solutions of
+     * the time-differentiated and the parameter-differentiated algebraic
+     * equations at `x`, respectively, with the current Heaviside variables.
+     * This is required after event assignments: `IDACalcIC` makes the
+     * algebraic states consistent, but neither their time derivatives nor
+     * their sensitivities.
+     * No-op for ODE models.
+     *
+     * @param t Timepoint
+     * @param x State variables with consistent algebraic states
+     * @param dx State derivatives, updated in place
+     * @param sx State sensitivities, updated in place. May be `nullptr`.
+     */
+    virtual void make_algebraic_derivatives_consistent(
+        [[maybe_unused]] realtype t, [[maybe_unused]] AmiVector const& x,
+        [[maybe_unused]] AmiVector& dx, [[maybe_unused]] AmiVectorArray* sx
+    ) {}
+
+    /**
      * @brief Get event-resolved observables.
      *
      * @param z Output buffer (shape `nz`)
