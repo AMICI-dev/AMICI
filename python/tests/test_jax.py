@@ -1452,11 +1452,15 @@ def test_nested_piecewise_in_condition(tmp_path):
 
 
 def test_parameter_dependent_trigger_time_state_assignment(tmp_path):
-    """Derivatives for a state-updating event whose trigger time is a
-    parameter.
+    """Derivatives for state-updating events whose trigger times are
+    parameters.
 
     `x' = -k * x` with `at time >= T: v = v + x, x = x + d`, so
     `v(tf) = exp(-k T)` and `x(tf) = exp(-k tf) + d exp(-k (tf - T))`.
+    `z' = -k * z` with the gated trigger `time >= T2 && g > 0.5` and
+    `z = z + 1`, so `z(tf) = exp(-k (tf - T2))`. The trigger of the last
+    event is false for all parameter values, so its trigger time is
+    infinite.
     """
     from amici.importers.antimony import antimony2sbml
     from amici.importers.sbml import SbmlImporter
@@ -1468,11 +1472,15 @@ def test_parameter_dependent_trigger_time_state_assignment(tmp_path):
 
     ant_model = """
     model parameter_trigger_time
-        k = 0.5; T = 1.5; d = 2
-        x = 1; v = 0
+        k = 0.5; T = 1.5; d = 2; T2 = 2; g = 1
+        x = 1; v = 0; z = 0
         x' = -k * x
         v' = 0
+        z' = -k * z
         at time >= T: v = v + x, x = x + d
+        at (time >= T2 && g > 0.5): z = z + 1
+        flag := 0
+        at (time >= 1 && flag > 0.5): z = z + 10
     end
     """
     model_name = "parameter_trigger_time"
@@ -1505,23 +1513,31 @@ def test_parameter_dependent_trigger_time_state_assignment(tmp_path):
         )
         return x[-1]
 
-    ik, iT, id_ = (model.parameter_ids.index(pid) for pid in ("k", "T", "d"))
-    ix, iv = (model.state_ids.index(sid) for sid in ("x", "v"))
+    ik, iT, id_, iT2 = (
+        model.parameter_ids.index(pid) for pid in ("k", "T", "d", "T2")
+    )
+    ix, iv, iz = (model.state_ids.index(sid) for sid in ("x", "v", "z"))
     p = jnp.array(model.parameters, dtype=float)
-    k, T, d, tf = 0.5, 1.5, 2.0, 3.0
-    assert_allclose(np.asarray(p)[[ik, iT, id_]], [k, T, d])
+    k, T, d, T2, tf = 0.5, 1.5, 2.0, 2.0, 3.0
+    assert_allclose(np.asarray(p)[[ik, iT, id_, iT2]], [k, T, d, T2])
 
     x = simulate(p)
     assert_allclose(x[iv], np.exp(-k * T), rtol=1e-6)
     assert_allclose(
         x[ix], np.exp(-k * tf) + d * np.exp(-k * (tf - T)), rtol=1e-6
     )
+    assert_allclose(x[iz], np.exp(-k * (tf - T2)), rtol=1e-6)
 
     sx = jax.jacfwd(simulate)(p)
     assert_allclose(sx[iv, iT], -k * np.exp(-k * T), rtol=1e-5)
     assert_allclose(sx[iv, ik], -T * np.exp(-k * T), rtol=1e-5)
     assert_allclose(sx[ix, iT], d * k * np.exp(-k * (tf - T)), rtol=1e-5)
     assert_allclose(sx[ix, id_], np.exp(-k * (tf - T)), rtol=1e-5)
+    assert_allclose(sx[iz, iT2], k * np.exp(-k * (tf - T2)), rtol=1e-5)
+    assert_allclose(sx[iz, ik], -(tf - T2) * np.exp(-k * (tf - T2)), rtol=1e-5)
+
+    # reverse mode (atol for entries that are zero up to solver noise)
+    assert_allclose(jax.jacrev(simulate)(p), sx, rtol=1e-5, atol=1e-8)
 
 
 @pytest.mark.parametrize(

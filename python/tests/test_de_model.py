@@ -153,9 +153,11 @@ def test_event_trigger_time():
 @skip_on_valgrind
 def test_event_trigger_time_minmax():
     """``Min``/``Max``-based event triggers (as generated for ``And``/``Or``
-    SBML triggers, and for PEtab v2 period-start events) could not
-    previously be solved for ``t`` at all (AMICI#3126), since
-    ``sympy.solve`` raises ``NotImplementedError`` on ``Min``/``Max``."""
+    SBML triggers, and for PEtab v2 period-start events) are solved for
+    ``t`` (AMICI#3126).
+
+    ``sympy.solve`` raises ``NotImplementedError`` for most of them, and
+    returns Heaviside-based expressions for two-leaf ones."""
     t = amici_time_symbol
     preeq, e0 = sp.symbols("preeq e0")
     static_syms = {preeq, e0}
@@ -184,6 +186,16 @@ def test_event_trigger_time_minmax():
     }
     for (preeq_v, e0_v), exp in expected.items():
         assert t_root.subs({preeq: preeq_v, e0: e0_v}) == exp
+
+    # two leaves, which `sympy.solve` would solve
+    T1, T2 = sp.symbols("T1 T2")
+    e = make_event(sp.Min(t - T1, t - T2))
+    assert e.has_explicit_trigger_times({T1, T2})
+    assert e.get_trigger_times() == {sp.Max(T1, T2)}
+    e = make_event(sp.Max(t - T1, t - T2))
+    assert e.get_trigger_times() == {sp.Min(T1, T2)}
+    e = make_event(-sp.Max(t - T1, t - T2))
+    assert e.get_trigger_times() == {sp.Min(T1, T2)}
 
     # a pure gating `Min` (no time-dependence at all, as for the
     # preequilibration-period trigger) has no trigger *time* to compute

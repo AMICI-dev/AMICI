@@ -798,17 +798,20 @@ class Event(ModelQuantity):
         ):
             # `solve` will solve, e.g., sin(t), but will only return [0, pi],
             #  so we better skip any periodic expressions here
-            try:
-                self._t_root = sp.solve(self.get_val(), amici_time_symbol)
-            except NotImplementedError:
-                # `sympy.solve` cannot handle Min/Max (And/Or-combined)
-                # triggers directly -- fall back to a more limited solver
-                # that understands that structure
-                t_root = solve_minmax_trigger_for_t(
-                    self.get_val(), amici_time_symbol
-                )
-                if t_root is not None:
-                    self._t_root = [t_root]
+            # Min/Max (And/Or-combined) triggers: `sympy.solve` raises
+            # NotImplementedError for most of them, and returns
+            # Heaviside-based expressions for the others
+            t_root = solve_minmax_trigger_for_t(
+                self.get_val(), amici_time_symbol
+            )
+            if t_root is not None:
+                self._t_root = [t_root]
+            else:
+                try:
+                    self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+                except NotImplementedError:
+                    # the trigger can't be solved for `t`
+                    pass
 
         self._is_negative_event = is_negative_event
 
