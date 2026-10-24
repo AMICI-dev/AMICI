@@ -581,6 +581,31 @@ void AbstractModel::fdwdw_rowvals(SUNMatrixWrapper& /*dwdw*/) {
     );
 }
 
+void AbstractModel::fdwdt(
+    realtype* /*dwdt*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*w*/, realtype const* /*tcl*/, realtype const* /*spl*/,
+    realtype const* /*dspl*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s "
+        "is not implemented for this model!",
+        __func__
+    );
+}
+
+void AbstractModel::fdxdotdt_explicit(
+    realtype* /*dxdotdt_explicit*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*dx*/, realtype const* /*w*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s "
+        "is not implemented for this model!",
+        __func__
+    );
+}
+
 void AbstractModel::fdx_rdatadx_solver(
     realtype* /*dx_rdatadx_solver*/, realtype const* /*x*/,
     realtype const* /*tcl*/, realtype const* /*p*/, realtype const* /*k*/

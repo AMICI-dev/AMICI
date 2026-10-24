@@ -1084,6 +1084,47 @@ class AbstractModel {
     virtual void fdwdw_rowvals(SUNMatrixWrapper& dwdw);
 
     /**
+     * @brief Model-specific implementation of fdwdt, no w chainrule
+     *
+     * @param dwdt explicit partial derivative of w wrt time
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h Heaviside vector
+     * @param w vector with helper variables
+     * @param tcl Total abundances for conservation laws
+     * @param spl spline values
+     * @param dspl spline time derivatives (not evaluated yet, NaN)
+     */
+    virtual void fdwdt(
+        realtype* dwdt, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* tcl, realtype const* spl, realtype const* dspl
+    );
+
+    /**
+     * @brief Model-specific implementation of fdxdotdt_explicit
+     *
+     * Only the components for the algebraic equations of DAEs are set.
+     *
+     * @param dxdotdt_explicit explicit partial derivative of the
+     * right-hand side wrt time
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h Heaviside vector
+     * @param dx Vector with the derivative states
+     * @param w vector with helper variables
+     */
+    virtual void fdxdotdt_explicit(
+        realtype* dxdotdt_explicit, realtype t, realtype const* x,
+        realtype const* p, realtype const* k, realtype const* h,
+        realtype const* dx, realtype const* w
+    );
+
+    /**
      * @brief Compute dx_rdata / dx_solver
      *
      * @param dx_rdatadx_solver dx_rdata / dx_solver

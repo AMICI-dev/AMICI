@@ -1622,6 +1622,18 @@ void Model::add_adjoint_event_update(
 ) {
     auto const* x_pos = compute_x_pos(x);
 
+    // The post-event algebraic states and their sensitivities are determined
+    // by the post-event differential states, so only the differential
+    // components of the adjoint state are propagated through the event.
+    AmiVector xB_diff(xB);
+    if (has_algebraic_states()) {
+        auto const& id = get_id_list();
+        for (int ix = 0; ix < nxtrue_solver; ++ix)
+            if (id[ix] == 0.0)
+                for (int iJ = 0; iJ < nJ; ++iJ)
+                    xB_diff[ix + iJ * nxtrue_solver] = 0.0;
+    }
+
     // all updates use the adjoint state after the event, and the Heaviside
     // variables with which the event assignments were evaluated
     for (int ip = 0; ip < nplist(); ip++) {
@@ -1629,7 +1641,8 @@ void Model::add_adjoint_event_update(
         fdeltaqB(
             derived_state_.deltaqB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            h_assign.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
+            h_assign.data(), dx.data(), plist(ip), ie, x_eval.data(),
+            xB_diff.data()
         );
         if (always_check_finite_) {
             check_finite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
@@ -1643,7 +1656,7 @@ void Model::add_adjoint_event_update(
         stauB_ie.data(), t, x_pos, state_.unscaled_parameters.data(),
         state_.fixed_parameters.data(), h_assign.data(), dx.data(), ie,
         xdot.data(), xdot_eval.data(), xdot_pre.data(), x_eval.data(),
-        xB.data(), state_.total_cl.data()
+        xB_diff.data(), state_.total_cl.data()
     );
     if (always_check_finite_) {
         check_finite(stauB_ie, ModelQuantity::stauB, t);
@@ -1657,7 +1670,7 @@ void Model::add_adjoint_event_update(
         fdeltaxB_at_trigger(
             derived_state_.deltaxB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
+            h_assign.data(), dx.data(), ie, x_eval.data(), xB_diff.data(),
             state_.total_cl.data()
         );
         if (always_check_finite_) {
@@ -1676,7 +1689,7 @@ void Model::add_adjoint_event_update(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, x_pos,
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
+        h_assign.data(), dx.data(), ie, x_eval.data(), xB_diff.data(),
         state_.total_cl.data()
     );
     if (always_check_finite_) {
@@ -1714,10 +1727,7 @@ void Model::add_adjoint_event_time_update(
             derived_state_.deltaxB_.at(ix + iJ * nxtrue_solver)
                 = stauB.at(iJ) * dtaudx.at(ix);
     // For algebraic-state-dependent triggers, `dtaudx` has nonzero
-    // algebraic components. This relies on the algebraic components of the
-    // differences of `xdot` in `stauB` being zero: `IDACalcIC` with
-    // `IDA_YA_YDP_INIT` does not change the derivatives of the algebraic
-    // states at events.
+    // algebraic components.
     project_algebraic_adjoint_event_update(
         t, x, state_.h, derived_state_.deltaxB_, xQB
     );

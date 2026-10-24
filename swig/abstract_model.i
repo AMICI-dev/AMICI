@@ -17,6 +17,8 @@
 %ignore fdwdw;
 %ignore fdwdw_rowvals;
 %ignore fdwdw_colptrs;
+%ignore fdwdt;
+%ignore fdxdotdt_explicit;
 %ignore fdwdp;
 %ignore fdwdp_rowvals;
 %ignore fdwdp_colptrs;
