@@ -326,12 +326,14 @@ class EventHandlingSimulator {
      * @param timepoints The output timepoints or measurement timepoints of
      * this period. This must contain at least the final timepoint of this
      * period.
-     * @param store_diagnosis Whether to store diagnosis in the solver at each
-     * timepoint in `timepoints`.
+     * @param is_main_simulation Whether this is the main simulation. If so,
+     * diagnosis is stored in the solver at each timepoint in `timepoints`,
+     * and the outputs of events that did not occur are filled in at the last
+     * output timepoint.
      */
     void
     run(realtype t, ExpData const* edata,
-        std::vector<realtype> const& timepoints, bool store_diagnosis);
+        std::vector<realtype> const& timepoints, bool is_main_simulation);
 
     /**
      * @brief Simulate until steady state and handle events along the way.
@@ -496,6 +498,21 @@ class EventHandlingSimulator {
     void handle_datapoint(realtype t);
 
     /**
+     * @brief Whether the main simulation is at the last output timepoint.
+     *
+     * Only then are the outputs of events that did not occur filled in.
+     * This is never the case if the last output timepoint is infinite
+     * (post-equilibration), nor during pre-equilibration, presimulation or
+     * post-equilibration.
+     *
+     * @return `true` if at the last output timepoint of the main simulation.
+     */
+    [[nodiscard]] bool at_last_output_timepoint() const {
+        return is_main_simulation_ && model_->nt() > 0
+               && ws_->sol.t == model_->get_timepoint(model_->nt() - 1);
+    }
+
+    /**
      * @brief fills events at final timepoint if necessary
      *
      * @param nmaxevent maximal number of events
@@ -518,6 +535,9 @@ class EventHandlingSimulator {
 
     /** Initial time of the current period. */
     realtype t0_{NAN};
+
+    /** Whether this simulator runs the main simulation, see `run`. */
+    bool is_main_simulation_{false};
 
     /**
      * The last trigger timepoint at which each event with an explicit

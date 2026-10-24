@@ -1614,6 +1614,146 @@ def test_posteq_events_are_handled(tempdir):
 
 
 @skip_on_valgrind
+def test_posteq_event_outputs(tempdir):
+    """Event outputs with post-equilibration.
+
+    Event outputs are recorded until the last finite output timepoint. The
+    outputs of events that did not occur until then are not filled in.
+    """
+    model_name = "test_posteq_event_outputs"
+    antimony2amici(
+        r"""
+        k = 0.3
+        x = 1
+        x' = -k * x
+        E1: at time > 1: x = x + 1
+        """,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+        ],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    model.set_timepoints([0.5, 2.0, np.inf])
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    # E1 occurs once, before the last finite timepoint
+    assert_allclose(rdata.z[0, 0], np.exp(-0.3), rtol=1e-8)
+    # the outputs of events that did not occur are not filled in
+    assert np.all(rdata.z[1:, 0] == 0.0)
+    assert np.all(rdata.rz == 0.0)
+
+    edata = ExpData(rdata, 1.0, 1.0, 0)
+    # only the first occurrence of E1 is measured
+    z_meas = np.full(model.nztrue * model.n_max_event(), np.nan)
+    z_meas[0] = 0.5
+    edata.set_event_measurements(z_meas)
+    edata.set_measurements(np.asarray(edata.get_measurements()) + 0.1)
+
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_method
+        assert np.all(np.abs(rdata.sllh) > 0.1), sensi_method
+        check_gradient(function, point, rdata.sllh).assert_success(
+            always_print=True
+        )
+
+
+@skip_on_valgrind
+def test_presim_event_outputs(tempdir):
+    """Event outputs with presimulation.
+
+    The outputs of events that did not occur are only filled in at the last
+    output timepoint of the main simulation, not at the end of the
+    presimulation, also if the last output timepoint is the initial time of
+    the main simulation.
+    """
+    model_name = "test_presim_event_outputs"
+    antimony2amici(
+        r"""
+        k = 0.3
+        q = 0.5
+        x = 1
+        x' = -k * x + q
+        # never occurs (x -> q / k < 3)
+        E1: at x > 3: x = x + 1
+        E2: at time > 1: x = x + 1
+        """,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="x", event_id="E2"),
+        ],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    point = np.asarray(model.get_free_parameters())
+
+    # E2 occurs during the main simulation, or not at all
+    for timepoints in ([0.2, 2.2], [0.0]):
+        model.set_timepoints(timepoints)
+        solver.set_sensitivity_order(SensitivityOrder.none)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS
+        edata = ExpData(rdata, 1.0, 1.0, 0)
+        edata.t_presim = 0.5
+        # first occurrences of E1 and E2
+        z_meas = np.full(model.nztrue * model.n_max_event(), np.nan)
+        z_meas[:2] = [0.5, 2.0]
+        edata.set_event_measurements(z_meas)
+
+        function, _ = run_simulation_to_function_and_derivative(
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=["llh"],
+        )
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        for sensi_method in (
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
+            solver.set_sensitivity_method(sensi_method)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS, (timepoints, sensi_method)
+            assert np.all(np.abs(rdata.sllh) > 1e-3), (
+                timepoints,
+                sensi_method,
+            )
+            check_gradient(function, point, rdata.sllh).assert_success(
+                always_print=True
+            )
+
+
+@skip_on_valgrind
 def test_preeq_presim_preserve_heaviside_state(tempdir):
     """Test the state of event trigger functions is preserved after
     pre-equilibration and presimulation.

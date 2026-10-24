@@ -76,11 +76,12 @@ ForwardProblem::ForwardProblem(
 
 void EventHandlingSimulator::run(
     realtype const t0, ExpData const* edata,
-    std::vector<realtype> const& timepoints, bool store_diagnosis
+    std::vector<realtype> const& timepoints, bool const is_main_simulation
 ) {
     std::ranges::fill(ws_->nroots, 0);
 
     t0_ = t0;
+    is_main_simulation_ = is_main_simulation;
     ws_->sol.t = t0;
     ws_->tlastroot = t0;
     ws_->t_roots_for_ignore = NAN;
@@ -152,14 +153,16 @@ void EventHandlingSimulator::run(
             }
         }
         handle_datapoint(next_t_out);
-        if (store_diagnosis) {
+        if (is_main_simulation) {
             // store diagnosis information for debugging
             solver_->store_diagnosis();
         }
     }
 
-    // fill events
-    if (model_->nz > 0 && model_->nt() > 0) {
+    // Fill in the outputs of events that did not occur. This is only done at
+    // the last output timepoint of the main simulation, not at the end of a
+    // presimulation or before post-equilibration.
+    if (model_->nz > 0 && at_last_output_timepoint()) {
         fill_events(model_->n_max_event(), edata);
     }
 
@@ -669,8 +672,7 @@ void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
 }
 
 void EventHandlingSimulator::store_event(ExpData const* edata) {
-    bool const is_last_timepoint
-        = (ws_->sol.t == model_->get_timepoint(model_->nt() - 1));
+    bool const is_last_timepoint = at_last_output_timepoint();
 
     if (is_last_timepoint) {
         // call from fillEvent at last timepoint
