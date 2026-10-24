@@ -790,24 +790,40 @@ int EventHandlingSimulator::detect_secondary_events() {
 
     // check whether we need to fire a secondary event
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+    auto const& h = model_->get_model_state().h;
+
+    // estimated change of the root functions within the integration
+    // tolerances, only computed if needed
+    std::vector<realtype> root_noise;
+
     for (int ie = 0; ie < model_->ne; ie++) {
-        // the same event should not trigger itself
-        if (ws_->roots_found.at(ie) == 0) {
-            // check whether the value of the Heaviside function changed
-            if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
-                ws_->roots_found.at(ie)
-                    = ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie) ? 1 : -1;
-                if (ws_->roots_found.at(ie) == 1)
-                    triggered_event = true;
-                secondevent++;
-            } else {
-                ws_->roots_found.at(ie) = 0;
-            }
-        } else {
-            // don't fire the same event again
-            ws_->roots_found.at(ie) = 0;
+        ws_->roots_found.at(ie) = 0;
+        auto const rootval = ws_->rootvals.at(ie);
+        // Root functions not changed by the preceding event assignment keep
+        // their Heaviside value.
+        if (rootval == ws_->rval_tmp.at(ie) || std::isnan(rootval))
+            continue;
+        // The roots crossed at this time are close to zero, so their sign
+        // may change due to roundoff or, for DAEs, the re-computation of the
+        // algebraic states. Only consider them crossed (back) if they are
+        // clearly on the other side.
+        if (ws_->roots_for_ignore.at(ie) != 0) {
+            if (root_noise.empty())
+                root_noise = compute_root_noise();
+            if (std::abs(rootval) <= root_noise[ie])
+                continue;
+        }
+        // Compare to the Heaviside variable, not to the previous root value,
+        // to also detect roots that are crossed back
+        realtype const h_new = rootval < 0.0 ? 0.0 : 1.0;
+        if (h_new != h.at(ie)) {
+            ws_->roots_found.at(ie) = h_new > h.at(ie) ? 1 : -1;
+            triggered_event |= ws_->roots_found.at(ie) == 1;
+            secondevent++;
         }
     }
+    // the next event assignment is compared to the current values
+    ws_->rval_tmp = ws_->rootvals;
 
     // fire the secondary event?
     if (secondevent > 0) {
@@ -833,6 +849,24 @@ int EventHandlingSimulator::detect_secondary_events() {
     }
 
     return secondevent;
+}
+
+std::vector<realtype> EventHandlingSimulator::compute_root_noise() {
+    auto const rtol = solver_->get_relative_tolerance();
+    auto const atol = solver_->get_absolute_tolerance();
+    AmiVector x(ws_->sol.x);
+    AmiVector dx(ws_->sol.dx);
+    for (int ix = 0; ix < x.size(); ++ix)
+        x[ix] += atol + rtol * std::abs(x[ix]);
+    for (int ix = 0; ix < dx.size(); ++ix)
+        dx[ix] += atol + rtol * std::abs(dx[ix]);
+    std::vector<realtype> root_noise(model_->ne);
+    model_->froot(ws_->sol.t, x, dx, root_noise);
+    // restore the model's derived state at the current state
+    model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+    for (int ie = 0; ie < model_->ne; ++ie)
+        root_noise[ie] = std::abs(root_noise[ie] - ws_->rootvals.at(ie));
+    return root_noise;
 }
 
 void EventHandlingSimulator::collect_roots(realtype const t_trigger) {
