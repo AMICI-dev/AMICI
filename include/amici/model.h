@@ -280,17 +280,24 @@ class Model : public AbstractModel, public ModelDimensions {
      * `sx <- P sx + dx0/dp`, where `P` zeroes the reinitialized states.
      * Accordingly, this computes `xQB += (dx0/dp)^T xB` and `xB <- P xB`.
      * Must be called with the fixed parameters that were used in
-     * `reinitialize`. Not supported for models with conservation laws,
-     * DAE models, or `nJ != 1`.
+     * `reinitialize`. Requires `check_reinitialize_b_supported`.
      *
      * @param t Timepoint of the reinitialization
-     * @param x State variables after the reinitialization
+     * @param x State variables at the start of the main simulation
      * @param xB Adjoint state variables
      * @param xQB Adjoint quadratures
      */
     void reinitialize_b(
         realtype t, AmiVector const& x, AmiVector& xB, AmiVector& xQB
     );
+
+    /**
+     * @brief Check whether `reinitialize_b` is supported.
+     *
+     * Throws if non-constant states are reinitialized for a model with
+     * conservation laws, a DAE model, or `nJ != 1`.
+     */
+    void check_reinitialize_b_supported() const;
 
     /**
      * @brief Initialize model state.

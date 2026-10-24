@@ -1059,6 +1059,66 @@ def test_preequilibration_reinit_adjoint_sensitivities(
 
 
 @skip_on_valgrind
+@pytest.mark.parametrize("variant", ["log10_plist", "event_at_t0"])
+def test_preequilibration_reinit_adjoint_sensitivities_variants(
+    reinit_model_module, variant
+):
+    """Adjoint pre-equilibration with reinitialization: parameter scaling
+    with a parameter subset, and an event at the start of the main
+    simulation after the reinitialization."""
+    model = reinit_model_module.get_model()
+    model.set_timepoints([0.0, 1.0, 2.0])
+    if variant == "log10_plist":
+        model.set_parameter_scale(ParameterScaling.log10)
+        plist = [
+            model.get_free_parameter_ids().index(id_)
+            for id_ in ("scale", "kdecay")
+        ]
+        model.set_parameter_list(plist)
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance(1e-10)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-10)
+    solver.set_absolute_tolerance_quadratures(1e-14)
+
+    def fixed_parameters(**kwargs):
+        return [kwargs[id_] for id_ in model.get_fixed_parameter_ids()]
+
+    edata = ExpData(model)
+    edata.fixed_parameters = fixed_parameters(
+        kinit=10.0, tev=0.0 if variant == "event_at_t0" else 1e6
+    )
+    edata.fixed_parameters_pre_equilibration = fixed_parameters(
+        kinit=3.0, tev=1e6
+    )
+    edata.reinitialize_fixed_parameter_initial_states = True
+    edata.set_measurements(np.full(model.nt() * model.ny, 1.0))
+    edata.set_noise_scales(np.full(model.nt() * model.ny, 0.1))
+
+    sllh = {}
+    for sensi_meth, sensi_meth_preeq in (
+        (SensitivityMethod.forward, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, (sensi_meth, sensi_meth_preeq)
+        if variant == "event_at_t0":
+            # the event fired at t0: x2 = kinit + 1
+            x2_idx = model.get_state_ids().index("x2")
+            assert_allclose(rdata.x[0, x2_idx], 11.0, rtol=1e-8)
+        sllh[sensi_meth] = np.array(rdata.sllh)
+
+    expected = sllh[SensitivityMethod.forward]
+    assert np.all(np.abs(expected) > 1e-2)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint], expected, rtol=1e-6, atol=1e-5
+    )
+
+
+@skip_on_valgrind
 @pytest.mark.parametrize(
     "period", ["preeq_switch", "preeq_no_switch", "presimulation"]
 )
