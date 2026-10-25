@@ -153,6 +153,14 @@ struct Discontinuity {
     /** State derivative corresponding to `x_at_trigger` (DAE only). */
     AmiVector dx_at_trigger;
 
+    /**
+     * Jump in `xdot` due to the Heaviside update of a secondary
+     * discontinuity that is not followed by any event application, e.g.,
+     * if event assignments crossed root functions only in the negative
+     * direction. Empty otherwise. Only populated for adjoint sensitivities.
+     */
+    AmiVector xdot_jump;
+
     /** Whether this discontinuity is due to events at the initial time. */
     bool initial_event{false};
 
@@ -436,6 +444,18 @@ class EventHandlingSimulator {
      * evaluating the event assignments.
      */
     void queue_triggered_events();
+
+    /**
+     * @brief Account for the jump in the right-hand side due to the latest
+     * Heaviside update in the sensitivities.
+     *
+     * The jump is `xdot` at the current state minus `xdot_at_trigger`.
+     * For forward sensitivities, `sx` is updated by the jump times the
+     * event time sensitivity. For adjoint sensitivities, the jump is stored
+     * in the latest discontinuity and applied in
+     * `EventHandlingBwdSimulator::handle_event_b`.
+     */
+    void apply_xdot_jump_sensitivity_update();
 
     /**
      * @brief Get the next trigger timepoint of the events with explicit
