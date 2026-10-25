@@ -39,6 +39,8 @@ __all__ = [
     "write_solver_settings_to_hdf5",
     "set_model_settings",
     "get_model_settings",
+    "set_solver_settings",
+    "get_solver_settings",
 ]
 
 
@@ -271,6 +273,91 @@ def set_model_settings(
         model.set_reinitialization_state_idxs(reinit_idxs)
 
 
+#: Solver settings handled by :func:`get_solver_settings` and
+#: :func:`set_solver_settings`. Each entry ``name`` has a getter
+#: ``Solver.get_{name}`` and a setter ``Solver.set_{name}``.
+solver_instance_settings = [
+    "sensitivity_order",
+    "sensitivity_method",
+    "sensitivity_method_pre_equilibration",
+    "internal_sensitivity_method",
+    "absolute_tolerance",
+    "relative_tolerance",
+    "absolute_tolerance_fsa",
+    "relative_tolerance_fsa",
+    "absolute_tolerance_b",
+    "relative_tolerance_b",
+    "absolute_tolerance_quadratures",
+    "relative_tolerance_quadratures",
+    "steady_state_tolerance_factor",
+    "steady_state_sensi_tolerance_factor",
+    "absolute_tolerance_steady_state",
+    "relative_tolerance_steady_state",
+    "absolute_tolerance_steady_state_sensi",
+    "relative_tolerance_steady_state_sensi",
+    "max_steps",
+    "max_steps_backward_problem",
+    "max_time",
+    "max_step_size",
+    "max_conv_fails",
+    "max_nonlin_iters",
+    "newton_max_steps",
+    "newton_damping_factor_mode",
+    "newton_damping_factor_lower_bound",
+    "newton_step_steady_state_check",
+    "sensi_steady_state_check",
+    "linear_multistep_method",
+    "non_linear_solver_iteration",
+    "linear_solver",
+    "interpolation_type",
+    "stability_limit_flag",
+    "state_ordering",
+    "return_data_reporting_mode",
+    "constraints",
+]
+
+
+def get_solver_settings(solver: AmiciSolver) -> dict[str, Any]:
+    """Get the settings of a solver.
+
+    The result can be passed to :func:`set_solver_settings` to apply the
+    same settings to another solver, and it can be pickled.
+
+    Tolerances that default to other settings when not set explicitly (e.g.,
+    :meth:`Solver.get_absolute_tolerance_fsa`) are stored with their current
+    values. After :func:`set_solver_settings`, they are set explicitly.
+
+    :param solver: The AMICI solver instance.
+
+    :returns:
+        Dictionary mapping setting names to values. For a setting ``name``,
+        the value is the return value of ``solver.get_{name}()``.
+    """
+    settings = {
+        name: getattr(solver, f"get_{name}")()
+        for name in solver_instance_settings
+    }
+    settings["constraints"] = tuple(settings["constraints"])
+    return settings
+
+
+def set_solver_settings(solver: AmiciSolver, settings: dict[str, Any]) -> None:
+    """Apply settings obtained from :func:`get_solver_settings` to a solver.
+
+    :param solver: The AMICI solver instance.
+    :param settings:
+        Dictionary mapping setting names to values, as returned by
+        :func:`get_solver_settings`. For each setting ``name``,
+        ``solver.set_{name}(value)`` is called. A subset of the settings may
+        be passed.
+    """
+    if unknown := set(settings) - set(solver_instance_settings):
+        raise ValueError(f"Unknown solver settings: {sorted(unknown)}")
+    for name in solver_instance_settings:
+        if name in settings:
+            getattr(solver, f"set_{name}")(settings[name])
+
+
 def _log_simulation(rdata: amici_swig.ReturnData):
     """Extension warnings to Python logging."""
     amici_severity_to_logging = {
@@ -427,9 +514,11 @@ def restore_edata(
     return edata
 
 
-def restore_solver(cls: type, cls_name: str, hdf5_file: str) -> Solver:
+def restore_solver(
+    cls: type, cls_name: str, settings: dict[str, Any]
+) -> Solver:
     """
-    Recreate a Solver or SolverPtr instance from an HDF5 file.
+    Recreate a Solver or SolverPtr instance from its settings.
 
     For use in Solver.__reduce__.
 
@@ -437,8 +526,8 @@ def restore_solver(cls: type, cls_name: str, hdf5_file: str) -> Solver:
         Class of the original object ({CVode,IDA}Solver or SolverPtr).
     :param cls_name:
         Name of the (pointed to) solver class ("CVodeSolver" or "IDASolver").
-    :param hdf5_file:
-        HDF5 file from which to read the solver settings.
+    :param settings:
+        Solver settings, as returned by :func:`get_solver_settings`.
     """
     from . import CVodeSolver, IDASolver
 
@@ -451,5 +540,5 @@ def restore_solver(cls: type, cls_name: str, hdf5_file: str) -> Solver:
 
     if not issubclass(cls, Solver):
         solver = cls(solver)
-    read_solver_settings_from_hdf5(hdf5_file, solver)
+    set_solver_settings(solver, settings)
     return solver

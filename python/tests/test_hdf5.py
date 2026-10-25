@@ -1,38 +1,10 @@
 """AMICI HDF5 I/O tests"""
 
 import os
-import random
 
 import amici
 import pytest
-from amici.sim.sundials import RDataReporting
-
-
-def _modify_solver_attrs(solver):
-    # change to non-default values
-    for attr in dir(solver):
-        if not attr.startswith("set"):
-            continue
-
-        val = getattr(solver, attr.replace("set", "get"))()
-
-        if isinstance(val, bool):
-            cval = not val
-        elif attr == "set_stability_limit_flag":
-            cval = 0
-        elif attr == "set_return_data_reporting_mode":
-            cval = RDataReporting.likelihood
-        elif attr == "set_max_time":
-            # default value is the maximum, must not add to that
-            cval = random.random()
-        elif attr == "set_constraints":
-            cval = [1.0, 1.0]
-        elif isinstance(val, int):
-            cval = val + 1
-        else:
-            cval = val + random.random()
-
-        getattr(solver, attr)(cval)
+from util import modify_solver_attrs
 
 
 @pytest.mark.skipif(
@@ -48,7 +20,7 @@ def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
 
     model = sbml_example_presimulation_module.get_model()
     solver = model.create_solver()
-    _modify_solver_attrs(solver)
+    modify_solver_attrs(solver)
 
     hdf5file = "solverSettings.hdf5"
 

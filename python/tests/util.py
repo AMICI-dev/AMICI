@@ -181,3 +181,36 @@ def check_trajectories_with_adjoint_sensitivities(
         atol=1e-6,
         err_msg="Finite differences and adjoint sensitivities do not match.",
     )
+
+
+def modify_solver_attrs(solver):
+    """Change all settings of `solver` to non-default values."""
+    import random
+
+    from amici.sim.sundials import RDataReporting
+
+    for attr in dir(solver):
+        if not attr.startswith("set") or not hasattr(
+            solver, attr.replace("set", "get")
+        ):
+            continue
+
+        val = getattr(solver, attr.replace("set", "get"))()
+
+        if isinstance(val, bool):
+            cval = not val
+        elif attr == "set_stability_limit_flag":
+            cval = 0
+        elif attr == "set_return_data_reporting_mode":
+            cval = RDataReporting.likelihood
+        elif attr == "set_max_time":
+            # default value is the maximum, must not add to that
+            cval = random.random()
+        elif attr == "set_constraints":
+            cval = [1.0, 1.0]
+        elif isinstance(val, int):
+            cval = val + 1
+        else:
+            cval = val + random.random()
+
+        getattr(solver, attr)(cval)

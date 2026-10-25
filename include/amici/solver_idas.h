@@ -114,6 +114,9 @@ class IDASolver : public Solver {
 
     Model const* get_model() const override;
 
+#if !defined(EXHALE_DOXYGEN_SHOULD_SKIP_THIS)
+    using Solver::set_linear_solver;
+#endif
     void set_linear_solver() const override;
 
     void set_linear_solver_b(int which) const override;
