@@ -748,6 +748,7 @@ class SbmlImporter:
             fixed_parameter_ids=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
+        self._process_kinetic_law_piecewise()
         self._process_compartments()
         self._process_species()
         self._process_reactions()
@@ -973,9 +974,7 @@ class SbmlImporter:
             if not r.isSetId():
                 continue
             # Piecewise functions are converted only once the free parameters
-            #  are known, see `_piecewise_to_heaviside`. This happens when
-            #  the kinetic law is substituted into other expressions via
-            #  `_sympify`, or in `_process_reactions`.
+            #  are known, see `_process_kinetic_law_piecewise`.
             self._add_local_symbol(
                 r.getId(),
                 self._sympify(
@@ -983,6 +982,21 @@ class SbmlImporter:
                     piecewise_to_heaviside=False,
                 ),
             )
+
+    def _process_kinetic_law_piecewise(self) -> None:
+        """
+        Transform piecewise functions in the kinetic laws stored as local
+        symbols to Heaviside functions, see `_piecewise_to_heaviside`.
+
+        This depends on the free parameters, so it has to happen after
+        `_process_parameters`, but before any of the free parameters are
+        turned into states or expressions.
+        """
+        for r in self.sbml_model.getListOfReactions():
+            if r.isSetId():
+                self._local_symbols[r.getId()] = self._piecewise_to_heaviside(
+                    self._local_symbols[r.getId()]
+                )
 
     def _add_local_symbol(self, key: str, value: sp.Expr):
         """
@@ -1437,9 +1451,7 @@ class SbmlImporter:
                     ] += sign * stoichiometry * species["conversion_factor"]
 
             if reaction.isSetId():
-                sym_math = self._piecewise_to_heaviside(
-                    self._local_symbols[reaction.getId()]
-                )
+                sym_math = self._local_symbols[reaction.getId()]
             else:
                 sym_math = self._sympify(
                     reaction.getKineticLaw() or sp.Float(0)
@@ -2986,8 +2998,9 @@ class SbmlImporter:
             * a libSBML object that has a ``getMath()`` function
         :param piecewise_to_heaviside:
             If ``True``, piecewise expressions are transformed to Heaviside
-            expressions. If ``False``, piecewise expressions are returned as
-            is.
+            expressions, unless they are continuously differentiable with
+            respect to the free parameters, see `_piecewise_to_heaviside`.
+            If ``False``, piecewise expressions are returned as is.
         :param bool2num:
             If ``True``, boolean expressions are transformed to numeric
             expressions. If ``False``, boolean expressions are returned as is.
