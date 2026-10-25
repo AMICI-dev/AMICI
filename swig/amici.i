@@ -342,25 +342,6 @@ def __repr__(self):
 };
 
 
-// Add function to check if amici was compiled with OpenMP
-%feature("docstring") compiled_with_openmp
-    "AMICI extension was compiled with OpenMP?";
-%{
-namespace amici {
-/** AMICI extension was compiled with OpenMP? */
-bool compiled_with_openmp() {
-#if defined(_OPENMP)
-    return true;
-#else
-    return false;
-#endif
-}
-};
-%}
-namespace amici {
-bool compiled_with_openmp();
-}
-
 %pythoncode %{
 from enum import IntEnum
 def enum(prefix):

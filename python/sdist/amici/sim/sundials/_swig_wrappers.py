@@ -39,6 +39,7 @@ __all__ = [
     "write_solver_settings_to_hdf5",
     "set_model_settings",
     "get_model_settings",
+    "compiled_with_openmp",
 ]
 
 
@@ -100,8 +101,8 @@ def run_simulations(
         :py:meth:`amici.sim.sundials.Model.create_solver`
     :param edata_list: list of ExpData instances
     :param failfast: returns as soon as an integration failure is encountered
-    :param num_threads: number of threads to use (only used if compiled
-        with openmp)
+    :param num_threads: number of threads for simulating multiple
+        conditions in parallel
 
     :returns: list of simulation results
     """
@@ -130,6 +131,24 @@ def run_simulations(
         _log_simulation(rdata)
 
     return [ReturnDataView(r) for r in rdata_ptr_list]
+
+
+def compiled_with_openmp() -> bool:
+    """Whether the AMICI extension was compiled with OpenMP.
+
+    .. deprecated::
+        AMICI no longer uses OpenMP. :func:`run_simulations` always supports
+        parallel simulation via ``num_threads``. This function always
+        returns ``False``.
+    """
+    warnings.warn(
+        "`compiled_with_openmp` is deprecated: AMICI no longer uses OpenMP, "
+        "and `run_simulations(..., num_threads=...)` always supports "
+        "parallel simulation.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return False
 
 
 def read_solver_settings_from_hdf5(

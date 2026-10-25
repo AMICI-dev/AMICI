@@ -23,14 +23,18 @@ std::unique_ptr<ReturnData> run_simulation(
 );
 
 /**
- * @brief Same as run_simulation, but for multiple ExpData instances. When
- * compiled with OpenMP support, this function runs multi-threaded.
+ * @brief Same as run_simulation, but for multiple ExpData instances,
+ * optionally running multiple simulations in parallel.
+ *
+ * Each simulation uses its own copy of `solver` and `model`.
  *
  * @param solver Solver instance
  * @param edatas experimental data objects
  * @param model model specification object
- * @param failfast flag to allow early termination
- * @param num_threads number of threads for parallel execution
+ * @param failfast If true, simulations that start after a simulation has
+ * failed are skipped and return empty results.
+ * @param num_threads Number of threads for parallel execution.
+ * Values smaller than 1 are treated as 1.
  * @return vector of pointers to return data objects
  */
 std::vector<std::unique_ptr<ReturnData>> run_simulations(
