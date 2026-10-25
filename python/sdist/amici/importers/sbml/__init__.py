@@ -748,7 +748,6 @@ class SbmlImporter:
             fixed_parameter_ids=fixed_parameters,
             hardcode_symbols=hardcode_symbols,
         )
-        self._process_kinetic_law_piecewise()
         self._process_compartments()
         self._process_species()
         self._process_reactions()
@@ -973,30 +972,10 @@ class SbmlImporter:
         for r in self.sbml_model.getListOfReactions():
             if not r.isSetId():
                 continue
-            # Piecewise functions are converted only once the free parameters
-            #  are known, see `_process_kinetic_law_piecewise`.
             self._add_local_symbol(
                 r.getId(),
-                self._sympify(
-                    r.getKineticLaw() or sp.Float(0),
-                    piecewise_to_heaviside=False,
-                ),
+                self._sympify(r.getKineticLaw() or sp.Float(0)),
             )
-
-    def _process_kinetic_law_piecewise(self) -> None:
-        """
-        Transform piecewise functions in the kinetic laws stored as local
-        symbols to Heaviside functions, see `_piecewise_to_heaviside`.
-
-        This depends on the free parameters, so it has to happen after
-        `_process_parameters`, but before any of the free parameters are
-        turned into states or expressions.
-        """
-        for r in self.sbml_model.getListOfReactions():
-            if r.isSetId():
-                self._local_symbols[r.getId()] = self._piecewise_to_heaviside(
-                    self._local_symbols[r.getId()]
-                )
 
     def _add_local_symbol(self, key: str, value: sp.Expr):
         """
@@ -2998,9 +2977,8 @@ class SbmlImporter:
             * a libSBML object that has a ``getMath()`` function
         :param piecewise_to_heaviside:
             If ``True``, piecewise expressions are transformed to Heaviside
-            expressions, unless they are continuously differentiable with
-            respect to the free parameters, see `_piecewise_to_heaviside`.
-            If ``False``, piecewise expressions are returned as is.
+            expressions. If ``False``, piecewise expressions are returned as
+            is.
         :param bool2num:
             If ``True``, boolean expressions are transformed to numeric
             expressions. If ``False``, boolean expressions are returned as is.
@@ -3101,36 +3079,16 @@ class SbmlImporter:
 
         # piecewise to heavisides
         if piecewise_to_heaviside:
-            expr = self._piecewise_to_heaviside(expr)
+            try:
+                expr = expr.replace(sp.Piecewise, _piecewise_to_minmax)
+                expr = expr.replace(
+                    sp.Piecewise,
+                    lambda *args: _parse_piecewise_to_heaviside(args),
+                )
+            except RuntimeError as err:
+                raise SBMLException(str(err)) from err
 
         return expr
-
-    def _piecewise_to_heaviside(self, expr: sp.Expr) -> sp.Expr:
-        """
-        Transform piecewise expressions to Heaviside expressions.
-
-        Piecewise expressions that are continuously differentiable with
-        respect to the free parameters are kept as is, see
-        :func:`amici.importers.utils._parse_piecewise_to_heaviside`.
-        Therefore, this must only be called after the free parameters have
-        been processed.
-
-        :param expr:
-            The expression to transform.
-        :raises SBMLException:
-            In case of unsupported expressions.
-        :returns:
-            The transformed expression.
-        """
-        parameters = list(self._symbols[SymbolId.FREE_PARAMETER])
-        try:
-            expr = expr.replace(sp.Piecewise, _piecewise_to_minmax)
-            return expr.replace(
-                sp.Piecewise,
-                lambda *args: _parse_piecewise_to_heaviside(args, parameters),
-            )
-        except RuntimeError as err:
-            raise SBMLException(str(err)) from err
 
     def _get_element_initial_assignment(
         self, element_id: str

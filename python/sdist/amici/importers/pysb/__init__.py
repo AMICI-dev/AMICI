@@ -763,7 +763,6 @@ def _add_expression(
     # `name` stays the original (used for `observation_model` lookups and
     # as the human-readable label); only the identifier is renamed
     sym_name = renames.get(name, name)
-    parameters = [par.get_sym() for par in ode_model.free_parameters()]
     if not pysb_model_has_obs_and_noise or name not in observation_model:
         if any(
             name == str(channel.sigma)
@@ -772,9 +771,7 @@ def _add_expression(
             component = SigmaY
         else:
             component = Expression
-        expr = _parse_special_functions(
-            _expr_to_amici(expr, renames), parameters
-        )
+        expr = _parse_special_functions(_expr_to_amici(expr, renames))
         ode_model.add_component(
             component(symbol_with_assumptions(sym_name), name, expr)
         )
@@ -791,9 +788,7 @@ def _add_expression(
         # If this changes, I would expect symbol redefinition warnings in CPP
         # models and overwriting in JAX models, but as both symbols refer to
         # the same _symbolic entity, this should not be a problem (untested)
-        expr = _parse_special_functions(
-            _expr_to_amici(expr, renames), parameters
-        )
+        expr = _parse_special_functions(_expr_to_amici(expr, renames))
         # mint (and, if needed, disambiguate) the measurement symbol up
         # front and pass it into the `Observable` explicitly -- a later,
         # independent call to `Observable.get_measurement_symbol()` (e.g.

@@ -491,7 +491,7 @@ def test_parse_piecewise_c1_no_heaviside():
     x = symbol_with_assumptions("x_1")
     pw = sp.Piecewise((t * x, t < 1), (x + (t - 1) * x, True))
 
-    res = _parse_piecewise_to_heaviside(pw.args, [])
+    res = _parse_piecewise_to_heaviside(pw.args)
     assert isinstance(res, sp.Piecewise)
     assert sp.simplify(res - pw) == 0
 
@@ -501,12 +501,12 @@ def test_parse_piecewise_c1_no_heaviside():
         ((p - 1) ** 2 + 2 * p - 1, True),
     )
 
-    res_param = _parse_piecewise_to_heaviside(pw_param.args, [p])
+    res_param = _parse_piecewise_to_heaviside(pw_param.args)
     assert isinstance(res_param, sp.Piecewise)
     assert sp.simplify(res_param - pw_param) == 0
 
     pw_three = sp.Piecewise((0, t < 0), (t**2, t < 1), (2 * t - 1, True))
-    res_three = _parse_piecewise_to_heaviside(pw_three.args, [])
+    res_three = _parse_piecewise_to_heaviside(pw_three.args)
     assert isinstance(res_three, sp.Piecewise)
     assert sp.simplify(res_three - pw_three) == 0
 
@@ -526,22 +526,22 @@ def test_parse_piecewise_non_c1_to_heaviside():
     x = symbol_with_assumptions("x_1")
     p = symbol_with_assumptions("p1")
 
-    for pw, parameters in [
+    for pw in [
         # kinks
-        (sp.Piecewise((0, t < 1), (t - 1, True)), []),
-        (sp.Piecewise((x, x > 0.9), (2 * x - 0.9, True)), []),
-        (sp.Piecewise((0, p < 0), (p, True)), []),
+        sp.Piecewise((0, t < 1), (t - 1, True)),
+        sp.Piecewise((0, t < p), (t - p, True)),
+        sp.Piecewise((x, x > 0.9), (2 * x - 0.9, True)),
+        sp.Piecewise((0, p < 0), (p, True)),
+        # kink hidden in a non-differentiable piece
+        sp.Piecewise((2 * sp.Max(0, t - 1), t < 1), (t - 1, True)),
         # the first two pieces match at t == 2, but are not adjacent
-        (sp.Piecewise(((t - 2) ** 2, t > 2), (0, t < 1), (5, True)), []),
+        sp.Piecewise(((t - 2) ** 2, t > 2), (0, t < 1), (5, True)),
         # conditions on different symbols
-        (
-            sp.Piecewise((1 + (t - p) ** 2, t < p), (1, x < 2), (x - 1, True)),
-            [p],
-        ),
+        sp.Piecewise((1 + (t - p) ** 2, t < p), (1, x < 2), (x - 1, True)),
         # no default piece
-        (sp.Piecewise((p * t, t < 1), (p, t < 2)), [p]),
+        sp.Piecewise((p * t, t < 1), (p, t < 2)),
     ]:
-        res = _parse_piecewise_to_heaviside(pw.args, parameters)
+        res = _parse_piecewise_to_heaviside(pw.args)
         assert not res.has(sp.Piecewise), pw
         assert res.has(sp.Heaviside), pw
 
@@ -562,11 +562,11 @@ def test_parse_piecewise_boolean_and_collapsing():
     p = symbol_with_assumptions("p1")
 
     pw_bool = sp.Piecewise((sp.true, t < 1), (sp.false, True))
-    res_bool = _parse_piecewise_to_heaviside(pw_bool.args, [p])
+    res_bool = _parse_piecewise_to_heaviside(pw_bool.args)
     assert sp.simplify(res_bool - (1 - sp.Heaviside(t - 1, 1))) == 0
 
     pw_same = sp.Piecewise((p * x, t < 1), (p * x, True), evaluate=False)
-    assert _parse_piecewise_to_heaviside(pw_same.args, [p]) == p * x
+    assert _parse_piecewise_to_heaviside(pw_same.args) == p * x
 
 
 def test_parse_piecewise_discontinuous_to_heaviside():
@@ -583,7 +583,7 @@ def test_parse_piecewise_discontinuous_to_heaviside():
     x = symbol_with_assumptions("x_1")
 
     pw_state = sp.Piecewise((t * x, x < 1), (2 * t * x, True))
-    res_state = _parse_piecewise_to_heaviside(pw_state.args, [])
+    res_state = _parse_piecewise_to_heaviside(pw_state.args)
     assert not isinstance(res_state, sp.Piecewise)
     expected_state = t * x * (
         1 - sp.Heaviside(x - 1, 1)
@@ -592,7 +592,7 @@ def test_parse_piecewise_discontinuous_to_heaviside():
 
     p = symbol_with_assumptions("p1")
     pw_param = sp.Piecewise((0, p < 1), (1, True))
-    res_param = _parse_piecewise_to_heaviside(pw_param.args, [p])
+    res_param = _parse_piecewise_to_heaviside(pw_param.args)
     assert not isinstance(res_param, sp.Piecewise)
     expected_param = sp.Heaviside(p - 1, 1)
     assert sp.simplify(res_param - expected_param) == 0
@@ -610,5 +610,5 @@ def test_parse_piecewise_c1_constant_zero():
     p = symbol_with_assumptions("p1")
     pw_zero = sp.Piecewise((p - p, p < 1), (0, True), evaluate=False)
 
-    res_zero = _parse_piecewise_to_heaviside(pw_zero.args, [p])
+    res_zero = _parse_piecewise_to_heaviside(pw_zero.args)
     assert sp.simplify(res_zero) == 0

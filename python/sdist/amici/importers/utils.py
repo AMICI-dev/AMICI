@@ -764,11 +764,7 @@ def maximum_bipartite_matching[L: Hashable, R: Hashable](
     return {left: right for right, left in match_right.items()}
 
 
-def _parse_special_functions(
-    sym: sp.Expr,
-    parameters: Iterable[sp.Symbol],
-    toplevel: bool = True,
-) -> sp.Expr:
+def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     """
     Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
@@ -776,17 +772,10 @@ def _parse_special_functions(
     :param sym:
         symbolic expressions
 
-    :param parameters:
-        parameters with respect to which piecewise functions need to be
-        continuously differentiable to be kept as piecewise functions,
-        see :func:`_parse_piecewise_to_heaviside`
-
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
-    args = tuple(
-        _parse_special_functions(arg, parameters, False) for arg in sym.args
-    )
+    args = tuple(_parse_special_functions(arg, False) for arg in sym.args)
 
     fun_mappings = {
         "times": sp.Mul,
@@ -819,7 +808,7 @@ def _parse_special_functions(
         return fun_mappings[sym.__class__.__name__](*args)
 
     elif isinstance(sym, sp.Piecewise):
-        return _parse_piecewise_to_heaviside(args, parameters)
+        return _parse_piecewise_to_heaviside(args)
 
     if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
@@ -836,11 +825,8 @@ def _parse_special_functions(
     return sym
 
 
-def _is_c1_piecewise(
-    pw: sp.Piecewise, parameters: Iterable[sp.Symbol]
-) -> bool:
-    """Return ``True`` if ``pw`` is continuously differentiable with respect to
-    the variable in its conditions and to ``parameters``.
+def _is_c1_piecewise(pw: sp.Piecewise) -> bool:
+    """Return ``True`` if ``pw`` is continuously differentiable.
 
     This check ensures that piecewise expressions which are already smooth are
     not transformed into events. It is conservative: piecewise expressions
@@ -852,10 +838,13 @@ def _is_c1_piecewise(
     with strictly increasing (decreasing) thresholds. Then, the region of
     each piece only borders the regions of the preceding and the following
     piece.
+
+    At each boundary, the adjacent pieces have to agree in their values and
+    in their derivatives with respect to the symbol in the conditions,
+    identically in all other symbols. This implies that their derivatives
+    with respect to all other symbols, including the threshold, agree as
+    well.
     """
-
-    from sympy.calculus.util import continuous_domain
-
     pieces = pw.args
 
     # without a default piece, the expression is undefined outside the
@@ -894,8 +883,6 @@ def _is_c1_piecewise(
             return False
         boundaries.append(boundary)
 
-    parameters = [par for par in parameters if pw.has(par)]
-
     # check continuity and derivative continuity at boundaries
     for boundary, (expr_left, _), (expr_right, _) in zip(
         boundaries, pieces[:-1], pieces[1:]
@@ -904,57 +891,38 @@ def _is_c1_piecewise(
             expr_left.subs(sym, boundary) - expr_right.subs(sym, boundary)
         ).is_zero:
             return False
-        for var in (sym, *parameters):
-            if not sp.simplify(
-                sp.diff(expr_left, var).subs(sym, boundary)
-                - sp.diff(expr_right, var).subs(sym, boundary)
-            ).is_zero:
-                return False
-
-    # check that each piece and its derivatives are continuous on R
-    for expr, _ in pieces:
-        for var in parameters:
-            try:
-                if continuous_domain(expr, var, sp.S.Reals) != sp.S.Reals:
-                    return False
-            except NotImplementedError:
-                return False
-            try:
-                dexpr = sp.diff(expr, var)
-                if continuous_domain(dexpr, var, sp.S.Reals) != sp.S.Reals:
-                    return False
-            except NotImplementedError:
-                return False
+        dleft, dright = sp.diff(expr_left, sym), sp.diff(expr_right, sym)
+        # pieces that are not differentiable themselves, e.g. Max/Min/Abs,
+        #  whose derivatives would be evaluated at their kinks otherwise
+        if any(
+            d.has(sp.Heaviside, sp.DiracDelta, sp.sign, sp.Derivative, sp.Subs)
+            for d in (dleft, dright)
+        ):
+            return False
+        if not sp.simplify(
+            dleft.subs(sym, boundary) - dright.subs(sym, boundary)
+        ).is_zero:
+            return False
 
     return True
 
 
-def _parse_piecewise_to_heaviside(
-    args: Iterable[ExprCondPair],
-    parameters: Sequence[sp.Symbol] | None = None,
-) -> sp.Expr:
+def _parse_piecewise_to_heaviside(args: Iterable[ExprCondPair]) -> sp.Expr:
     """
     Piecewise functions cannot be transformed into C++ right away, but AMICI
     has a special interface for Heaviside functions, so we transform them.
-    Piecewise functions that are continuously differentiable with respect to
-    ``parameters`` are returned as is, as they do not require events.
+    Piecewise functions that are continuously differentiable are returned as
+    is, as they do not require events, see :func:`_is_c1_piecewise`.
 
     :param args:
         condition-expression pairs of the piecewise function
-
-    :param parameters:
-        parameters with respect to which the piecewise function needs to be
-        continuously differentiable to be kept as is
     """
     pw = sp.Piecewise(*args)
     if not isinstance(pw, sp.Piecewise):
         # the piecewise function was simplified away
         return pw
 
-    if parameters is None:
-        parameters = []
-
-    if _is_c1_piecewise(pw, parameters):
+    if _is_c1_piecewise(pw):
         for _, cond in pw.args[:-1]:
             _check_unsupported_functions(
                 cond.lhs - cond.rhs, "sympy.Expression"
