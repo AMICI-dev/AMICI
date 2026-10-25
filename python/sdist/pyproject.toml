@@ -32,6 +32,14 @@ dependencies = [
     "xarray>=2025.01.0",
 ]
 license = "BSD-3-Clause"
+license-files = [
+    "LICENSE.md",
+    # vendored libraries that are linked into the AMICI extension
+    "amici/_installation/ThirdParty/sundials/LICENSE",
+    "amici/_installation/ThirdParty/sundials/NOTICE",
+    "amici/_installation/ThirdParty/SuiteSparse/LICENSE.txt",
+    "amici/_installation/ThirdParty/SuiteSparse/*/Doc/License.txt",
+]
 authors = [
     {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},

@@ -131,6 +131,20 @@ class AmiciBuildPy(build_py):
         self.run_command("build_ext")
         return super().run()
 
+    def find_data_files(self, package, src_dir):
+        # The vendored third-party sources are only needed to build AMICI
+        #  from the sdist. The headers and libraries needed for model
+        #  compilation are installed to `_installation/{include,lib}`, and
+        #  the third-party licenses are included via `license-files`.
+        if package == _THIRD_PARTY_PACKAGE or package.startswith(
+            f"{_THIRD_PARTY_PACKAGE}."
+        ):
+            return []
+        return super().find_data_files(package, src_dir)
+
+
+_THIRD_PARTY_PACKAGE = "amici._installation.ThirdParty"
+
 
 class AmiciBuildCMakeExtension(BuildExtension):
     def finalize_options(self):
