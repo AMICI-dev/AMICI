@@ -99,7 +99,8 @@ jobs:
               echo "::error::$(basename "$whl") links libraries under /opt/homebrew or /usr/local"
               status=1
             fi
-            if grep -rlE '/opt/homebrew|/usr/local' \
+            # ignore comments
+            if grep -rnE '^[^#]*(/opt/homebrew|/usr/local)' \
                 --include='*.cmake' "$dir"; then
               echo "::error::$(basename "$whl") has CMake files referencing /opt/homebrew or /usr/local"
               status=1
