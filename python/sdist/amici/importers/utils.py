@@ -8,7 +8,6 @@ from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from typing import SupportsFloat
 
 import sympy as sp
-from sympy.core.relational import Relational
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanAtom
 from toposort import toposort
@@ -838,32 +837,79 @@ def _parse_special_functions(
 
 
 def _is_c1_piecewise(
-    pw: sp.Piecewise, parameters: Sequence[sp.Symbol]
+    pw: sp.Piecewise, parameters: Iterable[sp.Symbol]
 ) -> bool:
     """Return ``True`` if ``pw`` is continuously differentiable with respect to
-    ``parameters``.
+    the variable in its conditions and to ``parameters``.
 
     This check ensures that piecewise expressions which are already smooth are
-    not transformed into events.
+    not transformed into events. It is conservative: piecewise expressions
+    that do not have one of the supported forms are reported as not
+    continuously differentiable.
+
+    Supported are piecewise expressions with a default piece whose
+    conditions are all upper bounds (or all lower bounds) on the same symbol
+    with strictly increasing (decreasing) thresholds. Then, the region of
+    each piece only borders the regions of the preceding and the following
+    piece.
     """
 
     from sympy.calculus.util import continuous_domain
 
     pieces = pw.args
 
-    # collect boundaries appearing in the conditions
-    boundaries: list[tuple[sp.Symbol, sp.Expr]] = []
-    for _, cond in pieces:
-        if cond in (True, False, sp.true, sp.false):
-            continue
-        if not isinstance(cond, Relational):
+    # without a default piece, the expression is undefined outside the
+    #  given conditions
+    if pieces[-1].cond != sp.true:
+        return False
+    # e.g. boolean pieces
+    if not all(isinstance(expr, sp.Expr) for expr, _ in pieces):
+        return False
+
+    # collect the boundaries between adjacent pieces
+    sym = None
+    is_upper_bound = None
+    boundaries: list[sp.Expr] = []
+    for _, cond in pieces[:-1]:
+        if not isinstance(cond, sp.Lt | sp.Le | sp.Gt | sp.Ge):
             return False
         if isinstance(cond.lhs, sp.Symbol) and not cond.rhs.has(cond.lhs):
-            boundaries.append((cond.lhs, cond.rhs))
+            cur_sym, boundary = cond.lhs, cond.rhs
+            cur_is_upper_bound = isinstance(cond, sp.Lt | sp.Le)
         elif isinstance(cond.rhs, sp.Symbol) and not cond.lhs.has(cond.rhs):
-            boundaries.append((cond.rhs, cond.lhs))
+            cur_sym, boundary = cond.rhs, cond.lhs
+            cur_is_upper_bound = isinstance(cond, sp.Gt | sp.Ge)
         else:
             return False
+
+        if sym is None:
+            sym, is_upper_bound = cur_sym, cur_is_upper_bound
+        elif cur_sym != sym or cur_is_upper_bound != is_upper_bound:
+            return False
+        elif not (
+            boundary - boundaries[-1]
+            if is_upper_bound
+            else boundaries[-1] - boundary
+        ).is_positive:
+            return False
+        boundaries.append(boundary)
+
+    parameters = [par for par in parameters if pw.has(par)]
+
+    # check continuity and derivative continuity at boundaries
+    for boundary, (expr_left, _), (expr_right, _) in zip(
+        boundaries, pieces[:-1], pieces[1:]
+    ):
+        if not sp.simplify(
+            expr_left.subs(sym, boundary) - expr_right.subs(sym, boundary)
+        ).is_zero:
+            return False
+        for var in (sym, *parameters):
+            if not sp.simplify(
+                sp.diff(expr_left, var).subs(sym, boundary)
+                - sp.diff(expr_right, var).subs(sym, boundary)
+            ).is_zero:
+                return False
 
     # check that each piece and its derivatives are continuous on R
     for expr, _ in pieces:
@@ -878,21 +924,6 @@ def _is_c1_piecewise(
                 if continuous_domain(dexpr, var, sp.S.Reals) != sp.S.Reals:
                     return False
             except NotImplementedError:
-                return False
-
-    # check continuity and derivative continuity at boundaries
-    for (sym, boundary), (expr_left, _), (expr_right, _) in zip(
-        boundaries, pieces[:-1], pieces[1:]
-    ):
-        if not sp.simplify(
-            expr_left.subs(sym, boundary) - expr_right.subs(sym, boundary)
-        ).is_zero:
-            return False
-        for var in parameters:
-            if not sp.simplify(
-                sp.diff(expr_left, var).subs(sym, boundary)
-                - sp.diff(expr_right, var).subs(sym, boundary)
-            ).is_zero:
                 return False
 
     return True
@@ -916,11 +947,18 @@ def _parse_piecewise_to_heaviside(
         continuously differentiable to be kept as is
     """
     pw = sp.Piecewise(*args)
+    if not isinstance(pw, sp.Piecewise):
+        # the piecewise function was simplified away
+        return pw
 
     if parameters is None:
         parameters = []
 
     if _is_c1_piecewise(pw, parameters):
+        for _, cond in pw.args[:-1]:
+            _check_unsupported_functions(
+                cond.lhs - cond.rhs, "sympy.Expression"
+            )
         return pw
 
     formula = sp.Integer(0)

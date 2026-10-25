@@ -505,6 +505,69 @@ def test_parse_piecewise_c1_no_heaviside():
     assert isinstance(res_param, sp.Piecewise)
     assert sp.simplify(res_param - pw_param) == 0
 
+    pw_three = sp.Piecewise((0, t < 0), (t**2, t < 1), (2 * t - 1, True))
+    res_three = _parse_piecewise_to_heaviside(pw_three.args, [])
+    assert isinstance(res_three, sp.Piecewise)
+    assert sp.simplify(res_three - pw_three) == 0
+
+
+def test_parse_piecewise_non_c1_to_heaviside():
+    """_parse_piecewise_to_heaviside should convert piecewise expressions that
+    are not C1, or whose smoothness cannot be established."""
+
+    import sympy as sp
+    from amici.importers.utils import (
+        _parse_piecewise_to_heaviside,
+        amici_time_symbol,
+        symbol_with_assumptions,
+    )
+
+    t = amici_time_symbol
+    x = symbol_with_assumptions("x_1")
+    p = symbol_with_assumptions("p1")
+
+    for pw, parameters in [
+        # kinks
+        (sp.Piecewise((0, t < 1), (t - 1, True)), []),
+        (sp.Piecewise((x, x > 0.9), (2 * x - 0.9, True)), []),
+        (sp.Piecewise((0, p < 0), (p, True)), []),
+        # the first two pieces match at t == 2, but are not adjacent
+        (sp.Piecewise(((t - 2) ** 2, t > 2), (0, t < 1), (5, True)), []),
+        # conditions on different symbols
+        (
+            sp.Piecewise((1 + (t - p) ** 2, t < p), (1, x < 2), (x - 1, True)),
+            [p],
+        ),
+        # no default piece
+        (sp.Piecewise((p * t, t < 1), (p, t < 2)), [p]),
+    ]:
+        res = _parse_piecewise_to_heaviside(pw.args, parameters)
+        assert not res.has(sp.Piecewise), pw
+        assert res.has(sp.Heaviside), pw
+
+
+def test_parse_piecewise_boolean_and_collapsing():
+    """_parse_piecewise_to_heaviside should handle boolean pieces and
+    piecewise expressions that are simplified away."""
+
+    import sympy as sp
+    from amici.importers.utils import (
+        _parse_piecewise_to_heaviside,
+        amici_time_symbol,
+        symbol_with_assumptions,
+    )
+
+    t = amici_time_symbol
+    x = symbol_with_assumptions("x_1")
+    p = symbol_with_assumptions("p1")
+
+    pw_bool = sp.Piecewise((sp.true, t < 1), (sp.false, True))
+    res_bool = _parse_piecewise_to_heaviside(pw_bool.args, [p])
+    assert sp.simplify(res_bool - (1 - sp.Heaviside(t - 1, 1))) == 0
+
+    pw_same = sp.Piecewise((p * x, t < 1), (p * x, True), evaluate=False)
+    assert _parse_piecewise_to_heaviside(pw_same.args, [p]) == p * x
+
 
 def test_parse_piecewise_discontinuous_to_heaviside():
     """_parse_piecewise_to_heaviside should convert discontinuous piecewise."""
