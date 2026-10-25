@@ -3332,3 +3332,60 @@ def test_secondary_event_heaviside_at_trigger(tempdir):
     assert_allclose(rdata.by_id("s"), [0.0, 1.0], rtol=0, atol=0)
     assert_allclose(rdata.by_id("z1"), [0.0, 1.0], rtol=0, atol=0)
     assert_allclose(rdata.by_id("z2"), [0.0, 1.0], rtol=0, atol=0)
+
+
+def test_dae_explicit_and_solver_tracked_events(tempdir):
+    """Check DAE models with explicitly timed and solver-tracked events.
+
+    Events with explicit trigger times are not tracked by the solver
+    (gh-3449).
+    """
+    events = """
+        E1: at time >= 1: x = x + 1
+        E2: at time >= 2: x = x + 1
+        E3: at time >= 3: x = x + 1
+        E4: at x < 0.6: x = 1
+    """
+    k = 0.5
+    t = np.linspace(0, 8, 17)
+    # analytical solution: after E3, x decays to 0.6, then E4 resets it to 1
+    x3 = ((np.exp(-k) + 1) * np.exp(-k) + 1) * np.exp(-k) + 1
+    t4 = 3 + np.log(x3 / 0.6) / k
+    period = np.log(1 / 0.6) / k
+    x_expected = np.where(
+        t < t4,
+        x3 * np.exp(-k * (t - 3)),
+        np.exp(-k * ((t - t4) % period)),
+    )
+    assert t4 < t[-1] - period
+
+    rdatas = {}
+    for dae in (False, True):
+        model_name = f"test_dae_explicit_and_solver_tracked_events_{dae}"
+        algebraic = "y = 0; 0 = y - 2 * x" if dae else "y := 2 * x"
+        antimony2amici(
+            f"""
+            k = 0.5
+            x = 1; x' = -k * x
+            {algebraic}
+            {events}
+            """,
+            model_name=model_name,
+            output_dir=tempdir,
+        )
+        model = import_model_module(model_name, tempdir).get_model()
+        assert model.ne - model.ne_solver == 3
+        model.set_timepoints(t)
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdatas[dae] = run_simulation(model, solver)
+        assert rdatas[dae].status == AMICI_SUCCESS
+
+    for dae in (False, True):
+        assert_allclose(
+            rdatas[dae].by_id("x")[t > 3], x_expected[t > 3], rtol=1e-6
+        )
+        assert_allclose(
+            rdatas[dae].by_id("y"), 2 * rdatas[dae].by_id("x"), rtol=1e-8
+        )
