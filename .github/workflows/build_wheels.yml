@@ -26,6 +26,11 @@ env:
   CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
   CIBW_ENVIRONMENT: AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''
   CIBW_BUILD_VERBOSITY: 1
+  # scipy-openblas64 is already copied to amici/_installation/lib and loaded
+  #  from there via os.add_dll_directory; don't let delvewheel look for it
+  CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >-
+    delvewheel repair --no-dll libscipy_openblas64_.dll
+    -w {dest_dir} -v {wheel}
   # Compile a model against the installed wheel and simulate it.
   #  cibuildwheel runs this from a temporary directory outside the source tree.
   CIBW_TEST_COMMAND: >-
